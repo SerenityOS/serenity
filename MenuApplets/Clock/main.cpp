@@ -31,6 +31,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
+#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <time.h>
@@ -52,7 +53,7 @@ public:
         });
     }
 
-    virtual ~ClockWidget() override {}
+    virtual ~ClockWidget() override { }
 
     int get_width()
     {
@@ -87,8 +88,12 @@ private:
 
         pid_t pid;
         const char* argv[] = { "Calendar", nullptr };
-        if ((errno = posix_spawn(&pid, "/bin/Calendar", nullptr, nullptr, const_cast<char**>(argv), environ)))
+        if ((errno = posix_spawn(&pid, "/bin/Calendar", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
+        } else {
+            if (disown(pid) < 0)
+                perror("disown");
+        }
     }
 
     void tick_clock()
