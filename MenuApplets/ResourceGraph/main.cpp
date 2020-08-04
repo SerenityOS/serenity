@@ -35,6 +35,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
+#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 
@@ -109,8 +110,12 @@ private:
             return;
         pid_t child_pid;
         const char* argv[] = { "SystemMonitor", nullptr };
-        if ((errno = posix_spawn(&child_pid, "/bin/SystemMonitor", nullptr, nullptr, const_cast<char**>(argv), environ)))
+        if ((errno = posix_spawn(&child_pid, "/bin/SystemMonitor", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
+        } else {
+            if (disown(child_pid) < 0)
+                perror("disown");
+        }
     }
 
     static void get_cpu_usage(unsigned& busy, unsigned& idle)
