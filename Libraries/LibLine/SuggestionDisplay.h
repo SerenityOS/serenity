@@ -62,10 +62,9 @@ protected:
 
 class XtermSuggestionDisplay : public SuggestionDisplay {
 public:
-    XtermSuggestionDisplay(size_t lines, size_t columns, const StringMetrics& prompt_metrics)
+    XtermSuggestionDisplay(size_t lines, size_t columns)
         : m_num_lines(lines)
         , m_num_columns(columns)
-        , m_prompt_metrics(prompt_metrics)
     {
     }
     virtual ~XtermSuggestionDisplay() override { }
@@ -94,7 +93,6 @@ private:
     size_t m_num_lines { 0 };
     size_t m_num_columns { 0 };
     size_t m_prompt_lines_at_suggestion_initiation { 0 };
-    const StringMetrics& m_prompt_metrics;
 
     struct PageRange {
         size_t start;
