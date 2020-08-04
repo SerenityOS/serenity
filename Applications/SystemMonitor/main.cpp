@@ -32,7 +32,6 @@
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessModel.h"
 #include "ProcessStacksWidget.h"
-#include "ProcessTableView.h"
 #include "ProcessUnveiledPathsWidget.h"
 #include <LibCore/Timer.h>
 #include <LibGUI/AboutDialog.h>
@@ -50,6 +49,7 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -104,8 +104,7 @@ private:
     String m_text;
 };
 
-static bool
-can_access_pid(pid_t pid)
+static bool can_access_pid(pid_t pid)
 {
     auto path = String::format("/proc/%d", pid);
     return access(path.characters(), X_OK) == 0;
@@ -187,36 +186,47 @@ int main(int argc, char** argv)
     process_table_container.set_layout<GUI::VerticalBoxLayout>();
     process_table_container.layout()->set_spacing(0);
 
-    auto& process_table_view = process_table_container.add<ProcessTableView>();
+    auto& process_table_view = process_table_container.add<GUI::TableView>();
+    process_table_view.set_headers_visible(true);
+    process_table_view.set_model(GUI::SortingProxyModel::create(ProcessModel::create()));
+    process_table_view.model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
+    process_table_view.model()->update();
 
     auto& refresh_timer = window->add<Core::Timer>(
         3000, [&] {
-            process_table_view.refresh();
+            process_table_view.model()->update();
             if (auto* memory_stats_widget = MemoryStatsWidget::the())
                 memory_stats_widget->refresh();
         });
 
-    auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/kill16.png"), [&process_table_view](const GUI::Action&) {
-        pid_t pid = process_table_view.selected_pid();
+    auto selected_pid = [&]() -> pid_t {
+        if (process_table_view.selection().is_empty())
+            return -1;
+        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), ProcessModel::Column::PID);
+        return process_table_view.model()->data(pid_index, GUI::Model::Role::Display).to_i32();
+    };
+
+    auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/kill16.png"), [&](const GUI::Action&) {
+        pid_t pid = selected_pid();
         if (pid != -1)
             kill(pid, SIGKILL);
     });
 
-    auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/stop16.png"), [&process_table_view](const GUI::Action&) {
-        pid_t pid = process_table_view.selected_pid();
+    auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/stop16.png"), [&](const GUI::Action&) {
+        pid_t pid = selected_pid();
         if (pid != -1)
             kill(pid, SIGSTOP);
     });
 
-    auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/continue16.png"), [&process_table_view](const GUI::Action&) {
-        pid_t pid = process_table_view.selected_pid();
+    auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/continue16.png"), [&](const GUI::Action&) {
+        pid_t pid = selected_pid();
         if (pid != -1)
             kill(pid, SIGCONT);
     });
 
     auto profile_action = GUI::Action::create("Profile process", { Mod_Ctrl, Key_P },
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"), [&process_table_view](auto&) {
-            pid_t pid = process_table_view.selected_pid();
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"), [&](auto&) {
+            pid_t pid = selected_pid();
             if (pid != -1) {
                 auto pid_string = String::format("%d", pid);
                 pid_t child;
@@ -231,8 +241,8 @@ int main(int argc, char** argv)
         });
 
     auto inspect_action = GUI::Action::create("Inspect process", { Mod_Ctrl, Key_I },
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-inspector.png"), [&process_table_view](auto&) {
-            pid_t pid = process_table_view.selected_pid();
+        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-inspector.png"), [&](auto&) {
+            pid_t pid = selected_pid();
             if (pid != -1) {
                 auto pid_string = String::format("%d", pid);
                 pid_t child;
@@ -308,7 +318,8 @@ int main(int argc, char** argv)
     auto& unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
     auto& stacks_widget = process_tab_widget.add_tab<ProcessStacksWidget>("Stacks");
 
-    process_table_view.on_process_selected = [&](pid_t pid) {
+    process_table_view.on_selection = [&](auto&) {
+        auto pid = selected_pid();
         if (!can_access_pid(pid)) {
             process_tab_widget.set_visible(false);
             process_tab_unused_widget.set_text("Process cannot be accessed");
