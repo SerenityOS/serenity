@@ -39,7 +39,6 @@ TEST_CASE(default_constructor_is_empty)
 TEST_CASE(implicit_converson_to_const)
 {
     Bytes bytes0;
-    ReadonlyBytes bytes1 { bytes0 };
     [[maybe_unused]] ReadonlyBytes bytes2 = bytes0;
     [[maybe_unused]] ReadonlyBytes bytes3 = static_cast<ReadonlyBytes>(bytes2);
 }
