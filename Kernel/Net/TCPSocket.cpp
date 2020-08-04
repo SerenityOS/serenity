@@ -161,7 +161,7 @@ NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
     return adopt(*new TCPSocket(protocol));
 }
 
-int TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
+KResultOr<size_t> TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
 {
     (void)flags;
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.data());
@@ -175,7 +175,7 @@ int TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
     return payload_size;
 }
 
-int TCPSocket::protocol_send(const void* data, size_t data_length)
+KResultOr<size_t> TCPSocket::protocol_send(const void* data, size_t data_length)
 {
     send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, data, data_length);
     return data_length;

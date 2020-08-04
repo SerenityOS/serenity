@@ -74,51 +74,38 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
 
 ssize_t Process::do_write(FileDescription& description, const u8* data, int data_size)
 {
-    ssize_t nwritten = 0;
+    ssize_t total_nwritten = 0;
     if (!description.is_blocking()) {
         if (!description.can_write())
             return -EAGAIN;
     }
 
-    if (description.should_append()) {
-#ifdef IO_DEBUG
-        dbg() << "seeking to end (O_APPEND)";
-#endif
+    if (description.should_append())
         description.seek(0, SEEK_END);
-    }
 
-    while (nwritten < data_size) {
-#ifdef IO_DEBUG
-        dbg() << "while " << nwritten << " < " << size;
-#endif
+    while (total_nwritten < data_size) {
         if (!description.can_write()) {
             if (!description.is_blocking()) {
                 // Short write: We can no longer write to this non-blocking description.
-                ASSERT(nwritten > 0);
-                return nwritten;
+                ASSERT(total_nwritten > 0);
+                return total_nwritten;
             }
-#ifdef IO_DEBUG
-            dbg() << "block write on " << description.absolute_path();
-#endif
             if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description).was_interrupted()) {
-                if (nwritten == 0)
+                if (total_nwritten == 0)
                     return -EINTR;
             }
         }
-        ssize_t rc = description.write(data + nwritten, data_size - nwritten);
-#ifdef IO_DEBUG
-        dbg() << "   -> write returned " << rc;
-#endif
-        if (rc < 0) {
-            if (nwritten)
-                return nwritten;
-            return rc;
+        auto nwritten_or_error = description.write(data + total_nwritten, data_size - total_nwritten);
+        if (nwritten_or_error.is_error()) {
+            if (total_nwritten)
+                return total_nwritten;
+            return nwritten_or_error.error();
         }
-        if (rc == 0)
+        if (nwritten_or_error.value() == 0)
             break;
-        nwritten += rc;
+        total_nwritten += nwritten_or_error.value();
     }
-    return nwritten;
+    return total_nwritten;
 }
 
 ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)

@@ -132,9 +132,9 @@ bool BlockBasedFS::write_block(unsigned index, const u8* data, size_t count, siz
         u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size()) + offset;
         file_description().seek(base_offset, SEEK_SET);
         auto nwritten = file_description().write(data, count);
-        if (nwritten < 0)
+        if (nwritten.is_error())
             return false;
-        ASSERT(static_cast<size_t>(nwritten) == count);
+        ASSERT(nwritten.value() == count);
         return true;
     }
 
@@ -156,7 +156,8 @@ bool BlockBasedFS::raw_read(unsigned index, u8* buffer)
     u32 base_offset = static_cast<u32>(index) * static_cast<u32>(m_logical_block_size);
     file_description().seek(base_offset, SEEK_SET);
     auto nread = file_description().read(buffer, m_logical_block_size);
-    ASSERT((size_t)nread == m_logical_block_size);
+    ASSERT(!nread.is_error());
+    ASSERT(nread.value() == m_logical_block_size);
     return true;
 }
 bool BlockBasedFS::raw_write(unsigned index, const u8* buffer)
@@ -164,7 +165,8 @@ bool BlockBasedFS::raw_write(unsigned index, const u8* buffer)
     u32 base_offset = static_cast<u32>(index) * static_cast<u32>(m_logical_block_size);
     file_description().seek(base_offset, SEEK_SET);
     auto nwritten = file_description().write(buffer, m_logical_block_size);
-    ASSERT((size_t)nwritten == m_logical_block_size);
+    ASSERT(!nwritten.is_error());
+    ASSERT(nwritten.value() == m_logical_block_size);
     return true;
 }
 
@@ -211,9 +213,9 @@ bool BlockBasedFS::read_block(unsigned index, u8* buffer, size_t count, size_t o
         u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size()) + static_cast<u32>(offset);
         file_description().seek(base_offset, SEEK_SET);
         auto nread = file_description().read(buffer, count);
-        if (nread < 0)
+        if (nread.is_error())
             return false;
-        ASSERT(static_cast<size_t>(nread) == count);
+        ASSERT(nread.value() == count);
         return true;
     }
 
@@ -222,9 +224,9 @@ bool BlockBasedFS::read_block(unsigned index, u8* buffer, size_t count, size_t o
         u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
         file_description().seek(base_offset, SEEK_SET);
         auto nread = file_description().read(entry.data, block_size());
-        if (nread < 0)
+        if (nread.is_error())
             return false;
-        ASSERT(static_cast<size_t>(nread) == block_size());
+        ASSERT(nread.value() == block_size());
         entry.has_data = true;
     }
     if (buffer)

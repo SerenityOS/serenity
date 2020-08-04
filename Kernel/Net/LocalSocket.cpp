@@ -260,10 +260,10 @@ bool LocalSocket::can_write(const FileDescription& description, size_t) const
     return false;
 }
 
-ssize_t LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
+KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
 {
     if (!has_attached_peer(description))
-        return -EPIPE;
+        return KResult(-EPIPE);
     ssize_t nwritten = send_buffer_for(description).write((const u8*)data, data_size);
     if (nwritten > 0)
         Thread::current()->did_unix_socket_write(nwritten);
@@ -290,18 +290,18 @@ DoubleBuffer& LocalSocket::send_buffer_for(FileDescription& description)
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
+KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
 {
     auto& buffer_for_me = receive_buffer_for(description);
     if (!description.is_blocking()) {
         if (buffer_for_me.is_empty()) {
             if (!has_attached_peer(description))
                 return 0;
-            return -EAGAIN;
+            return KResult(-EAGAIN);
         }
     } else if (!can_read(description, 0)) {
         if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description).was_interrupted())
-            return -EINTR;
+            return KResult(-EINTR);
     }
     if (!has_attached_peer(description) && buffer_for_me.is_empty())
         return 0;
