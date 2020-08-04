@@ -33,6 +33,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
+#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -66,17 +67,17 @@ String Handler::to_details_str() const
     obj.add("executable", executable);
     obj.add("name", name);
     switch (handler_type) {
-        case Type::Application:
-            obj.add("type", "app");
-            break;
-        case Type::UserDefault:
-            obj.add("type", "userdefault");
-            break;
-        case Type::UserPreferred:
-            obj.add("type", "userpreferred");
-            break;
-        default:
-            break;
+    case Type::Application:
+        obj.add("type", "app");
+        break;
+    case Type::UserDefault:
+        obj.add("type", "userdefault");
+        break;
+    case Type::UserPreferred:
+        obj.add("type", "userpreferred");
+        break;
+    default:
+        break;
     }
     if (!icons.is_empty()) {
         JsonObject icons_obj;
@@ -220,6 +221,9 @@ bool spawn(String executable, String argument)
     if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         return false;
+    } else {
+        if (disown(child_pid) < 0)
+            perror("disown");
     }
     return true;
 }
