@@ -36,14 +36,11 @@
 #if !defined __ENUMERATE_SYSCALL
 #    define __ENUMERATE_SYSCALL(x) SC_##x,
 #endif
-#if !defined __ENUMERATE_REMOVED_SYSCALL
-#    define __ENUMERATE_REMOVED_SYSCALL(x)
-#endif
 
 #define SC_NARG 4
 
 Syscall::Function syscall_table[] = {
-    ENUMERATE_SYSCALLS
+    ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 };
 
 FlatPtr arg[SC_NARG];
