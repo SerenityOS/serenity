@@ -33,7 +33,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/JPGLoader.h>
-#include <math.h>
+#include <Libraries/LibM/math.h>
 
 #define JPG_DBG 0
 #define jpg_dbg(x) \

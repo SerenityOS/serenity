@@ -30,7 +30,7 @@
 #include <AK/String.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
-#include <math.h>
+#include <LibM/math.h>
 
 namespace Gfx {
 

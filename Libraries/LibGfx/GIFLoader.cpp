@@ -30,7 +30,7 @@
 #include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
-#include <math.h>
+#include <LibM/math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -546,7 +546,7 @@ GIFImageDecoderPlugin::GIFImageDecoderPlugin(const u8* data, size_t size)
     m_context->data_size = size;
 }
 
-GIFImageDecoderPlugin::~GIFImageDecoderPlugin() { }
+GIFImageDecoderPlugin::~GIFImageDecoderPlugin() {}
 
 IntSize GIFImageDecoderPlugin::size()
 {

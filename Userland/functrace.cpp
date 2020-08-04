@@ -38,7 +38,7 @@
 #include <LibCore/File.h>
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
-#include <math.h>
+#include <LibM/math.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/Instruction.h>
 #include <signal.h>
