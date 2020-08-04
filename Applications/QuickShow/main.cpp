@@ -44,6 +44,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
+#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <string.h>
@@ -114,7 +115,12 @@ int main(int argc, char** argv)
             pid_t child;
             for (size_t i = 1; i < urls.size(); ++i) {
                 const char* argv[] = { "/bin/QuickShow", urls[i].path().characters(), nullptr };
-                posix_spawn(&child, "/bin/QuickShow", nullptr, nullptr, const_cast<char**>(argv), environ);
+                if ((errno = posix_spawn(&child, "/bin/QuickShow", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+                    perror("posix_spawn");
+                } else {
+                    if (disown(child) < 0)
+                        perror("disown");
+                }
             }
         }
     };
