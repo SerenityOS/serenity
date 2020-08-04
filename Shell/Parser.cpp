@@ -772,6 +772,8 @@ RefPtr<AST::Node> Parser::parse_variable()
     switch (peek()) {
     case '$':
     case '?':
+    case '*':
+    case '#':
         return create<AST::SpecialVariable>(consume()); // Variable Special
     default:
         break;

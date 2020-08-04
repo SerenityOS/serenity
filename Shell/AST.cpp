@@ -2004,6 +2004,7 @@ RefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
 SpecialVariableValue::~SpecialVariableValue()
 {
 }
+
 Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
     switch (m_name) {
@@ -2011,6 +2012,19 @@ Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
         return { String::number(shell->last_return_code) };
     case '$':
         return { String::number(getpid()) };
+    case '*':
+        if (auto argv = shell->lookup_local_variable("ARGV"))
+            return argv->resolve_as_list(shell);
+        return {};
+    case '#':
+        if (auto argv = shell->lookup_local_variable("ARGV")) {
+            if (argv->is_list()) {
+                auto list_argv = static_cast<AST::ListValue*>(argv.ptr());
+                return { String::number(list_argv->values().size()) };
+            }
+            return { "1" };
+        }
+        return { "0" };
     default:
         return { "" };
     }

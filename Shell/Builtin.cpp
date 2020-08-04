@@ -678,6 +678,40 @@ int Shell::builtin_setopt(int argc, const char** argv)
     return 0;
 }
 
+int Shell::builtin_shift(int argc, const char** argv)
+{
+    int count = 1;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (count < 1)
+        return 0;
+
+    auto argv_ = lookup_local_variable("ARGV");
+    if (!argv_) {
+        fprintf(stderr, "shift: ARGV is unset\n");
+        return 1;
+    }
+
+    if (!argv_->is_list())
+        argv_ = *new AST::ListValue({ argv_ });
+
+    auto& values = static_cast<AST::ListValue*>(argv_.ptr())->values();
+    if ((size_t)count > values.size()) {
+        fprintf(stderr, "shift: shift count must not be greater than %zu\n", values.size());
+        return 1;
+    }
+
+    for (auto i = 0; i < count; ++i)
+        values.take_first();
+
+    return 0;
+}
+
 int Shell::builtin_time(int argc, const char** argv)
 {
     Vector<const char*> args;
