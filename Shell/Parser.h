@@ -65,7 +65,7 @@ private:
     RefPtr<AST::Node> parse_glob();
 
     template<typename A, typename... Args>
-    RefPtr<A> create(Args... args);
+    NonnullRefPtr<A> create(Args... args);
 
     bool at_end() const { return m_input.length() <= m_offset; }
     char peek();
