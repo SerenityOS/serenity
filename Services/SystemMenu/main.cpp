@@ -36,6 +36,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
+#include <serenity.h>
 #include <spawn.h>
 
 //#define SYSTEM_MENU_DEBUG
@@ -163,8 +164,12 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             const auto& bin = g_apps[app_identifier].executable;
             pid_t child_pid;
             const char* argv[] = { bin.characters(), nullptr };
-            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), environ)))
+            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
                 perror("posix_spawn");
+            } else {
+                if (disown(child_pid) < 0)
+                    perror("disown");
+            }
         }));
         ++app_identifier;
     }
