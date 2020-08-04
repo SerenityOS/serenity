@@ -193,16 +193,16 @@ int IPv4Socket::allocate_local_port_if_needed()
     return port;
 }
 
-ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
+KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const void* data, size_t data_length, int flags, const sockaddr* addr, socklen_t addr_length)
 {
     (void)flags;
     if (addr && addr_length != sizeof(sockaddr_in))
-        return -EINVAL;
+        return KResult(-EINVAL);
 
     if (addr) {
         if (addr->sa_family != AF_INET) {
             klog() << "sendto: Bad address family: " << addr->sa_family << " is not AF_INET!";
-            return -EAFNOSUPPORT;
+            return KResult(-EAFNOSUPPORT);
         }
 
         auto& ia = *(const sockaddr_in*)addr;
@@ -212,7 +212,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
 
     auto routing_decision = route_to(m_peer_address, m_local_address, bound_interface());
     if (routing_decision.is_zero())
-        return -EHOSTUNREACH;
+        return KResult(-EHOSTUNREACH);
 
     if (m_local_address.to_u32() == 0)
         m_local_address = routing_decision.adapter->ipv4_address();
@@ -230,20 +230,20 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
         return data_length;
     }
 
-    int nsent = protocol_send(data, data_length);
-    if (nsent > 0)
-        Thread::current()->did_ipv4_socket_write(nsent);
-    return nsent;
+    auto nsent_or_error = protocol_send(data, data_length);
+    if (!nsent_or_error.is_error())
+        Thread::current()->did_ipv4_socket_write(nsent_or_error.value());
+    return nsent_or_error;
 }
 
-ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* buffer, size_t buffer_length, int, sockaddr*, socklen_t*)
+KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, void* buffer, size_t buffer_length, int, sockaddr*, socklen_t*)
 {
     Locker locker(lock());
     if (m_receive_buffer.is_empty()) {
         if (protocol_is_disconnected())
             return 0;
         if (!description.is_blocking())
-            return -EAGAIN;
+            return KResult(-EAGAIN);
 
         locker.unlock();
         auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description);
@@ -251,10 +251,10 @@ ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* bu
 
         if (!m_can_read) {
             if (res.was_interrupted())
-                return -EINTR;
+                return KResult(-EINTR);
 
             // Unblocked due to timeout.
-            return -EAGAIN;
+            return KResult(-EAGAIN);
         }
     }
 
@@ -267,7 +267,7 @@ ssize_t IPv4Socket::receive_byte_buffered(FileDescription& description, void* bu
     return nreceived;
 }
 
-ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
+KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
 {
     Locker locker(lock());
     ReceivedPacket packet;
@@ -278,7 +278,7 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
             if (protocol_is_disconnected())
                 return 0;
             if (!description.is_blocking())
-                return -EAGAIN;
+                return KResult(-EAGAIN);
         }
 
         if (!m_receive_queue.is_empty()) {
@@ -301,10 +301,10 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
 
         if (!m_can_read) {
             if (res.was_interrupted())
-                return -EINTR;
+                return KResult(-EINTR);
 
             // Unblocked due to timeout.
-            return -EAGAIN;
+            return KResult(-EAGAIN);
         }
         ASSERT(m_can_read);
         ASSERT(!m_receive_queue.is_empty());
@@ -338,23 +338,23 @@ ssize_t IPv4Socket::receive_packet_buffered(FileDescription& description, void* 
     return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
 }
 
-ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
+KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
 {
     if (addr_length && *addr_length < sizeof(sockaddr_in))
-        return -EINVAL;
+        return KResult(-EINVAL);
 
 #ifdef IPV4_SOCKET_DEBUG
     klog() << "recvfrom: type=" << type() << ", local_port=" << local_port();
 #endif
 
-    ssize_t nreceived = 0;
+    KResultOr<size_t> nreceived = 0;
     if (buffer_mode() == BufferMode::Bytes)
         nreceived = receive_byte_buffered(description, buffer, buffer_length, flags, addr, addr_length);
     else
         nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, addr, addr_length);
 
-    if (nreceived > 0)
-        Thread::current()->did_ipv4_socket_read(nreceived);
+    if (!nreceived.is_error())
+        Thread::current()->did_ipv4_socket_read(nreceived.value());
     return nreceived;
 }
 
@@ -374,8 +374,10 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
             ASSERT(m_can_read);
             return false;
         }
-        int nreceived = protocol_receive(packet, m_scratch_buffer.value().data(), m_scratch_buffer.value().size(), 0);
-        m_receive_buffer.write(m_scratch_buffer.value().data(), nreceived);
+        auto nreceived_or_error = protocol_receive(packet, m_scratch_buffer.value().data(), m_scratch_buffer.value().size(), 0);
+        if (nreceived_or_error.is_error())
+            return false;
+        m_receive_buffer.write(m_scratch_buffer.value().data(), nreceived_or_error.value());
         m_can_read = !m_receive_buffer.is_empty();
     } else {
         // FIXME: Maybe track the number of packets so we don't have to walk the entire packet queue to count them..

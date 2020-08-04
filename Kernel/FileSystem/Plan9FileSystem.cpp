@@ -426,9 +426,10 @@ KResult Plan9FS::post_message(Message& message)
             if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description).was_interrupted())
                 return KResult(-EINTR);
         }
-        ssize_t nwritten = description.write(data, size);
-        if (nwritten < 0)
-            return KResult(nwritten);
+        auto nwritten_or_error = description.write(data, size);
+        if (nwritten_or_error.is_error())
+            return nwritten_or_error.error();
+        auto nwritten = nwritten_or_error.value();
         data += nwritten;
         size -= nwritten;
     }
@@ -444,9 +445,10 @@ KResult Plan9FS::do_read(u8* data, size_t size)
             if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description).was_interrupted())
                 return KResult(-EINTR);
         }
-        ssize_t nread = description.read(data, size);
-        if (nread < 0)
-            return KResult(nread);
+        auto nread_or_error = description.read(data, size);
+        if (nread_or_error.is_error())
+            return nread_or_error.error();
+        auto nread = nread_or_error.value();
         if (nread == 0)
             return KResult(-EIO);
         data += nread;

@@ -57,7 +57,7 @@ bool InodeWatcher::can_write(const FileDescription&, size_t) const
     return true;
 }
 
-ssize_t InodeWatcher::read(FileDescription&, size_t, u8* buffer, ssize_t buffer_size)
+KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, u8* buffer, size_t buffer_size)
 {
     LOCKER(m_lock);
     ASSERT(!m_queue.is_empty() || !m_inode);
@@ -72,9 +72,9 @@ ssize_t InodeWatcher::read(FileDescription&, size_t, u8* buffer, ssize_t buffer_
     return sizeof(event);
 }
 
-ssize_t InodeWatcher::write(FileDescription&, size_t, const u8*, ssize_t)
+KResultOr<size_t> InodeWatcher::write(FileDescription&, size_t, const u8*, size_t)
 {
-    return -EIO;
+    return KResult(-EIO);
 }
 
 String InodeWatcher::absolute_path(const FileDescription&) const

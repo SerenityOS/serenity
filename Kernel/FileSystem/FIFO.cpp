@@ -145,29 +145,19 @@ bool FIFO::can_write(const FileDescription&, size_t) const
     return m_buffer.space_for_writing() || !m_readers;
 }
 
-ssize_t FIFO::read(FileDescription&, size_t, u8* buffer, ssize_t size)
+KResultOr<size_t> FIFO::read(FileDescription&, size_t, u8* buffer, size_t size)
 {
     if (!m_writers && m_buffer.is_empty())
         return 0;
-#ifdef FIFO_DEBUG
-    dbg() << "fifo: read(" << size << ")\n";
-#endif
-    ssize_t nread = m_buffer.read(buffer, size);
-#ifdef FIFO_DEBUG
-    dbg() << "   -> read (" << String::format("%c", buffer[0]) << ") " << nread;
-#endif
-    return nread;
+    return m_buffer.read(buffer, size);
 }
 
-ssize_t FIFO::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
+KResultOr<size_t> FIFO::write(FileDescription&, size_t, const u8* buffer, size_t size)
 {
     if (!m_readers) {
         Thread::current()->send_signal(SIGPIPE, Process::current());
         return -EPIPE;
     }
-#ifdef FIFO_DEBUG
-    dbg() << "fifo: write(" << (const void*)buffer << ", " << size << ")";
-#endif
     return m_buffer.write(buffer, size);
 }
 

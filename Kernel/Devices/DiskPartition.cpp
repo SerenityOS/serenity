@@ -48,7 +48,7 @@ DiskPartition::~DiskPartition()
 {
 }
 
-ssize_t DiskPartition::read(FileDescription& fd, size_t offset, u8* outbuf, ssize_t len)
+KResultOr<size_t> DiskPartition::read(FileDescription& fd, size_t offset, u8* outbuf, size_t len)
 {
     unsigned adjust = m_block_offset * block_size();
 
@@ -70,7 +70,7 @@ bool DiskPartition::can_read(const FileDescription& fd, size_t offset) const
     return m_device->can_read(fd, offset + adjust);
 }
 
-ssize_t DiskPartition::write(FileDescription& fd, size_t offset, const u8* inbuf, ssize_t len)
+KResultOr<size_t> DiskPartition::write(FileDescription& fd, size_t offset, const u8* inbuf, size_t len)
 {
     unsigned adjust = m_block_offset * block_size();
 

@@ -178,14 +178,14 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, void* value,
     }
 }
 
-ssize_t Socket::read(FileDescription& description, size_t, u8* buffer, ssize_t size)
+KResultOr<size_t> Socket::read(FileDescription& description, size_t, u8* buffer, size_t size)
 {
     if (is_shut_down_for_reading())
         return 0;
     return recvfrom(description, buffer, size, 0, nullptr, 0);
 }
 
-ssize_t Socket::write(FileDescription& description, size_t, const u8* data, ssize_t size)
+KResultOr<size_t> Socket::write(FileDescription& description, size_t, const u8* data, size_t size)
 {
     if (is_shut_down_for_writing())
         return -EPIPE;

@@ -60,17 +60,17 @@ String MasterPTY::pts_name() const
     return m_pts_name;
 }
 
-ssize_t MasterPTY::read(FileDescription&, size_t, u8* buffer, ssize_t size)
+KResultOr<size_t> MasterPTY::read(FileDescription&, size_t, u8* buffer, size_t size)
 {
     if (!m_slave && m_buffer.is_empty())
         return 0;
     return m_buffer.read(buffer, size);
 }
 
-ssize_t MasterPTY::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
+KResultOr<size_t> MasterPTY::write(FileDescription&, size_t, const u8* buffer, size_t size)
 {
     if (!m_slave)
-        return -EIO;
+        return KResult(-EIO);
     m_slave->on_master_write(buffer, size);
     return size;
 }

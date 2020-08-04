@@ -80,7 +80,7 @@ void PATADiskDevice::set_drive_geometry(u16 cyls, u16 heads, u16 spt)
     m_sectors_per_track = spt;
 }
 
-ssize_t PATADiskDevice::read(FileDescription&, size_t offset, u8* outbuf, ssize_t len)
+KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, u8* outbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -121,7 +121,7 @@ bool PATADiskDevice::can_read(const FileDescription&, size_t offset) const
     return offset < (m_cylinders * m_heads * m_sectors_per_track * block_size());
 }
 
-ssize_t PATADiskDevice::write(FileDescription&, size_t offset, const u8* inbuf, ssize_t len)
+KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const u8* inbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
