@@ -30,7 +30,7 @@
 #include <AK/NetworkOrdered.h>
 #include <LibCore/puff.h>
 #include <LibGfx/PNGLoader.h>
-#include <LibM/math.h>
+#include <math.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
