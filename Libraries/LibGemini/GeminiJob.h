@@ -67,7 +67,6 @@ protected:
 
 private:
     RefPtr<TLS::TLSv12> m_socket;
-    bool m_queued_finish { false };
 };
 
 }
