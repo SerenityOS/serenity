@@ -96,6 +96,7 @@ set(KERNEL_SOURCES
     Syscalls/chroot.cpp
     Syscalls/clock.cpp
     Syscalls/debug.cpp
+    Syscalls/disown.cpp
     Syscalls/dup.cpp
     Syscalls/execve.cpp
     Syscalls/exit.cpp
