@@ -55,7 +55,7 @@ private:
 
     // ^TTY
     virtual ssize_t on_tty_write(const u8*, ssize_t) override;
-    virtual StringView tty_name() const override { return m_tty_name; }
+    virtual String tty_name() const override { return m_tty_name; }
     virtual void echo(u8) override;
 
     // ^TerminalClient

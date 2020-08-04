@@ -246,8 +246,8 @@ public:
     int sys$sethostname(const char*, ssize_t);
     int sys$uname(utsname*);
     int sys$readlink(const Syscall::SC_readlink_params*);
-    int sys$ttyname_r(int fd, char*, ssize_t);
-    int sys$ptsname_r(int fd, char*, ssize_t);
+    int sys$ttyname(int fd, Userspace<char*>, size_t);
+    int sys$ptsname(int fd, Userspace<char*>, size_t);
     pid_t sys$fork(RegisterState&);
     int sys$execve(const Syscall::SC_execve_params*);
     int sys$dup(int oldfd);

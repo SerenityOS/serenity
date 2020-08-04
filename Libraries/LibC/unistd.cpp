@@ -279,7 +279,7 @@ ssize_t write(int fd, const void* buf, size_t count)
 
 int ttyname_r(int fd, char* buffer, size_t size)
 {
-    int rc = syscall(SC_ttyname_r, fd, buffer, size);
+    int rc = syscall(SC_ttyname, fd, buffer, size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

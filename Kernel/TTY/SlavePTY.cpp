@@ -54,7 +54,7 @@ SlavePTY::~SlavePTY()
     DevPtsFS::unregister_slave_pty(*this);
 }
 
-StringView SlavePTY::tty_name() const
+String SlavePTY::tty_name() const
 {
     return m_tty_name;
 }

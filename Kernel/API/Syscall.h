@@ -76,7 +76,7 @@ namespace Kernel {
     S(set_mmap_name)          \
     S(readlink)               \
     S(write)                  \
-    S(ttyname_r)              \
+    S(ttyname)                \
     S(stat)                   \
     S(getsid)                 \
     S(setsid)                 \
@@ -111,7 +111,7 @@ namespace Kernel {
     S(times)                  \
     S(utime)                  \
     S(sync)                   \
-    S(ptsname_r)              \
+    S(ptsname)                \
     S(select)                 \
     S(unlink)                 \
     S(poll)                   \
