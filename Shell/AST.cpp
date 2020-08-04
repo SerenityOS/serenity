@@ -546,7 +546,7 @@ void CloseFdRedirection::dump(int level) const
 RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
 {
     Command command;
-    command.redirections.append(*new CloseRedirection(m_fd));
+    command.redirections.append(adopt(*new CloseRedirection(m_fd)));
     return create<CommandValue>(move(command));
 }
 
@@ -1122,8 +1122,8 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
 
     auto pipe_write_end = new FdRedirection(STDIN_FILENO, -1, Rewiring::Close::Destination);
     auto pipe_read_end = new FdRedirection(STDOUT_FILENO, -1, pipe_write_end, Rewiring::Close::RefreshDestination);
-    first_in_right.redirections.append(*pipe_write_end);
-    last_in_left.redirections.append(*pipe_read_end);
+    first_in_right.redirections.append(adopt(*pipe_write_end));
+    last_in_left.redirections.append(adopt(*pipe_read_end));
     last_in_left.should_wait = false;
     last_in_left.is_pipe_source = true;
 
@@ -1238,7 +1238,7 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Read));
+    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Read)));
     return create<CommandValue>(move(command));
 }
 
@@ -1265,7 +1265,7 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::ReadWrite));
+    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::ReadWrite)));
     return create<CommandValue>(move(command));
 }
 
@@ -1758,7 +1758,7 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::WriteAppend));
+    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::WriteAppend)));
     return create<CommandValue>(move(command));
 }
 
@@ -1785,7 +1785,7 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Write));
+    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Write)));
     return create<CommandValue>(move(command));
 }
 

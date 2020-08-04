@@ -48,10 +48,11 @@ struct Position {
     bool contains(size_t offset) const { return start_offset <= offset && offset <= end_offset; }
 };
 
+struct FdRedirection;
 struct Rewiring : public RefCounted<Rewiring> {
     int source_fd { -1 };
     int dest_fd { -1 };
-    Rewiring* other_pipe_end { nullptr };
+    FdRedirection* other_pipe_end { nullptr };
     enum class Close {
         None,
         Source,
@@ -67,7 +68,7 @@ struct Rewiring : public RefCounted<Rewiring> {
     {
     }
 
-    Rewiring(int source, int dest, Rewiring* other_end, Close close)
+    Rewiring(int source, int dest, FdRedirection* other_end, Close close)
         : source_fd(source)
         , dest_fd(dest)
         , other_pipe_end(other_end)
@@ -121,19 +122,29 @@ private:
     virtual bool is_path_redirection() const override { return true; }
 };
 
-struct FdRedirection : public Redirection
-    , public Rewiring {
-
-    virtual Result<RefPtr<Rewiring>, String> apply() const override { return static_cast<RefPtr<Rewiring>>(this); }
+struct FdRedirection : public Redirection {
+    virtual Result<RefPtr<Rewiring>, String> apply() const override
+    {
+        return RefPtr<Rewiring>(adopt(*new Rewiring(source_fd, dest_fd, other_pipe_end, action)));
+    }
     virtual ~FdRedirection();
     FdRedirection(int source, int dest, Rewiring::Close close)
-        : Rewiring(source, dest, close)
+        : FdRedirection(source, dest, nullptr, close)
     {
     }
-    FdRedirection(int source, int dest, Rewiring* pipe_end, Rewiring::Close close)
-        : Rewiring(source, dest, pipe_end, close)
+
+    FdRedirection(int source, int dest, FdRedirection* pipe_end, Rewiring::Close close)
+        : source_fd(source)
+        , dest_fd(dest)
+        , other_pipe_end(pipe_end)
+        , action(close)
     {
     }
+
+    int source_fd { -1 };
+    int dest_fd { -1 };
+    FdRedirection* other_pipe_end { nullptr };
+    Rewiring::Close action { Rewiring::Close::None };
 
 private:
     virtual bool is_fd_redirection() const override { return true; }
