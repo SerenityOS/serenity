@@ -233,6 +233,7 @@ public:
     }
 
     const Vector<RefPtr<Value>>& values() const { return m_contained_values; }
+    Vector<RefPtr<Value>>& values() { return m_contained_values; }
 
 private:
     Vector<RefPtr<Value>> m_contained_values;

@@ -53,6 +53,7 @@
     __ENUMERATE_SHELL_BUILTIN(pushd)   \
     __ENUMERATE_SHELL_BUILTIN(popd)    \
     __ENUMERATE_SHELL_BUILTIN(setopt)  \
+    __ENUMERATE_SHELL_BUILTIN(shift)   \
     __ENUMERATE_SHELL_BUILTIN(time)    \
     __ENUMERATE_SHELL_BUILTIN(jobs)    \
     __ENUMERATE_SHELL_BUILTIN(disown)  \
