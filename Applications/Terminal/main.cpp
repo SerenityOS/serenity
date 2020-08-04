@@ -46,6 +46,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <serenity.h>
 #include <signal.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -272,7 +273,12 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::Action::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         pid_t child;
         const char* argv[] = { "Terminal", nullptr };
-        posix_spawn(&child, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ);
+        if ((errno = posix_spawn(&child, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child) < 0)
+                perror("disown");
+        }
     }));
     app_menu.add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/gear16.png"),
         [&](const GUI::Action&) {
