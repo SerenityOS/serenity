@@ -131,6 +131,7 @@ int main(int argc, char** argv)
     sigset_t blocked;
     sigemptyset(&blocked);
     sigaddset(&blocked, SIGTTOU);
+    sigaddset(&blocked, SIGTTIN);
     pthread_sigmask(SIG_BLOCK, &blocked, NULL);
 #endif
 #ifdef __serenity__

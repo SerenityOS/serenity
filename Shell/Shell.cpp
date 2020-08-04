@@ -522,6 +522,12 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     if (child == 0) {
         setpgid(0, 0);
         tcsetattr(0, TCSANOW, &default_termios);
+        if (command.should_wait) {
+            auto pid = getpid();
+            auto pgid = getpgid(pid);
+            tcsetpgrp(STDOUT_FILENO, pgid);
+            tcsetpgrp(STDIN_FILENO, pgid);
+        }
         for (auto& rewiring : rewirings) {
 #ifdef SH_DEBUG
             dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), rewiring.dest_fd, rewiring.source_fd);
@@ -618,7 +624,7 @@ Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
                 jobs_to_wait_for.append(job);
             } else if (command.should_notify_if_in_background) {
                 job->set_running_in_background(true);
-                restore_stdin();
+                restore_ios();
             }
         }
     }
@@ -641,9 +647,11 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
     run_command(data);
     return true;
 }
-void Shell::restore_stdin()
+void Shell::restore_ios()
 {
     tcsetattr(0, TCSANOW, &termios);
+    tcsetpgrp(STDOUT_FILENO, m_pid);
+    tcsetpgrp(STDIN_FILENO, m_pid);
 }
 
 void Shell::block_on_job(RefPtr<Job> job)
@@ -660,13 +668,13 @@ void Shell::block_on_job(RefPtr<Job> job)
         loop.quit(0);
     };
     if (job->exited()) {
-        restore_stdin();
+        restore_ios();
         return;
     }
 
     loop.exec();
 
-    restore_stdin();
+    restore_ios();
 }
 
 String Shell::get_history_path()
@@ -1030,7 +1038,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
 
 bool Shell::read_single_line()
 {
-    restore_stdin();
+    restore_ios();
     auto line_result = editor->get_line(prompt());
 
     if (line_result.is_error()) {
