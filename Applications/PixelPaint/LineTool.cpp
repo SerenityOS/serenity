@@ -30,7 +30,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
-#include <math.h>
+#include <LibM/math.h>
 
 namespace PixelPaint {
 

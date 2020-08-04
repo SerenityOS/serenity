@@ -30,7 +30,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <math.h>
+#include <LibM/math.h>
 
 SoundPlayerWidget::SoundPlayerWidget(GUI::Window& window, NonnullRefPtr<Audio::ClientConnection> connection)
     : m_window(window)
