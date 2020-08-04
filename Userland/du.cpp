@@ -33,7 +33,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Object.h>
-#include <LibM/math.h>
+#include <math.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>

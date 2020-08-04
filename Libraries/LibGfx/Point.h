@@ -31,7 +31,7 @@
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Forward.h>
 #include <LibIPC/Forward.h>
-#include <LibM/math.h>
+#include <math.h>
 #include <stdlib.h>
 
 namespace Gfx {

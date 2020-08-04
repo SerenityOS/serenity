@@ -27,7 +27,7 @@
 #include "SampleWidget.h"
 #include <LibAudio/Buffer.h>
 #include <LibGUI/Painter.h>
-#include <LibM/math.h>
+#include <math.h>
 
 SampleWidget::SampleWidget()
 {

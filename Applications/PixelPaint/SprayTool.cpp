@@ -33,7 +33,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibM/math.h>
+#include <math.h>
 #include <stdio.h>
 
 namespace PixelPaint {
