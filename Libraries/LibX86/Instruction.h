@@ -419,7 +419,6 @@ private:
     u32 evaluate_sib(const CPU&, SegmentRegister& default_segment) const;
 
     unsigned m_register_index { 0xffffffff };
-    SegmentRegister m_segment;
     union {
         u32 m_offset32 { 0 };
         u16 m_offset16;
@@ -539,7 +538,6 @@ private:
     mutable MemoryOrRegisterReference m_modrm;
 
     InstructionDescriptor* m_descriptor { nullptr };
-    InstructionHandler m_handler { nullptr };
 };
 
 template<typename CPU>
