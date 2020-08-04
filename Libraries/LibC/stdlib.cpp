@@ -670,7 +670,7 @@ char* ptsname(int fd)
 
 int ptsname_r(int fd, char* buffer, size_t size)
 {
-    int rc = syscall(SC_ptsname_r, fd, buffer, size);
+    int rc = syscall(SC_ptsname, fd, buffer, size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
