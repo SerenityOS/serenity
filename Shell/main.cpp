@@ -159,12 +159,14 @@ int main(int argc, char** argv)
 
     const char* command_to_run = nullptr;
     const char* file_to_read_from = nullptr;
+    Vector<const char*> script_args;
     bool skip_rc_files = false;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
-    parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc", 0);
+    parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(script_args, "Extra argumets to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
     parser.parse(argc, argv);
 
@@ -179,6 +181,13 @@ int main(int argc, char** argv)
         };
         run_rc_file(Shell::global_init_file_path);
         run_rc_file(Shell::local_init_file_path);
+    }
+
+    {
+        Vector<String> args;
+        for (auto* arg : script_args)
+            args.empend(arg);
+        shell->set_local_variable("ARGV", *new AST::ListValue(move(args)));
     }
 
     if (command_to_run) {

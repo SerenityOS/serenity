@@ -162,6 +162,8 @@ dquoted_string_inner :: '\' . dquoted_string_inner?       {concat}
 variable :: '$' identifier
           | '$' '$'
           | '$' '?'
+          | '$' '*'
+          | '$' '#'
           | ...
 
 comment :: '#' [^\n]*
