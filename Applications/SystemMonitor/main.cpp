@@ -55,6 +55,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibPCIDB/Database.h>
+#include <serenity.h>
 #include <signal.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -222,6 +223,9 @@ int main(int argc, char** argv)
                 const char* argv[] = { "/bin/Profiler", "--pid", pid_string.characters(), nullptr };
                 if ((errno = posix_spawn(&child, "/bin/Profiler", nullptr, nullptr, const_cast<char**>(argv), environ))) {
                     perror("posix_spawn");
+                } else {
+                    if (disown(child) < 0)
+                        perror("disown");
                 }
             }
         });
@@ -235,6 +239,9 @@ int main(int argc, char** argv)
                 const char* argv[] = { "/bin/Inspector", pid_string.characters(), nullptr };
                 if ((errno = posix_spawn(&child, "/bin/Inspector", nullptr, nullptr, const_cast<char**>(argv), environ))) {
                     perror("posix_spawn");
+                } else {
+                    if (disown(child) < 0)
+                        perror("disown");
                 }
             }
         });
