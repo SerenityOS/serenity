@@ -2041,24 +2041,24 @@ Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
     return { shell->expand_tilde(builder.to_string()) };
 }
 
-Result<RefPtr<Rewiring>, String> CloseRedirection::apply() const
+Result<NonnullRefPtr<Rewiring>, String> CloseRedirection::apply() const
 {
-    return static_cast<RefPtr<Rewiring>>((adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseDestination))));
+    return adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseDestination));
 }
 
 CloseRedirection::~CloseRedirection()
 {
 }
 
-Result<RefPtr<Rewiring>, String> PathRedirection::apply() const
+Result<NonnullRefPtr<Rewiring>, String> PathRedirection::apply() const
 {
-    auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<RefPtr<Rewiring>, String> {
+    auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<NonnullRefPtr<Rewiring>, String> {
         if (fd < 0) {
             String error = strerror(errno);
             dbg() << "open() failed for '" << path << "' with " << error;
             return error;
         }
-        return static_cast<RefPtr<Rewiring>>((adopt(*new Rewiring(my_fd, fd, Rewiring::Close::Destination))));
+        return adopt(*new Rewiring(my_fd, fd, Rewiring::Close::Destination));
     };
     switch (direction) {
     case AST::PathRedirection::WriteAppend:
