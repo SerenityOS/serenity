@@ -46,166 +46,163 @@ typedef u32 socklen_t;
 
 namespace Kernel {
 
-#define ENUMERATE_SYSCALLS                  \
-    __ENUMERATE_SYSCALL(sleep)              \
-    __ENUMERATE_SYSCALL(yield)              \
-    __ENUMERATE_SYSCALL(open)               \
-    __ENUMERATE_SYSCALL(close)              \
-    __ENUMERATE_SYSCALL(read)               \
-    __ENUMERATE_SYSCALL(lseek)              \
-    __ENUMERATE_SYSCALL(kill)               \
-    __ENUMERATE_SYSCALL(getuid)             \
-    __ENUMERATE_SYSCALL(exit)               \
-    __ENUMERATE_SYSCALL(geteuid)            \
-    __ENUMERATE_SYSCALL(getegid)            \
-    __ENUMERATE_SYSCALL(getgid)             \
-    __ENUMERATE_SYSCALL(getpid)             \
-    __ENUMERATE_SYSCALL(getppid)            \
-    __ENUMERATE_SYSCALL(getresuid)          \
-    __ENUMERATE_SYSCALL(getresgid)          \
-    __ENUMERATE_SYSCALL(waitid)             \
-    __ENUMERATE_SYSCALL(mmap)               \
-    __ENUMERATE_SYSCALL(munmap)             \
-    __ENUMERATE_SYSCALL(get_dir_entries)    \
-    __ENUMERATE_SYSCALL(getcwd)             \
-    __ENUMERATE_SYSCALL(gettimeofday)       \
-    __ENUMERATE_SYSCALL(gethostname)        \
-    __ENUMERATE_SYSCALL(sethostname)        \
-    __ENUMERATE_SYSCALL(chdir)              \
-    __ENUMERATE_SYSCALL(uname)              \
-    __ENUMERATE_SYSCALL(set_mmap_name)      \
-    __ENUMERATE_SYSCALL(readlink)           \
-    __ENUMERATE_SYSCALL(write)              \
-    __ENUMERATE_SYSCALL(ttyname_r)          \
-    __ENUMERATE_SYSCALL(stat)               \
-    __ENUMERATE_SYSCALL(getsid)             \
-    __ENUMERATE_SYSCALL(setsid)             \
-    __ENUMERATE_SYSCALL(getpgid)            \
-    __ENUMERATE_SYSCALL(setpgid)            \
-    __ENUMERATE_SYSCALL(getpgrp)            \
-    __ENUMERATE_SYSCALL(fork)               \
-    __ENUMERATE_SYSCALL(execve)             \
-    __ENUMERATE_SYSCALL(dup)                \
-    __ENUMERATE_SYSCALL(dup2)               \
-    __ENUMERATE_SYSCALL(sigaction)          \
-    __ENUMERATE_SYSCALL(umask)              \
-    __ENUMERATE_SYSCALL(getgroups)          \
-    __ENUMERATE_SYSCALL(setgroups)          \
-    __ENUMERATE_SYSCALL(sigreturn)          \
-    __ENUMERATE_SYSCALL(sigprocmask)        \
-    __ENUMERATE_SYSCALL(sigpending)         \
-    __ENUMERATE_SYSCALL(pipe)               \
-    __ENUMERATE_SYSCALL(killpg)             \
-    __ENUMERATE_SYSCALL(seteuid)            \
-    __ENUMERATE_SYSCALL(setegid)            \
-    __ENUMERATE_SYSCALL(setuid)             \
-    __ENUMERATE_SYSCALL(setgid)             \
-    __ENUMERATE_SYSCALL(setresuid)          \
-    __ENUMERATE_SYSCALL(setresgid)          \
-    __ENUMERATE_SYSCALL(alarm)              \
-    __ENUMERATE_SYSCALL(fstat)              \
-    __ENUMERATE_SYSCALL(access)             \
-    __ENUMERATE_SYSCALL(fcntl)              \
-    __ENUMERATE_SYSCALL(ioctl)              \
-    __ENUMERATE_SYSCALL(mkdir)              \
-    __ENUMERATE_SYSCALL(times)              \
-    __ENUMERATE_SYSCALL(utime)              \
-    __ENUMERATE_SYSCALL(sync)               \
-    __ENUMERATE_SYSCALL(ptsname_r)          \
-    __ENUMERATE_SYSCALL(select)             \
-    __ENUMERATE_SYSCALL(unlink)             \
-    __ENUMERATE_SYSCALL(poll)               \
-    __ENUMERATE_SYSCALL(rmdir)              \
-    __ENUMERATE_SYSCALL(chmod)              \
-    __ENUMERATE_SYSCALL(usleep)             \
-    __ENUMERATE_SYSCALL(socket)             \
-    __ENUMERATE_SYSCALL(bind)               \
-    __ENUMERATE_SYSCALL(accept)             \
-    __ENUMERATE_SYSCALL(listen)             \
-    __ENUMERATE_SYSCALL(connect)            \
-    __ENUMERATE_SYSCALL(shbuf_create)       \
-    __ENUMERATE_SYSCALL(shbuf_allow_pid)    \
-    __ENUMERATE_SYSCALL(shbuf_get)          \
-    __ENUMERATE_SYSCALL(shbuf_release)      \
-    __ENUMERATE_SYSCALL(link)               \
-    __ENUMERATE_SYSCALL(chown)              \
-    __ENUMERATE_SYSCALL(fchmod)             \
-    __ENUMERATE_SYSCALL(symlink)            \
-    __ENUMERATE_SYSCALL(shbuf_seal)         \
-    __ENUMERATE_SYSCALL(sendto)             \
-    __ENUMERATE_SYSCALL(recvfrom)           \
-    __ENUMERATE_SYSCALL(getsockopt)         \
-    __ENUMERATE_SYSCALL(setsockopt)         \
-    __ENUMERATE_SYSCALL(create_thread)      \
-    __ENUMERATE_SYSCALL(gettid)             \
-    __ENUMERATE_SYSCALL(donate)             \
-    __ENUMERATE_SYSCALL(rename)             \
-    __ENUMERATE_SYSCALL(ftruncate)          \
-    __ENUMERATE_SYSCALL(exit_thread)        \
-    __ENUMERATE_SYSCALL(mknod)              \
-    __ENUMERATE_SYSCALL(writev)             \
-    __ENUMERATE_SYSCALL(beep)               \
-    __ENUMERATE_SYSCALL(getsockname)        \
-    __ENUMERATE_SYSCALL(getpeername)        \
-    __ENUMERATE_SYSCALL(sched_setparam)     \
-    __ENUMERATE_SYSCALL(sched_getparam)     \
-    __ENUMERATE_SYSCALL(fchown)             \
-    __ENUMERATE_SYSCALL(halt)               \
-    __ENUMERATE_SYSCALL(reboot)             \
-    __ENUMERATE_SYSCALL(mount)              \
-    __ENUMERATE_SYSCALL(umount)             \
-    __ENUMERATE_SYSCALL(dump_backtrace)     \
-    __ENUMERATE_SYSCALL(dbgputch)           \
-    __ENUMERATE_SYSCALL(dbgputstr)          \
-    __ENUMERATE_SYSCALL(watch_file)         \
-    __ENUMERATE_SYSCALL(shbuf_allow_all)    \
-    __ENUMERATE_SYSCALL(set_process_icon)   \
-    __ENUMERATE_SYSCALL(mprotect)           \
-    __ENUMERATE_SYSCALL(realpath)           \
-    __ENUMERATE_SYSCALL(get_process_name)   \
-    __ENUMERATE_SYSCALL(fchdir)             \
-    __ENUMERATE_SYSCALL(getrandom)          \
-    __ENUMERATE_SYSCALL(setkeymap)          \
-    __ENUMERATE_SYSCALL(clock_gettime)      \
-    __ENUMERATE_SYSCALL(clock_settime)      \
-    __ENUMERATE_SYSCALL(clock_nanosleep)    \
-    __ENUMERATE_SYSCALL(join_thread)        \
-    __ENUMERATE_SYSCALL(module_load)        \
-    __ENUMERATE_SYSCALL(module_unload)      \
-    __ENUMERATE_SYSCALL(detach_thread)      \
-    __ENUMERATE_SYSCALL(set_thread_name)    \
-    __ENUMERATE_SYSCALL(get_thread_name)    \
-    __ENUMERATE_SYSCALL(madvise)            \
-    __ENUMERATE_SYSCALL(purge)              \
-    __ENUMERATE_SYSCALL(shbuf_set_volatile) \
-    __ENUMERATE_SYSCALL(profiling_enable)   \
-    __ENUMERATE_SYSCALL(profiling_disable)  \
-    __ENUMERATE_SYSCALL(futex)              \
-    __ENUMERATE_SYSCALL(set_thread_boost)   \
-    __ENUMERATE_SYSCALL(set_process_boost)  \
-    __ENUMERATE_SYSCALL(chroot)             \
-    __ENUMERATE_SYSCALL(pledge)             \
-    __ENUMERATE_SYSCALL(unveil)             \
-    __ENUMERATE_SYSCALL(perf_event)         \
-    __ENUMERATE_SYSCALL(shutdown)           \
-    __ENUMERATE_SYSCALL(get_stack_bounds)   \
-    __ENUMERATE_SYSCALL(ptrace)             \
-    __ENUMERATE_SYSCALL(minherit)           \
-    __ENUMERATE_SYSCALL(sendfd)             \
-    __ENUMERATE_SYSCALL(recvfd)             \
-    __ENUMERATE_SYSCALL(sysconf)            \
-    __ENUMERATE_SYSCALL(set_process_name)
+#define ENUMERATE_SYSCALLS(S) \
+    S(sleep)                  \
+    S(yield)                  \
+    S(open)                   \
+    S(close)                  \
+    S(read)                   \
+    S(lseek)                  \
+    S(kill)                   \
+    S(getuid)                 \
+    S(exit)                   \
+    S(geteuid)                \
+    S(getegid)                \
+    S(getgid)                 \
+    S(getpid)                 \
+    S(getppid)                \
+    S(getresuid)              \
+    S(getresgid)              \
+    S(waitid)                 \
+    S(mmap)                   \
+    S(munmap)                 \
+    S(get_dir_entries)        \
+    S(getcwd)                 \
+    S(gettimeofday)           \
+    S(gethostname)            \
+    S(sethostname)            \
+    S(chdir)                  \
+    S(uname)                  \
+    S(set_mmap_name)          \
+    S(readlink)               \
+    S(write)                  \
+    S(ttyname_r)              \
+    S(stat)                   \
+    S(getsid)                 \
+    S(setsid)                 \
+    S(getpgid)                \
+    S(setpgid)                \
+    S(getpgrp)                \
+    S(fork)                   \
+    S(execve)                 \
+    S(dup)                    \
+    S(dup2)                   \
+    S(sigaction)              \
+    S(umask)                  \
+    S(getgroups)              \
+    S(setgroups)              \
+    S(sigreturn)              \
+    S(sigprocmask)            \
+    S(sigpending)             \
+    S(pipe)                   \
+    S(killpg)                 \
+    S(seteuid)                \
+    S(setegid)                \
+    S(setuid)                 \
+    S(setgid)                 \
+    S(setresuid)              \
+    S(setresgid)              \
+    S(alarm)                  \
+    S(fstat)                  \
+    S(access)                 \
+    S(fcntl)                  \
+    S(ioctl)                  \
+    S(mkdir)                  \
+    S(times)                  \
+    S(utime)                  \
+    S(sync)                   \
+    S(ptsname_r)              \
+    S(select)                 \
+    S(unlink)                 \
+    S(poll)                   \
+    S(rmdir)                  \
+    S(chmod)                  \
+    S(usleep)                 \
+    S(socket)                 \
+    S(bind)                   \
+    S(accept)                 \
+    S(listen)                 \
+    S(connect)                \
+    S(shbuf_create)           \
+    S(shbuf_allow_pid)        \
+    S(shbuf_get)              \
+    S(shbuf_release)          \
+    S(link)                   \
+    S(chown)                  \
+    S(fchmod)                 \
+    S(symlink)                \
+    S(shbuf_seal)             \
+    S(sendto)                 \
+    S(recvfrom)               \
+    S(getsockopt)             \
+    S(setsockopt)             \
+    S(create_thread)          \
+    S(gettid)                 \
+    S(donate)                 \
+    S(rename)                 \
+    S(ftruncate)              \
+    S(exit_thread)            \
+    S(mknod)                  \
+    S(writev)                 \
+    S(beep)                   \
+    S(getsockname)            \
+    S(getpeername)            \
+    S(sched_setparam)         \
+    S(sched_getparam)         \
+    S(fchown)                 \
+    S(halt)                   \
+    S(reboot)                 \
+    S(mount)                  \
+    S(umount)                 \
+    S(dump_backtrace)         \
+    S(dbgputch)               \
+    S(dbgputstr)              \
+    S(watch_file)             \
+    S(shbuf_allow_all)        \
+    S(set_process_icon)       \
+    S(mprotect)               \
+    S(realpath)               \
+    S(get_process_name)       \
+    S(fchdir)                 \
+    S(getrandom)              \
+    S(setkeymap)              \
+    S(clock_gettime)          \
+    S(clock_settime)          \
+    S(clock_nanosleep)        \
+    S(join_thread)            \
+    S(module_load)            \
+    S(module_unload)          \
+    S(detach_thread)          \
+    S(set_thread_name)        \
+    S(get_thread_name)        \
+    S(madvise)                \
+    S(purge)                  \
+    S(shbuf_set_volatile)     \
+    S(profiling_enable)       \
+    S(profiling_disable)      \
+    S(futex)                  \
+    S(set_thread_boost)       \
+    S(set_process_boost)      \
+    S(chroot)                 \
+    S(pledge)                 \
+    S(unveil)                 \
+    S(perf_event)             \
+    S(shutdown)               \
+    S(get_stack_bounds)       \
+    S(ptrace)                 \
+    S(minherit)               \
+    S(sendfd)                 \
+    S(recvfd)                 \
+    S(sysconf)                \
+    S(set_process_name)
 
 namespace Syscall {
 
 enum Function {
 #undef __ENUMERATE_SYSCALL
-#undef __ENUMERATE_REMOVED_SYSCALL
-#define __ENUMERATE_REMOVED_SYSCALL(x) SC_##x,
 #define __ENUMERATE_SYSCALL(x) SC_##x,
-    ENUMERATE_SYSCALLS
+    ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 #undef __ENUMERATE_SYSCALL
-#undef __ENUMERATE_REMOVED_SYSCALL
         __Count
 };
 
@@ -213,16 +210,11 @@ inline constexpr const char* to_string(Function function)
 {
     switch (function) {
 #undef __ENUMERATE_SYSCALL
-#undef __ENUMERATE_REMOVED_SYSCALL
-#define __ENUMERATE_REMOVED_SYSCALL(x) \
-    case SC_##x:                       \
-        return #x " (removed)";
 #define __ENUMERATE_SYSCALL(x) \
     case SC_##x:               \
         return #x;
-        ENUMERATE_SYSCALLS
+        ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 #undef __ENUMERATE_SYSCALL
-#undef __ENUMERATE_REMOVED_SYSCALL
     default:
         break;
     }
@@ -507,10 +499,8 @@ inline u32 invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 
 #undef __ENUMERATE_SYSCALL
 #define __ENUMERATE_SYSCALL(x) using Syscall::SC_##x;
-#define __ENUMERATE_REMOVED_SYSCALL(x)
-ENUMERATE_SYSCALLS
+ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 #undef __ENUMERATE_SYSCALL
-#undef __ENUMERATE_REMOVED_SYSCALL
 #define syscall Syscall::invoke
 
 }
