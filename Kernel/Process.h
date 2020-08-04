@@ -333,6 +333,7 @@ public:
     int sys$sendfd(int sockfd, int fd);
     int sys$recvfd(int sockfd);
     long sys$sysconf(int name);
+    int sys$disown(pid_t);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);

@@ -194,7 +194,8 @@ namespace Kernel {
     S(sendfd)                 \
     S(recvfd)                 \
     S(sysconf)                \
-    S(set_process_name)
+    S(set_process_name)       \
+    S(disown)
 
 namespace Syscall {
 
