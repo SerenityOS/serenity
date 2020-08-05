@@ -25,6 +25,7 @@
  */
 
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/GetPassword.h>
 #include <alloca.h>
 #include <grp.h>
@@ -37,17 +38,22 @@ extern "C" int main(int, char**);
 
 int main(int argc, char** argv)
 {
-    if (geteuid() != 0) {
+    const char* user = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(user, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (geteuid() != 0)
         fprintf(stderr, "Not running as root :(\n");
-    }
 
     uid_t uid = 0;
     gid_t gid = 0;
     struct passwd* pwd = nullptr;
-    if (argc > 1) {
-        pwd = getpwnam(argv[1]);
+    if (user) {
+        pwd = getpwnam(user);
         if (!pwd) {
-            fprintf(stderr, "No such user: %s\n", argv[1]);
+            fprintf(stderr, "No such user: %s\n", user);
             return 1;
         }
         uid = pwd->pw_uid;
