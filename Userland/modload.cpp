@@ -24,17 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <serenity.h>
 #include <string.h>
 
 int main(int argc, char** argv)
 {
-    if (argc != 2) {
-        printf("usage: %s <module.o>\n", argv[0]);
-        return 0;
-    }
+    const char* path = nullptr;
 
-    const char* path = argv[1];
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "Path to the module to load", "path");
+    args_parser.parse(argc, argv);
+
     int rc = module_load(path, strlen(path));
     if (rc < 0) {
         perror("module_load");
