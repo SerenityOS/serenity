@@ -1515,10 +1515,10 @@ RefPtr<Inode> ProcFSProxyInode::lookup(StringView name)
     return m_fd->inode()->lookup(name);
 }
 
-size_t ProcFSProxyInode::directory_entry_count() const
+KResultOr<size_t> ProcFSProxyInode::directory_entry_count() const
 {
     if (!m_fd->inode())
-        return 0;
+        return KResult(-EINVAL);
     return m_fd->inode()->directory_entry_count();
 }
 
@@ -1538,14 +1538,18 @@ KResult ProcFSInode::remove_child(const StringView& name)
     return KResult(-EPERM);
 }
 
-size_t ProcFSInode::directory_entry_count() const
+KResultOr<size_t> ProcFSInode::directory_entry_count() const
 {
     ASSERT(is_directory());
     size_t count = 0;
-    traverse_as_directory([&count](const FS::DirectoryEntry&) {
+    KResult result = traverse_as_directory([&count](const FS::DirectoryEntry&) {
         ++count;
         return true;
     });
+
+    if (result.is_error())
+        return result;
+
     return count;
 }
 

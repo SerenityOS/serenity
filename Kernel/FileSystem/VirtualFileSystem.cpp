@@ -731,7 +731,11 @@ KResult VFS::rmdir(StringView path, Custody& base)
     if (!parent_inode.metadata().may_write(*Process::current()))
         return KResult(-EACCES);
 
-    if (inode.directory_entry_count() != 2)
+    KResultOr<size_t> dir_count_result = inode.directory_entry_count();
+    if (dir_count_result.is_error())
+        return dir_count_result.result();
+
+    if (dir_count_result.value() != 2)
         return KResult(-ENOTEMPTY);
 
     if (custody.is_readonly())
