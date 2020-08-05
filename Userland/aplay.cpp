@@ -27,26 +27,29 @@
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavLoader.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    const char* path = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "Path to WAV file", "path");
+    args_parser.parse(argc, argv);
+
     Core::EventLoop loop;
-    if (argc < 2) {
-        fprintf(stderr, "Need a WAV to play\n");
-        return 1;
-    }
 
     auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
-    Audio::WavLoader loader(argv[1]);
+    Audio::WavLoader loader(path);
     if (loader.has_error()) {
         fprintf(stderr, "Failed to load WAV file: %s\n", loader.error_string());
         return 1;
     }
 
-    printf("\033[34;1m Playing\033[0m: %s\n", argv[1]);
+    printf("\033[34;1m Playing\033[0m: %s\n", path);
     printf("\033[34;1m  Format\033[0m: %u Hz, %u-bit, %s\n",
         loader.sample_rate(),
         loader.bits_per_sample(),
