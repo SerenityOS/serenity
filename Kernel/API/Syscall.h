@@ -342,6 +342,7 @@ struct SC_setkeymap_params {
     Userspace<const u32*> shift_map;
     Userspace<const u32*> alt_map;
     Userspace<const u32*> altgr_map;
+    StringArgument map_name;
 };
 
 struct SC_create_thread_params {
