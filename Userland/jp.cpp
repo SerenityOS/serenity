@@ -28,6 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -46,13 +47,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2) {
-        fprintf(stderr, "usage: jp <file>\n");
-        return 0;
-    }
-    auto file = Core::File::construct(argv[1]);
+    const char* path = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "Path to JSON file", "path");
+    args_parser.parse(argc, argv);
+
+    auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file->error_string());
+        fprintf(stderr, "Couldn't open %s for reading: %s\n", path, file->error_string());
         return 1;
     }
 
