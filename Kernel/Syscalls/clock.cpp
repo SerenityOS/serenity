@@ -134,7 +134,7 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_
     }
 }
 
-int Process::sys$gettimeofday(timeval* user_tv)
+int Process::sys$gettimeofday(Userspace<timeval*> user_tv)
 {
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(user_tv))
