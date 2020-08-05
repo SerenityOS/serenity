@@ -223,7 +223,7 @@ public:
     [[noreturn]] void sys$exit(int status);
     int sys$sigreturn(RegisterState& registers);
     pid_t sys$waitid(Userspace<const Syscall::SC_waitid_params*>);
-    void* sys$mmap(const Syscall::SC_mmap_params*);
+    void* sys$mmap(Userspace<const Syscall::SC_mmap_params*>);
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(const Syscall::SC_set_mmap_name_params*);
     int sys$mprotect(void*, size_t, int prot);
