@@ -427,7 +427,7 @@ struct SC_unveil_params {
 struct SC_waitid_params {
     int idtype;
     int id;
-    struct siginfo* infop;
+    Userspace<struct siginfo*> infop;
     int options;
 };
 
