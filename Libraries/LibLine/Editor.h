@@ -61,8 +61,10 @@ struct Configuration {
         Eager,
     };
     enum OperationMode {
+        Unset,
         Full,
         NoEscapeSequences,
+        NonInteractive,
     };
 
     Configuration()
@@ -82,7 +84,7 @@ struct Configuration {
 
     RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
     TokenSplitMechanism split_mechanism { TokenSplitMechanism::Spaces };
-    OperationMode operation_mode { OperationMode::Full };
+    OperationMode operation_mode { OperationMode::Unset };
 };
 
 class Editor : public Core::Object {
