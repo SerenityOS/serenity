@@ -222,7 +222,7 @@ public:
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
     int sys$sigreturn(RegisterState& registers);
-    pid_t sys$waitid(const Syscall::SC_waitid_params*);
+    pid_t sys$waitid(Userspace<const Syscall::SC_waitid_params*>);
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(const Syscall::SC_set_mmap_name_params*);
