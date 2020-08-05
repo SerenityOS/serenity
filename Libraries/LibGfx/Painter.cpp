@@ -691,12 +691,13 @@ void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const In
 template<bool has_alpha_channel, typename GetPixel>
 ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, const IntRect& dst_rect, const Gfx::Bitmap& source, int hfactor, int vfactor, GetPixel get_pixel, float opacity)
 {
-    u8 src_alpha = opacity * 255;
+    bool has_opacity = opacity != 1.0f;
     for (int y = source.rect().top(); y <= source.rect().bottom(); ++y) {
         int dst_y = dst_rect.y() + y * vfactor;
         for (int x = source.rect().left(); x <= source.rect().right(); ++x) {
             auto src_pixel = get_pixel(source, x, y);
-            src_pixel.set_alpha(src_alpha);
+            if (has_opacity)
+                src_pixel.set_alpha(src_pixel.alpha() * opacity);
             for (int yo = 0; yo < vfactor; ++yo) {
                 auto* scanline = (Color*)target.scanline(dst_y + yo);
                 int dst_x = dst_rect.x() + x * hfactor;
@@ -726,7 +727,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const IntRe
         return do_draw_integer_scaled_bitmap<has_alpha_channel>(target, dst_rect, source, hfactor, vfactor, get_pixel, opacity);
     }
 
-    u8 src_alpha = opacity * 255;
+    bool has_opacity = opacity != 1.0f;
 
     for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
         auto* scanline = (Color*)target.scanline(y);
@@ -734,8 +735,8 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, const IntRe
             auto scaled_x = ((x - dst_rect.x()) * hscale) >> 16;
             auto scaled_y = ((y - dst_rect.y()) * vscale) >> 16;
             auto src_pixel = get_pixel(source, scaled_x, scaled_y);
-            src_pixel.set_alpha(src_alpha);
-
+            if (has_opacity)
+                src_pixel.set_alpha(src_pixel.alpha() * opacity);
             if constexpr (has_alpha_channel) {
                 scanline[x] = scanline[x].blend(src_pixel);
             } else
