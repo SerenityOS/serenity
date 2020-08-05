@@ -1659,7 +1659,7 @@ void TextEditor::set_document(TextDocument& document)
     for (size_t i = 0; i < m_document->line_count(); ++i) {
         m_line_visual_data.append(make<LineVisualData>());
     }
-    m_cursor = { 0, 0 };
+    set_cursor(0, 0);
     if (has_selection())
         m_selection.clear();
     recompute_all_visual_lines();
