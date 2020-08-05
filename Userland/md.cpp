@@ -27,6 +27,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibMarkdown/Document.h>
 #include <stdio.h>
@@ -42,14 +43,12 @@ int main(int argc, char* argv[])
     const char* file_name = nullptr;
     bool html = false;
 
-    for (int i = 1; i < argc; i++)
-        if (strcmp(argv[i], "--html") == 0)
-            html = true;
-        else
-            file_name = argv[i];
+    Core::ArgsParser args_parser;
+    args_parser.add_option(html, "Render to HTML rather than for the terminal", "html", 'H');
+    args_parser.add_positional_argument(file_name, "Path to Markdown file", "path", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
 
     auto file = Core::File::construct();
-    ;
     bool success;
     if (file_name == nullptr) {
         success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescription::No);
