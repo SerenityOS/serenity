@@ -28,16 +28,17 @@
 
 namespace Gfx {
 
-void DisjointRectSet::add(const IntRect& new_rect)
+bool DisjointRectSet::add_no_shatter(const IntRect& new_rect)
 {
+    if (new_rect.is_empty())
+        return false;
     for (auto& rect : m_rects) {
         if (rect.contains(new_rect))
-            return;
+            return false;
     }
 
     m_rects.append(new_rect);
-    if (m_rects.size() > 1)
-        shatter();
+    return true;
 }
 
 void DisjointRectSet::shatter()
@@ -70,6 +71,115 @@ void DisjointRectSet::shatter()
     next_pass:
         swap(output, m_rects);
     } while (pass_had_intersections);
+}
+
+void DisjointRectSet::move_by(int dx, int dy)
+{
+    for (auto& r : m_rects)
+        r.move_by(dx, dy);
+}
+
+bool DisjointRectSet::contains(const IntRect& rect) const
+{
+    if (is_empty() || rect.is_empty())
+        return false;
+
+    // TODO: This could use some optimization
+    DisjointRectSet remainder(rect);
+    for (auto& r : m_rects) {
+        auto shards = remainder.shatter(r);
+        if (shards.is_empty())
+            return true;
+        remainder = move(shards);
+    }
+    return false;
+}
+
+bool DisjointRectSet::intersects(const IntRect& rect) const
+{
+    for (auto& r : m_rects) {
+        if (r.intersects(rect))
+            return true;
+    }
+    return false;
+}
+
+bool DisjointRectSet::intersects(const DisjointRectSet& rects) const
+{
+    if (this == &rects)
+        return true;
+
+    for (auto& r : m_rects) {
+        for (auto& r2 : rects.m_rects) {
+            if (r.intersects(r2))
+                return true;
+        }
+    }
+    return false;
+}
+
+DisjointRectSet DisjointRectSet::intersected(const IntRect& rect) const
+{
+    DisjointRectSet intersected_rects;
+    intersected_rects.m_rects.ensure_capacity(m_rects.capacity());
+    for (auto& r : m_rects) {
+        auto intersected_rect = r.intersected(rect);
+        if (!intersected_rect.is_empty())
+            intersected_rects.m_rects.append(intersected_rect);
+    }
+    // Since there should be no overlaps, we don't need to call shatter()
+    return intersected_rects;
+}
+
+DisjointRectSet DisjointRectSet::intersected(const DisjointRectSet& rects) const
+{
+    if (&rects == this)
+        return clone();
+    if (is_empty() || rects.is_empty())
+        return {};
+
+    DisjointRectSet intersected_rects;
+    intersected_rects.m_rects.ensure_capacity(m_rects.capacity());
+    for (auto& r : m_rects) {
+        for (auto& r2 : rects.m_rects) {
+            auto intersected_rect = r.intersected(r2);
+            if (!intersected_rect.is_empty())
+                intersected_rects.m_rects.append(intersected_rect);
+        }
+    }
+    // Since there should be no overlaps, we don't need to call shatter()
+    return intersected_rects;
+}
+
+DisjointRectSet DisjointRectSet::shatter(const IntRect& hammer) const
+{
+    if (hammer.is_empty())
+        return clone();
+
+    DisjointRectSet shards;
+    for (auto& rect : m_rects) {
+        for (auto& shard : rect.shatter(hammer))
+            shards.add_no_shatter(shard);
+    }
+    // Since there should be no overlaps, we don't need to call shatter()
+    return shards;
+}
+
+DisjointRectSet DisjointRectSet::shatter(const DisjointRectSet& hammer) const
+{
+    if (this == &hammer)
+        return {};
+    if (hammer.is_empty() || !intersects(hammer))
+        return clone();
+
+    // TODO: This could use some optimization
+    auto shards = clone();
+    for (auto& hammer_rect : hammer.m_rects) {
+        auto shattered = shards.shatter(hammer_rect);
+        shards = move(shattered);
+    }
+    // Since there should be no overlaps, we don't need to call shatter()
+    return shards;
 }
 
 }
