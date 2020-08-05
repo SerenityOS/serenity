@@ -24,10 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -37,14 +36,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2) {
-        printf("usage: realpath <path>\n");
-        return 1;
-    }
+    const char* path;
 
-    char* value = realpath(argv[1], nullptr);
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "Path to resolve", "path");
+    args_parser.parse(argc, argv);
+
+    char* value = realpath(path, nullptr);
     if (value == nullptr) {
-        printf("realpath() error: %s\n", strerror(errno));
+        perror("realpath");
         return 1;
     }
     printf("%s\n", value);
