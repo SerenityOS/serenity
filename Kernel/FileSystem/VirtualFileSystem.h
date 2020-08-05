@@ -126,7 +126,7 @@ private:
 
     bool is_vfs_root(InodeIdentifier) const;
 
-    void traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
+    KResult traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntry&)>);
 
     Mount* find_mount_for_host(Inode&);
     Mount* find_mount_for_host(InodeIdentifier);

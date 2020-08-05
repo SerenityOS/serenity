@@ -187,13 +187,17 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
 
     auto temp_buffer = ByteBuffer::create_uninitialized(size_to_allocate);
     BufferStream stream(temp_buffer);
-    VFS::the().traverse_directory_inode(*m_inode, [&stream](auto& entry) {
+    KResult result = VFS::the().traverse_directory_inode(*m_inode, [&stream](auto& entry) {
         stream << (u32)entry.inode.index();
         stream << (u8)entry.file_type;
         stream << (u32)entry.name_length;
         stream << entry.name;
         return true;
     });
+
+    if (result.is_error())
+        result.error();
+
     stream.snip();
 
     if (static_cast<size_t>(size) < temp_buffer.size())
