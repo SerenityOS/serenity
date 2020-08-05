@@ -72,16 +72,16 @@ TEST_CASE(convert_to_int)
     auto value = AK::StringUtils::convert_to_int(StringView());
     EXPECT(!value.has_value());
 
-    AK::StringUtils::convert_to_int("");
+    value = AK::StringUtils::convert_to_int("");
     EXPECT(!value.has_value());
 
-    AK::StringUtils::convert_to_int("a");
+    value = AK::StringUtils::convert_to_int("a");
     EXPECT(!value.has_value());
 
-    AK::StringUtils::convert_to_int("+");
+    value = AK::StringUtils::convert_to_int("+");
     EXPECT(!value.has_value());
 
-    AK::StringUtils::convert_to_int("-");
+    value = AK::StringUtils::convert_to_int("-");
     EXPECT(!value.has_value());
 
     auto actual = AK::StringUtils::convert_to_int("0");
@@ -133,7 +133,7 @@ TEST_CASE(convert_to_uint)
     value = AK::StringUtils::convert_to_uint("+1");
     EXPECT(!value.has_value());
 
-    AK::StringUtils::convert_to_uint("-1");
+    value = AK::StringUtils::convert_to_uint("-1");
     EXPECT(!value.has_value());
 
     auto actual = AK::StringUtils::convert_to_uint("0");
