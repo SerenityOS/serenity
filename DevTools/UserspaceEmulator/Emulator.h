@@ -137,6 +137,7 @@ private:
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
     int virt$sleep(unsigned);
     int virt$getpgrp();
+    int virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
 
