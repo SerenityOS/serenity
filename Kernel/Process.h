@@ -321,7 +321,7 @@ public:
     int sys$module_unload(const char* name, size_t name_length);
     int sys$profiling_enable(pid_t);
     int sys$profiling_disable(pid_t);
-    int sys$futex(const Syscall::SC_futex_params*);
+    int sys$futex(Userspace<const Syscall::SC_futex_params*>);
     int sys$set_thread_boost(int tid, int amount);
     int sys$set_process_boost(pid_t, int amount);
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
@@ -688,7 +688,7 @@ private:
     VeilState m_veil_state { VeilState::None };
     Vector<UnveiledPath> m_unveiled_paths;
 
-    WaitQueue& futex_queue(i32*);
+    WaitQueue& futex_queue(Userspace<const i32*>);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;

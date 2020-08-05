@@ -331,10 +331,10 @@ struct SC_getpeername_params {
 };
 
 struct SC_futex_params {
-    i32* userspace_address;
+    Userspace<const i32*> userspace_address;
     int futex_op;
     i32 val;
-    const timespec* timeout;
+    Userspace<const timespec*> timeout;
 };
 
 struct SC_setkeymap_params {
