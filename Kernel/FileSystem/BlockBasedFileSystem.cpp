@@ -261,7 +261,8 @@ void BlockBasedFS::flush_specific_block_if_needed(unsigned index)
         if (entry.is_dirty && entry.block_index == index) {
             u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
             file_description().seek(base_offset, SEEK_SET);
-            file_description().write(entry.data, block_size());
+            // FIXME: Should this error path be surfaced somehow?
+            (void)file_description().write(entry.data, block_size());
             entry.is_dirty = false;
         }
     });
@@ -278,7 +279,8 @@ void BlockBasedFS::flush_writes_impl()
             return;
         u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
         file_description().seek(base_offset, SEEK_SET);
-        file_description().write(entry.data, block_size());
+        // FIXME: Should this error path be surfaced somehow?
+        (void)file_description().write(entry.data, block_size());
         ++count;
         entry.is_dirty = false;
     });
