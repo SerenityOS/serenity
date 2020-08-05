@@ -250,6 +250,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
+    case SC_getpgrp:
+        return virt$getpgrp();
     case SC_execve:
         return virt$execve(arg1);
     case SC_sleep:
@@ -1232,6 +1234,11 @@ void Emulator::setup_signal_trampoline()
 
     m_signal_trampoline = trampoline_region->base();
     mmu().add_region(move(trampoline_region));
+}
+
+int Emulator::virt$getpgrp()
+{
+    return syscall(SC_getpgrp);
 }
 
 }
