@@ -24,14 +24,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/StringBuilder.h>
 #include "BookmarksBarWidget.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include "WindowActions.h"
+#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -44,10 +45,17 @@
 
 namespace Browser {
 
-static const char* bookmarks_filename = "/home/anon/bookmarks.json";
 String g_home_url;
 URL url_from_user_input(const String& input);
 bool g_multi_process = false;
+
+static String bookmarks_file_path()
+{
+    StringBuilder builder;
+    builder.append(Core::StandardPaths::config_directory());
+    builder.append("/bookmarks.json");
+    return builder.to_string();
+}
 
 }
 
@@ -118,7 +126,7 @@ int main(int argc, char** argv)
     Browser::g_home_url = m_config->read_entry("Preferences", "Home", "about:blank");
 
     bool bookmarksbar_enabled = true;
-    auto bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_filename, bookmarksbar_enabled);
+    auto bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), bookmarksbar_enabled);
 
     auto window = GUI::Window::construct();
     window->resize(640, 480);
