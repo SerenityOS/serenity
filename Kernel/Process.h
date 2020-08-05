@@ -296,7 +296,7 @@ public:
     int sys$getpeername(const Syscall::SC_getpeername_params*);
     int sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
     int sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
-    int sys$create_thread(void* (*)(void*), const Syscall::SC_create_thread_params*);
+    int sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
     void sys$exit_thread(void*);
     int sys$join_thread(int tid, void** exit_value);
     int sys$detach_thread(int tid);
