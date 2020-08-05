@@ -27,6 +27,7 @@
 #include <AK/NumberFormat.h>
 #include <AK/SharedBuffer.h>
 #include <AK/URL.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
@@ -34,15 +35,15 @@
 
 int main(int argc, char** argv)
 {
-    if (argc != 2) {
-        printf("usage: %s <url>\n", argv[0]);
-        return 0;
-    }
+    const char* url_str = nullptr;
 
-    String url_string = argv[1];
-    URL url(url_string);
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(url_str, "URL to download from", "url");
+    args_parser.parse(argc, argv);
+
+    URL url(url_str);
     if (!url.is_valid()) {
-        fprintf(stderr, "'%s' is not a valid URL\n", url_string.characters());
+        fprintf(stderr, "'%s' is not a valid URL\n", url_str);
         return 1;
     }
 
@@ -51,7 +52,7 @@ int main(int argc, char** argv)
 
     auto download = protocol_client->start_download(url.to_string());
     if (!download) {
-        fprintf(stderr, "Failed to start download for '%s'\n", url_string.characters());
+        fprintf(stderr, "Failed to start download for '%s'\n", url_str);
         return 1;
     }
     u32 previous_downloaded_size { 0 };
