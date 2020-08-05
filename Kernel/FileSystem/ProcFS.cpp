@@ -33,6 +33,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Console.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -85,6 +86,7 @@ enum ProcFileType {
     FI_Root_inodes,
     FI_Root_dmesg,
     FI_Root_interrupts,
+    FI_Root_keymap,
     FI_Root_pci,
     FI_Root_devices,
     FI_Root_uptime,
@@ -369,6 +371,15 @@ Optional<KBuffer> procfs$interrupts(InodeIdentifier)
         obj.add("call_count", (unsigned)handler.get_invoking_count());
     });
     array.finish();
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$keymap(InodeIdentifier)
+{
+    KBufferBuilder builder;
+    JsonObjectSerializer<KBufferBuilder> json { builder };
+    json.add("keymap", KeyboardDevice::the().keymap_name());
+    json.finish();
     return builder.build();
 }
 
@@ -1572,6 +1583,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_self] = { "self", FI_Root_self, false, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, false, procfs$pci };
     m_entries[FI_Root_interrupts] = { "interrupts", FI_Root_interrupts, false, procfs$interrupts };
+    m_entries[FI_Root_keymap] = { "keymap", FI_Root_keymap, false, procfs$keymap };
     m_entries[FI_Root_devices] = { "devices", FI_Root_devices, false, procfs$devices };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, true, procfs$cmdline };
