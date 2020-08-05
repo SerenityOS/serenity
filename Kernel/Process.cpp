@@ -639,7 +639,8 @@ void Process::finalize()
         if (!description_or_error.is_error()) {
             auto& description = description_or_error.value();
             auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
-            description->write(json.data(), json.size());
+            // FIXME: Should this error path be surfaced somehow?
+            (void)description->write(json.data(), json.size());
         }
     }
 
