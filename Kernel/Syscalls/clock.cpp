@@ -76,7 +76,7 @@ int Process::sys$clock_settime(clockid_t clock_id, timespec* user_ts)
     return 0;
 }
 
-int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_params)
+int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -118,8 +118,7 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_
                     return -EFAULT;
                 }
 
-                timespec remaining_sleep;
-                memset(&remaining_sleep, 0, sizeof(timespec));
+                timespec remaining_sleep = {};
                 remaining_sleep.tv_sec = ticks_left / TimeManagement::the().ticks_per_second();
                 ticks_left -= remaining_sleep.tv_sec * TimeManagement::the().ticks_per_second();
                 remaining_sleep.tv_nsec = ticks_left * 1000000000 / TimeManagement::the().ticks_per_second();

@@ -282,8 +282,8 @@ struct SC_poll_params {
 struct SC_clock_nanosleep_params {
     int clock_id;
     int flags;
-    const struct timespec* requested_sleep;
-    struct timespec* remaining_sleep;
+    Userspace<const struct timespec*> requested_sleep;
+    Userspace<struct timespec*> remaining_sleep;
 };
 
 struct SC_sendto_params {
