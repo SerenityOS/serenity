@@ -1562,7 +1562,7 @@ void Ext2FS::uncache_inode(InodeIndex index)
     m_inode_cache.remove(index);
 }
 
-size_t Ext2FSInode::directory_entry_count() const
+KResultOr<size_t> Ext2FSInode::directory_entry_count() const
 {
     ASSERT(is_directory());
     LOCKER(m_lock);

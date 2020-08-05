@@ -794,13 +794,17 @@ void Plan9FSInode::flush_metadata()
     // Do nothing.
 }
 
-size_t Plan9FSInode::directory_entry_count() const
+KResultOr<size_t> Plan9FSInode::directory_entry_count() const
 {
     size_t count = 0;
-    traverse_as_directory([&count](const FS::DirectoryEntry&) {
+    KResult result = traverse_as_directory([&count](const FS::DirectoryEntry&) {
         count++;
         return true;
     });
+
+    if (result.is_error())
+        return result;
+
     return count;
 }
 

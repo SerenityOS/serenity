@@ -219,7 +219,7 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
     return fs().get_inode(it->value.entry.inode);
 }
 
-size_t TmpFSInode::directory_entry_count() const
+KResultOr<size_t> TmpFSInode::directory_entry_count() const
 {
     LOCKER(m_lock, Lock::Mode::Shared);
     ASSERT(is_directory());
