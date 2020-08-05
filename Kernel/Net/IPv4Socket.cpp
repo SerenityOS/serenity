@@ -285,7 +285,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
             packet = m_receive_queue.take_first();
             m_can_read = !m_receive_queue.is_empty();
 #ifdef IPV4_SOCKET_DEBUG
-            dbg() << "IPv4Socket(" << this << "): recvfrom without blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size_slow();
+            dbg() << "IPv4Socket(" << this << "): recvfrom without blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size();
 #endif
         }
     }
@@ -311,7 +311,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         packet = m_receive_queue.take_first();
         m_can_read = !m_receive_queue.is_empty();
 #ifdef IPV4_SOCKET_DEBUG
-        dbg() << "IPv4Socket(" << this << "): recvfrom with blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size_slow();
+        dbg() << "IPv4Socket(" << this << "): recvfrom with blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size();
 #endif
     }
     ASSERT(packet.data.has_value());
@@ -380,8 +380,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
         m_receive_buffer.write(m_scratch_buffer.value().data(), nreceived_or_error.value());
         m_can_read = !m_receive_buffer.is_empty();
     } else {
-        // FIXME: Maybe track the number of packets so we don't have to walk the entire packet queue to count them..
-        if (m_receive_queue.size_slow() > 2000) {
+        if (m_receive_queue.size() > 2000) {
             dbg() << "IPv4Socket(" << this << "): did_receive refusing packet since queue is full.";
             return false;
         }
@@ -393,7 +392,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     if (buffer_mode() == BufferMode::Bytes)
         dbg() << "IPv4Socket(" << this << "): did_receive " << packet_size << " bytes, total_received=" << m_bytes_received;
     else
-        dbg() << "IPv4Socket(" << this << "): did_receive " << packet_size << " bytes, total_received=" << m_bytes_received << ", packets in queue: " << m_receive_queue.size_slow();
+        dbg() << "IPv4Socket(" << this << "): did_receive " << packet_size << " bytes, total_received=" << m_bytes_received << ", packets in queue: " << m_receive_queue.size();
 #endif
     return true;
 }
