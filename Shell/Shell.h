@@ -218,6 +218,7 @@ private:
     Vector<LocalFrame> m_local_frames;
 
     HashMap<String, String> m_aliases;
+    bool m_is_interactive { true };
 };
 
 static constexpr bool is_word_character(char c)

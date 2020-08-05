@@ -58,7 +58,7 @@ extern char** environ;
 
 void Shell::print_path(const String& path)
 {
-    if (s_disable_hyperlinks) {
+    if (s_disable_hyperlinks || !m_is_interactive) {
         printf("%s", path.characters());
         return;
     }
@@ -1092,9 +1092,17 @@ Shell::Shell()
     int rc = gethostname(hostname, Shell::HostNameSize);
     if (rc < 0)
         perror("gethostname");
-    rc = ttyname_r(0, ttyname, Shell::TTYNameSize);
-    if (rc < 0)
-        perror("ttyname_r");
+
+    auto istty = isatty(STDIN_FILENO);
+    m_is_interactive = istty;
+
+    if (istty) {
+        rc = ttyname_r(0, ttyname, Shell::TTYNameSize);
+        if (rc < 0)
+            perror("ttyname_r");
+    } else {
+        ttyname[0] = 0;
+    }
 
     {
         auto* cwd = getcwd(nullptr, 0);
