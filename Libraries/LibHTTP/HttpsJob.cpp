@@ -88,7 +88,10 @@ void HttpsJob::shutdown()
 
 void HttpsJob::set_certificate(String certificate, String private_key)
 {
-    if (!m_socket->add_client_key(ByteBuffer::wrap(certificate.characters(), certificate.length()), ByteBuffer::wrap(private_key.characters(), private_key.length()))) {
+    if (!m_socket->add_client_key(
+            ByteBuffer::wrap(const_cast<char*>(certificate.characters()), certificate.length()),
+            ByteBuffer::wrap(const_cast<char*>(private_key.characters()), private_key.length()))) {
+
         dbg() << "LibHTTP: Failed to set a client certificate";
         // FIXME: Do something about this failure
         ASSERT_NOT_REACHED();

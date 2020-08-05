@@ -265,7 +265,7 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
                     if (length == 1)
                         cert.version = buffer[position];
                 }
-                // print_buffer(ByteBuffer::wrap(buffer + position, length));
+                // print_buffer(ByteBuffer::wrap(const_cast<u8*>(buffer) + position, length));
                 break;
             case 0x03:
                 if (_asn1_is_field_present(fields, Constants::pk_id)) {

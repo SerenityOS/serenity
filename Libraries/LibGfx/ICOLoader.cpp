@@ -170,7 +170,7 @@ static size_t find_largest_image(const ICOLoadingContext& context)
     size_t max_area = 0;
     size_t index = 0;
     size_t largest_index = 0;
-    for(const auto& desc : context.images) {
+    for (const auto& desc : context.images) {
         if (desc.width * desc.height > max_area) {
             max_area = desc.width * desc.height;
             largest_index = index;
@@ -182,7 +182,7 @@ static size_t find_largest_image(const ICOLoadingContext& context)
 
 static bool load_ico_directory(ICOLoadingContext& context)
 {
-    auto buffer = ByteBuffer::wrap(context.data, context.data_size);
+    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.data), context.data_size);
     auto stream = BufferStream(buffer);
     auto image_count = decode_ico_header(stream);
     if (!image_count.has_value() || image_count.value() == 0) {
@@ -280,7 +280,7 @@ static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
     }
 
     // Mask is 1bpp, and each row must be 4-byte aligned
-    size_t mask_row_len = align_up_to(align_up_to(desc.width, 8)/8, 4);
+    size_t mask_row_len = align_up_to(align_up_to(desc.width, 8) / 8, 4);
     size_t required_len = desc.height * (desc.width * sizeof(BMP_ARGB) + mask_row_len);
     size_t available_len = desc.size - sizeof(info);
     if (required_len > available_len) {
@@ -408,7 +408,7 @@ bool ICOImageDecoderPlugin::set_nonvolatile()
 
 bool ICOImageDecoderPlugin::sniff()
 {
-    auto buffer = ByteBuffer::wrap(m_context->data, m_context->data_size);
+    auto buffer = ByteBuffer::wrap(const_cast<u8*>(m_context->data), m_context->data_size);
     BufferStream stream(buffer);
     return decode_ico_header(stream).has_value();
 }
