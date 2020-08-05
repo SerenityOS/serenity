@@ -110,6 +110,8 @@ On Linux, QEMU is significantly faster if it's able to use KVM. The run script w
 
 Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/Documentation/INSTALL.md)
 
+Outside of QEMU, Serenity will run on VirtualBox. If you're curious, see how to [install Serenity on VirtualBox.](https://github.com/SerenityOS/serenity/blob/master/Documentation/VirtualBox.md)
+
 Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply run `make install`, `make image`, `make run` again. CMake will only rebuild those parts that have been updated.
 
 You may also want to replace `make` with `ninja` in the above commands for some additional build speed benefits. To do this, go to an empty directory at the root and call `cmake .. -G Ninja` inside that directory. You might either create a new directory or reuse the existing `Build` directory after cleaning it.
