@@ -126,9 +126,9 @@ String JsonParser::consume_quoted_string()
             sb.append(consume());
             sb.append(consume());
 
-            auto code_points = AK::StringUtils::convert_to_uint_from_hex(sb.to_string());
-            if (code_points.has_value()) {
-                final_sb.append_code_points(code_points.value());
+            auto codepoint = AK::StringUtils::convert_to_uint_from_hex(sb.to_string());
+            if (codepoint.has_value()) {
+                final_sb.append_codepoint(codepoint.value());
             } else {
                 final_sb.append('?');
             }

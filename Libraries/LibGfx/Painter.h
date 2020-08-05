@@ -81,7 +81,7 @@ public:
     void draw_glyph(const IntPoint&, u32, Color);
     void draw_glyph(const IntPoint&, u32, const Font&, Color);
     void draw_emoji(const IntPoint&, const Gfx::Bitmap&, const Font&);
-    void draw_glyph_or_emoji(const IntPoint&, u32 code_points, const Font&, Color);
+    void draw_glyph_or_emoji(const IntPoint&, u32 codepoint, const Font&, Color);
 
     static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&);
     static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&&);

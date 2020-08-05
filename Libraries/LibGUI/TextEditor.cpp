@@ -172,7 +172,7 @@ TextPosition TextEditor::text_position_at(const Gfx::IntPoint& a_position) const
                 int glyph_x = 0;
                 size_t i = 0;
                 for (; i < view.length(); ++i) {
-                    int advance = font().glyph_width(view.code_pointss()[i]) + font().glyph_spacing();
+                    int advance = font().glyph_width(view.codepoints()[i]) + font().glyph_spacing();
                     if ((glyph_x + (advance / 2)) >= position.x())
                         break;
                     glyph_x += advance;
@@ -465,7 +465,7 @@ void TextEditor::paint_event(PaintEvent& event)
             } else {
                 Gfx::IntRect character_rect = { visual_line_rect.location(), { 0, line_height() } };
                 for (size_t i = 0; i < visual_line_text.length(); ++i) {
-                    u32 code_points = visual_line_text.substring_view(i, 1).code_pointss()[0];
+                    u32 codepoint = visual_line_text.substring_view(i, 1).codepoints()[0];
                     const Gfx::Font* font = &this->font();
                     Color color;
                     Optional<Color> background_color;
@@ -482,7 +482,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         underline = span.is_underlined;
                         break;
                     }
-                    character_rect.set_width(font->glyph_width(code_points) + font->glyph_spacing());
+                    character_rect.set_width(font->glyph_width(codepoint) + font->glyph_spacing());
                     if (background_color.has_value())
                         painter.fill_rect(character_rect, background_color.value());
                     painter.draw_text(character_rect, visual_line_text.substring_view(i, 1), *font, m_text_alignment, color);
@@ -524,9 +524,9 @@ void TextEditor::paint_event(PaintEvent& event)
 
                     painter.fill_rect(selection_rect, background_color);
 
-                    if (visual_line_text.code_pointss()) {
+                    if (visual_line_text.codepoints()) {
                         Utf32View visual_selected_text {
-                            visual_line_text.code_pointss() + start_of_selection_within_visual_line,
+                            visual_line_text.codepoints() + start_of_selection_within_visual_line,
                             end_of_selection_within_visual_line - start_of_selection_within_visual_line
                         };
 
@@ -660,7 +660,7 @@ void TextEditor::sort_selected_lines()
     auto end = lines.begin() + (int)last_line + 1;
 
     quick_sort(start, end, [](auto& a, auto& b) {
-        return strcmp_utf32(a.code_pointss(), b.code_pointss(), min(a.length(), b.length())) < 0;
+        return strcmp_utf32(a.codepoints(), b.codepoints(), min(a.length(), b.length())) < 0;
     });
 
     did_change();
@@ -939,7 +939,7 @@ void TextEditor::keydown_event(KeyEvent& event)
 
     if (is_editable() && !event.ctrl() && !event.alt() && event.code_point() != 0) {
         StringBuilder sb;
-        sb.append_code_points(event.code_point());
+        sb.append_codepoint(event.code_point());
 
         insert_at_cursor_or_replace_selection(sb.to_string());
         return;
@@ -1525,8 +1525,8 @@ void TextEditor::recompute_visual_lines(size_t line_index)
 
         auto glyph_spacing = font().glyph_spacing();
         for (size_t i = 0; i < line.length(); ++i) {
-            auto code_points = line.code_pointss()[i];
-            auto glyph_width = font().glyph_or_emoji_width(code_points);
+            auto codepoint = line.codepoints()[i];
+            auto glyph_width = font().glyph_or_emoji_width(codepoint);
             if ((line_width_so_far + glyph_width + glyph_spacing) > available_width) {
                 visual_data.visual_line_breaks.append(i);
                 line_width_so_far = glyph_width + glyph_spacing;
@@ -1555,7 +1555,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
     auto& visual_data = m_line_visual_data[line_index];
 
     for (auto visual_line_break : visual_data.visual_line_breaks) {
-        auto visual_line_view = Utf32View(line.code_pointss() + start_of_line, visual_line_break - start_of_line);
+        auto visual_line_view = Utf32View(line.codepoints() + start_of_line, visual_line_break - start_of_line);
         Gfx::IntRect visual_line_rect {
             visual_data.visual_rect.x(),
             visual_data.visual_rect.y() + ((int)visual_line_index * line_height()),
