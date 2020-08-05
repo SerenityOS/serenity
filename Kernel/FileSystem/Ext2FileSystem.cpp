@@ -1023,7 +1023,9 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     m_lookup_cache.remove(name);
 
     auto child_inode = fs().get_inode(child_id);
-    child_inode->decrement_link_count();
+    result = child_inode->decrement_link_count();
+    if (result.is_error())
+        return result;
 
     did_remove_child(name);
     return KSuccess;
