@@ -35,7 +35,7 @@ enum KSuccessTag {
     KSuccess
 };
 
-class KResult {
+class [[nodiscard]] KResult {
 public:
     ALWAYS_INLINE explicit KResult(int negative_e)
         : m_error(negative_e)
