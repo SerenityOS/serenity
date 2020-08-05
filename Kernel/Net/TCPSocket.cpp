@@ -138,7 +138,8 @@ void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
 {
     ASSERT(m_pending_release_for_accept.contains(socket->tuple()));
     m_pending_release_for_accept.remove(socket->tuple());
-    queue_connection_from(*socket);
+    // FIXME: Should we observe this error somehow?
+    (void)queue_connection_from(*socket);
 }
 
 TCPSocket::TCPSocket(int protocol)

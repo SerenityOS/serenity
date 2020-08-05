@@ -55,9 +55,8 @@ void TTY::set_default_termios()
 KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
-        KResult result = Process::current()->send_signal(SIGTTIN, nullptr);
-        if (result.is_error())
-            return result;
+        // FIXME: Should we propigate this error path somehow?
+        (void)Process::current()->send_signal(SIGTTIN, nullptr);
         return KResult(-EINTR);
     }
 
@@ -93,9 +92,8 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
 KResultOr<size_t> TTY::write(FileDescription&, size_t, const u8* buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
-        KResult result = Process::current()->send_signal(SIGTTOU, nullptr);
-        if (result.is_error())
-            return result;
+        // FIXME: Should we propigate this error path somehow?
+        (void)Process::current()->send_signal(SIGTTOU, nullptr);
         return KResult(-EINTR);
     }
 
@@ -255,7 +253,8 @@ void TTY::generate_signal(int signal)
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbg() << tty_name() << ": Send signal " << signal << " to " << process;
-        process.send_signal(signal, nullptr);
+        // FIXME: Should this error be propagated somehow?
+        (void)process.send_signal(signal, nullptr);
         return IterationDecision::Continue;
     });
 }

@@ -246,7 +246,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     for (size_t i = 0; i < m_fds.size(); ++i) {
         auto& description_and_flags = m_fds[i];
         if (description_and_flags.description() && description_and_flags.flags() & FD_CLOEXEC) {
-            description_and_flags.description()->close();
+            // FIXME: Should this error path be observed somehow?
+            (void)description_and_flags.description()->close();
             description_and_flags = {};
         }
     }
