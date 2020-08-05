@@ -250,11 +250,18 @@ void Editor::initialize()
     if (m_was_resized)
         get_terminal_size();
 
-    auto* term = getenv("TERM");
-    if (StringView { term }.starts_with("xterm"))
-        m_configuration.set(Configuration::Full);
-    else
-        m_configuration.set(Configuration::NoEscapeSequences);
+    if (m_configuration.operation_mode == Configuration::Unset) {
+        auto istty = isatty(STDIN_FILENO) && isatty(STDOUT_FILENO);
+        if (!istty) {
+            m_configuration.set(Configuration::NonInteractive);
+        } else {
+            auto* term = getenv("TERM");
+            if (StringView { term }.starts_with("xterm"))
+                m_configuration.set(Configuration::Full);
+            else
+                m_configuration.set(Configuration::NoEscapeSequences);
+        }
+    }
 
     // Because we use our own line discipline which includes echoing,
     // we disable ICANON and ECHO.
@@ -272,15 +279,26 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     initialize();
     m_is_editing = true;
 
-    if (m_configuration.operation_mode == Configuration::NoEscapeSequences) {
+    if (m_configuration.operation_mode == Configuration::NoEscapeSequences || m_configuration.operation_mode == Configuration::NonInteractive) {
         // Do not use escape sequences, instead, use LibC's getline.
         size_t size = 0;
         char* line = nullptr;
-        fputs(prompt.characters(), stderr);
-        size_t line_length = getline(&line, &size, stdin);
+        // Show the prompt only on interactive mode (NoEscapeSequences in this case).
+        if (m_configuration.operation_mode != Configuration::NonInteractive)
+            fputs(prompt.characters(), stderr);
+        auto line_length = getline(&line, &size, stdin);
+        // getline() returns -1 and sets errno=0 on EOF.
+        if (line_length == -1) {
+            if (line)
+                free(line);
+            if (errno == 0)
+                return Error::Eof;
+
+            return Error::ReadFailure;
+        }
         restore();
         if (line) {
-            String result { line, line_length, Chomp };
+            String result { line, (size_t)line_length, Chomp };
             free(line);
             return result;
         }
@@ -429,7 +447,10 @@ void Editor::handle_read_event()
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
     size_t consumed_code_pointss = 0;
 
-    enum Amount { Character, Word };
+    enum Amount {
+        Character,
+        Word,
+    };
     auto do_cursor_left = [&](Amount amount) {
         if (m_cursor > 0) {
             if (amount == Word) {
@@ -565,12 +586,12 @@ void Editor::handle_read_event()
                 ctrl_held = false;
                 continue;
             case 'D': // left
-		do_cursor_left(ctrl_held ? Word : Character);
+                do_cursor_left(ctrl_held ? Word : Character);
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'C': // right
-		do_cursor_right(ctrl_held ? Word : Character);
+                do_cursor_right(ctrl_held ? Word : Character);
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
