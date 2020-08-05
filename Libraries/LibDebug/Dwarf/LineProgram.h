@@ -26,12 +26,13 @@
 
 #pragma once
 
-#include <AK/BufferStream.h>
+#include <AK/Stream.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 
 class LineProgram {
 public:
-    explicit LineProgram(BufferStream& stream);
+    explicit LineProgram(InputMemoryStream& stream);
 
     struct LineInfo {
         u32 address { 0 };
@@ -97,7 +98,7 @@ private:
     static constexpr u16 DWARF_VERSION = 3;
     static constexpr u8 SPECIAL_OPCODES_BASE = 13;
 
-    BufferStream& m_stream;
+    InputMemoryStream& m_stream;
 
     size_t m_unit_offset { 0 };
     UnitHeader32 m_unit_header {};

@@ -28,7 +28,6 @@
 
 #include "CompilationUnit.h"
 #include "DwarfTypes.h"
-#include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>

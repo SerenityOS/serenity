@@ -26,7 +26,9 @@
 
 #include "LineProgram.h"
 
-LineProgram::LineProgram(BufferStream& stream)
+#include <AK/String.h>
+
+LineProgram::LineProgram(InputMemoryStream& stream)
     : m_stream(stream)
 {
     m_unit_offset = m_stream.offset();
@@ -38,7 +40,7 @@ LineProgram::LineProgram(BufferStream& stream)
 
 void LineProgram::parse_unit_header()
 {
-    m_stream.read_raw((u8*)&m_unit_header, sizeof(m_unit_header));
+    m_stream >> Bytes { &m_unit_header, sizeof(m_unit_header) };
 
     ASSERT(m_unit_header.version == DWARF_VERSION);
     ASSERT(m_unit_header.opcode_base == SPECIAL_OPCODES_BASE);
@@ -51,21 +53,23 @@ void LineProgram::parse_unit_header()
 void LineProgram::parse_source_directories()
 {
     m_source_directories.append(".");
-    while (m_stream.peek()) {
-        String directory;
-        m_stream >> directory;
+
+    String directory;
+    while (m_stream >> directory) {
 #ifdef DWARF_DEBUG
         dbg() << "directory: " << directory;
 #endif
         m_source_directories.append(move(directory));
     }
-    m_stream.advance(1);
+    m_stream.handle_error();
+    m_stream.discard_or_error(1);
+    ASSERT(!m_stream.handle_error());
 }
 
 void LineProgram::parse_source_files()
 {
     m_source_files.append({ ".", 0 });
-    while (m_stream.peek()) {
+    while (!m_stream.eof() && m_stream.peek_or_error()) {
         String file_name;
         m_stream >> file_name;
         size_t directory_index = 0;
@@ -78,8 +82,8 @@ void LineProgram::parse_source_files()
 #endif
         m_source_files.append({ file_name, directory_index });
     }
-    m_stream.advance(1);
-    ASSERT(!m_stream.handle_read_failure());
+    m_stream.discard_or_error(1);
+    ASSERT(!m_stream.handle_error());
 }
 
 void LineProgram::append_to_line_info()
@@ -129,7 +133,7 @@ void LineProgram::handle_extended_opcode()
 #ifdef DWARF_DEBUG
         dbg() << "SetDiscriminator";
 #endif
-        m_stream.advance(1);
+        m_stream.discard_or_error(1);
         break;
     }
     default:
