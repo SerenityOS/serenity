@@ -250,6 +250,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
+    case SC_access:
+        return virt$access(arg1, arg2, arg3);
     case SC_getcwd:
         return virt$getcwd(arg1, arg2);
     case SC_ttyname:
@@ -1266,6 +1268,12 @@ int Emulator::virt$getcwd(FlatPtr buffer, size_t buffer_size)
         return rc;
     mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
     return rc;
+}
+
+int Emulator::virt$access(FlatPtr path, size_t path_length, int type)
+{
+    auto host_path = mmu().copy_buffer_from_vm(path, path_length);
+    return syscall(SC_access, host_path.data(), host_path.size(), type);
 }
 
 }
