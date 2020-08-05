@@ -26,17 +26,19 @@
 
 #include <AK/LogStream.h>
 #include <AK/MappedFile.h>
+#include <LibCore/ArgsParser.h>
 #include <LibX86/Disassembler.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
-    if (argc == 1) {
-        fprintf(stderr, "usage: %s <binary>\n", argv[0]);
-        return 1;
-    }
+    const char* path = nullptr;
 
-    MappedFile file(argv[1]);
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
+    args_parser.parse(argc, argv);
+
+    MappedFile file(path);
     if (!file.is_valid()) {
         // Already printed some error message.
         return 1;
