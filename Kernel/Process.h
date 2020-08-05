@@ -303,7 +303,7 @@ public:
     int sys$set_thread_name(int tid, const char* buffer, size_t buffer_size);
     int sys$get_thread_name(int tid, char* buffer, size_t buffer_size);
     int sys$rename(const Syscall::SC_rename_params*);
-    int sys$mknod(const Syscall::SC_mknod_params*);
+    int sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
     int sys$shbuf_create(int, void** buffer);
     int sys$shbuf_allow_pid(int, pid_t peer_pid);
     int sys$shbuf_allow_all(int);
