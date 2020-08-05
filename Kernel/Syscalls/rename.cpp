@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-int Process::sys$rename(const Syscall::SC_rename_params* user_params)
+int Process::sys$rename(Userspace<const Syscall::SC_rename_params*> user_params)
 {
     REQUIRE_PROMISE(cpath);
     Syscall::SC_rename_params params;
