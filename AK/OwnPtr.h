@@ -137,7 +137,7 @@ public:
 
     bool operator!() const { return !m_ptr; }
 
-    T* leak_ptr()
+    [[nodiscard]] T* leak_ptr()
     {
         T* leaked_ptr = m_ptr;
         m_ptr = nullptr;
