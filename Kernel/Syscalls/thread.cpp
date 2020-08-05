@@ -33,7 +33,7 @@
 
 namespace Kernel {
 
-int Process::sys$create_thread(void* (*entry)(void*), const Syscall::SC_create_thread_params* user_params)
+int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::SC_create_thread_params*> user_params)
 {
     REQUIRE_PROMISE(thread);
     if (!validate_read((const void*)entry, sizeof(void*)))
@@ -45,13 +45,13 @@ int Process::sys$create_thread(void* (*entry)(void*), const Syscall::SC_create_t
 
     unsigned detach_state = params.m_detach_state;
     int schedule_priority = params.m_schedule_priority;
-    void* stack_location = params.m_stack_location;
+    Userspace<void*> stack_location = params.m_stack_location;
     unsigned stack_size = params.m_stack_size;
 
     if (!validate_write(stack_location, stack_size))
         return -EFAULT;
 
-    u32 user_stack_address = reinterpret_cast<u32>(stack_location) + stack_size;
+    u32 user_stack_address = reinterpret_cast<u32>(stack_location.ptr()) + stack_size;
 
     if (!MM.validate_user_stack(*this, VirtualAddress(user_stack_address - 4)))
         return -EFAULT;
