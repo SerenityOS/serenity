@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -57,10 +58,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2) {
-        printf("usage: ping <host>\n");
-        return 0;
-    }
+    const char* host = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(host, "Host to ping", "host");
+    args_parser.parse(argc, argv);
 
     int fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (fd < 0) {
@@ -87,9 +89,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto* hostent = gethostbyname(argv[1]);
+    auto* hostent = gethostbyname(host);
     if (!hostent) {
-        printf("Lookup failed for '%s'\n", argv[1]);
+        printf("Lookup failed for '%s'\n", host);
         return 1;
     }
 
