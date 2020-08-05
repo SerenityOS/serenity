@@ -26,6 +26,7 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <LibCore/ArgsParser.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -40,33 +41,34 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc < 2) {
-        printf("usage: chgrp <gid> <path>\n");
-        return 0;
-    }
+    const char* gid_arg = nullptr;
+    const char* path = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(gid_arg, "Group ID", "gid");
+    args_parser.add_positional_argument(path, "Path to file", "path");
+    args_parser.parse(argc, argv);
 
     gid_t new_gid = -1;
-    auto gid_arg = String(argv[1]);
 
-    if (gid_arg.is_empty()) {
+    if (String(gid_arg).is_empty()) {
         fprintf(stderr, "Empty gid option\n");
         return 1;
     }
 
-    auto number = gid_arg.to_uint();
-
+    auto number = String(gid_arg).to_uint();
     if (number.has_value()) {
         new_gid = number.value();
     } else {
-        auto* group = getgrnam(gid_arg.characters());
+        auto* group = getgrnam(gid_arg);
         if (!group) {
-            fprintf(stderr, "Unknown group '%s'\n", gid_arg.characters());
+            fprintf(stderr, "Unknown group '%s'\n", gid_arg);
             return 1;
         }
         new_gid = group->gr_gid;
     }
 
-    int rc = chown(argv[2], -1, new_gid);
+    int rc = chown(path, -1, new_gid);
     if (rc < 0) {
         perror("chgrp");
         return 1;
