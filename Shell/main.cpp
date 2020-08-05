@@ -85,7 +85,7 @@ int main(int argc, char** argv)
         Vector<u64> disowned_jobs;
         for (auto& job : jobs) {
             int wstatus = 0;
-            auto child_pid = waitpid(job.value->pid(), &wstatus, WNOHANG);
+            auto child_pid = waitpid(job.value->pid(), &wstatus, WNOHANG | WUNTRACED);
             if (child_pid < 0) {
                 if (errno == ECHILD) {
                     // The child process went away before we could process its death, just assume it exited all ok.
@@ -109,6 +109,7 @@ int main(int argc, char** argv)
                     job.value->set_has_exit(126);
                 } else if (WIFSTOPPED(wstatus)) {
                     job.value->unblock();
+                    job.value->set_is_suspended(true);
                 }
             }
             if (job.value->should_be_disowned())
