@@ -45,6 +45,7 @@ public:
     static NonnullRefPtr<StringImpl> create_uninitialized(size_t length, char*& buffer);
     static RefPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
     static RefPtr<StringImpl> create(const char* cstring, size_t length, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl> create(ReadonlyBytes, ShouldChomp = NoChomp);
     NonnullRefPtr<StringImpl> to_lowercase() const;
     NonnullRefPtr<StringImpl> to_uppercase() const;
 
