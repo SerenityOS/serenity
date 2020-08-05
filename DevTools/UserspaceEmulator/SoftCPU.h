@@ -241,6 +241,13 @@ public:
         }
     }
 
+    u32 eflags() const { return m_eflags; }
+    void set_eflags(ValueWithShadow<u32> eflags)
+    {
+        m_eflags = eflags.value();
+        m_flags_tainted = eflags.is_uninitialized();
+    }
+
     ValueWithShadow<u32> eax() const { return const_gpr32(X86::RegisterEAX); }
     ValueWithShadow<u32> ebx() const { return const_gpr32(X86::RegisterEBX); }
     ValueWithShadow<u32> ecx() const { return const_gpr32(X86::RegisterECX); }
