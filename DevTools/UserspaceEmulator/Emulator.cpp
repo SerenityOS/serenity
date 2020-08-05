@@ -250,6 +250,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
+    case SC_ttyname:
+        return virt$ttyname(arg1, arg2, arg3);
     case SC_getpgrp:
         return virt$getpgrp();
     case SC_execve:
@@ -1242,6 +1244,16 @@ void Emulator::setup_signal_trampoline()
 int Emulator::virt$getpgrp()
 {
     return syscall(SC_getpgrp);
+}
+
+int Emulator::virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size)
+{
+    auto host_buffer = ByteBuffer::create_zeroed(buffer_size);
+    int rc = syscall(SC_ttyname, fd, host_buffer.data(), host_buffer.size());
+    if (rc < 1)
+        return rc;
+    mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
+    return rc;
 }
 
 }
