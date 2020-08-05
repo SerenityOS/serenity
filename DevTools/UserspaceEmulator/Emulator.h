@@ -33,6 +33,7 @@
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Loader.h>
 #include <LibX86/Instruction.h>
+#include <signal.h>
 #include <sys/types.h>
 
 namespace UserspaceEmulator {
@@ -59,6 +60,8 @@ public:
 
     bool is_in_malloc_or_free() const;
 
+    void did_receive_signal(int signum) { m_pending_signals |= (1 << signum); }
+
 private:
     NonnullRefPtr<ELF::Loader> m_elf;
     OwnPtr<DebugInfo> m_debug_info;
@@ -69,9 +72,13 @@ private:
     OwnPtr<MallocTracer> m_malloc_tracer;
 
     void setup_stack(const Vector<String>& arguments, const Vector<String>& environment);
+    void register_signal_handlers();
+    void setup_signal_trampoline();
 
     int virt$fork();
     int virt$execve(FlatPtr);
+    int virt$sigaction(int, FlatPtr, FlatPtr);
+    int virt$sigreturn();
     int virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t);
     int virt$ioctl(int fd, unsigned, FlatPtr);
     int virt$stat(FlatPtr);
@@ -128,8 +135,11 @@ private:
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
     void virt$exit(int);
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
+    int virt$sleep(unsigned);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
+
+    void dispatch_one_pending_signal();
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
@@ -138,6 +148,18 @@ private:
     FlatPtr m_malloc_symbol_end { 0 };
     FlatPtr m_free_symbol_start { 0 };
     FlatPtr m_free_symbol_end { 0 };
+
+    sigset_t m_pending_signals { 0 };
+    sigset_t m_signal_mask { 0 };
+
+    struct SignalHandlerInfo {
+        FlatPtr handler { 0 };
+        sigset_t mask { 0 };
+        int flags { 0 };
+    };
+    SignalHandlerInfo m_signal_handler[NSIG];
+
+    FlatPtr m_signal_trampoline { 0 };
 };
 
 void report(const char*, ...);

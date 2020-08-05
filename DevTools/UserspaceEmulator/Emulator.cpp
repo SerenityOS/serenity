@@ -71,6 +71,8 @@ Emulator::Emulator(const Vector<String>& arguments, const Vector<String>& enviro
     ASSERT(!s_the);
     s_the = this;
     setup_stack(arguments, environment);
+    register_signal_handlers();
+    setup_signal_trampoline();
 }
 
 void Emulator::setup_stack(const Vector<String>& arguments, const Vector<String>& environment)
@@ -188,6 +190,9 @@ int Emulator::exec()
 
         if (trace)
             m_cpu.dump();
+
+        if (m_pending_signals)
+            dispatch_one_pending_signal();
     }
 
     if (auto* tracer = malloc_tracer())
@@ -247,6 +252,12 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     switch (function) {
     case SC_execve:
         return virt$execve(arg1);
+    case SC_sleep:
+        return virt$sleep(arg1);
+    case SC_sigaction:
+        return virt$sigaction(arg1, arg2, arg3);
+    case SC_sigreturn:
+        return virt$sigreturn();
     case SC_stat:
         return virt$stat(arg1);
     case SC_realpath:
@@ -986,12 +997,241 @@ int Emulator::virt$gethostname(FlatPtr buffer, ssize_t buffer_size)
     return rc;
 }
 
+static void emulator_signal_handler(int signum)
+{
+    Emulator::the().did_receive_signal(signum);
+}
+
+void Emulator::register_signal_handlers()
+{
+    for (int signum = 0; signum < NSIG; ++signum)
+        signal(signum, emulator_signal_handler);
+}
+
+int Emulator::virt$sigaction(int signum, FlatPtr act, FlatPtr oldact)
+{
+    if (signum == SIGKILL) {
+        dbg() << "Attempted to sigaction() with SIGKILL";
+        return -EINVAL;
+    }
+
+    if (signum <= 0 || signum >= NSIG)
+        return -EINVAL;
+
+    struct sigaction host_act;
+    mmu().copy_from_vm(&host_act, act, sizeof(host_act));
+
+    auto& handler = m_signal_handler[signum];
+    handler.handler = (FlatPtr)host_act.sa_handler;
+    handler.mask = host_act.sa_mask;
+    handler.flags = host_act.sa_flags;
+
+    if (oldact) {
+        struct sigaction host_oldact;
+        auto& old_handler = m_signal_handler[signum];
+        host_oldact.sa_handler = (void (*)(int))(old_handler.handler);
+        host_oldact.sa_mask = old_handler.mask;
+        host_oldact.sa_flags = old_handler.flags;
+        mmu().copy_to_vm(oldact, &host_oldact, sizeof(host_oldact));
+    }
+    return 0;
+}
+
+int Emulator::virt$sleep(unsigned seconds)
+{
+    return syscall(SC_sleep, seconds);
+}
+
+int Emulator::virt$sigreturn()
+{
+    u32 stack_ptr = m_cpu.esp().value();
+    auto local_pop = [&]() -> ValueWithShadow<u32> {
+        auto value = m_cpu.read_memory32({ m_cpu.ss(), stack_ptr });
+        stack_ptr += sizeof(u32);
+        return value;
+    };
+
+    auto smuggled_eax = local_pop();
+
+    stack_ptr += 4 * sizeof(u32);
+
+    m_signal_mask = local_pop().value();
+
+    m_cpu.set_edi(local_pop());
+    m_cpu.set_esi(local_pop());
+    m_cpu.set_ebp(local_pop());
+    m_cpu.set_esp(local_pop());
+    m_cpu.set_ebx(local_pop());
+    m_cpu.set_edx(local_pop());
+    m_cpu.set_ecx(local_pop());
+    m_cpu.set_eax(local_pop());
+
+    m_cpu.set_eip(local_pop().value());
+    m_cpu.set_eflags(local_pop());
+
+    // FIXME: We're losing shadow bits here.
+    return smuggled_eax.value();
+}
+
+enum class DefaultSignalAction {
+    Terminate,
+    Ignore,
+    DumpCore,
+    Stop,
+    Continue,
+};
+
+DefaultSignalAction default_signal_action(int signal)
+{
+    ASSERT(signal && signal < NSIG);
+
+    switch (signal) {
+    case SIGHUP:
+    case SIGINT:
+    case SIGKILL:
+    case SIGPIPE:
+    case SIGALRM:
+    case SIGUSR1:
+    case SIGUSR2:
+    case SIGVTALRM:
+    case SIGSTKFLT:
+    case SIGIO:
+    case SIGPROF:
+    case SIGTERM:
+    case SIGPWR:
+        return DefaultSignalAction::Terminate;
+    case SIGCHLD:
+    case SIGURG:
+    case SIGWINCH:
+        return DefaultSignalAction::Ignore;
+    case SIGQUIT:
+    case SIGILL:
+    case SIGTRAP:
+    case SIGABRT:
+    case SIGBUS:
+    case SIGFPE:
+    case SIGSEGV:
+    case SIGXCPU:
+    case SIGXFSZ:
+    case SIGSYS:
+        return DefaultSignalAction::DumpCore;
+    case SIGCONT:
+        return DefaultSignalAction::Continue;
+    case SIGSTOP:
+    case SIGTSTP:
+    case SIGTTIN:
+    case SIGTTOU:
+        return DefaultSignalAction::Stop;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+void Emulator::dispatch_one_pending_signal()
+{
+    int signum = -1;
+    for (signum = 1; signum < NSIG; ++signum) {
+        int mask = 1 << signum;
+        if (m_pending_signals & mask)
+            break;
+    }
+    ASSERT(signum != -1);
+    m_pending_signals &= ~(1 << signum);
+
+    auto& handler = m_signal_handler[signum];
+
+    if (handler.handler == 0) {
+        // SIG_DFL
+        auto action = default_signal_action(signum);
+        if (action == DefaultSignalAction::Ignore)
+            return;
+        report("\n==%d== Got signal %d (%s), no handler registered\n", getpid(), signum, strsignal(signum));
+        m_shutdown = true;
+        return;
+    }
+
+    if (handler.handler == 1) {
+        // SIG_IGN
+        return;
+    }
+
+    report("\n==%d== Got signal %d (%s), handler at %p\n", getpid(), signum, strsignal(signum), handler.handler);
+
+    auto old_esp = m_cpu.esp();
+
+    u32 stack_alignment = (m_cpu.esp().value() - 56) % 16;
+    m_cpu.set_esp(shadow_wrap_as_initialized(m_cpu.esp().value() - stack_alignment));
+
+    m_cpu.push32(shadow_wrap_as_initialized(m_cpu.eflags()));
+    m_cpu.push32(shadow_wrap_as_initialized(m_cpu.eip()));
+    m_cpu.push32(m_cpu.eax());
+    m_cpu.push32(m_cpu.ecx());
+    m_cpu.push32(m_cpu.edx());
+    m_cpu.push32(m_cpu.ebx());
+    m_cpu.push32(old_esp);
+    m_cpu.push32(m_cpu.ebp());
+    m_cpu.push32(m_cpu.esi());
+    m_cpu.push32(m_cpu.edi());
+
+    // FIXME: Push old signal mask here.
+    m_cpu.push32(shadow_wrap_as_initialized(0u));
+
+    m_cpu.push32(shadow_wrap_as_initialized((u32)signum));
+    m_cpu.push32(shadow_wrap_as_initialized(handler.handler));
+    m_cpu.push32(shadow_wrap_as_initialized(0u));
+
+    ASSERT((m_cpu.esp().value() % 16) == 0);
+
+    m_cpu.set_eip(m_signal_trampoline);
+}
+
 void report(const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
     vfprintf(stderr, format, ap);
     va_end(ap);
+}
+
+void signal_trampoline_dummy(void)
+{
+    // The trampoline preserves the current eax, pushes the signal code and
+    // then calls the signal handler. We do this because, when interrupting a
+    // blocking syscall, that syscall may return some special error code in eax;
+    // This error code would likely be overwritten by the signal handler, so it's
+    // neccessary to preserve it here.
+    asm(
+        ".intel_syntax noprefix\n"
+        "asm_signal_trampoline:\n"
+        "push ebp\n"
+        "mov ebp, esp\n"
+        "push eax\n"          // we have to store eax 'cause it might be the return value from a syscall
+        "sub esp, 4\n"        // align the stack to 16 bytes
+        "mov eax, [ebp+12]\n" // push the signal code
+        "push eax\n"
+        "call [ebp+8]\n" // call the signal handler
+        "add esp, 8\n"
+        "mov eax, %P0\n"
+        "int 0x82\n" // sigreturn syscall
+        "asm_signal_trampoline_end:\n"
+        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+}
+
+extern "C" void asm_signal_trampoline(void);
+extern "C" void asm_signal_trampoline_end(void);
+
+void Emulator::setup_signal_trampoline()
+{
+    auto trampoline_region = make<SimpleRegion>(0xb0000000, 4096);
+
+    u8* trampoline = (u8*)asm_signal_trampoline;
+    u8* trampoline_end = (u8*)asm_signal_trampoline_end;
+    size_t trampoline_size = trampoline_end - trampoline;
+
+    u8* code_ptr = trampoline_region->data();
+    memcpy(code_ptr, trampoline, trampoline_size);
+
+    m_signal_trampoline = trampoline_region->base();
+    mmu().add_region(move(trampoline_region));
 }
 
 }
