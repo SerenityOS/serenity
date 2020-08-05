@@ -133,6 +133,11 @@ RefPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp shouldCho
     return create(cstring, strlen(cstring), shouldChomp);
 }
 
+RefPtr<StringImpl> StringImpl::create(ReadonlyBytes bytes, ShouldChomp shouldChomp)
+{
+    return StringImpl::create(reinterpret_cast<const char*>(bytes.data()), bytes.size(), shouldChomp);
+}
+
 static inline bool is_ascii_lowercase(char c)
 {
     return c >= 'a' && c <= 'z';
