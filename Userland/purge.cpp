@@ -25,6 +25,7 @@
  */
 
 #include <Kernel/API/Syscall.h>
+#include <LibCore/ArgsParser.h>
 #include <serenity.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,18 +33,23 @@
 int main(int argc, char** argv)
 {
     int mode = 0;
-    if (argc == 1) {
-        mode = PURGE_ALL_VOLATILE | PURGE_ALL_CLEAN_INODE;
-    } else {
-        if (!strcmp(argv[1], "-c")) {
-            mode = PURGE_ALL_CLEAN_INODE;
-        } else if (!strcmp(argv[1], "-v")) {
-            mode = PURGE_ALL_VOLATILE;
-        } else {
-            fprintf(stderr, "Unknown option: %s\n", argv[1]);
-            return 1;
-        }
-    }
+
+    bool purge_all_volatile = false;
+    bool purge_all_clean_inode = false;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(purge_all_volatile, "Mode PURGE_ALL_VOLATILE", nullptr, 'v');
+    args_parser.add_option(purge_all_clean_inode, "Mode PURGE_ALL_CLEAN_INODE", nullptr, 'c');
+    args_parser.parse(argc, argv);
+
+    if (!purge_all_volatile && !purge_all_clean_inode)
+        purge_all_volatile = purge_all_clean_inode = true;
+
+    if (purge_all_volatile)
+        mode |= PURGE_ALL_VOLATILE;
+    if (purge_all_clean_inode)
+        mode |= PURGE_ALL_CLEAN_INODE;
+
     int purged_page_count = purge(mode);
     if (purged_page_count < 0) {
         perror("purge");
