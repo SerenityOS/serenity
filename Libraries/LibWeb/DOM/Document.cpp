@@ -127,14 +127,22 @@ void Document::fixup()
     this->append_child(html);
 }
 
-const HTML::HTMLHtmlElement* Document::document_element() const
+const Element* Document::document_element() const
 {
-    return first_child_of_type<HTML::HTMLHtmlElement>();
+    return first_child_of_type<Element>();
+}
+
+const HTML::HTMLHtmlElement* Document::html_element() const
+{
+    auto* html = document_element();
+    if (is<HTML::HTMLHtmlElement>(html))
+        return downcast<HTML::HTMLHtmlElement>(html);
+    return nullptr;
 }
 
 const HTML::HTMLHeadElement* Document::head() const
 {
-    auto* html = document_element();
+    auto* html = html_element();
     if (!html)
         return nullptr;
     return html->first_child_of_type<HTML::HTMLHeadElement>();
@@ -142,7 +150,7 @@ const HTML::HTMLHeadElement* Document::head() const
 
 const HTML::HTMLElement* Document::body() const
 {
-    auto* html = document_element();
+    auto* html = html_element();
     if (!html)
         return nullptr;
     return html->first_child_of_type<HTML::HTMLBodyElement>();

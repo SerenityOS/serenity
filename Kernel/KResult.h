@@ -35,7 +35,7 @@ enum KSuccessTag {
     KSuccess
 };
 
-class KResult {
+class [[nodiscard]] KResult {
 public:
     ALWAYS_INLINE explicit KResult(int negative_e)
         : m_error(negative_e)
@@ -61,7 +61,7 @@ private:
 };
 
 template<typename T>
-class alignas(T) KResultOr {
+class alignas(T) [[nodiscard]] KResultOr {
 public:
     KResultOr(KResult error)
         : m_error(error)

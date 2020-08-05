@@ -31,11 +31,9 @@
 
 namespace Kernel {
 
-int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
+int Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
-    if (size < 0)
-        return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
     auto description = file_description(fd);
@@ -43,18 +41,16 @@ int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
         return -EBADF;
     if (!description->is_tty())
         return -ENOTTY;
-    String tty_name = description->tty()->tty_name();
-    if ((size_t)size < tty_name.length() + 1)
+    auto tty_name = description->tty()->tty_name();
+    if (size < tty_name.length() + 1)
         return -ERANGE;
     copy_to_user(buffer, tty_name.characters(), tty_name.length() + 1);
     return 0;
 }
 
-int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
+int Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
-    if (size < 0)
-        return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
     auto description = file_description(fd);
@@ -64,7 +60,7 @@ int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
     if (!master_pty)
         return -ENOTTY;
     auto pts_name = master_pty->pts_name();
-    if ((size_t)size < pts_name.length() + 1)
+    if (size < pts_name.length() + 1)
         return -ERANGE;
     copy_to_user(buffer, pts_name.characters(), pts_name.length() + 1);
     return 0;

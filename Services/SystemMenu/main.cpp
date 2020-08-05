@@ -36,6 +36,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
+#include <serenity.h>
 #include <spawn.h>
 
 //#define SYSTEM_MENU_DEBUG
@@ -163,8 +164,12 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             const auto& bin = g_apps[app_identifier].executable;
             pid_t child_pid;
             const char* argv[] = { bin.characters(), nullptr };
-            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), environ)))
+            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
                 perror("posix_spawn");
+            } else {
+                if (disown(child_pid) < 0)
+                    perror("disown");
+            }
         }));
         ++app_identifier;
     }
@@ -210,7 +215,12 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     system_menu->add_action(GUI::Action::create("About...", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"), [](auto&) {
         pid_t child_pid;
         const char* argv[] = { "/bin/About", nullptr };
-        posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ);
+        if ((errno = posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child_pid) < 0)
+                perror("disown");
+        }
     }));
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("Exit...", Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"), [](auto&) {
@@ -220,7 +230,12 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             return;
 
         pid_t child_pid;
-        posix_spawn(&child_pid, command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ);
+        if ((errno = posix_spawn(&child_pid, command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child_pid) < 0)
+                perror("disown");
+        }
     }));
 
     return system_menu;

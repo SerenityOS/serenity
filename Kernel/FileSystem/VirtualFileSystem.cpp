@@ -191,9 +191,9 @@ bool VFS::is_vfs_root(InodeIdentifier inode) const
     return inode == root_inode_id();
 }
 
-void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
+KResult VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
 {
-    dir_inode.traverse_as_directory([&](const FS::DirectoryEntry& entry) {
+    return dir_inode.traverse_as_directory([&](const FS::DirectoryEntry& entry) {
         InodeIdentifier resolved_inode;
         if (auto mount = find_mount_for_host(entry.inode))
             resolved_inode = mount->guest().identifier();
@@ -329,7 +329,9 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         return KResult(-EROFS);
 
     if (should_truncate_file) {
-        inode.truncate(0);
+        KResult result = inode.truncate(0);
+        if (result.is_error())
+            return result;
         inode.set_mtime(kgettimeofday().tv_sec);
     }
     auto description = FileDescription::create(custody);
@@ -731,7 +733,11 @@ KResult VFS::rmdir(StringView path, Custody& base)
     if (!parent_inode.metadata().may_write(*Process::current()))
         return KResult(-EACCES);
 
-    if (inode.directory_entry_count() != 2)
+    KResultOr<size_t> dir_count_result = inode.directory_entry_count();
+    if (dir_count_result.is_error())
+        return dir_count_result.result();
+
+    if (dir_count_result.value() != 2)
         return KResult(-ENOTEMPTY);
 
     if (custody.is_readonly())

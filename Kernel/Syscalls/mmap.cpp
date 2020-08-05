@@ -76,7 +76,7 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
     return true;
 }
 
-void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
+void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -331,7 +331,7 @@ int Process::sys$minherit(void* address, size_t size, int inherit)
     return -EINVAL;
 }
 
-int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_params)
+int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 

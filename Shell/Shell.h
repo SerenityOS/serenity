@@ -53,6 +53,7 @@
     __ENUMERATE_SHELL_BUILTIN(pushd)   \
     __ENUMERATE_SHELL_BUILTIN(popd)    \
     __ENUMERATE_SHELL_BUILTIN(setopt)  \
+    __ENUMERATE_SHELL_BUILTIN(shift)   \
     __ENUMERATE_SHELL_BUILTIN(time)    \
     __ENUMERATE_SHELL_BUILTIN(jobs)    \
     __ENUMERATE_SHELL_BUILTIN(disown)  \
@@ -73,6 +74,7 @@ public:
     constexpr static auto global_init_file_path = "/etc/shellrc";
 
     int run_command(const StringView&);
+    bool is_runnable(const StringView&);
     RefPtr<Job> run_command(const AST::Command&);
     Vector<RefPtr<Job>> run_commands(Vector<AST::Command>&);
     bool run_file(const String&, bool explicitly_invoked = true);
@@ -130,7 +132,7 @@ public:
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);
 
-    void restore_stdin();
+    void restore_ios();
 
     u64 find_last_job_id() const;
     const Job* find_job(u64 id);
@@ -187,6 +189,7 @@ private:
     virtual void save_to(JsonObject&) override;
 
     void cache_path();
+    void add_entry_to_cache(const String&);
     void stop_all_jobs();
     const Job* m_current_job { nullptr };
     LocalFrame* find_frame_containing_local_variable(const String& name);

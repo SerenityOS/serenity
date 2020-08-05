@@ -153,7 +153,7 @@ KResult DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEn
     return KSuccess;
 }
 
-size_t DevPtsFSInode::directory_entry_count() const
+KResultOr<size_t> DevPtsFSInode::directory_entry_count() const
 {
     ASSERT(identifier().index() == 1);
 

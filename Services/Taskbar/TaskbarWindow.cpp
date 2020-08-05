@@ -37,6 +37,7 @@
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
+#include <serenity.h>
 #include <stdio.h>
 
 //#define EVENT_DEBUG
@@ -45,10 +46,10 @@ class TaskbarWidget final : public GUI::Widget {
     C_OBJECT(TaskbarWidget);
 
 public:
-    virtual ~TaskbarWidget() override {}
+    virtual ~TaskbarWidget() override { }
 
 private:
-    TaskbarWidget() {}
+    TaskbarWidget() { }
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
@@ -126,6 +127,9 @@ void TaskbarWindow::create_quick_launch_bar()
                 execl(app_executable.characters(), app_executable.characters(), nullptr);
                 perror("execl");
                 ASSERT_NOT_REACHED();
+            } else {
+                if (disown(pid) < 0)
+                    perror("disown");
             }
         };
 

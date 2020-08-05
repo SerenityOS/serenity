@@ -129,7 +129,7 @@ public:
     virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
     {
         // XOR (and thus CTR) is the most symmetric mode.
-        this->encrypt(in, out, ivec);
+        (void)this->encrypt(in, out, ivec);
     }
 
 private:

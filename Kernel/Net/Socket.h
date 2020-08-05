@@ -107,8 +107,8 @@ public:
     virtual bool is_ipv4() const { return false; }
     virtual void attach(FileDescription&) = 0;
     virtual void detach(FileDescription&) = 0;
-    virtual ssize_t sendto(FileDescription&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
-    virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
+    virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
+    virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
     virtual KResult setsockopt(int level, int option, const void*, socklen_t);
     virtual KResult getsockopt(FileDescription&, int level, int option, void*, socklen_t*);
@@ -124,8 +124,8 @@ public:
     Lock& lock() { return m_lock; }
 
     // ^File
-    virtual ssize_t read(FileDescription&, size_t, u8*, ssize_t) override final;
-    virtual ssize_t write(FileDescription&, size_t, const u8*, ssize_t) override final;
+    virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) override final;
+    virtual KResultOr<size_t> write(FileDescription&, size_t, const u8*, size_t) override final;
     virtual String absolute_path(const FileDescription&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout.tv_sec || m_receive_timeout.tv_usec; }

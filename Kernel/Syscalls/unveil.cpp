@@ -71,8 +71,8 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
         return -EFAULT;
 
     unsigned new_permissions = 0;
-    for (size_t i = 0; i < permissions.length(); ++i) {
-        switch (permissions[i]) {
+    for (const char permission : permissions) {
+        switch (permission) {
         case 'r':
             new_permissions |= UnveiledPath::Access::Read;
             break;
@@ -90,8 +90,7 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
         }
     }
 
-    for (size_t i = 0; i < m_unveiled_paths.size(); ++i) {
-        auto& unveiled_path = m_unveiled_paths[i];
+    for (auto& unveiled_path : m_unveiled_paths) {
         if (unveiled_path.path == new_unveiled_path) {
             if (new_permissions & ~unveiled_path.permissions)
                 return -EPERM;

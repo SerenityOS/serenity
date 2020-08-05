@@ -42,15 +42,15 @@ void compute_relative_timeout_from_absolute(const timespec& absolute_time, timev
     compute_relative_timeout_from_absolute(tv_absolute_time, relative_time);
 }
 
-WaitQueue& Process::futex_queue(i32* userspace_address)
+WaitQueue& Process::futex_queue(Userspace<const i32*> userspace_address)
 {
-    auto& queue = m_futex_queues.ensure((FlatPtr)userspace_address);
+    auto& queue = m_futex_queues.ensure(userspace_address.ptr());
     if (!queue)
         queue = make<WaitQueue>();
     return *queue;
 }
 
-int Process::sys$futex(const Syscall::SC_futex_params* user_params)
+int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
 {
     REQUIRE_PROMISE(thread);
 
@@ -58,37 +58,29 @@ int Process::sys$futex(const Syscall::SC_futex_params* user_params)
     if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
-    i32* userspace_address = params.userspace_address;
-    int futex_op = params.futex_op;
-    i32 value = params.val;
-    const timespec* user_timeout = params.timeout;
-
-    if (!validate_read_typed(userspace_address))
+    if (!validate_read_typed(params.userspace_address))
         return -EFAULT;
 
-    if (user_timeout && !validate_read_typed(user_timeout))
-        return -EFAULT;
-
-    switch (futex_op) {
+    switch (params.futex_op) {
     case FUTEX_WAIT: {
         i32 user_value;
-        copy_from_user(&user_value, userspace_address);
-        if (user_value != value)
+        copy_from_user(&user_value, params.userspace_address);
+        if (user_value != params.val)
             return -EAGAIN;
 
         timespec ts_abstimeout { 0, 0 };
-        if (user_timeout && !validate_read_and_copy_typed(&ts_abstimeout, user_timeout))
+        if (params.timeout && !validate_read_and_copy_typed(&ts_abstimeout, params.timeout))
             return -EFAULT;
 
-        WaitQueue& wait_queue = futex_queue(userspace_address);
         timeval* optional_timeout = nullptr;
         timeval relative_timeout { 0, 0 };
-        if (user_timeout) {
+        if (params.timeout) {
             compute_relative_timeout_from_absolute(ts_abstimeout, relative_timeout);
             optional_timeout = &relative_timeout;
         }
 
         // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
+        WaitQueue& wait_queue = futex_queue(params.userspace_address);
         Thread::BlockResult result = Thread::current()->wait_on(wait_queue, "Futex", optional_timeout);
         if (result == Thread::BlockResult::InterruptedByTimeout) {
             return -ETIMEDOUT;
@@ -97,12 +89,12 @@ int Process::sys$futex(const Syscall::SC_futex_params* user_params)
         break;
     }
     case FUTEX_WAKE:
-        if (value == 0)
+        if (params.val == 0)
             return 0;
-        if (value == 1) {
-            futex_queue(userspace_address).wake_one();
+        if (params.val == 1) {
+            futex_queue(params.userspace_address).wake_one();
         } else {
-            futex_queue(userspace_address).wake_n(value);
+            futex_queue(params.userspace_address).wake_n(params.val);
         }
         break;
     }

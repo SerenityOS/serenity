@@ -1,10 +1,13 @@
 cmake_minimum_required (VERSION 3.0)
 project (Lagom)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++2a -fPIC -g -Wno-deprecated-copy")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++2a -fPIC -g")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-copy")
+endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconsumed")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconsumed -Wno-overloaded-virtual")
 
     option(ENABLE_ADDRESS_SANITIZER "Enable address sanitizer testing in gcc/clang" FALSE)
     if (ENABLE_ADDRESS_SANITIZER)
@@ -49,6 +52,7 @@ file(GLOB LIBMARKDOWN_SOURCES "../../Libraries/LibMarkdown/*.cpp")
 file(GLOB LIBX86_SOURCES "../../Libraries/LibX86/*.cpp")
 file(GLOB LIBJS_SOURCES "../../Libraries/LibJS/*.cpp")
 file(GLOB LIBJS_SUBDIR_SOURCES "../../Libraries/LibJS/*/*.cpp")
+file(GLOB LIBCOMPRESS_SOURCES "../../Libraries/LibCompress/*.cpp")
 file(GLOB LIBCRYPTO_SOURCES "../../Libraries/LibCrypto/*.cpp")
 file(GLOB LIBCRYPTO_SUBDIR_SOURCES "../../Libraries/LibCrypto/*/*.cpp")
 file(GLOB LIBTLS_SOURCES "../../Libraries/LibTLS/*.cpp")
@@ -56,7 +60,7 @@ file(GLOB SHELL_SOURCES "../../Shell/*.cpp")
 file(GLOB SHELL_TESTS "../../Shell/Tests/*.sh")
 
 set(LAGOM_CORE_SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
-set(LAGOM_MORE_SOURCES ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES})
+set(LAGOM_MORE_SOURCES ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES})
 
 include_directories (../../)
 include_directories (../../Libraries/)

@@ -54,7 +54,7 @@ SlavePTY::~SlavePTY()
     DevPtsFS::unregister_slave_pty(*this);
 }
 
-StringView SlavePTY::tty_name() const
+String SlavePTY::tty_name() const
 {
     return m_tty_name;
 }
@@ -89,7 +89,7 @@ bool SlavePTY::can_read(const FileDescription& description, size_t offset) const
     return TTY::can_read(description, offset);
 }
 
-ssize_t SlavePTY::read(FileDescription& description, size_t offset, u8* buffer, ssize_t size)
+KResultOr<size_t> SlavePTY::read(FileDescription& description, size_t offset, u8* buffer, size_t size)
 {
     if (m_master->is_closed())
         return 0;

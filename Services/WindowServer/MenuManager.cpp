@@ -146,7 +146,7 @@ void MenuManager::event(Core::Event& event)
         if (m_current_menu && event.type() == Event::KeyDown
             && ((key_event.key() >= Key_A && key_event.key() <= Key_Z)
                 || (key_event.key() >= Key_0 && key_event.key() <= Key_9))) {
-            m_current_search.append_codepoint(key_event.code_point());
+            m_current_search.append_code_points(key_event.code_point());
             m_search_timer->restart(s_search_timeout);
             for (int i = 0; i < m_current_menu->item_count(); ++i) {
                 auto text = m_current_menu->item(i).text();

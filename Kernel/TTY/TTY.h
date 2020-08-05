@@ -39,14 +39,14 @@ class TTY : public CharacterDevice {
 public:
     virtual ~TTY() override;
 
-    virtual ssize_t read(FileDescription&, size_t, u8*, ssize_t) override;
-    virtual ssize_t write(FileDescription&, size_t, const u8*, ssize_t) override;
+    virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) override;
+    virtual KResultOr<size_t> write(FileDescription&, size_t, const u8*, size_t) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override final;
     virtual String absolute_path(const FileDescription&) const override { return tty_name(); }
 
-    virtual StringView tty_name() const = 0;
+    virtual String tty_name() const = 0;
 
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }

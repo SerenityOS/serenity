@@ -9,6 +9,7 @@ interface Document : Node {
     readonly attribute DOMString compatMode;
     readonly attribute DocumentType? doctype;
 
+    readonly attribute Element? documentElement;
     readonly attribute HTMLElement? body;
 
 }

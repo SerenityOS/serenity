@@ -118,7 +118,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen
 
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
-            if (Thread::current()->block<Thread::AcceptBlocker>(*accepting_socket_description).was_interrupted())
+            if (Thread::current()->block<Thread::AcceptBlocker>(nullptr, *accepting_socket_description).was_interrupted())
                 return -EINTR;
         } else {
             return -EAGAIN;
@@ -211,7 +211,10 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
     if (socket.is_shut_down_for_writing())
         return -EPIPE;
     SmapDisabler disabler;
-    return socket.sendto(*description, params.data.data, params.data.size, flags, addr, addr_length);
+    auto result = socket.sendto(*description, params.data.data, params.data.size, flags, addr, addr_length);
+    if (result.is_error())
+        return result.error();
+    return result.value();
 }
 
 ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
@@ -251,11 +254,13 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     if (flags & MSG_DONTWAIT)
         description->set_blocking(false);
 
-    auto nrecv = socket.recvfrom(*description, params.buffer.data, params.buffer.size, flags, addr, addr_length);
+    auto result = socket.recvfrom(*description, params.buffer.data, params.buffer.size, flags, addr, addr_length);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
 
-    return nrecv;
+    if (result.is_error())
+        return result.error();
+    return result.value();
 }
 
 template<bool sockname, typename Params>

@@ -30,13 +30,17 @@
 #include <AK/String.h>
 #include <LibWeb/DOM/Attribute.h>
 #include <LibWeb/DOM/AttributeNames.h>
+#include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/TagNames.h>
 #include <LibWeb/Layout/LayoutNode.h>
 
 namespace Web::DOM {
 
-class Element : public ParentNode {
+class Element
+    : public ParentNode
+    , public NonDocumentTypeChildNode<Element> {
+
 public:
     using WrapperType = Bindings::ElementWrapper;
 
@@ -83,21 +87,10 @@ public:
     String inner_html() const;
     void set_inner_html(StringView);
 
-    virtual bool is_editable() const final;
-    String content_editable() const;
-    void set_content_editable(const String&);
-
 protected:
     RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
 private:
-    enum class ContentEditableState {
-        True,
-        False,
-        Inherit,
-    };
-    ContentEditableState content_editable_state() const;
-
     Attribute* find_attribute(const FlyString& name);
     const Attribute* find_attribute(const FlyString& name) const;
 

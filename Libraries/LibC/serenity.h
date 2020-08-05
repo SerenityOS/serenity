@@ -31,6 +31,8 @@
 
 __BEGIN_DECLS
 
+int disown(pid_t);
+
 int shbuf_create(int, void** buffer);
 int shbuf_allow_pid(int, pid_t peer_pid);
 int shbuf_allow_all(int);

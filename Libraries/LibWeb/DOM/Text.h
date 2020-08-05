@@ -34,6 +34,8 @@ namespace Web::DOM {
 
 class Text final : public CharacterData {
 public:
+    using WrapperType = Bindings::TextWrapper;
+
     explicit Text(Document&, const String&);
     virtual ~Text() override;
 

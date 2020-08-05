@@ -423,12 +423,13 @@ KResult Plan9FS::post_message(Message& message)
 
     while (size > 0) {
         if (!description.can_write()) {
-            if (Thread::current()->block<Thread::WriteBlocker>(description).was_interrupted())
+            if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description).was_interrupted())
                 return KResult(-EINTR);
         }
-        ssize_t nwritten = description.write(data, size);
-        if (nwritten < 0)
-            return KResult(nwritten);
+        auto nwritten_or_error = description.write(data, size);
+        if (nwritten_or_error.is_error())
+            return nwritten_or_error.error();
+        auto nwritten = nwritten_or_error.value();
         data += nwritten;
         size -= nwritten;
     }
@@ -441,12 +442,13 @@ KResult Plan9FS::do_read(u8* data, size_t size)
     auto& description = file_description();
     while (size > 0) {
         if (!description.can_read()) {
-            if (Thread::current()->block<Thread::ReadBlocker>(description).was_interrupted())
+            if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description).was_interrupted())
                 return KResult(-EINTR);
         }
-        ssize_t nread = description.read(data, size);
-        if (nread < 0)
-            return KResult(nread);
+        auto nread_or_error = description.read(data, size);
+        if (nread_or_error.is_error())
+            return nread_or_error.error();
+        auto nread = nread_or_error.value();
         if (nread == 0)
             return KResult(-EIO);
         data += nread;
@@ -498,7 +500,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
     return KSuccess;
 }
 
-bool Plan9FS::Blocker::should_unblock(Thread&, time_t, long)
+bool Plan9FS::Blocker::should_unblock(Thread&)
 {
     if (m_completion.completed)
         return true;
@@ -524,7 +526,7 @@ KResult Plan9FS::wait_for_specific_message(u16 tag, Message& out_message)
     // Block until either:
     // * Someone else reads the message we're waiting for, and hands it to us;
     // * Or we become the one to read and dispatch messages.
-    if (Thread::current()->block<Plan9FS::Blocker>(completion).was_interrupted()) {
+    if (Thread::current()->block<Plan9FS::Blocker>(nullptr, completion).was_interrupted()) {
         LOCKER(m_lock);
         m_completions.remove(tag);
         return KResult(-EINTR);
@@ -634,7 +636,8 @@ Plan9FSInode::~Plan9FSInode()
 {
     Plan9FS::Message clunk_request { fs(), Plan9FS::Message::Type::Tclunk };
     clunk_request << fid();
-    fs().post_message_and_explicitly_ignore_reply(clunk_request);
+    // FIXME: Should we observe this  error somehow?
+    (void)fs().post_message_and_explicitly_ignore_reply(clunk_request);
 }
 
 KResult Plan9FSInode::ensure_open_for_mode(int mode)
@@ -792,13 +795,17 @@ void Plan9FSInode::flush_metadata()
     // Do nothing.
 }
 
-size_t Plan9FSInode::directory_entry_count() const
+KResultOr<size_t> Plan9FSInode::directory_entry_count() const
 {
     size_t count = 0;
-    traverse_as_directory([&count](const FS::DirectoryEntry&) {
+    KResult result = traverse_as_directory([&count](const FS::DirectoryEntry&) {
         count++;
         return true;
     });
+
+    if (result.is_error())
+        return result;
+
     return count;
 }
 
@@ -823,7 +830,8 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEnt
             if (result.is_error()) {
                 Plan9FS::Message close_message { fs(), Plan9FS::Message::Type::Tclunk };
                 close_message << clone_fid;
-                fs().post_message_and_explicitly_ignore_reply(close_message);
+                // FIXME: Should we observe this error?
+                (void)fs().post_message_and_explicitly_ignore_reply(close_message);
                 return result;
             }
         }
@@ -865,7 +873,8 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEnt
 
         Plan9FS::Message close_message { fs(), Plan9FS::Message::Type::Tclunk };
         close_message << clone_fid;
-        fs().post_message_and_explicitly_ignore_reply(close_message);
+        // FIXME: Should we observe this error?
+        (void)fs().post_message_and_explicitly_ignore_reply(close_message);
         return result;
     } else {
         // TODO

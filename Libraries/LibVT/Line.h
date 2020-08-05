@@ -90,22 +90,22 @@ public:
 
     u16 length() const { return m_length; }
 
-    u32 codepoint(size_t index) const
+    u32 code_points(size_t index) const
     {
         if (m_utf32)
-            return m_codepoints.as_u32[index];
-        return m_codepoints.as_u8[index];
+            return m_code_pointss.as_u32[index];
+        return m_code_pointss.as_u8[index];
     }
 
-    void set_codepoint(size_t index, u32 codepoint)
+    void set_code_points(size_t index, u32 code_points)
     {
-        if (!m_utf32 && codepoint & 0xffffff80u)
+        if (!m_utf32 && code_points & 0xffffff80u)
             convert_to_utf32();
 
         if (m_utf32)
-            m_codepoints.as_u32[index] = codepoint;
+            m_code_pointss.as_u32[index] = code_points;
         else
-            m_codepoints.as_u8[index] = codepoint;
+            m_code_pointss.as_u8[index] = code_points;
     }
 
     bool is_dirty() const { return m_dirty; }
@@ -122,7 +122,7 @@ private:
     union {
         u8* as_u8;
         u32* as_u32;
-    } m_codepoints { nullptr };
+    } m_code_pointss { nullptr };
     Attribute* m_attributes { nullptr };
     bool m_dirty { false };
     bool m_utf32 { false };

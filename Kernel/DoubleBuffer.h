@@ -36,8 +36,8 @@ class DoubleBuffer {
 public:
     explicit DoubleBuffer(size_t capacity = 65536);
 
-    ssize_t write(const u8*, ssize_t);
-    ssize_t read(u8*, ssize_t);
+    size_t write(const u8*, size_t);
+    size_t read(u8*, size_t);
 
     bool is_empty() const { return m_empty; }
 

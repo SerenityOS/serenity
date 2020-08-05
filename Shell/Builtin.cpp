@@ -64,6 +64,7 @@ int Shell::builtin_alias(int argc, const char** argv)
             }
         } else {
             m_aliases.set(parts[0], parts[1]);
+            add_entry_to_cache(parts[0]);
         }
     }
 
@@ -673,6 +674,40 @@ int Shell::builtin_setopt(int argc, const char** argv)
     ENUMERATE_SHELL_OPTIONS();
 
 #undef __ENUMERATE_SHELL_OPTION
+
+    return 0;
+}
+
+int Shell::builtin_shift(int argc, const char** argv)
+{
+    int count = 1;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (count < 1)
+        return 0;
+
+    auto argv_ = lookup_local_variable("ARGV");
+    if (!argv_) {
+        fprintf(stderr, "shift: ARGV is unset\n");
+        return 1;
+    }
+
+    if (!argv_->is_list())
+        argv_ = adopt(*new AST::ListValue({ argv_ }));
+
+    auto& values = static_cast<AST::ListValue*>(argv_.ptr())->values();
+    if ((size_t)count > values.size()) {
+        fprintf(stderr, "shift: shift count must not be greater than %zu\n", values.size());
+        return 1;
+    }
+
+    for (auto i = 0; i < count; ++i)
+        values.take_first();
 
     return 0;
 }

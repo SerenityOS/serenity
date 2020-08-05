@@ -42,13 +42,13 @@ public:
 
 private:
     // ^TTY
-    virtual StringView tty_name() const override;
+    virtual String tty_name() const override;
     virtual ssize_t on_tty_write(const u8*, ssize_t) override;
     virtual void echo(u8) override;
 
     // ^CharacterDevice
     virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual ssize_t read(FileDescription&, size_t, u8*, ssize_t) override;
+    virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) override;
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual const char* class_name() const override { return "SlavePTY"; }
     virtual KResult close() override;

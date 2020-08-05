@@ -367,9 +367,15 @@ RefPtr<Value> BarewordLiteral::run(RefPtr<Shell>)
 void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
     if (metadata.is_first_in_list) {
-        editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Bold });
+        if (shell.is_runnable(m_text)) {
+            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Bold });
+        } else {
+            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Red) });
+        }
+
         return;
     }
+
     if (m_text.starts_with('-')) {
         if (m_text == "--") {
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
@@ -540,7 +546,7 @@ void CloseFdRedirection::dump(int level) const
 RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
 {
     Command command;
-    command.redirections.append(*new CloseRedirection(m_fd));
+    command.redirections.append(adopt(*new CloseRedirection(m_fd)));
     return create<CommandValue>(move(command));
 }
 
@@ -1116,8 +1122,8 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
 
     auto pipe_write_end = new FdRedirection(STDIN_FILENO, -1, Rewiring::Close::Destination);
     auto pipe_read_end = new FdRedirection(STDOUT_FILENO, -1, pipe_write_end, Rewiring::Close::RefreshDestination);
-    first_in_right.redirections.append(*pipe_write_end);
-    last_in_left.redirections.append(*pipe_read_end);
+    first_in_right.redirections.append(adopt(*pipe_write_end));
+    last_in_left.redirections.append(adopt(*pipe_read_end));
     last_in_left.should_wait = false;
     last_in_left.is_pipe_source = true;
 
@@ -1232,7 +1238,7 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Read));
+    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Read)));
     return create<CommandValue>(move(command));
 }
 
@@ -1259,7 +1265,7 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::ReadWrite));
+    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::ReadWrite)));
     return create<CommandValue>(move(command));
 }
 
@@ -1752,7 +1758,7 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::WriteAppend));
+    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::WriteAppend)));
     return create<CommandValue>(move(command));
 }
 
@@ -1779,7 +1785,7 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Write));
+    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Write)));
     return create<CommandValue>(move(command));
 }
 
@@ -1998,6 +2004,7 @@ RefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
 SpecialVariableValue::~SpecialVariableValue()
 {
 }
+
 Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
     switch (m_name) {
@@ -2005,6 +2012,19 @@ Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
         return { String::number(shell->last_return_code) };
     case '$':
         return { String::number(getpid()) };
+    case '*':
+        if (auto argv = shell->lookup_local_variable("ARGV"))
+            return argv->resolve_as_list(shell);
+        return {};
+    case '#':
+        if (auto argv = shell->lookup_local_variable("ARGV")) {
+            if (argv->is_list()) {
+                auto list_argv = static_cast<AST::ListValue*>(argv.ptr());
+                return { String::number(list_argv->values().size()) };
+            }
+            return { "1" };
+        }
+        return { "0" };
     default:
         return { "" };
     }
@@ -2021,24 +2041,24 @@ Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
     return { shell->expand_tilde(builder.to_string()) };
 }
 
-Result<RefPtr<Rewiring>, String> CloseRedirection::apply() const
+Result<NonnullRefPtr<Rewiring>, String> CloseRedirection::apply() const
 {
-    return static_cast<RefPtr<Rewiring>>((adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseDestination))));
+    return adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseDestination));
 }
 
 CloseRedirection::~CloseRedirection()
 {
 }
 
-Result<RefPtr<Rewiring>, String> PathRedirection::apply() const
+Result<NonnullRefPtr<Rewiring>, String> PathRedirection::apply() const
 {
-    auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<RefPtr<Rewiring>, String> {
+    auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<NonnullRefPtr<Rewiring>, String> {
         if (fd < 0) {
             String error = strerror(errno);
             dbg() << "open() failed for '" << path << "' with " << error;
             return error;
         }
-        return static_cast<RefPtr<Rewiring>>((adopt(*new Rewiring(my_fd, fd, Rewiring::Close::Destination))));
+        return adopt(*new Rewiring(my_fd, fd, Rewiring::Close::Destination));
     };
     switch (direction) {
     case AST::PathRedirection::WriteAppend:

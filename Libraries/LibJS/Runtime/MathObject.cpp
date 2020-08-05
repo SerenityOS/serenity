@@ -129,6 +129,9 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
         return {};
     if (number.is_nan())
         return js_nan();
+    auto number_double = number.as_double();
+    if (number_double < 0 && number_double > -1)
+        return Value(-0.f);
     return Value(::ceil(number.as_double()));
 }
 

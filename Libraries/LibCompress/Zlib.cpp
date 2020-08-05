@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,35 +24,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ProcessTableView.h"
-#include "ProcessModel.h"
-#include <LibGUI/SortingProxyModel.h>
-#include <stdio.h>
+#include <AK/Assertions.h>
+#include <AK/Span.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
+#include <LibCompress/Deflate.h>
+#include <LibCompress/Zlib.h>
 
-ProcessTableView::ProcessTableView()
+namespace Compress {
+
+Zlib::Zlib(ReadonlyBytes data)
 {
-    set_model(GUI::SortingProxyModel::create(ProcessModel::create()));
-    model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
-    refresh();
+    m_input_data = data;
 
-    on_selection = [this](auto&) {
-        if (on_process_selected)
-            on_process_selected(selected_pid());
-    };
+    u8 compression_info = data.at(0);
+    u8 flags = data.at(1);
+
+    m_compression_method = compression_info & 0xF;
+    m_compression_info = (compression_info >> 4) & 0xF;
+    m_check_bits = flags & 0xF;
+    m_has_dictionary = (flags >> 5) & 0x1;
+    m_compression_level = (flags >> 6) & 0x3;
+
+    ASSERT(m_compression_method == 8);
+    ASSERT(m_compression_info == 7);
+    ASSERT(!m_has_dictionary);
+    ASSERT((compression_info * 256 + flags) % 31 == 0);
+
+    m_data_bytes = data.slice(2, data.size() - 2 - 4);
 }
 
-ProcessTableView::~ProcessTableView()
+Vector<u8> Zlib::decompress()
 {
+    return Deflate(m_data_bytes).decompress();
 }
 
-void ProcessTableView::refresh()
+u32 Zlib::checksum()
 {
-    model()->update();
+    if (!m_checksum) {
+        auto bytes = m_input_data.slice(m_input_data.size() - 4, 4);
+        m_checksum = bytes.at(0) << 24 | bytes.at(1) << 16 | bytes.at(2) << 8 || bytes.at(3);
+    }
+
+    return m_checksum;
 }
 
-pid_t ProcessTableView::selected_pid() const
-{
-    if (selection().is_empty())
-        return -1;
-    return model()->data(model()->index(selection().first().row(), ProcessModel::Column::PID), GUI::Model::Role::Sort).as_i32();
 }

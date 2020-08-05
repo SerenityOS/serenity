@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,38 @@
 
 #pragma once
 
-#include <AK/Function.h>
-#include <LibGUI/TableView.h>
-#include <unistd.h>
+#include <AK/Forward.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/TreeNode.h>
 
-class GraphWidget;
-class ProcessModel;
+namespace Web::DOM {
 
-class ProcessTableView final : public GUI::TableView {
-    C_OBJECT(ProcessTableView)
+template<typename NodeType>
+class NonDocumentTypeChildNode {
 public:
-    virtual ~ProcessTableView() override;
+    Element* previous_element_sibling()
+    {
+        for (auto* sibling = static_cast<NodeType*>(this)->previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
+            if (is<Element>(*sibling))
+                return downcast<Element>(sibling);
+        }
+        return nullptr;
+    }
 
-    pid_t selected_pid() const;
+    Element* next_element_sibling()
+    {
+        for (auto* sibling = static_cast<NodeType*>(this)->next_sibling(); sibling; sibling = sibling->next_sibling()) {
+            if (is<Element>(*sibling))
+                return downcast<Element>(sibling);
+        }
+        return nullptr;
+    }
 
-    void refresh();
+    const Element* previous_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->previous_element_sibling(); }
+    const Element* next_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_sibling(); }
 
-    Function<void(pid_t)> on_process_selected;
-
-private:
-    ProcessTableView();
+protected:
+    NonDocumentTypeChildNode() { }
 };
+
+}

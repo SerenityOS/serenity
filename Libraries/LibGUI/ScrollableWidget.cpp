@@ -61,7 +61,11 @@ void ScrollableWidget::mousewheel_event(MouseEvent& event)
         return;
     }
     // FIXME: The wheel delta multiplier should probably come from... somewhere?
-    vertical_scrollbar().set_value(vertical_scrollbar().value() + event.wheel_delta() * 20);
+    if (event.modifiers() & Mod_Shift) {
+        horizontal_scrollbar().set_value(horizontal_scrollbar().value() + event.wheel_delta() * 60);
+    } else {
+        vertical_scrollbar().set_value(vertical_scrollbar().value() + event.wheel_delta() * 20);
+    }
 }
 
 void ScrollableWidget::custom_layout()

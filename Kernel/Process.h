@@ -211,7 +211,7 @@ public:
     int sys$getresuid(uid_t*, uid_t*, uid_t*);
     int sys$getresgid(gid_t*, gid_t*, gid_t*);
     mode_t sys$umask(mode_t);
-    int sys$open(const Syscall::SC_open_params*);
+    int sys$open(Userspace<const Syscall::SC_open_params*>);
     int sys$close(int fd);
     ssize_t sys$read(int fd, Userspace<u8*>, ssize_t);
     ssize_t sys$write(int fd, const u8*, ssize_t);
@@ -222,10 +222,10 @@ public:
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
     int sys$sigreturn(RegisterState& registers);
-    pid_t sys$waitid(const Syscall::SC_waitid_params*);
-    void* sys$mmap(const Syscall::SC_mmap_params*);
+    pid_t sys$waitid(Userspace<const Syscall::SC_waitid_params*>);
+    void* sys$mmap(Userspace<const Syscall::SC_mmap_params*>);
     int sys$munmap(void*, size_t size);
-    int sys$set_mmap_name(const Syscall::SC_set_mmap_name_params*);
+    int sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*>);
     int sys$mprotect(void*, size_t, int prot);
     int sys$madvise(void*, size_t, int advice);
     int sys$minherit(void*, size_t, int inherit);
@@ -238,16 +238,16 @@ public:
     int sys$fchdir(int fd);
     int sys$sleep(unsigned seconds);
     int sys$usleep(useconds_t usec);
-    int sys$gettimeofday(timeval*);
+    int sys$gettimeofday(Userspace<timeval*>);
     int sys$clock_gettime(clockid_t, timespec*);
     int sys$clock_settime(clockid_t, timespec*);
-    int sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params*);
+    int sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*>);
     int sys$gethostname(char*, ssize_t);
     int sys$sethostname(const char*, ssize_t);
     int sys$uname(utsname*);
-    int sys$readlink(const Syscall::SC_readlink_params*);
-    int sys$ttyname_r(int fd, char*, ssize_t);
-    int sys$ptsname_r(int fd, char*, ssize_t);
+    int sys$readlink(Userspace<const Syscall::SC_readlink_params*>);
+    int sys$ttyname(int fd, Userspace<char*>, size_t);
+    int sys$ptsname(int fd, Userspace<char*>, size_t);
     pid_t sys$fork(RegisterState&);
     int sys$execve(const Syscall::SC_execve_params*);
     int sys$dup(int oldfd);
@@ -272,9 +272,9 @@ public:
     int sys$mkdir(Userspace<const char*> pathname, size_t path_length, mode_t mode);
     clock_t sys$times(tms*);
     int sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
-    int sys$link(const Syscall::SC_link_params*);
+    int sys$link(Userspace<const Syscall::SC_link_params*>);
     int sys$unlink(const char* pathname, size_t path_length);
-    int sys$symlink(const Syscall::SC_symlink_params*);
+    int sys$symlink(Userspace<const Syscall::SC_symlink_params*>);
     int sys$rmdir(Userspace<const char*> pathname, size_t path_length);
     int sys$mount(const Syscall::SC_mount_params*);
     int sys$umount(const char* mountpoint, size_t mountpoint_length);
@@ -296,14 +296,14 @@ public:
     int sys$getpeername(const Syscall::SC_getpeername_params*);
     int sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
     int sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
-    int sys$create_thread(void* (*)(void*), const Syscall::SC_create_thread_params*);
+    int sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
     void sys$exit_thread(void*);
     int sys$join_thread(int tid, void** exit_value);
     int sys$detach_thread(int tid);
     int sys$set_thread_name(int tid, const char* buffer, size_t buffer_size);
     int sys$get_thread_name(int tid, char* buffer, size_t buffer_size);
-    int sys$rename(const Syscall::SC_rename_params*);
-    int sys$mknod(const Syscall::SC_mknod_params*);
+    int sys$rename(Userspace<const Syscall::SC_rename_params*>);
+    int sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
     int sys$shbuf_create(int, void** buffer);
     int sys$shbuf_allow_pid(int, pid_t peer_pid);
     int sys$shbuf_allow_all(int);
@@ -321,7 +321,7 @@ public:
     int sys$module_unload(const char* name, size_t name_length);
     int sys$profiling_enable(pid_t);
     int sys$profiling_disable(pid_t);
-    int sys$futex(const Syscall::SC_futex_params*);
+    int sys$futex(Userspace<const Syscall::SC_futex_params*>);
     int sys$set_thread_boost(int tid, int amount);
     int sys$set_process_boost(pid_t, int amount);
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
@@ -333,6 +333,7 @@ public:
     int sys$sendfd(int sockfd, int fd);
     int sys$recvfd(int sockfd);
     long sys$sysconf(int name);
+    int sys$disown(pid_t);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -687,7 +688,7 @@ private:
     VeilState m_veil_state { VeilState::None };
     Vector<UnveiledPath> m_unveiled_paths;
 
-    WaitQueue& futex_queue(i32*);
+    WaitQueue& futex_queue(Userspace<const i32*>);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;

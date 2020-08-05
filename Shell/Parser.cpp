@@ -72,7 +72,7 @@ bool Parser::expect(const StringView& expected)
 }
 
 template<typename A, typename... Args>
-RefPtr<A> Parser::create(Args... args)
+NonnullRefPtr<A> Parser::create(Args... args)
 {
     return adopt(*new A(AST::Position { m_rule_start_offsets.last(), m_offset }, args...));
 }
@@ -772,6 +772,8 @@ RefPtr<AST::Node> Parser::parse_variable()
     switch (peek()) {
     case '$':
     case '?':
+    case '*':
+    case '#':
         return create<AST::SpecialVariable>(consume()); // Variable Special
     default:
         break;

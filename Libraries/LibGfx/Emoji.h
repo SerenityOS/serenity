@@ -34,7 +34,7 @@ class Bitmap;
 
 class Emoji {
 public:
-    static const Gfx::Bitmap* emoji_for_codepoint(u32 codepoint);
+    static const Gfx::Bitmap* emoji_for_code_points(u32 code_points);
 };
 
 }

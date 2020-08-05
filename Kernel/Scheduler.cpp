@@ -27,6 +27,7 @@
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
+#include <AK/Time.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
@@ -62,19 +63,6 @@ void Scheduler::init_thread(Thread& thread)
     g_scheduler_data->m_nonrunnable_threads.append(thread);
 }
 
-void Scheduler::update_state_for_thread(Thread& thread)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_data);
-    ASSERT(g_scheduler_lock.own_lock());
-    auto& list = g_scheduler_data->thread_list_for_state(thread.state());
-
-    if (list.contains(thread))
-        return;
-
-    list.append(thread);
-}
-
 static u32 time_slice_for(const Thread& thread)
 {
     // One time slice unit == 1ms
@@ -104,7 +92,7 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, void*& joinee_exit_value)
     current_thread->m_joinee = &joinee;
 }
 
-bool Thread::JoinBlocker::should_unblock(Thread& joiner, time_t, long)
+bool Thread::JoinBlocker::should_unblock(Thread& joiner)
 {
     return !joiner.m_joinee;
 }
@@ -124,7 +112,7 @@ Thread::AcceptBlocker::AcceptBlocker(const FileDescription& description)
 {
 }
 
-bool Thread::AcceptBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::AcceptBlocker::should_unblock(Thread&)
 {
     auto& socket = *blocked_description().socket();
     return socket.can_accept();
@@ -135,7 +123,7 @@ Thread::ConnectBlocker::ConnectBlocker(const FileDescription& description)
 {
 }
 
-bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::ConnectBlocker::should_unblock(Thread&)
 {
     auto& socket = *blocked_description().socket();
     return socket.setup_state() == Socket::SetupState::Completed;
@@ -144,50 +132,50 @@ bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
 Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
+}
+
+timespec* Thread::WriteBlocker::override_timeout(timespec* timeout)
+{
+    auto& description =  blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            timeval deadline = Scheduler::time_since_boot();
-            deadline.tv_sec += socket.send_timeout().tv_sec;
-            deadline.tv_usec += socket.send_timeout().tv_usec;
-            deadline.tv_sec += (socket.send_timeout().tv_usec / 1000000) * 1;
-            deadline.tv_usec %= 1000000;
-            m_deadline = deadline;
+            timeval_to_timespec(Scheduler::time_since_boot(), m_deadline);
+            timespec_add_timeval(m_deadline, socket.send_timeout(), m_deadline);
+            if (!timeout || m_deadline < *timeout)
+                return &m_deadline;
         }
     }
+    return timeout;
 }
 
-bool Thread::WriteBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
+bool Thread::WriteBlocker::should_unblock(Thread&)
 {
-    if (m_deadline.has_value()) {
-        bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
-        return timed_out || blocked_description().can_write();
-    }
     return blocked_description().can_write();
 }
 
 Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
+}
+
+timespec* Thread::ReadBlocker::override_timeout(timespec* timeout)
+{
+    auto& description = blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            timeval deadline = Scheduler::time_since_boot();
-            deadline.tv_sec += socket.receive_timeout().tv_sec;
-            deadline.tv_usec += socket.receive_timeout().tv_usec;
-            deadline.tv_sec += (socket.receive_timeout().tv_usec / 1000000) * 1;
-            deadline.tv_usec %= 1000000;
-            m_deadline = deadline;
+            timeval_to_timespec(Scheduler::time_since_boot(), m_deadline);
+            timespec_add_timeval(m_deadline, socket.receive_timeout(), m_deadline);
+            if (!timeout || m_deadline < *timeout)
+                return &m_deadline;
         }
     }
+    return timeout;
 }
 
-bool Thread::ReadBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
+bool Thread::ReadBlocker::should_unblock(Thread&)
 {
-    if (m_deadline.has_value()) {
-        bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
-        return timed_out || blocked_description().can_read();
-    }
     return blocked_description().can_read();
 }
 
@@ -198,7 +186,7 @@ Thread::ConditionBlocker::ConditionBlocker(const char* state_string, Function<bo
     ASSERT(m_block_until_condition);
 }
 
-bool Thread::ConditionBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::ConditionBlocker::should_unblock(Thread&)
 {
     return m_block_until_condition();
 }
@@ -208,27 +196,20 @@ Thread::SleepBlocker::SleepBlocker(u64 wakeup_time)
 {
 }
 
-bool Thread::SleepBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::SleepBlocker::should_unblock(Thread&)
 {
     return m_wakeup_time <= g_uptime;
 }
 
-Thread::SelectBlocker::SelectBlocker(const timespec& ts, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
-    : m_select_timeout(ts)
-    , m_select_has_timeout(select_has_timeout)
-    , m_select_read_fds(read_fds)
+Thread::SelectBlocker::SelectBlocker(const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
+    : m_select_read_fds(read_fds)
     , m_select_write_fds(write_fds)
     , m_select_exceptional_fds(except_fds)
 {
 }
 
-bool Thread::SelectBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
+bool Thread::SelectBlocker::should_unblock(Thread& thread)
 {
-    if (m_select_has_timeout) {
-        if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec * 1000 >= m_select_timeout.tv_nsec))
-            return true;
-    }
-
     auto& process = thread.process();
     for (int fd : m_select_read_fds) {
         if (!process.m_fds[fd])
@@ -252,7 +233,7 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, pid_t& waitee_pid)
 {
 }
 
-bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
+bool Thread::WaitBlocker::should_unblock(Thread& thread)
 {
     bool should_unblock = m_wait_options & WNOHANG;
     if (m_waitee_pid != -1) {
@@ -294,7 +275,7 @@ Thread::SemiPermanentBlocker::SemiPermanentBlocker(Reason reason)
 {
 }
 
-bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::SemiPermanentBlocker::should_unblock(Thread&)
 {
     // someone else has to unblock us
     return false;
@@ -304,6 +285,7 @@ bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
 // Make a decision as to whether to unblock them or not.
 void Thread::consider_unblock(time_t now_sec, long now_usec)
 {
+    ScopedSpinLock lock(m_lock);
     switch (state()) {
     case Thread::Invalid:
     case Thread::Runnable:
@@ -315,10 +297,16 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         /* don't know, don't care */
         return;
     case Thread::Blocked:
+    {
         ASSERT(m_blocker != nullptr);
-        if (m_blocker->should_unblock(*this, now_sec, now_usec))
+        timespec now;
+        now.tv_sec = now_sec,
+        now.tv_nsec = now_usec * 1000ull;
+        bool timed_out = m_blocker_timeout && now >= *m_blocker_timeout;
+        if (timed_out || m_blocker->should_unblock(*this))
             unblock();
         return;
+    }
     case Thread::Skip1SchedulerPass:
         set_state(Thread::Skip0SchedulerPasses);
         return;
@@ -396,13 +384,15 @@ bool Scheduler::pick_next()
         }
         if (process.m_alarm_deadline && g_uptime > process.m_alarm_deadline) {
             process.m_alarm_deadline = 0;
-            process.send_signal(SIGALRM, nullptr);
+            // FIXME: Should we observe this signal somehow?
+            (void)process.send_signal(SIGALRM, nullptr);
         }
         return IterationDecision::Continue;
     });
 
     // Dispatch any pending signals.
     Thread::for_each_living([&](Thread& thread) -> IterationDecision {
+        ScopedSpinLock lock(thread.get_lock());
         if (!thread.has_unmasked_pending_signals())
             return IterationDecision::Continue;
         // NOTE: dispatch_one_pending_signal() may unblock the process.
@@ -427,6 +417,8 @@ bool Scheduler::pick_next()
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Reason: " << (thread.wait_reason() ? thread.wait_reason() : "none");
         else if (thread.state() == Thread::Dying)
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Finalizable: " << thread.is_finalizable();
+        else
+            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
         return IterationDecision::Continue;
     });
 

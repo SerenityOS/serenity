@@ -42,8 +42,8 @@ public:
     // ^CharacterDevice
     virtual bool can_read(const Kernel::FileDescription&, size_t) const override;
     virtual bool can_write(const Kernel::FileDescription&, size_t) const override { return true; }
-    virtual ssize_t read(Kernel::FileDescription&, size_t, u8*, ssize_t) override;
-    virtual ssize_t write(Kernel::FileDescription&, size_t, const u8*, ssize_t) override;
+    virtual Kernel::KResultOr<size_t> read(Kernel::FileDescription&, size_t, u8*, size_t) override;
+    virtual Kernel::KResultOr<size_t> write(Kernel::FileDescription&, size_t, const u8*, size_t) override;
     virtual const char* class_name() const override { return "Console"; }
 
     void put_char(char);

@@ -52,15 +52,19 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-ssize_t TTY::read(FileDescription&, size_t, u8* buffer, ssize_t size)
+KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
 {
-    ASSERT(size >= 0);
+    if (Process::current()->pgid() != pgid()) {
+        // FIXME: Should we propigate this error path somehow?
+        (void)Process::current()->send_signal(SIGTTIN, nullptr);
+        return KResult(-EINTR);
+    }
 
     if (m_input_buffer.size() < static_cast<size_t>(size))
         size = m_input_buffer.size();
 
     if (in_canonical_mode()) {
-        int i = 0;
+        size_t i = 0;
         for (; i < size; i++) {
             u8 ch = m_input_buffer.dequeue();
             if (ch == '\0') {
@@ -79,21 +83,20 @@ ssize_t TTY::read(FileDescription&, size_t, u8* buffer, ssize_t size)
         return i;
     }
 
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
         buffer[i] = m_input_buffer.dequeue();
 
     return size;
 }
 
-ssize_t TTY::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
+KResultOr<size_t> TTY::write(FileDescription&, size_t, const u8* buffer, size_t size)
 {
-#ifdef TTY_DEBUG
-    dbg() << "TTY::write {" << String::format("%u", size) << "} ";
-    for (size_t i = 0; i < size; ++i) {
-        dbg() << String::format("%b ", buffer[i]);
+    if (Process::current()->pgid() != pgid()) {
+        // FIXME: Should we propigate this error path somehow?
+        (void)Process::current()->send_signal(SIGTTOU, nullptr);
+        return KResult(-EINTR);
     }
-    dbg() << "";
-#endif
+
     on_tty_write(buffer, size);
     return size;
 }
@@ -250,7 +253,8 @@ void TTY::generate_signal(int signal)
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbg() << tty_name() << ": Send signal " << signal << " to " << process;
-        process.send_signal(signal, nullptr);
+        // FIXME: Should this error be propagated somehow?
+        (void)process.send_signal(signal, nullptr);
         return IterationDecision::Continue;
     });
 }
