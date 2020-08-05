@@ -166,7 +166,7 @@ public:
     {
         if (m_size_remaining < count)
             return false;
-        buffer = ByteBuffer::wrap(m_data_ptr, count);
+        buffer = ByteBuffer::wrap(const_cast<u8*>(m_data_ptr), count);
         m_data_ptr += count;
         m_size_remaining -= count;
         return true;

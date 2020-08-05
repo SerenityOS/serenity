@@ -189,12 +189,15 @@ void tls(const char* message, size_t len)
 
 void aes_cbc(const char* message, size_t len)
 {
-    auto buffer = ByteBuffer::wrap(message, len);
+    auto buffer = ByteBuffer::wrap(const_cast<char*>(message), len);
     // FIXME: Take iv as an optional parameter
     auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
 
     if (encrypting) {
-        Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(secret_key, strlen(secret_key)), key_bits, Crypto::Cipher::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher(
+            ByteBuffer::wrap(const_cast<char*>(secret_key), strlen(secret_key)),
+            key_bits,
+            Crypto::Cipher::Intent::Encryption);
 
         auto enc = cipher.create_aligned_buffer(buffer.size());
         (void)cipher.encrypt(buffer, enc, iv);
@@ -204,7 +207,10 @@ void aes_cbc(const char* message, size_t len)
         else
             print_buffer(enc, Crypto::Cipher::AESCipher::block_size());
     } else {
-        Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(secret_key, strlen(secret_key)), key_bits, Crypto::Cipher::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher(
+            ByteBuffer::wrap(const_cast<char*>(secret_key), strlen(secret_key)),
+            key_bits,
+            Crypto::Cipher::Intent::Decryption);
         auto dec = cipher.create_aligned_buffer(buffer.size());
         cipher.decrypt(buffer, dec, iv);
         printf("%.*s\n", (int)dec.size(), dec.data());

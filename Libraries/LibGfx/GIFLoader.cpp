@@ -345,7 +345,7 @@ bool load_gif_frame_descriptors(GIFLoadingContext& context)
     if (context.data_size < 32)
         return false;
 
-    auto buffer = ByteBuffer::wrap(context.data, context.data_size);
+    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.data), context.data_size);
     BufferStream stream(buffer);
 
     Optional<GIFFormat> format = decode_gif_header(stream);
@@ -546,7 +546,7 @@ GIFImageDecoderPlugin::GIFImageDecoderPlugin(const u8* data, size_t size)
     m_context->data_size = size;
 }
 
-GIFImageDecoderPlugin::~GIFImageDecoderPlugin() {}
+GIFImageDecoderPlugin::~GIFImageDecoderPlugin() { }
 
 IntSize GIFImageDecoderPlugin::size()
 {
@@ -591,7 +591,7 @@ bool GIFImageDecoderPlugin::set_nonvolatile()
 
 bool GIFImageDecoderPlugin::sniff()
 {
-    auto buffer = ByteBuffer::wrap(m_context->data, m_context->data_size);
+    auto buffer = ByteBuffer::wrap(const_cast<u8*>(m_context->data), m_context->data_size);
     BufferStream stream(buffer);
     return decode_gif_header(stream).has_value();
 }

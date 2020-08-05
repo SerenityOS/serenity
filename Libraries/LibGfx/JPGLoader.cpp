@@ -1146,7 +1146,7 @@ static bool scan_huffman_stream(BufferStream& stream, JPGLoadingContext& context
 
 static bool decode_jpg(JPGLoadingContext& context)
 {
-    ByteBuffer buffer = ByteBuffer::wrap(context.data, context.data_size);
+    ByteBuffer buffer = ByteBuffer::wrap(const_cast<u8*>(context.data), context.data_size);
     BufferStream stream(buffer);
     if (!parse_header(stream, context))
         return false;

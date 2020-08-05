@@ -117,7 +117,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
     if (url.protocol() == "about") {
         dbg() << "Loading about: URL " << url;
         deferred_invoke([success_callback = move(success_callback)](auto&) {
-            success_callback(ByteBuffer::wrap(String::empty().characters(), 1), {});
+            success_callback(ByteBuffer::wrap(const_cast<char*>(String::empty().characters()), 1), {});
         });
         return;
     }
