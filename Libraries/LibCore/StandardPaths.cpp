@@ -61,6 +61,14 @@ String StandardPaths::downloads_directory()
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
+String StandardPaths::config_directory()
+{
+    StringBuilder builder;
+    builder.append(home_directory());
+    builder.append("/.config");
+    return LexicalPath::canonicalized_path(builder.to_string());
+}
+
 String StandardPaths::tempfile_directory()
 {
     return "/tmp";

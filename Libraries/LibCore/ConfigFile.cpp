@@ -36,8 +36,8 @@ namespace Core {
 
 NonnullRefPtr<ConfigFile> ConfigFile::get_for_app(const String& app_name)
 {
-    String home_path = StandardPaths::home_directory();
-    auto path = String::format("%s/%s.ini", home_path.characters(), app_name.characters());
+    String directory = StandardPaths::config_directory();
+    auto path = String::format("%s/%s.ini", directory.characters(), app_name.characters());
     return adopt(*new ConfigFile(path));
 }
 
