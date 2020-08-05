@@ -28,7 +28,6 @@
 
 #include "CompilationUnit.h"
 #include "DwarfTypes.h"
-#include <AK/BufferStream.h>
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
@@ -82,7 +81,7 @@ public:
 
 private:
     AttributeValue get_attribute_value(AttributeDataForm form,
-        BufferStream& debug_info_stream) const;
+        InputMemoryStream& debug_info_stream) const;
 
     const CompilationUnit& m_compilation_unit;
     u32 m_offset { 0 };

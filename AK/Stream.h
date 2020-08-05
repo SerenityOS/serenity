@@ -154,6 +154,67 @@ public:
         return m_bytes[m_offset];
     }
 
+    // FIXME: Duplicated from AK::BufferStream::read_LEB128_unsigned.
+    // LEB128 is a variable-length encoding for integers
+    bool read_LEB128_unsigned(size_t& result)
+    {
+        const auto backup = m_offset;
+
+        result = 0;
+        size_t num_bytes = 0;
+        while (true) {
+            // Note. The implementation in AK::BufferStream::read_LEB128_unsigned read one
+            //       past the end, this is fixed here.
+            if (eof()) {
+                m_offset = backup;
+                m_error = true;
+                return false;
+            }
+
+            const u8 byte = m_bytes[m_offset];
+            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
+            ++m_offset;
+            if (!(byte & (1 << 7)))
+                break;
+            ++num_bytes;
+        }
+
+        return true;
+    }
+
+    // FIXME: Duplicated from AK::BufferStream::read_LEB128_signed.
+    // LEB128 is a variable-length encoding for integers
+    bool read_LEB128_signed(ssize_t& result)
+    {
+        const auto backup = m_offset;
+
+        result = 0;
+        size_t num_bytes = 0;
+        u8 byte = 0;
+
+        do {
+            // Note. The implementation in AK::BufferStream::read_LEB128_unsigned read one
+            //       past the end, this is fixed here.
+            if (eof()) {
+                m_offset = backup;
+                m_error = true;
+                return false;
+            }
+
+            byte = m_bytes[m_offset];
+            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
+            ++m_offset;
+            ++num_bytes;
+        } while (byte & (1 << 7));
+
+        if (num_bytes * 7 < sizeof(size_t) * 4 && (byte & 0x40)) {
+            // sign extend
+            result |= ((size_t)(-1) << (num_bytes * 7));
+        }
+
+        return true;
+    }
+
     ReadonlyBytes bytes() const { return m_bytes; }
     size_t offset() const { return m_offset; }
     size_t remaining() const { return m_bytes.size() - m_offset; }

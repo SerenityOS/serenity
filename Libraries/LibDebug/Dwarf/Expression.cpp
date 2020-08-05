@@ -24,18 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "Expression.h"
-#include <AK/BufferStream.h>
+
+#include <AK/Stream.h>
+
 #include <sys/arch/i386/regs.h>
 
-namespace Dwarf {
-namespace Expression {
+namespace Dwarf::Expression {
 
-Value evaluate(const ByteBuffer& bytes, const PtraceRegisters& regs)
+Value evaluate(ReadonlyBytes bytes, const PtraceRegisters& regs)
 {
-    // TODO: we need a BufferStream variant that takes a const ByteBuffer
-    BufferStream stream(const_cast<ByteBuffer&>(bytes));
+    InputMemoryStream stream(bytes);
 
-    while (!stream.at_end()) {
+    while (!stream.eof()) {
         u8 opcode = 0;
         stream >> opcode;
 
@@ -61,5 +61,4 @@ Value evaluate(const ByteBuffer& bytes, const PtraceRegisters& regs)
     ASSERT_NOT_REACHED();
 }
 
-};
-};
+}
