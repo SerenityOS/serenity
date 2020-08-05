@@ -66,7 +66,10 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    ASSERT(json.has_value());
+    if (!json.has_value()) {
+        fprintf(stderr, "Couldn't parse %s as JSON\n", path);
+        return 1;
+    }
 
     print(json.value());
     printf("\n");
