@@ -142,7 +142,7 @@ NonnullRefPtr<EditorWrapper> get_editor_of_file(const String& file)
 
 String get_project_executable_path()
 {
-    // e.g /my/project.files => /my/project
+    // e.g /my/project.hackstudio => /my/project
     // TODO: Perhaps a Makefile rule for getting the value of $(PROGRAM) would be better?
     return g_project->path().substring(0, g_project->path().index_of(".").value());
 }
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
     if (!make_is_available())
         GUI::MessageBox::show(g_window, "The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error);
 
-    open_project("/home/anon/little/little.files");
+    open_project("/home/anon/little/little.hackstudio");
 
     auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
     auto& toolbar = toolbar_container.add<GUI::ToolBar>();
