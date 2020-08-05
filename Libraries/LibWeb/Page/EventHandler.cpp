@@ -255,7 +255,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned, u32 code_point)
             auto& text_node = downcast<DOM::Text>(*m_frame.cursor_position().node());
             StringBuilder builder;
             builder.append(text_node.data().substring_view(0, m_frame.cursor_position().offset()));
-            builder.append_code_points(code_point);
+            builder.append_codepoint(code_point);
             builder.append(text_node.data().substring_view(m_frame.cursor_position().offset(), text_node.data().length() - m_frame.cursor_position().offset()));
             text_node.set_data(builder.to_string());
             // FIXME: This will advance the cursor incorrectly when inserting multiple whitespaces (DOM vs layout whitespace collapse difference.)
