@@ -55,7 +55,9 @@ void TTY::set_default_termios()
 KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
-        Process::current()->send_signal(SIGTTIN, nullptr);
+        KResult result = Process::current()->send_signal(SIGTTIN, nullptr);
+        if (result.is_error())
+            return result;
         return KResult(-EINTR);
     }
 
@@ -91,7 +93,9 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
 KResultOr<size_t> TTY::write(FileDescription&, size_t, const u8* buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
-        Process::current()->send_signal(SIGTTOU, nullptr);
+        KResult result = Process::current()->send_signal(SIGTTOU, nullptr);
+        if (result.is_error())
+            return result;
         return KResult(-EINTR);
     }
 
