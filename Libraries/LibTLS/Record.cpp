@@ -117,7 +117,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 auto view = ct.slice_view(header_size + iv_size, length);
 
                 // encrypt the message
-                m_aes_local->encrypt(buffer, view, iv);
+                (void)m_aes_local->encrypt(buffer, view, iv);
 
                 // store the correct ciphertext length into the packet
                 u16 ct_length = (u16)ct.size() - header_size;
