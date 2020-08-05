@@ -275,8 +275,8 @@ struct SC_select_params {
 struct SC_poll_params {
     struct pollfd* fds;
     unsigned nfds;
-    const struct timespec* timeout;
-    const u32* sigmask;
+    Userspace<const struct timespec*> timeout;
+    Userspace<const u32*> sigmask;
 };
 
 struct SC_clock_nanosleep_params {
