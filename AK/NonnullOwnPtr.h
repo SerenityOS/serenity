@@ -111,7 +111,7 @@ public:
         return *this;
     }
 
-    T* leak_ptr()
+    [[nodiscard]] T* leak_ptr()
     {
         return exchange(m_ptr, nullptr);
     }
