@@ -42,6 +42,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <termios.h>
 #include <unistd.h>
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -904,6 +905,22 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
     }
     if (request == TIOCSPGRP) {
         return syscall(SC_ioctl, fd, request, arg);
+    }
+    if (request == TCGETS) {
+        struct termios termios;
+        int rc = syscall(SC_ioctl, fd, request, &termios);
+        if (rc < 0)
+            return rc;
+        mmu().copy_to_vm(arg, &termios, sizeof(termios));
+        return rc;
+    }
+    if (request == TCSETS) {
+        struct termios termios;
+        mmu().copy_from_vm(&termios, arg, sizeof(termios));
+        int rc = syscall(SC_ioctl, fd, request, &termios);
+        if (rc < 0)
+            return rc;
+        return rc;
     }
     dbg() << "Unsupported ioctl: " << request;
     dump_backtrace();
