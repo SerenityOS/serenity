@@ -197,7 +197,7 @@ void aes_cbc(const char* message, size_t len)
         Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(secret_key, strlen(secret_key)), key_bits, Crypto::Cipher::Intent::Encryption);
 
         auto enc = cipher.create_aligned_buffer(buffer.size());
-        cipher.encrypt(buffer, enc, iv);
+        (void)cipher.encrypt(buffer, enc, iv);
 
         if (binary)
             printf("%.*s", (int)enc.size(), enc.data());
@@ -579,7 +579,7 @@ void aes_cbc_test_encrypt()
         auto in = "This is a test! This is another test!"_b;
         auto out = cipher.create_aligned_buffer(in.size());
         auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
-        cipher.encrypt(in, out, iv);
+        (void)cipher.encrypt(in, out, iv);
         if (out.size() != sizeof(result))
             FAIL(size mismatch);
         else if (memcmp(out.data(), result, out.size()) != 0) {
