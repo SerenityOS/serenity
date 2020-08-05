@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -34,14 +35,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc > 1) {
-        for (;;) {
-            puts(argv[1]);
-        }
-    } else {
-        for (;;) {
-            puts("yes");
-        }
-    }
+    const char* string = "yes";
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(string, "String to output (defaults to 'yes')", "string", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    for (;;)
+        puts(string);
     return 0;
 }
