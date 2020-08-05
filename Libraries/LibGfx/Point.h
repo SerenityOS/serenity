@@ -28,8 +28,8 @@
 
 #include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
-#include <LibGfx/Orientation.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Orientation.h>
 #include <LibIPC/Forward.h>
 #include <math.h>
 #include <stdlib.h>
@@ -100,6 +100,12 @@ public:
     }
 
     void constrain(const Rect<T>&);
+    Point<T> constrained(const Rect<T>& rect) const
+    {
+        Point<T> point = *this;
+        point.constrain(rect);
+        return point;
+    }
 
     bool operator==(const Point<T>& other) const
     {
