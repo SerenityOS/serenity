@@ -45,11 +45,16 @@ struct HitTestResult {
     int index_in_node { 0 };
 };
 
+enum class HitTestType {
+    Exact,      // Exact matches only
+    TextCursor, // Clicking past the right/bottom edge of text will still hit the text
+};
+
 class LayoutNode : public TreeNode<LayoutNode> {
 public:
     virtual ~LayoutNode();
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint&) const;
+    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const;
 
     bool is_anonymous() const { return !m_node; }
     const DOM::Node* node() const { return m_node; }

@@ -102,7 +102,7 @@ void LayoutNode::paint(PaintContext& context, PaintPhase phase)
     });
 }
 
-HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position) const
+HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     HitTestResult result;
     for_each_child([&](auto& child) {
@@ -110,7 +110,7 @@ HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position) const
         // The outer loop who called us will take care of those.
         if (is<LayoutBox>(child) && downcast<LayoutBox>(child).stacking_context())
             return;
-        auto child_result = child.hit_test(position);
+        auto child_result = child.hit_test(position, type);
         if (child_result.layout_node)
             result = child_result;
     });

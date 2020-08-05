@@ -717,10 +717,10 @@ void LayoutBlock::paint(PaintContext& context, PaintPhase phase)
     }
 }
 
-HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position) const
+HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     if (!children_are_inline())
-        return LayoutBox::hit_test(position);
+        return LayoutBox::hit_test(position, type);
 
     HitTestResult last_good_candidate;
     for (auto& line_box : m_line_boxes) {
@@ -729,7 +729,7 @@ HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position) const
                 continue;
             if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
                 if (fragment.layout_node().is_block())
-                    return downcast<LayoutBlock>(fragment.layout_node()).hit_test(position);
+                    return downcast<LayoutBlock>(fragment.layout_node()).hit_test(position, type);
                 return { fragment.layout_node(), fragment.text_index_at(position.x()) };
             }
             if (fragment.absolute_rect().top() <= position.y())
@@ -737,7 +737,7 @@ HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position) const
         }
     }
 
-    if (last_good_candidate.layout_node)
+    if (type == HitTestType::TextCursor && last_good_candidate.layout_node)
         return last_good_candidate;
     return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
 }

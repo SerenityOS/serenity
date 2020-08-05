@@ -55,7 +55,7 @@ public:
     float absolute_y() const { return absolute_rect().y(); }
     Gfx::FloatPoint absolute_position() const { return absolute_rect().location(); }
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint& absolute_position) const override;
+    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
     virtual void set_needs_display() override;
 
     bool is_body() const;
