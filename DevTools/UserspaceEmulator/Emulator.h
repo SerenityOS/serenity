@@ -77,6 +77,7 @@ private:
 
     int virt$fork();
     int virt$execve(FlatPtr);
+    int virt$access(FlatPtr, size_t, int);
     int virt$sigaction(int, FlatPtr, FlatPtr);
     int virt$sigreturn();
     int virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t);
