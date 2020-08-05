@@ -298,7 +298,7 @@ public:
     String text() const
     {
         StringBuilder sb;
-        sb.append_codepoint(m_code_point);
+        sb.append_code_point(m_code_point);
         return sb.to_string();
     }
     u32 scancode() const { return m_scancode; }

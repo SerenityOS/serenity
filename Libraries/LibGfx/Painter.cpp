@@ -803,14 +803,14 @@ void Painter::draw_scaled_bitmap(const IntRect& a_dst_rect, const Gfx::Bitmap& s
     }
 }
 
-FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 codepoint, Color color)
+FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 code_point, Color color)
 {
-    draw_glyph(point, codepoint, font(), color);
+    draw_glyph(point, code_point, font(), color);
 }
 
-FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 codepoint, const Font& font, Color color)
+FLATTEN void Painter::draw_glyph(const IntPoint& point, u32 code_point, const Font& font, Color color)
 {
-    draw_bitmap(point, font.glyph_bitmap(codepoint), color);
+    draw_bitmap(point, font.glyph_bitmap(code_point), color);
 }
 
 void Painter::draw_emoji(const IntPoint& point, const Gfx::Bitmap& emoji, const Font& font)
@@ -828,19 +828,19 @@ void Painter::draw_emoji(const IntPoint& point, const Gfx::Bitmap& emoji, const 
     }
 }
 
-void Painter::draw_glyph_or_emoji(const IntPoint& point, u32 codepoint, const Font& font, Color color)
+void Painter::draw_glyph_or_emoji(const IntPoint& point, u32 code_point, const Font& font, Color color)
 {
-    if (codepoint < (u32)font.glyph_count()) {
+    if (code_point < (u32)font.glyph_count()) {
         // This looks like a regular character.
-        draw_glyph(point, (size_t)codepoint, font, color);
+        draw_glyph(point, (size_t)code_point, font, color);
         return;
     }
 
     // Perhaps it's an emoji?
-    auto* emoji = Emoji::emoji_for_codepoint(codepoint);
+    auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr) {
 #ifdef EMOJI_DEBUG
-        dbg() << "Failed to find an emoji for codepoint " << codepoint;
+        dbg() << "Failed to find an emoji for code_point " << code_point;
 #endif
         draw_glyph(point, '?', font, color);
         return;
@@ -862,8 +862,8 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf8View& text, const 
             int new_width = font.width("...");
             if (new_width < text_width) {
                 for (auto it = final_text.begin(); it != final_text.end(); ++it) {
-                    u32 codepoint = *it;
-                    int glyph_width = font.glyph_or_emoji_width(codepoint);
+                    u32 code_point = *it;
+                    int glyph_width = font.glyph_or_emoji_width(code_point);
                     // NOTE: Glyph spacing should not be added after the last glyph on the line,
                     //       but since we are here because the last glyph does not actually fit on the line,
                     //       we don't have to worry about spacing.
@@ -904,13 +904,13 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf8View& text, const 
     auto point = rect.location();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
 
-    for (u32 codepoint : final_text) {
-        if (codepoint == ' ') {
+    for (u32 code_point : final_text) {
+        if (code_point == ' ') {
             point.move_by(space_width, 0);
             continue;
         }
-        draw_glyph_or_emoji(point, codepoint, font, color);
-        point.move_by(font.glyph_or_emoji_width(codepoint) + font.glyph_spacing(), 0);
+        draw_glyph_or_emoji(point, code_point, font, color);
+        point.move_by(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), 0);
     }
 }
 
@@ -927,8 +927,8 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf32View& text, const
             if (new_width < text_width) {
                 size_t i = 0;
                 for (; i < text.length(); ++i) {
-                    u32 codepoint = text.codepoints()[i];
-                    int glyph_width = font.glyph_or_emoji_width(codepoint);
+                    u32 code_point = text.code_points()[i];
+                    int glyph_width = font.glyph_or_emoji_width(code_point);
                     // NOTE: Glyph spacing should not be added after the last glyph on the line,
                     //       but since we are here because the last glyph does not actually fit on the line,
                     //       we don't have to worry about spacing.
@@ -938,7 +938,7 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf32View& text, const
                     new_width += glyph_width + glyph_spacing;
                 }
                 elided_text.clear();
-                elided_text.append(final_text.codepoints(), i);
+                elided_text.append(final_text.code_points(), i);
                 elided_text.append('.');
                 elided_text.append('.');
                 elided_text.append('.');
@@ -970,13 +970,13 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf32View& text, const
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
 
     for (size_t i = 0; i < final_text.length(); ++i) {
-        auto codepoint = final_text.codepoints()[i];
-        if (codepoint == ' ') {
+        auto code_point = final_text.code_points()[i];
+        if (code_point == ' ') {
             point.move_by(space_width, 0);
             continue;
         }
-        draw_glyph_or_emoji(point, codepoint, font, color);
-        point.move_by(font.glyph_or_emoji_width(codepoint) + font.glyph_spacing(), 0);
+        draw_glyph_or_emoji(point, code_point, font, color);
+        point.move_by(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), 0);
     }
 }
 
@@ -997,8 +997,8 @@ void Painter::draw_text(const IntRect& rect, const StringView& raw_text, const F
 
     int start_of_current_line = 0;
     for (auto it = text.begin(); it != text.end(); ++it) {
-        u32 codepoint = *it;
-        if (codepoint == '\n') {
+        u32 code_point = *it;
+        if (code_point == '\n') {
             int byte_offset = text.byte_offset_of(it);
             Utf8View line = text.substring_view(start_of_current_line, byte_offset - start_of_current_line);
             lines.append(line);
@@ -1055,8 +1055,8 @@ void Painter::draw_text(const IntRect& rect, const Utf32View& text, const Font& 
 
     size_t start_of_current_line = 0;
     for (size_t i = 0; i < text.length(); ++i) {
-        u32 codepoint = text.codepoints()[i];
-        if (codepoint == '\n') {
+        u32 code_point = text.code_points()[i];
+        if (code_point == '\n') {
             Utf32View line = text.substring_view(start_of_current_line, i - start_of_current_line);
             lines.append(line);
             start_of_current_line = i + 1;

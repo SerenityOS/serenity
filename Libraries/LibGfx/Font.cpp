@@ -255,20 +255,20 @@ bool Font::write_to_file(const StringView& path)
     return true;
 }
 
-GlyphBitmap Font::glyph_bitmap(u32 codepoint) const
+GlyphBitmap Font::glyph_bitmap(u32 code_point) const
 {
-    return GlyphBitmap(&m_rows[codepoint * m_glyph_height], { glyph_width(codepoint), m_glyph_height });
+    return GlyphBitmap(&m_rows[code_point * m_glyph_height], { glyph_width(code_point), m_glyph_height });
 }
 
-int Font::glyph_or_emoji_width(u32 codepoint) const
+int Font::glyph_or_emoji_width(u32 code_point) const
 {
-    if (codepoint < m_glyph_count)
-        return glyph_width(codepoint);
+    if (code_point < m_glyph_count)
+        return glyph_width(code_point);
 
     if (m_fixed_width)
         return m_glyph_width;
 
-    auto* emoji = Emoji::emoji_for_codepoint(codepoint);
+    auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr)
         return glyph_width('?');
     return emoji->size().width();
@@ -285,11 +285,11 @@ int Font::width(const Utf8View& utf8) const
     bool first = true;
     int width = 0;
 
-    for (u32 codepoint : utf8) {
+    for (u32 code_point : utf8) {
         if (!first)
             width += glyph_spacing();
         first = false;
-        width += glyph_or_emoji_width(codepoint);
+        width += glyph_or_emoji_width(code_point);
     }
 
     return width;
@@ -301,7 +301,7 @@ int Font::width(const Utf32View& view) const
         return 0;
     int width = (view.length() - 1) * glyph_spacing();
     for (size_t i = 0; i < view.length(); ++i)
-        width += glyph_or_emoji_width(view.codepoints()[i]);
+        width += glyph_or_emoji_width(view.code_points()[i]);
     return width;
 }
 

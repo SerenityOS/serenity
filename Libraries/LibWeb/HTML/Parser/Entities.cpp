@@ -31,12 +31,12 @@
 namespace Web {
 namespace HTML {
 
-Optional<EntityMatch> codepoints_from_entity(const StringView& entity)
+Optional<EntityMatch> code_points_from_entity(const StringView& entity)
 {
     constexpr struct {
         StringView entity;
-        u32 codepoint;
-    } single_codepoint_entities[] = {
+        u32 code_point;
+    } single_code_point_entities[] = {
         { "AElig;", 0x000C6 },
         { "AElig", 0x000C6 },
         { "AMP;", 0x00026 },
@@ -2179,9 +2179,9 @@ Optional<EntityMatch> codepoints_from_entity(const StringView& entity)
 
     constexpr struct {
         StringView entity;
-        u32 codepoint1;
-        u32 codepoint2;
-    } double_codepoint_entities[] = {
+        u32 code_point1;
+        u32 code_point2;
+    } double_code_point_entities[] = {
         { "NotEqualTilde;", 0x02242, 0x00338 },
         { "NotGreaterFullEqual;", 0x02267, 0x00338 },
         { "NotGreaterGreater;", 0x0226B, 0x00338 },
@@ -2279,17 +2279,17 @@ Optional<EntityMatch> codepoints_from_entity(const StringView& entity)
 
     EntityMatch match;
 
-    for (auto& single_codepoint_entity : single_codepoint_entities) {
-        if (entity.starts_with(single_codepoint_entity.entity)) {
-            if (match.entity.is_null() || single_codepoint_entity.entity.length() > match.entity.length())
-                match = { { single_codepoint_entity.codepoint }, single_codepoint_entity.entity };
+    for (auto& single_code_point_entity : single_code_point_entities) {
+        if (entity.starts_with(single_code_point_entity.entity)) {
+            if (match.entity.is_null() || single_code_point_entity.entity.length() > match.entity.length())
+                match = { { single_code_point_entity.code_point }, single_code_point_entity.entity };
         }
     }
 
-    for (auto& double_codepoint_entity : double_codepoint_entities) {
-        if (entity.starts_with(double_codepoint_entity.entity)) {
-            if (match.entity.is_null() || double_codepoint_entity.entity.length() > match.entity.length())
-                match = EntityMatch { { double_codepoint_entity.codepoint1, double_codepoint_entity.codepoint2 }, StringView(double_codepoint_entity.entity) };
+    for (auto& double_code_point_entity : double_code_point_entities) {
+        if (entity.starts_with(double_code_point_entity.entity)) {
+            if (match.entity.is_null() || double_code_point_entity.entity.length() > match.entity.length())
+                match = EntityMatch { { double_code_point_entity.code_point1, double_code_point_entity.code_point2 }, StringView(double_code_point_entity.entity) };
         }
     }
 

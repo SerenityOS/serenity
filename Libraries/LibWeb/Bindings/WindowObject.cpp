@@ -272,10 +272,10 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
 
     Vector<u8> byte_string;
     byte_string.ensure_capacity(string.length());
-    for (u32 codepoint : Utf8View(string)) {
-        if (codepoint > 0xff)
+    for (u32 code_point : Utf8View(string)) {
+        if (code_point > 0xff)
             return interpreter.throw_exception<JS::InvalidCharacterError>(JS::ErrorType::NotAByteString, "btoa");
-        byte_string.append(codepoint);
+        byte_string.append(code_point);
     }
 
     auto encoded = encode_base64(byte_string.span());
