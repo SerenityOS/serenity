@@ -391,10 +391,11 @@ KeyboardClient::~KeyboardClient()
 {
 }
 
-void KeyboardDevice::set_maps(Keyboard::CharacterMapData character_map_data)
+void KeyboardDevice::set_maps(const Keyboard::CharacterMapData& character_map_data, const String& character_map_name)
 {
     m_character_map.set_character_map_data(character_map_data);
-    dbg() << "New Character map passing to client.";
+    m_character_map.set_character_map_name(character_map_name);
+    dbg() << "New Character map \"" << character_map_name << "\" passing to client.";
 }
 
 }

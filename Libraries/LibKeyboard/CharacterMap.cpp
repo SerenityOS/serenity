@@ -36,7 +36,6 @@ namespace Keyboard {
 CharacterMap::CharacterMap(const String& file_name)
 {
 #ifdef KERNEL
-    UNUSED_PARAM(file_name);
     m_character_map_data = default_character_map;
 #else
     auto result = CharacterMapFile::load_from_file(file_name);
@@ -44,13 +43,14 @@ CharacterMap::CharacterMap(const String& file_name)
 
     m_character_map_data = result.value();
 #endif
+    m_character_map_name = file_name;
 }
 
 #ifndef KERNEL
 
 int CharacterMap::set_system_map()
 {
-    Syscall::SC_setkeymap_params params { m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map };
+    Syscall::SC_setkeymap_params params { m_character_map_data.map, m_character_map_data.shift_map, m_character_map_data.alt_map, m_character_map_data.altgr_map, { m_character_map_name.characters(), m_character_map_name.length() } };
     return syscall(SC_setkeymap, &params);
 }
 
@@ -92,4 +92,13 @@ void CharacterMap::set_character_map_data(CharacterMapData character_map_data)
     m_character_map_data = character_map_data;
 }
 
+void CharacterMap::set_character_map_name(const String& character_map_name)
+{
+    m_character_map_name = character_map_name;
+}
+
+const String CharacterMap::character_map_name()
+{
+    return m_character_map_name;
+}
 }

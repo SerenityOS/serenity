@@ -56,7 +56,16 @@ int Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_p
     copy_from_user(character_map_data.alt_map, params.alt_map, CHAR_MAP_SIZE * sizeof(u32));
     copy_from_user(character_map_data.altgr_map, params.altgr_map, CHAR_MAP_SIZE * sizeof(u32));
 
-    KeyboardDevice::the().set_maps(character_map_data);
+    auto map_name = get_syscall_path_argument(params.map_name);
+    if (map_name.is_error()) {
+        return map_name.error();
+    }
+    constexpr size_t map_name_max_size = 50;
+    if (map_name.value().length() > map_name_max_size) {
+        return -ENAMETOOLONG;
+    }
+
+    KeyboardDevice::the().set_maps(character_map_data, map_name.value());
     return 0;
 }
 

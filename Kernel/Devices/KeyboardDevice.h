@@ -51,7 +51,9 @@ public:
     KeyboardDevice();
 
     void set_client(KeyboardClient* client) { m_client = client; }
-    void set_maps(Keyboard::CharacterMapData character_map);
+    void set_maps(const Keyboard::CharacterMapData& character_map, const String& character_map_name);
+
+    const String keymap_name() { return m_character_map.character_map_name(); }
 
     // ^CharacterDevice
     virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) override;
