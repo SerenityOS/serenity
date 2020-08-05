@@ -27,6 +27,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -38,53 +39,41 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    bool flag_system = false;
+    bool flag_node = false;
+    bool flag_release = false;
+    bool flag_machine = false;
+    bool flag_all = false;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_option(flag_system, "Print the system name (default)", nullptr, 's');
+    args_parser.add_option(flag_node, "Print the node name", nullptr, 'n');
+    args_parser.add_option(flag_release, "Print the system release", nullptr, 'r');
+    args_parser.add_option(flag_machine, "Print the machine hardware name", nullptr, 'm');
+    args_parser.add_option(flag_all, "Print all information (same as -snrm)", nullptr, 'a');
+    args_parser.parse(argc, argv);
+
+    if (flag_all)
+        flag_system = flag_node = flag_release = flag_machine = true;
+
+    if (!flag_system && !flag_node && !flag_release && !flag_machine)
+        flag_system = true;
+
     utsname uts;
     int rc = uname(&uts);
     if (rc < 0) {
         perror("uname() failed");
         return 0;
     }
-    bool flag_s = false;
-    bool flag_n = false;
-    bool flag_r = false;
-    bool flag_m = false;
-    if (argc == 1) {
-        flag_s = true;
-    } else {
-        for (int i = 1; i < argc; ++i) {
-            if (argv[i][0] == '-') {
-                for (const char* o = &argv[i][1]; *o; ++o) {
-                    switch (*o) {
-                    case 's':
-                        flag_s = true;
-                        break;
-                    case 'n':
-                        flag_n = true;
-                        break;
-                    case 'r':
-                        flag_r = true;
-                        break;
-                    case 'm':
-                        flag_m = true;
-                        break;
-                    case 'a':
-                        flag_s = flag_n = flag_r = flag_m = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    if (!flag_s && !flag_n && !flag_r && !flag_m)
-        flag_s = true;
+
     Vector<String> parts;
-    if (flag_s)
+    if (flag_system)
         parts.append(uts.sysname);
-    if (flag_n)
+    if (flag_node)
         parts.append(uts.nodename);
-    if (flag_r)
+    if (flag_release)
         parts.append(uts.release);
-    if (flag_m)
+    if (flag_machine)
         parts.append(uts.machine);
     StringBuilder builder;
     builder.join(' ', parts);
