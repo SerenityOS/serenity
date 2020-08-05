@@ -896,6 +896,9 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
         mmu().copy_to_vm(arg, &ws, sizeof(winsize));
         return 0;
     }
+    if (request == TIOCSPGRP) {
+        return syscall(SC_ioctl, fd, request, arg);
+    }
     dbg() << "Unsupported ioctl: " << request;
     dump_backtrace();
     TODO();
