@@ -26,6 +26,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -36,12 +37,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc < 2) {
-        printf("usage: which <executable>\n");
-        return 0;
-    }
+    const char* filename = nullptr;
 
-    char* filename = argv[1];
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(filename, "Name of executable", "executable");
+    args_parser.parse(argc, argv);
 
     String path = getenv("PATH");
     if (path.is_empty())
