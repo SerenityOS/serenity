@@ -42,7 +42,6 @@ public:
     static NonnullRefPtr<ByteBufferImpl> create_zeroed(size_t);
     static NonnullRefPtr<ByteBufferImpl> copy(const void*, size_t);
     static NonnullRefPtr<ByteBufferImpl> wrap(void*, size_t);
-    static NonnullRefPtr<ByteBufferImpl> wrap(const void*, size_t);
     static NonnullRefPtr<ByteBufferImpl> adopt(void*, size_t);
 
     ~ByteBufferImpl() { clear(); }
@@ -135,7 +134,9 @@ public:
     static ByteBuffer create_uninitialized(size_t size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
     static ByteBuffer create_zeroed(size_t size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
     static ByteBuffer copy(const void* data, size_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
-    static ByteBuffer wrap(const void* data, size_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
+    // The const version of this method was removed because it was misleading, suggesting copy on write
+    // functionality. If you really need the old behaviour, call ByteBuffer::wrap(const_cast<void*>(data), size)
+    // manually. Writing to such a byte buffer invokes undefined behaviour.
     static ByteBuffer wrap(void* data, size_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
     static ByteBuffer adopt(void* data, size_t size) { return ByteBuffer(ByteBufferImpl::adopt(data, size)); }
 
@@ -193,7 +194,7 @@ public:
         // I cannot hand you a slice I don't have
         ASSERT(offset + size <= this->size());
 
-        return wrap(offset_pointer(offset), size);
+        return wrap(const_cast<u8*>(offset_pointer(offset)), size);
     }
 
     ByteBuffer slice(size_t offset, size_t size) const
@@ -300,11 +301,6 @@ inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::copy(const void* data, size
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(void* data, size_t size)
 {
     return ::adopt(*new ByteBufferImpl(data, size, Wrap));
-}
-
-inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(const void* data, size_t size)
-{
-    return ::adopt(*new ByteBufferImpl(const_cast<void*>(data), size, Wrap));
 }
 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::adopt(void* data, size_t size)

@@ -66,7 +66,7 @@ public:
         {
         }
 
-        ~Symbol() {}
+        ~Symbol() { }
 
         StringView name() const { return m_image.table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
@@ -92,7 +92,7 @@ public:
             , m_program_header_index(program_header_index)
         {
         }
-        ~ProgramHeader() {}
+        ~ProgramHeader() { }
 
         unsigned index() const { return m_program_header_index; }
         u32 type() const { return m_program_header.p_type; }
@@ -122,7 +122,7 @@ public:
             , m_section_index(sectionIndex)
         {
         }
-        ~Section() {}
+        ~Section() { }
 
         StringView name() const { return m_image.section_header_table_string(m_section_header.sh_name); }
         unsigned type() const { return m_section_header.sh_type; }
@@ -132,7 +132,7 @@ public:
         unsigned entry_count() const { return !entry_size() ? 0 : size() / entry_size(); }
         u32 address() const { return m_section_header.sh_addr; }
         const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
-        ByteBuffer wrapping_byte_buffer() { return ByteBuffer::wrap(reinterpret_cast<const u8*>(raw_data()), size()); }
+        ByteBuffer wrapping_byte_buffer() { return ByteBuffer::wrap(const_cast<char*>(raw_data()), size()); }
         bool is_undefined() const { return m_section_index == SHN_UNDEF; }
         const RelocationSection relocations() const;
         u32 flags() const { return m_section_header.sh_flags; }
@@ -166,7 +166,7 @@ public:
         {
         }
 
-        ~Relocation() {}
+        ~Relocation() { }
 
         unsigned offset() const { return m_rel.r_offset; }
         unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }

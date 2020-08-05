@@ -315,7 +315,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
             region_object.add("cow_pages", region.cow_pages());
             region_object.add("name", region.name());
             region_object.add("vmobject", region.vmobject().class_name());
-	    
+
             StringBuilder pagemap_builder;
             for (size_t i = 0; i < region.page_count(); ++i) {
                 auto* page = region.physical_page(i);
@@ -736,8 +736,7 @@ Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     Processor::for_each(
-        [&](Processor& proc) -> IterationDecision
-        {
+        [&](Processor& proc) -> IterationDecision {
             auto& info = proc.info();
             auto obj = array.add_object();
             JsonArray features;
@@ -1399,7 +1398,7 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, F
     ASSERT(is_persistent_inode(identifier()));
     // FIXME: Being able to write into ProcFS at a non-zero offset seems like something we should maybe support..
     ASSERT(offset == 0);
-    bool success = (*write_callback)(identifier(), ByteBuffer::wrap(buffer, size));
+    bool success = (*write_callback)(identifier(), ByteBuffer::wrap(const_cast<u8*>(buffer), size));
     ASSERT(success);
     return 0;
 }
