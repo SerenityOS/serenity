@@ -139,27 +139,29 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     return marked_fd_count;
 }
 
-int Process::sys$poll(const Syscall::SC_poll_params* params)
+int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
+
     // FIXME: Return -EINVAL if timeout is invalid.
-    if (!validate_read_typed(params))
+    Syscall::SC_poll_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
     SmapDisabler disabler;
 
-    pollfd* fds = params->fds;
-    unsigned nfds = params->nfds;
-    const timespec* timeout = params->timeout;
-    const sigset_t* sigmask = params->sigmask;
+    pollfd* fds = params.fds;
+    unsigned nfds = params.nfds;
 
     if (fds && !validate_read_typed(fds, nfds))
         return -EFAULT;
-    if (timeout && !validate_read_typed(timeout))
+
+    timespec timeout = {};
+    if (params.timeout && !validate_read_and_copy_typed(&timeout, params.timeout))
         return -EFAULT;
-    if (sigmask && !validate_read_typed(sigmask))
-        return -EFAULT;
-    if (!validate_read_typed(fds))
+
+    sigset_t sigmask = {};
+    if (params.sigmask && !validate_read_and_copy_typed(&sigmask, params.sigmask))
         return -EFAULT;
 
     Thread::SelectBlocker::FDVector rfds;
@@ -174,26 +176,30 @@ int Process::sys$poll(const Syscall::SC_poll_params* params)
 
     timespec actual_timeout;
     bool has_timeout = false;
-    if (timeout && (timeout->tv_sec || timeout->tv_nsec)) {
+    if (params.timeout && (timeout.tv_sec || timeout.tv_nsec)) {
         timespec ts_since_boot;
         timeval_to_timespec(Scheduler::time_since_boot(), ts_since_boot);
-        timespec_add(ts_since_boot, *timeout, actual_timeout);
+        timespec_add(ts_since_boot, timeout, actual_timeout);
         has_timeout = true;
     }
 
     auto current_thread = Thread::current();
     ScopedValueRollback scoped_sigmask(current_thread->m_signal_mask);
-    if (sigmask)
-        current_thread->m_signal_mask = *sigmask;
+    if (params.sigmask)
+        current_thread->m_signal_mask = sigmask;
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
     dbg() << "polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
 #endif
 
-    if (!timeout || has_timeout) {
+    if (!params.timeout || has_timeout) {
         if (current_thread->block<Thread::SelectBlocker>(has_timeout ? &actual_timeout : nullptr, rfds, wfds, Thread::SelectBlocker::FDVector()).was_interrupted())
             return -EINTR;
     }
+
+    // Validate we can still write after waking up.
+    if (fds && !validate_write_typed(fds, nfds))
+        return -EFAULT;
 
     int fds_with_revents = 0;
 
