@@ -1477,10 +1477,12 @@ void Ext2FSInode::populate_lookup_cache() const
         return;
     HashMap<String, unsigned> children;
 
-    traverse_as_directory([&children](auto& entry) {
+    KResult result = traverse_as_directory([&children](auto& entry) {
         children.set(String(entry.name, entry.name_length), entry.inode.index());
         return true;
     });
+
+    ASSERT(result.is_success());
 
     if (!m_lookup_cache.is_empty())
         return;

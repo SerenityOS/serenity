@@ -636,7 +636,8 @@ Plan9FSInode::~Plan9FSInode()
 {
     Plan9FS::Message clunk_request { fs(), Plan9FS::Message::Type::Tclunk };
     clunk_request << fid();
-    fs().post_message_and_explicitly_ignore_reply(clunk_request);
+    // FIXME: Should we observe this  error somehow?
+    (void)fs().post_message_and_explicitly_ignore_reply(clunk_request);
 }
 
 KResult Plan9FSInode::ensure_open_for_mode(int mode)
@@ -829,7 +830,8 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEnt
             if (result.is_error()) {
                 Plan9FS::Message close_message { fs(), Plan9FS::Message::Type::Tclunk };
                 close_message << clone_fid;
-                fs().post_message_and_explicitly_ignore_reply(close_message);
+                // FIXME: Should we observe this error?
+                (void)fs().post_message_and_explicitly_ignore_reply(close_message);
                 return result;
             }
         }
@@ -871,7 +873,8 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEnt
 
         Plan9FS::Message close_message { fs(), Plan9FS::Message::Type::Tclunk };
         close_message << clone_fid;
-        fs().post_message_and_explicitly_ignore_reply(close_message);
+        // FIXME: Should we observe this error?
+        (void)fs().post_message_and_explicitly_ignore_reply(close_message);
         return result;
     } else {
         // TODO
