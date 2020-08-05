@@ -155,6 +155,10 @@ void TTY::emit(u8 ch)
         if (ch == m_termios.c_cc[VSUSP]) {
             dbg() << tty_name() << ": VSUSP pressed!";
             generate_signal(SIGTSTP);
+            if (auto process = Process::from_pid(m_pgid)) {
+                if (auto parent = Process::from_pid(process->ppid()))
+                    (void)parent->send_signal(SIGCHLD, process);
+            }
             return;
         }
     }
@@ -390,5 +394,4 @@ void TTY::hang_up()
 {
     generate_signal(SIGHUP);
 }
-
 }
