@@ -384,7 +384,8 @@ bool Scheduler::pick_next()
         }
         if (process.m_alarm_deadline && g_uptime > process.m_alarm_deadline) {
             process.m_alarm_deadline = 0;
-            process.send_signal(SIGALRM, nullptr);
+            // FIXME: Should we observe this signal somehow?
+            (void)process.send_signal(SIGALRM, nullptr);
         }
         return IterationDecision::Continue;
     });
