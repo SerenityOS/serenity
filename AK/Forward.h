@@ -48,6 +48,8 @@ class URL;
 class FlyString;
 class Utf32View;
 class Utf8View;
+class InputStream;
+class InputMemoryStream;
 
 template<typename T>
 class Span;
@@ -129,6 +131,8 @@ using AK::Function;
 using AK::HashMap;
 using AK::HashTable;
 using AK::InlineLinkedList;
+using AK::InputMemoryStream;
+using AK::InputStream;
 using AK::IPv4Address;
 using AK::JsonArray;
 using AK::JsonObject;
