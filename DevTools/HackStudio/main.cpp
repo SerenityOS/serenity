@@ -196,7 +196,7 @@ int main(int argc, char** argv)
     if (!argument_absolute_path.is_empty() && argument_absolute_path.ends_with(".hackstudio"))
         open_project(argument_absolute_path);
     else
-        open_project("/home/anon/little/little.hackstudio");
+        open_project("/home/anon/Source/little/little.hackstudio");
 
     auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
     auto& toolbar = toolbar_container.add<GUI::ToolBar>();
