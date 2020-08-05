@@ -32,7 +32,7 @@
 namespace AK {
 
 template<typename ValueType, typename ErrorType>
-class Result {
+class [[nodiscard]] Result {
 public:
     Result(const ValueType& res)
         : m_result(res)
