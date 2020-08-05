@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/SinglyLinkedList.h>
+#include <AK/SinglyLinkedListWithCount.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Lock.h>
@@ -122,7 +122,7 @@ private:
         Optional<KBuffer> data;
     };
 
-    SinglyLinkedList<ReceivedPacket> m_receive_queue;
+    SinglyLinkedListWithCount<ReceivedPacket> m_receive_queue;
 
     DoubleBuffer m_receive_buffer;
 
