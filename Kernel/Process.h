@@ -211,7 +211,7 @@ public:
     int sys$getresuid(uid_t*, uid_t*, uid_t*);
     int sys$getresgid(gid_t*, gid_t*, gid_t*);
     mode_t sys$umask(mode_t);
-    int sys$open(const Syscall::SC_open_params*);
+    int sys$open(Userspace<const Syscall::SC_open_params*>);
     int sys$close(int fd);
     ssize_t sys$read(int fd, Userspace<u8*>, ssize_t);
     ssize_t sys$write(int fd, const u8*, ssize_t);
