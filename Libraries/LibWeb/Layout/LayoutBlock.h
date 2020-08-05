@@ -49,7 +49,7 @@ public:
     LineBox& ensure_last_line_box();
     LineBox& add_line_box();
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint&) const override;
+    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 
     LayoutBlock* previous_sibling() { return downcast<LayoutBlock>(LayoutNode::previous_sibling()); }
     const LayoutBlock* previous_sibling() const { return downcast<LayoutBlock>(LayoutNode::previous_sibling()); }

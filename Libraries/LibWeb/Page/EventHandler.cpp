@@ -77,7 +77,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
         return false;
     bool handled_event = false;
 
-    auto result = layout_root()->hit_test(position);
+    auto result = layout_root()->hit_test(position, HitTestType::Exact);
     if (result.layout_node && result.layout_node->node()) {
         RefPtr<DOM::Node> node = result.layout_node->node();
         if (is<HTML::HTMLIFrameElement>(*node)) {
@@ -104,7 +104,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     NonnullRefPtr document = *m_frame.document();
     auto& page_client = m_frame.page().client();
 
-    auto result = layout_root()->hit_test(position);
+    auto result = layout_root()->hit_test(position, HitTestType::Exact);
     if (!result.layout_node)
         return false;
 
@@ -151,10 +151,13 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         }
     } else {
         if (button == GUI::MouseButton::Left) {
-            m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
-            layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
-            dump_selection("MouseDown");
-            m_in_mouse_selection = true;
+            auto result = layout_root()->hit_test(position, HitTestType::TextCursor);
+            if (result.layout_node && result.layout_node->node()) {
+                m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
+                layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
+                dump_selection("MouseDown");
+                m_in_mouse_selection = true;
+            }
         } else if (button == GUI::MouseButton::Right) {
             page_client.page_did_request_context_menu(m_frame.to_main_frame_position(position));
         }
@@ -171,7 +174,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
-    auto result = layout_root()->hit_test(position);
+    auto result = layout_root()->hit_test(position, HitTestType::Exact);
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
         RefPtr<DOM::Node> node = result.layout_node->node();
@@ -198,7 +201,10 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 return true;
         }
         if (m_in_mouse_selection) {
-            layout_root()->selection().set_end({ result.layout_node, result.index_in_node });
+            auto hit = layout_root()->hit_test(position, HitTestType::TextCursor);
+            if (hit.layout_node && hit.layout_node->node()) {
+                layout_root()->selection().set_end({ hit.layout_node, hit.index_in_node });
+            }
             dump_selection("MouseMove");
             page_client.page_did_change_selection();
         }

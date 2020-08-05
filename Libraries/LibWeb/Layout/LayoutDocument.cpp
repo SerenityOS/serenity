@@ -113,9 +113,9 @@ void LayoutDocument::paint(PaintContext& context, PaintPhase phase)
     stacking_context()->paint(context, phase);
 }
 
-HitTestResult LayoutDocument::hit_test(const Gfx::IntPoint& position) const
+HitTestResult LayoutDocument::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
-    return stacking_context()->hit_test(position);
+    return stacking_context()->hit_test(position, type);
 }
 
 }

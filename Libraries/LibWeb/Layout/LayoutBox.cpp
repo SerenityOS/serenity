@@ -224,7 +224,7 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
     }
 }
 
-HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position) const
+HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check
@@ -233,7 +233,7 @@ HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position) const
     for_each_child([&](auto& child) {
         if (is<LayoutBox>(child) && downcast<LayoutBox>(child).stacking_context())
             return;
-        auto child_result = child.hit_test(position);
+        auto child_result = child.hit_test(position, type);
         if (child_result.layout_node)
             result = child_result;
     });

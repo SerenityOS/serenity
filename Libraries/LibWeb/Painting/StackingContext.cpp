@@ -61,19 +61,19 @@ void StackingContext::paint(PaintContext& context, LayoutNode::PaintPhase phase)
     }
 }
 
-HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position) const
+HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     HitTestResult result;
     if (!m_box.is_root()) {
-        result = m_box.hit_test(position);
+        result = m_box.hit_test(position, type);
     } else {
         // NOTE: LayoutDocument::hit_test() merely calls StackingContext::hit_test()
         //       so we call its base class instead.
-        result = downcast<LayoutDocument>(m_box).LayoutBlock::hit_test(position);
+        result = downcast<LayoutDocument>(m_box).LayoutBlock::hit_test(position, type);
     }
 
     for (auto* child : m_children) {
-        auto result_here = child->hit_test(position);
+        auto result_here = child->hit_test(position, type);
         if (result_here.layout_node)
             result = result_here;
     }
