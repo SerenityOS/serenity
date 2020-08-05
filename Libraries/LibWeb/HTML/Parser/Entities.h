@@ -33,11 +33,11 @@ namespace Web {
 namespace HTML {
 
 struct EntityMatch {
-    Vector<u32, 2> codepoints;
+    Vector<u32, 2> code_points;
     StringView entity;
 };
 
-Optional<EntityMatch> codepoints_from_entity(const StringView&);
+Optional<EntityMatch> code_points_from_entity(const StringView&);
 
 }
 }

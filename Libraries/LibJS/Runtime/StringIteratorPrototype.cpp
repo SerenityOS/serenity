@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
     }
 
     StringBuilder builder;
-    builder.append_codepoint(*utf8_iterator);
+    builder.append_code_point(*utf8_iterator);
     ++utf8_iterator;
 
     return create_iterator_result_object(global_object, js_string(interpreter, builder.to_string()), false);

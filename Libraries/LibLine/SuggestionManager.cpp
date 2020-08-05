@@ -59,16 +59,16 @@ void SuggestionManager::set_suggestions(Vector<CompletionSuggestion>&& suggestio
     if (m_suggestions.size() == 1) {
         m_largest_common_suggestion_prefix_length = m_suggestions[0].text_view.length();
     } else if (m_suggestions.size()) {
-        u32 last_valid_suggestion_codepoint;
+        u32 last_valid_suggestion_code_point;
 
         for (;; ++common_suggestion_prefix) {
             if (m_suggestions[0].text_view.length() <= common_suggestion_prefix)
                 goto no_more_commons;
 
-            last_valid_suggestion_codepoint = m_suggestions[0].text_view.codepoints()[common_suggestion_prefix];
+            last_valid_suggestion_code_point = m_suggestions[0].text_view.code_points()[common_suggestion_prefix];
 
             for (auto& suggestion : m_suggestions) {
-                if (suggestion.text_view.length() <= common_suggestion_prefix || suggestion.text_view.codepoints()[common_suggestion_prefix] != last_valid_suggestion_codepoint) {
+                if (suggestion.text_view.length() <= common_suggestion_prefix || suggestion.text_view.code_points()[common_suggestion_prefix] != last_valid_suggestion_code_point) {
                     goto no_more_commons;
                 }
             }

@@ -267,7 +267,7 @@ void KeyboardMapperWidget::set_current_map(const String current_map)
             continue;
 
         AK::StringBuilder sb;
-        sb.append_codepoint(map[index]);
+        sb.append_code_point(map[index]);
 
         m_keys.at(k)->set_text(sb.to_string());
     }
