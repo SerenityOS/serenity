@@ -189,7 +189,14 @@ int main(int argc, char** argv)
     if (!make_is_available())
         GUI::MessageBox::show(g_window, "The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error);
 
-    open_project("/home/anon/little/little.hackstudio");
+    String argument_absolute_path;
+    if (argc >= 2)
+        argument_absolute_path = Core::File::real_path_for(argv[1]);
+
+    if (!argument_absolute_path.is_empty() && argument_absolute_path.ends_with(".hackstudio"))
+        open_project(argument_absolute_path);
+    else
+        open_project("/home/anon/little/little.hackstudio");
 
     auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
     auto& toolbar = toolbar_container.add<GUI::ToolBar>();
@@ -684,7 +691,10 @@ int main(int argc, char** argv)
 
     g_open_file = open_file;
 
-    open_file(g_project->default_file());
+    if (!argument_absolute_path.is_empty() && !argument_absolute_path.ends_with(".hackstudio"))
+        open_file(argument_absolute_path);
+    else
+        open_file(g_project->default_file());
 
     update_actions();
     return app->exec();
