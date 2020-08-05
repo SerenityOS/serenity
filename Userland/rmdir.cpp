@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -35,11 +36,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2) {
-        fprintf(stderr, "usage: rmdir <path>\n");
-        return 1;
-    }
-    int rc = rmdir(argv[1]);
+    const char* path;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "Directory to remove", "path");
+    args_parser.parse(argc, argv);
+
+    int rc = rmdir(path);
     if (rc < 0) {
         perror("rmdir");
         return 1;
