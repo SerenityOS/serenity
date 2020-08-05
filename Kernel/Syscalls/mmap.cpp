@@ -331,7 +331,7 @@ int Process::sys$minherit(void* address, size_t size, int inherit)
     return -EINVAL;
 }
 
-int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_params)
+int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
