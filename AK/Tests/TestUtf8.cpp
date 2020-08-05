@@ -37,9 +37,9 @@ TEST_CASE(decode_ascii)
     size_t expected_size = sizeof(expected) / sizeof(expected[0]);
 
     size_t i = 0;
-    for (u32 code_points : utf8) {
+    for (u32 codepoint : utf8) {
         ASSERT(i < expected_size);
-        EXPECT_EQ(code_points, expected[i]);
+        EXPECT_EQ(codepoint, expected[i]);
         i++;
     }
     EXPECT_EQ(i, expected_size);
@@ -56,9 +56,9 @@ TEST_CASE(decode_utf8)
     size_t expected_size = sizeof(expected) / sizeof(expected[0]);
 
     size_t i = 0;
-    for (u32 code_points : utf8) {
+    for (u32 codepoint : utf8) {
         ASSERT(i < expected_size);
-        EXPECT_EQ(code_points, expected[i]);
+        EXPECT_EQ(codepoint, expected[i]);
         i++;
     }
     EXPECT_EQ(i, expected_size);

@@ -106,7 +106,7 @@ public:
 private:
     typedef Vector<unsigned, 4> ParamVector;
 
-    void on_code_points(u32);
+    void on_codepoint(u32);
 
     void scroll_up();
     void scroll_down();
@@ -193,13 +193,13 @@ private:
     };
 
     ParserState m_parser_state { Normal };
-    u32 m_parser_code_points { 0 };
+    u32 m_parser_codepoint { 0 };
     Vector<u8> m_parameters;
     Vector<u8> m_intermediates;
     Vector<u8> m_xterm_parameters;
     Vector<bool> m_horizontal_tabs;
     u8 m_final { 0 };
-    u32 m_last_code_points { 0 };
+    u32 m_last_codepoint { 0 };
 };
 
 }

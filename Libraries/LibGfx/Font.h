@@ -89,10 +89,10 @@ public:
 
     ~Font();
 
-    GlyphBitmap glyph_bitmap(u32 code_points) const;
+    GlyphBitmap glyph_bitmap(u32 codepoint) const;
 
     u8 glyph_width(size_t ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[ch]; }
-    int glyph_or_emoji_width(u32 code_points) const;
+    int glyph_or_emoji_width(u32 codepoint) const;
     u8 glyph_height() const { return m_glyph_height; }
     u8 min_glyph_width() const { return m_min_glyph_width; }
     u8 max_glyph_width() const { return m_max_glyph_width; }

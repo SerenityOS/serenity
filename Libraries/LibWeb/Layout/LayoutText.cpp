@@ -209,7 +209,7 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
             skip_over_whitespace();
         for (; it != utf8_view.end(); ++it) {
             if (!isspace(*it)) {
-                builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.code_points_length_in_bytes());
+                builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.codepoint_length_in_bytes());
             } else {
                 builder.append(' ');
                 skip_over_whitespace();

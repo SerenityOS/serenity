@@ -294,7 +294,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             painter.clear_rect(row_rect, color_from_rgb(line.attributes()[0].background_color).with_alpha(m_opacity));
 
         for (size_t column = 0; column < line.length(); ++column) {
-            u32 code_points = line.code_points(column);
+            u32 codepoint = line.codepoint(column);
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
@@ -342,12 +342,12 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 }
             }
 
-            if (code_points == ' ')
+            if (codepoint == ' ')
                 continue;
 
             painter.draw_glyph_or_emoji(
                 character_rect.location(),
-                code_points,
+                codepoint,
                 attribute.flags & VT::Attribute::Bold ? bold_font() : font(),
                 text_color);
         }
@@ -524,16 +524,16 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 
         auto position = buffer_position_at(event.position());
         auto& line = m_terminal.line(position.row());
-        bool want_whitespace = line.code_points(position.column()) == ' ';
+        bool want_whitespace = line.codepoint(position.column()) == ' ';
 
         int start_column = 0;
         int end_column = 0;
 
-        for (int column = position.column(); column >= 0 && (line.code_points(column) == ' ') == want_whitespace; --column) {
+        for (int column = position.column(); column >= 0 && (line.codepoint(column) == ' ') == want_whitespace; --column) {
             start_column = column;
         }
 
-        for (int column = position.column(); column < m_terminal.columns() && (line.code_points(column) == ' ') == want_whitespace; ++column) {
+        for (int column = position.column(); column < m_terminal.columns() && (line.codepoint(column) == ' ') == want_whitespace; ++column) {
             end_column = column;
         }
 
@@ -715,10 +715,10 @@ String TerminalWidget::selected_text() const
             }
             // FIXME: This is a bit hackish.
             if (line.is_utf32()) {
-                u32 code_points = line.code_points(column);
-                builder.append(Utf32View(&code_points, 1));
+                u32 codepoint = line.codepoint(column);
+                builder.append(Utf32View(&codepoint, 1));
             } else {
-                builder.append(line.code_points(column));
+                builder.append(line.codepoint(column));
             }
             if (column == line.length() - 1 || (m_rectangle_selection && column == last_column)) {
                 builder.append('\n');

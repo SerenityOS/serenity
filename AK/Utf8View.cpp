@@ -81,12 +81,12 @@ Utf8View Utf8View::substring_view(int byte_offset, int byte_length) const
 
 static inline bool decode_first_byte(
     unsigned char byte,
-    int& out_code_points_length_in_bytes,
+    int& out_codepoint_length_in_bytes,
     u32& out_value)
 {
     if ((byte & 128) == 0) {
         out_value = byte;
-        out_code_points_length_in_bytes = 1;
+        out_codepoint_length_in_bytes = 1;
         return true;
     }
     if ((byte & 64) == 0) {
@@ -94,17 +94,17 @@ static inline bool decode_first_byte(
     }
     if ((byte & 32) == 0) {
         out_value = byte & 31;
-        out_code_points_length_in_bytes = 2;
+        out_codepoint_length_in_bytes = 2;
         return true;
     }
     if ((byte & 16) == 0) {
         out_value = byte & 15;
-        out_code_points_length_in_bytes = 3;
+        out_codepoint_length_in_bytes = 3;
         return true;
     }
     if ((byte & 8) == 0) {
         out_value = byte & 7;
-        out_code_points_length_in_bytes = 4;
+        out_codepoint_length_in_bytes = 4;
         return true;
     }
 
@@ -115,13 +115,13 @@ bool Utf8View::validate(size_t& valid_bytes) const
 {
     valid_bytes = 0;
     for (auto ptr = begin_ptr(); ptr < end_ptr(); ptr++) {
-        int code_points_length_in_bytes;
+        int codepoint_length_in_bytes;
         u32 value;
-        bool first_byte_makes_sense = decode_first_byte(*ptr, code_points_length_in_bytes, value);
+        bool first_byte_makes_sense = decode_first_byte(*ptr, codepoint_length_in_bytes, value);
         if (!first_byte_makes_sense)
             return false;
 
-        for (int i = 1; i < code_points_length_in_bytes; i++) {
+        for (int i = 1; i < codepoint_length_in_bytes; i++) {
             ptr++;
             if (ptr >= end_ptr())
                 return false;
@@ -129,17 +129,17 @@ bool Utf8View::validate(size_t& valid_bytes) const
                 return false;
         }
 
-        valid_bytes += code_points_length_in_bytes;
+        valid_bytes += codepoint_length_in_bytes;
     }
 
     return true;
 }
 
-size_t Utf8View::length_in_code_pointss() const
+size_t Utf8View::length_in_codepoints() const
 {
     size_t length = 0;
-    for (auto code_points : *this) {
-        (void)code_points;
+    for (auto codepoint : *this) {
+        (void)codepoint;
         ++length;
     }
     return length;
@@ -165,54 +165,54 @@ Utf8CodepointIterator& Utf8CodepointIterator::operator++()
 {
     ASSERT(m_length > 0);
 
-    int code_points_length_in_bytes = 0;
+    int codepoint_length_in_bytes = 0;
     u32 value;
-    bool first_byte_makes_sense = decode_first_byte(*m_ptr, code_points_length_in_bytes, value);
+    bool first_byte_makes_sense = decode_first_byte(*m_ptr, codepoint_length_in_bytes, value);
 
     ASSERT(first_byte_makes_sense);
     (void)value;
 
-    ASSERT(code_points_length_in_bytes <= m_length);
-    m_ptr += code_points_length_in_bytes;
-    m_length -= code_points_length_in_bytes;
+    ASSERT(codepoint_length_in_bytes <= m_length);
+    m_ptr += codepoint_length_in_bytes;
+    m_length -= codepoint_length_in_bytes;
 
     return *this;
 }
 
-int Utf8CodepointIterator::code_points_length_in_bytes() const
+int Utf8CodepointIterator::codepoint_length_in_bytes() const
 {
     ASSERT(m_length > 0);
-    int code_points_length_in_bytes = 0;
+    int codepoint_length_in_bytes = 0;
     u32 value;
-    bool first_byte_makes_sense = decode_first_byte(*m_ptr, code_points_length_in_bytes, value);
+    bool first_byte_makes_sense = decode_first_byte(*m_ptr, codepoint_length_in_bytes, value);
     ASSERT(first_byte_makes_sense);
-    return code_points_length_in_bytes;
+    return codepoint_length_in_bytes;
 }
 
 u32 Utf8CodepointIterator::operator*() const
 {
     ASSERT(m_length > 0);
 
-    u32 code_points_value_so_far = 0;
-    int code_points_length_in_bytes = 0;
+    u32 codepoint_value_so_far = 0;
+    int codepoint_length_in_bytes = 0;
 
-    bool first_byte_makes_sense = decode_first_byte(m_ptr[0], code_points_length_in_bytes, code_points_value_so_far);
+    bool first_byte_makes_sense = decode_first_byte(m_ptr[0], codepoint_length_in_bytes, codepoint_value_so_far);
     if (!first_byte_makes_sense) {
         dbg() << "First byte doesn't make sense, bytes: " << StringView((const char*)m_ptr, m_length);
     }
     ASSERT(first_byte_makes_sense);
-    if (code_points_length_in_bytes > m_length) {
-        dbg() << "Not enough bytes (need " << code_points_length_in_bytes << ", have " << m_length << "), first byte is: " << m_ptr[0] << " " << (const char*)m_ptr;
+    if (codepoint_length_in_bytes > m_length) {
+        dbg() << "Not enough bytes (need " << codepoint_length_in_bytes << ", have " << m_length << "), first byte is: " << m_ptr[0] << " " << (const char*)m_ptr;
     }
-    ASSERT(code_points_length_in_bytes <= m_length);
+    ASSERT(codepoint_length_in_bytes <= m_length);
 
-    for (int offset = 1; offset < code_points_length_in_bytes; offset++) {
+    for (int offset = 1; offset < codepoint_length_in_bytes; offset++) {
         ASSERT(m_ptr[offset] >> 6 == 2);
-        code_points_value_so_far <<= 6;
-        code_points_value_so_far |= m_ptr[offset] & 63;
+        codepoint_value_so_far <<= 6;
+        codepoint_value_so_far |= m_ptr[offset] & 63;
     }
 
-    return code_points_value_so_far;
+    return codepoint_value_so_far;
 }
 
 }

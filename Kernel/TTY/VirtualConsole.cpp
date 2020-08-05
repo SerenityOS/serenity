@@ -287,10 +287,10 @@ void VirtualConsole::flush_dirty_lines()
         if (!line.is_dirty() && !m_terminal.m_need_full_flush)
             continue;
         for (size_t column = 0; column < line.length(); ++column) {
-            u32 code_points = line.code_points(column);
+            u32 codepoint = line.codepoint(column);
             auto attribute = line.attributes()[column];
             u16 vga_index = (visual_row * 160) + (column * 2);
-            m_current_vga_window[vga_index] = code_points < 128 ? code_points : '?';
+            m_current_vga_window[vga_index] = codepoint < 128 ? codepoint : '?';
             m_current_vga_window[vga_index + 1] = attribute_to_vga(attribute);
         }
         line.set_dirty(false);

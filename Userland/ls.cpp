@@ -144,7 +144,7 @@ int print_escaped(const char* name)
     Utf8View utf8_name(name);
     if (utf8_name.validate()) {
         printf("%s", name);
-        return utf8_name.length_in_code_pointss();
+        return utf8_name.length_in_codepoints();
     }
 
     for (int i = 0; name[i] != '\0'; i++) {

@@ -137,8 +137,8 @@ public:
     String source() const { return m_decoded_input; }
 
 private:
-    Optional<u32> next_code_points();
-    Optional<u32> peek_code_points(size_t offset) const;
+    Optional<u32> next_codepoint();
+    Optional<u32> peek_codepoint(size_t offset) const;
     bool consume_next_if_match(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive);
     void create_new_token(HTMLToken::Type);
     bool current_end_tag_token_is_appropriate() const;

@@ -97,7 +97,7 @@ void Editor::clear_line()
 void Editor::insert(const Utf32View& string)
 {
     for (size_t i = 0; i < string.length(); ++i)
-        insert(string.code_pointss()[i]);
+        insert(string.codepoints()[i]);
 }
 
 void Editor::insert(const String& string)
@@ -137,15 +137,15 @@ void Editor::register_character_input_callback(char ch, Function<bool(Editor&)> 
     m_key_callbacks.set(ch, make<KeyCallback>(move(callback)));
 }
 
-static size_t code_points_length_in_utf8(u32 code_points)
+static size_t codepoint_length_in_utf8(u32 codepoint)
 {
-    if (code_points <= 0x7f)
+    if (codepoint <= 0x7f)
         return 1;
-    if (code_points <= 0x07ff)
+    if (codepoint <= 0x07ff)
         return 2;
-    if (code_points <= 0xffff)
+    if (codepoint <= 0xffff)
         return 3;
-    if (code_points <= 0x10ffff)
+    if (codepoint <= 0x10ffff)
         return 4;
     return 3;
 }
@@ -156,20 +156,20 @@ static size_t code_points_length_in_utf8(u32 code_points)
 //                        |       |       +- scan offset = M
 //                        |       +- range end = M - B
 //                        +- range start = M - A
-// This method converts a byte range defined by [start_byte_offset, end_byte_offset] to a code_points range [M - A, M - B] as shown in the diagram above.
+// This method converts a byte range defined by [start_byte_offset, end_byte_offset] to a codepoint range [M - A, M - B] as shown in the diagram above.
 // If `reverse' is true, A and B are before M, if not, A and B are after M.
-Editor::CodepointRange Editor::byte_offset_range_to_code_points_offset_range(size_t start_byte_offset, size_t end_byte_offset, size_t scan_code_points_offset, bool reverse) const
+Editor::CodepointRange Editor::byte_offset_range_to_codepoint_offset_range(size_t start_byte_offset, size_t end_byte_offset, size_t scan_codepoint_offset, bool reverse) const
 {
     size_t byte_offset = 0;
-    size_t code_points_offset = scan_code_points_offset + (reverse ? 1 : 0);
+    size_t codepoint_offset = scan_codepoint_offset + (reverse ? 1 : 0);
     CodepointRange range;
 
     for (;;) {
         if (!reverse) {
-            if (code_points_offset >= m_buffer.size())
+            if (codepoint_offset >= m_buffer.size())
                 break;
         } else {
-            if (code_points_offset == 0)
+            if (codepoint_offset == 0)
                 break;
         }
 
@@ -182,7 +182,7 @@ Editor::CodepointRange Editor::byte_offset_range_to_code_points_offset_range(siz
         if (byte_offset < end_byte_offset)
             ++range.end;
 
-        byte_offset += code_points_length_in_utf8(m_buffer[reverse ? --code_points_offset : code_points_offset++]);
+        byte_offset += codepoint_length_in_utf8(m_buffer[reverse ? --codepoint_offset : codepoint_offset++]);
     }
 
     return range;
@@ -197,7 +197,7 @@ void Editor::stylize(const Span& span, const Style& style)
     auto end = span.end();
 
     if (span.mode() == Span::ByteOriented) {
-        auto offsets = byte_offset_range_to_code_points_offset_range(start, end, 0);
+        auto offsets = byte_offset_range_to_codepoint_offset_range(start, end, 0);
 
         start = offsets.start;
         end = offsets.end;
@@ -231,7 +231,7 @@ void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode o
     if (offset_mode == Span::Mode::ByteOriented) {
         // FIXME: We're assuming that invariant_offset points to the end of the available data
         //        this is not necessarily true, but is true in most cases.
-        auto offsets = byte_offset_range_to_code_points_offset_range(internal_static_offset, internal_invariant_offset + internal_static_offset, m_cursor - 1, true);
+        auto offsets = byte_offset_range_to_codepoint_offset_range(internal_static_offset, internal_invariant_offset + internal_static_offset, m_cursor - 1, true);
 
         internal_static_offset = offsets.start;
         internal_invariant_offset = offsets.end - offsets.start;
@@ -445,7 +445,7 @@ void Editor::handle_read_event()
     }
 
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
-    size_t consumed_code_pointss = 0;
+    size_t consumed_codepoints = 0;
 
     enum Amount {
         Character,
@@ -552,18 +552,18 @@ void Editor::handle_read_event()
         m_refresh_needed = true;
     };
 
-    for (auto code_points : input_view) {
+    for (auto codepoint : input_view) {
         if (m_finish)
             break;
 
-        ++consumed_code_pointss;
+        ++consumed_codepoints;
 
-        if (code_points == 0)
+        if (codepoint == 0)
             continue;
 
         switch (m_state) {
         case InputState::ExpectBracket:
-            if (code_points == '[') {
+            if (codepoint == '[') {
                 m_state = InputState::ExpectFinal;
                 continue;
             } else {
@@ -571,7 +571,7 @@ void Editor::handle_read_event()
                 break;
             }
         case InputState::ExpectFinal:
-            switch (code_points) {
+            switch (codepoint) {
             case 'O': // mod_ctrl
                 ctrl_held = true;
                 continue;
@@ -621,7 +621,7 @@ void Editor::handle_read_event()
                 ctrl_held = false;
                 continue;
             default:
-                dbgprintf("LibLine: Unhandled final: %02x (%c)\r\n", code_points, code_points);
+                dbgprintf("LibLine: Unhandled final: %02x (%c)\r\n", codepoint, codepoint);
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
@@ -631,14 +631,14 @@ void Editor::handle_read_event()
             m_state = InputState::Free;
             continue;
         case InputState::Free:
-            if (code_points == 27) {
+            if (codepoint == 27) {
                 m_state = InputState::ExpectBracket;
                 continue;
             }
             break;
         }
 
-        auto cb = m_key_callbacks.get(code_points);
+        auto cb = m_key_callbacks.get(codepoint);
         if (cb.has_value()) {
             if (!cb.value()->callback(*this)) {
                 continue;
@@ -646,19 +646,19 @@ void Editor::handle_read_event()
         }
 
         // ^N
-        if (code_points == ctrl('N')) {
+        if (codepoint == ctrl('N')) {
             do_search_forwards();
             continue;
         }
         // ^P
-        if (code_points == ctrl('P')) {
+        if (codepoint == ctrl('P')) {
             do_search_backwards();
             continue;
         }
 
         m_search_offset = 0; // reset search offset on any key
 
-        if (code_points == '\t' || reverse_tab) {
+        if (codepoint == '\t' || reverse_tab) {
             if (!on_tab_complete)
                 continue;
 
@@ -773,7 +773,7 @@ void Editor::handle_read_event()
         }
         m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
-        if (code_points == m_termios.c_cc[VWERASE]) {
+        if (codepoint == m_termios.c_cc[VWERASE]) {
             bool has_seen_nonspace = false;
             while (m_cursor > 0) {
                 if (isspace(m_buffer[m_cursor - 1])) {
@@ -786,7 +786,7 @@ void Editor::handle_read_event()
             }
             continue;
         }
-        if (code_points == m_termios.c_cc[VKILL]) {
+        if (codepoint == m_termios.c_cc[VKILL]) {
             for (size_t i = 0; i < m_cursor; ++i)
                 remove_at_index(0);
             m_cursor = 0;
@@ -795,7 +795,7 @@ void Editor::handle_read_event()
         }
         // Normally ^D. `stty eof \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
         // Handle it before ctrl shortcuts below and only continue if the buffer is empty, so that the editing shortcuts can take effect else.
-        if (code_points == m_termios.c_cc[VEOF] && m_buffer.is_empty()) {
+        if (codepoint == m_termios.c_cc[VEOF] && m_buffer.is_empty()) {
             printf("<EOF>\n");
             if (!m_always_refresh) {
                 m_input_error = Error::Eof;
@@ -804,37 +804,37 @@ void Editor::handle_read_event()
             continue;
         }
         // ^A
-        if (code_points == ctrl('A')) {
+        if (codepoint == ctrl('A')) {
             m_cursor = 0;
             continue;
         }
         // ^B
-        if (code_points == ctrl('B')) {
+        if (codepoint == ctrl('B')) {
             do_cursor_left(Character);
             continue;
         }
         // ^D
-        if (code_points == ctrl('D')) {
+        if (codepoint == ctrl('D')) {
             do_delete();
             continue;
         }
         // ^E
-        if (code_points == ctrl('E')) {
+        if (codepoint == ctrl('E')) {
             m_cursor = m_buffer.size();
             continue;
         }
         // ^F
-        if (code_points == ctrl('F')) {
+        if (codepoint == ctrl('F')) {
             do_cursor_right(Character);
             continue;
         }
         // ^H: ctrl('H') == '\b'
-        if (code_points == '\b' || code_points == m_termios.c_cc[VERASE]) {
+        if (codepoint == '\b' || codepoint == m_termios.c_cc[VERASE]) {
             do_backspace();
             continue;
         }
         // ^L
-        if (code_points == ctrl('L')) {
+        if (codepoint == ctrl('L')) {
             printf("\033[3J\033[H\033[2J"); // Clear screen.
             VT::move_absolute(1, 1);
             set_origin(1, 1);
@@ -842,7 +842,7 @@ void Editor::handle_read_event()
             continue;
         }
         // ^R
-        if (code_points == ctrl('R')) {
+        if (codepoint == ctrl('R')) {
             if (m_is_searching) {
                 // how did we get here?
                 ASSERT_NOT_REACHED();
@@ -850,8 +850,8 @@ void Editor::handle_read_event()
                 m_is_searching = true;
                 m_search_offset = 0;
                 m_pre_search_buffer.clear();
-                for (auto code_points : m_buffer)
-                    m_pre_search_buffer.append(code_points);
+                for (auto codepoint : m_buffer)
+                    m_pre_search_buffer.append(codepoint);
                 m_pre_search_cursor = m_cursor;
 
                 // Disable our own notifier so as to avoid interfering with the search editor.
@@ -958,7 +958,7 @@ void Editor::handle_read_event()
             continue;
         }
         // ^T
-        if (code_points == ctrl('T')) {
+        if (codepoint == ctrl('T')) {
             if (m_cursor > 0 && m_buffer.size() >= 2) {
                 if (m_cursor < m_buffer.size())
                     ++m_cursor;
@@ -968,18 +968,18 @@ void Editor::handle_read_event()
             }
             continue;
         }
-        if (code_points == '\n') {
+        if (codepoint == '\n') {
             finish();
             continue;
         }
 
-        insert(code_points);
+        insert(codepoint);
     }
 
-    if (consumed_code_pointss == m_incomplete_data.size()) {
+    if (consumed_codepoints == m_incomplete_data.size()) {
         m_incomplete_data.clear();
     } else {
-        for (size_t i = 0; i < consumed_code_pointss; ++i)
+        for (size_t i = 0; i < consumed_codepoints; ++i)
             m_incomplete_data.take_first();
     }
 }
@@ -1425,8 +1425,8 @@ StringMetrics Editor::actual_rendered_string_metrics(const Utf32View& view) cons
     VTState state { Free };
 
     for (size_t i = 0; i < view.length(); ++i) {
-        auto c = view.code_pointss()[i];
-        auto next_c = i + 1 < view.length() ? view.code_pointss()[i + 1] : 0;
+        auto c = view.codepoints()[i];
+        auto next_c = i + 1 < view.length() ? view.codepoints()[i + 1] : 0;
         state = actual_rendered_string_length_step(metrics, length, c, next_c, state);
     }
 

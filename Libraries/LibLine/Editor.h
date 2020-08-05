@@ -310,7 +310,7 @@ private:
         size_t start { 0 };
         size_t end { 0 };
     };
-    CodepointRange byte_offset_range_to_code_points_offset_range(size_t byte_start, size_t byte_end, size_t code_points_scan_offset, bool reverse = false) const;
+    CodepointRange byte_offset_range_to_codepoint_offset_range(size_t byte_start, size_t byte_end, size_t codepoint_scan_offset, bool reverse = false) const;
 
     void get_terminal_size();
 
