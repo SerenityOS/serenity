@@ -241,7 +241,7 @@ public:
     int sys$gettimeofday(Userspace<timeval*>);
     int sys$clock_gettime(clockid_t, timespec*);
     int sys$clock_settime(clockid_t, timespec*);
-    int sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params*);
+    int sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*>);
     int sys$gethostname(char*, ssize_t);
     int sys$sethostname(const char*, ssize_t);
     int sys$uname(utsname*);
