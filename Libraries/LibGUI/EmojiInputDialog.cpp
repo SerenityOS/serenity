@@ -37,9 +37,9 @@
 
 namespace GUI {
 
-static Vector<u32> supported_emoji_codepoints()
+static Vector<u32> supported_emoji_code_points()
 {
-    Vector<u32> codepoints;
+    Vector<u32> code_points;
     Core::DirIterator dt("/res/emoji", Core::DirIterator::SkipDots);
     while (dt.has_next()) {
         auto filename = dt.next_path();
@@ -49,10 +49,10 @@ static Vector<u32> supported_emoji_codepoints()
         auto basename = lexical_path.basename();
         if (!basename.starts_with("U+"))
             continue;
-        u32 codepoint = strtoul(basename.characters() + 2, nullptr, 16);
-        codepoints.append(codepoint);
+        u32 code_point = strtoul(basename.characters() + 2, nullptr, 16);
+        code_points.append(code_point);
     }
-    return codepoints;
+    return code_points;
 }
 
 EmojiInputDialog::EmojiInputDialog(Window* parent_window)
@@ -67,20 +67,20 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     auto& main_layout = main_widget.set_layout<VerticalBoxLayout>();
     main_layout.set_spacing(0);
 
-    auto codepoints = supported_emoji_codepoints();
+    auto code_points = supported_emoji_code_points();
 
     size_t index = 0;
     size_t columns = 6;
-    size_t rows = ceil_div(codepoints.size(), columns);
+    size_t rows = ceil_div(code_points.size(), columns);
 
-    for (size_t row = 0; row < rows && index < codepoints.size(); ++row) {
+    for (size_t row = 0; row < rows && index < code_points.size(); ++row) {
         auto& horizontal_container = main_widget.add<Widget>();
         auto& horizontal_layout = horizontal_container.set_layout<HorizontalBoxLayout>();
         horizontal_layout.set_spacing(0);
         for (size_t column = 0; column < columns; ++column) {
-            if (index < codepoints.size()) {
+            if (index < code_points.size()) {
                 StringBuilder builder;
-                builder.append(Utf32View(&codepoints[index++], 1));
+                builder.append(Utf32View(&code_points[index++], 1));
                 auto emoji_text = builder.to_string();
                 auto& button = horizontal_container.add<Button>(emoji_text);
                 button.set_button_style(Gfx::ButtonStyle::CoolBar);
