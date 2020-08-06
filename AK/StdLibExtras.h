@@ -38,7 +38,7 @@ namespace AK {
 template<typename T>
 inline constexpr T min(const T& a, const T& b)
 {
-    return a < b ? a : b;
+    return b < a ? b : a;
 }
 
 template<typename T>
