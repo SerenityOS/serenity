@@ -591,7 +591,7 @@ void Editor::handle_read_event()
                 do_cursor_right(Word);
                 m_state = InputState::Free;
                 continue;
-            case ctrl('H'): // ^[^H: alt-backspace: backward delete word
+            case '\b': // ^[^H: alt-backspace: backward delete word
             {
                 // A word here is contiguous alnums. `foo=bar baz` is three words.
                 bool has_seen_alnum = false;
@@ -639,6 +639,57 @@ void Editor::handle_read_event()
                         m_buffer[m_cursor] = tolower(m_buffer[m_cursor]);
                     }
                     ++m_cursor;
+                    m_refresh_needed = true;
+                }
+                m_state = InputState::Free;
+                continue;
+            }
+            case 't': // ^[t: alt-t: transpose words
+            {
+                // A word here is contiguous alnums. `foo=bar baz` is three words.
+
+                // 'abcd,.:efg...' should become 'efg...,.:abcd' if caret is after
+                // 'efg...'. If it's in 'efg', it should become 'efg,.:abcd...'
+                // with the caret after it, which then becomes 'abcd...,.:efg'
+                // when alt-t is pressed a second time.
+  
+                // Move to end of word under (or after) caret.
+                size_t cursor = m_cursor;
+                while (cursor < m_buffer.size() && !isalnum(m_buffer[cursor]))
+                    ++cursor;
+                while (cursor < m_buffer.size() && isalnum(m_buffer[cursor]))
+                    ++cursor;
+
+                // Move left over second word and the space to its right.
+                size_t end = cursor;
+                size_t start = cursor;
+                while (start > 0 && !isalnum(m_buffer[start - 1]))
+                    --start;
+                while (start > 0 && isalnum(m_buffer[start - 1]))
+                    --start;
+                size_t start_second_word = start;
+
+                // Move left over space between the two words.
+                while (start > 0 && !isalnum(m_buffer[start - 1]))
+                    --start;
+                size_t start_gap = start;
+
+                // Move left over first word.
+                while (start > 0 && isalnum(m_buffer[start - 1]))
+                    --start;
+
+                if (start != start_gap) {
+                    // To swap the two words, swap each word (and the gap) individually, and then swap the whole range.
+                    auto swap_range = [this](auto from, auto to) {
+                        for (size_t i = 0; i < (to - from) / 2; ++i)
+                            swap(m_buffer[from + i], m_buffer[to - 1 - i]);
+                    };
+                    swap_range(start, start_gap);
+                    swap_range(start_gap, start_second_word);
+                    swap_range(start_second_word, end);
+                    swap_range(start, end);
+                    m_cursor = cursor;
+                    // FIXME: Update anchored styles too.
                     m_refresh_needed = true;
                 }
                 m_state = InputState::Free;
