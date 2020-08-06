@@ -521,6 +521,7 @@ public:
 private:
     IntrusiveListNode m_runnable_list_node;
     IntrusiveListNode m_wait_queue_node;
+    WaitQueue* m_wait_queue { nullptr };
 
 private:
     friend class SchedulerData;
