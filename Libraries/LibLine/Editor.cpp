@@ -464,7 +464,7 @@ void Editor::handle_read_event()
                 for (;;) {
                     if (m_cursor == 0)
                         break;
-                    if (skipped_at_least_one_character && isspace(m_buffer[m_cursor - 1])) // stop *after* a space, but only if it changes the position
+                    if (skipped_at_least_one_character && !isalnum(m_buffer[m_cursor - 1])) // stop *after* a non-alnum, but only if it changes the position
                         break;
                     skipped_at_least_one_character = true;
                     --m_cursor;
@@ -484,7 +484,7 @@ void Editor::handle_read_event()
                 for (;;) {
                     if (m_cursor >= m_buffer.size())
                         break;
-                    if (isspace(m_buffer[++m_cursor]))
+                    if (!isalnum(m_buffer[++m_cursor]))
                         break;
                 }
                 m_buffer.take_last();
@@ -589,13 +589,14 @@ void Editor::handle_read_event()
                 continue;
             case 'd': // ^[d: alt-d: forward delete word
             {
-                bool has_seen_nonspace = false;
+                // A word here is contiguous alnums. `foo=bar baz` is three words.
+                bool has_seen_alnum = false;
                 while (m_cursor < m_buffer.size()) {
-                    if (isspace(m_buffer[m_cursor])) {
-                        if (has_seen_nonspace)
+                    if (!isalnum(m_buffer[m_cursor])) {
+                        if (has_seen_alnum)
                             break;
                     } else {
-                        has_seen_nonspace = true;
+                        has_seen_alnum = true;
                     }
                     do_delete();
                 }
@@ -610,10 +611,11 @@ void Editor::handle_read_event()
             case 'l': // ^[l: alt-l: lowercase word
             case 'u': // ^[u: alt-u: uppercase word
             {
-                while (m_cursor < m_buffer.size() && isspace(m_buffer[m_cursor]))
+                // A word here is contiguous alnums. `foo=bar baz` is three words.
+                while (m_cursor < m_buffer.size() && !isalnum(m_buffer[m_cursor]))
                     ++m_cursor;
                 size_t start = m_cursor;
-                while (m_cursor < m_buffer.size() && !isspace(m_buffer[m_cursor])) {
+                while (m_cursor < m_buffer.size() && isalnum(m_buffer[m_cursor])) {
                     if (code_point == 'u' || (code_point == 'c' && m_cursor == start)) {
                         m_buffer[m_cursor] = toupper(m_buffer[m_cursor]);
                     } else {
@@ -835,6 +837,7 @@ void Editor::handle_read_event()
 
         // Normally ^W. `stty werase \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
         if (code_point == m_termios.c_cc[VWERASE]) {
+            // A word here is space-separated. `foo=bar baz` is two words.
             bool has_seen_nonspace = false;
             while (m_cursor > 0) {
                 if (isspace(m_buffer[m_cursor - 1])) {
