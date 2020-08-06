@@ -35,6 +35,7 @@
 #include <AK/String.h>
 #include <AK/Userspace.h>
 #include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
@@ -106,7 +107,11 @@ struct UnveiledPath {
     unsigned permissions { 0 };
 };
 
-class Process : public RefCounted<Process>, public InlineLinkedListNode<Process> {
+class Process
+    : public RefCounted<Process>
+    , public InlineLinkedListNode<Process>
+    , public Weakable<Process> {
+
     AK_MAKE_NONCOPYABLE(Process);
     AK_MAKE_NONMOVABLE(Process);
 
@@ -453,7 +458,8 @@ public:
 
     [[nodiscard]] String validate_and_copy_string_from_user(Userspace<const char*> user_characters, size_t size) const
     {
-        return validate_and_copy_string_from_user(user_characters.unsafe_userspace_ptr(), size); }
+        return validate_and_copy_string_from_user(user_characters.unsafe_userspace_ptr(), size);
+    }
 
     [[nodiscard]] String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
 

@@ -155,9 +155,9 @@ void TTY::emit(u8 ch)
         if (ch == m_termios.c_cc[VSUSP]) {
             dbg() << tty_name() << ": VSUSP pressed!";
             generate_signal(SIGTSTP);
-            if (auto process = Process::from_pid(m_pgid)) {
-                if (auto parent = Process::from_pid(process->ppid()))
-                    (void)parent->send_signal(SIGCHLD, process);
+            if (m_process) {
+                if (auto parent = Process::from_pid(m_process->ppid()))
+                    (void)parent->send_signal(SIGCHLD, m_process);
             }
             return;
         }
@@ -304,7 +304,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 #endif
     switch (request) {
     case TIOCGPGRP:
-        return m_pgid;
+        return this->pgid();
     case TIOCSPGRP:
         pgid = static_cast<pid_t>(arg);
         if (pgid <= 0)
@@ -318,8 +318,8 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
                 return -EPERM;
             if (current_process.sid() != process->sid())
                 return -EPERM;
+            m_process = process->make_weak_ptr();
         }
-        m_pgid = pgid;
         return 0;
     case TCGETS: {
         user_termios = reinterpret_cast<termios*>(arg);
@@ -394,4 +394,10 @@ void TTY::hang_up()
 {
     generate_signal(SIGHUP);
 }
+
+pid_t TTY::pgid() const
+{
+    return m_process ? m_process->pgid() : 0;
+}
+
 }

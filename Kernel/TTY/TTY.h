@@ -27,13 +27,12 @@
 #pragma once
 
 #include <AK/CircularDeque.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
-
-class Process;
 
 class TTY : public CharacterDevice {
 public:
@@ -51,8 +50,7 @@ public:
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
 
-    void set_pgid(pid_t pgid) { m_pgid = pgid; }
-    pid_t pgid() const { return m_pgid; }
+    pid_t pgid() const;
 
     void set_termios(const termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
@@ -93,7 +91,7 @@ private:
     virtual bool is_tty() const final override { return true; }
 
     CircularDeque<u8, 1024> m_input_buffer;
-    pid_t m_pgid { 0 };
+    WeakPtr<Process> m_process;
     termios m_termios;
     unsigned short m_rows { 0 };
     unsigned short m_columns { 0 };
