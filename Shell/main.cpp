@@ -144,7 +144,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    editor = Line::Editor::construct(Line::Configuration { Line::Configuration::UnescapedSpaces });
+    editor = Line::Editor::construct(Line::Configuration {});
 
     auto shell = Shell::construct();
     s_shell = shell.ptr();

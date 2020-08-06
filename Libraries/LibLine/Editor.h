@@ -52,10 +52,6 @@
 namespace Line {
 
 struct Configuration {
-    enum TokenSplitMechanism {
-        Spaces,
-        UnescapedSpaces,
-    };
     enum RefreshBehaviour {
         Lazy,
         Eager,
@@ -79,11 +75,9 @@ struct Configuration {
     }
 
     void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
-    void set(TokenSplitMechanism split) { split_mechanism = split; }
     void set(OperationMode mode) { operation_mode = mode; }
 
     RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
-    TokenSplitMechanism split_mechanism { TokenSplitMechanism::Spaces };
     OperationMode operation_mode { OperationMode::Unset };
 };
 
@@ -301,8 +295,6 @@ private:
         m_origin_column = col;
         m_suggestion_display->set_origin(row, col, {});
     }
-
-    bool should_break_token(Vector<u32, 1024>& buffer, size_t index);
 
     void recalculate_origin();
     void reposition_cursor(bool to_end = false);
