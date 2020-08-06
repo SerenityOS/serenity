@@ -76,7 +76,7 @@ public:
     int run_command(const StringView&);
     bool is_runnable(const StringView&);
     RefPtr<Job> run_command(const AST::Command&);
-    Vector<RefPtr<Job>> run_commands(Vector<AST::Command>&);
+    NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
     bool run_file(const String&, bool explicitly_invoked = true);
     bool run_builtin(int argc, const char** argv, int& retval);
     bool has_builtin(const StringView&) const;
