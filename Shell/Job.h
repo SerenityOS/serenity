@@ -42,9 +42,7 @@
 
 class Job : public RefCounted<Job> {
 public:
-    explicit Job()
-    {
-    }
+    static NonnullRefPtr<Job> create(pid_t pid, pid_t pgid, String command, u64 job_id) { return adopt(*new Job(pid, pgid, move(command), job_id)); }
 
     ~Job()
     {
@@ -56,17 +54,7 @@ public:
 #endif
     }
 
-    Job(pid_t pid, unsigned pgid, String cmd, u64 job_id)
-        : m_pgid(pgid)
-        , m_pid(pid)
-        , m_job_id(job_id)
-        , m_cmd(move(cmd))
-    {
-        set_running_in_background(false);
-        m_command_timer.start();
-    }
-
-    unsigned pgid() const { return m_pgid; }
+    pid_t pgid() const { return m_pgid; }
     pid_t pid() const { return m_pid; }
     const String& cmd() const { return m_cmd; }
     u64 job_id() const { return m_job_id; }
@@ -105,7 +93,17 @@ public:
     void deactivate() const { m_active = false; }
 
 private:
-    unsigned m_pgid { 0 };
+    Job(pid_t pid, unsigned pgid, String cmd, u64 job_id)
+        : m_pgid(pgid)
+        , m_pid(pid)
+        , m_job_id(job_id)
+        , m_cmd(move(cmd))
+    {
+        set_running_in_background(false);
+        m_command_timer.start();
+    }
+
+    pid_t m_pgid { 0 };
     pid_t m_pid { 0 };
     u64 m_job_id { 0 };
     String m_cmd;

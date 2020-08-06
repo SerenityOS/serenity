@@ -572,7 +572,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     StringBuilder cmd;
     cmd.join(" ", command.argv);
 
-    auto job = adopt(*new Job(child, (unsigned)child, cmd.build(), find_last_job_id() + 1));
+    auto job = Job::create(child, (unsigned)child, cmd.build(), find_last_job_id() + 1);
     jobs.set((u64)child, job);
 
     job->on_exit = [](auto job) {
