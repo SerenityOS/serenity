@@ -349,6 +349,9 @@ int Shell::builtin_fg(int argc, const char** argv)
     dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
     fprintf(stderr, "Resuming job %" PRIu64 " - %s\n", job->job_id(), job->cmd().characters());
 
+    tcsetpgrp(STDOUT_FILENO, job->pgid());
+    tcsetpgrp(STDIN_FILENO, job->pgid());
+
     if (killpg(job->pgid(), SIGCONT) < 0) {
         perror("killpg");
         return 1;
