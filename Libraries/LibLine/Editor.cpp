@@ -919,7 +919,7 @@ void Editor::handle_read_event()
                 // Disable our own notifier so as to avoid interfering with the search editor.
                 m_notifier->set_enabled(false);
 
-                m_search_editor = Editor::construct(Configuration { Configuration::Eager, m_configuration.split_mechanism }); // Has anyone seen 'Inception'?
+                m_search_editor = Editor::construct(Configuration { Configuration::Eager }); // Has anyone seen 'Inception'?
                 add_child(*m_search_editor);
 
                 m_search_editor->on_display_refresh = [this](Editor& search_editor) {
@@ -1637,19 +1637,6 @@ String Editor::line(size_t up_to_index) const
     builder.append(Utf32View { m_buffer.data(), min(m_buffer.size(), up_to_index) });
     return builder.build();
 }
-
-bool Editor::should_break_token(Vector<u32, 1024>& buffer, size_t index)
-{
-    switch (m_configuration.split_mechanism) {
-    case Configuration::TokenSplitMechanism::Spaces:
-        return buffer[index] == ' ';
-    case Configuration::TokenSplitMechanism::UnescapedSpaces:
-        return buffer[index] == ' ' && (index == 0 || buffer[index - 1] != '\\');
-    }
-
-    ASSERT_NOT_REACHED();
-    return true;
-};
 
 void Editor::remove_at_index(size_t index)
 {
