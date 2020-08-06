@@ -83,15 +83,17 @@ int main(int argc, char** argv)
     Core::EventLoop::register_signal(SIGCHLD, [](int) {
         auto& jobs = s_shell->jobs;
         Vector<u64> disowned_jobs;
-        for (auto& job : jobs) {
+        for (auto& it : jobs) {
+            auto job_id = it.key;
+            auto& job = *it.value;
             int wstatus = 0;
-            auto child_pid = waitpid(job.value->pid(), &wstatus, WNOHANG | WUNTRACED);
+            auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
             if (child_pid < 0) {
                 if (errno == ECHILD) {
                     // The child process went away before we could process its death, just assume it exited all ok.
                     // FIXME: This should never happen, the child should stay around until we do the waitpid above.
-                    dbg() << "Child process gone, cannot get exit code for " << job.key;
-                    child_pid = job.value->pid();
+                    dbg() << "Child process gone, cannot get exit code for " << job_id;
+                    child_pid = job.pid();
                 } else {
                     ASSERT_NOT_REACHED();
                 }
@@ -102,21 +104,21 @@ int main(int argc, char** argv)
                 continue;
             }
 #endif
-            if (child_pid == job.value->pid()) {
+            if (child_pid == job.pid()) {
                 if (WIFEXITED(wstatus)) {
-                    job.value->set_has_exit(WEXITSTATUS(wstatus));
+                    job.set_has_exit(WEXITSTATUS(wstatus));
                 } else if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
-                    job.value->set_has_exit(126);
+                    job.set_has_exit(126);
                 } else if (WIFSTOPPED(wstatus)) {
-                    job.value->unblock();
-                    job.value->set_is_suspended(true);
+                    job.unblock();
+                    job.set_is_suspended(true);
                 }
             }
-            if (job.value->should_be_disowned())
-                disowned_jobs.append(job.key);
+            if (job.should_be_disowned())
+                disowned_jobs.append(job_id);
         }
-        for (auto key : disowned_jobs)
-            jobs.remove(key);
+        for (auto job_id : disowned_jobs)
+            jobs.remove(job_id);
     });
 
     Core::EventLoop::register_signal(SIGTSTP, [](auto) {

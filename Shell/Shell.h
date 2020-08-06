@@ -165,7 +165,7 @@ public:
     int last_return_code { 0 };
     Vector<String> directory_stack;
     CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
-    HashMap<u64, RefPtr<Job>> jobs;
+    HashMap<u64, NonnullRefPtr<Job>> jobs;
     Vector<String, 256> cached_path;
 
     enum ShellEventType {
