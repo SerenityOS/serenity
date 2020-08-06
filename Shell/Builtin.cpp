@@ -429,55 +429,17 @@ int Shell::builtin_jobs(int argc, const char** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
-    enum {
-        Basic,
-        OnlyPID,
-        ListAll,
-    } mode { Basic };
+    Job::PrintStatusMode mode = Job::PrintStatusMode::Basic;
 
     if (show_pid)
-        mode = OnlyPID;
+        mode = Job::PrintStatusMode::OnlyPID;
 
     if (list)
-        mode = ListAll;
+        mode = Job::PrintStatusMode::ListAll;
 
-    for (auto& job : jobs) {
-        auto pid = job.value->pid();
-        int wstatus;
-        auto rc = waitpid(pid, &wstatus, WNOHANG);
-        if (rc == -1) {
-            perror("waitpid");
+    for (auto& it : jobs) {
+        if (!it.value->print_status(mode))
             return 1;
-        }
-        auto status = "running";
-
-        if (rc != 0) {
-            if (WIFEXITED(wstatus))
-                status = "exited";
-
-            if (WIFSTOPPED(wstatus))
-                status = "stopped";
-
-            if (WIFSIGNALED(wstatus))
-                status = "signaled";
-        }
-
-        char background_indicator = '-';
-
-        if (job.value->is_running_in_background())
-            background_indicator = '+';
-
-        switch (mode) {
-        case Basic:
-            printf("[%" PRIu64 "] %c %s %s\n", job.value->job_id(), background_indicator, status, job.value->cmd().characters());
-            break;
-        case OnlyPID:
-            printf("[%" PRIu64 "] %c %d %s %s\n", job.value->job_id(), background_indicator, pid, status, job.value->cmd().characters());
-            break;
-        case ListAll:
-            printf("[%" PRIu64 "] %c %d %d %s %s\n", job.value->job_id(), background_indicator, pid, job.value->pgid(), status, job.value->cmd().characters());
-            break;
-        }
     }
 
     return 0;

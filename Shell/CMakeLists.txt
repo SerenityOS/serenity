@@ -1,9 +1,10 @@
 set(SOURCES
     AST.cpp
     Builtin.cpp
-    main.cpp
+    Job.cpp
     Parser.cpp
     Shell.cpp
+    main.cpp
 )
 
 serenity_bin(Shell)
