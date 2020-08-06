@@ -92,6 +92,14 @@ public:
 
     void deactivate() const { m_active = false; }
 
+    enum class PrintStatusMode {
+        Basic,
+        OnlyPID,
+        ListAll,
+    };
+
+    bool print_status(PrintStatusMode);
+
 private:
     Job(pid_t pid, unsigned pgid, String cmd, u64 job_id)
         : m_pgid(pgid)
