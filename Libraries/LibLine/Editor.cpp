@@ -571,7 +571,7 @@ void Editor::handle_read_event()
                 do_cursor_left(Word);
                 m_state = InputState::Free;
                 continue;
-            case 'd': // ^[d: alt-d
+            case 'd': // ^[d: alt-d: forward delete word
             {
                 bool has_seen_nonspace = false;
                 while (m_cursor < m_buffer.size()) {
@@ -590,6 +590,26 @@ void Editor::handle_read_event()
                 do_cursor_right(Word);
                 m_state = InputState::Free;
                 continue;
+            case 'c': // ^[c: alt-c: capitalize word
+            case 'l': // ^[l: alt-l: lowercase word
+            case 'u': // ^[u: alt-u: uppercase word
+            {
+                while (m_cursor < m_buffer.size() && isspace(m_buffer[m_cursor]))
+                    ++m_cursor;
+                size_t start = m_cursor;
+                while (m_cursor < m_buffer.size() && !isspace(m_buffer[m_cursor])) {
+                    if (code_point == 'u' || (code_point == 'c' && m_cursor == start)) {
+                        m_buffer[m_cursor] = toupper(m_buffer[m_cursor]);
+                    } else {
+                        ASSERT(code_point == 'l' || (code_point == 'c' && m_cursor > start));
+                        m_buffer[m_cursor] = tolower(m_buffer[m_cursor]);
+                    }
+                    ++m_cursor;
+                    m_refresh_needed = true;
+                }
+                m_state = InputState::Free;
+                continue;
+            }
             default:
                 m_state = InputState::Free;
                 continue;
