@@ -56,6 +56,16 @@ bool WaitQueue::enqueue(Thread& thread)
     return true;
 }
 
+bool WaitQueue::dequeue(Thread& thread)
+{
+    ScopedSpinLock queue_lock(m_lock);
+    if (m_threads.contains(thread)) {
+        m_threads.remove(thread);
+        return true;
+    }
+    return false;
+}
+
 void WaitQueue::wake_one(Atomic<bool>* lock)
 {
     ScopedSpinLock queue_lock(m_lock);
