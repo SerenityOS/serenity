@@ -91,6 +91,8 @@ public:
 
     bool cursor_blink_state() const { return m_cursor_blink_state; }
 
+    String selected_text() const;
+
 private:
     explicit Frame(DOM::Element& host_element, Frame& main_frame);
     explicit Frame(Page&);
