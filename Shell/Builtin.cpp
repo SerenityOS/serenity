@@ -734,7 +734,7 @@ int Shell::builtin_time(int argc, const char** argv)
     timer.start();
     for (auto& job : run_commands(commands)) {
         block_on_job(job);
-        exit_code = job->exit_code();
+        exit_code = job.exit_code();
     }
     fprintf(stderr, "Time: %d ms\n", timer.elapsed());
     return exit_code;

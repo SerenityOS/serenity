@@ -909,7 +909,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
             try_read();
         };
 
-        for (auto job : shell->run_commands(commands)) {
+        for (auto& job : shell->run_commands(commands)) {
             shell->block_on_job(job);
         }
 

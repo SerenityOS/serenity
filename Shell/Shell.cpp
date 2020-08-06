@@ -588,9 +588,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     return *job;
 }
 
-Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
+NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
 {
-    Vector<RefPtr<Job>> jobs_to_wait_for;
+    NonnullRefPtrVector<Job> jobs_to_wait_for;
 
     for (auto& command : commands) {
 #ifdef SH_DEBUG
@@ -618,10 +618,10 @@ Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
         if (command.should_wait) {
             block_on_job(job);
             if (!job->is_suspended())
-                jobs_to_wait_for.append(job);
+                jobs_to_wait_for.append(*job);
         } else {
             if (command.is_pipe_source) {
-                jobs_to_wait_for.append(job);
+                jobs_to_wait_for.append(*job);
             } else if (command.should_notify_if_in_background) {
                 job->set_running_in_background(true);
                 restore_ios();
