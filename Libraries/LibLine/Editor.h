@@ -377,8 +377,8 @@ private:
 
     enum class InputState {
         Free,
-        ExpectBracket,
-        ExpectFinal,
+        GotEscape,
+        GotEscapeFollowedByLeftBracket,
         ExpectTerminator,
     };
     InputState m_state { InputState::Free };
