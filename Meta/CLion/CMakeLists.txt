@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(serenity)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 file(GLOB_RECURSE AK_SOURCES "serenity/AK/*.cpp")
 file(GLOB_RECURSE APPLICATIONS_SOURCES "serenity/Applications/*.cpp")
@@ -24,8 +24,11 @@ set(INCLUDE_DIRS
     "serenity/Libraries"
     "serenity/Libraries/LibC"
     "serenity/Libraries/LibPthread"
+    "serenity/Libraries/LibM"
     "serenity/Services"
-    "serenity/Toolchain/Local/i686-pc-serenity/include/c++/10.1.0")
+    "serenity/Toolchain/Local/i686-pc-serenity/include/c++/10.1.0"
+    "serenity/Build/Services"
+    "serenity/Build/Libraries")
 
 add_library(serenity
     ${AK_SOURCES}
