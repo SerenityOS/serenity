@@ -26,8 +26,10 @@
 
 #include "CharacterMapFileListModel.h"
 #include <AK/QuickSort.h>
+#include <AK/JsonObject.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -67,12 +69,28 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/proc/keymap", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (unveil(nullptr, nullptr)) {
         perror("unveil");
         return 1;
     }
 
     auto app_icon = GUI::Icon::default_icon("app-keyboard-settings");
+
+    auto proc_keymap = Core::File::construct("/proc/keymap");
+    if (!proc_keymap->open(Core::IODevice::OpenMode::ReadOnly))
+        ASSERT_NOT_REACHED();
+
+    auto json = JsonValue::from_string(proc_keymap->read_all());
+    ASSERT(json.has_value());
+    JsonObject keymap_object = json.value().as_object();
+    ASSERT(keymap_object.has("keymap"));
+    String current_keymap = keymap_object.get("keymap").to_string();
+    dbg() << "KeyboardSettings thinks the current keymap is: " << current_keymap;
 
     Vector<String> character_map_files;
     Core::DirIterator iterator("/res/keymaps/", Core::DirIterator::Flags::SkipDots);
@@ -87,6 +105,13 @@ int main(int argc, char** argv)
         character_map_files.append(name);
     }
     quick_sort(character_map_files);
+
+    size_t initial_keymap_index = SIZE_MAX;
+    for (size_t i = 0; i < character_map_files.size(); ++i) {
+        if (character_map_files[i].equals_ignoring_case(current_keymap))
+            initial_keymap_index = i;
+    }
+    ASSERT(initial_keymap_index < character_map_files.size());
 
     auto window = GUI::Window::construct();
     window->set_title("Keyboard settings");
@@ -115,6 +140,7 @@ int main(int argc, char** argv)
     character_map_file_combo.set_preferred_size(0, 22);
     character_map_file_combo.set_only_allow_values_from_model(true);
     character_map_file_combo.set_model(*CharacterMapFileListModel::create(character_map_files));
+    character_map_file_combo.set_selected_index(initial_keymap_index);
 
     root_widget.layout()->add_spacer();
 
