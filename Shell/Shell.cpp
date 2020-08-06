@@ -674,6 +674,9 @@ void Shell::block_on_job(RefPtr<Job> job)
 
     loop.exec();
 
+    if (job->is_suspended())
+        job->print_status(Job::PrintStatusMode::Basic);
+
     restore_ios();
 }
 
