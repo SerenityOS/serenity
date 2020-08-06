@@ -72,12 +72,11 @@ ALWAYS_INLINE void Lock::lock()
     }
     for (;;) {
         int expected = 0;
-        if (m_holder.compare_exchange_strong(expected, tid, AK::memory_order_acq_rel)) {
-            m_holder = tid;
+        if (m_holder.compare_exchange_strong(expected, tid, AK::memory_order_acq_rel)) {            
             m_level = 1;
             return;
         }
-        donate(m_holder);
+        donate(expected);
     }
 }
 
