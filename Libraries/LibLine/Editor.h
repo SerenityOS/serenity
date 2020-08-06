@@ -149,6 +149,7 @@ public:
 
     void clear_line();
     void insert(const String&);
+    void insert(const StringView&);
     void insert(const Utf32View&);
     void insert(const u32);
     void stylize(const Span&, const Style&);

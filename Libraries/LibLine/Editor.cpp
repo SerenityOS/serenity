@@ -106,6 +106,12 @@ void Editor::insert(const String& string)
         insert(ch);
 }
 
+void Editor::insert(const StringView& string_view)
+{
+    for (auto ch : Utf8View { string_view })
+        insert(ch);
+}
+
 void Editor::insert(const u32 cp)
 {
     StringBuilder builder;
@@ -567,6 +573,16 @@ void Editor::handle_read_event()
             case '[':
                 m_state = InputState::GotEscapeFollowedByLeftBracket;
                 continue;
+            case '.': // ^[.: alt-.: insert last arg of previous command (similar to `!$`)
+            {
+                if (!m_history.is_empty()) {
+                    // FIXME: This isn't quite right: if the last arg was `"foo bar"` or `foo\ bar` (but not `foo\\ bar`), we should insert that whole arg as last token.
+                    if (auto last_words = m_history.last().split_view(' '); !last_words.is_empty())
+                        insert(last_words.last());
+                }
+                m_state = InputState::Free;
+                continue;
+            }
             case 'b': // ^[b: alt-b
                 do_cursor_left(Word);
                 m_state = InputState::Free;
