@@ -42,7 +42,7 @@
 // #define SUGGESTIONS_DEBUG
 
 namespace {
-u32 ctrl(char c) { return c & 0x3f; }
+constexpr u32 ctrl(char c) { return c & 0x3f; }
 }
 
 namespace Line {
@@ -587,6 +587,26 @@ void Editor::handle_read_event()
                 do_cursor_left(Word);
                 m_state = InputState::Free;
                 continue;
+            case 'f': // ^[f: alt-f
+                do_cursor_right(Word);
+                m_state = InputState::Free;
+                continue;
+            case ctrl('H'): // ^[^H: alt-backspace: backward delete word
+            {
+                // A word here is contiguous alnums. `foo=bar baz` is three words.
+                bool has_seen_alnum = false;
+                while (m_cursor > 0) {
+                    if (!isalnum(m_buffer[m_cursor - 1])) {
+                        if (has_seen_alnum)
+                            break;
+                    } else {
+                        has_seen_alnum = true;
+                    }
+                    do_backspace();
+                }
+                m_state = InputState::Free;
+                continue;
+            }
             case 'd': // ^[d: alt-d: forward delete word
             {
                 // A word here is contiguous alnums. `foo=bar baz` is three words.
@@ -603,10 +623,6 @@ void Editor::handle_read_event()
                 m_state = InputState::Free;
                 continue;
             }
-            case 'f': // ^[f: alt-f
-                do_cursor_right(Word);
-                m_state = InputState::Free;
-                continue;
             case 'c': // ^[c: alt-c: capitalize word
             case 'l': // ^[l: alt-l: lowercase word
             case 'u': // ^[u: alt-u: uppercase word
