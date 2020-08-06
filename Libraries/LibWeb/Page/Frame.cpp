@@ -26,7 +26,9 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/Layout/LayoutBreak.h>
 #include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
@@ -180,7 +182,7 @@ Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
     return position;
 }
 
-void Frame::set_cursor_position(const DOM::Position & position)
+void Frame::set_cursor_position(const DOM::Position& position)
 {
     if (m_cursor_position == position)
         return;
@@ -194,6 +196,53 @@ void Frame::set_cursor_position(const DOM::Position & position)
         m_cursor_position.node()->layout_node()->set_needs_display();
 
     dbg() << "Cursor position: " << m_cursor_position;
+}
+
+String Frame::selected_text() const
+{
+    StringBuilder builder;
+    if (!m_document)
+        return {};
+    auto* layout_root = m_document->layout_node();
+    if (!layout_root)
+        return {};
+    if (!layout_root->selection().is_valid())
+        return {};
+
+    auto selection = layout_root->selection().normalized();
+
+    if (selection.start().layout_node == selection.end().layout_node) {
+        if (!is<LayoutText>(*selection.start().layout_node))
+            return "";
+        return downcast<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node + 1);
+    }
+
+    // Start node
+    auto layout_node = selection.start().layout_node;
+    if (is<LayoutText>(*layout_node)) {
+        auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
+        builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
+    }
+
+    // Middle nodes
+    layout_node = layout_node->next_in_pre_order();
+    while (layout_node && layout_node != selection.end().layout_node) {
+        if (is<LayoutText>(*layout_node))
+            builder.append(downcast<LayoutText>(*layout_node).text_for_rendering());
+        else if (is<LayoutBreak>(*layout_node) || is<LayoutBlock>(*layout_node))
+            builder.append('\n');
+
+        layout_node = layout_node->next_in_pre_order();
+    }
+
+    // End node
+    ASSERT(layout_node == selection.end().layout_node);
+    if (is<LayoutText>(*layout_node)) {
+        auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
+        builder.append(text.substring(0, selection.end().index_in_node + 1));
+    }
+
+    return builder.to_string();
 }
 
 }

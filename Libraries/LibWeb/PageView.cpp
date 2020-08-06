@@ -115,47 +115,8 @@ void PageView::select_all()
 
 String PageView::selected_text() const
 {
-    StringBuilder builder;
-    auto* layout_root = this->layout_root();
-    if (!layout_root)
-        return {};
-    if (!layout_root->selection().is_valid())
-        return {};
-
-    auto selection = layout_root->selection().normalized();
-
-    if (selection.start().layout_node == selection.end().layout_node) {
-        if (!is<LayoutText>(*selection.start().layout_node))
-            return "";
-        return downcast<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node + 1);
-    }
-
-    // Start node
-    auto layout_node = selection.start().layout_node;
-    if (is<LayoutText>(*layout_node)) {
-        auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
-        builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
-    }
-
-    // Middle nodes
-    layout_node = layout_node->next_in_pre_order();
-    while (layout_node && layout_node != selection.end().layout_node) {
-        if (is<LayoutText>(*layout_node))
-            builder.append(downcast<LayoutText>(*layout_node).text_for_rendering());
-        else if (is<LayoutBreak>(*layout_node) || is<LayoutBlock>(*layout_node))
-            builder.append('\n');
-
-        layout_node = layout_node->next_in_pre_order();
-    }
-
-    // End node
-    ASSERT(layout_node == selection.end().layout_node);
-    if (is<LayoutText>(*layout_node)) {
-        auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
-        builder.append(text.substring(0, selection.end().index_in_node + 1));
-    }
-
-    return builder.to_string();
+    // FIXME: Use focused frame
+    return page().main_frame().selected_text();
 }
 
 void PageView::page_did_layout()
