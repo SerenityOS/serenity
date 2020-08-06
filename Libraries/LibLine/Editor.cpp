@@ -562,59 +562,68 @@ void Editor::handle_read_event()
             continue;
 
         switch (m_state) {
-        case InputState::ExpectBracket:
-            if (code_point == '[') {
-                m_state = InputState::ExpectFinal;
+        case InputState::GotEscape:
+            switch (code_point) {
+            case '[':
+                m_state = InputState::GotEscapeFollowedByLeftBracket;
                 continue;
-            } else {
+            case 'b': // ^[b: alt-b
+                do_cursor_left(Word);
                 m_state = InputState::Free;
-                break;
+                continue;
+            case 'f': // ^[f: alt-f
+                do_cursor_right(Word);
+                m_state = InputState::Free;
+                continue;
+            default:
+                m_state = InputState::Free;
+                continue;
             }
-        case InputState::ExpectFinal:
+        case InputState::GotEscapeFollowedByLeftBracket:
             switch (code_point) {
             case 'O': // mod_ctrl
                 ctrl_held = true;
                 continue;
-            case 'A': // up
+            case 'A': // ^[[A: arrow up
                 do_search_backwards();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            case 'B': // down
+            case 'B': // ^[[B: arrow down
                 do_search_forwards();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            case 'D': // left
+            case 'D': // ^[[D: arrow left
                 do_cursor_left(ctrl_held ? Word : Character);
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            case 'C': // right
+            case 'C': // ^[[C: arrow right
                 do_cursor_right(ctrl_held ? Word : Character);
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            case 'H':
+            case 'H': // ^[[H: home
                 m_cursor = 0;
                 m_inline_search_cursor = m_cursor;
                 m_search_offset = 0;
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            case 'F':
+            case 'F': // ^[[F: end
                 m_cursor = m_buffer.size();
                 m_state = InputState::Free;
                 m_inline_search_cursor = m_cursor;
                 m_search_offset = 0;
                 ctrl_held = false;
                 continue;
-            case 'Z': // shift+tab
+            case 'Z': // ^[[Z: shift+tab
                 reverse_tab = true;
                 m_state = InputState::Free;
                 ctrl_held = false;
                 break;
-            case '3':
+            case '3': // ^[[3~: delete
                 do_delete();
                 m_search_offset = 0;
                 m_state = InputState::ExpectTerminator;
@@ -632,7 +641,7 @@ void Editor::handle_read_event()
             continue;
         case InputState::Free:
             if (code_point == 27) {
-                m_state = InputState::ExpectBracket;
+                m_state = InputState::GotEscape;
                 continue;
             }
             break;
