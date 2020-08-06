@@ -714,10 +714,20 @@ void Thread::set_state(State new_state)
         ASSERT(g_scheduler_data->has_thread(*this));
     }
 
-    if (m_state == Dying && this != Thread::current() && is_finalizable()) {
-        // Some other thread set this thread to Dying, notify the
-        // finalizer right away as it can be cleaned up now
-        Scheduler::notify_finalizer();
+    if (m_state == Dying) {
+        if (previous_state == Queued) {
+            // Holding the scheduler lock, we need to dequeue this thread
+            ASSERT(m_wait_queue != nullptr);
+            m_wait_queue->dequeue(*this);
+            m_wait_queue = nullptr;
+        }
+        
+
+        if (this != Thread::current() && is_finalizable()) {
+            // Some other thread set this thread to Dying, notify the
+            // finalizer right away as it can be cleaned up now
+            Scheduler::notify_finalizer();
+        }
     }
 }
 
@@ -854,6 +864,7 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
 
 Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary)
 {
+    auto* current_thread = Thread::current();
     TimerId timer_id {};
     bool did_unlock;
 
@@ -865,7 +876,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // we need to wait until the scheduler lock is released again
         {
             ScopedSpinLock sched_lock(g_scheduler_lock);
-            if (!queue.enqueue(*Thread::current())) {
+            if (!queue.enqueue(*current_thread)) {
                 // The WaitQueue was already requested to wake someone when
                 // nobody was waiting. So return right away as we shouldn't
                 // be waiting
@@ -876,6 +887,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
 
                 return BlockResult::NotBlocked;
             }
+            current_thread->m_wait_queue = &queue;
 
             did_unlock = unlock_process_if_locked();
             if (lock)
@@ -885,7 +897,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
 
             if (timeout) {
                 timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
-                    ScopedSpinLock sched_lock(g_scheduler_lock);
                     wake_from_queue();
                 });
             }
@@ -921,7 +932,12 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // scheduler lock, which is held when we insert into the queue
         ScopedSpinLock sched_lock(g_scheduler_lock);
 
-        if (m_wait_queue_node.is_in_list())
+        // m_wait_queue should have been cleared either by the timeout
+        // or by being woken
+        ASSERT(m_wait_queue == nullptr);
+
+        // If our thread was still in the queue, we timed out
+        if (queue.dequeue(*current_thread))
             result = BlockResult::InterruptedByTimeout;
 
         // Make sure we cancel the timer if woke normally.
@@ -940,6 +956,7 @@ void Thread::wake_from_queue()
     ScopedSpinLock lock(g_scheduler_lock);
     ASSERT(state() == State::Queued);
     m_wait_reason = nullptr;
+    m_wait_queue = nullptr;
     if (this != Thread::current())
         set_state(State::Runnable);
     else
