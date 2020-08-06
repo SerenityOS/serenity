@@ -45,8 +45,6 @@ public:
 
     bool handle_error() { return exchange(m_error, false); }
 
-    operator bool() const { return !m_error && !m_fatal; }
-
 protected:
     mutable bool m_error { false };
     mutable bool m_fatal { false };
