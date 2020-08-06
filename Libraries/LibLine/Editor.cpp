@@ -797,6 +797,7 @@ void Editor::handle_read_event()
         }
         m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
+        // Normally ^W. `stty werase \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
         if (code_point == m_termios.c_cc[VWERASE]) {
             bool has_seen_nonspace = false;
             while (m_cursor > 0) {
@@ -810,6 +811,7 @@ void Editor::handle_read_event()
             }
             continue;
         }
+        // Normally ^U. `stty kill \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
         if (code_point == m_termios.c_cc[VKILL]) {
             for (size_t i = 0; i < m_cursor; ++i)
                 remove_at_index(0);
