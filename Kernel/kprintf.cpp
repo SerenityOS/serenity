@@ -176,14 +176,20 @@ extern "C" int kernelputstr(const char* characters, int length)
     return 0;
 }
 
-extern "C" int dbgprintf(const char* fmt, ...)
+extern "C" int vdbgprintf(const char* fmt, va_list ap)
 {
     ScopedSpinLock lock(s_log_lock);
     color_on();
+    int ret = printf_internal(debugger_putch, nullptr, fmt, ap);
+    color_off();
+    return ret;
+}
+
+extern "C" int dbgprintf(const char* fmt, ...)
+{
     va_list ap;
     va_start(ap, fmt);
-    int ret = printf_internal(debugger_putch, nullptr, fmt, ap);
+    int ret = vdbgprintf(fmt, ap);
     va_end(ap);
-    color_off();
     return ret;
 }
