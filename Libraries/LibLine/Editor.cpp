@@ -571,6 +571,21 @@ void Editor::handle_read_event()
                 do_cursor_left(Word);
                 m_state = InputState::Free;
                 continue;
+            case 'd': // ^[d: alt-d
+            {
+                bool has_seen_nonspace = false;
+                while (m_cursor < m_buffer.size()) {
+                    if (isspace(m_buffer[m_cursor])) {
+                        if (has_seen_nonspace)
+                            break;
+                    } else {
+                        has_seen_nonspace = true;
+                    }
+                    do_delete();
+                }
+                m_state = InputState::Free;
+                continue;
+            }
             case 'f': // ^[f: alt-f
                 do_cursor_right(Word);
                 m_state = InputState::Free;
