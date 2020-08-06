@@ -1077,8 +1077,6 @@ void Shell::custom_event(Core::CustomEvent& event)
             Core::EventLoop::current().post_event(*this, make<Core::CustomEvent>(ShellEventType::ReadLine));
         return;
     }
-
-    event.ignore();
 }
 
 Shell::Shell()
