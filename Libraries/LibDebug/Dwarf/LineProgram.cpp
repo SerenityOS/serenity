@@ -56,8 +56,9 @@ void LineProgram::parse_source_directories()
 {
     m_source_directories.append(".");
 
-    String directory;
-    while (m_stream >> directory) {
+    while (m_stream.peek_or_error()) {
+        String directory;
+        m_stream >> directory;
 #ifdef DWARF_DEBUG
         dbg() << "directory: " << directory;
 #endif
