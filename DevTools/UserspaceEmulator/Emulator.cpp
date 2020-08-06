@@ -1271,7 +1271,7 @@ int Emulator::virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size)
 {
     auto host_buffer = ByteBuffer::create_zeroed(buffer_size);
     int rc = syscall(SC_ttyname, fd, host_buffer.data(), host_buffer.size());
-    if (rc < 1)
+    if (rc < 0)
         return rc;
     mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
     return rc;
@@ -1281,7 +1281,7 @@ int Emulator::virt$getcwd(FlatPtr buffer, size_t buffer_size)
 {
     auto host_buffer = ByteBuffer::create_zeroed(buffer_size);
     int rc = syscall(SC_getcwd, host_buffer.data(), host_buffer.size());
-    if (rc < 1)
+    if (rc < 0)
         return rc;
     mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
     return rc;
