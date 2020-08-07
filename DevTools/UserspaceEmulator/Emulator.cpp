@@ -383,7 +383,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_fork:
         return virt$fork();
     default:
-        dbg() << "Unimplemented syscall: " << Syscall::to_string((Syscall::Function)function);
+        report("\n==%d==  \033[31;1mUnimplemented syscall: %s\033[0m, %p\n", getpid(), Syscall::to_string((Syscall::Function)function));
         dump_backtrace();
         TODO();
     }
