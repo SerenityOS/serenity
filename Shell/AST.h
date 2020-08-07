@@ -168,7 +168,7 @@ class Value : public RefCounted<Value> {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) = 0;
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>);
-    virtual RefPtr<Value> resolve_without_cast(RefPtr<Shell>) { return this; }
+    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) { return *this; }
     virtual ~Value();
     virtual bool is_command() const { return false; }
     virtual bool is_glob() const { return false; }
@@ -233,7 +233,7 @@ private:
 class ListValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
-    virtual RefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual ~ListValue();
     virtual bool is_list() const override { return true; }
     virtual bool is_list_without_resolution() const override { return true; }
@@ -286,7 +286,7 @@ private:
 class SimpleVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
-    RefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual ~SimpleVariableValue();
     SimpleVariableValue(String name)
         : m_name(move(name))
