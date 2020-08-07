@@ -253,12 +253,16 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     switch (function) {
     case SC_access:
         return virt$access(arg1, arg2, arg3);
+    case SC_waitid:
+        return virt$waitid(arg1);
     case SC_getcwd:
         return virt$getcwd(arg1, arg2);
     case SC_ttyname:
         return virt$ttyname(arg1, arg2, arg3);
     case SC_getpgrp:
         return virt$getpgrp();
+    case SC_getpgid:
+        return virt$getpgid(arg1);
     case SC_setpgid:
         return virt$setpgid(arg1, arg2);
     case SC_execve:
@@ -1269,6 +1273,11 @@ int Emulator::virt$getpgrp()
     return syscall(SC_getpgrp);
 }
 
+int Emulator::virt$getpgid(pid_t pid)
+{
+    return syscall(SC_getpgid, pid);
+}
+
 int Emulator::virt$setpgid(pid_t pid, pid_t pgid)
 {
     return syscall(SC_setpgid, pid, pgid);
@@ -1298,6 +1307,30 @@ int Emulator::virt$access(FlatPtr path, size_t path_length, int type)
 {
     auto host_path = mmu().copy_buffer_from_vm(path, path_length);
     return syscall(SC_access, host_path.data(), host_path.size(), type);
+}
+
+int Emulator::virt$waitid(FlatPtr params_addr)
+{
+    Syscall::SC_waitid_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    Syscall::SC_waitid_params host_params = params;
+    siginfo info;
+    host_params.infop = &info;
+
+    int rc = syscall(SC_waitid, &host_params);
+    if (rc < 0)
+        return rc;
+
+    if (info.si_addr) {
+        // FIXME: Translate this somehow.
+        TODO();
+    }
+
+    if (params.infop)
+        mmu().copy_to_vm(params.infop, &info, sizeof(info));
+
+    return rc;
 }
 
 }
