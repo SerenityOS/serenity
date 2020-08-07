@@ -313,4 +313,60 @@ TEST_CASE(insert_trivial)
     EXPECT_EQ(ints[5], 40);
 }
 
+TEST_CASE(vector_const_ops)
+{
+    Vector<int> ints;
+
+    for (int i = 0; i < 1000; ++i) {
+        ints.append(i);
+    }
+    EXPECT_EQ(ints.size(), 1000u);
+    
+    const Vector<int> same_ints = ints;
+    EXPECT_EQ(same_ints.size(), 1000u);
+    EXPECT_EQ(ints.at(42), ints[42]);
+    EXPECT_EQ(same_ints.at(42), same_ints[42]);
+    EXPECT_EQ(ints, same_ints);
+
+    Vector<String> strings;    
+    for (int i = 0; i < 1000; ++i) {
+        strings.append(String::number(i));        
+    }
+    EXPECT_EQ(strings.size(), 1000u);
+
+    const Vector<String> same_strings = strings;
+    EXPECT_EQ(same_strings.size(), 1000u);
+    EXPECT_EQ(same_strings[42], strings[42]);
+    EXPECT_EQ(same_strings.at(42), same_strings[42]);
+    EXPECT_EQ(same_strings.at(42), strings.at(42));
+    EXPECT_EQ(strings, same_strings);
+}
+
+
+TEST_CASE(vector_find)
+{
+    Vector<int> ints;
+
+    for (int i = 0; i < 1000; ++i) {
+        ints.append(i);
+    }    
+    const Vector<int> same_ints = ints;
+
+    EXPECT_EQ(ints.size(), 1000u);
+    EXPECT_EQ(ints.at(42), 42);
+    EXPECT_EQ(same_ints.at(42), 42);
+    
+    auto it = ints.find(42);
+    EXPECT_EQ(*it, 42);
+
+    it = ints.find(-42);
+    EXPECT(it == ints.end());
+    
+    auto cit = same_ints.find(42);
+    EXPECT_EQ(*cit, 42);
+
+    cit = same_ints.find(-42);
+    EXPECT(cit == same_ints.end());
+}
+
 TEST_MAIN(Vector)

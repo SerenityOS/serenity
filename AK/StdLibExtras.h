@@ -118,6 +118,22 @@ struct RemoveConst<const T> {
     typedef T Type;
 };
 
+template <class T>
+constexpr typename AddConst<T>::Type& as_const(T& t) noexcept {
+    return t;
+}
+
+template <class T>
+constexpr T& as_nonconst(const T& t) noexcept {
+    return const_cast<T&>(t);
+}
+
+template <class T>
+constexpr T* as_nonconst(const T* t) noexcept {
+    return const_cast<T*>(t);
+}
+
+
 template<class T>
 struct RemoveVolatile {
     typedef T Type;
@@ -497,6 +513,8 @@ using CopyConst =
 }
 
 using AK::AddConst;
+using AK::as_const;
+using AK::as_nonconst;
 using AK::ceil_div;
 using AK::clamp;
 using AK::Conditional;

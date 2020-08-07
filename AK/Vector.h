@@ -258,11 +258,10 @@ public:
     size_t capacity() const { return m_capacity; }
 
     T* data()
-    {
-        if constexpr (inline_capacity > 0)
-            return m_outline_buffer ? m_outline_buffer : inline_buffer();
-        return m_outline_buffer;
+    {        
+        return as_nonconst(as_const(*this).data());
     }
+    
     const T* data() const
     {
         if constexpr (inline_capacity > 0)
@@ -275,14 +274,14 @@ public:
         ASSERT(i < m_size);
         return data()[i];
     }
+
     ALWAYS_INLINE T& at(size_t i)
     {
-        ASSERT(i < m_size);
-        return data()[i];
+        return as_nonconst(as_const(*this).at(i));
     }
 
     ALWAYS_INLINE const T& operator[](size_t i) const { return at(i); }
-    ALWAYS_INLINE T& operator[](size_t i) { return at(i); }
+    ALWAYS_INLINE T& operator[](size_t i) { return as_nonconst(as_const(*this)[i]); }
 
     const T& first() const { return at(0); }
     T& first() { return at(0); }
@@ -636,14 +635,13 @@ private:
         return max(static_cast<size_t>(4), capacity + (capacity / 4) + 4);
     }
 
-    T* slot(size_t i) { return &data()[i]; }
+    T* slot(size_t i) { return as_nonconst(as_const(*this).slot(i)); }
     const T* slot(size_t i) const { return &data()[i]; }
 
     T* inline_buffer()
     {
-        static_assert(inline_capacity > 0);
-        return reinterpret_cast<T*>(m_inline_buffer_storage);
-    }
+        return as_nonconst(as_const(*this).inline_buffer());
+    }    
     const T* inline_buffer() const
     {
         static_assert(inline_capacity > 0);
