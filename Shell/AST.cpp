@@ -36,13 +36,13 @@
 namespace AST {
 
 template<typename T, typename... Args>
-static inline RefPtr<T> create(Args... args)
+static inline NonnullRefPtr<T> create(Args... args)
 {
     return adopt(*new T(args...));
 }
 
 template<typename T>
-static inline RefPtr<T> create(std::initializer_list<RefPtr<Value>> arg)
+static inline NonnullRefPtr<T> create(std::initializer_list<NonnullRefPtr<Value>> arg)
 {
     return adopt(*new T(arg));
 }
@@ -226,7 +226,7 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
 
     for (auto& element : m_list) {
         if (!result) {
-            result = create<ListValue>({ element->run(shell)->resolve_without_cast(shell) });
+            result = create<ListValue>({ element->run(shell)->resolve_without_cast(shell).release_nonnull() });
             continue;
         }
         auto element_value = element->run(shell)->resolve_without_cast(shell);
@@ -239,7 +239,7 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
             else
                 result = create<CommandSequenceValue>(move(joined_commands));
         } else {
-            Vector<RefPtr<Value>> values;
+            NonnullRefPtrVector<Value> values;
 
             if (result->is_list_without_resolution()) {
                 values.append(static_cast<ListValue*>(result.ptr())->values());
@@ -248,7 +248,7 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
                     values.append(create<StringValue>(result));
             }
 
-            values.append(move(element_value));
+            values.append(element_value.release_nonnull());
 
             result = create<ListValue>(move(values));
         }
@@ -496,7 +496,7 @@ RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
         return inner_value;
 
     auto values = inner_value->resolve_as_list(shell);
-    Vector<RefPtr<Value>> cast_values;
+    NonnullRefPtrVector<Value> cast_values;
     for (auto& value : values)
         cast_values.append(create<StringValue>(value));
 
@@ -754,7 +754,7 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
     if (!m_block)
         return create<ListValue>({});
 
-    Vector<RefPtr<Value>> values;
+    NonnullRefPtrVector<Value> values;
     auto resolved = m_iterated_expression->run(shell)->resolve_without_cast(shell);
     if (resolved->is_list_without_resolution())
         values = static_cast<ListValue*>(resolved.ptr())->values();
@@ -1899,16 +1899,16 @@ Vector<String> ListValue::resolve_as_list(RefPtr<Shell> shell)
 {
     Vector<String> values;
     for (auto& value : m_contained_values)
-        values.append(value->resolve_as_list(shell));
+        values.append(value.resolve_as_list(shell));
 
     return values;
 }
 
 RefPtr<Value> ListValue::resolve_without_cast(RefPtr<Shell> shell)
 {
-    Vector<RefPtr<Value>> values;
+    NonnullRefPtrVector<Value> values;
     for (auto& value : m_contained_values)
-        values.append(value->resolve_without_cast(shell));
+        values.append(value.resolve_without_cast(shell).release_nonnull());
 
     return create<ListValue>(move(values));
 }
