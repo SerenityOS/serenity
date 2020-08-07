@@ -137,6 +137,9 @@ Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_wid
     , m_glyph_spacing(glyph_spacing)
     , m_fixed_width(is_fixed_width)
 {
+    // FIXME: This is just a dumb guess. It would be cool to know the actual x-height of the font!
+    m_x_height = glyph_height / 2;
+
     m_glyph_count = glyph_count_by_type(m_type);
 
     if (!m_fixed_width) {

@@ -94,6 +94,8 @@ public:
     u8 glyph_width(size_t ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[ch]; }
     int glyph_or_emoji_width(u32 code_point) const;
     u8 glyph_height() const { return m_glyph_height; }
+    int x_height() const { return m_x_height; }
+
     u8 min_glyph_width() const { return m_min_glyph_width; }
     u8 max_glyph_width() const { return m_max_glyph_width; }
     u8 glyph_fixed_width() const { return m_glyph_width; }
@@ -121,6 +123,7 @@ public:
 
     FontTypes type() { return m_type; }
     void set_type(FontTypes type);
+
 private:
     Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type);
 
@@ -137,6 +140,7 @@ private:
 
     u8 m_glyph_width { 0 };
     u8 m_glyph_height { 0 };
+    u8 m_x_height { 0 };
     u8 m_min_glyph_width { 0 };
     u8 m_max_glyph_width { 0 };
     u8 m_glyph_spacing { 0 };
