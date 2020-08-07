@@ -963,6 +963,7 @@ int Emulator::virt$execve(FlatPtr params_addr)
 
     report("\n");
     report("==%d==  \033[33;1mSyscall:\033[0m execve\n", getpid());
+    report("==%d==  @ %s\n", getpid(), path.characters());
     for (auto& argument : arguments)
         report("==%d==    - %s\n", getpid(), argument.characters());
 
@@ -970,6 +971,7 @@ int Emulator::virt$execve(FlatPtr params_addr)
     Vector<char*> envp;
 
     argv.append(const_cast<char*>("/bin/UserspaceEmulator"));
+    argv.append(const_cast<char*>(path.characters()));
 
     auto create_string_vector = [](auto& output_vector, auto& input_vector) {
         for (auto& string : input_vector)
@@ -979,6 +981,9 @@ int Emulator::virt$execve(FlatPtr params_addr)
 
     create_string_vector(argv, arguments);
     create_string_vector(envp, environment);
+
+    // Yoink duplicated program name.
+    argv.remove(2);
 
     return execve(argv[0], (char* const*)argv.data(), (char* const*)envp.data());
 }
