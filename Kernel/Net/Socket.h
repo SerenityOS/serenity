@@ -110,7 +110,7 @@ public:
     virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
     virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
-    virtual KResult setsockopt(int level, int option, const void*, socklen_t);
+    virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t);
     virtual KResult getsockopt(FileDescription&, int level, int option, void*, socklen_t*);
 
     pid_t origin_pid() const { return m_origin.pid; }

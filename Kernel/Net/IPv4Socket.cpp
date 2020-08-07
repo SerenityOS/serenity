@@ -429,7 +429,7 @@ String IPv4Socket::absolute_path(const FileDescription&) const
     return builder.to_string();
 }
 
-KResult IPv4Socket::setsockopt(int level, int option, const void* user_value, socklen_t user_value_size)
+KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
 {
     if (level != IPPROTO_IP)
         return Socket::setsockopt(level, option, user_value, user_value_size);
@@ -439,7 +439,7 @@ KResult IPv4Socket::setsockopt(int level, int option, const void* user_value, so
         if (user_value_size < sizeof(int))
             return KResult(-EINVAL);
         int value;
-        if (!Process::current()->validate_read_and_copy_typed(&value, (const int*)user_value))
+        if (!Process::current()->validate_read_and_copy_typed(&value, static_ptr_cast<const int*>(user_value)))
             return KResult(-EFAULT);
         if (value < 0 || value > 255)
             return KResult(-EINVAL);
