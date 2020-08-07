@@ -259,6 +259,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$ttyname(arg1, arg2, arg3);
     case SC_getpgrp:
         return virt$getpgrp();
+    case SC_setpgid:
+        return virt$setpgid(arg1, arg2);
     case SC_execve:
         return virt$execve(arg1);
     case SC_sleep:
@@ -1265,6 +1267,11 @@ void Emulator::setup_signal_trampoline()
 int Emulator::virt$getpgrp()
 {
     return syscall(SC_getpgrp);
+}
+
+int Emulator::virt$setpgid(pid_t pid, pid_t pgid)
+{
+    return syscall(SC_setpgid, pid, pgid);
 }
 
 int Emulator::virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size)
