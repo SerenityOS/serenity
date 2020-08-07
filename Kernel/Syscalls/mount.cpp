@@ -35,7 +35,7 @@
 
 namespace Kernel {
 
-int Process::sys$mount(const Syscall::SC_mount_params* user_params)
+int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
 {
     if (!is_superuser())
         return -EPERM;
