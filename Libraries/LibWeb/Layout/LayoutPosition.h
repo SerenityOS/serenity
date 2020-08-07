@@ -33,24 +33,6 @@ namespace Web {
 class LayoutNode;
 
 struct LayoutPosition {
-    bool operator>=(const LayoutPosition& other) const
-    {
-        if (layout_node == other.layout_node)
-            return index_in_node >= other.index_in_node;
-
-        // FIXME: Implement.
-        return true;
-    }
-
-    bool operator<=(const LayoutPosition& other) const
-    {
-        if (layout_node == other.layout_node)
-            return index_in_node <= other.index_in_node;
-
-        // FIXME: Implement.
-        return false;
-    }
-
     RefPtr<LayoutNode> layout_node;
     int index_in_node { 0 };
 };
