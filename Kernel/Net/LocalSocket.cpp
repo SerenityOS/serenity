@@ -344,24 +344,30 @@ String LocalSocket::absolute_path(const FileDescription& description) const
     return builder.to_string();
 }
 
-KResult LocalSocket::getsockopt(FileDescription& description, int level, int option, void* value, socklen_t* value_size)
+KResult LocalSocket::getsockopt(FileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     if (level != SOL_SOCKET)
         return Socket::getsockopt(description, level, option, value, value_size);
 
+
+    socklen_t size;
+    if (!Process::current()->validate_read_and_copy_typed(&size, value_size))
+        return KResult(-EFAULT);
+
     switch (option) {
     case SO_PEERCRED: {
-        if (*value_size < sizeof(ucred))
+        if (size < sizeof(ucred))
             return KResult(-EINVAL);
-        auto& creds = *(ucred*)value;
         switch (role(description)) {
         case Role::Accepted:
-            creds = m_origin;
-            *value_size = sizeof(ucred);
+            copy_to_user(static_ptr_cast<ucred*>(value), &m_origin);
+            size = sizeof(ucred);
+            copy_to_user(value_size, &size);
             return KSuccess;
         case Role::Connected:
-            creds = m_acceptor;
-            *value_size = sizeof(ucred);
+            copy_to_user(static_ptr_cast<ucred*>(value), &m_acceptor);
+            size = sizeof(ucred);
+            copy_to_user(value_size, &size);
             return KSuccess;
         case Role::Connecting:
             return KResult(-ENOTCONN);

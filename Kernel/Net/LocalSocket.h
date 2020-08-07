@@ -62,7 +62,7 @@ public:
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
-    virtual KResult getsockopt(FileDescription&, int level, int option, void*, socklen_t*) override;
+    virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
     virtual KResult chown(FileDescription&, uid_t, gid_t) override;
     virtual KResult chmod(FileDescription&, mode_t) override;
 

@@ -137,40 +137,52 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
     }
 }
 
-KResult Socket::getsockopt(FileDescription&, int level, int option, void* value, socklen_t* value_size)
+KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
+    socklen_t size;
+    if (!Process::current()->validate_read_and_copy_typed(&size, value_size))
+        return KResult(-EFAULT);
+
     ASSERT(level == SOL_SOCKET);
     switch (option) {
     case SO_SNDTIMEO:
-        if (*value_size < sizeof(timeval))
+        if (size < sizeof(timeval))
             return KResult(-EINVAL);
-        *(timeval*)value = m_send_timeout;
-        *value_size = sizeof(timeval);
+        copy_to_user(static_ptr_cast<timeval*>(value), &m_send_timeout);
+        size = sizeof(timeval);
+        copy_to_user(value_size, &size);
         return KSuccess;
     case SO_RCVTIMEO:
-        if (*value_size < sizeof(timeval))
+        if (size < sizeof(timeval))
             return KResult(-EINVAL);
-        *(timeval*)value = m_receive_timeout;
-        *value_size = sizeof(timeval);
+        copy_to_user(static_ptr_cast<timeval*>(value), &m_receive_timeout);
+        size = sizeof(timeval);
+        copy_to_user(value_size, &size);
         return KSuccess;
-    case SO_ERROR:
-        if (*value_size < sizeof(int))
+    case SO_ERROR: {
+        if (size < sizeof(int))
             return KResult(-EINVAL);
         dbg() << "getsockopt(SO_ERROR): FIXME!";
-        *(int*)value = 0;
-        *value_size = sizeof(int);
+        int errno = 0;
+        copy_to_user(static_ptr_cast<int*>(value), &errno);
+        size = sizeof(int);
+        copy_to_user(value_size, &size);
         return KSuccess;
+    }
     case SO_BINDTODEVICE:
-        if (*value_size < IFNAMSIZ)
+        if (size < IFNAMSIZ)
             return KResult(-EINVAL);
         if (m_bound_interface) {
             const auto& name = m_bound_interface->name();
             auto length = name.length() + 1;
-            memcpy(value, name.characters(), length);
-            *value_size = length;
+            copy_to_user(static_ptr_cast<char*>(value), name.characters(), length);
+            size = length;
+            copy_to_user(value_size, &size);
             return KSuccess;
         } else {
-            *value_size = 0;
+            size = 0;
+            copy_to_user(value_size, &size);
+
             return KResult(-EFAULT);
         }
     default:
