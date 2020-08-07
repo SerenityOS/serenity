@@ -38,7 +38,7 @@ int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
     return description->chown(uid, gid);
 }
 
-int Process::sys$chown(const Syscall::SC_chown_params* user_params)
+int Process::sys$chown(Userspace<const Syscall::SC_chown_params*> user_params)
 {
     REQUIRE_PROMISE(chown);
     Syscall::SC_chown_params params;
