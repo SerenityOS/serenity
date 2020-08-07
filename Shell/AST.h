@@ -257,7 +257,7 @@ public:
     virtual bool is_string() const override { return m_split.is_null(); }
     virtual bool is_list() const override { return !m_split.is_null(); }
     StringValue(String string, String split_by = {}, bool keep_empty = false)
-        : m_string(string)
+        : m_string(move(string))
         , m_split(move(split_by))
         , m_keep_empty(keep_empty)
     {
@@ -275,7 +275,7 @@ public:
     virtual ~GlobValue();
     virtual bool is_glob() const override { return true; }
     GlobValue(String glob)
-        : m_glob(glob)
+        : m_glob(move(glob))
     {
     }
 
@@ -289,7 +289,7 @@ public:
     RefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual ~SimpleVariableValue();
     SimpleVariableValue(String name)
-        : m_name(name)
+        : m_name(move(name))
     {
     }
 
@@ -316,7 +316,7 @@ public:
     virtual ~TildeValue();
     virtual bool is_string() const override { return true; }
     TildeValue(String name)
-        : m_username(name)
+        : m_username(move(name))
     {
     }
 
