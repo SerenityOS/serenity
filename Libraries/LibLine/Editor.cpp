@@ -965,6 +965,12 @@ void Editor::handle_read_event()
             do_backspace();
             continue;
         }
+        // ^K
+        if (code_point == ctrl('K')) {
+            while (m_cursor < m_buffer.size())
+                do_delete();
+            continue;
+        }
         // ^L
         if (code_point == ctrl('L')) {
             printf("\033[3J\033[H\033[2J"); // Clear screen.
