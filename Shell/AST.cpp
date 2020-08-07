@@ -226,7 +226,7 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
 
     for (auto& element : m_list) {
         if (!result) {
-            result = create<ListValue>({ element->run(shell)->resolve_without_cast(shell).release_nonnull() });
+            result = create<ListValue>({ element->run(shell)->resolve_without_cast(shell) });
             continue;
         }
         auto element_value = element->run(shell)->resolve_without_cast(shell);
@@ -248,7 +248,7 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
                     values.append(create<StringValue>(result));
             }
 
-            values.append(element_value.release_nonnull());
+            values.append(element_value);
 
             result = create<ListValue>(move(values));
         }
@@ -1904,11 +1904,11 @@ Vector<String> ListValue::resolve_as_list(RefPtr<Shell> shell)
     return values;
 }
 
-RefPtr<Value> ListValue::resolve_without_cast(RefPtr<Shell> shell)
+NonnullRefPtr<Value> ListValue::resolve_without_cast(RefPtr<Shell> shell)
 {
     NonnullRefPtrVector<Value> values;
     for (auto& value : m_contained_values)
-        values.append(value.resolve_without_cast(shell).release_nonnull());
+        values.append(value.resolve_without_cast(shell));
 
     return create<ListValue>(move(values));
 }
@@ -1992,13 +1992,11 @@ Vector<String> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
     return res;
 }
 
-RefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
+NonnullRefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
 {
-
     if (auto value = shell->lookup_local_variable(m_name))
-        return value;
-
-    return this;
+        return value.release_nonnull();
+    return *this;
 }
 
 SpecialVariableValue::~SpecialVariableValue()
