@@ -30,14 +30,10 @@
 
 namespace AK::Concepts {
 
-// clang-format off
-
 template<typename T>
 concept Integral = IsIntegral<T>::value;
 
 template<typename T>
 concept FloatingPoint = IsFloatingPoint<T>::value;
-
-// clang-format on
 
 }
