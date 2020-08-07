@@ -138,6 +138,7 @@ private:
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
     int virt$sleep(unsigned);
     int virt$getpgrp();
+    int virt$setpgid(pid_t pid, pid_t pgid);
     int virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size);
     int virt$getcwd(FlatPtr buffer, size_t buffer_size);
 
