@@ -57,5 +57,7 @@ int main(int, char**)
         return 1;
     }
 
+    unveil(nullptr, nullptr);
+
     return event_loop.exec();
 }
