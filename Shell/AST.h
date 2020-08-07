@@ -238,16 +238,16 @@ public:
     virtual bool is_list() const override { return true; }
     virtual bool is_list_without_resolution() const override { return true; }
     ListValue(Vector<String> values);
-    ListValue(Vector<RefPtr<Value>> values)
-        : m_contained_values(move(values))
+    ListValue(Vector<NonnullRefPtr<Value>> values)
+        : m_contained_values(move(static_cast<NonnullRefPtrVector<Value>&>(values)))
     {
     }
 
-    const Vector<RefPtr<Value>>& values() const { return m_contained_values; }
-    Vector<RefPtr<Value>>& values() { return m_contained_values; }
+    const NonnullRefPtrVector<Value>& values() const { return m_contained_values; }
+    NonnullRefPtrVector<Value>& values() { return m_contained_values; }
 
 private:
-    Vector<RefPtr<Value>> m_contained_values;
+    NonnullRefPtrVector<Value> m_contained_values;
 };
 
 class StringValue final : public Value {
