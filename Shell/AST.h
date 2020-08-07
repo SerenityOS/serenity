@@ -861,8 +861,8 @@ private:
 class VariableDeclarations final : public Node {
 public:
     struct Variable {
-        RefPtr<Node> name;
-        RefPtr<Node> value;
+        NonnullRefPtr<Node> name;
+        NonnullRefPtr<Node> value;
     };
     VariableDeclarations(Position, Vector<Variable> variables);
     virtual ~VariableDeclarations();
