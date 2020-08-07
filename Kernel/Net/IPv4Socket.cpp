@@ -451,16 +451,22 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
     }
 }
 
-KResult IPv4Socket::getsockopt(FileDescription& description, int level, int option, void* value, socklen_t* value_size)
+KResult IPv4Socket::getsockopt(FileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     if (level != IPPROTO_IP)
         return Socket::getsockopt(description, level, option, value, value_size);
 
+    socklen_t size;
+    if (!Process::current()->validate_read_and_copy_typed(&size, value_size))
+        return KResult(-EFAULT);
+
     switch (option) {
     case IP_TTL:
-        if (*value_size < sizeof(int))
+        if (size < sizeof(int))
             return KResult(-EINVAL);
-        *(int*)value = m_ttl;
+        copy_to_user(static_ptr_cast<int*>(value), (int*)&m_ttl);
+        size = sizeof(int);
+        copy_to_user(value_size, &size);
         return KSuccess;
     default:
         return KResult(-ENOPROTOOPT);

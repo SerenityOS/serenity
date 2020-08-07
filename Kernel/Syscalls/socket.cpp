@@ -316,22 +316,24 @@ int Process::sys$getpeername(Userspace<const Syscall::SC_getpeername_params*> us
     return get_sock_or_peer_name<false>(params);
 }
 
-int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
+int Process::sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*> user_params)
 {
-    if (!validate_read_typed(params))
+    Syscall::SC_getsockopt_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
-    SmapDisabler disabler;
+    int sockfd = params.sockfd;
+    int level = params.level;
+    int option = params.option;
+    Userspace<void*> user_value = params.value;
+    Userspace<socklen_t*> user_value_size = params.value_size;
 
-    int sockfd = params->sockfd;
-    int level = params->level;
-    int option = params->option;
-    void* value = params->value;
-    socklen_t* value_size = params->value_size;
-
-    if (!validate_write_typed(value_size))
+    if (!validate_write_typed(user_value_size))
         return -EFAULT;
-    if (!validate_write(value, *value_size))
+    socklen_t value_size;
+    if (!validate_read_and_copy_typed(&value_size, user_value_size))
+        return -EFAULT;
+    if (!validate_write(user_value, value_size))
         return -EFAULT;
     auto description = file_description(sockfd);
     if (!description)
@@ -345,7 +347,7 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
     } else {
         REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     }
-    return socket.getsockopt(*description, level, option, value, value_size);
+    return socket.getsockopt(*description, level, option, user_value, user_value_size);
 }
 
 int Process::sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*> user_params)
