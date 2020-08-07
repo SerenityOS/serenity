@@ -251,6 +251,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
+    case SC_chdir:
+        return virt$chdir(arg1, arg2);
     case SC_access:
         return virt$access(arg1, arg2, arg3);
     case SC_waitid:
@@ -1336,6 +1338,12 @@ int Emulator::virt$waitid(FlatPtr params_addr)
         mmu().copy_to_vm(params.infop, &info, sizeof(info));
 
     return rc;
+}
+
+int Emulator::virt$chdir(FlatPtr path, size_t path_length)
+{
+    auto host_path = mmu().copy_buffer_from_vm(path, path_length);
+    return syscall(SC_chdir, host_path.data(), host_path.size());
 }
 
 }
