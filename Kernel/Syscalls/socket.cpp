@@ -300,7 +300,7 @@ int Process::get_sock_or_peer_name(const Params& params)
     return 0;
 }
 
-int Process::sys$getsockname(const Syscall::SC_getsockname_params* user_params)
+int Process::sys$getsockname(Userspace<const Syscall::SC_getsockname_params*> user_params)
 {
     Syscall::SC_getsockname_params params;
     if (!validate_read_and_copy_typed(&params, user_params))
