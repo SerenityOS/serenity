@@ -152,7 +152,7 @@ private:
 
 struct Command {
     Vector<String> argv;
-    Vector<NonnullRefPtr<Redirection>> redirections;
+    NonnullRefPtrVector<Redirection> redirections;
     bool should_wait { true };
     bool is_pipe_source { false };
     bool should_notify_if_in_background { true };

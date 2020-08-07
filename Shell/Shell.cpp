@@ -449,7 +449,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     // Resolve redirections.
     NonnullRefPtrVector<AST::Rewiring> rewirings;
     for (auto& redirection : command.redirections) {
-        auto rewiring_result = redirection->apply();
+        auto rewiring_result = redirection.apply();
         if (rewiring_result.is_error()) {
             if (!rewiring_result.error().is_empty())
                 fprintf(stderr, "error: %s\n", rewiring_result.error().characters());
