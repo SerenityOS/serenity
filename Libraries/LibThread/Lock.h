@@ -84,9 +84,10 @@ inline void Lock::unlock()
 {
     ASSERT(m_holder == gettid());
     ASSERT(m_level);
-    --m_level;
-    if (!m_level)
+    if (m_level == 1)
         m_holder.store(0, AK::memory_order_release);
+    else
+        --m_level;
 }
 
 #define LOCKER(lock) LibThread::Locker locker(lock)
