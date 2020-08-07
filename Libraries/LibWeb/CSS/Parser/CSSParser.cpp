@@ -272,19 +272,19 @@ static CSS::Length parse_length(const CSS::ParsingContext& context, const String
     if (view.ends_with('%')) {
         type = CSS::Length::Type::Percentage;
         value = try_parse_float(view.substring_view(0, view.length() - 1));
-    } else if (view.to_string().to_lowercase().ends_with("px")) {
+    } else if (view.ends_with("px", CaseSensitivity::CaseInsensitive)) {
         type = CSS::Length::Type::Px;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.to_string().to_lowercase().ends_with("pt")) {
+    } else if (view.ends_with("pt", CaseSensitivity::CaseInsensitive)) {
         type = CSS::Length::Type::Pt;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.to_string().to_lowercase().ends_with("rem")) {
+    } else if (view.ends_with("rem", CaseSensitivity::CaseInsensitive)) {
         type = CSS::Length::Type::Rem;
         value = try_parse_float(view.substring_view(0, view.length() - 3));
-    } else if (view.to_string().to_lowercase().ends_with("em")) {
+    } else if (view.ends_with("em", CaseSensitivity::CaseInsensitive)) {
         type = CSS::Length::Type::Em;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.to_string().to_lowercase().ends_with("ex")) {
+    } else if (view.ends_with("ex", CaseSensitivity::CaseInsensitive)) {
         type = CSS::Length::Type::Ex;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
     } else if (view == "0") {
