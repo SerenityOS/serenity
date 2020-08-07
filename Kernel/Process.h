@@ -298,7 +298,7 @@ public:
     int sys$getsockopt(const Syscall::SC_getsockopt_params*);
     int sys$setsockopt(const Syscall::SC_setsockopt_params*);
     int sys$getsockname(const Syscall::SC_getsockname_params*);
-    int sys$getpeername(const Syscall::SC_getpeername_params*);
+    int sys$getpeername(Userspace<const Syscall::SC_getpeername_params*>);
     int sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
     int sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
     int sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
@@ -420,6 +420,13 @@ public:
             copy_from_user(dest, src);
         }
         return validated;
+    }
+
+    template<typename T>
+    [[nodiscard]] bool validate_read_and_copy_typed(T* dest, Userspace<T*> src)
+    {
+        Userspace<const T*> const_src { src.ptr() };
+        return validate_read_and_copy_typed(dest, const_src);
     }
 
     template<typename T>

@@ -326,8 +326,8 @@ struct SC_getsockname_params {
 
 struct SC_getpeername_params {
     int sockfd;
-    sockaddr* addr;
-    socklen_t* addrlen;
+    Userspace<sockaddr*> addr;
+    Userspace<socklen_t*> addrlen;
 };
 
 struct SC_futex_params {
