@@ -62,8 +62,6 @@ public:
     virtual bool discard_or_error(size_t count) = 0;
 };
 
-// clang-format off
-
 template<Concepts::Integral Integral>
 InputStream& operator>>(InputStream& stream, Integral& value)
 {
@@ -79,8 +77,6 @@ InputStream& operator>>(InputStream& stream, FloatingPoint& value)
     return stream;
 }
 #endif
-
-// clang-format on
 
 inline InputStream& operator>>(InputStream& stream, bool& value)
 {
