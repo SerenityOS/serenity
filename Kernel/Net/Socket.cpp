@@ -101,24 +101,25 @@ KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
     return KSuccess;
 }
 
-KResult Socket::setsockopt(int level, int option, const void* user_value, socklen_t user_value_size)
+KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
 {
     ASSERT(level == SOL_SOCKET);
     switch (option) {
     case SO_SNDTIMEO:
         if (user_value_size != sizeof(timeval))
             return KResult(-EINVAL);
-        copy_from_user(&m_send_timeout, (const timeval*)user_value);
+        copy_from_user(&m_send_timeout, static_ptr_cast<const timeval*>(user_value));
         return KSuccess;
     case SO_RCVTIMEO:
         if (user_value_size != sizeof(timeval))
             return KResult(-EINVAL);
-        copy_from_user(&m_receive_timeout, (const timeval*)user_value);
+        copy_from_user(&m_receive_timeout, static_ptr_cast<const timeval*>(user_value));
         return KSuccess;
     case SO_BINDTODEVICE: {
         if (user_value_size != IFNAMSIZ)
             return KResult(-EINVAL);
-        auto ifname = Process::current()->validate_and_copy_string_from_user((const char*)user_value, user_value_size);
+        auto user_string = static_ptr_cast<const char*>(user_value);
+        auto ifname = Process::current()->validate_and_copy_string_from_user(user_string, user_value_size);
         if (ifname.is_null())
             return KResult(-EFAULT);
         auto device = NetworkAdapter::lookup_by_name(ifname);

@@ -348,7 +348,7 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
     return socket.getsockopt(*description, level, option, value, value_size);
 }
 
-int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* user_params)
+int Process::sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*> user_params)
 {
     Syscall::SC_setsockopt_params params;
     if (!validate_read_and_copy_typed(&params, user_params))

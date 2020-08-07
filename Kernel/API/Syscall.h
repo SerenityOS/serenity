@@ -314,7 +314,7 @@ struct SC_setsockopt_params {
     int sockfd;
     int level;
     int option;
-    const void* value;
+    Userspace<const void*> value;
     socklen_t value_size;
 };
 
