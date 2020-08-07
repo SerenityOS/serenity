@@ -272,6 +272,7 @@ using AK::TestSuite;
         static_assert(compiletime_lenof(___str(SuiteName)) != 0, "Set SuiteName"); \
         TestSuite::the().main(___str(SuiteName), argc, argv);                      \
         TestSuite::release();                                                      \
+        return 0;                                                                  \
     }
 
 #define assertEqual(one, two)                                                                                                                                              \
