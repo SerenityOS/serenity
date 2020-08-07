@@ -295,7 +295,7 @@ public:
     int sys$shutdown(int sockfd, int how);
     ssize_t sys$sendto(const Syscall::SC_sendto_params*);
     ssize_t sys$recvfrom(const Syscall::SC_recvfrom_params*);
-    int sys$getsockopt(const Syscall::SC_getsockopt_params*);
+    int sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*>);
     int sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*>);
     int sys$getsockname(Userspace<const Syscall::SC_getsockname_params*>);
     int sys$getpeername(Userspace<const Syscall::SC_getpeername_params*>);
