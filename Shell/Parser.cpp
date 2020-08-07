@@ -247,7 +247,7 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
     }
 
     Vector<AST::VariableDeclarations::Variable> variables;
-    variables.append({ move(name_expr), move(expression) });
+    variables.append({ move(name_expr), expression.release_nonnull() });
 
     if (consume_while(is_whitespace).is_empty())
         return create<AST::VariableDeclarations>(move(variables));
