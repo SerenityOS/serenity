@@ -284,6 +284,9 @@ static CSS::Length parse_length(const CSS::ParsingContext& context, const String
     } else if (view.to_string().to_lowercase().ends_with("em")) {
         type = CSS::Length::Type::Em;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
+    } else if (view.to_string().to_lowercase().ends_with("ex")) {
+        type = CSS::Length::Type::Ex;
+        value = try_parse_float(view.substring_view(0, view.length() - 2));
     } else if (view == "0") {
         type = CSS::Length::Type::Px;
         value = 0;

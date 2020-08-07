@@ -39,6 +39,7 @@ public:
         Auto,
         Px,
         Pt,
+        Ex,
         Em,
         Rem,
     };
@@ -84,7 +85,7 @@ public:
     bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_absolute() const { return m_type == Type::Px || m_type == Type::Pt; }
-    bool is_relative() const { return m_type == Type::Em || m_type == Type::Rem; }
+    bool is_relative() const { return m_type == Type::Ex || m_type == Type::Em || m_type == Type::Rem; }
 
     float raw_value() const { return m_value; }
     ALWAYS_INLINE float to_px(const LayoutNode& layout_node) const
