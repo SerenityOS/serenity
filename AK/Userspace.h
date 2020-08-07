@@ -73,6 +73,18 @@ private:
 #endif
 };
 
+template<typename T, typename U>
+inline Userspace<T> static_ptr_cast(const Userspace<U>& ptr)
+{
+#ifdef KERNEL
+    auto casted_ptr = static_cast<T>(ptr.unsafe_userspace_ptr());
+#else
+    auto casted_ptr = static_cast<T>(ptr.ptr());
+#endif
+    return Userspace<T>((FlatPtr)casted_ptr);
+}
+
 }
 
 using AK::Userspace;
+using AK::static_ptr_cast;
