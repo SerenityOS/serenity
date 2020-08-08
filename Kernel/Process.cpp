@@ -95,8 +95,12 @@ Lock* g_hostname_lock;
 VirtualAddress g_return_to_ring3_from_signal_trampoline;
 HashMap<String, OwnPtr<Module>>* g_modules;
 
-pid_t Process::allocate_pid()
+ProcessID Process::allocate_pid()
 {
+    // Overflow is UB, and negative PIDs wreck havoc.
+    // TODO: Handle PID overflow
+    // For example: Use an Atomic<u32>, mask the most significant bit,
+    // retry if PID is already taken as a PID, taken as a TID, or zero.
     return next_pid.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
 }
 
@@ -112,9 +116,9 @@ void Process::initialize()
     create_signal_trampolines();
 }
 
-Vector<pid_t> Process::all_pids()
+Vector<ProcessID> Process::all_pids()
 {
-    Vector<pid_t> pids;
+    Vector<ProcessID> pids;
     ScopedSpinLock lock(g_processes_lock);
     pids.ensure_capacity((int)g_processes->size_slow());
     for (auto& process : *g_processes)
@@ -286,7 +290,7 @@ void Process::kill_all_threads()
     });
 }
 
-RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String& path, uid_t uid, gid_t gid, pid_t parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
+RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String& path, uid_t uid, gid_t gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
     auto parts = path.split('/');
     if (arguments.is_empty()) {
@@ -334,7 +338,7 @@ RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String
 
 NonnullRefPtr<Process> Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)(), u32 affinity)
 {
-    auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0));
+    auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), Ring0));
     first_thread->tss().eip = (FlatPtr)e;
 
     if (process->pid() != 0) {
@@ -348,7 +352,7 @@ NonnullRefPtr<Process> Process::create_kernel_process(Thread*& first_thread, Str
     return process;
 }
 
-Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(allocate_pid())
     , m_euid(uid)
@@ -473,10 +477,11 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
     ASSERT_NOT_REACHED();
 }
 
-RefPtr<Process> Process::from_pid(pid_t pid)
+RefPtr<Process> Process::from_pid(ProcessID pid)
 {
     ScopedSpinLock lock(g_processes_lock);
     for (auto& process : *g_processes) {
+        process.pid();
         if (process.pid() == pid)
             return &process;
     }
@@ -553,7 +558,7 @@ siginfo_t Process::reap(Process& process)
     siginfo_t siginfo;
     memset(&siginfo, 0, sizeof(siginfo));
     siginfo.si_signo = SIGCHLD;
-    siginfo.si_pid = process.pid();
+    siginfo.si_pid = process.pid().value();
     siginfo.si_uid = process.uid();
 
     if (process.m_termination_signal) {
@@ -566,7 +571,7 @@ siginfo_t Process::reap(Process& process)
 
     ASSERT(g_processes_lock.is_locked());
 
-    if (process.ppid()) {
+    if (!!process.ppid()) {
         auto parent = Process::from_pid(process.ppid());
         if (parent) {
             parent->m_ticks_in_user_for_dead_children += process.m_ticks_in_user + process.m_ticks_in_user_for_dead_children;
@@ -654,7 +659,8 @@ void Process::finalize()
     disown_all_shared_buffers();
     {
         InterruptDisabler disabler;
-        if (auto* parent_thread = Thread::from_tid(m_ppid)) {
+        // FIXME: PID/TID BUG
+        if (auto* parent_thread = Thread::from_tid(m_ppid.value())) {
             if (parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
                 // NOTE: If the parent doesn't care about this process, let it go.
                 m_ppid = 0;
@@ -783,7 +789,8 @@ void Process::terminate_due_to_signal(u8 signal)
 KResult Process::send_signal(u8 signal, Process* sender)
 {
     InterruptDisabler disabler;
-    if (auto* thread = Thread::from_tid(m_pid)) {
+    // FIXME: PID/TID BUG
+    if (auto* thread = Thread::from_tid(m_pid.value())) {
         thread->send_signal(signal, sender);
         return KSuccess;
     }

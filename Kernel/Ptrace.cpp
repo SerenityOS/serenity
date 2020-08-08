@@ -43,7 +43,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         return KSuccess;
     }
 
-    if (params.pid == caller.pid())
+    if (params.pid == caller.pid().value())
         return KResult(-EINVAL);
 
     Thread* peer = nullptr;

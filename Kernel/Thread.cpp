@@ -52,9 +52,10 @@ Thread::Thread(NonnullRefPtr<Process> process)
 {
     if (m_process->m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel) == 0) {
         // First thread gets TID == PID
-        m_tid = m_process->pid();
+        m_tid = m_process->pid().value();
     } else {
-        m_tid = Process::allocate_pid();
+        // TODO: Use separate counter?
+        m_tid = Process::allocate_pid().value();
     }
 #ifdef THREAD_DEBUG
     dbg() << "Created new thread " << m_process->name() << "(" << m_process->pid() << ":" << m_tid << ")";
@@ -721,7 +722,6 @@ void Thread::set_state(State new_state)
             m_wait_queue->dequeue(*this);
             m_wait_queue = nullptr;
         }
-        
 
         if (this != Thread::current() && is_finalizable()) {
             // Some other thread set this thread to Dying, notify the
@@ -859,7 +859,7 @@ void Thread::make_thread_specific_region(Badge<Process>)
 
 const LogStream& operator<<(const LogStream& stream, const Thread& value)
 {
-    return stream << value.process().name() << "(" << value.pid() << ":" << value.tid() << ")";
+    return stream << value.process().name() << "(" << value.pid().value() << ":" << value.tid().value() << ")";
 }
 
 Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary)
@@ -982,7 +982,7 @@ void Thread::reset_fpu_state()
     memcpy(m_fpu_state, &Processor::current().clean_fpu_state(), sizeof(FPUState));
 }
 
-void Thread::start_tracing_from(pid_t tracer)
+void Thread::start_tracing_from(ProcessID tracer)
 {
     m_tracer = ThreadTracer::create(tracer);
 }

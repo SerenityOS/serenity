@@ -282,7 +282,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_master_tls_size = master_tls_size;
     m_master_tls_alignment = master_tls_alignment;
 
-    m_pid = new_main_thread->tid();
+    // FIXME: PID/TID BUG
+    m_pid = new_main_thread->tid().value();
     new_main_thread->make_thread_specific_region({});
     new_main_thread->reset_fpu_state();
 
@@ -296,7 +297,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     tss.eip = m_entry_eip;
     tss.esp = new_userspace_esp;
     tss.cr3 = m_page_directory->cr3();
-    tss.ss2 = m_pid;
+    tss.ss2 = m_pid.value();
 
     if (was_profiling)
         Profiling::did_exec(path);
