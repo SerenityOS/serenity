@@ -30,6 +30,7 @@
 #include <LibCore/UDPServer.h>
 #include <LibCore/UDPSocket.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #ifndef SOCK_NONBLOCK
 #    include <sys/ioctl.h>
@@ -53,6 +54,7 @@ UDPServer::UDPServer(Object* parent)
 
 UDPServer::~UDPServer()
 {
+    ::close(m_fd);
 }
 
 bool UDPServer::bind(const IPv4Address& address, u16 port)
