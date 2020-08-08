@@ -1,0 +1,8 @@
+[App]
+Name=2048
+Executable=/bin/2048
+Category=Games
+
+[Icons]
+16x16=/res/icons/16x16/app-2048.png
+32x32=/res/icons/32x32/app-2048.png
