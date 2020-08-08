@@ -757,7 +757,7 @@ NonnullRefPtr<CSS::StyleProperties> LayoutBlock::style_for_anonymous_block() con
 LineBox& LayoutBlock::ensure_last_line_box()
 {
     if (m_line_boxes.is_empty())
-        m_line_boxes.append(LineBox());
+        return add_line_box();
     return m_line_boxes.last();
 }
 
