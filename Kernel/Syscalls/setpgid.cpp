@@ -48,14 +48,15 @@ pid_t Process::sys$setsid()
     REQUIRE_PROMISE(proc);
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
-    Process::for_each_in_pgrp(pid(), [&](auto&) {
+    // FIXME: PID/PGID ISSUE?
+    Process::for_each_in_pgrp(pid().value(), [&](auto&) {
         found_process_with_same_pgid_as_my_pid = true;
         return IterationDecision::Break;
     });
     if (found_process_with_same_pgid_as_my_pid)
         return -EPERM;
-    m_sid = m_pid;
-    m_pgid = m_pid;
+    m_sid = m_pid.value();
+    m_pgid = m_pid.value();
     m_tty = nullptr;
     return m_sid;
 }
@@ -91,7 +92,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
     REQUIRE_PROMISE(proc);
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
-    pid_t pid = specified_pid ? specified_pid : m_pid;
+    ProcessID pid = specified_pid ? ProcessID(specified_pid) : m_pid;
     if (specified_pgid < 0) {
         // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
         return -EINVAL;
@@ -115,7 +116,8 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
         return -EPERM;
     }
 
-    pid_t new_pgid = specified_pgid ? specified_pgid : process->m_pid;
+    // FIXME: PID/PGID INCOMPLETE
+    pid_t new_pgid = specified_pgid ? specified_pgid : process->m_pid.value();
     pid_t current_sid = get_sid_from_pgid(process->m_pgid);
     pid_t new_sid = get_sid_from_pgid(new_pgid);
     if (current_sid != new_sid) {

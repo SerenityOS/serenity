@@ -35,9 +35,9 @@ namespace Kernel {
 
 class ThreadTracer {
 public:
-    static NonnullOwnPtr<ThreadTracer> create(pid_t tracer) { return make<ThreadTracer>(tracer); }
+    static NonnullOwnPtr<ThreadTracer> create(ProcessID tracer) { return make<ThreadTracer>(tracer); }
 
-    pid_t tracer_pid() const { return m_tracer_pid; }
+    ProcessID tracer_pid() const { return m_tracer_pid; }
     bool has_pending_signal(u32 signal) const { return m_pending_signals & (1 << (signal - 1)); }
     void set_signal(u32 signal) { m_pending_signals |= (1 << (signal - 1)); }
     void unset_signal(u32 signal) { m_pending_signals &= ~(1 << (signal - 1)); }
@@ -54,10 +54,10 @@ public:
         return m_regs.value();
     }
 
-    explicit ThreadTracer(pid_t);
+    explicit ThreadTracer(ProcessID);
 
 private:
-    pid_t m_tracer_pid { -1 };
+    ProcessID m_tracer_pid { -1 };
 
     // This is a bitmap for signals that are sent from the tracer to the tracee
     // TODO: Since we do not currently support sending signals

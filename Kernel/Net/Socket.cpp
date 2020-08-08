@@ -56,7 +56,7 @@ Socket::Socket(int domain, int type, int protocol)
     , m_protocol(protocol)
 {
     auto& process = *Process::current();
-    m_origin = { process.pid(), process.uid(), process.gid() };
+    m_origin = { process.pid().value(), process.uid(), process.gid() };
 }
 
 Socket::~Socket()
@@ -83,7 +83,7 @@ RefPtr<Socket> Socket::accept()
     auto client = m_pending.take_first();
     ASSERT(!client->is_connected());
     auto& process = *Process::current();
-    client->m_acceptor = { process.pid(), process.uid(), process.gid() };
+    client->m_acceptor = { process.pid().value(), process.uid(), process.gid() };
     client->m_connected = true;
     client->m_role = Role::Accepted;
     return client;

@@ -28,7 +28,7 @@
 
 namespace Kernel {
 
-int Process::sys$disown(pid_t pid)
+int Process::sys$disown(ProcessID pid)
 {
     REQUIRE_PROMISE(proc);
     auto process = Process::from_pid(pid);

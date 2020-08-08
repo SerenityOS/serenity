@@ -34,9 +34,12 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         ScopedSpinLock lock(g_processes_lock);
         if (idtype == P_PID && !Process::from_pid(id))
             return KResult(-ECHILD);
+        // FIXME: Race: After 'lock' releases, the 'id' process might vanish.
+        // If that is not a problem, why check for it?
+        // If it is a problem, let's fix it! (Eventually.)
     }
 
-    pid_t waitee_pid;
+    ProcessID waitee_pid { 0 };
 
     // FIXME: WaitBlocker should support idtype/id specs directly.
     if (idtype == P_ALL) {
@@ -62,14 +65,15 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
     if (waitee_process->is_dead()) {
         return reap(*waitee_process);
     } else {
-        auto* waitee_thread = Thread::from_tid(waitee_pid);
+        // FIXME: PID/TID BUG
+        auto* waitee_thread = Thread::from_tid(waitee_pid.value());
         if (!waitee_thread)
             return KResult(-ECHILD);
         ASSERT((options & WNOHANG) || waitee_thread->state() == Thread::State::Stopped);
         siginfo_t siginfo;
         memset(&siginfo, 0, sizeof(siginfo));
         siginfo.si_signo = SIGCHLD;
-        siginfo.si_pid = waitee_process->pid();
+        siginfo.si_pid = waitee_process->pid().value();
         siginfo.si_uid = waitee_process->uid();
 
         switch (waitee_thread->state()) {

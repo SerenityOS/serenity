@@ -95,7 +95,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     }
 
     child_first_thread->set_state(Thread::State::Skip1SchedulerPass);
-    return child->pid();
+    return child->pid().value();
 }
 
 }
