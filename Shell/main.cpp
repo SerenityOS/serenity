@@ -105,10 +105,10 @@ int main(int argc, char** argv)
             }
 #endif
             if (child_pid == job.pid()) {
-                if (WIFEXITED(wstatus)) {
+                if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
+                    job.set_signalled(WTERMSIG(wstatus));
+                } else if (WIFEXITED(wstatus)) {
                     job.set_has_exit(WEXITSTATUS(wstatus));
-                } else if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
-                    job.set_has_exit(126);
                 } else if (WIFSTOPPED(wstatus)) {
                     job.unblock();
                     job.set_is_suspended(true);
