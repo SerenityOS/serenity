@@ -153,11 +153,14 @@ public:
     const PageDirectory& page_directory() const { return *m_page_directory; }
 
     static RefPtr<Process> from_pid(ProcessID);
+    static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
     const String& name() const { return m_name; }
     ProcessID pid() const { return m_pid; }
-    pid_t sid() const { return m_sid; }
-    pid_t pgid() const { return m_pgid; }
+    SessionID sid() const { return m_sid; }
+    bool is_session_leader() const { return m_sid.value() == m_pid.value(); }
+    ProcessGroupID pgid() const { return m_pgid; }
+    bool is_group_leader() const { return m_pgid.value() == m_pid.value(); }
     const FixedArray<gid_t>& extra_gids() const { return m_extra_gids; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
@@ -179,7 +182,7 @@ public:
     template<typename Callback>
     static void for_each(Callback);
     template<typename Callback>
-    static void for_each_in_pgrp(pid_t, Callback);
+    static void for_each_in_pgrp(ProcessGroupID, Callback);
     template<typename Callback>
     void for_each_child(Callback);
     template<typename Callback>
@@ -617,8 +620,8 @@ private:
     String m_name;
 
     ProcessID m_pid { 0 };
-    pid_t m_sid { 0 };
-    pid_t m_pgid { 0 };
+    SessionID m_sid { 0 };
+    ProcessGroupID m_pgid { 0 };
 
     uid_t m_euid { 0 };
     gid_t m_egid { 0 };
@@ -772,7 +775,7 @@ inline void Process::for_each_thread(Callback callback) const
 }
 
 template<typename Callback>
-inline void Process::for_each_in_pgrp(pid_t pgid, Callback callback)
+inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(g_processes_lock);

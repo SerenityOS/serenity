@@ -50,7 +50,7 @@ public:
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
 
-    pid_t pgid() const;
+    ProcessGroupID pgid() const;
 
     void set_termios(const termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }

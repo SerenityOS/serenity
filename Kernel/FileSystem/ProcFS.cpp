@@ -822,9 +822,9 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         }
 
         process_object.add("pid", process.pid().value());
-        process_object.add("pgid", process.tty() ? process.tty()->pgid() : 0);
-        process_object.add("pgp", process.pgid());
-        process_object.add("sid", process.sid());
+        process_object.add("pgid", process.tty() ? process.tty()->pgid().value() : 0);
+        process_object.add("pgp", process.pgid().value());
+        process_object.add("sid", process.sid().value());
         process_object.add("uid", process.uid());
         process_object.add("gid", process.gid());
         process_object.add("ppid", process.ppid().value());
