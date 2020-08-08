@@ -79,13 +79,15 @@ bool UDPServer::bind(const IPv4Address& address, u16 port)
 
 ByteBuffer UDPServer::receive(size_t size, sockaddr_in& in)
 {
-    auto buf = ByteBuffer::create_zeroed(size);
+    auto buf = ByteBuffer::create_uninitialized(size);
     socklen_t in_len = sizeof(in);
     ssize_t rlen = ::recvfrom(m_fd, buf.data(), size, 0, (sockaddr*)&in, &in_len);
     if (rlen < 0) {
         dbg() << "recvfrom: " << strerror(errno);
         return {};
     }
+
+    buf.trim(rlen);
     return buf;
 }
 
