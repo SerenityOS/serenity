@@ -197,7 +197,7 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
     });
 
     if (result.is_error())
-        result.error();
+        return result;
 
     stream.snip();
 
