@@ -33,14 +33,14 @@ pid_t Process::sys$getsid(pid_t pid)
 {
     REQUIRE_PROMISE(proc);
     if (pid == 0)
-        return m_sid;
+        return m_sid.value();
     ScopedSpinLock lock(g_processes_lock);
     auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
     if (m_sid != process->m_sid)
         return -EPERM;
-    return process->m_sid;
+    return process->m_sid.value();
 }
 
 pid_t Process::sys$setsid()
@@ -48,44 +48,49 @@ pid_t Process::sys$setsid()
     REQUIRE_PROMISE(proc);
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
-    // FIXME: PID/PGID ISSUE?
     Process::for_each_in_pgrp(pid().value(), [&](auto&) {
         found_process_with_same_pgid_as_my_pid = true;
         return IterationDecision::Break;
     });
     if (found_process_with_same_pgid_as_my_pid)
         return -EPERM;
+    // Create a new Session and a new ProcessGroup.
     m_sid = m_pid.value();
     m_pgid = m_pid.value();
     m_tty = nullptr;
-    return m_sid;
+    return m_sid.value();
 }
 
 pid_t Process::sys$getpgid(pid_t pid)
 {
     REQUIRE_PROMISE(proc);
     if (pid == 0)
-        return m_pgid;
+        return m_pgid.value();
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
     auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
-    return process->m_pgid;
+    return process->m_pgid.value();
 }
 
 pid_t Process::sys$getpgrp()
 {
     REQUIRE_PROMISE(stdio);
-    return m_pgid;
+    return m_pgid.value();
 }
 
-static pid_t get_sid_from_pgid(pid_t pgid)
+SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
 {
+    // FIXME: This xor sys$setsid() uses the wrong locking mechanism.
     ScopedSpinLock lock(g_processes_lock);
-    auto group_leader = Process::from_pid(pgid);
-    if (!group_leader)
-        return -1;
-    return group_leader->sid();
+
+    SessionID sid { -1 };
+    Process::for_each_in_pgrp(pgid, [&](auto& process) {
+        sid = process.sid();
+        return IterationDecision::Break;
+    });
+
+    return sid;
 }
 
 int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
@@ -105,7 +110,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
         // of the calling process or of a child process of the calling process.
         return -ESRCH;
     }
-    if (process->pid() == process->sid()) {
+    if (process->is_session_leader()) {
         // The process indicated by the pid argument is a session leader.
         return -EPERM;
     }
@@ -116,10 +121,9 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
         return -EPERM;
     }
 
-    // FIXME: PID/PGID INCOMPLETE
-    pid_t new_pgid = specified_pgid ? specified_pgid : process->m_pid.value();
-    pid_t current_sid = get_sid_from_pgid(process->m_pgid);
-    pid_t new_sid = get_sid_from_pgid(new_pgid);
+    ProcessGroupID new_pgid = specified_pgid ? ProcessGroupID(specified_pgid) : process->m_pid.value();
+    SessionID current_sid = sid();
+    SessionID new_sid = get_sid_from_pgid(new_pgid);
     if (current_sid != new_sid) {
         // Can't move a process between sessions.
         return -EPERM;

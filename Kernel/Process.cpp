@@ -100,7 +100,8 @@ ProcessID Process::allocate_pid()
     // Overflow is UB, and negative PIDs wreck havoc.
     // TODO: Handle PID overflow
     // For example: Use an Atomic<u32>, mask the most significant bit,
-    // retry if PID is already taken as a PID, taken as a TID, or zero.
+    // retry if PID is already taken as a PID, taken as a TID,
+    // takes as a PGID, taken as a SID, or zero.
     return next_pid.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
 }
 

@@ -52,7 +52,8 @@ KResult Process::do_killpg(pid_t pgrp, int signal)
     // Send the signal to all processes in the given group.
     if (pgrp == 0) {
         // Send the signal to our own pgrp.
-        pgrp = pgid();
+        // FIXME: PIF/PGID INCOMPLETE
+        pgrp = pgid().value();
     }
 
     bool group_was_empty = true;

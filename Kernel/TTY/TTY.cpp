@@ -159,6 +159,7 @@ void TTY::emit(u8 ch)
                 if (auto parent = Process::from_pid(m_process->ppid()))
                     (void)parent->send_signal(SIGCHLD, m_process);
             }
+            // TODO: Else send it to the session leader maybe?
             return;
         }
     }
@@ -253,7 +254,7 @@ void TTY::generate_signal(int signal)
         return;
     if (should_flush_on_signal())
         flush_input();
-    dbg() << tty_name() << ": Send signal " << signal << " to everyone in pgrp " << pgid();
+    dbg() << tty_name() << ": Send signal " << signal << " to everyone in pgrp " << pgid().value();
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbg() << tty_name() << ": Send signal " << signal << " to " << process;
@@ -291,7 +292,6 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(tty);
     auto& current_process = *Process::current();
-    pid_t pgid;
     termios* user_termios;
     winsize* user_winsize;
 
@@ -304,23 +304,21 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 #endif
     switch (request) {
     case TIOCGPGRP:
-        return this->pgid();
-    case TIOCSPGRP:
-        pgid = static_cast<pid_t>(arg);
+        return this->pgid().value();
+    case TIOCSPGRP: {
+        ProcessGroupID pgid = static_cast<pid_t>(arg);
         if (pgid <= 0)
             return -EINVAL;
-        {
-            InterruptDisabler disabler;
-            auto process = Process::from_pid(pgid);
-            if (!process)
-                return -EPERM;
-            if (pgid != process->pgid())
-                return -EPERM;
-            if (current_process.sid() != process->sid())
-                return -EPERM;
-            m_process = process->make_weak_ptr();
-        }
+        InterruptDisabler disabler;
+        auto process = Process::from_pid(pgid.value());
+        SessionID new_sid = process ? process->sid() : Process::get_sid_from_pgid(pgid);
+        if (!new_sid || new_sid != current_process.sid())
+            return -EPERM;
+        if (process && pgid != process->pgid())
+            return -EPERM;
+        m_process = process ? process->make_weak_ptr() : WeakPtr<Process>();
         return 0;
+    }
     case TCGETS: {
         user_termios = reinterpret_cast<termios*>(arg);
         if (!current_process.validate_write(user_termios, sizeof(termios)))
@@ -395,7 +393,7 @@ void TTY::hang_up()
     generate_signal(SIGHUP);
 }
 
-pid_t TTY::pgid() const
+ProcessGroupID TTY::pgid() const
 {
     return m_process ? m_process->pgid() : 0;
 }
