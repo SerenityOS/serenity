@@ -59,7 +59,17 @@ public:
     const String& cmd() const { return m_cmd; }
     u64 job_id() const { return m_job_id; }
     bool exited() const { return m_exited; }
-    int exit_code() const { return m_exit_code; }
+    bool signaled() const { return m_term_sig != -1; }
+    int exit_code() const
+    {
+        ASSERT(exited());
+        return m_exit_code;
+    }
+    int termination_signal() const
+    {
+        ASSERT(signaled());
+        return m_term_sig;
+    }
     bool should_be_disowned() const { return m_should_be_disowned; }
     void disown() { m_should_be_disowned = true; }
     bool is_running_in_background() const { return m_running_in_background; }
@@ -79,6 +89,16 @@ public:
             return;
         m_exit_code = exit_code;
         m_exited = true;
+        if (on_exit)
+            on_exit(*this);
+    }
+    void set_signalled(int sig)
+    {
+        if (m_exited)
+            return;
+        m_exited = true;
+        m_exit_code = 126;
+        m_term_sig = sig;
         if (on_exit)
             on_exit(*this);
     }
@@ -118,6 +138,7 @@ private:
     bool m_exited { false };
     bool m_running_in_background { false };
     int m_exit_code { -1 };
+    int m_term_sig { -1 };
     Core::ElapsedTimer m_command_timer;
     mutable bool m_active { true };
     mutable bool m_is_suspended { false };

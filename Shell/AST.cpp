@@ -30,6 +30,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
+#include <signal.h>
 
 //#define EXECUTE_DEBUG
 
@@ -754,6 +755,8 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
     if (!m_block)
         return create<ListValue>({});
 
+    size_t consecutive_interruptions = 0;
+
     NonnullRefPtrVector<Value> values;
     auto resolved = m_iterated_expression->run(shell)->resolve_without_cast(shell);
     if (resolved->is_list_without_resolution())
@@ -762,6 +765,9 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
         values = create<ListValue>(resolved->resolve_as_list(shell))->values();
 
     for (auto& value : values) {
+        if (consecutive_interruptions == 2)
+            break;
+
         auto frame = shell->push_frame();
         shell->set_local_variable(m_variable_name, value);
 
@@ -771,6 +777,13 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
             if (!job || job->is_running_in_background())
                 continue;
             shell->block_on_job(job);
+            if (job->signaled()
+                && (job->termination_signal() == SIGINT
+                    || job->termination_signal() == SIGKILL
+                    || job->termination_signal() == SIGQUIT))
+                ++consecutive_interruptions;
+            else
+                consecutive_interruptions = 0;
         }
     }
 
