@@ -202,8 +202,8 @@ public:
     int sys$dbgputch(u8);
     int sys$dbgputstr(Userspace<const u8*>, int length);
     int sys$dump_backtrace();
-    int sys$gettid();
-    int sys$donate(int tid);
+    pid_t sys$gettid();
+    int sys$donate(pid_t tid);
     int sys$ftruncate(int fd, off_t);
     pid_t sys$setsid();
     pid_t sys$getsid(pid_t);
@@ -306,10 +306,10 @@ public:
     int sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
     int sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
     void sys$exit_thread(void*);
-    int sys$join_thread(int tid, void** exit_value);
-    int sys$detach_thread(int tid);
-    int sys$set_thread_name(int tid, const char* buffer, size_t buffer_size);
-    int sys$get_thread_name(int tid, char* buffer, size_t buffer_size);
+    int sys$join_thread(pid_t tid, void** exit_value);
+    int sys$detach_thread(pid_t tid);
+    int sys$set_thread_name(pid_t tid, const char* buffer, size_t buffer_size);
+    int sys$get_thread_name(pid_t tid, char* buffer, size_t buffer_size);
     int sys$rename(Userspace<const Syscall::SC_rename_params*>);
     int sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
     int sys$shbuf_create(int, void** buffer);
@@ -330,7 +330,7 @@ public:
     int sys$profiling_enable(pid_t);
     int sys$profiling_disable(pid_t);
     int sys$futex(Userspace<const Syscall::SC_futex_params*>);
-    int sys$set_thread_boost(int tid, int amount);
+    int sys$set_thread_boost(pid_t tid, int amount);
     int sys$set_process_boost(pid_t, int amount);
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
     int sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
@@ -597,7 +597,7 @@ private:
     void disown_all_shared_buffers();
 
     KResult do_kill(Process&, int signal);
-    KResult do_killpg(pid_t pgrp, int signal);
+    KResult do_killpg(ProcessGroupID pgrp, int signal);
     KResult do_killall(int signal);
     KResult do_killself(int signal);
 
@@ -739,8 +739,7 @@ inline void Process::for_each_child(Callback callback)
     ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        // FIXME: PID/TID BUG
-        if (process->ppid() == my_pid || process->has_tracee_thread(m_pid.value())) {
+        if (process->ppid() == my_pid || process->has_tracee_thread(m_pid)) {
             if (callback(*process) == IterationDecision::Break)
                 break;
         }

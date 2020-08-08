@@ -440,7 +440,7 @@ struct SC_stat_params {
 
 struct SC_ptrace_params {
     int request;
-    pid_t pid;
+    pid_t tid;
     Userspace<u8*> addr;
     int data;
 };

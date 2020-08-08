@@ -31,7 +31,7 @@
 
 extern "C" {
 
-int ptrace(int request, pid_t pid, void* addr, int data)
+int ptrace(int request, pid_t tid, void* addr, int data)
 {
 
     // PT_PEEK needs special handling since the syscall wrapper
@@ -49,7 +49,7 @@ int ptrace(int request, pid_t pid, void* addr, int data)
 
     Syscall::SC_ptrace_params params {
         request,
-        pid,
+        tid,
         reinterpret_cast<u8*>(addr),
         data
     };

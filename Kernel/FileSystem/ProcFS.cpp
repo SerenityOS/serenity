@@ -445,7 +445,7 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
     KBufferBuilder builder;
 
     JsonObjectSerializer object(builder);
-    object.add("pid", Profiling::pid());
+    object.add("pid", Profiling::pid().value());
     object.add("executable", Profiling::executable_path());
 
     auto array = object.add_array("events");
@@ -453,7 +453,7 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
     Profiling::for_each_sample([&](auto& sample) {
         auto object = array.add_object();
         object.add("type", "sample");
-        object.add("tid", sample.tid);
+        object.add("tid", sample.tid.value());
         object.add("timestamp", sample.timestamp);
         auto frames_array = object.add_array("stack");
         for (size_t i = 0; i < Profiling::max_stack_frame_count; ++i) {

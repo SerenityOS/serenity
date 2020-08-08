@@ -834,7 +834,7 @@ KBuffer Process::backtrace() const
 {
     KBufferBuilder builder;
     for_each_thread([&](Thread& thread) {
-        builder.appendf("Thread %d (%s):\n", thread.tid(), thread.name().characters());
+        builder.appendf("Thread %d (%s):\n", thread.tid().value(), thread.name().characters());
         builder.append(thread.backtrace());
         return IterationDecision::Continue;
     });

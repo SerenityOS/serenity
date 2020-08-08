@@ -684,9 +684,8 @@ void Scheduler::timer_tick(const RegisterState& regs)
         SmapDisabler disabler;
         auto backtrace = current_thread->raw_backtrace(regs.ebp, regs.eip);
         auto& sample = Profiling::next_sample_slot();
-        // FIXME: PID/TID INCOMPLETE
-        sample.pid = current_thread->process().pid().value();
-        sample.tid = current_thread->tid().value();
+        sample.pid = current_thread->process().pid();
+        sample.tid = current_thread->tid();
         sample.timestamp = g_uptime;
         for (size_t i = 0; i < min(backtrace.size(), Profiling::max_stack_frame_count); ++i) {
             sample.frames[i] = backtrace[i];

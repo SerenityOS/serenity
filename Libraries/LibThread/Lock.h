@@ -44,7 +44,7 @@ public:
     void unlock();
 
 private:
-    Atomic<int> m_holder { 0 };
+    Atomic<pid_t> m_holder { 0 };
     u32 m_level { 0 };
 };
 
@@ -65,14 +65,14 @@ private:
 
 ALWAYS_INLINE void Lock::lock()
 {
-    int tid = gettid();
+    pid_t tid = gettid();
     if (m_holder == tid) {
         ++m_level;
         return;
     }
     for (;;) {
         int expected = 0;
-        if (m_holder.compare_exchange_strong(expected, tid, AK::memory_order_acq_rel)) {            
+        if (m_holder.compare_exchange_strong(expected, tid, AK::memory_order_acq_rel)) {
             m_level = 1;
             return;
         }

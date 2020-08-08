@@ -35,7 +35,7 @@ int Process::sys$yield()
     return 0;
 }
 
-int Process::sys$donate(int tid)
+int Process::sys$donate(pid_t tid)
 {
     REQUIRE_PROMISE(stdio);
     if (tid < 0)
@@ -48,7 +48,7 @@ int Process::sys$donate(int tid)
     return 0;
 }
 
-int Process::sys$sched_setparam(int tid, Userspace<const struct sched_param*> user_param)
+int Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> user_param)
 {
     REQUIRE_PROMISE(proc);
     if (!validate_read_typed(user_param))
@@ -59,8 +59,8 @@ int Process::sys$sched_setparam(int tid, Userspace<const struct sched_param*> us
 
     InterruptDisabler disabler;
     auto* peer = Thread::current();
-    if (tid != 0)
-        peer = Thread::from_tid(tid);
+    if (pid != 0)
+        peer = Thread::from_tid(pid);
 
     if (!peer)
         return -ESRCH;
@@ -68,8 +68,7 @@ int Process::sys$sched_setparam(int tid, Userspace<const struct sched_param*> us
     if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
         return -EPERM;
 
-    if (desired_param.sched_priority < THREAD_PRIORITY_MIN ||
-        desired_param.sched_priority > THREAD_PRIORITY_MAX)
+    if (desired_param.sched_priority < THREAD_PRIORITY_MIN || desired_param.sched_priority > THREAD_PRIORITY_MAX)
         return -EINVAL;
 
     peer->set_priority((u32)desired_param.sched_priority);
@@ -84,8 +83,11 @@ int Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_p
 
     InterruptDisabler disabler;
     auto* peer = Thread::current();
-    if (pid != 0)
+    if (pid != 0) {
+        // FIXME: PID/TID BUG
+        // The entire process is supposed to be affected.
         peer = Thread::from_tid(pid);
+    }
 
     if (!peer)
         return -ESRCH;
@@ -93,12 +95,14 @@ int Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_p
     if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
         return -EPERM;
 
-    struct sched_param param { (int) peer->priority() };
+    struct sched_param param {
+        (int)peer->priority()
+    };
     copy_to_user(user_param, &param);
     return 0;
 }
 
-int Process::sys$set_thread_boost(int tid, int amount)
+int Process::sys$set_thread_boost(pid_t tid, int amount)
 {
     REQUIRE_PROMISE(proc);
     if (amount < 0 || amount > 20)
