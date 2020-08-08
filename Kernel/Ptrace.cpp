@@ -43,13 +43,17 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         return KSuccess;
     }
 
-    if (params.pid == caller.pid().value())
+    // FIXME: PID/TID BUG
+    // This bug allows to request PT_ATTACH (or anything else) the same process, as
+    // long it is not the main thread. Alternatively, if this is desired, then the
+    // bug is that this prevents PT_ATTACH to the main thread from another thread.
+    if (params.tid == caller.pid().value())
         return KResult(-EINVAL);
 
     Thread* peer = nullptr;
     {
         InterruptDisabler disabler;
-        peer = Thread::from_tid(params.pid);
+        peer = Thread::from_tid(params.tid);
     }
     if (!peer)
         return KResult(-ESRCH);

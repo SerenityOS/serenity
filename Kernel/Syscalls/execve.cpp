@@ -282,7 +282,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     m_master_tls_size = master_tls_size;
     m_master_tls_alignment = master_tls_alignment;
 
-    // FIXME: PID/TID BUG
+    // FIXME: PID/TID ISSUE
     m_pid = new_main_thread->tid().value();
     new_main_thread->make_thread_specific_region({});
     new_main_thread->reset_fpu_state();

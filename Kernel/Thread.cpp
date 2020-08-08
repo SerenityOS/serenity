@@ -54,11 +54,10 @@ Thread::Thread(NonnullRefPtr<Process> process)
         // First thread gets TID == PID
         m_tid = m_process->pid().value();
     } else {
-        // TODO: Use separate counter?
         m_tid = Process::allocate_pid().value();
     }
 #ifdef THREAD_DEBUG
-    dbg() << "Created new thread " << m_process->name() << "(" << m_process->pid() << ":" << m_tid << ")";
+    dbg() << "Created new thread " << m_process->name() << "(" << m_process->pid().value() << ":" << m_tid.value() << ")";
 #endif
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
@@ -87,7 +86,7 @@ Thread::Thread(NonnullRefPtr<Process> process)
 
     m_tss.cr3 = m_process->page_directory().cr3();
 
-    m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid), Region::Access::Read | Region::Access::Write, false, true);
+    m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid.value()), Region::Access::Read | Region::Access::Write, false, true);
     m_kernel_stack_region->set_stack(true);
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
@@ -963,7 +962,7 @@ void Thread::wake_from_queue()
         set_state(State::Running);
 }
 
-Thread* Thread::from_tid(int tid)
+Thread* Thread::from_tid(ThreadID tid)
 {
     InterruptDisabler disabler;
     Thread* found_thread = nullptr;

@@ -82,7 +82,7 @@ public:
     explicit Thread(NonnullRefPtr<Process>);
     ~Thread();
 
-    static Thread* from_tid(pid_t);
+    static Thread* from_tid(ThreadID);
     static void finalize_dying_threads();
 
     ThreadID tid() const { return m_tid; }
