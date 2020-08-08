@@ -73,7 +73,7 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     // length + 4 to give space for our extra junk at the end
     StringBuilder builder(m_name.length() + 4);
     builder.append(m_name);
-    builder.appendf("[%d]", thread->tid());
+    builder.appendf("[%d]", thread->tid().value());
     thread->set_name(builder.to_string());
 
     thread->set_priority(requested_thread_priority);
@@ -102,7 +102,7 @@ void Process::sys$exit_thread(void* exit_value)
     ASSERT_NOT_REACHED();
 }
 
-int Process::sys$detach_thread(int tid)
+int Process::sys$detach_thread(pid_t tid)
 {
     REQUIRE_PROMISE(thread);
     InterruptDisabler disabler;
@@ -117,7 +117,7 @@ int Process::sys$detach_thread(int tid)
     return 0;
 }
 
-int Process::sys$join_thread(int tid, void** exit_value)
+int Process::sys$join_thread(pid_t tid, void** exit_value)
 {
     REQUIRE_PROMISE(thread);
     if (exit_value && !validate_write_typed(exit_value))
@@ -169,7 +169,7 @@ int Process::sys$join_thread(int tid, void** exit_value)
     return 0;
 }
 
-int Process::sys$set_thread_name(int tid, const char* user_name, size_t user_name_length)
+int Process::sys$set_thread_name(pid_t tid, const char* user_name, size_t user_name_length)
 {
     REQUIRE_PROMISE(thread);
     auto name = validate_and_copy_string_from_user(user_name, user_name_length);
@@ -188,7 +188,7 @@ int Process::sys$set_thread_name(int tid, const char* user_name, size_t user_nam
     thread->set_name(name);
     return 0;
 }
-int Process::sys$get_thread_name(int tid, char* buffer, size_t buffer_size)
+int Process::sys$get_thread_name(pid_t tid, char* buffer, size_t buffer_size)
 {
     REQUIRE_PROMISE(thread);
     if (buffer_size == 0)

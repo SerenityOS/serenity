@@ -43,7 +43,7 @@ KResult Process::do_kill(Process& process, int signal)
     return KSuccess;
 }
 
-KResult Process::do_killpg(pid_t pgrp, int signal)
+KResult Process::do_killpg(ProcessGroupID pgrp, int signal)
 {
     InterruptDisabler disabler;
 
@@ -52,8 +52,7 @@ KResult Process::do_killpg(pid_t pgrp, int signal)
     // Send the signal to all processes in the given group.
     if (pgrp == 0) {
         // Send the signal to our own pgrp.
-        // FIXME: PIF/PGID INCOMPLETE
-        pgrp = pgid().value();
+        pgrp = pgid();
     }
 
     bool group_was_empty = true;
