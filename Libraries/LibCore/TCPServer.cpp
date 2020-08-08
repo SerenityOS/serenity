@@ -53,6 +53,7 @@ TCPServer::TCPServer(Object* parent)
 
 TCPServer::~TCPServer()
 {
+    ::close(m_fd);
 }
 
 bool TCPServer::listen(const IPv4Address& address, u16 port)
