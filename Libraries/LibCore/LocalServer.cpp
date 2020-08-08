@@ -45,6 +45,8 @@ LocalServer::LocalServer(Object* parent)
 
 LocalServer::~LocalServer()
 {
+    if (m_fd >= 0)
+        ::close(m_fd);
 }
 
 bool LocalServer::take_over_from_system_server()
