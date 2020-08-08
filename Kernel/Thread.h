@@ -82,11 +82,11 @@ public:
     explicit Thread(NonnullRefPtr<Process>);
     ~Thread();
 
-    static Thread* from_tid(int);
+    static Thread* from_tid(pid_t);
     static void finalize_dying_threads();
 
-    int tid() const { return m_tid; }
-    int pid() const;
+    ThreadID tid() const { return m_tid; }
+    ProcessID pid() const;
 
     void set_priority(u32 p) { m_priority = p; }
     u32 priority() const { return m_priority; }
@@ -236,13 +236,13 @@ public:
 
     class WaitBlocker final : public Blocker {
     public:
-        WaitBlocker(int wait_options, pid_t& waitee_pid);
+        WaitBlocker(int wait_options, ProcessID& waitee_pid);
         virtual bool should_unblock(Thread&) override;
         virtual const char* state_string() const override { return "Waiting"; }
 
     private:
         int m_wait_options { 0 };
-        pid_t& m_waitee_pid;
+        ProcessID& m_waitee_pid;
     };
 
     class SemiPermanentBlocker final : public Blocker {
@@ -512,7 +512,7 @@ public:
     static constexpr u32 default_userspace_stack_size = 4 * MB;
 
     ThreadTracer* tracer() { return m_tracer.ptr(); }
-    void start_tracing_from(pid_t tracer);
+    void start_tracing_from(ProcessID tracer);
     void stop_tracing();
     void tracer_trap(const RegisterState&);
 
@@ -533,7 +533,7 @@ private:
 
     mutable RecursiveSpinLock m_lock;
     NonnullRefPtr<Process> m_process;
-    int m_tid { -1 };
+    ThreadID m_tid { -1 };
     TSS32 m_tss;
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };

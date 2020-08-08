@@ -123,7 +123,7 @@ enum ProcFileType {
     FI_MaxStaticFileIndex,
 };
 
-static inline pid_t to_pid(const InodeIdentifier& identifier)
+static inline ProcessID to_pid(const InodeIdentifier& identifier)
 {
 #ifdef PROCFS_DEBUG
     dbg() << "to_pid, index=" << String::format("%08x", identifier.index()) << " -> " << (identifier.index() >> 16);
@@ -154,14 +154,14 @@ static inline size_t to_sys_index(const InodeIdentifier& identifier)
     return identifier.index() >> 16u;
 }
 
-static inline InodeIdentifier to_identifier(unsigned fsid, ProcParentDirectory parent, pid_t pid, ProcFileType proc_file_type)
+static inline InodeIdentifier to_identifier(unsigned fsid, ProcParentDirectory parent, ProcessID pid, ProcFileType proc_file_type)
 {
-    return { fsid, ((unsigned)parent << 12u) | ((unsigned)pid << 16u) | (unsigned)proc_file_type };
+    return { fsid, ((unsigned)parent << 12u) | ((unsigned)pid.value() << 16u) | (unsigned)proc_file_type };
 }
 
-static inline InodeIdentifier to_identifier_with_fd(unsigned fsid, pid_t pid, int fd)
+static inline InodeIdentifier to_identifier_with_fd(unsigned fsid, ProcessID pid, int fd)
 {
-    return { fsid, (PDI_PID_fd << 12u) | ((unsigned)pid << 16u) | (FI_MaxStaticFileIndex + fd) };
+    return { fsid, (PDI_PID_fd << 12u) | ((unsigned)pid.value() << 16u) | (FI_MaxStaticFileIndex + fd) };
 }
 
 static inline InodeIdentifier sys_var_to_identifier(unsigned fsid, unsigned index)
@@ -663,7 +663,7 @@ Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
 Optional<KBuffer> procfs$self(InodeIdentifier)
 {
     char buffer[16];
-    sprintf(buffer, "%u", Process::current()->pid());
+    sprintf(buffer, "%d", Process::current()->pid().value());
     return KBuffer::copy((const u8*)buffer, strlen(buffer));
 }
 
@@ -821,13 +821,13 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
             break;
         }
 
-        process_object.add("pid", process.pid());
+        process_object.add("pid", process.pid().value());
         process_object.add("pgid", process.tty() ? process.tty()->pgid() : 0);
         process_object.add("pgp", process.pgid());
         process_object.add("sid", process.sid());
         process_object.add("uid", process.uid());
         process_object.add("gid", process.gid());
-        process_object.add("ppid", process.ppid());
+        process_object.add("ppid", process.ppid().value());
         process_object.add("nfds", process.number_of_open_file_descriptors());
         process_object.add("name", process.name());
         process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
@@ -842,7 +842,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {
             auto thread_object = thread_array.add_object();
-            thread_object.add("tid", thread.tid());
+            thread_object.add("tid", thread.tid().value());
             thread_object.add("name", thread.name());
             thread_object.add("times_scheduled", thread.times_scheduled());
             thread_object.add("ticks", thread.ticks());
@@ -1227,7 +1227,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         }
         for (auto pid_child : Process::all_pids()) {
             char name[16];
-            size_t name_length = (size_t)sprintf(name, "%u", pid_child);
+            size_t name_length = (size_t)sprintf(name, "%d", pid_child.value());
             callback({ name, name_length, to_identifier(fsid(), PDI_Root, pid_child, FI_PID), 0 });
         }
         break;
@@ -1270,7 +1270,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
             if (!description)
                 continue;
             char name[16];
-            size_t name_length = (size_t)sprintf(name, "%u", i);
+            size_t name_length = (size_t)sprintf(name, "%d", i);
             callback({ name, name_length, to_identifier_with_fd(fsid(), pid, i), 0 });
         }
     } break;

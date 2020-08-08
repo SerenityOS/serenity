@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/DistinctNumeric.h>
 #include <AK/Types.h>
 
 #define O_RDONLY (1 << 0)
@@ -320,6 +321,11 @@ typedef u32 gid_t;
 typedef u32 clock_t;
 typedef u32 socklen_t;
 typedef int pid_t;
+// Avoid interference with AK/Types.h and LibC/sys/types.h by defining *separate* names:
+TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
+TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
+TYPEDEF_DISTINCT_ORDERED_ID(pid_t, SessionID);
+TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessGroupID);
 
 struct tms {
     clock_t tms_utime;

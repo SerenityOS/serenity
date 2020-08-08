@@ -61,7 +61,7 @@ void start(Process& process)
         executable_path() = process.executable()->absolute_path().impl();
     else
         executable_path() = {};
-    s_pid = process.pid();
+    s_pid = process.pid().value(); // FIXME: PID/TID INCOMPLETE
 
     if (!s_profiling_buffer) {
         s_profiling_buffer = RefPtr<KBufferImpl>(KBuffer::create_with_size(8 * MB).impl()).leak_ref();

@@ -87,7 +87,7 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
 
     thread->make_thread_specific_region({});
     thread->set_state(Thread::State::Runnable);
-    return thread->tid();
+    return thread->tid().value();
 }
 
 void Process::sys$exit_thread(void* exit_value)
@@ -212,7 +212,7 @@ int Process::sys$get_thread_name(int tid, char* buffer, size_t buffer_size)
 int Process::sys$gettid()
 {
     REQUIRE_PROMISE(stdio);
-    return Thread::current()->tid();
+    return Thread::current()->tid().value();
 }
 
 }

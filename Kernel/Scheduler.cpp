@@ -136,7 +136,7 @@ Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
 
 timespec* Thread::WriteBlocker::override_timeout(timespec* timeout)
 {
-    auto& description =  blocked_description();
+    auto& description = blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
@@ -227,7 +227,7 @@ bool Thread::SelectBlocker::should_unblock(Thread& thread)
     return false;
 }
 
-Thread::WaitBlocker::WaitBlocker(int wait_options, pid_t& waitee_pid)
+Thread::WaitBlocker::WaitBlocker(int wait_options, ProcessID& waitee_pid)
     : m_wait_options(wait_options)
     , m_waitee_pid(waitee_pid)
 {
@@ -296,8 +296,7 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
     case Thread::Dying:
         /* don't know, don't care */
         return;
-    case Thread::Blocked:
-    {
+    case Thread::Blocked: {
         ASSERT(m_blocker != nullptr);
         timespec now;
         now.tv_sec = now_sec,
@@ -378,7 +377,7 @@ bool Scheduler::pick_next()
                 auto name = process.name();
                 auto pid = process.pid();
                 auto exit_status = Process::reap(process);
-                dbg() << "Scheduler[" << Processor::current().id() << "]: Reaped unparented process " << name << "(" << pid << "), exit status: " << exit_status.si_status;
+                dbg() << "Scheduler[" << Processor::current().id() << "]: Reaped unparented process " << name << "(" << pid.value() << "), exit status: " << exit_status.si_status;
             }
             return IterationDecision::Continue;
         }
@@ -496,7 +495,7 @@ bool Scheduler::yield()
 bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 {
     ASSERT(beneficiary);
-    
+
     // Set the m_in_scheduler flag before acquiring the spinlock. This
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
@@ -685,8 +684,9 @@ void Scheduler::timer_tick(const RegisterState& regs)
         SmapDisabler disabler;
         auto backtrace = current_thread->raw_backtrace(regs.ebp, regs.eip);
         auto& sample = Profiling::next_sample_slot();
-        sample.pid = current_thread->process().pid();
-        sample.tid = current_thread->tid();
+        // FIXME: PID/TID INCOMPLETE
+        sample.pid = current_thread->process().pid().value();
+        sample.tid = current_thread->tid().value();
         sample.timestamp = g_uptime;
         for (size_t i = 0; i < min(backtrace.size(), Profiling::max_stack_frame_count); ++i) {
             sample.frames[i] = backtrace[i];

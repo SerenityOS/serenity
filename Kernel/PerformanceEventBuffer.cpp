@@ -94,12 +94,12 @@ PerformanceEvent& PerformanceEventBuffer::at(size_t index)
     return events[index];
 }
 
-KBuffer PerformanceEventBuffer::to_json(pid_t pid, const String& executable_path) const
+KBuffer PerformanceEventBuffer::to_json(ProcessID pid, const String& executable_path) const
 {
     KBufferBuilder builder;
 
     JsonObjectSerializer object(builder);
-    object.add("pid", pid);
+    object.add("pid", pid.value());
     object.add("executable", executable_path);
 
     auto array = object.add_array("events");

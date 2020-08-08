@@ -35,7 +35,7 @@ KResult Process::do_kill(Process& process, int signal)
     if (!is_superuser() && m_euid != process.m_uid && m_uid != process.m_uid)
         return KResult(-EPERM);
     if (process.is_ring0() && signal == SIGKILL) {
-        klog() << "attempted to send SIGKILL to ring 0 process " << process.name().characters() << "(" << process.pid() << ")";
+        klog() << "attempted to send SIGKILL to ring 0 process " << process.name().characters() << "(" << process.pid().value() << ")";
         return KResult(-EPERM);
     }
     if (signal != 0)
@@ -119,33 +119,34 @@ KResult Process::do_killself(int signal)
     return KSuccess;
 }
 
-int Process::sys$kill(pid_t pid, int signal)
+int Process::sys$kill(pid_t pid_or_pgid, int signal)
 {
-    if (pid == m_pid)
+    if (pid_or_pgid == m_pid.value())
         REQUIRE_PROMISE(stdio);
     else
         REQUIRE_PROMISE(proc);
 
     if (signal < 0 || signal >= 32)
         return -EINVAL;
-    if (pid < -1) {
-        if (pid == NumericLimits<i32>::min())
+    if (pid_or_pgid < -1) {
+        if (pid_or_pgid == NumericLimits<i32>::min())
             return -EINVAL;
-        return do_killpg(-pid, signal);
+        return do_killpg(-pid_or_pgid, signal);
     }
-    if (pid == -1)
+    if (pid_or_pgid == -1)
         return do_killall(signal);
-    if (pid == m_pid) {
+    if (pid_or_pgid == m_pid.value()) {
         return do_killself(signal);
     }
+    ASSERT(pid_or_pgid >= 0);
     ScopedSpinLock lock(g_processes_lock);
-    auto peer = Process::from_pid(pid);
+    auto peer = Process::from_pid(pid_or_pgid);
     if (!peer)
         return -ESRCH;
     return do_kill(*peer, signal);
 }
 
-int Process::sys$killpg(int pgrp, int signum)
+int Process::sys$killpg(pid_t pgrp, int signum)
 {
     REQUIRE_PROMISE(proc);
     if (signum < 1 || signum >= 32)

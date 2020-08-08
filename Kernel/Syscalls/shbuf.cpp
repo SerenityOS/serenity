@@ -70,7 +70,7 @@ int Process::sys$shbuf_create(int size, void** buffer)
 int Process::sys$shbuf_allow_pid(int shbuf_id, pid_t peer_pid)
 {
     REQUIRE_PROMISE(shared_buffer);
-    if (!peer_pid || peer_pid < 0 || peer_pid == m_pid)
+    if (!peer_pid || peer_pid < 0 || ProcessID(peer_pid) == m_pid)
         return -EINVAL;
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shbuf_id);

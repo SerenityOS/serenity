@@ -44,7 +44,10 @@ int Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
     return result.is_error() ? result.error() : result.value();
 }
 
-bool Process::has_tracee_thread(int tracer_pid) const
+/**
+ * "Does this process have a thread that is currently being traced by the provided process?"
+ */
+bool Process::has_tracee_thread(ProcessID tracer_pid) const
 {
     bool has_tracee = false;
 

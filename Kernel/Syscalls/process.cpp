@@ -32,13 +32,13 @@ namespace Kernel {
 pid_t Process::sys$getpid()
 {
     REQUIRE_PROMISE(stdio);
-    return m_pid;
+    return m_pid.value();
 }
 
 pid_t Process::sys$getppid()
 {
     REQUIRE_PROMISE(stdio);
-    return m_ppid;
+    return m_ppid.value();
 }
 
 int Process::sys$set_process_icon(int icon_id)

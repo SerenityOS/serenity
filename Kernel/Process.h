@@ -126,10 +126,10 @@ public:
     }
 
     static NonnullRefPtr<Process> create_kernel_process(Thread*& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
-    static RefPtr<Process> create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static RefPtr<Process> create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
-    static Vector<pid_t> all_pids();
+    static Vector<ProcessID> all_pids();
     static AK::NonnullRefPtrVector<Process> all_processes();
 
     Thread* create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
@@ -152,10 +152,10 @@ public:
     PageDirectory& page_directory() { return *m_page_directory; }
     const PageDirectory& page_directory() const { return *m_page_directory; }
 
-    static RefPtr<Process> from_pid(pid_t);
+    static RefPtr<Process> from_pid(ProcessID);
 
     const String& name() const { return m_name; }
-    pid_t pid() const { return m_pid; }
+    ProcessID pid() const { return m_pid; }
     pid_t sid() const { return m_sid; }
     pid_t pgid() const { return m_pgid; }
     const FixedArray<gid_t>& extra_gids() const { return m_extra_gids; }
@@ -165,9 +165,9 @@ public:
     gid_t gid() const { return m_gid; }
     uid_t suid() const { return m_suid; }
     gid_t sgid() const { return m_sgid; }
-    pid_t ppid() const { return m_ppid; }
+    ProcessID ppid() const { return m_ppid; }
 
-    pid_t exec_tid() const { return m_exec_tid; }
+    ThreadID exec_tid() const { return m_exec_tid; }
 
     mode_t umask() const { return m_umask; }
 
@@ -224,7 +224,7 @@ public:
     int sys$fstat(int fd, stat*);
     int sys$stat(Userspace<const Syscall::SC_stat_params*>);
     int sys$lseek(int fd, off_t, int whence);
-    int sys$kill(pid_t pid, int sig);
+    int sys$kill(pid_t pid_or_pgid, int sig);
     [[noreturn]] void sys$exit(int status);
     int sys$sigreturn(RegisterState& registers);
     pid_t sys$waitid(Userspace<const Syscall::SC_waitid_params*>);
@@ -263,7 +263,7 @@ public:
     int sys$getgroups(ssize_t, gid_t*);
     int sys$setgroups(ssize_t, const gid_t*);
     int sys$pipe(int pipefd[2], int flags);
-    int sys$killpg(int pgrp, int sig);
+    int sys$killpg(pid_t pgrp, int sig);
     int sys$seteuid(uid_t);
     int sys$setegid(gid_t);
     int sys$setuid(uid_t);
@@ -338,7 +338,7 @@ public:
     int sys$sendfd(int sockfd, int fd);
     int sys$recvfd(int sockfd);
     long sys$sysconf(int name);
-    int sys$disown(pid_t);
+    int sys$disown(ProcessID);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -574,8 +574,8 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(Thread*& first_thread, const String& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
-    static pid_t allocate_pid();
+    Process(Thread*& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    static ProcessID allocate_pid();
 
     Range allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
 
@@ -607,7 +607,7 @@ private:
     }
     KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
-    bool has_tracee_thread(int tracer_pid) const;
+    bool has_tracee_thread(ProcessID tracer_pid) const;
 
     RefPtr<PageDirectory> m_page_directory;
 
@@ -616,7 +616,7 @@ private:
 
     String m_name;
 
-    pid_t m_pid { 0 };
+    ProcessID m_pid { 0 };
     pid_t m_sid { 0 };
     pid_t m_pgid { 0 };
 
@@ -627,7 +627,7 @@ private:
     uid_t m_suid { 0 };
     gid_t m_sgid { 0 };
 
-    pid_t m_exec_tid { 0 };
+    ThreadID m_exec_tid { 0 };
     FlatPtr m_load_offset { 0U };
     FlatPtr m_entry_eip { 0U };
 
@@ -677,7 +677,7 @@ private:
     };
     RegionLookupCache m_region_lookup_cache;
 
-    pid_t m_ppid { 0 };
+    ProcessID m_ppid { 0 };
     mode_t m_umask { 022 };
 
     FixedArray<gid_t> m_extra_gids;
@@ -732,11 +732,12 @@ template<typename Callback>
 inline void Process::for_each_child(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    pid_t my_pid = pid();
+    ProcessID my_pid = pid();
     ScopedSpinLock lock(g_processes_lock);
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        if (process->ppid() == my_pid || process->has_tracee_thread(m_pid)) {
+        // FIXME: PID/TID BUG
+        if (process->ppid() == my_pid || process->has_tracee_thread(m_pid.value())) {
             if (callback(*process) == IterationDecision::Break)
                 break;
         }
@@ -748,7 +749,7 @@ template<typename Callback>
 inline void Process::for_each_thread(Callback callback) const
 {
     InterruptDisabler disabler;
-    pid_t my_pid = pid();
+    ProcessID my_pid = pid();
 
     if (my_pid == 0) {
         // NOTE: Special case the colonel process, since its main thread is not in the global thread table.
@@ -800,14 +801,14 @@ inline bool InodeMetadata::may_execute(const Process& process) const
     return may_execute(process.euid(), process.egid(), process.extra_gids());
 }
 
-inline int Thread::pid() const
+inline ProcessID Thread::pid() const
 {
     return m_process->pid();
 }
 
 inline const LogStream& operator<<(const LogStream& stream, const Process& process)
 {
-    return stream << process.name() << '(' << process.pid() << ')';
+    return stream << process.name() << '(' << process.pid().value() << ')';
 }
 
 inline u32 Thread::effective_priority() const

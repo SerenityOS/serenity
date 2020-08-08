@@ -48,13 +48,13 @@ void SharedBuffer::sanity_check(const char* what)
     if (found_refs != m_total_refs) {
         dbg() << what << " sanity -- SharedBuffer{" << this << "} id: " << m_shbuf_id << " has total refs " << m_total_refs << " but we found " << found_refs;
         for (const auto& ref : m_refs) {
-            dbg() << "    ref from pid " << ref.pid << ": refcnt " << ref.count;
+            dbg() << "    ref from pid " << ref.pid.value() << ": refcnt " << ref.count;
         }
         ASSERT_NOT_REACHED();
     }
 }
 
-bool SharedBuffer::is_shared_with(pid_t peer_pid) const
+bool SharedBuffer::is_shared_with(ProcessID peer_pid) const
 {
     LOCKER(shared_buffers().lock(), Lock::Mode::Shared);
     if (m_global)
@@ -102,7 +102,7 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
     ASSERT_NOT_REACHED();
 }
 
-void SharedBuffer::share_with(pid_t peer_pid)
+void SharedBuffer::share_with(ProcessID peer_pid)
 {
     LOCKER(shared_buffers().lock());
     if (m_global)
@@ -146,7 +146,7 @@ void SharedBuffer::deref_for_process(Process& process)
     ASSERT_NOT_REACHED();
 }
 
-void SharedBuffer::disown(pid_t pid)
+void SharedBuffer::disown(ProcessID pid)
 {
     LOCKER(shared_buffers().lock());
     for (size_t i = 0; i < m_refs.size(); ++i) {

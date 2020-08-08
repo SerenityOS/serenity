@@ -32,7 +32,7 @@
 
 namespace Kernel {
 
-ThreadTracer::ThreadTracer(pid_t tracer_pid)
+ThreadTracer::ThreadTracer(ProcessID tracer_pid)
     : m_tracer_pid(tracer_pid)
 {
 }
