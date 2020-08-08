@@ -188,8 +188,7 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
 
     auto& line_boxes = container.line_boxes();
-    if (line_boxes.is_empty())
-        line_boxes.append(LineBox());
+    container.ensure_last_line_box();
     float available_width = container.width() - line_boxes.last().width();
 
     // Collapse whitespace into single spaces
@@ -255,7 +254,7 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
                 chunk_width = font.width(chunk.view) + font.glyph_spacing();
 
             if (line_boxes.last().width() > 0 && chunk_width > available_width) {
-                line_boxes.append(LineBox());
+                container.add_line_box();
                 available_width = container.width();
             }
             if (need_collapse & line_boxes.last().fragments().is_empty())
@@ -269,14 +268,14 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
 
         if (do_wrap_lines) {
             if (available_width < 0) {
-                line_boxes.append(LineBox());
+                container.add_line_box();
                 available_width = container.width();
             }
         }
 
         if (do_wrap_breaks) {
             if (chunk.is_break) {
-                line_boxes.append(LineBox());
+                container.add_line_box();
                 available_width = container.width();
             }
         }
