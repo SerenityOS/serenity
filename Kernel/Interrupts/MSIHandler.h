@@ -33,7 +33,7 @@
 
 namespace Kernel {
 
-class MSIHandler : public GenericInterruptHandler {
+class MSIHandler final : public GenericInterruptHandler {
 public:
     virtual ~MSIHandler();
 
