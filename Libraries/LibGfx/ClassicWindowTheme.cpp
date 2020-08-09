@@ -132,8 +132,21 @@ ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowS
     }
 }
 
-void ClassicWindowTheme::paint_notification_frame(Painter&, const IntRect&, const Palette&) const
+void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRect& outer_rect, const IntRect& window_rect, const Palette& palette, const IntRect& close_button_rect) const
 {
+    Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
+
+    auto titlebar_rect = title_bar_rect(WindowType::Notification, window_rect, palette);
+    painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, titlebar_rect, palette.active_window_border1(), palette.active_window_border2());
+
+    int stripe_top = close_button_rect.bottom() + 4;
+    int stripe_bottom = window_rect.height() - 3;
+    if (stripe_top && stripe_bottom && stripe_top < stripe_bottom) {
+        for (int i = 2; i <= palette.window_title_height() - 2; i += 2) {
+            painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.active_window_title_stripes());
+        }
+    }
+
 }
 
 }
