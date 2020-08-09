@@ -163,7 +163,7 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
     return 0;
 }
 
-int Process::sys$module_unload(const char* user_name, size_t name_length)
+int Process::sys$module_unload(Userspace<const char*> user_name, size_t name_length)
 {
     if (!is_superuser())
         return -EPERM;
