@@ -93,7 +93,7 @@ int Process::sys$listen(int sockfd, int backlog)
     return socket.listen(backlog);
 }
 
-int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen_t* user_address_size)
+int Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_address, Userspace<socklen_t*> user_address_size)
 {
     REQUIRE_PROMISE(accept);
 
@@ -101,7 +101,8 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* user_address, socklen
     if (user_address) {
         if (!validate_write_typed(user_address_size))
             return -EFAULT;
-        copy_from_user(&address_size, user_address_size);
+        if (!validate_read_and_copy_typed(&address_size, user_address_size))
+            return -EFAULT;
         if (!validate_write(user_address, address_size))
             return -EFAULT;
     }
