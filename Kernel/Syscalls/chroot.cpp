@@ -31,7 +31,7 @@
 
 namespace Kernel {
 
-int Process::sys$chroot(const char* user_path, size_t path_length, int mount_flags)
+int Process::sys$chroot(Userspace<const char*> user_path, size_t path_length, int mount_flags)
 {
     if (!is_superuser())
         return -EPERM;
