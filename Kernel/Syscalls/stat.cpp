@@ -31,7 +31,7 @@
 
 namespace Kernel {
 
-int Process::sys$fstat(int fd, stat* user_statbuf)
+int Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 {
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(user_statbuf))
@@ -39,8 +39,7 @@ int Process::sys$fstat(int fd, stat* user_statbuf)
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
-    stat buffer;
-    memset(&buffer, 0, sizeof(buffer));
+    stat buffer = {};
     int rc = description->fstat(buffer);
     copy_to_user(user_statbuf, &buffer);
     return rc;
