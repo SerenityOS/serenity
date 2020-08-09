@@ -26,48 +26,33 @@
 
 #pragma once
 
-#include <AK/Forward.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <LibGfx/Forward.h>
 #include <LibGfx/WindowTheme.h>
+#include <LibGfx/Color.h>
 
-namespace WindowServer {
+namespace Gfx {
 
-class Button;
-class MouseEvent;
-class Window;
-
-class WindowFrame {
+class ClassicWindowTheme final : public WindowTheme {
 public:
-    WindowFrame(Window&);
-    ~WindowFrame();
+    ClassicWindowTheme();
+    virtual ~ClassicWindowTheme() override;
 
-    Gfx::IntRect rect() const;
-    void paint(Gfx::Painter&);
-    void on_mouse_event(const MouseEvent&);
-    void notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect);
-    void invalidate_title_bar();
+    virtual void paint_normal_frame(Painter&, WindowState, const IntRect& outer_rect, const IntRect& window_rect, const StringView& title, const Bitmap& icon, const Palette&, const IntRect& leftmost_button_rect) const override;
+    virtual void paint_notification_frame(Painter&, const IntRect&, const Palette&) const override;
 
-    Gfx::IntRect title_bar_rect() const;
-    Gfx::IntRect title_bar_icon_rect() const;
-    Gfx::IntRect title_bar_text_rect() const;
-
-    void did_set_maximized(Badge<Window>, bool);
-
-    void layout_buttons();
-    void set_button_icons();
+    virtual IntRect title_bar_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
+    virtual IntRect title_bar_icon_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
+    virtual IntRect title_bar_text_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
 
 private:
-    void paint_notification_frame(Gfx::Painter&);
-    void paint_normal_frame(Gfx::Painter&);
+    struct FrameColors {
+        Color title_color;
+        Color border_color;
+        Color border_color2;
+        Color title_stripes_color;
+        Color title_shadow_color;
+    };
 
-    Gfx::WindowTheme::WindowState window_state_for_theme() const;
-
-    Window& m_window;
-    NonnullOwnPtrVector<Button> m_buttons;
-    Button* m_close_button { nullptr };
-    Button* m_maximize_button { nullptr };
-    Button* m_minimize_button { nullptr };
+    FrameColors compute_frame_colors(WindowState, const Palette&) const;
 };
 
 }

@@ -29,6 +29,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
+#include <LibGfx/WindowTheme.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/Compositor.h>
 #include <WindowServer/Event.h>
@@ -131,51 +132,29 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 
 Gfx::IntRect WindowFrame::title_bar_rect() const
 {
-    auto window_titlebar_height = WindowManager::the().palette().window_title_height();
-    int total_vertical_padding = window_titlebar_height - WindowManager::the().window_title_font().glyph_height();
-
-    if (m_window.type() == WindowType::Notification)
-        return { m_window.width() + 3, total_vertical_padding / 2 - 1, window_titlebar_height, m_window.height() };
-    return { 4, total_vertical_padding / 2, m_window.width(), window_titlebar_height };
+    return Gfx::WindowTheme::current().title_bar_rect(m_window.type() == WindowType::Notification ? Gfx::WindowTheme::WindowType::Notification : Gfx::WindowTheme::WindowType::Normal, m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::IntRect WindowFrame::title_bar_icon_rect() const
 {
-    auto titlebar_rect = title_bar_rect();
-    Gfx::IntRect icon_rect {
-        titlebar_rect.x() + 2,
-        titlebar_rect.y(),
-        16,
-        16,
-    };
-    icon_rect.center_vertically_within(titlebar_rect);
-    icon_rect.move_by(0, 1);
-    return icon_rect;
+    return Gfx::WindowTheme::current().title_bar_icon_rect(m_window.type() == WindowType::Notification ? Gfx::WindowTheme::WindowType::Notification : Gfx::WindowTheme::WindowType::Normal, m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::IntRect WindowFrame::title_bar_text_rect() const
 {
-    auto titlebar_rect = title_bar_rect();
-    auto titlebar_icon_rect = title_bar_icon_rect();
-    return {
-        titlebar_rect.x() + 3 + titlebar_icon_rect.width() + 2,
-        titlebar_rect.y(),
-        titlebar_rect.width() - 5 - titlebar_icon_rect.width() - 2,
-        titlebar_rect.height()
-    };
+    return Gfx::WindowTheme::current().title_bar_text_rect(m_window.type() == WindowType::Notification ? Gfx::WindowTheme::WindowType::Notification : Gfx::WindowTheme::WindowType::Normal, m_window.rect(), WindowManager::the().palette());
 }
 
-WindowFrame::FrameColors WindowFrame::compute_frame_colors() const
+Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
 {
     auto& wm = WindowManager::the();
-    auto palette = wm.palette();
     if (&m_window == wm.m_highlight_window)
-        return { palette.highlight_window_title(), palette.highlight_window_border1(), palette.highlight_window_border2(), palette.highlight_window_title_stripes(), palette.highlight_window_title_shadow() };
+        return Gfx::WindowTheme::WindowState::Highlighted;
     if (&m_window == wm.m_move_window)
-        return { palette.moving_window_title(), palette.moving_window_border1(), palette.moving_window_border2(), palette.moving_window_title_stripes(), palette.moving_window_title_shadow() };
+        return Gfx::WindowTheme::WindowState::Moving;
     if (wm.is_active_window_or_accessory(m_window))
-        return { palette.active_window_title(), palette.active_window_border1(), palette.active_window_border2(), palette.active_window_title_stripes(), palette.active_window_title_shadow() };
-    return { palette.inactive_window_title(), palette.inactive_window_border1(), palette.inactive_window_border2(), palette.inactive_window_title_stripes(), palette.inactive_window_title_shadow() };
+        return Gfx::WindowTheme::WindowState::Active;
+    return Gfx::WindowTheme::WindowState::Inactive;
 }
 
 void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
@@ -212,41 +191,8 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
         title_text = window.title();
     }
 
-    Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
-
-    auto titlebar_rect = title_bar_rect();
-    auto titlebar_icon_rect = title_bar_icon_rect();
-    auto titlebar_inner_rect = title_bar_text_rect();
-    auto titlebar_title_rect = titlebar_inner_rect;
-    titlebar_title_rect.set_width(WindowManager::the().window_title_font().width(title_text));
-
-    auto [title_color, border_color, border_color2, stripes_color, shadow_color] = compute_frame_colors();
-
-    auto& wm = WindowManager::the();
-    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), palette.button());
-    painter.draw_line(titlebar_rect.bottom_left().translated(0, 2), titlebar_rect.bottom_right().translated(0, 2), palette.button());
-
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-
-    painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
-
-    int stripe_left = titlebar_title_rect.right() + 4;
-    int stripe_right = leftmost_button_rect.left() - 3;
-    if (stripe_left && stripe_right && stripe_left < stripe_right) {
-        for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
-            painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, stripes_color);
-        }
-    }
-
-    auto clipped_title_rect = titlebar_title_rect;
-    clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
-    if (!clipped_title_rect.is_empty()) {
-        painter.draw_text(clipped_title_rect.translated(1, 2), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, shadow_color, Gfx::TextElision::Right);
-        // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-        painter.draw_text(clipped_title_rect.translated(0, 1), title_text, wm.window_title_font(), Gfx::TextAlignment::CenterLeft, title_color, Gfx::TextElision::Right);
-    }
-
-    painter.blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
+    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), outer_rect, m_window.rect(), title_text, m_window.icon(), palette, leftmost_button_rect);
 }
 
 void WindowFrame::paint(Gfx::Painter& painter)
