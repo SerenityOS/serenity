@@ -65,7 +65,7 @@ Editor::~Editor()
 void Editor::get_terminal_size()
 {
     struct winsize ws;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0) {
+    if (ioctl(STDERR_FILENO, TIOCGWINSZ, &ws) < 0) {
         m_num_columns = 80;
         m_num_lines = 25;
     } else {
@@ -86,9 +86,9 @@ void Editor::add_to_history(const String& line)
 void Editor::clear_line()
 {
     for (size_t i = 0; i < m_cursor; ++i)
-        fputc(0x8, stdout);
-    fputs("\033[K", stdout);
-    fflush(stdout);
+        fputc(0x8, stderr);
+    fputs("\033[K", stderr);
+    fflush(stderr);
     m_buffer.clear();
     m_cursor = 0;
     m_inline_search_cursor = m_cursor;
@@ -257,7 +257,7 @@ void Editor::initialize()
         get_terminal_size();
 
     if (m_configuration.operation_mode == Configuration::Unset) {
-        auto istty = isatty(STDIN_FILENO) && isatty(STDOUT_FILENO);
+        auto istty = isatty(STDIN_FILENO) && isatty(STDERR_FILENO);
         if (!istty) {
             m_configuration.set(Configuration::NonInteractive);
         } else {
@@ -340,8 +340,8 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
         if (m_finish) {
             m_finish = false;
             reposition_cursor(true);
-            printf("\n");
-            fflush(stdout);
+            fprintf(stderr, "\n");
+            fflush(stderr);
             auto string = line();
             m_buffer.clear();
             m_is_editing = false;
@@ -386,7 +386,7 @@ void Editor::handle_interrupt_event()
     m_was_interrupted = false;
 
     if (!m_buffer.is_empty())
-        printf("^C");
+        fprintf(stderr, "^C");
 
     m_buffer.clear();
     m_cursor = 0;
@@ -537,8 +537,8 @@ void Editor::handle_read_event()
             return;
         }
         if (m_cursor == 0) {
-            fputc('\a', stdout);
-            fflush(stdout);
+            fputc('\a', stderr);
+            fflush(stderr);
             return;
         }
         remove_at_index(m_cursor - 1);
@@ -550,8 +550,8 @@ void Editor::handle_read_event()
 
     auto do_delete = [&] {
         if (m_cursor == m_buffer.size()) {
-            fputc('\a', stdout);
-            fflush(stdout);
+            fputc('\a', stderr);
+            fflush(stderr);
             return;
         }
         remove_at_index(m_cursor);
@@ -652,7 +652,7 @@ void Editor::handle_read_event()
                 // 'efg...'. If it's in 'efg', it should become 'efg,.:abcd...'
                 // with the caret after it, which then becomes 'abcd...,.:efg'
                 // when alt-t is pressed a second time.
-  
+
                 // Move to end of word under (or after) caret.
                 size_t cursor = m_cursor;
                 while (cursor < m_buffer.size() && !isalnum(m_buffer[cursor]))
@@ -804,8 +804,8 @@ void Editor::handle_read_event()
                 m_prompt_lines_at_suggestion_initiation = num_lines();
                 if (m_suggestion_manager.count() == 0) {
                     // There are no suggestions, beep.
-                    putchar('\a');
-                    fflush(stdout);
+                    fputc('\a', stderr);
+                    fflush(stderr);
                 }
             }
 
@@ -928,7 +928,7 @@ void Editor::handle_read_event()
         // Normally ^D. `stty eof \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
         // Handle it before ctrl shortcuts below and only continue if the buffer is empty, so that the editing shortcuts can take effect else.
         if (code_point == m_termios.c_cc[VEOF] && m_buffer.is_empty()) {
-            printf("<EOF>\n");
+            fprintf(stderr, "<EOF>\n");
             if (!m_always_refresh) {
                 m_input_error = Error::Eof;
                 finish();
@@ -973,7 +973,7 @@ void Editor::handle_read_event()
         }
         // ^L
         if (code_point == ctrl('L')) {
-            printf("\033[3J\033[H\033[2J"); // Clear screen.
+            fprintf(stderr, "\033[3J\033[H\033[2J"); // Clear screen.
             VT::move_absolute(1, 1);
             set_origin(1, 1);
             m_refresh_needed = true;
@@ -1029,7 +1029,7 @@ void Editor::handle_read_event()
                 // ourselves, then refresh the search editor, and then tell him not to process
                 // this event.
                 m_search_editor->register_character_input_callback(ctrl('L'), [this](auto& search_editor) {
-                    printf("\033[3J\033[H\033[2J"); // Clear screen.
+                    fprintf(stderr, "\033[3J\033[H\033[2J"); // Clear screen.
 
                     // refresh our own prompt
                     set_origin(1, 1);
@@ -1051,8 +1051,8 @@ void Editor::handle_read_event()
                     return false;
                 });
 
-                printf("\n");
-                fflush(stdout);
+                fprintf(stderr, "\n");
+                fflush(stderr);
 
                 auto search_prompt = "\x1b[32msearch:\x1b[0m ";
                 auto search_string_result = m_search_editor->get_line(search_prompt);
@@ -1141,8 +1141,8 @@ bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginn
         }
 
         if (last_matching_offset == -1) {
-            fputc('\a', stdout);
-            fflush(stdout);
+            fputc('\a', stderr);
+            fflush(stderr);
         }
     }
 
@@ -1235,11 +1235,11 @@ void Editor::refresh_display()
             // no need to refresh the entire line.
             char null = 0;
             m_pending_chars.append(&null, 1);
-            fputs((char*)m_pending_chars.data(), stdout);
+            fputs((char*)m_pending_chars.data(), stderr);
             m_pending_chars.clear();
             m_drawn_cursor = m_cursor;
             m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
-            fflush(stdout);
+            fflush(stderr);
             return;
         }
     }
@@ -1250,7 +1250,7 @@ void Editor::refresh_display()
     }
     VT::move_absolute(m_origin_row, m_origin_column);
 
-    fputs(m_new_prompt.characters(), stdout);
+    fputs(m_new_prompt.characters(), stderr);
 
     VT::clear_to_end_of_line();
     HashMap<u32, Style> empty_styles {};
@@ -1292,7 +1292,7 @@ void Editor::refresh_display()
         }
         builder.clear();
         builder.append(Utf32View { &m_buffer[i], 1 });
-        fputs(builder.to_string().characters(), stdout);
+        fputs(builder.to_string().characters(), stderr);
     }
 
     VT::apply_style(Style::reset_style()); // don't bleed to EOL
@@ -1306,7 +1306,7 @@ void Editor::refresh_display()
     }
 
     reposition_cursor();
-    fflush(stdout);
+    fflush(stderr);
 }
 
 void Editor::strip_styles(bool strip_anchored)
@@ -1342,8 +1342,8 @@ void Editor::reposition_cursor(bool to_end)
 
 void VT::move_absolute(u32 row, u32 col)
 {
-    printf("\033[%d;%dH", row, col);
-    fflush(stdout);
+    fprintf(stderr, "\033[%d;%dH", row, col);
+    fflush(stderr);
 }
 
 void VT::move_relative(int row, int col)
@@ -1360,9 +1360,9 @@ void VT::move_relative(int row, int col)
         col = -col;
 
     if (row > 0)
-        printf("\033[%d%c", row, x_op);
+        fprintf(stderr, "\033[%d%c", row, x_op);
     if (col > 0)
-        printf("\033[%d%c", col, y_op);
+        fprintf(stderr, "\033[%d%c", col, y_op);
 }
 
 Style Editor::find_applicable_style(size_t offset) const
@@ -1491,7 +1491,7 @@ String Style::to_string() const
 void VT::apply_style(const Style& style, bool is_starting)
 {
     if (is_starting) {
-        printf(
+        fprintf(stderr,
             "\033[%d;%d;%dm%s%s%s",
             style.bold() ? 1 : 22,
             style.underline() ? 4 : 24,
@@ -1500,7 +1500,7 @@ void VT::apply_style(const Style& style, bool is_starting)
             style.foreground().to_vt_escape().characters(),
             style.hyperlink().to_vt_escape(true).characters());
     } else {
-        printf("%s", style.hyperlink().to_vt_escape(false).characters());
+        fprintf(stderr, "%s", style.hyperlink().to_vt_escape(false).characters());
     }
 }
 
@@ -1508,28 +1508,28 @@ void VT::clear_lines(size_t count_above, size_t count_below)
 {
     // Go down count_below lines.
     if (count_below > 0)
-        printf("\033[%dB", (int)count_below);
+        fprintf(stderr, "\033[%dB", (int)count_below);
     // Then clear lines going upwards.
     for (size_t i = count_below + count_above; i > 0; --i)
-        fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stdout);
+        fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stderr);
 }
 
 void VT::save_cursor()
 {
-    fputs("\033[s", stdout);
-    fflush(stdout);
+    fputs("\033[s", stderr);
+    fflush(stderr);
 }
 
 void VT::restore_cursor()
 {
-    fputs("\033[u", stdout);
-    fflush(stdout);
+    fputs("\033[u", stderr);
+    fflush(stderr);
 }
 
 void VT::clear_to_end_of_line()
 {
-    fputs("\033[K", stdout);
-    fflush(stdout);
+    fputs("\033[K", stderr);
+    fflush(stderr);
 }
 
 StringMetrics Editor::actual_rendered_string_metrics(const StringView& string) const
@@ -1664,8 +1664,8 @@ Vector<size_t, 2> Editor::vt_dsr()
     if (m_input_error.has_value())
         return { 1, 1 };
 
-    fputs("\033[6n", stdout);
-    fflush(stdout);
+    fputs("\033[6n", stderr);
+    fflush(stderr);
 
     do {
         auto nread = read(0, buf + length, 16 - length);
