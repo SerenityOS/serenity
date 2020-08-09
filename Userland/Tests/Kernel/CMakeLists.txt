@@ -8,6 +8,7 @@ foreach(CMD_SRC ${CMD_SOURCES})
 endforeach()
 
 target_link_libraries(elf-execve-mmap-race LibPthread)
+target_link_libraries(kill-pidtid-confusion LibPthread)
 target_link_libraries(nanosleep-race-outbuf-munmap LibPthread)
 target_link_libraries(null-deref-close-during-select LibPthread)
 target_link_libraries(null-deref-crash-during-pthread_join LibPthread)
