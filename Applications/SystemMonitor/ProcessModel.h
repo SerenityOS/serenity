@@ -57,6 +57,9 @@ public:
         User,
         PID,
         TID,
+        PPID,
+        PGID,
+        SID,
         Virtual,
         Physical,
         DirtyPrivate,
@@ -107,8 +110,11 @@ private:
     ProcessModel();
 
     struct ThreadState {
-        int tid;
+        pid_t tid;
         pid_t pid;
+        pid_t ppid;
+        pid_t pgid;
+        pid_t sid;
         unsigned times_scheduled;
         String name;
         String state;
