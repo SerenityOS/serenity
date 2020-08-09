@@ -262,7 +262,7 @@ public:
     int sys$dup2(int oldfd, int newfd);
     int sys$sigaction(int signum, const sigaction* act, sigaction* old_act);
     int sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set);
-    int sys$sigpending(sigset_t*);
+    int sys$sigpending(Userspace<sigset_t*>);
     int sys$getgroups(ssize_t, Userspace<gid_t*>);
     int sys$setgroups(ssize_t, Userspace<const gid_t*>);
     int sys$pipe(int pipefd[2], int flags);
