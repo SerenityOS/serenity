@@ -309,7 +309,7 @@ public:
     int sys$join_thread(pid_t tid, void** exit_value);
     int sys$detach_thread(pid_t tid);
     int sys$set_thread_name(pid_t tid, Userspace<const char*> buffer, size_t buffer_size);
-    int sys$get_thread_name(pid_t tid, char* buffer, size_t buffer_size);
+    int sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size);
     int sys$rename(Userspace<const Syscall::SC_rename_params*>);
     int sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
     int sys$shbuf_create(int, void** buffer);
