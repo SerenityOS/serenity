@@ -161,19 +161,7 @@ void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
     Gfx::IntRect outer_rect = { {}, rect().size() };
-
-    Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
-
-    auto titlebar_rect = title_bar_rect();
-    painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, titlebar_rect, palette.active_window_border1(), palette.active_window_border2());
-
-    int stripe_top = m_buttons.last().relative_rect().bottom() + 4;
-    int stripe_bottom = m_window.height() - 3;
-    if (stripe_top && stripe_bottom && stripe_top < stripe_bottom) {
-        for (int i = 2; i <= palette.window_title_height() - 2; i += 2) {
-            painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.active_window_title_stripes());
-        }
-    }
+    Gfx::WindowTheme::current().paint_notification_frame(painter, outer_rect, m_window.rect(), palette, m_buttons.last().relative_rect());
 }
 
 void WindowFrame::paint_normal_frame(Gfx::Painter& painter)

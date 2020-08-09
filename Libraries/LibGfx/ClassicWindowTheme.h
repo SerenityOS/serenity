@@ -37,7 +37,7 @@ public:
     virtual ~ClassicWindowTheme() override;
 
     virtual void paint_normal_frame(Painter&, WindowState, const IntRect& outer_rect, const IntRect& window_rect, const StringView& title, const Bitmap& icon, const Palette&, const IntRect& leftmost_button_rect) const override;
-    virtual void paint_notification_frame(Painter&, const IntRect&, const Palette&) const override;
+    virtual void paint_notification_frame(Painter&, const IntRect& outer_rect, const IntRect& window_rect, const Palette&, const IntRect& close_button_rect) const override;
 
     virtual IntRect title_bar_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
     virtual IntRect title_bar_icon_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
