@@ -149,7 +149,7 @@ int Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_addre
     return accepted_socket_fd;
 }
 
-int Process::sys$connect(int sockfd, const sockaddr* user_address, socklen_t user_address_size)
+int Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, socklen_t user_address_size)
 {
     if (!validate_read(user_address, user_address_size))
         return -EFAULT;
