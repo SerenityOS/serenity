@@ -25,6 +25,7 @@ set(SOURCES
     StylePainter.cpp
     SystemTheme.cpp
     Triangle.cpp
+    WindowTheme.cpp
 )
 
 serenity_lib(LibGfx gfx)
