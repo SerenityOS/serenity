@@ -104,6 +104,8 @@ void TerminalWrapper::run_command(const String& command)
             exit(1);
         }
 
+        tcsetpgrp(pts_fd, getpid());
+
         // NOTE: It's okay if this fails.
         (void)ioctl(0, TIOCNOTTY);
 
