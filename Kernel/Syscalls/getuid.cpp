@@ -63,7 +63,7 @@ int Process::sys$getresuid(Userspace<uid_t*> ruid, Userspace<uid_t*> euid, Users
     return 0;
 }
 
-int Process::sys$getresgid(gid_t* rgid, gid_t* egid, gid_t* sgid)
+int Process::sys$getresgid(Userspace<gid_t*> rgid, Userspace<gid_t*> egid, Userspace<gid_t*> sgid)
 {
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(rgid) || !validate_write_typed(egid) || !validate_write_typed(sgid))
