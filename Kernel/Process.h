@@ -326,7 +326,7 @@ public:
     ssize_t sys$getrandom(Userspace<void*>, size_t, unsigned int);
     int sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
     int sys$module_load(Userspace<const char*> path, size_t path_length);
-    int sys$module_unload(const char* name, size_t name_length);
+    int sys$module_unload(Userspace<const char*> name, size_t name_length);
     int sys$profiling_enable(pid_t);
     int sys$profiling_disable(pid_t);
     int sys$futex(Userspace<const Syscall::SC_futex_params*>);
