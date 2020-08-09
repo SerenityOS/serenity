@@ -122,7 +122,7 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
     return result;
 }
 
-int Process::sys$umount(const char* user_mountpoint, size_t mountpoint_length)
+int Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
 {
     if (!is_superuser())
         return -EPERM;
