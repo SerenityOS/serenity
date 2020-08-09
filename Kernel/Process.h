@@ -294,7 +294,7 @@ public:
     int sys$bind(int sockfd, Userspace<const sockaddr*> addr, socklen_t);
     int sys$listen(int sockfd, int backlog);
     int sys$accept(int sockfd, Userspace<sockaddr*>, Userspace<socklen_t*>);
-    int sys$connect(int sockfd, const sockaddr*, socklen_t);
+    int sys$connect(int sockfd, Userspace<const sockaddr*>, socklen_t);
     int sys$shutdown(int sockfd, int how);
     ssize_t sys$sendto(const Syscall::SC_sendto_params*);
     ssize_t sys$recvfrom(const Syscall::SC_recvfrom_params*);
