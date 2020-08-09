@@ -332,7 +332,7 @@ public:
     int sys$futex(Userspace<const Syscall::SC_futex_params*>);
     int sys$set_thread_boost(pid_t tid, int amount);
     int sys$set_process_boost(pid_t, int amount);
-    int sys$chroot(const char* path, size_t path_length, int mount_flags);
+    int sys$chroot(Userspace<const char*> path, size_t path_length, int mount_flags);
     int sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
     int sys$unveil(Userspace<const Syscall::SC_unveil_params*>);
     int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
