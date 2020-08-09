@@ -31,7 +31,7 @@ namespace Kernel {
 extern String* g_hostname;
 extern Lock* g_hostname_lock;
 
-int Process::sys$gethostname(char* buffer, ssize_t size)
+int Process::sys$gethostname(Userspace<char*> buffer, ssize_t size)
 {
     REQUIRE_PROMISE(stdio);
     if (size < 0)
