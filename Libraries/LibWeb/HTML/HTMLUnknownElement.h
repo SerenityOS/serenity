@@ -36,12 +36,13 @@ public:
 
     HTMLUnknownElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLUnknownElement() override;
+
+private:
+    virtual bool is_unknown_html_element() const final { return true; }
 };
 
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLUnknownElement)
-// FIXME: I'm not sure what the check for this should be.
-//        There are some elements which are explicitly mapped to HTMLUnknownElement, but other than that, it's for, well, unknown elements.
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element(); }
+static bool is_type(const Web::DOM::Node& node) { return node.is_unknown_html_element(); }
 AK_END_TYPE_TRAITS()

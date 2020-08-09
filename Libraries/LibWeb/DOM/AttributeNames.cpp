@@ -45,8 +45,13 @@ void initialize()
     ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-    // NOTE: Special case for the class attribute since it's a C++ keyword.
+    // NOTE: Special case for the class and for attributes since they're C++ keywords.
     class_ = "class";
+    for_ = "for";
+
+    // NOTE: Special cases for attributes with dashes in them.
+    accept_charset = "accept-charset";
+    http_equiv = "http-equiv";
 
     s_initialized = true;
 }

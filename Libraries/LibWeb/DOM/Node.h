@@ -95,6 +95,7 @@ public:
     String child_text_content() const;
 
     virtual bool is_html_element() const { return false; }
+    virtual bool is_unknown_html_element() const { return false; }
 
     const Node* root() const;
     bool is_connected() const;

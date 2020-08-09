@@ -51,15 +51,19 @@ static String snake_name(const StringView& title_name)
     return builder.to_string();
 }
 
-static String add_underscore_to_cpp_keywords(const String& input)
+static String make_input_acceptable_cpp(const String& input)
 {
-    if (input == "class" || input == "template") {
+    if (input == "class" || input == "template" || input == "for") {
         StringBuilder builder;
         builder.append(input);
         builder.append('_');
         return builder.to_string();
     }
-    return input;
+
+    String input_without_dashes = input;
+    input_without_dashes.replace("-", "_");
+
+    return input_without_dashes;
 }
 
 namespace IDL {
@@ -638,7 +642,7 @@ void generate_implementation(const IDL::Interface& interface)
             auto attribute_name = attribute.extended_attributes.get("Reflect").value();
             if (attribute_name.is_null())
                 attribute_name = attribute.name;
-            attribute_name = add_underscore_to_cpp_keywords(attribute_name);
+            attribute_name = make_input_acceptable_cpp(attribute_name);
             out() << "    auto retval = impl->attribute(HTML::AttributeNames::" << attribute_name << ");";
         } else {
             out() << "    auto retval = impl->" << snake_name(attribute.name) << "();";
@@ -660,7 +664,7 @@ void generate_implementation(const IDL::Interface& interface)
                 auto attribute_name = attribute.extended_attributes.get("Reflect").value();
                 if (attribute_name.is_null())
                     attribute_name = attribute.name;
-                attribute_name = add_underscore_to_cpp_keywords(attribute_name);
+                attribute_name = make_input_acceptable_cpp(attribute_name);
                 out() << "    impl->set_attribute(HTML::AttributeNames::" << attribute_name << ", cpp_value);";
             } else {
                 out() << "    impl->set_" << snake_name(attribute.name) << "(cpp_value);";
