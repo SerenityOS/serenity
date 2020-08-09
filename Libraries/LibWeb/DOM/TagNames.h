@@ -36,14 +36,19 @@ void initialize();
 
 #define ENUMERATE_HTML_TAGS          \
     __ENUMERATE_HTML_TAG(a)          \
+    __ENUMERATE_HTML_TAG(abbr)       \
+    __ENUMERATE_HTML_TAG(acronym)    \
     __ENUMERATE_HTML_TAG(address)    \
     __ENUMERATE_HTML_TAG(applet)     \
     __ENUMERATE_HTML_TAG(area)       \
     __ENUMERATE_HTML_TAG(article)    \
     __ENUMERATE_HTML_TAG(aside)      \
+    __ENUMERATE_HTML_TAG(audio)      \
     __ENUMERATE_HTML_TAG(b)          \
     __ENUMERATE_HTML_TAG(base)       \
     __ENUMERATE_HTML_TAG(basefont)   \
+    __ENUMERATE_HTML_TAG(bdi)        \
+    __ENUMERATE_HTML_TAG(bdo)        \
     __ENUMERATE_HTML_TAG(bgsound)    \
     __ENUMERATE_HTML_TAG(big)        \
     __ENUMERATE_HTML_TAG(blink)      \
@@ -54,11 +59,16 @@ void initialize();
     __ENUMERATE_HTML_TAG(canvas)     \
     __ENUMERATE_HTML_TAG(caption)    \
     __ENUMERATE_HTML_TAG(center)     \
+    __ENUMERATE_HTML_TAG(cite)       \
     __ENUMERATE_HTML_TAG(code)       \
     __ENUMERATE_HTML_TAG(col)        \
     __ENUMERATE_HTML_TAG(colgroup)   \
+    __ENUMERATE_HTML_TAG(data)       \
+    __ENUMERATE_HTML_TAG(datalist)   \
     __ENUMERATE_HTML_TAG(dd)         \
+    __ENUMERATE_HTML_TAG(del)        \
     __ENUMERATE_HTML_TAG(details)    \
+    __ENUMERATE_HTML_TAG(dfn)        \
     __ENUMERATE_HTML_TAG(dialog)     \
     __ENUMERATE_HTML_TAG(dir)        \
     __ENUMERATE_HTML_TAG(div)        \
@@ -90,15 +100,22 @@ void initialize();
     __ENUMERATE_HTML_TAG(image)      \
     __ENUMERATE_HTML_TAG(img)        \
     __ENUMERATE_HTML_TAG(input)      \
+    __ENUMERATE_HTML_TAG(ins)        \
+    __ENUMERATE_HTML_TAG(kbd)        \
     __ENUMERATE_HTML_TAG(keygen)     \
+    __ENUMERATE_HTML_TAG(label)      \
+    __ENUMERATE_HTML_TAG(legend)     \
     __ENUMERATE_HTML_TAG(li)         \
     __ENUMERATE_HTML_TAG(link)       \
     __ENUMERATE_HTML_TAG(listing)    \
     __ENUMERATE_HTML_TAG(main)       \
+    __ENUMERATE_HTML_TAG(map)        \
+    __ENUMERATE_HTML_TAG(mark)       \
     __ENUMERATE_HTML_TAG(marquee)    \
     __ENUMERATE_HTML_TAG(math)       \
     __ENUMERATE_HTML_TAG(menu)       \
     __ENUMERATE_HTML_TAG(meta)       \
+    __ENUMERATE_HTML_TAG(meter)      \
     __ENUMERATE_HTML_TAG(nav)        \
     __ENUMERATE_HTML_TAG(nobr)       \
     __ENUMERATE_HTML_TAG(noembed)    \
@@ -108,26 +125,34 @@ void initialize();
     __ENUMERATE_HTML_TAG(ol)         \
     __ENUMERATE_HTML_TAG(optgroup)   \
     __ENUMERATE_HTML_TAG(option)     \
+    __ENUMERATE_HTML_TAG(output)     \
     __ENUMERATE_HTML_TAG(p)          \
     __ENUMERATE_HTML_TAG(param)      \
+    __ENUMERATE_HTML_TAG(picture)    \
     __ENUMERATE_HTML_TAG(path)       \
     __ENUMERATE_HTML_TAG(plaintext)  \
     __ENUMERATE_HTML_TAG(pre)        \
+    __ENUMERATE_HTML_TAG(progress)   \
+    __ENUMERATE_HTML_TAG(q)          \
     __ENUMERATE_HTML_TAG(ruby)       \
     __ENUMERATE_HTML_TAG(rb)         \
     __ENUMERATE_HTML_TAG(rp)         \
     __ENUMERATE_HTML_TAG(rt)         \
     __ENUMERATE_HTML_TAG(rtc)        \
     __ENUMERATE_HTML_TAG(s)          \
+    __ENUMERATE_HTML_TAG(samp)       \
     __ENUMERATE_HTML_TAG(script)     \
     __ENUMERATE_HTML_TAG(section)    \
     __ENUMERATE_HTML_TAG(select)     \
+    __ENUMERATE_HTML_TAG(slot)       \
     __ENUMERATE_HTML_TAG(small)      \
     __ENUMERATE_HTML_TAG(source)     \
     __ENUMERATE_HTML_TAG(span)       \
     __ENUMERATE_HTML_TAG(strike)     \
     __ENUMERATE_HTML_TAG(strong)     \
     __ENUMERATE_HTML_TAG(style)      \
+    __ENUMERATE_HTML_TAG(sub)        \
+    __ENUMERATE_HTML_TAG(sup)        \
     __ENUMERATE_HTML_TAG(summary)    \
     __ENUMERATE_HTML_TAG(svg)        \
     __ENUMERATE_HTML_TAG(table)      \
@@ -138,12 +163,15 @@ void initialize();
     __ENUMERATE_HTML_TAG(tfoot)      \
     __ENUMERATE_HTML_TAG(th)         \
     __ENUMERATE_HTML_TAG(thead)      \
+    __ENUMERATE_HTML_TAG(time)       \
     __ENUMERATE_HTML_TAG(title)      \
     __ENUMERATE_HTML_TAG(tr)         \
     __ENUMERATE_HTML_TAG(track)      \
     __ENUMERATE_HTML_TAG(tt)         \
     __ENUMERATE_HTML_TAG(u)          \
     __ENUMERATE_HTML_TAG(ul)         \
+    __ENUMERATE_HTML_TAG(var)        \
+    __ENUMERATE_HTML_TAG(video)      \
     __ENUMERATE_HTML_TAG(wbr)        \
     __ENUMERATE_HTML_TAG(xmp)
 

@@ -47,13 +47,27 @@ set(SOURCES
     FontCache.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/HTMLAnchorElement.cpp
-    HTML/HTMLBRElement.cpp
+    HTML/HTMLAreaElement.cpp
+    HTML/HTMLAudioElement.cpp
+    HTML/HTMLBaseElement.cpp
     HTML/HTMLBlinkElement.cpp
     HTML/HTMLBodyElement.cpp
+    HTML/HTMLBRElement.cpp
+    HTML/HTMLButtonElement.cpp
     HTML/HTMLCanvasElement.cpp
+    HTML/HTMLDataElement.cpp
+    HTML/HTMLDataListElement.cpp
+    HTML/HTMLDetailsElement.cpp
+    HTML/HTMLDialogElement.cpp
+    HTML/HTMLDivElement.cpp
+    HTML/HTMLDListElement.cpp
     HTML/HTMLElement.cpp
+    HTML/HTMLEmbedElement.cpp
+    HTML/HTMLFieldSetElement.cpp
     HTML/HTMLFontElement.cpp
     HTML/HTMLFormElement.cpp
+    HTML/HTMLFrameElement.cpp
+    HTML/HTMLFrameSetElement.cpp
     HTML/HTMLHRElement.cpp
     HTML/HTMLHeadElement.cpp
     HTML/HTMLHeadingElement.cpp
@@ -61,14 +75,48 @@ set(SOURCES
     HTML/HTMLIFrameElement.cpp
     HTML/HTMLImageElement.cpp
     HTML/HTMLInputElement.cpp
+    HTML/HTMLLabelElement.cpp
+    HTML/HTMLLegendElement.cpp
+    HTML/HTMLLIElement.cpp
     HTML/HTMLLinkElement.cpp
+    HTML/HTMLMapElement.cpp
+    HTML/HTMLMarqueeElement.cpp
+    HTML/HTMLMediaElement.cpp
+    HTML/HTMLMenuElement.cpp
+    HTML/HTMLMetaElement.cpp
+    HTML/HTMLMeterElement.cpp
+    HTML/HTMLModElement.cpp
     HTML/HTMLObjectElement.cpp
+    HTML/HTMLOListElement.cpp
+    HTML/HTMLOptGroupElement.cpp
+    HTML/HTMLOptionElement.cpp
+    HTML/HTMLOutputElement.cpp
+    HTML/HTMLParagraphElement.cpp
+    HTML/HTMLParamElement.cpp
+    HTML/HTMLPictureElement.cpp
+    HTML/HTMLPreElement.cpp
+    HTML/HTMLProgressElement.cpp
+    HTML/HTMLQuoteElement.cpp
     HTML/HTMLScriptElement.cpp
+    HTML/HTMLSelectElement.cpp
+    HTML/HTMLSlotElement.cpp
+    HTML/HTMLSourceElement.cpp
+    HTML/HTMLSpanElement.cpp
     HTML/HTMLStyleElement.cpp
+    HTML/HTMLTableCaptionElement.cpp
     HTML/HTMLTableCellElement.cpp
+    HTML/HTMLTableColElement.cpp
     HTML/HTMLTableElement.cpp
     HTML/HTMLTableRowElement.cpp
+    HTML/HTMLTableSectionElement.cpp
+    HTML/HTMLTemplateElement.cpp
+    HTML/HTMLTextAreaElement.cpp
+    HTML/HTMLTimeElement.cpp
     HTML/HTMLTitleElement.cpp
+    HTML/HTMLTrackElement.cpp
+    HTML/HTMLUListElement.cpp
+    HTML/HTMLUnknownElement.cpp
+    HTML/HTMLVideoElement.cpp
     HTML/ImageData.cpp
     HTML/Parser/Entities.cpp
     HTML/Parser/HTMLDocumentParser.cpp
@@ -172,11 +220,25 @@ libweb_js_wrapper(DOM/Node)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
 libweb_js_wrapper(HTML/HTMLAnchorElement)
+libweb_js_wrapper(HTML/HTMLAreaElement)
+libweb_js_wrapper(HTML/HTMLAudioElement)
+libweb_js_wrapper(HTML/HTMLBaseElement)
 libweb_js_wrapper(HTML/HTMLBodyElement)
 libweb_js_wrapper(HTML/HTMLBRElement)
+libweb_js_wrapper(HTML/HTMLButtonElement)
 libweb_js_wrapper(HTML/HTMLCanvasElement)
+libweb_js_wrapper(HTML/HTMLDataElement)
+libweb_js_wrapper(HTML/HTMLDataListElement)
+libweb_js_wrapper(HTML/HTMLDetailsElement)
+libweb_js_wrapper(HTML/HTMLDialogElement)
+libweb_js_wrapper(HTML/HTMLDivElement)
+libweb_js_wrapper(HTML/HTMLDListElement)
 libweb_js_wrapper(HTML/HTMLElement)
+libweb_js_wrapper(HTML/HTMLEmbedElement)
+libweb_js_wrapper(HTML/HTMLFieldSetElement)
 libweb_js_wrapper(HTML/HTMLFormElement)
+libweb_js_wrapper(HTML/HTMLFrameElement)
+libweb_js_wrapper(HTML/HTMLFrameSetElement)
 libweb_js_wrapper(HTML/HTMLHeadElement)
 libweb_js_wrapper(HTML/HTMLHeadingElement)
 libweb_js_wrapper(HTML/HTMLHRElement)
@@ -184,14 +246,48 @@ libweb_js_wrapper(HTML/HTMLHtmlElement)
 libweb_js_wrapper(HTML/HTMLIFrameElement)
 libweb_js_wrapper(HTML/HTMLImageElement)
 libweb_js_wrapper(HTML/HTMLInputElement)
+libweb_js_wrapper(HTML/HTMLLabelElement)
+libweb_js_wrapper(HTML/HTMLLegendElement)
+libweb_js_wrapper(HTML/HTMLLIElement)
 libweb_js_wrapper(HTML/HTMLLinkElement)
+libweb_js_wrapper(HTML/HTMLMapElement)
+libweb_js_wrapper(HTML/HTMLMarqueeElement)
+libweb_js_wrapper(HTML/HTMLMediaElement)
+libweb_js_wrapper(HTML/HTMLMenuElement)
+libweb_js_wrapper(HTML/HTMLMetaElement)
+libweb_js_wrapper(HTML/HTMLMeterElement)
+libweb_js_wrapper(HTML/HTMLModElement)
 libweb_js_wrapper(HTML/HTMLObjectElement)
+libweb_js_wrapper(HTML/HTMLOListElement)
+libweb_js_wrapper(HTML/HTMLOptGroupElement)
+libweb_js_wrapper(HTML/HTMLOptionElement)
+libweb_js_wrapper(HTML/HTMLOutputElement)
+libweb_js_wrapper(HTML/HTMLParagraphElement)
+libweb_js_wrapper(HTML/HTMLParamElement)
+libweb_js_wrapper(HTML/HTMLPictureElement)
+libweb_js_wrapper(HTML/HTMLPreElement)
+libweb_js_wrapper(HTML/HTMLProgressElement)
+libweb_js_wrapper(HTML/HTMLQuoteElement)
 libweb_js_wrapper(HTML/HTMLScriptElement)
+libweb_js_wrapper(HTML/HTMLSelectElement)
+libweb_js_wrapper(HTML/HTMLSlotElement)
+libweb_js_wrapper(HTML/HTMLSourceElement)
+libweb_js_wrapper(HTML/HTMLSpanElement)
 libweb_js_wrapper(HTML/HTMLStyleElement)
+libweb_js_wrapper(HTML/HTMLTableCaptionElement)
 libweb_js_wrapper(HTML/HTMLTableCellElement)
+libweb_js_wrapper(HTML/HTMLTableColElement)
 libweb_js_wrapper(HTML/HTMLTableElement)
 libweb_js_wrapper(HTML/HTMLTableRowElement)
+libweb_js_wrapper(HTML/HTMLTableSectionElement)
+libweb_js_wrapper(HTML/HTMLTemplateElement)
+libweb_js_wrapper(HTML/HTMLTextAreaElement)
+libweb_js_wrapper(HTML/HTMLTimeElement)
 libweb_js_wrapper(HTML/HTMLTitleElement)
+libweb_js_wrapper(HTML/HTMLTrackElement)
+libweb_js_wrapper(HTML/HTMLUListElement)
+libweb_js_wrapper(HTML/HTMLUnknownElement)
+libweb_js_wrapper(HTML/HTMLVideoElement)
 libweb_js_wrapper(HTML/ImageData)
 libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)

@@ -2,5 +2,6 @@ interface HTMLMetaElement : HTMLElement {
 
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString content;
+    [Reflect=http-equiv] attribute DOMString httpEquiv;
 
 }
