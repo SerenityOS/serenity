@@ -63,7 +63,7 @@ int Process::sys$socket(int domain, int type, int protocol)
     return fd;
 }
 
-int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_length)
+int Process::sys$bind(int sockfd, Userspace<const sockaddr*> address, socklen_t address_length)
 {
     if (!validate_read(address, address_length))
         return -EFAULT;
