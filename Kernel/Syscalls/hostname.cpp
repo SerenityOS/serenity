@@ -45,7 +45,7 @@ int Process::sys$gethostname(Userspace<char*> buffer, ssize_t size)
     return 0;
 }
 
-int Process::sys$sethostname(const char* hostname, ssize_t length)
+int Process::sys$sethostname(Userspace<const char*> hostname, ssize_t length)
 {
     REQUIRE_NO_PROMISES;
     if (!is_superuser())
