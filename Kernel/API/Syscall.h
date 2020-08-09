@@ -241,7 +241,7 @@ struct ImmutableBufferArgument {
 };
 
 struct StringListArgument {
-    StringArgument* strings { nullptr };
+    Userspace<StringArgument*> strings { };
     size_t length { 0 };
 };
 
