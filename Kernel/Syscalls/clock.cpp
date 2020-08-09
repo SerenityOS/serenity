@@ -29,14 +29,13 @@
 
 namespace Kernel {
 
-int Process::sys$clock_gettime(clockid_t clock_id, timespec* user_ts)
+int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(user_ts))
         return -EFAULT;
 
-    timespec ts;
-    memset(&ts, 0, sizeof(ts));
+    timespec ts = {};
 
     switch (clock_id) {
     case CLOCK_MONOTONIC:
