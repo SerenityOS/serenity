@@ -31,7 +31,7 @@
 #include "ProcessFileDescriptorMapWidget.h"
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessModel.h"
-#include "ProcessStacksWidget.h"
+#include "ProcessStackWidget.h"
 #include "ProcessUnveiledPathsWidget.h"
 #include <LibCore/Timer.h>
 #include <LibGUI/AboutDialog.h>
@@ -199,34 +199,34 @@ int main(int argc, char** argv)
                 memory_stats_widget->refresh();
         });
 
-    auto selected_pid = [&]() -> pid_t {
+    auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())
             return -1;
-        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), ProcessModel::Column::PID);
+        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column);
         return process_table_view.model()->data(pid_index, GUI::Model::Role::Display).to_i32();
     };
 
     auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/kill16.png"), [&](const GUI::Action&) {
-        pid_t pid = selected_pid();
+        pid_t pid = selected_id(ProcessModel::Column::PID);
         if (pid != -1)
             kill(pid, SIGKILL);
     });
 
     auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/stop16.png"), [&](const GUI::Action&) {
-        pid_t pid = selected_pid();
+        pid_t pid = selected_id(ProcessModel::Column::PID);
         if (pid != -1)
             kill(pid, SIGSTOP);
     });
 
     auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/continue16.png"), [&](const GUI::Action&) {
-        pid_t pid = selected_pid();
+        pid_t pid = selected_id(ProcessModel::Column::PID);
         if (pid != -1)
             kill(pid, SIGCONT);
     });
 
     auto profile_action = GUI::Action::create("Profile process", { Mod_Ctrl, Key_P },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"), [&](auto&) {
-            pid_t pid = selected_pid();
+            pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {
                 auto pid_string = String::format("%d", pid);
                 pid_t child;
@@ -242,7 +242,7 @@ int main(int argc, char** argv)
 
     auto inspect_action = GUI::Action::create("Inspect process", { Mod_Ctrl, Key_I },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-inspector.png"), [&](auto&) {
-            pid_t pid = selected_pid();
+            pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {
                 auto pid_string = String::format("%d", pid);
                 pid_t child;
@@ -316,10 +316,11 @@ int main(int argc, char** argv)
     auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
     auto& open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
     auto& unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
-    auto& stacks_widget = process_tab_widget.add_tab<ProcessStacksWidget>("Stacks");
+    auto& stack_widget = process_tab_widget.add_tab<ProcessStackWidget>("Stack");
 
     process_table_view.on_selection = [&](auto&) {
-        auto pid = selected_pid();
+        auto pid = selected_id(ProcessModel::Column::PID);
+        auto tid = selected_id(ProcessModel::Column::TID);
         if (!can_access_pid(pid)) {
             process_tab_widget.set_visible(false);
             process_tab_unused_widget.set_text("Process cannot be accessed");
@@ -330,7 +331,7 @@ int main(int argc, char** argv)
         process_tab_widget.set_visible(true);
         process_tab_unused_widget.set_visible(false);
         open_files_widget.set_pid(pid);
-        stacks_widget.set_pid(pid);
+        stack_widget.set_ids(pid, tid);
         memory_map_widget.set_pid(pid);
         unveiled_paths_widget.set_pid(pid);
     };
