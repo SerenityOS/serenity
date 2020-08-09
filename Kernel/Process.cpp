@@ -790,9 +790,20 @@ void Process::terminate_due_to_signal(u8 signal)
 KResult Process::send_signal(u8 signal, Process* sender)
 {
     InterruptDisabler disabler;
-    // FIXME: PID/TID BUG
-    if (auto* thread = Thread::from_tid(m_pid.value())) {
-        thread->send_signal(signal, sender);
+    Thread* receiver_thread;
+    // Try to send it to the "obvious" main thread:
+    receiver_thread = Thread::from_tid(m_pid.value());
+    // If the main thread has died, there may still be other threads:
+    if (!receiver_thread) {
+        // The first one should be good enough.
+        // Neither kill(2) nor kill(3) specify any selection precedure.
+        for_each_thread([&receiver_thread](Thread& thread) -> IterationDecision {
+            receiver_thread = &thread;
+            return IterationDecision::Break;
+        });
+    }
+    if (receiver_thread) {
+        receiver_thread->send_signal(signal, sender);
         return KSuccess;
     }
     return KResult(-ESRCH);
