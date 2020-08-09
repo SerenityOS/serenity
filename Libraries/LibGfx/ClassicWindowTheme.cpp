@@ -109,7 +109,8 @@ IntRect ClassicWindowTheme::title_bar_rect(WindowType window_type, const IntRect
 {
     auto& title_font = Font::default_bold_font();
     auto window_titlebar_height = palette.window_title_height();
-    int total_vertical_padding = window_titlebar_height - title_font.glyph_height();
+    // FIXME: The top of the titlebar doesn't get redrawn properly if this padding is different
+    int total_vertical_padding = title_font.glyph_height() - 1;
 
     if (window_type == WindowType::Notification)
         return { window_rect.width() + 3, total_vertical_padding / 2 - 1, window_titlebar_height, window_rect.height() };
