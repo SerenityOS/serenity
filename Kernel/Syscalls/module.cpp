@@ -35,7 +35,7 @@ namespace Kernel {
 
 extern HashMap<String, OwnPtr<Module>>* g_modules;
 
-int Process::sys$module_load(const char* user_path, size_t path_length)
+int Process::sys$module_load(Userspace<const char*> user_path, size_t path_length)
 {
     if (!is_superuser())
         return -EPERM;
