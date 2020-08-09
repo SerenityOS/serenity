@@ -118,7 +118,7 @@ int Process::sys$setresgid(gid_t rgid, gid_t egid, gid_t sgid)
     return 0;
 }
 
-int Process::sys$setgroups(ssize_t count, const gid_t* user_gids)
+int Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> user_gids)
 {
     REQUIRE_PROMISE(id);
     if (count < 0)
