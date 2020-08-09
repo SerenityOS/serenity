@@ -31,11 +31,11 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Frame/Frame.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Page.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web {
 
@@ -48,18 +48,18 @@ FrameLoader::~FrameLoader()
 {
 }
 
-static RefPtr<Document> create_markdown_document(const ByteBuffer& data, const URL& url)
+static RefPtr<DOM::Document> create_markdown_document(const ByteBuffer& data, const URL& url)
 {
     auto markdown_document = Markdown::Document::parse(data);
     if (!markdown_document)
         return nullptr;
 
-    return parse_html_document(markdown_document->render_to_html(), url, "utf-8");
+    return HTML::parse_html_document(markdown_document->render_to_html(), url, "utf-8");
 }
 
-static RefPtr<Document> create_text_document(const ByteBuffer& data, const URL& url)
+static RefPtr<DOM::Document> create_text_document(const ByteBuffer& data, const URL& url)
 {
-    auto document = adopt(*new Document(url));
+    auto document = adopt(*new DOM::Document(url));
 
     auto html_element = document->create_element("html");
     document->append_child(html_element);
@@ -82,9 +82,9 @@ static RefPtr<Document> create_text_document(const ByteBuffer& data, const URL& 
     return document;
 }
 
-static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL& url)
+static RefPtr<DOM::Document> create_image_document(const ByteBuffer& data, const URL& url)
 {
-    auto document = adopt(*new Document(url));
+    auto document = adopt(*new DOM::Document(url));
 
     auto image_decoder = Gfx::ImageDecoder::create(data.data(), data.size());
     auto bitmap = image_decoder->bitmap();
@@ -99,7 +99,7 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
     head_element->append_child(title_element);
 
     auto basename = LexicalPath(url.path()).basename();
-    auto title_text = adopt(*new Text(document, String::format("%s [%dx%d]", basename.characters(), bitmap->width(), bitmap->height())));
+    auto title_text = adopt(*new DOM::Text(document, String::format("%s [%dx%d]", basename.characters(), bitmap->width(), bitmap->height())));
     title_element->append_child(title_text);
 
     auto body_element = create_element(document, "body");
@@ -112,14 +112,14 @@ static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL&
     return document;
 }
 
-static RefPtr<Document> create_gemini_document(const ByteBuffer& data, const URL& url)
+static RefPtr<DOM::Document> create_gemini_document(const ByteBuffer& data, const URL& url)
 {
     auto markdown_document = Gemini::Document::parse({ (const char*)data.data(), data.size() }, url);
 
-    return parse_html_document(markdown_document->render_to_html(), url, "utf-8");
+    return HTML::parse_html_document(markdown_document->render_to_html(), url, "utf-8");
 }
 
-RefPtr<Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
+RefPtr<DOM::Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
 {
     if (mime_type.starts_with("image/"))
         return create_image_document(data, url);
@@ -130,7 +130,7 @@ RefPtr<Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& d
     if (mime_type == "text/gemini")
         return create_gemini_document(data, url);
     if (mime_type == "text/html") {
-        HTMLDocumentParser parser(data, encoding);
+        HTML::HTMLDocumentParser parser(data, encoding);
         parser.run(url);
         return parser.document();
     }
@@ -189,7 +189,7 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
                 String::copy(data).characters(),
                 escape_html_entities(failed_url.to_string()).characters(),
                 escape_html_entities(error).characters());
-            auto document = parse_html_document(html, failed_url, "utf-8");
+            auto document = HTML::parse_html_document(html, failed_url, "utf-8");
             ASSERT(document);
             frame().set_document(document);
             frame().page().client().page_did_change_title(document->title());
@@ -212,7 +212,7 @@ void FrameLoader::resource_did_load()
     // FIXME: Also check HTTP status code before redirecting
     auto location = resource()->response_headers().get("Location");
     if (location.has_value()) {
-        load(location.value(), FrameLoader::Type::Navigation);
+        load(url.complete_url(location.value()), FrameLoader::Type::Navigation);
         return;
     }
 

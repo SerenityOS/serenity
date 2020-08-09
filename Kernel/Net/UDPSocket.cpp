@@ -79,7 +79,7 @@ NonnullRefPtr<UDPSocket> UDPSocket::create(int protocol)
     return adopt(*new UDPSocket(protocol));
 }
 
-int UDPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
+KResultOr<size_t> UDPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
 {
     (void)flags;
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.data());
@@ -90,11 +90,11 @@ int UDPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
     return udp_packet.length() - sizeof(UDPPacket);
 }
 
-int UDPSocket::protocol_send(const void* data, size_t data_length)
+KResultOr<size_t> UDPSocket::protocol_send(const void* data, size_t data_length)
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
-        return -EHOSTUNREACH;
+        return KResult(-EHOSTUNREACH);
     auto buffer = ByteBuffer::create_zeroed(sizeof(UDPPacket) + data_length);
     auto& udp_packet = *(UDPPacket*)(buffer.data());
     udp_packet.set_source_port(local_port());
@@ -102,7 +102,7 @@ int UDPSocket::protocol_send(const void* data, size_t data_length)
     udp_packet.set_length(sizeof(UDPPacket) + data_length);
     memcpy(udp_packet.payload(), data, data_length);
     klog() << "sending as udp packet from " << routing_decision.adapter->ipv4_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << "!";
-    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, buffer.data(), buffer.size(), ttl());
+    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, buffer.span(), ttl());
     return data_length;
 }
 

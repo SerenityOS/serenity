@@ -26,9 +26,15 @@
 
 #pragma once
 
-namespace Web {
+namespace Web::CSS {
+class Selector;
+class StyleProperties;
+class StyleResolver;
+class StyleRule;
+class StyleSheet;
+}
 
-class CanvasRenderingContext2D;
+namespace Web::DOM {
 class Document;
 class DocumentType;
 class Element;
@@ -36,7 +42,19 @@ class Event;
 class EventHandler;
 class EventListener;
 class EventTarget;
-class Frame;
+class MouseEvent;
+class Node;
+class ParentNode;
+class Position;
+class Text;
+class Timer;
+class Window;
+enum class QuirksMode;
+}
+
+namespace Web::HTML {
+class CanvasRenderingContext2D;
+class HTMLAnchorElement;
 class HTMLBodyElement;
 class HTMLCanvasElement;
 class HTMLDocumentParser;
@@ -46,53 +64,67 @@ class HTMLHeadElement;
 class HTMLHtmlElement;
 class HTMLImageElement;
 class HTMLScriptElement;
-class PageView;
 class ImageData;
-class LineBox;
-class LineBoxFragment;
+}
+
+namespace Web {
+class Frame;
 class LayoutBlock;
 class LayoutDocument;
 class LayoutNode;
 class LayoutNodeWithStyle;
 class LayoutReplaced;
+class LineBox;
+class LineBoxFragment;
 class LoadRequest;
-class MouseEvent;
-class Node;
 class Origin;
 class Page;
 class PageClient;
+class PageView;
 class PaintContext;
 class Resource;
 class ResourceLoader;
-class Selector;
 class StackingContext;
-class StyleResolver;
-class StyleRule;
-class StyleSheet;
-class Text;
-class Timer;
-class Window;
 class XMLHttpRequest;
-enum class QuirksMode;
-
 }
 
 namespace Web::Bindings {
 
 class CanvasRenderingContext2DWrapper;
-class DocumentWrapper;
+class CharacterDataWrapper;
 class DocumentTypeWrapper;
+class DocumentWrapper;
 class ElementWrapper;
-class EventWrapper;
 class EventListenerWrapper;
 class EventTargetWrapper;
+class EventWrapper;
+class HTMLAnchorElementWrapper;
+class HTMLBRElementWrapper;
+class HTMLBodyElementWrapper;
 class HTMLCanvasElementWrapper;
 class HTMLElementWrapper;
+class HTMLFormElementWrapper;
+class HTMLHRElementWrapper;
+class HTMLHeadElementWrapper;
+class HTMLHeadingElementWrapper;
+class HTMLHtmlElementWrapper;
+class HTMLIFrameElementWrapper;
 class HTMLImageElementWrapper;
+class HTMLInputElementWrapper;
+class HTMLLinkElementWrapper;
+class HTMLObjectElementWrapper;
+class HTMLScriptElementWrapper;
+class HTMLStyleElementWrapper;
+class HTMLTableCellElementWrapper;
+class HTMLTableElementWrapper;
+class HTMLTableRowElementWrapper;
+class HTMLTitleElementWrapper;
 class ImageDataWrapper;
 class LocationObject;
 class MouseEventWrapper;
 class NodeWrapper;
+class TextWrapper;
+class UIEventWrapper;
 class WindowObject;
 class Wrappable;
 class Wrapper;

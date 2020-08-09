@@ -42,7 +42,7 @@ typedef __INT8_TYPE__ i8;
 #ifdef __serenity__
 
 typedef __SIZE_TYPE__ size_t;
-typedef MakeSigned<size_t>::type ssize_t;
+typedef MakeSigned<size_t>::Type ssize_t;
 
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 
@@ -62,8 +62,8 @@ typedef i64 int64_t;
 typedef int pid_t;
 
 #else
-#    include <stdint.h>
 #    include <stddef.h>
+#    include <stdint.h>
 #    include <sys/types.h>
 
 #    ifdef __ptrdiff_t
@@ -97,6 +97,8 @@ inline constexpr size_t align_up_to(const size_t value, const size_t alignment)
     return (value + (alignment - 1)) & ~(alignment - 1);
 }
 
-enum class TriState : u8 { False,
+enum class [[nodiscard]] TriState : u8 {
+    False,
     True,
-    Unknown };
+    Unknown
+};

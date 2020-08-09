@@ -26,17 +26,23 @@
 
 #include <AK/LogStream.h>
 #include <AK/MappedFile.h>
+#include <LibCore/ArgsParser.h>
 #include <LibX86/Disassembler.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
-    if (argc == 1) {
-        fprintf(stderr, "usage: %s <binary>\n", argv[0]);
+    const char* path = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
+    args_parser.parse(argc, argv);
+
+    MappedFile file(path);
+    if (!file.is_valid()) {
+        // Already printed some error message.
         return 1;
     }
-
-    MappedFile file(argv[1]);
 
     X86::SimpleInstructionStream stream((const u8*)file.data(), file.size());
     X86::Disassembler disassembler(stream);

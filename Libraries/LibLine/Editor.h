@@ -52,17 +52,15 @@
 namespace Line {
 
 struct Configuration {
-    enum TokenSplitMechanism {
-        Spaces,
-        UnescapedSpaces,
-    };
     enum RefreshBehaviour {
         Lazy,
         Eager,
     };
     enum OperationMode {
+        Unset,
         Full,
         NoEscapeSequences,
+        NonInteractive,
     };
 
     Configuration()
@@ -77,12 +75,10 @@ struct Configuration {
     }
 
     void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
-    void set(TokenSplitMechanism split) { split_mechanism = split; }
     void set(OperationMode mode) { operation_mode = mode; }
 
     RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
-    TokenSplitMechanism split_mechanism { TokenSplitMechanism::Spaces };
-    OperationMode operation_mode { OperationMode::Full };
+    OperationMode operation_mode { OperationMode::Unset };
 };
 
 class Editor : public Core::Object {
@@ -147,6 +143,7 @@ public:
 
     void clear_line();
     void insert(const String&);
+    void insert(const StringView&);
     void insert(const Utf32View&);
     void insert(const u32);
     void stylize(const Span&, const Style&);
@@ -299,8 +296,6 @@ private:
         m_suggestion_display->set_origin(row, col, {});
     }
 
-    bool should_break_token(Vector<u32, 1024>& buffer, size_t index);
-
     void recalculate_origin();
     void reposition_cursor(bool to_end = false);
 
@@ -308,7 +303,7 @@ private:
         size_t start { 0 };
         size_t end { 0 };
     };
-    CodepointRange byte_offset_range_to_codepoint_offset_range(size_t byte_start, size_t byte_end, size_t codepoint_scan_offset, bool reverse = false) const;
+    CodepointRange byte_offset_range_to_code_point_offset_range(size_t byte_start, size_t byte_end, size_t code_point_scan_offset, bool reverse = false) const;
 
     void get_terminal_size();
 
@@ -375,8 +370,8 @@ private:
 
     enum class InputState {
         Free,
-        ExpectBracket,
-        ExpectFinal,
+        GotEscape,
+        GotEscapeFollowedByLeftBracket,
         ExpectTerminator,
     };
     InputState m_state { InputState::Free };

@@ -33,7 +33,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Image.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ProgressBar.h>
@@ -74,7 +74,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     animation_container.set_preferred_size(0, 32);
     auto& animation_layout = animation_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& browser_image = animation_container.add<GUI::Image>();
+    auto& browser_image = animation_container.add<GUI::ImageWidget>();
     browser_image.load_from_file("/res/download-animation.gif");
     animation_layout.add_spacer();
 

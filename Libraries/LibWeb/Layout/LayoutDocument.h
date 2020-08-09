@@ -33,17 +33,17 @@ namespace Web {
 
 class LayoutDocument final : public LayoutBlock {
 public:
-    explicit LayoutDocument(Document&, NonnullRefPtr<StyleProperties>);
+    explicit LayoutDocument(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutDocument() override;
 
-    const Document& node() const { return static_cast<const Document&>(*LayoutNode::node()); }
+    const DOM::Document& node() const { return static_cast<const DOM::Document&>(*LayoutNode::node()); }
     virtual const char* class_name() const override { return "LayoutDocument"; }
     virtual void layout(LayoutMode = LayoutMode::Default) override;
 
     void paint_all_phases(PaintContext&);
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint&) const override;
+    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 
     const LayoutRange& selection() const { return m_selection; }
     LayoutRange& selection() { return m_selection; }
@@ -58,11 +58,8 @@ private:
     LayoutRange m_selection;
 };
 
-template<>
-inline bool is<LayoutDocument>(const LayoutNode& node)
-{
-    return node.is_root();
 }
 
-
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutDocument)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_root(); }
+AK_END_TYPE_TRAITS()

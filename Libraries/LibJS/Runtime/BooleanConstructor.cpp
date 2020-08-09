@@ -38,9 +38,9 @@ BooleanConstructor::BooleanConstructor(GlobalObject& global_object)
 {
 }
 
-void BooleanConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void BooleanConstructor::initialize(GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("prototype", Value(global_object.boolean_prototype()), 0);
     define_property("length", Value(1), Attribute::Configurable);
 }

@@ -41,7 +41,7 @@ public:
     const StackingContext* parent() const { return m_parent; }
 
     void paint(PaintContext&, LayoutNode::PaintPhase);
-    HitTestResult hit_test(const Gfx::IntPoint&) const;
+    HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const;
 
     void dump(int indent = 0) const;
 

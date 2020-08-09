@@ -206,6 +206,7 @@ struct Certificate {
     CertificateKeyAlgorithm ec_algorithm;
     ByteBuffer exponent;
     Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> public_key;
+    Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key;
     String issuer_country;
     String issuer_state;
     String issuer_location;
@@ -318,6 +319,13 @@ public:
     bool load_certificates(const ByteBuffer& pem_buffer);
     bool load_private_key(const ByteBuffer& pem_buffer);
 
+    bool add_client_key(const ByteBuffer& certificate_pem_buffer, const ByteBuffer& key_pem_buffer);
+    bool add_client_key(Certificate certificate)
+    {
+        m_context.client_certificates.append(move(certificate));
+        return true;
+    }
+
     ByteBuffer finish_build();
 
     const StringView& alpn() const { return m_context.negotiated_alpn; }
@@ -349,6 +357,7 @@ public:
     Function<void(AlertDescription)> on_tls_error;
     Function<void()> on_tls_connected;
     Function<void()> on_tls_finished;
+    Function<void(TLSv12&)> on_tls_certificate_request;
 
 private:
     explicit TLSv12(Core::Object* parent, Version version = Version::V12);

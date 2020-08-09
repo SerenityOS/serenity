@@ -12,4 +12,5 @@ endpoint ProtocolServer = 9
     // Download API
     StartDownload(URL url, IPC::Dictionary request_headers) => (i32 download_id)
     StopDownload(i32 download_id) => (bool success)
+    SetCertificate(i32 download_id, String certificate, String key) => (bool success)
 }

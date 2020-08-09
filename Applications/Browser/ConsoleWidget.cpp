@@ -36,7 +36,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/DOM/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMTreeModel.h>
 
@@ -47,13 +47,13 @@ ConsoleWidget::ConsoleWidget()
     set_layout<GUI::VerticalBoxLayout>();
     set_fill_with_background_color(true);
 
-    auto base_document = adopt(*new Web::Document);
-    base_document->append_child(adopt(*new Web::DocumentType(base_document)));
-    auto html_element = create_element(base_document, "html");
+    auto base_document = adopt(*new Web::DOM::Document);
+    base_document->append_child(adopt(*new Web::DOM::DocumentType(base_document)));
+    auto html_element = Web::DOM::create_element(base_document, "html");
     base_document->append_child(html_element);
-    auto head_element = create_element(base_document, "head");
+    auto head_element = Web::DOM::create_element(base_document, "head");
     html_element->append_child(head_element);
-    auto body_element = create_element(base_document, "body");
+    auto body_element = Web::DOM::create_element(base_document, "body");
     html_element->append_child(body_element);
     m_output_container = body_element;
 
@@ -91,7 +91,7 @@ ConsoleWidget::ConsoleWidget()
             auto error = parser.errors()[0];
             auto hint = error.source_location_hint(js_source);
             if (!hint.is_empty())
-                output_html.append(String::format("<pre>%s</pre>", hint.characters()));
+                output_html.append(String::format("<pre>%s</pre>", escape_html_entities(hint).characters()));
             m_interpreter->throw_exception<JS::SyntaxError>(error.to_string());
         } else {
             m_interpreter->run(m_interpreter->global_object(),*program);
@@ -165,4 +165,8 @@ void ConsoleWidget::clear_output()
     m_output_view->update();
 }
 
+void ConsoleWidget::focusin_event(Core::Event&)
+{
+    m_input->set_focus(true);
+}
 }

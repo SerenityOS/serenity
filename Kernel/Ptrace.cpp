@@ -63,8 +63,11 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
             return KResult(-EBUSY);
         }
         peer->start_tracing_from(caller.pid());
-        if (peer->state() != Thread::State::Stopped && !(peer->has_blocker() && peer->blocker().is_reason_signal()))
-            peer->send_signal(SIGSTOP, &caller);
+        if (peer->state() != Thread::State::Stopped) {
+            ScopedSpinLock lock(peer->get_lock());
+            if (!(peer->has_blocker() && peer->blocker().is_reason_signal()))
+                peer->send_signal(SIGSTOP, &caller);
+        }
         return KSuccess;
     }
 
@@ -98,7 +101,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         if (!tracer->has_regs())
             return KResult(-EINVAL);
 
-        auto* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
+        auto* regs = reinterpret_cast<PtraceRegisters*>(params.addr.unsafe_userspace_ptr());
         if (!caller.validate_write_typed(regs))
             return KResult(-EFAULT);
         copy_to_user(regs, &tracer->regs());
@@ -110,7 +113,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
             return KResult(-EINVAL);
 
         PtraceRegisters regs;
-        if (!caller.validate_read_and_copy_typed(&regs, (const PtraceRegisters*)params.addr))
+        if (!caller.validate_read_and_copy_typed(&regs, (const PtraceRegisters*)params.addr.unsafe_userspace_ptr()))
             return KResult(-EFAULT);
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
@@ -125,8 +128,9 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
 
     case PT_PEEK: {
         Kernel::Syscall::SC_ptrace_peek_params peek_params;
-        if (!caller.validate_read_and_copy_typed(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)))
+        if (!caller.validate_read_and_copy_typed(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr.unsafe_userspace_ptr())))
             return -EFAULT;
+
         // read validation is done inside 'peek_user_data'
         auto result = peer->process().peek_user_data(peek_params.address);
         if (result.is_error())
@@ -138,7 +142,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     }
 
     case PT_POKE: {
-        u32* addr = reinterpret_cast<u32*>(params.addr);
+        Userspace<u32*> addr = reinterpret_cast<FlatPtr>(params.addr.ptr());
         // write validation is done inside 'poke_user_data'
         return peer->process().poke_user_data(addr, params.data);
     }

@@ -29,6 +29,25 @@
 
 namespace Crypto {
 
+UnsignedBigInteger::UnsignedBigInteger(const u8* ptr, size_t length)
+{
+    m_words.resize_and_keep_capacity((length + sizeof(u32) - 1) / sizeof(u32));
+    size_t in = length, out = 0;
+    while (in >= sizeof(u32)) {
+        in -= sizeof(u32);
+        u32 word = ((u32)ptr[in] << 24) | ((u32)ptr[in + 1] << 16) | ((u32)ptr[in + 2] << 8) | (u32)ptr[in + 3];
+        m_words[out++] = word;
+    }
+    if (in > 0) {
+        u32 word = 0;
+        for (size_t i = 0; i < in; i++) {
+            word <<= 8;
+            word |= (u32)ptr[i];
+        }
+        m_words[out++] = word;
+    }
+}
+
 UnsignedBigInteger UnsignedBigInteger::create_invalid()
 {
     UnsignedBigInteger invalid(0);
@@ -36,35 +55,32 @@ UnsignedBigInteger UnsignedBigInteger::create_invalid()
     return invalid;
 }
 
-// FIXME: in great need of optimisation
-UnsignedBigInteger UnsignedBigInteger::import_data(const u8* ptr, size_t length)
+size_t UnsignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) const
 {
-    UnsignedBigInteger integer { 0 };
-
-    for (size_t i = 0; i < length; ++i) {
-        auto part = UnsignedBigInteger { ptr[length - i - 1] }.shift_left(8 * i);
-        integer = integer.plus(part);
+    size_t word_count = trimmed_length();
+    size_t out = 0;
+    if (word_count > 0) {
+        ssize_t leading_zeros = -1;
+        if (remove_leading_zeros) {
+            u32 word = m_words[word_count - 1];
+            for (size_t i = 0; i < sizeof(u32); i++) {
+                u8 byte = (u8)(word >> ((sizeof(u32) - i - 1) * 8));
+                data[out++] = byte;
+                if (leading_zeros < 0 && byte != 0)
+                    leading_zeros = (int)i;
+            }
+        }
+        for (size_t i = word_count - (remove_leading_zeros ? 1 : 0); i > 0; i--) {
+            auto word = m_words[i - 1];
+            data[out++] = (u8)(word >> 24);
+            data[out++] = (u8)(word >> 16);
+            data[out++] = (u8)(word >> 8);
+            data[out++] = (u8)word;
+        }
+        if (leading_zeros > 0)
+            out -= leading_zeros;
     }
-
-    return integer;
-}
-
-size_t UnsignedBigInteger::export_data(AK::ByteBuffer& data) const
-{
-    UnsignedBigInteger copy { *this };
-    UnsignedBigInteger quotient;
-    UnsignedBigInteger remainder;
-
-    size_t size = trimmed_length() * sizeof(u32);
-    size_t i = 0;
-    for (; i < size; ++i) {
-        if (copy.trimmed_length() == 0)
-            break;
-        data[size - i - 1] = copy.m_words[0] & 0xff;
-        divide_u16_without_allocation(copy, 256, quotient, remainder);
-        copy.set_to(quotient);
-    }
-    return i;
+    return out;
 }
 
 UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)

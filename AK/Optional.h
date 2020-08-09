@@ -34,7 +34,7 @@
 namespace AK {
 
 template<typename T>
-class alignas(T) Optional {
+class alignas(T) [[nodiscard]] Optional {
 public:
     Optional() {}
 

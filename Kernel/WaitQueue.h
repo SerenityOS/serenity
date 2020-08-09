@@ -38,7 +38,9 @@ public:
     WaitQueue();
     ~WaitQueue();
 
+    SpinLock<u32>& get_lock() { return m_lock; }
     bool enqueue(Thread&);
+    bool dequeue(Thread&);
     void wake_one(Atomic<bool>* lock = nullptr);
     void wake_n(u32 wake_count);
     void wake_all();

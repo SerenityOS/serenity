@@ -25,6 +25,8 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/HashMap.h>
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -49,6 +51,17 @@ static String snake_name(const StringView& title_name)
     return builder.to_string();
 }
 
+static String add_underscore_to_cpp_keywords(const String& input)
+{
+    if (input == "class" || input == "template") {
+        StringBuilder builder;
+        builder.append(input);
+        builder.append('_');
+        return builder.to_string();
+    }
+    return input;
+}
+
 namespace IDL {
 
 struct Type {
@@ -65,6 +78,7 @@ struct Function {
     Type return_type;
     String name;
     Vector<Parameter> parameters;
+    HashMap<String, String> extended_attributes;
 
     size_t length() const
     {
@@ -78,6 +92,7 @@ struct Attribute {
     bool unsigned_ { false };
     Type type;
     String name;
+    HashMap<String, String> extended_attributes;
 
     // Added for convenience after parsing
     String getter_callback_name;
@@ -94,6 +109,7 @@ struct Interface {
     // Added for convenience after parsing
     String wrapper_class;
     String wrapper_base_class;
+    String fully_qualified_name;
 };
 
 OwnPtr<Interface> parse_interface(const StringView& input)
@@ -174,7 +190,7 @@ OwnPtr<Interface> parse_interface(const StringView& input)
         return Type { name, nullable };
     };
 
-    auto parse_attribute = [&] {
+    auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
         bool readonly = false;
         bool unsigned_ = false;
         if (next_is("readonly")) {
@@ -202,10 +218,11 @@ OwnPtr<Interface> parse_interface(const StringView& input)
         attribute.name = name;
         attribute.getter_callback_name = String::format("%s_getter", snake_name(attribute.name).characters());
         attribute.setter_callback_name = String::format("%s_setter", snake_name(attribute.name).characters());
+        attribute.extended_attributes = move(extended_attributes);
         interface->attributes.append(move(attribute));
     };
 
-    auto parse_function = [&] {
+    auto parse_function = [&](HashMap<String, String>& extended_attributes) {
         auto return_type = parse_type();
         consume_whitespace();
         auto name = consume_while([](auto ch) { return !isspace(ch) && ch != '('; });
@@ -228,22 +245,45 @@ OwnPtr<Interface> parse_interface(const StringView& input)
 
         consume_specific(';');
 
-        interface->functions.append(Function { return_type, name, move(parameters) });
+        interface->functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
+    };
+
+    auto parse_extended_attributes = [&] {
+        HashMap<String, String> extended_attributes;
+        for (;;) {
+            consume_whitespace();
+            if (consume_if(']'))
+                break;
+            auto name = consume_while([](auto ch) { return ch != ']' && ch != '=' && ch != ','; });
+            if (consume_if('=')) {
+                auto value = consume_while([](auto ch) { return ch != ']' && ch != ','; });
+                extended_attributes.set(name, value);
+            } else {
+                extended_attributes.set(name, {});
+            }
+        }
+        consume_whitespace();
+        return extended_attributes;
     };
 
     for (;;) {
+        HashMap<String, String> extended_attributes;
 
         consume_whitespace();
 
         if (consume_if('}'))
             break;
 
+        if (consume_if('[')) {
+            extended_attributes = parse_extended_attributes();
+        }
+
         if (next_is("readonly") || next_is("attribute")) {
-            parse_attribute();
+            parse_attribute(extended_attributes);
             continue;
         }
 
-        parse_function();
+        parse_function(extended_attributes);
     }
 
     interface->wrapper_class = String::format("%sWrapper", interface->name.characters());
@@ -274,6 +314,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    LexicalPath lexical_path(path);
+    auto namespace_ = lexical_path.parts().at(lexical_path.parts().size() - 2);
+
     auto data = file_or_error.value()->read_all();
     auto interface = IDL::parse_interface(data);
 
@@ -281,6 +324,17 @@ int main(int argc, char** argv)
         fprintf(stderr, "Cannot parse %s\n", path);
         return 1;
     }
+
+    if (namespace_.is_one_of("DOM", "HTML", "UIEvents")) {
+        StringBuilder builder;
+        builder.append(namespace_);
+        builder.append("::");
+        builder.append(interface->name);
+        interface->fully_qualified_name = builder.to_string();
+    } else {
+        interface->fully_qualified_name = interface->name;
+    }
+
 
 #if 0
     dbg() << "Attributes:";
@@ -353,27 +407,34 @@ static void generate_header(const IDL::Interface& interface)
 
     out() << "#pragma once";
     out() << "#include <LibWeb/Bindings/Wrapper.h>";
+
+    // FIXME: This is very strange.
+    out() << "#if __has_include(<LibWeb/DOM/" << interface.name << ".h>)";
     out() << "#include <LibWeb/DOM/" << interface.name << ".h>";
+    out() << "#elif __has_include(<LibWeb/HTML/" << interface.name << ".h>)";
+    out() << "#include <LibWeb/HTML/" << interface.name << ".h>";
+    out() << "#elif __has_include(<LibWeb/UIEvents/" << interface.name << ".h>)";
+    out() << "#include <LibWeb/UIEvents/" << interface.name << ".h>";
+    out() << "#endif";
 
     if (wrapper_base_class != "Wrapper")
         out() << "#include <LibWeb/Bindings/" << wrapper_base_class << ".h>";
 
-    out() << "namespace Web {";
-    out() << "namespace Bindings {";
+    out() << "namespace Web::Bindings {";
 
     out() << "class " << wrapper_class << " : public " << wrapper_base_class << " {";
     out() << "    JS_OBJECT(" << wrapper_class << ", " << wrapper_base_class << ");";
     out() << "public:";
-    out() << "    " << wrapper_class << "(JS::GlobalObject&, " << interface.name << "&);";
-    out() << "    virtual void initialize(JS::Interpreter&, JS::GlobalObject&) override;";
+    out() << "    " << wrapper_class << "(JS::GlobalObject&, " << interface.fully_qualified_name << "&);";
+    out() << "    virtual void initialize(JS::GlobalObject&) override;";
     out() << "    virtual ~" << wrapper_class << "() override;";
 
     if (wrapper_base_class == "Wrapper") {
-        out() << "    " << interface.name << "& impl() { return *m_impl; }";
-        out() << "    const " << interface.name << "& impl() const { return *m_impl; }";
+        out() << "    " << interface.fully_qualified_name << "& impl() { return *m_impl; }";
+        out() << "    const " << interface.fully_qualified_name << "& impl() const { return *m_impl; }";
     } else {
-        out() << "    " << interface.name << "& impl() { return static_cast<" << interface.name << "&>(" << wrapper_base_class << "::impl()); }";
-        out() << "    const " << interface.name << "& impl() const { return static_cast<const " << interface.name << "&>(" << wrapper_base_class << "::impl()); }";
+        out() << "    " << interface.fully_qualified_name << "& impl() { return static_cast<" << interface.fully_qualified_name << "&>(" << wrapper_base_class << "::impl()); }";
+        out() << "    const " << interface.fully_qualified_name << "& impl() const { return static_cast<const " << interface.fully_qualified_name << "&>(" << wrapper_base_class << "::impl()); }";
     }
 
     auto is_foo_wrapper_name = snake_name(String::format("Is%s", wrapper_class.characters()));
@@ -392,16 +453,15 @@ static void generate_header(const IDL::Interface& interface)
     }
 
     if (wrapper_base_class == "Wrapper") {
-        out() << "    NonnullRefPtr<" << interface.name << "> m_impl;";
+        out() << "    NonnullRefPtr<" << interface.fully_qualified_name << "> m_impl;";
     }
 
     out() << "};";
 
     if (should_emit_wrapper_factory(interface)) {
-        out() << wrapper_class << "* wrap(JS::GlobalObject&, " << interface.name << "&);";
+        out() << wrapper_class << "* wrap(JS::GlobalObject&, " << interface.fully_qualified_name << "&);";
     }
 
-    out() << "}";
     out() << "}";
 }
 
@@ -421,19 +481,23 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/Bindings/NodeWrapperFactory.h>";
     out() << "#include <LibWeb/Bindings/" << wrapper_class << ".h>";
     out() << "#include <LibWeb/DOM/Element.h>";
-    out() << "#include <LibWeb/DOM/HTMLElement.h>";
+    out() << "#include <LibWeb/HTML/HTMLElement.h>";
     out() << "#include <LibWeb/DOM/EventListener.h>";
+    out() << "#include <LibWeb/Bindings/DocumentWrapper.h>";
     out() << "#include <LibWeb/Bindings/DocumentTypeWrapper.h>";
     out() << "#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>";
     out() << "#include <LibWeb/Bindings/HTMLImageElementWrapper.h>";
     out() << "#include <LibWeb/Bindings/ImageDataWrapper.h>";
     out() << "#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>";
 
-    out() << "namespace Web {";
-    out() << "namespace Bindings {";
+    // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+    out() << "using namespace Web::DOM;";
+    out() << "using namespace Web::HTML;";
+
+    out() << "namespace Web::Bindings {";
 
     // Implementation: Wrapper constructor
-    out() << wrapper_class << "::" << wrapper_class << "(JS::GlobalObject& global_object, " << interface.name << "& impl)";
+    out() << wrapper_class << "::" << wrapper_class << "(JS::GlobalObject& global_object, " << interface.fully_qualified_name << "& impl)";
     if (wrapper_base_class == "Wrapper") {
         out() << "    : Wrapper(*global_object.object_prototype())";
         out() << "    , m_impl(impl)";
@@ -444,10 +508,10 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "}";
 
     // Implementation: Wrapper initialize()
-    out() << "void " << wrapper_class << "::initialize(JS::Interpreter& interpreter, JS::GlobalObject& global_object)";
+    out() << "void " << wrapper_class << "::initialize(JS::GlobalObject& global_object)";
     out() << "{";
     out() << "    [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable;";
-    out() << "    " << wrapper_base_class << "::initialize(interpreter, global_object);";
+    out() << "    " << wrapper_base_class << "::initialize(global_object);";
 
     for (auto& attribute : interface.attributes) {
         out() << "    define_native_property(\"" << attribute.name << "\", " << attribute.getter_callback_name << ", " << (attribute.readonly ? "nullptr" : attribute.setter_callback_name) << ", default_attributes);";
@@ -466,13 +530,13 @@ void generate_implementation(const IDL::Interface& interface)
 
     // Implementation: impl_from()
     if (!interface.attributes.is_empty() || !interface.functions.is_empty()) {
-        out() << "static " << interface.name << "* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)";
+        out() << "static " << interface.fully_qualified_name << "* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)";
         out() << "{";
         out() << "    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);";
         out() << "    if (!this_object)";
         out() << "        return {};";
         out() << "    if (!this_object->inherits(\"" << wrapper_class << "\")) {";
-        out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << interface.name << "\");";
+        out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << interface.fully_qualified_name << "\");";
         out() << "        return nullptr;";
         out() << "    }";
         out() << "    return &static_cast<" << wrapper_class << "*>(this_object)->impl();";
@@ -569,7 +633,17 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "    auto* impl = impl_from(interpreter, global_object);";
         out() << "    if (!impl)";
         out() << "        return {};";
-        out() << "    auto retval = impl->" << snake_name(attribute.name) << "();";
+
+        if (attribute.extended_attributes.contains("Reflect")) {
+            auto attribute_name = attribute.extended_attributes.get("Reflect").value();
+            if (attribute_name.is_null())
+                attribute_name = attribute.name;
+            attribute_name = add_underscore_to_cpp_keywords(attribute_name);
+            out() << "    auto retval = impl->attribute(HTML::AttributeNames::" << attribute_name << ");";
+        } else {
+            out() << "    auto retval = impl->" << snake_name(attribute.name) << "();";
+        }
+
         generate_return_statement(attribute.type);
         out() << "}";
 
@@ -582,7 +656,15 @@ void generate_implementation(const IDL::Interface& interface)
 
             generate_to_cpp(attribute, "value", "", "cpp_value", true);
 
-            out() << "    impl->set_" << snake_name(attribute.name) << "(cpp_value);";
+            if (attribute.extended_attributes.contains("Reflect")) {
+                auto attribute_name = attribute.extended_attributes.get("Reflect").value();
+                if (attribute_name.is_null())
+                    attribute_name = attribute.name;
+                attribute_name = add_underscore_to_cpp_keywords(attribute_name);
+                out() << "    impl->set_attribute(HTML::AttributeNames::" << attribute_name << ", cpp_value);";
+            } else {
+                out() << "    impl->set_" << snake_name(attribute.name) << "(cpp_value);";
+            }
             out() << "}";
         }
     }
@@ -614,12 +696,11 @@ void generate_implementation(const IDL::Interface& interface)
 
     // Implementation: Wrapper factory
     if (should_emit_wrapper_factory(interface)) {
-        out() << wrapper_class << "* wrap(JS::GlobalObject& global_object, " << interface.name << "& impl)";
+        out() << wrapper_class << "* wrap(JS::GlobalObject& global_object, " << interface.fully_qualified_name << "& impl)";
         out() << "{";
         out() << "    return static_cast<" << wrapper_class << "*>(wrap_impl(global_object, impl));";
         out() << "}";
     }
 
-    out() << "}";
     out() << "}";
 }

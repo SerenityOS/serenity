@@ -47,6 +47,8 @@ public:
     int menu_id() const { return m_menu_id; }
 
     const String& name() const { return m_name; }
+    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
+    void set_icon(const Gfx::Bitmap*);
 
     Action* action_at(size_t);
 
@@ -66,6 +68,7 @@ private:
 
     int m_menu_id { -1 };
     String m_name;
+    RefPtr<Gfx::Bitmap> m_icon;
     NonnullOwnPtrVector<MenuItem> m_items;
     WeakPtr<Action> m_last_default_action;
 };

@@ -96,9 +96,9 @@ void iterator_close(Object& iterator)
     TODO();
 }
 
-Value create_iterator_result_object(Interpreter& interpreter, GlobalObject& global_object, Value value, bool done)
+Value create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
 {
-    auto* object = Object::create_empty(interpreter, global_object);
+    auto* object = Object::create_empty(global_object);
     object->define_property("value", value);
     object->define_property("done", Value(done));
     return object;

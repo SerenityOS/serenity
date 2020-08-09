@@ -53,6 +53,9 @@ public:
 
     void did_set_maximized(Badge<Window>, bool);
 
+    void layout_buttons();
+    void set_button_icons();
+
 private:
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);
@@ -61,12 +64,15 @@ private:
         Color title_color;
         Color border_color;
         Color border_color2;
+        Color title_stripes_color;
+        Color title_shadow_color;
     };
 
     FrameColors compute_frame_colors() const;
 
     Window& m_window;
     NonnullOwnPtrVector<Button> m_buttons;
+    Button* m_close_button { nullptr };
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
 };

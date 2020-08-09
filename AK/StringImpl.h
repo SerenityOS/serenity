@@ -29,6 +29,7 @@
 #include <AK/Badge.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/Span.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
 
@@ -44,6 +45,7 @@ public:
     static NonnullRefPtr<StringImpl> create_uninitialized(size_t length, char*& buffer);
     static RefPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
     static RefPtr<StringImpl> create(const char* cstring, size_t length, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl> create(ReadonlyBytes, ShouldChomp = NoChomp);
     NonnullRefPtr<StringImpl> to_lowercase() const;
     NonnullRefPtr<StringImpl> to_uppercase() const;
 
@@ -58,6 +60,9 @@ public:
 
     size_t length() const { return m_length; }
     const char* characters() const { return &m_inline_buffer[0]; }
+
+    ALWAYS_INLINE ReadonlyBytes bytes() const { return { characters(), length() }; }
+
     const char& operator[](size_t i) const
     {
         ASSERT(i < m_length);

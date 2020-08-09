@@ -35,11 +35,12 @@ class StringPrototype final : public StringObject {
 
 public:
     explicit StringPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~StringPrototype() override;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(char_at);
+    JS_DECLARE_NATIVE_FUNCTION(char_code_at);
     JS_DECLARE_NATIVE_FUNCTION(repeat);
     JS_DECLARE_NATIVE_FUNCTION(starts_with);
     JS_DECLARE_NATIVE_FUNCTION(index_of);

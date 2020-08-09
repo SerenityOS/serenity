@@ -290,7 +290,7 @@ int unsetenv(const char* name)
 
 int setenv(const char* name, const char* value, int overwrite)
 {
-    if (!overwrite && !getenv(name))
+    if (!overwrite && getenv(name))
         return 0;
     auto length = strlen(name) + strlen(value) + 2;
     auto* var = (char*)malloc(length);
@@ -670,7 +670,7 @@ char* ptsname(int fd)
 
 int ptsname_r(int fd, char* buffer, size_t size)
 {
-    int rc = syscall(SC_ptsname_r, fd, buffer, size);
+    int rc = syscall(SC_ptsname, fd, buffer, size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -873,8 +873,7 @@ long long strtoll(const char* str, char** endptr, int base)
     // Parse base
     if (base == 0) {
         if (*parse_ptr == '0') {
-            parse_ptr += 1;
-            if (*parse_ptr == 'x' || *parse_ptr == 'X') {
+            if (tolower(*(parse_ptr + 1)) == 'x') {
                 base = 16;
                 parse_ptr += 2;
             } else {
@@ -950,8 +949,7 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
     // Parse base
     if (base == 0) {
         if (*parse_ptr == '0') {
-            parse_ptr += 1;
-            if (*parse_ptr == 'x' || *parse_ptr == 'X') {
+            if (tolower(*(parse_ptr + 1)) == 'x') {
                 base = 16;
                 parse_ptr += 2;
             } else {

@@ -58,7 +58,7 @@ extern char** environ;
 
 void Shell::print_path(const String& path)
 {
-    if (s_disable_hyperlinks) {
+    if (s_disable_hyperlinks || !m_is_interactive) {
         printf("%s", path.characters());
         return;
     }
@@ -287,8 +287,8 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
                         auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
                         subcommand_ast = ast->command();
                     }
-                    AST::Node& substitute = *new AST::Join(subcommand_ast->position(), subcommand_ast, *new AST::CommandLiteral(subcommand_ast->position(), command));
-                    for (auto& subst_command : substitute.run(*this)->resolve_as_commands(*this)) {
+                    RefPtr<AST::Node> substitute = adopt(*new AST::Join(subcommand_ast->position(), subcommand_ast, adopt(*new AST::CommandLiteral(subcommand_ast->position(), command))));
+                    for (auto& subst_command : substitute->run(*this)->resolve_as_commands(*this)) {
                         if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
                             commands.append(subst_command);
                         else
@@ -386,6 +386,16 @@ String Shell::resolve_alias(const String& name) const
     return m_aliases.get(name).value_or({});
 }
 
+bool Shell::is_runnable(const StringView& name)
+{
+    if (access(name.to_string().characters(), X_OK) == 0)
+        return true;
+
+    return !!binary_search(cached_path.span(), name.to_string(), [](const String& name, const String& program) -> int {
+        return strcmp(name.characters(), program.characters());
+    });
+}
+
 int Shell::run_command(const StringView& cmd)
 {
     if (cmd.is_empty())
@@ -439,7 +449,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     // Resolve redirections.
     NonnullRefPtrVector<AST::Rewiring> rewirings;
     for (auto& redirection : command.redirections) {
-        auto rewiring_result = redirection->apply();
+        auto rewiring_result = redirection.apply();
         if (rewiring_result.is_error()) {
             if (!rewiring_result.error().is_empty())
                 fprintf(stderr, "error: %s\n", rewiring_result.error().characters());
@@ -512,6 +522,12 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     if (child == 0) {
         setpgid(0, 0);
         tcsetattr(0, TCSANOW, &default_termios);
+        if (command.should_wait) {
+            auto pid = getpid();
+            auto pgid = getpgid(pid);
+            tcsetpgrp(STDOUT_FILENO, pgid);
+            tcsetpgrp(STDIN_FILENO, pgid);
+        }
         for (auto& rewiring : rewirings) {
 #ifdef SH_DEBUG
             dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), rewiring.dest_fd, rewiring.source_fd);
@@ -556,7 +572,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     StringBuilder cmd;
     cmd.join(" ", command.argv);
 
-    auto job = adopt(*new Job(child, (unsigned)child, cmd.build(), find_last_job_id() + 1));
+    auto job = Job::create(child, (unsigned)child, cmd.build(), find_last_job_id() + 1);
     jobs.set((u64)child, job);
 
     job->on_exit = [](auto job) {
@@ -572,9 +588,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     return *job;
 }
 
-Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
+NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
 {
-    Vector<RefPtr<Job>> jobs_to_wait_for;
+    NonnullRefPtrVector<Job> jobs_to_wait_for;
 
     for (auto& command : commands) {
 #ifdef SH_DEBUG
@@ -586,8 +602,7 @@ Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
                 auto path_redir = (const AST::PathRedirection*)redir.ptr();
                 dbg() << "redir path " << (int)path_redir->direction << " " << path_redir->path << " <-> " << path_redir->fd;
             } else if (redir->is_fd_redirection()) {
-                auto fd_redir = (const AST::FdRedirection*)redir.ptr();
-                dbg() << "redir fd " << fd_redir->source_fd << " -> " << fd_redir->dest_fd;
+                dbg() << "redir fd " << redir->source_fd << " -> " << redir->dest_fd;
             } else if (redir->is_close_redirection()) {
                 auto close_redir = (const AST::CloseRedirection*)redir.ptr();
                 dbg() << "close fd " << close_redir->fd;
@@ -603,13 +618,13 @@ Vector<RefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
         if (command.should_wait) {
             block_on_job(job);
             if (!job->is_suspended())
-                jobs_to_wait_for.append(job);
+                jobs_to_wait_for.append(*job);
         } else {
             if (command.is_pipe_source) {
-                jobs_to_wait_for.append(job);
+                jobs_to_wait_for.append(*job);
             } else if (command.should_notify_if_in_background) {
                 job->set_running_in_background(true);
-                restore_stdin();
+                restore_ios();
             }
         }
     }
@@ -632,9 +647,11 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
     run_command(data);
     return true;
 }
-void Shell::restore_stdin()
+void Shell::restore_ios()
 {
     tcsetattr(0, TCSANOW, &termios);
+    tcsetpgrp(STDOUT_FILENO, m_pid);
+    tcsetpgrp(STDIN_FILENO, m_pid);
 }
 
 void Shell::block_on_job(RefPtr<Job> job)
@@ -651,13 +668,16 @@ void Shell::block_on_job(RefPtr<Job> job)
         loop.quit(0);
     };
     if (job->exited()) {
-        restore_stdin();
+        restore_ios();
         return;
     }
 
     loop.exec();
 
-    restore_stdin();
+    if (job->is_suspended())
+        job->print_status(Job::PrintStatusMode::Basic);
+
+    restore_ios();
 }
 
 String Shell::get_history_path()
@@ -785,6 +805,24 @@ void Shell::cache_path()
     quick_sort(cached_path);
 }
 
+void Shell::add_entry_to_cache(const String& entry)
+{
+    size_t index = 0;
+    auto match = binary_search(
+        cached_path.span(), entry, [](const String& name, const String& program) -> int {
+            return strcmp(name.characters(), program.characters());
+        },
+        &index);
+
+    if (match)
+        return;
+
+    while (strcmp(cached_path[index].characters(), entry.characters()) < 0) {
+        index++;
+    }
+    cached_path.insert(index, entry);
+}
+
 void Shell::highlight(Line::Editor& editor) const
 {
     auto line = editor.line();
@@ -878,7 +916,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
 
 Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& name, size_t offset)
 {
-    auto match = binary_search(cached_path.data(), cached_path.size(), name, [](const String& name, const String& program) -> int {
+    auto match = binary_search(cached_path.span(), name, [](const String& name, const String& program) -> int {
         return strncmp(name.characters(), program.characters(), name.length());
     });
 
@@ -1003,7 +1041,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
 
 bool Shell::read_single_line()
 {
-    restore_stdin();
+    restore_ios();
     auto line_result = editor->get_line(prompt());
 
     if (line_result.is_error()) {
@@ -1042,8 +1080,6 @@ void Shell::custom_event(Core::CustomEvent& event)
             Core::EventLoop::current().post_event(*this, make<Core::CustomEvent>(ShellEventType::ReadLine));
         return;
     }
-
-    event.ignore();
 }
 
 Shell::Shell()
@@ -1057,9 +1093,17 @@ Shell::Shell()
     int rc = gethostname(hostname, Shell::HostNameSize);
     if (rc < 0)
         perror("gethostname");
-    rc = ttyname_r(0, ttyname, Shell::TTYNameSize);
-    if (rc < 0)
-        perror("ttyname_r");
+
+    auto istty = isatty(STDIN_FILENO);
+    m_is_interactive = istty;
+
+    if (istty) {
+        rc = ttyname_r(0, ttyname, Shell::TTYNameSize);
+        if (rc < 0)
+            perror("ttyname_r");
+    } else {
+        ttyname[0] = 0;
+    }
 
     {
         auto* cwd = getcwd(nullptr, 0);

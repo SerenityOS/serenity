@@ -32,7 +32,7 @@
 
 namespace Web {
 
-StylePropertiesModel::StylePropertiesModel(const StyleProperties& properties)
+StylePropertiesModel::StylePropertiesModel(const CSS::StyleProperties& properties)
     : m_properties(properties)
 {
     properties.for_each_property([&](auto property_id, auto& property_value) {

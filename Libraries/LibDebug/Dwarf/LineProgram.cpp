@@ -26,7 +26,11 @@
 
 #include "LineProgram.h"
 
-LineProgram::LineProgram(BufferStream& stream)
+#include <AK/String.h>
+
+//#define DWARF_DEBUG
+
+LineProgram::LineProgram(InputMemoryStream& stream)
     : m_stream(stream)
 {
     m_unit_offset = m_stream.offset();
@@ -38,20 +42,21 @@ LineProgram::LineProgram(BufferStream& stream)
 
 void LineProgram::parse_unit_header()
 {
-    m_stream.read_raw((u8*)&m_unit_header, sizeof(m_unit_header));
+    m_stream >> Bytes { &m_unit_header, sizeof(m_unit_header) };
 
     ASSERT(m_unit_header.version == DWARF_VERSION);
     ASSERT(m_unit_header.opcode_base == SPECIAL_OPCODES_BASE);
 
 #ifdef DWARF_DEBUG
-    dbg() << "unit length: " << unit_header.length;
+    dbg() << "unit length: " << m_unit_header.length;
 #endif
 }
 
 void LineProgram::parse_source_directories()
 {
     m_source_directories.append(".");
-    while (m_stream.peek()) {
+
+    while (m_stream.peek_or_error()) {
         String directory;
         m_stream >> directory;
 #ifdef DWARF_DEBUG
@@ -59,13 +64,15 @@ void LineProgram::parse_source_directories()
 #endif
         m_source_directories.append(move(directory));
     }
-    m_stream.advance(1);
+    m_stream.handle_error();
+    m_stream.discard_or_error(1);
+    ASSERT(!m_stream.handle_error());
 }
 
 void LineProgram::parse_source_files()
 {
     m_source_files.append({ ".", 0 });
-    while (m_stream.peek()) {
+    while (!m_stream.eof() && m_stream.peek_or_error()) {
         String file_name;
         m_stream >> file_name;
         size_t directory_index = 0;
@@ -78,14 +85,14 @@ void LineProgram::parse_source_files()
 #endif
         m_source_files.append({ file_name, directory_index });
     }
-    m_stream.advance(1);
-    ASSERT(!m_stream.handle_read_failure());
+    m_stream.discard_or_error(1);
+    ASSERT(!m_stream.handle_error());
 }
 
 void LineProgram::append_to_line_info()
 {
 #ifdef DWARF_DEBUG
-    dbg() << "appending line info: " << (void*)address << ", " << files[file_index].name << ":" << line;
+    dbg() << "appending line info: " << (void*)m_address << ", " << m_source_files[m_file_index].name << ":" << m_line;
 #endif
     if (!m_is_statement)
         return;
@@ -121,7 +128,7 @@ void LineProgram::handle_extended_opcode()
         ASSERT(length == sizeof(size_t) + 1);
         m_stream >> m_address;
 #ifdef DWARF_DEBUG
-        dbg() << "SetAddress: " << (void*)address;
+        dbg() << "SetAddress: " << (void*)m_address;
 #endif
         break;
     }
@@ -129,7 +136,7 @@ void LineProgram::handle_extended_opcode()
 #ifdef DWARF_DEBUG
         dbg() << "SetDiscriminator";
 #endif
-        m_stream.advance(1);
+        m_stream.discard_or_error(1);
         break;
     }
     default:
@@ -151,7 +158,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         m_stream.read_LEB128_unsigned(operand);
         size_t delta = operand * m_unit_header.min_instruction_length;
 #ifdef DWARF_DEBUG
-        dbg() << "AdvnacePC by: " << delta << " to: " << (void*)(address + delta);
+        dbg() << "AdvnacePC by: " << delta << " to: " << (void*)(m_address + delta);
 #endif
         m_address += delta;
         break;
@@ -182,7 +189,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         ASSERT(line_delta >= 0 || m_line >= (size_t)(-line_delta));
         m_line += line_delta;
 #ifdef DWARF_DEBUG
-        dbg() << "AdvanceLine: " << line;
+        dbg() << "AdvanceLine: " << m_line;
 #endif
         break;
     }
@@ -198,7 +205,7 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         ssize_t address_increment = (adjusted_opcode / m_unit_header.line_range) * m_unit_header.min_instruction_length;
         address_increment *= m_unit_header.min_instruction_length;
 #ifdef DWARF_DEBUG
-        dbg() << "ConstAddPc: advance pc by: " << address_increment << " to: " << (address + address_increment);
+        dbg() << "ConstAddPc: advance pc by: " << address_increment << " to: " << (m_address + address_increment);
 #endif
         m_address += address_increment;
         break;
@@ -218,7 +225,7 @@ void LineProgram::handle_sepcial_opcode(u8 opcode)
 
 #ifdef DWARF_DEBUG
     dbg() << "Special adjusted_opcode: " << adjusted_opcode << ", delta_address: " << address_increment << ", delta_line: " << line_increment;
-    dbg() << "Address is now:" << (void*)m_address << ", and line is: " << source_files[m_file_index].name << ":" << line;
+    dbg() << "Address is now:" << (void*)m_address << ", and line is: " << m_source_files[m_file_index].name << ":" << m_line;
 #endif
 
     append_to_line_info();

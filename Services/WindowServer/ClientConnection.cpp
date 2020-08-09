@@ -407,6 +407,10 @@ OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(c
         dbg() << "ClientConnection: Ignoring SetWindowRect request for fullscreen window";
         return nullptr;
     }
+
+    if (message.rect().location() != window.rect().location()) {
+        window.set_default_positioned(false);
+    }
     auto normalized_rect = normalize_window_rect(message.rect(), window.type());
     window.set_rect(normalized_rect);
     window.request_update(normalized_rect);
@@ -422,6 +426,17 @@ OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(c
         return nullptr;
     }
     return make<Messages::WindowServer::GetWindowRectResponse>(it->value->rect());
+}
+
+OwnPtr<Messages::WindowServer::GetWindowRectInMenubarResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowRectInMenubar& message)
+{
+    int window_id = message.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("GetWindowRectInMenubar: Bad window ID");
+        return nullptr;
+    }
+    return make<Messages::WindowServer::GetWindowRectInMenubarResponse>(it->value->rect_in_menubar());
 }
 
 Window* ClientConnection::window_from_id(i32 window_id)
@@ -449,7 +464,12 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_has_alpha_channel(message.has_alpha_channel());
     window->set_title(message.title());
     if (!message.fullscreen()) {
-        auto normalized_rect = normalize_window_rect(message.rect(), window->type());
+        auto rect = message.rect();
+        if (message.auto_position() && window->type() == WindowType::Normal) {
+            rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), message.rect().size() };
+            window->set_default_positioned(true);
+        }
+        auto normalized_rect = normalize_window_rect(rect, window->type());
         window->set_rect(normalized_rect);
     }
     if (window->type() == WindowType::Desktop) {

@@ -38,7 +38,7 @@ public:
     static NativeFunction* create(Interpreter&, GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>);
 
     explicit NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>, Object& prototype);
-    virtual void initialize(Interpreter&, GlobalObject&) override { }
+    virtual void initialize(GlobalObject&) override { }
     virtual ~NativeFunction() override;
 
     virtual Value call(Interpreter&) override;

@@ -4,6 +4,7 @@
 # Remount /bin, /dev, /root, and /home while adding the appropriate permissions.
 /dev	/dev	bind	bind,nosuid,ro
 /bin	/bin	bind	bind,nodev,ro
+/etc	/etc	bind	bind,nodev,nosuid
 /home	/home	bind	bind,nodev,nosuid
 /root	/root	bind	bind,nodev,nosuid
 

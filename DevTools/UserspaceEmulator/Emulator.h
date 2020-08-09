@@ -33,6 +33,7 @@
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/Loader.h>
 #include <LibX86/Instruction.h>
+#include <signal.h>
 #include <sys/types.h>
 
 namespace UserspaceEmulator {
@@ -43,7 +44,7 @@ class Emulator {
 public:
     static Emulator& the();
 
-    Emulator(const Vector<String>& arguments, NonnullRefPtr<ELF::Loader>);
+    Emulator(const Vector<String>& arguments, const Vector<String>& environment, NonnullRefPtr<ELF::Loader>);
 
     bool load_elf();
     void dump_backtrace();
@@ -59,6 +60,8 @@ public:
 
     bool is_in_malloc_or_free() const;
 
+    void did_receive_signal(int signum) { m_pending_signals |= (1 << signum); }
+
 private:
     NonnullRefPtr<ELF::Loader> m_elf;
     OwnPtr<DebugInfo> m_debug_info;
@@ -68,10 +71,20 @@ private:
 
     OwnPtr<MallocTracer> m_malloc_tracer;
 
-    void setup_stack(const Vector<String>& arguments);
+    void setup_stack(const Vector<String>& arguments, const Vector<String>& environment);
+    void register_signal_handlers();
+    void setup_signal_trampoline();
 
+    int virt$fork();
+    int virt$execve(FlatPtr);
+    int virt$access(FlatPtr, size_t, int);
+    int virt$sigaction(int, FlatPtr, FlatPtr);
+    int virt$sigreturn();
     int virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t);
     int virt$ioctl(int fd, unsigned, FlatPtr);
+    int virt$stat(FlatPtr);
+    int virt$realpath(FlatPtr);
+    int virt$gethostname(FlatPtr, ssize_t);
     int virt$usleep(useconds_t);
     int virt$shbuf_create(int size, FlatPtr buffer);
     int virt$shbuf_allow_pid(int, pid_t peer_pid);
@@ -88,6 +101,8 @@ private:
     u32 virt$pledge(u32);
     uid_t virt$getuid();
     gid_t virt$getgid();
+    int virt$setuid(uid_t);
+    int virt$setgid(gid_t);
     u32 virt$read(int, FlatPtr, ssize_t);
     u32 virt$write(int, FlatPtr, ssize_t);
     u32 virt$mprotect(FlatPtr, size_t, int);
@@ -113,14 +128,27 @@ private:
     int virt$lseek(int fd, off_t offset, int whence);
     int virt$socket(int, int, int);
     int virt$getsockopt(FlatPtr);
+    int virt$setsockopt(FlatPtr);
     int virt$select(FlatPtr);
+    int virt$accept(int sockfd, FlatPtr address, FlatPtr address_length);
     int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
     int virt$recvfrom(FlatPtr);
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
     void virt$exit(int);
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
+    int virt$sleep(unsigned);
+    int virt$chdir(FlatPtr, size_t);
+    int virt$dup2(int, int);
+    int virt$getpgrp();
+    int virt$getpgid(pid_t);
+    int virt$setpgid(pid_t pid, pid_t pgid);
+    int virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size);
+    int virt$getcwd(FlatPtr buffer, size_t buffer_size);
+    int virt$waitid(FlatPtr);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
+
+    void dispatch_one_pending_signal();
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
@@ -129,6 +157,20 @@ private:
     FlatPtr m_malloc_symbol_end { 0 };
     FlatPtr m_free_symbol_start { 0 };
     FlatPtr m_free_symbol_end { 0 };
+
+    sigset_t m_pending_signals { 0 };
+    sigset_t m_signal_mask { 0 };
+
+    struct SignalHandlerInfo {
+        FlatPtr handler { 0 };
+        sigset_t mask { 0 };
+        int flags { 0 };
+    };
+    SignalHandlerInfo m_signal_handler[NSIG];
+
+    FlatPtr m_signal_trampoline { 0 };
 };
+
+void report(const char*, ...);
 
 }

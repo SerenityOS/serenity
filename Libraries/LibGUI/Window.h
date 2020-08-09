@@ -107,6 +107,7 @@ public:
     int height() const { return rect().height(); }
 
     Gfx::IntRect rect() const;
+    Gfx::IntRect rect_in_menubar() const;
     Gfx::IntSize size() const { return rect().size(); }
     void set_rect(const Gfx::IntRect&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
@@ -209,6 +210,18 @@ protected:
 private:
     virtual bool is_window() const override final { return true; }
 
+    void handle_drop_event(DropEvent&);
+    void handle_mouse_event(MouseEvent&);
+    void handle_multi_paint_event(MultiPaintEvent&);
+    void handle_key_event(KeyEvent&);
+    void handle_resize_event(ResizeEvent&);
+    void handle_input_entered_or_left_event(Core::Event&);
+    void handle_became_active_or_inactive_event(Core::Event&);
+    void handle_close_request();
+    void handle_theme_change_event(ThemeChangeEvent&);
+    void handle_drag_move_event(DragEvent&);
+    void handle_left_event();
+
     void server_did_destroy();
 
     RefPtr<Gfx::Bitmap> create_backing_bitmap(const Gfx::IntSize&);
@@ -249,12 +262,11 @@ private:
     bool m_visible_for_timer_purposes { true };
     bool m_visible { false };
     bool m_accessory { false };
+    bool m_moved_by_client { false };
 };
 
 }
 
-template<>
-inline bool Core::is<GUI::Window>(const Core::Object& object)
-{
-    return object.is_window();
-}
+AK_BEGIN_TYPE_TRAITS(GUI::Window)
+static bool is_type(const Core::Object& object) { return object.is_window(); }
+AK_END_TYPE_TRAITS()

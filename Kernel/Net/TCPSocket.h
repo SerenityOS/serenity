@@ -178,8 +178,8 @@ private:
 
     virtual void shut_down_for_writing() override;
 
-    virtual int protocol_receive(const KBuffer&, void* buffer, size_t buffer_size, int flags) override;
-    virtual int protocol_send(const void*, size_t) override;
+    virtual KResultOr<size_t> protocol_receive(const KBuffer&, void* buffer, size_t buffer_size, int flags) override;
+    virtual KResultOr<size_t> protocol_send(const void*, size_t) override;
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) override;
     virtual int protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;

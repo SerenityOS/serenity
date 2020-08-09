@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/Weakable.h>
-#include <LibGfx/FloatRect.h>
+#include <LibGfx/Rect.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 

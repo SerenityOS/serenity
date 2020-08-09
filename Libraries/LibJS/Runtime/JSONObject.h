@@ -35,7 +35,7 @@ class JSONObject final : public Object {
 
 public:
     explicit JSONObject(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~JSONObject() override;
 
     // The base implementation of stringify is exposed because it is used by

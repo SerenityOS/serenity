@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/ArgsParser.h>
 #include <mman.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -39,15 +40,21 @@ static int set_stack_test();
 
 int main(int argc, char** argv)
 {
-    if (argc == 2 && *argv[1] == 'm')
+    const char* test_name = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, x = set stack)", "test-name", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (*test_name == 'm')
         return mutex_test();
-    if (argc == 2 && *argv[1] == 'd')
+    if (*test_name == 'd')
         return detached_test();
-    if (argc == 2 && *argv[1] == 'p')
+    if (*test_name == 'p')
         return priority_test();
-    if (argc == 2 && *argv[1] == 's')
+    if (*test_name == 's')
         return stack_size_test();
-    if (argc == 2 && *argv[1] == 'x')
+    if (*test_name == 'x')
         return set_stack_test();
 
     printf("Hello from the first thread!\n");

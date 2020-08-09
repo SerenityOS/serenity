@@ -27,15 +27,15 @@
 #include <LibGUI/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutReplaced.h>
+#include <LibWeb/Page/Frame.h>
 
 namespace Web {
 
-LayoutNode::LayoutNode(Document& document, const Node* node)
+LayoutNode::LayoutNode(DOM::Document& document, DOM::Node* node)
     : m_document(document)
     , m_node(node)
 {
@@ -67,7 +67,7 @@ const LayoutBlock* LayoutNode::containing_block() const
         auto* ancestor = parent();
         while (ancestor && !is<LayoutBlock>(*ancestor))
             ancestor = ancestor->parent();
-        return to<LayoutBlock>(ancestor);
+        return downcast<LayoutBlock>(ancestor);
     };
 
     if (is_text())
@@ -81,7 +81,7 @@ const LayoutBlock* LayoutNode::containing_block() const
             ancestor = ancestor->parent();
         while (ancestor && (!is<LayoutBlock>(ancestor) || ancestor->is_anonymous()))
             ancestor = ancestor->containing_block();
-        return to<LayoutBlock>(ancestor);
+        return downcast<LayoutBlock>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)
@@ -96,21 +96,21 @@ void LayoutNode::paint(PaintContext& context, PaintPhase phase)
         return;
 
     for_each_child([&](auto& child) {
-        if (child.is_box() && to<LayoutBox>(child).stacking_context())
+        if (child.is_box() && downcast<LayoutBox>(child).stacking_context())
             return;
         child.paint(context, phase);
     });
 }
 
-HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position) const
+HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     HitTestResult result;
     for_each_child([&](auto& child) {
         // Skip over children that establish their own stacking context.
         // The outer loop who called us will take care of those.
-        if (is<LayoutBox>(child) && to<LayoutBox>(child).stacking_context())
+        if (is<LayoutBox>(child) && downcast<LayoutBox>(child).stacking_context())
             return;
-        auto child_result = child.hit_test(position);
+        auto child_result = child.hit_test(position, type);
         if (child_result.layout_node)
             result = child_result;
     });
@@ -163,14 +163,14 @@ void LayoutNode::set_needs_display()
 float LayoutNode::font_size() const
 {
     // FIXME: This doesn't work right for relative font-sizes
-    auto length = specified_style().length_or_fallback(CSS::PropertyID::FontSize, Length(10, Length::Type::Px));
+    auto length = specified_style().length_or_fallback(CSS::PropertyID::FontSize, CSS::Length(10, CSS::Length::Type::Px));
     return length.raw_value();
 }
 
 Gfx::FloatPoint LayoutNode::box_type_agnostic_position() const
 {
     if (is_box())
-        return to<LayoutBox>(*this).absolute_position();
+        return downcast<LayoutBox>(*this).absolute_position();
     ASSERT(is_inline());
     Gfx::FloatPoint position;
     if (auto* block = containing_block()) {
@@ -208,7 +208,7 @@ bool LayoutNode::is_fixed_position() const
     return position == CSS::Position::Fixed;
 }
 
-LayoutNodeWithStyle::LayoutNodeWithStyle(Document& document, const Node* node, NonnullRefPtr<StyleProperties> specified_style)
+LayoutNodeWithStyle::LayoutNodeWithStyle(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> specified_style)
     : LayoutNode(document, node)
     , m_specified_style(move(specified_style))
 {
@@ -216,7 +216,7 @@ LayoutNodeWithStyle::LayoutNodeWithStyle(Document& document, const Node* node, N
     apply_style(*m_specified_style);
 }
 
-void LayoutNodeWithStyle::apply_style(const StyleProperties& specified_style)
+void LayoutNodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 {
     auto& style = static_cast<MutableLayoutStyle&>(m_style);
 

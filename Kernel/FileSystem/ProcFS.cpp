@@ -33,6 +33,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Console.h>
 #include <Kernel/Devices/BlockDevice.h>
+#include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -85,6 +86,7 @@ enum ProcFileType {
     FI_Root_inodes,
     FI_Root_dmesg,
     FI_Root_interrupts,
+    FI_Root_keymap,
     FI_Root_pci,
     FI_Root_devices,
     FI_Root_uptime,
@@ -241,22 +243,21 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
 
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle) {
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process) {
         array.finish();
         return builder.build();
     }
-    auto& process = handle->process();
-    if (process.number_of_open_file_descriptors() == 0) {
+    if (process->number_of_open_file_descriptors() == 0) {
         array.finish();
         return builder.build();
     }
 
-    for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
-        auto description = process.file_description(i);
+    for (int i = 0; i < process->max_open_file_descriptors(); ++i) {
+        auto description = process->file_description(i);
         if (!description)
             continue;
-        bool cloexec = process.fd_flags(i) & FD_CLOEXEC;
+        bool cloexec = process->fd_flags(i) & FD_CLOEXEC;
 
         auto description_object = array.add_object();
         description_object.add("fd", i);
@@ -275,12 +276,11 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
 
 Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
         return {};
-    auto& process = handle->process();
     int fd = to_fd(identifier);
-    auto description = process.file_description(fd);
+    auto description = process->file_description(fd);
     if (!description)
         return {};
     return description->absolute_path().to_byte_buffer();
@@ -288,46 +288,48 @@ Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
 
 Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
         return {};
-    auto& process = handle->process();
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
-    for (auto& region : process.regions()) {
-        if (!region.is_user_accessible() && !Process::current()->is_superuser())
-            continue;
-        auto region_object = array.add_object();
-        region_object.add("readable", region.is_readable());
-        region_object.add("writable", region.is_writable());
-        region_object.add("executable", region.is_executable());
-        region_object.add("stack", region.is_stack());
-        region_object.add("shared", region.is_shared());
-        region_object.add("user_accessible", region.is_user_accessible());
-        region_object.add("purgeable", region.vmobject().is_purgeable());
-        if (region.vmobject().is_purgeable()) {
-            region_object.add("volatile", static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile());
-        }
-        region_object.add("purgeable", region.vmobject().is_purgeable());
-        region_object.add("address", region.vaddr().get());
-        region_object.add("size", region.size());
-        region_object.add("amount_resident", region.amount_resident());
-        region_object.add("amount_dirty", region.amount_dirty());
-        region_object.add("cow_pages", region.cow_pages());
-        region_object.add("name", region.name());
-        region_object.add("vmobject", region.vmobject().class_name());
+    {
+        ScopedSpinLock lock(process->get_lock());
+        for (auto& region : process->regions()) {
+            if (!region.is_user_accessible() && !Process::current()->is_superuser())
+                continue;
+            auto region_object = array.add_object();
+            region_object.add("readable", region.is_readable());
+            region_object.add("writable", region.is_writable());
+            region_object.add("executable", region.is_executable());
+            region_object.add("stack", region.is_stack());
+            region_object.add("shared", region.is_shared());
+            region_object.add("user_accessible", region.is_user_accessible());
+            region_object.add("purgeable", region.vmobject().is_purgeable());
+            if (region.vmobject().is_purgeable()) {
+                region_object.add("volatile", static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile());
+            }
+            region_object.add("purgeable", region.vmobject().is_purgeable());
+            region_object.add("address", region.vaddr().get());
+            region_object.add("size", region.size());
+            region_object.add("amount_resident", region.amount_resident());
+            region_object.add("amount_dirty", region.amount_dirty());
+            region_object.add("cow_pages", region.cow_pages());
+            region_object.add("name", region.name());
+            region_object.add("vmobject", region.vmobject().class_name());
 
-        StringBuilder pagemap_builder;
-        for (size_t i = 0; i < region.page_count(); ++i) {
-            auto* page = region.physical_page(i);
-            if (!page)
-                pagemap_builder.append('N');
-            else if (page->is_shared_zero_page())
-                pagemap_builder.append('Z');
-            else
-                pagemap_builder.append('P');
+            StringBuilder pagemap_builder;
+            for (size_t i = 0; i < region.page_count(); ++i) {
+                auto* page = region.physical_page(i);
+                if (!page)
+                    pagemap_builder.append('N');
+                else if (page->is_shared_zero_page())
+                    pagemap_builder.append('Z');
+                else
+                    pagemap_builder.append('P');
+            }
+            region_object.add("pagemap", pagemap_builder.to_string());
         }
-        region_object.add("pagemap", pagemap_builder.to_string());
     }
     array.finish();
     return builder.build();
@@ -369,6 +371,15 @@ Optional<KBuffer> procfs$interrupts(InodeIdentifier)
         obj.add("call_count", (unsigned)handler.get_invoking_count());
     });
     array.finish();
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$keymap(InodeIdentifier)
+{
+    KBufferBuilder builder;
+    JsonObjectSerializer<KBufferBuilder> json { builder };
+    json.add("keymap", KeyboardDevice::the().keymap_name());
+    json.finish();
     return builder.build();
 }
 
@@ -557,46 +568,47 @@ Optional<KBuffer> procfs$net_local(InodeIdentifier)
 
 Optional<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
         return {};
-    auto& process = handle->process();
     KBufferBuilder builder;
     builder.appendf("BEGIN       END         SIZE        NAME\n");
-    for (auto& region : process.regions()) {
-        builder.appendf("%x -- %x    %x    %s\n",
-            region.vaddr().get(),
-            region.vaddr().offset(region.size() - 1).get(),
-            region.size(),
-            region.name().characters());
-        builder.appendf("VMO: %s @ %x(%u)\n",
-            region.vmobject().is_anonymous() ? "anonymous" : "file-backed",
-            &region.vmobject(),
-            region.vmobject().ref_count());
-        for (size_t i = 0; i < region.vmobject().page_count(); ++i) {
-            auto& physical_page = region.vmobject().physical_pages()[i];
-            bool should_cow = false;
-            if (i >= region.first_page_index() && i <= region.last_page_index())
-                should_cow = region.should_cow(i - region.first_page_index());
-            builder.appendf("P%x%s(%u) ",
-                physical_page ? physical_page->paddr().get() : 0,
-                should_cow ? "!" : "",
-                physical_page ? physical_page->ref_count() : 0);
+    {
+        ScopedSpinLock lock(process->get_lock());
+        for (auto& region : process->regions()) {
+            builder.appendf("%x -- %x    %x    %s\n",
+                region.vaddr().get(),
+                region.vaddr().offset(region.size() - 1).get(),
+                region.size(),
+                region.name().characters());
+            builder.appendf("VMO: %s @ %x(%u)\n",
+                region.vmobject().is_anonymous() ? "anonymous" : "file-backed",
+                &region.vmobject(),
+                region.vmobject().ref_count());
+            for (size_t i = 0; i < region.vmobject().page_count(); ++i) {
+                auto& physical_page = region.vmobject().physical_pages()[i];
+                bool should_cow = false;
+                if (i >= region.first_page_index() && i <= region.last_page_index())
+                    should_cow = region.should_cow(i - region.first_page_index());
+                builder.appendf("P%x%s(%u) ",
+                    physical_page ? physical_page->paddr().get() : 0,
+                    should_cow ? "!" : "",
+                    physical_page ? physical_page->ref_count() : 0);
+            }
+            builder.appendf("\n");
         }
-        builder.appendf("\n");
     }
     return builder.build();
 }
 
 Optional<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
         return {};
-    auto& process = handle->process();
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
-    for (auto& unveiled_path : process.unveiled_paths()) {
+    for (auto& unveiled_path : process->unveiled_paths()) {
         auto obj = array.add_object();
         obj.add("path", unveiled_path.path);
         StringBuilder permissions_builder;
@@ -616,38 +628,36 @@ Optional<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
 
 Optional<KBuffer> procfs$pid_stack(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
         return {};
-    auto& process = handle->process();
-    return process.backtrace(*handle);
+    return process->backtrace();
 }
 
 Optional<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
         return {};
-    auto& process = handle->process();
-    auto* custody = process.executable();
+    auto* custody = process->executable();
     ASSERT(custody);
     return custody->absolute_path().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$pid_cwd(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
         return {};
-    return handle->process().current_directory().absolute_path().to_byte_buffer();
+    return process->current_directory().absolute_path().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
+    auto process = Process::from_pid(to_pid(identifier));
+    if (!process)
         return {};
-    return handle->process().root_directory_relative_to_global_root().absolute_path().to_byte_buffer();
+    return process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$self(InodeIdentifier)
@@ -737,8 +747,7 @@ Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     Processor::for_each(
-        [&](Processor& proc) -> IterationDecision
-        {
+        [&](Processor& proc) -> IterationDecision {
             auto& info = proc.info();
             auto obj = array.add_object();
             JsonArray features;
@@ -783,8 +792,6 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
 
 Optional<KBuffer> procfs$all(InodeIdentifier)
 {
-    ScopedSpinLock lock(g_scheduler_lock);
-    auto processes = Process::all_processes();
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
 
@@ -856,9 +863,12 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
             return IterationDecision::Continue;
         });
     };
+
+    ScopedSpinLock lock(g_scheduler_lock);
+    auto processes = Process::all_processes();
     build_process(*Scheduler::colonel());
-    for (auto* process : processes)
-        build_process(*process);
+    for (auto& process : processes)
+        build_process(process);
     array.finish();
     return builder.build();
 }
@@ -1069,9 +1079,15 @@ InodeMetadata ProcFSInode::metadata() const
 #endif
 
     if (is_process_related_file(identifier())) {
-        auto handle = ProcessInspectionHandle::from_pid(pid);
-        metadata.uid = handle->process().sys$getuid();
-        metadata.gid = handle->process().sys$getgid();
+        auto process = Process::from_pid(pid);
+        if (process) {
+            metadata.uid = process->sys$getuid();
+            metadata.gid = process->sys$getgid();
+        } else {
+            // TODO: How to handle this?
+            metadata.uid = 0;
+            metadata.gid = 0;
+        }
     }
 
     if (proc_parent_directory == PDI_PID_fd) {
@@ -1232,13 +1248,12 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         break;
 
     case FI_PID: {
-        auto handle = ProcessInspectionHandle::from_pid(pid);
-        if (!handle)
+        auto process = Process::from_pid(pid);
+        if (!process)
             return KResult(-ENOENT);
-        auto& process = handle->process();
         for (auto& entry : fs().m_entries) {
             if (entry.proc_file_type > __FI_PID_Start && entry.proc_file_type < __FI_PID_End) {
-                if (entry.proc_file_type == FI_PID_exe && !process.executable())
+                if (entry.proc_file_type == FI_PID_exe && !process->executable())
                     continue;
                 // FIXME: strlen() here is sad.
                 callback({ entry.name, strlen(entry.name), to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
@@ -1247,12 +1262,11 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     } break;
 
     case FI_PID_fd: {
-        auto handle = ProcessInspectionHandle::from_pid(pid);
-        if (!handle)
+        auto process = Process::from_pid(pid);
+        if (!process)
             return KResult(-ENOENT);
-        auto& process = handle->process();
-        for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
-            auto description = process.file_description(i);
+        for (int i = 0; i < process->max_open_file_descriptors(); ++i) {
+            auto description = process->file_description(i);
             if (!description)
                 continue;
             char name[16];
@@ -1324,13 +1338,12 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
     }
 
     if (proc_file_type == FI_PID) {
-        auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier()));
-        if (!handle)
+        auto process = Process::from_pid(to_pid(identifier()));
+        if (!process)
             return {};
-        auto& process = handle->process();
         for (auto& entry : fs().m_entries) {
             if (entry.proc_file_type > __FI_PID_Start && entry.proc_file_type < __FI_PID_End) {
-                if (entry.proc_file_type == FI_PID_exe && !process.executable())
+                if (entry.proc_file_type == FI_PID_exe && !process->executable())
                     continue;
                 if (entry.name == nullptr)
                     continue;
@@ -1348,8 +1361,7 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
             return {};
         bool fd_exists = false;
         {
-            InterruptDisabler disabler;
-            if (auto* process = Process::from_pid(to_pid(identifier())))
+            if (auto process = Process::from_pid(to_pid(identifier())))
                 fd_exists = process->file_description(name_as_number.value());
         }
         if (fd_exists)
@@ -1397,7 +1409,7 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, F
     ASSERT(is_persistent_inode(identifier()));
     // FIXME: Being able to write into ProcFS at a non-zero offset seems like something we should maybe support..
     ASSERT(offset == 0);
-    bool success = (*write_callback)(identifier(), ByteBuffer::wrap(buffer, size));
+    bool success = (*write_callback)(identifier(), ByteBuffer::wrap(const_cast<u8*>(buffer), size));
     ASSERT(success);
     return 0;
 }
@@ -1415,16 +1427,15 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
 
     auto pid = to_pid(identifier());
     auto proc_file_type = to_proc_file_type(identifier());
-    auto handle = ProcessInspectionHandle::from_pid(pid);
-    if (!handle)
+    auto process = Process::from_pid(pid);
+    if (!process)
         return KResult(-ENOENT);
-    auto& process = handle->process();
 
     if (to_proc_parent_directory(identifier()) == PDI_PID_fd) {
         if (out_parent)
             *out_parent = base;
         int fd = to_fd(identifier());
-        auto description = process.file_description(fd);
+        auto description = process->file_description(fd);
         if (!description)
             return KResult(-ENOENT);
         auto proxy_inode = ProcFSProxyInode::create(const_cast<ProcFS&>(fs()), *description);
@@ -1435,16 +1446,16 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
 
     switch (proc_file_type) {
     case FI_PID_cwd:
-        res = &process.current_directory();
+        res = &process->current_directory();
         break;
     case FI_PID_exe:
-        res = process.executable();
+        res = process->executable();
         break;
     case FI_PID_root:
         // Note: we open root_directory() here, not
         // root_directory_relative_to_global_root().
         // This seems more useful.
-        res = &process.root_directory();
+        res = &process->root_directory();
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -1514,10 +1525,10 @@ RefPtr<Inode> ProcFSProxyInode::lookup(StringView name)
     return m_fd->inode()->lookup(name);
 }
 
-size_t ProcFSProxyInode::directory_entry_count() const
+KResultOr<size_t> ProcFSProxyInode::directory_entry_count() const
 {
     if (!m_fd->inode())
-        return 0;
+        return KResult(-EINVAL);
     return m_fd->inode()->directory_entry_count();
 }
 
@@ -1537,14 +1548,18 @@ KResult ProcFSInode::remove_child(const StringView& name)
     return KResult(-EPERM);
 }
 
-size_t ProcFSInode::directory_entry_count() const
+KResultOr<size_t> ProcFSInode::directory_entry_count() const
 {
     ASSERT(is_directory());
     size_t count = 0;
-    traverse_as_directory([&count](const FS::DirectoryEntry&) {
+    KResult result = traverse_as_directory([&count](const FS::DirectoryEntry&) {
         ++count;
         return true;
     });
+
+    if (result.is_error())
+        return result;
+
     return count;
 }
 
@@ -1568,6 +1583,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_self] = { "self", FI_Root_self, false, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, false, procfs$pci };
     m_entries[FI_Root_interrupts] = { "interrupts", FI_Root_interrupts, false, procfs$interrupts };
+    m_entries[FI_Root_keymap] = { "keymap", FI_Root_keymap, false, procfs$keymap };
     m_entries[FI_Root_devices] = { "devices", FI_Root_devices, false, procfs$devices };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, true, procfs$cmdline };

@@ -7,6 +7,7 @@ compiler:
 - gcc
 
 cache:
+  ccache: true
   directories:
   - /var/cache/apt/archives/*.deb
   - Toolchain/Cache/
@@ -32,8 +33,9 @@ before_install:
 - cmake --version
 
 script:
-- export SERENITY_ROOT=$(pwd)
+- export SERENITY_ROOT="$(pwd)"
 - Meta/lint-shell-scripts.sh
+- Meta/lint-executable-resources.sh
 - Meta/check-style.sh
 - cd Toolchain
 - TRY_USE_LOCAL_TOOLCHAIN=y ./BuildIt.sh
@@ -41,9 +43,12 @@ script:
 - mkdir -p Build
 - cd Build
 - cmake .. -DBUILD_LAGOM=1
-- make
+- make -j2
 - CTEST_OUTPUT_ON_FAILURE=1 make test
 - cd Meta/Lagom
 - ./test-js
+# These feel like they should go into a script. However, that would be a Travis-specific script, and this is *the* right place for travis-specific stuff.
 - cd "$SERENITY_ROOT"/Toolchain/Cache
 - du -ch * || true
+- du -sch /home/travis/.ccache/* || true
+- du -sch /var/cache/apt/archives/*.deb || true

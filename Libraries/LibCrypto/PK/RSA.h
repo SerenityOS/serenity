@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
@@ -119,7 +120,7 @@ class RSA : public PKSystem<RSAPrivateKey<IntegerType>, RSAPublicKey<IntegerType
 public:
     using KeyPairType = RSAKeyPair<PublicKeyType, PrivateKeyType>;
 
-    static KeyPairType parse_rsa_key(const ByteBuffer&);
+    static KeyPairType parse_rsa_key(ReadonlyBytes);
     static KeyPairType generate_key_pair(size_t bits = 256)
     {
         IntegerType e { 65537 }; // :P
@@ -159,13 +160,13 @@ public:
 
     RSA(const ByteBuffer& publicKeyPEM, const ByteBuffer& privateKeyPEM)
     {
-        import_public_key(publicKeyPEM);
-        import_private_key(privateKeyPEM);
+        import_public_key(publicKeyPEM.span());
+        import_private_key(privateKeyPEM.span());
     }
 
     RSA(const StringView& privKeyPEM)
     {
-        import_private_key(ByteBuffer::wrap(privKeyPEM.characters_without_null_termination(), privKeyPEM.length()));
+        import_private_key(privKeyPEM.bytes());
         m_public_key.set(m_private_key.modulus(), m_private_key.public_exponent());
     }
 
@@ -187,8 +188,8 @@ public:
 
     virtual size_t output_size() const override { return m_public_key.length(); }
 
-    void import_public_key(const ByteBuffer& buffer, bool pem = true);
-    void import_private_key(const ByteBuffer& buffer, bool pem = true);
+    void import_public_key(ReadonlyBytes, bool pem = true);
+    void import_private_key(ReadonlyBytes, bool pem = true);
 
     const PrivateKeyType& private_key() const { return m_private_key; }
     const PublicKeyType& public_key() const { return m_public_key; }

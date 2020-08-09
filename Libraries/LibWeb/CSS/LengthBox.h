@@ -28,7 +28,7 @@
 
 #include <LibWeb/CSS/Length.h>
 
-namespace Web {
+namespace Web::CSS {
 
 struct LengthBox {
     Length top { Length::make_auto() };

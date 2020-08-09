@@ -29,7 +29,7 @@
 #include <AK/FlyString.h>
 #include <LibWeb/DOM/CharacterData.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class Comment final : public CharacterData {
 public:
@@ -39,10 +39,8 @@ public:
     virtual FlyString node_name() const override { return "#comment"; }
 };
 
-template<>
-inline bool is<Comment>(const Node& node)
-{
-    return node.is_comment();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::DOM::Comment)
+static bool is_type(const Web::DOM::Node& node) { return node.is_comment(); }
+AK_END_TYPE_TRAITS()

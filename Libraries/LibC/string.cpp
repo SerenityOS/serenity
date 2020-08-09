@@ -139,103 +139,24 @@ int memcmp(const void* v1, const void* v2, size_t n)
 }
 
 #if ARCH(I386)
-void* mmx_memcpy(void* dest, const void* src, size_t len)
-{
-    ASSERT(len >= 1024);
-
-    auto* dest_ptr = (u8*)dest;
-    auto* src_ptr = (const u8*)src;
-
-    if ((u32)dest_ptr & 7) {
-        u32 prologue = 8 - ((u32)dest_ptr & 7);
-        len -= prologue;
-        asm volatile(
-            "rep movsb\n"
-            : "=S"(src_ptr), "=D"(dest_ptr), "=c"(prologue)
-            : "0"(src_ptr), "1"(dest_ptr), "2"(prologue)
-            : "memory");
-    }
-    for (u32 i = len / 64; i; --i) {
-        asm volatile(
-            "movq (%0), %%mm0\n"
-            "movq 8(%0), %%mm1\n"
-            "movq 16(%0), %%mm2\n"
-            "movq 24(%0), %%mm3\n"
-            "movq 32(%0), %%mm4\n"
-            "movq 40(%0), %%mm5\n"
-            "movq 48(%0), %%mm6\n"
-            "movq 56(%0), %%mm7\n"
-            "movq %%mm0, (%1)\n"
-            "movq %%mm1, 8(%1)\n"
-            "movq %%mm2, 16(%1)\n"
-            "movq %%mm3, 24(%1)\n"
-            "movq %%mm4, 32(%1)\n"
-            "movq %%mm5, 40(%1)\n"
-            "movq %%mm6, 48(%1)\n"
-            "movq %%mm7, 56(%1)\n" ::"r"(src_ptr),
-            "r"(dest_ptr)
-            : "memory");
-        src_ptr += 64;
-        dest_ptr += 64;
-    }
-    asm volatile("emms" ::
-                     : "memory");
-    // Whatever remains we'll have to memcpy.
-    len %= 64;
-    if (len)
-        memcpy(dest_ptr, src_ptr, len);
-    return dest;
-}
-
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    if (n >= 1024)
-        return mmx_memcpy(dest_ptr, src_ptr, n);
-
-    u32 dest = (u32)dest_ptr;
-    u32 src = (u32)src_ptr;
-    // FIXME: Support starting at an unaligned address.
-    if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
-        size_t u32s = n / sizeof(u32);
-        asm volatile(
-            "rep movsl\n"
-            : "=S"(src), "=D"(dest)
-            : "S"(src), "D"(dest), "c"(u32s)
-            : "memory");
-        n -= u32s * sizeof(u32);
-        if (n == 0)
-            return dest_ptr;
-    }
+    void* original_dest = dest_ptr;
     asm volatile(
-        "rep movsb\n" ::"S"(src), "D"(dest), "c"(n)
-        : "memory");
-    return dest_ptr;
+        "rep movsb"
+        : "+D"(dest_ptr), "+S"(src_ptr), "+c"(n)::"memory");
+    return original_dest;
 }
 
 void* memset(void* dest_ptr, int c, size_t n)
 {
-    u32 dest = (u32)dest_ptr;
-    // FIXME: Support starting at an unaligned address.
-    if (!(dest & 0x3) && n >= 12) {
-        size_t u32s = n / sizeof(u32);
-        u32 expanded_c = (u8)c;
-        expanded_c |= expanded_c << 8;
-        expanded_c |= expanded_c << 16;
-        asm volatile(
-            "rep stosl\n"
-            : "=D"(dest)
-            : "D"(dest), "c"(u32s), "a"(expanded_c)
-            : "memory");
-        n -= u32s * sizeof(u32);
-        if (n == 0)
-            return dest_ptr;
-    }
+    void* original_dest = dest_ptr;
     asm volatile(
         "rep stosb\n"
-        : "=D"(dest), "=c"(n)
-        : "0"(dest), "1"(n), "a"(c)
+        : "=D"(dest_ptr), "=c"(n)
+        : "0"(dest_ptr), "1"(n), "a"(c)
         : "memory");
-    return dest_ptr;
+    return original_dest;
 }
 #else
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
@@ -266,6 +187,59 @@ void* memmove(void* dest, const void* src, size_t n)
     for (pd += n, ps += n; n--;)
         *--pd = *--ps;
     return dest;
+}
+
+namespace {
+const static void* bitap_bitwise(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+{
+    ASSERT(needle_length < 32);
+
+    u64 lookup = 0xfffffffe;
+
+    constexpr size_t mask_length = (size_t)((u8)-1) + 1;
+    u64 needle_mask[mask_length];
+
+    for (size_t i = 0; i < mask_length; ++i)
+        needle_mask[i] = 0xffffffff;
+
+    for (size_t i = 0; i < needle_length; ++i)
+        needle_mask[((const u8*)needle)[i]] &= ~(0x00000001 << i);
+
+    for (size_t i = 0; i < haystack_length; ++i) {
+        lookup |= needle_mask[((const u8*)haystack)[i]];
+        lookup <<= 1;
+
+        if (!(lookup & (0x00000001 << needle_length)))
+            return ((const u8*)haystack) + i - needle_length + 1;
+    }
+
+    return nullptr;
+}
+}
+
+const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+{
+    if (needle_length == 0)
+        return haystack;
+
+    if (haystack_length < needle_length)
+        return nullptr;
+
+    if (haystack_length == needle_length)
+        return memcmp(haystack, needle, haystack_length) == 0 ? haystack : nullptr;
+
+    if (needle_length < 32)
+        return bitap_bitwise(haystack, haystack_length, needle, needle_length);
+
+    // Fallback to a slower search.
+    auto length_diff = haystack_length - needle_length;
+    for (size_t i = 0; i < length_diff; ++i) {
+        const auto* start = ((const u8*)haystack) + i;
+        if (memcmp(start, needle, needle_length) == 0)
+            return start;
+    }
+
+    return nullptr;
 }
 
 char* strcpy(char* dest, const char* src)

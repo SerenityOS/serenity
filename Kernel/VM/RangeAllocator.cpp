@@ -172,9 +172,9 @@ void RangeAllocator::deallocate(Range range)
 
     ASSERT(!m_available_ranges.is_empty());
 
-    int nearby_index = 0;
+    size_t nearby_index = 0;
     auto* existing_range = binary_search(
-        m_available_ranges.data(), m_available_ranges.size(), range, [](auto& a, auto& b) {
+        m_available_ranges.span(), range, [](auto& a, auto& b) {
             return a.base().get() - b.end().get();
         },
         &nearby_index);

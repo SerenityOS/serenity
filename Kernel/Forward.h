@@ -45,6 +45,7 @@ class KBuffer;
 class KResult;
 class LocalSocket;
 class MappedROM;
+class MasterPTY;
 class PageDirectory;
 class PerformanceEventBuffer;
 class PhysicalPage;
@@ -56,11 +57,14 @@ class Range;
 class RangeAllocator;
 class Region;
 class Scheduler;
+class SchedulerPerProcessorData;
 class SharedBuffer;
 class Socket;
-template <typename BaseType> class SpinLock;
+template<typename BaseType>
+class SpinLock;
 class RecursiveSpinLock;
-template <typename BaseType, typename LockType> class ScopedSpinLock;
+template<typename LockType>
+class ScopedSpinLock;
 class TCPSocket;
 class TTY;
 class Thread;

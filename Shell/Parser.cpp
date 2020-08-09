@@ -72,7 +72,7 @@ bool Parser::expect(const StringView& expected)
 }
 
 template<typename A, typename... Args>
-RefPtr<A> Parser::create(Args... args)
+NonnullRefPtr<A> Parser::create(Args... args)
 {
     return adopt(*new A(AST::Position { m_rule_start_offsets.last(), m_offset }, args...));
 }
@@ -144,7 +144,7 @@ RefPtr<AST::Node> Parser::parse_toplevel()
 
 RefPtr<AST::Node> Parser::parse_sequence()
 {
-    consume_while(is_any_of(" \t\n"));
+    consume_while(is_any_of(" \t\n;")); // ignore whitespaces or terminators without effect.
 
     auto rule_start = push_start();
     auto var_decls = parse_variable_decls();
@@ -247,7 +247,7 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
     }
 
     Vector<AST::VariableDeclarations::Variable> variables;
-    variables.append({ move(name_expr), move(expression) });
+    variables.append({ move(name_expr), expression.release_nonnull() });
 
     if (consume_while(is_whitespace).is_empty())
         return create<AST::VariableDeclarations>(move(variables));
@@ -301,11 +301,11 @@ RefPtr<AST::Node> Parser::parse_and_logical_sequence()
         return pipe_sequence;
     }
 
-    auto right_pipe_sequence = parse_pipe_sequence();
-    if (!right_pipe_sequence)
-        right_pipe_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
+    auto right_and_sequence = parse_and_logical_sequence();
+    if (!right_and_sequence)
+        right_and_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
 
-    return create<AST::And>(create<AST::Execute>(move(pipe_sequence)), create<AST::Execute>(move(right_pipe_sequence)));
+    return create<AST::And>(create<AST::Execute>(move(pipe_sequence)), create<AST::Execute>(move(right_and_sequence)));
 }
 
 RefPtr<AST::Node> Parser::parse_pipe_sequence()
@@ -772,6 +772,8 @@ RefPtr<AST::Node> Parser::parse_variable()
     switch (peek()) {
     case '$':
     case '?':
+    case '*':
+    case '#':
         return create<AST::SpecialVariable>(consume()); // Variable Special
     default:
         break;

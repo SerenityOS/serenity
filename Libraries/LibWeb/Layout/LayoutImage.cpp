@@ -32,7 +32,7 @@
 
 namespace Web {
 
-LayoutImage::LayoutImage(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style, const ImageLoader& image_loader)
+LayoutImage::LayoutImage(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, const ImageLoader& image_loader)
     : LayoutReplaced(document, element, move(style))
     , m_image_loader(image_loader)
 {
@@ -54,20 +54,33 @@ int LayoutImage::preferred_height() const
 
 void LayoutImage::layout(LayoutMode layout_mode)
 {
-    if (preferred_width() && preferred_height()) {
+    if (m_image_loader.width()) {
         set_has_intrinsic_width(true);
+        set_intrinsic_width(m_image_loader.width());
+    }
+    if (m_image_loader.height()) {
         set_has_intrinsic_height(true);
-        set_intrinsic_width(preferred_width());
-        set_intrinsic_height(preferred_height());
-    } else if (renders_as_alt_text()) {
-        auto& image_element = to<HTMLImageElement>(node());
+        set_intrinsic_height(m_image_loader.height());
+    }
+
+    if (m_image_loader.width() && m_image_loader.height()) {
+        set_has_intrinsic_ratio(true);
+        set_intrinsic_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
+    } else {
+        set_has_intrinsic_ratio(false);
+    }
+
+    if (renders_as_alt_text()) {
+        auto& image_element = downcast<HTML::HTMLImageElement>(node());
         auto& font = Gfx::Font::default_font();
         auto alt = image_element.alt();
         if (alt.is_empty())
             alt = image_element.src();
         set_width(font.width(alt) + 16);
         set_height(font.glyph_height() + 16);
-    } else {
+    }
+
+    if (!has_intrinsic_width() && !has_intrinsic_height()) {
         set_width(16);
         set_height(16);
     }
@@ -88,7 +101,7 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Foreground) {
         if (renders_as_alt_text()) {
-            auto& image_element = to<HTMLImageElement>(node());
+            auto& image_element = downcast<HTML::HTMLImageElement>(node());
             context.painter().set_font(Gfx::Font::default_font());
             Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
             auto alt = image_element.alt();
@@ -103,7 +116,7 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
 
 bool LayoutImage::renders_as_alt_text() const
 {
-    if (is<HTMLImageElement>(node()))
+    if (is<HTML::HTMLImageElement>(node()))
         return !m_image_loader.has_image();
     return false;
 }

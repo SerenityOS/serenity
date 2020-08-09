@@ -31,6 +31,8 @@
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibCrypto/Checksum/Adler32.h>
+#include <LibCrypto/Checksum/CRC32.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA1.h>
@@ -61,6 +63,7 @@ static bool g_some_test_failed = false;
 static bool encrypting = true;
 
 constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
+constexpr const char* DEFAULT_CHECKSUM_SUITE { "CRC32" };
 constexpr const char* DEFAULT_HASH_SUITE { "SHA256" };
 constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
 constexpr const char* DEFAULT_SERVER { "www.google.com" };
@@ -68,6 +71,7 @@ constexpr const char* DEFAULT_SERVER { "www.google.com" };
 // listAllTests
 // Cipher
 int aes_cbc_tests();
+int aes_ctr_tests();
 
 // Hash
 int md5_tests();
@@ -88,6 +92,10 @@ int tls_tests();
 
 // Big Integer
 int bigint_tests();
+
+// Checksum
+int adler32_tests();
+int crc32_tests();
 
 // stop listing tests
 
@@ -181,26 +189,44 @@ void tls(const char* message, size_t len)
 
 void aes_cbc(const char* message, size_t len)
 {
-    auto buffer = ByteBuffer::wrap(message, len);
+    auto buffer = ByteBuffer::wrap(const_cast<char*>(message), len);
     // FIXME: Take iv as an optional parameter
     auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
 
     if (encrypting) {
-        Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(secret_key, strlen(secret_key)), key_bits, Crypto::Cipher::Intent::Encryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher(
+            ByteBuffer::wrap(const_cast<char*>(secret_key), strlen(secret_key)),
+            key_bits,
+            Crypto::Cipher::Intent::Encryption);
 
         auto enc = cipher.create_aligned_buffer(buffer.size());
-        cipher.encrypt(buffer, enc, iv);
+        (void)cipher.encrypt(buffer, enc, iv);
 
         if (binary)
             printf("%.*s", (int)enc.size(), enc.data());
         else
             print_buffer(enc, Crypto::Cipher::AESCipher::block_size());
     } else {
-        Crypto::Cipher::AESCipher::CBCMode cipher(ByteBuffer::wrap(secret_key, strlen(secret_key)), key_bits, Crypto::Cipher::Intent::Decryption);
+        Crypto::Cipher::AESCipher::CBCMode cipher(
+            ByteBuffer::wrap(const_cast<char*>(secret_key), strlen(secret_key)),
+            key_bits,
+            Crypto::Cipher::Intent::Decryption);
         auto dec = cipher.create_aligned_buffer(buffer.size());
         cipher.decrypt(buffer, dec, iv);
         printf("%.*s\n", (int)dec.size(), dec.data());
     }
+}
+
+void adler32(const char* message, size_t len)
+{
+    auto checksum = Crypto::Checksum::Adler32({ (const u8*)message, len });
+    printf("%#10X\n", checksum.digest());
+}
+
+void crc32(const char* message, size_t len)
+{
+    auto checksum = Crypto::Checksum::CRC32({ (const u8*)message, len });
+    printf("%#10X\n", checksum.digest());
 }
 
 void md5(const char* message, size_t len)
@@ -292,6 +318,7 @@ auto main(int argc, char** argv) -> int
         puts("test-crypto modes");
         puts("\tdigest - Access digest (authentication) functions");
         puts("\thash - Access hash functions");
+        puts("\tchecksum - Access checksum functions");
         puts("\tencrypt -- Access encryption functions");
         puts("\tdecrypt -- Access decryption functions");
         puts("\ttls -- Connect to a peer over TLS 1.2");
@@ -331,6 +358,24 @@ auto main(int argc, char** argv) -> int
         printf("unknown hash function '%s'\n", suite);
         return 1;
     }
+    if (mode_sv == "checksum") {
+        if (suite == nullptr)
+            suite = DEFAULT_CHECKSUM_SUITE;
+        StringView suite_sv { suite };
+
+        if (suite_sv == "CRC32") {
+            if (run_tests)
+                return crc32_tests();
+            return run(crc32);
+        }
+        if (suite_sv == "Adler32") {
+            if (run_tests)
+                return adler32_tests();
+            return run(adler32);
+        }
+        printf("unknown checksum function '%s'\n", suite);
+        return 1;
+    }
     if (mode_sv == "digest") {
         if (suite == nullptr)
             suite = DEFAULT_DIGEST_SUITE;
@@ -368,9 +413,11 @@ auto main(int argc, char** argv) -> int
     if (mode_sv == "test") {
         encrypting = true;
         aes_cbc_tests();
+        aes_ctr_tests();
 
         encrypting = false;
         aes_cbc_tests();
+        aes_ctr_tests();
 
         md5_tests();
         sha1_tests();
@@ -458,6 +505,9 @@ ByteBuffer operator""_b(const char* string, size_t length)
 void aes_cbc_test_name();
 void aes_cbc_test_encrypt();
 void aes_cbc_test_decrypt();
+void aes_ctr_test_name();
+void aes_ctr_test_encrypt();
+void aes_ctr_test_decrypt();
 
 void md5_test_name();
 void md5_test_hash();
@@ -535,7 +585,7 @@ void aes_cbc_test_encrypt()
         auto in = "This is a test! This is another test!"_b;
         auto out = cipher.create_aligned_buffer(in.size());
         auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
-        cipher.encrypt(in, out, iv);
+        (void)cipher.encrypt(in, out, iv);
         if (out.size() != sizeof(result))
             FAIL(size mismatch);
         else if (memcmp(out.data(), result, out.size()) != 0) {
@@ -642,6 +692,261 @@ void aes_cbc_test_decrypt()
         test_it(cipher, result, 48);
     }
     // TODO: Test non-CMS padding options
+}
+
+int aes_ctr_tests()
+{
+    aes_ctr_test_name();
+    if (encrypting) {
+        aes_ctr_test_encrypt();
+    } else {
+        aes_ctr_test_decrypt();
+    }
+
+    return g_some_test_failed ? 1 : 0;
+}
+
+void aes_ctr_test_name()
+{
+    I_TEST((AES CTR class name));
+    Crypto::Cipher::AESCipher::CTRMode cipher("WellHelloFriends"_b, 128, Crypto::Cipher::Intent::Encryption);
+    if (cipher.class_name() != "AES_CTR")
+        FAIL(Invalid class name);
+    else
+        PASS;
+}
+
+#define AS_BB(x) (ByteBuffer::wrap((x), sizeof((x)) / sizeof((x)[0])))
+void aes_ctr_test_encrypt()
+{
+    auto test_it = [](auto key, auto ivec, auto in, auto out_expected) {
+        // nonce is already included in ivec.
+        Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Encryption);
+        ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
+        ByteBuffer final_ivec = cipher.encrypt(in, out_actual, ivec).value();
+        if (out_expected.size() != out_actual.size()) {
+            FAIL(size mismatch);
+            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_actual.size());
+            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
+        } else if (memcmp(out_expected.data(), out_actual.data(), out_expected.size()) != 0) {
+            FAIL(invalid data);
+            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
+        } else
+            PASS;
+    };
+    // From RFC 3686, Section 6
+    {
+        // Test Vector #1
+        I_TEST((AES CTR 16 octets with 128 bit key | Encrypt))
+        u8 key[] {
+            0xae, 0x68, 0x52, 0xf8, 0x12, 0x10, 0x67, 0xcc, 0x4b, 0xf7, 0xa5, 0x76, 0x55, 0x77, 0xf3, 0x9e
+        };
+        u8 ivec[] {
+            0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x20, 0x6d, 0x73, 0x67
+        };
+        u8 out[] {
+            0xe4, 0x09, 0x5d, 0x4f, 0xb7, 0xa7, 0xb3, 0x79, 0x2d, 0x61, 0x75, 0xa3, 0x26, 0x13, 0x11, 0xb8
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    {
+        // Test Vector #2
+        I_TEST((AES CTR 32 octets with 128 bit key | Encrypt))
+        u8 key[] {
+            0x7e, 0x24, 0x06, 0x78, 0x17, 0xfa, 0xe0, 0xd7, 0x43, 0xd6, 0xce, 0x1f, 0x32, 0x53, 0x91, 0x63
+        };
+        u8 ivec[] {
+            0x00, 0x6c, 0xb6, 0xdb, 0xc0, 0x54, 0x3b, 0x59, 0xda, 0x48, 0xd9, 0x0b, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+        };
+        u8 out[] {
+            0x51, 0x04, 0xa1, 0x06, 0x16, 0x8a, 0x72, 0xd9, 0x79, 0x0d, 0x41, 0xee, 0x8e, 0xda, 0xd3, 0x88,
+            0xeb, 0x2e, 0x1e, 0xfc, 0x46, 0xda, 0x57, 0xc8, 0xfc, 0xe6, 0x30, 0xdf, 0x91, 0x41, 0xbe, 0x28
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    {
+        // Test Vector #3
+        I_TEST((AES CTR 36 octets with 128 bit key | Encrypt))
+        u8 key[] {
+            0x76, 0x91, 0xbe, 0x03, 0x5e, 0x50, 0x20, 0xa8, 0xac, 0x6e, 0x61, 0x85, 0x29, 0xf9, 0xa0, 0xdc
+        };
+        u8 ivec[] {
+            0x00, 0xe0, 0x01, 0x7b, 0x27, 0x77, 0x7f, 0x3f, 0x4a, 0x17, 0x86, 0xf0, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23
+        };
+        u8 out[] {
+            0xc1, 0xcf, 0x48, 0xa8, 0x9f, 0x2f, 0xfd, 0xd9, 0xcf, 0x46, 0x52, 0xe9, 0xef, 0xdb, 0x72, 0xd7, 0x45, 0x40, 0xa4, 0x2b, 0xde, 0x6d, 0x78, 0x36, 0xd5, 0x9a, 0x5c, 0xea, 0xae, 0xf3, 0x10, 0x53, 0x25, 0xb2, 0x07, 0x2f
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    {
+        // Test Vector #4
+        I_TEST((AES CTR 16 octets with 192 bit key | Encrypt))
+        u8 key[] {
+            0x16, 0xaf, 0x5b, 0x14, 0x5f, 0xc9, 0xf5, 0x79, 0xc1, 0x75, 0xf9, 0x3e, 0x3b, 0xfb, 0x0e, 0xed, 0x86, 0x3d, 0x06, 0xcc, 0xfd, 0xb7, 0x85, 0x15
+        };
+        u8 ivec[] {
+            0x00, 0x00, 0x00, 0x48, 0x36, 0x73, 0x3c, 0x14, 0x7d, 0x6d, 0x93, 0xcb, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x20, 0x6d, 0x73, 0x67
+        };
+        u8 out[] {
+            0x4b, 0x55, 0x38, 0x4f, 0xe2, 0x59, 0xc9, 0xc8, 0x4e, 0x79, 0x35, 0xa0, 0x03, 0xcb, 0xe9, 0x28
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    {
+        // Test Vector #5
+        I_TEST((AES CTR 32 octets with 192 bit key | Encrypt))
+        u8 key[] {
+            0x7c, 0x5c, 0xb2, 0x40, 0x1b, 0x3d, 0xc3, 0x3c, 0x19, 0xe7, 0x34, 0x08, 0x19, 0xe0, 0xf6, 0x9c, 0x67, 0x8c, 0x3d, 0xb8, 0xe6, 0xf6, 0xa9, 0x1a
+        };
+        u8 ivec[] {
+            0x00, 0x96, 0xb0, 0x3b, 0x02, 0x0c, 0x6e, 0xad, 0xc2, 0xcb, 0x50, 0x0d, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+        };
+        u8 out[] {
+            0x45, 0x32, 0x43, 0xfc, 0x60, 0x9b, 0x23, 0x32, 0x7e, 0xdf, 0xaa, 0xfa, 0x71, 0x31, 0xcd, 0x9f, 0x84, 0x90, 0x70, 0x1c, 0x5a, 0xd4, 0xa7, 0x9c, 0xfc, 0x1f, 0xe0, 0xff, 0x42, 0xf4, 0xfb, 0x00
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    {
+        // Test Vector #6
+        I_TEST((AES CTR 36 octets with 192 bit key | Encrypt))
+        u8 key[] {
+            0x02, 0xbf, 0x39, 0x1e, 0xe8, 0xec, 0xb1, 0x59, 0xb9, 0x59, 0x61, 0x7b, 0x09, 0x65, 0x27, 0x9b, 0xf5, 0x9b, 0x60, 0xa7, 0x86, 0xd3, 0xe0, 0xfe
+        };
+        u8 ivec[] {
+            0x00, 0x07, 0xbd, 0xfd, 0x5c, 0xbd, 0x60, 0x27, 0x8d, 0xcc, 0x09, 0x12, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23
+        };
+        u8 out[] {
+            0x96, 0x89, 0x3f, 0xc5, 0x5e, 0x5c, 0x72, 0x2f, 0x54, 0x0b, 0x7d, 0xd1, 0xdd, 0xf7, 0xe7, 0x58, 0xd2, 0x88, 0xbc, 0x95, 0xc6, 0x91, 0x65, 0x88, 0x45, 0x36, 0xc8, 0x11, 0x66, 0x2f, 0x21, 0x88, 0xab, 0xee, 0x09, 0x35
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    {
+        // Test Vector #7
+        I_TEST((AES CTR 16 octets with 256 bit key | Encrypt))
+        u8 key[] {
+            0x77, 0x6b, 0xef, 0xf2, 0x85, 0x1d, 0xb0, 0x6f, 0x4c, 0x8a, 0x05, 0x42, 0xc8, 0x69, 0x6f, 0x6c, 0x6a, 0x81, 0xaf, 0x1e, 0xec, 0x96, 0xb4, 0xd3, 0x7f, 0xc1, 0xd6, 0x89, 0xe6, 0xc1, 0xc1, 0x04
+        };
+        u8 ivec[] {
+            0x00, 0x00, 0x00, 0x60, 0xdb, 0x56, 0x72, 0xc9, 0x7a, 0xa8, 0xf0, 0xb2, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x20, 0x6d, 0x73, 0x67
+        };
+        u8 out[] {
+            0x14, 0x5a, 0xd0, 0x1d, 0xbf, 0x82, 0x4e, 0xc7, 0x56, 0x08, 0x63, 0xdc, 0x71, 0xe3, 0xe0, 0xc0
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    {
+        // Test Vector #8
+        I_TEST((AES CTR 32 octets with 256 bit key | Encrypt))
+        u8 key[] {
+            0xf6, 0xd6, 0x6d, 0x6b, 0xd5, 0x2d, 0x59, 0xbb, 0x07, 0x96, 0x36, 0x58, 0x79, 0xef, 0xf8, 0x86, 0xc6, 0x6d, 0xd5, 0x1a, 0x5b, 0x6a, 0x99, 0x74, 0x4b, 0x50, 0x59, 0x0c, 0x87, 0xa2, 0x38, 0x84
+        };
+        u8 ivec[] {
+            0x00, 0xfa, 0xac, 0x24, 0xc1, 0x58, 0x5e, 0xf1, 0x5a, 0x43, 0xd8, 0x75, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+        };
+        u8 out[] {
+            0xf0, 0x5e, 0x23, 0x1b, 0x38, 0x94, 0x61, 0x2c, 0x49, 0xee, 0x00, 0x0b, 0x80, 0x4e, 0xb2, 0xa9, 0xb8, 0x30, 0x6b, 0x50, 0x8f, 0x83, 0x9d, 0x6a, 0x55, 0x30, 0x83, 0x1d, 0x93, 0x44, 0xaf, 0x1c
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    {
+        // Test Vector #9
+        I_TEST((AES CTR 36 octets with 256 bit key | Encrypt))
+        u8 key[] {
+            0xff, 0x7a, 0x61, 0x7c, 0xe6, 0x91, 0x48, 0xe4, 0xf1, 0x72, 0x6e, 0x2f, 0x43, 0x58, 0x1d, 0xe2, 0xaa, 0x62, 0xd9, 0xf8, 0x05, 0x53, 0x2e, 0xdf, 0xf1, 0xee, 0xd6, 0x87, 0xfb, 0x54, 0x15, 0x3d
+        };
+        u8 ivec[] {
+            0x00, 0x1c, 0xc5, 0xb7, 0x51, 0xa5, 0x1d, 0x70, 0xa1, 0xc1, 0x11, 0x48, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 in[] {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23
+        };
+        u8 out[] {
+            0xeb, 0x6c, 0x52, 0x82, 0x1d, 0x0b, 0xbb, 0xf7, 0xce, 0x75, 0x94, 0x46, 0x2a, 0xca, 0x4f, 0xaa, 0xb4, 0x07, 0xdf, 0x86, 0x65, 0x69, 0xfd, 0x07, 0xf4, 0x8c, 0xc0, 0xb5, 0x83, 0xd6, 0x07, 0x1f, 0x1e, 0xc0, 0xe6, 0xb8
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    // Manual test case
+    {
+        // This test checks whether counter overflow crashes.
+        I_TEST((AES CTR 36 octets with 256 bit key, high counter | Encrypt))
+        u8 key[] {
+            0xff, 0x7a, 0x61, 0x7c, 0xe6, 0x91, 0x48, 0xe4, 0xf1, 0x72, 0x6e, 0x2f, 0x43, 0x58, 0x1d, 0xe2, 0xaa, 0x62, 0xd9, 0xf8, 0x05, 0x53, 0x2e, 0xdf, 0xf1, 0xee, 0xd6, 0x87, 0xfb, 0x54, 0x15, 0x3d
+        };
+        u8 ivec[] {
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        };
+        u8 in[] {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23
+        };
+        u8 out[] {
+            // Pasted from the output. The actual success condition is
+            // not crashing when incrementing the counter.
+            0x6e, 0x8c, 0xfc, 0x59, 0x08, 0xa8, 0xc0, 0xf1, 0xe6, 0x85, 0x96, 0xe9, 0xc5, 0x40, 0xb6, 0x8b, 0xfe, 0x28, 0x72, 0xe2, 0x24, 0x11, 0x7e, 0x59, 0xef, 0xac, 0x5c, 0xe1, 0x06, 0x89, 0x09, 0xab, 0xf8, 0x90, 0x1c, 0x66
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+}
+
+void aes_ctr_test_decrypt()
+{
+    auto test_it = [](auto key, auto ivec, auto in, auto out_expected) {
+        // nonce is already included in ivec.
+        Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Decryption);
+        ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
+        cipher.decrypt(in, out_actual, ivec);
+        if (out_expected.size() != out_actual.size()) {
+            FAIL(size mismatch);
+            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_actual.size());
+            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
+        } else if (memcmp(out_expected.data(), out_actual.data(), out_expected.size()) != 0) {
+            FAIL(invalid data);
+            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
+        } else
+            PASS;
+    };
+    // From RFC 3686, Section 6
+    {
+        // Test Vector #1
+        I_TEST((AES CTR 16 octets with 128 bit key | Decrypt))
+        u8 key[] {
+            0xae, 0x68, 0x52, 0xf8, 0x12, 0x10, 0x67, 0xcc, 0x4b, 0xf7, 0xa5, 0x76, 0x55, 0x77, 0xf3, 0x9e
+        };
+        u8 ivec[] {
+            0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 + 1 // See CTR.h
+        };
+        u8 out[] {
+            0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x20, 0x6d, 0x73, 0x67
+        };
+        u8 in[] {
+            0xe4, 0x09, 0x5d, 0x4f, 0xb7, 0xa7, 0xb3, 0x79, 0x2d, 0x61, 0x75, 0xa3, 0x26, 0x13, 0x11, 0xb8
+        };
+        test_it(AS_BB(key), AS_BB(ivec), AS_BB(in), AS_BB(out));
+    }
+    // If encryption works, then decryption works, too.
 }
 
 int md5_tests()
@@ -1297,6 +1602,50 @@ void tls_test_client_hello()
     loop.exec();
 }
 
+int adler32_tests()
+{
+    auto do_test = [](ReadonlyBytes input, u32 expected_result) {
+        I_TEST((CRC32));
+
+        auto pass = Crypto::Checksum::Adler32(input).digest() == expected_result;
+
+        if (pass) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    };
+
+    do_test(String("").bytes(), 0x1);
+    do_test(String("a").bytes(), 0x00620062);
+    do_test(String("abc").bytes(), 0x024d0127);
+    do_test(String("message digest").bytes(), 0x29750586);
+    do_test(String("abcdefghijklmnopqrstuvwxyz").bytes(), 0x90860b20);
+
+    return g_some_test_failed ? 1 : 0;
+}
+
+int crc32_tests()
+{
+    auto do_test = [](ReadonlyBytes input, u32 expected_result) {
+        I_TEST((Adler32));
+
+        auto pass = Crypto::Checksum::CRC32(input).digest() == expected_result;
+
+        if (pass) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    };
+
+    do_test(String("").bytes(), 0x0);
+    do_test(String("The quick brown fox jumps over the lazy dog").bytes(), 0x414FA339);
+    do_test(String("various CRC algorithms input data").bytes(), 0x9BD366AE);
+
+    return g_some_test_failed ? 1 : 0;
+}
+
 int bigint_tests()
 {
     bigint_test_fibo500();
@@ -1560,7 +1909,7 @@ void bigint_import_export()
         u8 target_buffer[128];
         AK::fill_with_random(random_bytes, 128);
         auto encoded = Crypto::UnsignedBigInteger::import_data(random_bytes, 128);
-        encoded.export_data(target_buffer, 128);
+        encoded.export_data({ target_buffer, 128 });
         if (memcmp(target_buffer, random_bytes, 128) != 0)
             FAIL(Could not roundtrip);
         else
@@ -1570,7 +1919,7 @@ void bigint_import_export()
         I_TEST((BigInteger | BigEndian Encode / Decode roundtrip));
         u8 target_buffer[128];
         auto encoded = "12345678901234567890"_bigint;
-        auto size = encoded.export_data(target_buffer, 128);
+        auto size = encoded.export_data({ target_buffer, 128 });
         auto decoded = Crypto::UnsignedBigInteger::import_data(target_buffer, size);
         if (encoded != decoded)
             FAIL(Could not roundtrip);
@@ -1590,7 +1939,7 @@ void bigint_import_export()
         I_TEST((BigInteger | BigEndian Export));
         auto number = "448378203247"_bigint;
         char exported[8] { 0 };
-        auto exported_length = number.export_data((u8*)exported, 8);
+        auto exported_length = number.export_data({ exported, 8 }, true);
         if (exported_length == 5 && memcmp(exported + 3, "hello", 5) == 0) {
             PASS;
         } else {
@@ -1877,7 +2226,7 @@ void bigint_signed_import_export()
         random_bytes[0] = 1;
         AK::fill_with_random(random_bytes + 1, 128);
         auto encoded = Crypto::SignedBigInteger::import_data(random_bytes, 129);
-        encoded.export_data(target_buffer, 129);
+        encoded.export_data({ target_buffer, 129 });
         if (memcmp(target_buffer, random_bytes, 129) != 0)
             FAIL(Could not roundtrip);
         else
@@ -1887,7 +2236,7 @@ void bigint_signed_import_export()
         I_TEST((Signed BigInteger | BigEndian Encode / Decode roundtrip));
         u8 target_buffer[128];
         auto encoded = "-12345678901234567890"_sbigint;
-        auto size = encoded.export_data(target_buffer, 128);
+        auto size = encoded.export_data({ target_buffer, 128 });
         auto decoded = Crypto::SignedBigInteger::import_data(target_buffer, size);
         if (encoded != decoded)
             FAIL(Could not roundtrip);

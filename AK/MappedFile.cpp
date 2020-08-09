@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/MappedFile.h>
+#include <AK/String.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -38,10 +38,10 @@ namespace AK {
 
 MappedFile::MappedFile(const StringView& file_name)
 {
-    m_size = PAGE_SIZE;
     int fd = open_with_path_length(file_name.characters_without_null_termination(), file_name.length(), O_RDONLY | O_CLOEXEC, 0);
 
     if (fd == -1) {
+        m_errno = errno;
         perror("open");
         return;
     }
@@ -51,8 +51,10 @@ MappedFile::MappedFile(const StringView& file_name)
     m_size = st.st_size;
     m_map = mmap(nullptr, m_size, PROT_READ, MAP_SHARED, fd, 0);
 
-    if (m_map == MAP_FAILED)
+    if (m_map == MAP_FAILED) {
+        m_errno = errno;
         perror("mmap");
+    }
 
 #ifdef DEBUG_MAPPED_FILE
     dbgprintf("MappedFile{%s} := { fd=%d, m_size=%u, m_map=%p }\n", file_name.characters(), fd, m_size, m_map);

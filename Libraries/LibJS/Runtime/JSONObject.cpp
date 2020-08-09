@@ -42,14 +42,14 @@ JSONObject::JSONObject(GlobalObject& global_object)
 {
 }
 
-void JSONObject::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void JSONObject::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("stringify", stringify, 3, attr);
     define_native_function("parse", parse, 2, attr);
 
-    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "JSON"), Attribute::Configurable);
+    define_property(global_object.interpreter().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "JSON"), Attribute::Configurable);
 }
 
 JSONObject::~JSONObject()
@@ -117,7 +117,7 @@ String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global
         state.gap = String::empty();
     }
 
-    auto* wrapper = Object::create_empty(interpreter, global_object);
+    auto* wrapper = Object::create_empty(global_object);
     wrapper->define_property(String::empty(), value);
     if (interpreter.exception())
         return {};
@@ -401,7 +401,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     }
     Value result = parse_json_value(interpreter, global_object, json.value());
     if (reviver.is_function()) {
-        auto* holder_object = Object::create_empty(interpreter, global_object);
+        auto* holder_object = Object::create_empty(global_object);
         holder_object->define_property(String::empty(), result);
         if (interpreter.exception())
             return {};
@@ -433,7 +433,7 @@ Value JSONObject::parse_json_value(Interpreter& interpreter, GlobalObject& globa
 
 Object* JSONObject::parse_json_object(Interpreter& interpreter, GlobalObject& global_object, const JsonObject& json_object)
 {
-    auto* object = Object::create_empty(interpreter, global_object);
+    auto* object = Object::create_empty(global_object);
     json_object.for_each_member([&](auto& key, auto& value) {
         object->define_property(key, parse_json_value(interpreter, global_object, value));
     });

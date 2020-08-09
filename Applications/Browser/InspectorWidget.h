@@ -36,18 +36,18 @@ class InspectorWidget final : public GUI::Widget {
 public:
     virtual ~InspectorWidget();
 
-    void set_document(Web::Document*);
+    void set_document(Web::DOM::Document*);
 
 private:
     InspectorWidget();
 
-    void set_inspected_node(Web::Node*);
+    void set_inspected_node(Web::DOM::Node*);
 
     RefPtr<GUI::TreeView> m_dom_tree_view;
     RefPtr<GUI::TreeView> m_layout_tree_view;
     RefPtr<GUI::TableView> m_style_table_view;
     RefPtr<GUI::TableView> m_computed_style_table_view;
-    RefPtr<Web::Document> m_document;
+    RefPtr<Web::DOM::Document> m_document;
 };
 
 }

@@ -82,7 +82,7 @@ PropertyDescriptor PropertyDescriptor::from_dictionary(Interpreter& interpreter,
     return descriptor;
 }
 
-Object* Object::create_empty(Interpreter&, GlobalObject& global_object)
+Object* Object::create_empty(GlobalObject& global_object)
 {
     return global_object.heap().allocate<Object>(global_object, *global_object.object_prototype());
 }
@@ -105,7 +105,7 @@ Object::Object(Object& prototype)
     set_prototype(&prototype);
 }
 
-void Object::initialize(Interpreter&, GlobalObject&)
+void Object::initialize(GlobalObject&)
 {
 }
 
@@ -301,7 +301,7 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
         return js_undefined();
     auto descriptor = descriptor_opt.value();
 
-    auto* descriptor_object = Object::create_empty(interpreter(), global_object());
+    auto* descriptor_object = Object::create_empty(global_object());
     descriptor_object->define_property("enumerable", Value(descriptor.attributes.is_enumerable()));
     if (interpreter().exception())
         return {};
@@ -392,7 +392,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
               << "setter=" << setter.to_string_without_side_effects() << "}";
 #endif
 
-        return define_property(property_name, Accessor::create(interpreter(), global_object(), getter_function, setter_function), attributes, throw_exceptions);
+        return define_property(property_name, Accessor::create(interpreter(), getter_function, setter_function), attributes, throw_exceptions);
     }
 
     auto value = descriptor.get("value");
@@ -438,7 +438,7 @@ bool Object::define_accessor(const PropertyName& property_name, Function& getter
             accessor = &existing_property.as_accessor();
     }
     if (!accessor) {
-        accessor = Accessor::create(interpreter(), global_object(), nullptr, nullptr);
+        accessor = Accessor::create(interpreter(), nullptr, nullptr);
         bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
         if (interpreter().exception())
             return {};
@@ -762,7 +762,7 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
 
 bool Object::define_native_property(const StringOrSymbol& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
-    return define_property(property_name, heap().allocate<NativeProperty>(global_object(), move(getter), move(setter)), attribute);
+    return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
 
 void Object::visit_children(Cell::Visitor& visitor)

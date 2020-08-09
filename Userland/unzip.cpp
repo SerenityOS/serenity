@@ -183,6 +183,8 @@ int main(int argc, char** argv)
     }
 
     MappedFile mapped_file { zip_file_path };
+    if (!mapped_file.is_valid())
+        return 1;
 
     printf("Archive: %s\n", zip_file_path.characters());
 

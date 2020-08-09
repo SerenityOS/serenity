@@ -30,7 +30,7 @@
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class EventListener
     : public RefCounted<EventListener>

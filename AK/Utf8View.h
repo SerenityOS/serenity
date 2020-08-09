@@ -45,7 +45,7 @@ public:
     Utf8CodepointIterator& operator++();
     u32 operator*() const;
 
-    int codepoint_length_in_bytes() const;
+    int code_point_length_in_bytes() const;
     bool done() const { return !m_length; }
 
 private:
@@ -80,7 +80,7 @@ public:
         return validate(valid_bytes);
     }
 
-    size_t length_in_codepoints() const;
+    size_t length_in_code_points() const;
 
 private:
     const unsigned char* begin_ptr() const;

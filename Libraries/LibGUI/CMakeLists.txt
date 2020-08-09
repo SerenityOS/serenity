@@ -26,14 +26,15 @@ set(SOURCES
     Event.cpp
     FilePicker.cpp
     FileSystemModel.cpp
+    FilteringProxyModel.cpp
     FontDatabase.cpp
     Frame.cpp
     GroupBox.cpp
-    Icon.cpp
-    IconView.cpp
-    Image.cpp
     INILexer.cpp
     INISyntaxHighlighter.cpp
+    Icon.cpp
+    IconView.cpp
+    ImageWidget.cpp
     InputBox.cpp
     JsonArrayModel.cpp
     JSSyntaxHighlighter.cpp
@@ -51,9 +52,11 @@ set(SOURCES
     MultiView.cpp
     Notification.cpp
     Painter.cpp
+    ProcessChooser.cpp
     ProgressBar.cpp
     RadioButton.cpp
     ResizeCorner.cpp
+    RunningProcessesModel.cpp
     ScrollableWidget.cpp
     ScrollBar.cpp
     Shortcut.cpp

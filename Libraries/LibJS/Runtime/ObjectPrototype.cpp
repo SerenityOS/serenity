@@ -39,9 +39,9 @@ ObjectPrototype::ObjectPrototype(GlobalObject& global_object)
 {
 }
 
-void ObjectPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ObjectPrototype::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
     // This must be called after the constructor has returned, so that the below code
     // can find the ObjectPrototype through normal paths.
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         return {};
 
     String tag;
-    auto to_string_tag = this_object->get(interpreter.well_known_symbol_to_string_tag());
+    auto to_string_tag = this_object->get(global_object.interpreter().well_known_symbol_to_string_tag());
     
     if (to_string_tag.is_string()) {
         tag = to_string_tag.as_string().string();

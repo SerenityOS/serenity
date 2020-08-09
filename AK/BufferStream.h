@@ -352,50 +352,6 @@ public:
         return *this;
     }
 
-    // LEB128 is a variable-length encoding for integers
-    BufferStream& read_LEB128_unsigned(size_t& result)
-    {
-        result = 0;
-        size_t num_bytes = 0;
-        while (true) {
-            if (m_offset > m_buffer.size()) {
-                m_read_failure = true;
-                break;
-            }
-            const u8 byte = m_buffer[m_offset];
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
-            ++m_offset;
-            if (!(byte & (1 << 7)))
-                break;
-            ++num_bytes;
-        }
-
-        return *this;
-    }
-
-    // LEB128 is a variable-length encoding for integers
-    BufferStream& read_LEB128_signed(ssize_t& result)
-    {
-        result = 0;
-        size_t num_bytes = 0;
-        u8 byte = 0;
-        do {
-            if (m_offset > m_buffer.size()) {
-                m_read_failure = true;
-                break;
-            }
-            byte = m_buffer[m_offset];
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
-            ++m_offset;
-            ++num_bytes;
-        } while (byte & (1 << 7));
-        if (num_bytes * 7 < sizeof(size_t) * 4 && (byte & 0x40)) {
-            // sign extend
-            result |= ((size_t)(-1) << (num_bytes * 7));
-        }
-        return *this;
-    }
-
     BufferStream& advance(size_t amount)
     {
         if (m_offset + amount > m_buffer.size()) {

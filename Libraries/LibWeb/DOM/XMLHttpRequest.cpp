@@ -38,7 +38,7 @@
 
 namespace Web {
 
-XMLHttpRequest::XMLHttpRequest(Window& window)
+XMLHttpRequest::XMLHttpRequest(DOM::Window& window)
     : m_window(window)
 {
 }
@@ -78,22 +78,22 @@ void XMLHttpRequest::send()
                 return;
             const_cast<XMLHttpRequest&>(*weak_this).m_response = data;
             const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
-            const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(Event::create("load"));
+            const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create("load"));
         },
         [weak_this = make_weak_ptr()](auto& error) {
             if (!weak_this)
                 return;
             dbg() << "XHR failed to load: " << error;
             const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
-            const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(Event::create("error"));
+            const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create("error"));
         });
 }
 
-void XMLHttpRequest::dispatch_event(NonnullRefPtr<Event> event)
+void XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
 {
     for (auto& listener : listeners()) {
         if (listener.event_name == event->type()) {
-            auto& function = const_cast<EventListener&>(*listener.listener).function();
+            auto& function = const_cast<DOM::EventListener&>(*listener.listener).function();
             auto& global_object = function.global_object();
             auto* this_value = wrap(global_object, *this);
             JS::MarkedValueList arguments(global_object.heap());

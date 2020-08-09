@@ -28,15 +28,22 @@
 
 #include <AK/String.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 
-namespace Web {
+namespace Web::DOM {
 
-class CharacterData : public Node {
+class CharacterData
+    : public Node
+    , public NonDocumentTypeChildNode<CharacterData> {
 public:
+    using WrapperType = Bindings::CharacterDataWrapper;
+
     virtual ~CharacterData() override;
 
     const String& data() const { return m_data; }
     void set_data(const String& data) { m_data = data; }
+
+    unsigned length() const { return m_data.length(); }
 
     virtual String text_content() const override { return m_data; }
 
@@ -47,10 +54,8 @@ private:
     String m_data;
 };
 
-template<>
-inline bool is<CharacterData>(const Node& node)
-{
-    return node.is_character_data();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::DOM::CharacterData)
+static bool is_type(const Web::DOM::Node& node) { return node.is_character_data(); }
+AK_END_TYPE_TRAITS()

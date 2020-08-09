@@ -25,15 +25,15 @@
  */
 
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web {
 
-LayoutDocument::LayoutDocument(Document& document, NonnullRefPtr<StyleProperties> style)
+LayoutDocument::LayoutDocument(DOM::Document& document, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutBlock(document, &document, move(style))
 {
 }
@@ -76,7 +76,7 @@ void LayoutDocument::layout(LayoutMode layout_mode)
     float lowest_bottom = 0;
     for_each_child([&](auto& child) {
         ASSERT(is<LayoutBlock>(child));
-        auto& child_block = to<LayoutBlock>(child);
+        auto& child_block = downcast<LayoutBlock>(child);
         lowest_bottom = max(lowest_bottom, child_block.absolute_rect().bottom());
     });
     set_height(lowest_bottom);
@@ -113,9 +113,9 @@ void LayoutDocument::paint(PaintContext& context, PaintPhase phase)
     stacking_context()->paint(context, phase);
 }
 
-HitTestResult LayoutDocument::hit_test(const Gfx::IntPoint& position) const
+HitTestResult LayoutDocument::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
-    return stacking_context()->hit_test(position);
+    return stacking_context()->hit_test(position, type);
 }
 
 }

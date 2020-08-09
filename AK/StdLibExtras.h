@@ -26,6 +26,11 @@
 
 #pragma once
 
+typedef __UINT64_TYPE__ u64;
+typedef __UINT32_TYPE__ u32;
+typedef __UINT16_TYPE__ u16;
+typedef __UINT8_TYPE__ u8;
+
 #define UNUSED_PARAM(x) (void)x
 
 inline constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned power_of_two)
@@ -38,7 +43,7 @@ namespace AK {
 template<typename T>
 inline constexpr T min(const T& a, const T& b)
 {
-    return a < b ? a : b;
+    return b < a ? b : a;
 }
 
 template<typename T>
@@ -99,13 +104,20 @@ struct EnableIf<true, T> {
 };
 
 template<class T>
+struct AddConst {
+    typedef const T Type;
+};
+
+template<class T>
 struct RemoveConst {
     typedef T Type;
 };
+
 template<class T>
 struct RemoveConst<const T> {
     typedef T Type;
 };
+
 template<class T>
 struct RemoveVolatile {
     typedef T Type;
@@ -314,52 +326,52 @@ struct MakeUnsigned {
 
 template<>
 struct MakeUnsigned<signed char> {
-    typedef unsigned char type;
+    typedef unsigned char Type;
 };
 
 template<>
 struct MakeUnsigned<short> {
-    typedef unsigned short type;
+    typedef unsigned short Type;
 };
 
 template<>
 struct MakeUnsigned<int> {
-    typedef unsigned type;
+    typedef unsigned Type;
 };
 
 template<>
 struct MakeUnsigned<long> {
-    typedef unsigned long type;
+    typedef unsigned long Type;
 };
 
 template<>
 struct MakeUnsigned<long long> {
-    typedef unsigned long long type;
+    typedef unsigned long long Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned char> {
-    typedef unsigned char type;
+    typedef unsigned char Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned short> {
-    typedef unsigned short type;
+    typedef unsigned short Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned int> {
-    typedef unsigned type;
+    typedef unsigned Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned long> {
-    typedef unsigned long type;
+    typedef unsigned long Type;
 };
 
 template<>
 struct MakeUnsigned<unsigned long long> {
-    typedef unsigned long long type;
+    typedef unsigned long long Type;
 };
 
 template<typename T>
@@ -368,52 +380,64 @@ struct MakeSigned {
 
 template<>
 struct MakeSigned<signed char> {
-    typedef signed char type;
+    typedef signed char Type;
 };
 
 template<>
 struct MakeSigned<short> {
-    typedef short type;
+    typedef short Type;
 };
 
 template<>
 struct MakeSigned<int> {
-    typedef int type;
+    typedef int Type;
 };
 
 template<>
 struct MakeSigned<long> {
-    typedef long type;
+    typedef long Type;
 };
 
 template<>
 struct MakeSigned<long long> {
-    typedef long long type;
+    typedef long long Type;
 };
 
 template<>
 struct MakeSigned<unsigned char> {
-    typedef char type;
+    typedef char Type;
 };
 
 template<>
 struct MakeSigned<unsigned short> {
-    typedef short type;
+    typedef short Type;
 };
 
 template<>
 struct MakeSigned<unsigned int> {
-    typedef int type;
+    typedef int Type;
 };
 
 template<>
 struct MakeSigned<unsigned long> {
-    typedef long type;
+    typedef long Type;
 };
 
 template<>
 struct MakeSigned<unsigned long long> {
-    typedef long long type;
+    typedef long long Type;
+};
+
+template<class T>
+struct IsVoid : IsSame<void, typename RemoveCV<T>::Type> {
+};
+
+template<class T>
+struct IsConst : FalseType {
+};
+
+template<class T>
+struct IsConst<const T> : TrueType {
 };
 
 template<typename T, typename U = T>
@@ -424,14 +448,66 @@ inline constexpr T exchange(T& slot, U&& value)
     return old_value;
 }
 
+template<typename T>
+struct IsUnion : public IntegralConstant<bool, __is_union(T)> {
+};
+
+template<typename T>
+struct IsClass : public IntegralConstant<bool, __is_class(T)> {
+};
+
+template<typename Base, typename Derived>
+struct IsBaseOf : public IntegralConstant<bool, __is_base_of(Base, Derived)> {
+};
+
+template<typename T>
+struct __IsIntegral : FalseType {
+};
+template<>
+struct __IsIntegral<u8> : TrueType {
+};
+template<>
+struct __IsIntegral<u16> : TrueType {
+};
+template<>
+struct __IsIntegral<u32> : TrueType {
+};
+template<>
+struct __IsIntegral<u64> : TrueType {
+};
+template<typename T>
+using IsIntegral = __IsIntegral<typename MakeUnsigned<typename RemoveCV<T>::Type>::Type>;
+
+template<typename T>
+struct __IsFloatingPoint : FalseType {
+};
+template<>
+struct __IsFloatingPoint<float> : TrueType {
+};
+template<>
+struct __IsFloatingPoint<double> : TrueType {
+};
+template<typename T>
+using IsFloatingPoint = __IsFloatingPoint<typename RemoveCV<T>::Type>;
+
+template<typename ReferenceType, typename T>
+using CopyConst =
+    typename Conditional<IsConst<ReferenceType>::value, typename AddConst<T>::Type, typename RemoveConst<T>::Type>::Type;
+
 }
 
+using AK::AddConst;
 using AK::ceil_div;
 using AK::clamp;
 using AK::Conditional;
 using AK::exchange;
 using AK::forward;
+using AK::IsBaseOf;
+using AK::IsClass;
+using AK::IsConst;
 using AK::IsSame;
+using AK::IsUnion;
+using AK::IsVoid;
 using AK::MakeSigned;
 using AK::MakeUnsigned;
 using AK::max;

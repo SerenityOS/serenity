@@ -22,7 +22,7 @@ sudo zypper install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs patch
 
 **Arch Linux / Manjaro**
 ```bash
-sudo pacman -S base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
+sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qemu-arch-extra
 ```
 
 **ALT Linux**
@@ -42,16 +42,8 @@ Ensure your CMake version is >= 3.16 with `cmake --version`. If your system does
 #### macOS prerequisites
 Make sure you have all the dependencies installed:
 ```bash
-brew install coreutils
 brew tap discoteq/discoteq
-brew install flock
-brew install qemu
-brew install e2fsprogs
-brew install m4
-brew install autoconf
-brew install libtool
-brew install automake
-brew install bash
+brew install coreutils flock qemu e2fsprogs m4 autoconf libtool automake bash gcc@10
 brew cask install osxfuse
 Toolchain/BuildFuseExt2.sh
 ```
@@ -65,6 +57,7 @@ Notes:
 - osxfuse, e2fsprogs, m4, autoconf, automake, libtool and `BuildFuseExt2.sh` are needed if you want to build the root filesystem disk image natively on macOS. This allows mounting an EXT2 fs and also installs commands like `mke2fs` that are not available on stock macOS. 
 - bash is needed because the default version installed on macOS doesn't support globstar
 - If you install some commercial EXT2 macOS fs handler instead of osxfuse and fuse-ext2, you will need to `brew install e2fsprogs` to obtain `mke2fs` anyway.
+- As of 2020-08-06, you might need to tell the build system about your newer host compiler. Once you've built the toolchain, navigate to `Build/`, `rm -rf *`, then run `cmake .. -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10`, then continue with `make install` as usual.
 
 #### OpenBSD prerequisites
 ```
@@ -109,6 +102,8 @@ To prevent this, remove `anon` from the `wheel` group and he will no longer be a
 On Linux, QEMU is significantly faster if it's able to use KVM. The run script will automatically enable KVM if `/dev/kvm` exists and is readable+writable by the current user.
 
 Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/Documentation/INSTALL.md)
+
+Outside of QEMU, Serenity will run on VirtualBox. If you're curious, see how to [install Serenity on VirtualBox.](https://github.com/SerenityOS/serenity/blob/master/Documentation/VirtualBox.md)
 
 Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply run `make install`, `make image`, `make run` again. CMake will only rebuild those parts that have been updated.
 

@@ -30,7 +30,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/FileSystemModel.h>
-#include <LibGUI/Image.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 
@@ -87,8 +87,9 @@ private:
     GUI::FileSystemModel& m_model;
     RefPtr<GUI::Button> m_apply_button;
     RefPtr<GUI::TextBox> m_name_box;
-    RefPtr<GUI::Image> m_icon;
+    RefPtr<GUI::ImageWidget> m_icon;
     String m_name;
+    String m_parent_path;
     String m_path;
     mode_t m_mode;
     mode_t m_old_mode;

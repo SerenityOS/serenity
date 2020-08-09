@@ -33,7 +33,7 @@
 namespace Crypto {
 namespace PK {
 
-RSA::KeyPairType RSA::parse_rsa_key(const ByteBuffer& in)
+RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes in)
 {
     // we are going to assign to at least one of these
     KeyPairType keypair;
@@ -125,10 +125,12 @@ void RSA::encrypt(const ByteBuffer& in, ByteBuffer& out)
         return;
     }
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
-    auto size = exp.export_data(out);
-    // FIXME: We should probably not do this...
-    if (size != out.size())
-        out = out.slice(out.size() - size, size);
+    auto size = exp.export_data(out.span());
+    auto outsize = out.size();
+    if (size != outsize) {
+        dbg() << "POSSIBLE RSA BUG!!! Size mismatch: " << outsize << " requested but " << size << " bytes generated";
+        out = out.slice(outsize - size, size);
+    }
 }
 
 void RSA::decrypt(const ByteBuffer& in, ByteBuffer& out)
@@ -137,7 +139,7 @@ void RSA::decrypt(const ByteBuffer& in, ByteBuffer& out)
 
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_private_key.private_exponent(), m_private_key.modulus());
-    auto size = exp.export_data(out);
+    auto size = exp.export_data(out.span());
 
     auto align = m_private_key.length();
     auto aligned_size = (size + align - 1) / align * align;
@@ -151,7 +153,7 @@ void RSA::sign(const ByteBuffer& in, ByteBuffer& out)
 {
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_private_key.private_exponent(), m_private_key.modulus());
-    auto size = exp.export_data(out);
+    auto size = exp.export_data(out.span());
     out = out.slice(out.size() - size, size);
 }
 
@@ -159,15 +161,19 @@ void RSA::verify(const ByteBuffer& in, ByteBuffer& out)
 {
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
-    auto size = exp.export_data(out);
+    auto size = exp.export_data(out.span());
     out = out.slice(out.size() - size, size);
 }
 
-void RSA::import_private_key(const ByteBuffer& buffer, bool pem)
+void RSA::import_private_key(ReadonlyBytes bytes, bool pem)
 {
-    // so gods help me, I hate DER
-    auto decoded_buffer = pem ? decode_pem(buffer) : buffer;
-    auto key = parse_rsa_key(decoded_buffer);
+    ByteBuffer buffer;
+    if (pem) {
+        buffer = decode_pem(bytes);
+        bytes = buffer.span();
+    }
+
+    auto key = parse_rsa_key(bytes);
     if (!key.private_key.length()) {
         dbg() << "We expected to see a private key, but we found none";
         ASSERT_NOT_REACHED();
@@ -175,11 +181,15 @@ void RSA::import_private_key(const ByteBuffer& buffer, bool pem)
     m_private_key = key.private_key;
 }
 
-void RSA::import_public_key(const ByteBuffer& buffer, bool pem)
+void RSA::import_public_key(ReadonlyBytes bytes, bool pem)
 {
-    // so gods help me, I hate DER
-    auto decoded_buffer = pem ? decode_pem(buffer) : buffer;
-    auto key = parse_rsa_key(decoded_buffer);
+    ByteBuffer buffer;
+    if (pem) {
+        buffer = decode_pem(bytes);
+        bytes = buffer.span();
+    }
+
+    auto key = parse_rsa_key(bytes);
     if (!key.public_key.length()) {
         dbg() << "We expected to see a public key, but we found none";
         ASSERT_NOT_REACHED();
@@ -244,8 +254,8 @@ void RSA_PKCS1_EME::encrypt(const ByteBuffer& in, ByteBuffer& out)
     // since arc4random can create zeros (shocking!)
     // we have to go through and un-zero the zeros
     for (size_t i = 0; i < ps_length; ++i)
-        if (!ps[i])
-            ps[i] = 0xfe;
+        while (!ps[i])
+            AK::fill_with_random(ps + i, 1);
 
     u8 paddings[] { 0x00, 0x02 };
 

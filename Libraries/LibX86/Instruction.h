@@ -47,7 +47,7 @@ template<typename T>
 struct TypeTrivia {
     static const size_t bits = sizeof(T) * 8;
     static const T sign_bit = 1 << (bits - 1);
-    static const T mask = typename MakeUnsigned<T>::type(-1);
+    static const T mask = typename MakeUnsigned<T>::Type(-1);
 };
 
 template<typename T, typename U>
@@ -66,7 +66,6 @@ enum IsLockPrefixAllowed {
 enum InstructionFormat {
     InvalidFormat,
     MultibyteWithSlash,
-    MultibyteWithSubopcode,
     InstructionPrefix,
 
     __BeginFormatsWithRMByte,
@@ -82,6 +81,14 @@ enum InstructionFormat {
     OP_RM8,
     OP_RM16,
     OP_RM32,
+    OP_FPU,
+    OP_FPU_reg,
+    OP_FPU_mem,
+    OP_FPU_AX16,
+    OP_FPU_RM16,
+    OP_FPU_RM32,
+    OP_FPU_RM64,
+    OP_FPU_M80,
     OP_RM8_reg8,
     OP_RM32_reg32,
     OP_reg32_RM32,
@@ -177,6 +184,11 @@ struct InstructionDescriptor {
     bool has_rm { false };
     unsigned imm1_bytes { 0 };
     unsigned imm2_bytes { 0 };
+
+    // Addressed by the 3 REG bits in the MOD-REG-R/M byte.
+    // Some slash instructions have further subgroups when MOD is 11,
+    // in that case the InstructionDescriptors in slashes have themselves
+    // a non-null slashes member that's indexed by the three R/M bits.
     InstructionDescriptor* slashes { nullptr };
 
     unsigned imm1_bytes_for_address_size(bool a32)
@@ -254,6 +266,17 @@ enum RegisterIndex32 {
     RegisterEBP,
     RegisterESI,
     RegisterEDI
+};
+
+enum FpuRegisterIndex {
+    ST0 = 0,
+    ST1,
+    ST2,
+    ST3,
+    ST4,
+    ST5,
+    ST6,
+    ST7
 };
 
 enum MMXRegisterIndex {
@@ -339,6 +362,13 @@ public:
     String to_string_o8(const Instruction&) const;
     String to_string_o16(const Instruction&) const;
     String to_string_o32(const Instruction&) const;
+    String to_string_fpu_reg() const;
+    String to_string_fpu_mem(const Instruction&) const;
+    String to_string_fpu_ax16() const;
+    String to_string_fpu16(const Instruction&) const;
+    String to_string_fpu32(const Instruction&) const;
+    String to_string_fpu64(const Instruction&) const;
+    String to_string_fpu80(const Instruction&) const;
     String to_string_mm(const Instruction&) const;
 
     bool is_register() const { return m_register_index != 0xffffffff; }
@@ -347,6 +377,7 @@ public:
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
     RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
+    FpuRegisterIndex reg_fpu() const { return static_cast<FpuRegisterIndex>(register_index()); }
 
     template<typename CPU, typename T>
     void write8(CPU&, const Instruction&, T);
@@ -388,7 +419,6 @@ private:
     u32 evaluate_sib(const CPU&, SegmentRegister& default_segment) const;
 
     unsigned m_register_index { 0xffffffff };
-    SegmentRegister m_segment;
     union {
         u32 m_offset32 { 0 };
         u16 m_offset16;
@@ -508,7 +538,6 @@ private:
     mutable MemoryOrRegisterReference m_modrm;
 
     InstructionDescriptor* m_descriptor { nullptr };
-    InstructionHandler m_handler { nullptr };
 };
 
 template<typename CPU>
@@ -848,20 +877,21 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
             m_register_index = m_op & 7;
     }
 
-    bool hasSlash = m_descriptor->format == MultibyteWithSlash;
-
-    if (hasSlash) {
+    bool has_slash = m_descriptor->format == MultibyteWithSlash;
+    if (has_slash) {
         m_descriptor = &m_descriptor->slashes[slash()];
+        if ((rm() & 0xc0) == 0xc0 && m_descriptor->slashes)
+            m_descriptor = &m_descriptor->slashes[rm() & 7];
     }
 
     if (!m_descriptor->mnemonic) {
         if (has_sub_op()) {
-            if (hasSlash)
+            if (has_slash)
                 fprintf(stderr, "Instruction %02X %02X /%u not understood\n", m_op, m_sub_op, slash());
             else
                 fprintf(stderr, "Instruction %02X %02X not understood\n", m_op, m_sub_op);
         } else {
-            if (hasSlash)
+            if (has_slash)
                 fprintf(stderr, "Instruction %02X /%u not understood\n", m_op, slash());
             else
                 fprintf(stderr, "Instruction %02X not understood\n", m_op);

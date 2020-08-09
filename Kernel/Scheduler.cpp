@@ -25,7 +25,9 @@
  */
 
 #include <AK/QuickSort.h>
+#include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
+#include <AK/Time.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
@@ -41,6 +43,16 @@
 
 namespace Kernel {
 
+class SchedulerPerProcessorData {
+    AK_MAKE_NONCOPYABLE(SchedulerPerProcessorData);
+    AK_MAKE_NONMOVABLE(SchedulerPerProcessorData);
+
+public:
+    SchedulerPerProcessorData() = default;
+
+    bool m_in_scheduler { true };
+};
+
 SchedulerData* g_scheduler_data;
 timeval g_timeofday;
 RecursiveSpinLock g_scheduler_lock;
@@ -49,18 +61,6 @@ void Scheduler::init_thread(Thread& thread)
 {
     ASSERT(g_scheduler_data);
     g_scheduler_data->m_nonrunnable_threads.append(thread);
-}
-
-void Scheduler::update_state_for_thread(Thread& thread)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_data);
-    auto& list = g_scheduler_data->thread_list_for_state(thread.state());
-
-    if (list.contains(thread))
-        return;
-
-    list.append(thread);
 }
 
 static u32 time_slice_for(const Thread& thread)
@@ -78,7 +78,7 @@ timeval Scheduler::time_since_boot()
 
 Thread* g_finalizer;
 WaitQueue* g_finalizer_wait_queue;
-Atomic<bool> g_finalizer_has_work{false};
+Atomic<bool> g_finalizer_has_work { false };
 static Process* s_colonel_process;
 u64 g_uptime;
 
@@ -92,7 +92,7 @@ Thread::JoinBlocker::JoinBlocker(Thread& joinee, void*& joinee_exit_value)
     current_thread->m_joinee = &joinee;
 }
 
-bool Thread::JoinBlocker::should_unblock(Thread& joiner, time_t, long)
+bool Thread::JoinBlocker::should_unblock(Thread& joiner)
 {
     return !joiner.m_joinee;
 }
@@ -112,7 +112,7 @@ Thread::AcceptBlocker::AcceptBlocker(const FileDescription& description)
 {
 }
 
-bool Thread::AcceptBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::AcceptBlocker::should_unblock(Thread&)
 {
     auto& socket = *blocked_description().socket();
     return socket.can_accept();
@@ -123,7 +123,7 @@ Thread::ConnectBlocker::ConnectBlocker(const FileDescription& description)
 {
 }
 
-bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::ConnectBlocker::should_unblock(Thread&)
 {
     auto& socket = *blocked_description().socket();
     return socket.setup_state() == Socket::SetupState::Completed;
@@ -132,50 +132,50 @@ bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
 Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
+}
+
+timespec* Thread::WriteBlocker::override_timeout(timespec* timeout)
+{
+    auto& description =  blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            timeval deadline = Scheduler::time_since_boot();
-            deadline.tv_sec += socket.send_timeout().tv_sec;
-            deadline.tv_usec += socket.send_timeout().tv_usec;
-            deadline.tv_sec += (socket.send_timeout().tv_usec / 1000000) * 1;
-            deadline.tv_usec %= 1000000;
-            m_deadline = deadline;
+            timeval_to_timespec(Scheduler::time_since_boot(), m_deadline);
+            timespec_add_timeval(m_deadline, socket.send_timeout(), m_deadline);
+            if (!timeout || m_deadline < *timeout)
+                return &m_deadline;
         }
     }
+    return timeout;
 }
 
-bool Thread::WriteBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
+bool Thread::WriteBlocker::should_unblock(Thread&)
 {
-    if (m_deadline.has_value()) {
-        bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
-        return timed_out || blocked_description().can_write();
-    }
     return blocked_description().can_write();
 }
 
 Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
+}
+
+timespec* Thread::ReadBlocker::override_timeout(timespec* timeout)
+{
+    auto& description = blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            timeval deadline = Scheduler::time_since_boot();
-            deadline.tv_sec += socket.receive_timeout().tv_sec;
-            deadline.tv_usec += socket.receive_timeout().tv_usec;
-            deadline.tv_sec += (socket.receive_timeout().tv_usec / 1000000) * 1;
-            deadline.tv_usec %= 1000000;
-            m_deadline = deadline;
+            timeval_to_timespec(Scheduler::time_since_boot(), m_deadline);
+            timespec_add_timeval(m_deadline, socket.receive_timeout(), m_deadline);
+            if (!timeout || m_deadline < *timeout)
+                return &m_deadline;
         }
     }
+    return timeout;
 }
 
-bool Thread::ReadBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
+bool Thread::ReadBlocker::should_unblock(Thread&)
 {
-    if (m_deadline.has_value()) {
-        bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
-        return timed_out || blocked_description().can_read();
-    }
     return blocked_description().can_read();
 }
 
@@ -186,7 +186,7 @@ Thread::ConditionBlocker::ConditionBlocker(const char* state_string, Function<bo
     ASSERT(m_block_until_condition);
 }
 
-bool Thread::ConditionBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::ConditionBlocker::should_unblock(Thread&)
 {
     return m_block_until_condition();
 }
@@ -196,38 +196,31 @@ Thread::SleepBlocker::SleepBlocker(u64 wakeup_time)
 {
 }
 
-bool Thread::SleepBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::SleepBlocker::should_unblock(Thread&)
 {
     return m_wakeup_time <= g_uptime;
 }
 
-Thread::SelectBlocker::SelectBlocker(const timespec& ts, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
-    : m_select_timeout(ts)
-    , m_select_has_timeout(select_has_timeout)
-    , m_select_read_fds(read_fds)
+Thread::SelectBlocker::SelectBlocker(const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
+    : m_select_read_fds(read_fds)
     , m_select_write_fds(write_fds)
     , m_select_exceptional_fds(except_fds)
 {
 }
 
-bool Thread::SelectBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
+bool Thread::SelectBlocker::should_unblock(Thread& thread)
 {
-    if (m_select_has_timeout) {
-        if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec * 1000 >= m_select_timeout.tv_nsec))
-            return true;
-    }
-
     auto& process = thread.process();
     for (int fd : m_select_read_fds) {
         if (!process.m_fds[fd])
             continue;
-        if (process.m_fds[fd].description->can_read())
+        if (process.m_fds[fd].description()->can_read())
             return true;
     }
     for (int fd : m_select_write_fds) {
         if (!process.m_fds[fd])
             continue;
-        if (process.m_fds[fd].description->can_write())
+        if (process.m_fds[fd].description()->can_write())
             return true;
     }
 
@@ -240,11 +233,11 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, pid_t& waitee_pid)
 {
 }
 
-bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
+bool Thread::WaitBlocker::should_unblock(Thread& thread)
 {
     bool should_unblock = m_wait_options & WNOHANG;
     if (m_waitee_pid != -1) {
-        auto* peer = Process::from_pid(m_waitee_pid);
+        auto peer = Process::from_pid(m_waitee_pid);
         if (!peer)
             return true;
     }
@@ -282,7 +275,7 @@ Thread::SemiPermanentBlocker::SemiPermanentBlocker(Reason reason)
 {
 }
 
-bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::SemiPermanentBlocker::should_unblock(Thread&)
 {
     // someone else has to unblock us
     return false;
@@ -292,6 +285,7 @@ bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
 // Make a decision as to whether to unblock them or not.
 void Thread::consider_unblock(time_t now_sec, long now_usec)
 {
+    ScopedSpinLock lock(m_lock);
     switch (state()) {
     case Thread::Invalid:
     case Thread::Runnable:
@@ -303,10 +297,16 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         /* don't know, don't care */
         return;
     case Thread::Blocked:
+    {
         ASSERT(m_blocker != nullptr);
-        if (m_blocker->should_unblock(*this, now_sec, now_usec))
+        timespec now;
+        now.tv_sec = now_sec,
+        now.tv_nsec = now_usec * 1000ull;
+        bool timed_out = m_blocker_timeout && now >= *m_blocker_timeout;
+        if (timed_out || m_blocker->should_unblock(*this))
             unblock();
         return;
+    }
     case Thread::Skip1SchedulerPass:
         set_state(Thread::Skip0SchedulerPasses);
         return;
@@ -319,12 +319,13 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
 void Scheduler::start()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    
+
     // We need to acquire our scheduler lock, which will be released
     // by the idle thread once control transferred there
     g_scheduler_lock.lock();
 
     auto& processor = Processor::current();
+    processor.set_scheduler_data(*new SchedulerPerProcessorData());
     ASSERT(processor.is_initialized());
     auto& idle_thread = *processor.idle_thread();
     ASSERT(processor.current_thread() == &idle_thread);
@@ -349,6 +350,20 @@ bool Scheduler::pick_next()
     auto now_sec = now.tv_sec;
     auto now_usec = now.tv_usec;
 
+    // Set the m_in_scheduler flag before acquiring the spinlock. This
+    // prevents a recursive call into Scheduler::invoke_async upon
+    // leaving the scheduler lock.
+    ScopedCritical critical;
+    Processor::current().get_scheduler_data().m_in_scheduler = true;
+    ScopeGuard guard(
+        []() {
+            // We may be on a different processor after we got switched
+            // back to this thread!
+            auto& scheduler_data = Processor::current().get_scheduler_data();
+            ASSERT(scheduler_data.m_in_scheduler);
+            scheduler_data.m_in_scheduler = false;
+        });
+
     ScopedSpinLock lock(g_scheduler_lock);
 
     // Check and unblock threads whose wait conditions have been met.
@@ -369,25 +384,16 @@ bool Scheduler::pick_next()
         }
         if (process.m_alarm_deadline && g_uptime > process.m_alarm_deadline) {
             process.m_alarm_deadline = 0;
-            process.send_signal(SIGALRM, nullptr);
+            // FIXME: Should we observe this signal somehow?
+            (void)process.send_signal(SIGALRM, nullptr);
         }
         return IterationDecision::Continue;
     });
 
     // Dispatch any pending signals.
     Thread::for_each_living([&](Thread& thread) -> IterationDecision {
+        ScopedSpinLock lock(thread.get_lock());
         if (!thread.has_unmasked_pending_signals())
-            return IterationDecision::Continue;
-        // FIXME: It would be nice if the Scheduler didn't have to worry about who is "current"
-        //        For now, avoid dispatching signals to "current" and do it in a scheduling pass
-        //        while some other process is interrupted. Otherwise a mess will be made.
-        if (&thread == current_thread)
-            return IterationDecision::Continue;
-        // We know how to interrupt blocked processes, but if they are just executing
-        // at some random point in the kernel, let them continue.
-        // Before returning to userspace from a syscall, we will block a thread if it has any
-        // pending unmasked signals, allowing it to be dispatched then.
-        if (thread.in_kernel() && !thread.is_blocked() && !thread.is_stopped())
             return IterationDecision::Continue;
         // NOTE: dispatch_one_pending_signal() may unblock the process.
         bool was_blocked = thread.is_blocked();
@@ -411,6 +417,8 @@ bool Scheduler::pick_next()
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Reason: " << (thread.wait_reason() ? thread.wait_reason() : "none");
         else if (thread.state() == Thread::Dying)
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Finalizable: " << thread.is_finalizable();
+        else
+            dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
         return IterationDecision::Continue;
     });
 
@@ -432,9 +440,6 @@ bool Scheduler::pick_next()
     Thread* thread_to_schedule = nullptr;
 
     for (auto* thread : sorted_runnables) {
-        if (thread->process().is_being_inspected())
-            continue;
-
         if (thread->process().exec_tid() && thread->process().exec_tid() != thread->tid())
             continue;
 
@@ -455,6 +460,10 @@ bool Scheduler::pick_next()
     dbg() << "Scheduler[" << Processor::current().id() << "]: Switch to " << *thread_to_schedule << " @ " << String::format("%04x:%08x", thread_to_schedule->tss().cs, thread_to_schedule->tss().eip);
 #endif
 
+    // We need to leave our first critical section before switching context,
+    // but since we're still holding the scheduler lock we're still in a critical section
+    critical.leave();
+
     return context_switch(thread_to_schedule);
 }
 
@@ -462,6 +471,7 @@ bool Scheduler::yield()
 {
     InterruptDisabler disabler;
     auto& proc = Processor::current();
+
     auto current_thread = Thread::current();
 #ifdef SCHEDULER_DEBUG
     dbg() << "Scheduler[" << proc.id() << "]: yielding thread " << *current_thread << " in_irq: " << proc.in_irq();
@@ -473,21 +483,38 @@ bool Scheduler::yield()
         // delay until exiting the trap or critical section
         proc.invoke_scheduler_async();
         return false;
-    } else if (!Scheduler::pick_next())
+    }
+
+    if (!Scheduler::pick_next())
         return false;
 #ifdef SCHEDULER_DEBUG
-    dbg() << "Scheduler[" << proc.id() << "]: yield returns to thread " << *current_thread << " in_irq: " << proc.in_irq();
+    dbg() << "Scheduler[" << Processor::current().id() << "]: yield returns to thread " << *current_thread << " in_irq: " << Processor::current().in_irq();
 #endif
     return true;
 }
 
 bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
 {
-    ScopedSpinLock lock(g_scheduler_lock);
+    ASSERT(beneficiary);
+    
+    // Set the m_in_scheduler flag before acquiring the spinlock. This
+    // prevents a recursive call into Scheduler::invoke_async upon
+    // leaving the scheduler lock.
+    ScopedCritical critical;
     auto& proc = Processor::current();
+    proc.get_scheduler_data().m_in_scheduler = true;
+    ScopeGuard guard(
+        []() {
+            // We may be on a different processor after we got switched
+            // back to this thread!
+            auto& scheduler_data = Processor::current().get_scheduler_data();
+            ASSERT(scheduler_data.m_in_scheduler);
+            scheduler_data.m_in_scheduler = false;
+        });
+
+    ScopedSpinLock lock(g_scheduler_lock);
+
     ASSERT(!proc.in_irq());
-    if (!Thread::is_thread(beneficiary))
-        return false;
 
     if (proc.in_critical()) {
         proc.invoke_scheduler_async();
@@ -497,7 +524,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     (void)reason;
     unsigned ticks_left = Thread::current()->ticks_left();
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
-         return Scheduler::yield();
+        return Scheduler::yield();
 
     unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
 #ifdef SCHEDULER_DEBUG
@@ -564,6 +591,39 @@ void Scheduler::enter_current(Thread& prev_thread)
     }
 }
 
+void Scheduler::leave_on_first_switch(u32 flags)
+{
+    // This is called when a thread is swiched into for the first time.
+    // At this point, enter_current has already be called, but because
+    // Scheduler::context_switch is not in the call stack we need to
+    // clean up and release locks manually here
+    g_scheduler_lock.unlock(flags);
+    auto& scheduler_data = Processor::current().get_scheduler_data();
+    ASSERT(scheduler_data.m_in_scheduler);
+    scheduler_data.m_in_scheduler = false;
+}
+
+void Scheduler::prepare_after_exec()
+{
+    // This is called after exec() when doing a context "switch" into
+    // the new process. This is called from Processor::assume_context
+    ASSERT(g_scheduler_lock.own_lock());
+    auto& scheduler_data = Processor::current().get_scheduler_data();
+    ASSERT(!scheduler_data.m_in_scheduler);
+    scheduler_data.m_in_scheduler = true;
+}
+
+void Scheduler::prepare_for_idle_loop()
+{
+    // This is called when the CPU finished setting up the idle loop
+    // and is about to run it. We need to acquire he scheduler lock
+    ASSERT(!g_scheduler_lock.own_lock());
+    g_scheduler_lock.lock();
+    auto& scheduler_data = Processor::current().get_scheduler_data();
+    ASSERT(!scheduler_data.m_in_scheduler);
+    scheduler_data.m_in_scheduler = true;
+}
+
 Process* Scheduler::colonel()
 {
     ASSERT(s_colonel_process);
@@ -579,7 +639,7 @@ void Scheduler::initialize()
     g_finalizer_wait_queue = new WaitQueue;
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-    s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, 1);
+    s_colonel_process = &Process::create_kernel_process(idle_thread, "colonel", idle_loop, 1).leak_ref();
     ASSERT(s_colonel_process);
     ASSERT(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
@@ -610,7 +670,9 @@ void Scheduler::timer_tick(const RegisterState& regs)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_irq());
-if (Processor::current().id() > 0) return;
+
+    if (Processor::current().id() > 0)
+        return;
     auto current_thread = Processor::current().current_thread();
     if (!current_thread)
         return;
@@ -644,8 +706,14 @@ if (Processor::current().id() > 0) return;
 void Scheduler::invoke_async()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(!Processor::current().in_irq());
-    pick_next();
+    auto& proc = Processor::current();
+    ASSERT(!proc.in_irq());
+
+    // Since this function is called when leaving critical sections (such
+    // as a SpinLock), we need to check if we're not already doing this
+    // to prevent recursion
+    if (!proc.get_scheduler_data().m_in_scheduler)
+        pick_next();
 }
 
 void Scheduler::notify_finalizer()
@@ -661,8 +729,9 @@ void Scheduler::idle_loop()
 
     for (;;) {
         asm("hlt");
-        
-if (Processor::current().id() == 0)        yield();
+
+        if (Processor::current().id() == 0)
+            yield();
     }
 }
 

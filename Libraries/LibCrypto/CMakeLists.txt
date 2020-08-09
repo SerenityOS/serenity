@@ -1,6 +1,8 @@
 set(SOURCES
     BigInt/UnsignedBigInteger.cpp
     BigInt/SignedBigInteger.cpp
+    Checksum/Adler32.cpp
+    Checksum/CRC32.cpp
     Cipher/AES.cpp
     Hash/MD5.cpp
     Hash/SHA1.cpp

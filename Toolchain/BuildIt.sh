@@ -19,9 +19,10 @@ MAKE="make"
 MD5SUM="md5sum"
 NPROC="nproc"
 
-# Each cache entry is 260 MB. 8 entries are 4 GiB.
-# It seems that Travis starts having trouble at 35 entries, so I think this is a good amount.
-KEEP_CACHE_COUNT=8
+# Each cache entry is 70 MB. 10 entries are 700 MiB.
+# It seems that Travis starts having trouble around a total
+# cache size of 9 GiB, so I think this is a good amount.
+KEEP_CACHE_COUNT=10
 
 if command -v ginstall &>/dev/null; then
     INSTALL=ginstall
@@ -78,7 +79,7 @@ pushd "$DIR"
 
         DEPS_CONFIG="
             uname=$(uname),TARGET=${TARGET},
-            BuildItHash=$($MD5SUM $(basename $0)),
+            BuildItHash=$($MD5SUM "$(basename "$0")"),
             MAKE=${MAKE},MD5SUM=${MD5SUM},NPROC=${NPROC},
             CC=${CC},CXX=${CXX},with_gmp=${with_gmp},LDFLAGS=${LDFLAGS},
             BINUTILS_VERSION=${BINUTILS_VERSION},BINUTILS_MD5SUM=${BINUTILS_MD5SUM},
@@ -105,12 +106,14 @@ pushd "$DIR"
                 # Travis preserves timestamps. Don't ask me why, but it does.
                 # We can exploit this to get an easy approximation of recent-ness.
                 # Our purging algorithm is simple: keep only the newest X entries.
+                # Note that `find` doesn't easily support ordering by date,
+                # and we control the filenames anyway.
+                # shellcheck disable=SC2012
                 ls -t | tail "-n+${KEEP_CACHE_COUNT}" | xargs -r rm -v
                 echo "After deletion:"
                 ls -l
             popd
         fi
-
     fi
 popd
 
@@ -194,11 +197,13 @@ pushd "$DIR/Build/"
     unset PKG_CONFIG_LIBDIR # Just in case
 
     pushd binutils
+        echo "XXX configure binutils"
         "$DIR"/Tarballs/binutils-2.33.1/configure --prefix="$PREFIX" \
                                                 --target="$TARGET" \
                                                 --with-sysroot="$SYSROOT" \
                                                 --enable-shared \
-                                                --disable-nls || exit 1
+                                                --disable-nls \
+                                                ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
         if [ "$(uname)" = "Darwin" ]; then
             # under macOS generated makefiles are not resolving the "intl"
             # dependency properly to allow linking its own copy of
@@ -208,6 +213,7 @@ pushd "$DIR/Build/"
             "$MAKE" all-yes
             popd
         fi
+        echo "XXX build binutils"
         "$MAKE" -j "$MAKEJOBS" || exit 1
         "$MAKE" install || exit 1
     popd
@@ -217,13 +223,15 @@ pushd "$DIR/Build/"
             perl -pi -e 's/-no-pie/-nopie/g' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/configure"
         fi
 
+        echo "XXX configure gcc and libgcc"
         "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
                                             --target="$TARGET" \
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
                                             --with-newlib \
                                             --enable-shared \
-                                            --enable-languages=c,c++ || exit 1
+                                            --enable-languages=c,c++ \
+                                            ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
         echo "XXX build gcc and libgcc"
         "$MAKE" -j "$MAKEJOBS" all-gcc all-target-libgcc || exit 1
@@ -246,7 +254,7 @@ pushd "$DIR/Build/"
         popd
 
         echo "XXX build libstdc++"
-        "$MAKE" all-target-libstdc++-v3 || exit 1
+        "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
         echo "XXX install libstdc++"
         "$MAKE" install-target-libstdc++-v3 || exit 1
 
@@ -262,7 +270,6 @@ popd
 
 pushd "$DIR"
     if [ "${TRY_USE_LOCAL_TOOLCHAIN}" = "y" ] ; then
-        # TODO: Compress with -z.  It's factor 3, and costs no time.
         echo "Caching toolchain:"
 
         if [ -z "${DEPS_HASH}" ] ; then
@@ -275,6 +282,19 @@ pushd "$DIR"
             echo "Not touching cache then."
         else
             mkdir -p Cache/
+            # We *most definitely* don't need debug symbols in the linker/compiler.
+            # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 250 MiB.
+            pushd "Local/libexec/gcc/i686-pc-serenity/${GCC_VERSION}"
+                for binary in cc1 cc1plus lto1; do
+                    echo "Before: $(du -h "${binary}")"
+                    strip "${binary}"
+                    echo "After: $(du -h "${binary}")"
+                done
+            popd
+            binary=Local/bin/i686-pc-serenity-lto-dump
+            echo "Before: $(du -h "${binary}")"
+            strip "${binary}"
+            echo "After: $(du -h "${binary}")"
             tar czf "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" Local/
         fi
     fi

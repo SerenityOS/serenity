@@ -35,7 +35,7 @@ class ArrayConstructor final : public NativeFunction {
 
 public:
     explicit ArrayConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ArrayConstructor() override;
 
     virtual Value call(Interpreter&) override;

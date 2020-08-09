@@ -30,23 +30,23 @@
 #include <AK/String.h>
 #include <LibWeb/DOM/CharacterData.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class Text final : public CharacterData {
 public:
+    using WrapperType = Bindings::TextWrapper;
+
     explicit Text(Document&, const String&);
     virtual ~Text() override;
 
     virtual FlyString node_name() const override { return "#text"; }
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
+    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 };
 
-template<>
-inline bool is<Text>(const Node& node)
-{
-    return node.is_text();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::DOM::Text)
+static bool is_type(const Web::DOM::Node& node) { return node.is_text(); }
+AK_END_TYPE_TRAITS()

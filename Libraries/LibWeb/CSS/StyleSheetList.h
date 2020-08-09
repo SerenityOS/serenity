@@ -33,7 +33,7 @@ namespace Web::CSS {
 
 class StyleSheetList : public RefCounted<StyleSheetList> {
 public:
-    static NonnullRefPtr<StyleSheetList> create(Document& document)
+    static NonnullRefPtr<StyleSheetList> create(DOM::Document& document)
     {
         return adopt(*new StyleSheetList(document));
     }
@@ -43,9 +43,9 @@ public:
     const NonnullRefPtrVector<StyleSheet>& sheets() const { return m_sheets; }
 
 private:
-    explicit StyleSheetList(Document&);
+    explicit StyleSheetList(DOM::Document&);
 
-    Document& m_document;
+    DOM::Document& m_document;
     NonnullRefPtrVector<StyleSheet> m_sheets;
 };
 

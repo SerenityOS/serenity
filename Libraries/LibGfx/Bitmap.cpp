@@ -74,8 +74,13 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
     ASSERT(!m_size.is_empty());
     ASSERT(!size_would_overflow(format, size));
     allocate_palette_from_format(format, {});
+#ifdef __serenity__
     int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
     m_data = (RGBA32*)mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
+#else
+    int map_flags = (MAP_ANONYMOUS | MAP_PRIVATE);
+    m_data = (RGBA32*)mmap(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0);
+#endif
     ASSERT(m_data && m_data != (void*)-1);
     m_needs_munmap = true;
 }
@@ -207,7 +212,11 @@ Bitmap::~Bitmap()
 void Bitmap::set_mmap_name(const StringView& name)
 {
     ASSERT(m_needs_munmap);
+#ifdef __serenity__
     ::set_mmap_name(m_data, size_in_bytes(), name.to_string().characters());
+#else
+    (void)name;
+#endif
 }
 
 void Bitmap::fill(Color color)
@@ -224,11 +233,13 @@ void Bitmap::set_volatile()
     ASSERT(m_purgeable);
     if (m_volatile)
         return;
+#ifdef __serenity__
     int rc = madvise(m_data, size_in_bytes(), MADV_SET_VOLATILE);
     if (rc < 0) {
         perror("madvise(MADV_SET_VOLATILE)");
         ASSERT_NOT_REACHED();
     }
+#endif
     m_volatile = true;
 }
 
@@ -237,11 +248,15 @@ void Bitmap::set_volatile()
     ASSERT(m_purgeable);
     if (!m_volatile)
         return true;
+#ifdef __serenity__
     int rc = madvise(m_data, size_in_bytes(), MADV_SET_NONVOLATILE);
     if (rc < 0) {
         perror("madvise(MADV_SET_NONVOLATILE)");
         ASSERT_NOT_REACHED();
     }
+#else
+    int rc = 0;
+#endif
     m_volatile = false;
     return rc == 0;
 }

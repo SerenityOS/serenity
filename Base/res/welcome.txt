@@ -55,7 +55,7 @@ This is all possibly by using HackStudio, Visual Builder, Terminal, and the
 (optional) GNU tools.
 
 * Multimedia
-$ /res/icons/audio-unmuted.png
+$ /res/icons/audio-volume-medium.png
 > Draw while playing your favorite songs!
 Serenity includes the Piano, which allows you to create your own tunes by
 simply pressing keys on the keyboard. You can pick the wavetype, octave, and

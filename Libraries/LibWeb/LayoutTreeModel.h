@@ -27,14 +27,13 @@
 #pragma once
 
 #include <LibGUI/Model.h>
+#include <LibWeb/Forward.h>
 
 namespace Web {
 
-class Document;
-
 class LayoutTreeModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<LayoutTreeModel> create(Document& document)
+    static NonnullRefPtr<LayoutTreeModel> create(DOM::Document& document)
     {
         return adopt(*new LayoutTreeModel(document));
     }
@@ -49,9 +48,9 @@ public:
     virtual void update() override;
 
 private:
-    explicit LayoutTreeModel(Document&);
+    explicit LayoutTreeModel(DOM::Document&);
 
-    NonnullRefPtr<Document> m_document;
+    NonnullRefPtr<DOM::Document> m_document;
 
     GUI::Icon m_document_icon;
     GUI::Icon m_element_icon;

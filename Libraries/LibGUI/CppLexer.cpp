@@ -243,6 +243,17 @@ Vector<CppToken> CppLexer::lex()
         tokens.append(token);
     };
 
+    auto emit_token_equals = [&](auto type, auto equals_type) {
+        if (peek(1) == '=') {
+            begin_token();
+            consume();
+            consume();
+            commit_token(equals_type);
+            return;
+        }
+        emit_token(type);
+    };
+
     auto match_escape_sequence = [&]() -> size_t {
         switch (peek(1)) {
         case '\'':
@@ -276,26 +287,41 @@ Vector<CppToken> CppLexer::lex()
         }
         case 'x': {
             size_t hex_digits = 0;
-            for (size_t i = 0; i < 2; ++i) {
-                if (!isxdigit(peek(2 + i)))
-                    break;
+            while (isxdigit(peek(2 + hex_digits)))
                 ++hex_digits;
-            }
             return 2 + hex_digits;
         }
-        case 'u': {
+        case 'u':
+        case 'U': {
             bool is_unicode = true;
-            for (size_t i = 0; i < 4; ++i) {
+            size_t number_of_digits = peek(1) == 'u' ? 4 : 8;
+            for (size_t i = 0; i < number_of_digits; ++i) {
                 if (!isxdigit(peek(2 + i))) {
                     is_unicode = false;
                     break;
                 }
             }
-            return is_unicode ? 6 : 0;
+            return is_unicode ? 2 + number_of_digits : 0;
         }
         default:
             return 0;
         }
+    };
+
+    auto match_string_prefix = [&](char quote) -> size_t {
+        if (peek() == quote)
+            return 1;
+        if (peek() == 'L' && peek(1) == quote)
+            return 2;
+        if (peek() == 'u') {
+            if (peek(1) == quote)
+                return 2;
+            if (peek(1) == '8' && peek(2) == quote)
+                return 3;
+        }
+        if (peek() == 'U' && peek(1) == quote)
+            return 2;
+        return 0;
     };
 
     while (m_index < m_input.length()) {
@@ -331,16 +357,188 @@ Vector<CppToken> CppLexer::lex()
             emit_token(CppToken::Type::RightBracket);
             continue;
         }
+        if (ch == '<') {
+            begin_token();
+            consume();
+            if (peek() == '<') {
+                consume();
+                if (peek() == '=') {
+                    consume();
+                    commit_token(CppToken::Type::LessLessEquals);
+                    continue;
+                }
+                commit_token(CppToken::Type::LessLess);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::LessEquals);
+                continue;
+            }
+            if (peek() == '>') {
+                consume();
+                commit_token(CppToken::Type::LessGreater);
+                continue;
+            }
+            commit_token(CppToken::Type::Less);
+            continue;
+        }
+        if (ch == '>') {
+            begin_token();
+            consume();
+            if (peek() == '>') {
+                consume();
+                if (peek() == '=') {
+                    consume();
+                    commit_token(CppToken::Type::GreaterGreaterEquals);
+                    continue;
+                }
+                commit_token(CppToken::Type::GreaterGreater);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::GreaterEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::Greater);
+            continue;
+        }
         if (ch == ',') {
             emit_token(CppToken::Type::Comma);
             continue;
         }
+        if (ch == '+') {
+            begin_token();
+            consume();
+            if (peek() == '+') {
+                consume();
+                commit_token(CppToken::Type::PlusPlus);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::PlusEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::Plus);
+            continue;
+        }
+        if (ch == '-') {
+            begin_token();
+            consume();
+            if (peek() == '-') {
+                consume();
+                commit_token(CppToken::Type::MinusMinus);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::MinusEquals);
+                continue;
+            }
+            if (peek() == '>') {
+                consume();
+                if (peek() == '*') {
+                    consume();
+                    commit_token(CppToken::Type::ArrowAsterisk);
+                    continue;
+                }
+                commit_token(CppToken::Type::Arrow);
+                continue;
+            }
+            commit_token(CppToken::Type::Minus);
+            continue;
+        }
         if (ch == '*') {
-            emit_token(CppToken::Type::Asterisk);
+            emit_token_equals(CppToken::Type::Asterisk, CppToken::Type::AsteriskEquals);
+            continue;
+        }
+        if (ch == '%') {
+            emit_token_equals(CppToken::Type::Percent, CppToken::Type::PercentEquals);
+            continue;
+        }
+        if (ch == '^') {
+            emit_token_equals(CppToken::Type::Caret, CppToken::Type::CaretEquals);
+            continue;
+        }
+        if (ch == '!') {
+            emit_token_equals(CppToken::Type::ExclamationMark, CppToken::Type::ExclamationMarkEquals);
+            continue;
+        }
+        if (ch == '=') {
+            emit_token_equals(CppToken::Type::Equals, CppToken::Type::EqualsEquals);
+            continue;
+        }
+        if (ch == '&') {
+            begin_token();
+            consume();
+            if (peek() == '&') {
+                consume();
+                commit_token(CppToken::Type::AndAnd);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::AndEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::And);
+            continue;
+        }
+        if (ch == '|') {
+            begin_token();
+            consume();
+            if (peek() == '|') {
+                consume();
+                commit_token(CppToken::Type::PipePipe);
+                continue;
+            }
+            if (peek() == '=') {
+                consume();
+                commit_token(CppToken::Type::PipeEquals);
+                continue;
+            }
+            commit_token(CppToken::Type::Pipe);
+            continue;
+        }
+        if (ch == '~') {
+            emit_token(CppToken::Type::Tilde);
+            continue;
+        }
+        if (ch == '?') {
+            emit_token(CppToken::Type::QuestionMark);
+            continue;
+        }
+        if (ch == ':') {
+            begin_token();
+            consume();
+            if (peek() == ':') {
+                consume();
+                if (peek() == '*') {
+                    consume();
+                    commit_token(CppToken::Type::ColonColonAsterisk);
+                    continue;
+                }
+                commit_token(CppToken::Type::ColonColon);
+                continue;
+            }
+            commit_token(CppToken::Type::Colon);
             continue;
         }
         if (ch == ';') {
             emit_token(CppToken::Type::Semicolon);
+            continue;
+        }
+        if (ch == '.') {
+            begin_token();
+            consume();
+            if (peek() == '*') {
+                consume();
+                commit_token(CppToken::Type::DotAsterisk);
+                continue;
+            }
+            commit_token(CppToken::Type::Dot);
             continue;
         }
         if (ch == '#') {
@@ -411,13 +609,17 @@ Vector<CppToken> CppLexer::lex()
             commit_token(CppToken::Type::Comment);
             continue;
         }
-        if (ch == '"') {
+        if (ch == '/') {
+            emit_token_equals(CppToken::Type::Slash, CppToken::Type::SlashEquals);
+            continue;
+        }
+        if (size_t prefix = match_string_prefix('"'); prefix > 0) {
             begin_token();
-            consume();
+            for (size_t i = 0; i < prefix; ++i)
+                consume();
             while (peek()) {
                 if (peek() == '\\') {
-                    size_t escape = match_escape_sequence();
-                    if (escape > 0) {
+                    if (size_t escape = match_escape_sequence(); escape > 0) {
                         commit_token(CppToken::Type::DoubleQuotedString);
                         begin_token();
                         for (size_t i = 0; i < escape; ++i)
@@ -434,13 +636,35 @@ Vector<CppToken> CppLexer::lex()
             commit_token(CppToken::Type::DoubleQuotedString);
             continue;
         }
-        if (ch == '\'') {
+        if (size_t prefix = match_string_prefix('R'); prefix > 0 && peek(prefix) == '"') {
             begin_token();
-            consume();
+            for (size_t i = 0; i < prefix + 1; ++i)
+                consume();
+            size_t prefix_start = m_index;
+            while (peek() && peek() != '(')
+                consume();
+            StringView prefix_string = m_input.substring_view(prefix_start, m_index - prefix_start);
+            while (peek()) {
+                if (consume() == '"') {
+                    ASSERT(m_index >= prefix_string.length() + 2);
+                    ASSERT(m_input[m_index - 1] == '"');
+                    if (m_input[m_index - 1 - prefix_string.length() - 1] == ')') {
+                        StringView suffix_string = m_input.substring_view(m_index - 1 - prefix_string.length(), prefix_string.length());
+                        if (prefix_string == suffix_string)
+                            break;
+                    }
+                }
+            }
+            commit_token(CppToken::Type::RawString);
+            continue;
+        }
+        if (size_t prefix = match_string_prefix('\''); prefix > 0) {
+            begin_token();
+            for (size_t i = 0; i < prefix; ++i)
+                consume();
             while (peek()) {
                 if (peek() == '\\') {
-                    size_t escape = match_escape_sequence();
-                    if (escape > 0) {
+                    if (size_t escape = match_escape_sequence(); escape > 0) {
                         commit_token(CppToken::Type::SingleQuotedString);
                         begin_token();
                         for (size_t i = 0; i < escape; ++i)

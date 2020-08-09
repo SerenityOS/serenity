@@ -30,6 +30,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>
 
@@ -83,15 +84,5 @@ private:
     VMObject& operator=(VMObject&&) = delete;
     VMObject(VMObject&&) = delete;
 };
-
-template<typename T>
-inline bool is(const VMObject&) { return false; }
-
-template<typename T>
-inline T& to(VMObject& object)
-{
-    ASSERT(is<typename RemoveConst<T>::Type>(object));
-    return static_cast<T&>(object);
-}
 
 }

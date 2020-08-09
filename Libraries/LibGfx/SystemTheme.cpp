@@ -85,6 +85,19 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
         return metric;
     };
 
+    auto get_path = [&](auto& name, auto role) {
+        auto path = file->read_entry("Paths", name);
+        if (path.is_empty()) {
+            switch (role) {
+            case (int)PathRole::TitleButtonIcons:
+                return "/res/icons/16x16/";
+            default:
+                return "/res/";
+            }
+        }
+        return &path[0];
+    };
+
 #define DO_COLOR(x) \
     data->color[(int)ColorRole::x] = get_color(#x)
 
@@ -107,17 +120,23 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(ActiveWindowBorder1);
     DO_COLOR(ActiveWindowBorder2);
     DO_COLOR(ActiveWindowTitle);
+    DO_COLOR(ActiveWindowTitleShadow);
+    DO_COLOR(ActiveWindowTitleStripes);
     DO_COLOR(InactiveWindowBorder1);
     DO_COLOR(InactiveWindowBorder2);
     DO_COLOR(InactiveWindowTitle);
+    DO_COLOR(InactiveWindowTitleShadow);
+    DO_COLOR(InactiveWindowTitleStripes);
     DO_COLOR(MovingWindowBorder1);
     DO_COLOR(MovingWindowBorder2);
     DO_COLOR(MovingWindowTitle);
+    DO_COLOR(MovingWindowTitleShadow);
+    DO_COLOR(MovingWindowTitleStripes);
     DO_COLOR(HighlightWindowBorder1);
     DO_COLOR(HighlightWindowBorder2);
     DO_COLOR(HighlightWindowTitle);
-    DO_COLOR(WindowTitleShadow);
-    DO_COLOR(WindowTitleStripes);
+    DO_COLOR(HighlightWindowTitleShadow);
+    DO_COLOR(HighlightWindowTitleStripes);
     DO_COLOR(MenuStripe);
     DO_COLOR(MenuBase);
     DO_COLOR(MenuBaseText);
@@ -152,6 +171,11 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_METRIC(TitleHeight);
     DO_METRIC(TitleButtonWidth);
     DO_METRIC(TitleButtonHeight);
+
+#define DO_PATH(x) \
+    data->path[(int)PathRole::x] = get_path(#x, (int)PathRole::x)
+
+    DO_PATH(TitleButtonIcons);
 
     buffer->seal();
     buffer->share_globally();

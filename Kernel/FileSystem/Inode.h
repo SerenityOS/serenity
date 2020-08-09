@@ -76,7 +76,7 @@ public:
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) = 0;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;
     virtual KResult remove_child(const StringView& name) = 0;
-    virtual size_t directory_entry_count() const = 0;
+    virtual KResultOr<size_t> directory_entry_count() const = 0;
     virtual KResult chmod(mode_t) = 0;
     virtual KResult chown(uid_t, gid_t) = 0;
     virtual KResult truncate(u64) { return KSuccess; }

@@ -109,24 +109,24 @@ Widget::~Widget()
 void Widget::child_event(Core::ChildEvent& event)
 {
     if (event.type() == Event::ChildAdded) {
-        if (event.child() && Core::is<Widget>(*event.child()) && layout()) {
+        if (event.child() && is<Widget>(*event.child()) && layout()) {
             if (event.insertion_before_child() && event.insertion_before_child()->is_widget())
-                layout()->insert_widget_before(Core::to<Widget>(*event.child()), Core::to<Widget>(*event.insertion_before_child()));
+                layout()->insert_widget_before(downcast<Widget>(*event.child()), downcast<Widget>(*event.insertion_before_child()));
             else
-                layout()->add_widget(Core::to<Widget>(*event.child()));
+                layout()->add_widget(downcast<Widget>(*event.child()));
         }
-        if (window() && event.child() && Core::is<Widget>(*event.child()))
-            window()->did_add_widget({}, Core::to<Widget>(*event.child()));
+        if (window() && event.child() && is<Widget>(*event.child()))
+            window()->did_add_widget({}, downcast<Widget>(*event.child()));
     }
     if (event.type() == Event::ChildRemoved) {
         if (layout()) {
-            if (event.child() && Core::is<Widget>(*event.child()))
-                layout()->remove_widget(Core::to<Widget>(*event.child()));
+            if (event.child() && is<Widget>(*event.child()))
+                layout()->remove_widget(downcast<Widget>(*event.child()));
             else
                 invalidate_layout();
         }
-        if (window() && event.child() && Core::is<Widget>(*event.child()))
-            window()->did_remove_widget({}, Core::to<Widget>(*event.child()));
+        if (window() && event.child() && is<Widget>(*event.child()))
+            window()->did_remove_widget({}, downcast<Widget>(*event.child()));
         update();
     }
     return Core::Object::child_event(event);
@@ -470,9 +470,9 @@ Gfx::IntRect Widget::screen_relative_rect() const
 Widget* Widget::child_at(const Gfx::IntPoint& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
-        if (!Core::is<Widget>(children()[i]))
+        if (!is<Widget>(children()[i]))
             continue;
-        auto& child = Core::to<Widget>(children()[i]);
+        auto& child = downcast<Widget>(children()[i]);
         if (!child.is_visible())
             continue;
         if (child.content_rect().contains(point))

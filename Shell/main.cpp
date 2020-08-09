@@ -83,15 +83,17 @@ int main(int argc, char** argv)
     Core::EventLoop::register_signal(SIGCHLD, [](int) {
         auto& jobs = s_shell->jobs;
         Vector<u64> disowned_jobs;
-        for (auto& job : jobs) {
+        for (auto& it : jobs) {
+            auto job_id = it.key;
+            auto& job = *it.value;
             int wstatus = 0;
-            auto child_pid = waitpid(job.value->pid(), &wstatus, WNOHANG);
+            auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
             if (child_pid < 0) {
                 if (errno == ECHILD) {
                     // The child process went away before we could process its death, just assume it exited all ok.
                     // FIXME: This should never happen, the child should stay around until we do the waitpid above.
-                    dbg() << "Child process gone, cannot get exit code for " << job.key;
-                    child_pid = job.value->pid();
+                    dbg() << "Child process gone, cannot get exit code for " << job_id;
+                    child_pid = job.pid();
                 } else {
                     ASSERT_NOT_REACHED();
                 }
@@ -99,23 +101,24 @@ int main(int argc, char** argv)
 #ifndef __serenity__
             if (child_pid == 0) {
                 // Linux: if child didn't "change state", but existed.
-                child_pid = job.value->pid();
+                continue;
             }
 #endif
-            if (child_pid == job.value->pid()) {
+            if (child_pid == job.pid()) {
                 if (WIFEXITED(wstatus)) {
-                    job.value->set_has_exit(WEXITSTATUS(wstatus));
+                    job.set_has_exit(WEXITSTATUS(wstatus));
                 } else if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
-                    job.value->set_has_exit(126);
+                    job.set_has_exit(126);
                 } else if (WIFSTOPPED(wstatus)) {
-                    job.value->unblock();
+                    job.unblock();
+                    job.set_is_suspended(true);
                 }
             }
-            if (job.value->should_be_disowned())
-                disowned_jobs.append(job.key);
+            if (job.should_be_disowned())
+                disowned_jobs.append(job_id);
         }
-        for (auto key : disowned_jobs)
-            jobs.remove(key);
+        for (auto job_id : disowned_jobs)
+            jobs.remove(job_id);
     });
 
     Core::EventLoop::register_signal(SIGTSTP, [](auto) {
@@ -131,6 +134,7 @@ int main(int argc, char** argv)
     sigset_t blocked;
     sigemptyset(&blocked);
     sigaddset(&blocked, SIGTTOU);
+    sigaddset(&blocked, SIGTTIN);
     pthread_sigmask(SIG_BLOCK, &blocked, NULL);
 #endif
 #ifdef __serenity__
@@ -140,7 +144,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    editor = Line::Editor::construct(Line::Configuration { Line::Configuration::UnescapedSpaces });
+    editor = Line::Editor::construct(Line::Configuration {});
 
     auto shell = Shell::construct();
     s_shell = shell.ptr();
@@ -159,12 +163,14 @@ int main(int argc, char** argv)
 
     const char* command_to_run = nullptr;
     const char* file_to_read_from = nullptr;
+    Vector<const char*> script_args;
     bool skip_rc_files = false;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
-    parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc", 0);
+    parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(script_args, "Extra argumets to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
     parser.parse(argc, argv);
 
@@ -179,6 +185,13 @@ int main(int argc, char** argv)
         };
         run_rc_file(Shell::global_init_file_path);
         run_rc_file(Shell::local_init_file_path);
+    }
+
+    {
+        Vector<String> args;
+        for (auto* arg : script_args)
+            args.empend(arg);
+        shell->set_local_variable("ARGV", adopt(*new AST::ListValue(move(args))));
     }
 
     if (command_to_run) {

@@ -37,7 +37,7 @@ class Cell {
     AK_MAKE_NONMOVABLE(Cell);
 
 public:
-    virtual void initialize(Interpreter&, GlobalObject&) { }
+    virtual void initialize(GlobalObject&) { }
     virtual ~Cell() { }
 
     bool is_marked() const { return m_mark; }

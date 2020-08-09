@@ -31,11 +31,9 @@
 
 namespace Web {
 
-class Element;
-
 class LayoutBlock : public LayoutBox {
 public:
-    LayoutBlock(Document&, const Node*, NonnullRefPtr<StyleProperties>);
+    LayoutBlock(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutBlock() override;
 
     virtual const char* class_name() const override { return "LayoutBlock"; }
@@ -51,12 +49,12 @@ public:
     LineBox& ensure_last_line_box();
     LineBox& add_line_box();
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint&) const override;
+    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 
-    LayoutBlock* previous_sibling() { return to<LayoutBlock>(LayoutNode::previous_sibling()); }
-    const LayoutBlock* previous_sibling() const { return to<LayoutBlock>(LayoutNode::previous_sibling()); }
-    LayoutBlock* next_sibling() { return to<LayoutBlock>(LayoutNode::next_sibling()); }
-    const LayoutBlock* next_sibling() const { return to<LayoutBlock>(LayoutNode::next_sibling()); }
+    LayoutBlock* previous_sibling() { return downcast<LayoutBlock>(LayoutNode::previous_sibling()); }
+    const LayoutBlock* previous_sibling() const { return downcast<LayoutBlock>(LayoutNode::previous_sibling()); }
+    LayoutBlock* next_sibling() { return downcast<LayoutBlock>(LayoutNode::next_sibling()); }
+    const LayoutBlock* next_sibling() const { return downcast<LayoutBlock>(LayoutNode::next_sibling()); }
 
     template<typename Callback>
     void for_each_fragment(Callback);
@@ -89,7 +87,7 @@ private:
     void place_block_level_replaced_element_in_normal_flow(LayoutReplaced&);
     void layout_absolutely_positioned_descendant(LayoutBox&);
 
-    NonnullRefPtr<StyleProperties> style_for_anonymous_block() const;
+    NonnullRefPtr<CSS::StyleProperties> style_for_anonymous_block() const;
 
     void layout_inline_children(LayoutMode);
     void layout_contained_boxes(LayoutMode);
@@ -119,10 +117,8 @@ void LayoutBlock::for_each_fragment(Callback callback) const
     }
 }
 
-template<>
-ALWAYS_INLINE bool is<LayoutBlock>(const LayoutNode& node)
-{
-    return node.is_block();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutBlock)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_block(); }
+AK_END_TYPE_TRAITS()

@@ -44,27 +44,30 @@ InodeFile::~InodeFile()
 {
 }
 
-ssize_t InodeFile::read(FileDescription& description, size_t offset, u8* buffer, ssize_t count)
+KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, u8* buffer, size_t count)
 {
     ssize_t nread = m_inode->read_bytes(offset, count, buffer, &description);
     if (nread > 0)
         Thread::current()->did_file_read(nread);
+    if (nread < 0)
+        return KResult(nread);
     return nread;
 }
 
-ssize_t InodeFile::write(FileDescription& description, size_t offset, const u8* data, ssize_t count)
+KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, const u8* data, size_t count)
 {
     ssize_t nwritten = m_inode->write_bytes(offset, count, data, &description);
     if (nwritten > 0) {
         m_inode->set_mtime(kgettimeofday().tv_sec);
         Thread::current()->did_file_write(nwritten);
     }
+    if (nwritten < 0)
+        return KResult(nwritten);
     return nwritten;
 }
 
 KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared)
 {
-    ASSERT(offset == 0);
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<InodeVMObject> vmobject;
     if (shared)

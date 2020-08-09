@@ -43,6 +43,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, CppToken::Type type)
         return { palette.syntax_identifier() };
     case CppToken::Type::DoubleQuotedString:
     case CppToken::Type::SingleQuotedString:
+    case CppToken::Type::RawString:
         return { palette.syntax_string() };
     case CppToken::Type::Integer:
     case CppToken::Type::Float:

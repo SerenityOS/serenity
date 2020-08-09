@@ -40,12 +40,6 @@
     extern WidgetClassRegistration registration_##class_name; \
     WidgetClassRegistration registration_##class_name(#class_name, []() { return class_name::construct(); });
 
-template<>
-inline bool Core::is<GUI::Widget>(const Core::Object& object)
-{
-    return object.is_widget();
-}
-
 namespace GUI {
 
 enum class SizePolicy {
@@ -249,8 +243,8 @@ public:
     void for_each_child_widget(Callback callback)
     {
         for_each_child([&](auto& child) {
-            if (Core::is<Widget>(child))
-                return callback(Core::to<Widget>(child));
+            if (is<Widget>(child))
+                return callback(downcast<Widget>(child));
             return IterationDecision::Continue;
         });
     }
@@ -278,9 +272,9 @@ public:
 protected:
     Widget();
 
-    virtual void custom_layout() {}
-    virtual void did_change_font() {}
-    virtual void did_layout() {}
+    virtual void custom_layout() { }
+    virtual void did_change_font() { }
+    virtual void did_layout() { }
     virtual void paint_event(PaintEvent&);
     virtual void resize_event(ResizeEvent&);
     virtual void show_event(ShowEvent&);
@@ -347,14 +341,18 @@ private:
 
 inline Widget* Widget::parent_widget()
 {
-    if (parent() && Core::is<Widget>(*parent()))
-        return &Core::to<Widget>(*parent());
+    if (parent() && is<Widget>(*parent()))
+        return &downcast<Widget>(*parent());
     return nullptr;
 }
 inline const Widget* Widget::parent_widget() const
 {
-    if (parent() && Core::is<Widget>(*parent()))
-        return &Core::to<const Widget>(*parent());
+    if (parent() && is<Widget>(*parent()))
+        return &downcast<const Widget>(*parent());
     return nullptr;
 }
 }
+
+AK_BEGIN_TYPE_TRAITS(GUI::Widget)
+static bool is_type(const Core::Object& object) { return object.is_widget(); }
+AK_END_TYPE_TRAITS()

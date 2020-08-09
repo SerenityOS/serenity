@@ -25,6 +25,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <LibCore/ArgsParser.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -34,10 +35,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2) {
-        printf("usage: basename <path>\n");
-        return 1;
-    }
-    printf("%s\n", LexicalPath(argv[1]).basename().characters());
+    const char* path = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(path, "Path to get basename from", "path");
+    args_parser.parse(argc, argv);
+
+    printf("%s\n", LexicalPath(path).basename().characters());
     return 0;
 }

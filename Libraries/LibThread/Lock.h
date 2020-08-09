@@ -72,12 +72,11 @@ ALWAYS_INLINE void Lock::lock()
     }
     for (;;) {
         int expected = 0;
-        if (m_holder.compare_exchange_strong(expected, tid, AK::memory_order_acq_rel)) {
-            m_holder = tid;
+        if (m_holder.compare_exchange_strong(expected, tid, AK::memory_order_acq_rel)) {            
             m_level = 1;
             return;
         }
-        donate(m_holder);
+        donate(expected);
     }
 }
 
@@ -85,9 +84,10 @@ inline void Lock::unlock()
 {
     ASSERT(m_holder == gettid());
     ASSERT(m_level);
-    --m_level;
-    if (!m_level)
+    if (m_level == 1)
         m_holder.store(0, AK::memory_order_release);
+    else
+        --m_level;
 }
 
 #define LOCKER(lock) LibThread::Locker locker(lock)

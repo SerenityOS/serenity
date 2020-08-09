@@ -172,7 +172,7 @@ bool SB16::can_read(const FileDescription&, size_t) const
     return false;
 }
 
-ssize_t SB16::read(FileDescription&, size_t, u8*, ssize_t)
+KResultOr<size_t> SB16::read(FileDescription&, size_t, u8*, size_t)
 {
     return 0;
 }
@@ -226,7 +226,7 @@ void SB16::wait_for_irq()
     disable_irq();
 }
 
-ssize_t SB16::write(FileDescription&, size_t, const u8* data, ssize_t length)
+KResultOr<size_t> SB16::write(FileDescription&, size_t, const u8* data, size_t length)
 {
     if (!m_dma_region) {
         auto page = MM.allocate_supervisor_physical_page();

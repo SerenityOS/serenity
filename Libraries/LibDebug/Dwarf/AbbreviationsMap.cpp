@@ -27,6 +27,8 @@
 #include "AbbreviationsMap.h"
 #include "DwarfInfo.h"
 
+#include <AK/Stream.h>
+
 namespace Dwarf {
 
 AbbreviationsMap::AbbreviationsMap(const DwarfInfo& dwarf_info, u32 offset)
@@ -38,10 +40,10 @@ AbbreviationsMap::AbbreviationsMap(const DwarfInfo& dwarf_info, u32 offset)
 
 void AbbreviationsMap::populate_map()
 {
-    BufferStream abbreviation_stream(const_cast<ByteBuffer&>(m_dwarf_info.abbreviation_data()));
-    abbreviation_stream.advance(m_offset);
+    InputMemoryStream abbreviation_stream(m_dwarf_info.abbreviation_data().span());
+    abbreviation_stream.discard_or_error(m_offset);
 
-    while (!abbreviation_stream.at_end()) {
+    while (!abbreviation_stream.eof()) {
         size_t abbreviation_code = 0;
         abbreviation_stream.read_LEB128_unsigned(abbreviation_code);
         // An abbrevation code of 0 marks the end of the

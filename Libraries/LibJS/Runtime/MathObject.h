@@ -35,7 +35,7 @@ class MathObject final : public Object {
 
 public:
     explicit MathObject(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~MathObject() override;
 
 private:

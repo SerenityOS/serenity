@@ -33,8 +33,9 @@ namespace AK {
 
 class MappedFile {
     AK_MAKE_NONCOPYABLE(MappedFile);
+
 public:
-    MappedFile() {}
+    MappedFile() { }
     explicit MappedFile(const StringView& file_name);
     MappedFile(MappedFile&&);
     ~MappedFile();
@@ -42,6 +43,11 @@ public:
     MappedFile& operator=(MappedFile&&);
 
     bool is_valid() const { return m_map != (void*)-1; }
+    int errno_if_invalid() const
+    {
+        ASSERT(!is_valid());
+        return m_errno;
+    }
     void unmap();
 
     void* data() { return m_map; }
@@ -51,6 +57,7 @@ public:
 private:
     size_t m_size { 0 };
     void* m_map { (void*)-1 };
+    int m_errno { 0 };
 };
 
 }

@@ -1,0 +1,9 @@
+interface HTMLImageElement : HTMLElement {
+
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString alt;
+    [Reflect] attribute DOMString srcset;
+    [Reflect] attribute DOMString sizes;
+    [Reflect=usemap] attribute DOMString useMap;
+
+}

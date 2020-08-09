@@ -26,7 +26,7 @@
 
 #include <LibWeb/CSS/StyleSheet.h>
 
-namespace Web {
+namespace Web::CSS {
 
 StyleSheet::StyleSheet(NonnullRefPtrVector<StyleRule>&& rules)
     : m_rules(move(rules))

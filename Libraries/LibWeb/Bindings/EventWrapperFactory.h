@@ -29,10 +29,8 @@
 #include <LibJS/Forward.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::Bindings {
 
-EventWrapper* wrap(JS::GlobalObject&, Event&);
+EventWrapper* wrap(JS::GlobalObject&, DOM::Event&);
 
-}
 }

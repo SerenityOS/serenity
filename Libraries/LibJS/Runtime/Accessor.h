@@ -35,9 +35,9 @@ namespace JS {
 
 class Accessor final : public Cell {
 public:
-    static Accessor* create(Interpreter& interpreter, GlobalObject& global_object, Function* getter, Function* setter)
+    static Accessor* create(Interpreter& interpreter, Function* getter, Function* setter)
     {
-        return interpreter.heap().allocate<Accessor>(global_object, getter, setter);
+        return interpreter.heap().allocate_without_global_object<Accessor>(getter, setter);
     }
 
     Accessor(Function* getter, Function* setter)

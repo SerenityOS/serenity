@@ -35,7 +35,7 @@ class ObjectPrototype final : public Object {
 
 public:
     explicit ObjectPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ObjectPrototype() override;
 
     // public to serve as intrinsic function %Object.prototype.toString%

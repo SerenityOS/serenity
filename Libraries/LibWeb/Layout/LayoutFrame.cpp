@@ -30,14 +30,14 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutFrame.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 
 namespace Web {
 
-LayoutFrame::LayoutFrame(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+LayoutFrame::LayoutFrame(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutReplaced(document, element, move(style))
 {
 }
@@ -64,7 +64,7 @@ void LayoutFrame::paint(PaintContext& context, PaintPhase phase)
     LayoutReplaced::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        auto* hosted_document = node().hosted_document();
+        auto* hosted_document = node().content_document();
         if (!hosted_document)
             return;
         auto* hosted_layout_tree = hosted_document->layout_node();
@@ -90,7 +90,7 @@ void LayoutFrame::did_set_rect()
     LayoutReplaced::did_set_rect();
 
     ASSERT(node().hosted_frame());
-    node().hosted_frame()->set_size(size().to_int_size());
+    node().hosted_frame()->set_size(size().to_type<int>());
 }
 
 }

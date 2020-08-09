@@ -5,6 +5,13 @@
 true || exit 2
 false && exit 2
 
+# Can we chain &&'s?
+false && exit 2 && echo "can't chain &&'s" && exit 2
+
+# Proper precedence between &&'s and ||'s
+false && exit 2 || true && false && exit 2
+
+
 # Sanity check: can we pass arguments to 'test'?
 test yes = yes || exit 2
 
@@ -78,7 +85,7 @@ rm -fr sh-test
 
 # Setopt
 setopt --inline_exec_keep_empty_segments
-test "$(echo "a\n\nb")" = "a  b" || fail inline_exec_keep_empty_segments has no effect
+test "$(echo -n "a\n\nb")" = "a  b" || fail inline_exec_keep_empty_segments has no effect
 
 setopt --no_inline_exec_keep_empty_segments
-test "$(echo "a\n\nb")" = "a b" || fail cannot unset inline_exec_keep_empty_segments
+test "$(echo -n "a\n\nb")" = "a b" || fail cannot unset inline_exec_keep_empty_segments

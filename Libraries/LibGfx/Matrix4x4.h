@@ -26,13 +26,14 @@
 
 #pragma once
 
+#include <LibGfx/Matrix.h>
 #include <LibGfx/Vector3.h>
 #include <math.h>
 
 namespace Gfx {
 
 template<typename T>
-class Matrix4x4 final {
+class Matrix4x4 final : public Matrix<4, T> {
 public:
     Matrix4x4() = default;
     Matrix4x4(T _11, T _12, T _13, T _14,
@@ -47,6 +48,9 @@ public:
         }
     {
     }
+
+    auto elements() const { return m_elements; }
+    auto elements() { return m_elements; }
 
     Matrix4x4 operator*(const Matrix4x4& other) const
     {

@@ -26,10 +26,10 @@
 
 #pragma once
 
-#ifdef __serenity__
+#if defined(__serenity__) || defined(__linux__)
 
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
+#    include <AK/RefCounted.h>
+#    include <AK/RefPtr.h>
 
 namespace AK {
 
@@ -54,7 +54,7 @@ private:
 
     int m_shbuf_id { -1 };
     int m_size { 0 };
-    void* m_data;
+    void* m_data { nullptr };
 };
 
 }

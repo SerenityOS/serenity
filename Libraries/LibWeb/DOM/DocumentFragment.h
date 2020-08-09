@@ -30,7 +30,7 @@
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class DocumentFragment
     : public ParentNode
@@ -44,10 +44,8 @@ public:
     virtual FlyString node_name() const override { return "#document-fragment"; }
 };
 
-template<>
-inline bool is<DocumentFragment>(const Node& node)
-{
-    return node.is_document_fragment();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::DOM::DocumentFragment)
+static bool is_type(const Web::DOM::Node& node) { return node.is_document_fragment(); }
+AK_END_TYPE_TRAITS()

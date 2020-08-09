@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibGfx/Color.h>
 
@@ -38,17 +39,23 @@ enum class ColorRole {
     ActiveWindowBorder1,
     ActiveWindowBorder2,
     ActiveWindowTitle,
+    ActiveWindowTitleShadow,
+    ActiveWindowTitleStripes,
     InactiveWindowBorder1,
     InactiveWindowBorder2,
     InactiveWindowTitle,
+    InactiveWindowTitleShadow,
+    InactiveWindowTitleStripes,
     MovingWindowBorder1,
     MovingWindowBorder2,
     MovingWindowTitle,
+    MovingWindowTitleShadow,
+    MovingWindowTitleStripes,
     HighlightWindowBorder1,
     HighlightWindowBorder2,
     HighlightWindowTitle,
-    WindowTitleShadow,
-    WindowTitleStripes,
+    HighlightWindowTitleStripes,
+    HighlightWindowTitleShadow,
     MenuStripe,
     MenuBase,
     MenuBaseText,
@@ -105,9 +112,16 @@ enum class MetricRole {
     __Count,
 };
 
+enum class PathRole {
+    NoRole,
+    TitleButtonIcons,
+    __Count,
+};
+
 struct SystemTheme {
     Color color[(int)ColorRole::__Count];
     int metric[(int)MetricRole::__Count];
+    String path[(int)PathRole::__Count];
 };
 
 const SystemTheme& current_system_theme();

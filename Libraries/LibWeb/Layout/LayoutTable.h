@@ -30,11 +30,9 @@
 
 namespace Web {
 
-class LayoutTableRow;
-
 class LayoutTable final : public LayoutBlock {
 public:
-    LayoutTable(Document&, const Element&, NonnullRefPtr<StyleProperties>);
+    LayoutTable(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutTable() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
@@ -44,10 +42,8 @@ private:
     virtual const char* class_name() const override { return "LayoutTable"; }
 };
 
-template<>
-inline bool is<LayoutTable>(const LayoutNode& node)
-{
-    return node.is_table();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutTable)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_table(); }
+AK_END_TYPE_TRAITS()

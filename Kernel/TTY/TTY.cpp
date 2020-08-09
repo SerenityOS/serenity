@@ -52,15 +52,19 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-ssize_t TTY::read(FileDescription&, size_t, u8* buffer, ssize_t size)
+KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
 {
-    ASSERT(size >= 0);
+    if (Process::current()->pgid() != pgid()) {
+        // FIXME: Should we propigate this error path somehow?
+        (void)Process::current()->send_signal(SIGTTIN, nullptr);
+        return KResult(-EINTR);
+    }
 
     if (m_input_buffer.size() < static_cast<size_t>(size))
         size = m_input_buffer.size();
 
     if (in_canonical_mode()) {
-        int i = 0;
+        size_t i = 0;
         for (; i < size; i++) {
             u8 ch = m_input_buffer.dequeue();
             if (ch == '\0') {
@@ -79,21 +83,20 @@ ssize_t TTY::read(FileDescription&, size_t, u8* buffer, ssize_t size)
         return i;
     }
 
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
         buffer[i] = m_input_buffer.dequeue();
 
     return size;
 }
 
-ssize_t TTY::write(FileDescription&, size_t, const u8* buffer, ssize_t size)
+KResultOr<size_t> TTY::write(FileDescription&, size_t, const u8* buffer, size_t size)
 {
-#ifdef TTY_DEBUG
-    dbg() << "TTY::write {" << String::format("%u", size) << "} ";
-    for (size_t i = 0; i < size; ++i) {
-        dbg() << String::format("%b ", buffer[i]);
+    if (Process::current()->pgid() != pgid()) {
+        // FIXME: Should we propigate this error path somehow?
+        (void)Process::current()->send_signal(SIGTTOU, nullptr);
+        return KResult(-EINTR);
     }
-    dbg() << "";
-#endif
+
     on_tty_write(buffer, size);
     return size;
 }
@@ -152,6 +155,10 @@ void TTY::emit(u8 ch)
         if (ch == m_termios.c_cc[VSUSP]) {
             dbg() << tty_name() << ": VSUSP pressed!";
             generate_signal(SIGTSTP);
+            if (m_process) {
+                if (auto parent = Process::from_pid(m_process->ppid()))
+                    (void)parent->send_signal(SIGCHLD, m_process);
+            }
             return;
         }
     }
@@ -250,7 +257,8 @@ void TTY::generate_signal(int signal)
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbg() << tty_name() << ": Send signal " << signal << " to " << process;
-        process.send_signal(signal, nullptr);
+        // FIXME: Should this error be propagated somehow?
+        (void)process.send_signal(signal, nullptr);
         return IterationDecision::Continue;
     });
 }
@@ -284,8 +292,8 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     REQUIRE_PROMISE(tty);
     auto& current_process = *Process::current();
     pid_t pgid;
-    termios* tp;
-    winsize* ws;
+    termios* user_termios;
+    winsize* user_winsize;
 
 #if 0
     // FIXME: When should we block things?
@@ -296,39 +304,43 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 #endif
     switch (request) {
     case TIOCGPGRP:
-        return m_pgid;
+        return this->pgid();
     case TIOCSPGRP:
         pgid = static_cast<pid_t>(arg);
         if (pgid <= 0)
             return -EINVAL;
         {
             InterruptDisabler disabler;
-            auto* process = Process::from_pid(pgid);
+            auto process = Process::from_pid(pgid);
             if (!process)
                 return -EPERM;
             if (pgid != process->pgid())
                 return -EPERM;
             if (current_process.sid() != process->sid())
                 return -EPERM;
+            m_process = process->make_weak_ptr();
         }
-        m_pgid = pgid;
         return 0;
-    case TCGETS:
-        tp = reinterpret_cast<termios*>(arg);
-        if (!current_process.validate_write(tp, sizeof(termios)))
+    case TCGETS: {
+        user_termios = reinterpret_cast<termios*>(arg);
+        if (!current_process.validate_write(user_termios, sizeof(termios)))
             return -EFAULT;
-        *tp = m_termios;
+        copy_to_user(user_termios, &m_termios);
         return 0;
+    }
     case TCSETS:
     case TCSETSF:
-    case TCSETSW:
-        tp = reinterpret_cast<termios*>(arg);
-        if (!current_process.validate_read(tp, sizeof(termios)))
+    case TCSETSW: {
+        user_termios = reinterpret_cast<termios*>(arg);
+        if (!current_process.validate_read(user_termios, sizeof(termios)))
             return -EFAULT;
-        set_termios(*tp);
+        termios termios;
+        copy_from_user(&termios, user_termios);
+        set_termios(termios);
         if (request == TCSETSF)
             flush_input();
         return 0;
+    }
     case TCFLSH:
         // Serenity's TTY implementation does not use an output buffer, so ignore TCOFLUSH.
         if (arg == TCIFLUSH || arg == TCIOFLUSH) {
@@ -338,22 +350,29 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         }
         return 0;
     case TIOCGWINSZ:
-        ws = reinterpret_cast<winsize*>(arg);
-        if (!current_process.validate_write(ws, sizeof(winsize)))
+        user_winsize = reinterpret_cast<winsize*>(arg);
+        if (!current_process.validate_write(user_winsize, sizeof(winsize)))
             return -EFAULT;
-        ws->ws_row = m_rows;
-        ws->ws_col = m_columns;
+        winsize ws;
+        ws.ws_row = m_rows;
+        ws.ws_col = m_columns;
+        ws.ws_xpixel = 0;
+        ws.ws_ypixel = 0;
+        copy_to_user(user_winsize, &ws);
         return 0;
-    case TIOCSWINSZ:
-        ws = reinterpret_cast<winsize*>(arg);
-        if (!current_process.validate_read(ws, sizeof(winsize)))
+    case TIOCSWINSZ: {
+        user_winsize = reinterpret_cast<winsize*>(arg);
+        if (!current_process.validate_read(user_winsize, sizeof(winsize)))
             return -EFAULT;
-        if (ws->ws_col == m_columns && ws->ws_row == m_rows)
+        winsize ws;
+        copy_from_user(&ws, user_winsize);
+        if (ws.ws_col == m_columns && ws.ws_row == m_rows)
             return 0;
-        m_rows = ws->ws_row;
-        m_columns = ws->ws_col;
+        m_rows = ws.ws_row;
+        m_columns = ws.ws_col;
         generate_signal(SIGWINCH);
         return 0;
+    }
     case TIOCSCTTY:
         current_process.set_tty(this);
         return 0;
@@ -374,6 +393,11 @@ void TTY::set_size(unsigned short columns, unsigned short rows)
 void TTY::hang_up()
 {
     generate_signal(SIGHUP);
+}
+
+pid_t TTY::pgid() const
+{
+    return m_process ? m_process->pgid() : 0;
 }
 
 }

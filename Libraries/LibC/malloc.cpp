@@ -116,7 +116,7 @@ struct ChunkedBlock
     ChunkedBlock* m_next { nullptr };
     FreelistEntry* m_freelist { nullptr };
     unsigned short m_free_chunks { 0 };
-    unsigned char m_slot[0];
+    [[gnu::aligned(8)]] unsigned char m_slot[0];
 
     void* chunk(size_t index)
     {
@@ -385,7 +385,7 @@ static void free_impl(void* ptr)
     }
 }
 
-void* malloc(size_t size)
+[[gnu::flatten]] void* malloc(size_t size)
 {
     void* ptr = malloc_impl(size);
     if (s_profiling)
@@ -393,7 +393,7 @@ void* malloc(size_t size)
     return ptr;
 }
 
-void free(void* ptr)
+[[gnu::flatten]] void free(void* ptr)
 {
     if (s_profiling)
         perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);

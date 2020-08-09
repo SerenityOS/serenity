@@ -26,8 +26,8 @@
 
 #include <LibGUI/Painter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/HTMLBodyElement.h>
-#include <LibWeb/Frame/Frame.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutBox.h>
 
@@ -186,7 +186,7 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
 
         auto bgimage = specified_style().property(CSS::PropertyID::BackgroundImage);
         if (bgimage.has_value() && bgimage.value()->is_image()) {
-            auto& image_value = static_cast<const ImageStyleValue&>(*bgimage.value());
+            auto& image_value = static_cast<const CSS::ImageStyleValue&>(*bgimage.value());
             if (image_value.bitmap()) {
                 context.painter().draw_tiled_bitmap(enclosing_int_rect(padded_rect), *image_value.bitmap());
             }
@@ -224,16 +224,16 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
     }
 }
 
-HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position) const
+HitTestResult LayoutBox::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check
     //        m_rect.contains() since inline text rects can't be trusted..
     HitTestResult result { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
     for_each_child([&](auto& child) {
-        if (is<LayoutBox>(child) && to<LayoutBox>(child).stacking_context())
+        if (is<LayoutBox>(child) && downcast<LayoutBox>(child).stacking_context())
             return;
-        auto child_result = child.hit_test(position);
+        auto child_result = child.hit_test(position, type);
         if (child_result.layout_node)
             result = child_result;
     });
@@ -297,7 +297,7 @@ StackingContext* LayoutBox::enclosing_stacking_context()
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (!ancestor->is_box())
             continue;
-        auto& ancestor_box = to<LayoutBox>(*ancestor);
+        auto& ancestor_box = downcast<LayoutBox>(*ancestor);
         if (!ancestor_box.establishes_stacking_context())
             continue;
         ASSERT(ancestor_box.stacking_context());

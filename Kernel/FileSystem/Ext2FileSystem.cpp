@@ -1023,7 +1023,9 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     m_lookup_cache.remove(name);
 
     auto child_inode = fs().get_inode(child_id);
-    child_inode->decrement_link_count();
+    result = child_inode->decrement_link_count();
+    if (result.is_error())
+        return result;
 
     did_remove_child(name);
     return KSuccess;
@@ -1475,10 +1477,12 @@ void Ext2FSInode::populate_lookup_cache() const
         return;
     HashMap<String, unsigned> children;
 
-    traverse_as_directory([&children](auto& entry) {
+    KResult result = traverse_as_directory([&children](auto& entry) {
         children.set(String(entry.name, entry.name_length), entry.inode.index());
         return true;
     });
+
+    ASSERT(result.is_success());
 
     if (!m_lookup_cache.is_empty())
         return;
@@ -1562,7 +1566,7 @@ void Ext2FS::uncache_inode(InodeIndex index)
     m_inode_cache.remove(index);
 }
 
-size_t Ext2FSInode::directory_entry_count() const
+KResultOr<size_t> Ext2FSInode::directory_entry_count() const
 {
     ASSERT(is_directory());
     LOCKER(m_lock);

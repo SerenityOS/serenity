@@ -45,17 +45,17 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibJS/Interpreter.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/Parser/CSSParser.h>
 #include <LibWeb/WebContentView.h>
 
 namespace Browser {
@@ -88,14 +88,14 @@ Tab::Tab(Type type)
     else
         m_web_content_view = widget.add<WebContentView>();
 
-    m_go_back_action = GUI::CommonActions::make_go_back_action( [this](auto&) { go_back(); }, this);
+    m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { go_forward(); }, this);
 
     toolbar.add_action(*m_go_back_action);
     toolbar.add_action(*m_go_forward_action);
 
     toolbar.add_action(GUI::CommonActions::make_go_home_action([this](auto&) { load(g_home_url); }, this));
-    m_reload_action = GUI::CommonActions::make_reload_action( [this](auto&) { reload(); }, this);
+    m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { reload(); }, this);
 
     toolbar.add_action(*m_reload_action);
 
@@ -338,7 +338,7 @@ Tab::Tab(Type type)
         "Dump Style sheets", [this](auto&) {
             if (m_type == Type::InProcessWebView) {
                 for (auto& sheet : m_page_view->document()->style_sheets().sheets()) {
-                    dump_sheet(sheet);
+                    Web::dump_sheet(sheet);
                 }
             } else {
                 TODO();

@@ -36,9 +36,9 @@ ErrorConstructor::ErrorConstructor(GlobalObject& global_object)
 {
 }
 
-void ErrorConstructor::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ErrorConstructor::initialize(GlobalObject& global_object)
 {
-    NativeFunction::initialize(interpreter, global_object);
+    NativeFunction::initialize(global_object);
     define_property("prototype", global_object.error_prototype(), 0);
     define_property("length", Value(1), Attribute::Configurable);
 }
@@ -68,9 +68,9 @@ Value ErrorConstructor::construct(Interpreter& interpreter, Function&)
         : NativeFunction(*global_object.function_prototype())                                                          \
     {                                                                                                                  \
     }                                                                                                                  \
-    void ConstructorName::initialize(Interpreter& interpreter, GlobalObject& global_object)                            \
+    void ConstructorName::initialize(GlobalObject& global_object)                            \
     {                                                                                                                  \
-        NativeFunction::initialize(interpreter, global_object);                                                        \
+        NativeFunction::initialize(global_object);                                                        \
         define_property("prototype", global_object.snake_name##_prototype(), 0);                                       \
         define_property("length", Value(1), Attribute::Configurable);                                                  \
     }                                                                                                                  \

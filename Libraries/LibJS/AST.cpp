@@ -672,7 +672,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             return interpreter.throw_exception<TypeError>(ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects().characters());
 
         class_constructor->set_constructor_kind(Function::ConstructorKind::Derived);
-        Object* prototype = Object::create_empty(interpreter, interpreter.global_object());
+        Object* prototype = Object::create_empty(global_object);
 
         Object* super_constructor_prototype = nullptr;
         if (!super_constructor.is_null()) {
@@ -930,6 +930,7 @@ void ClassDeclaration::dump(int indent) const
 void ClassExpression::dump(int indent) const
 {
     print_indent(indent);
+    ASSERT(m_name.characters());
     printf("ClassExpression: \"%s\"\n", m_name.characters());
 
     print_indent(indent);
@@ -1461,7 +1462,7 @@ Value ObjectProperty::execute(Interpreter&, GlobalObject&) const
 
 Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    auto* object = Object::create_empty(interpreter, global_object);
+    auto* object = Object::create_empty(global_object);
     for (auto& property : m_properties) {
         auto key = property.key().execute(interpreter, global_object);
         if (interpreter.exception())

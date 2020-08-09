@@ -64,6 +64,7 @@ int Shell::builtin_alias(int argc, const char** argv)
             }
         } else {
             m_aliases.set(parts[0], parts[1]);
+            add_entry_to_cache(parts[0]);
         }
     }
 
@@ -266,7 +267,8 @@ int Shell::builtin_exit(int argc, const char** argv)
     }
     stop_all_jobs();
     save_history();
-    printf("Good-bye!\n");
+    if (m_is_interactive)
+        printf("Good-bye!\n");
     exit(exit_code);
     return 0;
 }
@@ -346,6 +348,9 @@ int Shell::builtin_fg(int argc, const char** argv)
 
     dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
     fprintf(stderr, "Resuming job %" PRIu64 " - %s\n", job->job_id(), job->cmd().characters());
+
+    tcsetpgrp(STDOUT_FILENO, job->pgid());
+    tcsetpgrp(STDIN_FILENO, job->pgid());
 
     if (killpg(job->pgid(), SIGCONT) < 0) {
         perror("killpg");
@@ -427,55 +432,17 @@ int Shell::builtin_jobs(int argc, const char** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), false))
         return 1;
 
-    enum {
-        Basic,
-        OnlyPID,
-        ListAll,
-    } mode { Basic };
+    Job::PrintStatusMode mode = Job::PrintStatusMode::Basic;
 
     if (show_pid)
-        mode = OnlyPID;
+        mode = Job::PrintStatusMode::OnlyPID;
 
     if (list)
-        mode = ListAll;
+        mode = Job::PrintStatusMode::ListAll;
 
-    for (auto& job : jobs) {
-        auto pid = job.value->pid();
-        int wstatus;
-        auto rc = waitpid(pid, &wstatus, WNOHANG);
-        if (rc == -1) {
-            perror("waitpid");
+    for (auto& it : jobs) {
+        if (!it.value->print_status(mode))
             return 1;
-        }
-        auto status = "running";
-
-        if (rc != 0) {
-            if (WIFEXITED(wstatus))
-                status = "exited";
-
-            if (WIFSTOPPED(wstatus))
-                status = "stopped";
-
-            if (WIFSIGNALED(wstatus))
-                status = "signaled";
-        }
-
-        char background_indicator = '-';
-
-        if (job.value->is_running_in_background())
-            background_indicator = '+';
-
-        switch (mode) {
-        case Basic:
-            printf("[%" PRIu64 "] %c %s %s\n", job.value->job_id(), background_indicator, status, job.value->cmd().characters());
-            break;
-        case OnlyPID:
-            printf("[%" PRIu64 "] %c %d %s %s\n", job.value->job_id(), background_indicator, pid, status, job.value->cmd().characters());
-            break;
-        case ListAll:
-            printf("[%" PRIu64 "] %c %d %d %s %s\n", job.value->job_id(), background_indicator, pid, job.value->pgid(), status, job.value->cmd().characters());
-            break;
-        }
     }
 
     return 0;
@@ -677,6 +644,40 @@ int Shell::builtin_setopt(int argc, const char** argv)
     return 0;
 }
 
+int Shell::builtin_shift(int argc, const char** argv)
+{
+    int count = 1;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    if (count < 1)
+        return 0;
+
+    auto argv_ = lookup_local_variable("ARGV");
+    if (!argv_) {
+        fprintf(stderr, "shift: ARGV is unset\n");
+        return 1;
+    }
+
+    if (!argv_->is_list())
+        argv_ = adopt(*new AST::ListValue({ argv_.release_nonnull() }));
+
+    auto& values = static_cast<AST::ListValue*>(argv_.ptr())->values();
+    if ((size_t)count > values.size()) {
+        fprintf(stderr, "shift: shift count must not be greater than %zu\n", values.size());
+        return 1;
+    }
+
+    for (auto i = 0; i < count; ++i)
+        values.take_first();
+
+    return 0;
+}
+
 int Shell::builtin_time(int argc, const char** argv)
 {
     Vector<const char*> args;
@@ -698,7 +699,7 @@ int Shell::builtin_time(int argc, const char** argv)
     timer.start();
     for (auto& job : run_commands(commands)) {
         block_on_job(job);
-        exit_code = job->exit_code();
+        exit_code = job.exit_code();
     }
     fprintf(stderr, "Time: %d ms\n", timer.elapsed());
     return exit_code;

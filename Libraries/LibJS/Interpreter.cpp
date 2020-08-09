@@ -274,7 +274,7 @@ Value Interpreter::construct(Function& function, Function& new_target, Optional<
 
     Object* new_object = nullptr;
     if (function.constructor_kind() == Function::ConstructorKind::Base) {
-        new_object = Object::create_empty(*this, global_object);
+        new_object = Object::create_empty(global_object);
         current_environment()->bind_this_value(new_object);
         if (exception())
             return {};

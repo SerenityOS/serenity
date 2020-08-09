@@ -138,7 +138,8 @@ void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
 {
     ASSERT(m_pending_release_for_accept.contains(socket->tuple()));
     m_pending_release_for_accept.remove(socket->tuple());
-    queue_connection_from(*socket);
+    // FIXME: Should we observe this error somehow?
+    (void)queue_connection_from(*socket);
 }
 
 TCPSocket::TCPSocket(int protocol)
@@ -161,7 +162,7 @@ NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
     return adopt(*new TCPSocket(protocol));
 }
 
-int TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
+KResultOr<size_t> TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
 {
     (void)flags;
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.data());
@@ -175,7 +176,7 @@ int TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
     return payload_size;
 }
 
-int TCPSocket::protocol_send(const void* data, size_t data_length)
+KResultOr<size_t> TCPSocket::protocol_send(const void* data, size_t data_length)
 {
     send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, data, data_length);
     return data_length;
@@ -217,7 +218,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, size_t payload_s
 
     routing_decision.adapter->send_ipv4(
         routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-        buffer.data(), buffer.size(), ttl());
+        buffer.span(), ttl());
 
     m_packets_out++;
     m_bytes_out += buffer.size();
@@ -245,7 +246,7 @@ void TCPSocket::send_outgoing_packets()
 #endif
         routing_decision.adapter->send_ipv4(
             routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-            packet.buffer.data(), packet.buffer.size(), ttl());
+            packet.buffer.span(), ttl());
 
         m_packets_out++;
         m_bytes_out += packet.buffer.size();
@@ -372,7 +373,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_direction = Direction::Outgoing;
 
     if (should_block == ShouldBlock::Yes) {
-        if (Thread::current()->block<Thread::ConnectBlocker>(description).was_interrupted())
+        if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description).was_interrupted())
             return KResult(-EINTR);
         ASSERT(setup_state() == SetupState::Completed);
         if (has_error()) {

@@ -70,7 +70,8 @@ FileDescription::~FileDescription()
         socket()->detach(*this);
     if (is_fifo())
         static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
-    m_file->close();
+    // FIXME: Should this error path be observed somehow?
+    (void)m_file->close();
     m_inode = nullptr;
 }
 
@@ -124,28 +125,32 @@ off_t FileDescription::seek(off_t offset, int whence)
     return m_current_offset;
 }
 
-ssize_t FileDescription::read(u8* buffer, ssize_t count)
+KResultOr<size_t> FileDescription::read(u8* buffer, size_t count)
 {
     LOCKER(m_lock);
-    if ((m_current_offset + count) < 0)
+    Checked<size_t> new_offset = m_current_offset;
+    new_offset += count;
+    if (new_offset.has_overflow())
         return -EOVERFLOW;
     SmapDisabler disabler;
-    int nread = m_file->read(*this, offset(), buffer, count);
-    if (nread > 0 && m_file->is_seekable())
-        m_current_offset += nread;
-    return nread;
+    auto nread_or_error = m_file->read(*this, offset(), buffer, count);
+    if (!nread_or_error.is_error() && m_file->is_seekable())
+        m_current_offset += nread_or_error.value();
+    return nread_or_error;
 }
 
-ssize_t FileDescription::write(const u8* data, ssize_t size)
+KResultOr<size_t> FileDescription::write(const u8* data, size_t size)
 {
     LOCKER(m_lock);
-    if ((m_current_offset + size) < 0)
+    Checked<size_t> new_offset = m_current_offset;
+    new_offset += size;
+    if (new_offset.has_overflow())
         return -EOVERFLOW;
     SmapDisabler disabler;
-    int nwritten = m_file->write(*this, offset(), data, size);
-    if (nwritten > 0 && m_file->is_seekable())
-        m_current_offset += nwritten;
-    return nwritten;
+    auto nwritten_or_error = m_file->write(*this, offset(), data, size);
+    if (!nwritten_or_error.is_error() && m_file->is_seekable())
+        m_current_offset += nwritten_or_error.value();
+    return nwritten_or_error;
 }
 
 bool FileDescription::can_write() const
@@ -183,13 +188,17 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
 
     auto temp_buffer = ByteBuffer::create_uninitialized(size_to_allocate);
     BufferStream stream(temp_buffer);
-    VFS::the().traverse_directory_inode(*m_inode, [&stream](auto& entry) {
+    KResult result = VFS::the().traverse_directory_inode(*m_inode, [&stream](auto& entry) {
         stream << (u32)entry.inode.index();
         stream << (u8)entry.file_type;
         stream << (u32)entry.name_length;
         stream << entry.name;
         return true;
     });
+
+    if (result.is_error())
+        return result;
+
     stream.snip();
 
     if (static_cast<size_t>(size) < temp_buffer.size())

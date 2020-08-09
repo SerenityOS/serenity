@@ -39,7 +39,7 @@
 #include <LibGUI/FontDatabase.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Image.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
@@ -495,11 +495,11 @@ int main(int argc, char** argv)
     tab_image.layout()->set_margins({ 8, 8, 8, 8 });
     tab_image.layout()->set_spacing(8);
 
-    auto& banner_image = tab_image.add<GUI::Image>();
+    auto& banner_image = tab_image.add<GUI::ImageWidget>();
     banner_image.set_frame_thickness(2);
     banner_image.load_from_file("/res/brand-banner.png");
 
-    auto& gif_animation_image = tab_image.add<GUI::Image>();
+    auto& gif_animation_image = tab_image.add<GUI::ImageWidget>();
     gif_animation_image.load_from_file("/res/download-animation.gif");
 
     auto& tab_cursors = tab_widget.add_tab<GUI::Widget>("Cursors");

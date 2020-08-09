@@ -31,8 +31,11 @@
 #include <AK/HashMap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
+#include <AK/Userspace.h>
 #include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
@@ -104,7 +107,11 @@ struct UnveiledPath {
     unsigned permissions { 0 };
 };
 
-class Process : public InlineLinkedListNode<Process> {
+class Process
+    : public RefCounted<Process>
+    , public InlineLinkedListNode<Process>
+    , public Weakable<Process> {
+
     AK_MAKE_NONCOPYABLE(Process);
     AK_MAKE_NONMOVABLE(Process);
 
@@ -118,12 +125,12 @@ public:
         return current_thread ? &current_thread->process() : nullptr;
     }
 
-    static Process* create_kernel_process(Thread*& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
-    static Process* create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static NonnullRefPtr<Process> create_kernel_process(Thread*& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
+    static RefPtr<Process> create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
     static Vector<pid_t> all_pids();
-    static Vector<Process*> all_processes();
+    static AK::NonnullRefPtrVector<Process> all_processes();
 
     Thread* create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
@@ -135,7 +142,7 @@ public:
         Ring3 = 3,
     };
 
-    KBuffer backtrace(ProcessInspectionHandle&) const;
+    KBuffer backtrace() const;
 
     bool is_dead() const { return m_dead; }
 
@@ -145,7 +152,7 @@ public:
     PageDirectory& page_directory() { return *m_page_directory; }
     const PageDirectory& page_directory() const { return *m_page_directory; }
 
-    static Process* from_pid(pid_t);
+    static RefPtr<Process> from_pid(pid_t);
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
@@ -181,13 +188,16 @@ public:
     void die();
     void finalize();
 
+    ALWAYS_INLINE SpinLock<u32>& get_lock() const { return m_lock; }
+
     int sys$yield();
     int sys$sync();
     int sys$beep();
-    int sys$get_process_name(char* buffer, int buffer_size);
-    int sys$watch_file(const char* path, size_t path_length);
+    int sys$get_process_name(Userspace<char*> buffer, size_t buffer_size);
+    int sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length);
+    int sys$watch_file(Userspace<const char*> path, size_t path_length);
     int sys$dbgputch(u8);
-    int sys$dbgputstr(const u8*, int length);
+    int sys$dbgputstr(Userspace<const u8*>, int length);
     int sys$dump_backtrace();
     int sys$gettid();
     int sys$donate(int tid);
@@ -206,43 +216,43 @@ public:
     int sys$getresuid(uid_t*, uid_t*, uid_t*);
     int sys$getresgid(gid_t*, gid_t*, gid_t*);
     mode_t sys$umask(mode_t);
-    int sys$open(const Syscall::SC_open_params*);
+    int sys$open(Userspace<const Syscall::SC_open_params*>);
     int sys$close(int fd);
-    ssize_t sys$read(int fd, u8*, ssize_t);
+    ssize_t sys$read(int fd, Userspace<u8*>, ssize_t);
     ssize_t sys$write(int fd, const u8*, ssize_t);
     ssize_t sys$writev(int fd, const struct iovec* iov, int iov_count);
     int sys$fstat(int fd, stat*);
-    int sys$stat(const Syscall::SC_stat_params*);
+    int sys$stat(Userspace<const Syscall::SC_stat_params*>);
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
     int sys$sigreturn(RegisterState& registers);
-    pid_t sys$waitid(const Syscall::SC_waitid_params*);
-    void* sys$mmap(const Syscall::SC_mmap_params*);
+    pid_t sys$waitid(Userspace<const Syscall::SC_waitid_params*>);
+    void* sys$mmap(Userspace<const Syscall::SC_mmap_params*>);
     int sys$munmap(void*, size_t size);
-    int sys$set_mmap_name(const Syscall::SC_set_mmap_name_params*);
+    int sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*>);
     int sys$mprotect(void*, size_t, int prot);
     int sys$madvise(void*, size_t, int advice);
     int sys$minherit(void*, size_t, int inherit);
     int sys$purge(int mode);
     int sys$select(const Syscall::SC_select_params*);
-    int sys$poll(const Syscall::SC_poll_params*);
+    int sys$poll(Userspace<const Syscall::SC_poll_params*>);
     ssize_t sys$get_dir_entries(int fd, void*, ssize_t);
-    int sys$getcwd(char*, ssize_t);
-    int sys$chdir(const char*, size_t);
+    int sys$getcwd(Userspace<char*>, ssize_t);
+    int sys$chdir(Userspace<const char*>, size_t);
     int sys$fchdir(int fd);
     int sys$sleep(unsigned seconds);
     int sys$usleep(useconds_t usec);
-    int sys$gettimeofday(timeval*);
+    int sys$gettimeofday(Userspace<timeval*>);
     int sys$clock_gettime(clockid_t, timespec*);
     int sys$clock_settime(clockid_t, timespec*);
-    int sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params*);
+    int sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*>);
     int sys$gethostname(char*, ssize_t);
     int sys$sethostname(const char*, ssize_t);
     int sys$uname(utsname*);
-    int sys$readlink(const Syscall::SC_readlink_params*);
-    int sys$ttyname_r(int fd, char*, ssize_t);
-    int sys$ptsname_r(int fd, char*, ssize_t);
+    int sys$readlink(Userspace<const Syscall::SC_readlink_params*>);
+    int sys$ttyname(int fd, Userspace<char*>, size_t);
+    int sys$ptsname(int fd, Userspace<char*>, size_t);
     pid_t sys$fork(RegisterState&);
     int sys$execve(const Syscall::SC_execve_params*);
     int sys$dup(int oldfd);
@@ -261,21 +271,21 @@ public:
     int sys$setresuid(uid_t, uid_t, uid_t);
     int sys$setresgid(gid_t, gid_t, gid_t);
     unsigned sys$alarm(unsigned seconds);
-    int sys$access(const char* pathname, size_t path_length, int mode);
+    int sys$access(Userspace<const char*> pathname, size_t path_length, int mode);
     int sys$fcntl(int fd, int cmd, u32 extra_arg);
     int sys$ioctl(int fd, unsigned request, FlatPtr arg);
-    int sys$mkdir(const char* pathname, size_t path_length, mode_t mode);
+    int sys$mkdir(Userspace<const char*> pathname, size_t path_length, mode_t mode);
     clock_t sys$times(tms*);
-    int sys$utime(const char* pathname, size_t path_length, const struct utimbuf*);
-    int sys$link(const Syscall::SC_link_params*);
+    int sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
+    int sys$link(Userspace<const Syscall::SC_link_params*>);
     int sys$unlink(const char* pathname, size_t path_length);
-    int sys$symlink(const Syscall::SC_symlink_params*);
-    int sys$rmdir(const char* pathname, size_t path_length);
-    int sys$mount(const Syscall::SC_mount_params*);
+    int sys$symlink(Userspace<const Syscall::SC_symlink_params*>);
+    int sys$rmdir(Userspace<const char*> pathname, size_t path_length);
+    int sys$mount(Userspace<const Syscall::SC_mount_params*>);
     int sys$umount(const char* mountpoint, size_t mountpoint_length);
     int sys$chmod(const char* pathname, size_t path_length, mode_t);
     int sys$fchmod(int fd, mode_t);
-    int sys$chown(const Syscall::SC_chown_params*);
+    int sys$chown(Userspace<const Syscall::SC_chown_params*>);
     int sys$fchown(int fd, uid_t, gid_t);
     int sys$socket(int domain, int type, int protocol);
     int sys$bind(int sockfd, const sockaddr* addr, socklen_t);
@@ -285,20 +295,20 @@ public:
     int sys$shutdown(int sockfd, int how);
     ssize_t sys$sendto(const Syscall::SC_sendto_params*);
     ssize_t sys$recvfrom(const Syscall::SC_recvfrom_params*);
-    int sys$getsockopt(const Syscall::SC_getsockopt_params*);
-    int sys$setsockopt(const Syscall::SC_setsockopt_params*);
-    int sys$getsockname(const Syscall::SC_getsockname_params*);
-    int sys$getpeername(const Syscall::SC_getpeername_params*);
-    int sys$sched_setparam(pid_t pid, const struct sched_param* param);
-    int sys$sched_getparam(pid_t pid, struct sched_param* param);
-    int sys$create_thread(void* (*)(void*), const Syscall::SC_create_thread_params*);
+    int sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*>);
+    int sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*>);
+    int sys$getsockname(Userspace<const Syscall::SC_getsockname_params*>);
+    int sys$getpeername(Userspace<const Syscall::SC_getpeername_params*>);
+    int sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
+    int sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
+    int sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
     void sys$exit_thread(void*);
     int sys$join_thread(int tid, void** exit_value);
     int sys$detach_thread(int tid);
     int sys$set_thread_name(int tid, const char* buffer, size_t buffer_size);
     int sys$get_thread_name(int tid, char* buffer, size_t buffer_size);
-    int sys$rename(const Syscall::SC_rename_params*);
-    int sys$mknod(const Syscall::SC_mknod_params*);
+    int sys$rename(Userspace<const Syscall::SC_rename_params*>);
+    int sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
     int sys$shbuf_create(int, void** buffer);
     int sys$shbuf_allow_pid(int, pid_t peer_pid);
     int sys$shbuf_allow_all(int);
@@ -309,25 +319,26 @@ public:
     int sys$halt();
     int sys$reboot();
     int sys$set_process_icon(int icon_id);
-    int sys$realpath(const Syscall::SC_realpath_params*);
+    int sys$realpath(Userspace<const Syscall::SC_realpath_params*>);
     ssize_t sys$getrandom(void*, size_t, unsigned int);
-    int sys$setkeymap(const Syscall::SC_setkeymap_params*);
+    int sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
     int sys$module_load(const char* path, size_t path_length);
     int sys$module_unload(const char* name, size_t name_length);
     int sys$profiling_enable(pid_t);
     int sys$profiling_disable(pid_t);
-    int sys$futex(const Syscall::SC_futex_params*);
+    int sys$futex(Userspace<const Syscall::SC_futex_params*>);
     int sys$set_thread_boost(int tid, int amount);
     int sys$set_process_boost(pid_t, int amount);
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
-    int sys$pledge(const Syscall::SC_pledge_params*);
-    int sys$unveil(const Syscall::SC_unveil_params*);
+    int sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
+    int sys$unveil(Userspace<const Syscall::SC_unveil_params*>);
     int sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     int sys$get_stack_bounds(FlatPtr* stack_base, size_t* stack_size);
-    int sys$ptrace(const Syscall::SC_ptrace_params*);
+    int sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>);
     int sys$sendfd(int sockfd, int fd);
     int sys$recvfd(int sockfd);
     long sys$sysconf(int name);
+    int sys$disown(pid_t);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -341,7 +352,11 @@ public:
     void set_tty(TTY*);
 
     size_t region_count() const { return m_regions.size(); }
-    const NonnullOwnPtrVector<Region>& regions() const { return m_regions; }
+    const NonnullOwnPtrVector<Region>& regions() const
+    {
+        ASSERT(m_lock.is_locked());
+        return m_regions;
+    }
     void dump_regions();
 
     u32 m_ticks_in_user { 0 };
@@ -356,7 +371,29 @@ public:
     [[nodiscard]] bool validate_write(void*, size_t) const;
 
     template<typename T>
+    [[nodiscard]] bool validate_read(Userspace<T*> ptr, size_t size) const
+    {
+        return validate_read(ptr.unsafe_userspace_ptr(), size);
+    }
+
+    template<typename T>
+    [[nodiscard]] bool validate_write(Userspace<T*> ptr, size_t size) const
+    {
+        return validate_write(ptr.unsafe_userspace_ptr(), size);
+    }
+
+    template<typename T>
     [[nodiscard]] bool validate_read_typed(T* value, size_t count = 1)
+    {
+        Checked size = sizeof(T);
+        size *= count;
+        if (size.has_overflow())
+            return false;
+        return validate_read(value, size.value());
+    }
+
+    template<typename T>
+    [[nodiscard]] bool validate_read_typed(Userspace<T*> value, size_t count = 1)
     {
         Checked size = sizeof(T);
         size *= count;
@@ -376,6 +413,23 @@ public:
     }
 
     template<typename T>
+    [[nodiscard]] bool validate_read_and_copy_typed(T* dest, Userspace<const T*> src)
+    {
+        bool validated = validate_read_typed(src);
+        if (validated) {
+            copy_from_user(dest, src);
+        }
+        return validated;
+    }
+
+    template<typename T>
+    [[nodiscard]] bool validate_read_and_copy_typed(T* dest, Userspace<T*> src)
+    {
+        Userspace<const T*> const_src { src.ptr() };
+        return validate_read_and_copy_typed(dest, const_src);
+    }
+
+    template<typename T>
     [[nodiscard]] bool validate_write_typed(T* value, size_t count = 1)
     {
         Checked size = sizeof(T);
@@ -385,19 +439,48 @@ public:
         return validate_write(value, size.value());
     }
 
+    template<typename T>
+    [[nodiscard]] bool validate_write_typed(Userspace<T*> value, size_t count = 1)
+    {
+        Checked size = sizeof(T);
+        size *= count;
+        if (size.has_overflow())
+            return false;
+        return validate_write(value, size.value());
+    }
+
     template<typename DataType, typename SizeType>
-    [[nodiscard]] bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
+    [[nodiscard]] bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>& buffer)
+    {
+        return validate_write(buffer.data, buffer.size);
+    }
+
     template<typename DataType, typename SizeType>
-    [[nodiscard]] bool validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>&);
+    [[nodiscard]] bool validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>& buffer)
+    {
+        return validate_read(buffer.data, buffer.size);
+    }
 
     [[nodiscard]] String validate_and_copy_string_from_user(const char*, size_t) const;
+
+    [[nodiscard]] String validate_and_copy_string_from_user(Userspace<const char*> user_characters, size_t size) const
+    {
+        return validate_and_copy_string_from_user(user_characters.unsafe_userspace_ptr(), size);
+    }
+
     [[nodiscard]] String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
 
     Custody& current_directory();
-    Custody* executable() { return m_executable.ptr(); }
+    Custody* executable()
+    {
+        return m_executable.ptr();
+    }
 
     int number_of_open_file_descriptors() const;
-    int max_open_file_descriptors() const { return m_max_open_file_descriptors; }
+    int max_open_file_descriptors() const
+    {
+        return m_max_open_file_descriptors;
+    }
 
     size_t amount_clean_inode() const;
     size_t amount_dirty_private() const;
@@ -409,7 +492,10 @@ public:
 
     int exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
-    bool is_superuser() const { return m_euid == 0; }
+    bool is_superuser() const
+    {
+        return m_euid == 0;
+    }
 
     Region* allocate_region_with_vmobject(VirtualAddress, size_t, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot);
     Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool should_commit = true);
@@ -420,14 +506,18 @@ public:
     Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
     Vector<Region*, 2> split_region_around_range(const Region& source_region, const Range&);
 
-    bool is_being_inspected() const { return m_inspector_count; }
-
     void terminate_due_to_signal(u8 signal);
     KResult send_signal(u8 signal, Process* sender);
 
-    u16 thread_count() const { return m_thread_count.load(AK::MemoryOrder::memory_order_consume); }
+    u16 thread_count() const
+    {
+        return m_thread_count.load(AK::MemoryOrder::memory_order_consume);
+    }
 
-    Lock& big_lock() { return m_big_lock; }
+    Lock& big_lock()
+    {
+        return m_big_lock;
+    }
 
     struct ELFBundle {
         OwnPtr<Region> region;
@@ -435,28 +525,49 @@ public:
     };
     OwnPtr<ELFBundle> elf_bundle() const;
 
-    int icon_id() const { return m_icon_id; }
+    int icon_id() const
+    {
+        return m_icon_id;
+    }
 
-    u32 priority_boost() const { return m_priority_boost; }
+    u32 priority_boost() const
+    {
+        return m_priority_boost;
+    }
 
     Custody& root_directory();
     Custody& root_directory_relative_to_global_root();
     void set_root_directory(const Custody&);
 
-    bool has_promises() const { return m_promises; }
-    bool has_promised(Pledge pledge) const { return m_promises & (1u << (u32)pledge); }
+    bool has_promises() const
+    {
+        return m_promises;
+    }
+    bool has_promised(Pledge pledge) const
+    {
+        return m_promises & (1u << (u32)pledge);
+    }
 
-    VeilState veil_state() const { return m_veil_state; }
-    const Vector<UnveiledPath>& unveiled_paths() const { return m_unveiled_paths; }
+    VeilState veil_state() const
+    {
+        return m_veil_state;
+    }
+    const Vector<UnveiledPath>& unveiled_paths() const
+    {
+        return m_unveiled_paths;
+    }
 
-    void increment_inspector_count(Badge<ProcessInspectionHandle>) { ++m_inspector_count; }
-    void decrement_inspector_count(Badge<ProcessInspectionHandle>) { --m_inspector_count; }
+    bool wait_for_tracer_at_next_execve() const
+    {
+        return m_wait_for_tracer_at_next_execve;
+    }
+    void set_wait_for_tracer_at_next_execve(bool val)
+    {
+        m_wait_for_tracer_at_next_execve = val;
+    }
 
-    bool wait_for_tracer_at_next_execve() const { return m_wait_for_tracer_at_next_execve; }
-    void set_wait_for_tracer_at_next_execve(bool val) { m_wait_for_tracer_at_next_execve = val; }
-
-    KResultOr<u32> peek_user_data(u32* address);
-    KResult poke_user_data(u32* address, u32 data);
+    KResultOr<u32> peek_user_data(Userspace<const u32*> address);
+    KResult poke_user_data(Userspace<u32*> address, u32 data);
 
 private:
     friend class MemoryManager;
@@ -490,6 +601,10 @@ private:
     KResultOr<siginfo_t> do_waitid(idtype_t idtype, int id, int options);
 
     KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length) const;
+    KResultOr<String> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const
+    {
+        return get_syscall_path_argument(user_path.unsafe_userspace_ptr(), path_length);
+    }
     KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
     bool has_tracee_thread(int tracer_pid) const;
@@ -518,12 +633,22 @@ private:
 
     static const int m_max_open_file_descriptors { FD_SETSIZE };
 
-    struct FileDescriptionAndFlags {
-        operator bool() const { return !!description; }
+    class FileDescriptionAndFlags {
+    public:
+        operator bool() const { return !!m_description; }
+
+        FileDescription* description() { return m_description; }
+        const FileDescription* description() const { return m_description; }
+
+        u32 flags() const { return m_flags; }
+        void set_flags(u32 flags) { m_flags = flags; }
+
         void clear();
-        void set(NonnullRefPtr<FileDescription>&& d, u32 f = 0);
-        RefPtr<FileDescription> description;
-        u32 flags { 0 };
+        void set(NonnullRefPtr<FileDescription>&&, u32 flags = 0);
+
+    private:
+        RefPtr<FileDescription> m_description;
+        u32 m_flags { 0 };
     };
     Vector<FileDescriptionAndFlags> m_fds;
 
@@ -542,8 +667,8 @@ private:
 
     RefPtr<TTY> m_tty;
 
-    Region* region_from_range(const Range&);
-    Region* region_containing(const Range&);
+    Region* find_region_from_range(const Range&);
+    Region* find_region_containing(const Range&);
 
     NonnullOwnPtrVector<Region> m_regions;
     struct RegionLookupCache {
@@ -562,7 +687,7 @@ private:
     size_t m_master_tls_alignment { 0 };
 
     Lock m_big_lock { "Process" };
-    SpinLock<u32> m_lock;
+    mutable SpinLock<u32> m_lock;
 
     u64 m_alarm_deadline { 0 };
 
@@ -576,53 +701,15 @@ private:
     VeilState m_veil_state { VeilState::None };
     Vector<UnveiledPath> m_unveiled_paths;
 
-    WaitQueue& futex_queue(i32*);
+    WaitQueue& futex_queue(Userspace<const i32*>);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
-
-    u32 m_inspector_count { 0 };
 
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall
     // and wait for a tracer to attach.
     bool m_wait_for_tracer_at_next_execve { false };
-};
-
-class ProcessInspectionHandle {
-public:
-    ProcessInspectionHandle(Process& process)
-        : m_process(process)
-    {
-        if (&process != Process::current()) {
-            InterruptDisabler disabler;
-            m_process.increment_inspector_count({});
-        }
-    }
-    ~ProcessInspectionHandle()
-    {
-        if (&m_process != Process::current()) {
-            InterruptDisabler disabler;
-            m_process.decrement_inspector_count({});
-        }
-    }
-
-    Process& process() { return m_process; }
-
-    static OwnPtr<ProcessInspectionHandle> from_pid(pid_t pid)
-    {
-        InterruptDisabler disabler;
-        auto* process = Process::from_pid(pid);
-        if (process)
-            return make<ProcessInspectionHandle>(*process);
-        return nullptr;
-    }
-
-    Process* operator->() { return &m_process; }
-    Process& operator*() { return m_process; }
-
-private:
-    Process& m_process;
 };
 
 extern InlineLinkedList<Process>* g_processes;
@@ -715,7 +802,7 @@ inline bool InodeMetadata::may_execute(const Process& process) const
 
 inline int Thread::pid() const
 {
-    return m_process.pid();
+    return m_process->pid();
 }
 
 inline const LogStream& operator<<(const LogStream& stream, const Process& process)
@@ -725,7 +812,7 @@ inline const LogStream& operator<<(const LogStream& stream, const Process& proce
 
 inline u32 Thread::effective_priority() const
 {
-    return m_priority + m_process.priority_boost() + m_priority_boost + m_extra_priority;
+    return m_priority + m_process->priority_boost() + m_priority_boost + m_extra_priority;
 }
 
 #define REQUIRE_NO_PROMISES                        \

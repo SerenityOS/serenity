@@ -29,7 +29,7 @@
 #include <AK/FlyString.h>
 #include <LibWeb/Bindings/Wrappable.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class Event
     : public RefCounted<Event>
@@ -42,10 +42,11 @@ public:
         return adopt(*new Event(event_name));
     }
 
-    virtual ~Event() {}
+    virtual ~Event() { }
 
     const FlyString& type() const { return m_type; }
 
+    virtual bool is_ui_event() const { return false; }
     virtual bool is_mouse_event() const { return false; }
 
 protected:

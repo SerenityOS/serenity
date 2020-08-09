@@ -38,21 +38,21 @@
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/DOM/HTMLAnchorElement.h>
-#include <LibWeb/DOM/HTMLImageElement.h>
-#include <LibWeb/DOM/MouseEvent.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame/EventHandler.h>
-#include <LibWeb/Frame/Frame.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/LayoutBreak.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page/EventHandler.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 #include <LibWeb/Painting/PaintContext.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 #include <stdio.h>
 
 //#define SELECTION_DEBUG
@@ -107,7 +107,7 @@ void PageView::select_all()
 
     int last_layout_node_index_in_node = 0;
     if (is<LayoutText>(*last_layout_node))
-        last_layout_node_index_in_node = to<LayoutText>(*last_layout_node).text_for_rendering().length() - 1;
+        last_layout_node_index_in_node = downcast<LayoutText>(*last_layout_node).text_for_rendering().length() - 1;
 
     layout_root->selection().set({ first_layout_node, 0 }, { last_layout_node, last_layout_node_index_in_node });
     update();
@@ -115,53 +115,14 @@ void PageView::select_all()
 
 String PageView::selected_text() const
 {
-    StringBuilder builder;
-    auto* layout_root = this->layout_root();
-    if (!layout_root)
-        return {};
-    if (!layout_root->selection().is_valid())
-        return {};
-
-    auto selection = layout_root->selection().normalized();
-
-    if (selection.start().layout_node == selection.end().layout_node) {
-        if (!is<LayoutText>(*selection.start().layout_node))
-            return "";
-        return to<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node + 1);
-    }
-
-    // Start node
-    auto layout_node = selection.start().layout_node;
-    if (is<LayoutText>(*layout_node)) {
-        auto& text = to<LayoutText>(*layout_node).text_for_rendering();
-        builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
-    }
-
-    // Middle nodes
-    layout_node = layout_node->next_in_pre_order();
-    while (layout_node && layout_node != selection.end().layout_node) {
-        if (is<LayoutText>(*layout_node))
-            builder.append(to<LayoutText>(*layout_node).text_for_rendering());
-        else if (is<LayoutBreak>(*layout_node) || is<LayoutBlock>(*layout_node))
-            builder.append('\n');
-
-        layout_node = layout_node->next_in_pre_order();
-    }
-
-    // End node
-    ASSERT(layout_node == selection.end().layout_node);
-    if (is<LayoutText>(*layout_node)) {
-        auto& text = to<LayoutText>(*layout_node).text_for_rendering();
-        builder.append(text.substring(0, selection.end().index_in_node + 1));
-    }
-
-    return builder.to_string();
+    // FIXME: Use focused frame
+    return page().main_frame().selected_text();
 }
 
 void PageView::page_did_layout()
 {
     ASSERT(layout_root());
-    set_content_size(layout_root()->size().to_int_size());
+    set_content_size(layout_root()->size().to_type<int>());
 }
 
 void PageView::page_did_change_title(const String& title)
@@ -170,7 +131,7 @@ void PageView::page_did_change_title(const String& title)
         on_title_change(title);
 }
 
-void PageView::page_did_set_document_in_main_frame(Document* document)
+void PageView::page_did_set_document_in_main_frame(DOM::Document* document)
 {
     if (on_set_document)
         on_set_document(document);
@@ -263,14 +224,14 @@ void PageView::layout_and_sync_size()
 
     page().main_frame().set_size(available_size());
     document()->layout();
-    set_content_size(layout_root()->size().to_int_size());
+    set_content_size(layout_root()->size().to_type<int>());
 
     // NOTE: If layout caused us to gain or lose scrollbars, we have to lay out again
     //       since the scrollbars now take up some of the available space.
     if (had_vertical_scrollbar != vertical_scrollbar().is_visible() || had_horizontal_scrollbar != horizontal_scrollbar().is_visible()) {
         page().main_frame().set_size(available_size());
         document()->layout();
-        set_content_size(layout_root()->size().to_int_size());
+        set_content_size(layout_root()->size().to_type<int>());
     }
 
     page().main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
@@ -335,6 +296,8 @@ void PageView::mouseup_event(GUI::MouseEvent& event)
 
 void PageView::keydown_event(GUI::KeyEvent& event)
 {
+    page().handle_keydown(event.key(), event.modifiers(), event.code_point());
+
     if (event.modifiers() == 0) {
         switch (event.key()) {
         case Key_Home:
@@ -383,7 +346,7 @@ void PageView::reload()
 
 void PageView::load_html(const StringView& html, const URL& url)
 {
-    HTMLDocumentParser parser(html, "utf-8");
+    HTML::HTMLDocumentParser parser(html, "utf-8");
     parser.run(url);
     set_document(&parser.document());
 }
@@ -419,17 +382,17 @@ void PageView::load_empty_document()
     page().main_frame().set_document(nullptr);
 }
 
-Document* PageView::document()
+DOM::Document* PageView::document()
 {
     return page().main_frame().document();
 }
 
-const Document* PageView::document() const
+const DOM::Document* PageView::document() const
 {
     return page().main_frame().document();
 }
 
-void PageView::set_document(Document* document)
+void PageView::set_document(DOM::Document* document)
 {
     page().main_frame().set_document(document);
 }

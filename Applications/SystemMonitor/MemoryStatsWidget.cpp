@@ -50,7 +50,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
     s_the = this;
 
     set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    set_preferred_size(0, 72);
+    set_preferred_size(0, 110);
 
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_margins({ 0, 8, 0, 0 });
@@ -71,8 +71,10 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
 
     m_user_physical_pages_label = build_widgets_for_label("Userspace physical:");
     m_supervisor_physical_pages_label = build_widgets_for_label("Supervisor physical:");
-    m_kmalloc_label = build_widgets_for_label("Kernel heap:");
-    m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc/kfree:");
+    m_kmalloc_space_label = build_widgets_for_label("Kernel heap:");
+    m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc:");
+    m_kfree_count_label = build_widgets_for_label("Calls kfree:");
+    m_kmalloc_difference_label = build_widgets_for_label("Difference:");
 
     refresh();
 }
@@ -117,10 +119,12 @@ void MemoryStatsWidget::refresh()
     size_t user_pages_available = user_physical_allocated + user_physical_available;
     size_t supervisor_pages_available = super_physical_alloc + super_physical_free;
 
-    m_kmalloc_label->set_text(String::format("%uK/%uK", bytes_to_kb(kmalloc_allocated), bytes_to_kb(kmalloc_sum_available)));
+    m_kmalloc_space_label->set_text(String::format("%uK/%uK", bytes_to_kb(kmalloc_allocated), bytes_to_kb(kmalloc_sum_available)));
     m_user_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(user_physical_allocated), page_count_to_kb(user_pages_available)));
     m_supervisor_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(super_physical_alloc), page_count_to_kb(supervisor_pages_available)));
-    m_kmalloc_count_label->set_text(String::format("%u/%u (+%u)", kmalloc_call_count, kfree_call_count, kmalloc_call_count - kfree_call_count));
+    m_kmalloc_count_label->set_text(String::format("%u", kmalloc_call_count));
+    m_kfree_count_label->set_text(String::format("%u", kfree_call_count));
+    m_kmalloc_difference_label->set_text(String::format("+%u", kmalloc_call_count - kfree_call_count));
 
     m_graph.set_max(page_count_to_kb(user_pages_available));
     m_graph.add_value(page_count_to_kb(user_physical_allocated));

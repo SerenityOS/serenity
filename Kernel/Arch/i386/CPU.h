@@ -623,6 +623,7 @@ static_assert(GDT_SELECTOR_CODE0 + 16 == GDT_SELECTOR_CODE3); // CS3 = CS0 + 16
 static_assert(GDT_SELECTOR_CODE0 + 24 == GDT_SELECTOR_DATA3); // SS3 = CS0 + 32
 
 class ProcessorInfo;
+class SchedulerPerProcessorData;
 struct MemoryManagerData;
 struct ProcessorMessageEntry;
 
@@ -683,6 +684,7 @@ class Processor {
 
     ProcessorInfo* m_info;
     MemoryManagerData* m_mm_data;
+    SchedulerPerProcessorData* m_scheduler_data;
     Thread* m_current_thread;
     Thread* m_idle_thread;
 
@@ -768,6 +770,16 @@ public:
     ALWAYS_INLINE static bool is_initialized()
     {
         return get_fs() == GDT_SELECTOR_PROC && read_fs_u32(0) != 0;
+    }
+
+    ALWAYS_INLINE void set_scheduler_data(SchedulerPerProcessorData& scheduler_data)
+    {
+        m_scheduler_data = &scheduler_data;
+    }
+
+    ALWAYS_INLINE SchedulerPerProcessorData& get_scheduler_data() const
+    {
+        return *m_scheduler_data;
     }
 
     ALWAYS_INLINE void set_mm_data(MemoryManagerData& mm_data)
@@ -920,16 +932,13 @@ class ScopedCritical {
 public:
     ScopedCritical()
     {
-        m_valid = true;
-        Processor::current().enter_critical(m_prev_flags);
+        enter();
     }
 
     ~ScopedCritical()
     {
-        if (m_valid) {
-            m_valid = false;
-            Processor::current().leave_critical(m_prev_flags);
-        }
+        if (m_valid)
+            leave();
     }
 
     ScopedCritical(ScopedCritical&& from)
@@ -953,6 +962,20 @@ public:
             m_prev_flags |= 0x200;
         else
             m_prev_flags &= ~0x200;
+    }
+
+    void leave()
+    {
+        ASSERT(m_valid);
+        m_valid = false;
+        Processor::current().leave_critical(m_prev_flags);
+    }
+
+    void enter()
+    {
+        ASSERT(!m_valid);
+        m_valid = true;
+        Processor::current().enter_critical(m_prev_flags);
     }
 
 private:

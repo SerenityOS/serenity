@@ -30,7 +30,7 @@
 
 namespace Web {
 
-LayoutReplaced::LayoutReplaced(Document& document, const Element& element, NonnullRefPtr<StyleProperties> style)
+LayoutReplaced::LayoutReplaced(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutBox(document, &element, move(style))
 {
     // FIXME: Allow non-inline replaced elements.
@@ -45,7 +45,7 @@ float LayoutReplaced::calculate_width() const
 {
     // 10.3.2 [Inline,] replaced elements
 
-    auto zero_value = Length::make_px(0);
+    auto zero_value = CSS::Length::make_px(0);
     auto& containing_block = *this->containing_block();
 
     auto margin_left = style().margin().left.resolved_or_zero(*this, containing_block.width());
@@ -108,7 +108,7 @@ float LayoutReplaced::calculate_height() const
     if (specified_width.is_auto() && specified_height.is_auto() && has_intrinsic_height())
         used_height = intrinsic_height();
     else if (specified_height.is_auto() && has_intrinsic_ratio())
-        used_height = calculate_width() * intrinsic_ratio();
+        used_height = calculate_width() / intrinsic_ratio();
     else if (specified_height.is_auto() && has_intrinsic_height())
         used_height = intrinsic_height();
     else if (specified_height.is_auto())

@@ -38,7 +38,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/HTMLAnchorElement.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>
@@ -48,7 +48,7 @@
 
 //#define EVENT_DEBUG
 
-namespace Web {
+namespace Web::DOM {
 
 Node::Node(Document& document, NodeType type)
     : m_document(&document)
@@ -62,18 +62,18 @@ Node::~Node()
         layout_node()->parent()->remove_child(*layout_node());
 }
 
-const HTMLAnchorElement* Node::enclosing_link_element() const
+const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
 {
     for (auto* node = this; node; node = node->parent()) {
-        if (is<HTMLAnchorElement>(*node) && to<HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
-            return to<HTMLAnchorElement>(node);
+        if (is<HTML::HTMLAnchorElement>(*node) && downcast<HTML::HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
+            return downcast<HTML::HTMLAnchorElement>(node);
     }
     return nullptr;
 }
 
-const HTMLElement* Node::enclosing_html_element() const
+const HTML::HTMLElement* Node::enclosing_html_element() const
 {
-    return first_ancestor_of_type<HTMLElement>();
+    return first_ancestor_of_type<HTML::HTMLElement>();
 }
 
 String Node::text_content() const
@@ -92,25 +92,7 @@ String Node::text_content() const
     return builder.to_string();
 }
 
-const Element* Node::next_element_sibling() const
-{
-    for (auto* node = next_sibling(); node; node = node->next_sibling()) {
-        if (node->is_element())
-            return static_cast<const Element*>(node);
-    }
-    return nullptr;
-}
-
-const Element* Node::previous_element_sibling() const
-{
-    for (auto* node = previous_sibling(); node; node = node->previous_sibling()) {
-        if (node->is_element())
-            return static_cast<const Element*>(node);
-    }
-    return nullptr;
-}
-
-RefPtr<LayoutNode> Node::create_layout_node(const StyleProperties*)
+RefPtr<LayoutNode> Node::create_layout_node(const CSS::StyleProperties*)
 {
     return nullptr;
 }
@@ -160,9 +142,9 @@ String Node::child_text_content() const
         return String::empty();
 
     StringBuilder builder;
-    to<ParentNode>(*this).for_each_child([&](auto& child) {
+    downcast<ParentNode>(*this).for_each_child([&](auto& child) {
         if (is<Text>(child))
-            builder.append(to<Text>(child).text_content());
+            builder.append(downcast<Text>(child).text_content());
     });
     return builder.build();
 }
@@ -184,14 +166,14 @@ Element* Node::parent_element()
 {
     if (!parent() || !is<Element>(parent()))
         return nullptr;
-    return to<Element>(parent());
+    return downcast<Element>(parent());
 }
 
 const Element* Node::parent_element() const
 {
     if (!parent() || !is<Element>(parent()))
         return nullptr;
-    return to<Element>(parent());
+    return downcast<Element>(parent());
 }
 
 RefPtr<Node> Node::append_child(NonnullRefPtr<Node> node, bool notify)
@@ -215,6 +197,11 @@ RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, b
 void Node::set_document(Badge<Document>, Document& document)
 {
     m_document = &document;
+}
+
+bool Node::is_editable() const
+{
+    return parent() && parent()->is_editable();
 }
 
 }

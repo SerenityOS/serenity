@@ -111,6 +111,11 @@ void ClientConnection::did_progress_download(Badge<Download>, Download& download
     post_message(Messages::ProtocolClient::DownloadProgress(download.id(), download.total_size(), download.downloaded_size()));
 }
 
+void ClientConnection::did_request_certificates(Badge<Download>, Download& download)
+{
+    post_message(Messages::ProtocolClient::CertificateRequested(download.id()));
+}
+
 OwnPtr<Messages::ProtocolServer::GreetResponse> ClientConnection::handle(const Messages::ProtocolServer::Greet&)
 {
     return make<Messages::ProtocolServer::GreetResponse>(client_id());
@@ -120,6 +125,17 @@ OwnPtr<Messages::ProtocolServer::DisownSharedBufferResponse> ClientConnection::h
 {
     m_shared_buffers.remove(message.shbuf_id());
     return make<Messages::ProtocolServer::DisownSharedBufferResponse>();
+}
+
+OwnPtr<Messages::ProtocolServer::SetCertificateResponse> ClientConnection::handle(const Messages::ProtocolServer::SetCertificate& message)
+{
+    auto* download = const_cast<Download*>(m_downloads.get(message.download_id()).value_or(nullptr));
+    bool success = false;
+    if (download) {
+        download->set_certificate(message.certificate(), message.key());
+        success = true;
+    }
+    return make<Messages::ProtocolServer::SetCertificateResponse>(success);
 }
 
 }

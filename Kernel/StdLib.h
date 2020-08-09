@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Userspace.h>
 
 namespace Syscall {
 struct StringArgument;
@@ -53,6 +54,7 @@ char* strdup(const char*);
 int memcmp(const void*, const void*, size_t);
 char* strrchr(const char* str, int ch);
 void* memmove(void* dest, const void* src, size_t n);
+const void* memmem(const void* haystack, size_t, const void* needle, size_t);
 
 inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
@@ -68,4 +70,29 @@ template<typename T>
 inline void copy_to_user(T* dest, const T* src)
 {
     copy_to_user(dest, src, sizeof(T));
+}
+
+
+template<typename T>
+inline void copy_from_user(T* dest, Userspace<const T*> src)
+{
+    copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
+}
+
+template<typename T>
+inline void copy_to_user(Userspace<T*> dest, const T* src)
+{
+    copy_to_user(dest.unsafe_userspace_ptr(), src, sizeof(T));
+}
+
+template<typename T>
+inline void copy_to_user(Userspace<T*> dest, const void* src, size_t size)
+{
+    copy_to_user(dest.unsafe_userspace_ptr(), src, size);
+}
+
+template<typename T>
+inline void copy_from_user(void* dest, Userspace<const T*> src, size_t size)
+{
+    copy_from_user(dest, src.unsafe_userspace_ptr(), size);
 }

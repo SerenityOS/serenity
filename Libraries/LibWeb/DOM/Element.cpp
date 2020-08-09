@@ -33,6 +33,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutListItem.h>
@@ -41,9 +42,8 @@
 #include <LibWeb/Layout/LayoutTableRow.h>
 #include <LibWeb/Layout/LayoutTableRowGroup.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
-#include <LibWeb/Parser/HTMLDocumentParser.h>
 
-namespace Web {
+namespace Web::DOM {
 
 Element::Element(Document& document, const FlyString& tag_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
@@ -90,6 +90,11 @@ void Element::set_attribute(const FlyString& name, const String& value)
     parse_attribute(name, value);
 }
 
+void Element::remove_attribute(const FlyString& name)
+{
+    m_attributes.remove_first_matching([&](auto& attribute) { return attribute.name() == name; });
+}
+
 void Element::set_attributes(Vector<Attribute>&& attributes)
 {
     m_attributes = move(attributes);
@@ -107,7 +112,7 @@ bool Element::has_class(const FlyString& class_name) const
     return false;
 }
 
-RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_style)
+RefPtr<LayoutNode> Element::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     const_cast<Element&>(*this).m_resolved_style = style;
@@ -116,7 +121,7 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
     if (display == CSS::Display::None)
         return nullptr;
 
-    if (tag_name() == "noscript" && document().is_scripting_enabled())
+    if (local_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;
 
     if (display == CSS::Display::Block)
@@ -164,7 +169,7 @@ enum class StyleDifference {
     NeedsRelayout,
 };
 
-static StyleDifference compute_style_difference(const StyleProperties& old_style, const StyleProperties& new_style, const Document& document)
+static StyleDifference compute_style_difference(const CSS::StyleProperties& old_style, const CSS::StyleProperties& new_style, const Document& document)
 {
     if (old_style == new_style)
         return StyleDifference::None;
@@ -223,7 +228,7 @@ void Element::recompute_style()
     }
 }
 
-NonnullRefPtr<StyleProperties> Element::computed_style()
+NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
 {
     auto properties = m_resolved_style->clone();
     if (layout_node() && layout_node()->has_style()) {
@@ -252,7 +257,7 @@ NonnullRefPtr<StyleProperties> Element::computed_style()
 
 void Element::set_inner_html(StringView markup)
 {
-    auto new_children = HTMLDocumentParser::parse_html_fragment(*this, markup);
+    auto new_children = HTML::HTMLDocumentParser::parse_html_fragment(*this, markup);
     remove_all_children();
     while (!new_children.is_empty()) {
         append_child(new_children.take_first());
@@ -271,17 +276,17 @@ String Element::inner_html() const
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             if (child->is_element()) {
                 builder.append('<');
-                builder.append(to<Element>(*child).tag_name());
+                builder.append(downcast<Element>(*child).local_name());
                 builder.append('>');
 
                 recurse(*child);
 
                 builder.append("</");
-                builder.append(to<Element>(*child).tag_name());
+                builder.append(downcast<Element>(*child).local_name());
                 builder.append('>');
             }
             if (child->is_text()) {
-                builder.append(to<Text>(*child).data());
+                builder.append(downcast<Text>(*child).data());
             }
         }
     };

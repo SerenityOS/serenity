@@ -26,22 +26,20 @@
 
 #pragma once
 
-#include <LibWeb/DOM/HTMLImageElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/LayoutReplaced.h>
 
 namespace Web {
 
-class HTMLImageElement;
-
 class LayoutImage : public LayoutReplaced {
 public:
-    LayoutImage(Document&, const Element&, NonnullRefPtr<StyleProperties>, const ImageLoader&);
+    LayoutImage(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>, const ImageLoader&);
     virtual ~LayoutImage() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    const Element& node() const { return static_cast<const Element&>(LayoutReplaced::node()); }
+    const DOM::Element& node() const { return static_cast<const DOM::Element&>(LayoutReplaced::node()); }
 
     bool renders_as_alt_text() const;
 
@@ -57,10 +55,8 @@ private:
     const ImageLoader& m_image_loader;
 };
 
-template<>
-inline bool is<LayoutImage>(const LayoutNode& node)
-{
-    return node.is_image();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutImage)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_image(); }
+AK_END_TYPE_TRAITS()

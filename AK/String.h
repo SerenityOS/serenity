@@ -28,6 +28,7 @@
 
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
+#include <AK/Stream.h>
 #include <AK/StringImpl.h>
 #include <AK/StringUtils.h>
 #include <AK/Traits.h>
@@ -80,6 +81,11 @@ public:
 
     String(const char* cstring, size_t length, ShouldChomp shouldChomp = NoChomp)
         : m_impl(StringImpl::create(cstring, length, shouldChomp))
+    {
+    }
+
+    explicit String(ReadonlyBytes bytes, ShouldChomp shouldChomp = NoChomp)
+        : m_impl(StringImpl::create(bytes, shouldChomp))
     {
     }
 
@@ -137,6 +143,9 @@ public:
     ALWAYS_INLINE bool is_empty() const { return length() == 0; }
     ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
     ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
+
+    ALWAYS_INLINE ReadonlyBytes bytes() const { return m_impl ? m_impl->bytes() : nullptr; }
+
     ALWAYS_INLINE const char& operator[](size_t i) const
     {
         return (*m_impl)[i];
@@ -193,6 +202,18 @@ public:
         return *this;
     }
 
+    String& operator=(std::nullptr_t)
+    {
+        m_impl = nullptr;
+        return *this;
+    }
+
+    String& operator=(ReadonlyBytes bytes)
+    {
+        m_impl = StringImpl::create(bytes);
+        return *this;
+    }
+
     u32 hash() const
     {
         if (!m_impl)
@@ -227,7 +248,7 @@ public:
     template<typename T, typename... Rest>
     bool is_one_of(const T& string, Rest... rest) const
     {
-        if (string == *this)
+        if (*this == string)
             return true;
         return is_one_of(rest...);
     }
@@ -254,6 +275,28 @@ bool operator>(const char*, const String&);
 bool operator<=(const char*, const String&);
 
 String escape_html_entities(const StringView& html);
+
+inline InputMemoryStream& operator>>(InputMemoryStream& stream, String& string)
+{
+    // FIXME: There was some talking about a generic lexer class?
+
+    const auto start = stream.offset();
+
+    while (!stream.eof() && stream.m_bytes[stream.m_offset]) {
+        ++stream.m_offset;
+    }
+
+    if (stream.eof()) {
+        stream.m_error = true;
+        stream.m_offset = start;
+        string = nullptr;
+    } else {
+        string = String { stream.bytes().slice(start, stream.offset() - start) };
+        ++stream.m_offset;
+    }
+
+    return stream;
+}
 
 }
 

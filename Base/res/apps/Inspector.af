@@ -1,0 +1,8 @@
+[App]
+Name=Inspector
+Executable=/bin/Inspector
+Category=Development
+
+[Icons]
+16x16=/res/icons/16x16/app-inspector.png
+32x32=/res/icons/32x32/app-inspector.png

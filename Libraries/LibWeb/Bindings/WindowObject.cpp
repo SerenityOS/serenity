@@ -29,10 +29,12 @@
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <AK/Utf8View.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
@@ -46,7 +48,7 @@
 namespace Web {
 namespace Bindings {
 
-WindowObject::WindowObject(Window& impl)
+WindowObject::WindowObject(DOM::Window& impl)
     : m_impl(impl)
 {
     impl.set_wrapper({}, *this);
@@ -89,7 +91,7 @@ void WindowObject::visit_children(Visitor& visitor)
     visitor.visit(m_xhr_prototype);
 }
 
-static Window* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
+static DOM::Window* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
 {
     auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object) {
@@ -252,7 +254,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
     if (interpreter.exception())
         return {};
     auto decoded = decode_base64(StringView(string));
-    return JS::js_string(interpreter, String::copy(decoded));
+
+    // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
+    return JS::js_string(interpreter, TextCodec::decoder_for("iso-8859-1")->to_utf8(decoded));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
@@ -265,8 +269,17 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     auto string = interpreter.argument(0).to_string(interpreter);
     if (interpreter.exception())
         return {};
-    auto encoded = encode_base64(StringView(string));
-    return JS::js_string(interpreter, String::copy(encoded));
+
+    Vector<u8> byte_string;
+    byte_string.ensure_capacity(string.length());
+    for (u32 code_point : Utf8View(string)) {
+        if (code_point > 0xff)
+            return interpreter.throw_exception<JS::InvalidCharacterError>(JS::ErrorType::NotAByteString, "btoa");
+        byte_string.append(code_point);
+    }
+
+    auto encoded = encode_base64(byte_string.span());
+    return JS::js_string(interpreter, move(encoded));
 }
 
 JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)

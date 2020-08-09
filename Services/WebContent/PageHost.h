@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <LibWeb/Page.h>
+#include <LibWeb/Page/Page.h>
 
 namespace WebContent {
 

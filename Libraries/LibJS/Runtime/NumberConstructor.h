@@ -35,7 +35,7 @@ class NumberConstructor final : public NativeFunction {
 
 public:
     explicit NumberConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~NumberConstructor() override;
 
     virtual Value call(Interpreter&) override;

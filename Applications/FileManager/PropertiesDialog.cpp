@@ -69,12 +69,13 @@ PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, boo
     file_container.layout()->set_spacing(20);
     file_container.set_preferred_size(0, 34);
 
-    m_icon = file_container.add<GUI::Image>();
+    m_icon = file_container.add<GUI::ImageWidget>();
     m_icon->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_icon->set_preferred_size(32, 32);
 
     m_name = lexical_path.basename();
     m_path = lexical_path.string();
+    m_parent_path = lexical_path.dirname();
 
     m_name_box = file_container.add<GUI::TextBox>();
     m_name_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -188,7 +189,7 @@ void PropertiesDialog::permission_changed(mode_t mask, bool set)
 
 String PropertiesDialog::make_full_path(String name)
 {
-    return String::format("%s/%s", m_model.root_path().characters(), name.characters());
+    return String::format("%s/%s", m_parent_path.characters(), name.characters());
 }
 
 bool PropertiesDialog::apply_changes()

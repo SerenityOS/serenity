@@ -37,12 +37,19 @@ class CharacterMap {
 public:
     CharacterMap(const String& file_name);
 
+#ifndef KERNEL
     int set_system_map();
+#endif
+
     u32 get_char(KeyEvent);
     void set_character_map_data(CharacterMapData character_map_data);
+    void set_character_map_name(const String& character_map_name);
+
+    const String character_map_name();
 
 private:
     CharacterMapData m_character_map_data;
+    String m_character_map_name;
 };
 
 }

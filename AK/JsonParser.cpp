@@ -81,9 +81,9 @@ String JsonParser::consume_and_unescape_string()
             final_sb.append('\f');
             break;
         case 'u': {
-            auto codepoint = AK::StringUtils::convert_to_uint_from_hex(consume(4));
-            if (codepoint.has_value())
-                final_sb.append_codepoint(codepoint.value());
+            auto code_point = AK::StringUtils::convert_to_uint_from_hex(consume(4));
+            if (code_point.has_value())
+                final_sb.append_code_point(code_point.value());
             else
                 final_sb.append('?');
         } break;

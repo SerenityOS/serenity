@@ -40,15 +40,14 @@ struct PixelBox {
 
 struct BoxModelMetrics {
 public:
-    LengthBox margin;
-    LengthBox padding;
-    LengthBox border;
-    LengthBox offset;
+    CSS::LengthBox margin;
+    CSS::LengthBox padding;
+    CSS::LengthBox border;
+    CSS::LengthBox offset;
 
     PixelBox margin_box(const LayoutNode&) const;
     PixelBox padding_box(const LayoutNode&) const;
     PixelBox border_box(const LayoutNode&) const;
-
 };
 
 }

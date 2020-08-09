@@ -55,13 +55,14 @@ __BEGIN_DECLS
 extern char** environ;
 
 int get_process_name(char* buffer, int buffer_size);
+int set_process_name(const char* name, size_t name_length);
 void dump_backtrace();
 int fsync(int fd);
 void sysbeep();
 int gettid();
 int donate(int tid);
 int set_process_icon(int icon_id);
-inline int getpagesize() { return 4096; }
+int getpagesize();
 pid_t fork();
 int execv(const char* path, char* const argv[]);
 int execve(const char* filename, char* const argv[], char* const envp[]);
@@ -175,7 +176,21 @@ enum {
 enum {
     _SC_NPROCESSORS_CONF,
     _SC_NPROCESSORS_ONLN,
+    _SC_PAGESIZE,
 };
+
+#define _SC_NPROCESSORS_CONF _SC_NPROCESSORS_CONF
+#define _SC_NPROCESSORS_ONLN _SC_NPROCESSORS_ONLN
+#define _SC_PAGESIZE _SC_PAGESIZE
+
 long sysconf(int name);
+
+struct crypt_data {
+    int initialized;
+    char result[65];
+};
+
+char* crypt(const char* key, const char* salt);
+char* crypt_r(const char* key, const char* salt, struct crypt_data* data);
 
 __END_DECLS

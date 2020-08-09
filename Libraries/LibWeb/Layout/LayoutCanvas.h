@@ -26,32 +26,28 @@
 
 #pragma once
 
-#include <LibWeb/DOM/HTMLCanvasElement.h>
+#include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/Layout/LayoutReplaced.h>
 
 namespace Web {
 
-class HTMLCanvasElement;
-
 class LayoutCanvas : public LayoutReplaced {
 public:
-    LayoutCanvas(Document&, const HTMLCanvasElement&, NonnullRefPtr<StyleProperties>);
+    LayoutCanvas(DOM::Document&, HTML::HTMLCanvasElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutCanvas() override;
 
     virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    const HTMLCanvasElement& node() const { return static_cast<const HTMLCanvasElement&>(LayoutReplaced::node()); }
+    const HTML::HTMLCanvasElement& node() const { return static_cast<const HTML::HTMLCanvasElement&>(LayoutReplaced::node()); }
 
 private:
     virtual const char* class_name() const override { return "LayoutCanvas"; }
     virtual bool is_canvas() const override { return true; }
 };
 
-template<>
-inline bool is<LayoutCanvas>(const LayoutNode& node)
-{
-    return node.is_canvas();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutCanvas)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_canvas(); }
+AK_END_TYPE_TRAITS()

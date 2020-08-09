@@ -78,8 +78,8 @@ void GlobalObject::initialize()
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
-    static_cast<FunctionPrototype*>(m_function_prototype)->initialize(heap().interpreter(), *this);
-    static_cast<ObjectPrototype*>(m_object_prototype)->initialize(heap().interpreter(), *this);
+    static_cast<FunctionPrototype*>(m_function_prototype)->initialize(*this);
+    static_cast<ObjectPrototype*>(m_object_prototype)->initialize(*this);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     if (!m_##snake_name##_prototype)                                          \

@@ -36,7 +36,7 @@ class ArrayPrototype final : public Object {
 
 public:
     ArrayPrototype(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~ArrayPrototype() override;
 
 private:

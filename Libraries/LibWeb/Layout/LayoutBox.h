@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <LibGfx/FloatRect.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Painting/StackingContext.h>
 
@@ -55,7 +55,7 @@ public:
     float absolute_y() const { return absolute_rect().y(); }
     Gfx::FloatPoint absolute_position() const { return absolute_rect().location(); }
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint& absolute_position) const override;
+    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
     virtual void set_needs_display() override;
 
     bool is_body() const;
@@ -71,7 +71,7 @@ public:
     virtual void paint(PaintContext&, PaintPhase) override;
 
 protected:
-    LayoutBox(Document& document, const Node* node, NonnullRefPtr<StyleProperties> style)
+    LayoutBox(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : LayoutNodeWithStyleAndBoxModelMetrics(document, node, move(style))
     {
     }
@@ -98,10 +98,8 @@ private:
     OwnPtr<StackingContext> m_stacking_context;
 };
 
-template<>
-ALWAYS_INLINE bool is<LayoutBox>(const LayoutNode& node)
-{
-    return node.is_box();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutBox)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_box(); }
+AK_END_TYPE_TRAITS()

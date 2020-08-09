@@ -361,7 +361,7 @@ void Terminal::escape$b(const ParamVector& params)
         return;
 
     for (unsigned i = 0; i < params[0]; ++i)
-        put_character_at(m_cursor_row, m_cursor_column++, m_last_codepoint);
+        put_character_at(m_cursor_row, m_cursor_column++, m_last_code_point);
 }
 
 void Terminal::escape$d(const ParamVector& params)
@@ -537,11 +537,11 @@ void Terminal::escape$P(const ParamVector& params)
 
     // Move n characters of line to the left
     for (int i = m_cursor_column; i < line.length() - num; i++)
-        line.set_codepoint(i, line.codepoint(i + num));
+        line.set_code_point(i, line.code_point(i + num));
 
     // Fill remainder of line with blanks
     for (int i = line.length() - num; i < line.length(); i++)
-        line.set_codepoint(i, ' ');
+        line.set_code_point(i, ' ');
 
     line.set_dirty(true);
 }
@@ -768,17 +768,17 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
     invalidate_cursor();
 }
 
-void Terminal::put_character_at(unsigned row, unsigned column, u32 codepoint)
+void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
     auto& line = m_lines[row];
-    line.set_codepoint(column, codepoint);
+    line.set_code_point(column, code_point);
     line.attributes()[column] = m_current_attribute;
     line.attributes()[column].flags |= Attribute::Touched;
     line.set_dirty(true);
 
-    m_last_codepoint = codepoint;
+    m_last_code_point = code_point;
 }
 
 void Terminal::NEL()
@@ -820,14 +820,14 @@ void Terminal::on_input(u8 ch)
 
     auto fail_utf8_parse = [this] {
         m_parser_state = Normal;
-        on_codepoint('%');
+        on_code_point('%');
     };
 
     auto advance_utf8_parse = [this, ch] {
-        m_parser_codepoint <<= 6;
-        m_parser_codepoint |= ch & 0x3f;
+        m_parser_code_point <<= 6;
+        m_parser_code_point |= ch & 0x3f;
         if (m_parser_state == UTF8Needs1Byte) {
-            on_codepoint(m_parser_codepoint);
+            on_code_point(m_parser_code_point);
             m_parser_state = Normal;
         } else {
             m_parser_state = (ParserState)(m_parser_state + 1);
@@ -928,17 +928,17 @@ void Terminal::on_input(u8 ch)
             break;
         if ((ch & 0xe0) == 0xc0) {
             m_parser_state = UTF8Needs1Byte;
-            m_parser_codepoint = ch & 0x1f;
+            m_parser_code_point = ch & 0x1f;
             return;
         }
         if ((ch & 0xf0) == 0xe0) {
             m_parser_state = UTF8Needs2Bytes;
-            m_parser_codepoint = ch & 0x0f;
+            m_parser_code_point = ch & 0x0f;
             return;
         }
         if ((ch & 0xf8) == 0xf0) {
             m_parser_state = UTF8Needs3Bytes;
-            m_parser_codepoint = ch & 0x07;
+            m_parser_code_point = ch & 0x07;
             return;
         }
         fail_utf8_parse();
@@ -978,26 +978,26 @@ void Terminal::on_input(u8 ch)
         return;
     }
 
-    on_codepoint(ch);
+    on_code_point(ch);
 }
 
-void Terminal::on_codepoint(u32 codepoint)
+void Terminal::on_code_point(u32 code_point)
 {
     auto new_column = m_cursor_column + 1;
     if (new_column < columns()) {
-        put_character_at(m_cursor_row, m_cursor_column, codepoint);
+        put_character_at(m_cursor_row, m_cursor_column, code_point);
         set_cursor(m_cursor_row, new_column);
         return;
     }
     if (m_stomp) {
         m_stomp = false;
         newline();
-        put_character_at(m_cursor_row, m_cursor_column, codepoint);
+        put_character_at(m_cursor_row, m_cursor_column, code_point);
         set_cursor(m_cursor_row, 1);
     } else {
         // Curious: We wait once on the right-hand side
         m_stomp = true;
-        put_character_at(m_cursor_row, m_cursor_column, codepoint);
+        put_character_at(m_cursor_row, m_cursor_column, code_point);
     }
 }
 
@@ -1078,7 +1078,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
         emit_string("\033");
 
     StringBuilder sb;
-    sb.append_codepoint(code_point);
+    sb.append_code_point(code_point);
 
     emit_string(sb.to_string());
 }

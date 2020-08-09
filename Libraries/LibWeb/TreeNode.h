@@ -28,18 +28,10 @@
 
 #include <AK/Assertions.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
 
 namespace Web {
-
-// FIXME: I wish I didn't have to forward declare these, but I can't seem to avoid
-//        it if I still want to have for_each_in_subtree_of_type<U> inline here.
-class Node;
-class LayoutNode;
-template<typename T>
-bool is(const Node&);
-template<typename T>
-bool is(const LayoutNode&);
 
 template<typename T>
 class TreeNode : public Weakable<T> {

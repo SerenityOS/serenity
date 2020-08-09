@@ -28,7 +28,6 @@
 
 #include "CompilationUnit.h"
 #include "DwarfTypes.h"
-#include <AK/BufferStream.h>
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
@@ -52,6 +51,7 @@ public:
             Boolean,
             DwarfExpression,
             SecOffset,
+            RawBytes,
         } type;
 
         union {
@@ -62,7 +62,7 @@ public:
             struct {
                 u32 length;
                 const u8* bytes; // points to bytes in the memory mapped elf image
-            } as_dwarf_expression;
+            } as_raw_bytes;
         } data {};
     };
 
@@ -81,7 +81,7 @@ public:
 
 private:
     AttributeValue get_attribute_value(AttributeDataForm form,
-        BufferStream& debug_info_stream) const;
+        InputMemoryStream& debug_info_stream) const;
 
     const CompilationUnit& m_compilation_unit;
     u32 m_offset { 0 };

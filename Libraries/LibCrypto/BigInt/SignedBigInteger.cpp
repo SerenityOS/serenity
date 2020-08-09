@@ -36,11 +36,15 @@ SignedBigInteger SignedBigInteger::import_data(const u8* ptr, size_t length)
     return { move(unsigned_data), sign };
 }
 
-size_t SignedBigInteger::export_data(AK::ByteBuffer& data) const
+size_t SignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) const
 {
+    // FIXME: Support this:
+    //        m <0XX> -> m <XX> (if remove_leading_zeros)
+    ASSERT(!remove_leading_zeros);
+
     data[0] = m_sign;
-    auto bytes_view = data.slice_view(1, data.size() - 1);
-    return m_unsigned_data.export_data(bytes_view) + 1;
+    auto bytes_view = data.slice(1, data.size() - 1);
+    return m_unsigned_data.export_data(bytes_view, remove_leading_zeros) + 1;
 }
 
 SignedBigInteger SignedBigInteger::from_base10(StringView str)

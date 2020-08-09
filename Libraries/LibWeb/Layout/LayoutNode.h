@@ -27,8 +27,8 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/TypeCasts.h>
 #include <AK/Vector.h>
-#include <LibGfx/FloatRect.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
@@ -40,69 +40,28 @@
 
 namespace Web {
 
-template<typename T>
-inline bool is(const LayoutNode&)
-{
-    return false;
-}
-
-template<typename T>
-inline bool is(const LayoutNode* node)
-{
-    return !node || is<T>(*node);
-}
-
-template<>
-inline bool is<LayoutNode>(const LayoutNode&)
-{
-    return true;
-}
-
-template<typename T>
-inline const T& to(const LayoutNode& node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<const T&>(node);
-}
-
-template<typename T>
-inline T* to(LayoutNode* node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<T*>(node);
-}
-
-template<typename T>
-inline const T* to(const LayoutNode* node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<const T*>(node);
-}
-
-template<typename T>
-inline T& to(LayoutNode& node)
-{
-    ASSERT(is<T>(node));
-    return static_cast<T&>(node);
-}
-
 struct HitTestResult {
     RefPtr<LayoutNode> layout_node;
     int index_in_node { 0 };
+};
+
+enum class HitTestType {
+    Exact,      // Exact matches only
+    TextCursor, // Clicking past the right/bottom edge of text will still hit the text
 };
 
 class LayoutNode : public TreeNode<LayoutNode> {
 public:
     virtual ~LayoutNode();
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint&) const;
+    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const;
 
     bool is_anonymous() const { return !m_node; }
-    const Node* node() const { return m_node; }
-    Node* node() { return const_cast<Node*>(m_node); }
+    const DOM::Node* node() const { return m_node; }
+    DOM::Node* node() { return m_node; }
 
-    Document& document() { return m_document; }
-    const Document& document() const { return m_document; }
+    DOM::Document& document() { return m_document; }
+    const DOM::Document& document() const { return m_document; }
 
     const Frame& frame() const;
     Frame& frame();
@@ -130,7 +89,7 @@ public:
         for (auto* node = first_child(); node; node = node->next_sibling()) {
             if (!is<T>(node))
                 continue;
-            callback(to<T>(*node));
+            callback(downcast<T>(*node));
         }
     }
 
@@ -140,7 +99,7 @@ public:
         for (auto* node = first_child(); node; node = node->next_sibling()) {
             if (!is<T>(node))
                 continue;
-            callback(to<T>(*node));
+            callback(downcast<T>(*node));
         }
     }
 
@@ -158,6 +117,7 @@ public:
     virtual bool is_table_row() const { return false; }
     virtual bool is_table_cell() const { return false; }
     virtual bool is_table_row_group() const { return false; }
+    virtual bool is_break() const { return false; }
     bool has_style() const { return m_has_style; }
 
     bool is_inline() const { return m_inline; }
@@ -191,7 +151,7 @@ public:
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 
-    const StyleProperties& specified_style() const;
+    const CSS::StyleProperties& specified_style() const;
     const ImmutableLayoutStyle& style() const;
 
     LayoutNodeWithStyle* parent();
@@ -240,13 +200,13 @@ public:
     float font_size() const;
 
 protected:
-    LayoutNode(Document&, const Node*);
+    LayoutNode(DOM::Document&, DOM::Node*);
 
 private:
     friend class LayoutNodeWithStyle;
 
-    Document& m_document;
-    const Node* m_node { nullptr };
+    DOM::Document& m_document;
+    DOM::Node* m_node { nullptr };
 
     bool m_inline { false };
     bool m_has_style { false };
@@ -258,21 +218,20 @@ class LayoutNodeWithStyle : public LayoutNode {
 public:
     virtual ~LayoutNodeWithStyle() override { }
 
-    const StyleProperties& specified_style() const { return m_specified_style; }
-    void set_specified_style(const StyleProperties& style) { m_specified_style = style; }
+    const CSS::StyleProperties& specified_style() const { return m_specified_style; }
+    void set_specified_style(const CSS::StyleProperties& style) { m_specified_style = style; }
 
     const ImmutableLayoutStyle& style() const { return static_cast<const ImmutableLayoutStyle&>(m_style); }
 
-    void apply_style(const StyleProperties&);
+    void apply_style(const CSS::StyleProperties&);
 
 protected:
-    LayoutNodeWithStyle(Document&, const Node*, NonnullRefPtr<StyleProperties>);
+    LayoutNodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
 
 private:
-
     LayoutStyle m_style;
 
-    NonnullRefPtr<StyleProperties> m_specified_style;
+    NonnullRefPtr<CSS::StyleProperties> m_specified_style;
     CSS::Position m_position;
     CSS::TextAlign m_text_align;
 };
@@ -283,7 +242,7 @@ public:
     const BoxModelMetrics& box_model() const { return m_box_model; }
 
 protected:
-    LayoutNodeWithStyleAndBoxModelMetrics(Document& document, const Node* node, NonnullRefPtr<StyleProperties> style)
+    LayoutNodeWithStyleAndBoxModelMetrics(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : LayoutNodeWithStyle(document, node, move(style))
     {
     }
@@ -292,7 +251,7 @@ private:
     BoxModelMetrics m_box_model;
 };
 
-inline const StyleProperties& LayoutNode::specified_style() const
+inline const CSS::StyleProperties& LayoutNode::specified_style() const
 {
     if (m_has_style)
         return static_cast<const LayoutNodeWithStyle*>(this)->specified_style();
@@ -321,7 +280,7 @@ inline const T* LayoutNode::next_sibling_of_type() const
 {
     for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
         if (is<T>(*sibling))
-            return &to<T>(*sibling);
+            return &downcast<T>(*sibling);
     }
     return nullptr;
 }
@@ -331,7 +290,7 @@ inline T* LayoutNode::next_sibling_of_type()
 {
     for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
         if (is<T>(*sibling))
-            return &to<T>(*sibling);
+            return &downcast<T>(*sibling);
     }
     return nullptr;
 }
@@ -341,7 +300,7 @@ inline const T* LayoutNode::previous_sibling_of_type() const
 {
     for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
         if (is<T>(*sibling))
-            return &to<T>(*sibling);
+            return &downcast<T>(*sibling);
     }
     return nullptr;
 }
@@ -351,7 +310,7 @@ inline T* LayoutNode::previous_sibling_of_type()
 {
     for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
         if (is<T>(*sibling))
-            return &to<T>(*sibling);
+            return &downcast<T>(*sibling);
     }
     return nullptr;
 }
@@ -361,7 +320,7 @@ inline const T* LayoutNode::first_child_of_type() const
 {
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<T>(*child))
-            return &to<T>(*child);
+            return &downcast<T>(*child);
     }
     return nullptr;
 }
@@ -371,7 +330,7 @@ inline T* LayoutNode::first_child_of_type()
 {
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<T>(*child))
-            return &to<T>(*child);
+            return &downcast<T>(*child);
     }
     return nullptr;
 }
@@ -381,7 +340,7 @@ inline const T* LayoutNode::first_ancestor_of_type() const
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (is<T>(*ancestor))
-            return &to<T>(*ancestor);
+            return &downcast<T>(*ancestor);
     }
     return nullptr;
 }
@@ -391,15 +350,13 @@ inline T* LayoutNode::first_ancestor_of_type()
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (is<T>(*ancestor))
-            return &to<T>(*ancestor);
+            return &downcast<T>(*ancestor);
     }
     return nullptr;
 }
 
-template<>
-inline bool is<LayoutNodeWithStyle>(const LayoutNode& node)
-{
-    return node.has_style();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::LayoutNodeWithStyle)
+static bool is_type(const Web::LayoutNode& node) { return node.has_style(); }
+AK_END_TYPE_TRAITS()

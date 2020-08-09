@@ -150,8 +150,8 @@ public:
         }
     }
 
-    static Region* region_from_vaddr(Process&, VirtualAddress);
-    static const Region* region_from_vaddr(const Process&, VirtualAddress);
+    static Region* find_region_from_vaddr(Process&, VirtualAddress);
+    static const Region* find_region_from_vaddr(const Process&, VirtualAddress);
 
     void dump_kernel_regions();
 
@@ -184,7 +184,7 @@ private:
     static Region* user_region_from_vaddr(Process&, VirtualAddress);
     static Region* kernel_region_from_vaddr(VirtualAddress);
 
-    static Region* region_from_vaddr(VirtualAddress);
+    static Region* find_region_from_vaddr(VirtualAddress);
 
     RefPtr<PhysicalPage> find_free_user_physical_page();
     u8* quickmap_page(PhysicalPage&);

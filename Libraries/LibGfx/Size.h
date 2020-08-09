@@ -32,88 +32,121 @@
 
 namespace Gfx {
 
-class IntSize {
+template<typename T>
+class Size {
 public:
-    IntSize() {}
-    IntSize(int w, int h)
+    Size() {}
+
+    Size(T w, T h)
         : m_width(w)
         , m_height(h)
+    {
+    }
+
+    template<typename U>
+    Size(U width, U height)
+        : m_width(width)
+        , m_height(height)
+    {
+    }
+
+    template<typename U>
+    explicit Size(const Size<U>& other)
+        : m_width(other.width())
+        , m_height(other.height())
     {
     }
 
     bool is_null() const { return !m_width && !m_height; }
     bool is_empty() const { return m_width <= 0 || m_height <= 0; }
 
-    int width() const { return m_width; }
-    int height() const { return m_height; }
+    T width() const { return m_width; }
+    T height() const { return m_height; }
 
-    int area() const { return width() * height(); }
+    T area() const { return width() * height(); }
 
-    void set_width(int w) { m_width = w; }
-    void set_height(int h) { m_height = h; }
+    void set_width(T w) { m_width = w; }
+    void set_height(T h) { m_height = h; }
 
-    bool operator==(const IntSize& other) const
+    bool operator==(const Size<T>& other) const
     {
         return m_width == other.m_width && m_height == other.m_height;
     }
 
-    bool operator!=(const IntSize& other) const
+    bool operator!=(const Size<T>& other) const
     {
         return !(*this == other);
     }
 
-    IntSize& operator-=(const IntSize& other)
+    Size<T>& operator-=(const Size<T>& other)
     {
         m_width -= other.m_width;
         m_height -= other.m_height;
         return *this;
     }
 
-    IntSize& operator+=(const IntSize& other)
+    Size<T>& operator+=(const Size<T>& other)
     {
         m_width += other.m_width;
         m_height += other.m_height;
         return *this;
     }
 
-    int primary_size_for_orientation(Orientation orientation) const
+    T primary_size_for_orientation(Orientation orientation) const
     {
         return orientation == Orientation::Vertical ? height() : width();
     }
 
-    void set_primary_size_for_orientation(Orientation orientation, int value)
+    void set_primary_size_for_orientation(Orientation orientation, T value)
     {
-        if (orientation == Orientation::Vertical)
+        if (orientation == Orientation::Vertical) {
             set_height(value);
-        else
+        } else {
             set_width(value);
+        }
     }
 
-    int secondary_size_for_orientation(Orientation orientation) const
+    T secondary_size_for_orientation(Orientation orientation) const
     {
         return orientation == Orientation::Vertical ? width() : height();
     }
 
-    void set_secondary_size_for_orientation(Orientation orientation, int value)
+    void set_secondary_size_for_orientation(Orientation orientation, T value)
     {
-        if (orientation == Orientation::Vertical)
+        if (orientation == Orientation::Vertical) {
             set_width(value);
-        else
+        } else {
             set_height(value);
+        }
+    }
+
+    template<typename U>
+    Size<U> to_type() const
+    {
+        return Size<U>(*this);
     }
 
     String to_string() const;
 
 private:
-    int m_width { 0 };
-    int m_height { 0 };
+    T m_width { 0 };
+    T m_height { 0 };
 };
 
-const LogStream& operator<<(const LogStream&, const IntSize&);
+template<typename T>
+const LogStream& operator<<(const LogStream& stream, const Gfx::Size<T>& size)
+{
+    return stream << size.to_string();
+}
+
+using IntSize = Size<int>;
+using FloatSize = Size<float>;
 
 }
 
 namespace IPC {
+
 bool encode(Encoder&, const Gfx::IntSize&);
 bool decode(Decoder&, Gfx::IntSize&);
+
 }

@@ -36,7 +36,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/Image.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/StackWidget.h>
@@ -214,7 +214,7 @@ int main(int argc, char** argv)
         title_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
 
         if (!page.icon.is_empty()) {
-            auto& icon = title_box.add<GUI::Image>();
+            auto& icon = title_box.add<GUI::ImageWidget>();
             icon.set_preferred_size(16, 16);
             icon.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
             icon.load_from_file(page.icon);

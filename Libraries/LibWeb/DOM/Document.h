@@ -41,7 +41,7 @@
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 
-namespace Web {
+namespace Web::DOM {
 
 enum class QuirksMode {
     No,
@@ -69,8 +69,8 @@ public:
 
     void fixup();
 
-    StyleResolver& style_resolver() { return *m_style_resolver; }
-    const StyleResolver& style_resolver() const { return *m_style_resolver; }
+    CSS::StyleResolver& style_resolver() { return *m_style_resolver; }
+    const CSS::StyleResolver& style_resolver() const { return *m_style_resolver; }
 
     CSS::StyleSheetList& style_sheets() { return *m_style_sheets; }
     const CSS::StyleSheetList& style_sheets() const { return *m_style_sheets; }
@@ -85,9 +85,10 @@ public:
     Node* inspected_node() { return m_inspected_node; }
     const Node* inspected_node() const { return m_inspected_node; }
 
-    const HTMLHtmlElement* document_element() const;
-    const HTMLHeadElement* head() const;
-    const HTMLElement* body() const;
+    const Element* document_element() const;
+    const HTML::HTMLHtmlElement* html_element() const;
+    const HTML::HTMLHeadElement* head() const;
+    const HTML::HTMLElement* body() const;
 
     String title() const;
 
@@ -124,7 +125,7 @@ public:
     void schedule_style_update();
 
     Vector<const Element*> get_elements_by_name(const String&) const;
-    NonnullRefPtrVector<Element> get_elements_by_tag_name(const String&) const;
+    NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
     RefPtr<Element> query_selector(const StringView&);
     NonnullRefPtrVector<Element> query_selector_all(const StringView&);
 
@@ -138,15 +139,15 @@ public:
     NonnullRefPtr<Element> create_element(const String& tag_name);
     NonnullRefPtr<Text> create_text_node(const String& data);
 
-    void set_pending_parsing_blocking_script(Badge<HTMLScriptElement>, HTMLScriptElement*);
-    HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }
-    NonnullRefPtr<HTMLScriptElement> take_pending_parsing_blocking_script(Badge<HTMLDocumentParser>);
+    void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
+    HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }
+    NonnullRefPtr<HTML::HTMLScriptElement> take_pending_parsing_blocking_script(Badge<HTML::HTMLDocumentParser>);
 
-    void add_script_to_execute_when_parsing_has_finished(Badge<HTMLScriptElement>, HTMLScriptElement&);
-    NonnullRefPtrVector<HTMLScriptElement> take_scripts_to_execute_when_parsing_has_finished(Badge<HTMLDocumentParser>);
+    void add_script_to_execute_when_parsing_has_finished(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement&);
+    NonnullRefPtrVector<HTML::HTMLScriptElement> take_scripts_to_execute_when_parsing_has_finished(Badge<HTML::HTMLDocumentParser>);
 
-    void add_script_to_execute_as_soon_as_possible(Badge<HTMLScriptElement>, HTMLScriptElement&);
-    NonnullRefPtrVector<HTMLScriptElement> take_scripts_to_execute_as_soon_as_possible(Badge<HTMLDocumentParser>);
+    void add_script_to_execute_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement&);
+    NonnullRefPtrVector<HTML::HTMLScriptElement> take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLDocumentParser>);
 
     QuirksMode mode() const { return m_quirks_mode; }
     bool in_quirks_mode() const { return m_quirks_mode == QuirksMode::Yes; }
@@ -157,10 +158,13 @@ public:
     const DocumentType* doctype() const;
     const String& compat_mode() const;
 
-private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) override;
+    void set_editable(bool editable) { m_editable = editable; }
+    virtual bool is_editable() const final;
 
-    OwnPtr<StyleResolver> m_style_resolver;
+private:
+    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
+
+    OwnPtr<CSS::StyleResolver> m_style_resolver;
     RefPtr<CSS::StyleSheetList> m_style_sheets;
     RefPtr<Node> m_hovered_node;
     RefPtr<Node> m_inspected_node;
@@ -181,17 +185,16 @@ private:
 
     OwnPtr<JS::Interpreter> m_interpreter;
 
-    RefPtr<HTMLScriptElement> m_pending_parsing_blocking_script;
-    NonnullRefPtrVector<HTMLScriptElement> m_scripts_to_execute_when_parsing_has_finished;
-    NonnullRefPtrVector<HTMLScriptElement> m_scripts_to_execute_as_soon_as_possible;
+    RefPtr<HTML::HTMLScriptElement> m_pending_parsing_blocking_script;
+    NonnullRefPtrVector<HTML::HTMLScriptElement> m_scripts_to_execute_when_parsing_has_finished;
+    NonnullRefPtrVector<HTML::HTMLScriptElement> m_scripts_to_execute_as_soon_as_possible;
 
     QuirksMode m_quirks_mode { QuirksMode::No };
+    bool m_editable { false };
 };
 
-template<>
-inline bool is<Document>(const Node& node)
-{
-    return node.is_document();
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::DOM::Document)
+static bool is_type(const Web::DOM::Node& node) { return node.is_document(); }
+AK_END_TYPE_TRAITS()

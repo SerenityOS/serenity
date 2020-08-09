@@ -241,6 +241,13 @@ public:
         }
     }
 
+    u32 eflags() const { return m_eflags; }
+    void set_eflags(ValueWithShadow<u32> eflags)
+    {
+        m_eflags = eflags.value();
+        m_flags_tainted = eflags.is_uninitialized();
+    }
+
     ValueWithShadow<u32> eax() const { return const_gpr32(X86::RegisterEAX); }
     ValueWithShadow<u32> ebx() const { return const_gpr32(X86::RegisterEBX); }
     ValueWithShadow<u32> ecx() const { return const_gpr32(X86::RegisterECX); }
@@ -574,6 +581,125 @@ private:
     virtual void ENTER16(const X86::Instruction&) override;
     virtual void ENTER32(const X86::Instruction&) override;
     virtual void ESCAPE(const X86::Instruction&) override;
+    virtual void FADD_RM32(const X86::Instruction&) override;
+    virtual void FMUL_RM32(const X86::Instruction&) override;
+    virtual void FCOM_RM32(const X86::Instruction&) override;
+    virtual void FCOMP_RM32(const X86::Instruction&) override;
+    virtual void FSUB_RM32(const X86::Instruction&) override;
+    virtual void FSUBR_RM32(const X86::Instruction&) override;
+    virtual void FDIV_RM32(const X86::Instruction&) override;
+    virtual void FDIVR_RM32(const X86::Instruction&) override;
+    virtual void FLD_RM32(const X86::Instruction&) override;
+    virtual void FXCH(const X86::Instruction&) override;
+    virtual void FST_RM32(const X86::Instruction&) override;
+    virtual void FNOP(const X86::Instruction&) override;
+    virtual void FSTP_RM32(const X86::Instruction&) override;
+    virtual void FLDENV(const X86::Instruction&) override;
+    virtual void FCHS(const X86::Instruction&) override;
+    virtual void FABS(const X86::Instruction&) override;
+    virtual void FTST(const X86::Instruction&) override;
+    virtual void FXAM(const X86::Instruction&) override;
+    virtual void FLDCW(const X86::Instruction&) override;
+    virtual void FLD1(const X86::Instruction&) override;
+    virtual void FLDL2T(const X86::Instruction&) override;
+    virtual void FLDL2E(const X86::Instruction&) override;
+    virtual void FLDPI(const X86::Instruction&) override;
+    virtual void FLDLG2(const X86::Instruction&) override;
+    virtual void FLDLN2(const X86::Instruction&) override;
+    virtual void FLDZ(const X86::Instruction&) override;
+    virtual void FNSTENV(const X86::Instruction&) override;
+    virtual void F2XM1(const X86::Instruction&) override;
+    virtual void FYL2X(const X86::Instruction&) override;
+    virtual void FPTAN(const X86::Instruction&) override;
+    virtual void FPATAN(const X86::Instruction&) override;
+    virtual void FXTRACT(const X86::Instruction&) override;
+    virtual void FPREM1(const X86::Instruction&) override;
+    virtual void FDECSTP(const X86::Instruction&) override;
+    virtual void FINCSTP(const X86::Instruction&) override;
+    virtual void FNSTCW(const X86::Instruction&) override;
+    virtual void FPREM(const X86::Instruction&) override;
+    virtual void FYL2XP1(const X86::Instruction&) override;
+    virtual void FSQRT(const X86::Instruction&) override;
+    virtual void FSINCOS(const X86::Instruction&) override;
+    virtual void FRNDINT(const X86::Instruction&) override;
+    virtual void FSCALE(const X86::Instruction&) override;
+    virtual void FSIN(const X86::Instruction&) override;
+    virtual void FCOS(const X86::Instruction&) override;
+    virtual void FIADD_RM32(const X86::Instruction&) override;
+    virtual void FCMOVB(const X86::Instruction&) override;
+    virtual void FIMUL_RM32(const X86::Instruction&) override;
+    virtual void FCMOVE(const X86::Instruction&) override;
+    virtual void FICOM_RM32(const X86::Instruction&) override;
+    virtual void FCMOVBE(const X86::Instruction&) override;
+    virtual void FICOMP_RM32(const X86::Instruction&) override;
+    virtual void FCMOVU(const X86::Instruction&) override;
+    virtual void FISUB_RM32(const X86::Instruction&) override;
+    virtual void FISUBR_RM32(const X86::Instruction&) override;
+    virtual void FUCOMPP(const X86::Instruction&) override;
+    virtual void FIDIV_RM32(const X86::Instruction&) override;
+    virtual void FIDIVR_RM32(const X86::Instruction&) override;
+    virtual void FILD_RM32(const X86::Instruction&) override;
+    virtual void FCMOVNB(const X86::Instruction&) override;
+    virtual void FISTTP_RM32(const X86::Instruction&) override;
+    virtual void FCMOVNE(const X86::Instruction&) override;
+    virtual void FIST_RM32(const X86::Instruction&) override;
+    virtual void FCMOVNBE(const X86::Instruction&) override;
+    virtual void FISTP_RM32(const X86::Instruction&) override;
+    virtual void FCMOVNU(const X86::Instruction&) override;
+    virtual void FNENI(const X86::Instruction&) override;
+    virtual void FNDISI(const X86::Instruction&) override;
+    virtual void FNCLEX(const X86::Instruction&) override;
+    virtual void FNINIT(const X86::Instruction&) override;
+    virtual void FNSETPM(const X86::Instruction&) override;
+    virtual void FLD_RM80(const X86::Instruction&) override;
+    virtual void FUCOMI(const X86::Instruction&) override;
+    virtual void FCOMI(const X86::Instruction&) override;
+    virtual void FSTP_RM80(const X86::Instruction&) override;
+    virtual void FADD_RM64(const X86::Instruction&) override;
+    virtual void FMUL_RM64(const X86::Instruction&) override;
+    virtual void FCOM_RM64(const X86::Instruction&) override;
+    virtual void FCOMP_RM64(const X86::Instruction&) override;
+    virtual void FSUB_RM64(const X86::Instruction&) override;
+    virtual void FSUBR_RM64(const X86::Instruction&) override;
+    virtual void FDIV_RM64(const X86::Instruction&) override;
+    virtual void FDIVR_RM64(const X86::Instruction&) override;
+    virtual void FLD_RM64(const X86::Instruction&) override;
+    virtual void FFREE(const X86::Instruction&) override;
+    virtual void FISTTP_RM64(const X86::Instruction&) override;
+    virtual void FST_RM64(const X86::Instruction&) override;
+    virtual void FSTP_RM64(const X86::Instruction&) override;
+    virtual void FRSTOR(const X86::Instruction&) override;
+    virtual void FUCOM(const X86::Instruction&) override;
+    virtual void FUCOMP(const X86::Instruction&) override;
+    virtual void FNSAVE(const X86::Instruction&) override;
+    virtual void FNSTSW(const X86::Instruction&) override;
+    virtual void FIADD_RM16(const X86::Instruction&) override;
+    virtual void FADDP(const X86::Instruction&) override;
+    virtual void FIMUL_RM16(const X86::Instruction&) override;
+    virtual void FMULP(const X86::Instruction&) override;
+    virtual void FICOM_RM16(const X86::Instruction&) override;
+    virtual void FICOMP_RM16(const X86::Instruction&) override;
+    virtual void FCOMPP(const X86::Instruction&) override;
+    virtual void FISUB_RM16(const X86::Instruction&) override;
+    virtual void FSUBRP(const X86::Instruction&) override;
+    virtual void FISUBR_RM16(const X86::Instruction&) override;
+    virtual void FSUBP(const X86::Instruction&) override;
+    virtual void FIDIV_RM16(const X86::Instruction&) override;
+    virtual void FDIVRP(const X86::Instruction&) override;
+    virtual void FIDIVR_RM16(const X86::Instruction&) override;
+    virtual void FDIVP(const X86::Instruction&) override;
+    virtual void FILD_RM16(const X86::Instruction&) override;
+    virtual void FFREEP(const X86::Instruction&) override;
+    virtual void FISTTP_RM16(const X86::Instruction&) override;
+    virtual void FIST_RM16(const X86::Instruction&) override;
+    virtual void FISTP_RM16(const X86::Instruction&) override;
+    virtual void FBLD_M80(const X86::Instruction&) override;
+    virtual void FNSTSW_AX(const X86::Instruction&) override;
+    virtual void FILD_RM64(const X86::Instruction&) override;
+    virtual void FUCOMIP(const X86::Instruction&) override;
+    virtual void FBSTP_M80(const X86::Instruction&) override;
+    virtual void FCOMIP(const X86::Instruction&) override;
+    virtual void FISTP_RM64(const X86::Instruction&) override;
     virtual void HLT(const X86::Instruction&) override;
     virtual void IDIV_RM16(const X86::Instruction&) override;
     virtual void IDIV_RM32(const X86::Instruction&) override;
@@ -922,37 +1048,37 @@ private:
     virtual void wrap_0xD3_16(const X86::Instruction&) override;
     virtual void wrap_0xD3_32(const X86::Instruction&) override;
 
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_or, typename Op>
     void generic_AL_imm8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_or, typename Op>
     void generic_AX_imm16(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_or, typename Op>
     void generic_EAX_imm32(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_or, typename Op>
     void generic_RM16_imm16(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_or, typename Op>
     void generic_RM16_imm8(Op, const X86::Instruction&);
     template<bool update_dest, typename Op>
     void generic_RM16_unsigned_imm8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_RM16_reg16(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_or, typename Op>
     void generic_RM32_imm32(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_or, typename Op>
     void generic_RM32_imm8(Op, const X86::Instruction&);
     template<bool update_dest, typename Op>
     void generic_RM32_unsigned_imm8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_RM32_reg32(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_or, typename Op>
     void generic_RM8_imm8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_RM8_reg8(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_reg16_RM16(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_reg32_RM32(Op, const X86::Instruction&);
-    template<bool update_dest, typename Op>
+    template<bool update_dest, bool is_zero_idiom_if_both_operands_same, typename Op>
     void generic_reg8_RM8(Op, const X86::Instruction&);
 
     template<typename Op>

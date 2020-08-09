@@ -57,6 +57,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
+#include <serenity.h>
 #include <signal.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -353,8 +354,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         if (GUI::InputBox::show(value, window, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_file_path = LexicalPath::canonicalized_path(
                 String::format("%s/%s",
-                               directory_view.path().characters(),
-                               value.characters()));
+                    directory_view.path().characters(),
+                    value.characters()));
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {
@@ -382,7 +383,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         posix_spawn_file_actions_addchdir(&spawn_actions, directory_view.path().characters());
         pid_t pid;
         const char* argv[] = { "Terminal", nullptr };
-        posix_spawn(&pid, "/bin/Terminal", &spawn_actions, nullptr, const_cast<char**>(argv), environ);
+        if ((errno = posix_spawn(&pid, "/bin/Terminal", &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(pid) < 0)
+                perror("disown");
+        }
         posix_spawn_file_actions_destroy(&spawn_actions);
     });
 
@@ -708,7 +714,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(*view_as_columns_action);
 
     directory_view.on_path_change = [&](const String& new_path) {
-        const  Gfx::Bitmap* icon = nullptr;
+        const Gfx::Bitmap* icon = nullptr;
         if (new_path == Core::StandardPaths::home_directory())
             icon = &home_directory_icon();
         else
@@ -802,10 +808,14 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
             const char* argv[] = { launcher_handler.details().name.characters(), nullptr };
             posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+            if (disown(child) < 0)
+                perror("disown");
         } else {
             for (auto& path : selected_file_paths()) {
                 const char* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
                 posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+                if (disown(child) < 0)
+                    perror("disown");
             }
         }
     };
@@ -846,7 +856,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 } else {
                     file_context_menu_action_default_action.clear();
                 }
-                
+
                 if (current_file_handlers.size() > 1) {
                     added_open_menu_items = true;
                     auto& file_open_with_menu = file_context_menu->add_submenu("Open with");

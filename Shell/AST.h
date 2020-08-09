@@ -48,10 +48,11 @@ struct Position {
     bool contains(size_t offset) const { return start_offset <= offset && offset <= end_offset; }
 };
 
+struct FdRedirection;
 struct Rewiring : public RefCounted<Rewiring> {
     int source_fd { -1 };
     int dest_fd { -1 };
-    Rewiring* other_pipe_end { nullptr };
+    FdRedirection* other_pipe_end { nullptr };
     enum class Close {
         None,
         Source,
@@ -67,7 +68,7 @@ struct Rewiring : public RefCounted<Rewiring> {
     {
     }
 
-    Rewiring(int source, int dest, Rewiring* other_end, Close close)
+    Rewiring(int source, int dest, FdRedirection* other_end, Close close)
         : source_fd(source)
         , dest_fd(dest)
         , other_pipe_end(other_end)
@@ -77,7 +78,7 @@ struct Rewiring : public RefCounted<Rewiring> {
 };
 
 struct Redirection : public RefCounted<Redirection> {
-    virtual Result<RefPtr<Rewiring>, String> apply() const = 0;
+    virtual Result<NonnullRefPtr<Rewiring>, String> apply() const = 0;
     virtual ~Redirection();
     virtual bool is_path_redirection() const { return false; }
     virtual bool is_fd_redirection() const { return false; }
@@ -87,7 +88,7 @@ struct Redirection : public RefCounted<Redirection> {
 struct CloseRedirection : public Redirection {
     int fd { -1 };
 
-    virtual Result<RefPtr<Rewiring>, String> apply() const override;
+    virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override;
     virtual ~CloseRedirection();
     CloseRedirection(int fd)
         : fd(fd)
@@ -108,7 +109,7 @@ struct PathRedirection : public Redirection {
         ReadWrite,
     } direction { Read };
 
-    virtual Result<RefPtr<Rewiring>, String> apply() const override;
+    virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override;
     virtual ~PathRedirection();
     PathRedirection(String path, int fd, decltype(direction) direction)
         : path(move(path))
@@ -121,19 +122,29 @@ private:
     virtual bool is_path_redirection() const override { return true; }
 };
 
-struct FdRedirection : public Redirection
-    , public Rewiring {
-
-    virtual Result<RefPtr<Rewiring>, String> apply() const override { return static_cast<RefPtr<Rewiring>>(this); }
+struct FdRedirection : public Redirection {
+    virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override
+    {
+        return adopt(*new Rewiring(source_fd, dest_fd, other_pipe_end, action));
+    }
     virtual ~FdRedirection();
     FdRedirection(int source, int dest, Rewiring::Close close)
-        : Rewiring(source, dest, close)
+        : FdRedirection(source, dest, nullptr, close)
     {
     }
-    FdRedirection(int source, int dest, Rewiring* pipe_end, Rewiring::Close close)
-        : Rewiring(source, dest, pipe_end, close)
+
+    FdRedirection(int source, int dest, FdRedirection* pipe_end, Rewiring::Close close)
+        : source_fd(source)
+        , dest_fd(dest)
+        , other_pipe_end(pipe_end)
+        , action(close)
     {
     }
+
+    int source_fd { -1 };
+    int dest_fd { -1 };
+    FdRedirection* other_pipe_end { nullptr };
+    Rewiring::Close action { Rewiring::Close::None };
 
 private:
     virtual bool is_fd_redirection() const override { return true; }
@@ -141,7 +152,7 @@ private:
 
 struct Command {
     Vector<String> argv;
-    Vector<NonnullRefPtr<Redirection>> redirections;
+    NonnullRefPtrVector<Redirection> redirections;
     bool should_wait { true };
     bool is_pipe_source { false };
     bool should_notify_if_in_background { true };
@@ -157,7 +168,7 @@ class Value : public RefCounted<Value> {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) = 0;
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>);
-    virtual RefPtr<Value> resolve_without_cast(RefPtr<Shell>) { return this; }
+    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) { return *this; }
     virtual ~Value();
     virtual bool is_command() const { return false; }
     virtual bool is_glob() const { return false; }
@@ -222,20 +233,21 @@ private:
 class ListValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
-    virtual RefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual ~ListValue();
     virtual bool is_list() const override { return true; }
     virtual bool is_list_without_resolution() const override { return true; }
     ListValue(Vector<String> values);
-    ListValue(Vector<RefPtr<Value>> values)
-        : m_contained_values(move(values))
+    ListValue(Vector<NonnullRefPtr<Value>> values)
+        : m_contained_values(move(static_cast<NonnullRefPtrVector<Value>&>(values)))
     {
     }
 
-    const Vector<RefPtr<Value>>& values() const { return m_contained_values; }
+    const NonnullRefPtrVector<Value>& values() const { return m_contained_values; }
+    NonnullRefPtrVector<Value>& values() { return m_contained_values; }
 
 private:
-    Vector<RefPtr<Value>> m_contained_values;
+    NonnullRefPtrVector<Value> m_contained_values;
 };
 
 class StringValue final : public Value {
@@ -245,7 +257,7 @@ public:
     virtual bool is_string() const override { return m_split.is_null(); }
     virtual bool is_list() const override { return !m_split.is_null(); }
     StringValue(String string, String split_by = {}, bool keep_empty = false)
-        : m_string(string)
+        : m_string(move(string))
         , m_split(move(split_by))
         , m_keep_empty(keep_empty)
     {
@@ -263,7 +275,7 @@ public:
     virtual ~GlobValue();
     virtual bool is_glob() const override { return true; }
     GlobValue(String glob)
-        : m_glob(glob)
+        : m_glob(move(glob))
     {
     }
 
@@ -274,10 +286,10 @@ private:
 class SimpleVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
-    RefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
+    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual ~SimpleVariableValue();
     SimpleVariableValue(String name)
-        : m_name(name)
+        : m_name(move(name))
     {
     }
 
@@ -304,7 +316,7 @@ public:
     virtual ~TildeValue();
     virtual bool is_string() const override { return true; }
     TildeValue(String name)
-        : m_username(name)
+        : m_username(move(name))
     {
     }
 
@@ -849,8 +861,8 @@ private:
 class VariableDeclarations final : public Node {
 public:
     struct Variable {
-        RefPtr<Node> name;
-        RefPtr<Node> value;
+        NonnullRefPtr<Node> name;
+        NonnullRefPtr<Node> value;
     };
     VariableDeclarations(Position, Vector<Variable> variables);
     virtual ~VariableDeclarations();

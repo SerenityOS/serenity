@@ -38,12 +38,12 @@ ArrayIteratorPrototype::ArrayIteratorPrototype(GlobalObject& global_object)
 {
 }
 
-void ArrayIteratorPrototype::initialize(Interpreter& interpreter, GlobalObject& global_object)
+void ArrayIteratorPrototype::initialize(GlobalObject& global_object)
 {
-    Object::initialize(interpreter, global_object);
+    Object::initialize(global_object);
 
     define_native_function("next", next, 0, Attribute::Configurable | Attribute::Writable);
-    define_property(interpreter.well_known_symbol_to_string_tag(), js_string(interpreter, "Array Iterator"), Attribute::Configurable);
+    define_property(global_object.interpreter().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Array Iterator"), Attribute::Configurable);
 }
 
 ArrayIteratorPrototype::~ArrayIteratorPrototype()
@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
     auto& iterator = static_cast<ArrayIterator&>(this_object);
     auto target_array = iterator.array();
     if (target_array.is_undefined())
-        return create_iterator_result_object(interpreter, global_object, js_undefined(), true);
+        return create_iterator_result_object(global_object, js_undefined(), true);
     ASSERT(target_array.is_object());
     auto& array = target_array.as_object();
 
@@ -72,23 +72,23 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 
     if (index >= length) {
         iterator.m_array = js_undefined();
-        return create_iterator_result_object(interpreter, global_object, js_undefined(), true);
+        return create_iterator_result_object(global_object, js_undefined(), true);
     }
 
     iterator.m_index++;
     if (iteration_kind == Object::PropertyKind::Key)
-        return create_iterator_result_object(interpreter, global_object, Value(static_cast<i32>(index)), false);
+        return create_iterator_result_object(global_object, Value(static_cast<i32>(index)), false);
 
     auto value = array.get(index);
     if (interpreter.exception())
         return {};
     if (iteration_kind == Object::PropertyKind::Value)
-        return create_iterator_result_object(interpreter, global_object, value, false);
+        return create_iterator_result_object(global_object, value, false);
 
     auto* entry_array = Array::create(global_object);
     entry_array->define_property(0, Value(static_cast<i32>(index)));
     entry_array->define_property(1, value);
-    return create_iterator_result_object(interpreter, global_object, entry_array, false);
+    return create_iterator_result_object(global_object, entry_array, false);
 }
 
 }

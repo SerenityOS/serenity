@@ -176,7 +176,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
         return KSuccess;
     }
 
-    if (Thread::current()->block<Thread::ConnectBlocker>(description).was_interrupted()) {
+    if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description).was_interrupted()) {
         m_connect_side_role = Role::None;
         return KResult(-EINTR);
     }
@@ -260,10 +260,10 @@ bool LocalSocket::can_write(const FileDescription& description, size_t) const
     return false;
 }
 
-ssize_t LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
+KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
 {
     if (!has_attached_peer(description))
-        return -EPIPE;
+        return KResult(-EPIPE);
     ssize_t nwritten = send_buffer_for(description).write((const u8*)data, data_size);
     if (nwritten > 0)
         Thread::current()->did_unix_socket_write(nwritten);
@@ -290,18 +290,18 @@ DoubleBuffer& LocalSocket::send_buffer_for(FileDescription& description)
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
+KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
 {
     auto& buffer_for_me = receive_buffer_for(description);
     if (!description.is_blocking()) {
         if (buffer_for_me.is_empty()) {
             if (!has_attached_peer(description))
                 return 0;
-            return -EAGAIN;
+            return KResult(-EAGAIN);
         }
     } else if (!can_read(description, 0)) {
-        if (Thread::current()->block<Thread::ReadBlocker>(description).was_interrupted())
-            return -EINTR;
+        if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description).was_interrupted())
+            return KResult(-EINTR);
     }
     if (!has_attached_peer(description) && buffer_for_me.is_empty())
         return 0;
@@ -344,24 +344,30 @@ String LocalSocket::absolute_path(const FileDescription& description) const
     return builder.to_string();
 }
 
-KResult LocalSocket::getsockopt(FileDescription& description, int level, int option, void* value, socklen_t* value_size)
+KResult LocalSocket::getsockopt(FileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     if (level != SOL_SOCKET)
         return Socket::getsockopt(description, level, option, value, value_size);
 
+
+    socklen_t size;
+    if (!Process::current()->validate_read_and_copy_typed(&size, value_size))
+        return KResult(-EFAULT);
+
     switch (option) {
     case SO_PEERCRED: {
-        if (*value_size < sizeof(ucred))
+        if (size < sizeof(ucred))
             return KResult(-EINVAL);
-        auto& creds = *(ucred*)value;
         switch (role(description)) {
         case Role::Accepted:
-            creds = m_origin;
-            *value_size = sizeof(ucred);
+            copy_to_user(static_ptr_cast<ucred*>(value), &m_origin);
+            size = sizeof(ucred);
+            copy_to_user(value_size, &size);
             return KSuccess;
         case Role::Connected:
-            creds = m_acceptor;
-            *value_size = sizeof(ucred);
+            copy_to_user(static_ptr_cast<ucred*>(value), &m_acceptor);
+            size = sizeof(ucred);
+            copy_to_user(value_size, &size);
             return KSuccess;
         case Role::Connecting:
             return KResult(-ENOTCONN);

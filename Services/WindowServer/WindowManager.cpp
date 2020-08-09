@@ -210,7 +210,7 @@ void WindowManager::move_to_front_and_make_active(Window& window)
             auto* parent = wnd.parent_window();
             do_move_to_front(*parent, true, false);
             make_active = false;
-                
+
             for (auto& accessory_window : parent->accessory_windows()) {
                 if (accessory_window && accessory_window.ptr() != &wnd)
                     do_move_to_front(*accessory_window, false, false);
@@ -379,6 +379,9 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_
 
     tell_wm_listeners_window_rect_changed(window);
 
+    if (window.type() == WindowType::MenuApplet)
+        AppletManager::the().calculate_applet_rects(MenuManager::the().window());
+
     MenuManager::the().refresh();
 }
 
@@ -439,6 +442,7 @@ void WindowManager::start_window_move(Window& window, const MouseEvent& event)
 #endif
     move_to_front_and_make_active(window);
     m_move_window = window.make_weak_ptr();
+    m_move_window->set_default_positioned(false);
     m_move_origin = event.position();
     m_move_window_origin = window.position();
     window.invalidate();
@@ -476,6 +480,10 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
     m_resize_window_original_rect = window.rect();
 
     window.invalidate();
+
+    if (hot_area_row == 0 || hot_area_column == 0) {
+        m_resize_window->set_default_positioned(false);
+    }
 }
 
 void WindowManager::start_window_resize(Window& window, const MouseEvent& event)
@@ -811,7 +819,7 @@ bool WindowManager::is_menu_doubleclick(Window& window, const MouseEvent& event)
     auto& metadata = m_double_click_info.metadata_for_button(event.button());
     if (!metadata.clock.is_valid())
         return false;
-    
+
     return is_considered_doubleclick(event, metadata);
 }
 
@@ -1140,7 +1148,7 @@ void WindowManager::restore_active_input_window(Window* window)
     // If the current active window is also gone, pick some other window
     if (!window && pick_new_active_window(nullptr))
         return;
-    
+
     set_active_input_window(window);
 }
 
@@ -1388,6 +1396,8 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
                 notified_clients.set(window.client());
             }
         }
+        window.frame().layout_buttons();
+        window.frame().set_button_icons();
         return IterationDecision::Continue;
     });
     MenuManager::the().did_change_theme();
@@ -1423,4 +1433,34 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
     });
 }
 
+Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint& desired)
+{
+    // FIXME: Find a  better source for the width and height to shift by.
+    Gfx::IntPoint shift(8, palette().window_title_height() + 10);
+
+    // FIXME: Find a better source for this.
+    int taskbar_height = 28;
+    int menubar_height = MenuManager::the().menubar_rect().height();
+
+    const Window* overlap_window = nullptr;
+    for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
+        if (window.default_positioned() && (!overlap_window || overlap_window->window_id() < window.window_id())) {
+            overlap_window = &window;
+        }
+        return IterationDecision::Continue;
+    });
+
+    Gfx::IntPoint point;
+    if (overlap_window) {
+        point = overlap_window->position() + shift;
+        point = { point.x() % Screen::the().width(),
+            (point.y() >= (Screen::the().height() - taskbar_height))
+                ? menubar_height + palette().window_title_height()
+                : point.y() };
+    } else {
+        point = desired;
+    }
+
+    return point;
+}
 }

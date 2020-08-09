@@ -35,7 +35,7 @@ enum KSuccessTag {
     KSuccess
 };
 
-class KResult {
+class [[nodiscard]] KResult {
 public:
     ALWAYS_INLINE explicit KResult(int negative_e)
         : m_error(negative_e)
@@ -47,10 +47,10 @@ public:
     {
     }
     operator int() const { return m_error; }
-    int error() const { return m_error; }
+    [[nodiscard]] int error() const { return m_error; }
 
-    bool is_success() const { return m_error == 0; }
-    bool is_error() const { return !is_success(); }
+    [[nodiscard]] bool is_success() const { return m_error == 0; }
+    [[nodiscard]] bool is_error() const { return !is_success(); }
 
 private:
     template<typename T>
@@ -61,7 +61,7 @@ private:
 };
 
 template<typename T>
-class alignas(T) KResultOr {
+class alignas(T) [[nodiscard]] KResultOr {
 public:
     KResultOr(KResult error)
         : m_error(error)
@@ -115,18 +115,22 @@ public:
             value().~T();
     }
 
-    bool is_error() const { return m_is_error; }
+    [[nodiscard]] bool is_error() const { return m_is_error; }
+
     ALWAYS_INLINE KResult error() const
     {
         ASSERT(m_is_error);
         return m_error;
     }
+
     KResult result() const { return m_is_error ? KSuccess : m_error; }
+
     ALWAYS_INLINE T& value()
     {
         ASSERT(!m_is_error);
         return *reinterpret_cast<T*>(&m_storage);
     }
+
     ALWAYS_INLINE const T& value() const
     {
         ASSERT(!m_is_error);

@@ -45,6 +45,7 @@ public:
 
     Color color(ColorRole) const;
     int metric(MetricRole) const;
+    String path(PathRole) const;
     const SystemTheme& theme() const;
 
     void replace_internal_buffer(Badge<GUI::Application>, SharedBuffer& buffer);
@@ -71,17 +72,23 @@ public:
     Color active_window_border1() const { return color(ColorRole::ActiveWindowBorder1); }
     Color active_window_border2() const { return color(ColorRole::ActiveWindowBorder2); }
     Color active_window_title() const { return color(ColorRole::ActiveWindowTitle); }
+    Color active_window_title_stripes() const { return color(ColorRole::ActiveWindowTitleStripes); }
+    Color active_window_title_shadow() const { return color(ColorRole::ActiveWindowTitleShadow); }
     Color inactive_window_border1() const { return color(ColorRole::InactiveWindowBorder1); }
     Color inactive_window_border2() const { return color(ColorRole::InactiveWindowBorder2); }
     Color inactive_window_title() const { return color(ColorRole::InactiveWindowTitle); }
+    Color inactive_window_title_stripes() const { return color(ColorRole::InactiveWindowTitleStripes); }
+    Color inactive_window_title_shadow() const { return color(ColorRole::InactiveWindowTitleShadow); }
     Color moving_window_border1() const { return color(ColorRole::MovingWindowBorder1); }
     Color moving_window_border2() const { return color(ColorRole::MovingWindowBorder2); }
     Color moving_window_title() const { return color(ColorRole::MovingWindowTitle); }
+    Color moving_window_title_stripes() const { return color(ColorRole::MovingWindowTitleStripes); }
+    Color moving_window_title_shadow() const { return color(ColorRole::MovingWindowTitleShadow); }
     Color highlight_window_border1() const { return color(ColorRole::HighlightWindowBorder1); }
     Color highlight_window_border2() const { return color(ColorRole::HighlightWindowBorder2); }
     Color highlight_window_title() const { return color(ColorRole::HighlightWindowTitle); }
-    Color window_title_stripes() const { return color(ColorRole::WindowTitleStripes); }
-    Color window_title_shadow() const { return color(ColorRole::WindowTitleShadow); }
+    Color highlight_window_title_stripes() const { return color(ColorRole::HighlightWindowTitleStripes); }
+    Color highlight_window_title_shadow() const { return color(ColorRole::HighlightWindowTitleShadow); }
     Color menu_stripe() const { return color(ColorRole::MenuStripe); }
     Color menu_base() const { return color(ColorRole::MenuBase); }
     Color menu_base_text() const { return color(ColorRole::MenuBaseText); }
@@ -124,11 +131,15 @@ public:
     int window_title_button_width() const { return metric(MetricRole::TitleButtonWidth); }
     int window_title_button_height() const { return metric(MetricRole::TitleButtonHeight); }
 
+    String title_button_icons_path() const { return path(PathRole::TitleButtonIcons); }
+
     Color color(ColorRole role) const { return m_impl->color(role); }
     int metric(MetricRole role) const { return m_impl->metric(role); }
+    String path(PathRole role) const { return m_impl->path(role); }
 
     void set_color(ColorRole, Color);
     void set_metric(MetricRole, int);
+    void set_path(PathRole, String);
 
     const SystemTheme& theme() const { return m_impl->theme(); }
 

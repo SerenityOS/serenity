@@ -31,8 +31,7 @@
 
 class PtraceRegisters;
 
-namespace Dwarf {
-namespace Expression {
+namespace Dwarf::Expression {
 
 enum class Type {
     None,
@@ -52,7 +51,6 @@ enum class Operations : u8 {
     FbReg = 0x91,
 };
 
-Value evaluate(const ByteBuffer&, const PtraceRegisters&);
+Value evaluate(ReadonlyBytes, const PtraceRegisters&);
 
-}
 }

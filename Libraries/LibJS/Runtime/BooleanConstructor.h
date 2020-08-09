@@ -35,7 +35,7 @@ class BooleanConstructor final : public NativeFunction {
 
 public:
     explicit BooleanConstructor(GlobalObject&);
-    virtual void initialize(Interpreter&, GlobalObject&) override;
+    virtual void initialize(GlobalObject&) override;
     virtual ~BooleanConstructor() override;
 
     virtual Value call(Interpreter&) override;

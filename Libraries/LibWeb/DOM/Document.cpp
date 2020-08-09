@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/AttributeNames.h>
@@ -42,33 +43,34 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/DOM/HTMLBodyElement.h>
-#include <LibWeb/DOM/HTMLHeadElement.h>
-#include <LibWeb/DOM/HTMLHtmlElement.h>
-#include <LibWeb/DOM/HTMLScriptElement.h>
-#include <LibWeb/DOM/HTMLTitleElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Frame/Frame.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLHeadElement.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/HTML/HTMLScriptElement.h>
+#include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Origin.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
-#include <LibWeb/Parser/CSSParser.h>
+#include <LibWeb/SVG/TagNames.h>
 #include <stdio.h>
 
-namespace Web {
+namespace Web::DOM {
 
 Document::Document(const URL& url)
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
-    , m_style_resolver(make<StyleResolver>(*this))
+    , m_style_resolver(make<CSS::StyleResolver>(*this))
     , m_style_sheets(CSS::StyleSheetList::create(*this))
     , m_url(url)
     , m_window(Window::create_with_document(*this))
 {
     HTML::AttributeNames::initialize();
     HTML::TagNames::initialize();
+    SVG::TagNames::initialize();
 
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();
@@ -115,7 +117,7 @@ void Document::fixup()
     if (!first_child() || !is<DocumentType>(*first_child()))
         prepend_child(adopt(*new DocumentType(*this)));
 
-    if (is<HTMLHtmlElement>(first_child()->next_sibling()))
+    if (is<HTML::HTMLHtmlElement>(first_child()->next_sibling()))
         return;
 
     auto body = create_element("body");
@@ -125,25 +127,33 @@ void Document::fixup()
     this->append_child(html);
 }
 
-const HTMLHtmlElement* Document::document_element() const
+const Element* Document::document_element() const
 {
-    return first_child_of_type<HTMLHtmlElement>();
+    return first_child_of_type<Element>();
 }
 
-const HTMLHeadElement* Document::head() const
+const HTML::HTMLHtmlElement* Document::html_element() const
 {
     auto* html = document_element();
-    if (!html)
-        return nullptr;
-    return html->first_child_of_type<HTMLHeadElement>();
+    if (is<HTML::HTMLHtmlElement>(html))
+        return downcast<HTML::HTMLHtmlElement>(html);
+    return nullptr;
 }
 
-const HTMLElement* Document::body() const
+const HTML::HTMLHeadElement* Document::head() const
 {
-    auto* html = document_element();
+    auto* html = html_element();
     if (!html)
         return nullptr;
-    return html->first_child_of_type<HTMLBodyElement>();
+    return html->first_child_of_type<HTML::HTMLHeadElement>();
+}
+
+const HTML::HTMLElement* Document::body() const
+{
+    auto* html = html_element();
+    if (!html)
+        return nullptr;
+    return html->first_child_of_type<HTML::HTMLBodyElement>();
 }
 
 String Document::title() const
@@ -152,7 +162,7 @@ String Document::title() const
     if (!head_element)
         return {};
 
-    auto* title_element = head_element->first_child_of_type<HTMLTitleElement>();
+    auto* title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
     if (!title_element)
         return {};
 
@@ -211,7 +221,7 @@ RefPtr<Gfx::Bitmap> Document::background_image() const
     if (!background_image.has_value() || !background_image.value()->is_image())
         return {};
 
-    auto& image_value = static_cast<const ImageStyleValue&>(*background_image.value());
+    auto& image_value = static_cast<const CSS::ImageStyleValue&>(*background_image.value());
     if (!image_value.bitmap())
         return {};
 
@@ -268,9 +278,9 @@ void Document::update_layout()
     layout();
 }
 
-RefPtr<LayoutNode> Document::create_layout_node(const StyleProperties*)
+RefPtr<LayoutNode> Document::create_layout_node(const CSS::StyleProperties*)
 {
-    return adopt(*new LayoutDocument(*this, StyleProperties::create()));
+    return adopt(*new LayoutDocument(*this, CSS::StyleProperties::create()));
 }
 
 void Document::set_link_color(Color color)
@@ -334,11 +344,11 @@ Vector<const Element*> Document::get_elements_by_name(const String& name) const
     return elements;
 }
 
-NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const String& tag_name) const
+NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const FlyString& tag_name) const
 {
     NonnullRefPtrVector<Element> elements;
     for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (element.tag_name() == tag_name)
+        if (element.local_name() == tag_name)
             elements.append(element);
         return IterationDecision::Continue;
     });
@@ -431,7 +441,7 @@ JS::Value Document::run_javascript(const StringView& source)
 
 NonnullRefPtr<Element> Document::create_element(const String& tag_name)
 {
-    return Web::create_element(*this, tag_name);
+    return DOM::create_element(*this, tag_name);
 }
 
 NonnullRefPtr<Text> Document::create_text_node(const String& data)
@@ -439,32 +449,32 @@ NonnullRefPtr<Text> Document::create_text_node(const String& data)
     return adopt(*new Text(*this, data));
 }
 
-void Document::set_pending_parsing_blocking_script(Badge<HTMLScriptElement>, HTMLScriptElement* script)
+void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement* script)
 {
     m_pending_parsing_blocking_script = script;
 }
 
-NonnullRefPtr<HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTMLDocumentParser>)
+NonnullRefPtr<HTML::HTMLScriptElement> Document::take_pending_parsing_blocking_script(Badge<HTML::HTMLDocumentParser>)
 {
     return m_pending_parsing_blocking_script.release_nonnull();
 }
 
-void Document::add_script_to_execute_when_parsing_has_finished(Badge<HTMLScriptElement>, HTMLScriptElement& script)
+void Document::add_script_to_execute_when_parsing_has_finished(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
     m_scripts_to_execute_when_parsing_has_finished.append(script);
 }
 
-NonnullRefPtrVector<HTMLScriptElement> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTMLDocumentParser>)
+NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_when_parsing_has_finished(Badge<HTML::HTMLDocumentParser>)
 {
     return move(m_scripts_to_execute_when_parsing_has_finished);
 }
 
-void Document::add_script_to_execute_as_soon_as_possible(Badge<HTMLScriptElement>, HTMLScriptElement& script)
+void Document::add_script_to_execute_as_soon_as_possible(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement& script)
 {
     m_scripts_to_execute_as_soon_as_possible.append(script);
 }
 
-NonnullRefPtrVector<HTMLScriptElement> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTMLDocumentParser>)
+NonnullRefPtrVector<HTML::HTMLScriptElement> Document::take_scripts_to_execute_as_soon_as_possible(Badge<HTML::HTMLDocumentParser>)
 {
     return move(m_scripts_to_execute_as_soon_as_possible);
 }
@@ -491,6 +501,11 @@ const String& Document::compat_mode() const
         return back_compat;
 
     return css1_compat;
+}
+
+bool Document::is_editable() const
+{
+    return m_editable;
 }
 
 }

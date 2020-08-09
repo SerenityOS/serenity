@@ -30,14 +30,14 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Frame/Frame.h>
 #include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 
 namespace Web {
 
-LayoutWidget::LayoutWidget(Document& document, const Element& element, GUI::Widget& widget)
-    : LayoutReplaced(document, element, StyleProperties::create())
+LayoutWidget::LayoutWidget(DOM::Document& document, DOM::Element& element, GUI::Widget& widget)
+    : LayoutReplaced(document, element, CSS::StyleProperties::create())
     , m_widget(widget)
 {
     set_has_intrinsic_width(true);
@@ -59,7 +59,7 @@ void LayoutWidget::did_set_rect()
 
 void LayoutWidget::update_widget()
 {
-    auto adjusted_widget_position = absolute_rect().location().to_int_point();
+    auto adjusted_widget_position = absolute_rect().location().to_type<int>();
     auto& page_view = static_cast<const PageView&>(frame().page().client());
     adjusted_widget_position.move_by(-page_view.horizontal_scrollbar().value(), -page_view.vertical_scrollbar().value());
     widget().move_to(adjusted_widget_position);

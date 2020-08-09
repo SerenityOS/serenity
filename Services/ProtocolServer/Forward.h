@@ -31,7 +31,9 @@ namespace ProtocolServer {
 class ClientConnection;
 class Download;
 class GeminiProtocol;
+class HttpDownload;
 class HttpProtocol;
+class HttpsDownload;
 class HttpsProtocol;
 class Protocol;
 

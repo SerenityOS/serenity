@@ -113,6 +113,9 @@ Come hang out with us in `#serenityos` on the Freenode IRC network.
 * **Ali Mohammad Pur** - [alimpfard](https://github.com/alimpfard)
 * **Shannon Booth** - [shannonbooth](https://github.com/shannonbooth)
 * **Hüseyin ASLITÜRK** - [asliturk](https://github.com/asliturk)
+* **Matthew Olsson** - [mattco98](https://github.com/mattco98)
+* **Nico Weber** - [nico](https://github.com/nico)
+* **Brian Gianforcaro** - [bgianfo](https://github.com/bgianfo)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 

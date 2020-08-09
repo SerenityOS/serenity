@@ -38,6 +38,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Window.h>
 
 namespace PixelPaint {
 
@@ -55,12 +56,14 @@ public:
         builder.append(")");
         set_tooltip(builder.to_string());
 
-        m_action = GUI::Action::create_checkable(name, shortcut, [this](auto& action) {
-            if (action.is_checked())
-                m_toolbox.on_tool_selection(m_tool);
-            else
-                m_toolbox.on_tool_selection(nullptr);
-        });
+        m_action = GUI::Action::create_checkable(
+            name, shortcut, [this](auto& action) {
+                if (action.is_checked())
+                    m_toolbox.on_tool_selection(m_tool);
+                else
+                    m_toolbox.on_tool_selection(nullptr);
+            },
+            toolbox.window());
 
         m_tool->set_action(m_action);
         set_action(*m_action);
@@ -101,6 +104,17 @@ ToolboxWidget::ToolboxWidget()
     m_action_group.set_exclusive(true);
     m_action_group.set_unchecking_allowed(false);
 
+    deferred_invoke([this](auto&) {
+        setup_tools();
+    });
+}
+
+ToolboxWidget::~ToolboxWidget()
+{
+}
+
+void ToolboxWidget::setup_tools()
+{
     auto add_tool = [&](const StringView& name, const StringView& icon_name, const GUI::Shortcut& shortcut, NonnullOwnPtr<Tool> tool) -> ToolButton& {
         m_tools.append(tool.ptr());
         auto& button = add<ToolButton>(*this, name, shortcut, move(tool));
@@ -120,10 +134,6 @@ ToolboxWidget::ToolboxWidget()
     add_tool("Line", "line", { Mod_Ctrl | Mod_Shift, Key_L }, make<LineTool>());
     add_tool("Rectangle", "rectangle", { Mod_Ctrl | Mod_Shift, Key_R }, make<RectangleTool>());
     add_tool("Ellipse", "circle", { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
-}
-
-ToolboxWidget::~ToolboxWidget()
-{
 }
 
 }

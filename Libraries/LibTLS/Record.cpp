@@ -117,7 +117,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 auto view = ct.slice_view(header_size + iv_size, length);
 
                 // encrypt the message
-                m_aes_local->encrypt(buffer, view, iv);
+                (void)m_aes_local->encrypt(buffer, view, iv);
 
                 // store the correct ciphertext length into the packet
                 u16 ct_length = (u16)ct.size() - header_size;
@@ -239,7 +239,7 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
         memcpy(temp_buf, buffer.offset_pointer(0), 3);
         *(u16*)(temp_buf + 3) = convert_between_host_and_network(length);
         auto hmac = hmac_message(ByteBuffer::wrap(temp_buf, 5), decrypted, mac_size);
-        auto message_mac = ByteBuffer::wrap(message_hmac, mac_size);
+        auto message_mac = ByteBuffer::wrap(const_cast<u8*>(message_hmac), mac_size);
         if (hmac != message_mac) {
             dbg() << "integrity check failed (mac length " << length << ")";
             dbg() << "mac received:";

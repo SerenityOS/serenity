@@ -30,11 +30,11 @@
 
 namespace Web {
 
-void dump_tree(const Node&);
+void dump_tree(const DOM::Node&);
 void dump_tree(const LayoutNode&);
-void dump_sheet(const StyleSheet&);
-void dump_rule(const StyleRule&);
-void dump_selector(const Selector&);
+void dump_sheet(const CSS::StyleSheet&);
+void dump_rule(const CSS::StyleRule&);
+void dump_selector(const CSS::Selector&);
 
 #undef HTML_DEBUG
 

@@ -42,12 +42,12 @@ void LineBox::add_fragment(const LayoutNode& layout_node, int start, int length,
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
         m_fragments.last().set_width(m_fragments.last().width() + width);
     } else {
-        m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width, 0), Gfx::FloatSize(width, height)));
+        m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width, 0.0f), Gfx::FloatSize(width, height)));
     }
     m_width += width;
 
     if (is<LayoutBox>(layout_node))
-        const_cast<LayoutBox&>(to<LayoutBox>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
+        const_cast<LayoutBox&>(downcast<LayoutBox>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
 }
 
 void LineBox::trim_trailing_whitespace()

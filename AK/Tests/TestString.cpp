@@ -87,8 +87,8 @@ TEST_CASE(starts_with)
     EXPECT(!test_string.starts_with('B'));
     EXPECT(test_string.starts_with("ABCDEF"));
     EXPECT(!test_string.starts_with("DEF"));
-    EXPECT(test_string.starts_with("abc",  CaseSensitivity::CaseInsensitive));
-    EXPECT(!test_string.starts_with("abc",  CaseSensitivity::CaseSensitive));
+    EXPECT(test_string.starts_with("abc", CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string.starts_with("abc", CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(ends_with)
@@ -99,8 +99,8 @@ TEST_CASE(ends_with)
     EXPECT(!test_string.ends_with('E'));
     EXPECT(test_string.ends_with("ABCDEF"));
     EXPECT(!test_string.ends_with("ABC"));
-    EXPECT(test_string.ends_with("def",  CaseSensitivity::CaseInsensitive));
-    EXPECT(!test_string.ends_with("def",  CaseSensitivity::CaseSensitive));
+    EXPECT(test_string.ends_with("def", CaseSensitivity::CaseInsensitive));
+    EXPECT(!test_string.ends_with("def", CaseSensitivity::CaseSensitive));
 }
 
 TEST_CASE(copy_string)
@@ -188,6 +188,16 @@ TEST_CASE(replace)
     EXPECT(test_string == "111._.|||._.|||");
 }
 
+TEST_CASE(substring)
+{
+    String test = "abcdef";
+    EXPECT_EQ(test.substring(0, 6), test);
+    EXPECT_EQ(test.substring(0, 3), "abc");
+    EXPECT_EQ(test.substring(3, 3), "def");
+    EXPECT_EQ(test.substring(3, 0), "");
+    EXPECT_EQ(test.substring(6, 0), "");
+}
+
 TEST_CASE(split)
 {
     String test = "foo bar baz";
@@ -200,15 +210,36 @@ TEST_CASE(split)
     EXPECT_EQ(parts[0].characters()[3], '\0');
     EXPECT_EQ(parts[1].characters()[3], '\0');
     EXPECT_EQ(parts[2].characters()[3], '\0');
+
+    test = "a    b";
+
+    parts = test.split(' ');
+    EXPECT_EQ(parts.size(), 2u);
+    EXPECT_EQ(parts[0], "a");
+    EXPECT_EQ(parts[1], "b");
+
+    parts = test.split(' ', true);
+    EXPECT_EQ(parts.size(), 5u);
+    EXPECT_EQ(parts[0], "a");
+    EXPECT_EQ(parts[1], "");
+    EXPECT_EQ(parts[2], "");
+    EXPECT_EQ(parts[3], "");
+    EXPECT_EQ(parts[4], "b");
+
+    test = "axxbx";
+    EXPECT_EQ(test.split('x').size(), 2u);
+    EXPECT_EQ(test.split('x', true).size(), 4u);
+    EXPECT_EQ(test.split_view('x').size(), 2u);
+    EXPECT_EQ(test.split_view('x', true).size(), 4u);
 }
 
 TEST_CASE(builder_zero_initial_capacity)
 {
-   StringBuilder builder(0);
-   builder.append("");
-   auto built = builder.build();
-   EXPECT_EQ(built.is_null(), false);
-   EXPECT_EQ(built.length(), 0u);
+    StringBuilder builder(0);
+    builder.append("");
+    auto built = builder.build();
+    EXPECT_EQ(built.is_null(), false);
+    EXPECT_EQ(built.length(), 0u);
 }
 
 TEST_MAIN(String)

@@ -1,0 +1,8 @@
+interface HTMLElement : Element {
+
+    [Reflect] attribute DOMString title;
+    [Reflect] attribute DOMString lang;
+
+    attribute DOMString contentEditable;
+
+}

@@ -41,6 +41,8 @@ public:
 private:
     explicit HttpsDownload(ClientConnection&, NonnullRefPtr<HTTP::HttpsJob>);
 
+    virtual void set_certificate(String certificate, String key) override;
+
     NonnullRefPtr<HTTP::HttpsJob> m_job;
 };
 

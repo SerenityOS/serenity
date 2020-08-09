@@ -29,7 +29,7 @@
 #include <AK/FlyString.h>
 #include <LibWeb/DOM/Node.h>
 
-namespace Web {
+namespace Web::DOM {
 
 class DocumentType final : public Node {
 public:
@@ -55,10 +55,8 @@ private:
     String m_system_id;
 };
 
-template<>
-inline bool is<DocumentType>(const Node& node)
-{
-    return node.type() == NodeType::DOCUMENT_TYPE_NODE;
 }
 
-}
+AK_BEGIN_TYPE_TRAITS(Web::DOM::DocumentType)
+static bool is_type(const Web::DOM::Node& node) { return node.type() == Web::DOM::NodeType::DOCUMENT_TYPE_NODE; }
+AK_END_TYPE_TRAITS()

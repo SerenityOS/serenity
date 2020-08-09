@@ -43,11 +43,53 @@ namespace GUI {
     __TOKEN(RightCurly)            \
     __TOKEN(LeftBracket)           \
     __TOKEN(RightBracket)          \
+    __TOKEN(Less)                  \
+    __TOKEN(Greater)               \
+    __TOKEN(LessEquals)            \
+    __TOKEN(GreaterEquals)         \
+    __TOKEN(LessLess)              \
+    __TOKEN(GreaterGreater)        \
+    __TOKEN(LessLessEquals)        \
+    __TOKEN(GreaterGreaterEquals)  \
+    __TOKEN(LessGreater)           \
     __TOKEN(Comma)                 \
+    __TOKEN(Plus)                  \
+    __TOKEN(PlusPlus)              \
+    __TOKEN(PlusEquals)            \
+    __TOKEN(Minus)                 \
+    __TOKEN(MinusMinus)            \
+    __TOKEN(MinusEquals)           \
     __TOKEN(Asterisk)              \
+    __TOKEN(AsteriskEquals)        \
+    __TOKEN(Slash)                 \
+    __TOKEN(SlashEquals)           \
+    __TOKEN(Percent)               \
+    __TOKEN(PercentEquals)         \
+    __TOKEN(Caret)                 \
+    __TOKEN(CaretEquals)           \
+    __TOKEN(ExclamationMark)       \
+    __TOKEN(ExclamationMarkEquals) \
+    __TOKEN(Equals)                \
+    __TOKEN(EqualsEquals)          \
+    __TOKEN(And)                   \
+    __TOKEN(AndAnd)                \
+    __TOKEN(AndEquals)             \
+    __TOKEN(Pipe)                  \
+    __TOKEN(PipePipe)              \
+    __TOKEN(PipeEquals)            \
+    __TOKEN(Tilde)                 \
+    __TOKEN(QuestionMark)          \
+    __TOKEN(Colon)                 \
+    __TOKEN(ColonColon)            \
+    __TOKEN(ColonColonAsterisk)    \
     __TOKEN(Semicolon)             \
+    __TOKEN(Dot)                   \
+    __TOKEN(DotAsterisk)           \
+    __TOKEN(Arrow)                 \
+    __TOKEN(ArrowAsterisk)         \
     __TOKEN(DoubleQuotedString)    \
     __TOKEN(SingleQuotedString)    \
+    __TOKEN(RawString)             \
     __TOKEN(EscapeSequence)        \
     __TOKEN(Comment)               \
     __TOKEN(Integer)               \

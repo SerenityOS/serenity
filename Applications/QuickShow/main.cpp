@@ -44,6 +44,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
+#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <string.h>
@@ -69,7 +70,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
-    window->set_rect(200, 200, 300, 200);
+    window->resize(300, 200);
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"));
     window->set_title("QuickShow");
 
@@ -114,7 +115,12 @@ int main(int argc, char** argv)
             pid_t child;
             for (size_t i = 1; i < urls.size(); ++i) {
                 const char* argv[] = { "/bin/QuickShow", urls[i].path().characters(), nullptr };
-                posix_spawn(&child, "/bin/QuickShow", nullptr, nullptr, const_cast<char**>(argv), environ);
+                if ((errno = posix_spawn(&child, "/bin/QuickShow", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+                    perror("posix_spawn");
+                } else {
+                    if (disown(child) < 0)
+                        perror("disown");
+                }
             }
         }
     };

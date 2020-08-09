@@ -53,6 +53,7 @@
     __ENUMERATE_SHELL_BUILTIN(pushd)   \
     __ENUMERATE_SHELL_BUILTIN(popd)    \
     __ENUMERATE_SHELL_BUILTIN(setopt)  \
+    __ENUMERATE_SHELL_BUILTIN(shift)   \
     __ENUMERATE_SHELL_BUILTIN(time)    \
     __ENUMERATE_SHELL_BUILTIN(jobs)    \
     __ENUMERATE_SHELL_BUILTIN(disown)  \
@@ -73,8 +74,9 @@ public:
     constexpr static auto global_init_file_path = "/etc/shellrc";
 
     int run_command(const StringView&);
+    bool is_runnable(const StringView&);
     RefPtr<Job> run_command(const AST::Command&);
-    Vector<RefPtr<Job>> run_commands(Vector<AST::Command>&);
+    NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
     bool run_file(const String&, bool explicitly_invoked = true);
     bool run_builtin(int argc, const char** argv, int& retval);
     bool has_builtin(const StringView&) const;
@@ -130,7 +132,7 @@ public:
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);
 
-    void restore_stdin();
+    void restore_ios();
 
     u64 find_last_job_id() const;
     const Job* find_job(u64 id);
@@ -163,7 +165,7 @@ public:
     int last_return_code { 0 };
     Vector<String> directory_stack;
     CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
-    HashMap<u64, RefPtr<Job>> jobs;
+    HashMap<u64, NonnullRefPtr<Job>> jobs;
     Vector<String, 256> cached_path;
 
     enum ShellEventType {
@@ -187,6 +189,7 @@ private:
     virtual void save_to(JsonObject&) override;
 
     void cache_path();
+    void add_entry_to_cache(const String&);
     void stop_all_jobs();
     const Job* m_current_job { nullptr };
     LocalFrame* find_frame_containing_local_variable(const String& name);
@@ -215,6 +218,7 @@ private:
     Vector<LocalFrame> m_local_frames;
 
     HashMap<String, String> m_aliases;
+    bool m_is_interactive { true };
 };
 
 static constexpr bool is_word_character(char c)

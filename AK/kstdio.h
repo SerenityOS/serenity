@@ -31,7 +31,9 @@
 #        include <Kernel/kstdio.h>
 #    else
 #        include <AK/Types.h>
+#        include <stdarg.h>
 extern "C" {
+int vdbgprintf(const char* fmt, va_list);
 int dbgprintf(const char* fmt, ...);
 ssize_t dbgputstr(const char*, ssize_t);
 int sprintf(char* buf, const char* fmt, ...);

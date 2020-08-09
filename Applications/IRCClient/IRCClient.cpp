@@ -215,7 +215,7 @@ void IRCClient::process_line(ByteBuffer&& line)
 
 void IRCClient::send(const String& text)
 {
-    if (!m_socket->send(ByteBuffer::wrap(text.characters(), text.length()))) {
+    if (!m_socket->send(text.bytes())) {
         perror("send");
         exit(1);
     }

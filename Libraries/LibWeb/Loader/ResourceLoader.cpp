@@ -117,7 +117,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
     if (url.protocol() == "about") {
         dbg() << "Loading about: URL " << url;
         deferred_invoke([success_callback = move(success_callback)](auto&) {
-            success_callback(ByteBuffer::wrap(String::empty().characters(), 1), {});
+            success_callback(ByteBuffer::wrap(const_cast<char*>(String::empty().characters()), 1), {});
         });
         return;
     }
@@ -178,6 +178,9 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
                 return;
             }
             success_callback(ByteBuffer::copy(payload.data(), payload.size()), response_headers);
+        };
+        download->on_certificate_requested = []() -> Protocol::Download::CertificateAndKey {
+            return {};
         };
         ++m_pending_loads;
         if (on_load_counter_change)

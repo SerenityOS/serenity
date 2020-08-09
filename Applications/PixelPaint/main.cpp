@@ -25,10 +25,16 @@
  */
 
 #include "CreateNewLayerDialog.h"
+#include "Filters/BoxBlurFilter.h"
+#include "Filters/GenericConvolutionFilter.h"
+#include "Filters/LaplacianFilter.h"
+#include "Filters/SharpenFilter.h"
+#include "Filters/SpatialGaussianBlurFilter.h"
 #include "Image.h"
 #include "ImageEditor.h"
 #include "Layer.h"
 #include "LayerListWidget.h"
+#include "LayerPropertiesWidget.h"
 #include "PaletteWidget.h"
 #include "Tool.h"
 #include "ToolboxWidget.h"
@@ -44,6 +50,7 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Matrix4x4.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -64,7 +71,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("PixelPaint");
-    window->set_rect(40, 100, 950, 570);
+    window->resize(950, 570);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& horizontal_container = window->set_main_widget<GUI::Widget>();
@@ -93,6 +100,8 @@ int main(int argc, char** argv)
     right_panel.set_layout<GUI::VerticalBoxLayout>();
 
     auto& layer_list_widget = right_panel.add<PixelPaint::LayerListWidget>();
+
+    auto& layer_properties_widget = right_panel.add<PixelPaint::LayerPropertiesWidget>();
 
     window->show();
 
@@ -131,7 +140,7 @@ int main(int argc, char** argv)
         "Create new layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(image_editor.image()->size(), window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
-                auto layer = PixelPaint::Layer::create_with_size(dialog->layer_size(), dialog->layer_name());
+                auto layer = PixelPaint::Layer::create_with_size(*image_editor.image(), dialog->layer_size(), dialog->layer_name());
                 if (!layer) {
                     GUI::MessageBox::show_error(window, String::format("Unable to create layer with size %s", dialog->size().to_string().characters()));
                     return;
@@ -191,6 +200,70 @@ int main(int argc, char** argv)
         },
         window));
 
+    auto& filter_menu = menubar->add_menu("Filter");
+    auto& spatial_filters_menu = filter_menu.add_submenu("Spatial");
+
+    auto& edge_detect_submenu = spatial_filters_menu.add_submenu("Edge Detect");
+    edge_detect_submenu.add_action(GUI::Action::create("Laplacian (cardinal)", [&](auto&) {
+        if (auto* layer = image_editor.active_layer()) {
+            PixelPaint::LaplacianFilter filter;
+            if (auto parameters = filter.get_parameters(layer->bitmap(), layer->rect(), false))
+                filter.apply(*parameters);
+        }
+    }));
+    edge_detect_submenu.add_action(GUI::Action::create("Laplacian (diagonal)", [&](auto&) {
+        if (auto* layer = image_editor.active_layer()) {
+            PixelPaint::LaplacianFilter filter;
+            if (auto parameters = filter.get_parameters(layer->bitmap(), layer->rect(), true))
+                filter.apply(*parameters);
+        }
+    }));
+    auto& blur_submenu = spatial_filters_menu.add_submenu("Blur and Sharpen");
+    blur_submenu.add_action(GUI::Action::create("Gaussian Blur (3x3)", [&](auto&) {
+        if (auto* layer = image_editor.active_layer()) {
+            PixelPaint::SpatialGaussianBlurFilter<3> filter;
+            if (auto parameters = filter.get_parameters(layer->bitmap(), layer->rect()))
+                filter.apply(*parameters);
+        }
+    }));
+    blur_submenu.add_action(GUI::Action::create("Gaussian Blur (5x5)", [&](auto&) {
+        if (auto* layer = image_editor.active_layer()) {
+            PixelPaint::SpatialGaussianBlurFilter<5> filter;
+            if (auto parameters = filter.get_parameters(layer->bitmap(), layer->rect()))
+                filter.apply(*parameters);
+        }
+    }));
+    blur_submenu.add_action(GUI::Action::create("Box Blur (3x3)", [&](auto&) {
+        if (auto* layer = image_editor.active_layer()) {
+            PixelPaint::BoxBlurFilter<3> filter;
+            if (auto parameters = filter.get_parameters(layer->bitmap(), layer->rect()))
+                filter.apply(*parameters);
+        }
+    }));
+    blur_submenu.add_action(GUI::Action::create("Box Blur (5x5)", [&](auto&) {
+        if (auto* layer = image_editor.active_layer()) {
+            PixelPaint::BoxBlurFilter<5> filter;
+            if (auto parameters = filter.get_parameters(layer->bitmap(), layer->rect()))
+                filter.apply(*parameters);
+        }
+    }));
+    blur_submenu.add_action(GUI::Action::create("Sharpen", [&](auto&) {
+        if (auto* layer = image_editor.active_layer()) {
+            PixelPaint::SharpenFilter filter;
+            if (auto parameters = filter.get_parameters(layer->bitmap(), layer->rect()))
+                filter.apply(*parameters);
+        }
+    }));
+
+    spatial_filters_menu.add_separator();
+    spatial_filters_menu.add_action(GUI::Action::create("Generic 5x5 Convolution", [&](auto&) {
+        if (auto* layer = image_editor.active_layer()) {
+            PixelPaint::GenericConvolutionFilter<5> filter;
+            if (auto parameters = filter.get_parameters(layer->bitmap(), layer->rect(), window))
+                filter.apply(*parameters);
+        }
+    }));
+
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("PixelPaint", app_icon.bitmap_for_size(32), window);
@@ -200,20 +273,21 @@ int main(int argc, char** argv)
 
     image_editor.on_active_layer_change = [&](auto* layer) {
         layer_list_widget.set_selected_layer(layer);
+        layer_properties_widget.set_layer(layer);
     };
 
     auto image = PixelPaint::Image::create_with_size({ 640, 480 });
 
-    auto bg_layer = PixelPaint::Layer::create_with_size({ 640, 480 }, "Background");
+    auto bg_layer = PixelPaint::Layer::create_with_size(*image, { 640, 480 }, "Background");
     image->add_layer(*bg_layer);
     bg_layer->bitmap().fill(Color::White);
 
-    auto fg_layer1 = PixelPaint::Layer::create_with_size({ 200, 200 }, "FG Layer 1");
+    auto fg_layer1 = PixelPaint::Layer::create_with_size(*image, { 200, 200 }, "FG Layer 1");
     fg_layer1->set_location({ 50, 50 });
     image->add_layer(*fg_layer1);
     fg_layer1->bitmap().fill(Color::Yellow);
 
-    auto fg_layer2 = PixelPaint::Layer::create_with_size({ 100, 100 }, "FG Layer 2");
+    auto fg_layer2 = PixelPaint::Layer::create_with_size(*image, { 100, 100 }, "FG Layer 2");
     fg_layer2->set_location({ 300, 300 });
     image->add_layer(*fg_layer2);
     fg_layer2->bitmap().fill(Color::Blue);

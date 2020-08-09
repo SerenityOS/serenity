@@ -25,6 +25,8 @@
  */
 
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
+#include <LibCore/GetPassword.h>
 #include <alloca.h>
 #include <grp.h>
 #include <pwd.h>
@@ -36,20 +38,22 @@ extern "C" int main(int, char**);
 
 int main(int argc, char** argv)
 {
-    if (geteuid() != 0) {
+    const char* user = nullptr;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(user, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (geteuid() != 0)
         fprintf(stderr, "Not running as root :(\n");
-    } else if (getuid() != 0) {
-        const char* target_user = argc > 1 ? argv[1] : "root";
-        fprintf(stderr, "Access to account '%s' granted\n", target_user);
-    }
 
     uid_t uid = 0;
     gid_t gid = 0;
     struct passwd* pwd = nullptr;
-    if (argc > 1) {
-        pwd = getpwnam(argv[1]);
+    if (user) {
+        pwd = getpwnam(user);
         if (!pwd) {
-            fprintf(stderr, "No such user: %s\n", argv[1]);
+            fprintf(stderr, "No such user: %s\n", user);
             return 1;
         }
         uid = pwd->pw_uid;
@@ -62,6 +66,20 @@ int main(int argc, char** argv)
     if (!pwd) {
         fprintf(stderr, "No passwd entry.\n");
         return 1;
+    }
+
+    if (getuid() != 0 && pwd->pw_passwd[0] != '\0') {
+        auto password = Core::get_password();
+        if (password.is_error()) {
+            fprintf(stderr, strerror(password.error()));
+            return 1;
+        }
+
+        char* hash = crypt(password.value().characters(), pwd->pw_passwd);
+        if (hash == NULL || strcmp(hash, pwd->pw_passwd) != 0) {
+            fprintf(stderr, "Incorrect or disabled password.\n");
+            return 1;
+        }
     }
 
     Vector<gid_t> extra_gids;
@@ -88,7 +106,7 @@ int main(int argc, char** argv)
         perror("setuid");
         return 1;
     }
-    rc = execl("/bin/sh", "sh", nullptr);
+    rc = execl(pwd->pw_shell, pwd->pw_shell, nullptr);
     perror("execl");
     return 1;
 }
