@@ -98,7 +98,7 @@ void IPv4Socket::get_peer_address(sockaddr* address, socklen_t* address_size)
     *address_size = sizeof(sockaddr_in);
 }
 
-KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
+KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
 {
     ASSERT(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_in))

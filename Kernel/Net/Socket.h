@@ -98,7 +98,7 @@ public:
 
     KResult shutdown(int how);
 
-    virtual KResult bind(const sockaddr*, socklen_t) = 0;
+    virtual KResult bind(Userspace<const sockaddr*>, socklen_t) = 0;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock) = 0;
     virtual KResult listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;

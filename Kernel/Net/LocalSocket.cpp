@@ -91,7 +91,7 @@ void LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
     get_local_address(address, address_size);
 }
 
-KResult LocalSocket::bind(const sockaddr* user_address, socklen_t address_size)
+KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
 {
     ASSERT(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_un))
