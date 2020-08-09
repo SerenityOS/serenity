@@ -74,7 +74,7 @@ int Process::sys$getresgid(gid_t* rgid, gid_t* egid, gid_t* sgid)
     return 0;
 }
 
-int Process::sys$getgroups(ssize_t count, gid_t* user_gids)
+int Process::sys$getgroups(ssize_t count, Userspace<gid_t*> user_gids)
 {
     REQUIRE_PROMISE(stdio);
     if (count < 0)
