@@ -257,7 +257,7 @@ public:
     int sys$ttyname(int fd, Userspace<char*>, size_t);
     int sys$ptsname(int fd, Userspace<char*>, size_t);
     pid_t sys$fork(RegisterState&);
-    int sys$execve(const Syscall::SC_execve_params*);
+    int sys$execve(Userspace<const Syscall::SC_execve_params*>);
     int sys$dup(int oldfd);
     int sys$dup2(int oldfd, int newfd);
     int sys$sigaction(int signum, const sigaction* act, sigaction* old_act);
