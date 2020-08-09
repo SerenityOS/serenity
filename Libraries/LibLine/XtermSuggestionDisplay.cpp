@@ -63,7 +63,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         // the suggestion list to fit in the prompt line.
         auto start = max_line_count - m_prompt_lines_at_suggestion_initiation;
         for (size_t i = start; i < max_line_count; ++i) {
-            putchar('\n');
+            fputc('\n', stderr);
         }
         lines_used += max_line_count;
         longest_suggestion_length = 0;
@@ -113,7 +113,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         if (next_column > m_num_columns) {
             auto lines = (suggestion.text_view.length() + m_num_columns - 1) / m_num_columns;
             lines_used += lines;
-            putchar('\n');
+            fputc('\n', stderr);
             num_printed = 0;
         }
 
@@ -125,20 +125,20 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         // Only apply colour to the selection if something is *actually* added to the buffer.
         if (manager.is_current_suggestion_complete() && index == manager.next_index()) {
             VT::apply_style({ Style::Foreground(Style::XtermColor::Blue) });
-            fflush(stdout);
+            fflush(stderr);
         }
 
         if (spans_entire_line) {
             num_printed += m_num_columns;
-            fprintf(stdout, "%s", suggestion.text_string.characters());
+            fprintf(stderr, "%s", suggestion.text_string.characters());
         } else {
-            fprintf(stdout, "%-*s", static_cast<int>(longest_suggestion_byte_length) + 2, suggestion.text_string.characters());
+            fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_byte_length) + 2, suggestion.text_string.characters());
             num_printed += longest_suggestion_length + 2;
         }
 
         if (manager.is_current_suggestion_complete() && index == manager.next_index()) {
             VT::apply_style(Style::reset_style());
-            fflush(stdout);
+            fflush(stderr);
         }
         return IterationDecision::Continue;
     });
@@ -157,17 +157,17 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
         if (string.length() > m_num_columns - 1) {
             // This would overflow into the next line, so just don't print an indicator.
-            fflush(stdout);
+            fflush(stderr);
             return;
         }
 
         VT::move_absolute(m_origin_row + lines_used, m_num_columns - string.length() - 1);
         VT::apply_style({ Style::Background(Style::XtermColor::Green) });
-        fputs(string.characters(), stdout);
+        fputs(string.characters(), stderr);
         VT::apply_style(Style::reset_style());
     }
 
-    fflush(stdout);
+    fflush(stderr);
 }
 
 bool XtermSuggestionDisplay::cleanup()
