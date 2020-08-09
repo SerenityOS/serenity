@@ -90,6 +90,12 @@ String ProcessModel::column_name(int column) const
         return "PID";
     case Column::TID:
         return "TID";
+    case Column::PPID:
+        return "PPID";
+    case Column::PGID:
+        return "PGID";
+    case Column::SID:
+        return "SID";
     case Column::State:
         return "State";
     case Column::User:
@@ -165,6 +171,9 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
             return Gfx::TextAlignment::CenterLeft;
         case Column::PID:
         case Column::TID:
+        case Column::PPID:
+        case Column::PGID:
+        case Column::SID:
         case Column::Priority:
         case Column::EffectivePriority:
         case Column::Virtual:
@@ -202,6 +211,12 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
             return thread.current_state.pid;
         case Column::TID:
             return thread.current_state.tid;
+        case Column::PPID:
+            return thread.current_state.ppid;
+        case Column::PGID:
+            return thread.current_state.pgid;
+        case Column::SID:
+            return thread.current_state.sid;
         case Column::State:
             return thread.current_state.state;
         case Column::User:
@@ -273,6 +288,12 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
             return thread.current_state.pid;
         case Column::TID:
             return thread.current_state.tid;
+        case Column::PPID:
+            return thread.current_state.ppid;
+        case Column::PGID:
+            return thread.current_state.pgid;
+        case Column::SID:
+            return thread.current_state.sid;
         case Column::State:
             return thread.current_state.state;
         case Column::User:
@@ -366,7 +387,10 @@ void ProcessModel::update()
 
             state.name = thread.name;
 
+            state.ppid = it.value.ppid;
             state.tid = thread.tid;
+            state.pgid = it.value.pgid;
+            state.sid = it.value.sid;
             state.times_scheduled = thread.times_scheduled;
             state.cpu = thread.cpu;
             state.priority = thread.priority;
