@@ -281,7 +281,7 @@ public:
     clock_t sys$times(Userspace<tms*>);
     int sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
     int sys$link(Userspace<const Syscall::SC_link_params*>);
-    int sys$unlink(const char* pathname, size_t path_length);
+    int sys$unlink(Userspace<const char*> pathname, size_t path_length);
     int sys$symlink(Userspace<const Syscall::SC_symlink_params*>);
     int sys$rmdir(Userspace<const char*> pathname, size_t path_length);
     int sys$mount(Userspace<const Syscall::SC_mount_params*>);
