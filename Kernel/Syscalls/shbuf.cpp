@@ -120,7 +120,7 @@ int Process::sys$shbuf_release(int shbuf_id)
     return 0;
 }
 
-void* Process::sys$shbuf_get(int shbuf_id, size_t* user_size)
+void* Process::sys$shbuf_get(int shbuf_id, Userspace<size_t*> user_size)
 {
     REQUIRE_PROMISE(shared_buffer);
     if (user_size && !validate_write_typed(user_size))
