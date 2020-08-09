@@ -252,7 +252,7 @@ public:
     int sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*>);
     int sys$gethostname(Userspace<char*>, ssize_t);
     int sys$sethostname(Userspace<const char*>, ssize_t);
-    int sys$uname(utsname*);
+    int sys$uname(Userspace<utsname*>);
     int sys$readlink(Userspace<const Syscall::SC_readlink_params*>);
     int sys$ttyname(int fd, Userspace<char*>, size_t);
     int sys$ptsname(int fd, Userspace<char*>, size_t);
