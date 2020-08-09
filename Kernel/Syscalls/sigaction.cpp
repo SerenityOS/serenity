@@ -28,7 +28,7 @@
 
 namespace Kernel {
 
-int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
+int Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set)
 {
     REQUIRE_PROMISE(sigaction);
     auto current_thread = Thread::current();
