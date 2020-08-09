@@ -37,28 +37,40 @@ void initialize();
 #define ENUMERATE_HTML_ATTRIBUTES               \
     __ENUMERATE_HTML_ATTRIBUTE(abbr)            \
     __ENUMERATE_HTML_ATTRIBUTE(accept)          \
+    __ENUMERATE_HTML_ATTRIBUTE(accept_charset)  \
     __ENUMERATE_HTML_ATTRIBUTE(action)          \
     __ENUMERATE_HTML_ATTRIBUTE(align)           \
     __ENUMERATE_HTML_ATTRIBUTE(allow)           \
     __ENUMERATE_HTML_ATTRIBUTE(alt)             \
     __ENUMERATE_HTML_ATTRIBUTE(async)           \
+    __ENUMERATE_HTML_ATTRIBUTE(behaviour)       \
     __ENUMERATE_HTML_ATTRIBUTE(bgcolor)         \
+    __ENUMERATE_HTML_ATTRIBUTE(cite)            \
     __ENUMERATE_HTML_ATTRIBUTE(class_)          \
+    __ENUMERATE_HTML_ATTRIBUTE(cols)            \
     __ENUMERATE_HTML_ATTRIBUTE(colspan)         \
+    __ENUMERATE_HTML_ATTRIBUTE(content)         \
     __ENUMERATE_HTML_ATTRIBUTE(contenteditable) \
     __ENUMERATE_HTML_ATTRIBUTE(data)            \
+    __ENUMERATE_HTML_ATTRIBUTE(datetime)        \
     __ENUMERATE_HTML_ATTRIBUTE(download)        \
     __ENUMERATE_HTML_ATTRIBUTE(defer)           \
+    __ENUMERATE_HTML_ATTRIBUTE(direction)       \
     __ENUMERATE_HTML_ATTRIBUTE(dirname)         \
+    __ENUMERATE_HTML_ATTRIBUTE(for_)            \
+    __ENUMERATE_HTML_ATTRIBUTE(frameborder)     \
     __ENUMERATE_HTML_ATTRIBUTE(headers)         \
     __ENUMERATE_HTML_ATTRIBUTE(height)          \
     __ENUMERATE_HTML_ATTRIBUTE(href)            \
     __ENUMERATE_HTML_ATTRIBUTE(hreflang)        \
+    __ENUMERATE_HTML_ATTRIBUTE(http_equiv)      \
     __ENUMERATE_HTML_ATTRIBUTE(id)              \
     __ENUMERATE_HTML_ATTRIBUTE(imagesizes)      \
     __ENUMERATE_HTML_ATTRIBUTE(imagesrcset)     \
     __ENUMERATE_HTML_ATTRIBUTE(integrity)       \
+    __ENUMERATE_HTML_ATTRIBUTE(label)           \
     __ENUMERATE_HTML_ATTRIBUTE(lang)            \
+    __ENUMERATE_HTML_ATTRIBUTE(longdesc)        \
     __ENUMERATE_HTML_ATTRIBUTE(max)             \
     __ENUMERATE_HTML_ATTRIBUTE(media)           \
     __ENUMERATE_HTML_ATTRIBUTE(method)          \
@@ -67,11 +79,15 @@ void initialize();
     __ENUMERATE_HTML_ATTRIBUTE(pattern)         \
     __ENUMERATE_HTML_ATTRIBUTE(ping)            \
     __ENUMERATE_HTML_ATTRIBUTE(placeholder)     \
+    __ENUMERATE_HTML_ATTRIBUTE(poster)          \
     __ENUMERATE_HTML_ATTRIBUTE(rel)             \
+    __ENUMERATE_HTML_ATTRIBUTE(rows)            \
+    __ENUMERATE_HTML_ATTRIBUTE(scrolling)       \
     __ENUMERATE_HTML_ATTRIBUTE(size)            \
     __ENUMERATE_HTML_ATTRIBUTE(sizes)           \
     __ENUMERATE_HTML_ATTRIBUTE(src)             \
     __ENUMERATE_HTML_ATTRIBUTE(srcdoc)          \
+    __ENUMERATE_HTML_ATTRIBUTE(srclang)         \
     __ENUMERATE_HTML_ATTRIBUTE(srcset)          \
     __ENUMERATE_HTML_ATTRIBUTE(step)            \
     __ENUMERATE_HTML_ATTRIBUTE(style)           \
@@ -80,7 +96,8 @@ void initialize();
     __ENUMERATE_HTML_ATTRIBUTE(type)            \
     __ENUMERATE_HTML_ATTRIBUTE(usemap)          \
     __ENUMERATE_HTML_ATTRIBUTE(value)           \
-    __ENUMERATE_HTML_ATTRIBUTE(width)
+    __ENUMERATE_HTML_ATTRIBUTE(width)           \
+    __ENUMERATE_HTML_ATTRIBUTE(wrap)
 
 #define __ENUMERATE_HTML_ATTRIBUTE(name) extern FlyString name;
 ENUMERATE_HTML_ATTRIBUTES
