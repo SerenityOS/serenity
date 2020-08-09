@@ -216,6 +216,7 @@ private:
     pid_t m_pid { 0 };
 
     Vector<LocalFrame> m_local_frames;
+    NonnullRefPtrVector<AST::Redirection> m_global_redirections;
 
     HashMap<String, String> m_aliases;
     bool m_is_interactive { true };

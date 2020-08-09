@@ -446,14 +446,20 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         fflush(stderr);
     }
 
+    // If the command is empty, store the redirections and apply them to all later commands.
+    if (command.argv.is_empty()) {
+        m_global_redirections.append(command.redirections);
+        return nullptr;
+    }
+
     // Resolve redirections.
     NonnullRefPtrVector<AST::Rewiring> rewirings;
-    for (auto& redirection : command.redirections) {
+    auto resolve_redirection = [&](auto& redirection) -> IterationDecision {
         auto rewiring_result = redirection.apply();
         if (rewiring_result.is_error()) {
             if (!rewiring_result.error().is_empty())
                 fprintf(stderr, "error: %s\n", rewiring_result.error().characters());
-            continue;
+            return IterationDecision::Continue;
         }
         auto& rewiring = rewiring_result.value();
 
@@ -474,31 +480,23 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             int rc = pipe(pipe_fd);
             if (rc < 0) {
                 perror("pipe(RedirRefresh)");
-                return nullptr;
+                return IterationDecision::Break;
             }
             rewiring->dest_fd = pipe_fd[1];
             rewiring->other_pipe_end->dest_fd = pipe_fd[0]; // This fd will be added to the collection on one of the next iterations.
             fds.add(pipe_fd[1]);
         }
+        return IterationDecision::Continue;
+    };
+
+    for (auto& redirection : m_global_redirections) {
+        if (resolve_redirection(redirection) == IterationDecision::Break)
+            return nullptr;
     }
 
-    // If the command is empty, do all the rewirings in the current process and return.
-    // This allows the user to mess with the shell internals, but is apparently useful?
-    // We'll just allow the users to shoot themselves until they get tired of doing so.
-    if (command.argv.is_empty()) {
-        for (auto& rewiring : rewirings) {
-#ifdef SH_DEBUG
-            dbgprintf("in %d, dup2(%d, %d)\n", getpid(), rewiring.dest_fd, rewiring.source_fd);
-#endif
-            int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
-            if (rc < 0) {
-                perror("dup2(run)");
-                return nullptr;
-            }
-        }
-
-        fds.collect();
-        return nullptr;
+    for (auto& redirection : command.redirections) {
+        if (resolve_redirection(redirection) == IterationDecision::Break)
+            return nullptr;
     }
 
     Vector<const char*> argv;
