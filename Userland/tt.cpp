@@ -36,6 +36,7 @@ static int mutex_test();
 static int detached_test();
 static int priority_test();
 static int stack_size_test();
+static int staying_alive_test();
 static int set_stack_test();
 
 int main(int argc, char** argv)
@@ -43,7 +44,7 @@ int main(int argc, char** argv)
     const char* test_name = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, x = set stack)", "test-name", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, t = simple thread test, x = set stack, nothing = join race)", "test-name", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (*test_name == 'm')
@@ -54,6 +55,8 @@ int main(int argc, char** argv)
         return priority_test();
     if (*test_name == 's')
         return stack_size_test();
+    if (*test_name == 't')
+        return staying_alive_test();
     if (*test_name == 'x')
         return set_stack_test();
 
@@ -286,6 +289,33 @@ int stack_size_test()
         return 6;
     }
 
+    return 0;
+}
+
+int staying_alive_test()
+{
+    pthread_t thread_id;
+    int rc = pthread_create(
+        &thread_id, nullptr, [](void*) -> void* {
+            printf("I'm the secondary thread :^)\n");
+            sleep(20);
+            printf("Secondary thread is still alive\n");
+            sleep(3520);
+            printf("Secondary thread exiting\n");
+            pthread_exit((void*)0xDEADBEEF);
+            return nullptr;
+        },
+        nullptr);
+    if (rc < 0) {
+        perror("pthread_create");
+        return 1;
+    }
+
+    sleep(1);
+    printf("I'm the main thread :^)\n");
+    sleep(3600);
+
+    printf("Main thread exiting\n");
     return 0;
 }
 
