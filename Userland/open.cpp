@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         }
 
         URL url = URL::create_with_url_or_path(path);
-        if (url.protocol() == "file" && realpath_errno) {
+        if (url.scheme() == "file" && realpath_errno) {
             fprintf(stderr, "Failed to open '%s': %s\n", url.path().characters(), strerror(realpath_errno));
             all_ok = false;
             continue;

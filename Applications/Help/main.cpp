@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
     };
 
     page_view.on_link_click = [&](auto& url, auto&, unsigned) {
-        if (url.protocol() != "file") {
+        if (url.scheme() != "file") {
             open_external(url);
             return;
         }

@@ -848,7 +848,7 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
                 write(m_ptm_fd, " ", 1);
                 first = false;
             }
-            if (url.protocol() == "file")
+            if (url.scheme() == "file")
                 write(m_ptm_fd, url.path().characters(), url.path().length());
             else
                 write(m_ptm_fd, url.to_string().characters(), url.to_string().length());

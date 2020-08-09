@@ -47,14 +47,14 @@ public:
     }
 
     bool is_valid() const { return m_valid; }
-    String protocol() const { return m_protocol; }
+    String scheme() const { return m_scheme; }
     String host() const { return m_host; }
     String path() const { return m_path; }
     String query() const { return m_query; }
     String fragment() const { return m_fragment; }
     u16 port() const { return m_port; }
 
-    void set_protocol(const String& protocol);
+    void set_scheme(const String& scheme);
     void set_host(const String& host);
     void set_path(const String& path);
     void set_query(const String& query);
@@ -87,7 +87,7 @@ private:
     bool m_valid { false };
     u16 m_port { 80 };
     bool m_data_payload_is_base64 { false };
-    String m_protocol;
+    String m_scheme;
     String m_host;
     String m_path;
     String m_query;

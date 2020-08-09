@@ -53,12 +53,12 @@ int main(int argc, char** argv)
     if (app->args().size() >= 1) {
         url = URL::create_with_url_or_path(app->args()[0]);
 
-        if (url.protocol().to_lowercase() == "ircs") {
+        if (url.scheme().to_lowercase() == "ircs") {
             fprintf(stderr, "Secure IRC over SSL/TLS (ircs) is not supported\n");
             return 1;
         }
 
-        if (url.protocol().to_lowercase() != "irc") {
+        if (url.scheme().to_lowercase() != "irc") {
             fprintf(stderr, "Unsupported protocol\n");
             return 1;
         }

@@ -114,7 +114,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         return;
     }
 
-    if (url.protocol() == "about") {
+    if (url.scheme() == "about") {
         dbg() << "Loading about: URL " << url;
         deferred_invoke([success_callback = move(success_callback)](auto&) {
             success_callback(ByteBuffer::wrap(const_cast<char*>(String::empty().characters()), 1), {});
@@ -122,7 +122,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         return;
     }
 
-    if (url.protocol() == "data") {
+    if (url.scheme() == "data") {
         dbg() << "ResourceLoader loading a data URL with mime-type: '" << url.data_mime_type() << "', base64=" << url.data_payload_is_base64() << ", payload='" << url.data_payload() << "'";
 
         ByteBuffer data;
@@ -137,7 +137,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         return;
     }
 
-    if (url.protocol() == "file") {
+    if (url.scheme() == "file") {
         auto f = Core::File::construct();
         f->set_filename(url.path());
         if (!f->open(Core::IODevice::OpenMode::ReadOnly)) {
@@ -154,7 +154,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
         return;
     }
 
-    if (url.protocol() == "http" || url.protocol() == "https" || url.protocol() == "gemini") {
+    if (url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "gemini") {
         HashMap<String, String> headers;
         headers.set("User-Agent", m_user_agent);
         auto download = protocol_client().start_download(url.to_string(), headers);
@@ -189,7 +189,7 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
     }
 
     if (error_callback)
-        error_callback(String::format("Protocol not implemented: %s", url.protocol().characters()));
+        error_callback(String::format("Protocol not implemented: %s", url.scheme().characters()));
 }
 
 bool ResourceLoader::is_port_blocked(int port)

@@ -85,7 +85,7 @@ Origin Document::origin() const
 {
     if (!m_url.is_valid())
         return {};
-    return { m_url.protocol(), m_url.host(), m_url.port() };
+    return { m_url.scheme(), m_url.host(), m_url.port() };
 }
 
 void Document::schedule_style_update()

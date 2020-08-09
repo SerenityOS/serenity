@@ -153,9 +153,9 @@ bool FrameLoader::load(const URL& url, Type type)
     if (type == Type::Navigation)
         frame().page().client().page_did_start_loading(url);
 
-    if (type != Type::IFrame && url.protocol() != "file" && url.protocol() != "about") {
+    if (type != Type::IFrame && url.scheme() != "file" && url.scheme() != "about") {
         URL favicon_url;
-        favicon_url.set_protocol(url.protocol());
+        favicon_url.set_scheme(url.scheme());
         favicon_url.set_host(url.host());
         favicon_url.set_port(url.port());
         favicon_url.set_path("/favicon.ico");

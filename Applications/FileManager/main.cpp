@@ -527,7 +527,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             if (uri_as_string.is_empty())
                 continue;
             URL url = uri_as_string;
-            if (!url.is_valid() || url.protocol() != "file") {
+            if (!url.is_valid() || url.scheme() != "file") {
                 dbg() << "Cannot paste URI " << uri_as_string;
                 continue;
             }

@@ -98,7 +98,7 @@ void Resource::did_load(Badge<ResourceLoader>, const ByteBuffer& data, const Has
 #endif
         m_encoding = encoding_from_content_type(content_type.value());
         m_mime_type = mime_type_from_content_type(content_type.value());
-    } else if (url().protocol() == "data" && !url().data_mime_type().is_empty()) {
+    } else if (url().scheme() == "data" && !url().data_mime_type().is_empty()) {
 #ifdef RESOURCE_DEBUG
         dbg() << "This is a data URL with mime-type _" << url().data_mime_type() << "_";
 #endif

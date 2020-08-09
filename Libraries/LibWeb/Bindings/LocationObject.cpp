@@ -125,7 +125,7 @@ JS_DEFINE_NATIVE_GETTER(LocationObject::protocol_getter)
 {
     auto& window = static_cast<WindowObject&>(global_object);
     StringBuilder builder;
-    builder.append(window.impl().document().url().protocol());
+    builder.append(window.impl().document().url().scheme());
     builder.append(':');
     return JS::js_string(interpreter, builder.to_string());
 }

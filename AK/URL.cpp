@@ -31,7 +31,7 @@
 
 namespace AK {
 
-static inline bool is_valid_protocol_character(char ch)
+static inline bool is_valid_scheme_character(char ch)
 {
     return ch >= 'a' && ch <= 'z';
 }
@@ -52,7 +52,7 @@ bool URL::parse(const StringView& string)
         return false;
 
     enum class State {
-        InProtocol,
+        InScheme,
         InHostname,
         InPort,
         InPath,
@@ -63,7 +63,7 @@ bool URL::parse(const StringView& string)
     };
 
     Vector<char, 256> buffer;
-    State state { State::InProtocol };
+    State state { State::InScheme };
 
     size_t index = 0;
 
@@ -81,23 +81,23 @@ bool URL::parse(const StringView& string)
 
     while (index < string.length()) {
         switch (state) {
-        case State::InProtocol: {
-            if (is_valid_protocol_character(peek())) {
+        case State::InScheme: {
+            if (is_valid_scheme_character(peek())) {
                 buffer.append(consume());
                 continue;
             }
             if (consume() != ':')
                 return false;
 
-            m_protocol = String::copy(buffer);
+            m_scheme = String::copy(buffer);
 
-            if (m_protocol == "data") {
+            if (m_scheme == "data") {
                 buffer.clear();
                 state = State::InDataMimeType;
                 continue;
             }
 
-            if (m_protocol == "about") {
+            if (m_scheme == "about") {
                 buffer.clear();
                 state = State::InPath;
                 continue;
@@ -109,11 +109,11 @@ bool URL::parse(const StringView& string)
                 return false;
             if (buffer.is_empty())
                 return false;
-            if (m_protocol == "http")
+            if (m_scheme == "http")
                 m_port = 80;
-            else if (m_protocol == "https")
+            else if (m_scheme == "https")
                 m_port = 443;
-            else if (m_protocol == "gemini")
+            else if (m_scheme == "gemini")
                 m_port = 1965;
             state = State::InHostname;
             buffer.clear();
@@ -125,7 +125,7 @@ bool URL::parse(const StringView& string)
                 continue;
             }
             if (buffer.is_empty()) {
-                if (m_protocol == "file") {
+                if (m_scheme == "file") {
                     m_host = "";
                     state = State::InPath;
                     continue;
@@ -230,7 +230,7 @@ bool URL::parse(const StringView& string)
         m_host = String::copy(buffer);
         m_path = "/";
     }
-    if (state == State::InProtocol)
+    if (state == State::InScheme)
         return false;
     if (state == State::InPath)
         m_path = String::copy(buffer);
@@ -255,15 +255,15 @@ URL::URL(const StringView& string)
 String URL::to_string() const
 {
     StringBuilder builder;
-    builder.append(m_protocol);
+    builder.append(m_scheme);
 
-    if (m_protocol == "about") {
+    if (m_scheme == "about") {
         builder.append(':');
         builder.append(m_path);
         return builder.to_string();
     }
 
-    if (m_protocol == "data") {
+    if (m_scheme == "data") {
         builder.append(':');
         builder.append(m_data_mime_type);
         if (m_data_payload_is_base64)
@@ -275,8 +275,8 @@ String URL::to_string() const
 
     builder.append("://");
     builder.append(m_host);
-    if (protocol() != "file") {
-        if (!(protocol() == "http" && port() == 80) && !(protocol() == "https" && port() == 443) && !(protocol() == "gemini" && port() == 1965)) {
+    if (scheme() != "file") {
+        if (!(scheme() == "http" && port() == 80) && !(scheme() == "https" && port() == 443) && !(scheme() == "gemini" && port() == 1965)) {
             builder.append(':');
             builder.append(String::number(m_port));
         }
@@ -302,11 +302,11 @@ URL URL::complete_url(const String& string) const
     if (url.is_valid())
         return url;
 
-    if (protocol() == "data")
+    if (scheme() == "data")
         return {};
 
     if (string.starts_with("//")) {
-        URL url(String::format("%s:%s", m_protocol.characters(), string.characters()));
+        URL url(String::format("%s:%s", m_scheme.characters(), string.characters()));
         if (url.is_valid())
             return url;
     }
@@ -352,9 +352,9 @@ URL URL::complete_url(const String& string) const
     return url;
 }
 
-void URL::set_protocol(const String& protocol)
+void URL::set_scheme(const String& protocol)
 {
-    m_protocol = protocol;
+    m_scheme = protocol;
     m_valid = compute_validity();
 }
 
@@ -383,9 +383,9 @@ void URL::set_fragment(const String& fragment)
 bool URL::compute_validity() const
 {
     // FIXME: This is by no means complete.
-    if (m_protocol.is_empty())
+    if (m_scheme.is_empty())
         return false;
-    if (m_protocol == "file") {
+    if (m_scheme == "file") {
         if (m_path.is_empty())
             return false;
     } else {
@@ -398,7 +398,7 @@ bool URL::compute_validity() const
 URL URL::create_with_file_protocol(const String& path)
 {
     URL url;
-    url.set_protocol("file");
+    url.set_scheme("file");
     url.set_path(path);
     return url;
 }

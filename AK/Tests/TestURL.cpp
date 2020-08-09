@@ -38,7 +38,7 @@ TEST_CASE(basic)
     {
         URL url("http://www.serenityos.org");
         EXPECT_EQ(url.is_valid(), true);
-        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
         EXPECT_EQ(url.port(), 80);
         EXPECT_EQ(url.path(), "/");
@@ -48,7 +48,7 @@ TEST_CASE(basic)
     {
         URL url("https://www.serenityos.org/index.html");
         EXPECT_EQ(url.is_valid(), true);
-        EXPECT_EQ(url.protocol(), "https");
+        EXPECT_EQ(url.scheme(), "https");
         EXPECT_EQ(url.host(), "www.serenityos.org");
         EXPECT_EQ(url.port(), 443);
         EXPECT_EQ(url.path(), "/index.html");
@@ -58,7 +58,7 @@ TEST_CASE(basic)
     {
         URL url("https://localhost:1234/~anon/test/page.html");
         EXPECT_EQ(url.is_valid(), true);
-        EXPECT_EQ(url.protocol(), "https");
+        EXPECT_EQ(url.scheme(), "https");
         EXPECT_EQ(url.host(), "localhost");
         EXPECT_EQ(url.port(), 1234);
         EXPECT_EQ(url.path(), "/~anon/test/page.html");
@@ -68,7 +68,7 @@ TEST_CASE(basic)
     {
         URL url("http://www.serenityos.org/index.html?#");
         EXPECT_EQ(url.is_valid(), true);
-        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
         EXPECT_EQ(url.port(), 80);
         EXPECT_EQ(url.path(), "/index.html");
@@ -78,7 +78,7 @@ TEST_CASE(basic)
     {
         URL url("http://www.serenityos.org/index.html?foo=1&bar=2");
         EXPECT_EQ(url.is_valid(), true);
-        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
         EXPECT_EQ(url.port(), 80);
         EXPECT_EQ(url.path(), "/index.html");
@@ -88,7 +88,7 @@ TEST_CASE(basic)
     {
         URL url("http://www.serenityos.org/index.html#fragment");
         EXPECT_EQ(url.is_valid(), true);
-        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
         EXPECT_EQ(url.port(), 80);
         EXPECT_EQ(url.path(), "/index.html");
@@ -98,7 +98,7 @@ TEST_CASE(basic)
     {
         URL url("http://www.serenityos.org/index.html?foo=1&bar=2&baz=/?#frag/ment?test#");
         EXPECT_EQ(url.is_valid(), true);
-        EXPECT_EQ(url.protocol(), "http");
+        EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(url.host(), "www.serenityos.org");
         EXPECT_EQ(url.port(), 80);
         EXPECT_EQ(url.path(), "/index.html");
@@ -152,7 +152,7 @@ TEST_CASE(about_url)
 {
     URL url("about:blank");
     EXPECT_EQ(url.is_valid(), true);
-    EXPECT_EQ(url.protocol(), "about");
+    EXPECT_EQ(url.scheme(), "about");
     EXPECT_EQ(url.path(), "blank");
     EXPECT_EQ(url.to_string(), "about:blank");
 }
