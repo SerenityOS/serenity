@@ -37,13 +37,3 @@ int sprintf(char* buf, const char* fmt, ...);
 void set_serial_debug(bool on_or_off);
 int get_serial_debug();
 }
-
-#ifdef __cplusplus
-
-template<size_t N>
-inline int dbgputstr(const char (&array)[N])
-{
-    return ::dbgputstr(array, N);
-}
-
-#endif
