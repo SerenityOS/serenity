@@ -90,12 +90,12 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     return thread->tid().value();
 }
 
-void Process::sys$exit_thread(void* exit_value)
+void Process::sys$exit_thread(Userspace<void*> exit_value)
 {
     REQUIRE_PROMISE(thread);
     cli();
     auto current_thread = Thread::current();
-    current_thread->m_exit_value = exit_value;
+    current_thread->m_exit_value = reinterpret_cast<void*>(exit_value.ptr());
     current_thread->set_should_die();
     big_lock().force_unlock_if_locked();
     current_thread->die_if_needed();

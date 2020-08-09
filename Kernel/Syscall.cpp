@@ -95,7 +95,7 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
         if (function == SC_exit)
             process.sys$exit((int)arg1);
         else
-            process.sys$exit_thread((void*)arg1);
+            process.sys$exit_thread(arg1);
         ASSERT_NOT_REACHED();
         return 0;
     }
