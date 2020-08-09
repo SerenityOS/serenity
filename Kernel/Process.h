@@ -216,7 +216,7 @@ public:
     gid_t sys$getegid();
     pid_t sys$getpid();
     pid_t sys$getppid();
-    int sys$getresuid(uid_t*, uid_t*, uid_t*);
+    int sys$getresuid(Userspace<uid_t*>, Userspace<uid_t*>, Userspace<uid_t*>);
     int sys$getresgid(gid_t*, gid_t*, gid_t*);
     mode_t sys$umask(mode_t);
     int sys$open(Userspace<const Syscall::SC_open_params*>);
