@@ -323,7 +323,7 @@ public:
     int sys$reboot();
     int sys$set_process_icon(int icon_id);
     int sys$realpath(Userspace<const Syscall::SC_realpath_params*>);
-    ssize_t sys$getrandom(void*, size_t, unsigned int);
+    ssize_t sys$getrandom(Userspace<void*>, size_t, unsigned int);
     int sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
     int sys$module_load(const char* path, size_t path_length);
     int sys$module_unload(const char* name, size_t name_length);
