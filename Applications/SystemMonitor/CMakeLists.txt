@@ -7,7 +7,7 @@ set(SOURCES
     ProcessFileDescriptorMapWidget.cpp
     ProcessMemoryMapWidget.cpp
     ProcessModel.cpp
-    ProcessStacksWidget.cpp
+    ProcessStackWidget.cpp
     ProcessUnveiledPathsWidget.cpp
 )
 
