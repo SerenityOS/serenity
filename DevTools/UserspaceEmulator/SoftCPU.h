@@ -1120,6 +1120,10 @@ private:
     u32 m_eip { 0 };
     u32 m_base_eip { 0 };
 
+    long double m_fpu[8];
+    // FIXME: Shadow for m_fpu.
+    u8 m_fpu_top { 0 };
+
     ValueWithShadow<u16> m_fpu_cw { 0, 0 };
 
     const u8* m_cached_code_ptr { nullptr };
