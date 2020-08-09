@@ -52,7 +52,7 @@ gid_t Process::sys$getegid()
     return m_egid;
 }
 
-int Process::sys$getresuid(uid_t* ruid, uid_t* euid, uid_t* suid)
+int Process::sys$getresuid(Userspace<uid_t*> ruid, Userspace<uid_t*> euid, Userspace<uid_t*> suid)
 {
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(ruid) || !validate_write_typed(euid) || !validate_write_typed(suid))
