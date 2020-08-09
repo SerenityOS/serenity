@@ -189,7 +189,7 @@ int Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, si
     return 0;
 }
 
-int Process::sys$get_thread_name(pid_t tid, char* buffer, size_t buffer_size)
+int Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size)
 {
     REQUIRE_PROMISE(thread);
     if (buffer_size == 0)
