@@ -285,7 +285,7 @@ public:
     int sys$symlink(Userspace<const Syscall::SC_symlink_params*>);
     int sys$rmdir(Userspace<const char*> pathname, size_t path_length);
     int sys$mount(Userspace<const Syscall::SC_mount_params*>);
-    int sys$umount(const char* mountpoint, size_t mountpoint_length);
+    int sys$umount(Userspace<const char*> mountpoint, size_t mountpoint_length);
     int sys$chmod(const char* pathname, size_t path_length, mode_t);
     int sys$fchmod(int fd, mode_t);
     int sys$chown(Userspace<const Syscall::SC_chown_params*>);
