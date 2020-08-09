@@ -69,7 +69,9 @@ enum ProcParentDirectory {
     PDI_Root_net,
     PDI_PID,
     PDI_PID_fd,
+    PDI_PID_stacks,
 };
+static_assert(PDI_PID_stacks < 16, "Too many directories for identifier scheme");
 
 enum ProcFileType {
     FI_Invalid = 0,
@@ -111,7 +113,7 @@ enum ProcFileType {
     __FI_PID_Start,
     FI_PID_vm,
     FI_PID_vmobjects,
-    FI_PID_stack,
+    FI_PID_stacks, // directory
     FI_PID_fds,
     FI_PID_unveil,
     FI_PID_exe,  // symlink
@@ -129,6 +131,12 @@ static inline ProcessID to_pid(const InodeIdentifier& identifier)
     dbg() << "to_pid, index=" << String::format("%08x", identifier.index()) << " -> " << (identifier.index() >> 16);
 #endif
     return identifier.index() >> 16u;
+}
+
+static inline ThreadID to_tid(const InodeIdentifier& identifier)
+{
+    // Sneakily, use the exact same mechanism.
+    return to_pid(identifier).value();
 }
 
 static inline ProcParentDirectory to_proc_parent_directory(const InodeIdentifier& identifier)
@@ -164,6 +172,11 @@ static inline InodeIdentifier to_identifier_with_fd(unsigned fsid, ProcessID pid
     return { fsid, (PDI_PID_fd << 12u) | ((unsigned)pid.value() << 16u) | (FI_MaxStaticFileIndex + fd) };
 }
 
+static inline InodeIdentifier to_identifier_with_stack(unsigned fsid, ThreadID tid)
+{
+    return { fsid, (PDI_PID_stacks << 12u) | ((unsigned)tid.value() << 16u) | FI_MaxStaticFileIndex };
+}
+
 static inline InodeIdentifier sys_var_to_identifier(unsigned fsid, unsigned index)
 {
     ASSERT(index < 256);
@@ -184,6 +197,8 @@ static inline InodeIdentifier to_parent_id(const InodeIdentifier& identifier)
         return to_identifier(identifier.fsid(), PDI_Root, to_pid(identifier), FI_PID);
     case PDI_PID_fd:
         return to_identifier(identifier.fsid(), PDI_PID, to_pid(identifier), FI_PID_fd);
+    case PDI_PID_stacks:
+        return to_identifier(identifier.fsid(), PDI_PID, to_pid(identifier), FI_PID_stacks);
     }
     ASSERT_NOT_REACHED();
 }
@@ -209,6 +224,12 @@ static inline bool is_process_related_file(const InodeIdentifier& identifier)
     }
 }
 
+static inline bool is_thread_related_file(const InodeIdentifier& identifier)
+{
+    auto proc_parent_directory = to_proc_parent_directory(identifier);
+    return proc_parent_directory == PDI_PID_stacks;
+}
+
 static inline bool is_directory(const InodeIdentifier& identifier)
 {
     auto proc_file_type = to_proc_file_type(identifier);
@@ -218,6 +239,7 @@ static inline bool is_directory(const InodeIdentifier& identifier)
     case FI_Root_net:
     case FI_PID:
     case FI_PID_fd:
+    case FI_PID_stacks:
         return true;
     default:
         return false;
@@ -626,12 +648,15 @@ Optional<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$pid_stack(InodeIdentifier identifier)
+Optional<KBuffer> procfs$tid_stack(InodeIdentifier identifier)
 {
-    auto process = Process::from_pid(to_pid(identifier));
-    if (!process)
+    auto thread = Thread::from_tid(to_tid(identifier));
+    if (!thread)
         return {};
-    return process->backtrace();
+    KBufferBuilder builder;
+    builder.appendf("Thread %d (%s):\n", thread->tid().value(), thread->name().characters());
+    builder.append(thread->backtrace());
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
@@ -1071,7 +1096,6 @@ InodeMetadata ProcFSInode::metadata() const
     metadata.atime = mepoch;
     metadata.mtime = mepoch;
     auto proc_parent_directory = to_proc_parent_directory(identifier());
-    auto pid = to_pid(identifier());
     auto proc_file_type = to_proc_file_type(identifier());
 
 #ifdef PROCFS_DEBUG
@@ -1079,10 +1103,22 @@ InodeMetadata ProcFSInode::metadata() const
 #endif
 
     if (is_process_related_file(identifier())) {
+        ProcessID pid = to_pid(identifier());
         auto process = Process::from_pid(pid);
         if (process) {
             metadata.uid = process->sys$getuid();
             metadata.gid = process->sys$getgid();
+        } else {
+            // TODO: How to handle this?
+            metadata.uid = 0;
+            metadata.gid = 0;
+        }
+    } else if (is_thread_related_file(identifier())) {
+        ThreadID tid = to_tid(identifier());
+        auto thread = Thread::from_tid(tid);
+        if (thread) {
+            metadata.uid = thread->process().sys$getuid();
+            metadata.gid = thread->process().sys$getgid();
         } else {
             // TODO: How to handle this?
             metadata.uid = 0;
@@ -1111,6 +1147,7 @@ InodeMetadata ProcFSInode::metadata() const
         break;
     case FI_PID:
     case FI_PID_fd:
+    case FI_PID_stacks:
         metadata.mode = S_IFDIR | S_IRUSR | S_IXUSR;
         break;
     default:
@@ -1150,6 +1187,10 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
         switch (to_proc_parent_directory(identifier())) {
         case PDI_PID_fd:
             callback_tmp = procfs$pid_fd_entry;
+            read_callback = &callback_tmp;
+            break;
+        case PDI_PID_stacks:
+            callback_tmp = procfs$tid_stack;
             read_callback = &callback_tmp;
             break;
         case PDI_Root_sys:
@@ -1209,7 +1250,6 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     if (!Kernel::is_directory(identifier()))
         return KResult(-ENOTDIR);
 
-    auto pid = to_pid(identifier());
     auto proc_file_type = to_proc_file_type(identifier());
     auto parent_id = to_parent_id(identifier());
 
@@ -1248,6 +1288,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         break;
 
     case FI_PID: {
+        auto pid = to_pid(identifier());
         auto process = Process::from_pid(pid);
         if (!process)
             return KResult(-ENOENT);
@@ -1262,6 +1303,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     } break;
 
     case FI_PID_fd: {
+        auto pid = to_pid(identifier());
         auto process = Process::from_pid(pid);
         if (!process)
             return KResult(-ENOENT);
@@ -1274,6 +1316,21 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
             callback({ name, name_length, to_identifier_with_fd(fsid(), pid, i), 0 });
         }
     } break;
+
+    case FI_PID_stacks: {
+        auto pid = to_pid(identifier());
+        auto process = Process::from_pid(pid);
+        if (!process)
+            return KResult(-ENOENT);
+        process->for_each_thread([&](Thread& thread) -> IterationDecision {
+            int tid = thread.tid().value();
+            char name[16];
+            size_t name_length = (size_t)sprintf(name, "%d", tid);
+            callback({ name, name_length, to_identifier_with_stack(fsid(), tid), 0 });
+            return IterationDecision::Continue;
+        });
+    } break;
+
     default:
         return KSuccess;
     }
@@ -1367,6 +1424,25 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
         if (fd_exists)
             return fs().get_inode(to_identifier_with_fd(fsid(), to_pid(identifier()), name_as_number.value()));
     }
+
+    if (proc_file_type == FI_PID_stacks) {
+        auto name_as_number = name.to_int();
+        if (!name_as_number.has_value())
+            return {};
+        int tid = name_as_number.value();
+        if (tid <= 0) {
+            return {};
+        }
+        bool thread_exists = false;
+        {
+            auto process = Process::from_pid(to_pid(identifier()));
+            auto thread = Thread::from_tid(tid);
+            thread_exists = process && thread && process->pid() == thread->pid();
+        }
+        if (thread_exists)
+            return fs().get_inode(to_identifier_with_stack(fsid(), tid));
+    }
+
     return {};
 }
 
@@ -1416,6 +1492,8 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, F
 
 KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
 {
+    // The only links are in pid directories, so it's safe to ignore
+    // unrelated files and the thread-specific stacks/ directory.
     if (!is_process_related_file(identifier()))
         return Inode::resolve_as_link(base, out_parent, options, symlink_recursion_level);
 
@@ -1600,7 +1678,7 @@ ProcFS::ProcFS()
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, false, procfs$pid_vm };
     m_entries[FI_PID_vmobjects] = { "vmobjects", FI_PID_vmobjects, true, procfs$pid_vmobjects };
-    m_entries[FI_PID_stack] = { "stack", FI_PID_stack, false, procfs$pid_stack };
+    m_entries[FI_PID_stacks] = { "stacks", FI_PID_stacks, false };
     m_entries[FI_PID_fds] = { "fds", FI_PID_fds, false, procfs$pid_fds };
     m_entries[FI_PID_exe] = { "exe", FI_PID_exe, false, procfs$pid_exe };
     m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, false, procfs$pid_cwd };
@@ -1621,5 +1699,4 @@ KResult ProcFSInode::chown(uid_t, gid_t)
 {
     return KResult(-EPERM);
 }
-
 }
