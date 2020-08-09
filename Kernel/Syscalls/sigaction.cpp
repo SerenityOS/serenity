@@ -59,7 +59,7 @@ int Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<
     return 0;
 }
 
-int Process::sys$sigpending(sigset_t* set)
+int Process::sys$sigpending(Userspace<sigset_t*> set)
 {
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(set))
