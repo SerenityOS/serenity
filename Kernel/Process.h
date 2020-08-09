@@ -278,7 +278,7 @@ public:
     int sys$fcntl(int fd, int cmd, u32 extra_arg);
     int sys$ioctl(int fd, unsigned request, FlatPtr arg);
     int sys$mkdir(Userspace<const char*> pathname, size_t path_length, mode_t mode);
-    clock_t sys$times(tms*);
+    clock_t sys$times(Userspace<tms*>);
     int sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
     int sys$link(Userspace<const Syscall::SC_link_params*>);
     int sys$unlink(const char* pathname, size_t path_length);
