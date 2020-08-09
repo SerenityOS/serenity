@@ -31,7 +31,7 @@
 
 namespace Kernel {
 
-int Process::sys$chmod(const char* user_path, size_t path_length, mode_t mode)
+int Process::sys$chmod(Userspace<const char*> user_path, size_t path_length, mode_t mode)
 {
     REQUIRE_PROMISE(fattr);
     auto path = get_syscall_path_argument(user_path, path_length);
