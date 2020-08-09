@@ -263,7 +263,7 @@ public:
     int sys$sigaction(int signum, const sigaction* act, sigaction* old_act);
     int sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set);
     int sys$sigpending(sigset_t*);
-    int sys$getgroups(ssize_t, gid_t*);
+    int sys$getgroups(ssize_t, Userspace<gid_t*>);
     int sys$setgroups(ssize_t, Userspace<const gid_t*>);
     int sys$pipe(int pipefd[2], int flags);
     int sys$killpg(pid_t pgrp, int sig);
