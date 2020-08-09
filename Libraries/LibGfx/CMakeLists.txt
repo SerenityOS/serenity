@@ -3,6 +3,7 @@ set(SOURCES
     Bitmap.cpp
     BMPLoader.cpp
     CharacterBitmap.cpp
+    ClassicWindowTheme.cpp
     Color.cpp
     DisjointRectSet.cpp
     Emoji.cpp
