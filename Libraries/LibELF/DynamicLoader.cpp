@@ -201,7 +201,7 @@ void DynamicLoader::load_program_headers(const Image& elf_image)
         ASSERT_NOT_REACHED();
     }
     m_text_segment_size = region->required_load_size();
-    m_text_segment_load_address = VirtualAddress { (u32)text_segment_begin };
+    m_text_segment_load_address = VirtualAddress { (FlatPtr)text_segment_begin };
 
     m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
 
@@ -210,7 +210,7 @@ void DynamicLoader::load_program_headers(const Image& elf_image)
     if (MAP_FAILED == data_segment_begin) {
         ASSERT_NOT_REACHED();
     }
-    VirtualAddress data_segment_actual_addr = region->desired_load_address().offset((u32)text_segment_begin);
+    VirtualAddress data_segment_actual_addr = region->desired_load_address().offset((FlatPtr)text_segment_begin);
     memcpy(data_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
 
     // FIXME: Do some kind of 'allocate TLS section' or some such from a per-application pool
@@ -218,14 +218,14 @@ void DynamicLoader::load_program_headers(const Image& elf_image)
         region = tls_region_ptr;
         // FIXME: This can't be right either. TLS needs some real work i'd say :)
         m_tls_segment_address = tls_region_ptr->desired_load_address();
-        VirtualAddress tls_segment_actual_addr = region->desired_load_address().offset((u32)text_segment_begin);
+        VirtualAddress tls_segment_actual_addr = region->desired_load_address().offset((FlatPtr)text_segment_begin);
         memcpy(tls_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
     }
 }
 
 void DynamicLoader::do_relocations()
 {
-    u32 load_base_address = m_dynamic_object->base_address().get();
+    FlatPtr load_base_address = m_dynamic_object->base_address().get();
 
     // FIXME: We should really bail on undefined symbols here.
 
@@ -277,7 +277,7 @@ void DynamicLoader::do_relocations()
             VERBOSE("Relocation type: R_386_TLS_TPOFF at offset %X\n", relocation.offset());
             // FIXME: this can't be right? I have no idea what "negative offset into TLS storage" means...
             // FIXME: Check m_has_static_tls and do something different for dynamic TLS
-            *patch_ptr = relocation.offset() - (u32)m_tls_segment_address.as_ptr() - *patch_ptr;
+            *patch_ptr = relocation.offset() - (FlatPtr)m_tls_segment_address.as_ptr() - *patch_ptr;
             break;
         }
         default:
@@ -321,12 +321,12 @@ void DynamicLoader::setup_plt_trampoline()
 {
     VirtualAddress got_address = m_dynamic_object->plt_got_base_address();
 
-    u32* got_u32_ptr = (u32*)got_address.as_ptr();
-    got_u32_ptr[1] = (u32)this;
-    got_u32_ptr[2] = (u32)&_plt_trampoline;
+    FlatPtr* got_ptr = (FlatPtr*)got_address.as_ptr();
+    got_ptr[1] = (FlatPtr)this;
+    got_ptr[2] = (FlatPtr)&_plt_trampoline;
 
 #ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Set GOT PLT entries at %p: [0] = %p [1] = %p, [2] = %p\n", got_u32_ptr, got_u32_ptr[0], got_u32_ptr[1], got_u32_ptr[2]);
+    dbgprintf("Set GOT PLT entries at %p: [0] = %p [1] = %p, [2] = %p\n", got_ptr, (void*)got_ptr[0], (void*)got_ptr[1], (void*)got_ptr[2]);
 #endif
 }
 
@@ -372,7 +372,7 @@ void DynamicLoader::call_object_init_functions()
     while (init_begin != init_end) {
         // Android sources claim that these can be -1, to be ignored.
         // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
-        if (!*init_begin || ((i32)*init_begin == -1))
+        if (!*init_begin || ((FlatPtr)*init_begin == (FlatPtr)-1))
             continue;
 #ifdef DYNAMIC_LOAD_DEBUG
         dbgprintf("Calling DT_INITARRAY entry at %p\n", *init_begin);
