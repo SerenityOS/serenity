@@ -169,7 +169,7 @@ int Process::sys$join_thread(pid_t tid, void** exit_value)
     return 0;
 }
 
-int Process::sys$set_thread_name(pid_t tid, const char* user_name, size_t user_name_length)
+int Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
 {
     REQUIRE_PROMISE(thread);
     auto name = validate_and_copy_string_from_user(user_name, user_name_length);
@@ -188,6 +188,7 @@ int Process::sys$set_thread_name(pid_t tid, const char* user_name, size_t user_n
     thread->set_name(name);
     return 0;
 }
+
 int Process::sys$get_thread_name(pid_t tid, char* buffer, size_t buffer_size)
 {
     REQUIRE_PROMISE(thread);
