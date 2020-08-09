@@ -62,8 +62,8 @@ void DynamicObject::dump() const
     if (m_has_soname)
         builder.appendf("DT_SONAME: %s\n", soname()); // FIXME: Valdidate that this string is null terminated?
 
-    dbgprintf("Dynamic section at address 0x%x contains %zu entries:\n", m_dynamic_address.as_ptr(), num_dynamic_sections);
-    dbgprintf(builder.to_string().characters());
+    dbgprintf("Dynamic section at address %p contains %zu entries:\n", m_dynamic_address.as_ptr(), num_dynamic_sections);
+    dbgprintf("%s", builder.to_string().characters());
 }
 
 void DynamicObject::parse()

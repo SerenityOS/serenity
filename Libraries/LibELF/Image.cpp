@@ -106,7 +106,7 @@ void Image::dump() const
     for (unsigned i = 0; i < header().e_shnum; ++i) {
         auto& section = this->section(i);
         dbgprintf("    Section %u: {\n", i);
-        dbgprintf("        name: %s\n", section.name());
+        dbgprintf("        name: %.*s\n", (int)section.name().length(), section.name().characters_without_null_termination());
         dbgprintf("        type: %x\n", section.type());
         dbgprintf("      offset: %x\n", section.offset());
         dbgprintf("        size: %u\n", section.size());
@@ -118,8 +118,9 @@ void Image::dump() const
     for (unsigned i = 1; i < symbol_count(); ++i) {
         auto& sym = symbol(i);
         dbgprintf("Symbol @%u:\n", i);
-        dbgprintf("    Name: %s\n", sym.name());
-        dbgprintf("    In section: %s\n", section_index_to_string(sym.section_index()));
+        dbgprintf("    Name: %.*s\n", (int)sym.name().length(), sym.name().characters_without_null_termination());
+        StringView section_index_string = section_index_to_string(sym.section_index());
+        dbgprintf("    In section: %.*s\n", (int)section_index_string.length(), section_index_string.characters_without_null_termination());
         dbgprintf("    Value: %x\n", sym.value());
         dbgprintf("    Size: %u\n", sym.size());
     }

@@ -38,15 +38,18 @@ int dbgprintf(const char* fmt, ...);
 ssize_t dbgputstr(const char*, ssize_t);
 int sprintf(char* buf, const char* fmt, ...);
 }
-template<size_t N>
-inline int dbgputstr(const char (&array)[N])
-{
-    return ::dbgputstr(array, N);
-}
 #    endif
 #else
 #    include <stdio.h>
 #    define kprintf printf
 #    define dbgprintf(...) fprintf(stderr, __VA_ARGS__)
-#    define dbgputstr(characters, length) fwrite(characters, 1, length, stderr)
+inline size_t dbgputstr(const char* characters, ssize_t length)
+{
+    return fwrite(characters, 1, length, stderr);
+}
 #endif
+template<size_t N>
+inline int dbgputstr(const char (&array)[N])
+{
+    return ::dbgputstr(array, N);
+}
