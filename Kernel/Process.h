@@ -291,7 +291,7 @@ public:
     int sys$chown(Userspace<const Syscall::SC_chown_params*>);
     int sys$fchown(int fd, uid_t, gid_t);
     int sys$socket(int domain, int type, int protocol);
-    int sys$bind(int sockfd, const sockaddr* addr, socklen_t);
+    int sys$bind(int sockfd, Userspace<const sockaddr*> addr, socklen_t);
     int sys$listen(int sockfd, int backlog);
     int sys$accept(int sockfd, sockaddr*, socklen_t*);
     int sys$connect(int sockfd, const sockaddr*, socklen_t);
