@@ -32,7 +32,7 @@ namespace Kernel {
 // We don't use the flag yet, but we could use it for distinguishing
 // random source like Linux, unlike the OpenBSD equivalent. However, if we
 // do, we should be able of the caveats that Linux has dealt with.
-ssize_t Process::sys$getrandom(void* buffer, size_t buffer_size, [[maybe_unused]] unsigned flags)
+ssize_t Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[maybe_unused]] unsigned flags)
 {
     REQUIRE_PROMISE(stdio);
     if (buffer_size <= 0)
@@ -42,7 +42,8 @@ ssize_t Process::sys$getrandom(void* buffer, size_t buffer_size, [[maybe_unused]
         return -EFAULT;
 
     SmapDisabler disabler;
-    get_good_random_bytes((u8*)buffer, buffer_size);
+    // FIXME: We should really push Userspace<T> down through the interface.
+    get_good_random_bytes((u8*)buffer.ptr(), buffer_size);
     return 0;
 }
 
