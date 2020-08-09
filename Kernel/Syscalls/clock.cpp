@@ -54,7 +54,7 @@ int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
     return 0;
 }
 
-int Process::sys$clock_settime(clockid_t clock_id, timespec* user_ts)
+int Process::sys$clock_settime(clockid_t clock_id, const timespec* user_ts)
 {
     REQUIRE_PROMISE(settime);
 
