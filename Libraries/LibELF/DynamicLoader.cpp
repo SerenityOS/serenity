@@ -30,10 +30,10 @@
 
 #include <assert.h>
 #include <dlfcn.h>
-#include <mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 
 #define DYNAMIC_LOAD_DEBUG
 //#define DYNAMIC_LOAD_VERBOSE
@@ -44,6 +44,13 @@
 #    define VERBOSE(fmt, ...) \
         do {                  \
         } while (0)
+#endif
+
+#ifndef __serenity__
+static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int fd, off_t offset, const char*)
+{
+    return mmap(addr, length, prot, flags, fd, offset);
+}
 #endif
 
 namespace ELF {
