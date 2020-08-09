@@ -117,7 +117,7 @@ int Process::sys$detach_thread(pid_t tid)
     return 0;
 }
 
-int Process::sys$join_thread(pid_t tid, void** exit_value)
+int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
 {
     REQUIRE_PROMISE(thread);
     if (exit_value && !validate_write_typed(exit_value))
