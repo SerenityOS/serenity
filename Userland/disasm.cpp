@@ -27,8 +27,10 @@
 #include <AK/LogStream.h>
 #include <AK/MappedFile.h>
 #include <LibCore/ArgsParser.h>
+#include <LibELF/Loader.h>
 #include <LibX86/Disassembler.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char** argv)
 {
@@ -44,7 +46,24 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    X86::SimpleInstructionStream stream((const u8*)file.data(), file.size());
+    const u8* asm_data = (const u8*)file.data();
+    size_t asm_size = file.size();
+    size_t file_offset = 0;
+    if (asm_size >= 4 && strncmp((const char*)asm_data, "\u007fELF", 4) == 0) {
+        if (auto elf = ELF::Loader::create(asm_data, asm_size)) {
+            elf->image().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
+                // FIXME: Disassemble all SHT_PROGBITS sections, not just .text.
+                if (section.name() != ".text")
+                    return IterationDecision::Continue;
+                asm_data = (const u8*)section.raw_data();
+                asm_size = section.size();
+                file_offset = section.address();
+                return IterationDecision::Break;
+            });
+        }
+    }
+
+    X86::SimpleInstructionStream stream(asm_data, asm_size);
     X86::Disassembler disassembler(stream);
 
     for (;;) {
@@ -52,7 +71,7 @@ int main(int argc, char** argv)
         auto insn = disassembler.next();
         if (!insn.has_value())
             break;
-        out() << String::format("%08x", offset) << "  " << insn.value().to_string(offset);
+        out() << String::format("%08x", file_offset + offset) << "  " << insn.value().to_string(offset);
     }
 
     return 0;
