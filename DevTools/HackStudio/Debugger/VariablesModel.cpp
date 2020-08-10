@@ -68,7 +68,7 @@ int VariablesModel::row_count(const GUI::ModelIndex& index) const
     return node->members.size();
 }
 
-String variable_value_as_string(const DebugInfo::VariableInfo& variable)
+static String variable_value_as_string(const DebugInfo::VariableInfo& variable)
 {
     if (variable.location_type != DebugInfo::VariableInfo::LocationType::Address)
         return "N/A";
