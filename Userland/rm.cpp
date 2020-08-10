@@ -35,7 +35,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-int remove(bool recursive, bool force, String path)
+static int remove(bool recursive, bool force, String path)
 {
     struct stat path_stat;
     if (lstat(path.characters(), &path_stat) < 0) {

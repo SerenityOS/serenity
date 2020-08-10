@@ -30,7 +30,7 @@
 #include <string.h>
 #include <unistd.h>
 
-void handle_sigint(int)
+static void handle_sigint(int)
 {
 }
 
