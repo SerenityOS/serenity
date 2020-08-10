@@ -176,7 +176,7 @@ extern "C" int kernelputstr(const char* characters, int length)
     return 0;
 }
 
-extern "C" int vdbgprintf(const char* fmt, va_list ap)
+static int vdbgprintf(const char* fmt, va_list ap)
 {
     ScopedSpinLock lock(s_log_lock);
     color_on();
