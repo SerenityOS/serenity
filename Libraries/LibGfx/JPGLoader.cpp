@@ -220,7 +220,7 @@ struct JPGLoadingContext {
     MacroblockMeta mblock_meta;
 };
 
-void generate_huffman_codes(HuffmanTableSpec& table)
+static void generate_huffman_codes(HuffmanTableSpec& table)
 {
     unsigned code = 0;
     for (auto number_of_codes : table.code_counts) {
@@ -230,7 +230,7 @@ void generate_huffman_codes(HuffmanTableSpec& table)
     }
 }
 
-Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1)
+static Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1)
 {
     if (count > (8 * sizeof(size_t))) {
         dbg() << String::format("Can't read %i bits at once!", count);
@@ -254,7 +254,7 @@ Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1
     return value;
 }
 
-Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTableSpec& table)
+static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTableSpec& table)
 {
     unsigned code = 0;
     size_t code_cursor = 0;
@@ -289,7 +289,7 @@ Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTableSpec
  * macroblocks that share the chrominance data. Next two iterations (assuming that
  * we are dealing with three components) will fill up the blocks with chroma data.
  */
-bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macroblocks, u8 hcursor, u8 vcursor)
+static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macroblocks, u8 hcursor, u8 vcursor)
 {
     for (u32 cindex = 0; cindex < context.component_count; cindex++) {
         auto& component = context.components[cindex];
@@ -373,7 +373,7 @@ bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
     return true;
 }
 
-Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& context)
+static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& context)
 {
     Vector<Macroblock> macroblocks;
     macroblocks.resize(context.mblock_meta.padded_total);
@@ -798,7 +798,7 @@ static bool skip_marker_with_length(BufferStream& stream)
     return !stream.handle_read_failure();
 }
 
-void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
@@ -819,7 +819,7 @@ void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
     }
 }
 
-void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     static const float m0 = 2.0 * cos(1.0 / 16.0 * 2.0 * M_PI);
     static const float m1 = 2.0 * cos(2.0 / 16.0 * 2.0 * M_PI);
@@ -986,7 +986,7 @@ void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& macrobloc
     }
 }
 
-void ycbcr_to_rgb(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void ycbcr_to_rgb(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {

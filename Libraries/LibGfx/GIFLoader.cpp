@@ -36,8 +36,6 @@
 
 namespace Gfx {
 
-static bool load_gif_frame_descriptors(GIFLoadingContext&);
-
 struct RGB {
     u8 r;
     u8 g;
@@ -117,7 +115,7 @@ enum class GIFFormat {
     GIF89a,
 };
 
-Optional<GIFFormat> decode_gif_header(BufferStream& stream)
+static Optional<GIFFormat> decode_gif_header(BufferStream& stream)
 {
     static const char valid_header_87[] = "GIF87a";
     static const char valid_header_89[] = "GIF89a";
@@ -262,7 +260,7 @@ private:
     Vector<u8> m_output {};
 };
 
-bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_index)
+static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_index)
 {
     if (frame_index >= context.images.size()) {
         return false;
@@ -340,7 +338,7 @@ bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_index)
     return true;
 }
 
-bool load_gif_frame_descriptors(GIFLoadingContext& context)
+static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 {
     if (context.data_size < 32)
         return false;
