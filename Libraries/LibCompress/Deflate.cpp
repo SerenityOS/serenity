@@ -308,7 +308,6 @@ i8 BitStreamReader::read()
     return (m_current_byte >> (7 - m_remaining_bits)) & 1;
 }
 
-
 i8 BitStreamReader::read_byte()
 {
     m_current_byte = 0;
@@ -319,7 +318,6 @@ i8 BitStreamReader::read_byte()
 
     return m_data.at(m_data_index++);
 }
-
 
 u8 BitStreamReader::get_bit_byte_offset()
 {
@@ -392,7 +390,7 @@ CanonicalCode::CanonicalCode(Vector<u8> codes)
     }
 }
 
-i32 binary_search(Vector<u32>& heystack, u32 needle)
+static i32 binary_search(Vector<u32>& heystack, u32 needle)
 {
     i32 low = 0;
     i32 high = heystack.size();
