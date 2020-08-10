@@ -26,6 +26,7 @@
 
 #include "Tab.h"
 #include "BookmarksBarWidget.h"
+#include "Browser.h"
 #include "ConsoleWidget.h"
 #include "DownloadWidget.h"
 #include "InspectorWidget.h"
@@ -59,8 +60,6 @@
 #include <LibWeb/WebContentView.h>
 
 namespace Browser {
-
-extern String g_home_url;
 
 URL url_from_user_input(const String& input)
 {
