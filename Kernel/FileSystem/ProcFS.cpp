@@ -260,7 +260,7 @@ ProcFS::~ProcFS()
 {
 }
 
-Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -296,7 +296,7 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
@@ -308,7 +308,7 @@ Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
     return description->absolute_path().to_byte_buffer();
 }
 
-Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
@@ -357,7 +357,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$pci(InodeIdentifier)
+static Optional<KBuffer> procfs$pci(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -379,7 +379,7 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$interrupts(InodeIdentifier)
+static Optional<KBuffer> procfs$interrupts(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -396,7 +396,7 @@ Optional<KBuffer> procfs$interrupts(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$keymap(InodeIdentifier)
+static Optional<KBuffer> procfs$keymap(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonObjectSerializer<KBufferBuilder> json { builder };
@@ -405,7 +405,7 @@ Optional<KBuffer> procfs$keymap(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$devices(InodeIdentifier)
+static Optional<KBuffer> procfs$devices(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -426,14 +426,14 @@ Optional<KBuffer> procfs$devices(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$uptime(InodeIdentifier)
+static Optional<KBuffer> procfs$uptime(InodeIdentifier)
 {
     KBufferBuilder builder;
     builder.appendf("%u\n", (g_uptime / 1000));
     return builder.build();
 }
 
-Optional<KBuffer> procfs$cmdline(InodeIdentifier)
+static Optional<KBuffer> procfs$cmdline(InodeIdentifier)
 {
     KBufferBuilder builder;
     builder.append(kernel_command_line().string());
@@ -441,7 +441,7 @@ Optional<KBuffer> procfs$cmdline(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$modules(InodeIdentifier)
+static Optional<KBuffer> procfs$modules(InodeIdentifier)
 {
     extern HashMap<String, OwnPtr<Module>>* g_modules;
     KBufferBuilder builder;
@@ -461,7 +461,7 @@ Optional<KBuffer> procfs$modules(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$profile(InodeIdentifier)
+static Optional<KBuffer> procfs$profile(InodeIdentifier)
 {
     InterruptDisabler disabler;
     KBufferBuilder builder;
@@ -493,7 +493,7 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
+static Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -519,7 +519,7 @@ Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$net_arp(InodeIdentifier)
+static Optional<KBuffer> procfs$net_arp(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -533,7 +533,7 @@ Optional<KBuffer> procfs$net_arp(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
+static Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -555,7 +555,7 @@ Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$net_udp(InodeIdentifier)
+static Optional<KBuffer> procfs$net_udp(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -570,7 +570,7 @@ Optional<KBuffer> procfs$net_udp(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$net_local(InodeIdentifier)
+static Optional<KBuffer> procfs$net_local(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -588,7 +588,7 @@ Optional<KBuffer> procfs$net_local(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
@@ -623,7 +623,7 @@ Optional<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
@@ -648,7 +648,7 @@ Optional<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$tid_stack(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$tid_stack(InodeIdentifier identifier)
 {
     auto thread = Thread::from_tid(to_tid(identifier));
     if (!thread)
@@ -659,7 +659,7 @@ Optional<KBuffer> procfs$tid_stack(InodeIdentifier identifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
@@ -669,7 +669,7 @@ Optional<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
     return custody->absolute_path().to_byte_buffer();
 }
 
-Optional<KBuffer> procfs$pid_cwd(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$pid_cwd(InodeIdentifier identifier)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
@@ -677,7 +677,7 @@ Optional<KBuffer> procfs$pid_cwd(InodeIdentifier identifier)
     return process->current_directory().absolute_path().to_byte_buffer();
 }
 
-Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
+static Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
@@ -685,7 +685,7 @@ Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
     return process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer();
 }
 
-Optional<KBuffer> procfs$self(InodeIdentifier)
+static Optional<KBuffer> procfs$self(InodeIdentifier)
 {
     char buffer[16];
     sprintf(buffer, "%d", Process::current()->pid().value());
@@ -712,7 +712,7 @@ Optional<KBuffer> procfs$mm(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$dmesg(InodeIdentifier)
+static Optional<KBuffer> procfs$dmesg(InodeIdentifier)
 {
     InterruptDisabler disabler;
     KBufferBuilder builder;
@@ -721,7 +721,7 @@ Optional<KBuffer> procfs$dmesg(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$mounts(InodeIdentifier)
+static Optional<KBuffer> procfs$mounts(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
     KBufferBuilder builder;
@@ -740,7 +740,7 @@ Optional<KBuffer> procfs$mounts(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$df(InodeIdentifier)
+static Optional<KBuffer> procfs$df(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
     KBufferBuilder builder;
@@ -767,7 +767,7 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
+static Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -815,7 +815,7 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$all(InodeIdentifier)
+static Optional<KBuffer> procfs$all(InodeIdentifier)
 {
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
@@ -898,7 +898,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$inodes(InodeIdentifier)
+static Optional<KBuffer> procfs$inodes(InodeIdentifier)
 {
     extern InlineLinkedList<Inode>& all_inodes();
     KBufferBuilder builder;

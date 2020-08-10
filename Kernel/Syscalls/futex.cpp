@@ -29,13 +29,13 @@
 
 namespace Kernel {
 
-void compute_relative_timeout_from_absolute(const timeval& absolute_time, timeval& relative_time)
+static void compute_relative_timeout_from_absolute(const timeval& absolute_time, timeval& relative_time)
 {
     // Convert absolute time to relative time of day.
     timeval_sub(absolute_time, kgettimeofday(), relative_time);
 }
 
-void compute_relative_timeout_from_absolute(const timespec& absolute_time, timeval& relative_time)
+static void compute_relative_timeout_from_absolute(const timespec& absolute_time, timeval& relative_time)
 {
     timeval tv_absolute_time;
     timespec_to_timeval(absolute_time, tv_absolute_time);

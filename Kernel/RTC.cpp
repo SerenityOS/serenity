@@ -109,7 +109,7 @@ static unsigned days_in_years_since_epoch(unsigned year)
     return days;
 }
 
-u8 bcd_to_binary(u8 bcd)
+static u8 bcd_to_binary(u8 bcd)
 {
     return (bcd & 0x0F) + ((bcd >> 4) * 10);
 }

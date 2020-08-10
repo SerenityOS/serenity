@@ -37,7 +37,7 @@
 
 namespace Kernel {
 
-Lockable<HashTable<FIFO*>>& all_fifos()
+static Lockable<HashTable<FIFO*>>& all_fifos()
 {
     static Lockable<HashTable<FIFO*>>* s_table;
     if (!s_table)

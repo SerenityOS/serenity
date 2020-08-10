@@ -39,7 +39,7 @@ namespace Kernel {
 
 static SpinLock s_all_inodes_lock;
 
-InlineLinkedList<Inode>& all_inodes()
+static InlineLinkedList<Inode>& all_inodes()
 {
     ASSERT(s_all_inodes_lock.is_locked());
 
