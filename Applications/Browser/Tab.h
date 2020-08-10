@@ -111,4 +111,6 @@ private:
     RefPtr<const Gfx::Bitmap> m_icon;
 };
 
+URL url_from_user_input(const String& input);
+
 }

@@ -25,6 +25,7 @@
  */
 
 #include "BookmarksBarWidget.h"
+#include "Browser.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include "WindowActions.h"
@@ -46,7 +47,6 @@
 namespace Browser {
 
 String g_home_url;
-URL url_from_user_input(const String& input);
 bool g_multi_process = false;
 
 static String bookmarks_file_path()
