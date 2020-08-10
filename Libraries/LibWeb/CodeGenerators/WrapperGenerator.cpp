@@ -116,7 +116,7 @@ struct Interface {
     String fully_qualified_name;
 };
 
-OwnPtr<Interface> parse_interface(const StringView& input)
+static OwnPtr<Interface> parse_interface(const StringView& input)
 {
     auto interface = make<Interface>();
 
@@ -338,7 +338,6 @@ int main(int argc, char** argv)
     } else {
         interface->fully_qualified_name = interface->name;
     }
-
 
 #if 0
     dbg() << "Attributes:";
