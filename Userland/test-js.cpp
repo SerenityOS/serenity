@@ -144,7 +144,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)
     return JS::Value(interpreter.in_strict_mode());
 }
 
-double get_time_in_ms()
+static double get_time_in_ms()
 {
     struct timeval tv1;
     struct timezone tz1;
@@ -154,7 +154,7 @@ double get_time_in_ms()
 }
 
 template<typename Callback>
-void iterate_directory_recursively(const String& directory_path, Callback callback)
+static void iterate_directory_recursively(const String& directory_path, Callback callback)
 {
     Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
 
@@ -168,7 +168,7 @@ void iterate_directory_recursively(const String& directory_path, Callback callba
     }
 }
 
-Vector<String> get_test_paths(const String& test_root)
+static Vector<String> get_test_paths(const String& test_root)
 {
     Vector<String> paths;
 
@@ -201,7 +201,7 @@ void TestRunner::run()
     print_test_results();
 }
 
-Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
+static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
 {
     auto file = Core::File::construct(file_path);
     auto result = file->open(Core::IODevice::ReadOnly);
@@ -225,7 +225,7 @@ Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_pa
     return Result<NonnullRefPtr<JS::Program>, ParserError>(program);
 }
 
-Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
+static Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
     auto result = interpreter.get_variable("__TestResults__", interpreter.global_object());
     auto json_string = JS::JSONObject::stringify_impl(interpreter, interpreter.global_object(), result, JS::js_undefined(), JS::js_undefined());
@@ -337,7 +337,7 @@ enum Modifier {
     CLEAR,
 };
 
-void print_modifiers(Vector<Modifier> modifiers)
+static void print_modifiers(Vector<Modifier> modifiers)
 {
     for (auto& modifier : modifiers) {
         auto code = [&]() -> String {

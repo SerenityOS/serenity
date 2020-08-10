@@ -33,12 +33,12 @@
 #include <string.h>
 #include <sys/socket.h>
 
-void test_invalid(int);
-void test_no_route(int);
-void test_valid(int);
-void test_send(int);
+static void test_invalid(int);
+static void test_no_route(int);
+static void test_valid(int);
+static void test_send(int);
 
-void test(AK::Function<void(int)> test_fn)
+static void test(AK::Function<void(int)> test_fn)
 {
 
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);

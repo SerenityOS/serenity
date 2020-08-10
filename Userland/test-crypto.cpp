@@ -70,36 +70,36 @@ constexpr const char* DEFAULT_SERVER { "www.google.com" };
 
 // listAllTests
 // Cipher
-int aes_cbc_tests();
-int aes_ctr_tests();
+static int aes_cbc_tests();
+static int aes_ctr_tests();
 
 // Hash
-int md5_tests();
-int sha1_tests();
-int sha256_tests();
-int sha512_tests();
+static int md5_tests();
+static int sha1_tests();
+static int sha256_tests();
+static int sha512_tests();
 
 // Authentication
-int hmac_md5_tests();
-int hmac_sha256_tests();
-int hmac_sha512_tests();
+static int hmac_md5_tests();
+static int hmac_sha256_tests();
+static int hmac_sha512_tests();
 
 // Public-Key
-int rsa_tests();
+static int rsa_tests();
 
 // TLS
-int tls_tests();
+static int tls_tests();
 
 // Big Integer
-int bigint_tests();
+static int bigint_tests();
 
 // Checksum
-int adler32_tests();
-int crc32_tests();
+static int adler32_tests();
+static int crc32_tests();
 
 // stop listing tests
 
-void print_buffer(const ReadonlyBytes& buffer, int split)
+static void print_buffer(const ReadonlyBytes& buffer, int split)
 {
     for (size_t i = 0; i < buffer.size(); ++i) {
         if (split > 0) {
@@ -117,8 +117,9 @@ void print_buffer(const ReadonlyBytes& buffer, int split)
     puts("");
 }
 
-Core::EventLoop loop;
-int run(Function<void(const char*, size_t)> fn)
+static Core::EventLoop g_loop;
+
+static int run(Function<void(const char*, size_t)> fn)
 {
     if (interactive) {
         auto editor = Line::Editor::construct();
@@ -131,10 +132,10 @@ int run(Function<void(const char*, size_t)> fn)
             auto& line = line_result.value();
 
             if (line == ".wait") {
-                loop.exec();
+                g_loop.exec();
             } else {
                 fn(line.characters(), line.length());
-                loop.pump();
+                g_loop.pump();
             }
         }
     } else {
@@ -153,12 +154,12 @@ int run(Function<void(const char*, size_t)> fn)
         }
         auto buffer = file.value()->read_all();
         fn((const char*)buffer.data(), buffer.size());
-        loop.exec();
+        g_loop.exec();
     }
     return 0;
 }
 
-void tls(const char* message, size_t len)
+static void tls(const char* message, size_t len)
 {
     static RefPtr<TLS::TLSv12> tls;
     static ByteBuffer write {};
@@ -177,17 +178,17 @@ void tls(const char* message, size_t len)
             }
         };
         tls->on_tls_error = [&](auto) {
-            loop.quit(1);
+            g_loop.quit(1);
         };
         tls->on_tls_finished = [&]() {
-            loop.quit(0);
+            g_loop.quit(0);
         };
     }
     write.append(message, len);
     write.append("\r\n", 2);
 }
 
-void aes_cbc(const char* message, size_t len)
+static void aes_cbc(const char* message, size_t len)
 {
     auto buffer = ByteBuffer::wrap(const_cast<char*>(message), len);
     // FIXME: Take iv as an optional parameter
@@ -219,19 +220,19 @@ void aes_cbc(const char* message, size_t len)
     }
 }
 
-void adler32(const char* message, size_t len)
+static void adler32(const char* message, size_t len)
 {
     auto checksum = Crypto::Checksum::Adler32({ (const u8*)message, len });
     printf("%#10X\n", checksum.digest());
 }
 
-void crc32(const char* message, size_t len)
+static void crc32(const char* message, size_t len)
 {
     auto checksum = Crypto::Checksum::CRC32({ (const u8*)message, len });
     printf("%#10X\n", checksum.digest());
 }
 
-void md5(const char* message, size_t len)
+static void md5(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::MD5::hash((const u8*)message, len);
     if (binary)
@@ -240,7 +241,7 @@ void md5(const char* message, size_t len)
         print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
 }
 
-void hmac_md5(const char* message, size_t len)
+static void hmac_md5(const char* message, size_t len)
 {
     Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
@@ -250,7 +251,7 @@ void hmac_md5(const char* message, size_t len)
         print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
 
-void sha1(const char* message, size_t len)
+static void sha1(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA1::hash((const u8*)message, len);
     if (binary)
@@ -259,7 +260,7 @@ void sha1(const char* message, size_t len)
         print_buffer({ digest.data, Crypto::Hash::SHA1::digest_size() }, -1);
 }
 
-void sha256(const char* message, size_t len)
+static void sha256(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA256::hash((const u8*)message, len);
     if (binary)
@@ -268,7 +269,7 @@ void sha256(const char* message, size_t len)
         print_buffer({ digest.data, Crypto::Hash::SHA256::digest_size() }, -1);
 }
 
-void hmac_sha256(const char* message, size_t len)
+static void hmac_sha256(const char* message, size_t len)
 {
     Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
@@ -278,7 +279,7 @@ void hmac_sha256(const char* message, size_t len)
         print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
 
-void sha512(const char* message, size_t len)
+static void sha512(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA512::hash((const u8*)message, len);
     if (binary)
@@ -287,7 +288,7 @@ void sha512(const char* message, size_t len)
         print_buffer({ digest.data, Crypto::Hash::SHA512::digest_size() }, -1);
 }
 
-void hmac_sha512(const char* message, size_t len)
+static void hmac_sha512(const char* message, size_t len)
 {
     Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
@@ -496,7 +497,7 @@ auto main(int argc, char** argv) -> int
         g_some_test_failed = true;     \
     } while (0)
 
-ByteBuffer operator""_b(const char* string, size_t length)
+static ByteBuffer operator""_b(const char* string, size_t length)
 {
     dbg() << "Create byte buffer of size " << length;
     return ByteBuffer::copy(string, length);
@@ -504,62 +505,62 @@ ByteBuffer operator""_b(const char* string, size_t length)
 
 // tests go after here
 // please be reasonable with orders kthx
-void aes_cbc_test_name();
-void aes_cbc_test_encrypt();
-void aes_cbc_test_decrypt();
-void aes_ctr_test_name();
-void aes_ctr_test_encrypt();
-void aes_ctr_test_decrypt();
+static void aes_cbc_test_name();
+static void aes_cbc_test_encrypt();
+static void aes_cbc_test_decrypt();
+static void aes_ctr_test_name();
+static void aes_ctr_test_encrypt();
+static void aes_ctr_test_decrypt();
 
-void md5_test_name();
-void md5_test_hash();
-void md5_test_consecutive_updates();
+static void md5_test_name();
+static void md5_test_hash();
+static void md5_test_consecutive_updates();
 
-void sha1_test_name();
-void sha1_test_hash();
+static void sha1_test_name();
+static void sha1_test_hash();
 
-void sha256_test_name();
-void sha256_test_hash();
+static void sha256_test_name();
+static void sha256_test_hash();
 
-void sha512_test_name();
-void sha512_test_hash();
+static void sha512_test_name();
+static void sha512_test_hash();
 
-void hmac_md5_test_name();
-void hmac_md5_test_process();
+static void hmac_md5_test_name();
+static void hmac_md5_test_process();
 
-void hmac_sha256_test_name();
-void hmac_sha256_test_process();
+static void hmac_sha256_test_name();
+static void hmac_sha256_test_process();
 
-void hmac_sha512_test_name();
-void hmac_sha512_test_process();
+static void hmac_sha512_test_name();
+static void hmac_sha512_test_process();
 
-void rsa_test_encrypt();
-void rsa_test_der_parse();
-void rsa_test_encrypt_decrypt();
-void rsa_emsa_pss_test_create();
-void bigint_test_number_theory(); // FIXME: we should really move these num theory stuff out
+static void rsa_test_encrypt();
+static void rsa_test_der_parse();
+static void rsa_test_encrypt_decrypt();
+static void rsa_emsa_pss_test_create();
+static void bigint_test_number_theory(); // FIXME: we should really move these num theory stuff out
 
-void tls_test_client_hello();
+static void tls_test_client_hello();
 
-void bigint_test_fibo500();
-void bigint_addition_edgecases();
-void bigint_subtraction();
-void bigint_multiplication();
-void bigint_division();
-void bigint_base10();
-void bigint_import_export();
-void bigint_bitwise();
+static void bigint_test_fibo500();
+static void bigint_addition_edgecases();
+static void bigint_subtraction();
+static void bigint_multiplication();
+static void bigint_division();
+static void bigint_base10();
+static void bigint_import_export();
+static void bigint_bitwise();
 
-void bigint_test_signed_fibo500();
-void bigint_signed_addition_edgecases();
-void bigint_signed_subtraction();
-void bigint_signed_multiplication();
-void bigint_signed_division();
-void bigint_signed_base10();
-void bigint_signed_import_export();
-void bigint_signed_bitwise();
+static void bigint_test_signed_fibo500();
+static void bigint_signed_addition_edgecases();
+static void bigint_signed_subtraction();
+static void bigint_signed_multiplication();
+static void bigint_signed_division();
+static void bigint_signed_base10();
+static void bigint_signed_import_export();
+static void bigint_signed_bitwise();
 
-int aes_cbc_tests()
+static int aes_cbc_tests()
 {
     aes_cbc_test_name();
     if (encrypting) {
@@ -571,7 +572,7 @@ int aes_cbc_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
-void aes_cbc_test_name()
+static void aes_cbc_test_name()
 {
     I_TEST((AES CBC class name));
     Crypto::Cipher::AESCipher::CBCMode cipher("WellHelloFriends"_b, 128, Crypto::Cipher::Intent::Encryption);
@@ -581,7 +582,7 @@ void aes_cbc_test_name()
         PASS;
 }
 
-void aes_cbc_test_encrypt()
+static void aes_cbc_test_encrypt()
 {
     auto test_it = [](auto& cipher, auto& result) {
         auto in = "This is a test! This is another test!"_b;
@@ -644,7 +645,7 @@ void aes_cbc_test_encrypt()
     }
     // TODO: Test non-CMS padding options
 }
-void aes_cbc_test_decrypt()
+static void aes_cbc_test_decrypt()
 {
     auto test_it = [](auto& cipher, auto& result, auto result_len) {
         auto true_value = "This is a test! This is another test!";
@@ -698,7 +699,7 @@ void aes_cbc_test_decrypt()
     // TODO: Test non-CMS padding options
 }
 
-int aes_ctr_tests()
+static int aes_ctr_tests()
 {
     aes_ctr_test_name();
     if (encrypting) {
@@ -710,7 +711,7 @@ int aes_ctr_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
-void aes_ctr_test_name()
+static void aes_ctr_test_name()
 {
     I_TEST((AES CTR class name));
     Crypto::Cipher::AESCipher::CTRMode cipher("WellHelloFriends"_b, 128, Crypto::Cipher::Intent::Encryption);
@@ -721,7 +722,7 @@ void aes_ctr_test_name()
 }
 
 #define AS_BB(x) (ByteBuffer::wrap((x), sizeof((x)) / sizeof((x)[0])))
-void aes_ctr_test_encrypt()
+static void aes_ctr_test_encrypt()
 {
     auto test_it = [](auto key, auto ivec, auto in, auto out_expected) {
         // nonce is already included in ivec.
@@ -916,7 +917,7 @@ void aes_ctr_test_encrypt()
     }
 }
 
-void aes_ctr_test_decrypt()
+static void aes_ctr_test_decrypt()
 {
     auto test_it = [](auto key, auto ivec, auto in, auto out_expected) {
         // nonce is already included in ivec.
@@ -955,7 +956,7 @@ void aes_ctr_test_decrypt()
     // If encryption works, then decryption works, too.
 }
 
-int md5_tests()
+static int md5_tests()
 {
     md5_test_name();
     md5_test_hash();
@@ -963,7 +964,7 @@ int md5_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
-void md5_test_name()
+static void md5_test_name()
 {
     I_TEST((MD5 class name));
     Crypto::Hash::MD5 md5;
@@ -973,7 +974,7 @@ void md5_test_name()
         PASS;
 }
 
-void md5_test_hash()
+static void md5_test_hash()
 {
     {
         I_TEST((MD5 Hashing | "Well hello friends"));
@@ -1048,7 +1049,7 @@ void md5_test_hash()
     }
 }
 
-void md5_test_consecutive_updates()
+static void md5_test_consecutive_updates()
 {
     {
         I_TEST((MD5 Hashing | Multiple Updates));
@@ -1088,28 +1089,28 @@ void md5_test_consecutive_updates()
     }
 }
 
-int hmac_md5_tests()
+static int hmac_md5_tests()
 {
     hmac_md5_test_name();
     hmac_md5_test_process();
     return g_some_test_failed ? 1 : 0;
 }
 
-int hmac_sha256_tests()
+static int hmac_sha256_tests()
 {
     hmac_sha256_test_name();
     hmac_sha256_test_process();
     return g_some_test_failed ? 1 : 0;
 }
 
-int hmac_sha512_tests()
+static int hmac_sha512_tests()
 {
     hmac_sha512_test_name();
     hmac_sha512_test_process();
     return g_some_test_failed ? 1 : 0;
 }
 
-void hmac_md5_test_name()
+static void hmac_md5_test_name()
 {
     I_TEST((HMAC - MD5 | Class name));
     Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac("Well Hello Friends");
@@ -1119,7 +1120,7 @@ void hmac_md5_test_name()
         PASS;
 }
 
-void hmac_md5_test_process()
+static void hmac_md5_test_process()
 {
     {
         I_TEST((HMAC - MD5 | Basic));
@@ -1148,14 +1149,14 @@ void hmac_md5_test_process()
     }
 }
 
-int sha1_tests()
+static int sha1_tests()
 {
     sha1_test_name();
     sha1_test_hash();
     return g_some_test_failed ? 1 : 0;
 }
 
-void sha1_test_name()
+static void sha1_test_name()
 {
     I_TEST((SHA1 class name));
     Crypto::Hash::SHA1 sha;
@@ -1166,7 +1167,7 @@ void sha1_test_name()
         PASS;
 }
 
-void sha1_test_hash()
+static void sha1_test_hash()
 {
     {
         I_TEST((SHA256 Hashing | ""));
@@ -1220,14 +1221,14 @@ void sha1_test_hash()
     }
 }
 
-int sha256_tests()
+static int sha256_tests()
 {
     sha256_test_name();
     sha256_test_hash();
     return g_some_test_failed ? 1 : 0;
 }
 
-void sha256_test_name()
+static void sha256_test_name()
 {
     I_TEST((SHA256 class name));
     Crypto::Hash::SHA256 sha;
@@ -1238,7 +1239,7 @@ void sha256_test_name()
         PASS;
 }
 
-void sha256_test_hash()
+static void sha256_test_hash()
 {
     {
         I_TEST((SHA256 Hashing | "Well hello friends"));
@@ -1266,7 +1267,7 @@ void sha256_test_hash()
     }
 }
 
-void hmac_sha256_test_name()
+static void hmac_sha256_test_name()
 {
     I_TEST((HMAC - SHA256 | Class name));
     Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac("Well Hello Friends");
@@ -1276,7 +1277,7 @@ void hmac_sha256_test_name()
         PASS;
 }
 
-void hmac_sha256_test_process()
+static void hmac_sha256_test_process()
 {
     {
         I_TEST((HMAC - SHA256 | Basic));
@@ -1331,14 +1332,14 @@ void hmac_sha256_test_process()
     }
 }
 
-int sha512_tests()
+static int sha512_tests()
 {
     sha512_test_name();
     sha512_test_hash();
     return g_some_test_failed ? 1 : 0;
 }
 
-void sha512_test_name()
+static void sha512_test_name()
 {
     I_TEST((SHA512 class name));
     Crypto::Hash::SHA512 sha;
@@ -1349,7 +1350,7 @@ void sha512_test_name()
         PASS;
 }
 
-void sha512_test_hash()
+static void sha512_test_hash()
 {
     {
         I_TEST((SHA512 Hashing | "Well hello friends"));
@@ -1377,7 +1378,7 @@ void sha512_test_hash()
     }
 }
 
-void hmac_sha512_test_name()
+static void hmac_sha512_test_name()
 {
     I_TEST((HMAC - SHA512 | Class name));
     Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac("Well Hello Friends");
@@ -1387,7 +1388,7 @@ void hmac_sha512_test_name()
         PASS;
 }
 
-void hmac_sha512_test_process()
+static void hmac_sha512_test_process()
 {
     {
         I_TEST((HMAC - SHA512 | Basic));
@@ -1416,7 +1417,7 @@ void hmac_sha512_test_process()
     }
 }
 
-int rsa_tests()
+static int rsa_tests()
 {
     rsa_test_encrypt();
     rsa_test_der_parse();
@@ -1426,7 +1427,7 @@ int rsa_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
-void rsa_test_encrypt()
+static void rsa_test_encrypt()
 {
     {
         I_TEST((RSA RAW | Encryption));
@@ -1468,7 +1469,7 @@ void rsa_test_encrypt()
     }
 }
 
-void bigint_test_number_theory()
+static void bigint_test_number_theory()
 {
     {
         I_TEST((Number Theory | Modular Inverse));
@@ -1494,7 +1495,7 @@ void bigint_test_number_theory()
     }
 }
 
-void rsa_emsa_pss_test_create()
+static void rsa_emsa_pss_test_create()
 {
     {
         // This is a template validity test
@@ -1505,7 +1506,7 @@ void rsa_emsa_pss_test_create()
     }
 }
 
-void rsa_test_der_parse()
+static void rsa_test_der_parse()
 {
     I_TEST((RSA | ASN1 DER / PEM encoded Key import));
     auto privkey = R"(-----BEGIN RSA PRIVATE KEY-----
@@ -1528,7 +1529,7 @@ nrDlBQpuxz7bwSyQO7UCIHrYMnDohgNbwtA5ZpW3H1cKKQQvueWm6sxW9P5sUrZ3
     }
 }
 
-void rsa_test_encrypt_decrypt()
+static void rsa_test_encrypt_decrypt()
 {
     I_TEST((RSA | Encrypt));
     dbg() << " creating rsa object";
@@ -1553,13 +1554,13 @@ void rsa_test_encrypt_decrypt()
     }
 }
 
-int tls_tests()
+static int tls_tests()
 {
     tls_test_client_hello();
     return g_some_test_failed ? 1 : 0;
 }
 
-void tls_test_client_hello()
+static void tls_test_client_hello()
 {
     I_TEST((TLS | Connect and Data Transfer));
     Core::EventLoop loop;
@@ -1608,7 +1609,7 @@ void tls_test_client_hello()
     loop.exec();
 }
 
-int adler32_tests()
+static int adler32_tests()
 {
     auto do_test = [](ReadonlyBytes input, u32 expected_result) {
         I_TEST((CRC32));
@@ -1631,7 +1632,7 @@ int adler32_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
-int crc32_tests()
+static int crc32_tests()
 {
     auto do_test = [](ReadonlyBytes input, u32 expected_result) {
         I_TEST((Adler32));
@@ -1652,7 +1653,7 @@ int crc32_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
-int bigint_tests()
+static int bigint_tests()
 {
     bigint_test_fibo500();
     bigint_addition_edgecases();
@@ -1675,7 +1676,7 @@ int bigint_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
-Crypto::UnsignedBigInteger bigint_fibonacci(size_t n)
+static Crypto::UnsignedBigInteger bigint_fibonacci(size_t n)
 {
     Crypto::UnsignedBigInteger num1(0);
     Crypto::UnsignedBigInteger num2(1);
@@ -1687,7 +1688,7 @@ Crypto::UnsignedBigInteger bigint_fibonacci(size_t n)
     return num1;
 }
 
-Crypto::SignedBigInteger bigint_signed_fibonacci(size_t n)
+static Crypto::SignedBigInteger bigint_signed_fibonacci(size_t n)
 {
     Crypto::SignedBigInteger num1(0);
     Crypto::SignedBigInteger num2(1);
@@ -1698,7 +1699,7 @@ Crypto::SignedBigInteger bigint_signed_fibonacci(size_t n)
     }
     return num1;
 }
-void bigint_test_fibo500()
+static void bigint_test_fibo500()
 {
     {
         I_TEST((BigInteger | Fibonacci500));
@@ -1712,7 +1713,7 @@ void bigint_test_fibo500()
     }
 }
 
-void bigint_addition_edgecases()
+static void bigint_addition_edgecases()
 {
     {
         I_TEST((BigInteger | Edge Cases));
@@ -1740,7 +1741,7 @@ void bigint_addition_edgecases()
     }
 }
 
-void bigint_subtraction()
+static void bigint_subtraction()
 {
     {
         I_TEST((BigInteger | Simple Subtraction 1));
@@ -1807,7 +1808,7 @@ void bigint_subtraction()
     }
 }
 
-void bigint_multiplication()
+static void bigint_multiplication()
 {
     {
         I_TEST((BigInteger | Simple Multiplication));
@@ -1843,7 +1844,7 @@ void bigint_multiplication()
         }
     }
 }
-void bigint_division()
+static void bigint_division()
 {
     {
         I_TEST((BigInteger | Simple Division));
@@ -1885,7 +1886,7 @@ void bigint_division()
     }
 }
 
-void bigint_base10()
+static void bigint_base10()
 {
     {
         I_TEST((BigInteger | From String));
@@ -1907,7 +1908,7 @@ void bigint_base10()
     }
 }
 
-void bigint_import_export()
+static void bigint_import_export()
 {
     {
         I_TEST((BigInteger | BigEndian Decode / Encode roundtrip));
@@ -1955,7 +1956,7 @@ void bigint_import_export()
     }
 }
 
-void bigint_bitwise()
+static void bigint_bitwise()
 {
     {
         I_TEST((BigInteger | Basic bitwise or));
@@ -2021,7 +2022,7 @@ void bigint_bitwise()
     }
 }
 
-void bigint_test_signed_fibo500()
+static void bigint_test_signed_fibo500()
 {
     {
         I_TEST((Signed BigInteger | Fibonacci500));
@@ -2035,7 +2036,7 @@ void bigint_test_signed_fibo500()
     }
 }
 
-void bigint_signed_addition_edgecases()
+static void bigint_signed_addition_edgecases()
 {
     {
         I_TEST((Signed BigInteger | Borrow with zero));
@@ -2060,7 +2061,7 @@ void bigint_signed_addition_edgecases()
     }
 }
 
-void bigint_signed_subtraction()
+static void bigint_signed_subtraction()
 {
     {
         I_TEST((Signed BigInteger | Simple Subtraction 1));
@@ -2120,7 +2121,7 @@ void bigint_signed_subtraction()
     }
 }
 
-void bigint_signed_multiplication()
+static void bigint_signed_multiplication()
 {
     {
         I_TEST((Signed BigInteger | Simple Multiplication));
@@ -2157,7 +2158,7 @@ void bigint_signed_multiplication()
         }
     }
 }
-void bigint_signed_division()
+static void bigint_signed_division()
 {
     {
         I_TEST((Signed BigInteger | Simple Division));
@@ -2201,7 +2202,7 @@ void bigint_signed_division()
     }
 }
 
-void bigint_signed_base10()
+static void bigint_signed_base10()
 {
     {
         I_TEST((Signed BigInteger | From String));
@@ -2223,7 +2224,7 @@ void bigint_signed_base10()
     }
 }
 
-void bigint_signed_import_export()
+static void bigint_signed_import_export()
 {
     {
         I_TEST((Signed BigInteger | BigEndian Decode / Encode roundtrip));
@@ -2251,7 +2252,7 @@ void bigint_signed_import_export()
     }
 }
 
-void bigint_signed_bitwise()
+static void bigint_signed_bitwise()
 {
     {
         I_TEST((Signed BigInteger | Bitwise or handles sign));

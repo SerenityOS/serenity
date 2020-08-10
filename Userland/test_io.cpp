@@ -52,7 +52,7 @@
         }                                                                                                                                                                                            \
     } while (0)
 
-void test_read_from_directory()
+static void test_read_from_directory()
 {
     char buffer[BUFSIZ];
     int fd = open("/", O_DIRECTORY | O_RDONLY);
@@ -63,7 +63,7 @@ void test_read_from_directory()
     ASSERT(rc == 0);
 }
 
-void test_write_to_directory()
+static void test_write_to_directory()
 {
     char str[] = "oh frick";
     int fd = open("/", O_DIRECTORY | O_RDONLY);
@@ -76,7 +76,7 @@ void test_write_to_directory()
     ASSERT(rc == 0);
 }
 
-void test_read_from_writeonly()
+static void test_read_from_writeonly()
 {
     char buffer[BUFSIZ];
     int fd = open("/tmp/xxxx123", O_CREAT | O_WRONLY);
@@ -87,7 +87,7 @@ void test_read_from_writeonly()
     ASSERT(rc == 0);
 }
 
-void test_write_to_readonly()
+static void test_write_to_readonly()
 {
     char str[] = "hello";
     int fd = open("/tmp/abcd123", O_CREAT | O_RDONLY);
@@ -98,7 +98,7 @@ void test_write_to_readonly()
     ASSERT(rc == 0);
 }
 
-void test_read_past_eof()
+static void test_read_past_eof()
 {
     char buffer[BUFSIZ];
     int fd = open("/home/anon/myfile.txt", O_RDONLY);
@@ -118,7 +118,7 @@ void test_read_past_eof()
     ASSERT(rc == 0);
 }
 
-void test_ftruncate_readonly()
+static void test_ftruncate_readonly()
 {
     int fd = open("/tmp/trunctest", O_RDONLY | O_CREAT, 0666);
     ASSERT(fd >= 0);
@@ -127,7 +127,7 @@ void test_ftruncate_readonly()
     close(fd);
 }
 
-void test_ftruncate_negative()
+static void test_ftruncate_negative()
 {
     int fd = open("/tmp/trunctest", O_RDWR | O_CREAT, 0666);
     ASSERT(fd >= 0);
@@ -136,7 +136,7 @@ void test_ftruncate_negative()
     close(fd);
 }
 
-void test_mmap_directory()
+static void test_mmap_directory()
 {
     int fd = open("/tmp", O_RDONLY | O_DIRECTORY);
     ASSERT(fd >= 0);
@@ -152,7 +152,7 @@ void test_mmap_directory()
     close(fd);
 }
 
-void test_tmpfs_read_past_end()
+static void test_tmpfs_read_past_end()
 {
     int fd = open("/tmp/x", O_RDWR | O_CREAT | O_TRUNC, 0600);
     ASSERT(fd >= 0);
@@ -171,7 +171,7 @@ void test_tmpfs_read_past_end()
     close(fd);
 }
 
-void test_procfs_read_past_end()
+static void test_procfs_read_past_end()
 {
     int fd = open("/proc/uptime", O_RDONLY);
     ASSERT(fd >= 0);
@@ -187,7 +187,7 @@ void test_procfs_read_past_end()
     close(fd);
 }
 
-void test_open_create_device()
+static void test_open_create_device()
 {
     int fd = open("/tmp/fakedevice", (O_RDWR | O_CREAT), (S_IFCHR | 0600));
     ASSERT(fd >= 0);
@@ -205,7 +205,7 @@ void test_open_create_device()
     close(fd);
 }
 
-void test_unlink_symlink()
+static void test_unlink_symlink()
 {
     int rc = symlink("/proc/2/foo", "/tmp/linky");
     if (rc < 0) {
@@ -223,7 +223,7 @@ void test_unlink_symlink()
     }
 }
 
-void test_eoverflow()
+static void test_eoverflow()
 {
     int fd = open("/tmp/x", O_RDWR);
     ASSERT(fd >= 0);
@@ -243,7 +243,7 @@ void test_eoverflow()
     close(fd);
 }
 
-void test_rmdir_while_inside_dir()
+static void test_rmdir_while_inside_dir()
 {
     int rc = mkdir("/home/anon/testdir", 0700);
     ASSERT(rc == 0);
@@ -263,7 +263,7 @@ void test_rmdir_while_inside_dir()
     ASSERT(rc == 0);
 }
 
-void test_writev()
+static void test_writev()
 {
     int pipefds[2];
     pipe(pipefds);
@@ -294,7 +294,7 @@ void test_writev()
     close(pipefds[1]);
 }
 
-void test_rmdir_root()
+static void test_rmdir_root()
 {
     int rc = rmdir("/");
     if (rc != -1 || errno != EBUSY) {
@@ -303,7 +303,7 @@ void test_rmdir_root()
     }
 }
 
-int main(int, char**)
+int main()
 {
     int rc;
     EXPECT_ERROR_2(ENOTDIR, open, "/dev/zero", (O_DIRECTORY | O_RDONLY));

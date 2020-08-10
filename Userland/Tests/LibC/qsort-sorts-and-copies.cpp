@@ -37,7 +37,7 @@ struct SortableObject {
     int m_payload;
 };
 
-int compare_sortable_object(const void* a, const void* b)
+static int compare_sortable_object(const void* a, const void* b)
 {
     const int key1 = static_cast<const SortableObject*>(a)->m_key;
     const int key2 = static_cast<const SortableObject*>(b)->m_key;
@@ -50,13 +50,13 @@ int compare_sortable_object(const void* a, const void* b)
     }
 }
 
-int calc_payload_for_pos(size_t pos)
+static int calc_payload_for_pos(size_t pos)
 {
     pos *= 231;
     return pos ^ (pos << 8) ^ (pos << 16) ^ (pos << 24);
 }
 
-void shuffle_vec(Vector<SortableObject>& test_objects)
+static void shuffle_vec(Vector<SortableObject>& test_objects)
 {
     for (size_t i = 0; i < test_objects.size() * 3; ++i) {
         auto i1 = rand() % test_objects.size();

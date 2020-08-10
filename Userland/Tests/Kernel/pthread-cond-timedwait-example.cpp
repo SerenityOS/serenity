@@ -42,7 +42,7 @@ struct worker_t {
     long int wait_time;
 };
 
-void* run_worker(void* args)
+static void* run_worker(void* args)
 {
     struct timespec time_to_wait = { 0, 0 };
     worker_t* worker = (worker_t*)args;
@@ -65,7 +65,7 @@ void* run_worker(void* args)
     return nullptr;
 }
 
-void init_worker(worker_t* worker, const char* name, long int wait_time)
+static void init_worker(worker_t* worker, const char* name, long int wait_time)
 {
     worker->name = name;
     worker->wait_time = wait_time;

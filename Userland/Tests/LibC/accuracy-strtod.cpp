@@ -256,7 +256,7 @@ constexpr size_t NUM_TESTCASES = sizeof(TESTCASES) / sizeof(TESTCASES[0]);
 
 typedef double (*strtod_fn_t)(const char* str, char** endptr);
 
-long long cast_ll(double d)
+static long long cast_ll(double d)
 {
     union readable_t {
         double as_double;
@@ -273,7 +273,7 @@ long long cast_ll(double d)
     return readable.as_ll;
 }
 
-bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, const char* expect_hex, int expect_consume, long long expect_ll)
+static bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, const char* expect_hex, int expect_consume, long long expect_ll)
 {
     union readable_t {
         double as_double;
@@ -324,7 +324,7 @@ bool is_strtod_close(strtod_fn_t strtod_fn, const char* test_string, const char*
     return !(wrong_hex || error_cns || wrong_cns);
 }
 
-long long hex_to_ll(const char* hex)
+static long long hex_to_ll(const char* hex)
 {
     long long result = 0;
     for (int i = 0; i < 16; ++i) {
