@@ -123,6 +123,7 @@ void for_each_allocator(Callback callback)
     callback(s_slab_allocator_16);
     callback(s_slab_allocator_32);
     callback(s_slab_allocator_64);
+    callback(s_slab_allocator_128);
 }
 
 void slab_alloc_init()
