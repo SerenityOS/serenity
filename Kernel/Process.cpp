@@ -273,10 +273,6 @@ void Process::kill_threads_except_self()
         // At this point, we have no joiner anymore
         thread.m_joiner = nullptr;
         thread.set_should_die();
-
-        if (thread.state() != Thread::State::Dead)
-            thread.set_state(Thread::State::Dying);
-
         return IterationDecision::Continue;
     });
 

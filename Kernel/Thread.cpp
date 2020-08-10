@@ -117,17 +117,11 @@ void Thread::unblock()
     ASSERT(m_lock.own_lock());
     m_blocker = nullptr;
     if (Thread::current() == this) {
-        if (m_should_die)
-            set_state(Thread::Dying);
-        else
-            set_state(Thread::Running);
+        set_state(Thread::Running);
         return;
     }
     ASSERT(m_state != Thread::Runnable && m_state != Thread::Running);
-    if (m_should_die)
-        set_state(Thread::Dying);
-    else
-        set_state(Thread::Runnable);
+    set_state(Thread::Runnable);
 }
 
 void Thread::set_should_die()
@@ -150,12 +144,6 @@ void Thread::set_should_die()
         // We're blocked in the kernel.
         m_blocker->set_interrupted_by_death();
         unblock();
-    } else {
-        // We're executing in userspace (and we're clearly
-        // not the current thread). No need to unwind, so
-        // set the state to dying right away. This also
-        // makes sure we won't be scheduled anymore.
-        set_state(Thread::State::Dying);
     }
 }
 
@@ -169,7 +157,7 @@ void Thread::die_if_needed()
     unlock_process_if_locked();
 
     ScopedCritical critical;
-    set_state(Thread::State::Dying);
+    set_should_die();
 
     // Flag a context switch. Because we're in a critical section,
     // Scheduler::yield will actually only mark a pending scontext switch
@@ -715,13 +703,7 @@ void Thread::set_state(State new_state)
     }
 
     if (m_state == Dying) {
-        if (previous_state == Queued) {
-            // Holding the scheduler lock, we need to dequeue this thread
-            ASSERT(m_wait_queue != nullptr);
-            m_wait_queue->dequeue(*this);
-            m_wait_queue = nullptr;
-        }
-
+        ASSERT(previous_state != Queued);
         if (this != Thread::current() && is_finalizable()) {
             // Some other thread set this thread to Dying, notify the
             // finalizer right away as it can be cleaned up now
@@ -886,7 +868,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
 
                 return BlockResult::NotBlocked;
             }
-            current_thread->m_wait_queue = &queue;
 
             did_unlock = unlock_process_if_locked();
             if (lock)
@@ -923,6 +904,14 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // This looks counter productive, but we may not actually leave
         // the critical section we just restored. It depends on whether
         // we were in one while being called.
+        if (current_thread->should_die()) {
+            // We're being unblocked so that we can clean up. We shouldn't
+            // be in Dying state until we're about to return back to user mode
+            ASSERT(current_thread->state() == Thread::Running);
+#ifdef THREAD_DEBUG
+            dbg() << "Dying thread " << *current_thread << " was unblocked";
+#endif
+        }
     }
 
     BlockResult result(BlockResult::WokeNormally);
@@ -930,10 +919,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // To be able to look at m_wait_queue_node we once again need the
         // scheduler lock, which is held when we insert into the queue
         ScopedSpinLock sched_lock(g_scheduler_lock);
-
-        // m_wait_queue should have been cleared either by the timeout
-        // or by being woken
-        ASSERT(m_wait_queue == nullptr);
 
         // If our thread was still in the queue, we timed out
         if (queue.dequeue(*current_thread))
@@ -955,7 +940,6 @@ void Thread::wake_from_queue()
     ScopedSpinLock lock(g_scheduler_lock);
     ASSERT(state() == State::Queued);
     m_wait_reason = nullptr;
-    m_wait_queue = nullptr;
     if (this != Thread::current())
         set_state(State::Runnable);
     else
