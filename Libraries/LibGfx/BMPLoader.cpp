@@ -186,12 +186,12 @@ RefPtr<Gfx::Bitmap> load_bmp(const StringView& path)
     return bitmap;
 }
 
-const LogStream& operator<<(const LogStream& out, Endpoint<i32> ep)
+static const LogStream& operator<<(const LogStream& out, Endpoint<i32> ep)
 {
     return out << "(" << ep.x << ", " << ep.y << ", " << ep.z << ")";
 }
 
-const LogStream& operator<<(const LogStream& out, Endpoint<u32> ep)
+static const LogStream& operator<<(const LogStream& out, Endpoint<u32> ep)
 {
     return out << "(" << ep.x << ", " << ep.y << ", " << ep.z << ")";
 }
@@ -254,7 +254,7 @@ private:
 };
 
 // Lookup table for distributing all possible 2-bit numbers evenly into 8-bit numbers
-u8 scaling_factors_2bit[4] = {
+static u8 scaling_factors_2bit[4] = {
     0x00,
     0x55,
     0xaa,
@@ -262,7 +262,7 @@ u8 scaling_factors_2bit[4] = {
 };
 
 // Lookup table for distributing all possible 3-bit numbers evenly into 8-bit numbers
-u8 scaling_factors_3bit[8] = {
+static u8 scaling_factors_3bit[8] = {
     0x00,
     0x24,
     0x48,
@@ -273,7 +273,7 @@ u8 scaling_factors_3bit[8] = {
     0xff,
 };
 
-u8 scale_masked_8bit_number(u8 number, u8 bits_set)
+static u8 scale_masked_8bit_number(u8 number, u8 bits_set)
 {
     // If there are more than 4 bit set, an easy way to scale the number is to
     // just copy the most significant bits into the least significant bits
@@ -288,7 +288,7 @@ u8 scale_masked_8bit_number(u8 number, u8 bits_set)
     return scaling_factors_3bit[number >> 5];
 }
 
-u8 get_scaled_color(u32 data, u8 mask_size, i8 mask_shift)
+static u8 get_scaled_color(u32 data, u8 mask_size, i8 mask_shift)
 {
     // A negative mask_shift indicates we actually need to left shift
     // the result in order to get out a valid 8-bit color (for example, the blue
@@ -307,7 +307,7 @@ u8 get_scaled_color(u32 data, u8 mask_size, i8 mask_shift)
 //   consider, as an example, a 5 bit number (so the bottom 3 bits are ignored).
 //   The purest white you could get is 0xf8, which is 248 in RGB-land. We need
 //   to scale the values in order to reach the proper value of 255.
-u32 int_to_scaled_rgb(BMPLoadingContext& context, u32 data)
+static u32 int_to_scaled_rgb(BMPLoadingContext& context, u32 data)
 {
     u8 r = get_scaled_color(data & context.dib.info.masks[0], context.dib.info.mask_sizes[0], context.dib.info.mask_shifts[0]);
     u8 g = get_scaled_color(data & context.dib.info.masks[1], context.dib.info.mask_sizes[1], context.dib.info.mask_shifts[1]);
@@ -325,7 +325,7 @@ u32 int_to_scaled_rgb(BMPLoadingContext& context, u32 data)
     return color;
 }
 
-void populate_dib_mask_info(BMPLoadingContext& context)
+static void populate_dib_mask_info(BMPLoadingContext& context)
 {
     if (context.dib.info.masks.is_empty())
         return;
@@ -592,7 +592,7 @@ static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, 
     return true;
 }
 
-ALWAYS_INLINE bool is_supported_compression_format(BMPLoadingContext& context, u8 compression)
+ALWAYS_INLINE static bool is_supported_compression_format(BMPLoadingContext& context, u8 compression)
 {
     return compression == Compression::RGB || compression == Compression::BITFIELDS
         || compression == Compression::ALPHABITFIELDS || compression == Compression::RLE8
