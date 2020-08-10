@@ -144,17 +144,17 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 
 Gfx::IntRect WindowFrame::title_bar_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_rect(m_window.type() == WindowType::Notification ? Gfx::WindowTheme::WindowType::Notification : Gfx::WindowTheme::WindowType::Normal, m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().title_bar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::IntRect WindowFrame::title_bar_icon_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_icon_rect(m_window.type() == WindowType::Notification ? Gfx::WindowTheme::WindowType::Notification : Gfx::WindowTheme::WindowType::Normal, m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().title_bar_icon_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::IntRect WindowFrame::title_bar_text_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_text_rect(m_window.type() == WindowType::Notification ? Gfx::WindowTheme::WindowType::Notification : Gfx::WindowTheme::WindowType::Normal, m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().title_bar_text_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
