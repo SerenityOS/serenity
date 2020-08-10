@@ -35,7 +35,7 @@
 
 bool g_there_was_an_error = false;
 
-[[noreturn]] void fatal_error(const char* format, ...)
+[[noreturn]] static void fatal_error(const char* format, ...)
 {
     fputs("\033[31m", stderr);
 
@@ -334,14 +334,14 @@ private:
     Mode m_mode { Same };
 };
 
-OwnPtr<Condition> parse_complex_expression(char* argv[]);
+static OwnPtr<Condition> parse_complex_expression(char* argv[]);
 
 static bool should_treat_expression_as_single_string(const StringView& arg_after)
 {
     return arg_after.is_null() || arg_after == "-a" || arg_after == "-o";
 }
 
-OwnPtr<Condition> parse_simple_expression(char* argv[])
+static OwnPtr<Condition> parse_simple_expression(char* argv[])
 {
     StringView arg = argv[optind];
     if (arg.is_null()) {
@@ -468,7 +468,7 @@ OwnPtr<Condition> parse_simple_expression(char* argv[])
     }
 }
 
-OwnPtr<Condition> parse_complex_expression(char* argv[])
+static OwnPtr<Condition> parse_complex_expression(char* argv[])
 {
     auto command = parse_simple_expression(argv);
 

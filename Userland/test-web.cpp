@@ -24,11 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/URL.h>
 #include <AK/Function.h>
-#include <AK/JsonValue.h>
 #include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/QuickSort.h>
+#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -42,9 +42,9 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
-#include <LibWeb/PageView.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/PageView.h>
 #include <sys/time.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
@@ -164,12 +164,12 @@ private:
     RefPtr<JS::Program> m_web_test_common;
 };
 
-double get_time_in_ms()
+static double get_time_in_ms()
 {
     struct timeval tv1;
     struct timezone tz1;
     auto return_code = gettimeofday(&tv1, &tz1);
-        ASSERT(return_code >= 0);
+    ASSERT(return_code >= 0);
     return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
 }
 
@@ -188,7 +188,7 @@ void iterate_directory_recursively(const String& directory_path, Callback callba
     }
 }
 
-Vector<String> get_test_paths(const String& test_root)
+static Vector<String> get_test_paths(const String& test_root)
 {
     Vector<String> paths;
 
@@ -202,7 +202,8 @@ Vector<String> get_test_paths(const String& test_root)
     return paths;
 }
 
-void TestRunner::run() {
+void TestRunner::run()
+{
     size_t progress_counter = 0;
     auto test_paths = get_test_paths(m_web_test_root);
 
@@ -228,8 +229,7 @@ void TestRunner::run() {
             [page_to_load](auto error) {
                 printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
                 exit(1);
-            }
-        );
+            });
     };
 
     for (auto& path : test_paths) {
@@ -247,7 +247,7 @@ void TestRunner::run() {
     print_test_results();
 }
 
-Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
+static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
 {
     auto file = Core::File::construct(file_path);
     auto result = file->open(Core::IODevice::ReadOnly);
@@ -271,7 +271,7 @@ Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_pa
     return Result<NonnullRefPtr<JS::Program>, ParserError>(program);
 }
 
-Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
+static Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
     auto result = interpreter.get_variable("__TestResults__", interpreter.global_object());
     auto json_string = JS::JSONObject::stringify_impl(interpreter, interpreter.global_object(), result, JS::js_undefined(), JS::js_undefined());
@@ -333,8 +333,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             new_interpreter.global_object().define_property(
                 "libweb_tester",
                 new_interpreter.heap().allocate<TestRunnerObject>(new_interpreter.global_object(), new_interpreter.global_object()),
-                JS::Attribute::Enumerable | JS::Attribute::Configurable
-            );
+                JS::Attribute::Enumerable | JS::Attribute::Configurable);
             new_interpreter.run(new_interpreter.global_object(), *m_js_test_common);
             new_interpreter.run(new_interpreter.global_object(), *m_web_test_common);
             new_interpreter.run(new_interpreter.global_object(), *file_program.value());
@@ -416,8 +415,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         [page_to_load](auto error) {
             printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
             exit(1);
-        }
-    );
+        });
 
     return file_result;
 }
@@ -435,7 +433,7 @@ enum Modifier {
     CLEAR,
 };
 
-void print_modifiers(Vector<Modifier> modifiers)
+static void print_modifiers(Vector<Modifier> modifiers)
 {
     for (auto& modifier : modifiers) {
         auto code = [&]() -> String {
