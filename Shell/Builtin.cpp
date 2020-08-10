@@ -33,52 +33,119 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#define DISALLOW_REWIRING(rewirings, name)                               \
+    if (!rewirings.is_empty()) {                                         \
+        fprintf(stderr, "Shell: Rewiring `" #name "' is not allowed\n"); \
+        return 126;                                                      \
+    }
+
 extern char** environ;
 extern RefPtr<Line::Editor> editor;
 
-int Shell::builtin_alias(int argc, const char** argv)
+static Vector<const char*> to_argv(const AST::Command& command)
 {
+    Vector<const char*> argv;
+    for (auto& arg : command.argv)
+        argv.append(arg.characters());
+    argv.append(nullptr);
+    return argv;
+}
+
+static int fork_and_resolve(const NonnullRefPtrVector<AST::Rewiring>& rewirings, Function<int()> action)
+{
+    if (rewirings.is_empty())
+        return action();
+
+    auto pid = fork();
+    if (pid == 0) {
+        for (auto& rewiring : rewirings) {
+#ifdef SH_DEBUG
+            dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), rewiring.dest_fd, rewiring.source_fd);
+#endif
+            int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
+            if (rc < 0) {
+                perror("dup2(run)");
+                exit(126);
+            }
+        }
+
+        int retval = action();
+
+        exit(retval);
+    }
+
+    int wstatus = 0;
+    auto child_pid = waitpid(pid, &wstatus, 0);
+    if (child_pid < 0) {
+        perror("waitpid");
+        return 126;
+    }
+
+    ASSERT(WIFEXITED(wstatus));
+
+    return WEXITSTATUS(wstatus);
+}
+
+int Shell::builtin_alias(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
+{
+    const Vector<const char*> argv = to_argv(command);
     Vector<const char*> arguments;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(arguments, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argv.size() - 1, const_cast<char**>(argv.data()), false))
         return 1;
 
     if (arguments.is_empty()) {
-        for (auto& alias : m_aliases)
-            printf("%s=%s\n", escape_token(alias.key).characters(), escape_token(alias.value).characters());
-        return 0;
+        fork_and_resolve(rewirings, [&]() -> int {
+            for (auto& alias : m_aliases)
+                printf("%s=%s\n", escape_token(alias.key).characters(), escape_token(alias.value).characters());
+            return 0;
+        });
     }
 
-    bool fail = false;
-    for (auto& argument : arguments) {
-        auto parts = String { argument }.split_limit('=', 2, true);
-        if (parts.size() == 1) {
-            auto alias = m_aliases.get(parts[0]);
-            if (alias.has_value()) {
-                printf("%s=%s\n", escape_token(parts[0]).characters(), escape_token(alias.value()).characters());
-            } else {
-                fail = true;
+    auto evaluate_arguments = [&](bool in_fork) {
+        bool fail = false;
+        for (auto& argument : arguments) {
+            auto parts = String { argument }.split_limit('=', 2, true);
+            if (parts.size() == 1) {
+                auto alias = m_aliases.get(parts[0]);
+                if (alias.has_value()) {
+                    if (in_fork) {
+                        printf("%s=%s\n", escape_token(parts[0]).characters(), escape_token(alias.value()).characters());
+                    }
+                } else {
+                    fail = true;
+                }
+            } else if (!in_fork) {
+                m_aliases.set(parts[0], parts[1]);
+                add_entry_to_cache(parts[0]);
             }
-        } else {
-            m_aliases.set(parts[0], parts[1]);
-            add_entry_to_cache(parts[0]);
         }
-    }
 
-    return fail ? 1 : 0;
+        return fail ? 1 : 0;
+    };
+
+    auto retval = evaluate_arguments(false);
+    retval += fork_and_resolve(rewirings, [&]() { return evaluate_arguments(true); });
+
+    return retval;
 }
 
-int Shell::builtin_bg(int argc, const char** argv)
+int Shell::builtin_bg(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, bg);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     int job_id = -1;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(job_id, "Job ID to run in background", "job-id", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     if (job_id == -1 && !jobs.is_empty())
@@ -109,14 +176,19 @@ int Shell::builtin_bg(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_cd(int argc, const char** argv)
+int Shell::builtin_cd(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, cd);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     const char* arg_path = nullptr;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     String new_path;
@@ -166,25 +238,30 @@ int Shell::builtin_cd(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_cdh(int argc, const char** argv)
+int Shell::builtin_cdh(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     int index = -1;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(index, "Index of the cd history entry (leave out for a list)", "index", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     if (index == -1) {
-        if (cd_history.is_empty()) {
-            fprintf(stderr, "cdh: no history available\n");
-            return 0;
-        }
+        return fork_and_resolve(rewirings, [&]() -> int {
+            if (cd_history.is_empty()) {
+                fprintf(stderr, "cdh: no history available\n");
+                return 0;
+            }
 
-        for (ssize_t i = cd_history.size() - 1; i >= 0; --i)
-            printf("%lu: %s\n", cd_history.size() - i, cd_history.at(i).characters());
-        return 0;
+            for (ssize_t i = cd_history.size() - 1; i >= 0; --i)
+                printf("%lu: %s\n", cd_history.size() - i, cd_history.at(i).characters());
+            return 0;
+        });
     }
 
     if (index < 1 || (size_t)index > cd_history.size()) {
@@ -192,13 +269,19 @@ int Shell::builtin_cdh(int argc, const char** argv)
         return 1;
     }
 
-    const char* path = cd_history.at(cd_history.size() - index).characters();
-    const char* cd_args[] = { "cd", path, nullptr };
-    return Shell::builtin_cd(2, cd_args);
+    const auto& path = cd_history.at(cd_history.size() - index);
+    const Vector<String> cd_args { "cd", path };
+    AST::Command cd_command = command;
+    cd_command.argv = cd_args;
+
+    return Shell::builtin_cd(cd_command, rewirings);
 }
 
-int Shell::builtin_dirs(int argc, const char** argv)
+int Shell::builtin_dirs(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     // The first directory in the stack is ALWAYS the current directory
     directory_stack.at(0) = cwd.characters();
 
@@ -215,7 +298,7 @@ int Shell::builtin_dirs(int argc, const char** argv)
     parser.add_option(number_when_printing, "Number the directories in the stack when printing", "number", 'v');
     parser.add_positional_argument(paths, "Extra paths to put on the stack", "path", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     // -v implies -p
@@ -238,24 +321,33 @@ int Shell::builtin_dirs(int argc, const char** argv)
         directory_stack.append(path);
 
     if (print || (!clear && paths.is_empty())) {
-        int index = 0;
-        for (auto& directory : directory_stack) {
-            if (number_when_printing)
-                printf("%d ", index++);
-            print_path(directory);
-            fputc(separator, stdout);
-        }
+        fork_and_resolve(rewirings, [&]() -> int {
+            int index = 0;
+            for (auto& directory : directory_stack) {
+                if (number_when_printing)
+                    printf("%d ", index++);
+                print_path(directory);
+                fputc(separator, stdout);
+            }
+
+            return 0;
+        });
     }
 
     return 0;
 }
 
-int Shell::builtin_exit(int argc, const char** argv)
+int Shell::builtin_exit(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, exit);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     int exit_code = 0;
     Core::ArgsParser parser;
     parser.add_positional_argument(exit_code, "Exit code", "code", Core::ArgsParser::Required::No);
-    if (!parser.parse(argc, const_cast<char**>(argv)))
+    if (!parser.parse(argc, const_cast<char**>(argv.data())))
         return 1;
 
     if (!jobs.is_empty()) {
@@ -273,19 +365,26 @@ int Shell::builtin_exit(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_export(int argc, const char** argv)
+int Shell::builtin_export(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     Vector<const char*> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     if (vars.is_empty()) {
-        for (size_t i = 0; environ[i]; ++i)
-            puts(environ[i]);
+        fork_and_resolve(rewirings, []() -> int {
+            for (size_t i = 0; environ[i]; ++i)
+                puts(environ[i]);
+
+            return 0;
+        });
         return 0;
     }
 
@@ -319,14 +418,19 @@ int Shell::builtin_export(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_fg(int argc, const char** argv)
+int Shell::builtin_fg(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, fd);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     int job_id = -1;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(job_id, "Job ID to bring to foreground", "job-id", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     if (job_id == -1 && !jobs.is_empty())
@@ -362,14 +466,19 @@ int Shell::builtin_fg(int argc, const char** argv)
     return job->exit_code();
 }
 
-int Shell::builtin_disown(int argc, const char** argv)
+int Shell::builtin_disown(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, disown);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     Vector<const char*> str_job_ids;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(str_job_ids, "Id of the jobs to disown (omit for current job)", "job_ids", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     Vector<size_t> job_ids;
@@ -413,23 +522,30 @@ int Shell::builtin_disown(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_history(int, const char**)
+int Shell::builtin_history(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
-    for (size_t i = 0; i < editor->history().size(); ++i) {
-        printf("%6zu  %s\n", i, editor->history()[i].characters());
-    }
+    fork_and_resolve(rewirings, [&]() -> int {
+        for (size_t i = 0; i < editor->history().size(); ++i) {
+            printf("%6zu  %s\n", i, editor->history()[i].characters());
+        }
+
+        return 0;
+    });
     return 0;
 }
 
-int Shell::builtin_jobs(int argc, const char** argv)
+int Shell::builtin_jobs(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     bool list = false, show_pid = false;
 
     Core::ArgsParser parser;
     parser.add_option(list, "List all information about jobs", "list", 'l');
     parser.add_option(show_pid, "Display the PID of the jobs", "pid", 'p');
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     Job::PrintStatusMode mode = Job::PrintStatusMode::Basic;
@@ -440,16 +556,23 @@ int Shell::builtin_jobs(int argc, const char** argv)
     if (list)
         mode = Job::PrintStatusMode::ListAll;
 
-    for (auto& it : jobs) {
-        if (!it.value->print_status(mode))
-            return 1;
-    }
+    return fork_and_resolve(rewirings, [&]() -> int {
+        for (auto& it : jobs) {
+            if (!it.value->print_status(mode))
+                return 1;
+        }
 
-    return 0;
+        return 0;
+    });
 }
 
-int Shell::builtin_popd(int argc, const char** argv)
+int Shell::builtin_popd(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, popd);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     if (directory_stack.size() <= 1) {
         fprintf(stderr, "Shell: popd: directory stack empty\n");
         return 1;
@@ -461,7 +584,7 @@ int Shell::builtin_popd(int argc, const char** argv)
     Core::ArgsParser parser;
     parser.add_option(should_not_switch, "Do not switch dirs", "no-switch", 'n');
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     bool should_switch = !should_not_switch;
@@ -511,8 +634,13 @@ int Shell::builtin_popd(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_pushd(int argc, const char** argv)
+int Shell::builtin_pushd(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, pushd);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     StringBuilder path_builder;
     bool should_switch = true;
 
@@ -550,7 +678,7 @@ int Shell::builtin_pushd(int argc, const char** argv)
         }
     } else if (argc == 3) {
         directory_stack.append(cwd.characters());
-        for (int i = 1; i < argc; i++) {
+        for (int i = 1; i < (int)argc; i++) {
             const char* arg = argv[i];
 
             if (arg[0] != '-') {
@@ -598,15 +726,23 @@ int Shell::builtin_pushd(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_pwd(int, const char**)
+int Shell::builtin_pwd(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
-    print_path(cwd);
-    fputc('\n', stdout);
-    return 0;
+    return fork_and_resolve(rewirings, [&]() -> int {
+        print_path(cwd);
+        fputc('\n', stdout);
+
+        return 0;
+    });
 }
 
-int Shell::builtin_setopt(int argc, const char** argv)
+int Shell::builtin_setopt(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, setopt);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     if (argc == 1) {
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
     if (options.name)                                         \
@@ -628,7 +764,7 @@ int Shell::builtin_setopt(int argc, const char** argv)
 
 #undef __ENUMERATE_SHELL_OPTION
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
@@ -644,14 +780,19 @@ int Shell::builtin_setopt(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_shift(int argc, const char** argv)
+int Shell::builtin_shift(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, shift);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     int count = 1;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     if (count < 1)
@@ -678,21 +819,32 @@ int Shell::builtin_shift(int argc, const char** argv)
     return 0;
 }
 
-int Shell::builtin_time(int argc, const char** argv)
+int Shell::builtin_time(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     Vector<const char*> args;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
-    AST::Command command;
+    AST::Command exec_command;
     for (auto& arg : args)
-        command.argv.append(arg);
+        exec_command.argv.append(arg);
 
-    auto commands = expand_aliases({ move(command) });
+    NonnullRefPtrVector<AST::Redirection> redirs;
+    for (auto& rewiring : rewirings)
+        redirs.append(adopt(*new AST::FdRedirection(rewiring.source_fd, rewiring.dest_fd, rewiring.other_pipe_end, rewiring.fd_action)));
+    exec_command.redirections = redirs;
+    exec_command.should_wait = command.should_wait;
+    exec_command.is_pipe_source = command.is_pipe_source;
+    exec_command.should_notify_if_in_background = command.should_notify_if_in_background;
+
+    auto commands = expand_aliases({ move(exec_command) });
 
     Core::ElapsedTimer timer;
     int exit_code = 1;
@@ -705,19 +857,25 @@ int Shell::builtin_time(int argc, const char** argv)
     return exit_code;
 }
 
-int Shell::builtin_umask(int argc, const char** argv)
+int Shell::builtin_umask(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     const char* mask_text = nullptr;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     if (!mask_text) {
         mode_t old_mask = umask(0);
-        printf("%#o\n", old_mask);
+        fork_and_resolve(rewirings, [&]() -> int {
+            printf("%#o\n", old_mask);
+            return 0;
+        });
         umask(old_mask);
         return 0;
     }
@@ -733,14 +891,19 @@ int Shell::builtin_umask(int argc, const char** argv)
     return 1;
 }
 
-int Shell::builtin_unset(int argc, const char** argv)
+int Shell::builtin_unset(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings)
 {
+    DISALLOW_REWIRING(rewirings, unset);
+
+    auto argv = to_argv(command);
+    auto argc = argv.size() - 1;
+
     Vector<const char*> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), false))
+    if (!parser.parse(argc, const_cast<char**>(argv.data()), false))
         return 1;
 
     for (auto& value : vars) {
@@ -754,17 +917,17 @@ int Shell::builtin_unset(int argc, const char** argv)
     return 0;
 }
 
-bool Shell::run_builtin(int argc, const char** argv, int& retval)
+bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings, int& retval)
 {
-    if (argc == 0)
+    if (command.argv.is_empty())
         return false;
 
-    StringView name { argv[0] };
+    const auto& name = command.argv.first();
 
-#define __ENUMERATE_SHELL_BUILTIN(builtin)      \
-    if (name == #builtin) {                     \
-        retval = builtin_##builtin(argc, argv); \
-        return true;                            \
+#define __ENUMERATE_SHELL_BUILTIN(builtin)              \
+    if (name == #builtin) {                             \
+        retval = builtin_##builtin(command, rewirings); \
+        return true;                                    \
     }
 
     ENUMERATE_SHELL_BUILTINS();

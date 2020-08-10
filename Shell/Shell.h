@@ -78,7 +78,7 @@ public:
     RefPtr<Job> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
     bool run_file(const String&, bool explicitly_invoked = true);
-    bool run_builtin(int argc, const char** argv, int& retval);
+    bool run_builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&, int& retval);
     bool has_builtin(const StringView&) const;
     void block_on_job(RefPtr<Job>);
     String prompt() const;
@@ -197,7 +197,7 @@ private:
     virtual void custom_event(Core::CustomEvent&) override;
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
-    int builtin_##builtin(int argc, const char** argv);
+    int builtin_##builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&);
 
     ENUMERATE_SHELL_BUILTINS();
 

@@ -499,6 +499,12 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             return nullptr;
     }
 
+    int retval = 0;
+    if (run_builtin(command, rewirings, retval)) {
+        last_return_code = retval;
+        return nullptr;
+    }
+
     Vector<const char*> argv;
     Vector<String> copy_argv = command.argv;
     argv.ensure_capacity(command.argv.size() + 1);
@@ -507,10 +513,6 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         argv.append(arg.characters());
 
     argv.append(nullptr);
-
-    int retval = 0;
-    if (run_builtin(argv.size() - 1, argv.data(), retval))
-        return nullptr;
 
     pid_t child = fork();
     if (child < 0) {
@@ -596,13 +598,13 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
         for (auto& arg : command.argv)
             dbg() << "argv: " << arg;
         for (auto& redir : command.redirections) {
-            if (redir->is_path_redirection()) {
-                auto path_redir = (const AST::PathRedirection*)redir.ptr();
+            if (redir.is_path_redirection()) {
+                auto path_redir = (const AST::PathRedirection*)&redir;
                 dbg() << "redir path " << (int)path_redir->direction << " " << path_redir->path << " <-> " << path_redir->fd;
-            } else if (redir->is_fd_redirection()) {
-                dbg() << "redir fd " << redir->source_fd << " -> " << redir->dest_fd;
-            } else if (redir->is_close_redirection()) {
-                auto close_redir = (const AST::CloseRedirection*)redir.ptr();
+            } else if (redir.is_fd_redirection()) {
+                // dbg() << "redir fd " << redir.source_fd << " -> " << redir.dest_fd;
+            } else if (redir.is_close_redirection()) {
+                auto close_redir = (const AST::CloseRedirection*)&redir;
                 dbg() << "close fd " << close_redir->fd;
             } else {
                 ASSERT_NOT_REACHED();
