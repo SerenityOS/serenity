@@ -45,7 +45,7 @@ Compositor& Compositor::the()
     return s_the;
 }
 
-WallpaperMode mode_to_enum(const String& name)
+static WallpaperMode mode_to_enum(const String& name)
 {
     if (name == "simple")
         return WallpaperMode::Simple;

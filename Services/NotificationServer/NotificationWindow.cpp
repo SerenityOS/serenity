@@ -29,8 +29,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/ImageWidget.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
@@ -40,7 +40,7 @@ namespace NotificationServer {
 
 static Vector<RefPtr<NotificationWindow>> s_windows;
 
-void update_notification_window_locations()
+static void update_notification_window_locations()
 {
     Gfx::IntRect last_window_rect;
     for (auto& window : s_windows) {
