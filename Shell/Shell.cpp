@@ -535,6 +535,10 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
                 perror("dup2(run)");
                 return nullptr;
             }
+            // dest_fd is closed via the `fds` collector, but rewiring.other_pipe_end->dest_fd
+            // isn't yet in that collector when the first child spawns.
+            if (rewiring.other_pipe_end && close(rewiring.other_pipe_end->dest_fd) < 0)
+                perror("close other pipe end");
         }
 
         fds.collect();
