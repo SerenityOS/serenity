@@ -28,7 +28,7 @@
 
 #include <AK/Stream.h>
 
-bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
+static bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
 {
     if (lhs.size() != rhs.size())
         return false;
