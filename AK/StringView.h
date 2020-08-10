@@ -158,6 +158,13 @@ public:
         return !(*this == other);
     }
 
+    bool operator<(const StringView& other) const
+    {
+        if (int c = __builtin_memcmp(m_characters, other.m_characters, min(m_length, other.m_length)))
+            return c < 0;
+        return m_length < other.m_length;
+    }
+
     const StringImpl* impl() const { return m_impl; }
 
     String to_string() const;
