@@ -25,14 +25,13 @@
  */
 
 #include "Locator.h"
+#include "HackStudio.h"
 #include "Project.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 
-extern RefPtr<Project> g_project;
-extern void open_file(const String&);
 static RefPtr<Gfx::Bitmap> s_file_icon;
 static RefPtr<Gfx::Bitmap> s_cplusplus_icon;
 static RefPtr<Gfx::Bitmap> s_header_icon;

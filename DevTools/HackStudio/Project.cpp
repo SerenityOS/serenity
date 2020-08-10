@@ -25,6 +25,7 @@
  */
 
 #include "Project.h"
+#include "HackStudio.h"
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
@@ -117,7 +118,6 @@ public:
             return m_project.m_file_icon;
         }
         if (role == Role::Font) {
-            extern String g_currently_open_file;
             if (node->name == g_currently_open_file)
                 return Gfx::Font::default_bold_font();
             return {};

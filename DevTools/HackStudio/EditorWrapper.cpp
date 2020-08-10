@@ -26,14 +26,12 @@
 
 #include "EditorWrapper.h"
 #include "Editor.h"
+#include "HackStudio.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGfx/Font.h>
-
-extern RefPtr<EditorWrapper> g_current_editor_wrapper;
-extern Function<void(String)> g_open_file;
 
 EditorWrapper::EditorWrapper(BreakpointChangeCallback breakpoint_change_callback)
 {
@@ -69,7 +67,7 @@ EditorWrapper::EditorWrapper(BreakpointChangeCallback breakpoint_change_callback
         g_current_editor_wrapper = this;
     };
 
-    m_editor->on_open = [this](String path) {
+    m_editor->on_open = [](String path) {
         g_open_file(path);
     };
 
