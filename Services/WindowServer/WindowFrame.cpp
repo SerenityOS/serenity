@@ -39,6 +39,18 @@
 
 namespace WindowServer {
 
+static Gfx::WindowTheme::WindowType to_theme_window_type(WindowType type)
+{
+    switch (type) {
+    case WindowType::Normal:
+        return Gfx::WindowTheme::WindowType::Normal;
+    case WindowType::Notification:
+        return Gfx::WindowTheme::WindowType::Notification;
+    default:
+        return Gfx::WindowTheme::WindowType::Other;
+    }
+}
+
 static Gfx::Bitmap* s_minimize_icon;
 static Gfx::Bitmap* s_maximize_icon;
 static Gfx::Bitmap* s_restore_icon;
@@ -207,28 +219,7 @@ static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& re
 {
     if (window.is_frameless())
         return rect;
-
-    auto type = window.type();
-    auto window_titlebar_height = WindowManager::the().palette().window_title_height();
-
-    switch (type) {
-    case WindowType::Normal:
-        return {
-            rect.x() - 4,
-            rect.y() - window_titlebar_height - 6,
-            rect.width() + 8,
-            rect.height() + 10 + window_titlebar_height
-        };
-    case WindowType::Notification:
-        return {
-            rect.x() - 3,
-            rect.y() - 3,
-            rect.width() + 6 + window_titlebar_height,
-            rect.height() + 6
-        };
-    default:
-        return rect;
-    }
+    return Gfx::WindowTheme::current().frame_rect_for_window(to_theme_window_type(window.type()), rect, WindowManager::the().palette());
 }
 
 static Gfx::IntRect frame_rect_for_window(Window& window)
