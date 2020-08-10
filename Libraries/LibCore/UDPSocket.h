@@ -36,7 +36,6 @@ public:
     virtual ~UDPSocket() override;
 
 private:
-    UDPSocket(int fd, Object* parent = nullptr);
     explicit UDPSocket(Object* parent = nullptr);
 };
 
