@@ -633,7 +633,7 @@ void TextEditor::move_selected_lines_down()
     update();
 }
 
-int strcmp_utf32(const u32* s1, const u32* s2, size_t n)
+static int strcmp_utf32(const u32* s1, const u32* s2, size_t n)
 {
     while (n-- > 0) {
         if (*s1++ != *s2++)
