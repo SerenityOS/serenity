@@ -31,7 +31,7 @@
 #include <string.h>
 #include <unistd.h>
 
-void usage(void)
+static void usage(void)
 {
     printf("usage: allocate [number [unit (B/KB/MB)]]\n");
     exit(1);

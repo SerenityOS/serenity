@@ -35,7 +35,7 @@
 #include <string.h>
 #include <unistd.h>
 
-int parse_options(const StringView& options)
+static int parse_options(const StringView& options)
 {
     int flags = 0;
     Vector<StringView> parts = options.split_view(',');
@@ -60,12 +60,12 @@ int parse_options(const StringView& options)
     return flags;
 }
 
-bool is_source_none(const char* source)
+static bool is_source_none(const char* source)
 {
     return !strcmp("none", source);
 }
 
-int get_source_fd(const char* source)
+static int get_source_fd(const char* source)
 {
     if (is_source_none(source))
         return -1;
@@ -81,7 +81,7 @@ int get_source_fd(const char* source)
     return fd;
 }
 
-bool mount_all()
+static bool mount_all()
 {
     // Mount all filesystems listed in /etc/fstab.
     dbg() << "Mounting all filesystems...";
@@ -139,7 +139,7 @@ bool mount_all()
     return all_ok;
 }
 
-bool print_mounts()
+static bool print_mounts()
 {
     // Output info about currently mounted filesystems.
     auto df = Core::File::construct("/proc/df");

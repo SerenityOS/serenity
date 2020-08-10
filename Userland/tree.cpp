@@ -41,7 +41,7 @@ static int max_depth = INT_MAX;
 static int g_directories_seen = 0;
 static int g_files_seen = 0;
 
-void print_directory_tree(const String& root_path, int depth, const String& indent_string)
+static void print_directory_tree(const String& root_path, int depth, const String& indent_string)
 {
     if (depth > 0) {
         String root_indent_string;

@@ -47,7 +47,7 @@
 #include <string.h>
 #include <unistd.h>
 
-OwnPtr<DebugSession> g_debug_session;
+static OwnPtr<DebugSession> g_debug_session;
 static bool g_should_output_color = false;
 
 static void handle_sigint(int)
@@ -58,7 +58,7 @@ static void handle_sigint(int)
     g_debug_session = nullptr;
 }
 
-void print_function_call(String function_name, size_t depth)
+static void print_function_call(String function_name, size_t depth)
 {
     for (size_t i = 0; i < depth; ++i) {
         printf("  ");
@@ -66,7 +66,7 @@ void print_function_call(String function_name, size_t depth)
     printf("=> %s\n", function_name.characters());
 }
 
-void print_syscall(PtraceRegisters& regs, size_t depth)
+static void print_syscall(PtraceRegisters& regs, size_t depth)
 {
     for (size_t i = 0; i < depth; ++i) {
         printf("  ");
@@ -83,7 +83,7 @@ void print_syscall(PtraceRegisters& regs, size_t depth)
         end_color);
 }
 
-NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
+static NonnullOwnPtr<HashMap<void*, X86::Instruction>> instrument_code()
 {
     (void)demangle("foo"); // Required for linked with __cxa_demangle
     auto instrumented = make<HashMap<void*, X86::Instruction>>();

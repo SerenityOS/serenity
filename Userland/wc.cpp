@@ -44,7 +44,7 @@ bool output_line = false;
 bool output_byte = false;
 bool output_word = false;
 
-void wc_out(Count& count)
+static void wc_out(Count& count)
 {
     if (output_line)
         printf("%7i ", count.lines);
@@ -56,7 +56,7 @@ void wc_out(Count& count)
     printf("%14s\n", count.name.characters());
 }
 
-Count get_count(const String& file_name)
+static Count get_count(const String& file_name)
 {
     Count count;
     FILE* file_pointer = nullptr;
@@ -86,7 +86,7 @@ Count get_count(const String& file_name)
     return count;
 }
 
-Count get_total_count(Vector<Count>& counts)
+static Count get_total_count(Vector<Count>& counts)
 {
     Count total_count { "total" };
     for (auto& count : counts) {

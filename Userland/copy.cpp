@@ -39,7 +39,7 @@ struct Options {
     StringView type;
 };
 
-Options parse_options(int argc, char* argv[])
+static Options parse_options(int argc, char* argv[])
 {
     const char* type = "text/plain";
     Vector<const char*> text;

@@ -33,7 +33,7 @@
 
 static const u8 central_directory_file_header_sig[] = "\x50\x4b\x01\x02";
 
-bool seek_and_read(u8* buffer, const MappedFile& file, off_t seek_to, size_t bytes_to_read)
+static bool seek_and_read(u8* buffer, const MappedFile& file, off_t seek_to, size_t bytes_to_read)
 {
     if (!buffer)
         return false;
@@ -46,7 +46,7 @@ bool seek_and_read(u8* buffer, const MappedFile& file, off_t seek_to, size_t byt
     return true;
 }
 
-bool find_next_central_directory(off_t file_size, const MappedFile& file, off_t current_index, off_t& return_index)
+static bool find_next_central_directory(off_t file_size, const MappedFile& file, off_t current_index, off_t& return_index)
 {
     off_t start_index = current_index == 0 ? current_index : current_index + 1;
     for (off_t index = start_index; index < file_size - 4; index++) {
@@ -62,7 +62,7 @@ bool find_next_central_directory(off_t file_size, const MappedFile& file, off_t 
     return false;
 }
 
-bool unpack_file_for_central_directory_index(off_t central_directory_index, const MappedFile& file)
+static bool unpack_file_for_central_directory_index(off_t central_directory_index, const MappedFile& file)
 {
     enum CentralFileDirectoryHeaderOffsets {
         CFDHCompressionMethodOffset = 10,

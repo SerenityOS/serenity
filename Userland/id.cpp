@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     return status;
 }
 
-bool print_uid_object(uid_t uid)
+static bool print_uid_object(uid_t uid)
 {
     if (flag_print_name) {
         struct passwd* pw = getpwuid(uid);
@@ -92,7 +92,7 @@ bool print_uid_object(uid_t uid)
     return true;
 }
 
-bool print_gid_object(gid_t gid)
+static bool print_gid_object(gid_t gid)
 {
     if (flag_print_name) {
         struct group* gr = getgrgid(gid);
@@ -102,7 +102,7 @@ bool print_gid_object(gid_t gid)
     return true;
 }
 
-bool print_gid_list()
+static bool print_gid_list()
 {
     int extra_gid_count = getgroups(0, nullptr);
     if (extra_gid_count) {
@@ -127,7 +127,7 @@ bool print_gid_list()
     return true;
 }
 
-bool print_full_id_list()
+static bool print_full_id_list()
 {
 
     uid_t uid = getuid();
@@ -159,7 +159,7 @@ bool print_full_id_list()
     return true;
 }
 
-int print_id_objects()
+static int print_id_objects()
 {
     if (flag_print_uid) {
         if (!print_uid_object(getuid()))

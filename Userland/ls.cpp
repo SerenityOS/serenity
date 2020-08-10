@@ -137,7 +137,7 @@ int main(int argc, char** argv)
     return status;
 }
 
-int print_escaped(const char* name)
+static int print_escaped(const char* name)
 {
     int printed = 0;
 
@@ -172,7 +172,7 @@ static String& hostname()
     return s_hostname;
 }
 
-size_t print_name(const struct stat& st, const String& name, const char* path_for_link_resolution, const char* path_for_hyperlink)
+static size_t print_name(const struct stat& st, const String& name, const char* path_for_link_resolution, const char* path_for_hyperlink)
 {
     if (!flag_disable_hyperlinks) {
         if (auto* full_path = realpath(path_for_hyperlink, nullptr)) {
@@ -250,7 +250,7 @@ static String human_readable_size(size_t size)
     return number_string_with_one_decimal((float)size / (float)GB, "G");
 }
 
-bool print_filesystem_object(const String& path, const String& name, const struct stat& st)
+static bool print_filesystem_object(const String& path, const String& name, const struct stat& st)
 {
     if (flag_show_inode)
         printf("%08u ", st.st_ino);
@@ -318,7 +318,7 @@ bool print_filesystem_object(const String& path, const String& name, const struc
     return true;
 }
 
-int do_file_system_object_long(const char* path)
+static int do_file_system_object_long(const char* path)
 {
     Core::DirIterator di(path, !flag_show_dotfiles ? Core::DirIterator::SkipDots : Core::DirIterator::Flags::NoFlags);
     if (di.has_error()) {
@@ -383,7 +383,7 @@ int do_file_system_object_long(const char* path)
     return 0;
 }
 
-bool print_filesystem_object_short(const char* path, const char* name, size_t* nprinted)
+static bool print_filesystem_object_short(const char* path, const char* name, size_t* nprinted)
 {
     struct stat st;
     int rc = lstat(path, &st);

@@ -82,7 +82,7 @@ static String prompt_for_level(int level)
     return prompt_builder.build();
 }
 
-String read_next_piece()
+static String read_next_piece()
 {
     StringBuilder piece;
 
@@ -234,7 +234,7 @@ static void print_regexp(const JS::Object& object, HashTable<JS::Object*>&)
     printf("\033[34;1m/%s/%s\033[0m", regexp.content().characters(), regexp.flags().characters());
 }
 
-void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
+static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
     if (value.is_empty()) {
         printf("\033[34;1m<empty>\033[0m");
@@ -292,14 +292,14 @@ static void print(JS::Value value)
     putchar('\n');
 }
 
-bool file_has_shebang(AK::ByteBuffer file_contents)
+static bool file_has_shebang(AK::ByteBuffer file_contents)
 {
     if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!')
         return true;
     return false;
 }
 
-StringView strip_shebang(AK::ByteBuffer file_contents)
+static StringView strip_shebang(AK::ByteBuffer file_contents)
 {
     size_t i = 0;
     for (i = 2; i < file_contents.size(); ++i) {
@@ -309,7 +309,7 @@ StringView strip_shebang(AK::ByteBuffer file_contents)
     return StringView((const char*)file_contents.data() + i, file_contents.size() - i);
 }
 
-bool write_to_file(const StringView& path)
+static bool write_to_file(const StringView& path)
 {
     int fd = open_with_path_length(path.characters_without_null_termination(), path.length(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     for (size_t i = 0; i < repl_statements.size(); i++) {
@@ -335,7 +335,7 @@ bool write_to_file(const StringView& path)
     return true;
 }
 
-bool parse_and_run(JS::Interpreter& interpreter, const StringView& source)
+static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source)
 {
     auto parser = JS::Parser(JS::Lexer(source));
     auto program = parser.parse_program();
@@ -443,7 +443,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
     return JS::Value(true);
 }
 
-void repl(JS::Interpreter& interpreter)
+static void repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
         String piece = read_next_piece();
@@ -455,7 +455,7 @@ void repl(JS::Interpreter& interpreter)
 }
 
 static Function<void()> interrupt_interpreter;
-void sigint_handler()
+static void sigint_handler()
 {
     interrupt_interpreter();
 }

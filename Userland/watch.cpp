@@ -42,7 +42,7 @@ static bool flag_beep_on_fail = false;
 static volatile int exit_code = 0;
 static volatile pid_t child_pid = -1;
 
-String build_header_string(const Vector<const char*>& command, const struct timeval& interval)
+static String build_header_string(const Vector<const char*>& command, const struct timeval& interval)
 {
     StringBuilder builder;
     builder.appendf("Every %d", interval.tv_sec);
@@ -52,7 +52,7 @@ String build_header_string(const Vector<const char*>& command, const struct time
     return builder.build();
 }
 
-struct timeval get_current_time()
+static struct timeval get_current_time()
 {
     struct timespec ts;
     struct timeval tv;
@@ -61,14 +61,14 @@ struct timeval get_current_time()
     return tv;
 }
 
-int64_t usecs_from(const struct timeval& start, const struct timeval& end)
+static int64_t usecs_from(const struct timeval& start, const struct timeval& end)
 {
     struct timeval diff;
     timeval_sub(end, start, diff);
     return 1000000 * diff.tv_sec + diff.tv_usec;
 }
 
-void handle_signal(int signal)
+static void handle_signal(int signal)
 {
     if (child_pid > 0) {
         if (kill(child_pid, signal) < 0) {
@@ -84,7 +84,7 @@ void handle_signal(int signal)
     exit(exit_code);
 }
 
-int run_command(const Vector<const char*>& command)
+static int run_command(const Vector<const char*>& command)
 {
     if ((errno = posix_spawnp(const_cast<pid_t*>(&child_pid), command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
         exit_code = 1;
@@ -92,23 +92,23 @@ int run_command(const Vector<const char*>& command)
         return errno;
     }
 
-   // Wait for the child to terminate, then return its exit code.
-   int status;
-   pid_t exited_pid;
-   do {
-       exited_pid = waitpid(child_pid, &status, 0);
-   } while (exited_pid < 0 && errno == EINTR);
-   ASSERT(exited_pid == child_pid);
-   child_pid = -1;
-   if (exited_pid < 0) {
-       perror("waitpid");
-       return 1;
-   }
-   if (WIFEXITED(status)) {
-       return WEXITSTATUS(status);
-   } else {
-       return 1;
-   }
+    // Wait for the child to terminate, then return its exit code.
+    int status;
+    pid_t exited_pid;
+    do {
+        exited_pid = waitpid(child_pid, &status, 0);
+    } while (exited_pid < 0 && errno == EINTR);
+    ASSERT(exited_pid == child_pid);
+    child_pid = -1;
+    if (exited_pid < 0) {
+        perror("waitpid");
+        return 1;
+    }
+    if (WIFEXITED(status)) {
+        return WEXITSTATUS(status);
+    } else {
+        return 1;
+    }
 }
 
 int main(int argc, char** argv)
