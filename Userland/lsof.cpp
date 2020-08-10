@@ -42,7 +42,7 @@ struct OpenFile {
     String name;
 };
 
-Vector<OpenFile> get_open_files_by_pid(pid_t pid)
+static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
 {
     auto file = Core::File::open(String::format("/proc/%d/fds", pid), Core::IODevice::OpenMode::ReadOnly);
     if (file.is_error()) {
@@ -69,7 +69,7 @@ Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     return files;
 }
 
-void display_entry(const OpenFile& file, const Core::ProcessStatistics& statistics)
+static void display_entry(const OpenFile& file, const Core::ProcessStatistics& statistics)
 {
     printf("%-28s %4d %4d %-10s %4d %s\n", statistics.name.characters(), file.pid, statistics.pgid, statistics.username.characters(), file.fd, file.name.characters());
 }

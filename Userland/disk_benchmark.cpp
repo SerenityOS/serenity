@@ -42,7 +42,7 @@ struct Result {
     u64 read_bps;
 };
 
-Result average_result(const Vector<Result>& results)
+static Result average_result(const Vector<Result>& results)
 {
     Result average;
 
@@ -57,13 +57,13 @@ Result average_result(const Vector<Result>& results)
     return average;
 }
 
-void exit_with_usage(int rc)
+static void exit_with_usage(int rc)
 {
     fprintf(stderr, "Usage: disk_benchmark [-h] [-d directory] [-t time_per_benchmark] [-f file_size1,file_size2,...] [-b block_size1,block_size2,...]\n");
     exit(rc);
 }
 
-Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
+static Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
 
 int main(int argc, char** argv)
 {

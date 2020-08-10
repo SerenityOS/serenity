@@ -38,7 +38,7 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
-String si_bytes(unsigned bytes)
+static String si_bytes(unsigned bytes)
 {
     if (bytes >= GB)
         return String::format("%fGiB", (double)bytes / (double)GB);

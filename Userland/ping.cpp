@@ -36,7 +36,7 @@
 #include <time.h>
 #include <unistd.h>
 
-uint16_t internet_checksum(const void* ptr, size_t count)
+static uint16_t internet_checksum(const void* ptr, size_t count)
 {
     uint32_t checksum = 0;
     auto* w = (const uint16_t*)ptr;

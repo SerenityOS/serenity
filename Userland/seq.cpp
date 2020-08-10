@@ -30,7 +30,7 @@
 #include <string.h>
 #include <unistd.h>
 
-double get_double(const char* name, const char* d_string, int* number_of_decimals)
+static double get_double(const char* name, const char* d_string, int* number_of_decimals)
 {
     char* end;
     double d = strtod(d_string, &end);
