@@ -100,12 +100,11 @@ private:
         char padding[templated_slab_size - sizeof(FreeSlab*)];
     };
 
-    // NOTE: These are not default-initialized to prevent an init-time constructor from overwriting them
-    FreeSlab* m_freelist;
+    FreeSlab* m_freelist { nullptr };
     Atomic<size_t> m_num_allocated;
     Atomic<size_t> m_num_free;
-    void* m_base;
-    void* m_end;
+    void* m_base { nullptr };
+    void* m_end { nullptr };
     SpinLock<u32> m_lock;
 
     static_assert(sizeof(FreeSlab) == templated_slab_size);
