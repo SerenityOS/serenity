@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -54,7 +54,7 @@ int tgetent(char* bp, const char* name)
 
 static HashMap<String, const char*>* caps = nullptr;
 
-void ensure_caps()
+static void ensure_caps()
 {
     if (caps)
         return;

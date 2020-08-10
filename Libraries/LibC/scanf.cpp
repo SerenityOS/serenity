@@ -61,7 +61,7 @@ static const char* determine_base(const char* p, int& base)
 static int _atob(unsigned long* vp, const char* p, int base)
 {
     unsigned long value, v1, v2;
-    const char *q;
+    const char* q;
     char tmp[20];
     int digit;
 
@@ -106,7 +106,7 @@ static int _atob(unsigned long* vp, const char* p, int base)
     return 1;
 }
 
-int atob(unsigned int* vp, const char* p, int base)
+static int atob(unsigned int* vp, const char* p, int base)
 {
     unsigned long v;
 

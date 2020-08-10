@@ -182,15 +182,6 @@ static BigAllocator* big_allocator_for_size(size_t size)
 
 extern "C" {
 
-size_t malloc_good_size(size_t size)
-{
-    for (size_t i = 0; size_classes[i]; ++i) {
-        if (size < size_classes[i])
-            return size_classes[i];
-    }
-    return PAGE_ROUND_UP(size);
-}
-
 static void* os_alloc(size_t size, const char* name)
 {
     auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE, 0, 0, block_size, name);
