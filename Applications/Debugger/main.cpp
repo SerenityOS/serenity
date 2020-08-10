@@ -56,7 +56,7 @@ static void handle_sigint(int)
     g_debug_session = nullptr;
 }
 
-void handle_print_registers(const PtraceRegisters& regs)
+static void handle_print_registers(const PtraceRegisters& regs)
 {
     printf("eax: 0x%x\n", regs.eax);
     printf("ecx: 0x%x\n", regs.ecx);
@@ -70,7 +70,7 @@ void handle_print_registers(const PtraceRegisters& regs)
     printf("eflags: 0x%x\n", regs.eflags);
 }
 
-bool handle_disassemble_command(const String& command, void* first_instruction)
+static bool handle_disassemble_command(const String& command, void* first_instruction)
 {
     (void)demangle("foo");
     auto parts = command.split(' ');
@@ -110,7 +110,7 @@ bool handle_disassemble_command(const String& command, void* first_instruction)
     return true;
 }
 
-bool handle_breakpoint_command(const String& command)
+static bool handle_breakpoint_command(const String& command)
 {
     auto parts = command.split(' ');
     if (parts.size() != 2)
@@ -158,7 +158,7 @@ bool handle_breakpoint_command(const String& command)
     return true;
 }
 
-void print_help()
+static void print_help()
 {
     printf("Options:\n"
            "cont - Continue execution\n"
