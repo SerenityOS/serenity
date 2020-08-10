@@ -32,6 +32,7 @@
 #include "FindInFilesWidget.h"
 #include "FormEditorWidget.h"
 #include "FormWidget.h"
+#include "HackStudio.h"
 #include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
@@ -91,7 +92,7 @@ RefPtr<FormEditorWidget> g_form_editor_widget;
 
 static RefPtr<GUI::TabWidget> s_action_tab_widget;
 
-void add_new_editor(GUI::Widget& parent)
+static void add_new_editor(GUI::Widget& parent)
 {
     auto wrapper = EditorWrapper::construct(Debugger::on_breakpoint_change);
     if (s_action_tab_widget) {
@@ -109,7 +110,7 @@ enum class EditMode {
     Form,
 };
 
-void set_edit_mode(EditMode mode)
+static void set_edit_mode(EditMode mode)
 {
     if (mode == EditMode::Text) {
         g_right_hand_stack->set_active_widget(g_text_inner_splitter);
@@ -118,18 +119,18 @@ void set_edit_mode(EditMode mode)
     }
 }
 
-EditorWrapper& current_editor_wrapper()
+static EditorWrapper& current_editor_wrapper()
 {
     ASSERT(g_current_editor_wrapper);
     return *g_current_editor_wrapper;
 }
 
-Editor& current_editor()
+GUI::TextEditor& current_editor()
 {
     return current_editor_wrapper().editor();
 }
 
-NonnullRefPtr<EditorWrapper> get_editor_of_file(const String& file)
+static NonnullRefPtr<EditorWrapper> get_editor_of_file(const String& file)
 {
     for (auto& wrapper : g_all_editor_wrappers) {
         String wrapper_file = wrapper.filename_label().text();
@@ -140,7 +141,7 @@ NonnullRefPtr<EditorWrapper> get_editor_of_file(const String& file)
     ASSERT_NOT_REACHED();
 }
 
-String get_project_executable_path()
+static String get_project_executable_path()
 {
     // e.g /my/project.hackstudio => /my/project
     // TODO: Perhaps a Makefile rule for getting the value of $(PROGRAM) would be better?

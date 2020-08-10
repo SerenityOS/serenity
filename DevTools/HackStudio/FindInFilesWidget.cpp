@@ -25,16 +25,13 @@
  */
 
 #include "FindInFilesWidget.h"
+#include "HackStudio.h"
 #include "Project.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
-
-extern GUI::TextEditor& current_editor();
-extern void open_file(const String&);
-extern OwnPtr<Project> g_project;
 
 struct Match {
     String filename;
