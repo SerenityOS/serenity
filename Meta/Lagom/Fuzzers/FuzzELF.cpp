@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andrew Kaster <andrewdkaster@gmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,13 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibELF/Loader.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include <LibELF/exec_elf.h>
-
-namespace ELF {
-
-bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool verbose=true);
-bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8* buffer, size_t buffer_size, String& interpreter_path);
-
-} // end namespace ELF
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+{
+    ELF::Loader::create(data, size, /*verbose_logging=*/false);
+    return 0;
+}
