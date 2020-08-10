@@ -34,16 +34,6 @@
 
 namespace Core {
 
-UDPSocket::UDPSocket(int fd, Object* parent)
-    : Socket(Socket::Type::UDP, parent)
-{
-    // NOTE: This constructor is used by UDPServer::accept(), so the socket is already connected.
-    m_connected = true;
-    set_fd(fd);
-    set_mode(IODevice::ReadWrite);
-    set_error(0);
-}
-
 UDPSocket::UDPSocket(Object* parent)
     : Socket(Socket::Type::UDP, parent)
 {
