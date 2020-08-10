@@ -105,6 +105,7 @@ public:
     SharedInodeVMObject* shared_vmobject() { return m_shared_vmobject.ptr(); }
     const SharedInodeVMObject* shared_vmobject() const { return m_shared_vmobject.ptr(); }
 
+    static InlineLinkedList<Inode>& all_with_lock();
     static void sync();
 
     bool has_watchers() const { return !m_watchers.is_empty(); }

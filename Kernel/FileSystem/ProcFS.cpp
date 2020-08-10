@@ -900,10 +900,9 @@ static Optional<KBuffer> procfs$all(InodeIdentifier)
 
 static Optional<KBuffer> procfs$inodes(InodeIdentifier)
 {
-    extern InlineLinkedList<Inode>& all_inodes();
     KBufferBuilder builder;
     InterruptDisabler disabler;
-    for (auto& inode : all_inodes()) {
+    for (auto& inode : Inode::all_with_lock()) {
         builder.appendf("Inode{K%x} %02u:%08u (%u)\n", &inode, inode.fsid(), inode.index(), inode.ref_count());
     }
     return builder.build();

@@ -39,7 +39,7 @@ namespace Kernel {
 
 static SpinLock s_all_inodes_lock;
 
-static InlineLinkedList<Inode>& all_inodes()
+InlineLinkedList<Inode>& Inode::all_with_lock()
 {
     ASSERT(s_all_inodes_lock.is_locked());
 
@@ -54,7 +54,7 @@ void Inode::sync()
     NonnullRefPtrVector<Inode, 32> inodes;
     {
         ScopedSpinLock all_inodes_lock(s_all_inodes_lock);
-        for (auto& inode : all_inodes()) {
+        for (auto& inode : all_with_lock()) {
             if (inode.is_metadata_dirty())
                 inodes.append(inode);
         }
@@ -110,13 +110,13 @@ Inode::Inode(FS& fs, unsigned index)
     , m_index(index)
 {
     ScopedSpinLock all_inodes_lock(s_all_inodes_lock);
-    all_inodes().append(this);
+    all_with_lock().append(this);
 }
 
 Inode::~Inode()
 {
     ScopedSpinLock all_inodes_lock(s_all_inodes_lock);
-    all_inodes().remove(this);
+    all_with_lock().remove(this);
 }
 
 void Inode::will_be_destroyed()
