@@ -73,6 +73,7 @@ public:
         return *this;
     }
     ALWAYS_INLINE ElementType& operator*() { return m_vector[m_index]; }
+    ALWAYS_INLINE ElementType* operator->() { return &m_vector[m_index]; }
     size_t operator-(const VectorIterator& other) { return m_index - other.m_index; }
 
     bool is_end() const { return m_index == m_vector.size(); }
