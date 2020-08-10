@@ -397,6 +397,8 @@ void Process::dump_regions()
     MM.dump_kernel_regions();
 }
 
+// Make sure the compiler doesn't "optimize away" this function:
+extern void signal_trampoline_dummy(void);
 void signal_trampoline_dummy(void)
 {
     // The trampoline preserves the current eax, pushes the signal code and

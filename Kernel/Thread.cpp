@@ -359,7 +359,7 @@ enum class DefaultSignalAction {
     Continue,
 };
 
-DefaultSignalAction default_signal_action(u8 signal)
+static DefaultSignalAction default_signal_action(u8 signal)
 {
     ASSERT(signal && signal < NSIG);
 

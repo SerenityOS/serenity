@@ -115,7 +115,7 @@ static void load_kernel_sybols_from_data(const KBuffer& buffer)
     g_kernel_symbols_available = true;
 }
 
-NEVER_INLINE void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksyms)
+NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksyms)
 {
     SmapDisabler disabler;
 #if 0
