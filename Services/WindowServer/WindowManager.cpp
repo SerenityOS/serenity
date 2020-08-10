@@ -1426,8 +1426,9 @@ void WindowManager::minimize_windows(Window& window, bool minimized)
 
 void WindowManager::maximize_windows(Window& window, bool maximized)
 {
-    for_each_window_in_modal_stack(window, [&](auto& w, bool) {
-        w.set_maximized(maximized);
+    for_each_window_in_modal_stack(window, [&](auto& w, bool stack_top) {
+        if (stack_top)
+            w.set_maximized(maximized);
         if (w.is_minimized())
             w.set_minimized(false);
     });
