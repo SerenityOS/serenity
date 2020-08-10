@@ -30,7 +30,7 @@
 
 namespace TextCodec {
 
-Latin1Decoder& latin1_decoder()
+static Latin1Decoder& latin1_decoder()
 {
     static Latin1Decoder* decoder;
     if (!decoder)
@@ -38,7 +38,7 @@ Latin1Decoder& latin1_decoder()
     return *decoder;
 }
 
-UTF8Decoder& utf8_decoder()
+static UTF8Decoder& utf8_decoder()
 {
     static UTF8Decoder* decoder;
     if (!decoder)
