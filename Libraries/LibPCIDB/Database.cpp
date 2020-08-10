@@ -106,7 +106,7 @@ const StringView Database::get_programming_interface(u8 class_id, u8 subclass_id
     return programming_interface.value()->name;
 }
 
-u8 parse_hex_digit(char digit)
+static u8 parse_hex_digit(char digit)
 {
     if (digit >= '0' && digit <= '9')
         return digit - '0';
@@ -115,7 +115,7 @@ u8 parse_hex_digit(char digit)
 }
 
 template<typename T>
-T parse_hex(StringView str, size_t count)
+static T parse_hex(StringView str, size_t count)
 {
     ASSERT(str.length() >= count);
 
@@ -180,7 +180,6 @@ int Database::init()
 
     auto lines = m_view.split_view('\n');
 
-
     for (auto& line : lines) {
         if (line.length() < 2 || line[0] == '#')
             continue;
@@ -242,7 +241,6 @@ int Database::init()
     commit_all();
 
     m_ready = true;
-
 
     return 0;
 }
