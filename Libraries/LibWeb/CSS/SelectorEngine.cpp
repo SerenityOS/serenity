@@ -42,7 +42,7 @@ static bool matches_hover_pseudo_class(const DOM::Element& element)
     return element.is_ancestor_of(*hovered_node);
 }
 
-bool matches(const CSS::Selector::SimpleSelector& component, const DOM::Element& element)
+static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::Element& element)
 {
     switch (component.pseudo_class) {
     case CSS::Selector::SimpleSelector::PseudoClass::None:
@@ -114,7 +114,7 @@ bool matches(const CSS::Selector::SimpleSelector& component, const DOM::Element&
     }
 }
 
-bool matches(const CSS::Selector& selector, int component_list_index, const DOM::Element& element)
+static bool matches(const CSS::Selector& selector, int component_list_index, const DOM::Element& element)
 {
     auto& component_list = selector.complex_selectors()[component_list_index];
     for (auto& component : component_list.compound_selector) {

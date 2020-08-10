@@ -60,7 +60,7 @@ void Resource::for_each_client(Function<void(ResourceClient&)> callback)
     }
 }
 
-String encoding_from_content_type(const String& content_type)
+static String encoding_from_content_type(const String& content_type)
 {
     auto offset = content_type.index_of("charset=");
     if (offset.has_value()) {
@@ -75,7 +75,7 @@ String encoding_from_content_type(const String& content_type)
     return "utf-8";
 }
 
-String mime_type_from_content_type(const String& content_type)
+static String mime_type_from_content_type(const String& content_type)
 {
     auto offset = content_type.index_of(";");
     if (offset.has_value())

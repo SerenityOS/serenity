@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/MouseEventWrapper.h>
 
 namespace Web {
