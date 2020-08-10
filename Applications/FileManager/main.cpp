@@ -57,6 +57,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
+#include <pthread.h>
 #include <serenity.h>
 #include <signal.h>
 #include <spawn.h>
@@ -147,6 +148,10 @@ private:
 
 int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location)
 {
+    static constexpr const char* process_name = "FileManager (Desktop)";
+    set_process_name(process_name, strlen(process_name));
+    pthread_setname_np(pthread_self(), process_name);
+
     (void)config;
     (void)initial_location;
     auto window = GUI::Window::construct();
