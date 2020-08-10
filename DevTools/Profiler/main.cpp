@@ -132,7 +132,7 @@ int main(int argc, char** argv)
     return app->exec();
 }
 
-bool prompt_to_stop_profiling()
+static bool prompt_to_stop_profiling()
 {
     auto window = GUI::Window::construct();
     window->set_title("Profiling");

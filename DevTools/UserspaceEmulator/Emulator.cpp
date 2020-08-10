@@ -1124,7 +1124,7 @@ enum class DefaultSignalAction {
     Continue,
 };
 
-DefaultSignalAction default_signal_action(int signal)
+static DefaultSignalAction default_signal_action(int signal)
 {
     ASSERT(signal && signal < NSIG);
 
@@ -1235,6 +1235,8 @@ void report(const char* format, ...)
     va_end(ap);
 }
 
+// Make sure the compiler doesn't "optimize away" this function:
+extern void signal_trampoline_dummy(void);
 void signal_trampoline_dummy(void)
 {
     // The trampoline preserves the current eax, pushes the signal code and
