@@ -37,7 +37,7 @@ namespace ELF {
 
 class Image {
 public:
-    explicit Image(const u8*, size_t);
+    explicit Image(const u8*, size_t, bool verbose_logging = true);
     ~Image();
     void dump() const;
     bool is_valid() const { return m_valid; }
@@ -206,7 +206,6 @@ public:
     VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
 
 private:
-    bool parse_header();
     const char* raw_data(unsigned offset) const;
     const Elf32_Ehdr& header() const;
     const Elf32_Shdr& section_header(unsigned) const;
@@ -218,6 +217,7 @@ private:
 
     const u8* m_buffer { nullptr };
     size_t m_size { 0 };
+    bool m_verbose_logging { true };
     HashMap<String, unsigned> m_sections;
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
