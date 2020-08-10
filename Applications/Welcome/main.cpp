@@ -53,7 +53,7 @@ struct ContentPage {
     Vector<String> content;
 };
 
-Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
+static Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
 {
     const auto error = Optional<Vector<ContentPage>>();
     auto file = Core::File::construct(path);
