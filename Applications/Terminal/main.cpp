@@ -134,7 +134,7 @@ static void run_command(int ptm_fd, String command)
     }
 }
 
-RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
+static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
 {
     auto window = GUI::Window::construct();
     window->set_title("Terminal Settings");
