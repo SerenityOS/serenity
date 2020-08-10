@@ -392,6 +392,7 @@ public:
     // Tell this thread to unblock if needed,
     // gracefully unwind the stack and die.
     void set_should_die();
+    bool should_die() const { return m_should_die; }
     void die_if_needed();
 
     bool tick();
@@ -521,7 +522,6 @@ public:
 private:
     IntrusiveListNode m_runnable_list_node;
     IntrusiveListNode m_wait_queue_node;
-    WaitQueue* m_wait_queue { nullptr };
 
 private:
     friend class SchedulerData;
