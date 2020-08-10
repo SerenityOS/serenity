@@ -204,7 +204,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyUp& message
     Core::EventLoop::current().post_event(*window, move(key_event));
 }
 
-MouseButton to_gmousebutton(u32 button)
+static MouseButton to_gmousebutton(u32 button)
 {
     switch (button) {
     case 0:
