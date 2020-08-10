@@ -365,6 +365,21 @@ bool Scheduler::pick_next()
 
     ScopedSpinLock lock(g_scheduler_lock);
 
+    if (current_thread->should_die() && current_thread->state() == Thread::Running) {
+        // Rather than immediately killing threads, yanking the kernel stack
+        // away from them (which can lead to e.g. reference leaks), we always
+        // allow Thread::wait_on to return. This allows the kernel stack to
+        // clean up and eventually we'll get here shortly before transitioning
+        // back to user mode (from Processor::exit_trap). At this point we
+        // no longer want to schedule this thread. We can't wait until
+        // Scheduler::enter_current because we don't want to allow it to
+        // transition back to user mode.
+#ifdef SCHEDULER_DEBUG
+        dbg() << "Scheduler[" << Processor::current().id() << "]: Thread " << *current_thread << " is dying";
+#endif
+        current_thread->set_state(Thread::Dying);
+    }
+
     // Check and unblock threads whose wait conditions have been met.
     Scheduler::for_each_nonrunnable([&](Thread& thread) {
         thread.consider_unblock(now_sec, now_usec);
