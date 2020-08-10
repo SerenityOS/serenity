@@ -155,7 +155,7 @@ double tanh(double x) NOEXCEPT
     return (plusX - minusX) / (plusX + minusX);
 }
 
-double ampsin(double angle) NOEXCEPT
+static double ampsin(double angle) NOEXCEPT
 {
     double looped_angle = fmod(M_PI + angle, M_TAU) - M_PI;
     double looped_angle_squared = looped_angle * looped_angle;
@@ -536,5 +536,4 @@ double erfc(double x) NOEXCEPT
 {
     return 1 - erf(x);
 }
-
 }
