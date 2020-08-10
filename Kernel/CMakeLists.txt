@@ -1,3 +1,8 @@
+set(KERNEL_HEAP_SOURCES
+    Heap/SlabAllocator.cpp
+    Heap/kmalloc.cpp
+)
+
 set(KERNEL_SOURCES
     ACPI/DynamicParser.cpp
     ACPI/Initialize.cpp
@@ -47,8 +52,6 @@ set(KERNEL_SOURCES
     FileSystem/ProcFS.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
-    Heap/SlabAllocator.cpp
-    Heap/kmalloc.cpp
     Interrupts/APIC.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IOAPIC.cpp
@@ -244,6 +247,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -nostdinc -nostdinc++")
 add_link_options(LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib)
 
 add_library(boot OBJECT Arch/i386/Boot/boot.S)
+add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 file(GENERATE OUTPUT linker.ld INPUT linker.ld)
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
@@ -255,8 +259,8 @@ else()
 endif()
 
 add_executable(Kernel ${SOURCES})
-target_link_libraries(Kernel gcc stdc++)
-add_dependencies(Kernel boot)
+target_link_libraries(Kernel kernel_heap gcc stdc++)
+add_dependencies(Kernel boot kernel_heap)
 install(TARGETS Kernel RUNTIME DESTINATION boot)
 
 add_custom_command(
