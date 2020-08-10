@@ -76,6 +76,8 @@
 
 // Defined in the linker script
 typedef void (*ctor_func_t)();
+extern ctor_func_t start_heap_ctors;
+extern ctor_func_t end_heap_ctors;
 extern ctor_func_t start_ctors;
 extern ctor_func_t end_ctors;
 
@@ -107,6 +109,9 @@ extern "C" [[noreturn]] void init()
 
     s_bsp_processor.early_initialize(0);
 
+    // Invoke the constructors needed for the kernel heap
+    for (ctor_func_t* ctor = &start_heap_ctors; ctor < &end_heap_ctors; ctor++)
+        (*ctor)();
     kmalloc_init();
     slab_alloc_init();
 
