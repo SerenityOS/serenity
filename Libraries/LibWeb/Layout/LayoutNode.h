@@ -69,40 +69,6 @@ public:
     const LayoutDocument& root() const;
     LayoutDocument& root();
 
-    template<typename Callback>
-    inline void for_each_child(Callback callback) const
-    {
-        for (auto* node = first_child(); node; node = node->next_sibling())
-            callback(*node);
-    }
-
-    template<typename Callback>
-    inline void for_each_child(Callback callback)
-    {
-        for (auto* node = first_child(); node; node = node->next_sibling())
-            callback(*node);
-    }
-
-    template<typename T, typename Callback>
-    inline void for_each_child_of_type(Callback callback)
-    {
-        for (auto* node = first_child(); node; node = node->next_sibling()) {
-            if (!is<T>(node))
-                continue;
-            callback(downcast<T>(*node));
-        }
-    }
-
-    template<typename T, typename Callback>
-    inline void for_each_child_of_type(Callback callback) const
-    {
-        for (auto* node = first_child(); node; node = node->next_sibling()) {
-            if (!is<T>(node))
-                continue;
-            callback(downcast<T>(*node));
-        }
-    }
-
     virtual const char* class_name() const = 0;
     virtual bool is_root() const { return false; }
     virtual bool is_text() const { return false; }
@@ -170,30 +136,6 @@ public:
 
     bool children_are_inline() const { return m_children_are_inline; }
     void set_children_are_inline(bool value) { m_children_are_inline = value; }
-
-    template<typename U>
-    const U* next_sibling_of_type() const;
-
-    template<typename U>
-    U* next_sibling_of_type();
-
-    template<typename U>
-    const U* previous_sibling_of_type() const;
-
-    template<typename U>
-    U* previous_sibling_of_type();
-
-    template<typename T>
-    const T* first_child_of_type() const;
-
-    template<typename T>
-    T* first_child_of_type();
-
-    template<typename T>
-    const T* first_ancestor_of_type() const;
-
-    template<typename T>
-    T* first_ancestor_of_type();
 
     Gfx::FloatPoint box_type_agnostic_position() const;
 
@@ -273,86 +215,6 @@ inline const LayoutNodeWithStyle* LayoutNode::parent() const
 inline LayoutNodeWithStyle* LayoutNode::parent()
 {
     return static_cast<LayoutNodeWithStyle*>(TreeNode<LayoutNode>::parent());
-}
-
-template<typename T>
-inline const T* LayoutNode::next_sibling_of_type() const
-{
-    for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
-        if (is<T>(*sibling))
-            return &downcast<T>(*sibling);
-    }
-    return nullptr;
-}
-
-template<typename T>
-inline T* LayoutNode::next_sibling_of_type()
-{
-    for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
-        if (is<T>(*sibling))
-            return &downcast<T>(*sibling);
-    }
-    return nullptr;
-}
-
-template<typename T>
-inline const T* LayoutNode::previous_sibling_of_type() const
-{
-    for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
-        if (is<T>(*sibling))
-            return &downcast<T>(*sibling);
-    }
-    return nullptr;
-}
-
-template<typename T>
-inline T* LayoutNode::previous_sibling_of_type()
-{
-    for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
-        if (is<T>(*sibling))
-            return &downcast<T>(*sibling);
-    }
-    return nullptr;
-}
-
-template<typename T>
-inline const T* LayoutNode::first_child_of_type() const
-{
-    for (auto* child = first_child(); child; child = child->next_sibling()) {
-        if (is<T>(*child))
-            return &downcast<T>(*child);
-    }
-    return nullptr;
-}
-
-template<typename T>
-inline T* LayoutNode::first_child_of_type()
-{
-    for (auto* child = first_child(); child; child = child->next_sibling()) {
-        if (is<T>(*child))
-            return &downcast<T>(*child);
-    }
-    return nullptr;
-}
-
-template<typename T>
-inline const T* LayoutNode::first_ancestor_of_type() const
-{
-    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (is<T>(*ancestor))
-            return &downcast<T>(*ancestor);
-    }
-    return nullptr;
-}
-
-template<typename T>
-inline T* LayoutNode::first_ancestor_of_type()
-{
-    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (is<T>(*ancestor))
-            return &downcast<T>(*ancestor);
-    }
-    return nullptr;
 }
 
 }
