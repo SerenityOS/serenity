@@ -106,12 +106,6 @@ public:
     Element* parent_element();
     const Element* parent_element() const;
 
-    template<typename T>
-    const T* first_child_of_type() const;
-
-    template<typename T>
-    const T* first_ancestor_of_type() const;
-
     virtual void inserted_into(Node&) { }
     virtual void removed_from(Node&) { }
     virtual void children_changed() { }
@@ -143,25 +137,5 @@ protected:
     NodeType m_type { NodeType::INVALID };
     bool m_needs_style_update { true };
 };
-
-template<typename T>
-inline const T* Node::first_child_of_type() const
-{
-    for (auto* child = first_child(); child; child = child->next_sibling()) {
-        if (is<T>(*child))
-            return downcast<T>(child);
-    }
-    return nullptr;
-}
-
-template<typename T>
-inline const T* Node::first_ancestor_of_type() const
-{
-    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (is<T>(*ancestor))
-            return downcast<T>(ancestor);
-    }
-    return nullptr;
-}
 
 }

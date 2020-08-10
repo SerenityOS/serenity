@@ -191,6 +191,98 @@ public:
         return IterationDecision::Continue;
     }
 
+    template<typename Callback>
+    void for_each_child(Callback callback) const
+    {
+        return const_cast<TreeNode*>(this)->template for_each_child(move(callback));
+    }
+
+    template<typename Callback>
+    void for_each_child(Callback callback)
+    {
+        for (auto* node = first_child(); node; node = node->next_sibling())
+            callback(*node);
+    }
+
+    template<typename U, typename Callback>
+    void for_each_child_of_type(Callback callback)
+    {
+        for (auto* node = first_child(); node; node = node->next_sibling()) {
+            if (is<U>(node))
+                callback(downcast<U>(*node));
+        }
+    }
+
+    template<typename U, typename Callback>
+    void for_each_child_of_type(Callback callback) const
+    {
+        return const_cast<TreeNode*>(this)->template for_each_child_of_type<U>(move(callback));
+    }
+
+    template<typename U>
+    const U* next_sibling_of_type() const
+    {
+        return const_cast<TreeNode*>(this)->template next_sibling_of_type<U>();
+    }
+
+    template<typename U>
+    inline U* next_sibling_of_type()
+    {
+        for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
+            if (is<U>(*sibling))
+                return &downcast<U>(*sibling);
+        }
+        return nullptr;
+    }
+
+    template<typename U>
+    const U* previous_sibling_of_type() const
+    {
+        return const_cast<TreeNode*>(this)->template previous_sibling_of_type<U>();
+    }
+
+    template<typename U>
+    U* previous_sibling_of_type()
+    {
+        for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
+            if (is<U>(*sibling))
+                return &downcast<U>(*sibling);
+        }
+        return nullptr;
+    }
+
+    template<typename U>
+    const U* first_child_of_type() const
+    {
+        return const_cast<TreeNode*>(this)->template first_child_of_type<U>();
+    }
+
+    template<typename U>
+    U* first_child_of_type()
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (is<U>(*child))
+                return &downcast<U>(*child);
+        }
+        return nullptr;
+    }
+
+    template<typename U>
+    const U* first_ancestor_of_type() const
+    {
+        return const_cast<TreeNode*>(this)->template first_ancestor_of_type<U>();
+    }
+
+    template<typename U>
+    U* first_ancestor_of_type()
+    {
+        for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+            if (is<U>(*ancestor))
+                return &downcast<U>(*ancestor);
+        }
+        return nullptr;
+    }
+
 protected:
     TreeNode() { }
 
