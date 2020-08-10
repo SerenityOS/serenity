@@ -777,13 +777,15 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
             if (!job || job->is_running_in_background())
                 continue;
             shell->block_on_job(job);
-            if (job->signaled()
-                && (job->termination_signal() == SIGINT
-                    || job->termination_signal() == SIGKILL
-                    || job->termination_signal() == SIGQUIT))
-                ++consecutive_interruptions;
-            else
+
+            if (job->signaled()) {
+                if (job->termination_signal() == SIGINT)
+                    ++consecutive_interruptions;
+                else
+                    break;
+            } else {
                 consecutive_interruptions = 0;
+            }
         }
     }
 
