@@ -147,7 +147,30 @@ void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRec
             painter.draw_line({ titlebar_rect.x() + i, stripe_top }, { titlebar_rect.x() + i, stripe_bottom }, palette.active_window_title_stripes());
         }
     }
+}
 
+IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const IntRect& window_rect, const Gfx::Palette& palette) const
+{
+    auto window_titlebar_height = palette.window_title_height();
+
+    switch (window_type) {
+    case WindowType::Normal:
+        return {
+            window_rect.x() - 4,
+            window_rect.y() - window_titlebar_height - 6,
+            window_rect.width() + 8,
+            window_rect.height() + 10 + window_titlebar_height
+        };
+    case WindowType::Notification:
+        return {
+            window_rect.x() - 3,
+            window_rect.y() - 3,
+            window_rect.width() + 6 + window_titlebar_height,
+            window_rect.height() + 6
+        };
+    default:
+        return window_rect;
+    }
 }
 
 }

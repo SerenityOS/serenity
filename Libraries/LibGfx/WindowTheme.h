@@ -36,6 +36,7 @@ public:
     enum class WindowType {
         Normal,
         Notification,
+        Other,
     };
 
     enum class WindowState {
@@ -55,6 +56,8 @@ public:
     virtual IntRect title_bar_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
     virtual IntRect title_bar_icon_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
     virtual IntRect title_bar_text_rect(WindowType, const IntRect& window_rect, const Palette&) const = 0;
+
+    virtual IntRect frame_rect_for_window(WindowType, const IntRect& window_rect, const Palette&) const = 0;
 
 protected:
     WindowTheme() { }
