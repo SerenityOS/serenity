@@ -100,8 +100,9 @@ public:
 
     void set(const String& key, JsonValue value)
     {
+        if (m_members.set(key, move(value)) == HashSetResult::ReplacedExistingEntry)
+            m_order.remove(m_order.find_first_index(key).value());
         m_order.append(key);
-        m_members.set(key, move(value));
     }
 
     template<typename Callback>
