@@ -30,6 +30,7 @@
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -87,6 +88,15 @@ TextEditorWidget::TextEditorWidget()
 
     m_page_view = splitter.add<Web::PageView>();
     m_page_view->set_visible(false);
+    m_page_view->on_link_click = [&](auto& url, auto&, unsigned) {
+        if (!Desktop::Launcher::open(url)) {
+            GUI::MessageBox::show(
+                window(),
+                String::format("The link to '%s' could not be opened.", url.to_string().characters()),
+                "Failed to open link",
+                GUI::MessageBox::Type::Error);
+        }
+    };
 
     m_find_replace_widget = add<GUI::Widget>();
     m_find_replace_widget->set_fill_with_background_color(true);
@@ -483,8 +493,7 @@ void TextEditorWidget::set_path(const LexicalPath& lexical_path)
     m_name = lexical_path.title();
     m_extension = lexical_path.extension();
 
-    if (m_extension == "c" || m_extension == "cc" || m_extension == "cxx" ||
-        m_extension == "cpp" || m_extension == "h") {
+    if (m_extension == "c" || m_extension == "cc" || m_extension == "cxx" || m_extension == "cpp" || m_extension == "h") {
         m_cpp_highlight->activate();
     } else if (m_extension == "js" || m_extension == "json") {
         m_js_highlight->activate();
