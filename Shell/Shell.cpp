@@ -39,6 +39,7 @@
 #include <LibLine/Editor.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -581,7 +582,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         if (!job->exited())
             return;
         if (job->is_running_in_background())
-            fprintf(stderr, "Shell: Job %d(%s) exited\n", job->pid(), job->cmd().characters());
+            fprintf(stderr, "Shell: Job %" PRIu64 "(%s) exited\n", job->job_id(), job->cmd().characters());
         job->disown();
     };
 
