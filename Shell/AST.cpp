@@ -1142,6 +1142,14 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
     last_in_left.should_wait = false;
     last_in_left.is_pipe_source = true;
 
+    if (first_in_right.pipeline) {
+        last_in_left.pipeline = first_in_right.pipeline;
+    } else {
+        auto pipeline = adopt(*new Pipeline);
+        last_in_left.pipeline = pipeline;
+        first_in_right.pipeline = pipeline;
+    }
+
     Vector<Command> commands;
     commands.append(left);
     commands.append(last_in_left);

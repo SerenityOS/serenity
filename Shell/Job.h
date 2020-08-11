@@ -27,6 +27,7 @@
 #pragma once
 
 #include "Execution.h"
+#include "Forward.h"
 #include <AK/Function.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -42,7 +43,7 @@
 
 class Job : public RefCounted<Job> {
 public:
-    static NonnullRefPtr<Job> create(pid_t pid, pid_t pgid, String command, u64 job_id) { return adopt(*new Job(pid, pgid, move(command), job_id)); }
+    static NonnullRefPtr<Job> create(pid_t pid, pid_t pgid, String command, u64 job_id, AST::Pipeline* pipeline = nullptr) { return adopt(*new Job(pid, pgid, move(command), job_id, pipeline)); }
 
     ~Job()
     {
@@ -121,12 +122,15 @@ public:
     bool print_status(PrintStatusMode);
 
 private:
-    Job(pid_t pid, unsigned pgid, String cmd, u64 job_id)
+    Job(pid_t pid, unsigned pgid, String cmd, u64 job_id, AST::Pipeline* pipeline)
         : m_pgid(pgid)
         , m_pid(pid)
         , m_job_id(job_id)
         , m_cmd(move(cmd))
     {
+        if (pipeline)
+            m_pipeline = *pipeline;
+
         set_running_in_background(false);
         m_command_timer.start();
     }
@@ -143,4 +147,5 @@ private:
     mutable bool m_active { true };
     mutable bool m_is_suspended { false };
     bool m_should_be_disowned { false };
+    RefPtr<AST::Pipeline> m_pipeline;
 };
