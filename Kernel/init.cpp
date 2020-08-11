@@ -89,6 +89,12 @@ namespace Kernel {
 [[noreturn]] static void init_stage2();
 static void setup_serial_debug();
 
+// boot.S expects these functions precisely this this. We declare them here
+// to ensure the signatures don't accidentally change.
+extern "C" void init_finished(u32 cpu);
+extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info);
+extern "C" [[noreturn]] void init();
+
 VirtualConsole* tty0;
 
 static Processor s_bsp_processor; // global but let's keep it "private"

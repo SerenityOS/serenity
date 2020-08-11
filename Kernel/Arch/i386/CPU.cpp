@@ -29,8 +29,9 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/ProcessorInfo.h>
 #include <Kernel/Arch/i386/ISRStubs.h>
+#include <Kernel/Arch/i386/ProcessorInfo.h>
+#include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -44,7 +45,6 @@
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
-#include <Kernel/IO.h>
 #include <LibC/mallocdefs.h>
 
 //#define PAGE_FAULT_DEBUG
@@ -58,6 +58,13 @@ static Descriptor s_idt[256];
 
 static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_COUNT];
 
+// The compiler can't see the calls to these functions inside assembly.
+// Declare them, to avoid dead code warnings.
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread);
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap);
+extern "C" u32 do_init_context(Thread* thread, u32 flags);
+extern "C" void pre_init_finished(void);
+extern "C" void post_init_finished(void);
 extern "C" void handle_interrupt(TrapFrame*);
 
 #define EH_ENTRY(ec, title)                         \
@@ -337,7 +344,7 @@ void breakpoint_handler(TrapFrame* trap)
         asm("movl %%cr4, %%eax"                                                                                                                                                \
             : "=a"(cr4));                                                                                                                                                      \
         klog() << "CR0=" << String::format("%x", cr0) << " CR2=" << String::format("%x", cr2) << " CR3=" << String::format("%x", cr3) << " CR4=" << String::format("%x", cr4); \
-        Processor::halt();                                                                                                                                                                \
+        Processor::halt();                                                                                                                                                     \
     }
 
 EH(2, "Unknown error")
@@ -917,14 +924,14 @@ String Processor::features_string() const
         };
     bool first = true;
     for (u32 flag = 1; flag < sizeof(m_features) * 8; flag <<= 1) {
-       if ((static_cast<u32>(m_features) & flag) != 0) {
-           if (first)
-               first = false;
-           else
-               builder.append(' ');
-           auto str = feature_to_str(static_cast<CPUFeature>(flag));
-           builder.append(str, strlen(str));
-       }
+        if ((static_cast<u32>(m_features) & flag) != 0) {
+            if (first)
+                first = false;
+            else
+                builder.append(' ');
+            auto str = feature_to_str(static_cast<CPUFeature>(flag));
+            builder.append(str, strlen(str));
+        }
     }
     return builder.build();
 }
@@ -998,7 +1005,7 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
 {
     u16 i = (selector & 0xfffc) >> 3;
     u32 prev_gdt_length = m_gdt_length;
-    
+
     if (i > m_gdt_length) {
         m_gdt_length = i + 1;
         ASSERT(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
@@ -1174,11 +1181,11 @@ extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapF
     (void)from_thread;
     (void)to_thread;
     (void)trap;
-    
+
 #ifdef CONTEXT_SWITCH_DEBUG
-        dbg() << "switch_context <-- from " << VirtualAddress(from_thread) << " " << *from_thread << " to " << VirtualAddress(to_thread) << " " << *to_thread << " (context_first_init)";
+    dbg() << "switch_context <-- from " << VirtualAddress(from_thread) << " " << *from_thread << " to " << VirtualAddress(to_thread) << " " << *to_thread << " (context_first_init)";
 #endif
-    
+
     ASSERT(to_thread == Thread::current());
 
     Scheduler::enter_current(*from_thread);
@@ -1229,7 +1236,7 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
 
     auto& tss = thread.tss();
     bool return_to_user = (tss.cs & 3) != 0;
-    
+
     // make room for an interrupt frame
     if (!return_to_user) {
         // userspace_esp and userspace_ss are not popped off by iret
@@ -1300,7 +1307,6 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     return stack_top;
 }
 
-
 extern "C" u32 do_init_context(Thread* thread, u32 flags)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -1367,7 +1373,7 @@ extern "C" void post_init_finished(void)
 void Processor::initialize_context_switching(Thread& initial_thread)
 {
     ASSERT(initial_thread.process().is_ring0());
-    
+
     auto& tss = initial_thread.tss();
     m_tss = tss;
     m_tss.esp0 = tss.esp0;
@@ -1375,9 +1381,9 @@ void Processor::initialize_context_switching(Thread& initial_thread)
     // user mode needs to be able to switch to kernel mode:
     m_tss.cs = m_tss.ds = m_tss.es = m_tss.gs = m_tss.ss = GDT_SELECTOR_CODE0 | 3;
     m_tss.fs = GDT_SELECTOR_PROC | 3;
-    
+
     m_scheduler_initialized = true;
-    
+
     asm volatile(
         "movl %[new_esp], %%esp \n" // swich to new stack
         "pushl %[from_to_thread] \n" // to_thread
@@ -1508,7 +1514,7 @@ void Processor::smp_enable()
         for (size_t k = 0; k < msg_entries_cnt; k++)
             msg_entries[msg_entry_i + k].msg = &msg;
     }
-    
+
     atomic_store(&s_message_pool, &msgs[0], AK::MemoryOrder::memory_order_release);
 
     // Start sending IPI messages
@@ -1646,7 +1652,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg, bool async)
     }
 }
 
-void Processor::smp_broadcast(void(*callback)(void*), void* data, void(*free_data)(void*), bool async)
+void Processor::smp_broadcast(void (*callback)(void*), void* data, void (*free_data)(void*), bool async)
 {
     auto& msg = smp_get_from_pool();
     msg.type = ProcessorMessage::CallbackWithData;
@@ -1656,7 +1662,7 @@ void Processor::smp_broadcast(void(*callback)(void*), void* data, void(*free_dat
     smp_broadcast_message(msg, async);
 }
 
-void Processor::smp_broadcast(void(*callback)(), bool async)
+void Processor::smp_broadcast(void (*callback)(), bool async)
 {
     auto& msg = smp_get_from_pool();
     msg.type = ProcessorMessage::CallbackWithData;
