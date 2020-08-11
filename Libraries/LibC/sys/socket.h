@@ -86,6 +86,13 @@ struct ucred {
 #define SO_BINDTODEVICE 7
 #define SO_KEEPALIVE 9
 
+struct sockaddr_storage {
+    union {
+        char data[sizeof(sockaddr_un)];
+        void* alignment;
+    };
+};
+
 int socket(int domain, int type, int protocol);
 int bind(int sockfd, const struct sockaddr* addr, socklen_t);
 int listen(int sockfd, int backlog);
