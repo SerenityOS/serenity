@@ -56,6 +56,9 @@ public:
 
     Chess::Square mouse_to_square(GUI::MouseEvent& event) const;
 
+    bool drag_enabled() const { return m_drag_enabled; }
+    void set_drag_enabled(bool e) { m_drag_enabled = e; }
+
 private:
     Chess m_board;
     Color m_dark_square_color { Color::from_rgb(0xb58863) };
@@ -66,4 +69,5 @@ private:
     Chess::Square m_moving_square { 50, 50 };
     Gfx::IntPoint m_drag_point;
     bool m_dragging_piece { false };
+    bool m_drag_enabled { true };
 };

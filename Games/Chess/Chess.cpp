@@ -352,3 +352,21 @@ bool Chess::apply_illegal_move(const Move& move, Colour colour)
 
     return true;
 }
+
+Chess::Result Chess::game_result() const
+{
+    bool are_legal_moves = false;
+    generate_moves([&](Move m) {
+        (void)m;
+        are_legal_moves = true;
+        return IterationDecision::Break;
+    });
+
+    if (are_legal_moves)
+        return Result::NotFinished;
+
+    if (in_check(turn()))
+        return Result::CheckMate;
+
+    return Result::StaleMate;
+}
