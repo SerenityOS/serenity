@@ -29,6 +29,7 @@
 #include "Chess.h"
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
@@ -63,6 +64,7 @@ private:
     Chess m_board;
     Color m_dark_square_color { Color::from_rgb(0xb58863) };
     Color m_light_square_color { Color::from_rgb(0xf0d9b5) };
+    Color m_move_highlight_color { Color::from_rgba(0x66ccee00) };
     Chess::Colour m_side { Chess::Colour::White };
     HashMap<Chess::Piece, RefPtr<Gfx::Bitmap>> m_pieces;
     String m_piece_set;
@@ -70,4 +72,5 @@ private:
     Gfx::IntPoint m_drag_point;
     bool m_dragging_piece { false };
     bool m_drag_enabled { true };
+    Optional<Chess::Move> m_last_move;
 };
