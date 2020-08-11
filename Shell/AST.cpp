@@ -1119,6 +1119,108 @@ Execute::~Execute()
 {
 }
 
+void IfCond::dump(int level) const
+{
+    Node::dump(level);
+    print_indented("Condition", ++level);
+    m_condition->dump(level + 1);
+    print_indented("True Branch", level);
+    if (m_true_branch)
+        m_true_branch->dump(level + 1);
+    else
+        print_indented("(empty)", level + 1);
+    print_indented("False Branch", level);
+    if (m_false_branch)
+        m_false_branch->dump(level + 1);
+    else
+        print_indented("(empty)", level + 1);
+}
+
+RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
+{
+    auto cond = m_condition->run(shell)->resolve_without_cast(shell);
+    ASSERT(cond->is_job());
+
+    auto cond_job_value = static_cast<const JobValue*>(cond.ptr());
+    auto cond_job = cond_job_value->job();
+
+    shell->block_on_job(cond_job);
+
+    if (cond_job->signaled())
+        return create<ListValue>({}); // Exit early.
+
+    if (cond_job->exit_code() == 0) {
+        if (m_true_branch)
+            return m_true_branch->run(shell);
+    } else {
+        if (m_false_branch)
+            return m_false_branch->run(shell);
+    }
+
+    return create<ListValue>({});
+}
+
+void IfCond::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    metadata.is_first_in_list = true;
+
+    editor.stylize({ m_position.start_offset, m_position.start_offset + 2 }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+    if (m_else_position.has_value())
+        editor.stylize({ m_else_position.value().start_offset, m_else_position.value().start_offset + 4 }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+
+    m_condition->highlight_in_editor(editor, shell, metadata);
+    if (m_true_branch)
+        m_true_branch->highlight_in_editor(editor, shell, metadata);
+    if (m_false_branch)
+        m_false_branch->highlight_in_editor(editor, shell, metadata);
+}
+
+HitTestResult IfCond::hit_test_position(size_t offset)
+{
+    if (!position().contains(offset))
+        return {};
+
+    if (auto result = m_condition->hit_test_position(offset); result.matching_node)
+        return result;
+
+    if (m_true_branch) {
+        if (auto result = m_true_branch->hit_test_position(offset); result.matching_node)
+            return result;
+    }
+
+    if (m_false_branch) {
+        if (auto result = m_false_branch->hit_test_position(offset); result.matching_node)
+            return result;
+    }
+
+    return {};
+}
+
+IfCond::IfCond(Position position, Optional<Position> else_position, RefPtr<Node> condition, RefPtr<Node> true_branch, RefPtr<Node> false_branch)
+    : Node(move(position))
+    , m_condition(move(condition))
+    , m_true_branch(move(true_branch))
+    , m_false_branch(move(false_branch))
+    , m_else_position(move(else_position))
+{
+    if (m_condition->is_syntax_error())
+        set_is_syntax_error(m_condition->syntax_error_node());
+    else if (m_true_branch && m_true_branch->is_syntax_error())
+        set_is_syntax_error(m_true_branch->syntax_error_node());
+    else if (m_false_branch && m_false_branch->is_syntax_error())
+        set_is_syntax_error(m_false_branch->syntax_error_node());
+
+    m_condition = create<AST::Execute>(m_condition->position(), m_condition);
+    if (m_true_branch)
+        m_true_branch = create<AST::Execute>(m_true_branch->position(), m_true_branch);
+    if (m_false_branch)
+        m_false_branch = create<AST::Execute>(m_false_branch->position(), m_false_branch);
+}
+
+IfCond::~IfCond()
+{
+}
+
 void Join::dump(int level) const
 {
     Node::dump(level);
