@@ -63,8 +63,10 @@ __BEGIN_DECLS
 
 #define MSG_DONTWAIT 0x40
 
+typedef uint16_t sa_family_t;
+
 struct sockaddr {
-    uint16_t sa_family;
+    sa_family_t sa_family;
     char sa_data[14];
 };
 
