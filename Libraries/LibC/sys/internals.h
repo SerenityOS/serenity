@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,40 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Types.h>
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/internals.h>
-#include <unistd.h>
+#pragma once
 
-extern "C" {
+#include <sys/cdefs.h>
 
-int main(int, char**, char**);
+__BEGIN_DECLS
 
-// Tell the compiler that this may be called from somewhere else.
-int _start(int argc, char** argv, char** env);
+extern void __libc_init();
+extern void __malloc_init();
+extern void __stdio_init();
+extern void _init();
+extern bool __environ_is_malloced;
 
-int _start(int argc, char** argv, char** env)
-{
-    environ = env;
-    __environ_is_malloced = false;
-
-    __libc_init();
-
-    _init();
-
-    extern void (*__init_array_start[])(int, char**, char**) __attribute__((visibility("hidden")));
-    extern void (*__init_array_end[])(int, char**, char**) __attribute__((visibility("hidden")));
-
-    const size_t size = __init_array_end - __init_array_start;
-    for (size_t i = 0; i < size; i++)
-        (*__init_array_start[i])(argc, argv, env);
-
-    int status = main(argc, argv, environ);
-
-    exit(status);
-
-    return 20150614;
-}
-}
+__END_DECLS

@@ -27,19 +27,17 @@
 #include <AK/String.h>
 #include <assert.h>
 #include <stdio.h>
+#include <sys/internals.h>
 
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
-
-// FIXME: Because we need to call printf, and we don't have access to the stout file descriptor
-//     from the main executable. We need to call __libc_init....
-extern "C" void __libc_init();
-extern "C" bool __environ_is_malloced;
 
 class Global {
 public:
     Global(int i)
         : m_i(i)
     {
+        // FIXME: Because we need to call printf, and we don't have access to the stdout
+        // file descriptor from the main executable, we need to initialize LibC ourself.
         __environ_is_malloced = false;
         environ = __static_environ;
         __libc_init();
