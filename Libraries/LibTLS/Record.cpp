@@ -92,7 +92,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 buffer_position += packet.size() - header_size;
 
                 // get the appropricate HMAC value for the entire packet
-                auto mac = hmac_message(packet, {}, mac_size, true);
+                auto mac = hmac_message(packet.span(), {}, mac_size, true);
 
                 // write the MAC
                 buffer.overwrite(buffer_position, mac.data(), mac.size());
@@ -114,10 +114,8 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 ASSERT(length % block_size == 0);
 
                 // get a block to encrypt into
-                auto view = ct.slice_view(header_size + iv_size, length);
-
-                // encrypt the message
-                (void)m_aes_local->encrypt(buffer, view, iv);
+                auto view = ct.span().slice(header_size + iv_size, length);
+                m_aes_local->encrypt(buffer.span(), view, iv.span());
 
                 // store the correct ciphertext length into the packet
                 u16 ct_length = (u16)ct.size() - header_size;
@@ -137,17 +135,17 @@ void TLSv12::update_hash(const ByteBuffer& message)
     m_context.handshake_hash.update(message);
 }
 
-ByteBuffer TLSv12::hmac_message(const ByteBuffer& buf, const Optional<ByteBuffer> buf2, size_t mac_length, bool local)
+ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local)
 {
     u64 sequence_number = convert_between_host_and_network(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
     ensure_hmac(mac_length, local);
     auto& hmac = local ? *m_hmac_local : *m_hmac_remote;
-#ifdef TLS_DEBUG
+#ifndef TLS_DEBUG
     dbg() << "========================= PACKET DATA ==========================";
     print_buffer((const u8*)&sequence_number, sizeof(u64));
-    print_buffer(buf);
+    print_buffer(buf.data(), buf.size());
     if (buf2.has_value())
-        print_buffer(buf2.value());
+        print_buffer(buf2.value().data(), buf2.value().size());
     dbg() << "========================= PACKET DATA ==========================";
 #endif
     hmac.update((const u8*)&sequence_number, sizeof(u64));
@@ -217,9 +215,10 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
         auto decrypted = m_aes_remote->create_aligned_buffer(length - iv_size);
         auto iv = buffer.slice_view(header_size, iv_size);
 
-        m_aes_remote->decrypt(buffer.slice_view(header_size + iv_size, length - iv_size), decrypted, iv);
+        Bytes decrypted_span = decrypted.span();
+        m_aes_remote->decrypt(buffer.span().slice(header_size + iv_size, length - iv_size), decrypted_span, iv.span());
 
-        length = decrypted.size();
+        length = decrypted_span.size();
 
 #ifdef TLS_DEBUG
         dbg() << "Decrypted: ";
@@ -234,11 +233,11 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
             return (i8)Error::BrokenPacket;
         }
 
-        const u8* message_hmac = decrypted.offset_pointer(length - mac_size);
+        const u8* message_hmac = decrypted_span.offset(length - mac_size);
         u8 temp_buf[5];
         memcpy(temp_buf, buffer.offset_pointer(0), 3);
         *(u16*)(temp_buf + 3) = convert_between_host_and_network(length);
-        auto hmac = hmac_message(ByteBuffer::wrap(temp_buf, 5), decrypted, mac_size);
+        auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span, mac_size);
         auto message_mac = ByteBuffer::wrap(const_cast<u8*>(message_hmac), mac_size);
         if (hmac != message_mac) {
             dbg() << "integrity check failed (mac length " << length << ")";

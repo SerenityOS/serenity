@@ -68,8 +68,11 @@ public:
         m_inner_hasher.update(message, length);
     }
 
+    TagType process(const ReadonlyBytes& span) { return process(span.data(), span.size()); }
     TagType process(const ByteBuffer& buffer) { return process(buffer.data(), buffer.size()); }
     TagType process(const StringView& string) { return process((const u8*)string.characters_without_null_termination(), string.length()); }
+
+    void update(const ReadonlyBytes& span) { return update(span.data(), span.size()); }
     void update(const ByteBuffer& buffer) { return update(buffer.data(), buffer.size()); }
     void update(const StringView& string) { return update((const u8*)string.characters_without_null_termination(), string.length()); }
 

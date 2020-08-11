@@ -64,12 +64,14 @@ public:
     virtual ByteBuffer get() const = 0;
     virtual const ByteBuffer& data() const = 0;
 
-    virtual void overwrite(const ByteBuffer&) = 0;
-    virtual void overwrite(const u8*, size_t) = 0;
+    virtual void overwrite(const ReadonlyBytes&) = 0;
+    virtual void overwrite(const ByteBuffer& buffer) { overwrite(buffer.span()); }
+    virtual void overwrite(const u8* data, size_t size) { overwrite({ data, size }); }
 
     virtual void apply_initialization_vector(const u8* ivec) = 0;
 
     PaddingMode padding_mode() const { return m_padding_mode; }
+    void set_padding_mode(PaddingMode mode) { m_padding_mode = mode; }
 
     template<typename T>
     void put(size_t offset, T value)

@@ -27,6 +27,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Span.h>
+#include <AK/StdLibExtras.h>
 #include <LibCrypto/Cipher/Cipher.h>
 
 namespace Crypto {
@@ -37,9 +39,8 @@ class Mode {
 public:
     virtual ~Mode() { }
 
-    // FIXME: Somehow communicate that encrypt returns the last initialization vector (if the mode supports it)
-    virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
-    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) = 0;
+    virtual void encrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}, Bytes* ivec_out = nullptr) = 0;
+    virtual void decrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}) = 0;
 
     virtual size_t IV_length() const = 0;
 
@@ -58,7 +59,7 @@ public:
     T& cipher() { return m_cipher; }
 
 protected:
-    virtual void prune_padding(ByteBuffer& data)
+    virtual void prune_padding(Bytes& data)
     {
         auto size = data.size();
         switch (m_cipher.padding_mode()) {
@@ -74,7 +75,7 @@ protected:
                     return;
                 }
             }
-            data.trim(size - maybe_padding_length);
+            data = data.slice(0, size - maybe_padding_length);
             break;
         }
         case PaddingMode::RFC5246: {
@@ -86,13 +87,13 @@ protected:
                     return;
                 }
             }
-            data.trim(size - maybe_padding_length - 1);
+            data = data.slice(0, size - maybe_padding_length - 1);
             break;
         }
         case PaddingMode::Null: {
             while (data[size - 1] == 0)
                 --size;
-            data.trim(size);
+            data = data.slice(0, size);
             break;
         }
         default:
