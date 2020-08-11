@@ -436,7 +436,11 @@ JS::Value Document::run_javascript(const StringView& source)
         parser.print_errors();
         return JS::js_undefined();
     }
-    return document().interpreter().run(document().interpreter().global_object(), *program);
+    auto& interpreter = document().interpreter();
+    auto result = interpreter.run(interpreter.global_object(), *program);
+    if (interpreter.exception())
+        interpreter.clear_exception();
+    return result;
 }
 
 NonnullRefPtr<Element> Document::create_element(const String& tag_name)
