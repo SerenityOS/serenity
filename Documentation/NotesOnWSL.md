@@ -49,7 +49,7 @@ For a more in depth explaination of the technical limitations of their approach,
 
 The recommendation from the Microsoft team on that issue is:
 
-> [I]f it's at all possible, store your projects in the Linux file system in WSL2.
+> If it's at all possible, store your projects in the Linux file system in WSL2.
 
 In practice, this means cloning and building the project to somewhere such as `/home/username/serenity`.
 
