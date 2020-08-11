@@ -176,10 +176,11 @@ public:
         return this->m_values[index];
     }
 
-    ALWAYS_INLINE T& operator=(const T& other)
+    ALWAYS_INLINE Span& operator=(const Span<T>& other)
     {
         this->m_size = other.m_size;
         this->m_values = other.m_values;
+        return *this;
     }
 
     ALWAYS_INLINE operator Span<const T>() const
