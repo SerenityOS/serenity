@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/IterationDecision.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 
@@ -46,6 +47,7 @@ public:
         Black,
         None,
     };
+    static Colour opposing_colour(Colour colour) { return (colour == Colour::White) ? Colour::Black : Colour::White; }
 
     struct Piece {
         Colour colour;
@@ -64,6 +66,21 @@ public:
         {
         }
         bool operator==(const Square& other) const { return rank == other.rank && file == other.file; }
+
+        template<typename Callback>
+        static void for_each(Callback callback)
+        {
+            for (int rank = 0; rank < 8; ++rank) {
+                for (int file = 0; file < 8; ++file) {
+                    if (callback(Square(rank, file)) == IterationDecision::Break) {
+                        goto exit;
+                    }
+                }
+            }
+        exit:;
+        }
+
+        bool in_bounds() const { return rank < 8 && file < 8; }
     };
 
     struct Move {
@@ -82,15 +99,25 @@ public:
     Piece get_piece(const Square&) const;
     Piece set_piece(const Square&, const Piece&);
 
-    bool is_legal(const Move&) const;
+    bool is_legal(const Move&, Colour colour = Colour::None) const;
+    bool in_check(Colour colour) const;
 
-    bool apply_move(const Move&);
+    bool apply_move(const Move&, Colour colour = Colour::None);
 
     Colour turn() const { return m_turn; };
 
+    Colour turn() const { return m_turn; };
 private:
+    bool is_legal_no_check(const Move&, Colour colour) const;
+    bool apply_illegal_move(const Move&, Colour colour);
+
     Piece m_board[8][8];
     Colour m_turn { Colour::White };
+
+    bool m_white_can_castle_kingside { true };
+    bool m_white_can_castle_queenside { true };
+    bool m_black_can_castle_kingside { true };
+    bool m_black_can_castle_queenside { true };
 };
 
 template<>

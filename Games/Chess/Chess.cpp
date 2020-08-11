@@ -26,6 +26,9 @@
 
 #include "Chess.h"
 #include <AK/Assertions.h>
+#include <AK/LogStream.h>
+#include <AK/Vector.h>
+#include <stdlib.h>
 
 Chess::Square::Square(const StringView& name)
 {
@@ -102,26 +105,250 @@ Chess::Piece Chess::set_piece(const Square& square, const Piece& piece)
     return m_board[square.rank][square.file] = piece;
 }
 
-bool Chess::is_legal(const Move& move) const
+bool Chess::is_legal(const Move& move, Colour colour) const
 {
-    // FIXME: Impelement actual chess logic.
-    return get_piece(move.from).colour == turn() && get_piece(move.to).colour != turn();
+    if (colour == Colour::None)
+        colour = turn();
+
+    if (!is_legal_no_check(move, colour))
+        return false;
+
+    Chess clone = *this;
+    clone.apply_illegal_move(move, colour);
+    if (clone.in_check(colour))
+        return false;
+
+    // Don't allow castling through check or out of check.
+    Vector<Square> check_squares;
+    if (colour == Colour::White && move.from == Square("e1") && get_piece(Square("e1")) == Piece(Colour::White, Type::King)) {
+        if (move.to == Square("a1") || move.to == Square("c1")) {
+            check_squares = { Square("e1"), Square("d1"), Square("c1") };
+        } else if (move.to == Square("h1") || move.to == Square("g1")) {
+            check_squares = { Square("e1"), Square("f1"), Square("g1") };
+        }
+    } else if (colour == Colour::Black && move.from == Square("e8") && get_piece(Square("e8")) == Piece(Colour::Black, Type::King)) {
+        if (move.to == Square("a8") || move.to == Square("c8")) {
+            check_squares = { Square("e8"), Square("d8"), Square("c8") };
+        } else if (move.to == Square("h8") || move.to == Square("g8")) {
+            check_squares = { Square("e8"), Square("f8"), Square("g8") };
+        }
+    }
+    for (auto& square : check_squares) {
+        Chess clone = *this;
+        clone.set_piece(move.from, EmptyPiece);
+        clone.set_piece(square, { colour, Type::King });
+        if (clone.in_check(colour))
+            return false;
+    }
+
+    return true;
 }
 
-bool Chess::apply_move(const Move& move)
+bool Chess::is_legal_no_check(const Move& move, Colour colour) const
 {
-    if (!is_legal(move)) {
+    auto piece = get_piece(move.from);
+    if (piece.colour != colour)
         return false;
+
+    if (move.to.rank > 7 || move.to.file > 7)
+        return false;
+
+    if (piece.type == Type::Pawn) {
+        // FIXME: Add en passant.
+        if (colour == Colour::White) {
+            if (move.to.rank == move.from.rank + 1 && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
+                // Regular pawn move.
+                return true;
+            } else if (move.to.rank == move.from.rank + 1 && (move.to.file == move.from.file + 1 || move.to.file == move.from.file - 1)
+                && get_piece(move.to).colour == Colour::Black) {
+                // Pawn capture.
+                return true;
+            } else if (move.from.rank == 1 && move.to.rank == move.from.rank + 2 && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
+                // 2 square pawn move from initial position.
+                return true;
+            }
+        } else if (colour == Colour::Black) {
+            if (move.to.rank == move.from.rank - 1 && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
+                // Regular pawn move.
+                return true;
+            } else if (move.to.rank == move.from.rank - 1 && (move.to.file == move.from.file + 1 || move.to.file == move.from.file - 1)
+                && get_piece(move.to).colour == Colour::White) {
+                // Pawn capture.
+                return true;
+            } else if (move.from.rank == 6 && move.to.rank == move.from.rank - 2 && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
+                // 2 square pawn move from initial position.
+                return true;
+            }
+        }
+        return false;
+    } else if (piece.type == Type::Knight) {
+        int rank_delta = abs(move.to.rank - move.from.rank);
+        int file_delta = abs(move.to.file - move.from.file);
+        if (get_piece(move.to).colour != colour && max(rank_delta, file_delta) == 2 && min(rank_delta, file_delta) == 1) {
+            return true;
+        }
+    } else if (piece.type == Type::Bishop) {
+        int rank_delta = move.to.rank - move.from.rank;
+        int file_delta = move.to.file - move.from.file;
+        if (abs(rank_delta) == abs(file_delta)) {
+            int dr = rank_delta / abs(rank_delta);
+            int df = file_delta / abs(file_delta);
+            for (Square sq = move.from; sq != move.to; sq.rank += dr, sq.file += df) {
+                if (get_piece(sq).type != Type::None && sq != move.from) {
+                    return false;
+                }
+            }
+
+            if (get_piece(move.to).colour != colour) {
+                return true;
+            }
+        }
+    } else if (piece.type == Type::Rook) {
+        int rank_delta = move.to.rank - move.from.rank;
+        int file_delta = move.to.file - move.from.file;
+        if (rank_delta == 0 || file_delta == 0) {
+            int dr = (rank_delta) ? rank_delta / abs(rank_delta) : 0;
+            int df = (file_delta) ? file_delta / abs(file_delta) : 0;
+            for (Square sq = move.from; sq != move.to; sq.rank += dr, sq.file += df) {
+                if (get_piece(sq).type != Type::None && sq != move.from) {
+                    return false;
+                }
+            }
+
+            if (get_piece(move.to).colour != colour) {
+                return true;
+            }
+        }
+    } else if (piece.type == Type::Queen) {
+        int rank_delta = move.to.rank - move.from.rank;
+        int file_delta = move.to.file - move.from.file;
+        if (abs(rank_delta) == abs(file_delta) || rank_delta == 0 || file_delta == 0) {
+            int dr = (rank_delta) ? rank_delta / abs(rank_delta) : 0;
+            int df = (file_delta) ? file_delta / abs(file_delta) : 0;
+            for (Square sq = move.from; sq != move.to; sq.rank += dr, sq.file += df) {
+                if (get_piece(sq).type != Type::None && sq != move.from) {
+                    return false;
+                }
+            }
+
+            if (get_piece(move.to).colour != colour) {
+                return true;
+            }
+        }
+    } else if (piece.type == Type::King) {
+        int rank_delta = move.to.rank - move.from.rank;
+        int file_delta = move.to.file - move.from.file;
+        if (abs(rank_delta) <= 1 && abs(file_delta) <= 1) {
+            if (get_piece(move.to).colour != colour) {
+                return true;
+            }
+        }
+
+        if (colour == Colour::White) {
+            if ((move.to == Square("a1") || move.to == Square("c1")) && m_white_can_castle_queenside && get_piece(Square("b1")).type == Type::None && get_piece(Square("c1")).type == Type::None && get_piece(Square("d1")).type == Type::None) {
+
+                return true;
+            } else if ((move.to == Square("h1") || move.to == Square("g1")) && m_white_can_castle_kingside && get_piece(Square("f1")).type == Type::None && get_piece(Square("g1")).type == Type::None) {
+                return true;
+            }
+        } else {
+            if ((move.to == Square("a8") || move.to == Square("c8")) && m_black_can_castle_queenside && get_piece(Square("b8")).type == Type::None && get_piece(Square("c8")).type == Type::None && get_piece(Square("d8")).type == Type::None) {
+
+                return true;
+            } else if ((move.to == Square("h8") || move.to == Square("g8")) && m_black_can_castle_kingside && get_piece(Square("f8")).type == Type::None && get_piece(Square("g8")).type == Type::None) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Chess::in_check(Colour colour) const
+{
+    Square king_square = { 50, 50 };
+    Square::for_each([&](const Square& square) {
+        if (get_piece(square) == Piece(colour, Type::King)) {
+            king_square = square;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    bool check = false;
+    Square::for_each([&](const Square& square) {
+        if (is_legal({ square, king_square }, opposing_colour(colour))) {
+            check = true;
+            return IterationDecision::Break;
+        } else if (get_piece(square) == Piece(opposing_colour(colour), Type::King) && is_legal_no_check({ square, king_square }, opposing_colour(colour))) {
+            // The King is a special case, because it would be in check if it put the opposing king in check.
+            check = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    return check;
+}
+
+bool Chess::apply_move(const Move& move, Colour colour)
+{
+    if (colour == Colour::None)
+        colour = turn();
+
+    if (!is_legal(move, colour))
+        return false;
+
+    return apply_illegal_move(move, colour);
+}
+
+bool Chess::apply_illegal_move(const Move& move, Colour colour)
+{
+    m_turn = opposing_colour(colour);
+
+    // FIXME: pawn promotion
+
+    if (move.from == Square("a1") || move.to == Square("a1") || move.from == Square("e1"))
+        m_white_can_castle_queenside = false;
+    if (move.from == Square("h1") || move.to == Square("h1") || move.from == Square("e1"))
+        m_white_can_castle_kingside = false;
+    if (move.from == Square("a8") || move.to == Square("a8") || move.from == Square("e8"))
+        m_black_can_castle_queenside = false;
+    if (move.from == Square("h8") || move.to == Square("h8") || move.from == Square("e8"))
+        m_black_can_castle_kingside = false;
+
+    if (colour == Colour::White && move.from == Square("e1") && get_piece(Square("e1")) == Piece(Colour::White, Type::King)) {
+        if (move.to == Square("a1") || move.to == Square("c1")) {
+            set_piece(Square("e1"), EmptyPiece);
+            set_piece(Square("a1"), EmptyPiece);
+            set_piece(Square("c1"), { Colour::White, Type::King });
+            set_piece(Square("d1"), { Colour::White, Type::Rook });
+            return true;
+        } else if (move.to == Square("h1") || move.to == Square("g1")) {
+            set_piece(Square("e1"), EmptyPiece);
+            set_piece(Square("h1"), EmptyPiece);
+            set_piece(Square("g1"), { Colour::White, Type::King });
+            set_piece(Square("f1"), { Colour::White, Type::Rook });
+            return true;
+        }
+    } else if (colour == Colour::Black && move.from == Square("e8") && get_piece(Square("e8")) == Piece(Colour::Black, Type::King)) {
+        if (move.to == Square("a8") || move.to == Square("c8")) {
+            set_piece(Square("e8"), EmptyPiece);
+            set_piece(Square("a8"), EmptyPiece);
+            set_piece(Square("c8"), { Colour::White, Type::King });
+            set_piece(Square("d8"), { Colour::White, Type::Rook });
+            return true;
+        } else if (move.to == Square("h8") || move.to == Square("g8")) {
+            set_piece(Square("e8"), EmptyPiece);
+            set_piece(Square("h8"), EmptyPiece);
+            set_piece(Square("g8"), { Colour::Black, Type::King });
+            set_piece(Square("f8"), { Colour::Black, Type::Rook });
+            return true;
+        }
     }
 
     set_piece(move.to, get_piece(move.from));
     set_piece(move.from, EmptyPiece);
-
-    if (m_turn == Colour::White) {
-        m_turn = Colour::Black;
-    } else if (m_turn == Colour::Black) {
-        m_turn = Colour::White;
-    }
 
     return true;
 }
