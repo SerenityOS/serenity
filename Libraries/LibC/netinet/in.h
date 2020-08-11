@@ -28,6 +28,7 @@
 
 #include <bits/stdint.h>
 #include <sys/cdefs.h>
+#include <sys/socket.h>
 
 __BEGIN_DECLS
 
@@ -43,13 +44,15 @@ in_addr_t inet_addr(const char*);
 #define IPPORT_RESERVED 1024
 #define IPPORT_USERRESERVED 5000
 
+typedef uint16_t in_port_t;
+
 struct in_addr {
     uint32_t s_addr;
 };
 
 struct sockaddr_in {
-    uint16_t sin_family;
-    uint16_t sin_port;
+    sa_family_t sin_family;
+    in_port_t sin_port;
     struct in_addr sin_addr;
     char sin_zero[8];
 };
@@ -59,8 +62,8 @@ struct in6_addr {
 };
 
 struct sockaddr_in6 {
-    uint16_t sin6_family;      // AF_INET6.
-    uint16_t sin6_port;        // Port number.
+    sa_family_t sin6_family;   // AF_INET6.
+    in_port_t sin6_port;       // Port number.
     uint32_t sin6_flowinfo;    // IPv6 traffic class and flow information.
     struct in6_addr sin6_addr; // IPv6 address.
     uint32_t sin6_scope_id;    // Set of interfaces for a scop
