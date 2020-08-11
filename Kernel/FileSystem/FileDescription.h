@@ -71,7 +71,7 @@ public:
 
     ssize_t get_dir_entries(u8* buffer, ssize_t);
 
-    KResultOr<ByteBuffer> read_entire_file();
+    KResultOr<KBuffer> read_entire_file();
 
     String absolute_path() const;
 

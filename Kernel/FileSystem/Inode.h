@@ -67,7 +67,7 @@ public:
     InodeIdentifier identifier() const { return { fsid(), index() }; }
     virtual InodeMetadata metadata() const = 0;
 
-    KResultOr<ByteBuffer> read_entire(FileDescription* = nullptr) const;
+    KResultOr<KBuffer> read_entire(FileDescription* = nullptr) const;
 
     virtual ssize_t read_bytes(off_t, ssize_t, u8* buffer, FileDescription*) const = 0;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const = 0;

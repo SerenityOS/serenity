@@ -31,6 +31,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KBufferBuilder.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
@@ -65,10 +66,9 @@ void Inode::sync()
     }
 }
 
-KResultOr<ByteBuffer> Inode::read_entire(FileDescription* descriptor) const
+KResultOr<KBuffer> Inode::read_entire(FileDescription* descriptor) const
 {
-    size_t initial_size = metadata().size ? metadata().size : 4096;
-    StringBuilder builder(initial_size);
+    KBufferBuilder builder;
 
     ssize_t nread;
     u8 buffer[4096];
@@ -85,10 +85,10 @@ KResultOr<ByteBuffer> Inode::read_entire(FileDescription* descriptor) const
     }
     if (nread < 0) {
         klog() << "Inode::read_entire: ERROR: " << nread;
-        return nullptr;
+        return KResult(nread);
     }
 
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
@@ -101,12 +101,6 @@ KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<C
         return contents_or.error();
 
     auto& contents = contents_or.value();
-    if (!contents) {
-        if (out_parent)
-            *out_parent = nullptr;
-        return KResult(-ENOENT);
-    }
-
     auto path = StringView(contents.data(), contents.size());
     return VFS::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
 }
