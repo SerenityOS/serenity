@@ -381,13 +381,8 @@ extern "C" {
 multiboot_info_t* multiboot_info_ptr;
 }
 
-// Define some Itanium C++ ABI methods to stop the linker from complaining
+// Define some Itanium C++ ABI methods to stop the linker from complaining.
 // If we actually call these something has gone horribly wrong
 void* __dso_handle __attribute__((visibility("hidden")));
 
-extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
-{
-    ASSERT_NOT_REACHED();
-    return 0;
-}
 }
