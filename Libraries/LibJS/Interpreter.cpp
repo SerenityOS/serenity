@@ -60,6 +60,8 @@ Interpreter::~Interpreter()
 
 Value Interpreter::run(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
 {
+    ASSERT(!exception());
+
     if (statement.is_program()) {
         if (m_call_stack.is_empty()) {
             CallFrame global_call_frame;
