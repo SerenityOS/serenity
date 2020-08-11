@@ -889,7 +889,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
         }
         auto& last_in_commands = commands.last();
 
-        last_in_commands.redirections.prepend(*new FdRedirection(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
+        last_in_commands.redirections.prepend(adopt(*new FdRedirection(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination)));
         last_in_commands.should_wait = true;
         last_in_commands.should_notify_if_in_background = false;
         last_in_commands.is_pipe_source = false;
