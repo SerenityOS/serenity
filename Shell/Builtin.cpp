@@ -332,7 +332,7 @@ int Shell::builtin_fg(int argc, const char** argv)
     if (job_id == -1 && !jobs.is_empty())
         job_id = find_last_job_id();
 
-    auto* job = const_cast<Job*>(find_job(job_id));
+    RefPtr<Job> job = find_job(job_id);
 
     if (!job) {
         if (job_id == -1) {
