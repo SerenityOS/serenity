@@ -69,7 +69,7 @@ const KernelSymbol* symbolicate_kernel_address(u32 address)
     return nullptr;
 }
 
-static void load_kernel_sybols_from_data(const ByteBuffer& buffer)
+static void load_kernel_sybols_from_data(const KBuffer& buffer)
 {
     g_lowest_kernel_symbol_address = 0xffffffff;
     g_highest_kernel_symbol_address = 0;

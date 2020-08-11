@@ -56,7 +56,6 @@ int Process::sys$module_load(Userspace<const char*> user_path, size_t path_lengt
     auto payload = payload_or_error.value();
     auto storage = KBuffer::create_with_size(payload.size());
     memcpy(storage.data(), payload.data(), payload.size());
-    payload.clear();
 
     auto elf_image = make<ELF::Image>(storage.data(), storage.size());
     if (!elf_image->parse())

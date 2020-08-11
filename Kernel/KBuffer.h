@@ -105,6 +105,9 @@ public:
     size_t size() const { return m_impl->size(); }
     size_t capacity() const { return m_impl->capacity(); }
 
+    void* end_pointer() { return data() + size(); }
+    const void* end_pointer() const { return data() + size(); }
+
     void set_size(size_t size) { m_impl->set_size(size); }
 
     const KBufferImpl& impl() const { return m_impl; }
