@@ -41,6 +41,7 @@ struct timeval;
 struct timespec;
 struct sockaddr;
 struct siginfo;
+struct stat;
 typedef u32 socklen_t;
 }
 
