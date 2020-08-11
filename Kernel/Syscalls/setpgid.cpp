@@ -124,8 +124,13 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     ProcessGroupID new_pgid = specified_pgid ? ProcessGroupID(specified_pgid) : process->m_pid.value();
     SessionID current_sid = sid();
     SessionID new_sid = get_sid_from_pgid(new_pgid);
-    if (current_sid != new_sid) {
+    if (new_sid != -1 && current_sid != new_sid) {
         // Can't move a process between sessions.
+        return -EPERM;
+    }
+    if (new_sid == -1 && new_pgid != process->m_pid.value()) {
+        // The value of the pgid argument is valid, but is not
+        // the calling pid, and is not an existing process group.
         return -EPERM;
     }
     // FIXME: There are more EPERM conditions to check for here..
