@@ -38,6 +38,9 @@ extern void _init();
 extern char** environ;
 extern bool __environ_is_malloced;
 
+// Tell the compiler that this may be called from somewhere else.
+int _start(int argc, char** argv, char** env);
+
 int _start(int argc, char** argv, char** env)
 {
     environ = env;
