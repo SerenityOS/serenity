@@ -518,15 +518,10 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         perror("fork");
         return nullptr;
     }
+
     if (child == 0) {
-        setpgid(0, 0);
         tcsetattr(0, TCSANOW, &default_termios);
-        if (command.should_wait) {
-            auto pid = getpid();
-            auto pgid = getpgid(pid);
-            tcsetpgrp(STDOUT_FILENO, pgid);
-            tcsetpgrp(STDIN_FILENO, pgid);
-        }
+
         for (auto& rewiring : rewirings) {
 #ifdef SH_DEBUG
             dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), rewiring.dest_fd, rewiring.source_fd);
@@ -572,10 +567,27 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         ASSERT_NOT_REACHED();
     }
 
+    bool is_first = !command.pipeline || (command.pipeline && command.pipeline->pgid == -1);
+
+    if (command.pipeline) {
+        if (is_first) {
+            command.pipeline->pgid = child;
+        }
+    }
+
+    pid_t pgid = is_first ? child : (command.pipeline ? command.pipeline->pgid : child);
+    if (setpgid(child, pgid) < 0)
+        perror("setpgid");
+
+    if (command.should_wait) {
+        tcsetpgrp(STDOUT_FILENO, pgid);
+        tcsetpgrp(STDIN_FILENO, pgid);
+    }
+
     StringBuilder cmd;
     cmd.join(" ", command.argv);
 
-    auto job = Job::create(child, (unsigned)child, cmd.build(), find_last_job_id() + 1);
+    auto job = Job::create(child, pgid, cmd.build(), find_last_job_id() + 1, command.pipeline);
     jobs.set((u64)child, job);
 
     job->on_exit = [](auto job) {

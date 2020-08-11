@@ -150,9 +150,15 @@ private:
     virtual bool is_fd_redirection() const override { return true; }
 };
 
+class Pipeline : public RefCounted<Pipeline> {
+public:
+    pid_t pgid { -1 };
+};
+
 struct Command {
     Vector<String> argv;
     NonnullRefPtrVector<Redirection> redirections;
+    mutable RefPtr<Pipeline> pipeline;
     bool should_wait { true };
     bool is_pipe_source { false };
     bool should_notify_if_in_background { true };
@@ -190,7 +196,7 @@ public:
     }
 
     CommandValue(Vector<String> argv)
-        : m_command({ move(argv), {}, true, false, true })
+        : m_command({ move(argv), {}, {}, true, false, true })
     {
     }
 

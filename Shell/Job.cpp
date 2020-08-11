@@ -25,6 +25,7 @@
  */
 
 #include "Job.h"
+#include "AST.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <sys/wait.h>

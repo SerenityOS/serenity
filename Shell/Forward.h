@@ -32,5 +32,6 @@ namespace AST {
 class Node;
 class Value;
 class SyntaxError;
+class Pipeline;
 
 }
