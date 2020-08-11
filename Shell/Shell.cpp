@@ -518,7 +518,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         return nullptr;
     }
     if (child == 0) {
-        setpgid(0, 0);
+        if (setsid() < 0)
+            perror("setsid");
         tcsetattr(0, TCSANOW, &default_termios);
         if (command.should_wait) {
             auto pid = getpid();
