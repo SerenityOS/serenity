@@ -364,6 +364,9 @@ RefPtr<AST::Node> Parser::parse_control_structure()
     if (auto for_loop = parse_for_loop())
         return for_loop;
 
+    if (auto if_expr = parse_if_expr())
+        return if_expr;
+
     return nullptr;
 }
 
@@ -429,6 +432,83 @@ RefPtr<AST::Node> Parser::parse_for_loop()
     }
 
     return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(body), move(in_start_position)); // ForLoop Var Iterated Block
+}
+
+RefPtr<AST::Node> Parser::parse_if_expr()
+{
+    auto rule_start = push_start();
+    if (!expect("if")) {
+        m_offset = rule_start->offset;
+        return nullptr;
+    }
+
+    if (consume_while(is_any_of(" \t\n")).is_empty()) {
+        m_offset = rule_start->offset;
+        return nullptr;
+    }
+
+    RefPtr<AST::Node> condition;
+    {
+        auto cond_error_start = push_start();
+        condition = parse_or_logical_sequence();
+        if (!condition) {
+            auto syntax_error = create<AST::SyntaxError>("Expected a logical sequence after 'if'");
+            return create<AST::IfCond>(Optional<AST::Position> {}, move(syntax_error), nullptr, nullptr);
+        }
+    }
+
+    auto parse_braced_toplevel = [&]() -> RefPtr<AST::Node> {
+        {
+            auto obrace_error_start = push_start();
+            if (!expect('{')) {
+                auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start an 'if' true branch");
+                return syntax_error;
+            }
+        }
+
+        auto body = parse_toplevel();
+
+        {
+            auto cbrace_error_start = push_start();
+            if (!expect('}')) {
+                auto error_start = push_start();
+                RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end an 'if' true branch");
+                if (body)
+                    body->set_is_syntax_error(*syntax_error);
+                else
+                    body = syntax_error;
+            }
+        }
+
+        return body;
+    };
+
+    consume_while(is_whitespace);
+    auto true_branch = parse_braced_toplevel();
+
+    if (true_branch && true_branch->is_syntax_error())
+        return create<AST::IfCond>(Optional<AST::Position> {}, move(condition), move(true_branch), nullptr); // If expr syntax_error
+
+    consume_while(is_whitespace);
+    Optional<AST::Position> else_position;
+    {
+        auto else_start = push_start();
+        if (expect("else"))
+            else_position = AST::Position { else_start->offset, m_offset };
+    }
+
+    if (else_position.has_value()) {
+        consume_while(is_whitespace);
+        if (peek() == '{') {
+            auto false_branch = parse_braced_toplevel();
+            return create<AST::IfCond>(else_position, move(condition), move(true_branch), move(false_branch)); // If expr true_branch Else false_branch
+        }
+
+        auto else_if_branch = parse_if_expr();
+        return create<AST::IfCond>(else_position, move(condition), move(true_branch), move(else_if_branch)); // If expr true_branch Else If ...
+    }
+
+    return create<AST::IfCond>(else_position, move(condition), move(true_branch), nullptr); // If expr true_branch
 }
 
 RefPtr<AST::Node> Parser::parse_redirection()
