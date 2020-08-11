@@ -55,6 +55,12 @@ private:
 Global g_glob { 5 };
 
 extern "C" {
+
+// Tell the compiler that these symbols might be accessed from other places:
+extern int global_lib_variable;
+void global_lib_function();
+const char* other_lib_function(int my_argument);
+
 int global_lib_variable = 1234;
 
 void global_lib_function()
