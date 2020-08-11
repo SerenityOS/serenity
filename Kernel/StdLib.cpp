@@ -306,4 +306,10 @@ void free(void* p)
 {
     ASSERT_NOT_REACHED();
 }
+
+extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
+{
+    ASSERT_NOT_REACHED();
+    return 0;
+}
 }
