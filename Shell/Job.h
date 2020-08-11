@@ -53,6 +53,8 @@ public:
             dbg() << "Command \"" << m_cmd << "\" finished in " << elapsed << " ms";
         }
 #endif
+        if (m_pipeline)
+            m_pipeline = nullptr;
     }
 
     pid_t pgid() const { return m_pgid; }

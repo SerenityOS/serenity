@@ -513,6 +513,12 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     if (run_builtin(argv.size() - 1, argv.data(), retval))
         return nullptr;
 
+    int sync_pipe[2];
+    if (pipe(sync_pipe) < 0) {
+        perror("pipe");
+        return nullptr;
+    }
+
     pid_t child = fork();
     if (child < 0) {
         perror("fork");
@@ -520,6 +526,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     }
 
     if (child == 0) {
+        close(sync_pipe[1]);
+
         tcsetattr(0, TCSANOW, &default_termios);
 
         for (auto& rewiring : rewirings) {
@@ -538,6 +546,18 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         }
 
         fds.collect();
+
+        u8 c;
+        while (read(sync_pipe[0], &c, 1) < 0) {
+            if (errno != EINTR) {
+                perror("read");
+                // There's nothing interesting we can do here.
+                break;
+            }
+            dbg() << "Oof";
+        }
+
+        close(sync_pipe[0]);
 
         int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
         if (rc < 0) {
@@ -567,6 +587,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         ASSERT_NOT_REACHED();
     }
 
+    close(sync_pipe[0]);
+
     bool is_first = !command.pipeline || (command.pipeline && command.pipeline->pgid == -1);
 
     if (command.pipeline) {
@@ -583,6 +605,17 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         tcsetpgrp(STDOUT_FILENO, pgid);
         tcsetpgrp(STDIN_FILENO, pgid);
     }
+
+    while (write(sync_pipe[1], "x", 1) < 0) {
+        if (errno != EINTR) {
+            perror("write");
+            // There's nothing interesting we can do here.
+            break;
+        }
+        dbg() << "Oof";
+    }
+
+    close(sync_pipe[1]);
 
     StringBuilder cmd;
     cmd.join(" ", command.argv);
