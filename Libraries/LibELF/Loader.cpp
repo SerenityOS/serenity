@@ -43,6 +43,8 @@ namespace ELF {
 Loader::Loader(const u8* buffer, size_t size, bool verbose_logging)
     : m_image(buffer, size, verbose_logging)
 {
+    if (m_image.is_valid())
+        m_symbol_count = m_image.symbol_count();
 }
 
 Loader::~Loader()
@@ -56,8 +58,6 @@ bool Loader::load()
 #endif
     if (!m_image.is_valid())
         return false;
-
-    m_symbol_count = m_image.symbol_count();
 
     if (!layout())
         return false;
