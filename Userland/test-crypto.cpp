@@ -99,7 +99,7 @@ int crc32_tests();
 
 // stop listing tests
 
-void print_buffer(const ByteBuffer& buffer, int split)
+void print_buffer(const ReadonlyBytes& buffer, int split)
 {
     for (size_t i = 0; i < buffer.size(); ++i) {
         if (split > 0) {
@@ -200,20 +200,22 @@ void aes_cbc(const char* message, size_t len)
             Crypto::Cipher::Intent::Encryption);
 
         auto enc = cipher.create_aligned_buffer(buffer.size());
-        (void)cipher.encrypt(buffer, enc, iv);
+        auto enc_span = enc.span();
+        cipher.encrypt(buffer.span(), enc_span, iv.span());
 
         if (binary)
-            printf("%.*s", (int)enc.size(), enc.data());
+            printf("%.*s", (int)enc_span.size(), enc_span.data());
         else
-            print_buffer(enc, Crypto::Cipher::AESCipher::block_size());
+            print_buffer(enc_span, Crypto::Cipher::AESCipher::block_size());
     } else {
         Crypto::Cipher::AESCipher::CBCMode cipher(
             ByteBuffer::wrap(const_cast<char*>(secret_key), strlen(secret_key)),
             key_bits,
             Crypto::Cipher::Intent::Decryption);
         auto dec = cipher.create_aligned_buffer(buffer.size());
-        cipher.decrypt(buffer, dec, iv);
-        printf("%.*s\n", (int)dec.size(), dec.data());
+        auto dec_span = dec.span();
+        cipher.decrypt(buffer.span(), dec_span, iv.span());
+        printf("%.*s\n", (int)dec_span.size(), dec_span.data());
     }
 }
 
@@ -235,7 +237,7 @@ void md5(const char* message, size_t len)
     if (binary)
         printf("%.*s", (int)Crypto::Hash::MD5::digest_size(), digest.data);
     else
-        print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
+        print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
 }
 
 void hmac_md5(const char* message, size_t len)
@@ -245,7 +247,7 @@ void hmac_md5(const char* message, size_t len)
     if (binary)
         printf("%.*s", (int)hmac.digest_size(), mac.data);
     else
-        print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+        print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
 
 void sha1(const char* message, size_t len)
@@ -254,7 +256,7 @@ void sha1(const char* message, size_t len)
     if (binary)
         printf("%.*s", (int)Crypto::Hash::SHA1::digest_size(), digest.data);
     else
-        print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
+        print_buffer({ digest.data, Crypto::Hash::SHA1::digest_size() }, -1);
 }
 
 void sha256(const char* message, size_t len)
@@ -263,7 +265,7 @@ void sha256(const char* message, size_t len)
     if (binary)
         printf("%.*s", (int)Crypto::Hash::SHA256::digest_size(), digest.data);
     else
-        print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA256::digest_size()), -1);
+        print_buffer({ digest.data, Crypto::Hash::SHA256::digest_size() }, -1);
 }
 
 void hmac_sha256(const char* message, size_t len)
@@ -273,7 +275,7 @@ void hmac_sha256(const char* message, size_t len)
     if (binary)
         printf("%.*s", (int)hmac.digest_size(), mac.data);
     else
-        print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+        print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
 
 void sha512(const char* message, size_t len)
@@ -282,7 +284,7 @@ void sha512(const char* message, size_t len)
     if (binary)
         printf("%.*s", (int)Crypto::Hash::SHA512::digest_size(), digest.data);
     else
-        print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA512::digest_size()), -1);
+        print_buffer({ digest.data, Crypto::Hash::SHA512::digest_size() }, -1);
 }
 
 void hmac_sha512(const char* message, size_t len)
@@ -292,7 +294,7 @@ void hmac_sha512(const char* message, size_t len)
     if (binary)
         printf("%.*s", (int)hmac.digest_size(), mac.data);
     else
-        print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+        print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
 
 auto main(int argc, char** argv) -> int
@@ -585,12 +587,13 @@ void aes_cbc_test_encrypt()
         auto in = "This is a test! This is another test!"_b;
         auto out = cipher.create_aligned_buffer(in.size());
         auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
-        (void)cipher.encrypt(in, out, iv);
+        auto out_span = out.span();
+        cipher.encrypt(in.span(), out_span, iv.span());
         if (out.size() != sizeof(result))
             FAIL(size mismatch);
-        else if (memcmp(out.data(), result, out.size()) != 0) {
+        else if (memcmp(out_span.data(), result, out_span.size()) != 0) {
             FAIL(invalid data);
-            print_buffer(out, Crypto::Cipher::AESCipher::block_size());
+            print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
         } else
             PASS;
     };
@@ -648,13 +651,14 @@ void aes_cbc_test_decrypt()
         auto in = ByteBuffer::copy(result, result_len);
         auto out = cipher.create_aligned_buffer(in.size());
         auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
-        cipher.decrypt(in, out, iv);
-        if (out.size() != strlen(true_value)) {
+        auto out_span = out.span();
+        cipher.decrypt(in.span(), out_span, iv.span());
+        if (out_span.size() != strlen(true_value)) {
             FAIL(size mismatch);
-            printf("Expected %zu bytes but got %zu\n", strlen(true_value), out.size());
-        } else if (memcmp(out.data(), true_value, strlen(true_value)) != 0) {
+            printf("Expected %zu bytes but got %zu\n", strlen(true_value), out_span.size());
+        } else if (memcmp(out_span.data(), true_value, strlen(true_value)) != 0) {
             FAIL(invalid data);
-            print_buffer(out, Crypto::Cipher::AESCipher::block_size());
+            print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
         } else
             PASS;
     };
@@ -723,14 +727,15 @@ void aes_ctr_test_encrypt()
         // nonce is already included in ivec.
         Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Encryption);
         ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
-        ByteBuffer final_ivec = cipher.encrypt(in, out_actual, ivec).value();
+        Bytes out_span = out_actual.span();
+        cipher.encrypt(in.span(), out_span, ivec.span());
         if (out_expected.size() != out_actual.size()) {
             FAIL(size mismatch);
-            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_actual.size());
-            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
-        } else if (memcmp(out_expected.data(), out_actual.data(), out_expected.size()) != 0) {
+            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_span.size());
+            print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
+        } else if (memcmp(out_expected.data(), out_span.data(), out_expected.size()) != 0) {
             FAIL(invalid data);
-            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
+            print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
         } else
             PASS;
     };
@@ -917,14 +922,15 @@ void aes_ctr_test_decrypt()
         // nonce is already included in ivec.
         Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Decryption);
         ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
-        cipher.decrypt(in, out_actual, ivec);
-        if (out_expected.size() != out_actual.size()) {
+        auto out_span = out_actual.span();
+        cipher.decrypt(in.span(), out_span, ivec.span());
+        if (out_expected.size() != out_span.size()) {
             FAIL(size mismatch);
-            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_actual.size());
-            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
-        } else if (memcmp(out_expected.data(), out_actual.data(), out_expected.size()) != 0) {
+            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_span.size());
+            print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
+        } else if (memcmp(out_expected.data(), out_span.data(), out_expected.size()) != 0) {
             FAIL(invalid data);
-            print_buffer(out_actual, Crypto::Cipher::AESCipher::block_size());
+            print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
         } else
             PASS;
     };
@@ -978,7 +984,7 @@ void md5_test_hash()
 
         if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
         } else {
             PASS;
         }
@@ -993,7 +999,7 @@ void md5_test_hash()
 
         if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
         } else {
             PASS;
         }
@@ -1007,7 +1013,7 @@ void md5_test_hash()
 
         if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
         } else {
             PASS;
         }
@@ -1021,7 +1027,7 @@ void md5_test_hash()
 
         if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
         } else {
             PASS;
         }
@@ -1035,7 +1041,7 @@ void md5_test_hash()
 
         if (memcmp(result, digest.data, Crypto::Hash::MD5::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::MD5::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
         } else {
             PASS;
         }
@@ -1124,7 +1130,7 @@ void hmac_md5_test_process()
         auto mac = hmac.process("Some bogus data");
         if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
             FAIL(Invalid mac);
-            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+            print_buffer({ mac.data, hmac.digest_size() }, -1);
         } else
             PASS;
     }
@@ -1170,7 +1176,7 @@ void sha1_test_hash()
         auto digest = Crypto::Hash::SHA1::hash("");
         if (memcmp(result, digest.data, Crypto::Hash::SHA1::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::SHA1::digest_size() }, -1);
         } else
             PASS;
     }
@@ -1182,7 +1188,7 @@ void sha1_test_hash()
         auto digest = Crypto::Hash::SHA1::hash("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         if (memcmp(result, digest.data, Crypto::Hash::SHA1::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::SHA1::digest_size() }, -1);
         } else
             PASS;
     }
@@ -1208,7 +1214,7 @@ void sha1_test_hash()
         auto digest = hasher.digest();
         if (memcmp(result, digest.data, Crypto::Hash::SHA1::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA1::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::SHA1::digest_size() }, -1);
         } else
             PASS;
     }
@@ -1242,7 +1248,7 @@ void sha256_test_hash()
         auto digest = Crypto::Hash::SHA256::hash("Well hello friends");
         if (memcmp(result, digest.data, Crypto::Hash::SHA256::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA256::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::SHA256::digest_size() }, -1);
         } else
             PASS;
     }
@@ -1254,7 +1260,7 @@ void sha256_test_hash()
         auto digest = Crypto::Hash::SHA256::hash("");
         if (memcmp(result, digest.data, Crypto::Hash::SHA256::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA256::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::SHA256::digest_size() }, -1);
         } else
             PASS;
     }
@@ -1281,7 +1287,7 @@ void hmac_sha256_test_process()
         auto mac = hmac.process("Some bogus data");
         if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
             FAIL(Invalid mac);
-            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+            print_buffer({ mac.data, hmac.digest_size() }, -1);
         } else
             PASS;
     }
@@ -1294,7 +1300,7 @@ void hmac_sha256_test_process()
         auto mac = hmac.process("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
             FAIL(Invalid mac);
-            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+            print_buffer({ mac.data, hmac.digest_size() }, -1);
         } else
             PASS;
     }
@@ -1307,7 +1313,7 @@ void hmac_sha256_test_process()
         auto mac = hmac.process("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
             FAIL(Invalid mac);
-            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+            print_buffer({ mac.data, hmac.digest_size() }, -1);
         } else
             PASS;
     }
@@ -1353,7 +1359,7 @@ void sha512_test_hash()
         auto digest = Crypto::Hash::SHA512::hash("Well hello friends");
         if (memcmp(result, digest.data, Crypto::Hash::SHA512::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA512::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::SHA512::digest_size() }, -1);
         } else
             PASS;
     }
@@ -1365,7 +1371,7 @@ void sha512_test_hash()
         auto digest = Crypto::Hash::SHA512::hash("");
         if (memcmp(result, digest.data, Crypto::Hash::SHA512::digest_size()) != 0) {
             FAIL(Invalid hash);
-            print_buffer(ByteBuffer::wrap(digest.data, Crypto::Hash::SHA512::digest_size()), -1);
+            print_buffer({ digest.data, Crypto::Hash::SHA512::digest_size() }, -1);
         } else
             PASS;
     }
@@ -1392,7 +1398,7 @@ void hmac_sha512_test_process()
         auto mac = hmac.process("Some bogus data");
         if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
             FAIL(Invalid mac);
-            print_buffer(ByteBuffer::wrap(mac.data, hmac.digest_size()), -1);
+            print_buffer({ mac.data, hmac.digest_size() }, -1);
         } else
             PASS;
     }
@@ -1435,7 +1441,7 @@ void rsa_test_encrypt()
         rsa.encrypt(data, buf);
         if (memcmp(result, buf.data(), buf.size())) {
             FAIL(Invalid encryption result);
-            print_buffer(buf, 16);
+            print_buffer(buf.span(), 16);
         } else {
             PASS;
         }
@@ -1944,7 +1950,7 @@ void bigint_import_export()
             PASS;
         } else {
             FAIL(Invalid value);
-            print_buffer(ByteBuffer::wrap(exported - exported_length + 8, exported_length), -1);
+            print_buffer({ exported - exported_length + 8, exported_length }, -1);
         }
     }
 }

@@ -68,12 +68,13 @@ public:
 
         typename CipherType::CTRMode cipher(m_key, KeySize);
 
-        auto wrapped_buffer = ByteBuffer::wrap(buffer, n);
-        m_counter = cipher.key_stream(wrapped_buffer, m_counter).value();
+        Bytes buffer_span { buffer, n };
+        auto counter_span = m_counter.span();
+        cipher.key_stream(buffer_span, counter_span, &counter_span);
 
         // Extract a new key from the prng stream.
 
-        m_counter = cipher.key_stream(m_key, m_counter).value();
+        cipher.key_stream(buffer_span, counter_span, &counter_span);
     }
 
     template<typename T>

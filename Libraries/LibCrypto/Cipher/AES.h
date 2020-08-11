@@ -46,7 +46,7 @@ public:
     AESCipherBlock(const u8* data, size_t length, PaddingMode mode = PaddingMode::CMS)
         : AESCipherBlock(mode)
     {
-        overwrite(data, length);
+        CipherBlock::overwrite(data, length);
     }
 
     static size_t block_size() { return BlockSizeInBits / 8; };
@@ -54,8 +54,9 @@ public:
     virtual ByteBuffer get() const override { return m_data; };
     virtual const ByteBuffer& data() const override { return m_data; };
 
-    virtual void overwrite(const ByteBuffer&) override;
-    virtual void overwrite(const u8* data, size_t length) override;
+    virtual void overwrite(const ReadonlyBytes&) override;
+    virtual void overwrite(const ByteBuffer& buffer) override { overwrite(buffer.span()); }
+    virtual void overwrite(const u8* data, size_t size) override { overwrite({ data, size }); }
 
     virtual void apply_initialization_vector(const u8* ivec) override
     {
