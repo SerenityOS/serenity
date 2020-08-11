@@ -98,8 +98,8 @@ public:
     // Must intercept `Intent`, because AES must always be set to
     // Encryption, even when decrypting AES-CTR.
     // TODO: How to deal with ciphers that take different arguments?
-    template<typename... Args>
-    explicit constexpr CTR<T>(const ByteBuffer& user_key, size_t key_bits, Intent = Intent::Encryption, Args... args)
+    template<typename KeyType, typename... Args>
+    explicit constexpr CTR<T>(const KeyType& user_key, size_t key_bits, Intent = Intent::Encryption, Args... args)
         : Mode<T>(user_key, key_bits, args...)
     {
     }
@@ -114,26 +114,29 @@ public:
 
     virtual size_t IV_length() const override { return IVSizeInBits / 8; }
 
-    virtual Optional<ByteBuffer> encrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
+    virtual void encrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}, Bytes* ivec_out = nullptr) override
     {
         // Our interpretation of "ivec" is what AES-CTR
         // would define as nonce + IV + 4 zero bytes.
-        return this->encrypt_or_stream(&in, out, ivec);
+        this->encrypt_or_stream(&in, out, ivec, ivec_out);
     }
 
-    Optional<ByteBuffer> key_stream(ByteBuffer& out, Optional<ByteBuffer> ivec = {})
+    void key_stream(Bytes& out, const Bytes& ivec = {}, Bytes* ivec_out = nullptr)
     {
-        return this->encrypt_or_stream(nullptr, out, ivec);
+        this->encrypt_or_stream(nullptr, out, ivec, ivec_out);
     }
 
-    virtual void decrypt(const ByteBuffer& in, ByteBuffer& out, Optional<ByteBuffer> ivec = {}) override
+    virtual void decrypt(const ReadonlyBytes& in, Bytes& out, const Bytes& ivec = {}) override
     {
         // XOR (and thus CTR) is the most symmetric mode.
-        (void)this->encrypt(in, out, ivec);
+        this->encrypt(in, out, ivec);
     }
 
 private:
-    static void increment_inplace(ByteBuffer& in)
+    u8 m_ivec_storage[IVSizeInBits / 8];
+    typename T::BlockType m_cipher_block {};
+
+    static void increment_inplace(Bytes& in)
     {
         for (size_t i = in.size(); i > 0;) {
             --i;
@@ -146,14 +149,14 @@ private:
         }
     }
 
-    Optional<ByteBuffer> encrypt_or_stream(const ByteBuffer* in, ByteBuffer& out, Optional<ByteBuffer> ivec)
+    void encrypt_or_stream(const ReadonlyBytes* in, Bytes& out, const Bytes& ivec, Bytes* ivec_out = nullptr)
     {
         size_t length;
         if (in) {
             ASSERT(in->size() <= out.size());
             length = in->size();
             if (length == 0)
-                return {};
+                return;
         } else {
             length = out.size();
         }
@@ -162,29 +165,36 @@ private:
 
         // FIXME: We should have two of these encrypt/decrypt functions that
         //        we SFINAE out based on whether the Cipher mode needs an ivec
-        ASSERT(ivec.has_value());
-        auto iv = ivec.value();
+        ASSERT(!ivec.is_empty());
+        ASSERT(ivec.size() >= IV_length());
 
-        typename T::BlockType block { cipher.padding_mode() };
+        m_cipher_block.set_padding_mode(cipher.padding_mode());
+
+        __builtin_memcpy(m_ivec_storage, ivec.data(), IV_length());
+        Bytes iv { m_ivec_storage, IV_length() };
+
         size_t offset { 0 };
         auto block_size = cipher.block_size();
 
         while (length > 0) {
-            block.overwrite(iv.slice_view(0, block_size));
+            m_cipher_block.overwrite(iv.slice(0, block_size));
 
-            cipher.encrypt_block(block, block);
+            cipher.encrypt_block(m_cipher_block, m_cipher_block);
             if (in) {
-                block.apply_initialization_vector(in->data() + offset);
+                m_cipher_block.apply_initialization_vector(in->data() + offset);
             }
             auto write_size = min(block_size, length);
-            out.overwrite(offset, block.get().data(), write_size);
+
+            ASSERT(offset + write_size <= out.size());
+            __builtin_memcpy(out.offset(offset), m_cipher_block.get().data(), write_size);
 
             increment_inplace(iv);
             length -= write_size;
             offset += write_size;
         }
 
-        return iv;
+        if (ivec_out)
+            __builtin_memcpy(ivec_out->data(), iv.data(), min(ivec_out->size(), IV_length()));
     }
 };
 
