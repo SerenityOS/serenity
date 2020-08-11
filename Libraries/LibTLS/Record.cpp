@@ -140,7 +140,7 @@ ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<Readonl
     u64 sequence_number = convert_between_host_and_network(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
     ensure_hmac(mac_length, local);
     auto& hmac = local ? *m_hmac_local : *m_hmac_remote;
-#ifndef TLS_DEBUG
+#ifdef TLS_DEBUG
     dbg() << "========================= PACKET DATA ==========================";
     print_buffer((const u8*)&sequence_number, sizeof(u64));
     print_buffer(buf.data(), buf.size());
