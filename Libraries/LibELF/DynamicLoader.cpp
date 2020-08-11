@@ -330,7 +330,9 @@ void DynamicLoader::setup_plt_trampoline()
 #endif
 }
 
-// Called from our ASM routine _plt_trampoline
+// Called from our ASM routine _plt_trampoline.
+// Tell the compiler that it might be called from other places:
+extern "C" Elf32_Addr _fixup_plt_entry(DynamicLoader* object, u32 relocation_offset);
 extern "C" Elf32_Addr _fixup_plt_entry(DynamicLoader* object, u32 relocation_offset)
 {
     return object->patch_plt_entry(relocation_offset);
