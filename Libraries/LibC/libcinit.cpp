@@ -26,6 +26,8 @@
 
 #include <AK/Types.h>
 #include <assert.h>
+#include <sys/internals.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -35,10 +37,7 @@ bool __environ_is_malloced;
 
 void __libc_init()
 {
-    void __malloc_init();
     __malloc_init();
-
-    void __stdio_init();
     __stdio_init();
 }
 
@@ -52,9 +51,9 @@ void __libc_init()
 extern u32 __stack_chk_guard;
 u32 __stack_chk_guard = (u32)0xc6c7c8c9;
 
+[[noreturn]] void __stack_chk_fail();
 [[noreturn]] void __stack_chk_fail()
 {
     ASSERT_NOT_REACHED();
 }
-
 }
