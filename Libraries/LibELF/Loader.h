@@ -59,7 +59,6 @@ public:
         return m_image.entry();
     }
     const Image& image() const { return m_image; }
-    char* symbol_ptr(const char* name) const;
     Optional<Image::Symbol> find_demangled_function(const String& name) const;
 
     bool has_symbols() const { return m_symbol_count; }
@@ -71,22 +70,7 @@ private:
     explicit Loader(const u8*, size_t, bool verbose_logging);
 
     bool layout();
-    bool perform_relocations();
-    void* lookup(const ELF::Image::Symbol&);
-    char* area_for_section(const ELF::Image::Section&);
-    char* area_for_section_name(const char*);
 
-    struct PtrAndSize {
-        PtrAndSize() {}
-        PtrAndSize(char* p, unsigned s)
-            : ptr(p)
-            , size(s)
-        {
-        }
-
-        char* ptr { nullptr };
-        unsigned size { 0 };
-    };
     Image m_image;
 
     size_t m_symbol_count { 0 };
