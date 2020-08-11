@@ -53,26 +53,29 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     size_t tile_width = width() / 8;
     size_t tile_height = height() / 8;
 
-    for (unsigned rank = 0; rank < 8; ++rank) {
-        for (unsigned file = 0; file < 8; ++file) {
-            Gfx::IntRect tile_rect;
-            if (side() == Chess::Colour::White) {
-                tile_rect = { file * tile_width, (7 - rank) * tile_height, tile_width, tile_height };
-            } else {
-                tile_rect = { (7 - file) * tile_width, rank * tile_height, tile_width, tile_height };
-            }
+    Chess::Square::for_each([&](Chess::Square sq) {
+        Gfx::IntRect tile_rect;
+        if (side() == Chess::Colour::White) {
+            tile_rect = { sq.file * tile_width, (7 - sq.rank) * tile_height, tile_width, tile_height };
+        } else {
+            tile_rect = { (7 - sq.file) * tile_width, sq.rank * tile_height, tile_width, tile_height };
+        }
 
-            painter.fill_rect(tile_rect, ((rank % 2) == (file % 2)) ? m_dark_square_color : m_light_square_color);
+        painter.fill_rect(tile_rect, ((sq.rank % 2) == (sq.file % 2)) ? m_dark_square_color : m_light_square_color);
 
-            Chess::Square square = { rank, file };
-            if (!(m_dragging_piece && square == m_moving_square)) {
-                auto bmp = m_pieces.get(board().get_piece(square));
-                if (bmp.has_value()) {
-                    painter.draw_scaled_bitmap(tile_rect, *bmp.value(), bmp.value()->rect());
-                }
+        if (m_last_move.has_value() && (m_last_move.value().to == sq || m_last_move.value().from == sq)) {
+            painter.fill_rect(tile_rect, m_move_highlight_color);
+        }
+
+        if (!(m_dragging_piece && sq == m_moving_square)) {
+            auto bmp = m_pieces.get(board().get_piece(sq));
+            if (bmp.has_value()) {
+                painter.draw_scaled_bitmap(tile_rect, *bmp.value(), bmp.value()->rect());
             }
         }
-    }
+
+        return IterationDecision::Continue;
+    });
 
     if (m_dragging_piece) {
         auto bmp = m_pieces.get(board().get_piece(m_moving_square));
@@ -111,32 +114,36 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 
     auto target_square = mouse_to_square(event);
 
-    if (board().apply_move({ m_moving_square, target_square }) && board().game_result() != Chess::Result::NotFinished) {
-        set_drag_enabled(false);
-        update();
+    if (board().apply_move({ m_moving_square, target_square })) {
+        m_last_move = Chess::Move(m_moving_square, target_square);
 
-        String msg;
-        switch (board().game_result()) {
-        case Chess::Result::CheckMate:
-            if (board().turn() == Chess::Colour::White) {
-                msg = "Black wins by Checkmate.";
-            } else {
-                msg = "White wins by Checkmate.";
+        if (board().game_result() != Chess::Result::NotFinished) {
+            set_drag_enabled(false);
+            update();
+
+            String msg;
+            switch (board().game_result()) {
+            case Chess::Result::CheckMate:
+                if (board().turn() == Chess::Colour::White) {
+                    msg = "Black wins by Checkmate.";
+                } else {
+                    msg = "White wins by Checkmate.";
+                }
+                break;
+            case Chess::Result::StaleMate:
+                msg = "Draw by Stalemate.";
+                break;
+            case Chess::Result::FiftyMoveRule:
+                msg = "Draw by 50 move rule.";
+                break;
+            case Chess::Result::ThreeFoldRepitition:
+                msg = "Draw by threefold repitition.";
+                break;
+            default:
+                ASSERT_NOT_REACHED();
             }
-            break;
-        case Chess::Result::StaleMate:
-            msg = "Draw by Stalemate.";
-            break;
-        case Chess::Result::FiftyMoveRule:
-            msg = "Draw by 50 move rule.";
-            break;
-        case Chess::Result::ThreeFoldRepitition:
-            msg = "Draw by threefold repitition.";
-            break;
-        default:
-            ASSERT_NOT_REACHED();
+            GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
         }
-        GUI::MessageBox::show(window(), msg, "Game Over");
     }
 
     update();
