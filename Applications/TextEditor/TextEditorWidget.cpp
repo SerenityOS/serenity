@@ -86,8 +86,20 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
+    auto update_statusbar_cursor_position = [this] {
+        StringBuilder builder;
+        builder.appendf("Line: %d, Column: %d", m_editor->cursor().line() + 1, m_editor->cursor().column());
+        m_statusbar->set_text(builder.to_string());
+    };
+
     m_page_view = splitter.add<Web::PageView>();
     m_page_view->set_visible(false);
+    m_page_view->on_link_hover = [this, update_statusbar_cursor_position = move(update_statusbar_cursor_position)](auto& url) {
+        if (url.is_valid())
+            m_statusbar->set_text(url.to_string());
+        else
+            update_statusbar_cursor_position();
+    };
     m_page_view->on_link_click = [&](auto& url, auto&, unsigned) {
         if (!Desktop::Launcher::open(url)) {
             GUI::MessageBox::show(
@@ -288,10 +300,8 @@ TextEditorWidget::TextEditorWidget()
 
     m_statusbar = add<GUI::StatusBar>();
 
-    m_editor->on_cursor_change = [this] {
-        StringBuilder builder;
-        builder.appendf("Line: %d, Column: %d", m_editor->cursor().line() + 1, m_editor->cursor().column());
-        m_statusbar->set_text(builder.to_string());
+    m_editor->on_cursor_change = [update_statusbar_cursor_position = move(update_statusbar_cursor_position)] {
+        update_statusbar_cursor_position();
     };
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
