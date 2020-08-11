@@ -67,6 +67,7 @@ void AESCipherKey::expand_encrypt_key(const ByteBuffer& user_key, size_t bits)
 
     ASSERT(!user_key.is_null());
     ASSERT(is_valid_key_size(bits));
+    ASSERT(user_key.size() >= bits / 8);
 
     round_key = round_keys();
 
@@ -78,10 +79,10 @@ void AESCipherKey::expand_encrypt_key(const ByteBuffer& user_key, size_t bits)
         m_rounds = 14;
     }
 
-    round_key[0] = get_key(user_key.slice_view(0, 4).data());
-    round_key[1] = get_key(user_key.slice_view(4, 4).data());
-    round_key[2] = get_key(user_key.slice_view(8, 4).data());
-    round_key[3] = get_key(user_key.slice_view(12, 4).data());
+    round_key[0] = get_key(user_key.data());
+    round_key[1] = get_key(user_key.data() + 4);
+    round_key[2] = get_key(user_key.data() + 8);
+    round_key[3] = get_key(user_key.data() + 12);
     if (bits == 128) {
         for (;;) {
             temp = round_key[3];
@@ -103,8 +104,8 @@ void AESCipherKey::expand_encrypt_key(const ByteBuffer& user_key, size_t bits)
         return;
     }
 
-    round_key[4] = get_key(user_key.slice_view(16, 4).data());
-    round_key[5] = get_key(user_key.slice_view(20, 4).data());
+    round_key[4] = get_key(user_key.data() + 16);
+    round_key[5] = get_key(user_key.data() + 20);
     if (bits == 192) {
         for (;;) {
             temp = round_key[5];
@@ -131,8 +132,8 @@ void AESCipherKey::expand_encrypt_key(const ByteBuffer& user_key, size_t bits)
         return;
     }
 
-    round_key[6] = get_key(user_key.slice_view(24, 4).data());
-    round_key[7] = get_key(user_key.slice_view(28, 4).data());
+    round_key[6] = get_key(user_key.data() + 24);
+    round_key[7] = get_key(user_key.data() + 28);
     if (true) { // bits == 256
         for (;;) {
             temp = round_key[7];
