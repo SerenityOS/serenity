@@ -34,6 +34,13 @@
 #    pragma GCC optimize("O3")
 #endif
 
+#define TODO_INSN()                                                                 \
+    do {                                                                            \
+        report("\n==%d== Unimplemented instruction: %s\n", getpid(), __FUNCTION__); \
+        m_emulator.dump_backtrace();                                                \
+        _exit(0);                                                                   \
+    } while (0)
+
 //#define MEMORY_DEBUG
 
 #define DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(mnemonic, op)                                                                            \
@@ -943,12 +950,12 @@ ALWAYS_INLINE void SoftCPU::generic_RM32_CL(Op op, const X86::Instruction& insn)
     insn.modrm().write32(*this, insn, op(*this, data, cl()));
 }
 
-void SoftCPU::AAA(const X86::Instruction&) { TODO(); }
-void SoftCPU::AAD(const X86::Instruction&) { TODO(); }
-void SoftCPU::AAM(const X86::Instruction&) { TODO(); }
-void SoftCPU::AAS(const X86::Instruction&) { TODO(); }
-void SoftCPU::ARPL(const X86::Instruction&) { TODO(); }
-void SoftCPU::BOUND(const X86::Instruction&) { TODO(); }
+void SoftCPU::AAA(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::AAD(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::AAM(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::AAS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::ARPL(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::BOUND(const X86::Instruction&) { TODO_INSN(); }
 
 template<typename T>
 ALWAYS_INLINE static T op_bsf(SoftCPU&, T value)
@@ -1146,8 +1153,8 @@ void SoftCPU::CALL_FAR_mem16(const X86::Instruction&)
 {
     TODO();
 }
-void SoftCPU::CALL_FAR_mem32(const X86::Instruction&) { TODO(); }
-void SoftCPU::CALL_RM16(const X86::Instruction&) { TODO(); }
+void SoftCPU::CALL_FAR_mem32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::CALL_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::CALL_RM32(const X86::Instruction& insn)
 {
@@ -1157,9 +1164,9 @@ void SoftCPU::CALL_RM32(const X86::Instruction& insn)
     set_eip(address.value());
 }
 
-void SoftCPU::CALL_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::CALL_imm16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::CALL_imm16_imm32(const X86::Instruction&) { TODO(); }
+void SoftCPU::CALL_imm16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::CALL_imm16_imm16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::CALL_imm16_imm32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::CALL_imm32(const X86::Instruction& insn)
 {
@@ -1190,9 +1197,9 @@ void SoftCPU::CLD(const X86::Instruction&)
     set_df(false);
 }
 
-void SoftCPU::CLI(const X86::Instruction&) { TODO(); }
-void SoftCPU::CLTS(const X86::Instruction&) { TODO(); }
-void SoftCPU::CMC(const X86::Instruction&) { TODO(); }
+void SoftCPU::CLI(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::CLTS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::CMC(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::CMOVcc_reg16_RM16(const X86::Instruction& insn)
 {
@@ -1275,7 +1282,7 @@ void SoftCPU::CMPXCHG_RM8_reg8(const X86::Instruction& insn)
     }
 }
 
-void SoftCPU::CPUID(const X86::Instruction&) { TODO(); }
+void SoftCPU::CPUID(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::CWD(const X86::Instruction&)
 {
@@ -1287,8 +1294,8 @@ void SoftCPU::CWDE(const X86::Instruction&)
     set_eax(shadow_wrap_with_taint_from(sign_extended_to<u32>(ax().value()), ax()));
 }
 
-void SoftCPU::DAA(const X86::Instruction&) { TODO(); }
-void SoftCPU::DAS(const X86::Instruction&) { TODO(); }
+void SoftCPU::DAA(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::DAS(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::DEC_RM16(const X86::Instruction& insn)
 {
@@ -1377,8 +1384,8 @@ void SoftCPU::DIV_RM8(const X86::Instruction& insn)
     set_ah(shadow_wrap_with_taint_from<u8>(remainder, original_ax, divisor));
 }
 
-void SoftCPU::ENTER16(const X86::Instruction&) { TODO(); }
-void SoftCPU::ENTER32(const X86::Instruction&) { TODO(); }
+void SoftCPU::ENTER16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::ENTER32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::ESCAPE(const X86::Instruction&)
 {
@@ -1387,126 +1394,126 @@ void SoftCPU::ESCAPE(const X86::Instruction&)
     TODO();
 }
 
-void SoftCPU::FADD_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FMUL_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FCOM_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FCOMP_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FSUB_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FSUBR_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FDIV_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FDIVR_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLD_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FXCH(const X86::Instruction&) { TODO(); }
-void SoftCPU::FST_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FNOP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FSTP_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLDENV(const X86::Instruction&) { TODO(); }
-void SoftCPU::FCHS(const X86::Instruction&) { TODO(); }
-void SoftCPU::FABS(const X86::Instruction&) { TODO(); }
-void SoftCPU::FTST(const X86::Instruction&) { TODO(); }
-void SoftCPU::FXAM(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLDCW(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLD1(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLDL2T(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLDL2E(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLDPI(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLDLG2(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLDLN2(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLDZ(const X86::Instruction&) { TODO(); }
-void SoftCPU::FNSTENV(const X86::Instruction&) { TODO(); }
-void SoftCPU::F2XM1(const X86::Instruction&) { TODO(); };
-void SoftCPU::FYL2X(const X86::Instruction&) { TODO(); };
-void SoftCPU::FPTAN(const X86::Instruction&) { TODO(); };
-void SoftCPU::FPATAN(const X86::Instruction&) { TODO(); };
-void SoftCPU::FXTRACT(const X86::Instruction&) { TODO(); };
-void SoftCPU::FPREM1(const X86::Instruction&) { TODO(); };
-void SoftCPU::FDECSTP(const X86::Instruction&) { TODO(); };
-void SoftCPU::FINCSTP(const X86::Instruction&) { TODO(); };
-void SoftCPU::FNSTCW(const X86::Instruction&) { TODO(); };
-void SoftCPU::FPREM(const X86::Instruction&) { TODO(); };
-void SoftCPU::FYL2XP1(const X86::Instruction&) { TODO(); };
-void SoftCPU::FSQRT(const X86::Instruction&) { TODO(); };
-void SoftCPU::FSINCOS(const X86::Instruction&) { TODO(); };
-void SoftCPU::FRNDINT(const X86::Instruction&) { TODO(); };
-void SoftCPU::FSCALE(const X86::Instruction&) { TODO(); };
-void SoftCPU::FSIN(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCOS(const X86::Instruction&) { TODO(); };
-void SoftCPU::FIADD_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCMOVB(const X86::Instruction&) { TODO(); };
-void SoftCPU::FIMUL_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCMOVE(const X86::Instruction&) { TODO(); };
-void SoftCPU::FICOM_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCMOVBE(const X86::Instruction&) { TODO(); };
-void SoftCPU::FICOMP_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCMOVU(const X86::Instruction&) { TODO(); };
-void SoftCPU::FISUB_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FISUBR_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FUCOMPP(const X86::Instruction&) { TODO(); };
-void SoftCPU::FIDIV_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FIDIVR_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FILD_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCMOVNB(const X86::Instruction&) { TODO(); };
-void SoftCPU::FISTTP_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCMOVNE(const X86::Instruction&) { TODO(); };
-void SoftCPU::FIST_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCMOVNBE(const X86::Instruction&) { TODO(); };
-void SoftCPU::FISTP_RM32(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCMOVNU(const X86::Instruction&) { TODO(); };
-void SoftCPU::FNENI(const X86::Instruction&) { TODO(); };
-void SoftCPU::FNDISI(const X86::Instruction&) { TODO(); };
-void SoftCPU::FNCLEX(const X86::Instruction&) { TODO(); };
-void SoftCPU::FNINIT(const X86::Instruction&) { TODO(); };
-void SoftCPU::FNSETPM(const X86::Instruction&) { TODO(); };
-void SoftCPU::FLD_RM80(const X86::Instruction&) { TODO(); };
-void SoftCPU::FUCOMI(const X86::Instruction&) { TODO(); };
-void SoftCPU::FCOMI(const X86::Instruction&) { TODO(); };
-void SoftCPU::FSTP_RM80(const X86::Instruction&) { TODO(); };
-void SoftCPU::FADD_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FMUL_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FCOM_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FCOMP_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FSUB_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FSUBR_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FDIV_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FDIVR_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FLD_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FFREE(const X86::Instruction&) { TODO(); }
-void SoftCPU::FISTTP_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FST_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FSTP_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FRSTOR(const X86::Instruction&) { TODO(); }
-void SoftCPU::FUCOM(const X86::Instruction&) { TODO(); }
-void SoftCPU::FUCOMP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FNSAVE(const X86::Instruction&) { TODO(); }
-void SoftCPU::FNSTSW(const X86::Instruction&) { TODO(); }
-void SoftCPU::FIADD_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FADDP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FIMUL_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FMULP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FICOM_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FICOMP_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FCOMPP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FISUB_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FSUBRP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FISUBR_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FSUBP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FIDIV_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FDIVRP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FIDIVR_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FDIVP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FILD_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FFREEP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FISTTP_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FIST_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FISTP_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::FBLD_M80(const X86::Instruction&) { TODO(); }
-void SoftCPU::FNSTSW_AX(const X86::Instruction&) { TODO(); }
-void SoftCPU::FILD_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::FUCOMIP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FBSTP_M80(const X86::Instruction&) { TODO(); }
-void SoftCPU::FCOMIP(const X86::Instruction&) { TODO(); }
-void SoftCPU::FISTP_RM64(const X86::Instruction&) { TODO(); }
-void SoftCPU::HLT(const X86::Instruction&) { TODO(); }
+void SoftCPU::FADD_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FMUL_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCOM_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCOMP_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSUB_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSUBR_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FDIV_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FDIVR_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLD_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FXCH(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FST_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FNOP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSTP_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDENV(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCHS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FABS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FTST(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FXAM(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDCW(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLD1(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDL2T(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDL2E(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDPI(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDLG2(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDLN2(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLDZ(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FNSTENV(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::F2XM1(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FYL2X(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FPTAN(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FPATAN(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FXTRACT(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FPREM1(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FDECSTP(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FINCSTP(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FNSTCW(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FPREM(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FYL2XP1(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FSQRT(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FSINCOS(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FRNDINT(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FSCALE(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FSIN(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCOS(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FIADD_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCMOVB(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FIMUL_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCMOVE(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FICOM_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCMOVBE(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FICOMP_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCMOVU(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FISUB_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FISUBR_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FUCOMPP(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FIDIV_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FIDIVR_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FILD_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCMOVNB(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FISTTP_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCMOVNE(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FIST_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCMOVNBE(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FISTP_RM32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCMOVNU(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FNENI(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FNDISI(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FNCLEX(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FNINIT(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FNSETPM(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FLD_RM80(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FUCOMI(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FCOMI(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FSTP_RM80(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::FADD_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FMUL_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCOM_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCOMP_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSUB_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSUBR_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FDIV_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FDIVR_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FLD_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FFREE(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FISTTP_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FST_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSTP_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FRSTOR(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FUCOM(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FUCOMP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FNSAVE(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FNSTSW(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FIADD_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FADDP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FIMUL_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FMULP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FICOM_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FICOMP_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCOMPP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FISUB_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSUBRP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FISUBR_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FSUBP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FIDIV_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FDIVRP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FIDIVR_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FDIVP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FILD_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FFREEP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FISTTP_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FIST_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FISTP_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FBLD_M80(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FNSTSW_AX(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FILD_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FUCOMIP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FBSTP_M80(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCOMIP(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FISTP_RM64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::HLT(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::IDIV_RM16(const X86::Instruction& insn)
 {
@@ -1677,11 +1684,11 @@ void SoftCPU::INC_reg32(const X86::Instruction& insn)
     gpr32(insn.reg32()) = op_inc(*this, const_gpr32(insn.reg32()));
 }
 
-void SoftCPU::INSB(const X86::Instruction&) { TODO(); }
-void SoftCPU::INSD(const X86::Instruction&) { TODO(); }
-void SoftCPU::INSW(const X86::Instruction&) { TODO(); }
-void SoftCPU::INT3(const X86::Instruction&) { TODO(); }
-void SoftCPU::INTO(const X86::Instruction&) { TODO(); }
+void SoftCPU::INSB(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::INSD(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::INSW(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::INT3(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::INTO(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::INT_imm8(const X86::Instruction& insn)
 {
@@ -1690,14 +1697,14 @@ void SoftCPU::INT_imm8(const X86::Instruction& insn)
     set_eax(shadow_wrap_as_initialized(m_emulator.virt_syscall(eax().value(), edx().value(), ecx().value(), ebx().value())));
 }
 
-void SoftCPU::INVLPG(const X86::Instruction&) { TODO(); }
-void SoftCPU::IN_AL_DX(const X86::Instruction&) { TODO(); }
-void SoftCPU::IN_AL_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::IN_AX_DX(const X86::Instruction&) { TODO(); }
-void SoftCPU::IN_AX_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::IN_EAX_DX(const X86::Instruction&) { TODO(); }
-void SoftCPU::IN_EAX_imm8(const X86::Instruction&) { TODO(); }
-void SoftCPU::IRET(const X86::Instruction&) { TODO(); }
+void SoftCPU::INVLPG(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::IN_AL_DX(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::IN_AL_imm8(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::IN_AX_DX(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::IN_AX_imm8(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::IN_EAX_DX(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::IN_EAX_imm8(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::IRET(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::JCXZ_imm8(const X86::Instruction& insn)
 {
@@ -1712,9 +1719,9 @@ void SoftCPU::JCXZ_imm8(const X86::Instruction& insn)
     }
 }
 
-void SoftCPU::JMP_FAR_mem16(const X86::Instruction&) { TODO(); }
-void SoftCPU::JMP_FAR_mem32(const X86::Instruction&) { TODO(); }
-void SoftCPU::JMP_RM16(const X86::Instruction&) { TODO(); }
+void SoftCPU::JMP_FAR_mem16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::JMP_FAR_mem32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::JMP_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::JMP_RM32(const X86::Instruction& insn)
 {
@@ -1726,8 +1733,8 @@ void SoftCPU::JMP_imm16(const X86::Instruction& insn)
     set_eip(eip() + (i16)insn.imm16());
 }
 
-void SoftCPU::JMP_imm16_imm16(const X86::Instruction&) { TODO(); }
-void SoftCPU::JMP_imm16_imm32(const X86::Instruction&) { TODO(); }
+void SoftCPU::JMP_imm16_imm16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::JMP_imm16_imm32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::JMP_imm32(const X86::Instruction& insn)
 {
@@ -1753,12 +1760,12 @@ void SoftCPU::Jcc_imm8(const X86::Instruction& insn)
         set_eip(eip() + (i8)insn.imm8());
 }
 
-void SoftCPU::LAHF(const X86::Instruction&) { TODO(); }
-void SoftCPU::LAR_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LAR_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::LDS_reg16_mem16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LDS_reg32_mem32(const X86::Instruction&) { TODO(); }
-void SoftCPU::LEAVE16(const X86::Instruction&) { TODO(); }
+void SoftCPU::LAHF(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LAR_reg16_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LAR_reg32_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LDS_reg16_mem16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LDS_reg32_mem32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LEAVE16(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::LEAVE32(const X86::Instruction&)
 {
@@ -1779,16 +1786,16 @@ void SoftCPU::LEA_reg32_mem32(const X86::Instruction& insn)
     gpr32(insn.reg32()) = shadow_wrap_as_initialized<u32>(insn.modrm().resolve(*this, insn).offset());
 }
 
-void SoftCPU::LES_reg16_mem16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LES_reg32_mem32(const X86::Instruction&) { TODO(); }
-void SoftCPU::LFS_reg16_mem16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LFS_reg32_mem32(const X86::Instruction&) { TODO(); }
-void SoftCPU::LGDT(const X86::Instruction&) { TODO(); }
-void SoftCPU::LGS_reg16_mem16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LGS_reg32_mem32(const X86::Instruction&) { TODO(); }
-void SoftCPU::LIDT(const X86::Instruction&) { TODO(); }
-void SoftCPU::LLDT_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LMSW_RM16(const X86::Instruction&) { TODO(); }
+void SoftCPU::LES_reg16_mem16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LES_reg32_mem32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LFS_reg16_mem16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LFS_reg32_mem32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LGDT(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LGS_reg16_mem16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LGS_reg32_mem32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LIDT(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LLDT_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LMSW_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 template<typename T>
 ALWAYS_INLINE static void do_lods(SoftCPU& cpu, const X86::Instruction& insn)
@@ -1856,11 +1863,11 @@ void SoftCPU::LOOP_imm8(const X86::Instruction& insn)
     }
 }
 
-void SoftCPU::LSL_reg16_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LSL_reg32_RM32(const X86::Instruction&) { TODO(); }
-void SoftCPU::LSS_reg16_mem16(const X86::Instruction&) { TODO(); }
-void SoftCPU::LSS_reg32_mem32(const X86::Instruction&) { TODO(); }
-void SoftCPU::LTR_RM16(const X86::Instruction&) { TODO(); }
+void SoftCPU::LSL_reg16_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LSL_reg32_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LSS_reg16_mem16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LSS_reg32_mem32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::LTR_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 template<typename T>
 ALWAYS_INLINE static void do_movs(SoftCPU& cpu, const X86::Instruction& insn)
@@ -1935,8 +1942,8 @@ void SoftCPU::MOV_AX_moff16(const X86::Instruction& insn)
     set_ax(read_memory16({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }));
 }
 
-void SoftCPU::MOV_CR_reg32(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_DR_reg32(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOV_CR_reg32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::MOV_DR_reg32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::MOV_EAX_moff32(const X86::Instruction& insn)
 {
@@ -1953,7 +1960,7 @@ void SoftCPU::MOV_RM16_reg16(const X86::Instruction& insn)
     insn.modrm().write16(*this, insn, const_gpr16(insn.reg16()));
 }
 
-void SoftCPU::MOV_RM16_seg(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOV_RM16_seg(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::MOV_RM32_imm32(const X86::Instruction& insn)
 {
@@ -2000,8 +2007,8 @@ void SoftCPU::MOV_reg16_imm16(const X86::Instruction& insn)
     gpr16(insn.reg16()) = shadow_wrap_as_initialized(insn.imm16());
 }
 
-void SoftCPU::MOV_reg32_CR(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_reg32_DR(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOV_reg32_CR(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::MOV_reg32_DR(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::MOV_reg32_RM32(const X86::Instruction& insn)
 {
@@ -2023,8 +2030,8 @@ void SoftCPU::MOV_reg8_imm8(const X86::Instruction& insn)
     gpr8(insn.reg8()) = shadow_wrap_as_initialized(insn.imm8());
 }
 
-void SoftCPU::MOV_seg_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOV_seg_RM32(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOV_seg_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::MOV_seg_RM32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::MUL_RM16(const X86::Instruction& insn)
 {
@@ -2101,21 +2108,21 @@ void SoftCPU::NOT_RM8(const X86::Instruction& insn)
     insn.modrm().write8(*this, insn, ValueWithShadow<u8>(~data.value(), data.shadow()));
 }
 
-void SoftCPU::OUTSB(const X86::Instruction&) { TODO(); }
-void SoftCPU::OUTSD(const X86::Instruction&) { TODO(); }
-void SoftCPU::OUTSW(const X86::Instruction&) { TODO(); }
-void SoftCPU::OUT_DX_AL(const X86::Instruction&) { TODO(); }
-void SoftCPU::OUT_DX_AX(const X86::Instruction&) { TODO(); }
-void SoftCPU::OUT_DX_EAX(const X86::Instruction&) { TODO(); }
-void SoftCPU::OUT_imm8_AL(const X86::Instruction&) { TODO(); }
-void SoftCPU::OUT_imm8_AX(const X86::Instruction&) { TODO(); }
-void SoftCPU::OUT_imm8_EAX(const X86::Instruction&) { TODO(); }
-void SoftCPU::PADDB_mm1_mm2m64(const X86::Instruction&) { TODO(); }
-void SoftCPU::PADDW_mm1_mm2m64(const X86::Instruction&) { TODO(); }
-void SoftCPU::PADDD_mm1_mm2m64(const X86::Instruction&) { TODO(); }
-void SoftCPU::POPA(const X86::Instruction&) { TODO(); }
-void SoftCPU::POPAD(const X86::Instruction&) { TODO(); }
-void SoftCPU::POPF(const X86::Instruction&) { TODO(); }
+void SoftCPU::OUTSB(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::OUTSD(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::OUTSW(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::OUT_DX_AL(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::OUT_DX_AX(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::OUT_DX_EAX(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::OUT_imm8_AL(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::OUT_imm8_AX(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::OUT_imm8_EAX(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PADDB_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PADDW_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PADDD_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::POPA(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::POPAD(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::POPF(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::POPFD(const X86::Instruction&)
 {
@@ -2125,10 +2132,10 @@ void SoftCPU::POPFD(const X86::Instruction&)
     taint_flags_from(popped_value);
 }
 
-void SoftCPU::POP_DS(const X86::Instruction&) { TODO(); }
-void SoftCPU::POP_ES(const X86::Instruction&) { TODO(); }
-void SoftCPU::POP_FS(const X86::Instruction&) { TODO(); }
-void SoftCPU::POP_GS(const X86::Instruction&) { TODO(); }
+void SoftCPU::POP_DS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::POP_ES(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::POP_FS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::POP_GS(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::POP_RM16(const X86::Instruction& insn)
 {
@@ -2140,7 +2147,7 @@ void SoftCPU::POP_RM32(const X86::Instruction& insn)
     insn.modrm().write32(*this, insn, pop32());
 }
 
-void SoftCPU::POP_SS(const X86::Instruction&) { TODO(); }
+void SoftCPU::POP_SS(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::POP_reg16(const X86::Instruction& insn)
 {
@@ -2152,9 +2159,9 @@ void SoftCPU::POP_reg32(const X86::Instruction& insn)
     gpr32(insn.reg32()) = pop32();
 }
 
-void SoftCPU::PUSHA(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSHAD(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSHF(const X86::Instruction&) { TODO(); }
+void SoftCPU::PUSHA(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSHAD(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSHF(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::PUSHFD(const X86::Instruction&)
 {
@@ -2162,20 +2169,20 @@ void SoftCPU::PUSHFD(const X86::Instruction&)
     push32(shadow_wrap_as_initialized(m_eflags & 0x00fcffff));
 }
 
-void SoftCPU::PUSH_CS(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_DS(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_ES(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_FS(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_GS(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_RM16(const X86::Instruction&) { TODO(); }
+void SoftCPU::PUSH_CS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSH_DS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSH_ES(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSH_FS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSH_GS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSH_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::PUSH_RM32(const X86::Instruction& insn)
 {
     push32(insn.modrm().read32<ValueWithShadow<u32>>(*this, insn));
 }
 
-void SoftCPU::PUSH_SP_8086_80186(const X86::Instruction&) { TODO(); }
-void SoftCPU::PUSH_SS(const X86::Instruction&) { TODO(); }
+void SoftCPU::PUSH_SP_8086_80186(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::PUSH_SS(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::PUSH_imm16(const X86::Instruction& insn)
 {
@@ -2312,7 +2319,7 @@ ALWAYS_INLINE static T op_rcr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(RCR, op_rcr)
 
-void SoftCPU::RDTSC(const X86::Instruction&) { TODO(); }
+void SoftCPU::RDTSC(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::RET(const X86::Instruction& insn)
 {
@@ -2322,8 +2329,8 @@ void SoftCPU::RET(const X86::Instruction& insn)
     set_eip(ret_address.value());
 }
 
-void SoftCPU::RETF(const X86::Instruction&) { TODO(); }
-void SoftCPU::RETF_imm16(const X86::Instruction&) { TODO(); }
+void SoftCPU::RETF(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::RETF_imm16(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::RET_imm16(const X86::Instruction& insn)
 {
@@ -2402,7 +2409,7 @@ ALWAYS_INLINE static T op_ror(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(ROR, op_ror)
 
-void SoftCPU::SAHF(const X86::Instruction&) { TODO(); }
+void SoftCPU::SAHF(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::SALC(const X86::Instruction&)
 {
@@ -2481,7 +2488,7 @@ void SoftCPU::SETcc_RM8(const X86::Instruction& insn)
     insn.modrm().write8(*this, insn, shadow_wrap_as_initialized<u8>(evaluate_condition(insn.cc())));
 }
 
-void SoftCPU::SGDT(const X86::Instruction&) { TODO(); }
+void SoftCPU::SGDT(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::SHLD_RM16_reg16_CL(const X86::Instruction& insn)
 {
@@ -2527,9 +2534,9 @@ void SoftCPU::SHRD_RM32_reg32_imm8(const X86::Instruction& insn)
 
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(SHR, op_shr)
 
-void SoftCPU::SIDT(const X86::Instruction&) { TODO(); }
-void SoftCPU::SLDT_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::SMSW_RM16(const X86::Instruction&) { TODO(); }
+void SoftCPU::SIDT(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::SLDT_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::SMSW_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::STC(const X86::Instruction&)
 {
@@ -2541,7 +2548,7 @@ void SoftCPU::STD(const X86::Instruction&)
     set_df(true);
 }
 
-void SoftCPU::STI(const X86::Instruction&) { TODO(); }
+void SoftCPU::STI(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::STOSB(const X86::Instruction& insn)
 {
@@ -2567,14 +2574,14 @@ void SoftCPU::STOSW(const X86::Instruction& insn)
     });
 }
 
-void SoftCPU::STR_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::UD0(const X86::Instruction&) { TODO(); }
-void SoftCPU::UD1(const X86::Instruction&) { TODO(); }
-void SoftCPU::UD2(const X86::Instruction&) { TODO(); }
-void SoftCPU::VERR_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::VERW_RM16(const X86::Instruction&) { TODO(); }
-void SoftCPU::WAIT(const X86::Instruction&) { TODO(); }
-void SoftCPU::WBINVD(const X86::Instruction&) { TODO(); }
+void SoftCPU::STR_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::UD0(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::UD1(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::UD2(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::VERR_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::VERW_RM16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::WAIT(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::WBINVD(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::XADD_RM16_reg16(const X86::Instruction& insn)
 {
@@ -2678,16 +2685,16 @@ DEFINE_GENERIC_INSN_HANDLERS(AND, op_and, true, false, false)
 DEFINE_GENERIC_INSN_HANDLERS(CMP, op_sub, false, false, false)
 DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(TEST, op_and, false, false, false)
 
-void SoftCPU::MOVQ_mm1_mm2m64(const X86::Instruction&) { TODO(); }
-void SoftCPU::EMMS(const X86::Instruction&) { TODO(); }
-void SoftCPU::MOVQ_mm1_m64_mm2(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xC0(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xC1_16(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xC1_32(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xD0(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xD1_16(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xD1_32(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xD2(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xD3_16(const X86::Instruction&) { TODO(); }
-void SoftCPU::wrap_0xD3_32(const X86::Instruction&) { TODO(); }
+void SoftCPU::MOVQ_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::EMMS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::MOVQ_mm1_m64_mm2(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xC0(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xC1_16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xC1_32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xD0(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xD1_16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xD1_32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xD2(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xD3_16(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::wrap_0xD3_32(const X86::Instruction&) { TODO_INSN(); }
 }
