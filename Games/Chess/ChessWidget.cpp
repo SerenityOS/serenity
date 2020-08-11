@@ -26,6 +26,7 @@
 
 #include "ChessWidget.h"
 #include <AK/String.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 
 ChessWidget::ChessWidget(const StringView& set)
@@ -92,7 +93,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     GUI::Widget::mousedown_event(event);
     auto square = mouse_to_square(event);
     auto piece = board().get_piece(square);
-    if (piece.colour == board().turn()) {
+    if (drag_enabled() && piece.colour == board().turn()) {
         m_dragging_piece = true;
         m_drag_point = event.position();
         m_moving_square = square;
@@ -110,7 +111,34 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 
     auto target_square = mouse_to_square(event);
 
-    board().apply_move({ m_moving_square, target_square });
+    if (board().apply_move({ m_moving_square, target_square }) && board().game_result() != Chess::Result::NotFinished) {
+        set_drag_enabled(false);
+        update();
+
+        String msg;
+        switch (board().game_result()) {
+        case Chess::Result::CheckMate:
+            if (board().turn() == Chess::Colour::White) {
+                msg = "Black wins by Checkmate.";
+            } else {
+                msg = "White wins by Checkmate.";
+            }
+            break;
+        case Chess::Result::StaleMate:
+            msg = "Draw by Stalemate.";
+            break;
+        case Chess::Result::FiftyMoveRule:
+            msg = "Draw by 50 move rule.";
+            break;
+        case Chess::Result::ThreeFoldRepitition:
+            msg = "Draw by threefold repitition.";
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+        GUI::MessageBox::show(window(), msg, "Game Over");
+    }
+
     update();
 }
 
