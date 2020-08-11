@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,21 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
-#include <Kernel/Modules/module_syms.h>
+#pragma once
 
-extern "C" const char module_name[] = "TestModule";
-
-extern "C" void module_init()
-{
-    klog() << "TestModule has booted!";
-
-    for (int i = 0; i < 3; ++i) {
-        klog() << "i is now " << i;
-    }
-}
-
-extern "C" void module_fini()
-{
-    klog() << "TestModule is being removed!";
-}
+extern "C" const char module_name[];
+extern "C" void module_init();
+extern "C" void module_fini();
