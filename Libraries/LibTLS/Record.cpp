@@ -77,12 +77,12 @@ void TLSv12::update_packet(ByteBuffer& packet)
 
             if (m_context.crypto.created == 1) {
                 // `buffer' will continue to be encrypted
-                auto buffer = ByteBuffer::create_zeroed(length);
+                auto buffer = ByteBuffer::create_uninitialized(length);
                 size_t buffer_position = 0;
                 auto iv_size = iv_length();
 
                 // We need enough space for a header, iv_length bytes of IV and whatever the packet contains
-                auto ct = ByteBuffer::create_zeroed(length + header_size + iv_size);
+                auto ct = ByteBuffer::create_uninitialized(length + header_size + iv_size);
 
                 // copy the header over
                 ct.overwrite(0, packet.data(), header_size - 2);
