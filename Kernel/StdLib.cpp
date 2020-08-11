@@ -282,11 +282,6 @@ char* strstr(const char* haystack, const char* needle)
     return const_cast<char*>(haystack);
 }
 
-[[noreturn]] void __cxa_pure_virtual()
-{
-    ASSERT_NOT_REACHED();
-}
-
 void* realloc(void* p, size_t s)
 {
     return krealloc(p, s);
@@ -296,6 +291,13 @@ void free(void* p)
 {
     return kfree(p);
 }
+
+// Functions that are automatically called by the C++ compiler.
+// Declare them first, to tell the silly compiler that they are indeed being used.
+[[noreturn]] void __stack_chk_fail();
+[[noreturn]] void __stack_chk_fail_local();
+extern "C" int __cxa_atexit(void (*)(void*), void*, void*);
+[[noreturn]] void __cxa_pure_virtual();
 
 [[noreturn]] void __stack_chk_fail()
 {
@@ -311,5 +313,10 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 {
     ASSERT_NOT_REACHED();
     return 0;
+}
+
+[[noreturn]] void __cxa_pure_virtual()
+{
+    ASSERT_NOT_REACHED();
 }
 }
