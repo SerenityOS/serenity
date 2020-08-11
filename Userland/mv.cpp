@@ -38,10 +38,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    // NOTE: The "force" option is a dummy for now, it's just here to silence scripts that use "mv -f"
+    //       In the future, it might be used to cancel out an "-i" interactive option.
+    bool force = false;
+
     const char* old_path = nullptr;
     const char* new_path = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(force, "Force", "force", 'f');
     args_parser.add_positional_argument(old_path, "The file or directory being moved", "source");
     args_parser.add_positional_argument(new_path, "destination of the move operation", "destination");
     args_parser.parse(argc, argv);
