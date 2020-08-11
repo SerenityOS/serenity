@@ -104,9 +104,20 @@ public:
 
     bool apply_move(const Move&, Colour colour = Colour::None);
 
-    Colour turn() const { return m_turn; };
+    enum class Result {
+        CheckMate,
+        StaleMate,
+        FiftyMoveRule,
+        ThreeFoldRepitition,
+        NotFinished,
+    };
+
+    template<typename Callback>
+    void generate_moves(Callback callback, Colour colour = Colour::None) const;
+    Result game_result() const;
 
     Colour turn() const { return m_turn; };
+
 private:
     bool is_legal_no_check(const Move&, Colour colour) const;
     bool apply_illegal_move(const Move&, Colour colour);
@@ -127,3 +138,98 @@ struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
         return pair_int_hash(static_cast<u32>(piece.colour), static_cast<u32>(piece.type));
     }
 };
+
+template<typename Callback>
+void Chess::generate_moves(Callback callback, Colour colour) const
+{
+    if (colour == Colour::None)
+        colour = turn();
+
+    auto try_move = [&](Move m) {
+        if (is_legal(m, colour)) {
+            if (callback(m) == IterationDecision::Break)
+                return false;
+        }
+        return true;
+    };
+
+    Square::for_each([&](Square sq) {
+        auto piece = get_piece(sq);
+        if (piece.colour != colour)
+            return IterationDecision::Continue;
+
+        bool keep_going = true;
+        if (piece.type == Type::Pawn) {
+            keep_going =
+                try_move({sq, {sq.rank+1, sq.file}}) &&
+                try_move({sq, {sq.rank+2, sq.file}}) &&
+                try_move({sq, {sq.rank-1, sq.file}}) &&
+                try_move({sq, {sq.rank-2, sq.file}}) &&
+                try_move({sq, {sq.rank+1, sq.file+1}}) &&
+                try_move({sq, {sq.rank+1, sq.file-1}}) &&
+                try_move({sq, {sq.rank-1, sq.file+1}}) &&
+                try_move({sq, {sq.rank-1, sq.file-1}});
+        } else if (piece.type == Type::Knight) {
+            keep_going =
+                try_move({sq, {sq.rank+2, sq.file+1}}) &&
+                try_move({sq, {sq.rank+2, sq.file-1}}) &&
+                try_move({sq, {sq.rank+1, sq.file+2}}) &&
+                try_move({sq, {sq.rank+1, sq.file-2}}) &&
+                try_move({sq, {sq.rank-2, sq.file+1}}) &&
+                try_move({sq, {sq.rank-2, sq.file-1}}) &&
+                try_move({sq, {sq.rank-1, sq.file+2}}) &&
+                try_move({sq, {sq.rank-1, sq.file-2}});
+        } else if (piece.type == Type::Bishop) {
+            for (int dr = -1; dr <= 1; dr += 2) {
+                for (int df = -1; df <= 1; df += 2) {
+                    for (Square to = sq; to.in_bounds(); to = { to.rank + dr, to.file + df }) {
+                        if (!try_move({ sq, to }))
+                            return IterationDecision::Break;
+                    }
+                }
+            }
+        } else if (piece.type == Type::Rook) {
+            for (int dr = -1; dr <= 1; dr++) {
+                for (int df = -1; df <= 1; df++) {
+                    if ((dr == 0) != (df == 0)) {
+                        for (Square to = sq; to.in_bounds(); to = { to.rank + dr, to.file + df }) {
+                            if (!try_move({ sq, to }))
+                                return IterationDecision::Break;
+                        }
+                    }
+                }
+            }
+        } else if (piece.type == Type::Queen) {
+            for (int dr = -1; dr <= 1; dr++) {
+                for (int df = -1; df <= 1; df++) {
+                    if (dr != 0 || df != 0) {
+                        for (Square to = sq; to.in_bounds(); to = { to.rank + dr, to.file + df }) {
+                            if (!try_move({ sq, to }))
+                                return IterationDecision::Break;
+                        }
+                    }
+                }
+            }
+        } else if (piece.type == Type::King) {
+            for (int dr = -1; dr <= 1; dr++) {
+                for (int df = -1; df <= 1; df++) {
+                    if (!try_move({ sq, { sq.rank + dr, sq.file + df } }))
+                        return IterationDecision::Break;
+                }
+            }
+
+            // Castling moves.
+            if (sq == Square("e1")) {
+                keep_going = try_move({ sq, Square("c1") }) && try_move({ sq, Square("g1") });
+            } else if (sq == Square("e8")) {
+                keep_going = try_move({ sq, Square("c8") }) && try_move({ sq, Square("g8") });
+            }
+        }
+
+        if (keep_going) {
+            return IterationDecision::Continue;
+        } else {
+            return IterationDecision::Break;
+        }
+    });
+}
