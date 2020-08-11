@@ -675,6 +675,26 @@ private:
     bool m_capture_stdout { false };
 };
 
+class IfCond final : public Node {
+public:
+    IfCond(Position, Optional<Position> else_position, RefPtr<AST::Node> cond_expr, RefPtr<AST::Node> true_branch, RefPtr<AST::Node> false_branch);
+    virtual ~IfCond();
+
+private:
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) override;
+    virtual String class_name() const override { return "IfCond"; }
+    virtual bool would_execute() const override { return true; }
+
+    RefPtr<AST::Node> m_condition;
+    RefPtr<AST::Node> m_true_branch;
+    RefPtr<AST::Node> m_false_branch;
+
+    Optional<Position> m_else_position;
+};
+
 class Join final : public Node {
 public:
     Join(Position, RefPtr<Node>, RefPtr<Node>);
