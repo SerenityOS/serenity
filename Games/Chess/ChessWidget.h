@@ -83,5 +83,4 @@ private:
     Gfx::IntPoint m_drag_point;
     bool m_dragging_piece { false };
     bool m_drag_enabled { true };
-    Optional<Chess::Move> m_last_move;
 };

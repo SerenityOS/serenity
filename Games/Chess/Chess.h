@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/IterationDecision.h>
+#include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 
@@ -92,6 +93,7 @@ public:
             , to(to)
         {
         }
+        bool operator==(const Move& other) const { return from == other.from && to == other.to; }
     };
 
     Chess();
@@ -103,6 +105,7 @@ public:
     bool in_check(Colour colour) const;
 
     bool apply_move(const Move&, Colour colour = Colour::None);
+    const Optional<Move>& last_move() const { return m_last_move; }
 
     enum class Result {
         CheckMate,
@@ -124,6 +127,7 @@ private:
 
     Piece m_board[8][8];
     Colour m_turn { Colour::White };
+    Optional<Move> m_last_move;
 
     bool m_white_can_castle_kingside { true };
     bool m_white_can_castle_queenside { true };
