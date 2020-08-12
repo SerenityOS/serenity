@@ -87,13 +87,15 @@ public:
     struct Move {
         Square from;
         Square to;
+        Type promote_to;
         Move(const StringView& algebraic);
-        Move(const Square& from, const Square& to)
+        Move(const Square& from, const Square& to, const Type& promote_to = Type::Queen)
             : from(from)
             , to(to)
+            , promote_to(promote_to)
         {
         }
-        bool operator==(const Move& other) const { return from == other.from && to == other.to; }
+        bool operator==(const Move& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
     };
 
     Chess();
@@ -103,6 +105,8 @@ public:
 
     bool is_legal(const Move&, Colour colour = Colour::None) const;
     bool in_check(Colour colour) const;
+
+    bool is_promotion_move(const Move&, Colour colour = Colour::None) const;
 
     bool apply_move(const Move&, Colour colour = Colour::None);
     const Optional<Move>& last_move() const { return m_last_move; }

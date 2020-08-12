@@ -25,6 +25,7 @@
  */
 
 #include "ChessWidget.h"
+#include "PromotionDialog.h"
 #include <AK/String.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -114,7 +115,14 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 
     auto target_square = mouse_to_square(event);
 
-    if (board().apply_move({ m_moving_square, target_square })) {
+    Chess::Move move = { m_moving_square, target_square };
+    if (board().is_promotion_move(move)) {
+        auto promotion_dialog = PromotionDialog::construct(*this);
+        if (promotion_dialog->exec() == PromotionDialog::ExecOK)
+            move.promote_to = promotion_dialog->selected_piece();
+    }
+
+    if (board().apply_move(move)) {
         if (board().game_result() != Chess::Result::NotFinished) {
             set_drag_enabled(false);
             update();
@@ -196,6 +204,11 @@ Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
     } else {
         return { event.y() / tile_height, 7 - (event.x() / tile_width) };
     }
+}
+
+RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(const Chess::Piece& piece) const
+{
+    return m_pieces.get(piece).value();
 }
 
 void ChessWidget::reset()
