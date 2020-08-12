@@ -331,6 +331,10 @@ public:
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
     unsigned buttons() const { return m_buttons; }
+    bool ctrl() const { return m_modifiers & Mod_Ctrl; }
+    bool alt() const { return m_modifiers & Mod_Alt; }
+    bool shift() const { return m_modifiers & Mod_Shift; }
+    bool logo() const { return m_modifiers & Mod_Logo; }
     unsigned modifiers() const { return m_modifiers; }
     int wheel_delta() const { return m_wheel_delta; }
 
