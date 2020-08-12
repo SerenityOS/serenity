@@ -42,6 +42,8 @@ public:
 
     bool has_image() const;
 
+    bool has_loaded_or_failed() const { return m_loading_state != LoadingState::Loading; }
+
     void set_visible_in_viewport(bool) const;
 
     unsigned width() const;
@@ -59,10 +61,18 @@ private:
 
     void animate();
 
+    enum class LoadingState {
+        None,
+        Loading,
+        Loaded,
+        Failed,
+    };
+
     mutable bool m_visible_in_viewport { false };
 
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
+    LoadingState m_loading_state { LoadingState::Loading };
     NonnullRefPtr<Core::Timer> m_timer;
 };
 

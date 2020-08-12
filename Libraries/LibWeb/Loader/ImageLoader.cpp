@@ -39,6 +39,7 @@ ImageLoader::ImageLoader()
 
 void ImageLoader::load(const URL& url)
 {
+    m_loading_state = LoadingState::Loading;
     LoadRequest request;
     request.set_url(url);
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
@@ -62,10 +63,13 @@ void ImageLoader::resource_did_load()
     ASSERT(resource());
 
     if (!resource()->mime_type().starts_with("image/")) {
+        m_loading_state = LoadingState::Failed;
         if (on_fail)
             on_fail();
         return;
     }
+
+    m_loading_state = LoadingState::Loaded;
 
 #ifdef IMAGE_LOADER_DEBUG
     if (!resource()->has_encoded_data()) {
@@ -118,6 +122,7 @@ void ImageLoader::animate()
 void ImageLoader::resource_did_fail()
 {
     dbg() << "ImageLoader: Resource did fail. URL: " << resource()->url();
+    m_loading_state = LoadingState::Failed;
     if (on_fail)
         on_fail();
 }
