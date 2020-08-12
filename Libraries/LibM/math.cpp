@@ -25,7 +25,7 @@
  */
 
 #include <LibC/assert.h>
-#include <LibM/math.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 

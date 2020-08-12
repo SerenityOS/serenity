@@ -30,7 +30,7 @@
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
-#include <LibM/math.h>
+#include <math.h>
 
 namespace Gfx {
 

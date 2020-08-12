@@ -157,6 +157,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -DSANITIZE_PTRS")
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
 include_directories(Libraries/LibC)
+include_directories(Libraries/LibM)
 include_directories(Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Libraries)
