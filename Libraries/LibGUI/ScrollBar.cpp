@@ -330,22 +330,14 @@ void ScrollBar::set_automatic_scrolling_active(bool active)
     }
 }
 
-void ScrollBar::scroll_to_position(const Gfx::IntPoint& position)
+void ScrollBar::scroll_to_position(const Gfx::IntPoint& click_position)
 {
     float range_size = m_max - m_min;
     float available = scrubbable_range_in_pixels();
 
-    float x = ::max(0, position.x() - button_width() - button_width() / 2);
-    float y = ::max(0, position.y() - button_height() - button_height() / 2);
-
-    float rel_x = x / available;
-    float rel_y = y / available;
-
-    if (orientation() == Orientation::Vertical)
-        set_value(m_min + rel_y * range_size);
-    else
-        set_value(m_min + rel_x * range_size);
-
+    float x_or_y = ::max(0, click_position.primary_offset_for_orientation(orientation()) - button_width() - button_width() / 2);
+    float rel_x_or_y = x_or_y / available;
+    set_value(m_min + rel_x_or_y * range_size);
 }
 
 void ScrollBar::mousemove_event(MouseEvent& event)
