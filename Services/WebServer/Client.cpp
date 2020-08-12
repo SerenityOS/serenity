@@ -220,7 +220,7 @@ void Client::handle_directory_listing(const String& requested_path, const String
         builder.append("<tr>");
         builder.appendf("<td><div class=\"%s\"></div></td>", is_directory ? "folder" : "file");
         builder.append("<td><a href=\"");
-        builder.append(urlencode(name));
+        builder.append(URL::encode(name));
         builder.append("\">");
         builder.append(escape_html_entities(name));
         builder.append("</a></td><td>&nbsp;</td>");

@@ -123,14 +123,9 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
     }
 
     if (url.scheme() == "data") {
-        dbg() << "ResourceLoader loading a data URL with mime-type: '" << url.data_mime_type() << "', base64=" << url.data_payload_is_base64() << ", payload='" << url.data_payload() << "'";
+        dbg() << "ResourceLoader loading a data URL with mime-type: '" << url.payload().mime_type() << "', base64=" << (url.payload().encoding() == URL::Payload::Encoding::Base64) << ", payload='" << url.payload().data() << "'";
 
-        ByteBuffer data;
-        if (url.data_payload_is_base64())
-            data = decode_base64(url.data_payload());
-        else
-            data = url.data_payload().to_byte_buffer();
-
+        ByteBuffer data = url.payload().data();
         deferred_invoke([data = move(data), success_callback = move(success_callback)](auto&) {
             success_callback(data, {});
         });

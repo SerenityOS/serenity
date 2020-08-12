@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Benoit Lormeau <blormeau@outlook.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,272 +25,236 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Base64.h>
+#include <AK/GenericLexer.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
-#include <AK/URLParser.h>
+#include <AK/URLHelper.h>
+
+static bool is_scheme_char(char c)
+{
+    return is_alphanum(c) || c == '+' || c == '-' || c == '.';
+}
+
+static bool is_sub_delim(char c)
+{
+    return c == '!' || c == '$' || c == '&' || c == '\''
+        || c == '(' || c == ')' || c == '*' || c == '+'
+        || c == ',' || c == ';' || c == '=';
+}
+
+static bool is_unreserved(char c)
+{
+    return is_alphanum(c) || c == '-' || c == '.' || c == '_' || c == '~';
+}
+
+static bool is_percent_encoded(char c)
+{
+    return c == '%' || is_hex_digit(c);
+}
+
+static bool is_pchar(char c)
+{
+    return is_unreserved(c) || is_percent_encoded(c) || is_sub_delim(c) || c == ':' || c == '@';
+}
+
+static HashMap<String, u16, CaseInsensitiveStringTraits> s_protocols_default_port;
 
 namespace AK {
 
-static inline bool is_valid_scheme_character(char ch)
-{
-    return ch >= 'a' && ch <= 'z';
-}
-
-static inline bool is_valid_hostname_character(char ch)
-{
-    return ch && ch != '/' && ch != ':';
-}
-
-static inline bool is_digit(char ch)
-{
-    return ch >= '0' && ch <= '9';
-}
-
-bool URL::parse(const StringView& string)
-{
-    if (string.is_null())
-        return false;
-
-    enum class State {
-        InScheme,
-        InHostname,
-        InPort,
-        InPath,
-        InQuery,
-        InFragment,
-        InDataMimeType,
-        InDataPayload,
-    };
-
-    Vector<char, 256> buffer;
-    State state { State::InScheme };
-
-    size_t index = 0;
-
-    auto peek = [&] {
-        if (index >= string.length())
-            return '\0';
-        return string[index];
-    };
-
-    auto consume = [&] {
-        if (index >= string.length())
-            return '\0';
-        return string[index++];
-    };
-
-    while (index < string.length()) {
-        switch (state) {
-        case State::InScheme: {
-            if (is_valid_scheme_character(peek())) {
-                buffer.append(consume());
-                continue;
-            }
-            if (consume() != ':')
-                return false;
-
-            m_scheme = String::copy(buffer);
-
-            if (m_scheme == "data") {
-                buffer.clear();
-                state = State::InDataMimeType;
-                continue;
-            }
-
-            if (m_scheme == "about") {
-                buffer.clear();
-                state = State::InPath;
-                continue;
-            }
-
-            if (consume() != '/')
-                return false;
-            if (consume() != '/')
-                return false;
-            if (buffer.is_empty())
-                return false;
-            if (m_scheme == "http")
-                m_port = 80;
-            else if (m_scheme == "https")
-                m_port = 443;
-            else if (m_scheme == "gemini")
-                m_port = 1965;
-            state = State::InHostname;
-            buffer.clear();
-            continue;
-        }
-        case State::InHostname:
-            if (is_valid_hostname_character(peek())) {
-                buffer.append(consume());
-                continue;
-            }
-            if (buffer.is_empty()) {
-                if (m_scheme == "file") {
-                    m_host = "";
-                    state = State::InPath;
-                    continue;
-                }
-                return false;
-            }
-            m_host = String::copy(buffer);
-            buffer.clear();
-            if (peek() == ':') {
-                consume();
-                state = State::InPort;
-                continue;
-            }
-            if (peek() == '/') {
-                state = State::InPath;
-                continue;
-            }
-            return false;
-        case State::InPort:
-            if (is_digit(peek())) {
-                buffer.append(consume());
-                continue;
-            }
-            if (buffer.is_empty())
-                return false;
-            {
-                auto port_opt = String::copy(buffer).to_uint();
-                buffer.clear();
-                if (!port_opt.has_value())
-                    return false;
-                m_port = port_opt.value();
-            }
-            if (peek() == '/') {
-                state = State::InPath;
-                continue;
-            }
-            return false;
-        case State::InPath:
-            if (peek() == '?' || peek() == '#') {
-                m_path = String::copy(buffer);
-                buffer.clear();
-                state = peek() == '?' ? State::InQuery : State::InFragment;
-                consume();
-                continue;
-            }
-            buffer.append(consume());
-            continue;
-        case State::InQuery:
-            if (peek() == '#') {
-                m_query = String::copy(buffer);
-                buffer.clear();
-                consume();
-                state = State::InFragment;
-                continue;
-            }
-            buffer.append(consume());
-            continue;
-        case State::InFragment:
-            buffer.append(consume());
-            continue;
-        case State::InDataMimeType: {
-            if (peek() != ';' && peek() != ',') {
-                buffer.append(consume());
-                continue;
-            }
-
-            m_data_mime_type = String::copy(buffer);
-            buffer.clear();
-
-            if (peek() == ';') {
-                consume();
-                if (consume() != 'b')
-                    return false;
-                if (consume() != 'a')
-                    return false;
-                if (consume() != 's')
-                    return false;
-                if (consume() != 'e')
-                    return false;
-                if (consume() != '6')
-                    return false;
-                if (consume() != '4')
-                    return false;
-                m_data_payload_is_base64 = true;
-            }
-
-            if (consume() != ',')
-                return false;
-
-            state = State::InDataPayload;
-            break;
-        }
-        case State::InDataPayload:
-            buffer.append(consume());
-            break;
-        }
-    }
-    if (state == State::InHostname) {
-        // We're still in the hostname, so e.g "http://serenityos.org"
-        if (buffer.is_empty())
-            return false;
-        m_host = String::copy(buffer);
-        m_path = "/";
-    }
-    if (state == State::InScheme)
-        return false;
-    if (state == State::InPath)
-        m_path = String::copy(buffer);
-    if (state == State::InQuery)
-        m_query = String::copy(buffer);
-    if (state == State::InFragment)
-        m_fragment = String::copy(buffer);
-    if (state == State::InDataPayload)
-        m_data_payload = urldecode(String::copy(buffer));
-    if (m_query.is_null())
-        m_query = "";
-    if (m_fragment.is_null())
-        m_fragment = "";
-    return true;
-}
-
 URL::URL(const StringView& string)
 {
-    m_valid = parse(string);
+    m_valid = parse(string) && compute_validity();
+}
+
+bool URL::parse(const StringView& input)
+{
+    GenericLexer lexer(input);
+
+    // Scheme
+    if (!lexer.next_is(is_alpha))
+        return false;
+    else {
+        m_scheme = lexer.consume_while(is_scheme_char);
+        m_scheme = m_scheme.to_lowercase();
+        if (!lexer.consume_specific(':'))
+            return false;
+
+        m_port = get_protocol_default_port(m_scheme);
+    }
+
+    auto helper = URLHelper::from_scheme(m_scheme);
+
+    if (helper->requires_special_handling())
+        return helper->take_over_parsing({}, lexer, *this);
+
+    // Authority
+    if (helper->requires_authority_prefix() && !lexer.next_is("//"))
+        return false;
+
+    if (lexer.consume_specific("//")) {
+        auto authority = lexer.consume_until([](char c) {
+            return c == '/' || c == '?' || c == '#';
+        });
+        if (authority.is_empty() && !helper->can_authority_be_empty())
+            return false;
+
+        GenericLexer auth_lexer(authority);
+
+        if (authority.contains('@')) { // There's user infos
+            auto username = auth_lexer.consume_while([](char c) {
+                return is_unreserved(c) || is_percent_encoded(c) || is_sub_delim(c);
+            });
+            m_username = decode(username);
+
+            if (auth_lexer.consume_specific(':')) { // There's a password (can be empty)
+                auto password = auth_lexer.consume_until('@');
+                m_password = password.is_empty() ? "" : decode(password);
+            }
+            else {
+                auth_lexer.ignore(); // Ignore the @
+            }
+        }
+
+        if (auth_lexer.consume_specific('[')) { // IPv6 addresses are contained within brackets
+            m_host = auth_lexer.consume_while([](char c) {
+                return (is_hex_digit(c) || c == ':') && c != ']';
+            });
+            if (!auth_lexer.consume_specific(']'))
+                return false;
+        }
+        else {
+            m_host = auth_lexer.consume_while([](char c) {
+                return is_unreserved(c) || is_percent_encoded(c) || is_sub_delim(c);
+            });
+        }
+        if (auth_lexer.consume_specific(':')) { // There's a port
+            auto port = StringUtils::convert_to_int(auth_lexer.consume_while(is_digit));
+            if (port.has_value())
+                m_port = port.value();
+        }
+
+        if (!auth_lexer.is_eof())
+            return false;
+    }
+
+    // Path
+    auto path = lexer.consume_until([](char c) {
+        return c == '?' || c == '#';
+    });
+    m_path = path.is_empty() ? "/" : decode(path);
+
+    // Query
+    if (lexer.consume_specific('?'))
+        m_query = lexer.consume_until('#');
+
+    // Fragment
+    lexer.consume_specific('#');
+    m_fragment = lexer.consume_all();
+
+    return lexer.is_eof();
+}
+
+// FIXME: Definitly use regex here if it ever gets into serenity
+bool URL::compute_validity() const
+{
+    // Validate scheme
+    if (m_scheme.is_empty() || !is_alpha(m_scheme[0]))
+        return false;
+    for (auto c : m_scheme) {
+        if (!is_scheme_char(c))
+            return false;
+    }
+
+    // Validate host
+    Function<bool(char)> host_char_validator;
+    if (m_host.contains(":")) { // Only IPv6 addresses can contain colons
+        host_char_validator = [](char c) {
+            return c == ':' || is_hex_digit(c);
+        };
+    }
+    else {
+        host_char_validator = [](char c) {
+            return is_unreserved(c) || is_percent_encoded(c) || is_sub_delim(c);
+        };
+    }
+
+    for (auto c : m_host) {
+        if (!host_char_validator(c))
+            return false;
+    }
+
+    // Validate query
+    for (auto c : m_query) {
+        if (!(is_pchar(c) || c == '/' || c == '?'))
+            return false;
+    }
+
+    // Validate fragment
+    for (auto c : m_fragment) {
+        if (!(is_pchar(c) || c == '/' || c == '?'))
+            return false;
+    }
+
+    return true;
 }
 
 String URL::to_string() const
 {
+    if (!m_valid)
+        return {};
+
     StringBuilder builder;
     builder.append(m_scheme);
+    builder.append(':');
 
-    if (m_scheme == "about") {
-        builder.append(':');
-        builder.append(m_path);
-        return builder.to_string();
-    }
+    auto helper = URLHelper::from_scheme(m_scheme);
+    if (helper->requires_special_handling())
+        return helper->take_over_serializing({}, builder, *this);
 
-    if (m_scheme == "data") {
-        builder.append(':');
-        builder.append(m_data_mime_type);
-        if (m_data_payload_is_base64)
-            builder.append(";base64");
-        builder.append(',');
-        builder.append(m_data_payload);
-        return builder.to_string();
-    }
-
-    builder.append("://");
-    builder.append(m_host);
-    if (scheme() != "file") {
-        if (!(scheme() == "http" && port() == 80) && !(scheme() == "https" && port() == 443) && !(scheme() == "gemini" && port() == 1965)) {
+    if (!m_host.is_empty() || helper->requires_authority_prefix()) {
+        builder.append("//");
+        if (!m_username.is_empty()) {
+            builder.append(encode(m_username));
+            if (!m_password.is_null()) {
+                builder.append(':');
+                builder.append(encode(m_password));
+            }
+            builder.append('@');
+        }
+        builder.append(m_host);
+        if (m_port != get_protocol_default_port(m_scheme)) {
             builder.append(':');
-            builder.append(String::number(m_port));
+            builder.appendf("%u", m_port);
         }
     }
-    builder.append(m_path);
+
+    // Encode each parts of the path and keep the trailing slashes
+    if (m_path.starts_with('/'))
+        builder.append('/');
+    auto path_parts = m_path.split_view('/');
+    bool first = true;
+    for (auto part : path_parts) {
+        if (first)
+            first = false;
+        else
+            builder.append('/');
+        builder.append(encode(part));
+    }
+    if (m_path.length() > 1 && m_path.ends_with('/'))
+        builder.append('/');
+
     if (!m_query.is_empty()) {
         builder.append('?');
         builder.append(m_query);
     }
+
     if (!m_fragment.is_empty()) {
         builder.append('#');
-        builder.append(m_fragment);
+        builder.append(encode(m_fragment));
     }
+
     return builder.to_string();
 }
 
@@ -324,13 +289,11 @@ URL URL::complete_url(const String& string) const
     }
 
     StringBuilder builder;
-    LexicalPath lexical_path(path());
+    LexicalPath lexical_path(m_path);
     builder.append('/');
 
-    bool document_url_ends_in_slash = path()[path().length() - 1] == '/';
-
     for (size_t i = 0; i < lexical_path.parts().size(); ++i) {
-        if (i == lexical_path.parts().size() - 1 && !document_url_ends_in_slash)
+        if (i == lexical_path.parts().size() - 1 && !m_path.ends_with('/'))
             break;
         builder.append(lexical_path.parts()[i]);
         builder.append('/');
@@ -352,10 +315,28 @@ URL URL::complete_url(const String& string) const
     return url;
 }
 
-void URL::set_scheme(const String& protocol)
+String URL::basename() const
 {
-    m_scheme = protocol;
+    if (!m_valid)
+        return {};
+    return LexicalPath(m_path).basename();
+}
+
+void URL::set_scheme(const String& scheme)
+{
+    m_scheme = scheme.to_lowercase();
     m_valid = compute_validity();
+}
+
+void URL::set_username(const String& username)
+{
+    m_username = username;
+    m_valid = compute_validity();
+}
+
+void URL::set_password(const String& password)
+{
+    m_password = password;
 }
 
 void URL::set_host(const String& host)
@@ -373,26 +354,59 @@ void URL::set_path(const String& path)
 void URL::set_query(const String& query)
 {
     m_query = query;
+    m_valid = compute_validity();
 }
 
 void URL::set_fragment(const String& fragment)
 {
     m_fragment = fragment;
+    m_valid = compute_validity();
 }
 
-bool URL::compute_validity() const
+HashMap<String, String> URL::parse_query_fields() const
 {
-    // FIXME: This is by no means complete.
-    if (m_scheme.is_empty())
-        return false;
-    if (m_scheme == "file") {
-        if (m_path.is_empty())
-            return false;
-    } else {
-        if (m_host.is_empty())
-            return false;
+    HashMap<String, String> fields;
+    GenericLexer lexer(m_query);
+
+    while (!lexer.is_eof()) {
+        auto key = lexer.consume_until([&](char c) {
+            return c == '=' || c == '&' || c == ';';
+        });
+        fields.ensure(key);
+
+        if (lexer.consume_specific('=')) {
+            auto value = lexer.consume_until([](char c) {
+                return c == '&' || c == ';';
+            });
+            fields.set(key, value);
+        }
+        else {
+            lexer.ignore();
+        }
     }
-    return true;
+
+    return fields;
+}
+
+void URL::set_query_fields(const HashMap<String, String>& fields)
+{
+    StringBuilder builder;
+    bool first = true;
+
+    for (auto [key, value] : fields) {
+        if (first)
+            first = false;
+        else
+            builder.append('&');
+
+        builder.append(query_encode(key));
+        if (!value.is_empty()) {
+            builder.append('=');
+            builder.append(query_encode(value));
+        }
+    }
+
+    m_query = builder.to_string();
 }
 
 URL URL::create_with_file_protocol(const String& path)
@@ -413,11 +427,94 @@ URL URL::create_with_url_or_path(const String& url_or_path)
     return URL::create_with_file_protocol(path);
 }
 
-String URL::basename() const
+u16 URL::get_protocol_default_port(const String& protocol)
 {
-    if (!m_valid)
+    if (s_protocols_default_port.is_empty()) {
+        s_protocols_default_port.set("gemini", 1965);
+        s_protocols_default_port.set("http", 80);
+        s_protocols_default_port.set("https", 443);
+        s_protocols_default_port.set("ssh", 22);
+        s_protocols_default_port.set("telnet", 23);
+    }
+
+    return s_protocols_default_port.get(protocol).value_or(0);
+}
+
+// Encode according to the RFC 3986. Use it to encode URL parts.
+String URL::encode(const StringView& input)
+{
+    StringBuilder builder;
+    for (char c : input) {
+        if (is_alphanum(c) || c == '-' || c == '.'  || c == '_' || c == '~')
+            builder.append(c);
+        else {
+            builder.append('%');
+            builder.appendf("%02X", (u8)c);
+        }
+    }
+    return builder.to_string();
+}
+
+String URL::decode(const StringView& input)
+{
+    if (input.is_empty())
         return {};
-    return LexicalPath(m_path).basename();
+
+    GenericLexer lexer(input);
+
+    StringBuilder builder;
+    while (!lexer.is_eof()) {
+        if (lexer.consume_specific('%') && is_hex_digit(lexer.peek(0)) && is_hex_digit(lexer.peek(1))) {
+            auto hex = lexer.consume(2);
+            auto byte_point = StringUtils::convert_to_uint_from_hex(hex);
+            builder.append(byte_point.value());
+        }
+        else {
+            builder.append(lexer.consume());
+        }
+    }
+    return builder.to_string();
+}
+
+// Encode as a WWW form's data (application/x-www-form-urlencoded)
+String URL::query_encode(const StringView& input)
+{
+    StringBuilder builder;
+    for (char c : input) {
+        if (c == ' ')
+            builder.append('+');
+        else if (is_alphanum(c) || c == '-' || c == '.'  || c == '_')
+            builder.append(c);
+        else {
+            builder.append('%');
+            builder.appendf("%02X", (u8)c);
+        }
+    }
+    return builder.to_string();
+}
+
+String URL::query_decode(const StringView& input)
+{
+    if (input.is_empty())
+        return {};
+
+    GenericLexer lexer(input);
+
+    StringBuilder builder;
+    while (!lexer.is_eof()) {
+        if (lexer.consume_specific('+')) {
+            builder.append(' ');
+        }
+        else if (lexer.consume_specific('%') && is_hex_digit(lexer.peek(0)) && is_hex_digit(lexer.peek(1))) {
+            auto hex = lexer.consume(2);
+            auto byte_point = StringUtils::convert_to_uint_from_hex(hex);
+            builder.append(byte_point.value());
+        }
+        else {
+            builder.append(lexer.consume());
+        }
+    }
+    return builder.to_string();
 }
 
 }
