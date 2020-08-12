@@ -292,11 +292,6 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
         }
 
         int pixel_index = 0;
-        RGB transparent_color { 0, 0, 0 };
-        if (image.transparent) {
-            transparent_color = context.logical_screen.color_map[image.transparency_index];
-        }
-
         while (true) {
             Optional<u16> code = decoder.next_code();
             if (!code.has_value()) {
@@ -321,13 +316,14 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
 
                 Color c = Color(rgb.r, rgb.g, rgb.b);
 
-                if (image.transparent) {
-                    if (rgb.r == transparent_color.r && rgb.g == transparent_color.g && rgb.b == transparent_color.b) {
-                        c.set_alpha(0);
-                    }
+                if (image.transparent && color == image.transparency_index) {
+                    c.set_alpha(0);
                 }
 
-                image.bitmap->set_pixel(x, y, c);
+                if (!image.transparent || image.disposal_method == ImageDescriptor::DisposalMethod::None || color != image.transparency_index) {
+                    image.bitmap->set_pixel(x, y, c);
+                }
+
                 ++pixel_index;
             }
         }
