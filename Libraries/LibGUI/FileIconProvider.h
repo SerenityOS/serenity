@@ -26,70 +26,22 @@
 
 #pragma once
 
+#include <AK/Forward.h>
+#include <LibGUI/Forward.h>
+#include <sys/types.h>
+
 namespace GUI {
 
-class AbstractButton;
-class AbstractTableView;
-class AbstractView;
-class Action;
-class ActionGroup;
-class Application;
-class BoxLayout;
-class Button;
-class CheckBox;
-class Command;
-class DragEvent;
-class DropEvent;
-class FileSystemModel;
-class Frame;
-class GroupBox;
-class HorizontalBoxLayout;
-class HorizontalSlider;
-class Icon;
-class IconView;
-class JsonArrayModel;
-class KeyEvent;
-class Label;
-class Layout;
-class ListView;
-class Menu;
-class MenuBar;
-class MenuItem;
-class Model;
-class ModelEditingDelegate;
-class ModelIndex;
-class MouseEvent;
-class MultiPaintEvent;
-class MultiView;
-class PaintEvent;
-class Painter;
-class ResizeCorner;
-class ResizeEvent;
-class ScrollBar;
-class Slider;
-class SortingProxyModel;
-class SpinBox;
-class Splitter;
-class StackWidget;
-class StatusBar;
-class SyntaxHighlighter;
-class TabWidget;
-class TableView;
-class TextBox;
-class TextDocument;
-class TextDocumentLine;
-class TextDocumentUndoCommand;
-class TextEditor;
-class ThemeChangeEvent;
-class ToolBar;
-class ToolBarContainer;
-class TreeView;
-class Variant;
-class VerticalBoxLayout;
-class VerticalSlider;
-class WMEvent;
-class Widget;
-class Window;
-class WindowServerConnection;
+class FileIconProvider {
+public:
+    static Icon icon_for_path(const String&, mode_t);
+    static Icon icon_for_path(const String&);
+
+    static Icon filetype_image_icon();
+    static Icon directory_icon();
+    static Icon directory_open_icon();
+    static Icon home_directory_icon();
+    static Icon home_directory_open_icon();
+};
 
 }
