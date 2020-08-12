@@ -34,7 +34,7 @@ namespace AttributeNames {
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-void initialize()
+[[gnu::constructor]] static void initialize()
 {
     static bool s_initialized = false;
     if (s_initialized)
