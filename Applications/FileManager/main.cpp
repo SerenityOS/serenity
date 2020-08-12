@@ -678,7 +678,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     view_menu.add_action(*view_as_columns_action);
     view_menu.add_separator();
     view_menu.add_action(GUI::Action::create_checkable("Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
-        directory_view.model().set_should_show_dotfiles(action.is_checked());
+        directory_view.set_should_show_dotfiles(action.is_checked());
     }));
 
     auto& go_menu = menubar->add_menu("Go");
