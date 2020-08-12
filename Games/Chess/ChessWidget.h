@@ -59,6 +59,7 @@ public:
 
     bool drag_enabled() const { return m_drag_enabled; }
     void set_drag_enabled(bool e) { m_drag_enabled = e; }
+    RefPtr<Gfx::Bitmap> get_piece_graphic(const Chess::Piece& piece) const;
 
     void reset();
 
