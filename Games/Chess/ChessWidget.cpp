@@ -62,7 +62,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
             tile_rect = { (7 - sq.file) * tile_width, sq.rank * tile_height, tile_width, tile_height };
         }
 
-        painter.fill_rect(tile_rect, ((sq.rank % 2) == (sq.file % 2)) ? board_theme().dark_square_color : board_theme().light_square_color);
+        painter.fill_rect(tile_rect, (sq.is_light()) ? board_theme().light_square_color : board_theme().dark_square_color);
 
         if (board().last_move().has_value() && (board().last_move().value().to == sq || board().last_move().value().from == sq)) {
             painter.fill_rect(tile_rect, m_move_highlight_color);
@@ -124,9 +124,8 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 
     if (board().apply_move(move)) {
         if (board().game_result() != Chess::Result::NotFinished) {
-            set_drag_enabled(false);
-            update();
 
+            bool over = true;
             String msg;
             switch (board().game_result()) {
             case Chess::Result::CheckMate:
@@ -140,15 +139,42 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 msg = "Draw by Stalemate.";
                 break;
             case Chess::Result::FiftyMoveRule:
-                msg = "Draw by 50 move rule.";
+                update();
+                if (GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?", "Claim Draw?",
+                        GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
+                    == GUI::Dialog::ExecYes) {
+                    msg = "Draw by 50 move rule.";
+                } else {
+                    over = false;
+                }
+                break;
+            case Chess::Result::SeventyFiveMoveRule:
+                msg = "Draw by 75 move rule.";
                 break;
             case Chess::Result::ThreeFoldRepitition:
-                msg = "Draw by threefold repitition.";
+                update();
+                if (GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?", "Claim Draw?",
+                        GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
+                    == GUI::Dialog::ExecYes) {
+                    msg = "Draw by threefold repitition.";
+                } else {
+                    over = false;
+                }
+                break;
+            case Chess::Result::FiveFoldRepitition:
+                msg = "Draw by fivefold repitition.";
+                break;
+            case Chess::Result::InsufficientMaterial:
+                msg = "Draw by insufficient material.";
                 break;
             default:
                 ASSERT_NOT_REACHED();
             }
-            GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
+            if (over) {
+                set_drag_enabled(false);
+                update();
+                GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
+            }
         }
     }
 
