@@ -355,3 +355,8 @@ void DirectoryView::update_statusbar()
 
     set_status_message(builder.to_string());
 }
+
+void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
+{
+    m_model->set_should_show_dotfiles(show_dotfiles);
+}

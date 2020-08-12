@@ -110,6 +110,8 @@ public:
         callback(*m_columns_view);
     }
 
+    void set_should_show_dotfiles(bool);
+
     GUI::FileSystemModel& model() { return *m_model; }
 
 private:
