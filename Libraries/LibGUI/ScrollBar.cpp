@@ -179,9 +179,9 @@ Gfx::IntRect ScrollBar::increment_gutter_rect() const
 int ScrollBar::scrubbable_range_in_pixels() const
 {
     if (orientation() == Orientation::Vertical)
-        return height() - button_height() * 2 - scrubber_size();
+        return height() - button_height() * 2 - visible_scrubber_size();
     else
-        return width() - button_width() * 2 - scrubber_size();
+        return width() - button_width() * 2 - visible_scrubber_size();
 }
 
 bool ScrollBar::has_scrubber() const
@@ -189,7 +189,7 @@ bool ScrollBar::has_scrubber() const
     return m_max != m_min;
 }
 
-int ScrollBar::scrubber_size() const
+int ScrollBar::visible_scrubber_size() const
 {
     int pixel_range = length(orientation()) - button_size() * 2;
     int value_range = m_max - m_min;
@@ -205,13 +205,13 @@ int ScrollBar::scrubber_size() const
 
 Gfx::IntRect ScrollBar::scrubber_rect() const
 {
-    if (!has_scrubber() || length(orientation()) <= (button_size() * 2) + scrubber_size())
+    if (!has_scrubber() || length(orientation()) <= (button_size() * 2) + visible_scrubber_size())
         return {};
     float x_or_y;
     if (m_value == m_min)
         x_or_y = button_size();
     else if (m_value == m_max)
-        x_or_y = (length(orientation()) - button_size() - scrubber_size()) + 1;
+        x_or_y = (length(orientation()) - button_size() - visible_scrubber_size()) + 1;
     else {
         float range_size = m_max - m_min;
         float available = scrubbable_range_in_pixels();
@@ -220,9 +220,9 @@ Gfx::IntRect ScrollBar::scrubber_rect() const
     }
 
     if (orientation() == Orientation::Vertical)
-        return { 0, (int)x_or_y, button_width(), scrubber_size() };
+        return { 0, (int)x_or_y, button_width(), visible_scrubber_size() };
     else
-        return { (int)x_or_y, 0, scrubber_size(), button_height() };
+        return { (int)x_or_y, 0, visible_scrubber_size(), button_height() };
 }
 
 void ScrollBar::paint_event(PaintEvent& event)
