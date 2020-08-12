@@ -189,7 +189,7 @@ bool ScrollBar::has_scrubber() const
     return m_max != m_min;
 }
 
-int ScrollBar::visible_scrubber_size() const
+int ScrollBar::unclamped_scrubber_size() const
 {
     int pixel_range = length(orientation()) - button_size() * 2;
     int value_range = m_max - m_min;
@@ -200,7 +200,12 @@ int ScrollBar::visible_scrubber_size() const
         // (page) in relation to the content (value range + page)
         scrubber_size = (m_page * pixel_range) / (value_range + m_page);
     }
-    return ::max(scrubber_size, button_size());
+    return scrubber_size;
+}
+
+int ScrollBar::visible_scrubber_size() const
+{
+    return ::max(unclamped_scrubber_size(), button_size());
 }
 
 Gfx::IntRect ScrollBar::scrubber_rect() const
@@ -294,7 +299,11 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         return;
     }
 
-    scroll_to_position(event.position());
+    // FIXME: If scrolling by page, scroll every second or so while mouse is down.
+    if (event.shift())
+        scroll_to_position(event.position());
+    else
+        scroll_by_page(event.position());
 
     m_scrubbing = true;
     m_scrub_start_value = value();
@@ -328,6 +337,19 @@ void ScrollBar::set_automatic_scrolling_active(bool active)
     } else {
         m_automatic_scrolling_timer->stop();
     }
+}
+
+void ScrollBar::scroll_by_page(const Gfx::IntPoint& click_position)
+{
+    float range_size = m_max - m_min;
+    float available = scrubbable_range_in_pixels();
+    float rel_scrubber_size = unclamped_scrubber_size() / available;
+    float page_increment = range_size * rel_scrubber_size;
+
+    if (click_position.primary_offset_for_orientation(orientation()) < scrubber_rect().primary_offset_for_orientation(orientation()))
+        set_value(value() - page_increment);
+    else
+        set_value(value() + page_increment);
 }
 
 void ScrollBar::scroll_to_position(const Gfx::IntPoint& click_position)
