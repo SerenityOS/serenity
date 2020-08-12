@@ -48,7 +48,7 @@ TEST_CASE(read_an_integer)
     InputMemoryStream stream { { &expected, sizeof(expected) } };
     stream >> actual;
 
-    EXPECT(!stream.error() && !stream.fatal() && stream.eof());
+    EXPECT(!stream.error() && stream.eof());
     EXPECT_EQ(expected, actual);
 }
 
@@ -59,15 +59,15 @@ TEST_CASE(recoverable_error)
 
     InputMemoryStream stream { { &expected, sizeof(expected) } };
 
-    EXPECT(!stream.error() && !stream.fatal() && !stream.eof());
+    EXPECT(!stream.error() && !stream.eof());
     stream >> to_large_value;
-    EXPECT(stream.error() && !stream.fatal() && !stream.eof());
+    EXPECT(stream.error() && !stream.eof());
 
     EXPECT(stream.handle_error());
-    EXPECT(!stream.error() && !stream.fatal() && !stream.eof());
+    EXPECT(!stream.error() && !stream.eof());
 
     stream >> actual;
-    EXPECT(!stream.error() && !stream.fatal() && stream.eof());
+    EXPECT(!stream.error() && stream.eof());
     EXPECT_EQ(expected, actual);
 }
 
@@ -78,7 +78,7 @@ TEST_CASE(chain_stream_operator)
     InputMemoryStream stream { { expected, sizeof(expected) } };
 
     stream >> actual[0] >> actual[1] >> actual[2] >> actual[3];
-    EXPECT(!stream.error() && !stream.fatal() && stream.eof());
+    EXPECT(!stream.error() && stream.eof());
 
     EXPECT(compare({ expected, sizeof(expected) }, { actual, sizeof(actual) }));
 }
@@ -94,17 +94,17 @@ TEST_CASE(seeking_slicing_offset)
     InputMemoryStream stream { { input, sizeof(input) } };
 
     stream >> Bytes { actual0, sizeof(actual0) };
-    EXPECT(!stream.error() && !stream.fatal() && !stream.eof());
+    EXPECT(!stream.error() && !stream.eof());
     EXPECT(compare({ expected0, sizeof(expected0) }, { actual0, sizeof(actual0) }));
 
     stream.seek(4);
     stream >> Bytes { actual1, sizeof(actual1) };
-    EXPECT(!stream.error() && !stream.fatal() && stream.eof());
+    EXPECT(!stream.error() && stream.eof());
     EXPECT(compare({ expected1, sizeof(expected1) }, { actual1, sizeof(actual1) }));
 
     stream.seek(1);
     stream >> Bytes { actual2, sizeof(actual2) };
-    EXPECT(!stream.error() && !stream.fatal() && !stream.eof());
+    EXPECT(!stream.error() && !stream.eof());
     EXPECT(compare({ expected2, sizeof(expected2) }, { actual2, sizeof(actual2) }));
 }
 

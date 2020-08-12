@@ -37,17 +37,15 @@ class Stream {
 public:
     virtual ~Stream()
     {
-        ASSERT(!error() && !fatal());
+        ASSERT(!error());
     }
 
     bool error() const { return m_error; }
-    bool fatal() const { return m_fatal; }
 
     bool handle_error() { return exchange(m_error, false); }
 
 protected:
     mutable bool m_error { false };
-    mutable bool m_fatal { false };
 };
 
 }
