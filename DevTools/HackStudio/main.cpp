@@ -39,6 +39,7 @@
 #include "WidgetTool.h"
 #include "WidgetTreeModel.h"
 #include <AK/StringBuilder.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -205,12 +206,14 @@ int main(int argc, char** argv)
     if (!make_is_available())
         GUI::MessageBox::show(g_window, "The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error);
 
-    String argument_absolute_path;
-    if (argc >= 2)
-        argument_absolute_path = Core::File::real_path_for(argv[1]);
+    const char* workspace_argument = nullptr;
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(workspace_argument, "Path to workspace", "workspace", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
 
-    if (!argument_absolute_path.is_empty() && argument_absolute_path.ends_with(".hackstudio"))
-        open_project(argument_absolute_path);
+    auto workspace = Core::File::real_path_for(workspace_argument);
+    if (workspace.ends_with(".hackstudio"))
+        open_project(workspace);
     else
         open_project("/home/anon/Source/little/little.hackstudio");
 
@@ -718,8 +721,8 @@ int main(int argc, char** argv)
 
     g_open_file = open_file;
 
-    if (!argument_absolute_path.is_empty() && !argument_absolute_path.ends_with(".hackstudio"))
-        open_file(argument_absolute_path);
+    if (!workspace.is_empty() && !workspace.ends_with(".hackstudio"))
+        open_file(workspace);
     else
         open_file(g_project->default_file());
 
