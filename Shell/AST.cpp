@@ -718,7 +718,7 @@ void Fd2FdRedirection::dump(int level) const
 RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
 {
     Command command;
-    command.redirections.append(*new FdRedirection(source_fd, dest_fd, Rewiring::Close::None));
+    command.redirections.append(FdRedirection::create(source_fd, dest_fd, Rewiring::Close::None));
     return create<CommandValue>(move(command));
 }
 
@@ -889,7 +889,7 @@ RefPtr<Value> Execute::run(RefPtr<Shell> shell)
         }
         auto& last_in_commands = commands.last();
 
-        last_in_commands.redirections.prepend(adopt(*new FdRedirection(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination)));
+        last_in_commands.redirections.prepend(FdRedirection::create(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
         last_in_commands.should_wait = true;
         last_in_commands.should_notify_if_in_background = false;
         last_in_commands.is_pipe_source = false;
@@ -1135,10 +1135,10 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
     auto last_in_left = left.take_last();
     auto first_in_right = right.take_first();
 
-    auto pipe_write_end = new FdRedirection(STDIN_FILENO, -1, Rewiring::Close::Destination);
-    auto pipe_read_end = new FdRedirection(STDOUT_FILENO, -1, pipe_write_end, Rewiring::Close::RefreshDestination);
-    first_in_right.redirections.append(adopt(*pipe_write_end));
-    last_in_left.redirections.append(adopt(*pipe_read_end));
+    auto pipe_write_end = FdRedirection::create(STDIN_FILENO, -1, Rewiring::Close::Destination);
+    auto pipe_read_end = FdRedirection::create(STDOUT_FILENO, -1, pipe_write_end, Rewiring::Close::RefreshDestination);
+    first_in_right.redirections.append(pipe_write_end);
+    last_in_left.redirections.append(pipe_read_end);
     last_in_left.should_wait = false;
     last_in_left.is_pipe_source = true;
 
