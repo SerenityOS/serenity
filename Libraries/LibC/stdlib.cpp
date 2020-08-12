@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/internals.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -196,10 +197,6 @@ __attribute__((warn_unused_result)) int __generate_unique_filename(char* pattern
 }
 
 extern "C" {
-
-// Itanium C++ ABI methods defined in crt0.cpp
-extern int __cxa_atexit(void (*function)(void*), void* paramter, void* dso_handle);
-extern void __cxa_finalize(void* dso_handle);
 
 void exit(int status)
 {
