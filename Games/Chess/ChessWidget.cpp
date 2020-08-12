@@ -63,7 +63,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
         painter.fill_rect(tile_rect, ((sq.rank % 2) == (sq.file % 2)) ? board_theme().dark_square_color : board_theme().light_square_color);
 
-        if (m_last_move.has_value() && (m_last_move.value().to == sq || m_last_move.value().from == sq)) {
+        if (board().last_move().has_value() && (board().last_move().value().to == sq || board().last_move().value().from == sq)) {
             painter.fill_rect(tile_rect, m_move_highlight_color);
         }
 
@@ -115,8 +115,6 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     auto target_square = mouse_to_square(event);
 
     if (board().apply_move({ m_moving_square, target_square })) {
-        m_last_move = Chess::Move(m_moving_square, target_square);
-
         if (board().game_result() != Chess::Result::NotFinished) {
             set_drag_enabled(false);
             update();
@@ -204,7 +202,6 @@ void ChessWidget::reset()
 {
     m_board = Chess();
     m_drag_enabled = true;
-    m_last_move = Optional<Chess::Move>();
     update();
 }
 

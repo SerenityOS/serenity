@@ -154,32 +154,30 @@ bool Chess::is_legal_no_check(const Move& move, Colour colour) const
         return false;
 
     if (piece.type == Type::Pawn) {
-        // FIXME: Add en passant.
-        if (colour == Colour::White) {
-            if (move.to.rank == move.from.rank + 1 && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
-                // Regular pawn move.
-                return true;
-            } else if (move.to.rank == move.from.rank + 1 && (move.to.file == move.from.file + 1 || move.to.file == move.from.file - 1)
-                && get_piece(move.to).colour == Colour::Black) {
+        int dir = (colour == Colour::White) ? +1 : -1;
+        unsigned start_rank = (colour == Colour::White) ? 1 : 6;
+        unsigned other_start_rank = (colour == Colour::White) ? 6 : 1;
+        unsigned en_passant_rank = (colour == Colour::White) ? 4 : 3;
+
+        if (move.to.rank == move.from.rank + dir && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
+            // Regular pawn move.
+            return true;
+        } else if (move.to.rank == move.from.rank + dir && (move.to.file == move.from.file + 1 || move.to.file == move.from.file - 1)) {
+            Move en_passant_last_move = { { other_start_rank, move.to.file }, { en_passant_rank, move.to.file } };
+            if (get_piece(move.to).colour == opposing_colour(colour)) {
                 // Pawn capture.
                 return true;
-            } else if (move.from.rank == 1 && move.to.rank == move.from.rank + 2 && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
-                // 2 square pawn move from initial position.
+            } else if (m_last_move.has_value() && move.from.rank == en_passant_rank && m_last_move.value() == en_passant_last_move
+                && get_piece(en_passant_last_move.to) == Piece(opposing_colour(colour), Type::Pawn)) {
+                // En passant.
                 return true;
             }
-        } else if (colour == Colour::Black) {
-            if (move.to.rank == move.from.rank - 1 && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
-                // Regular pawn move.
-                return true;
-            } else if (move.to.rank == move.from.rank - 1 && (move.to.file == move.from.file + 1 || move.to.file == move.from.file - 1)
-                && get_piece(move.to).colour == Colour::White) {
-                // Pawn capture.
-                return true;
-            } else if (move.from.rank == 6 && move.to.rank == move.from.rank - 2 && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
-                // 2 square pawn move from initial position.
-                return true;
-            }
+        } else if (move.from.rank == start_rank && move.to.rank == move.from.rank + (2 * dir) && move.to.file == move.from.file
+            && get_piece(move.to).type == Type::None && get_piece({ move.from.rank + dir, move.from.file }).type == Type::None) {
+            // 2 square pawn move from initial position.
+            return true;
         }
+
         return false;
     } else if (piece.type == Type::Knight) {
         int rank_delta = abs(move.to.rank - move.from.rank);
@@ -308,6 +306,8 @@ bool Chess::apply_illegal_move(const Move& move, Colour colour)
 
     // FIXME: pawn promotion
 
+    m_last_move = move;
+
     if (move.from == Square("a1") || move.to == Square("a1") || move.from == Square("e1"))
         m_white_can_castle_queenside = false;
     if (move.from == Square("h1") || move.to == Square("h1") || move.from == Square("e1"))
@@ -344,6 +344,15 @@ bool Chess::apply_illegal_move(const Move& move, Colour colour)
             set_piece(Square("g8"), { Colour::Black, Type::King });
             set_piece(Square("f8"), { Colour::Black, Type::Rook });
             return true;
+        }
+    }
+
+    if (get_piece(move.from).type == Type::Pawn && move.from.file != move.to.file && get_piece(move.to).type == Type::None) {
+        // En passant.
+        if (colour == Colour::White) {
+            set_piece({ move.to.rank - 1, move.to.file }, EmptyPiece);
+        } else {
+            set_piece({ move.to.rank + 1, move.to.file }, EmptyPiece);
         }
     }
 
