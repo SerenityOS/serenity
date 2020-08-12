@@ -109,8 +109,15 @@ struct PathRedirection : public Redirection {
         ReadWrite,
     } direction { Read };
 
+    static NonnullRefPtr<PathRedirection> create(String path, int fd, decltype(direction) direction)
+    {
+        return adopt(*new PathRedirection(move(path), fd, direction));
+    }
+
     virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override;
     virtual ~PathRedirection();
+
+private:
     PathRedirection(String path, int fd, decltype(direction) direction)
         : path(move(path))
         , fd(fd)
@@ -118,7 +125,6 @@ struct PathRedirection : public Redirection {
     {
     }
 
-private:
     virtual bool is_path_redirection() const override { return true; }
 };
 

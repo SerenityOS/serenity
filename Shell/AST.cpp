@@ -1261,7 +1261,7 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Read)));
+    command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Read));
     return create<CommandValue>(move(command));
 }
 
@@ -1288,7 +1288,7 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::ReadWrite)));
+    command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::ReadWrite));
     return create<CommandValue>(move(command));
 }
 
@@ -1781,7 +1781,7 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::WriteAppend)));
+    command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::WriteAppend));
     return create<CommandValue>(move(command));
 }
 
@@ -1808,7 +1808,7 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.join(" ", path_segments);
 
-    command.redirections.append(adopt(*new PathRedirection(builder.to_string(), m_fd, PathRedirection::Write)));
+    command.redirections.append(PathRedirection::create(builder.to_string(), m_fd, PathRedirection::Write));
     return create<CommandValue>(move(command));
 }
 
