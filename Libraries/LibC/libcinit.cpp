@@ -40,20 +40,4 @@ void __libc_init()
     __malloc_init();
     __stdio_init();
 }
-
-[[noreturn]] void __cxa_pure_virtual() __attribute__((weak));
-
-[[noreturn]] void __cxa_pure_virtual()
-{
-    ASSERT_NOT_REACHED();
-}
-
-extern u32 __stack_chk_guard;
-u32 __stack_chk_guard = (u32)0xc6c7c8c9;
-
-[[noreturn]] void __stack_chk_fail();
-[[noreturn]] void __stack_chk_fail()
-{
-    ASSERT_NOT_REACHED();
-}
 }
