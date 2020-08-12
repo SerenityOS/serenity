@@ -118,6 +118,7 @@ We also have a project mailing list: [serenityos-dev](https://lists.sr.ht/~aweso
 * **Matthew Olsson** - [mattco98](https://github.com/mattco98)
 * **Nico Weber** - [nico](https://github.com/nico)
 * **Brian Gianforcaro** - [bgianfo](https://github.com/bgianfo)
+* **Ben Wiederhake** - [BenWiederhake](https://github.com/BenWiederhake)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
