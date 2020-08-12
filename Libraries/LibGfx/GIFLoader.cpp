@@ -282,13 +282,19 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
         Color background_color = Color(background_rgb.r, background_rgb.g, background_rgb.b);
 
         image.bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
-        image.bitmap->fill(background_color);
-        if (i > 0 && image.disposal_method == ImageDescriptor::DisposalMethod::InPlace) {
+
+        const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : ImageDescriptor::DisposalMethod::None;
+
+        if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::InPlace) {
             for (int y = 0; y < image.bitmap->height(); ++y) {
                 for (int x = 0; x < image.bitmap->width(); ++x) {
                     image.bitmap->set_pixel(x, y, context.images.at(i - 1).bitmap->get_pixel(x, y));
                 }
             }
+        } else if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestoreBackground) {
+            image.bitmap->fill(background_color);
+        } else if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
+            image.bitmap->fill(Color(Color::NamedColor::Transparent));
         }
 
         int pixel_index = 0;
@@ -320,7 +326,7 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
                     c.set_alpha(0);
                 }
 
-                if (!image.transparent || image.disposal_method == ImageDescriptor::DisposalMethod::None || color != image.transparency_index) {
+                if (!image.transparent || previous_image_disposal_method == ImageDescriptor::DisposalMethod::None || color != image.transparency_index) {
                     image.bitmap->set_pixel(x, y, c);
                 }
 
