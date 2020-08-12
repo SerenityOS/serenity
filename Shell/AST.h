@@ -123,11 +123,30 @@ private:
 };
 
 struct FdRedirection : public Redirection {
+public:
+    static NonnullRefPtr<FdRedirection> create(int source, int dest, Rewiring::Close close)
+    {
+        return adopt(*new FdRedirection(source, dest, close));
+    }
+
+    static NonnullRefPtr<FdRedirection> create(int source, int dest, FdRedirection* pipe_end, Rewiring::Close close)
+    {
+        return adopt(*new FdRedirection(source, dest, pipe_end, close));
+    }
+
+    virtual ~FdRedirection();
+
     virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override
     {
         return adopt(*new Rewiring(source_fd, dest_fd, other_pipe_end, action));
     }
-    virtual ~FdRedirection();
+
+    int source_fd { -1 };
+    int dest_fd { -1 };
+    FdRedirection* other_pipe_end { nullptr };
+    Rewiring::Close action { Rewiring::Close::None };
+
+private:
     FdRedirection(int source, int dest, Rewiring::Close close)
         : FdRedirection(source, dest, nullptr, close)
     {
@@ -141,12 +160,6 @@ struct FdRedirection : public Redirection {
     {
     }
 
-    int source_fd { -1 };
-    int dest_fd { -1 };
-    FdRedirection* other_pipe_end { nullptr };
-    Rewiring::Close action { Rewiring::Close::None };
-
-private:
     virtual bool is_fd_redirection() const override { return true; }
 };
 
