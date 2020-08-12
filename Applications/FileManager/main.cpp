@@ -480,7 +480,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto properties_action
         = GUI::Action::create(
             "Properties...", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GUI::Action& action) {
-                auto& model = directory_view.model();
                 String container_dir_path;
                 String path;
                 Vector<String> selected;
@@ -496,9 +495,9 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
                 RefPtr<PropertiesDialog> properties;
                 if (selected.is_empty()) {
-                    properties = window->add<PropertiesDialog>(model, path, true);
+                    properties = window->add<PropertiesDialog>(path, true);
                 } else {
-                    properties = window->add<PropertiesDialog>(model, selected.first(), access(container_dir_path.characters(), W_OK) != 0);
+                    properties = window->add<PropertiesDialog>(selected.first(), access(container_dir_path.characters(), W_OK) != 0);
                 }
 
                 properties->exec();

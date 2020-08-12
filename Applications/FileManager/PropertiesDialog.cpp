@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/TabWidget.h>
@@ -39,9 +40,8 @@
 #include <string.h>
 #include <unistd.h>
 
-PropertiesDialog::PropertiesDialog(GUI::FileSystemModel& model, String path, bool disable_rename, Window* parent_window)
+PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Window* parent_window)
     : Dialog(parent_window)
-    , m_model(model)
 {
     auto lexical_path = LexicalPath(path);
     ASSERT(lexical_path.is_valid());
@@ -170,7 +170,7 @@ PropertiesDialog::~PropertiesDialog() { }
 
 void PropertiesDialog::update()
 {
-    auto bitmap = m_model.icon_for_file(m_mode, m_name).bitmap_for_size(32);
+    auto bitmap = GUI::FileIconProvider::icon_for_path(m_name, m_mode).bitmap_for_size(32);
     m_icon->set_bitmap(bitmap);
     set_title(String::format("%s - Properties", m_name.characters()));
 }
@@ -187,7 +187,7 @@ void PropertiesDialog::permission_changed(mode_t mask, bool set)
     m_apply_button->set_enabled(m_name_dirty || m_permissions_dirty);
 }
 
-String PropertiesDialog::make_full_path(String name)
+String PropertiesDialog::make_full_path(const String& name)
 {
     return String::format("%s/%s", m_parent_path.characters(), name.characters());
 }
