@@ -38,7 +38,6 @@
 #include <LibWeb/CSS/Parser/CSSParser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
-#include <LibWeb/DOM/AttributeNames.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
@@ -46,6 +45,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>

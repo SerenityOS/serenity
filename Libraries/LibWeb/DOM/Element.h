@@ -29,10 +29,10 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <LibWeb/DOM/Attribute.h>
-#include <LibWeb/DOM/AttributeNames.h>
 #include <LibWeb/DOM/NonDocumentTypeChildNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/TagNames.h>
+#include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/Layout/LayoutNode.h>
 
 namespace Web::DOM {

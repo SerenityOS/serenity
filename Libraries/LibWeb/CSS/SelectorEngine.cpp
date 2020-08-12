@@ -25,10 +25,10 @@
  */
 
 #include <LibWeb/CSS/SelectorEngine.h>
-#include <LibWeb/DOM/AttributeNames.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/AttributeNames.h>
 
 namespace Web::SelectorEngine {
 
