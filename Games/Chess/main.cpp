@@ -25,7 +25,12 @@
  */
 
 #include "ChessWidget.h"
+#include <LibCore/ConfigFile.h>
+#include <LibCore/DirIterator.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
 
 int main(int argc, char** argv)
@@ -36,10 +41,70 @@ int main(int argc, char** argv)
     auto& widget = window->set_main_widget<ChessWidget>();
     widget.set_side(Chess::Colour::White);
 
+    RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Chess");
+
+    auto size = config->read_num_entry("Display", "size", 512);
     window->set_title("Chess");
-    window->resize(512, 512);
+    window->resize(size, size);
     window->set_resizable(false);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-chess.png"));
+
+    auto icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-chess.png");
+    window->set_icon(icon);
+
+    widget.set_piece_set(config->read_entry("Style", "PieceSet", "test"));
+    widget.set_board_theme(config->read_entry("Style", "BoardTheme", "Beige"));
+
+    auto menubar = GUI::MenuBar::construct();
+    auto& app_menu = menubar->add_menu("Chess");
+
+    app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
+        widget.reset();
+    }));
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the()->quit();
+    }));
+
+    auto& style_menu = menubar->add_menu("Style");
+    GUI::ActionGroup piece_set_action_group;
+    piece_set_action_group.set_exclusive(true);
+    auto& piece_set_menu = style_menu.add_submenu("Piece Set");
+    piece_set_menu.set_icon(icon);
+
+    Core::DirIterator di("/res/icons/chess/sets/", Core::DirIterator::SkipParentAndBaseDir);
+    while (di.has_next()) {
+        auto set = di.next_path();
+        auto action = GUI::Action::create_checkable(set, [&](auto& action) {
+            widget.set_piece_set(action.text());
+            widget.update();
+            config->write_entry("Style", "PieceSet", action.text());
+            config->sync();
+        });
+
+        piece_set_action_group.add_action(*action);
+        if (widget.piece_set() == set)
+            action->set_checked(true);
+        piece_set_menu.add_action(*action);
+    }
+
+    GUI::ActionGroup board_theme_action_group;
+    board_theme_action_group.set_exclusive(true);
+    auto& board_theme_menu = style_menu.add_submenu("Board Theme");
+    board_theme_menu.set_icon(Gfx::Bitmap::load_from_file("/res/icons/chess/mini-board.png"));
+
+    for (auto& theme : Vector({ "Beige", "Green", "Blue" })) {
+        auto action = GUI::Action::create_checkable(theme, [&](auto& action) {
+            widget.set_board_theme(action.text());
+            widget.update();
+            config->write_entry("Style", "BoardTheme", action.text());
+            config->sync();
+        });
+        board_theme_action_group.add_action(*action);
+        if (widget.board_theme().name == theme)
+            action->set_checked(true);
+        board_theme_menu.add_action(*action);
+    }
+
+    app->set_menubar(move(menubar));
 
     window->show();
 

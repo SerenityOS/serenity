@@ -61,7 +61,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
             tile_rect = { (7 - sq.file) * tile_width, sq.rank * tile_height, tile_width, tile_height };
         }
 
-        painter.fill_rect(tile_rect, ((sq.rank % 2) == (sq.file % 2)) ? m_dark_square_color : m_light_square_color);
+        painter.fill_rect(tile_rect, ((sq.rank % 2) == (sq.file % 2)) ? board_theme().dark_square_color : board_theme().light_square_color);
 
         if (m_last_move.has_value() && (m_last_move.value().to == sq || m_last_move.value().from == sq)) {
             painter.fill_rect(tile_rect, m_move_highlight_color);
@@ -197,5 +197,28 @@ Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
         return { 7 - (event.y() / tile_height), event.x() / tile_width };
     } else {
         return { event.y() / tile_height, 7 - (event.x() / tile_width) };
+    }
+}
+
+void ChessWidget::reset()
+{
+    m_board = Chess();
+    m_drag_enabled = true;
+    m_last_move = Optional<Chess::Move>();
+    update();
+}
+
+void ChessWidget::set_board_theme(const StringView& name)
+{
+    // FIXME: Add some kind of themes.json
+    // The following Colours have been taken from lichess.org, but i'm pretty sure they took them from chess.com.
+    if (name == "Beige") {
+        m_board_theme = { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
+    } else if (name == "Green") {
+        m_board_theme = { "Green", Color::from_rgb(0x86a666), Color::from_rgb(0xffffdd) };
+    } else if (name == "Blue") {
+        m_board_theme = { "Blue", Color::from_rgb(0x8ca2ad), Color::from_rgb(0xdee3e6) };
+    } else {
+        set_board_theme("Beige");
     }
 }

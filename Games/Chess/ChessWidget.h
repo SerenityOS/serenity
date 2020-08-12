@@ -60,10 +60,21 @@ public:
     bool drag_enabled() const { return m_drag_enabled; }
     void set_drag_enabled(bool e) { m_drag_enabled = e; }
 
+    void reset();
+
+    struct BoardTheme {
+        String name;
+        Color dark_square_color;
+        Color light_square_color;
+    };
+
+    const BoardTheme& board_theme() const { return m_board_theme; }
+    void set_board_theme(const BoardTheme& theme) { m_board_theme = theme; }
+    void set_board_theme(const StringView& name);
+
 private:
     Chess m_board;
-    Color m_dark_square_color { Color::from_rgb(0xb58863) };
-    Color m_light_square_color { Color::from_rgb(0xf0d9b5) };
+    BoardTheme m_board_theme { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
     Color m_move_highlight_color { Color::from_rgba(0x66ccee00) };
     Chess::Colour m_side { Chess::Colour::White };
     HashMap<Chess::Piece, RefPtr<Gfx::Bitmap>> m_pieces;
