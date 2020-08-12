@@ -17,10 +17,17 @@ MISSING_PRAGMA_ONCE_ERRORS=()
 GOOD_PRAGMA_ONCE_PATTERN=$'(^|\\S\n\n)#pragma once(\n\n\\S.|$)'
 BAD_PRAGMA_ONCE_ERRORS=()
 
+# We check that "#include <LibM/math.h>" is not being used
+LIBM_MATH_H_INCLUDE_PATTERN='#include <LibM/math.h>'
+LIBM_MATH_H_INCLUDE_ERRORS=()
+
 while IFS= read -r f; do
     file_content="$(< "$f")"
     if [[ ! "$file_content" =~ $LICENSE_HEADER_PATTERN ]]; then
         MISSING_LICENSE_HEADER_ERRORS+=("$f")
+    fi
+    if [[ "$file_content" =~ $LIBM_MATH_H_INCLUDE_PATTERN ]]; then
+        LIBM_MATH_H_INCLUDE_ERRORS+=("$f")
     fi
     if [[ "$f" =~ \.h$ ]]; then
         if [[ ! "$file_content" =~ $PRAGMA_ONCE_PATTERN ]]; then
@@ -52,6 +59,10 @@ if (( ${#MISSING_PRAGMA_ONCE_ERRORS[@]} )); then
 fi
 if (( ${#BAD_PRAGMA_ONCE_ERRORS[@]} )); then
     echo "\"#pragma once\" should have a blank line before and after in these files: ${BAD_PRAGMA_ONCE_ERRORS[*]}"
+    exit_status=1
+fi
+if (( ${#LIBM_MATH_H_INCLUDE_ERRORS[@]} )); then
+    echo "\"#include <LibM/math.h>\" should be replaced with just \"#include <math.h>\" in these files: ${LIBM_MATH_H_INCLUDE_ERRORS[*]}"
     exit_status=1
 fi
 exit "$exit_status"
