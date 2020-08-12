@@ -30,6 +30,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -204,20 +205,6 @@ FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
     : m_root_path(LexicalPath::canonicalized_path(root_path))
     , m_mode(mode)
 {
-    m_directory_icon = Icon::default_icon("filetype-folder");
-    m_directory_open_icon = Icon::default_icon("filetype-folder-open");
-    m_home_directory_icon = Icon::default_icon("home-directory");
-    m_home_directory_open_icon = Icon::default_icon("home-directory-open");
-    m_file_icon = Icon::default_icon("filetype-unknown");
-    m_symlink_icon = Icon::default_icon("filetype-symlink");
-    m_socket_icon = Icon::default_icon("filetype-socket");
-    m_executable_icon = Icon::default_icon("filetype-executable");
-
-#define __ENUMERATE_FILETYPE(filetype_name, ...) \
-    m_filetype_##filetype_name##_icon = Icon::default_icon("filetype-" #filetype_name);
-    ENUMERATE_FILETYPES
-#undef __ENUMERATE_FILETYPE
-
     setpwent();
     while (auto* passwd = getpwent())
         m_user_names.set(passwd->pw_uid, passwd->pw_name);
@@ -456,49 +443,27 @@ Variant FileSystemModel::data(const ModelIndex& index, Role role) const
     return {};
 }
 
-Icon FileSystemModel::icon_for_file(const mode_t mode, const String& name) const
-{
-    if (S_ISDIR(mode))
-        return m_directory_icon;
-    if (S_ISLNK(mode))
-        return m_symlink_icon;
-    if (S_ISSOCK(mode))
-        return m_socket_icon;
-    if (mode & (S_IXUSR | S_IXGRP | S_IXOTH))
-        return m_executable_icon;
-
-#define __ENUMERATE_FILETYPE(filetype_name, filetype_extensions...)  \
-    for (auto& extension : Vector<String> { filetype_extensions }) { \
-        if (name.to_lowercase().ends_with(extension))                \
-            return m_filetype_##filetype_name##_icon;                \
-    }
-    ENUMERATE_FILETYPES
-#undef __ENUMERATE_FILETYPE
-
-    return m_file_icon;
-}
-
 Icon FileSystemModel::icon_for(const Node& node) const
 {
     if (Gfx::Bitmap::is_path_a_supported_image_format(node.name.to_lowercase())) {
         if (!node.thumbnail) {
             if (!const_cast<FileSystemModel*>(this)->fetch_thumbnail_for(node))
-                return m_filetype_image_icon;
+                return FileIconProvider::filetype_image_icon();
         }
-        return GUI::Icon(m_filetype_image_icon.bitmap_for_size(16), *node.thumbnail);
+        return GUI::Icon(FileIconProvider::filetype_image_icon().bitmap_for_size(16), *node.thumbnail);
     }
 
     if (node.is_directory()) {
         if (node.full_path(*this) == Core::StandardPaths::home_directory()) {
             if (node.is_selected())
-                return m_home_directory_open_icon;
-            return m_home_directory_icon;
+                return FileIconProvider::home_directory_open_icon();
+            return FileIconProvider::home_directory_icon();
         }
         if (node.is_selected())
-            return m_directory_open_icon;
+            return FileIconProvider::directory_open_icon();
     }
 
-    return icon_for_file(node.mode, node.name);
+    return FileIconProvider::icon_for_path(node.name, node.mode);
 }
 
 static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;

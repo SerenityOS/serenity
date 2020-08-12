@@ -35,21 +35,6 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#define ENUMERATE_FILETYPES                    \
-    __ENUMERATE_FILETYPE(cplusplus, ".cpp")    \
-    __ENUMERATE_FILETYPE(header, ".h")         \
-    __ENUMERATE_FILETYPE(html, ".html")        \
-    __ENUMERATE_FILETYPE(image, ".png")        \
-    __ENUMERATE_FILETYPE(java, ".java")        \
-    __ENUMERATE_FILETYPE(javascript, ".js")    \
-    __ENUMERATE_FILETYPE(library, ".so", ".a") \
-    __ENUMERATE_FILETYPE(markdown, ".md")      \
-    __ENUMERATE_FILETYPE(object, ".o", ".obj") \
-    __ENUMERATE_FILETYPE(pdf, ".pdf")          \
-    __ENUMERATE_FILETYPE(python, ".py")        \
-    __ENUMERATE_FILETYPE(sound, ".wav")        \
-    __ENUMERATE_FILETYPE(ini, ".ini")          \
-    __ENUMERATE_FILETYPE(text, ".txt")
 namespace GUI {
 
 class FileSystemModel
@@ -139,7 +124,6 @@ public:
     ModelIndex m_previously_selected_index {};
 
     const Node& node(const ModelIndex& index) const;
-    GUI::Icon icon_for_file(const mode_t mode, const String& name) const;
 
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_complete;
@@ -180,20 +164,6 @@ private:
     String m_root_path;
     Mode m_mode { Invalid };
     OwnPtr<Node> m_root { nullptr };
-
-    GUI::Icon m_directory_icon;
-    GUI::Icon m_directory_open_icon;
-    GUI::Icon m_home_directory_icon;
-    GUI::Icon m_home_directory_open_icon;
-    GUI::Icon m_file_icon;
-    GUI::Icon m_symlink_icon;
-    GUI::Icon m_socket_icon;
-    GUI::Icon m_executable_icon;
-
-#define __ENUMERATE_FILETYPE(filetype_name, ...) \
-    GUI::Icon m_filetype_##filetype_name##_icon;
-    ENUMERATE_FILETYPES
-#undef __ENUMERATE_FILETYPE
 
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };
