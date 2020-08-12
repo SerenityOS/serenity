@@ -73,8 +73,10 @@
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 #include <LibVT/TerminalWidget.h>
+#include <fcntl.h>
 #include <spawn.h>
 #include <stdio.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -206,14 +208,14 @@ int main(int argc, char** argv)
     if (!make_is_available())
         GUI::MessageBox::show(g_window, "The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GUI::MessageBox::Type::Error);
 
-    const char* workspace_argument = nullptr;
+    const char* path_argument = nullptr;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(workspace_argument, "Path to workspace", "workspace", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    auto workspace = Core::File::real_path_for(workspace_argument);
-    if (workspace.ends_with(".hackstudio"))
-        open_project(workspace);
+    auto argument_absolute_path = Core::File::real_path_for(path_argument);
+    if (argument_absolute_path.ends_with(".hackstudio"))
+        open_project(argument_absolute_path);
     else
         open_project("/home/anon/Source/little/little.hackstudio");
 
@@ -721,8 +723,8 @@ int main(int argc, char** argv)
 
     g_open_file = open_file;
 
-    if (!workspace.is_empty() && !workspace.ends_with(".hackstudio"))
-        open_file(workspace);
+    if (!argument_absolute_path.is_empty() && !argument_absolute_path.ends_with(".hackstudio"))
+        open_file(argument_absolute_path);
     else
         open_file(g_project->default_file());
 
@@ -805,12 +807,16 @@ bool make_is_available()
 {
     pid_t pid;
     const char* argv[] = { "make", "--version", nullptr };
-    if ((errno = posix_spawnp(&pid, "make", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+    posix_spawn_file_actions_t action;
+    posix_spawn_file_actions_init(&action);
+    posix_spawn_file_actions_addopen(&action, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
+
+    if ((errno = posix_spawnp(&pid, "make", &action, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         return false;
     }
-
     int wstatus;
     waitpid(pid, &wstatus, 0);
+    posix_spawn_file_actions_destroy(&action);
     return WEXITSTATUS(wstatus) == 0;
 }
