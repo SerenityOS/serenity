@@ -54,20 +54,27 @@ int LayoutImage::preferred_height() const
 
 void LayoutImage::layout(LayoutMode layout_mode)
 {
-    if (m_image_loader.width()) {
+    if (!m_image_loader.has_loaded_or_failed()) {
         set_has_intrinsic_width(true);
-        set_intrinsic_width(m_image_loader.width());
-    }
-    if (m_image_loader.height()) {
         set_has_intrinsic_height(true);
-        set_intrinsic_height(m_image_loader.height());
-    }
-
-    if (m_image_loader.width() && m_image_loader.height()) {
-        set_has_intrinsic_ratio(true);
-        set_intrinsic_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
+        set_intrinsic_width(0);
+        set_intrinsic_height(0);
     } else {
-        set_has_intrinsic_ratio(false);
+        if (m_image_loader.width()) {
+            set_has_intrinsic_width(true);
+            set_intrinsic_width(m_image_loader.width());
+        }
+        if (m_image_loader.height()) {
+            set_has_intrinsic_height(true);
+            set_intrinsic_height(m_image_loader.height());
+        }
+
+        if (m_image_loader.width() && m_image_loader.height()) {
+            set_has_intrinsic_ratio(true);
+            set_intrinsic_ratio((float)m_image_loader.width() / (float)m_image_loader.height());
+        } else {
+            set_has_intrinsic_ratio(false);
+        }
     }
 
     if (renders_as_alt_text()) {
