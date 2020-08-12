@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/IterationDecision.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
@@ -82,6 +83,7 @@ public:
         }
 
         bool in_bounds() const { return rank < 8 && file < 8; }
+        bool is_light() const { return (rank % 2) != (file % 2); }
     };
 
     struct Move {
@@ -115,7 +117,10 @@ public:
         CheckMate,
         StaleMate,
         FiftyMoveRule,
+        SeventyFiveMoveRule,
         ThreeFoldRepitition,
+        FiveFoldRepitition,
+        InsufficientMaterial,
         NotFinished,
     };
 
@@ -125,6 +130,8 @@ public:
 
     Colour turn() const { return m_turn; };
 
+    bool operator==(const Chess& other) const;
+
 private:
     bool is_legal_no_check(const Move&, Colour colour) const;
     bool apply_illegal_move(const Move&, Colour colour);
@@ -132,11 +139,15 @@ private:
     Piece m_board[8][8];
     Colour m_turn { Colour::White };
     Optional<Move> m_last_move;
+    int m_moves_since_capture { 0 };
 
     bool m_white_can_castle_kingside { true };
     bool m_white_can_castle_queenside { true };
     bool m_black_can_castle_kingside { true };
     bool m_black_can_castle_queenside { true };
+
+    HashMap<Chess, int> m_previous_states;
+    friend struct AK::Traits<Chess>;
 };
 
 template<>
@@ -144,6 +155,27 @@ struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
     static unsigned hash(Chess::Piece piece)
     {
         return pair_int_hash(static_cast<u32>(piece.colour), static_cast<u32>(piece.type));
+    }
+};
+
+template<>
+struct AK::Traits<Chess> : public GenericTraits<Chess> {
+    static unsigned hash(Chess chess)
+    {
+        unsigned hash = 0;
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_queenside));
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_kingside));
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_queenside));
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_kingside));
+
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_kingside));
+
+        Chess::Square::for_each([&](Chess::Square sq) {
+            hash = pair_int_hash(hash, Traits<Chess::Piece>::hash(chess.get_piece(sq)));
+            return IterationDecision::Continue;
+        });
+
+        return hash;
     }
 };
 
