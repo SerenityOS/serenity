@@ -359,7 +359,10 @@ int Shell::builtin_fg(int argc, const char** argv)
 
     block_on_job(job);
 
-    return job->exit_code();
+    if (job->exited())
+        return job->exit_code();
+    else
+        return 0;
 }
 
 int Shell::builtin_disown(int argc, const char** argv)
