@@ -32,8 +32,6 @@ namespace Web {
 namespace HTML {
 namespace TagNames {
 
-void initialize();
-
 #define ENUMERATE_HTML_TAGS          \
     __ENUMERATE_HTML_TAG(a)          \
     __ENUMERATE_HTML_TAG(abbr)       \

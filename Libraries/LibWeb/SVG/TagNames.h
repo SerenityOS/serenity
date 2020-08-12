@@ -30,8 +30,6 @@
 
 namespace Web::SVG::TagNames {
 
-void initialize();
-
 #define ENUMERATE_SVG_GRAPHICS_TAGS  \
     __ENUMERATE_SVG_TAG(svg)         \
     __ENUMERATE_SVG_TAG(path)        \

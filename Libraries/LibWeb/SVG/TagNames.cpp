@@ -32,7 +32,7 @@ namespace Web::SVG::TagNames {
     ENUMERATE_SVG_TAGS
 #undef __ENUMERATE_SVG_TAG
 
-void initialize()
+[[gnu::constructor]] static void initialize()
 {
     static bool s_initialized = false;
     if (s_initialized)

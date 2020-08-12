@@ -32,8 +32,6 @@ namespace Web {
 namespace HTML {
 namespace AttributeNames {
 
-void initialize();
-
 #define ENUMERATE_HTML_ATTRIBUTES               \
     __ENUMERATE_HTML_ATTRIBUTE(abbr)            \
     __ENUMERATE_HTML_ATTRIBUTE(accept)          \

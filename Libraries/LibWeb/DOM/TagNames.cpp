@@ -34,7 +34,7 @@ namespace TagNames {
 ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
 
-void initialize()
+[[gnu::constructor]] static void initialize()
 {
     static bool s_initialized = false;
     if (s_initialized)
