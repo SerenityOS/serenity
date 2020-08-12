@@ -28,12 +28,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/internals.h>
 
 //#define GLOBAL_DTORS_DEBUG
 
 extern "C" {
-
-typedef void (*AtExitFunction)(void*);
 
 struct __exit_entry {
     AtExitFunction method;
@@ -83,4 +82,16 @@ void __cxa_finalize(void* dso_handle)
     }
 }
 
+[[noreturn]] void __cxa_pure_virtual()
+{
+    ASSERT_NOT_REACHED();
+}
+
+extern u32 __stack_chk_guard;
+u32 __stack_chk_guard = (u32)0xc6c7c8c9;
+
+[[noreturn]] void __stack_chk_fail()
+{
+    ASSERT_NOT_REACHED();
+}
 } // extern "C"
