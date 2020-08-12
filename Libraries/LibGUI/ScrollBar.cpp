@@ -294,19 +294,7 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         return;
     }
 
-    float range_size = m_max - m_min;
-    float available = scrubbable_range_in_pixels();
-
-    float x = ::max(0, event.position().x() - button_width() - button_width() / 2);
-    float y = ::max(0, event.position().y() - button_height() - button_height() / 2);
-
-    float rel_x = x / available;
-    float rel_y = y / available;
-
-    if (orientation() == Orientation::Vertical)
-        set_value(m_min + rel_y * range_size);
-    else
-        set_value(m_min + rel_x * range_size);
+    scroll_to_position(event.position());
 
     m_scrubbing = true;
     m_scrub_start_value = value();
@@ -340,6 +328,24 @@ void ScrollBar::set_automatic_scrolling_active(bool active)
     } else {
         m_automatic_scrolling_timer->stop();
     }
+}
+
+void ScrollBar::scroll_to_position(const Gfx::IntPoint& position)
+{
+    float range_size = m_max - m_min;
+    float available = scrubbable_range_in_pixels();
+
+    float x = ::max(0, position.x() - button_width() - button_width() / 2);
+    float y = ::max(0, position.y() - button_height() - button_height() / 2);
+
+    float rel_x = x / available;
+    float rel_y = y / available;
+
+    if (orientation() == Orientation::Vertical)
+        set_value(m_min + rel_y * range_size);
+    else
+        set_value(m_min + rel_x * range_size);
+
 }
 
 void ScrollBar::mousemove_event(MouseEvent& event)

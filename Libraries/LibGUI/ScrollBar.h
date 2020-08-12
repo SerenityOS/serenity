@@ -92,6 +92,8 @@ private:
     void on_automatic_scrolling_timer_fired();
     void set_automatic_scrolling_active(bool);
 
+    void scroll_to_position(const Gfx::IntPoint&);
+
     int m_min { 0 };
     int m_max { 0 };
     int m_page { 0 };
