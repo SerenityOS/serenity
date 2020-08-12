@@ -240,7 +240,7 @@ OwnPtr<Project> Project::load_from_file(const String& path)
 
     quick_sort(files);
 
-    auto project = OwnPtr(new Project(path, move(files)));
+    auto project = adopt_own(*new Project(path, move(files)));
     project->m_type = type;
     return project;
 }
