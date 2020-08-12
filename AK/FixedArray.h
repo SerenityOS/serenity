@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Span.h>
 #include <AK/Vector.h>
 
 namespace AK {
@@ -33,7 +34,7 @@ namespace AK {
 template<typename T>
 class FixedArray {
 public:
-    FixedArray() {}
+    FixedArray() { }
     explicit FixedArray(size_t size)
         : m_size(size)
     {
@@ -86,6 +87,9 @@ public:
         return m_elements;
     }
 
+    Bytes bytes() { return { data(), size() }; }
+    ReadonlyBytes bytes() const { return { data(), size() }; }
+
     T& operator[](size_t index)
     {
         ASSERT(index < m_size);
@@ -137,6 +141,9 @@ public:
     using ConstIterator = VectorIterator<const FixedArray, const T>;
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
+
+    operator Bytes() { return bytes(); }
+    operator ReadonlyBytes() const { return bytes(); }
 
 private:
     size_t m_size { 0 };
