@@ -27,8 +27,8 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <LibWeb/DOM/AttributeNames.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/TreeNode.h>
 
 namespace Web::DOM {
