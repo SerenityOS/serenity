@@ -107,7 +107,18 @@ Outside of QEMU, Serenity will run on VirtualBox. If you're curious, see how to 
 
 Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply run `make install`, `make image`, `make run` again. CMake will only rebuild those parts that have been updated.
 
-You may also want to replace `make` with `ninja` in the above commands for some additional build speed benefits. To do this, go to an empty directory at the root and call `cmake .. -G Ninja` inside that directory. You might either create a new directory or reuse the existing `Build` directory after cleaning it.
+#### Faster than make: "Ninja"
+
+You may also want to replace `make` with `ninja` in the above commands for some additional build speed benefits, like reduced double-building of headers.
+Most of the process stays the same:
+- Go to an empty directory at the root (e.g. `Build/`) and call `cmake .. -G Ninja` inside that directory
+- You might either create a new directory or reuse the existing `Build` directory after cleaning it.
+- `make` becomes `ninja`
+- `make install` becomes `ninja install`
+- `make image` becomes `ninja image`
+- `make run` becomes `ninja run`
+
+Note that ninja automatically chooses a sane value for `-j` automatically, and if something goes wrong it will print the full compiler invocation. Otherwise, `ninja` behaves just like `make`. (And is a tad faster.)
 
 #### Ports
 To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run **./package.sh**. The sourcecode for the package will be downloaded and the package will be built. After that, run **make image** from the `Build/` directory to update the disk image. The next time you start Serenity with **make run**, `curl` will be available.
