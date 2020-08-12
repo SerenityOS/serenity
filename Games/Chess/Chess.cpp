@@ -305,9 +305,17 @@ bool Chess::apply_move(const Move& move, Colour colour)
 
 bool Chess::apply_illegal_move(const Move& move, Colour colour)
 {
+    Chess clone = *this;
+    clone.m_previous_states = {};
+    auto state_count = 0;
+    if (m_previous_states.contains(clone))
+        state_count = m_previous_states.get(clone).value();
+    m_previous_states.set(clone, state_count + 1);
+
     m_turn = opposing_colour(colour);
 
     m_last_move = move;
+    m_moves_since_capture++;
 
     if (move.from == Square("a1") || move.to == Square("a1") || move.from == Square("e1"))
         m_white_can_castle_queenside = false;
@@ -362,7 +370,11 @@ bool Chess::apply_illegal_move(const Move& move, Colour colour)
         } else {
             set_piece({ move.to.rank + 1, move.to.file }, EmptyPiece);
         }
+        m_moves_since_capture = 0;
     }
+
+    if (get_piece(move.to).colour != Colour::None)
+        m_moves_since_capture = 0;
 
     set_piece(move.to, get_piece(move.from));
     set_piece(move.from, EmptyPiece);
@@ -372,6 +384,44 @@ bool Chess::apply_illegal_move(const Move& move, Colour colour)
 
 Chess::Result Chess::game_result() const
 {
+    bool sufficient_material = false;
+    bool no_more_pieces_allowed = false;
+    Optional<Square> bishop;
+    Square::for_each([&](Square sq) {
+        if (get_piece(sq).type == Type::Queen || get_piece(sq).type == Type::Rook || get_piece(sq).type == Type::Pawn) {
+            sufficient_material = true;
+            return IterationDecision::Break;
+        }
+
+        if (get_piece(sq).type != Type::None && get_piece(sq).type != Type::King && no_more_pieces_allowed) {
+            sufficient_material = true;
+            return IterationDecision::Break;
+        }
+
+        if (get_piece(sq).type == Type::Knight)
+            no_more_pieces_allowed = true;
+
+        if (get_piece(sq).type == Type::Bishop) {
+            if (bishop.has_value()) {
+                if (get_piece(sq).colour == get_piece(bishop.value()).colour) {
+                    sufficient_material = true;
+                    return IterationDecision::Break;
+                } else if (sq.is_light() != bishop.value().is_light()) {
+                    sufficient_material = true;
+                    return IterationDecision::Break;
+                }
+                no_more_pieces_allowed = true;
+            } else {
+                bishop = sq;
+            }
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    if (!sufficient_material)
+        return Result::InsufficientMaterial;
+
     bool are_legal_moves = false;
     generate_moves([&](Move m) {
         (void)m;
@@ -379,8 +429,22 @@ Chess::Result Chess::game_result() const
         return IterationDecision::Break;
     });
 
-    if (are_legal_moves)
+    if (are_legal_moves) {
+        if (m_moves_since_capture >= 75 * 2)
+            return Result::SeventyFiveMoveRule;
+        if (m_moves_since_capture == 50 * 2)
+            return Result::FiftyMoveRule;
+
+        auto repeats = m_previous_states.get(*this);
+        if (repeats.has_value()) {
+            if (repeats.value() == 3)
+                return Result::ThreeFoldRepitition;
+            if (repeats.value() >= 5)
+                return Result::FiveFoldRepitition;
+        }
+
         return Result::NotFinished;
+    }
 
     if (in_check(turn()))
         return Result::CheckMate;
@@ -400,4 +464,29 @@ bool Chess::is_promotion_move(const Move& move, Colour colour) const
         return true;
 
     return false;
+}
+
+bool Chess::operator==(const Chess& other) const
+{
+    bool equal_squares = true;
+    Square::for_each([&](Square sq) {
+        if (get_piece(sq) != other.get_piece(sq)) {
+            equal_squares = false;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    if (!equal_squares)
+        return false;
+
+    if (m_white_can_castle_queenside != other.m_white_can_castle_queenside)
+        return false;
+    if (m_white_can_castle_kingside != other.m_white_can_castle_kingside)
+        return false;
+    if (m_black_can_castle_queenside != other.m_black_can_castle_queenside)
+        return false;
+    if (m_black_can_castle_kingside != other.m_black_can_castle_kingside)
+        return false;
+
+    return turn() == other.turn();
 }
