@@ -23,7 +23,6 @@ set(SOURCES
     CSS/StyleSheet.cpp
     CSS/StyleSheetList.cpp
     CSS/StyleValue.cpp
-    DOM/AttributeNames.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
@@ -45,22 +44,23 @@ set(SOURCES
     DOMTreeModel.cpp
     Dump.cpp
     FontCache.cpp
+    HTML/AttributeNames.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/HTMLAnchorElement.cpp
     HTML/HTMLAreaElement.cpp
     HTML/HTMLAudioElement.cpp
+    HTML/HTMLBRElement.cpp
     HTML/HTMLBaseElement.cpp
     HTML/HTMLBlinkElement.cpp
     HTML/HTMLBodyElement.cpp
-    HTML/HTMLBRElement.cpp
     HTML/HTMLButtonElement.cpp
     HTML/HTMLCanvasElement.cpp
+    HTML/HTMLDListElement.cpp
     HTML/HTMLDataElement.cpp
     HTML/HTMLDataListElement.cpp
     HTML/HTMLDetailsElement.cpp
     HTML/HTMLDialogElement.cpp
     HTML/HTMLDivElement.cpp
-    HTML/HTMLDListElement.cpp
     HTML/HTMLElement.cpp
     HTML/HTMLEmbedElement.cpp
     HTML/HTMLFieldSetElement.cpp
@@ -75,9 +75,9 @@ set(SOURCES
     HTML/HTMLIFrameElement.cpp
     HTML/HTMLImageElement.cpp
     HTML/HTMLInputElement.cpp
+    HTML/HTMLLIElement.cpp
     HTML/HTMLLabelElement.cpp
     HTML/HTMLLegendElement.cpp
-    HTML/HTMLLIElement.cpp
     HTML/HTMLLinkElement.cpp
     HTML/HTMLMapElement.cpp
     HTML/HTMLMarqueeElement.cpp
@@ -86,8 +86,8 @@ set(SOURCES
     HTML/HTMLMetaElement.cpp
     HTML/HTMLMeterElement.cpp
     HTML/HTMLModElement.cpp
-    HTML/HTMLObjectElement.cpp
     HTML/HTMLOListElement.cpp
+    HTML/HTMLObjectElement.cpp
     HTML/HTMLOptGroupElement.cpp
     HTML/HTMLOptionElement.cpp
     HTML/HTMLOutputElement.cpp
