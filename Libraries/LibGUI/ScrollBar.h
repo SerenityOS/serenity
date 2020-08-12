@@ -87,12 +87,14 @@ private:
     Gfx::IntRect decrement_gutter_rect() const;
     Gfx::IntRect increment_gutter_rect() const;
     Gfx::IntRect scrubber_rect() const;
+    int unclamped_scrubber_size() const;
     int visible_scrubber_size() const;
     int scrubbable_range_in_pixels() const;
     void on_automatic_scrolling_timer_fired();
     void set_automatic_scrolling_active(bool);
 
     void scroll_to_position(const Gfx::IntPoint&);
+    void scroll_by_page(const Gfx::IntPoint&);
 
     int m_min { 0 };
     int m_max { 0 };
