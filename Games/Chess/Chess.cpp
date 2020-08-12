@@ -153,6 +153,9 @@ bool Chess::is_legal_no_check(const Move& move, Colour colour) const
     if (move.to.rank > 7 || move.to.file > 7)
         return false;
 
+    if (move.promote_to == Type::Pawn || move.promote_to == Type::King || move.promote_to == Type::None)
+        return false;
+
     if (piece.type == Type::Pawn) {
         int dir = (colour == Colour::White) ? +1 : -1;
         unsigned start_rank = (colour == Colour::White) ? 1 : 6;
@@ -304,8 +307,6 @@ bool Chess::apply_illegal_move(const Move& move, Colour colour)
 {
     m_turn = opposing_colour(colour);
 
-    // FIXME: pawn promotion
-
     m_last_move = move;
 
     if (move.from == Square("a1") || move.to == Square("a1") || move.from == Square("e1"))
@@ -347,6 +348,13 @@ bool Chess::apply_illegal_move(const Move& move, Colour colour)
         }
     }
 
+    if (get_piece(move.from).type == Type::Pawn && ((colour == Colour::Black && move.to.rank == 0) || (colour == Colour::White && move.to.rank == 7))) {
+        // Pawn Promotion
+        set_piece(move.to, { colour, move.promote_to });
+        set_piece(move.from, EmptyPiece);
+        return true;
+    }
+
     if (get_piece(move.from).type == Type::Pawn && move.from.file != move.to.file && get_piece(move.to).type == Type::None) {
         // En passant.
         if (colour == Colour::White) {
@@ -378,4 +386,18 @@ Chess::Result Chess::game_result() const
         return Result::CheckMate;
 
     return Result::StaleMate;
+}
+
+bool Chess::is_promotion_move(const Move& move, Colour colour) const
+{
+    if (colour == Colour::None)
+        colour = turn();
+
+    if (!is_legal(move, colour))
+        return false;
+
+    if (get_piece(move.from).type == Type::Pawn && ((colour == Colour::Black && move.to.rank == 0) || (colour == Colour::White && move.to.rank == 7)))
+        return true;
+
+    return false;
 }

@@ -2,6 +2,7 @@ set(SOURCES
     main.cpp
     Chess.cpp
     ChessWidget.cpp
+    PromotionDialog.cpp
 )
 
 serenity_bin(Chess)
