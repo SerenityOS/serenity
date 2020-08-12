@@ -40,7 +40,7 @@ namespace AK {
 class [[gnu::packed]] IPv4Address
 {
 public:
-    IPv4Address() {}
+    IPv4Address() { }
     IPv4Address(const u8 data[4])
     {
         m_data[0] = data[0];
@@ -76,12 +76,37 @@ public:
         if (string.is_null())
             return {};
         auto parts = string.split_view('.');
-        if (parts.size() != 4)
+
+        u32 a;
+        u32 b;
+        u32 c;
+        u32 d;
+
+        if (parts.size() == 1) {
+            a = 0;
+            b = 0;
+            c = 0;
+            d = parts[1].to_uint().value_or(256);
+        } else if (parts.size() == 2) {
+            a = parts[1].to_uint().value_or(256);
+            b = 0;
+            c = 0;
+            d = parts[2].to_uint().value_or(256);
+        } else if (parts.size() == 3) {
+            a = parts[0].to_uint().value_or(256);
+            b = parts[1].to_uint().value_or(256);
+            c = 0;
+            d = parts[2].to_uint().value_or(256);
+        } else if (parts.size() == 4) {
+            a = parts[0].to_uint().value_or(256);
+            b = parts[1].to_uint().value_or(256);
+            c = parts[2].to_uint().value_or(256);
+            d = parts[3].to_uint().value_or(256);
+        } else {
             return {};
-        auto a = parts[0].to_uint().value_or(256);
-        auto b = parts[1].to_uint().value_or(256);
-        auto c = parts[2].to_uint().value_or(256);
-        auto d = parts[3].to_uint().value_or(256);
+        }
+
+
         if (a > 255 || b > 255 || c > 255 || d > 255)
             return {};
         return IPv4Address((u8)a, (u8)b, (u8)c, (u8)d);
