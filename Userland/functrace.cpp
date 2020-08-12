@@ -38,9 +38,9 @@
 #include <LibCore/File.h>
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
-#include <LibM/math.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/Instruction.h>
+#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

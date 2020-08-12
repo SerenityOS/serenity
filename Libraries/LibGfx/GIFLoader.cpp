@@ -30,7 +30,7 @@
 #include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
-#include <LibM/math.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
