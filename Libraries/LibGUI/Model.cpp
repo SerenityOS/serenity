@@ -56,7 +56,7 @@ void Model::for_each_view(Function<void(AbstractView&)> callback)
 void Model::did_update(unsigned flags)
 {
     for (auto* client : m_clients)
-        client->on_model_update(flags);
+        client->model_did_update(flags);
 
     for_each_view([&](auto& view) {
         view.did_update_model(flags);

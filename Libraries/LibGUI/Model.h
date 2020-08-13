@@ -48,7 +48,7 @@ class ModelClient {
 public:
     virtual ~ModelClient() { }
 
-    virtual void on_model_update(unsigned flags) = 0;
+    virtual void model_did_update(unsigned flags) = 0;
 };
 
 class Model : public RefCounted<Model> {

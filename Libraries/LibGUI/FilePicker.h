@@ -35,8 +35,11 @@
 
 namespace GUI {
 
-class FilePicker final : public Dialog, private ModelClient {
-    C_OBJECT(FilePicker)
+class FilePicker final
+    : public Dialog
+    , private ModelClient {
+    C_OBJECT(FilePicker);
+
 public:
     enum class Mode {
         Open,
@@ -69,7 +72,8 @@ private:
 
     void set_path(const String&);
 
-    virtual void on_model_update(unsigned) override;
+    // ^GUI::ModelClient
+    virtual void model_did_update(unsigned) override;
 
     FilePicker(Window* parent_window, Mode type = Mode::Open, Options = Options::None, const StringView& file_name = "Untitled", const StringView& path = Core::StandardPaths::home_directory());
 

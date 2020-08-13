@@ -219,7 +219,7 @@ DirectoryView::~DirectoryView()
     m_model->unregister_client(*this);
 }
 
-void DirectoryView::on_model_update(unsigned flags)
+void DirectoryView::model_did_update(unsigned flags)
 {
     if (flags & GUI::Model::UpdateFlag::InvalidateAllIndexes) {
         for_each_view_implementation([](auto& view) {
