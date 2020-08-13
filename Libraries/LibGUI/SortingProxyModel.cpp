@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/TemporaryChange.h>
 #include <AK/QuickSort.h>
+#include <AK/TemporaryChange.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <stdio.h>
@@ -33,21 +33,21 @@
 
 namespace GUI {
 
-SortingProxyModel::SortingProxyModel(NonnullRefPtr<Model>&& target)
-    : m_target(move(target))
+SortingProxyModel::SortingProxyModel(NonnullRefPtr<Model> source)
+    : m_source(move(source))
     , m_key_column(-1)
 {
-    // Since the target model already called Model::did_update we can't
+    // Since the source model already called Model::did_update we can't
     // assume we will get another call. So, we need to register for further
     // updates and just call resort() right away, otherwise requests
     // to this model won't work because there are no indices to map
-    m_target->register_client(*this);
+    m_source->register_client(*this);
     resort();
 }
 
 SortingProxyModel::~SortingProxyModel()
 {
-    m_target->unregister_client(*this);
+    m_source->unregister_client(*this);
 }
 
 void SortingProxyModel::on_model_update(unsigned flags)
@@ -57,45 +57,45 @@ void SortingProxyModel::on_model_update(unsigned flags)
 
 int SortingProxyModel::row_count(const ModelIndex& index) const
 {
-    auto target_index = map_to_target(index);
-    return target().row_count(target_index);
+    auto source_index = map_to_source(index);
+    return source().row_count(source_index);
 }
 
 int SortingProxyModel::column_count(const ModelIndex& index) const
 {
-    auto target_index = map_to_target(index);
-    return target().column_count(target_index);
+    auto source_index = map_to_source(index);
+    return source().column_count(source_index);
 }
 
-ModelIndex SortingProxyModel::map_to_target(const ModelIndex& index) const
+ModelIndex SortingProxyModel::map_to_source(const ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
     if (static_cast<size_t>(index.row()) >= m_row_mappings.size() || index.column() >= column_count())
         return {};
-    return target().index(m_row_mappings[index.row()], index.column());
+    return source().index(m_row_mappings[index.row()], index.column());
 }
 
 String SortingProxyModel::column_name(int column) const
 {
-    return target().column_name(column);
+    return source().column_name(column);
 }
 
 Variant SortingProxyModel::data(const ModelIndex& index, Role role) const
 {
-    auto target_index = map_to_target(index);
-    ASSERT(target_index.is_valid());
-    return target().data(target_index, role);
+    auto source_index = map_to_source(index);
+    ASSERT(source_index.is_valid());
+    return source().data(source_index, role);
 }
 
 void SortingProxyModel::update()
 {
-    target().update();
+    source().update();
 }
 
 StringView SortingProxyModel::drag_data_type() const
 {
-    return target().drag_data_type();
+    return source().drag_data_type();
 }
 
 void SortingProxyModel::set_key_column_and_sort_order(int column, SortOrder sort_order)
@@ -113,7 +113,7 @@ void SortingProxyModel::resort(unsigned flags)
 {
     TemporaryChange change(m_sorting, true);
     auto old_row_mappings = m_row_mappings;
-    int row_count = target().row_count();
+    int row_count = source().row_count();
     m_row_mappings.resize(row_count);
     for (int i = 0; i < row_count; ++i)
         m_row_mappings[i] = i;
@@ -122,8 +122,8 @@ void SortingProxyModel::resort(unsigned flags)
         return;
     }
     quick_sort(m_row_mappings, [&](auto row1, auto row2) -> bool {
-        auto data1 = target().data(target().index(row1, m_key_column), m_sort_role);
-        auto data2 = target().data(target().index(row2, m_key_column), m_sort_role);
+        auto data1 = source().data(source().index(row1, m_key_column), m_sort_role);
+        auto data2 = source().data(source().index(row2, m_key_column), m_sort_role);
         if (data1 == data2)
             return 0;
         bool is_less_than;
@@ -135,13 +135,13 @@ void SortingProxyModel::resort(unsigned flags)
     });
     for_each_view([&](AbstractView& view) {
         view.selection().change_from_model({}, [&](ModelSelection& selection) {
-            Vector<ModelIndex> selected_indexes_in_target;
+            Vector<ModelIndex> selected_indexes_in_source;
             selection.for_each_index([&](const ModelIndex& index) {
-                selected_indexes_in_target.append(target().index(old_row_mappings[index.row()], index.column()));
+                selected_indexes_in_source.append(source().index(old_row_mappings[index.row()], index.column()));
             });
 
             selection.clear();
-            for (auto& index : selected_indexes_in_target) {
+            for (auto& index : selected_indexes_in_source) {
                 for (size_t i = 0; i < m_row_mappings.size(); ++i) {
                     if (m_row_mappings[i] == index.row()) {
                         selection.add(this->index(i, index.column()));
@@ -156,7 +156,7 @@ void SortingProxyModel::resort(unsigned flags)
 
 bool SortingProxyModel::is_column_sortable(int column_index) const
 {
-    return target().is_column_sortable(column_index);
+    return source().is_column_sortable(column_index);
 }
 
 }

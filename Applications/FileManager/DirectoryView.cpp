@@ -306,7 +306,7 @@ void DirectoryView::open_next_directory()
 GUI::ModelIndex DirectoryView::map_table_view_index(const GUI::ModelIndex& index) const
 {
     auto& filter_model = (const GUI::SortingProxyModel&)*m_table_view->model();
-    return filter_model.map_to_target(index);
+    return filter_model.map_to_source(index);
 }
 
 void DirectoryView::update_statusbar()

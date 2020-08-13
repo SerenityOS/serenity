@@ -208,7 +208,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     m_view->on_selection_change = [this] {
         auto index = m_view->selection().first();
         auto& filter_model = (SortingProxyModel&)*m_view->model();
-        auto local_index = filter_model.map_to_target(index);
+        auto local_index = filter_model.map_to_source(index);
         const FileSystemModel::Node& node = m_model->node(local_index);
         LexicalPath path { node.full_path(m_model) };
 
@@ -246,7 +246,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
 
     m_view->on_activation = [this](auto& index) {
         auto& filter_model = (SortingProxyModel&)*m_view->model();
-        auto local_index = filter_model.map_to_target(index);
+        auto local_index = filter_model.map_to_source(index);
         const FileSystemModel::Node& node = m_model->node(local_index);
         auto path = node.full_path(m_model);
 
