@@ -418,7 +418,10 @@ void CustomColorWidget::pick_color_at_position(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(position))
         return;
 
-    auto color = m_custom_colors->get_pixel(position);
+    // Map actual event position onto scaled bitmap to get the right pixel
+    auto pixel_x = min(position.x() * m_custom_colors->width() / frame_inner_rect().width(), m_custom_colors->width() - 1);
+    auto pixel_y = min(position.y() * m_custom_colors->height() / frame_inner_rect().height(), m_custom_colors->height() - 1);
+    auto color = m_custom_colors->get_pixel({ pixel_x, pixel_y });
     m_last_position = position;
 
     if (on_pick)
