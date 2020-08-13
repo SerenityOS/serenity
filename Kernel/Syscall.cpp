@@ -120,6 +120,10 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 }
 
+constexpr int RandomByteBufferSize = 256;
+u8 g_random_byte_buffer[RandomByteBufferSize];
+int g_random_byte_buffer_offset = RandomByteBufferSize;
+
 void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
@@ -135,7 +139,13 @@ void syscall_handler(TrapFrame* trap)
 
     // Apply a random offset in the range 0-255 to the stack pointer,
     // to make kernel stacks a bit less deterministic.
-    auto* ptr = (char*)__builtin_alloca(get_fast_random<u8>());
+    // Since this is very hot code, request random data in chunks instead of
+    // one byte at a time. This is a noticeable speedup.
+    if (g_random_byte_buffer_offset == RandomByteBufferSize) {
+        get_fast_random_bytes(g_random_byte_buffer, RandomByteBufferSize);
+        g_random_byte_buffer_offset = 0;
+    }
+    auto* ptr = (char*)__builtin_alloca(g_random_byte_buffer[g_random_byte_buffer_offset++]);
     asm volatile(""
                  : "=m"(*ptr));
 
