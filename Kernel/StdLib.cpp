@@ -232,14 +232,6 @@ int strcmp(const char* s1, const char* s2)
     return *(const u8*)s1 < *(const u8*)s2 ? -1 : 1;
 }
 
-char* strdup(const char* str)
-{
-    size_t len = strlen(str);
-    char* new_str = (char*)kmalloc(len + 1);
-    strcpy(new_str, str);
-    return new_str;
-}
-
 int memcmp(const void* v1, const void* v2, size_t n)
 {
     auto* s1 = (const u8*)v1;

@@ -50,7 +50,6 @@ int strcmp(char const*, const char*);
 size_t strlen(const char*);
 size_t strnlen(const char*, size_t);
 void* memset(void*, int, size_t);
-char* strdup(const char*);
 int memcmp(const void*, const void*, size_t);
 char* strrchr(const char* str, int ch);
 void* memmove(void* dest, const void* src, size_t n);
