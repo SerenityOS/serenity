@@ -362,24 +362,13 @@ void init_stage2()
 
 void setup_serial_debug()
 {
-    // this is only used one time, directly below here. we can't use this part
-    // of libc at this point in the boot process, or we'd just pull strstr in
-    // from <string.h>.
-    auto bad_prefix_check = [](const char* str, const char* search) -> bool {
-        while (*search)
-            if (*search++ != *str++)
-                return false;
-
-        return true;
-    };
-
     // serial_debug will output all the klog() and dbg() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
     //
     // note: it must be the first option in the boot cmdline.
     u32 cmdline = low_physical_to_virtual(multiboot_info_ptr->cmdline);
-    if (cmdline && bad_prefix_check(reinterpret_cast<const char*>(cmdline), "serial_debug"))
+    if (cmdline && StringView(reinterpret_cast<const char*>(cmdline)).starts_with("serial_debug"))
         set_serial_debug(true);
 }
 
