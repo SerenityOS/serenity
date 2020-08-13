@@ -30,10 +30,11 @@
 
 namespace GUI {
 
-class SortingProxyModel final : public Model
+class SortingProxyModel final
+    : public Model
     , private ModelClient {
 public:
-    static NonnullRefPtr<SortingProxyModel> create(NonnullRefPtr<Model>&& model) { return adopt(*new SortingProxyModel(move(model))); }
+    static NonnullRefPtr<SortingProxyModel> create(NonnullRefPtr<Model> source) { return adopt(*new SortingProxyModel(move(source))); }
     virtual ~SortingProxyModel() override;
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const override;
@@ -48,25 +49,25 @@ public:
     virtual void set_key_column_and_sort_order(int, SortOrder) override;
     virtual bool is_column_sortable(int column_index) const override;
 
-    ModelIndex map_to_target(const ModelIndex&) const;
+    ModelIndex map_to_source(const ModelIndex&) const;
 
     Role sort_role() const { return m_sort_role; }
     void set_sort_role(Role role) { m_sort_role = role; }
 
 private:
-    explicit SortingProxyModel(NonnullRefPtr<Model>&&);
+    explicit SortingProxyModel(NonnullRefPtr<Model> source);
 
     virtual void on_model_update(unsigned) override;
 
-    Model& target() { return *m_target; }
-    const Model& target() const { return *m_target; }
+    Model& source() { return *m_source; }
+    const Model& source() const { return *m_source; }
 
     void resort(unsigned flags = Model::UpdateFlag::DontInvalidateIndexes);
 
     void set_sorting_case_sensitive(bool b) { m_sorting_case_sensitive = b; }
     bool is_sorting_case_sensitive() { return m_sorting_case_sensitive; }
 
-    NonnullRefPtr<Model> m_target;
+    NonnullRefPtr<Model> m_source;
     Vector<int> m_row_mappings;
     int m_key_column { -1 };
     SortOrder m_sort_order { SortOrder::Ascending };
