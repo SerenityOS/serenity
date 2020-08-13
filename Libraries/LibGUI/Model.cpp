@@ -73,16 +73,6 @@ ModelIndex Model::index(int row, int column, const ModelIndex&) const
     return create_index(row, column);
 }
 
-ModelIndex Model::sibling(int row, int column, const ModelIndex& parent) const
-{
-    if (!parent.is_valid())
-        return index(row, column, {});
-    int row_count = this->row_count(parent);
-    if (row < 0 || row > row_count)
-        return {};
-    return index(row, column, parent);
-}
-
 bool Model::accepts_drag(const ModelIndex&, const StringView&)
 {
     return false;

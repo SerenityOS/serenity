@@ -288,7 +288,7 @@ void TreeView::paint_event(PaintEvent& event)
 
             if (column_index != tree_column) {
                 Gfx::IntRect cell_rect(horizontal_padding() + x_offset, rect.y(), column_width, item_height());
-                auto cell_index = model.sibling(index.row(), column_index, index.parent());
+                auto cell_index = model.index(index.row(), column_index, index.parent());
 
                 if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
                     delegate->paint(painter, cell_rect, palette(), model, cell_index);
