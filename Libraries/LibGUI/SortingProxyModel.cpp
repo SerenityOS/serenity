@@ -111,7 +111,6 @@ void SortingProxyModel::set_key_column_and_sort_order(int column, SortOrder sort
 
 void SortingProxyModel::resort(unsigned flags)
 {
-    TemporaryChange change(m_sorting, true);
     auto old_row_mappings = m_row_mappings;
     int row_count = source().row_count();
     m_row_mappings.resize(row_count);

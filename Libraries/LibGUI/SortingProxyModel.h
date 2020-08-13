@@ -74,7 +74,6 @@ private:
     SortOrder m_sort_order { SortOrder::Ascending };
     Role m_sort_role { Role::Sort };
     bool m_sorting_case_sensitive { false };
-    bool m_sorting { false };
 };
 
 }
