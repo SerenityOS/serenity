@@ -464,7 +464,10 @@ Gfx::IntRect Widget::window_relative_rect() const
 
 Gfx::IntRect Widget::screen_relative_rect() const
 {
-    return window_relative_rect().translated(window()->position());
+    auto window_position = window()->window_type() == WindowType::MenuApplet
+        ? window()->rect_in_menubar().location()
+        : window()->rect().location();
+    return window_relative_rect().translated(window_position);
 }
 
 Widget* Widget::child_at(const Gfx::IntPoint& point) const
