@@ -522,7 +522,7 @@ private:
     template<typename InstructionStreamType>
     Instruction(InstructionStreamType&, bool o32, bool a32);
 
-    String to_string_internal(u32 origin, const SymbolProvider*, bool x32) const;
+    void to_string_internal(StringBuilder&, u32 origin, const SymbolProvider*, bool x32) const;
 
     const char* reg8_name() const;
     const char* reg16_name() const;

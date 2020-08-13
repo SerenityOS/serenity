@@ -1219,24 +1219,26 @@ String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider,
         builder.append("lock ");
     if (has_rep_prefix())
         builder.append(m_rep_prefix == Prefix::REPNZ ? "repnz " : "repz ");
-    builder.append(to_string_internal(origin, symbol_provider, x32));
+    to_string_internal(builder, origin, symbol_provider, x32);
     return builder.to_string();
 }
 
-String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_provider, bool x32) const
+void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const SymbolProvider* symbol_provider, bool x32) const
 {
-    if (!m_descriptor)
-        return String::format("db %#02x", m_op);
-
-    StringBuilder builder;
+    if (!m_descriptor) {
+        builder.appendf("db %#02x", m_op);
+        return;
+    }
 
     String mnemonic = String(m_descriptor->mnemonic).to_lowercase();
 
-    builder.append(mnemonic);
-    builder.append(' ');
+    auto append_mnemonic = [&] { builder.append(mnemonic); };
+    auto append_mnemonic_space = [&] {
+        builder.append(mnemonic);
+        builder.append(' ');
+    };
 
     auto formatted_address = [&](FlatPtr origin, bool x32, auto offset) {
-        StringBuilder builder;
         builder.append(relative_address(origin, x32, offset));
         if (symbol_provider) {
             u32 symbol_offset = 0;
@@ -1247,7 +1249,6 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
                 builder.appendf("+%u", symbol_offset);
             builder.append('>');
         }
-        return builder.to_string();
     };
 
     auto append_rm8 = [&] { builder.append(m_modrm.to_string_o8(*this)); };
@@ -1273,10 +1274,10 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
     auto append_seg = [&] { builder.append(register_name(segment_register())); };
     auto append_creg = [&] { builder.appendf("cr%u", register_index()); };
     auto append_dreg = [&] { builder.appendf("dr%u", register_index()); };
-    auto append_relative_addr = [&] { builder.append(formatted_address(origin + (m_a32 ? 6 : 4), x32, i32(m_a32 ? imm32() : imm16()))); };
-    auto append_relative_imm8 = [&] { builder.append(formatted_address(origin + 2, x32, i8(imm8()))); };
-    auto append_relative_imm16 = [&] { builder.append(formatted_address(origin + 3, x32, i16(imm16()))); };
-    auto append_relative_imm32 = [&] { builder.append(formatted_address(origin + 5, x32, i32(imm32()))); };
+    auto append_relative_addr = [&] { formatted_address(origin + (m_a32 ? 6 : 4), x32, i32(m_a32 ? imm32() : imm16())); };
+    auto append_relative_imm8 = [&] { formatted_address(origin + 2, x32, i8(imm8())); };
+    auto append_relative_imm16 = [&] { formatted_address(origin + 3, x32, i16(imm16())); };
+    auto append_relative_imm32 = [&] { formatted_address(origin + 5, x32, i32(imm32())); };
 
     auto append_mm = [&] { builder.appendf("mm%u", register_index()); };
     auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
@@ -1294,21 +1295,25 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
 
     switch (m_descriptor->format) {
     case OP_RM8_imm8:
+      append_mnemonic_space();
         append_rm8();
         append(", ");
         append_imm8();
         break;
     case OP_RM16_imm8:
+        append_mnemonic_space();
         append_rm16();
         append(", ");
         append_imm8();
         break;
     case OP_RM32_imm8:
+        append_mnemonic_space();
         append_rm32();
         append(", ");
         append_imm8();
         break;
     case OP_reg16_RM16_imm8:
+        append_mnemonic_space();
         append_reg16();
         append(", ");
         append_rm16();
@@ -1316,6 +1321,7 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
         append_imm8();
         break;
     case OP_reg32_RM32_imm8:
+        append_mnemonic_space();
         append_reg32();
         append(", ");
         append_rm32();
@@ -1323,50 +1329,62 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
         append_imm8();
         break;
     case OP_AL_imm8:
+        append_mnemonic_space();
         append("al, ");
         append_imm8();
         break;
     case OP_imm8:
+        append_mnemonic_space();
         append_imm8();
         break;
     case OP_reg8_imm8:
+        append_mnemonic_space();
         append_reg8();
         append(", ");
         append_imm8();
         break;
     case OP_AX_imm8:
+        append_mnemonic_space();
         append("ax, ");
         append_imm8();
         break;
     case OP_EAX_imm8:
+        append_mnemonic_space();
         append("eax, ");
         append_imm8();
         break;
     case OP_imm8_AL:
+        append_mnemonic_space();
         append_imm8();
         append(", al");
         break;
     case OP_imm8_AX:
+        append_mnemonic_space();
         append_imm8();
         append(", ax");
         break;
     case OP_imm8_EAX:
+        append_mnemonic_space();
         append_imm8();
         append(", eax");
         break;
     case OP_AX_imm16:
+        append_mnemonic_space();
         append("ax, ");
         append_imm16();
         break;
     case OP_imm16:
+        append_mnemonic_space();
         append_imm16();
         break;
     case OP_reg16_imm16:
+        append_mnemonic_space();
         append_reg16();
         append(", ");
         append_imm16();
         break;
     case OP_reg16_RM16_imm16:
+        append_mnemonic_space();
         append_reg16();
         append(", ");
         append_rm16();
@@ -1374,6 +1392,7 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
         append_imm16();
         break;
     case OP_reg32_RM32_imm32:
+        append_mnemonic_space();
         append_reg32();
         append(", ");
         append_rm32();
@@ -1381,299 +1400,375 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
         append_imm32();
         break;
     case OP_imm32:
+        append_mnemonic_space();
         append_imm32();
         break;
     case OP_EAX_imm32:
+        append_mnemonic_space();
         append("eax, ");
         append_imm32();
         break;
     case OP_CS:
+        append_mnemonic_space();
         append("cs");
         break;
     case OP_DS:
+        append_mnemonic_space();
         append("ds");
         break;
     case OP_ES:
+        append_mnemonic_space();
         append("es");
         break;
     case OP_SS:
+        append_mnemonic_space();
         append("ss");
         break;
     case OP_FS:
+        append_mnemonic_space();
         append("fs");
         break;
     case OP_GS:
+        append_mnemonic_space();
         append("gs");
         break;
     case OP:
+        append_mnemonic_space();
         break;
     case OP_reg32:
+        append_mnemonic_space();
         append_reg32();
         break;
     case OP_imm16_imm8:
+        append_mnemonic_space();
         append_imm16_1();
         append(", ");
         append_imm8_2();
         break;
     case OP_moff8_AL:
+        append_mnemonic_space();
         append_moff();
         append(", al");
         break;
     case OP_moff16_AX:
+        append_mnemonic_space();
         append_moff();
         append(", ax");
         break;
     case OP_moff32_EAX:
+        append_mnemonic_space();
         append_moff();
         append(", eax");
         break;
     case OP_AL_moff8:
+        append_mnemonic_space();
         append("al, ");
         append_moff();
         break;
     case OP_AX_moff16:
+        append_mnemonic_space();
         append("ax, ");
         append_moff();
         break;
     case OP_EAX_moff32:
+        append_mnemonic_space();
         append("eax, ");
         append_moff();
         break;
     case OP_imm16_imm16:
+        append_mnemonic_space();
         append_imm16_1();
         append(":");
         append_imm16_2();
         break;
     case OP_imm16_imm32:
+        append_mnemonic_space();
         append_imm16_1();
         append(":");
         append_imm32_2();
         break;
     case OP_reg32_imm32:
+        append_mnemonic_space();
         append_reg32();
         append(", ");
         append_imm32();
         break;
     case OP_RM8_1:
+        append_mnemonic_space();
         append_rm8();
         append(", 0x01");
         break;
     case OP_RM16_1:
+        append_mnemonic_space();
         append_rm16();
         append(", 0x01");
         break;
     case OP_RM32_1:
+        append_mnemonic_space();
         append_rm32();
         append(", 0x01");
         break;
     case OP_RM8_CL:
+        append_mnemonic_space();
         append_rm8();
         append(", cl");
         break;
     case OP_RM16_CL:
+        append_mnemonic_space();
         append_rm16();
         append(", cl");
         break;
     case OP_RM32_CL:
+        append_mnemonic_space();
         append_rm32();
         append(", cl");
         break;
     case OP_reg16:
+        append_mnemonic_space();
         append_reg16();
         break;
     case OP_AX_reg16:
+        append_mnemonic_space();
         append("ax, ");
         append_reg16();
         break;
     case OP_EAX_reg32:
+        append_mnemonic_space();
         append("eax, ");
         append_reg32();
         break;
     case OP_3:
+        append_mnemonic_space();
         append("0x03");
         break;
     case OP_AL_DX:
+        append_mnemonic_space();
         append("al, dx");
         break;
     case OP_AX_DX:
+        append_mnemonic_space();
         append("ax, dx");
         break;
     case OP_EAX_DX:
+        append_mnemonic_space();
         append("eax, dx");
         break;
     case OP_DX_AL:
+        append_mnemonic_space();
         append("dx, al");
         break;
     case OP_DX_AX:
+        append_mnemonic_space();
         append("dx, ax");
         break;
     case OP_DX_EAX:
+        append_mnemonic_space();
         append("dx, eax");
         break;
     case OP_reg8_CL:
+        append_mnemonic_space();
         append_reg8();
         append(", cl");
         break;
     case OP_RM8:
+        append_mnemonic_space();
         append_rm8();
         break;
     case OP_RM16:
+        append_mnemonic_space();
         append_rm16();
         break;
     case OP_RM32:
+        append_mnemonic_space();
         append_rm32();
         break;
     case OP_FPU:
+        append_mnemonic_space();
         break;
     case OP_FPU_reg:
+        append_mnemonic_space();
         append_fpu_reg();
         break;
     case OP_FPU_mem:
+        append_mnemonic_space();
         append_fpu_mem();
         break;
     case OP_FPU_AX16:
+        append_mnemonic_space();
         append_fpu_ax16();
         break;
     case OP_FPU_RM16:
+        append_mnemonic_space();
         append_fpu_rm16();
         break;
     case OP_FPU_RM32:
+        append_mnemonic_space();
         append_fpu_rm32();
         break;
     case OP_FPU_RM64:
+        append_mnemonic_space();
         append_fpu_rm64();
         break;
     case OP_FPU_M80:
+        append_mnemonic_space();
         append_fpu_rm80();
         break;
     case OP_RM8_reg8:
+        append_mnemonic_space();
         append_rm8();
         append(", ");
         append_reg8();
         break;
     case OP_RM16_reg16:
+        append_mnemonic_space();
         append_rm16();
         append(", ");
         append_reg16();
         break;
     case OP_RM32_reg32:
+        append_mnemonic_space();
         append_rm32();
         append(", ");
         append_reg32();
         break;
     case OP_reg8_RM8:
+        append_mnemonic_space();
         append_reg8();
         append(", ");
         append_rm8();
         break;
     case OP_reg16_RM16:
+        append_mnemonic_space();
         append_reg16();
         append(", ");
         append_rm16();
         break;
     case OP_reg32_RM32:
+        append_mnemonic_space();
         append_reg32();
         append(", ");
         append_rm32();
         break;
     case OP_reg32_RM16:
+        append_mnemonic_space();
         append_reg32();
         append(", ");
         append_rm16();
         break;
     case OP_reg16_RM8:
+        append_mnemonic_space();
         append_reg16();
         append(", ");
         append_rm8();
         break;
     case OP_reg32_RM8:
+        append_mnemonic_space();
         append_reg32();
         append(", ");
         append_rm8();
         break;
     case OP_RM16_imm16:
+        append_mnemonic_space();
         append_rm16();
         append(", ");
         append_imm16();
         break;
     case OP_RM32_imm32:
+        append_mnemonic_space();
         append_rm32();
         append(", ");
         append_imm32();
         break;
     case OP_RM16_seg:
+        append_mnemonic_space();
         append_rm16();
         append(", ");
         append_seg();
         break;
     case OP_RM32_seg:
+        append_mnemonic_space();
         append_rm32();
         append(", ");
         append_seg();
         break;
     case OP_seg_RM16:
+        append_mnemonic_space();
         append_seg();
         append(", ");
         append_rm16();
         break;
     case OP_seg_RM32:
+        append_mnemonic_space();
         append_seg();
         append(", ");
         append_rm32();
         break;
     case OP_reg16_mem16:
+        append_mnemonic_space();
         append_reg16();
         append(", ");
         append_rm16();
         break;
     case OP_reg32_mem32:
+        append_mnemonic_space();
         append_reg32();
         append(", ");
         append_rm32();
         break;
     case OP_FAR_mem16:
+        append_mnemonic_space();
         append("far ");
         append_rm16();
         break;
     case OP_FAR_mem32:
+        append_mnemonic_space();
         append("far ");
         append_rm32();
         break;
     case OP_reg32_CR:
+        append_mnemonic_space();
         builder.append(register_name(static_cast<RegisterIndex32>(rm() & 7)));
         append(", ");
         append_creg();
         break;
     case OP_CR_reg32:
+        append_mnemonic_space();
         append_creg();
         append(", ");
         builder.append(register_name(static_cast<RegisterIndex32>(rm() & 7)));
         break;
     case OP_reg32_DR:
+        append_mnemonic_space();
         builder.append(register_name(static_cast<RegisterIndex32>(rm() & 7)));
         append(", ");
         append_dreg();
         break;
     case OP_DR_reg32:
+        append_mnemonic_space();
         append_dreg();
         append(", ");
         builder.append(register_name(static_cast<RegisterIndex32>(rm() & 7)));
         break;
     case OP_short_imm8:
+        append_mnemonic_space();
         append("short ");
         append_relative_imm8();
         break;
     case OP_relimm16:
+        append_mnemonic_space();
         append_relative_imm16();
         break;
     case OP_relimm32:
+        append_mnemonic_space();
         append_relative_imm32();
         break;
     case OP_NEAR_imm:
+        append_mnemonic_space();
         append("near ");
         append_relative_addr();
         break;
     case OP_RM16_reg16_imm8:
+        append_mnemonic_space();
         append_rm16();
         append(", ");
         append_reg16();
@@ -1681,6 +1776,7 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
         append_imm8();
         break;
     case OP_RM32_reg32_imm8:
+        append_mnemonic_space();
         append_rm32();
         append(", ");
         append_reg32();
@@ -1688,36 +1784,41 @@ String Instruction::to_string_internal(u32 origin, const SymbolProvider* symbol_
         append_imm8();
         break;
     case OP_RM16_reg16_CL:
+        append_mnemonic_space();
         append_rm16();
         append(", ");
         append_reg16();
         append(", cl");
         break;
     case OP_RM32_reg32_CL:
+        append_mnemonic_space();
         append_rm32();
         append(", ");
         append_reg32();
         append(", cl");
         break;
     case OP_mm1_mm2m64:
+        append_mnemonic_space();
         append_mm();
         append(", ");
         append_mmrm64();
         break;
     case OP_mm1m64_mm2:
+        append_mnemonic_space();
         append_mm();
         append(", ");
         append_mmrm64();
         break;
     case InstructionPrefix:
-        return mnemonic;
+        append_mnemonic();
+        break;
     case InvalidFormat:
     case MultibyteWithSlash:
     case __BeginFormatsWithRMByte:
     case __EndFormatsWithRMByte:
-        return String::format("(!%s)", mnemonic.characters());
+        builder.append(String::format("(!%s)", mnemonic.characters()));
+        break;
     }
-    return builder.to_string();
 }
 
 String Instruction::mnemonic() const
