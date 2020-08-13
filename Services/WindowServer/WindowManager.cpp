@@ -871,6 +871,16 @@ void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event)
 
 void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_window)
 {
+    HashTable<Window*> windows_who_received_mouse_event_due_to_cursor_tracking;
+
+    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
+        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->is_blocked_by_modal_window())
+            continue;
+        windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
+        auto translated_event = event.translated(-window->position());
+        deliver_mouse_event(*window, translated_event);
+    }
+
     hovered_window = nullptr;
 
     if (process_ongoing_drag(event, hovered_window))
@@ -888,16 +898,6 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     // This is quite hackish, but it's how the Button hover effect is implemented.
     if (m_hovered_button && event.type() == Event::MouseMove)
         m_hovered_button->on_mouse_event(event.translated(-m_hovered_button->screen_rect().location()));
-
-    HashTable<Window*> windows_who_received_mouse_event_due_to_cursor_tracking;
-
-    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->is_blocked_by_modal_window())
-            continue;
-        windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
-        auto translated_event = event.translated(-window->position());
-        deliver_mouse_event(*window, translated_event);
-    }
 
     // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
     if (MenuManager::the().has_open_menu() || menubar_rect().contains(event.position())) {
