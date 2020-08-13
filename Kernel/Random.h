@@ -73,8 +73,8 @@ public:
         cipher.key_stream(buffer_span, counter_span, &counter_span);
 
         // Extract a new key from the prng stream.
-
-        cipher.key_stream(buffer_span, counter_span, &counter_span);
+        Bytes key_span = m_key.span();
+        cipher.key_stream(key_span, counter_span, &counter_span);
     }
 
     template<typename T>
