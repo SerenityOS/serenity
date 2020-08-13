@@ -88,10 +88,10 @@ public:
             c = 0;
             d = parts[1].to_uint().value_or(256);
         } else if (parts.size() == 2) {
-            a = parts[1].to_uint().value_or(256);
+            a = parts[0].to_uint().value_or(256);
             b = 0;
             c = 0;
-            d = parts[2].to_uint().value_or(256);
+            d = parts[1].to_uint().value_or(256);
         } else if (parts.size() == 3) {
             a = parts[0].to_uint().value_or(256);
             b = parts[1].to_uint().value_or(256);
