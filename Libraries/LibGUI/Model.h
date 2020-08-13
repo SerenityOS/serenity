@@ -81,7 +81,6 @@ public:
     virtual void update() = 0;
     virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const;
-    virtual ModelIndex sibling(int row, int column, const ModelIndex& parent) const;
     virtual bool is_editable(const ModelIndex&) const { return false; }
     virtual void set_data(const ModelIndex&, const Variant&) { }
     virtual int tree_column() const { return 0; }

@@ -289,7 +289,7 @@ void ColumnsView::keydown_event(KeyEvent& event)
             auto old_index = selection().first();
             auto parent_index = model.parent_index(old_index);
             int row = old_index.row() > 0 ? old_index.row() - 1 : 0;
-            new_index = model.sibling(row, old_index.column(), parent_index);
+            new_index = model.index(row, old_index.column(), parent_index);
         } else {
             new_index = model.index(0, m_model_column, {});
         }
@@ -306,7 +306,7 @@ void ColumnsView::keydown_event(KeyEvent& event)
             auto old_index = selection().first();
             auto parent_index = model.parent_index(old_index);
             int row = old_index.row() + 1;
-            new_index = model.sibling(row, old_index.column(), parent_index);
+            new_index = model.index(row, old_index.column(), parent_index);
         } else {
             new_index = model.index(0, m_model_column, {});
         }
