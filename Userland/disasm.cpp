@@ -141,7 +141,7 @@ int main(int argc, char** argv)
             is_first_symbol = false;
         }
 
-        out() << String::format("%08x", virtual_offset) << "  " << insn.value().to_string(offset);
+        out() << String::format("%08x", virtual_offset) << "  " << insn.value().to_string(virtual_offset);
     }
 
     return 0;
