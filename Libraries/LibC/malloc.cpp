@@ -397,7 +397,8 @@ void* calloc(size_t count, size_t size)
 {
     size_t new_size = count * size;
     auto* ptr = malloc(new_size);
-    memset(ptr, 0, new_size);
+    if (ptr)
+        memset(ptr, 0, new_size);
     return ptr;
 }
 
@@ -418,13 +419,18 @@ void* realloc(void* ptr, size_t size)
 {
     if (!ptr)
         return malloc(size);
+    if (!size)
+        return nullptr;
+
     LOCKER(malloc_lock());
     auto existing_allocation_size = malloc_size(ptr);
     if (size <= existing_allocation_size)
         return ptr;
     auto* new_ptr = malloc(size);
-    memcpy(new_ptr, ptr, min(existing_allocation_size, size));
-    free(ptr);
+    if (new_ptr) {
+        memcpy(new_ptr, ptr, min(existing_allocation_size, size));
+        free(ptr);
+    }
     return new_ptr;
 }
 
