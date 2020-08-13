@@ -82,6 +82,8 @@ public:
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     void set_opacity(float);
+
+    WindowType window_type() const { return m_window_type; }
     void set_window_type(WindowType);
 
     int window_id() const { return m_window_id; }
