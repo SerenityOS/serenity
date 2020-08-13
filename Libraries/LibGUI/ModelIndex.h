@@ -55,6 +55,8 @@ public:
         return !(*this == other);
     }
 
+    const Model* model() const { return m_model; }
+
 private:
     ModelIndex(const Model& model, int row, int column, void* internal_data)
         : m_model(&model)
