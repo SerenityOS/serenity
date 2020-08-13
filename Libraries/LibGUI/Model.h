@@ -80,7 +80,7 @@ public:
     virtual TriState data_matches(const ModelIndex&, Variant) const { return TriState::Unknown; }
     virtual void update() = 0;
     virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }
-    virtual ModelIndex index(int row, int column = 0, const ModelIndex& = ModelIndex()) const { return create_index(row, column); }
+    virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const;
     virtual ModelIndex sibling(int row, int column, const ModelIndex& parent) const;
     virtual bool is_editable(const ModelIndex&) const { return false; }
     virtual void set_data(const ModelIndex&, const Variant&) { }

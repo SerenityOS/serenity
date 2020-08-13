@@ -68,6 +68,11 @@ ModelIndex Model::create_index(int row, int column, const void* data) const
     return ModelIndex(*this, row, column, const_cast<void*>(data));
 }
 
+ModelIndex Model::index(int row, int column, const ModelIndex&) const
+{
+    return create_index(row, column);
+}
+
 ModelIndex Model::sibling(int row, int column, const ModelIndex& parent) const
 {
     if (!parent.is_valid())
