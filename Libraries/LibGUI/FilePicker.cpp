@@ -287,7 +287,7 @@ FilePicker::~FilePicker()
     m_model->unregister_client(*this);
 }
 
-void FilePicker::on_model_update(unsigned)
+void FilePicker::model_did_update(unsigned)
 {
     m_location_textbox->set_text(m_model->root_path());
     if (have_preview())

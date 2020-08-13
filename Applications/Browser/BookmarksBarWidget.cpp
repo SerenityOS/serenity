@@ -108,7 +108,7 @@ void BookmarksBarWidget::resize_event(GUI::ResizeEvent& event)
     update_content_size();
 }
 
-void BookmarksBarWidget::on_model_update(unsigned)
+void BookmarksBarWidget::model_did_update(unsigned)
 {
     for (auto* child : child_widgets()) {
         child->remove_from_parent();

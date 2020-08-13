@@ -57,7 +57,8 @@ public:
 private:
     explicit SortingProxyModel(NonnullRefPtr<Model> source);
 
-    virtual void on_model_update(unsigned) override;
+    // ^ModelClient
+    virtual void model_did_update(unsigned) override;
 
     Model& source() { return *m_source; }
     const Model& source() const { return *m_source; }

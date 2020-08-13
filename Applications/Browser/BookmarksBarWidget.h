@@ -32,9 +32,11 @@
 
 namespace Browser {
 
-class BookmarksBarWidget final : public GUI::Widget
+class BookmarksBarWidget final
+    : public GUI::Widget
     , private GUI::ModelClient {
-    C_OBJECT(BookmarksBarWidget)
+    C_OBJECT(BookmarksBarWidget);
+
 public:
     static BookmarksBarWidget& the();
 
@@ -54,7 +56,10 @@ public:
 private:
     BookmarksBarWidget(const String&, bool enabled);
 
-    virtual void on_model_update(unsigned) override;
+    // ^GUI::ModelClient
+    virtual void model_did_update(unsigned) override;
+
+    // ^GUI::Widget
     virtual void resize_event(GUI::ResizeEvent&) override;
 
     void update_content_size();

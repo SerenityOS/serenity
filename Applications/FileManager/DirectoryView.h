@@ -37,7 +37,7 @@
 #include <LibGUI/TableView.h>
 #include <sys/stat.h>
 
-class LauncherHandler: public RefCounted<LauncherHandler> {
+class LauncherHandler : public RefCounted<LauncherHandler> {
 public:
     LauncherHandler(const NonnullRefPtr<Desktop::Launcher::Details>& details)
         : m_details(details)
@@ -51,9 +51,11 @@ private:
     NonnullRefPtr<Desktop::Launcher::Details> m_details;
 };
 
-class DirectoryView final : public GUI::StackWidget
+class DirectoryView final
+    : public GUI::StackWidget
     , private GUI::ModelClient {
-    C_OBJECT(DirectoryView)
+    C_OBJECT(DirectoryView);
+
 public:
     virtual ~DirectoryView() override;
 
@@ -118,7 +120,8 @@ private:
     DirectoryView();
     const GUI::FileSystemModel& model() const { return *m_model; }
 
-    virtual void on_model_update(unsigned) override;
+    // ^GUI::ModelClient
+    virtual void model_did_update(unsigned) override;
 
     void handle_activation(const GUI::ModelIndex&);
     GUI::ModelIndex map_table_view_index(const GUI::ModelIndex&) const;

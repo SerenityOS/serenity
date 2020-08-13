@@ -50,7 +50,7 @@ SortingProxyModel::~SortingProxyModel()
     m_source->unregister_client(*this);
 }
 
-void SortingProxyModel::on_model_update(unsigned flags)
+void SortingProxyModel::model_did_update(unsigned flags)
 {
     resort(flags);
 }
