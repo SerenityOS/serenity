@@ -186,8 +186,13 @@ void ComboBox::open()
         model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
     };
 
+    auto taskbar_height = GUI::Desktop::the().taskbar_height();
+    auto menubar_height = GUI::Desktop::the().menubar_height();
+    // NOTE: This is so the combobox bottom edge exactly fits the taskbar's
+    //       top edge - the value was found through trial and error though.
+    auto offset = 8;
     Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
-    list_window_rect.intersect(Desktop::the().rect().shrunken(0, 128));
+    list_window_rect.intersect(Desktop::the().rect().shrunken(0, taskbar_height + menubar_height + offset));
 
     if (m_list_view->hover_highlighting())
         m_list_view->set_last_valid_hovered_index({});
