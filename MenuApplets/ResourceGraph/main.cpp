@@ -70,19 +70,23 @@ private:
             m_last_cpu_idle = idle;
             float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
             m_history.enqueue(cpu);
+            m_tooltip = String::format("CPU usage: %.1f%%", 100 * cpu);
             break;
         }
         case GraphType::Memory: {
             unsigned allocated;
             unsigned available;
             get_memory_usage(allocated, available);
-            float memory = (float)allocated / (float)(allocated + available);
+            float total_memory = allocated + available;
+            float memory = (float)allocated / total_memory;
             m_history.enqueue(memory);
+            m_tooltip = String::format("Memory: %.1f MiB of %.1f MiB in use",(float)allocated / MB, total_memory / MB);
             break;
         }
         default:
             ASSERT_NOT_REACHED();
         }
+        set_tooltip(m_tooltip);
         update();
     }
 
@@ -146,8 +150,8 @@ private:
         ASSERT(json.has_value());
         unsigned user_physical_allocated = json.value().as_object().get("user_physical_allocated").to_u32();
         unsigned user_physical_available = json.value().as_object().get("user_physical_available").to_u32();
-        allocated = (user_physical_allocated * 4096) / 1024;
-        available = (user_physical_available * 4096) / 1024;
+        allocated = (user_physical_allocated * PAGE_SIZE);
+        available = (user_physical_available * PAGE_SIZE);
     }
 
     GraphType m_graph_type;
@@ -155,6 +159,7 @@ private:
     CircularQueue<float, 30> m_history;
     unsigned m_last_cpu_busy { 0 };
     unsigned m_last_cpu_idle { 0 };
+    String m_tooltip;
 };
 
 int main(int argc, char** argv)
