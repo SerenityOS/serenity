@@ -47,7 +47,12 @@ private:
     };
 
 public:
-    HashMap() {}
+    HashMap() { }
+
+    HashMap(size_t capacity)
+        : m_table(capacity)
+    {
+    }
 
     bool is_empty() const { return m_table.is_empty(); }
     size_t size() const { return m_table.size(); }
