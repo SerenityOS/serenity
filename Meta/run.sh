@@ -20,6 +20,8 @@ die() {
 
 [ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=256M
 
+[ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
+
 [ -z "$SERENITY_DISK_IMAGE" ] && {
     if [ "$1" = qgrub ]; then
         SERENITY_DISK_IMAGE="grub_disk_image"
@@ -31,7 +33,7 @@ die() {
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
--cpu max
+-cpu $SERENITY_QEMU_CPU
 -d guest_errors
 -smp 2
 -device VGA,vgamem_mb=64
@@ -45,7 +47,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
--cpu max
+-cpu $SERENITY_QEMU_CPU
 -machine q35
 -d guest_errors
 -smp 2
