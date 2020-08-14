@@ -19,10 +19,10 @@ MAKE="make"
 MD5SUM="md5sum"
 NPROC="nproc"
 
-# Each cache entry is 70 MB. 10 entries are 700 MiB.
+# Each cache entry is 70 MB. 5 entries are 350 MiB.
 # It seems that Travis starts having trouble around a total
 # cache size of 9 GiB, so I think this is a good amount.
-KEEP_CACHE_COUNT=10
+KEEP_CACHE_COUNT=5
 
 if command -v ginstall &>/dev/null; then
     INSTALL=ginstall
@@ -76,19 +76,27 @@ GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
 pushd "$DIR"
     if [ "${TRY_USE_LOCAL_TOOLCHAIN}" = "y" ] ; then
         echo "Checking cached toolchain:"
-
-        DEPS_CONFIG="
+        # TODO: This is still overly pessimistic.
+        DEPS_CONFIG="\
             uname=$(uname),TARGET=${TARGET},
             BuildItHash=$($MD5SUM "$(basename "$0")"),
             MAKE=${MAKE},MD5SUM=${MD5SUM},NPROC=${NPROC},
             CC=${CC},CXX=${CXX},with_gmp=${with_gmp},LDFLAGS=${LDFLAGS},
             BINUTILS_VERSION=${BINUTILS_VERSION},BINUTILS_MD5SUM=${BINUTILS_MD5SUM},
             GCC_VERSION=${GCC_VERSION},GCC_MD5SUM=${GCC_MD5SUM}"
-        echo "Config is:${DEPS_CONFIG}"
         if ! DEPS_HASH=$("$DIR/ComputeDependenciesHash.sh" "$MD5SUM" <<<"${DEPS_CONFIG}"); then
+            # Make it stand out more
+            echo
+            echo
+            echo
+            echo
             echo "Dependency hashing failed"
             echo "Will rebuild toolchain from scratch, and NOT SAVE THE RESULT."
             echo "Someone should look into this, but for now it'll work, albeit inefficient."
+            echo
+            echo
+            echo
+            echo
             # Should be empty anyway, but just to make sure:
             DEPS_HASH=""
         elif [ -r "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" ] ; then
@@ -238,12 +246,10 @@ pushd "$DIR/Build/"
         echo "XXX install gcc and libgcc"
         "$MAKE" install-gcc install-target-libgcc || exit 1
 
-        echo "XXX serenity libc and libm"
+        echo "XXX serenity libc and libm headers"
         mkdir -p "$BUILD"
         pushd "$BUILD"
-            CXXFLAGS="-DBUILDING_SERENITY_TOOLCHAIN" cmake ..
-            cmake --build . --target LibC
-            "$INSTALL" -D Libraries/LibC/libc.a Libraries/LibM/libm.a Root/usr/lib/
+            mkdir -p Root/usr/include/
             SRC_ROOT=$(realpath "$DIR"/..)
             FILES=$(find "$SRC_ROOT"/Libraries/LibC "$SRC_ROOT"/Libraries/LibM -name '*.h' -print)
             for header in $FILES; do
