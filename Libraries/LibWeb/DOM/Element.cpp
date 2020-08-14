@@ -295,4 +295,9 @@ String Element::inner_html() const
     return builder.to_string();
 }
 
+bool Element::is_focused() const
+{
+    return document().focused_element() == this;
+}
+
 }

@@ -87,6 +87,9 @@ public:
     String inner_html() const;
     void set_inner_html(StringView);
 
+    bool is_focused() const;
+    virtual bool is_focusable() const { return false; }
+
 protected:
     RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 

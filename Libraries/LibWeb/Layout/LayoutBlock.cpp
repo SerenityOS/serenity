@@ -715,6 +715,23 @@ void LayoutBlock::paint(PaintContext& context, PaintPhase phase)
             }
         }
     }
+
+    if (phase == PaintPhase::FocusOutline) {
+        if (children_are_inline()) {
+            for (auto& line_box : m_line_boxes) {
+                for (auto& fragment : line_box.fragments()) {
+                    auto* node = fragment.layout_node().node();
+                    if (!node)
+                        continue;
+                    auto* parent = node->parent_element();
+                    if (!parent)
+                        continue;
+                    if (parent->is_focused())
+                        context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), context.palette().focus_outline());
+                }
+            }
+        }
+    }
 }
 
 HitTestResult LayoutBlock::hit_test(const Gfx::IntPoint& position, HitTestType type) const

@@ -48,6 +48,9 @@ public:
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
 
 private:
+    bool focus_next_element();
+    bool focus_previous_element();
+
     LayoutDocument* layout_root();
     const LayoutDocument* layout_root() const;
 
