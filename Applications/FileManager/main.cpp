@@ -775,7 +775,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     directory_view.on_selection_change = [&](GUI::AbstractView& view) {
         // FIXME: Figure out how we can enable/disable the paste action, based on clipboard contents.
-        auto selection = view.selection();
+        auto& selection = view.selection();
 
         delete_action->set_enabled(!selection.is_empty() && access(directory_view.path().characters(), W_OK) == 0);
         copy_action->set_enabled(!selection.is_empty());

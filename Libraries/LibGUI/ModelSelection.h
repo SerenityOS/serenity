@@ -31,10 +31,14 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <LibGUI/ModelIndex.h>
+#include <AK/Noncopyable.h>
 
 namespace GUI {
 
 class ModelSelection {
+    AK_MAKE_NONCOPYABLE(ModelSelection);
+    AK_MAKE_NONMOVABLE(ModelSelection);
+
 public:
     ModelSelection(AbstractView& view)
         : m_view(view)
