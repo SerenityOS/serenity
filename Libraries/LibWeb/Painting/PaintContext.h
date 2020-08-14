@@ -26,9 +26,9 @@
 
 #pragma once
 
+#include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
-#include <LibGfx/Forward.h>
 
 namespace Web {
 
@@ -52,12 +52,16 @@ public:
 
     const Gfx::IntPoint& scroll_offset() const { return m_scroll_offset; }
 
+    bool has_focus() const { return m_focus; }
+    void set_has_focus(bool focus) { m_focus = focus; }
+
 private:
     Gfx::Painter& m_painter;
     Palette m_palette;
     Gfx::IntRect m_viewport_rect;
     Gfx::IntPoint m_scroll_offset;
     bool m_should_show_line_box_borders { false };
+    bool m_focus { false };
 };
 
 }
