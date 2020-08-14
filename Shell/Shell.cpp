@@ -500,6 +500,10 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             return nullptr;
     }
 
+    int retval = 0;
+    if (run_builtin(command, rewirings, retval))
+        return nullptr;
+
     Vector<const char*> argv;
     Vector<String> copy_argv = command.argv;
     argv.ensure_capacity(command.argv.size() + 1);
@@ -508,10 +512,6 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         argv.append(arg.characters());
 
     argv.append(nullptr);
-
-    int retval = 0;
-    if (run_builtin(argv.size() - 1, argv.data(), retval))
-        return nullptr;
 
     int sync_pipe[2];
     if (pipe(sync_pipe) < 0) {

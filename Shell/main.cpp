@@ -56,6 +56,38 @@ void FileDescriptionCollector::add(int fd)
     m_fds.append(fd);
 }
 
+SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>& intended_rewirings)
+{
+    for (auto& rewiring : intended_rewirings) {
+        int new_fd = dup(rewiring.source_fd);
+        if (new_fd < 0) {
+            if (errno != EBADF)
+                perror("dup");
+            // The fd that will be overwritten isn't open right now,
+            // it will be cleaned up by the exec()-side collector
+            // and we have nothing to do here, so just ignore this error.
+            continue;
+        }
+
+        auto flags = fcntl(new_fd, F_GETFL);
+        auto rc = fcntl(new_fd, F_SETFL, flags | FD_CLOEXEC);
+        ASSERT(rc == 0);
+
+        m_saves.append({ rewiring.source_fd, new_fd });
+        m_collector.add(new_fd);
+    }
+}
+
+SavedFileDescriptors::~SavedFileDescriptors()
+{
+    for (auto& save : m_saves) {
+        if (dup2(save.saved, save.original) < 0) {
+            perror("dup2(~SavedFileDescriptors)");
+            continue;
+        }
+    }
+}
+
 int main(int argc, char** argv)
 {
     Core::EventLoop loop;
