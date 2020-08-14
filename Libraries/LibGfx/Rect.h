@@ -43,7 +43,7 @@ T abst(T value)
 template<typename T>
 class Rect {
 public:
-    Rect() {}
+    Rect() { }
 
     Rect(T x, T y, T width, T height)
         : m_location(x, y)
@@ -191,6 +191,18 @@ public:
             && bottom() >= other.bottom();
     }
 
+    template<typename Container>
+    bool contains(const Container& others) const
+    {
+        bool have_any = false;
+        for (const auto& other : others) {
+            if (!contains(other))
+                return false;
+            have_any = true;
+        }
+        return have_any;
+    }
+
     int primary_offset_for_orientation(Orientation orientation) const { return m_location.primary_offset_for_orientation(orientation); }
     void set_primary_offset_for_orientation(Orientation orientation, int value) { m_location.set_primary_offset_for_orientation(orientation, value); }
     int secondary_offset_for_orientation(Orientation orientation) const { return m_location.secondary_offset_for_orientation(orientation); }
@@ -268,6 +280,32 @@ public:
             && other.left() <= right()
             && top() <= other.bottom()
             && other.top() <= bottom();
+    }
+
+    template<typename Container>
+    bool intersects(const Container& others) const
+    {
+        for (const auto& other : others) {
+            if (intersects(other))
+                return true;
+        }
+        return false;
+    }
+
+    template<typename Container, typename Function>
+    IterationDecision for_each_intersected(const Container& others, Function f) const
+    {
+        if (is_empty())
+            return IterationDecision::Continue;
+        for (const auto& other : others) {
+            auto intersected_rect = intersected(other);
+            if (!intersected_rect.is_empty()) {
+                IterationDecision decision = f(intersected_rect);
+                if (decision != IterationDecision::Continue)
+                    return decision;
+            }
+        }
+        return IterationDecision::Continue;
     }
 
     T x() const { return location().x(); }
