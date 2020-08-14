@@ -61,6 +61,8 @@ Frame::~Frame()
 void Frame::setup()
 {
     m_cursor_blink_timer = Core::Timer::construct(500, [this] {
+        if (!is_focused_frame())
+            return;
         if (m_cursor_position.node() && m_cursor_position.node()->layout_node()) {
             m_cursor_blink_state = !m_cursor_blink_state;
             m_cursor_position.node()->layout_node()->set_needs_display();
