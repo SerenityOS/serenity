@@ -148,6 +148,12 @@ public:
         return { this->m_values + start, size };
     }
 
+    ALWAYS_INLINE Span slice(size_t start) const
+    {
+        ASSERT(start < this->m_size);
+        return { this->m_values + start, this->m_size - start };
+    }
+
     ALWAYS_INLINE T* offset(size_t start) const
     {
         ASSERT(start < this->m_size);
