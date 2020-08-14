@@ -45,7 +45,7 @@ static String si_bytes(unsigned bytes)
     if (bytes >= MB)
         return String::format("%fMiB", (double)bytes / (double)MB);
     if (bytes >= KB)
-        return String::format("%fKiB", (double)bytes / (double)KB);
+        return String::format("%fkiB", (double)bytes / (double)KB);
     return String::format("%dB", bytes);
 }
 
