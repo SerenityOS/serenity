@@ -91,6 +91,34 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     };
 
     table_view.model()->update();
+
+    m_refresh_timer = add<Core::Timer>();
+
+    m_refresh_timer->start(m_refresh_interval); // Start the timer to update the processes
+    m_refresh_timer->on_timeout = [&table_view] {
+        auto previous_selected_pid = -1; // Store the selection index to not to clear the selection upon update.
+        if (!table_view.selection().is_empty()) {
+            auto pid_as_variant = table_view.model()->data(table_view.selection().first(), GUI::Model::Role::Custom);
+            previous_selected_pid = pid_as_variant.as_i32();
+        }
+
+        table_view.model()->update();
+
+        if (previous_selected_pid == -1) {
+            return;
+        }
+
+        auto model = table_view.model();
+        auto row_count = model->row_count();
+        auto column_index = 1; // Corresponds to PID column in the table_view.
+        for (int row_index = 0; row_index < row_count; ++row_index) {
+            auto cell_index = model->index(row_index, column_index);
+            auto pid_as_variant = model->data(cell_index, GUI::Model::Role::Custom);
+            if (previous_selected_pid == pid_as_variant.as_i32()) {
+                table_view.selection().set(cell_index); // Set only if PIDs are matched.
+            }
+        }
+    };
 }
 
 ProcessChooser::~ProcessChooser()
