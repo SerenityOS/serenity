@@ -28,17 +28,17 @@
 
 #ifdef __serenity__
 
-#include <AK/Assertions.h>
-#include <AK/Types.h>
-#include <AK/Atomic.h>
-#include <unistd.h>
+#    include <AK/Assertions.h>
+#    include <AK/Atomic.h>
+#    include <AK/Types.h>
+#    include <unistd.h>
 
 namespace LibThread {
 
 class Lock {
 public:
-    Lock() {}
-    ~Lock() {}
+    Lock() { }
+    ~Lock() { }
 
     void lock();
     void unlock();
@@ -90,12 +90,19 @@ inline void Lock::unlock()
         --m_level;
 }
 
-#define LOCKER(lock) LibThread::Locker locker(lock)
+#    define LOCKER(lock) LibThread::Locker locker(lock)
 
 template<typename T>
 class Lockable {
 public:
-    Lockable() {}
+    Lockable() { }
+
+    template<typename... Args>
+    Lockable(Args&&... args)
+        : m_resource(forward(args)...)
+    {
+    }
+
     Lockable(T&& resource)
         : m_resource(move(resource))
     {
@@ -128,6 +135,6 @@ public:
 
 }
 
-#define LOCKER(x)
+#    define LOCKER(x)
 
 #endif
