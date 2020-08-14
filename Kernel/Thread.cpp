@@ -136,7 +136,21 @@ void Thread::set_should_die()
 
     // Remember that we should die instead of returning to
     // the userspace.
-    m_should_die = true;
+    {
+        ScopedSpinLock lock(g_scheduler_lock);
+        m_should_die = true;
+
+        // NOTE: Even the current thread can technically be in "Stopped"
+        // state! This is the case when another thread sent a SIGSTOP to
+        // it while it was running and it calls e.g. exit() before
+        // the scheduler gets involved again.
+        if (is_stopped()) {
+            // If we were stopped, we need to briefly resume so that
+            // the kernel stacks can clean up. We won't ever return back
+            // to user mode, though
+            resume_from_stopped();
+        }
+    }
 
     if (is_blocked()) {
         ScopedSpinLock lock(m_lock);
@@ -428,6 +442,20 @@ static void push_value_on_user_stack(u32* stack, u32 data)
     copy_to_user((u32*)*stack, &data);
 }
 
+void Thread::resume_from_stopped()
+{
+    ASSERT(is_stopped());
+    ASSERT(m_stop_state != State::Invalid);
+    set_state(m_stop_state);
+    m_stop_state = State::Invalid;
+    // make sure SemiPermanentBlocker is unblocked
+    if (m_state != Thread::Runnable && m_state != Thread::Running) {
+        ScopedSpinLock lock(m_lock);
+        if (m_blocker && m_blocker->is_reason_signal())
+            unblock();
+    }
+}
+
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -455,18 +483,8 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     }
 
     if (signal == SIGCONT && is_stopped()) {
-        ASSERT(m_stop_state != State::Invalid);
-        set_state(m_stop_state);
-        m_stop_state = State::Invalid;
-        // make sure SemiPermanentBlocker is unblocked
-        if (m_state != Thread::Runnable && m_state != Thread::Running) {
-            ScopedSpinLock lock(m_lock);
-            if (m_blocker && m_blocker->is_reason_signal())
-                unblock();
-        }
-    }
-
-    else {
+        resume_from_stopped();
+    } else {
         auto* thread_tracer = tracer();
         if (thread_tracer != nullptr) {
             // when a thread is traced, it should be stopped whenever it receives a signal

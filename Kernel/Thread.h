@@ -270,6 +270,8 @@ public:
     void did_schedule() { ++m_times_scheduled; }
     u32 times_scheduled() const { return m_times_scheduled; }
 
+    void resume_from_stopped();
+
     bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const { return m_state == Blocked; }
     bool has_blocker() const
