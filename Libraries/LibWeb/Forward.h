@@ -130,6 +130,7 @@ class ImageData;
 }
 
 namespace Web {
+class EventHandler;
 class Frame;
 class LayoutBlock;
 class LayoutDocument;

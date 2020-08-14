@@ -119,6 +119,8 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return false;
     }
 
+    m_frame.page().set_focused_frame({}, m_frame);
+
     auto offset = compute_mouse_event_offset(position, *result.layout_node);
     node->dispatch_event(UIEvents::MouseEvent::create("mousedown", offset.x(), offset.y()));
     if (!layout_root())
