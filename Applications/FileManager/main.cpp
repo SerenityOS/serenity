@@ -40,6 +40,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
@@ -241,6 +242,12 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
         if (!index.is_valid())
             desktop_view_context_menu->popup(event.screen_position());
     };
+
+    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    auto selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
+    if (!selected_wallpaper.is_empty()) {
+        GUI::Desktop::the().set_wallpaper(selected_wallpaper, false);
+    }
 
     window->show();
     return GUI::Application::the()->exec();
