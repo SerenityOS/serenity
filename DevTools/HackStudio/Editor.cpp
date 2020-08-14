@@ -65,7 +65,7 @@ const EditorWrapper& Editor::wrapper() const
     return static_cast<const EditorWrapper&>(*parent());
 }
 
-void Editor::focusin_event(Core::Event& event)
+void Editor::focusin_event(GUI::FocusEvent& event)
 {
     wrapper().set_editor_has_focus({}, true);
     if (on_focus)
@@ -73,7 +73,7 @@ void Editor::focusin_event(Core::Event& event)
     GUI::TextEditor::focusin_event(event);
 }
 
-void Editor::focusout_event(Core::Event& event)
+void Editor::focusout_event(GUI::FocusEvent& event)
 {
     wrapper().set_editor_has_focus({}, false);
     GUI::TextEditor::focusout_event(event);

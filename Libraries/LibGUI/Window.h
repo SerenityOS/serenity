@@ -30,6 +30,7 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
+#include <LibGUI/FocusSource.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/WindowType.h>
 #include <LibGfx/Color.h>
@@ -152,7 +153,7 @@ public:
 
     Widget* focused_widget() { return m_focused_widget; }
     const Widget* focused_widget() const { return m_focused_widget; }
-    void set_focused_widget(Widget*);
+    void set_focused_widget(Widget*, FocusSource = FocusSource::Programmatic);
 
     void update();
     void update(const Gfx::IntRect&);

@@ -1147,7 +1147,7 @@ void TextEditor::set_cursor(const TextPosition& a_position)
         m_highlighter->cursor_did_change();
 }
 
-void TextEditor::focusin_event(Core::Event&)
+void TextEditor::focusin_event(FocusEvent&)
 {
     m_cursor_state = true;
     update_cursor();
@@ -1156,7 +1156,7 @@ void TextEditor::focusin_event(Core::Event&)
         on_focusin();
 }
 
-void TextEditor::focusout_event(Core::Event&)
+void TextEditor::focusout_event(FocusEvent&)
 {
     stop_timer();
     if (on_focusout)

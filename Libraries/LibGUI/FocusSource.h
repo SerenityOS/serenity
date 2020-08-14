@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Hunter Salyer <thefalsehonesty@gmail.com>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,35 +26,12 @@
 
 #pragma once
 
-#include "BrowserConsoleClient.h"
-#include "History.h"
-#include <LibGUI/Widget.h>
-#include <LibJS/Forward.h>
-#include <LibWeb/PageView.h>
+namespace GUI {
 
-namespace Browser {
-
-class ConsoleWidget final : public GUI::Widget {
-    C_OBJECT(ConsoleWidget)
-public:
-    virtual ~ConsoleWidget();
-
-    void set_interpreter(WeakPtr<JS::Interpreter>);
-    void print_source_line(const StringView&);
-    void print_html(const StringView&);
-    void clear_output();
-
-private:
-    ConsoleWidget();
-
-    virtual bool accepts_focus() const override { return true; }
-    virtual void focusin_event(GUI::FocusEvent&) override;
-
-    RefPtr<GUI::TextBox> m_input;
-    RefPtr<Web::PageView> m_output_view;
-    RefPtr<Web::DOM::Element> m_output_container;
-    WeakPtr<JS::Interpreter> m_interpreter;
-    OwnPtr<BrowserConsoleClient> m_console_client;
+enum class FocusSource {
+    Programmatic,
+    Keyboard,
+    Mouse,
 };
 
 }
