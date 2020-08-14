@@ -1147,8 +1147,10 @@ void TextEditor::set_cursor(const TextPosition& a_position)
         m_highlighter->cursor_did_change();
 }
 
-void TextEditor::focusin_event(FocusEvent&)
+void TextEditor::focusin_event(FocusEvent& event)
 {
+    if (event.source() == FocusSource::Keyboard)
+        select_all();
     m_cursor_state = true;
     update_cursor();
     start_timer(500);
