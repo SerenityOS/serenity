@@ -108,6 +108,9 @@ void LayoutText::paint_fragment(PaintContext& context, const LineBoxFragment& fr
 
 void LayoutText::paint_cursor_if_needed(PaintContext& context, const LineBoxFragment& fragment) const
 {
+    if (!frame().is_focused_frame())
+        return;
+
     if (!frame().cursor_blink_state())
         return;
 
