@@ -36,6 +36,7 @@ public:
 
     void reset();
     int score() const;
+    void undo();
 
     struct State {
         Vector<Vector<u32>> board;
