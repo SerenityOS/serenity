@@ -12,7 +12,7 @@ Once installed, you will need to make sure the distribution you want to use (and
 The installation then proceeds as usual.
 
 WSL2 does not natively support graphical applications.
-You can either install qemu natively on windows and allow WSL to talk to it, or you can install an X Server for windows.
+You can either install QEMU natively on windows and allow WSL to talk to it, or you can install an X Server for windows.
 
 ### Setting up an X server with WSL:
 
@@ -28,22 +28,27 @@ This is due to a bug in WSL2. For more information, microsoft/WSL#4106.
 
 Now you can finally, **make run**.
 
-### Using native Qemu install with WSL:
+### Using native QEMU install with WSL:
 
-- Grab latest qemu from [here](https://www.qemu.org/download/#windows) and install for windows.
+- Grab latest QEMU from [here](https://www.qemu.org/download/#windows) and install for Windows.
+
 - Locate the executable `qemu-system-i386.exe` in WSL.
-In a 64-bit machine, it's located at `/mnt/c/Program Files/qemu/qemu-system-i386.exe`.
+By default this will be located at `/mnt/c/Program Files/qemu/qemu-system-i386.exe`.
 
-- Edit `serenity/Meta/CLion/run.sh`. Set **SERENITY_QEMU_BIN**  to point to the windows installation of `qemu-system-i386.exe`.
-Also verify that the value of **SERENITY_BUILD** is valid.
-In a 64-bit machine, if qemu was installed in the default location you shouldn't need to alter anything.
+- Set the `SERENITY_QEMU_BIN` environment variable to the location above. For example: \
+`export SERENITY_QEMU_BIN='/mnt/c/Program Files/qemu/qemu-system-i386.exe'`
 
-- Execute `serenity/Meta/CLion/run.sh`.
+- Locate the _Windows_ path to the SerenityOS disk image, as native QEMU will be accessing it via the Windows filesystem. If your build tree is located in the WSL2 partition, this will be accessible under the `\\wsl$` network file share (see [notes below](#note-on-filesystems)).
+
+- Set the `SERENITY_DISK_IMAGE` environment variable to the full path of the SerenityOS disk image file from above. For example: \
+`export SERENITY_DISK_IMAGE='\\wsl$\Ubuntu-20.04\home\username\serenity\Build\_disk_image'`
+
+- `make run` as usual.
 
 ### Note on filesystems
 
 WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is terrible.
-This is because WSL2 runs as a Hyper-V virtual machine and uses the 9p file system protocol to access host windows files, over Hyper-V sockets.
+This is because WSL2 runs as a Hyper-V virtual machine and uses the 9P file system protocol to access host windows files, over Hyper-V sockets.
 
 For a more in depth explaination of the technical limitations of their approach, see [this issue on the WSL github](https://github.com/microsoft/WSL/issues/4197#issuecomment-604592340)
 
@@ -54,4 +59,6 @@ The recommendation from the Microsoft team on that issue is:
 In practice, this means cloning and building the project to somewhere such as `/home/username/serenity`.
 
 If you're using the native Windows QEMU binary from the above steps, QEMU is not able to access the ext4 root partition of the
-WSL2 installation without proper massaging. To avoid this, you might copy or symlink `Build/_disk_image` and `Build/Kernel/Kernel` to a native Windows partition (e.g. `/mnt/c`) before running the QEUMU launch commands in `Meta/CLion/run.sh`.
+WSL2 installation without going via the 9P network file share. The root of your WSL2 distro will begin at the network path `\\wsl$\{distro-name}`.
+
+Alternatively, you may prefer to copy `Build/_disk_image` and `Build/Kernel/Kernel` to a native Windows partition (e.g. `/mnt/c`) before running `make run`, in which case `SERENITY_DISK_IMAGE` will be a regular Windows path (e.g. `'D:\serenity\_disk_image'`)
