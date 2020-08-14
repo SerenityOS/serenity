@@ -26,7 +26,9 @@
 
 #pragma once
 
+#include "Forward.h"
 #include <AK/Forward.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ElapsedTimer.h>
@@ -41,4 +43,19 @@ public:
 
 private:
     Vector<int, 32> m_fds;
+};
+
+class SavedFileDescriptors {
+public:
+    SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>&);
+    ~SavedFileDescriptors();
+
+private:
+    struct SavedFileDescriptor {
+        int original { -1 };
+        int saved { -1 };
+    };
+
+    Vector<SavedFileDescriptor> m_saves;
+    FileDescriptionCollector m_collector;
 };
