@@ -161,6 +161,11 @@ public:
     void set_editable(bool editable) { m_editable = editable; }
     virtual bool is_editable() const final;
 
+    Element* focused_element() { return m_focused_element; }
+    const Element* focused_element() const { return m_focused_element; }
+
+    void set_focused_element(Element*);
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
@@ -191,6 +196,8 @@ private:
 
     QuirksMode m_quirks_mode { QuirksMode::No };
     bool m_editable { false };
+
+    WeakPtr<Element> m_focused_element;
 };
 
 }

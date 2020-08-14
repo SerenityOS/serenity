@@ -39,6 +39,8 @@ public:
 
     String href() const { return attribute(HTML::AttributeNames::href); }
     String target() const { return attribute(HTML::AttributeNames::target); }
+
+    virtual bool is_focusable() const override { return has_attribute(HTML::AttributeNames::href); }
 };
 
 }

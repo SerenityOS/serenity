@@ -103,6 +103,7 @@ public:
         Background,
         Border,
         Foreground,
+        FocusOutline,
         Overlay,
     };
     virtual void paint(PaintContext&, PaintPhase);

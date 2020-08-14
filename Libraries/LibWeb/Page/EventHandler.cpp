@@ -237,8 +237,41 @@ void EventHandler::dump_selection(const char* event_name) const
 #endif
 }
 
-bool EventHandler::handle_keydown(KeyCode key, unsigned, u32 code_point)
+bool EventHandler::focus_next_element()
 {
+    if (!m_frame.document())
+        return false;
+    auto* element = m_frame.document()->focused_element();
+    if (!element) {
+        element = m_frame.document()->first_child_of_type<DOM::Element>();
+        if (element && element->is_focusable()) {
+            m_frame.document()->set_focused_element(element);
+            return true;
+        }
+    }
+
+    for (element = element->next_element_in_pre_order(); element && !element->is_focusable(); element = element->next_element_in_pre_order())
+        ;
+
+    m_frame.document()->set_focused_element(element);
+    return element;
+}
+
+bool EventHandler::focus_previous_element()
+{
+    // FIXME: Implement Shift-Tab cycling backwards through focusable elements!
+    return false;
+}
+
+bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
+{
+    if (key == KeyCode::Key_Tab) {
+        if (modifiers & KeyModifier::Mod_Shift)
+            return focus_previous_element();
+        else
+            return focus_next_element();
+    }
+
     if (m_frame.cursor_position().node() && m_frame.cursor_position().node()->is_editable()) {
         // FIXME: Support backspacing across DOM node boundaries.
         if (key == KeyCode::Key_Backspace && m_frame.cursor_position().offset() > 0) {

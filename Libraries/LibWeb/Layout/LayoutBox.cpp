@@ -27,9 +27,9 @@
 #include <LibGUI/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
-#include <LibWeb/Page/Frame.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutBox.h>
+#include <LibWeb/Page/Frame.h>
 
 namespace Web {
 
@@ -221,6 +221,10 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
         context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
         context.painter().draw_rect(enclosing_int_rect(padded_rect), Color::Cyan);
         context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
+    }
+
+    if (phase == PaintPhase::FocusOutline && node() && node()->is_element() && downcast<DOM::Element>(*node()).is_focused()) {
+        context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
     }
 }
 

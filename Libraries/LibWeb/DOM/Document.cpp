@@ -508,4 +508,18 @@ bool Document::is_editable() const
     return m_editable;
 }
 
+void Document::set_focused_element(Element* element)
+{
+    if (m_focused_element == element)
+        return;
+
+    if (element)
+        m_focused_element = element->make_weak_ptr();
+    else
+        m_focused_element = nullptr;
+
+    if (m_layout_root)
+        m_layout_root->set_needs_display();
+}
+
 }

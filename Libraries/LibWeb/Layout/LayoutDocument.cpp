@@ -105,6 +105,7 @@ void LayoutDocument::paint_all_phases(PaintContext& context)
     paint(context, PaintPhase::Background);
     paint(context, PaintPhase::Border);
     paint(context, PaintPhase::Foreground);
+    paint(context, PaintPhase::FocusOutline);
     paint(context, PaintPhase::Overlay);
 }
 
