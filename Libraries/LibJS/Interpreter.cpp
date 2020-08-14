@@ -247,6 +247,8 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 
 Value Interpreter::call(Function& function, Value this_value, Optional<MarkedValueList> arguments)
 {
+    ASSERT(!exception());
+
     auto& call_frame = push_call_frame();
     call_frame.function_name = function.name();
     call_frame.this_value = function.bound_this().value_or(this_value);
