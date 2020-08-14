@@ -86,7 +86,7 @@ public:
             a = 0;
             b = 0;
             c = 0;
-            d = parts[1].to_uint().value_or(256);
+            d = parts[0].to_uint().value_or(256);
         } else if (parts.size() == 2) {
             a = parts[0].to_uint().value_or(256);
             b = 0;
