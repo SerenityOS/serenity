@@ -524,6 +524,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
         return create<AST::ReadWriteRedirection>(pipe_fd, move(path)); // Redirection ReadWrite
     }
     default:
+        m_offset = rule_start->offset;
         return nullptr;
     }
 }
