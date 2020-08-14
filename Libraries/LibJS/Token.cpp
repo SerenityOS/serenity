@@ -217,10 +217,14 @@ bool Token::is_identifier_name() const
         || m_type == TokenType::Delete
         || m_type == TokenType::Do
         || m_type == TokenType::Else
+        || m_type == TokenType::Enum
+        || m_type == TokenType::Export
+        || m_type == TokenType::Extends
         || m_type == TokenType::Finally
         || m_type == TokenType::For
         || m_type == TokenType::Function
         || m_type == TokenType::If
+        || m_type == TokenType::Import
         || m_type == TokenType::In
         || m_type == TokenType::Instanceof
         || m_type == TokenType::Interface
@@ -228,6 +232,7 @@ bool Token::is_identifier_name() const
         || m_type == TokenType::New
         || m_type == TokenType::NullLiteral
         || m_type == TokenType::Return
+        || m_type == TokenType::Super
         || m_type == TokenType::Switch
         || m_type == TokenType::This
         || m_type == TokenType::Throw
