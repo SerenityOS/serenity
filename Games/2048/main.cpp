@@ -75,6 +75,9 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
         game.reset();
     }));
+    app_menu.add_action(GUI::CommonActions::make_undo_action([&](auto&) {
+        game.undo();
+    }));
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));

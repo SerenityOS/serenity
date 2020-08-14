@@ -235,14 +235,6 @@ void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
     case KeyCode::Key_Down:
         new_state.board = reverse(slide_left(reverse(previous_state.board), successful_merge_score));
         break;
-    case KeyCode::Key_U:
-    case KeyCode::Key_Backspace:
-        if (m_states.size() > 1) {
-            m_states.take_last();
-            update();
-        } else {
-            return;
-        }
     default:
         return;
     }
@@ -348,4 +340,13 @@ void TwentyFortyEightGame::game_over()
 int TwentyFortyEightGame::score() const
 {
     return m_states.last().score;
+}
+
+void TwentyFortyEightGame::undo()
+{
+    if (m_states.size() > 1) {
+        m_states.take_last();
+        --m_current_turn;
+        update();
+    }
 }
