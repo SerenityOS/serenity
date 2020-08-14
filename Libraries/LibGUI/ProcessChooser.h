@@ -27,6 +27,7 @@
 #pragma once
 
 #include <LibGUI/Dialog.h>
+#include <LibCore/Timer.h>
 
 namespace GUI {
 
@@ -46,6 +47,10 @@ private:
     String m_window_title;
     String m_button_label;
     RefPtr<Gfx::Bitmap> m_window_icon;
+
+    bool m_refresh_enabled { true };
+    unsigned m_refresh_interval { 1000 };
+    RefPtr<Core::Timer> m_refresh_timer;
 };
 
 }
