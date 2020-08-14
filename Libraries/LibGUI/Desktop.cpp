@@ -64,12 +64,12 @@ void Desktop::set_wallpaper_mode(const StringView& mode)
     WindowServerConnection::the().post_message(Messages::WindowServer::SetWallpaperMode(mode));
 }
 
-bool Desktop::set_wallpaper(const StringView& path)
+bool Desktop::set_wallpaper(const StringView& path, bool save_config)
 {
     WindowServerConnection::the().post_message(Messages::WindowServer::AsyncSetWallpaper(path));
     auto ret_val = WindowServerConnection::the().wait_for_specific_message<Messages::WindowClient::AsyncSetWallpaperFinished>()->success();
 
-    if (ret_val) {
+    if (ret_val && save_config) {
         RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("WindowManager");
         dbg() << "Saving wallpaper path '" << path << "' to config file at " << config->file_name();
         config->write_entry("Background", "Wallpaper", path);

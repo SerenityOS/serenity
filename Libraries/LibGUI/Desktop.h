@@ -43,7 +43,7 @@ public:
     void set_wallpaper_mode(const StringView& mode);
 
     String wallpaper() const;
-    bool set_wallpaper(const StringView& path);
+    bool set_wallpaper(const StringView& path, bool save_config = true);
 
     Gfx::IntRect rect() const { return m_rect; }
 
