@@ -53,8 +53,18 @@ public:
         return nullptr;
     }
 
+    Element* next_element_in_pre_order()
+    {
+        for (auto* node = static_cast<NodeType*>(this)->next_in_pre_order(); node; node = node->next_in_pre_order()) {
+            if (is<Element>(*node))
+                return downcast<Element>(node);
+        }
+        return nullptr;
+    }
+
     const Element* previous_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->previous_element_sibling(); }
     const Element* next_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_sibling(); }
+    const Element* next_element_in_pre_order() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_in_pre_order(); }
 
 protected:
     NonDocumentTypeChildNode() { }
