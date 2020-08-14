@@ -39,6 +39,7 @@ public:
 
     struct State {
         Vector<Vector<u32>> board;
+        size_t score { 0 };
         String score_text;
     };
 
@@ -56,6 +57,7 @@ private:
     int m_rows { 4 };
     int m_columns { 4 };
     u32 m_starting_tile { 2 };
+    size_t m_current_turn { 0 };
 
     Vector<State, 16> m_states;
 };

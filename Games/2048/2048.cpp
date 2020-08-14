@@ -82,7 +82,8 @@ void TwentyFortyEightGame::reset()
     m_states.clear();
     m_states.append(initial_state());
 
-    m_states.last().score_text = String::format("Score: %d", score());
+    m_current_turn = 0;
+    m_states.last().score_text = "Score: 0";
 
     update();
 }
@@ -124,7 +125,7 @@ static Vector<Vector<u32>> reverse(const Vector<Vector<u32>>& board)
     return new_board;
 }
 
-static Vector<u32> slide_row(const Vector<u32>& row)
+static Vector<u32> slide_row(const Vector<u32>& row, size_t& successful_merge_score)
 {
     if (row.size() < 2)
         return row;
@@ -136,36 +137,37 @@ static Vector<u32> slide_row(const Vector<u32>& row)
     result.take_first();
 
     if (x == 0) {
-        result = slide_row(result);
+        result = slide_row(result, successful_merge_score);
         result.append(0);
         return result;
     }
 
     if (y == 0) {
         result[0] = x;
-        result = slide_row(result);
+        result = slide_row(result, successful_merge_score);
         result.append(0);
         return result;
     }
 
     if (x == y) {
         result.take_first();
-        result = slide_row(result);
+        result = slide_row(result, successful_merge_score);
         result.append(0);
         result.prepend(x + x);
+        successful_merge_score += x * 2;
         return result;
     }
 
-    result = slide_row(result);
+    result = slide_row(result, successful_merge_score);
     result.prepend(x);
     return result;
 }
 
-static Vector<Vector<u32>> slide_left(const Vector<Vector<u32>>& board)
+static Vector<Vector<u32>> slide_left(const Vector<Vector<u32>>& board, size_t& successful_merge_score)
 {
     Vector<Vector<u32>> new_board;
     for (auto& row : board)
-        new_board.append(slide_row(row));
+        new_board.append(slide_row(row, successful_merge_score));
 
     return new_board;
 }
@@ -215,22 +217,23 @@ void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
 {
     auto& previous_state = m_states.last();
     State new_state;
+    size_t successful_merge_score = 0;
     switch (event.key()) {
     case KeyCode::Key_A:
     case KeyCode::Key_Left:
-        new_state.board = transpose(slide_left(transpose(previous_state.board)));
+        new_state.board = transpose(slide_left(transpose(previous_state.board), successful_merge_score));
         break;
     case KeyCode::Key_D:
     case KeyCode::Key_Right:
-        new_state.board = transpose(reverse(slide_left(reverse(transpose(previous_state.board)))));
+        new_state.board = transpose(reverse(slide_left(reverse(transpose(previous_state.board)), successful_merge_score)));
         break;
     case KeyCode::Key_W:
     case KeyCode::Key_Up:
-        new_state.board = slide_left(previous_state.board);
+        new_state.board = slide_left(previous_state.board, successful_merge_score);
         break;
     case KeyCode::Key_S:
     case KeyCode::Key_Down:
-        new_state.board = reverse(slide_left(reverse(previous_state.board)));
+        new_state.board = reverse(slide_left(reverse(previous_state.board), successful_merge_score));
         break;
     case KeyCode::Key_U:
     case KeyCode::Key_Backspace:
@@ -245,11 +248,14 @@ void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
     }
 
     if (new_state.board != previous_state.board) {
+        ++m_current_turn;
         add_tile(new_state.board, m_starting_tile * 2);
+        auto last_score = m_states.last().score;
         if (m_states.size() == 16)
             m_states.take_first();
         m_states.append(move(new_state));
 
+        m_states.last().score = last_score + successful_merge_score;
         m_states.last().score_text = String::format("Score: %d", score());
 
         update();
@@ -258,7 +264,7 @@ void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
     if (is_complete(m_states.last())) {
         // You won!
         GUI::MessageBox::show(window(),
-            String::format("Score = %d", score()),
+            String::format("Score = %d in %zu turns", score(), m_current_turn),
             "You won!",
             GUI::MessageBox::Type::Information);
         return game_over();
@@ -267,7 +273,7 @@ void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
     if (is_stalled(m_states.last())) {
         // Game over!
         GUI::MessageBox::show(window(),
-            String::format("Score = %d", score()),
+            String::format("Score = %d in %zu turns", score(), m_current_turn),
             "You lost!",
             GUI::MessageBox::Type::Information);
         return game_over();
@@ -341,11 +347,5 @@ void TwentyFortyEightGame::game_over()
 
 int TwentyFortyEightGame::score() const
 {
-    u32 score = 0;
-    for (auto& row : m_states.last().board) {
-        for (auto& element : row)
-            score = max(score, element);
-    }
-
-    return score;
+    return m_states.last().score;
 }
