@@ -737,7 +737,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
         }
         object = object->prototype();
         if (interpreter().exception())
-            return {};
+            return false;
     }
     return put_own_property(*this, string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put);
 }

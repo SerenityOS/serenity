@@ -65,7 +65,8 @@ public:
             return;
         MarkedValueList arguments(interpreter().heap());
         arguments.append(setter_value);
-        interpreter().call(*m_setter, this_value, move(arguments));
+        // FIXME: It might be nice if we had a way to communicate to our caller if an exception happened after this.
+        (void)interpreter().call(*m_setter, this_value, move(arguments));
     }
 
     void visit_children(Cell::Visitor& visitor) override
