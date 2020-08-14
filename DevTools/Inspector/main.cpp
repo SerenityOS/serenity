@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Inspector");
-    window->set_rect(150, 150, 550, 500);
+    window->set_rect(150, 150, 685, 500);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();
@@ -122,6 +122,8 @@ int main(int argc, char** argv)
     auto& tree_view = splitter.add<GUI::TreeView>();
     tree_view.set_model(remote_process.object_graph_model());
     tree_view.set_activates_on_selection(true);
+    tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    tree_view.set_preferred_size(286, 0);
 
     auto& properties_tree_view = splitter.add<GUI::TreeView>();
     properties_tree_view.set_editable(true);
