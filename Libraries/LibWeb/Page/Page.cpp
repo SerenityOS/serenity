@@ -79,7 +79,7 @@ bool Page::handle_mousemove(const Gfx::IntPoint& position, unsigned buttons, uns
 
 bool Page::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 {
-    return main_frame().event_handler().handle_keydown(key, modifiers, code_point);
+    return focused_frame().event_handler().handle_keydown(key, modifiers, code_point);
 }
 
 }
