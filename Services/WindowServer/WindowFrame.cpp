@@ -69,7 +69,7 @@ WindowFrame::WindowFrame(Window& window)
 
     if (window.is_resizable()) {
         auto button = make<Button>(*this, [this](auto&) {
-            m_window.set_maximized(!m_window.is_maximized());
+            WindowManager::the().maximize_windows(m_window, !m_window.is_maximized());
         });
         m_maximize_button = button.ptr();
         m_buttons.append(move(button));
@@ -77,7 +77,7 @@ WindowFrame::WindowFrame(Window& window)
 
     if (window.is_minimizable()) {
         auto button = make<Button>(*this, [this](auto&) {
-            m_window.set_minimized(true);
+            WindowManager::the().minimize_windows(m_window, true);
         });
         m_minimize_button = button.ptr();
         m_buttons.append(move(button));
