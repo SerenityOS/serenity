@@ -296,7 +296,7 @@ void PageView::mouseup_event(GUI::MouseEvent& event)
 
 void PageView::keydown_event(GUI::KeyEvent& event)
 {
-    page().handle_keydown(event.key(), event.modifiers(), event.code_point());
+    bool page_accepted_event = page().handle_keydown(event.key(), event.modifiers(), event.code_point());
 
     if (event.modifiers() == 0) {
         switch (event.key()) {
@@ -325,6 +325,10 @@ void PageView::keydown_event(GUI::KeyEvent& event)
             vertical_scrollbar().set_value(vertical_scrollbar().value() - frame_inner_rect().height());
             break;
         default:
+            if (!page_accepted_event) {
+                ScrollableWidget::keydown_event(event);
+                return;
+            }
             break;
         }
     }
