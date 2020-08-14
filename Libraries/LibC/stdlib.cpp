@@ -745,18 +745,17 @@ char* mkdtemp(char* pattern)
 
 void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
 {
-    int low = 0;
-    int high = nmemb - 1;
-    while (low <= high) {
-        int middle = (low + high) / 2;
-        void* middle_memb = const_cast<char*>((const char*)base + middle * size);
+    char* start = static_cast<char*>(const_cast<void*>(base));
+    while (nmemb > 0) {
+        char* middle_memb = start + (nmemb / 2) * size;
         int comparison = compar(key, middle_memb);
-        if (comparison < 0)
-            high = middle - 1;
-        else if (comparison > 0)
-            low = middle + 1;
-        else
+        if (comparison == 0)
             return middle_memb;
+        else if (comparison > 0) {
+            start = middle_memb + size;
+            --nmemb;
+        }
+        nmemb /= 2;
     }
 
     return NULL;
