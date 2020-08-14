@@ -55,12 +55,12 @@ Application::Application(int argc, char** argv)
     Clipboard::initialize({});
     if (argc > 0)
         m_invoked_as = argv[0];
+
+    if (getenv("GUI_FOCUS_DEBUG"))
+        m_focus_debugging_enabled = true;
+
     for (int i = 1; i < argc; i++) {
         String arg(argv[i]);
-
-        if (arg == "--gui-focus-debug")
-            m_focus_debugging_enabled = true;
-
         m_args.append(move(arg));
     }
 }
