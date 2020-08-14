@@ -111,7 +111,12 @@ private:
     using Bucket = SinglyLinkedList<T>;
 
 public:
-    HashTable() {}
+    HashTable() { }
+    HashTable(size_t capacity)
+        : m_buckets(new Bucket[capacity])
+        , m_capacity(capacity)
+    {
+    }
     HashTable(const HashTable& other)
     {
         ensure_capacity(other.size());
