@@ -176,6 +176,13 @@ public:
         __builtin_memmove(other.data(), data(), sizeof(T) * min(size(), other.size()));
     }
 
+    ALWAYS_INLINE void fill(const T& value)
+    {
+        for (size_t idx = 0; idx < size(); ++idx) {
+            data()[idx] = value;
+        }
+    }
+
     ALWAYS_INLINE const T& at(size_t index) const
     {
         ASSERT(index < this->m_size);
