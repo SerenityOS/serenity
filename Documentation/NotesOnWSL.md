@@ -45,6 +45,25 @@ By default this will be located at `/mnt/c/Program Files/qemu/qemu-system-i386.e
 
 - `make run` as usual.
 
+#### Hardware acceleration
+
+The steps above will run QEMU in software virtualisation mode, which is very slow.
+QEMU supports hardware acceleration on Windows via the [Windows Hypervisor Platform](https://docs.microsoft.com/en-us/virtualization/api/) (WHPX), a user-mode virtualisation API that can be used alongside Hyper-V.
+This is important to note as WSL2 itself runs on top of Hyper-V, which conflicts with other acceleration technologies such as Intel HAXM.
+
+To run SerenityOS in a WHPX-enabled QEMU VM:
+
+- If you have not already done so, enable Windows Hypervisor Platform, either using "Turn Windows features on or off", or by running the following command in an elevated PowerShell session: \
+`dism /Online /Enable-Feature /All /FeatureName:HypervisorPlatform`
+
+- Specify QEMU acceleration option: \
+`export SERENITY_EXTRA_QEMU_ARGS="-accel whpx"`
+
+- Disable Virtual Machine eXtensions on the vCPU, otherwise some versions of QEMU will crash out with a "WHPX: Unexpected VP exit code 4" error: \
+`export SERENITY_QEMU_CPU="max,vmx=off"`
+
+- `make run` as usual.
+
 ### Note on filesystems
 
 WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is terrible.
