@@ -51,8 +51,8 @@ public:
     BreakpointChangeCallback on_breakpoint_change;
 
 private:
-    virtual void focusin_event(Core::Event&) override;
-    virtual void focusout_event(Core::Event&) override;
+    virtual void focusin_event(GUI::FocusEvent&) override;
+    virtual void focusout_event(GUI::FocusEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;

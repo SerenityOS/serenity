@@ -183,9 +183,9 @@ void Widget::event(Core::Event& event)
     case Event::Resize:
         return handle_resize_event(static_cast<ResizeEvent&>(event));
     case Event::FocusIn:
-        return focusin_event(event);
+        return focusin_event(static_cast<FocusEvent&>(event));
     case Event::FocusOut:
-        return focusout_event(event);
+        return focusout_event(static_cast<FocusEvent&>(event));
     case Event::Show:
         return show_event(static_cast<ShowEvent&>(event));
     case Event::Hide:
@@ -302,7 +302,7 @@ void Widget::handle_mouseup_event(MouseEvent& event)
 void Widget::handle_mousedown_event(MouseEvent& event)
 {
     if (accepts_focus())
-        set_focus(true);
+        set_focus(true, FocusSource::Mouse);
     mousedown_event(event);
     if (event.button() == MouseButton::Right) {
         ContextMenuEvent c_event(event.position(), screen_relative_rect().location().translated(event.position()));
@@ -356,9 +356,9 @@ void Widget::keydown_event(KeyEvent& event)
 {
     if (!event.alt() && !event.ctrl() && !event.logo() && event.key() == KeyCode::Key_Tab) {
         if (event.shift())
-            focus_previous_widget();
+            focus_previous_widget(FocusSource::Keyboard);
         else
-            focus_next_widget();
+            focus_next_widget(FocusSource::Keyboard);
         event.accept();
         return;
     }
@@ -390,11 +390,11 @@ void Widget::context_menu_event(ContextMenuEvent&)
 {
 }
 
-void Widget::focusin_event(Core::Event&)
+void Widget::focusin_event(FocusEvent&)
 {
 }
 
-void Widget::focusout_event(Core::Event&)
+void Widget::focusout_event(FocusEvent&)
 {
 }
 
@@ -513,16 +513,16 @@ bool Widget::is_focused() const
     return false;
 }
 
-void Widget::set_focus(bool focus)
+void Widget::set_focus(bool focus, FocusSource source)
 {
     auto* win = window();
     if (!win)
         return;
     if (focus) {
-        win->set_focused_widget(this);
+        win->set_focused_widget(this, source);
     } else {
         if (win->focused_widget() == this)
-            win->set_focused_widget(nullptr);
+            win->set_focused_widget(nullptr, source);
     }
 }
 
@@ -703,29 +703,29 @@ void Widget::set_updates_enabled(bool enabled)
         update();
 }
 
-void Widget::focus_previous_widget()
+void Widget::focus_previous_widget(FocusSource source)
 {
     auto focusable_widgets = window()->focusable_widgets();
     for (int i = focusable_widgets.size() - 1; i >= 0; --i) {
         if (focusable_widgets[i] != this)
             continue;
         if (i > 0)
-            focusable_widgets[i - 1]->set_focus(true);
+            focusable_widgets[i - 1]->set_focus(true, source);
         else
-            focusable_widgets.last()->set_focus(true);
+            focusable_widgets.last()->set_focus(true, source);
     }
 }
 
-void Widget::focus_next_widget()
+void Widget::focus_next_widget(FocusSource source)
 {
     auto focusable_widgets = window()->focusable_widgets();
     for (size_t i = 0; i < focusable_widgets.size(); ++i) {
         if (focusable_widgets[i] != this)
             continue;
         if (i < focusable_widgets.size() - 1)
-            focusable_widgets[i + 1]->set_focus(true);
+            focusable_widgets[i + 1]->set_focus(true, source);
         else
-            focusable_widgets.first()->set_focus(true);
+            focusable_widgets.first()->set_focus(true, source);
     }
 }
 

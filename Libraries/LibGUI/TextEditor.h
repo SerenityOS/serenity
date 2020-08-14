@@ -166,8 +166,8 @@ protected:
     virtual void mousemove_event(MouseEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
-    virtual void focusin_event(Core::Event&) override;
-    virtual void focusout_event(Core::Event&) override;
+    virtual void focusin_event(FocusEvent&) override;
+    virtual void focusout_event(FocusEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
     virtual bool accepts_focus() const override { return true; }
     virtual void enter_event(Core::Event&) override;

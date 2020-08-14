@@ -30,6 +30,7 @@
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/Event.h>
+#include <LibGUI/FocusSource.h>
 #include <LibGUI/WindowType.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
@@ -76,12 +77,12 @@ public:
         __End_WM_Events,
     };
 
-    Event() {}
+    Event() { }
     explicit Event(Type type)
         : Core::Event(type)
     {
     }
-    virtual ~Event() {}
+    virtual ~Event() { }
 
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
     bool is_paint_event() const { return type() == Paint; }
@@ -385,6 +386,20 @@ public:
         : Event(Type::ThemeChange)
     {
     }
+};
+
+class FocusEvent final : public Event {
+public:
+    explicit FocusEvent(Type type, FocusSource source)
+        : Event(type)
+        , m_source(source)
+    {
+    }
+
+    FocusSource source() const { return m_source; }
+
+private:
+    FocusSource m_source { FocusSource::Programmatic };
 };
 
 }

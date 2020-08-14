@@ -525,17 +525,17 @@ void Window::set_main_widget(Widget* widget)
     update();
 }
 
-void Window::set_focused_widget(Widget* widget)
+void Window::set_focused_widget(Widget* widget, FocusSource source)
 {
     if (m_focused_widget == widget)
         return;
     if (m_focused_widget) {
-        Core::EventLoop::current().post_event(*m_focused_widget, make<Event>(Event::FocusOut));
+        Core::EventLoop::current().post_event(*m_focused_widget, make<FocusEvent>(Event::FocusOut, source));
         m_focused_widget->update();
     }
     m_focused_widget = widget ? widget->make_weak_ptr() : nullptr;
     if (m_focused_widget) {
-        Core::EventLoop::current().post_event(*m_focused_widget, make<Event>(Event::FocusIn));
+        Core::EventLoop::current().post_event(*m_focused_widget, make<FocusEvent>(Event::FocusIn, source));
         m_focused_widget->update();
     }
 }

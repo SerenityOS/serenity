@@ -181,13 +181,13 @@ void TerminalWidget::set_logical_focus(bool focus)
     update();
 }
 
-void TerminalWidget::focusin_event(Core::Event& event)
+void TerminalWidget::focusin_event(GUI::FocusEvent& event)
 {
     set_logical_focus(true);
     return GUI::Frame::focusin_event(event);
 }
 
-void TerminalWidget::focusout_event(Core::Event& event)
+void TerminalWidget::focusout_event(GUI::FocusEvent& event)
 {
     set_logical_focus(false);
     return GUI::Frame::focusout_event(event);

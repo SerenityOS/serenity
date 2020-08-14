@@ -102,8 +102,8 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void doubleclick_event(GUI::MouseEvent&) override;
-    virtual void focusin_event(Core::Event&) override;
-    virtual void focusout_event(Core::Event&) override;
+    virtual void focusin_event(GUI::FocusEvent&) override;
+    virtual void focusout_event(GUI::FocusEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
     virtual void leave_event(Core::Event&) override;

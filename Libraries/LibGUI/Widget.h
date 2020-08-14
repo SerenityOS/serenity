@@ -147,7 +147,7 @@ public:
     virtual bool accepts_focus() const { return false; }
 
     bool is_focused() const;
-    void set_focus(bool);
+    void set_focus(bool, FocusSource = FocusSource::Programmatic);
 
     enum class ShouldRespectGreediness { No = 0,
         Yes };
@@ -287,8 +287,8 @@ protected:
     virtual void mousewheel_event(MouseEvent&);
     virtual void doubleclick_event(MouseEvent&);
     virtual void context_menu_event(ContextMenuEvent&);
-    virtual void focusin_event(Core::Event&);
-    virtual void focusout_event(Core::Event&);
+    virtual void focusin_event(FocusEvent&);
+    virtual void focusout_event(FocusEvent&);
     virtual void enter_event(Core::Event&);
     virtual void leave_event(Core::Event&);
     virtual void child_event(Core::ChildEvent&) override;
@@ -310,8 +310,8 @@ private:
     void handle_mouseup_event(MouseEvent&);
     void handle_enter_event(Core::Event&);
     void handle_leave_event(Core::Event&);
-    void focus_previous_widget();
-    void focus_next_widget();
+    void focus_previous_widget(FocusSource);
+    void focus_next_widget(FocusSource);
 
     Window* m_window { nullptr };
     RefPtr<Layout> m_layout;
