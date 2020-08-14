@@ -86,8 +86,6 @@ namespace Kernel {
     S(getpgrp)                \
     S(fork)                   \
     S(execve)                 \
-    S(dup)                    \
-    S(dup2)                   \
     S(sigaction)              \
     S(umask)                  \
     S(getgroups)              \

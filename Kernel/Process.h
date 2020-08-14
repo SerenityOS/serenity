@@ -258,8 +258,6 @@ public:
     int sys$ptsname(int fd, Userspace<char*>, size_t);
     pid_t sys$fork(RegisterState&);
     int sys$execve(Userspace<const Syscall::SC_execve_params*>);
-    int sys$dup(int oldfd);
-    int sys$dup2(int oldfd, int newfd);
     int sys$sigaction(int signum, const sigaction* act, sigaction* old_act);
     int sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set);
     int sys$sigpending(Userspace<sigset_t*>);

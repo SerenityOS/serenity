@@ -138,7 +138,6 @@ private:
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
     int virt$sleep(unsigned);
     int virt$chdir(FlatPtr, size_t);
-    int virt$dup2(int, int);
     int virt$getpgrp();
     int virt$getpgid(pid_t);
     int virt$setpgid(pid_t pid, pid_t pgid);
