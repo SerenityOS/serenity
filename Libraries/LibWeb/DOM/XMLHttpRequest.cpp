@@ -98,7 +98,10 @@ void XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
             auto* this_value = wrap(global_object, *this);
             JS::MarkedValueList arguments(global_object.heap());
             arguments.append(wrap(global_object, *event));
-            function.interpreter().call(function, this_value, move(arguments));
+            auto& interpreter = function.interpreter();
+            (void)interpreter.call(function, this_value, move(arguments));
+            if (interpreter.exception())
+                interpreter.clear_exception();
         }
     }
 }

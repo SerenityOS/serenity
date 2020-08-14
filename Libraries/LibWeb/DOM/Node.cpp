@@ -127,7 +127,10 @@ void Node::dispatch_event(NonnullRefPtr<Event> event)
             auto* event_wrapper = wrap(global_object, *event);
             JS::MarkedValueList arguments(global_object.heap());
             arguments.append(event_wrapper);
-            document().interpreter().call(function, this_value, move(arguments));
+            auto& interpreter = document().interpreter();
+            (void)interpreter.call(function, this_value, move(arguments));
+            if (interpreter.exception())
+                interpreter.clear_exception();
         }
     }
 
