@@ -35,6 +35,8 @@
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/PageView.h>
 
+//#define DEBUG_HIGHLIGHT_FOCUSED_FRAME
+
 namespace Web {
 
 LayoutFrame::LayoutFrame(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
@@ -82,6 +84,12 @@ void LayoutFrame::paint(PaintContext& context, PaintPhase phase)
 
         context.set_viewport_rect(old_viewport_rect);
         context.painter().restore();
+
+#ifdef DEBUG_HIGHLIGHT_FOCUSED_FRAME
+        if (node().hosted_frame()->is_focused_frame()) {
+            context.painter().draw_rect(absolute_rect().to<int>(), Color::Cyan);
+        }
+#endif
     }
 }
 

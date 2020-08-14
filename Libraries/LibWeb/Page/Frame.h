@@ -48,6 +48,7 @@ public:
     ~Frame();
 
     bool is_main_frame() const { return this == &m_main_frame; }
+    bool is_focused_frame() const;
 
     const DOM::Document* document() const { return m_document; }
     DOM::Document* document() { return m_document; }

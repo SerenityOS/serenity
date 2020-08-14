@@ -53,6 +53,11 @@ public:
     Web::Frame& main_frame() { return *m_main_frame; }
     const Web::Frame& main_frame() const { return *m_main_frame; }
 
+    Web::Frame& focused_frame();
+    const Web::Frame& focused_frame() const { return const_cast<Page*>(this)->focused_frame(); }
+
+    void set_focused_frame(Badge<EventHandler>, Frame&);
+
     void load(const URL&);
 
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
@@ -67,6 +72,7 @@ private:
     PageClient& m_client;
 
     RefPtr<Frame> m_main_frame;
+    WeakPtr<Frame> m_focused_frame;
 };
 
 class PageClient {

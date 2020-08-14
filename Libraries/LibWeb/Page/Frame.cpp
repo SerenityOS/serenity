@@ -68,6 +68,11 @@ void Frame::setup()
     });
 }
 
+bool Frame::is_focused_frame() const
+{
+    return this == &page().focused_frame();
+}
+
 void Frame::set_document(DOM::Document* document)
 {
     if (m_document == document)

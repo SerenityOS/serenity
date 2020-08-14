@@ -40,6 +40,18 @@ Page::~Page()
 {
 }
 
+Frame& Page::focused_frame()
+{
+    if (m_focused_frame)
+        return *m_focused_frame;
+    return main_frame();
+}
+
+void Page::set_focused_frame(Badge<EventHandler>, Frame& frame)
+{
+    m_focused_frame = frame.make_weak_ptr();
+}
+
 void Page::load(const URL& url)
 {
     main_frame().loader().load(url, FrameLoader::Type::Navigation);
