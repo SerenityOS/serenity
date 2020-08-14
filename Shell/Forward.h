@@ -33,5 +33,6 @@ class Node;
 class Value;
 class SyntaxError;
 class Pipeline;
+class Rewiring;
 
 }

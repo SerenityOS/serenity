@@ -757,23 +757,41 @@ int Shell::builtin_unset(int argc, const char** argv)
     return 0;
 }
 
-bool Shell::run_builtin(int argc, const char** argv, int& retval)
+bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<AST::Rewiring>& rewirings, int& retval)
 {
-    if (argc == 0)
+    if (command.argv.is_empty())
         return false;
 
-    StringView name { argv[0] };
+    if (!has_builtin(command.argv.first()))
+        return false;
 
-#define __ENUMERATE_SHELL_BUILTIN(builtin)      \
-    if (name == #builtin) {                     \
-        retval = builtin_##builtin(argc, argv); \
-        return true;                            \
+    Vector<const char*> argv;
+    for (auto& arg : command.argv)
+        argv.append(arg.characters());
+
+    argv.append(nullptr);
+
+    StringView name = command.argv.first();
+
+    SavedFileDescriptors fds { rewirings };
+
+    for (auto& rewiring : rewirings) {
+        int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
+        if (rc < 0) {
+            perror("dup2(run)");
+            return false;
+        }
+    }
+
+#define __ENUMERATE_SHELL_BUILTIN(builtin)                        \
+    if (name == #builtin) {                                       \
+        retval = builtin_##builtin(argv.size() - 1, argv.data()); \
+        return true;                                              \
     }
 
     ENUMERATE_SHELL_BUILTINS();
 
 #undef __ENUMERATE_SHELL_BUILTIN
-
     return false;
 }
 
