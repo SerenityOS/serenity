@@ -82,6 +82,7 @@ set(KERNEL_SOURCES
     PCI/MMIOAccess.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
+    ProcessGroup.cpp
     Profiling.cpp
     Ptrace.cpp
     RTC.cpp
