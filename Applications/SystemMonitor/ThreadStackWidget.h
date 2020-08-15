@@ -24,45 +24,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ProcessStackWidget.h"
-#include <AK/ByteBuffer.h>
-#include <LibCore/File.h>
-#include <LibCore/Timer.h>
-#include <LibGUI/BoxLayout.h>
+#pragma once
 
-ProcessStackWidget::ProcessStackWidget()
-{
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins({ 4, 4, 4, 4 });
-    m_stack_editor = add<GUI::TextEditor>();
-    m_stack_editor->set_mode(GUI::TextEditor::ReadOnly);
+#include <LibGUI/TextEditor.h>
+#include <LibGUI/Widget.h>
 
-    m_timer = add<Core::Timer>(1000, [this] { refresh(); });
-}
+class ThreadStackWidget final : public GUI::Widget {
+    C_OBJECT(ThreadStackWidget)
+public:
+    virtual ~ThreadStackWidget() override;
 
-ProcessStackWidget::~ProcessStackWidget()
-{
-}
+    void set_ids(pid_t pid, pid_t tid);
+    void refresh();
 
-void ProcessStackWidget::set_ids(pid_t pid, pid_t tid)
-{
-    if (m_pid == pid && m_tid == tid)
-        return;
-    m_pid = pid;
-    m_tid = tid;
-    refresh();
-}
+private:
+    ThreadStackWidget();
 
-void ProcessStackWidget::refresh()
-{
-    auto file = Core::File::construct(String::format("/proc/%d/stacks/%d", m_pid, m_tid));
-    if (!file->open(Core::IODevice::ReadOnly)) {
-        m_stack_editor->set_text(String::format("Unable to open %s", file->filename().characters()));
-        return;
-    }
-
-    auto new_text = file->read_all();
-    if (m_stack_editor->text() != new_text) {
-        m_stack_editor->set_text(new_text);
-    }
-}
+    pid_t m_pid { -1 };
+    pid_t m_tid { -1 };
+    RefPtr<GUI::TextEditor> m_stack_editor;
+    RefPtr<Core::Timer> m_timer;
+};
