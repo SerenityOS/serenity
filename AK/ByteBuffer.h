@@ -71,8 +71,8 @@ public:
     u8* data() { return m_data; }
     const u8* data() const { return m_data; }
 
-    Bytes span() { return { data(), size() }; }
-    ReadonlyBytes span() const { return { data(), size() }; }
+    Bytes bytes() { return { data(), size() }; }
+    ReadonlyBytes bytes() const { return { data(), size() }; }
 
     u8* offset_pointer(int offset) { return m_data + offset; }
     const u8* offset_pointer(int offset) const { return m_data + offset; }
@@ -163,8 +163,8 @@ public:
     u8* data() { return m_impl ? m_impl->data() : nullptr; }
     const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
 
-    Bytes span() { return m_impl ? m_impl->span() : nullptr; }
-    ReadonlyBytes span() const { return m_impl ? m_impl->span() : nullptr; }
+    Bytes bytes() { return m_impl ? m_impl->bytes() : nullptr; }
+    ReadonlyBytes bytes() const { return m_impl ? m_impl->bytes() : nullptr; }
 
     u8* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
     const u8* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
@@ -232,6 +232,9 @@ public:
         ASSERT(offset + data_size <= size());
         __builtin_memcpy(this->data() + offset, data, data_size);
     }
+
+    operator Bytes() { return bytes(); }
+    operator ReadonlyBytes() const { return bytes(); }
 
 private:
     explicit ByteBuffer(RefPtr<ByteBufferImpl>&& impl)
