@@ -626,7 +626,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     job->on_exit = [](auto job) {
         if (!job->exited())
             return;
-        if (job->is_running_in_background())
+        if (job->is_running_in_background() && job->should_announce_exit())
             fprintf(stderr, "Shell: Job %" PRIu64 "(%s) exited\n", job->job_id(), job->cmd().characters());
         job->disown();
     };
@@ -670,10 +670,10 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
                 jobs_to_wait_for.append(*job);
         } else {
             if (command.is_pipe_source) {
+                job->set_running_in_background(true);
                 jobs_to_wait_for.append(*job);
             } else if (command.should_notify_if_in_background) {
-                job->set_running_in_background(true);
-                restore_ios();
+                job->set_should_announce_exit(true);
             }
         }
     }
@@ -710,23 +710,26 @@ void Shell::block_on_job(RefPtr<Job> job)
     if (!job)
         return;
 
+    ScopeGuard io_restorer { [&]() {
+        if (job->exited() && !job->is_running_in_background()) {
+            restore_ios();
+        }
+    } };
+
     Core::EventLoop loop;
     job->on_exit = [&, old_exit = move(job->on_exit)](auto job) {
         if (old_exit)
             old_exit(job);
         loop.quit(0);
     };
-    if (job->exited()) {
-        restore_ios();
+
+    if (job->exited())
         return;
-    }
 
     loop.exec();
 
     if (job->is_suspended())
         job->print_status(Job::PrintStatusMode::Basic);
-
-    restore_ios();
 }
 
 String Shell::get_history_path()

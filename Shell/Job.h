@@ -76,6 +76,7 @@ public:
     bool should_be_disowned() const { return m_should_be_disowned; }
     void disown() { m_should_be_disowned = true; }
     bool is_running_in_background() const { return m_running_in_background; }
+    bool should_announce_exit() const { return m_should_announce_exit; }
     bool is_suspended() const { return m_is_suspended; }
     void unblock() const
     {
@@ -113,6 +114,8 @@ public:
         m_running_in_background = running_in_background;
     }
 
+    void set_should_announce_exit(bool value) { m_should_announce_exit = value; }
+
     void deactivate() const { m_active = false; }
 
     enum class PrintStatusMode {
@@ -143,6 +146,7 @@ private:
     String m_cmd;
     bool m_exited { false };
     bool m_running_in_background { false };
+    bool m_should_announce_exit { false };
     int m_exit_code { -1 };
     int m_term_sig { -1 };
     Core::ElapsedTimer m_command_timer;
