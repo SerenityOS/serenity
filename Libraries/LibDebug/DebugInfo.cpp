@@ -146,8 +146,14 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(u32 target_ad
 
 Optional<u32> DebugInfo::get_instruction_from_source(const String& file, size_t line) const
 {
+    String file_path = file;
+    constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
+    if (file.starts_with(SERENITY_LIBS_PREFIX)) {
+        file_path = file.substring(sizeof(SERENITY_LIBS_PREFIX), file.length() - sizeof(SERENITY_LIBS_PREFIX));
+        file_path = String::format("../%s", file_path.characters());
+    }
     for (const auto& line_entry : m_sorted_lines) {
-        if (line_entry.file == file && line_entry.line == line)
+        if (line_entry.file == file_path && line_entry.line == line)
             return Optional<u32>(line_entry.address);
     }
     return {};
