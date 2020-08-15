@@ -1419,11 +1419,11 @@ static void hmac_sha512_test_process()
 
 static int rsa_tests()
 {
-    rsa_test_encrypt();
-    rsa_test_der_parse();
+    (void)rsa_test_encrypt;
+    (void)rsa_test_der_parse;
     bigint_test_number_theory();
-    rsa_test_encrypt_decrypt();
-    rsa_emsa_pss_test_create();
+    (void)rsa_test_encrypt_decrypt;
+    (void)rsa_emsa_pss_test_create;
     return g_some_test_failed ? 1 : 0;
 }
 
@@ -1480,17 +1480,109 @@ static void bigint_test_number_theory()
         }
     }
     {
-        I_TEST((Number Theory | Modular Power));
-        auto exp = Crypto::NumberTheory::ModularPower(
-            Crypto::UnsignedBigInteger::from_base10("2988348162058574136915891421498819466320163312926952423791023078876139"),
-            Crypto::UnsignedBigInteger::from_base10("2351399303373464486466122544523690094744975233415544072992656881240319"),
-            10000);
+        struct {
+            Crypto::UnsignedBigInteger base;
+            Crypto::UnsignedBigInteger exp;
+            Crypto::UnsignedBigInteger mod;
+            Crypto::UnsignedBigInteger expected;
+        } mod_pow_tests[] = {
+            { "2988348162058574136915891421498819466320163312926952423791023078876139"_bigint, "2351399303373464486466122544523690094744975233415544072992656881240319"_bigint, "10000"_bigint, "3059"_bigint },
+            { "24231"_bigint, "12448"_bigint, "14679"_bigint, "4428"_bigint },
+            { "1005404"_bigint, "8352654"_bigint, "8161408"_bigint, "2605696"_bigint },
+            { "3665005778"_bigint, "3244425589"_bigint, "565668506"_bigint, "524766494"_bigint },
+            { "10662083169959689657"_bigint, "11605678468317533000"_bigint, "1896834583057209739"_bigint, "1292743154593945858"_bigint },
+            { "99667739213529524852296932424683448520"_bigint, "123394910770101395416306279070921784207"_bigint, "238026722756504133786938677233768788719"_bigint, "197165477545023317459748215952393063201"_bigint },
+            { "49368547511968178788919424448914214709244872098814465088945281575062739912239"_bigint, "25201856190991298572337188495596990852134236115562183449699512394891190792064"_bigint, "45950460777961491021589776911422805972195170308651734432277141467904883064645"_bigint, "39917885806532796066922509794537889114718612292469285403012781055544152450051"_bigint },
+            { "48399385336454791246880286907257136254351739111892925951016159217090949616810"_bigint, "5758661760571644379364752528081901787573279669668889744323710906207949658569"_bigint, "32812120644405991429173950312949738783216437173380339653152625840449006970808"_bigint, "7948464125034399875323770213514649646309423451213282653637296324080400293584"_bigint },
+        };
 
-        if (exp == 3059) {
-            PASS;
+        for (auto test_case : mod_pow_tests) {
+            I_TEST((Number Theory | Modular Power));
+            auto actual = Crypto::NumberTheory::ModularPower(
+                test_case.base, test_case.exp, test_case.mod);
+
+            if (actual == test_case.expected) {
+                PASS;
+            } else {
+                FAIL(Wrong result);
+                printf("b: %s\ne: %s\nm: %s\nexpect: %s\nactual: %s\n",
+                    test_case.base.to_base10().characters(), test_case.exp.to_base10().characters(), test_case.mod.to_base10().characters(), test_case.expected.to_base10().characters(), actual.to_base10().characters());
+            }
+        }
+    }
+    {
+        struct {
+            Crypto::UnsignedBigInteger candidate;
+            bool expected_result;
+        } primality_tests[] = {
+            { "1180591620717411303424"_bigint, false },                  // 2**70
+            { "620448401733239439360000"_bigint, false },                // 25!
+            { "953962166440690129601298432"_bigint, false },             // 12**25
+            { "620448401733239439360000"_bigint, false },                // 25!
+            { "147926426347074375"_bigint, false },                      // 35! / 2**32
+            { "340282366920938429742726440690708343523"_bigint, false }, // 2 factors near 2^64
+            { "73"_bigint, true },
+            { "6967"_bigint, true },
+            { "787649"_bigint, true },
+            { "73513949"_bigint, true },
+            { "6691236901"_bigint, true },
+            { "741387182759"_bigint, true },
+            { "67466615915827"_bigint, true },
+            { "9554317039214687"_bigint, true },
+            { "533344522150170391"_bigint, true },
+            { "18446744073709551557"_bigint, true }, // just below 2**64
+        };
+
+        for (auto test_case : primality_tests) {
+            I_TEST((Number Theory | Primality));
+            bool actual_result = Crypto::NumberTheory::is_probably_prime(test_case.candidate);
+            if (test_case.expected_result == actual_result) {
+                PASS;
+            } else {
+                FAIL(Wrong primality guess);
+                printf("The number %s is %sa prime, but the test said it is %sa prime!\n",
+                    test_case.candidate.to_base10().characters(), test_case.expected_result ? "" : "not ", actual_result ? "" : "not ");
+            }
+        }
+    }
+    {
+        struct {
+            Crypto::UnsignedBigInteger min;
+            Crypto::UnsignedBigInteger max;
+        } primality_tests[] = {
+            { "1"_bigint, "1000000"_bigint },
+            { "10000000000"_bigint, "20000000000"_bigint },
+            { "1000"_bigint, "200000000000000000"_bigint },
+            { "200000000000000000"_bigint, "200000000000010000"_bigint },
+        };
+
+        for (auto test_case : primality_tests) {
+            I_TEST((Number Theory | Random numbers));
+            auto actual_result = Crypto::NumberTheory::random_number(test_case.min, test_case.max);
+            if (actual_result < the_min) {
+                FAIL(Too small);
+                printf("The generated number %s is smaller than the requested minimum %s. (max = %s)\n", actual_result.to_base10().characters(), test_case.min.to_base10().characters(), test_case.max.to_base10().characters());
+            } else if (!(actual_result < the_max)) {
+                FAIL(Too large);
+                printf("The generated number %s is larger-or-equal to the requested maximum %s. (min = %s)\n", actual_result.to_base10().characters(), test_case.max.to_base10().characters(), test_case.min.to_base10().characters());
+            } else {
+                PASS;
+            }
+        }
+    }
+    {
+        I_TEST((Number Theory | Random distribution));
+        auto actual_result = Crypto::NumberTheory::random_number(
+            "1"_bigint,
+            "100000000000000000000000000000"_bigint);         // 10**29
+        if (actual_result < "100000000000000000000"_bigint) { // 10**20
+            FAIL(Too small);
+            printf("The generated number %s is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.\n", actual_result.to_base10().characters());
+        } else if ("99999999900000000000000000000"_bigint < actual_result) { // 10**29 - 10**20
+            FAIL(Too large);
+            printf("The generated number %s is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.\n", actual_result.to_base10().characters());
         } else {
-            FAIL(Invalid result);
-            puts(exp.to_base10().characters());
+            PASS;
         }
     }
 }
