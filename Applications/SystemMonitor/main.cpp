@@ -31,7 +31,7 @@
 #include "ProcessFileDescriptorMapWidget.h"
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessModel.h"
-#include "ProcessStackWidget.h"
+#include "ThreadStackWidget.h"
 #include "ProcessUnveiledPathsWidget.h"
 #include <LibCore/Timer.h>
 #include <LibGUI/AboutDialog.h>
@@ -316,7 +316,7 @@ int main(int argc, char** argv)
     auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
     auto& open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
     auto& unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
-    auto& stack_widget = process_tab_widget.add_tab<ProcessStackWidget>("Stack");
+    auto& stack_widget = process_tab_widget.add_tab<ThreadStackWidget>("Stack");
 
     process_table_view.on_selection = [&](auto&) {
         auto pid = selected_id(ProcessModel::Column::PID);
