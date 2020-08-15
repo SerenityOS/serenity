@@ -75,6 +75,6 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto encoded = encode_base64(buffer.span());
+    auto encoded = encode_base64(buffer);
     printf("%s\n", encoded.characters());
 }

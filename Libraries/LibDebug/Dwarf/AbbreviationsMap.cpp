@@ -40,7 +40,7 @@ AbbreviationsMap::AbbreviationsMap(const DwarfInfo& dwarf_info, u32 offset)
 
 void AbbreviationsMap::populate_map()
 {
-    InputMemoryStream abbreviation_stream(m_dwarf_info.abbreviation_data().span());
+    InputMemoryStream abbreviation_stream(m_dwarf_info.abbreviation_data());
     abbreviation_stream.discard_or_error(m_offset);
 
     while (!abbreviation_stream.eof()) {

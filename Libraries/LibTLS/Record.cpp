@@ -92,7 +92,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 buffer_position += packet.size() - header_size;
 
                 // get the appropricate HMAC value for the entire packet
-                auto mac = hmac_message(packet.span(), {}, mac_size, true);
+                auto mac = hmac_message(packet, {}, mac_size, true);
 
                 // write the MAC
                 buffer.overwrite(buffer_position, mac.data(), mac.size());
@@ -114,8 +114,8 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 ASSERT(length % block_size == 0);
 
                 // get a block to encrypt into
-                auto view = ct.span().slice(header_size + iv_size, length);
-                m_aes_local->encrypt(buffer.span(), view, iv.span());
+                auto view = ct.bytes().slice(header_size + iv_size, length);
+                m_aes_local->encrypt(buffer, view, iv);
 
                 // store the correct ciphertext length into the packet
                 u16 ct_length = (u16)ct.size() - header_size;
@@ -215,8 +215,8 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
         auto decrypted = m_aes_remote->create_aligned_buffer(length - iv_size);
         auto iv = buffer.slice_view(header_size, iv_size);
 
-        Bytes decrypted_span = decrypted.span();
-        m_aes_remote->decrypt(buffer.span().slice(header_size + iv_size, length - iv_size), decrypted_span, iv.span());
+        Bytes decrypted_span = decrypted;
+        m_aes_remote->decrypt(buffer.bytes().slice(header_size + iv_size, length - iv_size), decrypted_span, iv);
 
         length = decrypted_span.size();
 

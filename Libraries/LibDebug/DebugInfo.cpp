@@ -105,7 +105,7 @@ void DebugInfo::prepare_lines()
         return;
 
     auto buffer = section.wrapping_byte_buffer();
-    InputMemoryStream stream { buffer.span() };
+    InputMemoryStream stream { buffer };
 
     Vector<LineProgram::LineInfo> all_lines;
     while (!stream.eof()) {

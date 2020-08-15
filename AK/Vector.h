@@ -243,6 +243,9 @@ public:
         return !(*this == other);
     }
 
+    operator Span<T>() { return span(); }
+    operator Span<const T>() const { return span(); }
+
     bool contains_slow(const T& value) const
     {
         for (size_t i = 0; i < size(); ++i) {

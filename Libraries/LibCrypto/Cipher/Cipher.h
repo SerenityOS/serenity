@@ -65,7 +65,7 @@ public:
     virtual const ByteBuffer& data() const = 0;
 
     virtual void overwrite(const ReadonlyBytes&) = 0;
-    virtual void overwrite(const ByteBuffer& buffer) { overwrite(buffer.span()); }
+    virtual void overwrite(const ByteBuffer& buffer) { overwrite(buffer.bytes()); }
     virtual void overwrite(const u8* data, size_t size) { overwrite({ data, size }); }
 
     virtual void apply_initialization_vector(const u8* ivec) = 0;
