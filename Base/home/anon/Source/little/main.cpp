@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
+#include "other.h"
 
 enum TestEnum {
     ValueOne,
@@ -19,6 +20,7 @@ int main(int, char**)
     printf("my_struct.x is %d\n", my_struct.x);
     for (int i = 0; i < 3; ++i) {
         // This is a comment :^)
+        func();
         printf("Hello friends!\n");
         mkdir("/tmp/xyz", 0755);
     }
