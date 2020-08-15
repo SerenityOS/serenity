@@ -252,10 +252,9 @@ void Service::spawn(int socket_fd)
 
         if (socket_fd >= 0) {
             ASSERT(!m_socket_path.is_null());
-            ASSERT(socket_fd > 2);
+            ASSERT(socket_fd > 3);
             dup2(socket_fd, 3);
             // The new descriptor is !CLOEXEC here.
-            // This is true even if socket_fd == 3.
             setenv("SOCKET_TAKEOVER", "1", true);
         }
 
