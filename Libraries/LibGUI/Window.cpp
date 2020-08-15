@@ -32,6 +32,7 @@
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
@@ -210,6 +211,13 @@ void Window::set_rect(const Gfx::IntRect& a_rect)
         m_front_bitmap = nullptr;
     if (m_main_widget)
         m_main_widget->resize(window_rect.size());
+}
+
+void Window::center_on_screen()
+{
+    auto window_rect = rect();
+    window_rect.center_within(Desktop::the().rect());
+    set_rect(window_rect);
 }
 
 void Window::set_window_type(WindowType window_type)

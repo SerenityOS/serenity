@@ -35,7 +35,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Desktop.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
@@ -156,10 +155,8 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Welcome");
-    Gfx::IntRect window_rect { 0, 0, 640, 360 };
-    window_rect.center_within(GUI::Desktop::the().rect());
-    window->set_resizable(true);
-    window->set_rect(window_rect);
+    window->resize(640, 360);
+    window->center_on_screen();
 
     auto& background = window->set_main_widget<BackgroundWidget>();
     background.set_fill_with_background_color(false);

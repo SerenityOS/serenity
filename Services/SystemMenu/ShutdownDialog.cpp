@@ -29,7 +29,6 @@
 #include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Widget.h>
@@ -62,9 +61,8 @@ Vector<char const*> ShutdownDialog::show()
 ShutdownDialog::ShutdownDialog()
     : Dialog(nullptr)
 {
-    Gfx::IntRect rect({ 0, 0, 180, 180 + ((static_cast<int>(options.size()) - 3) * 16) });
-    rect.center_within(GUI::Desktop::the().rect());
-    set_rect(rect);
+    resize(180, 180 + ((static_cast<int>(options.size()) - 3) * 16));
+    center_on_screen();
     set_resizable(false);
     set_title("SerenityOS");
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"));

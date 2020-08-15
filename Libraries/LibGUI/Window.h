@@ -123,6 +123,8 @@ public:
     void resize(int width, int height) { resize({ width, height }); }
     void resize(const Gfx::IntSize& size) { set_rect({ position(), size }); }
 
+    void center_on_screen();
+
     virtual void event(Core::Event&) override;
 
     bool is_visible() const;

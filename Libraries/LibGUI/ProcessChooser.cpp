@@ -26,7 +26,6 @@
 
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Desktop.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ProcessChooser.h>
 #include <LibGUI/RunningProcessesModel.h>
@@ -48,9 +47,8 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     else if (parent_window)
         set_icon(parent_window->icon());
 
-    Gfx::IntRect window_rect { 0, 0, 300, 340 };
-    window_rect.center_within(GUI::Desktop::the().rect());
-    set_rect(window_rect);
+    resize(300, 340);
+    center_on_screen();
 
     auto& widget = set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
