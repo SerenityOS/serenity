@@ -100,6 +100,7 @@ set(KERNEL_SOURCES
     Syscalls/clock.cpp
     Syscalls/debug.cpp
     Syscalls/disown.cpp
+    Syscalls/dup2.cpp
     Syscalls/execve.cpp
     Syscalls/exit.cpp
     Syscalls/fcntl.cpp
