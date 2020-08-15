@@ -7,8 +7,8 @@ set(SOURCES
     ProcessFileDescriptorMapWidget.cpp
     ProcessMemoryMapWidget.cpp
     ProcessModel.cpp
-    ProcessStackWidget.cpp
     ProcessUnveiledPathsWidget.cpp
+    ThreadStackWidget.cpp
 )
 
 serenity_bin(SystemMonitor)
