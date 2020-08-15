@@ -105,8 +105,6 @@ public:
     using Iterator = T*;
     using ConstIterator = const T*;
 
-    static_assert(!IsPointer<T>::value);
-
     using Detail::Span<T>::Span;
 
     ALWAYS_INLINE Span(std::nullptr_t)
