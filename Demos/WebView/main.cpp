@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     auto& view = main_widget.add<WebContentView>();
     auto& statusbar = main_widget.add<GUI::StatusBar>();
     window->set_title("WebView");
-    window->set_rect(100, 100, 640, 480);
+    window->resize(640, 480);
     window->show();
 
     view.on_title_change = [&](auto& title) {

@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_resizable(false);
     window->set_title("Minesweeper");
-    window->set_rect(100, 100, 139, 175);
+    window->resize(139, 175);
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_layout<GUI::VerticalBoxLayout>();

@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 
     window->set_double_buffering_enabled(false);
     window->set_title("2048");
-    window->set_rect(100, 100, 324, 336);
+    window->resize(324, 336);
 
     auto& game = window->set_main_widget<TwentyFortyEightGame>();
     game.set_fill_with_background_color(true);

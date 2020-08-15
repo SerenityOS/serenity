@@ -228,7 +228,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
     window->set_title("Fire");
     window->set_resizable(false);
-    window->set_rect(100, 100, 640, 400);
+    window->resize(640, 400);
 
     auto& fire = window->set_main_widget<Fire>();
 
