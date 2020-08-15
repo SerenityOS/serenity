@@ -26,6 +26,7 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/NumberFormat.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
@@ -37,17 +38,6 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-
-static String si_bytes(unsigned bytes)
-{
-    if (bytes >= GiB)
-        return String::format("%fGiB", (double)bytes / (double)GiB);
-    if (bytes >= MiB)
-        return String::format("%fMiB", (double)bytes / (double)MiB);
-    if (bytes >= KiB)
-        return String::format("%fkiB", (double)bytes / (double)KiB);
-    return String::format("%dB", bytes);
-}
 
 int main(int argc, char** argv)
 {
@@ -95,8 +85,8 @@ int main(int argc, char** argv)
             printf("\tnetmask: %s\n", netmask.characters());
             printf("\tgateway: %s\n", gateway.characters());
             printf("\tclass: %s\n", class_name.characters());
-            printf("\tRX: %u packets %u bytes (%s)\n", packets_in, bytes_in, si_bytes(bytes_in).characters());
-            printf("\tTX: %u packets %u bytes (%s)\n", packets_out, bytes_out, si_bytes(bytes_out).characters());
+            printf("\tRX: %u packets %u bytes (%s)\n", packets_in, bytes_in, human_readable_size(bytes_in).characters());
+            printf("\tTX: %u packets %u bytes (%s)\n", packets_out, bytes_out, human_readable_size(bytes_out).characters());
             printf("\tMTU: %u\n", mtu);
             printf("\n");
         });

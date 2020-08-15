@@ -31,6 +31,7 @@
 
 namespace AK {
 
+// FIXME: Remove this hackery once printf() supports floats.
 static String number_string_with_one_decimal(float number, const char* suffix)
 {
     float decimals = number - (int)number;

@@ -25,6 +25,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -229,25 +230,6 @@ static size_t print_name(const struct stat& st, const String& name, const char* 
     }
 
     return nprinted;
-}
-
-// FIXME: Remove this hackery once printf() supports floats.
-// FIXME: Also, we should probably round the sizes in ls -lh output.
-static String number_string_with_one_decimal(float number, const char* suffix)
-{
-    float decimals = number - (int)number;
-    return String::format("%d.%d%s", (int)number, (int)(decimals * 10), suffix);
-}
-
-static String human_readable_size(size_t size)
-{
-    if (size < 1 * KiB)
-        return String::number(size);
-    if (size < 1 * MiB)
-        return number_string_with_one_decimal((float)size / (float)KiB, "K");
-    if (size < 1 * GiB)
-        return number_string_with_one_decimal((float)size / (float)MiB, "M");
-    return number_string_with_one_decimal((float)size / (float)GiB, "G");
 }
 
 static bool print_filesystem_object(const String& path, const String& name, const struct stat& st)

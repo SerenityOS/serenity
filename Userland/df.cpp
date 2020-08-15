@@ -24,16 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/NumberFormat.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <string.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static bool flag_human_readable = false;
@@ -47,25 +48,6 @@ struct FileSystem {
     size_t block_size { 0 };
     String mount_point;
 };
-
-// FIXME: Remove this hackery once printf() supports floats.
-// FIXME: Also, we should probably round the sizes in df -h output.
-static String number_string_with_one_decimal(float number, const char* suffix)
-{
-    float decimals = number - (int)number;
-    return String::format("%d.%d%s", (int)number, (int)(decimals * 10), suffix);
-}
-
-static String human_readable_size(size_t size)
-{
-    if (size < 1 * KiB)
-        return String::number(size);
-    if (size < 1 * MiB)
-        return number_string_with_one_decimal((float)size / (float)KiB, "K");
-    if (size < 1 * GiB)
-        return number_string_with_one_decimal((float)size / (float)MiB, "M");
-    return number_string_with_one_decimal((float)size / (float)GiB, "G");
-}
 
 int main(int argc, char** argv)
 {
