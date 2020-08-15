@@ -70,6 +70,22 @@ public:
     void reset_breakpoints() { m_breakpoints.clear(); }
 
 private:
+    class DebuggingState {
+    public:
+        enum State {
+            Normal,
+            SingleStepping,
+        };
+        State get() const { return m_state; }
+        void set_normal();
+        void set_single_stepping(DebugInfo::SourcePosition original_source_position);
+        bool should_stop_single_stepping(const DebugInfo::SourcePosition& current_source_position) const;
+
+    private:
+        State m_state { Normal };
+        Optional<DebugInfo::SourcePosition> m_original_source_position; // The source position at which we started the current single step
+    };
+
     explicit Debugger(
         Function<HasControlPassedToUser(const PtraceRegisters&)> on_stop_callback,
         Function<void()> on_continue_callback,
