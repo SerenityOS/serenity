@@ -157,7 +157,7 @@ Tab::Tab(Type type)
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("Download", [this](auto&) {
         auto window = GUI::Window::construct();
-        window->set_rect(300, 300, 300, 150);
+        window->resize(300, 150);
         auto url = m_link_context_menu_url;
         window->set_title(String::format("0%% of %s", url.basename().characters()));
         window->set_resizable(false);
@@ -262,7 +262,7 @@ Tab::Tab(Type type)
                 editor.set_text(source);
                 editor.set_mode(GUI::TextEditor::ReadOnly);
                 editor.set_ruler_visible(true);
-                window->set_rect(150, 150, 640, 480);
+                window->resize(640, 480);
                 window->set_title(url);
                 window->show();
                 (void)window.leak_ref();
@@ -277,7 +277,7 @@ Tab::Tab(Type type)
             if (m_type == Type::InProcessWebView) {
                 if (!m_dom_inspector_window) {
                     m_dom_inspector_window = GUI::Window::construct();
-                    m_dom_inspector_window->set_rect(100, 100, 300, 500);
+                    m_dom_inspector_window->resize(300, 500);
                     m_dom_inspector_window->set_title("DOM inspector");
                     m_dom_inspector_window->set_main_widget<InspectorWidget>();
                 }
@@ -300,7 +300,7 @@ Tab::Tab(Type type)
             if (m_type == Type::InProcessWebView) {
                 if (!m_console_window) {
                     m_console_window = GUI::Window::construct();
-                    m_console_window->set_rect(100, 100, 500, 300);
+                    m_console_window->resize(500, 300);
                     m_console_window->set_title("JS Console");
                     m_console_window->set_main_widget<ConsoleWidget>();
                 }

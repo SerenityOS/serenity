@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
 
     auto window = GUI::Window::construct();
-    window->set_rect(100, 100, 240, 160);
+    window->resize(240, 160);
     window->set_title("Hello World!");
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();

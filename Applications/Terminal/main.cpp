@@ -139,7 +139,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto window = GUI::Window::construct();
     window->set_title("Terminal Settings");
     window->set_resizable(false);
-    window->set_rect(50, 50, 200, 185);
+    window->resize(200, 185);
     window->set_modal(true);
 
     auto& settings = window->set_main_widget<GUI::Widget>();

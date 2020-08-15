@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     auto window = GUI::Window::construct();
     window->set_title("Eyes");
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-eyes.png"));
-    window->set_rect(350, 270, 75 * (full_rows > 0 ? max_in_row : extra_columns), 100 * (full_rows + (extra_columns > 0 ? 1 : 0)));
+    window->resize(75 * (full_rows > 0 ? max_in_row : extra_columns), 100 * (full_rows + (extra_columns > 0 ? 1 : 0)));
     window->set_has_alpha_channel(true);
 
     auto& eyes = window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns);

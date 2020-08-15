@@ -202,7 +202,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(true);
     window->set_title("LibGfx Demo");
     window->set_resizable(false);
-    window->set_rect(100, 100, WIDTH, HEIGHT);
+    window->resize(WIDTH, HEIGHT);
     window->set_main_widget<Canvas>();
     window->show();
 

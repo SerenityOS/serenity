@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     auto app_icon = GUI::Icon::default_icon("app-widget-gallery");
 
     auto window = GUI::Window::construct();
-    window->set_rect(100, 100, 430, 480);
+    window->resize(430, 480);
     window->set_title("Widget Gallery");
     window->set_icon(app_icon.bitmap_for_size(16));
 

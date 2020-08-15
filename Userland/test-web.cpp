@@ -649,7 +649,7 @@ int main(int argc, char** argv)
 
     if (show_window) {
         window->set_title("LibWeb Test Window");
-        window->set_rect(100, 100, 640, 480);
+        window->resize(640, 480);
         window->show();
     }
 

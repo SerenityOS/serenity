@@ -196,7 +196,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(true);
     window->set_title("Cube");
     window->set_resizable(false);
-    window->set_rect(100, 100, WIDTH, HEIGHT);
+    window->resize(WIDTH, HEIGHT);
 
     auto& cube = window->set_main_widget<Cube>();
 

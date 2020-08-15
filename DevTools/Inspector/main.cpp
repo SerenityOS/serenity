@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Inspector");
-    window->set_rect(150, 150, 685, 500);
+    window->resize(685, 500);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();
