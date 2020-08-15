@@ -30,10 +30,17 @@
 
 DebugSession::DebugSession(int pid)
     : m_debugee_pid(pid)
-    , m_executable(String::format("/proc/%d/exe", pid))
-    , m_elf(ELF::Loader::create(reinterpret_cast<u8*>(m_executable.data()), m_executable.size()))
+    , m_executable(initialize_executable_mapped_file(pid))
+    , m_elf(ELF::Loader::create(reinterpret_cast<const u8*>(m_executable->data()), m_executable->size()))
     , m_debug_info(m_elf)
 {
+}
+
+NonnullOwnPtr<const MappedFile> DebugSession::initialize_executable_mapped_file(int pid)
+{
+    auto executable = adopt_own(*new MappedFile(String::format("/proc/%d/exe", pid)));
+    ASSERT(executable->is_valid());
+    return executable;
 }
 
 DebugSession::~DebugSession()
