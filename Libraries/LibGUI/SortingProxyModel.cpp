@@ -109,6 +109,15 @@ void SortingProxyModel::set_key_column_and_sort_order(int column, SortOrder sort
     resort();
 }
 
+bool SortingProxyModel::less_than(const ModelIndex& index1, const ModelIndex& index2) const
+{
+    auto data1 = data(index1, Role::Sort);
+    auto data2 = data(index2, Role::Sort);
+    if (data1.is_string() && data2.is_string())
+        return data1.as_string().to_lowercase() < data2.as_string().to_lowercase();
+    return data1 < data2;
+}
+
 void SortingProxyModel::resort(unsigned flags)
 {
     auto old_row_mappings = m_row_mappings;
@@ -121,15 +130,7 @@ void SortingProxyModel::resort(unsigned flags)
         return;
     }
     quick_sort(m_row_mappings, [&](auto row1, auto row2) -> bool {
-        auto data1 = source().data(source().index(row1, m_key_column), m_sort_role);
-        auto data2 = source().data(source().index(row2, m_key_column), m_sort_role);
-        if (data1 == data2)
-            return 0;
-        bool is_less_than;
-        if (data1.is_string() && data2.is_string() && !m_sorting_case_sensitive)
-            is_less_than = data1.as_string().to_lowercase() < data2.as_string().to_lowercase();
-        else
-            is_less_than = data1 < data2;
+        bool is_less_than = less_than(source().index(row1, m_key_column), source().index(row2, m_key_column));
         return m_sort_order == SortOrder::Ascending ? is_less_than : !is_less_than;
     });
     for_each_view([&](AbstractView& view) {

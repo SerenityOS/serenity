@@ -30,7 +30,7 @@
 
 namespace GUI {
 
-class SortingProxyModel final
+class SortingProxyModel
     : public Model
     , private ModelClient {
 public:
@@ -49,6 +49,8 @@ public:
     virtual void set_key_column_and_sort_order(int, SortOrder) override;
     virtual bool is_column_sortable(int column_index) const override;
 
+    virtual bool less_than(const ModelIndex&, const ModelIndex&) const;
+
     ModelIndex map_to_source(const ModelIndex&) const;
 
     Role sort_role() const { return m_sort_role; }
@@ -65,15 +67,11 @@ private:
 
     void resort(unsigned flags = Model::UpdateFlag::DontInvalidateIndexes);
 
-    void set_sorting_case_sensitive(bool b) { m_sorting_case_sensitive = b; }
-    bool is_sorting_case_sensitive() { return m_sorting_case_sensitive; }
-
     NonnullRefPtr<Model> m_source;
     Vector<int> m_row_mappings;
     int m_key_column { -1 };
     SortOrder m_sort_order { SortOrder::Ascending };
     Role m_sort_role { Role::Sort };
-    bool m_sorting_case_sensitive { false };
 };
 
 }
