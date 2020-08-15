@@ -41,12 +41,12 @@ static String number_string_with_one_decimal(float number, const char* suffix)
 static String human_readable_size(size_t size)
 {
     if (size < 1 * KiB)
-        return String::format("%zu bytes", size);
+        return String::format("%zu B", size);
     if (size < 1 * MiB)
-        return number_string_with_one_decimal((float)size / (float)KiB, "KB");
+        return number_string_with_one_decimal((float)size / (float)KiB, "KiB");
     if (size < 1 * GiB)
-        return number_string_with_one_decimal((float)size / (float)MiB, "MB");
-    return number_string_with_one_decimal((float)size / (float)GiB, "GB");
+        return number_string_with_one_decimal((float)size / (float)MiB, "MiB");
+    return number_string_with_one_decimal((float)size / (float)GiB, "GiB");
 }
 
 }
