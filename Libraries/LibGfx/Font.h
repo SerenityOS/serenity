@@ -110,6 +110,10 @@ public:
     bool is_fixed_width() const { return m_fixed_width; }
     void set_fixed_width(bool b) { m_fixed_width = b; }
 
+    const Font& bold_family_font() const { return *m_bold_family_font; }
+    bool has_boldface() const { return m_boldface; }
+    void set_boldface(bool b) { m_boldface = b; }
+
     u8 glyph_spacing() const { return m_glyph_spacing; }
     void set_glyph_spacing(u8 spacing) { m_glyph_spacing = spacing; }
 
@@ -130,6 +134,9 @@ private:
     static RefPtr<Font> load_from_memory(const u8*);
     static size_t glyph_count_by_type(FontTypes type);
 
+    void set_family_fonts();
+    RefPtr<Font> m_bold_family_font;
+
     String m_name;
     FontTypes m_type;
     size_t m_glyph_count { 256 };
@@ -146,6 +153,7 @@ private:
     u8 m_glyph_spacing { 0 };
 
     bool m_fixed_width { false };
+    bool m_boldface { false };
 };
 
 }

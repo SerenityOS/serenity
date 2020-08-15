@@ -30,8 +30,10 @@
 #include <AK/BufferStream.h>
 #include <AK/MappedFile.h>
 #include <AK/StdLibExtras.h>
+#include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <AK/Vector.h>
 #include <AK/kmalloc.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -152,6 +154,8 @@ Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_wid
         m_min_glyph_width = minimum;
         m_max_glyph_width = maximum;
     }
+
+    set_family_fonts();
 }
 
 Font::~Font()
@@ -341,6 +345,37 @@ void Font::set_type(FontTypes type)
     m_glyph_count = new_glyph_count;
     m_rows = new_rows;
     m_glyph_widths = new_widths;
+}
+
+void Font::set_family_fonts()
+{
+    String typeface;
+    String weight;
+    StringBuilder size;
+
+    auto parts = this->name().split(' ');
+    if (parts.size() < 2) {
+        typeface = this->name();
+    } else {
+        typeface = parts[0];
+        weight = parts[1];
+    }
+
+    if (this->is_fixed_width()) {
+        size.appendf("%d", this->m_max_glyph_width);
+        size.append("x");
+    }
+    size.appendf("%d", this->m_glyph_height);
+
+    StringBuilder path;
+
+    if (weight != "Bold") {
+        path.appendf("/res/fonts/%sBold%s.font", &typeface[0], &size.to_string()[0]);
+        m_bold_family_font = Font::load_from_file(path.to_string());
+        if (m_bold_family_font)
+            set_boldface(true);
+        path.clear();
+    }
 }
 
 }
