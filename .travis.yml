@@ -28,8 +28,12 @@ before_install:
 - sudo apt-get install -y g++-8 libstdc++-8-dev shellcheck libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
 - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
 - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
-- sudo python2 -m pip install cmake
-- export PATH=/usr/local/bin/:$PATH
+# Travis ships an old cmake 3.12.4. We need cmake >= 3.16.
+# Why would you put binaries there?!
+- sudo rm -rf /usr/local/cmake-*
+- which cmake || true
+- curl -sSf --proto =https --retry 3 --retry-delay 60 https://cmake.org/files/v3.18/cmake-3.18.1-Linux-x86_64.sh > /tmp/cmake-install.sh
+- sudo sh /tmp/cmake-install.sh --skip-license --prefix=/usr
 - cmake --version
 
 script:
