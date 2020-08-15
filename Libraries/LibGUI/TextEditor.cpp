@@ -412,7 +412,7 @@ void TextEditor::paint_event(PaintEvent& event)
             painter.draw_text(
                 ruler_line_rect.shrunken(2, 0).translated(0, m_line_spacing / 2),
                 String::number(i + 1),
-                is_current_line ? Gfx::Font::default_bold_font() : font(),
+                is_current_line && font().has_boldface() ? font().bold_family_font() : font(),
                 Gfx::TextAlignment::TopRight,
                 is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
         }
