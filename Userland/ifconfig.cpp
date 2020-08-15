@@ -40,12 +40,12 @@
 
 static String si_bytes(unsigned bytes)
 {
-    if (bytes >= GB)
-        return String::format("%fGiB", (double)bytes / (double)GB);
-    if (bytes >= MB)
-        return String::format("%fMiB", (double)bytes / (double)MB);
-    if (bytes >= KB)
-        return String::format("%fkiB", (double)bytes / (double)KB);
+    if (bytes >= GiB)
+        return String::format("%fGiB", (double)bytes / (double)GiB);
+    if (bytes >= MiB)
+        return String::format("%fMiB", (double)bytes / (double)MiB);
+    if (bytes >= KiB)
+        return String::format("%fkiB", (double)bytes / (double)KiB);
     return String::format("%dB", bytes);
 }
 

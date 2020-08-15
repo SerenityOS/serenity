@@ -109,7 +109,7 @@ void Job::on_socket_connected()
         ASSERT(m_state == State::InBody || m_state == State::Finished);
 
         read_while_data_available([&] {
-            auto read_size = 64 * KB;
+            auto read_size = 64 * KiB;
 
             auto payload = receive(read_size);
             if (!payload) {

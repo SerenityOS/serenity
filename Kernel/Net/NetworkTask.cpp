@@ -105,7 +105,7 @@ void NetworkTask_main()
         return packet_size;
     };
 
-    size_t buffer_size = 64 * KB;
+    size_t buffer_size = 64 * KiB;
     auto buffer_region = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer", Region::Access::Read | Region::Access::Write, false, true);
     auto buffer = (u8*)buffer_region->vaddr().get();
 

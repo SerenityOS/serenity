@@ -837,7 +837,7 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEnt
         }
 
         u64 offset = 0;
-        u32 count = fs().adjust_buffer_size(8 * MB);
+        u32 count = fs().adjust_buffer_size(8 * MiB);
 
         while (true) {
             Plan9FS::Message message { fs(), Plan9FS::Message::Type::Treaddir };

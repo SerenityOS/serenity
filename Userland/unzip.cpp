@@ -156,7 +156,7 @@ static bool unpack_file_for_central_directory_index(off_t central_directory_inde
 int main(int argc, char** argv)
 {
     const char* path;
-    int map_size_limit = 32 * MB;
+    int map_size_limit = 32 * MiB;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(map_size_limit, "Maximum chunk size to map", "map-size-limit", 0, "size");
