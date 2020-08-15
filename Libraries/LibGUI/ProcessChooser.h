@@ -42,6 +42,8 @@ public:
 private:
     ProcessChooser(const StringView& window_title = "Process Chooser", const StringView& button_label = "Select", const Gfx::Bitmap* window_icon = nullptr, GUI::Window* parent_window = nullptr);
 
+    void set_pid_from_index_and_close(const ModelIndex&);
+
     pid_t m_pid { 0 };
 
     String m_window_title;
