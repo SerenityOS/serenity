@@ -415,20 +415,8 @@ int dup(int old_fd)
 
 int dup2(int old_fd, int new_fd)
 {
-    if (new_fd < 0) {
-        errno = EBADF;
-        return -1;
-    }
-
-    if (old_fd == new_fd)
-        return old_fd;
-
-    // Validate `old_fd` so we don't close `new_fd` and then fail the `F_DUPFD`.
-    if (fcntl(old_fd, F_GETFL) < 0)
-        return -1;
-
-    close(new_fd);
-    return fcntl(old_fd, F_DUPFD, new_fd);
+    int rc = syscall(SC_dup2, old_fd, new_fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int setgroups(size_t size, const gid_t* list)
