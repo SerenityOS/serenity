@@ -125,7 +125,7 @@ void RSA::encrypt(const ByteBuffer& in, ByteBuffer& out)
         return;
     }
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
-    auto size = exp.export_data(out.span());
+    auto size = exp.export_data(out);
     auto outsize = out.size();
     if (size != outsize) {
         dbg() << "POSSIBLE RSA BUG!!! Size mismatch: " << outsize << " requested but " << size << " bytes generated";
@@ -139,7 +139,7 @@ void RSA::decrypt(const ByteBuffer& in, ByteBuffer& out)
 
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_private_key.private_exponent(), m_private_key.modulus());
-    auto size = exp.export_data(out.span());
+    auto size = exp.export_data(out);
 
     auto align = m_private_key.length();
     auto aligned_size = (size + align - 1) / align * align;
@@ -153,7 +153,7 @@ void RSA::sign(const ByteBuffer& in, ByteBuffer& out)
 {
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_private_key.private_exponent(), m_private_key.modulus());
-    auto size = exp.export_data(out.span());
+    auto size = exp.export_data(out);
     out = out.slice(out.size() - size, size);
 }
 
@@ -161,7 +161,7 @@ void RSA::verify(const ByteBuffer& in, ByteBuffer& out)
 {
     auto in_integer = UnsignedBigInteger::import_data(in.data(), in.size());
     auto exp = NumberTheory::ModularPower(in_integer, m_public_key.public_exponent(), m_public_key.modulus());
-    auto size = exp.export_data(out.span());
+    auto size = exp.export_data(out);
     out = out.slice(out.size() - size, size);
 }
 
@@ -170,7 +170,7 @@ void RSA::import_private_key(ReadonlyBytes bytes, bool pem)
     ByteBuffer buffer;
     if (pem) {
         buffer = decode_pem(bytes);
-        bytes = buffer.span();
+        bytes = buffer;
     }
 
     auto key = parse_rsa_key(bytes);
@@ -186,7 +186,7 @@ void RSA::import_public_key(ReadonlyBytes bytes, bool pem)
     ByteBuffer buffer;
     if (pem) {
         buffer = decode_pem(bytes);
-        bytes = buffer.span();
+        bytes = buffer;
     }
 
     auto key = parse_rsa_key(bytes);

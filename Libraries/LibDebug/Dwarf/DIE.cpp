@@ -36,7 +36,7 @@ DIE::DIE(const CompilationUnit& unit, u32 offset)
     : m_compilation_unit(unit)
     , m_offset(offset)
 {
-    InputMemoryStream stream(m_compilation_unit.dwarf_info().debug_info_data().span());
+    InputMemoryStream stream(m_compilation_unit.dwarf_info().debug_info_data());
     stream.discard_or_error(m_offset);
     stream.read_LEB128_unsigned(m_abbreviation_code);
     m_data_offset = stream.offset();
@@ -181,7 +181,7 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
 
 Optional<DIE::AttributeValue> DIE::get_attribute(const Attribute& attribute) const
 {
-    InputMemoryStream stream { m_compilation_unit.dwarf_info().debug_info_data().span() };
+    InputMemoryStream stream { m_compilation_unit.dwarf_info().debug_info_data() };
     stream.discard_or_error(m_data_offset);
 
     auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);

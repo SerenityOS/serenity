@@ -201,8 +201,8 @@ static void aes_cbc(const char* message, size_t len)
             Crypto::Cipher::Intent::Encryption);
 
         auto enc = cipher.create_aligned_buffer(buffer.size());
-        auto enc_span = enc.span();
-        cipher.encrypt(buffer.span(), enc_span, iv.span());
+        auto enc_span = enc.bytes();
+        cipher.encrypt(buffer, enc_span, iv);
 
         if (binary)
             printf("%.*s", (int)enc_span.size(), enc_span.data());
@@ -214,8 +214,8 @@ static void aes_cbc(const char* message, size_t len)
             key_bits,
             Crypto::Cipher::Intent::Decryption);
         auto dec = cipher.create_aligned_buffer(buffer.size());
-        auto dec_span = dec.span();
-        cipher.decrypt(buffer.span(), dec_span, iv.span());
+        auto dec_span = dec.bytes();
+        cipher.decrypt(buffer, dec_span, iv);
         printf("%.*s\n", (int)dec_span.size(), dec_span.data());
     }
 }
@@ -588,8 +588,8 @@ static void aes_cbc_test_encrypt()
         auto in = "This is a test! This is another test!"_b;
         auto out = cipher.create_aligned_buffer(in.size());
         auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
-        auto out_span = out.span();
-        cipher.encrypt(in.span(), out_span, iv.span());
+        auto out_span = out.bytes();
+        cipher.encrypt(in, out_span, iv);
         if (out.size() != sizeof(result))
             FAIL(size mismatch);
         else if (memcmp(out_span.data(), result, out_span.size()) != 0) {
@@ -652,8 +652,8 @@ static void aes_cbc_test_decrypt()
         auto in = ByteBuffer::copy(result, result_len);
         auto out = cipher.create_aligned_buffer(in.size());
         auto iv = ByteBuffer::create_zeroed(Crypto::Cipher::AESCipher::block_size());
-        auto out_span = out.span();
-        cipher.decrypt(in.span(), out_span, iv.span());
+        auto out_span = out.bytes();
+        cipher.decrypt(in, out_span, iv);
         if (out_span.size() != strlen(true_value)) {
             FAIL(size mismatch);
             printf("Expected %zu bytes but got %zu\n", strlen(true_value), out_span.size());
@@ -728,8 +728,8 @@ static void aes_ctr_test_encrypt()
         // nonce is already included in ivec.
         Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Encryption);
         ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
-        Bytes out_span = out_actual.span();
-        cipher.encrypt(in.span(), out_span, ivec.span());
+        Bytes out_span = out_actual.bytes();
+        cipher.encrypt(in, out_span, ivec);
         if (out_expected.size() != out_actual.size()) {
             FAIL(size mismatch);
             printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_span.size());
@@ -923,8 +923,8 @@ static void aes_ctr_test_decrypt()
         // nonce is already included in ivec.
         Crypto::Cipher::AESCipher::CTRMode cipher(key, 8 * key.size(), Crypto::Cipher::Intent::Decryption);
         ByteBuffer out_actual = ByteBuffer::create_zeroed(in.size());
-        auto out_span = out_actual.span();
-        cipher.decrypt(in.span(), out_span, ivec.span());
+        auto out_span = out_actual.bytes();
+        cipher.decrypt(in, out_span, ivec);
         if (out_expected.size() != out_span.size()) {
             FAIL(size mismatch);
             printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_span.size());
@@ -1442,7 +1442,7 @@ static void rsa_test_encrypt()
         rsa.encrypt(data, buf);
         if (memcmp(result, buf.data(), buf.size())) {
             FAIL(Invalid encryption result);
-            print_buffer(buf.span(), 16);
+            print_buffer(buf, 16);
         } else {
             PASS;
         }
