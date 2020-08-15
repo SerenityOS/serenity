@@ -559,7 +559,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         memory_graph.set_text_color(Color::Cyan);
         memory_graph.set_graph_color(Color::from_rgb(0x00bbbb));
         memory_graph.text_formatter = [](int value, int max) {
-            return String::format("%d / %d KB", value, max);
+            return String::format("%d / %d KiB", value, max);
         };
 
         self.add<MemoryStatsWidget>(memory_graph);
