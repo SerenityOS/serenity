@@ -98,7 +98,7 @@ public:
 
     const ELF::Loader& elf() const { return *m_elf; }
     NonnullRefPtr<const ELF::Loader> elf_ref() const { return m_elf; }
-    const MappedFile& executable() const { return m_executable; }
+    const MappedFile& executable() const { return *m_executable; }
     const DebugInfo& debug_info() const { return m_debug_info; }
 
     enum DebugDecision {
@@ -119,10 +119,12 @@ private:
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
 
+    static NonnullOwnPtr<const MappedFile> initialize_executable_mapped_file(int pid);
+
     int m_debugee_pid { -1 };
     bool m_is_debugee_dead { false };
 
-    MappedFile m_executable;
+    NonnullOwnPtr<const MappedFile> m_executable;
     NonnullRefPtr<const ELF::Loader> m_elf;
     DebugInfo m_debug_info;
 
