@@ -18,6 +18,7 @@ set(SOURCES
     Tool.cpp
     WidgetTool.cpp
     WidgetTreeModel.cpp
+    CodeDocument.cpp
 )
 
 serenity_bin(HackStudio)
