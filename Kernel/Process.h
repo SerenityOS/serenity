@@ -40,6 +40,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
+#include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
@@ -159,8 +160,8 @@ public:
     ProcessID pid() const { return m_pid; }
     SessionID sid() const { return m_sid; }
     bool is_session_leader() const { return m_sid.value() == m_pid.value(); }
-    ProcessGroupID pgid() const { return m_pgid; }
-    bool is_group_leader() const { return m_pgid.value() == m_pid.value(); }
+    ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
+    bool is_group_leader() const { return pgid().value() == m_pid.value(); }
     const FixedArray<gid_t>& extra_gids() const { return m_extra_gids; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
@@ -620,7 +621,7 @@ private:
 
     ProcessID m_pid { 0 };
     SessionID m_sid { 0 };
-    ProcessGroupID m_pgid { 0 };
+    RefPtr<ProcessGroup> m_pg;
 
     uid_t m_euid { 0 };
     gid_t m_egid { 0 };

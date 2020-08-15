@@ -155,10 +155,8 @@ void TTY::emit(u8 ch)
         if (ch == m_termios.c_cc[VSUSP]) {
             dbg() << tty_name() << ": VSUSP pressed!";
             generate_signal(SIGTSTP);
-            if (m_process) {
-                if (auto parent = Process::from_pid(m_process->ppid()))
-                    (void)parent->send_signal(SIGCHLD, m_process);
-            }
+            if (m_original_process_parent)
+                (void)m_original_process_parent->send_signal(SIGCHLD, nullptr);
             // TODO: Else send it to the session leader maybe?
             return;
         }
@@ -310,13 +308,27 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         if (pgid <= 0)
             return -EINVAL;
         InterruptDisabler disabler;
-        auto process = Process::from_pid(pgid.value());
+        auto process_group = ProcessGroup::from_pgid(pgid);
+        // Disallow setting a nonexistent PGID.
+        if (!process_group)
+            return -EINVAL;
+
+        auto process = Process::from_pid(ProcessID(pgid.value()));
         SessionID new_sid = process ? process->sid() : Process::get_sid_from_pgid(pgid);
         if (!new_sid || new_sid != current_process.sid())
             return -EPERM;
         if (process && pgid != process->pgid())
             return -EPERM;
-        m_process = process ? process->make_weak_ptr() : WeakPtr<Process>();
+        m_pg = process_group->make_weak_ptr();
+
+        if (process) {
+            if (auto parent = Process::from_pid(process->ppid())) {
+                m_original_process_parent = parent->make_weak_ptr();
+                return 0;
+            }
+        }
+
+        m_original_process_parent = nullptr;
         return 0;
     }
     case TCGETS: {
@@ -392,10 +404,4 @@ void TTY::hang_up()
 {
     generate_signal(SIGHUP);
 }
-
-ProcessGroupID TTY::pgid() const
-{
-    return m_process ? m_process->pgid() : 0;
-}
-
 }
