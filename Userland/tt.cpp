@@ -261,7 +261,7 @@ int stack_size_test()
         printf("pthread_attr_setstacksize: %s\n", strerror(rc));
         return 3;
     }
-    printf("Set thread stack size to 8 MB\n");
+    printf("Set thread stack size to 8 MiB\n");
 
     pthread_t thread_id;
     rc = pthread_create(
