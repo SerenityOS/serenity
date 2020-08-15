@@ -55,11 +55,11 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     widget.set_layout<GUI::VerticalBoxLayout>();
     widget.layout()->set_margins({ 0, 0, 0, 2 });
 
-    auto& table_view = widget.add<GUI::TableView>();
+    m_table_view = widget.add<GUI::TableView>();
     auto sorting_model = GUI::SortingProxyModel::create(RunningProcessesModel::create());
     sorting_model->set_sort_role(GUI::Model::Role::Display);
     sorting_model->set_key_column_and_sort_order(RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
-    table_view.set_model(sorting_model);
+    m_table_view->set_model(sorting_model);
 
     auto& button_container = widget.add<GUI::Widget>();
     button_container.set_preferred_size(0, 30);
@@ -71,13 +71,13 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     auto& select_button = button_container.add<GUI::Button>(m_button_label);
     select_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     select_button.set_preferred_size(80, 24);
-    select_button.on_click = [&](auto) {
-        if (table_view.selection().is_empty()) {
+    select_button.on_click = [this](auto) {
+        if (m_table_view->selection().is_empty()) {
             GUI::MessageBox::show(this, "No process selected!", m_window_title, GUI::MessageBox::Type::Error);
             return;
         }
-        auto index = table_view.selection().first();
-        auto pid_as_variant = table_view.model()->data(index, GUI::Model::Role::Custom);
+        auto index = m_table_view->selection().first();
+        auto pid_as_variant = m_table_view->model()->data(index, GUI::Model::Role::Custom);
         m_pid = pid_as_variant.as_i32();
         done(ExecOK);
     };
@@ -88,32 +88,32 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
         done(ExecCancel);
     };
 
-    table_view.model()->update();
+    m_table_view->model()->update();
 
     m_refresh_timer = add<Core::Timer>();
 
     m_refresh_timer->start(m_refresh_interval); // Start the timer to update the processes
-    m_refresh_timer->on_timeout = [&table_view] {
+    m_refresh_timer->on_timeout = [this] {
         auto previous_selected_pid = -1; // Store the selection index to not to clear the selection upon update.
-        if (!table_view.selection().is_empty()) {
-            auto pid_as_variant = table_view.model()->data(table_view.selection().first(), GUI::Model::Role::Custom);
+        if (!m_table_view->selection().is_empty()) {
+            auto pid_as_variant = m_table_view->model()->data(m_table_view->selection().first(), GUI::Model::Role::Custom);
             previous_selected_pid = pid_as_variant.as_i32();
         }
 
-        table_view.model()->update();
+        m_table_view->model()->update();
 
         if (previous_selected_pid == -1) {
             return;
         }
 
-        auto model = table_view.model();
+        auto model = m_table_view->model();
         auto row_count = model->row_count();
-        auto column_index = 1; // Corresponds to PID column in the table_view.
+        auto column_index = 1; // Corresponds to PID column in the m_table_view.
         for (int row_index = 0; row_index < row_count; ++row_index) {
             auto cell_index = model->index(row_index, column_index);
             auto pid_as_variant = model->data(cell_index, GUI::Model::Role::Custom);
             if (previous_selected_pid == pid_as_variant.as_i32()) {
-                table_view.selection().set(cell_index); // Set only if PIDs are matched.
+                m_table_view->selection().set(cell_index); // Set only if PIDs are matched.
             }
         }
     };

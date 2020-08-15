@@ -47,6 +47,7 @@ private:
     String m_window_title;
     String m_button_label;
     RefPtr<Gfx::Bitmap> m_window_icon;
+    RefPtr<TableView> m_table_view;
 
     bool m_refresh_enabled { true };
     unsigned m_refresh_interval { 1000 };
