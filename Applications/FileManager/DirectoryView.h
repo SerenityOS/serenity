@@ -124,7 +124,7 @@ private:
     virtual void model_did_update(unsigned) override;
 
     void handle_activation(const GUI::ModelIndex&);
-    GUI::ModelIndex map_table_view_index(const GUI::ModelIndex&) const;
+    GUI::ModelIndex map_index(const GUI::ModelIndex&) const;
 
     void set_status_message(const StringView&);
     void update_statusbar();
@@ -132,6 +132,7 @@ private:
     ViewMode m_view_mode { Invalid };
 
     NonnullRefPtr<GUI::FileSystemModel> m_model;
+    NonnullRefPtr<GUI::SortingProxyModel> m_sorting_model;
     size_t m_path_history_position { 0 };
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);
