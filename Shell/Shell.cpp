@@ -646,13 +646,14 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
         for (auto& arg : command.argv)
             dbg() << "argv: " << arg;
         for (auto& redir : command.redirections) {
-            if (redir->is_path_redirection()) {
-                auto path_redir = (const AST::PathRedirection*)redir.ptr();
+            if (redir.is_path_redirection()) {
+                auto path_redir = (const AST::PathRedirection*)&redir;
                 dbg() << "redir path " << (int)path_redir->direction << " " << path_redir->path << " <-> " << path_redir->fd;
-            } else if (redir->is_fd_redirection()) {
-                dbg() << "redir fd " << redir->source_fd << " -> " << redir->dest_fd;
-            } else if (redir->is_close_redirection()) {
-                auto close_redir = (const AST::CloseRedirection*)redir.ptr();
+            } else if (redir.is_fd_redirection()) {
+                auto* fdredir = (const AST::FdRedirection*)&redir;
+                dbg() << "redir fd " << fdredir->source_fd << " -> " << fdredir->dest_fd;
+            } else if (redir.is_close_redirection()) {
+                auto close_redir = (const AST::CloseRedirection*)&redir;
                 dbg() << "close fd " << close_redir->fd;
             } else {
                 ASSERT_NOT_REACHED();
