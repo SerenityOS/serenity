@@ -269,6 +269,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     //       and we don't want to deal with faults after this point.
     u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment), move(auxv));
 
+    if (wait_for_tracer_at_next_execve())
+        Thread::current()->send_urgent_signal_to_self(SIGSTOP);
+
     // We enter a critical section here because we don't want to get interrupted between do_exec()
     // and Processor::assume_context() or the next context switch.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
@@ -557,7 +560,7 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return -E2BIG;
 
-    if (m_wait_for_tracer_at_next_execve)
+    if (wait_for_tracer_at_next_execve())
         Thread::current()->send_urgent_signal_to_self(SIGSTOP);
 
     String path;
@@ -597,5 +600,4 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     ASSERT(rc < 0); // We should never continue after a successful exec!
     return rc;
 }
-
 }
