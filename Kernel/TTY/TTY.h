@@ -30,6 +30,7 @@
 #include <AK/WeakPtr.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/DoubleBuffer.h>
+#include <Kernel/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -50,7 +51,7 @@ public:
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
 
-    ProcessGroupID pgid() const;
+    ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
 
     void set_termios(const termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
@@ -91,7 +92,8 @@ private:
     virtual bool is_tty() const final override { return true; }
 
     CircularDeque<u8, 1024> m_input_buffer;
-    WeakPtr<Process> m_process;
+    WeakPtr<Process> m_original_process_parent;
+    WeakPtr<ProcessGroup> m_pg;
     termios m_termios;
     unsigned short m_rows { 0 };
     unsigned short m_columns { 0 };

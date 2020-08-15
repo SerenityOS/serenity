@@ -56,7 +56,7 @@ pid_t Process::sys$setsid()
         return -EPERM;
     // Create a new Session and a new ProcessGroup.
     m_sid = m_pid.value();
-    m_pgid = m_pid.value();
+    m_pg = ProcessGroup::create(ProcessGroupID(m_pid.value()));
     m_tty = nullptr;
     return m_sid.value();
 }
@@ -65,18 +65,18 @@ pid_t Process::sys$getpgid(pid_t pid)
 {
     REQUIRE_PROMISE(proc);
     if (pid == 0)
-        return m_pgid.value();
+        return pgid().value();
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
     auto process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
-    return process->m_pgid.value();
+    return process->pgid().value();
 }
 
 pid_t Process::sys$getpgrp()
 {
     REQUIRE_PROMISE(stdio);
-    return m_pgid.value();
+    return pgid().value();
 }
 
 SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
@@ -134,7 +134,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
         return -EPERM;
     }
     // FIXME: There are more EPERM conditions to check for here..
-    process->m_pgid = new_pgid;
+    process->m_pg = ProcessGroup::find_or_create(new_pgid);
     return 0;
 }
 

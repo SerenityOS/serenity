@@ -46,7 +46,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     child->m_unveiled_paths = m_unveiled_paths;
     child->m_fds = m_fds;
     child->m_sid = m_sid;
-    child->m_pgid = m_pgid;
+    child->m_pg = m_pg;
     child->m_umask = m_umask;
 
 #ifdef FORK_DEBUG
