@@ -36,7 +36,7 @@ ProjectFile::ProjectFile(const String& name)
 const GUI::TextDocument& ProjectFile::document() const
 {
     if (!m_document) {
-        m_document = GUI::TextDocument::create(nullptr);
+        m_document = CodeDocument::create(nullptr);
         auto file = Core::File::construct(m_name);
         if (!file->open(Core::File::ReadOnly)) {
             ASSERT_NOT_REACHED();
