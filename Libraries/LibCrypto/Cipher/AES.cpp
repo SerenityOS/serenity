@@ -396,10 +396,10 @@ void AESCipher::decrypt_block(const AESCipherBlock& in, AESCipherBlock& out)
     // clang-format on
 }
 
-void AESCipherBlock::overwrite(const ReadonlyBytes& span)
+void AESCipherBlock::overwrite(ReadonlyBytes bytes)
 {
-    auto data = span.data();
-    auto length = span.size();
+    auto data = bytes.data();
+    auto length = bytes.size();
 
     ASSERT(length <= m_data.size());
     m_data.overwrite(0, data, length);
