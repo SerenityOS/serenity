@@ -96,7 +96,12 @@ void DebugInfoWidget::update_state(const DebugSession& debug_session, const Ptra
 {
     m_variables_view->set_model(VariablesModel::create(regs));
     m_backtrace_view->set_model(BacktraceModel::create(debug_session, regs));
-    m_backtrace_view->selection().set(m_backtrace_view->model()->index(0));
+    auto selected_index = m_backtrace_view->model()->index(0);
+    if (!selected_index.is_valid()) {
+        dbg() << "Warning: DebugInfoWidget: backtrace selected index is invalid";
+        return;
+    }
+    m_backtrace_view->selection().set(selected_index);
 }
 
 void DebugInfoWidget::program_stopped()

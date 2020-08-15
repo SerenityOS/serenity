@@ -57,12 +57,12 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const DebugSe
         String name = debug_session.debug_info().name_of_containing_function(current_instruction);
         if (name.is_null()) {
             dbg() << "BacktraceModel: couldn't find containing function for address: " << (void*)current_instruction;
-            break;
+            name = "<missing>";
         }
 
         frames.append({ name, current_instruction, current_ebp });
         current_instruction = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp + 4)).value();
         current_ebp = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp)).value();
-    } while (current_ebp);
+    } while (current_ebp && current_instruction);
     return frames;
 }
