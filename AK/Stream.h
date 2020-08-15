@@ -62,6 +62,9 @@ public:
     virtual bool discard_or_error(size_t count) = 0;
 };
 
+// HACK: Apple Clang does not currently support concepts, so let's just use a template with no concepts.
+//       This is only an issue when building Lagom.
+#ifndef __APPLE__
 template<Concepts::Integral Integral>
 InputStream& operator>>(InputStream& stream, Integral& value)
 {
@@ -72,6 +75,14 @@ InputStream& operator>>(InputStream& stream, Integral& value)
 #ifndef KERNEL
 template<Concepts::FloatingPoint FloatingPoint>
 InputStream& operator>>(InputStream& stream, FloatingPoint& value)
+{
+    stream.read_or_error({ &value, sizeof(value) });
+    return stream;
+}
+#endif
+#else
+template<typename T>
+InputStream& operator>>(InputStream& stream, T& value)
 {
     stream.read_or_error({ &value, sizeof(value) });
     return stream;

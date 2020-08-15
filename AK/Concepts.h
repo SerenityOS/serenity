@@ -30,10 +30,14 @@
 
 namespace AK::Concepts {
 
+// HACK: Apple Clang does not currently support concepts.
+//       This is only an issue when building Lagom.
+#ifndef __APPLE__
 template<typename T>
 concept Integral = IsIntegral<T>::value;
 
 template<typename T>
 concept FloatingPoint = IsFloatingPoint<T>::value;
+#endif
 
 }
