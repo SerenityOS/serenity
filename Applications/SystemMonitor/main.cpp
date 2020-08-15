@@ -31,8 +31,9 @@
 #include "ProcessFileDescriptorMapWidget.h"
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessModel.h"
-#include "ThreadStackWidget.h"
 #include "ProcessUnveiledPathsWidget.h"
+#include "ThreadStackWidget.h"
+#include <AK/NumberFormat.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -60,17 +61,6 @@
 #include <spawn.h>
 #include <stdio.h>
 #include <unistd.h>
-
-static String human_readable_size(u32 size)
-{
-    if (size < (64 * KiB))
-        return String::format("%u", size);
-    if (size < MiB)
-        return String::format("%u KB", size / KiB);
-    if (size < GiB)
-        return String::format("%u MB", size / MiB);
-    return String::format("%u GB", size / GiB);
-}
 
 static NonnullRefPtr<GUI::Widget> build_file_systems_tab();
 static NonnullRefPtr<GUI::Widget> build_pci_devices_tab();
