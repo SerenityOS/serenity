@@ -1419,11 +1419,11 @@ static void hmac_sha512_test_process()
 
 static int rsa_tests()
 {
-    (void)rsa_test_encrypt;
-    (void)rsa_test_der_parse;
+    rsa_test_encrypt();
+    rsa_test_der_parse();
     bigint_test_number_theory();
-    (void)rsa_test_encrypt_decrypt;
-    (void)rsa_emsa_pss_test_create;
+    rsa_test_encrypt_decrypt();
+    rsa_emsa_pss_test_create();
     return g_some_test_failed ? 1 : 0;
 }
 
@@ -1559,10 +1559,10 @@ static void bigint_test_number_theory()
         for (auto test_case : primality_tests) {
             I_TEST((Number Theory | Random numbers));
             auto actual_result = Crypto::NumberTheory::random_number(test_case.min, test_case.max);
-            if (actual_result < the_min) {
+            if (actual_result < test_case.min) {
                 FAIL(Too small);
                 printf("The generated number %s is smaller than the requested minimum %s. (max = %s)\n", actual_result.to_base10().characters(), test_case.min.to_base10().characters(), test_case.max.to_base10().characters());
-            } else if (!(actual_result < the_max)) {
+            } else if (!(actual_result < test_case.max)) {
                 FAIL(Too large);
                 printf("The generated number %s is larger-or-equal to the requested maximum %s. (min = %s)\n", actual_result.to_base10().characters(), test_case.max.to_base10().characters(), test_case.min.to_base10().characters());
             } else {
