@@ -171,7 +171,7 @@ public:
     HashSetResult set(T&&);
 
     template<typename U, size_t N>
-    void setFrom(U (&from_array)[N])
+    void set_from(U (&from_array)[N])
     {
         for (size_t i = 0; i < N; ++i) {
             set(from_array[i]);

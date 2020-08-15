@@ -210,7 +210,7 @@ static bool is_keyword(const StringView& string)
 {
     static HashTable<String> keywords(array_size(s_known_keywords));
     if (keywords.is_empty()) {
-        keywords.setFrom(s_known_keywords);
+        keywords.set_from(s_known_keywords);
     }
     return keywords.contains(string);
 }
@@ -219,7 +219,7 @@ static bool is_known_type(const StringView& string)
 {
     static HashTable<String> types(array_size(s_known_types));
     if (types.is_empty()) {
-        types.setFrom(s_known_types);
+        types.set_from(s_known_types);
     }
     return types.contains(string);
 }
