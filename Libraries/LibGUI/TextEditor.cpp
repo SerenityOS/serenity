@@ -42,6 +42,7 @@
 #include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <math.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -328,8 +329,8 @@ int TextEditor::ruler_width() const
 {
     if (!m_ruler_visible)
         return 0;
-    // FIXME: Resize based on needed space.
-    return 5 * font().glyph_width('x') + 4;
+    int line_count_digits = static_cast<int>(log10(line_count())) + 1;
+    return line_count() < 10 ? (line_count_digits + 1) * font().glyph_width('x') + 4 : line_count_digits * font().glyph_width('x') + 4;
 }
 
 Gfx::IntRect TextEditor::ruler_content_rect(size_t line_index) const
