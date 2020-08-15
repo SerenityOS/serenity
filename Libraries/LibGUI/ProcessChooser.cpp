@@ -61,6 +61,8 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     sorting_model->set_key_column_and_sort_order(RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
     m_table_view->set_model(sorting_model);
 
+    m_table_view->on_activation = [this](const ModelIndex& index) { set_pid_from_index_and_close(index); };
+
     auto& button_container = widget.add<GUI::Widget>();
     button_container.set_preferred_size(0, 30);
     button_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -77,9 +79,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
             return;
         }
         auto index = m_table_view->selection().first();
-        auto pid_as_variant = m_table_view->model()->data(index, GUI::Model::Role::Custom);
-        m_pid = pid_as_variant.as_i32();
-        done(ExecOK);
+        set_pid_from_index_and_close(index);
     };
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
@@ -117,6 +117,13 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
             }
         }
     };
+}
+
+void ProcessChooser::set_pid_from_index_and_close(const ModelIndex& index)
+{
+    auto pid_as_variant = m_table_view->model()->data(index, GUI::Model::Role::Custom);
+    m_pid = pid_as_variant.as_i32();
+    done(ExecOK);
 }
 
 ProcessChooser::~ProcessChooser()
