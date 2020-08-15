@@ -74,8 +74,13 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
         return;
 
     auto address = session->debug_info().get_instruction_from_source(position.file_path, position.line_number);
-    if (!address.has_value())
+    if (!address.has_value()) {
+        dbg() << "Warning: couldn't get instruction address from source";
+        // TODO: Currently, the GUI will indicate that a breakpoint was inserted/remove at this line,
+        // regardless of whether we actually succeeded to insert it. (For example a breakpoint on a comment, or an include statemanet).
+        // We should indicate failure via a return value from this function, and not update the breakpoint GUI if we fail.
         return;
+    }
 
     if (change_type == BreakpointChange::Added) {
         bool success = session->insert_breakpoint(reinterpret_cast<void*>(address.value()));
@@ -88,7 +93,9 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
 
 DebugInfo::SourcePosition Debugger::create_source_position(const String& file, size_t line)
 {
-    return { String::format("./%s", file.characters()), line + 1 };
+    if (!file.starts_with('/') && !file.starts_with("./"))
+        return { String::format("./%s", file.characters()), line + 1 };
+    return { file, line + 1 };
 }
 
 int Debugger::start_static()
@@ -118,8 +125,7 @@ void Debugger::start()
 
 int Debugger::debugger_loop()
 {
-    bool in_single_step_mode = false;
-    Vector<void*> temporary_breakpoints;
+    DebuggingState state;
 
     m_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == DebugSession::DebugBreakReason::Exited) {
@@ -130,12 +136,14 @@ int Debugger::debugger_loop()
         ASSERT(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
 
-        if (in_single_step_mode) {
-            for (auto address : temporary_breakpoints) {
-                m_debug_session->remove_breakpoint(address);
+        auto source_position = m_debug_session->debug_info().get_source_position(regs.eip);
+        if (state.get() == Debugger::DebuggingState::SingleStepping) {
+            ASSERT(source_position.has_value());
+            if (state.should_stop_single_stepping(source_position.value())) {
+                state.set_normal();
+            } else {
+                return DebugSession::DebugDecision::SingleStep;
             }
-            temporary_breakpoints.clear();
-            in_single_step_mode = false;
         }
 
         auto control_passed_to_user = m_on_stopped_callback(regs);
@@ -155,25 +163,28 @@ int Debugger::debugger_loop()
         }
 
         if (m_continue_type == ContinueType::SourceSingleStep) {
-            // A possible method for source level single stepping is to single step
-            // in assembly level, until the current instruction's source position has changed.
-            // However, since we do not currently generate debug symbols for library code,
-            // we may have to single-step over lots of library code instructions until we get back to our code,
-            // which is very slow.
-            // So the current method is to insert a temporary breakpoint at every known statement in our source code,
-            // continue execution, and remove the temporary breakpoints once we hit the first breakpoint.
-            m_debug_session->debug_info().for_each_source_position([&](DebugInfo::SourcePosition position) {
-                auto address = (void*)position.address_of_first_statement;
-                if ((u32)address != regs.eip && !m_debug_session->breakpoint_exists(address)) {
-                    m_debug_session->insert_breakpoint(address);
-                    temporary_breakpoints.append(address);
-                }
-            });
-            in_single_step_mode = true;
-            return DebugSession::DebugDecision::Continue;
+            state.set_single_stepping(source_position.value());
+            return DebugSession::DebugDecision::SingleStep;
         }
         ASSERT_NOT_REACHED();
     });
     m_debug_session.clear();
     return 0;
+}
+
+void Debugger::DebuggingState::set_normal()
+{
+    m_state = State::Normal;
+    m_original_source_position.clear();
+}
+
+void Debugger::DebuggingState::set_single_stepping(DebugInfo::SourcePosition original_source_position)
+{
+    m_state = State::SingleStepping;
+    m_original_source_position = original_source_position;
+}
+bool Debugger::DebuggingState::should_stop_single_stepping(const DebugInfo::SourcePosition& current_source_position) const
+{
+    ASSERT(m_state == State::SingleStepping);
+    return m_original_source_position.value() != current_source_position;
 }
