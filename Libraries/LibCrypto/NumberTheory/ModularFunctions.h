@@ -272,38 +272,47 @@ inline UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInte
 template<size_t test_count>
 static bool MR_primality_test(UnsignedBigInteger n, const Vector<UnsignedBigInteger, test_count>& tests)
 {
-    auto prev = n.minus({ 1 });
-    auto b = prev;
-    auto r = 0;
+    // Written using Wikipedia:
+    // https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test
+    ASSERT(!(n < 4));
+    auto predecessor = n.minus({ 1 });
+    auto d = predecessor;
+    size_t r = 0;
 
-    auto div_result = b.divided_by(2);
-    while (div_result.quotient == 0) {
-        div_result = b.divided_by(2);
-        b = div_result.quotient;
-        ++r;
+    {
+        auto div_result = d.divided_by(2);
+        while (div_result.remainder == 0) {
+            d = div_result.quotient;
+            div_result = d.divided_by(2);
+            ++r;
+        }
+    }
+    if (r == 0) {
+        // n - 1 is odd, so n was even. But there is only one even prime:
+        return n == 2;
     }
 
-    for (size_t i = 0; i < tests.size(); ++i) {
-        auto return_ = true;
-        if (n < tests[i])
+    for (auto a : tests) {
+        // Technically: ASSERT(2 <= a && a <= n - 2)
+        ASSERT(a < n);
+        auto x = ModularPower(a, d, n);
+        if (x == 1 || x == predecessor)
             continue;
-        auto x = ModularPower(tests[i], b, n);
-        if (x == 1 || x == prev)
-            continue;
-        for (auto d = r - 1; d != 0; --d) {
+        bool skip_this_witness = false;
+        // r − 1 iterations.
+        for (size_t i = 0; i < r - 1; ++i) {
             x = ModularPower(x, 2, n);
-            if (x == 1)
-                return false;
-            if (x == prev) {
-                return_ = false;
+            if (x == predecessor) {
+                skip_this_witness = true;
                 break;
             }
         }
-        if (return_)
-            return false;
+        if (skip_this_witness)
+            continue;
+        return false; // "composite"
     }
 
-    return true;
+    return true; // "probably prime"
 }
 
 static UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBigInteger& max_excluded)
@@ -329,15 +338,34 @@ static UnsignedBigInteger random_number(const UnsignedBigInteger& min, const Uns
 
 static bool is_probably_prime(const UnsignedBigInteger& p)
 {
-    if (p == 2 || p == 3 || p == 5)
+    // Is it a small number?
+    if (p < 49) {
+        u32 p_value = p.words()[0];
+        // Is it a very small prime?
+        if (p_value == 2 || p_value == 3 || p_value == 5 || p_value == 7)
+            return true;
+        // Is it the multiple of a very small prime?
+        if (p_value % 2 == 0 || p_value % 3 == 0 || p_value % 5 == 0 || p_value % 7 == 0)
+            return false;
+        // Then it must be a prime, but not a very small prime, like 37.
         return true;
-    if (p < 49)
-        return true;
+    }
 
     Vector<UnsignedBigInteger, 256> tests;
-    UnsignedBigInteger seven { 7 };
-    for (size_t i = 0; i < tests.size(); ++i)
-        tests.append(random_number(seven, p.minus(2)));
+    // Make some good initial guesses that are guaranteed to find all primes < 2^64.
+    tests.append(UnsignedBigInteger(2));
+    tests.append(UnsignedBigInteger(3));
+    tests.append(UnsignedBigInteger(5));
+    tests.append(UnsignedBigInteger(7));
+    tests.append(UnsignedBigInteger(11));
+    tests.append(UnsignedBigInteger(13));
+    UnsignedBigInteger seventeen { 17 };
+    for (size_t i = tests.size(); i < 256; ++i) {
+        tests.append(random_number(seventeen, p.minus(2)));
+    }
+    // Miller-Rabin's "error" is 8^-k. In adversarial cases, it's 4^-k.
+    // With 200 random numbers, this would mean an error of about 2^-400.
+    // So we don't need to worry too much about the quality of the random numbers.
 
     return MR_primality_test(p, tests);
 }
@@ -349,6 +377,10 @@ inline static UnsignedBigInteger random_big_prime(size_t bits)
     UnsignedBigInteger max = UnsignedBigInteger { 1 }.shift_left(bits).minus(1);
     for (;;) {
         auto p = random_number(min, max);
+        if ((p.words()[0] & 1) == 0) {
+            // An even number is definitely not a large prime.
+            continue;
+        }
         if (is_probably_prime(p))
             return p;
     }
