@@ -45,15 +45,16 @@ NonnullOwnPtr<const MappedFile> DebugSession::initialize_executable_mapped_file(
 
 DebugSession::~DebugSession()
 {
+    if (m_is_debugee_dead)
+        return;
+
     for (const auto& bp : m_breakpoints) {
         disable_breakpoint(bp.key);
     }
     m_breakpoints.clear();
 
-    if (!m_is_debugee_dead) {
-        if (ptrace(PT_DETACH, m_debugee_pid, 0, 0) < 0) {
-            perror("PT_DETACH");
-        }
+    if (ptrace(PT_DETACH, m_debugee_pid, 0, 0) < 0) {
+        perror("PT_DETACH");
     }
 }
 
