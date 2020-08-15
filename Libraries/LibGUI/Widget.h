@@ -28,6 +28,7 @@
 
 #include <AK/String.h>
 #include <LibCore/Object.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Margins.h>
@@ -113,7 +114,7 @@ public:
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }
-    void set_tooltip(const StringView& tooltip) { m_tooltip = tooltip; }
+    void set_tooltip(const StringView&);
 
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
@@ -312,6 +313,8 @@ private:
     void handle_leave_event(Core::Event&);
     void focus_previous_widget(FocusSource);
     void focus_next_widget(FocusSource);
+
+    void show_tooltip();
 
     Window* m_window { nullptr };
     RefPtr<Layout> m_layout;

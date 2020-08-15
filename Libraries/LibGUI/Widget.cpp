@@ -317,8 +317,7 @@ void Widget::handle_mousedoubleclick_event(MouseEvent& event)
 
 void Widget::handle_enter_event(Core::Event& event)
 {
-    if (has_tooltip())
-        Application::the()->show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2));
+    show_tooltip();
     enter_event(event);
 }
 
@@ -841,6 +840,19 @@ Gfx::IntRect Widget::content_rect() const
     rect.set_width(rect.width() - (m_content_margins.left() + m_content_margins.right()));
     rect.set_height(rect.height() - (m_content_margins.top() + m_content_margins.bottom()));
     return rect;
+}
+
+void Widget::set_tooltip(const StringView& tooltip)
+{
+    m_tooltip = tooltip;
+    if (GUI::Application::the()->tooltip_source_widget() == this)
+        show_tooltip();
+}
+
+void Widget::show_tooltip()
+{
+    if (has_tooltip())
+        Application::the()->show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2), this);
 }
 
 }

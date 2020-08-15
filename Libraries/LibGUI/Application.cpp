@@ -115,7 +115,7 @@ public:
     {
         // FIXME: Add some kind of GUI::Label auto-sizing feature.
         int text_width = m_label->font().width(tooltip);
-        set_rect(100, 100, text_width + 10, m_label->font().glyph_height() + 8);
+        set_rect(rect().x(), rect().y(), text_width + 10, m_label->font().glyph_height() + 8);
         m_label->set_text(tooltip);
     }
 
@@ -134,8 +134,9 @@ private:
     RefPtr<Label> m_label;
 };
 
-void Application::show_tooltip(const StringView& tooltip, const Gfx::IntPoint& screen_location)
+void Application::show_tooltip(const StringView& tooltip, const Gfx::IntPoint& screen_location, const Widget* tooltip_source_widget)
 {
+    m_tooltip_source_widget = tooltip_source_widget;
     if (!m_tooltip_window) {
         m_tooltip_window = TooltipWindow::construct();
         m_tooltip_window->set_double_buffering_enabled(false);
@@ -159,6 +160,7 @@ void Application::show_tooltip(const StringView& tooltip, const Gfx::IntPoint& s
 
 void Application::hide_tooltip()
 {
+    m_tooltip_source_widget = nullptr;
     if (m_tooltip_window) {
         m_tooltip_window->hide();
         m_tooltip_window = nullptr;
