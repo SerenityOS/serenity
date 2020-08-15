@@ -38,8 +38,8 @@
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/PageView.h>
 
 // #define EDITOR_DEBUG
@@ -109,16 +109,16 @@ void Editor::paint_event(GUI::PaintEvent& event)
     if (ruler_visible()) {
         size_t first_visible_line = text_position_at(event.rect().top_left()).line();
         size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
-        for (size_t line : m_breakpoint_lines) {
+        for (size_t line : breakpoint_lines()) {
             if (line < first_visible_line || line > last_visible_line) {
                 continue;
             }
             const auto& icon = breakpoint_icon_bitmap();
             painter.blit(breakpoint_icon_rect(line).center(), icon, icon.rect());
         }
-        if (m_execution_position.has_value()) {
+        if (execution_position().has_value()) {
             const auto& icon = current_position_icon_bitmap();
-            painter.blit(breakpoint_icon_rect(m_execution_position.value()).center(), icon, icon.rect());
+            painter.blit(breakpoint_icon_rect(execution_position().value()).center(), icon, icon.rect());
         }
     }
 }
@@ -261,11 +261,11 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     auto text_position = text_position_at(event.position());
     auto ruler_line_rect = ruler_content_rect(text_position.line());
     if (event.button() == GUI::MouseButton::Left && event.position().x() < ruler_line_rect.width()) {
-        if (!m_breakpoint_lines.contains_slow(text_position.line())) {
-            m_breakpoint_lines.append(text_position.line());
+        if (!breakpoint_lines().contains_slow(text_position.line())) {
+            breakpoint_lines().append(text_position.line());
             on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);
         } else {
-            m_breakpoint_lines.remove_first_matching([&](size_t line) { return line == text_position.line(); });
+            breakpoint_lines().remove_first_matching([&](size_t line) { return line == text_position.line(); });
             on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Removed);
         }
     }
@@ -373,18 +373,18 @@ void Editor::navigate_to_include_if_available(String path)
 
 void Editor::set_execution_position(size_t line_number)
 {
-    m_execution_position = line_number;
+    code_document().set_execution_position(line_number);
     scroll_position_into_view({ line_number, 0 });
     update(breakpoint_icon_rect(line_number));
 }
 
 void Editor::clear_execution_position()
 {
-    if (!m_execution_position.has_value()) {
+    if (!execution_position().has_value()) {
         return;
     }
-    size_t previous_position = m_execution_position.value();
-    m_execution_position = {};
+    size_t previous_position = execution_position().value();
+    code_document().clear_execution_position();
     update(breakpoint_icon_rect(previous_position));
 }
 
@@ -398,4 +398,22 @@ const Gfx::Bitmap& Editor::current_position_icon_bitmap()
 {
     static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png");
     return *bitmap;
+}
+
+const CodeDocument& Editor::code_document() const
+{
+    const auto& doc = document();
+    ASSERT(doc.is_code_document());
+    return static_cast<const CodeDocument&>(doc);
+}
+
+CodeDocument& Editor::code_document()
+{
+    return const_cast<CodeDocument&>(static_cast<const Editor&>(*this).code_document());
+}
+
+void Editor::set_document(GUI::TextDocument& doc)
+{
+    ASSERT(doc.is_code_document());
+    GUI::TextEditor::set_document(doc);
 }

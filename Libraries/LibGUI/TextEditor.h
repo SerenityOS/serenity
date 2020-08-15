@@ -58,7 +58,7 @@ public:
     const TextDocument& document() const { return *m_document; }
     TextDocument& document() { return *m_document; }
 
-    void set_document(TextDocument&);
+    virtual void set_document(TextDocument&);
 
     bool has_visible_list() const { return m_has_visible_list; }
     void set_has_visible_list(bool);
@@ -175,7 +175,7 @@ protected:
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void theme_change_event(ThemeChangeEvent&) override;
-    virtual void cursor_did_change() { }
+    virtual void cursor_did_change() {}
     Gfx::IntRect ruler_content_rect(size_t line) const;
 
     TextPosition text_position_at(const Gfx::IntPoint&) const;

@@ -75,7 +75,7 @@ public:
     };
 
     static NonnullRefPtr<TextDocument> create(Client* client = nullptr);
-    ~TextDocument();
+    virtual ~TextDocument();
 
     size_t line_count() const { return m_lines.size(); }
     const TextDocumentLine& line(size_t line_index) const { return m_lines[line_index]; }
@@ -137,9 +137,12 @@ public:
     TextPosition insert_at(const TextPosition&, const StringView&, const Client* = nullptr);
     void remove(const TextRange&);
 
-private:
+    virtual bool is_code_document() const { return false; }
+
+protected:
     explicit TextDocument(Client* client);
 
+private:
     void update_undo_timer();
 
     NonnullOwnPtrVector<TextDocumentLine> m_lines;

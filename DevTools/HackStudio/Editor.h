@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "CodeDocument.h"
 #include "Debugger/BreakpointCallback.h"
 #include <AK/Optional.h>
 #include <LibGUI/TextEditor.h>
@@ -44,11 +45,18 @@ public:
     EditorWrapper& wrapper();
     const EditorWrapper& wrapper() const;
 
-    const Vector<size_t>& breakpoint_lines() const { return m_breakpoint_lines; }
+    const Vector<size_t>& breakpoint_lines() const { return code_document().breakpoint_lines(); }
+    Vector<size_t>& breakpoint_lines() { return code_document().breakpoint_lines(); }
+    Optional<size_t> execution_position() const { return code_document().execution_position(); }
     void set_execution_position(size_t line_number);
     void clear_execution_position();
 
     BreakpointChangeCallback on_breakpoint_change;
+
+    const CodeDocument& code_document() const;
+    CodeDocument& code_document();
+
+    virtual void set_document(GUI::TextDocument&) override;
 
 private:
     virtual void focusin_event(GUI::FocusEvent&) override;
@@ -77,7 +85,4 @@ private:
     bool m_hovering_editor { false };
     bool m_hovering_link { false };
     bool m_holding_ctrl { false };
-
-    Vector<size_t> m_breakpoint_lines;
-    Optional<size_t> m_execution_position;
 };
