@@ -1,5 +1,5 @@
 PROGRAM = little
-OBJS = main.o
+OBJS = main.o other.o
 CXXFLAGS = -g
 
 all: $(PROGRAM)

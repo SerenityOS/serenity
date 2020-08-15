@@ -2,3 +2,5 @@ main.cpp
 Makefile
 little.hackstudio
 test.frm
+other.cpp
+other.h
