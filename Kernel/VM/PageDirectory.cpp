@@ -90,7 +90,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     m_directory_pages[0] = MM.allocate_user_physical_page();
     m_directory_pages[1] = MM.allocate_user_physical_page();
     m_directory_pages[2] = MM.allocate_user_physical_page();
-    // Share the top 1 GB of kernel-only mappings (>=3GB or >=0xc0000000)
+    // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=0xc0000000)
     m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
 
     {
