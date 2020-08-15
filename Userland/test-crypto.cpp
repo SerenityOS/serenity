@@ -99,7 +99,7 @@ static int crc32_tests();
 
 // stop listing tests
 
-static void print_buffer(const ReadonlyBytes& buffer, int split)
+static void print_buffer(ReadonlyBytes buffer, int split)
 {
     for (size_t i = 0; i < buffer.size(); ++i) {
         if (split > 0) {
