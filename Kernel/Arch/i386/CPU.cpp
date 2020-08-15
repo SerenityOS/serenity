@@ -1190,10 +1190,6 @@ extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapF
 
     Scheduler::enter_current(*from_thread);
 
-    if (to_thread->process().wait_for_tracer_at_next_execve()) {
-        to_thread->send_urgent_signal_to_self(SIGSTOP);
-    }
-
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
     // context), we need to notify the scheduler so that it can release
