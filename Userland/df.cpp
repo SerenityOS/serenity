@@ -58,13 +58,13 @@ static String number_string_with_one_decimal(float number, const char* suffix)
 
 static String human_readable_size(size_t size)
 {
-    if (size < 1 * KB)
+    if (size < 1 * KiB)
         return String::number(size);
-    if (size < 1 * MB)
-        return number_string_with_one_decimal((float)size / (float)KB, "K");
-    if (size < 1 * GB)
-        return number_string_with_one_decimal((float)size / (float)MB, "M");
-    return number_string_with_one_decimal((float)size / (float)GB, "G");
+    if (size < 1 * MiB)
+        return number_string_with_one_decimal((float)size / (float)KiB, "K");
+    if (size < 1 * GiB)
+        return number_string_with_one_decimal((float)size / (float)MiB, "M");
+    return number_string_with_one_decimal((float)size / (float)GiB, "G");
 }
 
 int main(int argc, char** argv)

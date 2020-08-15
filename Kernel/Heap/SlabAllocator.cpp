@@ -128,10 +128,10 @@ void for_each_allocator(Callback callback)
 
 void slab_alloc_init()
 {
-    s_slab_allocator_16.init(128 * KB);
-    s_slab_allocator_32.init(128 * KB);
-    s_slab_allocator_64.init(512 * KB);
-    s_slab_allocator_128.init(512 * KB);
+    s_slab_allocator_16.init(128 * KiB);
+    s_slab_allocator_32.init(128 * KiB);
+    s_slab_allocator_64.init(512 * KiB);
+    s_slab_allocator_128.init(512 * KiB);
 }
 
 void* slab_alloc(size_t slab_size)

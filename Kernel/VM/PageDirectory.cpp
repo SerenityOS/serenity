@@ -80,7 +80,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     if (parent_range_allocator) {
         m_range_allocator.initialize_from_parent(*parent_range_allocator);
     } else {
-        size_t random_offset = (get_fast_random<u8>() % 32 * MB) & PAGE_MASK;
+        size_t random_offset = (get_fast_random<u8>() % 32 * MiB) & PAGE_MASK;
         u32 base = userspace_range_base + random_offset;
         m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base);
     }
@@ -102,7 +102,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
         MM.unquickmap_page();
     }
 
-    // Clone bottom 2 MB of mappings from kernel_page_directory
+    // Clone bottom 2 MiB of mappings from kernel_page_directory
     PageDirectoryEntry buffer;
     auto* kernel_pd = MM.quickmap_pd(MM.kernel_page_directory(), 0);
     memcpy(&buffer, kernel_pd, sizeof(PageDirectoryEntry));

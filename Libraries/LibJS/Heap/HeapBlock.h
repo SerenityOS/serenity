@@ -34,7 +34,7 @@ namespace JS {
 
 class HeapBlock {
 public:
-    static constexpr size_t block_size = 16 * KB;
+    static constexpr size_t block_size = 16 * KiB;
     static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, size_t);
 
     void operator delete(void*);

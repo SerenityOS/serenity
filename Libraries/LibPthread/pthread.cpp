@@ -44,9 +44,9 @@ namespace {
 using PthreadAttrImpl = Syscall::SC_create_thread_params;
 } // end anonymous namespace
 
-constexpr size_t required_stack_alignment = 4 * MB;
+constexpr size_t required_stack_alignment = 4 * MiB;
 constexpr size_t highest_reasonable_guard_size = 32 * PAGE_SIZE;
-constexpr size_t highest_reasonable_stack_size = 8 * MB; // That's the default in Ubuntu?
+constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the default in Ubuntu?
 
 extern "C" {
 

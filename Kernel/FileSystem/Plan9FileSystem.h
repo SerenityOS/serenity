@@ -105,7 +105,7 @@ private:
     Atomic<u32> m_next_fid { 1 };
 
     ProtocolVersion m_remote_protocol_version { ProtocolVersion::v9P2000 };
-    size_t m_max_message_size { 4 * KB };
+    size_t m_max_message_size { 4 * KiB };
 
     Lock m_send_lock { "Plan9FS send" };
     Atomic<bool> m_someone_is_reading { false };

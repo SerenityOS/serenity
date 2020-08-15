@@ -73,7 +73,7 @@ static bool s_profiling = false;
 static unsigned short size_classes[] = { 8, 16, 32, 64, 128, 252, 508, 1016, 2036, 4090, 8188, 16376, 32756, 0 };
 static constexpr size_t num_size_classes = sizeof(size_classes) / sizeof(unsigned short);
 
-constexpr size_t block_size = 64 * KB;
+constexpr size_t block_size = 64 * KiB;
 constexpr size_t block_mask = ~(block_size - 1);
 
 struct CommonHeader {

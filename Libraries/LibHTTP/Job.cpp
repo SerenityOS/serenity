@@ -173,7 +173,7 @@ void Job::on_socket_connected()
         ASSERT(can_read());
 
         read_while_data_available([&] {
-            auto read_size = 64 * KB;
+            auto read_size = 64 * KiB;
             if (m_current_chunk_remaining_size.has_value()) {
             read_chunk_size:;
                 auto remaining = m_current_chunk_remaining_size.value();
