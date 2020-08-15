@@ -64,7 +64,7 @@ void start(Process& process)
     s_pid = process.pid();
 
     if (!s_profiling_buffer) {
-        s_profiling_buffer = RefPtr<KBufferImpl>(KBuffer::create_with_size(8 * MB).impl()).leak_ref();
+        s_profiling_buffer = RefPtr<KBufferImpl>(KBuffer::create_with_size(8 * MiB).impl()).leak_ref();
         s_profiling_buffer->region().commit();
         s_slot_count = s_profiling_buffer->size() / sizeof(Sample);
     }

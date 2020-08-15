@@ -355,7 +355,7 @@ struct SC_create_thread_params {
     // ... ok, if you say so posix. Guess we get to lie to people about guard page size
     unsigned int m_guard_page_size = 0;          // Rounded up to PAGE_SIZE
     unsigned int m_reported_guard_page_size = 0; // The lie we tell callers
-    unsigned int m_stack_size = 4 * MB;          // Default PTHREAD_STACK_MIN
+    unsigned int m_stack_size = 4 * MiB;         // Default PTHREAD_STACK_MIN
     Userspace<void*> m_stack_location;           // nullptr means any, o.w. process virtual address
 };
 

@@ -101,8 +101,8 @@ void MemoryManager::parse_memory_map()
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
             continue;
 
-        // FIXME: Maybe make use of stuff below the 1MB mark?
-        if (mmap->addr < (1 * MB))
+        // FIXME: Maybe make use of stuff below the 1MiB mark?
+        if (mmap->addr < (1 * MiB))
             continue;
 
         if ((mmap->addr + mmap->len) > 0xffffffff)
@@ -131,9 +131,9 @@ void MemoryManager::parse_memory_map()
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
-            if (page_base < 7 * MB) {
+            if (page_base < 7 * MiB) {
                 // nothing
-            } else if (page_base >= 7 * MB && page_base < 8 * MB) {
+            } else if (page_base >= 7 * MiB && page_base < 8 * MiB) {
                 if (region.is_null() || !region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
                     m_super_physical_regions.append(PhysicalRegion::create(addr, addr));
                     region = m_super_physical_regions.last();

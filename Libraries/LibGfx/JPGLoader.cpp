@@ -1206,7 +1206,7 @@ JPGImageDecoderPlugin::JPGImageDecoderPlugin(const u8* data, size_t size)
     m_context = make<JPGLoadingContext>();
     m_context->data = data;
     m_context->data_size = size;
-    m_context->huffman_stream.stream.ensure_capacity(50 * KB);
+    m_context->huffman_stream.stream.ensure_capacity(50 * KiB);
 }
 
 JPGImageDecoderPlugin::~JPGImageDecoderPlugin()

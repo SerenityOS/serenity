@@ -33,7 +33,7 @@
 namespace Kernel {
 
 PerformanceEventBuffer::PerformanceEventBuffer()
-    : m_buffer(KBuffer::create_with_size(4 * MB))
+    : m_buffer(KBuffer::create_with_size(4 * MiB))
 {
 }
 

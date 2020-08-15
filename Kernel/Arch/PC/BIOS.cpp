@@ -34,7 +34,7 @@ namespace Kernel {
 MappedROM map_bios()
 {
     MappedROM mapping;
-    mapping.size = 128 * KB;
+    mapping.size = 128 * KiB;
     mapping.paddr = PhysicalAddress(0xe0000);
     mapping.region = MM.allocate_kernel_region(mapping.paddr, PAGE_ROUND_UP(mapping.size), {}, Region::Access::Read);
     return mapping;

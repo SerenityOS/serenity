@@ -63,13 +63,13 @@
 
 static String human_readable_size(u32 size)
 {
-    if (size < (64 * KB))
+    if (size < (64 * KiB))
         return String::format("%u", size);
-    if (size < MB)
-        return String::format("%u KB", size / KB);
-    if (size < GB)
-        return String::format("%u MB", size / MB);
-    return String::format("%u GB", size / GB);
+    if (size < MiB)
+        return String::format("%u KB", size / KiB);
+    if (size < GiB)
+        return String::format("%u MB", size / MiB);
+    return String::format("%u GB", size / GiB);
 }
 
 static NonnullRefPtr<GUI::Widget> build_file_systems_tab();

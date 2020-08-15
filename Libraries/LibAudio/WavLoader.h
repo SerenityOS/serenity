@@ -44,7 +44,7 @@ public:
     bool has_error() const { return !m_error_string.is_null(); }
     const char* error_string() { return m_error_string.characters(); }
 
-    RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KB);
+    RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB);
 
     void reset();
     void seek(const int position);

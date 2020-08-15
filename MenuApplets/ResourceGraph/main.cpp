@@ -80,7 +80,7 @@ private:
             float total_memory = allocated + available;
             float memory = (float)allocated / total_memory;
             m_history.enqueue(memory);
-            m_tooltip = String::format("Memory: %.1f MiB of %.1f MiB in use",(float)allocated / MB, total_memory / MB);
+            m_tooltip = String::format("Memory: %.1f MiB of %.1f MiB in use", (float)allocated / MiB, total_memory / MiB);
             break;
         }
         default:

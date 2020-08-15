@@ -74,9 +74,9 @@ typedef __PTRDIFF_TYPE__ __ptrdiff_t;
 
 typedef Conditional<sizeof(void*) == 8, u64, u32>::Type FlatPtr;
 
-constexpr unsigned KB = 1024;
-constexpr unsigned MB = KB * KB;
-constexpr unsigned GB = KB * KB * KB;
+constexpr unsigned KiB = 1024;
+constexpr unsigned MiB = KiB * KiB;
+constexpr unsigned GiB = KiB * KiB * KiB;
 
 namespace std {
 typedef decltype(nullptr) nullptr_t;
