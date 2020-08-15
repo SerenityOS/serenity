@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 
     window->set_double_buffering_enabled(false);
     window->set_title("Snake");
-    window->set_rect(100, 100, 320, 320);
+    window->resize(320, 320);
 
     auto& game = window->set_main_widget<SnakeGame>();
 

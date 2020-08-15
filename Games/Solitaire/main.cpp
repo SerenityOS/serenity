@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
 
     window->set_resizable(false);
-    window->set_rect(300, 100, SolitaireWidget::width, SolitaireWidget::height);
+    window->resize(SolitaireWidget::width, SolitaireWidget::height);
 
     auto widget = SolitaireWidget::construct(window, [&](uint32_t score) {
         window->set_title(String::format("Score: %u - Solitaire", score));

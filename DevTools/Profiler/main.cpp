@@ -80,8 +80,8 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Profiler");
-    window->set_rect(100, 100, 800, 600);
     window->set_icon(app_icon.bitmap_for_size(16));
+    window->resize(800, 600);
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
@@ -136,8 +136,8 @@ static bool prompt_to_stop_profiling()
 {
     auto window = GUI::Window::construct();
     window->set_title("Profiling");
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"));
     window->resize(320, 200);
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"));
     window->center_on_screen();
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);

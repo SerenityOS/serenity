@@ -186,7 +186,7 @@ int main(int argc, char** argv)
     Function<void()> update_actions;
 
     g_window = GUI::Window::construct();
-    g_window->set_rect(90, 90, 840, 600);
+    g_window->resize(840, 600);
     g_window->set_title("HackStudio");
 
     auto& widget = g_window->set_main_widget<GUI::Widget>();
