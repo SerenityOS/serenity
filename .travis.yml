@@ -40,6 +40,7 @@ script:
 - export SERENITY_ROOT="$(pwd)"
 - Meta/lint-shell-scripts.sh
 - Meta/lint-executable-resources.sh
+- Meta/lint-ipc-ids.sh
 - Meta/check-style.sh
 - cd Toolchain
 - TRY_USE_LOCAL_TOOLCHAIN=y ./BuildIt.sh
