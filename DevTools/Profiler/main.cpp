@@ -137,9 +137,8 @@ static bool prompt_to_stop_profiling()
     auto window = GUI::Window::construct();
     window->set_title("Profiling");
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"));
-    Gfx::IntRect window_rect { 0, 0, 320, 200 };
-    window_rect.center_within(GUI::Desktop::the().rect());
-    window->set_rect(window_rect);
+    window->resize(320, 200);
+    window->center_on_screen();
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
     widget.set_layout<GUI::VerticalBoxLayout>();
