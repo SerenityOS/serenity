@@ -114,17 +114,18 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
 
 DirectoryView::DirectoryView()
     : m_model(GUI::FileSystemModel::create())
+    , m_sorting_model(GUI::SortingProxyModel::create(m_model))
 {
     set_active_widget(nullptr);
     set_content_margins({ 2, 2, 2, 2 });
     m_icon_view = add<GUI::IconView>();
-    m_icon_view->set_model(model());
+    m_icon_view->set_model(m_sorting_model);
 
     m_columns_view = add<GUI::ColumnsView>();
-    m_columns_view->set_model(model());
+    m_columns_view->set_model(m_sorting_model);
 
     m_table_view = add<GUI::TableView>();
-    m_table_view->set_model(GUI::SortingProxyModel::create(m_model));
+    m_table_view->set_model(m_sorting_model);
 
     m_table_view->model()->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
@@ -159,14 +160,14 @@ DirectoryView::DirectoryView()
             on_thumbnail_progress(done, total);
     };
 
-    m_icon_view->on_activation = [&](const GUI::ModelIndex& index) {
-        handle_activation(index);
+    m_icon_view->on_activation = [&](auto& index) {
+        handle_activation(map_index(index));
     };
-    m_columns_view->on_activation = [&](const GUI::ModelIndex& index) {
-        handle_activation(index);
+    m_columns_view->on_activation = [&](auto& index) {
+        handle_activation(map_index(index));
     };
     m_table_view->on_activation = [&](auto& index) {
-        handle_activation(map_table_view_index(index));
+        handle_activation(map_index(index));
     };
 
     m_table_view->on_selection_change = [this] {
@@ -187,28 +188,28 @@ DirectoryView::DirectoryView()
 
     m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(*m_table_view, map_table_view_index(index), event);
+            on_context_menu_request(*m_table_view, map_index(index), event);
     };
     m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(*m_icon_view, index, event);
+            on_context_menu_request(*m_icon_view, map_index(index), event);
     };
     m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(*m_columns_view, index, event);
+            on_context_menu_request(*m_columns_view, map_index(index), event);
     };
 
     m_table_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(*m_table_view, map_table_view_index(index), event);
+            on_drop(*m_table_view, map_index(index), event);
     };
     m_icon_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(*m_icon_view, index, event);
+            on_drop(*m_icon_view, map_index(index), event);
     };
     m_columns_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(*m_columns_view, index, event);
+            on_drop(*m_columns_view, map_index(index), event);
     };
 
     set_view_mode(ViewMode::Icon);
@@ -303,10 +304,9 @@ void DirectoryView::open_next_directory()
     }
 }
 
-GUI::ModelIndex DirectoryView::map_table_view_index(const GUI::ModelIndex& index) const
+GUI::ModelIndex DirectoryView::map_index(const GUI::ModelIndex& index) const
 {
-    auto& filter_model = (const GUI::SortingProxyModel&)*m_table_view->model();
-    return filter_model.map_to_source(index);
+    return m_sorting_model->map_to_source(index);
 }
 
 void DirectoryView::update_statusbar()
@@ -340,13 +340,7 @@ void DirectoryView::update_statusbar()
     builder.append(')');
 
     if (selected_item_count == 1) {
-        auto index = current_view().selection().first();
-
-        // FIXME: This is disgusting. This code should not even be aware that there is a GUI::SortingProxyModel in the table view.
-        if (m_view_mode == ViewMode::Table)
-            index = map_table_view_index(index);
-
-        auto& node = model().node(index);
+        auto& node = model().node(map_index(current_view().selection().first()));
         if (!node.symlink_target.is_empty()) {
             builder.append(" -> ");
             builder.append(node.symlink_target);
