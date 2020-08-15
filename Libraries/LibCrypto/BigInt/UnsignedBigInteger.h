@@ -114,6 +114,8 @@ private:
     ALWAYS_INLINE static u32 shift_left_get_one_word(const UnsignedBigInteger& number, size_t num_bits, size_t result_word_index);
 
     static constexpr size_t BITS_IN_WORD = 32;
+    // Little endian
+    // m_word[0] + m_word[1] * 256 + m_word[2] * 65536 + ...
     AK::Vector<u32, STARTING_WORD_SIZE> m_words;
 
     // Used to indicate a negative result, or a result of an invalid operation
