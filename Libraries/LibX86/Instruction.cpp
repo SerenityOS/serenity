@@ -1208,32 +1208,17 @@ static String relative_address(u32 origin, bool x32, i32 imm)
 
 String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider, bool x32) const
 {
-    String segment_prefix;
-    String asize_prefix;
-    String osize_prefix;
-    String rep_prefix;
-    String lock_prefix;
-    if (m_segment_prefix.has_value()) {
-        segment_prefix = String::format("%s: ", register_name(m_segment_prefix.value()));
-    }
-    if (has_address_size_override_prefix()) {
-        asize_prefix = m_a32 ? "a32 " : "a16 ";
-    }
-    if (has_operand_size_override_prefix()) {
-        osize_prefix = m_o32 ? "o32 " : "o16 ";
-    }
-    if (has_lock_prefix()) {
-        lock_prefix = "lock ";
-    }
-    if (has_rep_prefix()) {
-        rep_prefix = m_rep_prefix == Prefix::REPNZ ? "repnz " : "repz ";
-    }
     StringBuilder builder;
-    builder.append(segment_prefix);
-    builder.append(asize_prefix);
-    builder.append(osize_prefix);
-    builder.append(lock_prefix);
-    builder.append(rep_prefix);
+    if (m_segment_prefix.has_value())
+        builder.appendf("%s: ", register_name(m_segment_prefix.value()));
+    if (has_address_size_override_prefix())
+        builder.append(m_a32 ? "a32 " : "a16 ");
+    if (has_operand_size_override_prefix())
+        builder.append(m_o32 ? "o32 " : "o16 ");
+    if (has_lock_prefix())
+        builder.append("lock ");
+    if (has_rep_prefix())
+        builder.append(m_rep_prefix == Prefix::REPNZ ? "repnz " : "repz ");
     builder.append(to_string_internal(origin, symbol_provider, x32));
     return builder.to_string();
 }
