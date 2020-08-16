@@ -55,6 +55,12 @@ public:
     {
     }
 
+    ~StringOrSymbol()
+    {
+        if (is_string())
+            reinterpret_cast<const StringImpl*>(m_ptr)->unref();
+    }
+
     StringOrSymbol(const Symbol* symbol)
         : m_ptr(symbol)
     {
@@ -64,6 +70,8 @@ public:
     StringOrSymbol(const StringOrSymbol& other)
     {
         m_ptr = other.m_ptr;
+        if (is_string())
+            reinterpret_cast<const StringImpl*>(m_ptr)->ref();
     }
 
     ALWAYS_INLINE bool is_valid() const { return m_ptr != nullptr; }
@@ -120,6 +128,8 @@ public:
         if (this == &other)
             return *this;
         m_ptr = other.m_ptr;
+        if (is_string())
+            reinterpret_cast<const StringImpl*>(m_ptr)->ref();
         return *this;
     }
 
