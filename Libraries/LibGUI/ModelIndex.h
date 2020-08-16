@@ -38,7 +38,7 @@ class ModelIndex {
 public:
     ModelIndex() { }
 
-    bool is_valid() const { return m_row != -1 && m_column != -1; }
+    bool is_valid() const { return m_model && m_row != -1 && m_column != -1; }
     int row() const { return m_row; }
     int column() const { return m_column; }
 
