@@ -30,10 +30,14 @@
 
 namespace AK::Concepts {
 
+#if defined(__cpp_concepts) && !defined(__COVERITY__)
+
 template<typename T>
 concept Integral = IsIntegral<T>::value;
 
 template<typename T>
 concept FloatingPoint = IsFloatingPoint<T>::value;
+
+#endif
 
 }
