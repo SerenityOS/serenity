@@ -127,7 +127,7 @@ DirectoryView::DirectoryView()
     m_table_view = add<GUI::TableView>();
     m_table_view->set_model(m_sorting_model);
 
-    m_table_view->model()->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
+    m_table_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
     m_icon_view->set_model_column(GUI::FileSystemModel::Column::Name);
     m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);

@@ -37,7 +37,8 @@
 namespace GUI {
 
 AbstractView::AbstractView()
-    : m_selection(*this)
+    : m_sort_order(SortOrder::Ascending)
+    , m_selection(*this)
 {
 }
 
@@ -398,6 +399,15 @@ void AbstractView::set_multi_select(bool multi_select)
         m_selection.clear();
         m_selection.set(first_selected);
     }
+}
+
+void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_order)
+{
+    m_key_column = column;
+    m_sort_order = sort_order;
+
+    if (model())
+        model()->sort(column, sort_order);
 }
 
 }

@@ -103,7 +103,7 @@ void TableView::paint_event(PaintEvent& event)
             if (is_column_hidden(column_index))
                 continue;
             int column_width = this->column_width(column_index);
-            bool is_key_column = model()->key_column() == column_index;
+            bool is_key_column = m_key_column == column_index;
             Gfx::IntRect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
             if (is_key_column)

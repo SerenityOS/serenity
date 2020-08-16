@@ -212,4 +212,11 @@ void MultiView::set_multi_select(bool multi_select)
     apply_multi_select();
 }
 
+void MultiView::set_key_column_and_sort_order(int column, SortOrder sort_order)
+{
+    for_each_view_implementation([&](auto& view) {
+        view.set_key_column_and_sort_order(column, sort_order);
+    });
+}
+
 }
