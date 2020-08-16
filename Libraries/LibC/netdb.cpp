@@ -100,7 +100,9 @@ hostent* gethostbyname(const char* name)
 {
     auto ipv4_address = IPv4Address::from_string(name);
     if (ipv4_address.has_value()) {
-        sprintf(__gethostbyname_name_buffer, "%s", ipv4_address.value().to_string().characters());
+        auto ip4_string = ipv4_address.value().to_string();
+        ASSERT(ip4_string.length() < sizeof(__gethostbyname_name_buffer));
+        strncpy(__gethostbyname_name_buffer, ip4_string.characters(), ip4_string.length());
         __gethostbyname_buffer.h_name = __gethostbyname_name_buffer;
         __gethostbyname_buffer.h_aliases = nullptr;
         __gethostbyname_buffer.h_addrtype = AF_INET;
