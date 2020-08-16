@@ -106,6 +106,8 @@ private:
 
     RefPtr<Web::PageView> m_page_view;
 
+    GUI::ActionGroup font_actions;
+
     bool m_document_dirty { false };
     bool m_document_opening { false };
     bool m_auto_detect_preview_mode { false };
