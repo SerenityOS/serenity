@@ -133,6 +133,10 @@ static void buffer_putch(char*& bufptr, char ch)
     *bufptr++ = ch;
 }
 
+// Declare it, so that the symbol is exported, because libstdc++ uses it.
+// However, *only* libstdc++ uses it, and none of the rest of the Kernel.
+extern "C" int sprintf(char* buffer, const char* fmt, ...);
+
 int sprintf(char* buffer, const char* fmt, ...)
 {
     ScopedSpinLock lock(s_log_lock);
