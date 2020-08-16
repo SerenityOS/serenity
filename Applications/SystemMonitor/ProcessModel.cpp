@@ -352,6 +352,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
 
 void ProcessModel::update()
 {
+    auto previous_pid_count = m_pids.size();
     auto all_processes = Core::ProcessStatisticsReader::get_all();
 
     unsigned last_sum_times_scheduled = 0;
@@ -434,5 +435,7 @@ void ProcessModel::update()
     if (on_cpu_info_change)
         on_cpu_info_change(m_cpus);
 
-    did_update(GUI::Model::UpdateFlag::DontInvalidateIndexes);
+    // FIXME: This is a rather hackish way of invalidating indexes.
+    //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indexes.
+    did_update(previous_pid_count == m_pids.size() ? GUI::Model::UpdateFlag::DontInvalidateIndexes : GUI::Model::UpdateFlag::InvalidateAllIndexes);
 }
