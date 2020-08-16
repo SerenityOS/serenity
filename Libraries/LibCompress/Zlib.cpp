@@ -45,6 +45,7 @@ Zlib::Zlib(ReadonlyBytes data)
     m_check_bits = flags & 0xF;
     m_has_dictionary = (flags >> 5) & 0x1;
     m_compression_level = (flags >> 6) & 0x3;
+    m_checksum = 0;
 
     ASSERT(m_compression_method == 8);
     ASSERT(m_compression_info == 7);
