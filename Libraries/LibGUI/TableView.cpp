@@ -111,7 +111,7 @@ void TableView::paint_event(PaintEvent& event)
             auto cell_index = model()->index(row_index, column_index);
 
             if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
-                delegate->paint(painter, cell_rect, palette(), *model(), cell_index);
+                delegate->paint(painter, cell_rect, palette(), cell_index);
             } else {
                 auto data = model()->data(cell_index);
                 if (data.is_bitmap()) {

@@ -37,10 +37,10 @@ class PagemapPaintingDelegate final : public GUI::TableCellPaintingDelegate {
 public:
     virtual ~PagemapPaintingDelegate() override {}
 
-    virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Gfx::Palette&, const GUI::Model& model, const GUI::ModelIndex& index) override
+    virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Gfx::Palette&, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
-        auto pagemap = model.data(index, GUI::ModelRole::Custom).to_string();
+        auto pagemap = index.data(GUI::ModelRole::Custom).to_string();
 
         float scale_factor = (float)pagemap.length() / (float)rect.width();
 

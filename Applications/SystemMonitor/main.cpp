@@ -337,12 +337,12 @@ class ProgressBarPaintingDelegate final : public GUI::TableCellPaintingDelegate 
 public:
     virtual ~ProgressBarPaintingDelegate() override { }
 
-    virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Palette& palette, const GUI::Model& model, const GUI::ModelIndex& index) override
+    virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Palette& palette, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
-        auto percentage = model.data(index, GUI::ModelRole::Custom).to_i32();
+        auto percentage = index.data(GUI::ModelRole::Custom).to_i32();
 
-        auto data = model.data(index, GUI::ModelRole::Display);
+        auto data = index.data(GUI::ModelRole::Display);
         String text;
         if (data.is_string())
             text = data.as_string();
