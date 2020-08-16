@@ -32,6 +32,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <Kernel/API/Syscall.h>
+#include <LibX86/ELFSymbolProvider.h>
 #include <fcntl.h>
 #include <serenity.h>
 #include <stdio.h>
@@ -157,25 +158,9 @@ bool Emulator::load_elf()
     return true;
 }
 
-class ELFSymbolProvider final : public X86::SymbolProvider {
-public:
-    ELFSymbolProvider(ELF::Loader& loader)
-        : m_loader(loader)
-    {
-    }
-
-    virtual String symbolicate(FlatPtr address, u32* offset = nullptr) const
-    {
-        return m_loader.symbolicate(address, offset);
-    }
-
-private:
-    ELF::Loader& m_loader;
-};
-
 int Emulator::exec()
 {
-    ELFSymbolProvider symbol_provider(*m_elf);
+    X86::ELFSymbolProvider symbol_provider(*m_elf);
 
     bool trace = false;
 
