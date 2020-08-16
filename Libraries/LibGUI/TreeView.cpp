@@ -291,7 +291,7 @@ void TreeView::paint_event(PaintEvent& event)
                 auto cell_index = model.index(index.row(), column_index, index.parent());
 
                 if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
-                    delegate->paint(painter, cell_rect, palette(), model, cell_index);
+                    delegate->paint(painter, cell_rect, palette(), cell_index);
                 } else {
                     auto data = model.data(cell_index);
 
