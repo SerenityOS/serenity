@@ -35,7 +35,7 @@ static double get_double(const char* name, const char* d_string, int* number_of_
     char* end;
     double d = strtod(d_string, &end);
     if (d == 0 && end == d_string) {
-        fprintf(stderr, "%s: invalid double vallue \"%s\"\n", name, d_string);
+        fprintf(stderr, "%s: invalid double value \"%s\"\n", name, d_string);
         exit(1);
     }
     if (char* dot = strchr(d_string, '.'))
@@ -95,7 +95,7 @@ int main(int argc, const char* argv[])
     double d = start;
     for (int i = 0; i <= n; ++i) {
         char buf[40];
-        sprintf(buf, "%f", d); // FIXME: Serenity's printf() doesn't seem to handle %f correctly: For `seq 1 0.1 2` this always prints "1.0" as `d` goes from 1.0 to 2.0.
+        snprintf(buf, sizeof(buf), "%f", d);
         if (char* dot = strchr(buf, '.')) {
             if (number_of_decimals == 0)
                 *dot = '\0';
@@ -105,4 +105,6 @@ int main(int argc, const char* argv[])
         printf("%s\n", buf);
         d += step;
     }
+
+    return 0;
 }
