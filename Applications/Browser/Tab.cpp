@@ -361,6 +361,17 @@ Tab::Tab(Type type)
     line_box_borders_action->set_checked(false);
     debug_menu.add_action(line_box_borders_action);
 
+    debug_menu.add_separator();
+    debug_menu.add_action(GUI::Action::create("Collect garbage", { Mod_Ctrl | Mod_Shift, Key_G }, [this](auto&) {
+        if (m_type == Type::InProcessWebView) {
+            if (auto* document = m_page_view->document()) {
+                document->interpreter().heap().collect_garbage(JS::Heap::CollectionType::CollectGarbage, true);
+            }
+        } else {
+            TODO();
+        }
+    }));
+
     auto& bookmarks_menu = m_menubar->add_menu("Bookmarks");
     bookmarks_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
 
