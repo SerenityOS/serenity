@@ -44,10 +44,16 @@ SortingProxyModel::~SortingProxyModel()
 
 void SortingProxyModel::invalidate(unsigned int flags)
 {
-    if (flags == UpdateFlag::DontInvalidateIndexes)
+    if (flags == UpdateFlag::DontInvalidateIndexes) {
         sort(m_last_key_column, m_last_sort_order);
-    else
+    } else {
         m_mappings.clear();
+
+        // FIXME: This is really harsh, but without precise invalidation, not much we can do.
+        for_each_view([&](auto& view) {
+            view.selection().clear();
+        });
+    }
     did_update(flags);
 }
 
