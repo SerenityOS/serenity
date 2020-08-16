@@ -44,7 +44,10 @@ SortingProxyModel::~SortingProxyModel()
 
 void SortingProxyModel::invalidate(unsigned int flags)
 {
-    m_mappings.clear();
+    if (flags == UpdateFlag::DontInvalidateIndexes)
+        sort(m_last_key_column, m_last_sort_order);
+    else
+        m_mappings.clear();
     did_update(flags);
 }
 
