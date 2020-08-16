@@ -91,7 +91,7 @@ private:
         u32 required_load_size() { return ALIGN_ROUND_UP(m_program_header.p_memsz, m_program_header.p_align); }
 
     private:
-        Elf32_Phdr m_program_header; // Explictly a copy of the PHDR in the image
+        Elf32_Phdr m_program_header; // Explicitly a copy of the PHDR in the image
     };
 
     explicit DynamicLoader(const char* filename, int fd, size_t file_size);
@@ -115,7 +115,7 @@ private:
     OwnPtr<DynamicObject> m_dynamic_object;
 
     VirtualAddress m_text_segment_load_address;
-    size_t m_text_segment_size;
+    size_t m_text_segment_size { 0 };
 
     VirtualAddress m_tls_segment_address;
     VirtualAddress m_dynamic_section_address;
