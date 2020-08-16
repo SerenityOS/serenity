@@ -633,9 +633,9 @@ int Emulator::virt$select(FlatPtr params_addr)
     Syscall::SC_select_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
-    fd_set readfds;
-    fd_set writefds;
-    fd_set exceptfds;
+    fd_set readfds {};
+    fd_set writefds {};
+    fd_set exceptfds {};
     struct timespec timeout;
     u32 sigmask;
 
