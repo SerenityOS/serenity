@@ -46,8 +46,8 @@ private:
 
     TrackManager& m_track_manager;
 
-    int m_roll_width;
-    int m_num_notes;
-    double m_note_width;
+    int m_roll_width { 0 };
+    int m_num_notes { 0 };
+    double m_note_width { 0.0 };
     int m_zoom_level { 1 };
 };
