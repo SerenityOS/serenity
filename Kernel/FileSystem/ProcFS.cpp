@@ -824,26 +824,32 @@ static Optional<KBuffer> procfs$all(InodeIdentifier)
     auto build_process = [&](const Process& process) {
         auto process_object = array.add_object();
 
-        StringBuilder pledge_builder;
+        if (process.is_ring3()) {
+            StringBuilder pledge_builder;
+
 #define __ENUMERATE_PLEDGE_PROMISE(promise)      \
     if (process.has_promised(Pledge::promise)) { \
         pledge_builder.append(#promise " ");     \
     }
-        ENUMERATE_PLEDGE_PROMISES
+            ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
 
-        process_object.add("pledge", pledge_builder.to_string());
+            process_object.add("pledge", pledge_builder.to_string());
 
-        switch (process.veil_state()) {
-        case VeilState::None:
-            process_object.add("veil", "None");
-            break;
-        case VeilState::Dropped:
-            process_object.add("veil", "Dropped");
-            break;
-        case VeilState::Locked:
-            process_object.add("veil", "Locked");
-            break;
+            switch (process.veil_state()) {
+            case VeilState::None:
+                process_object.add("veil", "None");
+                break;
+            case VeilState::Dropped:
+                process_object.add("veil", "Dropped");
+                break;
+            case VeilState::Locked:
+                process_object.add("veil", "Locked");
+                break;
+            }
+        } else {
+            process_object.add("pledge", String());
+            process_object.add("veil", String());
         }
 
         process_object.add("pid", process.pid().value());
