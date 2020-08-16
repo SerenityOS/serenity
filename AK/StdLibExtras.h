@@ -40,6 +40,13 @@ inline constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned powe
 
 namespace AK {
 
+
+template<typename T, typename SizeType = decltype(sizeof(T)), SizeType N>
+constexpr SizeType array_size(T (&)[N])
+{
+    return N;
+}
+
 template<typename T>
 inline constexpr T min(const T& a, const T& b)
 {
@@ -497,6 +504,7 @@ using CopyConst =
 }
 
 using AK::AddConst;
+using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
 using AK::Conditional;
