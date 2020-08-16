@@ -36,10 +36,6 @@
 #    include <inttypes.h>
 #endif
 
-#ifdef KERNEL
-extern "C" char* strstr(const char* haystack, const char* needle);
-#endif
-
 namespace AK {
 
 String::String(const StringView& view)
