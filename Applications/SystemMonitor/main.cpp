@@ -179,7 +179,7 @@ int main(int argc, char** argv)
     auto& process_table_view = process_table_container.add<GUI::TableView>();
     process_table_view.set_headers_visible(true);
     process_table_view.set_model(GUI::SortingProxyModel::create(ProcessModel::create()));
-    process_table_view.model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
+    process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     process_table_view.model()->update();
 
     auto& refresh_timer = window->add<Core::Timer>(

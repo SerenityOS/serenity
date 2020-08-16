@@ -32,7 +32,6 @@ namespace GUI {
 
 SortingProxyModel::SortingProxyModel(NonnullRefPtr<Model> source)
     : m_source(move(source))
-    , m_key_column(-1)
 {
     m_source->register_client(*this);
     invalidate();
@@ -126,17 +125,6 @@ StringView SortingProxyModel::drag_data_type() const
     return source().drag_data_type();
 }
 
-void SortingProxyModel::set_key_column_and_sort_order(int column, SortOrder sort_order)
-{
-    if (column == m_key_column && sort_order == m_sort_order)
-        return;
-
-    ASSERT(column >= 0 && column < column_count());
-    m_key_column = column;
-    m_sort_order = sort_order;
-    invalidate();
-}
-
 bool SortingProxyModel::less_than(const ModelIndex& index1, const ModelIndex& index2) const
 {
     auto data1 = index1.model() ? index1.model()->data(index1, m_sort_role) : Variant();
@@ -177,6 +165,43 @@ ModelIndex SortingProxyModel::parent_index(const ModelIndex& proxy_index) const
     return map_to_proxy(it->value->source_parent);
 }
 
+void SortingProxyModel::sort_mapping(Mapping& mapping, int column, SortOrder sort_order)
+{
+    if (column == -1) {
+        int row_count = source().row_count(mapping.source_parent);
+        for (int i = 0; i < row_count; ++i) {
+            mapping.source_rows[i] = i;
+            mapping.proxy_rows[i] = i;
+        }
+        return;
+    }
+
+    int row_count = source().row_count(mapping.source_parent);
+    for (int i = 0; i < row_count; ++i)
+        mapping.source_rows[i] = i;
+
+    quick_sort(mapping.source_rows, [&](auto row1, auto row2) -> bool {
+        bool is_less_than = less_than(source().index(row1, column, mapping.source_parent), source().index(row2, column, mapping.source_parent));
+        return sort_order == SortOrder::Ascending ? is_less_than : !is_less_than;
+    });
+
+    for (int i = 0; i < row_count; ++i)
+        mapping.proxy_rows[mapping.source_rows[i]] = i;
+}
+
+void SortingProxyModel::sort(int column, SortOrder sort_order)
+{
+    for (auto& it : m_mappings) {
+        auto& mapping = *it.value;
+        sort_mapping(mapping, column, sort_order);
+    }
+
+    m_last_key_column = column;
+    m_last_sort_order = sort_order;
+
+    did_update();
+}
+
 SortingProxyModel::InternalMapIterator SortingProxyModel::build_mapping(const ModelIndex& source_parent)
 {
     auto it = m_mappings.find(source_parent);
@@ -191,24 +216,7 @@ SortingProxyModel::InternalMapIterator SortingProxyModel::build_mapping(const Mo
     mapping->source_rows.resize(row_count);
     mapping->proxy_rows.resize(row_count);
 
-    for (int i = 0; i < row_count; ++i) {
-        mapping->source_rows[i] = i;
-    }
-
-    // If we don't have a key column, we're not sorting.
-    if (m_key_column == -1) {
-        m_mappings.set(source_parent, move(mapping));
-        return m_mappings.find(source_parent);
-    }
-
-    quick_sort(mapping->source_rows, [&](auto row1, auto row2) -> bool {
-        bool is_less_than = less_than(source().index(row1, m_key_column, source_parent), source().index(row2, m_key_column, source_parent));
-        return m_sort_order == SortOrder::Ascending ? is_less_than : !is_less_than;
-    });
-
-    for (int i = 0; i < row_count; ++i) {
-        mapping->proxy_rows[mapping->source_rows[i]] = i;
-    }
+    sort_mapping(*mapping, m_last_key_column, m_last_sort_order);
 
     if (source_parent.is_valid()) {
         auto source_grand_parent = source_parent.parent();

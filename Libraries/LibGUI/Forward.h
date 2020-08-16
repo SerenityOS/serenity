@@ -92,4 +92,6 @@ class Widget;
 class Window;
 class WindowServerConnection;
 
+enum class SortOrder;
+
 }

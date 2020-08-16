@@ -63,6 +63,8 @@ public:
 
     void set_column_hidden(int column_index, bool hidden);
 
+    void set_key_column_and_sort_order(int column, SortOrder);
+
     GUI::AbstractView& current_view()
     {
         switch (m_view_mode) {

@@ -65,13 +65,12 @@ void AbstractTableView::update_column_sizes()
     auto& model = *this->model();
     int column_count = model.column_count();
     int row_count = model.row_count();
-    int key_column = model.key_column();
 
     for (int column = 0; column < column_count; ++column) {
         if (is_column_hidden(column))
             continue;
         int header_width = header_font().width(model.column_name(column));
-        if (column == key_column && model.is_column_sortable(column))
+        if (column == m_key_column && model.is_column_sortable(column))
             header_width += font().width(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
         int column_width = header_width;
         for (int row = 0; row < row_count; ++row) {
@@ -146,7 +145,7 @@ void AbstractTableView::paint_headers(Painter& painter)
         if (is_column_hidden(column_index))
             continue;
         int column_width = this->column_width(column_index);
-        bool is_key_column = model()->key_column() == column_index;
+        bool is_key_column = m_key_column == column_index;
         Gfx::IntRect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
         bool hovered = column_index == m_hovered_column_header_index && model()->is_column_sortable(column_index);
@@ -155,10 +154,9 @@ void AbstractTableView::paint_headers(Painter& painter)
         if (is_key_column) {
             StringBuilder builder;
             builder.append(model()->column_name(column_index));
-            auto sort_order = model()->sort_order();
-            if (sort_order == SortOrder::Ascending)
+            if (m_sort_order == SortOrder::Ascending)
                 builder.append(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
-            else if (sort_order == SortOrder::Descending)
+            else if (m_sort_order == SortOrder::Descending)
                 builder.append(" \xE2\xAC\x87"); // DOWNWARDS BLACK ARROW
             text = builder.to_string();
         } else {
@@ -327,11 +325,11 @@ void AbstractTableView::mouseup_event(MouseEvent& event)
             auto header_rect = this->header_rect(m_pressed_column_header_index);
             if (header_rect.contains(horizontally_adjusted_position)) {
                 auto new_sort_order = SortOrder::Ascending;
-                if (model()->key_column() == m_pressed_column_header_index)
-                    new_sort_order = model()->sort_order() == SortOrder::Ascending
+                if (m_key_column == m_pressed_column_header_index)
+                    new_sort_order = m_sort_order == SortOrder::Ascending
                         ? SortOrder::Descending
                         : SortOrder::Ascending;
-                model()->set_key_column_and_sort_order(m_pressed_column_header_index, new_sort_order);
+                set_key_column_and_sort_order(m_pressed_column_header_index, new_sort_order);
             }
             m_pressed_column_header_index = -1;
             m_pressed_column_header_is_pressed = false;

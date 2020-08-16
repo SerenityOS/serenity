@@ -76,6 +76,8 @@ public:
 
     void set_last_valid_hovered_index(const ModelIndex&);
 
+    void set_key_column_and_sort_order(int column, SortOrder);
+
 protected:
     AbstractView();
     virtual ~AbstractView() override;
@@ -110,6 +112,9 @@ protected:
 
     ModelIndex m_hovered_index;
     ModelIndex m_last_valid_hovered_index;
+
+    int m_key_column { 0 };
+    SortOrder m_sort_order;
 
 private:
     RefPtr<Model> m_model;

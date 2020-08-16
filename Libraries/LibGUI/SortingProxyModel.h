@@ -46,9 +46,6 @@ public:
     virtual ModelIndex parent_index(const ModelIndex&) const override;
     virtual ModelIndex index(int row, int column, const ModelIndex& parent) const override;
 
-    virtual int key_column() const override { return m_key_column; }
-    virtual SortOrder sort_order() const override { return m_sort_order; }
-    virtual void set_key_column_and_sort_order(int, SortOrder) override;
     virtual bool is_column_sortable(int column_index) const override;
 
     virtual bool less_than(const ModelIndex&, const ModelIndex&) const;
@@ -58,6 +55,8 @@ public:
 
     Role sort_role() const { return m_sort_role; }
     void set_sort_role(Role role) { m_sort_role = role; }
+
+    virtual void sort(int column, SortOrder) override;
 
 private:
     explicit SortingProxyModel(NonnullRefPtr<Model> source);
@@ -71,6 +70,8 @@ private:
 
     using InternalMapIterator = HashMap<ModelIndex, NonnullOwnPtr<Mapping>>::IteratorType;
 
+    void sort_mapping(Mapping&, int column, SortOrder);
+
     // ^ModelClient
     virtual void model_did_update(unsigned) override;
 
@@ -83,9 +84,9 @@ private:
     NonnullRefPtr<Model> m_source;
 
     HashMap<ModelIndex, NonnullOwnPtr<Mapping>> m_mappings;
-    int m_key_column { -1 };
-    SortOrder m_sort_order { SortOrder::Ascending };
     Role m_sort_role { Role::Sort };
+    int m_last_key_column { -1 };
+    SortOrder m_last_sort_order { SortOrder::Ascending };
 };
 
 }

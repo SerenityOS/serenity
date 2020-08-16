@@ -87,16 +87,13 @@ public:
     virtual bool accepts_drag(const ModelIndex&, const StringView& data_type);
 
     virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
+    virtual void sort([[maybe_unused]] int column, SortOrder) { }
 
     bool is_valid(const ModelIndex& index) const
     {
         auto parent_index = this->parent_index(index);
         return index.row() >= 0 && index.row() < row_count(parent_index) && index.column() >= 0 && index.column() < column_count(parent_index);
     }
-
-    virtual int key_column() const { return -1; }
-    virtual SortOrder sort_order() const { return SortOrder::None; }
-    virtual void set_key_column_and_sort_order(int, SortOrder) { }
 
     virtual StringView drag_data_type() const { return {}; }
 
