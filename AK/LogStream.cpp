@@ -60,49 +60,49 @@ const LogStream& operator<<(const LogStream& stream, const StringView& value)
 const LogStream& operator<<(const LogStream& stream, int value)
 {
     char buffer[32];
-    sprintf(buffer, "%d", value);
+    snprintf(buffer, sizeof(buffer), "%d", value);
     return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, long value)
 {
     char buffer[32];
-    sprintf(buffer, "%ld", value);
+    snprintf(buffer, sizeof(buffer), "%ld", value);
     return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, long long value)
 {
     char buffer[32];
-    sprintf(buffer, "%lld", value);
+    snprintf(buffer, sizeof(buffer), "%lld", value);
     return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned value)
 {
     char buffer[32];
-    sprintf(buffer, "%u", value);
+    snprintf(buffer, sizeof(buffer), "%u", value);
     return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned long long value)
 {
     char buffer[32];
-    sprintf(buffer, "%llu", value);
+    snprintf(buffer, sizeof(buffer), "%llu", value);
     return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, unsigned long value)
 {
     char buffer[32];
-    sprintf(buffer, "%lu", value);
+    snprintf(buffer, sizeof(buffer), "%lu", value);
     return stream << buffer;
 }
 
 const LogStream& operator<<(const LogStream& stream, const void* value)
 {
     char buffer[32];
-    sprintf(buffer, "%p", value);
+    snprintf(buffer, sizeof(buffer), "%p", value);
     return stream << buffer;
 }
 
