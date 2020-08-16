@@ -153,16 +153,6 @@ char* strcpy(char* dest, const char* src)
     return dest;
 }
 
-char* strncpy(char* dest, const char* src, size_t n)
-{
-    size_t i;
-    for (i = 0; i < n && src[i] != '\0'; ++i)
-        dest[i] = src[i];
-    for (; i < n; ++i)
-        dest[i] = '\0';
-    return dest;
-}
-
 void memset_user(void* dest_ptr, int c, size_t n)
 {
     ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));
@@ -194,17 +184,6 @@ void* memset(void* dest_ptr, int c, size_t n)
         : "0"(dest), "1"(n), "a"(c)
         : "memory");
     return dest_ptr;
-}
-
-char* strrchr(const char* str, int ch)
-{
-    char* last = nullptr;
-    char c;
-    for (; (c = *str); ++str) {
-        if (c == ch)
-            last = const_cast<char*>(str);
-    }
-    return last;
 }
 
 size_t strlen(const char* str)
