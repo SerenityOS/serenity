@@ -30,6 +30,7 @@
 #include <LibELF/Loader.h>
 #include <LibGUI/Painter.h>
 #include <LibX86/Disassembler.h>
+#include <LibX86/ELFSymbolProvider.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -49,22 +50,6 @@ static Color color_for_percent(int percent)
     ASSERT(percent >= 0 && percent <= 100);
     return heat_gradient().get_pixel(percent, 0);
 }
-
-class ELFSymbolProvider final : public X86::SymbolProvider {
-public:
-    ELFSymbolProvider(ELF::Loader& loader)
-        : m_loader(loader)
-    {
-    }
-
-    virtual String symbolicate(FlatPtr address, u32* offset = nullptr) const
-    {
-        return m_loader.symbolicate(address, offset);
-    }
-
-private:
-    ELF::Loader& m_loader;
-};
 
 DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     : m_profile(profile)
@@ -89,7 +74,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
 
     auto view = symbol.value().raw_data();
 
-    ELFSymbolProvider symbol_provider(*elf_loader);
+    X86::ELFSymbolProvider symbol_provider(*elf_loader);
     X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
 
