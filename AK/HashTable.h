@@ -111,7 +111,12 @@ private:
     using Bucket = SinglyLinkedList<T>;
 
 public:
-    HashTable() {}
+    HashTable() { }
+    HashTable(size_t capacity)
+        : m_buckets(new Bucket[capacity])
+        , m_capacity(capacity)
+    {
+    }
     HashTable(const HashTable& other)
     {
         ensure_capacity(other.size());
@@ -164,6 +169,15 @@ public:
 
     HashSetResult set(const T&);
     HashSetResult set(T&&);
+
+    template<typename U, size_t N>
+    void set_from(U (&from_array)[N])
+    {
+        for (size_t i = 0; i < N; ++i) {
+            set(from_array[i]);
+        }
+    }
+
     bool contains(const T&) const;
     void clear();
 
