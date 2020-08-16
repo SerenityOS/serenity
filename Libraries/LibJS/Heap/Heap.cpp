@@ -26,6 +26,7 @@
 
 #include <AK/Badge.h>
 #include <AK/HashTable.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
@@ -82,8 +83,10 @@ Cell* Heap::allocate_cell(size_t size)
     return cell;
 }
 
-void Heap::collect_garbage(CollectionType collection_type)
+void Heap::collect_garbage(CollectionType collection_type, bool print_report)
 {
+    Core::ElapsedTimer collection_measurement_timer;
+    collection_measurement_timer.start();
     if (collection_type == CollectionType::CollectGarbage) {
         if (m_gc_deferrals) {
             m_should_gc_when_deferral_ends = true;
@@ -93,7 +96,7 @@ void Heap::collect_garbage(CollectionType collection_type)
         gather_roots(roots);
         mark_live_cells(roots);
     }
-    sweep_dead_cells();
+    sweep_dead_cells(print_report, collection_measurement_timer);
 }
 
 void Heap::gather_roots(HashTable<Cell*>& roots)
@@ -230,12 +233,17 @@ void Heap::mark_live_cells(const HashTable<Cell*>& roots)
         visitor.visit(root);
 }
 
-void Heap::sweep_dead_cells()
+void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measurement_timer)
 {
 #ifdef HEAP_DEBUG
     dbg() << "sweep_dead_cells:";
 #endif
     Vector<HeapBlock*, 32> empty_blocks;
+
+    size_t collected_cells = 0;
+    size_t live_cells = 0;
+    size_t collected_cell_bytes = 0;
+    size_t live_cell_bytes = 0;
 
     for (auto& block : m_blocks) {
         bool block_has_live_cells = false;
@@ -246,9 +254,13 @@ void Heap::sweep_dead_cells()
                     dbg() << "  ~ " << cell;
 #endif
                     block->deallocate(cell);
+                    ++collected_cells;
+                    collected_cell_bytes += block->cell_size();
                 } else {
                     cell->set_marked(false);
                     block_has_live_cells = true;
+                    ++live_cells;
+                    live_cell_bytes += block->cell_size();
                 }
             }
         });
@@ -268,6 +280,19 @@ void Heap::sweep_dead_cells()
         dbg() << " > Live HeapBlock @ " << block << ": cell_size=" << block->cell_size();
     }
 #endif
+
+    int time_spent = measurement_timer.elapsed();
+
+    if (print_report) {
+        dbg() << "Garbage collection report";
+        dbg() << "=============================================";
+        dbg() << "     Time spent: " << time_spent << " ms";
+        dbg() << "     Live cells: " << live_cells << " (" << live_cell_bytes << " bytes)";
+        dbg() << "Collected cells: " << collected_cells << " (" << collected_cell_bytes << " bytes)";
+        dbg() << "    Live blocks: " << m_blocks.size() << " (" << m_blocks.size() * HeapBlock::block_size << " bytes)";
+        dbg() << "   Freed blocks: " << empty_blocks.size() << " (" << empty_blocks.size() * HeapBlock::block_size << " bytes)";
+        dbg() << "=============================================";
+    }
 }
 
 void Heap::did_create_handle(Badge<HandleImpl>, HandleImpl& impl)

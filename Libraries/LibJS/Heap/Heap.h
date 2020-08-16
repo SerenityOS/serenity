@@ -31,6 +31,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Cell.h>
@@ -68,7 +69,7 @@ public:
         CollectEverything,
     };
 
-    void collect_garbage(CollectionType = CollectionType::CollectGarbage);
+    void collect_garbage(CollectionType = CollectionType::CollectGarbage, bool print_report = false);
 
     Interpreter& interpreter() { return m_interpreter; }
 
@@ -90,7 +91,7 @@ private:
     void gather_roots(HashTable<Cell*>&);
     void gather_conservative_roots(HashTable<Cell*>&);
     void mark_live_cells(const HashTable<Cell*>& live_cells);
-    void sweep_dead_cells();
+    void sweep_dead_cells(bool print_report, const Core::ElapsedTimer&);
 
     Cell* cell_from_possible_pointer(FlatPtr);
 
