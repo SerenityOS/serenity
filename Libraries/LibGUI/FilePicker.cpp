@@ -111,11 +111,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
 
     auto& toolbar = upper_container.add<ToolBar>();
     toolbar.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-#ifdef MULTIVIEW_WITH_COLUMNSVIEW
     toolbar.set_preferred_size(165, 0);
-#else
-    toolbar.set_preferred_size(140, 0);
-#endif
     toolbar.set_has_frame(false);
 
     m_location_textbox = upper_container.add<TextBox>();
@@ -175,11 +171,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
 
     toolbar.add_action(m_view->view_as_icons_action());
     toolbar.add_action(m_view->view_as_table_action());
-
-#ifdef MULTIVIEW_WITH_COLUMNSVIEW
-    m_view->view_as_columns_action().set_enabled(false);
     toolbar.add_action(m_view->view_as_columns_action());
-#endif
 
     auto& lower_container = vertical_container.add<Widget>();
     lower_container.set_layout<VerticalBoxLayout>();
