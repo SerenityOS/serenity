@@ -293,7 +293,7 @@ UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBi
     auto size = range.trimmed_length() * sizeof(u32) + 2;
     // "+2" is intentional (see below).
     // Also, if we're about to crash anyway, at least produce a nice error:
-    ASSERT(size < 8 * MB);
+    ASSERT(size < 8 * MiB);
     u8 buf[size];
     AK::fill_with_random(buf, size);
     UnsignedBigInteger random { buf, size };
