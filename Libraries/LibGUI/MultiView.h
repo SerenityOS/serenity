@@ -32,8 +32,6 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
 
-//#define MULTIVIEW_WITH_COLUMNSVIEW
-
 namespace GUI {
 
 class MultiView final : public GUI::StackWidget {
@@ -70,10 +68,8 @@ public:
         switch (m_view_mode) {
         case ViewMode::Table:
             return *m_table_view;
-#ifdef MULTIVIEW_WITH_COLUMNSVIEW
         case ViewMode::Columns:
             return *m_columns_view;
-#endif
         case ViewMode::Icon:
             return *m_icon_view;
         default:
@@ -89,9 +85,7 @@ public:
     {
         callback(*m_table_view);
         callback(*m_icon_view);
-#ifdef MULTIVIEW_WITH_COLUMNSVIEW
         callback(*m_columns_view);
-#endif
     }
 
     Model* model() { return m_model; }
@@ -101,9 +95,7 @@ public:
 
     Action& view_as_table_action() { return *m_view_as_table_action; }
     Action& view_as_icons_action() { return *m_view_as_icons_action; }
-#ifdef MULTIVIEW_WITH_COLUMNSVIEW
     Action& view_as_columns_action() { return *m_view_as_columns_action; }
-#endif
 
     bool is_multi_select() const { return m_multi_select; }
     void set_multi_select(bool);
@@ -121,15 +113,11 @@ private:
 
     RefPtr<TableView> m_table_view;
     RefPtr<IconView> m_icon_view;
-#ifdef MULTIVIEW_WITH_COLUMNSVIEW
     RefPtr<ColumnsView> m_columns_view;
-#endif
 
     RefPtr<Action> m_view_as_table_action;
     RefPtr<Action> m_view_as_icons_action;
-#ifdef MULTIVIEW_WITH_COLUMNSVIEW
     RefPtr<Action> m_view_as_columns_action;
-#endif
 
     OwnPtr<ActionGroup> m_view_type_action_group;
 
