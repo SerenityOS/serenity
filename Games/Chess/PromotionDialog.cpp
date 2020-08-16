@@ -31,6 +31,7 @@
 
 PromotionDialog::PromotionDialog(ChessWidget& chess_widget)
     : Dialog(chess_widget.window())
+    , m_selected_piece(Chess::Type::None)
 {
     set_title("Choose piece to promote to");
     resize(70 * 4, 70);
