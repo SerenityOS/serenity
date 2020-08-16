@@ -429,12 +429,18 @@ TextEditorWidget::TextEditorWidget()
     view_menu.add_action(*m_html_preview_action);
     view_menu.add_separator();
 
+    font_actions.set_exclusive(true);
+
     auto& font_menu = view_menu.add_submenu("Font");
     GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        font_menu.add_action(GUI::Action::create(font_name, [this](const GUI::Action& action) {
+        auto action = GUI::Action::create_checkable(font_name, [&](auto& action) {
             m_editor->set_font(GUI::FontDatabase::the().get_by_name(action.text()));
             m_editor->update();
-        }));
+        });
+        if (m_editor->font().name() == font_name)
+            action->set_checked(true);
+        font_actions.add_action(*action);
+        font_menu.add_action(*action);
     });
 
     syntax_actions.set_exclusive(true);
