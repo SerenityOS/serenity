@@ -31,6 +31,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibELF/Loader.h>
 #include <LibX86/Disassembler.h>
+#include <LibX86/ELFSymbolProvider.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -66,8 +67,13 @@ int main(int argc, char** argv)
     size_t asm_size = file.size();
     size_t file_offset = 0;
     Vector<Symbol>::Iterator current_symbol = symbols.begin();
+    RefPtr<ELF::Loader> elf;
+    OwnPtr<X86::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
     if (asm_size >= 4 && strncmp((const char*)asm_data, "\u007fELF", 4) == 0) {
-        if (auto elf = ELF::Loader::create(asm_data, asm_size)) {
+        NonnullRefPtr<ELF::Loader> elf_loader = ELF::Loader::create(asm_data, asm_size);
+        if (elf_loader->image().is_valid()) {
+            elf = elf_loader;
+            symbol_provider = new X86::ELFSymbolProvider(*elf);
             elf->image().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
                 // FIXME: Disassemble all SHT_PROGBITS sections, not just .text.
                 if (section.name() != ".text")
@@ -141,7 +147,7 @@ int main(int argc, char** argv)
             is_first_symbol = false;
         }
 
-        out() << String::format("%08x", virtual_offset) << "  " << insn.value().to_string(virtual_offset);
+        out() << String::format("%08x", virtual_offset) << "  " << insn.value().to_string(virtual_offset, symbol_provider);
     }
 
     return 0;
