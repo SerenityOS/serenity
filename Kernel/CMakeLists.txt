@@ -195,6 +195,7 @@ set(KERNEL_SOURCES
 )
 
 set(AK_SOURCES
+    ../AK/Demangle.cpp
     ../AK/FlyString.cpp
     ../AK/GenericLexer.cpp
     ../AK/JsonParser.cpp

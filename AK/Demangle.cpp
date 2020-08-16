@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Brian Gianforcaro <b.gianfo@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,39 +24,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
+#include <AK/Demangle.h>
+#include <AK/GenericLexer.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-
-#ifndef BUILDING_SERENITY_TOOLCHAIN
-#    include <cxxabi.h>
-#endif
+#include <AK/StringBuilder.h>
 
 namespace AK {
 
-Optional<String> serenity_demangle(const StringView name);
-
-inline String demangle(const StringView& name)
+/*
+ * Implementation of a C++ name demangler, based on the Itanium C++ ABI Name Mangling spec
+ *
+ * Grammar Reference: https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling
+ *
+ */
+class NameDemangler : GenericLexer
 {
-#ifdef BUILDING_SERENITY_TOOLCHAIN
-    Optional<String> demangled_name = serenity_demangle(name);
+public:
 
-    if (demangled_name.has_value())
-        return demangled_name.release_value();
+    NameDemangler(const StringView name);
 
-    return String(name);
-#else
-    int status = 0;
-    auto* demangled_name = abi::__cxa_demangle(name.to_string().characters(), nullptr, nullptr, &status);
-    auto string = String(status == 0 ? demangled_name : name);
-    if (status == 0)
-        kfree(demangled_name);
-    return string;
-#endif
+    Optional<String> demangle();
+
+private:
+
+    StringBuilder m_output_builder {};
+};
+
+NameDemangler::NameDemangler(const StringView mangled_name)
+    : GenericLexer(mangled_name)
+{
+}
+
+Optional<String> NameDemangler::demangle()
+{
+    return m_input;
+}
+
+Optional<String> serenity_demangle(const StringView mangled_name)
+{
+    NameDemangler name_demangler(mangled_name);
+    return name_demangler.demangle();
 }
 
 }
-
-using AK::demangle;

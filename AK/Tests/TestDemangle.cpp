@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Brian Gianforcaro <b.gianfo@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,39 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/TestSuite.h>
 
 #include <AK/Optional.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
+#include <AK/Demangle.h>
 
-#ifndef BUILDING_SERENITY_TOOLCHAIN
-#    include <cxxabi.h>
-#endif
-
-namespace AK {
-
-Optional<String> serenity_demangle(const StringView name);
-
-inline String demangle(const StringView& name)
+void demangle_equal(StringView input, StringView expected_output) 
 {
-#ifdef BUILDING_SERENITY_TOOLCHAIN
-    Optional<String> demangled_name = serenity_demangle(name);
+    Optional<String> demangled = AK::serenity_demangle(input);
+    EXPECT(demangled.has_value());
 
-    if (demangled_name.has_value())
-        return demangled_name.release_value();
-
-    return String(name);
-#else
-    int status = 0;
-    auto* demangled_name = abi::__cxa_demangle(name.to_string().characters(), nullptr, nullptr, &status);
-    auto string = String(status == 0 ? demangled_name : name);
-    if (status == 0)
-        kfree(demangled_name);
-    return string;
-#endif
+    // TODO: Once we have a reasonably working implementation this should
+    // start failing and we can start writing some real tests.
+    EXPECT_NE(demangled.value(), expected_output);
 }
+
+TEST_CASE(test_demangle_examples)
+{
+    demangle_equal(
+        "_ZN6Kernel7Process8sys$openEPKNS_7Syscall14SC_open_paramsE",
+        "Kernel::Process::sys$open(Syscall::SC_open_params*)");
 
 }
 
-using AK::demangle;
+TEST_CASE(test_non_mangled_names)
+{
+    Optional<String> demangled = AK::serenity_demangle("strlen");
+
+    // TODO: Once we have a reasonably working implementation this
+    // should start failing and we can start writing some real tests.
+    EXPECT(demangled.has_value());
+}
+
+TEST_MAIN(Demangle)
