@@ -394,6 +394,7 @@ void ProcessModel::update()
             state.sid = it.value.sid;
             state.times_scheduled = thread.times_scheduled;
             state.cpu = thread.cpu;
+            state.cpu_percent = 0;
             state.priority = thread.priority;
             state.effective_priority = thread.effective_priority;
             state.state = thread.state;
