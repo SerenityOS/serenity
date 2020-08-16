@@ -62,13 +62,13 @@ String RemoteObjectPropertyModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto* path = static_cast<const JsonPath*>(index.internal_data());
     if (!path)
         return {};
 
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Name:
             return path->last().to_string();

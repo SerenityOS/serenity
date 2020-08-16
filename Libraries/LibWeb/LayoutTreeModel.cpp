@@ -115,17 +115,17 @@ static String with_whitespace_collapsed(const StringView& string)
     return builder.to_string();
 }
 
-GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto& node = *static_cast<LayoutNode*>(index.internal_data());
-    if (role == Role::Icon) {
+    if (role == GUI::ModelRole::Icon) {
         if (node.is_root())
             return m_document_icon;
         if (node.is_text())
             return m_text_icon;
         return m_element_icon;
     }
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         if (node.is_text())
             return String::format("LayoutText: %s", with_whitespace_collapsed(downcast<LayoutText>(node).text_for_rendering()).characters());
         StringBuilder builder;

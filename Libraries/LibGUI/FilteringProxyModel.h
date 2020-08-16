@@ -45,7 +45,7 @@ public:
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const override;
     virtual int column_count(const ModelIndex& = ModelIndex()) const override;
-    virtual Variant data(const ModelIndex&, Role = Role::Display) const override;
+    virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const override;
     virtual void update() override;
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
 

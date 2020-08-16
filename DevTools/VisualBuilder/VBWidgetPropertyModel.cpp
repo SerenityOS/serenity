@@ -57,23 +57,23 @@ String VBWidgetPropertyModel::column_name(int column) const
     }
 }
 
-GUI::Variant VBWidgetPropertyModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant VBWidgetPropertyModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    if (role == Role::TextAlignment) {
+    if (role == GUI::ModelRole::TextAlignment) {
         return Gfx::TextAlignment::CenterLeft;
     }
-    if (role == Role::Font) {
+    if (role == GUI::ModelRole::Font) {
         if (index.column() == Column::Name)
             return Gfx::Font::default_bold_font();
         return {};
     }
-    if (role == Role::Custom) {
+    if (role == GUI::ModelRole::Custom) {
         auto& property = m_widget.m_properties[index.row()];
         if (index.column() == Column::Type)
             return (int)property.value().type();
         return {};
     }
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         auto& property = m_widget.m_properties[index.row()];
         switch (index.column()) {
         case Column::Name:
@@ -85,7 +85,7 @@ GUI::Variant VBWidgetPropertyModel::data(const GUI::ModelIndex& index, Role role
         }
         ASSERT_NOT_REACHED();
     }
-    if (role == Role::ForegroundColor) {
+    if (role == GUI::ModelRole::ForegroundColor) {
         auto& property = m_widget.m_properties[index.row()];
         switch (index.column()) {
         case Column::Name:

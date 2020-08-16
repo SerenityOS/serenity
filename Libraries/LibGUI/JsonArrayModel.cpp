@@ -92,16 +92,16 @@ bool JsonArrayModel::remove(int row)
     return true;
 }
 
-Variant JsonArrayModel::data(const ModelIndex& index, Role role) const
+Variant JsonArrayModel::data(const ModelIndex& index, ModelRole role) const
 {
     auto& field_spec = m_fields[index.column()];
     auto& object = m_array.at(index.row()).as_object();
 
-    if (role == Model::Role::TextAlignment) {
+    if (role == ModelRole::TextAlignment) {
         return field_spec.text_alignment;
     }
 
-    if (role == Model::Role::Display) {
+    if (role == ModelRole::Display) {
         auto& json_field_name = field_spec.json_field_name;
         auto data = object.get(json_field_name);
         if (field_spec.massage_for_display)
@@ -111,13 +111,13 @@ Variant JsonArrayModel::data(const ModelIndex& index, Role role) const
         return object.get(json_field_name).to_string();
     }
 
-    if (role == Model::Role::Sort) {
+    if (role == ModelRole::Sort) {
         if (field_spec.massage_for_sort)
             return field_spec.massage_for_sort(object);
-        return data(index, Role::Display);
+        return data(index, ModelRole::Display);
     }
 
-    if (role == Model::Role::Custom) {
+    if (role == ModelRole::Custom) {
         if (field_spec.massage_for_custom)
             return field_spec.massage_for_custom(object);
         return {};

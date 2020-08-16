@@ -92,15 +92,15 @@ String RunningProcessesModel::column_name(int column_index) const
     ASSERT_NOT_REACHED();
 }
 
-GUI::Variant RunningProcessesModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant RunningProcessesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto& process = m_processes[index.row()];
 
-    if (role == Role::Custom) {
+    if (role == ModelRole::Custom) {
         return process.pid;
     }
 
-    if (role == Role::Display) {
+    if (role == ModelRole::Display) {
         switch (index.column()) {
         case Column::Icon:
             if (!process.icon)

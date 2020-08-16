@@ -56,11 +56,11 @@ String IRCWindowListModel::column_name(int column) const
     ASSERT_NOT_REACHED();
 }
 
-GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    if (role == Role::TextAlignment)
+    if (role == GUI::ModelRole::TextAlignment)
         return Gfx::TextAlignment::CenterLeft;
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Name: {
             auto& window = m_client.window_at(index.row());
@@ -70,7 +70,7 @@ GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, Role role) c
         }
         }
     }
-    if (role == Role::ForegroundColor) {
+    if (role == GUI::ModelRole::ForegroundColor) {
         switch (index.column()) {
         case Column::Name: {
             auto& window = m_client.window_at(index.row());

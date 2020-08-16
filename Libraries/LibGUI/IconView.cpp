@@ -438,8 +438,8 @@ void IconView::paint_event(PaintEvent& event)
             background_color = widget_background_color;
         }
 
-        auto icon = model()->data(item_data.index, Model::Role::Icon);
-        auto item_text = model()->data(item_data.index, Model::Role::Display);
+        auto icon = model()->data(item_data.index, ModelRole::Icon);
+        auto item_text = model()->data(item_data.index, ModelRole::Display);
 
         if (icon.is_icon()) {
             if (auto bitmap = icon.as_icon().bitmap_for_size(item_data.icon_rect.width())) {
@@ -458,7 +458,7 @@ void IconView::paint_event(PaintEvent& event)
         if (item_data.selected)
             text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
         else
-            text_color = model()->data(item_data.index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
+            text_color = model()->data(item_data.index, ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(item_data.text_rect, background_color);
         painter.draw_text(item_data.text_rect, item_text.to_string(), font_for_index(item_data.index), Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
 

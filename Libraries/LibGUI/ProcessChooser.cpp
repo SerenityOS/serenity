@@ -57,7 +57,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
 
     m_table_view = widget.add<GUI::TableView>();
     auto sorting_model = GUI::SortingProxyModel::create(RunningProcessesModel::create());
-    sorting_model->set_sort_role(GUI::Model::Role::Display);
+    sorting_model->set_sort_role(GUI::ModelRole::Display);
     m_table_view->set_key_column_and_sort_order(RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
     m_table_view->set_model(sorting_model);
 
@@ -96,7 +96,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     m_refresh_timer->on_timeout = [this] {
         auto previous_selected_pid = -1; // Store the selection index to not to clear the selection upon update.
         if (!m_table_view->selection().is_empty()) {
-            auto pid_as_variant = m_table_view->model()->data(m_table_view->selection().first(), GUI::Model::Role::Custom);
+            auto pid_as_variant = m_table_view->model()->data(m_table_view->selection().first(), GUI::ModelRole::Custom);
             previous_selected_pid = pid_as_variant.as_i32();
         }
 
@@ -111,7 +111,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
         auto column_index = 1; // Corresponds to PID column in the m_table_view.
         for (int row_index = 0; row_index < row_count; ++row_index) {
             auto cell_index = model->index(row_index, column_index);
-            auto pid_as_variant = model->data(cell_index, GUI::Model::Role::Custom);
+            auto pid_as_variant = model->data(cell_index, GUI::ModelRole::Custom);
             if (previous_selected_pid == pid_as_variant.as_i32()) {
                 m_table_view->selection().set(cell_index); // Set only if PIDs are matched.
             }
@@ -121,7 +121,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
 
 void ProcessChooser::set_pid_from_index_and_close(const ModelIndex& index)
 {
-    auto pid_as_variant = m_table_view->model()->data(index, GUI::Model::Role::Custom);
+    auto pid_as_variant = m_table_view->model()->data(index, GUI::ModelRole::Custom);
     m_pid = pid_as_variant.as_i32();
     done(ExecOK);
 }

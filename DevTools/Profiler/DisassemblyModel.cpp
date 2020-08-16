@@ -157,25 +157,25 @@ static Optional<ColorPair> color_pair_for(const InstructionData& insn)
     return ColorPair { background, foreground };
 }
 
-GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto& insn = m_instructions[index.row()];
 
-    if (role == Role::BackgroundColor) {
+    if (role == GUI::ModelRole::BackgroundColor) {
         auto colors = color_pair_for(insn);
         if (!colors.has_value())
             return {};
         return colors.value().background;
     }
 
-    if (role == Role::ForegroundColor) {
+    if (role == GUI::ModelRole::ForegroundColor) {
         auto colors = color_pair_for(insn);
         if (!colors.has_value())
             return {};
         return colors.value().foreground;
     }
 
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::SampleCount) {
             if (m_profile.show_percentages())
                 return ((float)insn.event_count / (float)m_node.event_count()) * 100.0f;

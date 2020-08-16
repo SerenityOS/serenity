@@ -438,7 +438,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         view.selection().for_each_index([&](const GUI::ModelIndex& index) {
             auto parent_index = model.parent_index(index);
             auto name_index = model.index(index.row(), GUI::FileSystemModel::Column::Name, parent_index);
-            auto path = model.data(name_index, GUI::Model::Role::Custom).to_string();
+            auto path = model.data(name_index, GUI::ModelRole::Custom).to_string();
             paths.append(path);
         });
         return paths;

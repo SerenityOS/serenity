@@ -47,8 +47,10 @@ String ClipboardHistoryModel::column_name(int column) const
     }
 }
 
-GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, Role) const
+GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
+    if (role != GUI::ModelRole::Display)
+        return {};
     auto& data_and_type = m_history_items[index.row()];
     switch (index.column()) {
     case Column::Data:

@@ -38,9 +38,9 @@ public:
     virtual int row_count(const GUI::ModelIndex&) const override { return 2; }
     virtual int column_count(const GUI::ModelIndex&) const override { return 1; }
     virtual void update() override {}
-    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
-        if (role != Role::Display)
+        if (role != GUI::ModelRole::Display)
             return {};
         switch (index.row()) {
         case 0:
@@ -94,7 +94,7 @@ VBPropertiesWindow::VBPropertiesWindow()
         if (!m_table_view->model())
             return nullptr;
         auto type_index = m_table_view->model()->index(index.row(), VBWidgetPropertyModel::Column::Type);
-        auto type = m_table_view->model()->data(type_index, GUI::Model::Role::Custom).to_i32();
+        auto type = m_table_view->model()->data(type_index, GUI::ModelRole::Custom).to_i32();
         switch ((GUI::Variant::Type)type) {
         case GUI::Variant::Type::Bool:
             return make<BoolModelEditingDelegate>();

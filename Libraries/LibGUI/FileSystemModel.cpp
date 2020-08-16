@@ -349,11 +349,11 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
     return node.parent->index(*this, index.column());
 }
 
-Variant FileSystemModel::data(const ModelIndex& index, Role role) const
+Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
 {
     ASSERT(index.is_valid());
 
-    if (role == Role::TextAlignment) {
+    if (role == ModelRole::TextAlignment) {
         switch (index.column()) {
         case Column::Icon:
             return Gfx::TextAlignment::Center;
@@ -374,13 +374,13 @@ Variant FileSystemModel::data(const ModelIndex& index, Role role) const
 
     auto& node = this->node(index);
 
-    if (role == Role::Custom) {
+    if (role == ModelRole::Custom) {
         // For GUI::FileSystemModel, custom role means the full path.
         ASSERT(index.column() == Column::Name);
         return node.full_path(*this);
     }
 
-    if (role == Role::DragData) {
+    if (role == ModelRole::DragData) {
         if (index.column() == Column::Name) {
             StringBuilder builder;
             builder.append("file://");
@@ -390,7 +390,7 @@ Variant FileSystemModel::data(const ModelIndex& index, Role role) const
         return {};
     }
 
-    if (role == Role::Sort) {
+    if (role == ModelRole::Sort) {
         switch (index.column()) {
         case Column::Icon:
             return node.is_directory() ? 0 : 1;
@@ -414,7 +414,7 @@ Variant FileSystemModel::data(const ModelIndex& index, Role role) const
         ASSERT_NOT_REACHED();
     }
 
-    if (role == Role::Display) {
+    if (role == ModelRole::Display) {
         switch (index.column()) {
         case Column::Icon:
             return icon_for(node);
@@ -437,7 +437,7 @@ Variant FileSystemModel::data(const ModelIndex& index, Role role) const
         }
     }
 
-    if (role == Role::Icon) {
+    if (role == ModelRole::Icon) {
         return icon_for(node);
     }
     return {};

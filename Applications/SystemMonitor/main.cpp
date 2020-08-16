@@ -193,7 +193,7 @@ int main(int argc, char** argv)
         if (process_table_view.selection().is_empty())
             return -1;
         auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column);
-        return process_table_view.model()->data(pid_index, GUI::Model::Role::Display).to_i32();
+        return process_table_view.model()->data(pid_index, GUI::ModelRole::Display).to_i32();
     };
 
     auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/kill16.png"), [&](const GUI::Action&) {
@@ -340,9 +340,9 @@ public:
     virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Palette& palette, const GUI::Model& model, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
-        auto percentage = model.data(index, GUI::Model::Role::Custom).to_i32();
+        auto percentage = model.data(index, GUI::ModelRole::Custom).to_i32();
 
-        auto data = model.data(index, GUI::Model::Role::Display);
+        auto data = model.data(index, GUI::ModelRole::Display);
         String text;
         if (data.is_string())
             text = data.as_string();

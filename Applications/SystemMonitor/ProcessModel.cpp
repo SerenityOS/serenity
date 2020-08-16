@@ -156,11 +156,11 @@ static String pretty_byte_size(size_t size)
     return String::format("%uK", size / 1024);
 }
 
-GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     ASSERT(is_valid(index));
 
-    if (role == Role::TextAlignment) {
+    if (role == GUI::ModelRole::TextAlignment) {
         switch (index.column()) {
         case Column::Icon:
         case Column::Name:
@@ -203,7 +203,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
     auto it = m_threads.find(m_pids[index.row()]);
     auto& thread = *(*it).value;
 
-    if (role == Role::Sort) {
+    if (role == GUI::ModelRole::Sort) {
         switch (index.column()) {
         case Column::Icon:
             return 0;
@@ -272,7 +272,7 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, Role role) const
         return {};
     }
 
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Icon:
             if (thread.current_state.icon_id != -1) {

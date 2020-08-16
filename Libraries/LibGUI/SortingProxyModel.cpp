@@ -113,7 +113,7 @@ String SortingProxyModel::column_name(int column) const
     return source().column_name(column);
 }
 
-Variant SortingProxyModel::data(const ModelIndex& proxy_index, Role role) const
+Variant SortingProxyModel::data(const ModelIndex& proxy_index, ModelRole role) const
 {
     return source().data(map_to_source(proxy_index), role);
 }

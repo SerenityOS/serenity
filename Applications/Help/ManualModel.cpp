@@ -155,17 +155,17 @@ int ManualModel::column_count(const GUI::ModelIndex&) const
     return 1;
 }
 
-GUI::Variant ManualModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto* node = static_cast<const ManualNode*>(index.internal_data());
     switch (role) {
-    case Role::Search:
+    case GUI::ModelRole::Search:
         if (!node->is_page())
             return {};
         return String(page_view(page_path(index)).value());
-    case Role::Display:
+    case GUI::ModelRole::Display:
         return node->name();
-    case Role::Icon:
+    case GUI::ModelRole::Icon:
         if (node->is_page())
             return m_page_icon;
         if (node->is_open())

@@ -50,10 +50,10 @@ public:
     };
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_suggestions.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Column_Count; }
-    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
         auto& suggestion = m_suggestions.at(index.row());
-        if (role == Role::Display) {
+        if (role == GUI::ModelRole::Display) {
             if (index.column() == Column::Name)
                 return suggestion;
             if (index.column() == Column::Icon) {
@@ -142,7 +142,7 @@ Locator::~Locator()
 void Locator::open_suggestion(const GUI::ModelIndex& index)
 {
     auto filename_index = m_suggestion_view->model()->index(index.row(), LocatorSuggestionModel::Column::Name);
-    auto filename = m_suggestion_view->model()->data(filename_index, GUI::Model::Role::Display).to_string();
+    auto filename = m_suggestion_view->model()->data(filename_index, GUI::ModelRole::Display).to_string();
     open_file(filename);
     close();
 }

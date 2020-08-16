@@ -134,7 +134,7 @@ void AbstractView::begin_editing(const ModelIndex& index)
     ASSERT(aid_create_editing_delegate);
     m_editing_delegate = aid_create_editing_delegate(index);
     m_editing_delegate->bind(*model(), index);
-    m_editing_delegate->set_value(model()->data(index, Model::Role::Display));
+    m_editing_delegate->set_value(model()->data(index, ModelRole::Display));
     m_edit_widget = m_editing_delegate->widget();
     add_child(*m_edit_widget);
     m_edit_widget->move_to_back();
@@ -187,7 +187,7 @@ NonnullRefPtr<Gfx::Font> AbstractView::font_for_index(const ModelIndex& index) c
     if (!model())
         return font();
 
-    auto font_data = model()->data(index, Model::Role::Font);
+    auto font_data = model()->data(index, ModelRole::Font);
     if (font_data.is_font())
         return font_data.as_font();
 
@@ -285,14 +285,14 @@ void AbstractView::mousemove_event(MouseEvent& event)
             text_builder.append(", ");
         text_builder.append(text_data.to_string());
 
-        auto drag_data = m_model->data(index, Model::Role::DragData);
+        auto drag_data = m_model->data(index, ModelRole::DragData);
         data_builder.append(drag_data.to_string());
         data_builder.append('\n');
 
         first = false;
 
         if (!bitmap) {
-            Variant icon_data = model()->data(index, Model::Role::Icon);
+            Variant icon_data = model()->data(index, ModelRole::Icon);
             if (icon_data.is_icon())
                 bitmap = icon_data.as_icon().bitmap_for_size(32);
         }

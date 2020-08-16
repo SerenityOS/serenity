@@ -52,11 +52,11 @@ public:
         return "Data";
     }
 
-    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
-        if (role == Role::TextAlignment)
+        if (role == GUI::ModelRole::TextAlignment)
             return Gfx::TextAlignment::CenterLeft;
-        if (role == Role::Display)
+        if (role == GUI::ModelRole::Display)
             return m_data.at(index.row());
 
         return {};
