@@ -688,8 +688,8 @@ static Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
 static Optional<KBuffer> procfs$self(InodeIdentifier)
 {
     char buffer[16];
-    sprintf(buffer, "%d", Process::current()->pid().value());
-    return KBuffer::copy((const u8*)buffer, strlen(buffer));
+    int written = snprintf(buffer, sizeof(buffer), "%d", Process::current()->pid().value());
+    return KBuffer::copy((const u8*)buffer, static_cast<size_t>(written));
 }
 
 Optional<KBuffer> procfs$mm(InodeIdentifier)
@@ -1272,7 +1272,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         }
         for (auto pid_child : Process::all_pids()) {
             char name[16];
-            size_t name_length = (size_t)sprintf(name, "%d", pid_child.value());
+            size_t name_length = (size_t)snprintf(name, sizeof(name), "%d", pid_child.value());
             callback({ { name, name_length }, to_identifier(fsid(), PDI_Root, pid_child, FI_PID), 0 });
         }
         break;
@@ -1317,7 +1317,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
             if (!description)
                 continue;
             char name[16];
-            size_t name_length = (size_t)sprintf(name, "%d", i);
+            size_t name_length = (size_t)snprintf(name, sizeof(name), "%d", i);
             callback({ { name, name_length }, to_identifier_with_fd(fsid(), pid, i), 0 });
         }
     } break;
@@ -1330,7 +1330,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         process->for_each_thread([&](Thread& thread) -> IterationDecision {
             int tid = thread.tid().value();
             char name[16];
-            size_t name_length = (size_t)sprintf(name, "%d", tid);
+            size_t name_length = (size_t)snprintf(name, sizeof(name), "%d", tid);
             callback({ { name, name_length }, to_identifier_with_stack(fsid(), tid), 0 });
             return IterationDecision::Continue;
         });
