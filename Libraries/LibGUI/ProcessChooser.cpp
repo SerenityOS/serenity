@@ -96,7 +96,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     m_refresh_timer->on_timeout = [this] {
         auto previous_selected_pid = -1; // Store the selection index to not to clear the selection upon update.
         if (!m_table_view->selection().is_empty()) {
-            auto pid_as_variant = m_table_view->model()->data(m_table_view->selection().first(), GUI::ModelRole::Custom);
+            auto pid_as_variant = m_table_view->selection().first().data(GUI::ModelRole::Custom);
             previous_selected_pid = pid_as_variant.as_i32();
         }
 
@@ -111,7 +111,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
         auto column_index = 1; // Corresponds to PID column in the m_table_view.
         for (int row_index = 0; row_index < row_count; ++row_index) {
             auto cell_index = model->index(row_index, column_index);
-            auto pid_as_variant = model->data(cell_index, GUI::ModelRole::Custom);
+            auto pid_as_variant = cell_index.data(GUI::ModelRole::Custom);
             if (previous_selected_pid == pid_as_variant.as_i32()) {
                 m_table_view->selection().set(cell_index); // Set only if PIDs are matched.
             }
@@ -121,8 +121,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
 
 void ProcessChooser::set_pid_from_index_and_close(const ModelIndex& index)
 {
-    auto pid_as_variant = m_table_view->model()->data(index, GUI::ModelRole::Custom);
-    m_pid = pid_as_variant.as_i32();
+    m_pid = index.data(GUI::ModelRole::Custom).as_i32();
     done(ExecOK);
 }
 

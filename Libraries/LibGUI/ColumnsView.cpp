@@ -125,7 +125,7 @@ void ColumnsView::paint_event(PaintEvent& event)
             Gfx::IntRect row_rect { column_x, row * item_height(), column.width, item_height() };
             painter.fill_rect(row_rect, background_color);
 
-            auto icon = model()->data(index, ModelRole::Icon);
+            auto icon = index.data(ModelRole::Icon);
             Gfx::IntRect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };
             icon_rect.center_vertically_within(row_rect);
             if (icon.is_icon()) {
@@ -141,7 +141,7 @@ void ColumnsView::paint_event(PaintEvent& event)
                 icon_rect.right() + 1 + icon_spacing(), row * item_height(),
                 column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - s_arrow_bitmap_width - icon_spacing(), item_height()
             };
-            auto text = model()->data(index).to_string();
+            auto text = index.data().to_string();
             painter.draw_text(text_rect, text, Gfx::TextAlignment::CenterLeft, text_color);
 
             bool expandable = model()->row_count(index) > 0;
@@ -203,7 +203,7 @@ void ColumnsView::update_column_sizes()
         for (int row = 0; row < row_count; row++) {
             ModelIndex index = model()->index(row, m_model_column, column.parent_index);
             ASSERT(index.is_valid());
-            auto text = model()->data(index).to_string();
+            auto text = index.data().to_string();
             int row_width = icon_spacing() + icon_size() + icon_spacing() + font().width(text) + icon_spacing() + s_arrow_bitmap_width + icon_spacing();
             if (row_width > column.width)
                 column.width = row_width;

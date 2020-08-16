@@ -95,7 +95,7 @@ void IconView::reinit_item_cache() const
         auto& item_data = m_item_data_cache[i];
         // TODO: It's unfortunate that we have no way to know whether any
         // data actually changed, so we have to invalidate *everyone*
-        if (item_data.is_valid()/* && !model()->is_valid(item_data.index)*/)
+        if (item_data.is_valid() /* && !model()->is_valid(item_data.index)*/)
             item_data.invalidate();
         if (item_data.selected && i < (size_t)m_first_selected_hint)
             m_first_selected_hint = (int)i;
@@ -114,7 +114,7 @@ auto IconView::get_item_data(int item_index) const -> ItemData&
         return item_data;
 
     item_data.index = model()->index(item_index, model_column());
-    item_data.data = model()->data(item_data.index);
+    item_data.data = item_data.index.data();
     get_item_rects(item_index, item_data, font_for_index(item_data.index));
     item_data.valid = true;
     return item_data;
@@ -338,7 +338,7 @@ void IconView::mousemove_event(MouseEvent& event)
                     scroll_out_of_view_timer_fired();
                 };
             }
-            
+
             m_out_of_view_position = event.position();
             if (!m_out_of_view_timer->is_active())
                 m_out_of_view_timer->start();
@@ -373,7 +373,7 @@ void IconView::scroll_out_of_view_timer_fired()
     else if (m_out_of_view_position.x() < in_view_rect.left())
         adjust_x = -(SCROLL_OUT_OF_VIEW_HOT_MARGIN / 2) + max(-SCROLL_OUT_OF_VIEW_HOT_MARGIN, m_out_of_view_position.x() - in_view_rect.left());
 
-    ScrollableWidget::scroll_into_view({scroll_to.translated(adjust_x, adjust_y), {1, 1}}, true, true);
+    ScrollableWidget::scroll_into_view({ scroll_to.translated(adjust_x, adjust_y), { 1, 1 } }, true, true);
     update_rubber_banding(m_out_of_view_position);
 }
 
@@ -423,7 +423,7 @@ void IconView::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
-    
+
     if (fill_with_background_color())
         painter.fill_rect(event.rect(), widget_background_color);
     painter.translate(frame_thickness(), frame_thickness());
@@ -438,8 +438,8 @@ void IconView::paint_event(PaintEvent& event)
             background_color = widget_background_color;
         }
 
-        auto icon = model()->data(item_data.index, ModelRole::Icon);
-        auto item_text = model()->data(item_data.index, ModelRole::Display);
+        auto icon = item_data.index.data(ModelRole::Icon);
+        auto item_text = item_data.index.data();
 
         if (icon.is_icon()) {
             if (auto bitmap = icon.as_icon().bitmap_for_size(item_data.icon_rect.width())) {
@@ -458,7 +458,7 @@ void IconView::paint_event(PaintEvent& event)
         if (item_data.selected)
             text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
         else
-            text_color = model()->data(item_data.index, ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
+            text_color = item_data.index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(item_data.text_rect, background_color);
         painter.draw_text(item_data.text_rect, item_text.to_string(), font_for_index(item_data.index), Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
 
@@ -482,7 +482,7 @@ void IconView::did_update_selection()
     AbstractView::did_update_selection();
     if (m_changing_selection)
         return;
-    
+
     // Selection was modified externally, we need to synchronize our cache
     do_clear_selection();
     selection().for_each_index([&](const ModelIndex& index) {

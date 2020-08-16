@@ -74,7 +74,7 @@ void AbstractTableView::update_column_sizes()
             header_width += font().width(" \xE2\xAC\x86"); // UPWARDS BLACK ARROW
         int column_width = header_width;
         for (int row = 0; row < row_count; ++row) {
-            auto cell_data = model.data(model.index(row, column));
+            auto cell_data = model.index(row, column).data();
             int cell_width = 0;
             if (cell_data.is_icon()) {
                 cell_width = item_height();

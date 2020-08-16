@@ -225,7 +225,7 @@ int main(int argc, char** argv)
     auto selected_file_names = [&] {
         Vector<String> files;
         g_project_tree_view->selection().for_each_index([&](const GUI::ModelIndex& index) {
-            files.append(g_project->model().data(index).as_string());
+            files.append(index.data().as_string());
         });
         return files;
     };
@@ -478,7 +478,7 @@ int main(int argc, char** argv)
     toolbar.add_separator();
 
     g_project_tree_view->on_activation = [&](auto& index) {
-        auto filename = g_project_tree_view->model()->data(index, GUI::ModelRole::Custom).to_string();
+        auto filename = index.data(GUI::ModelRole::Custom).to_string();
         open_file(filename);
     };
 
