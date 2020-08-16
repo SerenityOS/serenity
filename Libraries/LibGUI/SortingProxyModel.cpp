@@ -130,8 +130,8 @@ StringView SortingProxyModel::drag_data_type() const
 
 bool SortingProxyModel::less_than(const ModelIndex& index1, const ModelIndex& index2) const
 {
-    auto data1 = index1.model() ? index1.model()->data(index1, m_sort_role) : Variant();
-    auto data2 = index2.model() ? index2.model()->data(index2, m_sort_role) : Variant();
+    auto data1 = index1.data(m_sort_role);
+    auto data2 = index2.data(m_sort_role);
     if (data1.is_string() && data2.is_string())
         return data1.as_string().to_lowercase() < data2.as_string().to_lowercase();
     return data1 < data2;

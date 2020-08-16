@@ -142,7 +142,7 @@ Locator::~Locator()
 void Locator::open_suggestion(const GUI::ModelIndex& index)
 {
     auto filename_index = m_suggestion_view->model()->index(index.row(), LocatorSuggestionModel::Column::Name);
-    auto filename = m_suggestion_view->model()->data(filename_index, GUI::ModelRole::Display).to_string();
+    auto filename = filename_index.data().to_string();
     open_file(filename);
     close();
 }

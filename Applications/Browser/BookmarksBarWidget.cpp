@@ -119,8 +119,8 @@ void BookmarksBarWidget::model_did_update(unsigned)
     int width = 0;
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto title = model()->data(model()->index(item_index, 0)).to_string();
-        auto url = model()->data(model()->index(item_index, 1)).to_string();
+        auto title = model()->index(item_index, 0).data().to_string();
+        auto url = model()->index(item_index, 1).data().to_string();
 
         Gfx::IntRect rect { width, 0, font().width(title) + 32, height() };
 
@@ -192,8 +192,8 @@ bool BookmarksBarWidget::contains_bookmark(const String& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto item_title = model()->data(model()->index(item_index, 0)).to_string();
-        auto item_url = model()->data(model()->index(item_index, 1)).to_string();
+        auto item_title = model()->index(item_index, 0).data().to_string();
+        auto item_url = model()->index(item_index, 1).data().to_string();
         if (item_url == url) {
             return true;
         }
@@ -205,8 +205,8 @@ bool BookmarksBarWidget::remove_bookmark(const String& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto item_title = model()->data(model()->index(item_index, 0)).to_string();
-        auto item_url = model()->data(model()->index(item_index, 1)).to_string();
+        auto item_title = model()->index(item_index, 0).data().to_string();
+        auto item_url = model()->index(item_index, 1).data().to_string();
         if (item_url == url) {
             auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
 

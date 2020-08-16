@@ -59,7 +59,7 @@ void ListView::update_content_size()
 
     int content_width = 0;
     for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
-        auto text = model()->data(model()->index(row, m_model_column), ModelRole::Display);
+        auto text = model()->index(row, m_model_column).data();
         content_width = max(content_width, font().width(text.to_string()));
     }
 
@@ -150,7 +150,7 @@ void ListView::paint_event(PaintEvent& event)
         Gfx::IntRect row_rect(0, y, content_width(), item_height());
         painter.fill_rect(row_rect, background_color);
         auto index = model()->index(row_index, m_model_column);
-        auto data = model()->data(index);
+        auto data = index.data();
         auto font = font_for_index(index);
         if (data.is_bitmap()) {
             painter.blit(row_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
@@ -162,11 +162,11 @@ void ListView::paint_event(PaintEvent& event)
             if (is_selected_row)
                 text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
             else
-                text_color = model()->data(index, ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
+                text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
             auto text_rect = row_rect;
             text_rect.move_by(horizontal_padding(), 0);
             text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
-            auto text_alignment = model()->data(index, ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
+            auto text_alignment = index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
             painter.draw_text(text_rect, data.to_string(), font, text_alignment, text_color);
         }
 

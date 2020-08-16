@@ -61,7 +61,7 @@ Variant FilteringProxyModel::data(const ModelIndex& index, ModelRole role) const
     if ((size_t)index.row() > m_matching_indices.size() || index.row() < 0)
         return 0;
 
-    return m_model.data(m_matching_indices[index.row()], role);
+    return m_matching_indices[index.row()].data(role);
 }
 
 void FilteringProxyModel::update()
@@ -84,7 +84,7 @@ void FilteringProxyModel::filter()
             auto filter_matches = m_model.data_matches(index, m_filter_term);
             bool matches = filter_matches == TriState::True;
             if (filter_matches == TriState::Unknown) {
-                auto data = m_model.data(index, ModelRole::Display);
+                auto data = index.data();
                 if (data.is_string() && data.as_string().contains(m_filter_term))
                     matches = true;
             }

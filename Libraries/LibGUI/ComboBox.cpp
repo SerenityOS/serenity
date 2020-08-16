@@ -118,7 +118,7 @@ ComboBox::ComboBox()
     m_list_view->on_selection = [this](auto& index) {
         ASSERT(model());
         m_list_view->set_activates_on_selection(true);
-        auto new_value = model()->data(index).to_string();
+        auto new_value = index.data().to_string();
         m_editor->set_text(new_value);
         if (!m_only_allow_values_from_model)
             m_editor->select_all();
@@ -178,7 +178,7 @@ void ComboBox::open()
     int longest_item_width = 0;
     for (int i = 0; i < model()->row_count(); ++i) {
         auto index = model()->index(i);
-        auto item_text = model()->data(index).to_string();
+        auto item_text = index.data().to_string();
         longest_item_width = max(longest_item_width, m_list_view->font().width(item_text));
     }
     Gfx::IntSize size {
