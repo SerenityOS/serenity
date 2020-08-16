@@ -50,7 +50,7 @@ public:
     void update_section_node_on_toggle(const GUI::ModelIndex&, const bool);
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
-    virtual GUI::Variant data(const GUI::ModelIndex&, Role = Role::Display) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
     virtual TriState data_matches(const GUI::ModelIndex&, GUI::Variant) const override;
     virtual void update() override;
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;

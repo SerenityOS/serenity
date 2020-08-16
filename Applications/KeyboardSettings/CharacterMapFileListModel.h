@@ -48,12 +48,12 @@ public:
         return 1;
     }
 
-    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
         ASSERT(index.is_valid());
         ASSERT(index.column() == 0);
 
-        if (role == Role::Display)
+        if (role == GUI::ModelRole::Display)
             return m_file_names.at(index.row());
 
         return {};

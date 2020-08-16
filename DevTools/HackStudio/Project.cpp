@@ -97,16 +97,16 @@ public:
         return 1;
     }
 
-    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
         auto* node = static_cast<Project::ProjectTreeNode*>(index.internal_data());
-        if (role == Role::Display) {
+        if (role == GUI::ModelRole::Display) {
             return node->name;
         }
-        if (role == Role::Custom) {
+        if (role == GUI::ModelRole::Custom) {
             return node->path;
         }
-        if (role == Role::Icon) {
+        if (role == GUI::ModelRole::Icon) {
             if (node->type == Project::ProjectTreeNode::Type::Project)
                 return m_project.m_project_icon;
             if (node->type == Project::ProjectTreeNode::Type::Directory)
@@ -117,7 +117,7 @@ public:
                 return m_project.m_header_icon;
             return m_project.m_file_icon;
         }
-        if (role == Role::Font) {
+        if (role == GUI::ModelRole::Font) {
             if (node->name == g_currently_open_file)
                 return Gfx::Font::default_bold_font();
             return {};

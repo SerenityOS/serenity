@@ -40,7 +40,7 @@ public:
     virtual int row_count(const ModelIndex& = ModelIndex()) const override;
     virtual int column_count(const ModelIndex& = ModelIndex()) const override;
     virtual String column_name(int) const override;
-    virtual Variant data(const ModelIndex&, Role = Role::Display) const override;
+    virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const override;
     virtual void update() override;
     virtual StringView drag_data_type() const override;
     virtual ModelIndex parent_index(const ModelIndex&) const override;
@@ -53,8 +53,8 @@ public:
     ModelIndex map_to_source(const ModelIndex&) const;
     ModelIndex map_to_proxy(const ModelIndex&) const;
 
-    Role sort_role() const { return m_sort_role; }
-    void set_sort_role(Role role) { m_sort_role = role; }
+    ModelRole sort_role() const { return m_sort_role; }
+    void set_sort_role(ModelRole role) { m_sort_role = role; }
 
     virtual void sort(int column, SortOrder) override;
 
@@ -84,7 +84,7 @@ private:
     NonnullRefPtr<Model> m_source;
 
     HashMap<ModelIndex, NonnullOwnPtr<Mapping>> m_mappings;
-    Role m_sort_role { Role::Sort };
+    ModelRole m_sort_role { ModelRole::Sort };
     int m_last_key_column { -1 };
     SortOrder m_last_sort_order { SortOrder::Ascending };
 };

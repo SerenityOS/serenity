@@ -65,11 +65,11 @@ public:
     virtual ~ListViewModel() override { }
     virtual int row_count(const GUI::ModelIndex&) const override { return m_model_items.size(); }
     virtual int column_count(const GUI::ModelIndex&) const override { return 1; }
-    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
         ASSERT(index.is_valid());
         ASSERT(index.column() == 0);
-        if (role == Role::Display)
+        if (role == GUI::ModelRole::Display)
             return m_model_items.at(index.row());
         return {};
     }

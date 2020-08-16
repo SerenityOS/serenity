@@ -159,15 +159,15 @@ void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const Stri
         GUI::MessageBox::Type::Error);
 }
 
-GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto* variable = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
     switch (role) {
-    case Role::Display: {
+    case GUI::ModelRole::Display: {
         auto value_as_string = variable_value_as_string(*variable);
         return String::format("%s: %s", variable->name.characters(), value_as_string.characters());
     }
-    case Role::Icon:
+    case GUI::ModelRole::Icon:
         return m_variable_icon;
     default:
         return {};

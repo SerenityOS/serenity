@@ -115,10 +115,10 @@ static String with_whitespace_collapsed(const StringView& string)
     return builder.to_string();
 }
 
-GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto& node = *static_cast<DOM::Node*>(index.internal_data());
-    if (role == Role::Icon) {
+    if (role == GUI::ModelRole::Icon) {
         if (node.is_document())
             return m_document_icon;
         if (node.is_element())
@@ -126,7 +126,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, Role role) const
         // FIXME: More node type icons?
         return m_text_icon;
     }
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         if (node.is_text())
             return String::format("%s", with_whitespace_collapsed(downcast<DOM::Text>(node).data()).characters());
         if (!node.is_element())

@@ -70,16 +70,16 @@ public:
         }
     }
 
-    virtual GUI::Variant data(const GUI::ModelIndex& index, Role role = Role::Display) const override
+    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
-        if (role == Role::TextAlignment)
+        if (role == GUI::ModelRole::TextAlignment)
             return Gfx::TextAlignment::CenterLeft;
-        if (role == Role::Font) {
+        if (role == GUI::ModelRole::Font) {
             if (index.column() == Column::MatchedText)
                 return Gfx::Font::default_fixed_width_font();
             return {};
         }
-        if (role == Role::Display) {
+        if (role == GUI::ModelRole::Display) {
             auto& match = m_matches.at(index.row());
             switch (index.column()) {
             case Column::Filename:

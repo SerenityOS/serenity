@@ -85,13 +85,13 @@ int WidgetTreeModel::column_count(const GUI::ModelIndex&) const
     return 1;
 }
 
-GUI::Variant WidgetTreeModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant WidgetTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto* widget = static_cast<GUI::Widget*>(index.internal_data());
-    if (role == Role::Icon) {
+    if (role == GUI::ModelRole::Icon) {
         return m_widget_icon;
     }
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         return String::format("%s (%s)", widget->class_name(), widget->relative_rect().to_string().characters());
     }
     return {};

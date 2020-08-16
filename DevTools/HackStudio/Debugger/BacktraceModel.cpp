@@ -32,9 +32,9 @@ NonnullRefPtr<BacktraceModel> BacktraceModel::create(const DebugSession& debug_s
     return adopt(*new BacktraceModel(create_backtrace(debug_session, regs)));
 }
 
-GUI::Variant BacktraceModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant BacktraceModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         auto& frame = m_frames.at(index.row());
         return frame.function_name;
     }

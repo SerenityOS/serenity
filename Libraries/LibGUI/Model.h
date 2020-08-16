@@ -32,6 +32,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <LibGUI/ModelIndex.h>
+#include <LibGUI/ModelRole.h>
 #include <LibGUI/Variant.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/TextAlignment.h>
@@ -58,25 +59,12 @@ public:
         InvalidateAllIndexes = 1 << 0,
     };
 
-    enum class Role {
-        Display,
-        Sort,
-        ForegroundColor,
-        BackgroundColor,
-        Icon,
-        Font,
-        DragData,
-        TextAlignment,
-        Search,
-        Custom = 0x100, // Applications are free to use roles above this number as they please
-    };
-
     virtual ~Model();
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const = 0;
     virtual int column_count(const ModelIndex& = ModelIndex()) const = 0;
     virtual String column_name(int) const { return {}; }
-    virtual Variant data(const ModelIndex&, Role = Role::Display) const = 0;
+    virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const = 0;
     virtual TriState data_matches(const ModelIndex&, Variant) const { return TriState::Unknown; }
     virtual void update() = 0;
     virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }

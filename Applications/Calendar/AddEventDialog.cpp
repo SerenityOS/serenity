@@ -146,10 +146,10 @@ String AddEventDialog::MonthListModel::column_name(int column) const
     }
 }
 
-GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto& month = Calendar::name_of_month(index.row() + 1);
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Month:
             return month;

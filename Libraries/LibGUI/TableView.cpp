@@ -128,13 +128,13 @@ void TableView::paint_event(PaintEvent& event)
                     if (is_selected_row)
                         text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
                     else
-                        text_color = model()->data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
+                        text_color = model()->data(cell_index, ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
                     if (!is_selected_row) {
-                        auto cell_background_color = model()->data(cell_index, Model::Role::BackgroundColor);
+                        auto cell_background_color = model()->data(cell_index, ModelRole::BackgroundColor);
                         if (cell_background_color.is_valid())
                             painter.fill_rect(cell_rect_for_fill, cell_background_color.to_color(background_color));
                     }
-                    auto text_alignment = model()->data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
+                    auto text_alignment = model()->data(cell_index, ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
                     painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                 }
             }

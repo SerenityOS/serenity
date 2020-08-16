@@ -171,7 +171,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
         if (index.is_valid()) {
             auto& metadata = ensure_metadata_for_index(index);
             int x_offset = tree_column_x_offset + horizontal_padding() + indent_level * indent_width_in_pixels();
-            auto node_text = model.data(index, Model::Role::Display).to_string();
+            auto node_text = model.data(index, ModelRole::Display).to_string();
             Gfx::IntRect rect = {
                 x_offset, y_offset,
                 icon_size() + icon_spacing() + text_padding() + font_for_index(index)->width(node_text) + text_padding(), item_height()
@@ -302,15 +302,15 @@ void TreeView::paint_event(PaintEvent& event)
                             painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
                     } else {
                         if (!is_selected_row)
-                            text_color = model.data(cell_index, Model::Role::ForegroundColor).to_color(palette().color(foreground_role()));
-                        auto text_alignment = model.data(cell_index, Model::Role::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
+                            text_color = model.data(cell_index, ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
+                        auto text_alignment = model.data(cell_index, ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
                         painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                     }
                 }
             } else {
                 // It's the tree column!
                 Gfx::IntRect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
-                auto icon = model.data(index, Model::Role::Icon);
+                auto icon = model.data(index, ModelRole::Icon);
                 if (icon.is_icon()) {
                     if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size())) {
                         if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row())
@@ -323,7 +323,7 @@ void TreeView::paint_event(PaintEvent& event)
                     icon_rect.right() + 1 + icon_spacing(), rect.y(),
                     rect.width() - icon_size() - icon_spacing(), rect.height()
                 };
-                auto node_text = model.data(index, Model::Role::Display).to_string();
+                auto node_text = model.data(index, ModelRole::Display).to_string();
                 painter.draw_text(text_rect, node_text, font_for_index(index), Gfx::TextAlignment::Center, text_color);
                 auto index_at_indent = index;
                 for (int i = indent_level; i > 0; --i) {

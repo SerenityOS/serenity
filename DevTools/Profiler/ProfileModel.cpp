@@ -108,14 +108,14 @@ String ProfileModel::column_name(int column) const
     }
 }
 
-GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, Role role) const
+GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
     auto* node = static_cast<ProfileNode*>(index.internal_data());
-    if (role == Role::TextAlignment) {
+    if (role == GUI::ModelRole::TextAlignment) {
         if (index.column() == Column::SampleCount || index.column() == Column::SelfCount)
             return Gfx::TextAlignment::CenterRight;
     }
-    if (role == Role::Icon) {
+    if (role == GUI::ModelRole::Icon) {
         if (index.column() == Column::StackFrame) {
             if (node->address() >= 0xc0000000)
                 return m_kernel_frame_icon;
@@ -123,7 +123,7 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, Role role) const
         }
         return {};
     }
-    if (role == Role::Display) {
+    if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::SampleCount) {
             if (m_profile.show_percentages())
                 return ((float)node->event_count() / (float)m_profile.filtered_event_count()) * 100.0f;

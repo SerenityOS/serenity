@@ -478,7 +478,7 @@ int main(int argc, char** argv)
     toolbar.add_separator();
 
     g_project_tree_view->on_activation = [&](auto& index) {
-        auto filename = g_project_tree_view->model()->data(index, GUI::Model::Role::Custom).to_string();
+        auto filename = g_project_tree_view->model()->data(index, GUI::ModelRole::Custom).to_string();
         open_file(filename);
     };
 

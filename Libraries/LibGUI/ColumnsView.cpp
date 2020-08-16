@@ -125,7 +125,7 @@ void ColumnsView::paint_event(PaintEvent& event)
             Gfx::IntRect row_rect { column_x, row * item_height(), column.width, item_height() };
             painter.fill_rect(row_rect, background_color);
 
-            auto icon = model()->data(index, Model::Role::Icon);
+            auto icon = model()->data(index, ModelRole::Icon);
             Gfx::IntRect icon_rect = { column_x + icon_spacing(), 0, icon_size(), icon_size() };
             icon_rect.center_vertically_within(row_rect);
             if (icon.is_icon()) {
