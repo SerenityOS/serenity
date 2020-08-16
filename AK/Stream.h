@@ -62,7 +62,11 @@ public:
     virtual bool discard_or_error(size_t count) = 0;
 };
 
+#if defined(__cpp_concepts) && !defined(__COVERITY__)
 template<Concepts::Integral Integral>
+#else
+template<typename Integral, typename EnableIf<IsIntegral<Integral>::value, int>::Type = 0>
+#endif
 InputStream& operator>>(InputStream& stream, Integral& value)
 {
     stream.read_or_error({ &value, sizeof(value) });
@@ -70,12 +74,18 @@ InputStream& operator>>(InputStream& stream, Integral& value)
 }
 
 #ifndef KERNEL
+
+#if defined(__cpp_concepts) && !defined(__COVERITY__)
 template<Concepts::FloatingPoint FloatingPoint>
+#else
+template<typename FloatingPoint, typename EnableIf<IsFloatingPoint<FloatingPoint>::value, int>::Type = 0>
+#endif
 InputStream& operator>>(InputStream& stream, FloatingPoint& value)
 {
     stream.read_or_error({ &value, sizeof(value) });
     return stream;
 }
+
 #endif
 
 inline InputStream& operator>>(InputStream& stream, bool& value)
