@@ -359,7 +359,8 @@ private:
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
     // TODO: handle signals internally.
-    struct termios m_termios, m_default_termios;
+    struct termios m_termios {};
+    struct termios m_default_termios {};
     bool m_was_interrupted { false };
     bool m_was_resized { false };
 
