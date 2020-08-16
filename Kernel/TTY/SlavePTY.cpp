@@ -38,7 +38,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     , m_master(master)
     , m_index(index)
 {
-    sprintf(m_tty_name, "/dev/pts/%u", m_index);
+    snprintf(m_tty_name, sizeof(m_tty_name), "/dev/pts/%u", m_index);
     auto process = Process::current();
     set_uid(process->uid());
     set_gid(process->gid());
