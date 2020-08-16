@@ -176,6 +176,8 @@ void SortingProxyModel::sort_mapping(Mapping& mapping, int column, SortOrder sor
         return;
     }
 
+    auto old_source_rows = mapping.source_rows;
+
     int row_count = source().row_count(mapping.source_parent);
     for (int i = 0; i < row_count; ++i)
         mapping.source_rows[i] = i;
@@ -187,6 +189,34 @@ void SortingProxyModel::sort_mapping(Mapping& mapping, int column, SortOrder sor
 
     for (int i = 0; i < row_count; ++i)
         mapping.proxy_rows[mapping.source_rows[i]] = i;
+
+    // FIXME: I really feel like this should be done at the view layer somehow.
+    for_each_view([&](AbstractView& view) {
+        view.selection().change_from_model({}, [&](ModelSelection& selection) {
+            Vector<ModelIndex> selected_indexes_in_source;
+            Vector<ModelIndex> stale_indexes_in_selection;
+            selection.for_each_index([&](const ModelIndex& index) {
+                if (index.parent() == mapping.source_parent) {
+                    stale_indexes_in_selection.append(index);
+                    selected_indexes_in_source.append(source().index(old_source_rows[index.row()], index.column(), mapping.source_parent));
+                }
+            });
+
+            for (auto& index : stale_indexes_in_selection) {
+                selection.remove(index);
+            }
+
+            for (auto& index : selected_indexes_in_source) {
+                for (size_t i = 0; i < mapping.source_rows.size(); ++i) {
+                    if (mapping.source_rows[i] == index.row()) {
+                        auto new_source_index = this->index(i, index.column(), mapping.source_parent);
+                        selection.add(new_source_index);
+                        break;
+                    }
+                }
+            }
+        });
+    });
 }
 
 void SortingProxyModel::sort(int column, SortOrder sort_order)
@@ -199,7 +229,7 @@ void SortingProxyModel::sort(int column, SortOrder sort_order)
     m_last_key_column = column;
     m_last_sort_order = sort_order;
 
-    did_update();
+    did_update(UpdateFlag::DontInvalidateIndexes);
 }
 
 SortingProxyModel::InternalMapIterator SortingProxyModel::build_mapping(const ModelIndex& source_parent)
