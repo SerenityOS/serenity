@@ -97,15 +97,6 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
     return AK::memmem(haystack, haystack_length, needle, needle_length);
 }
 
-char* strcpy(char* dest, const char* src)
-{
-    auto* dest_ptr = dest;
-    auto* src_ptr = src;
-    while ((*dest_ptr++ = *src_ptr++) != '\0')
-        ;
-    return dest;
-}
-
 void memset_user(void* dest_ptr, int c, size_t n)
 {
     ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));

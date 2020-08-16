@@ -42,7 +42,6 @@ void copy_from_user(void*, const void*, size_t);
 void memset_user(void*, int, size_t);
 
 void* memcpy(void*, const void*, size_t);
-char* strcpy(char*, const char*);
 int strncmp(const char* s1, const char* s2, size_t n);
 char* strstr(const char* haystack, const char* needle);
 int strcmp(char const*, const char*);
@@ -68,7 +67,6 @@ inline void copy_to_user(T* dest, const T* src)
 {
     copy_to_user(dest, src, sizeof(T));
 }
-
 
 template<typename T>
 inline void copy_from_user(T* dest, Userspace<const T*> src)
