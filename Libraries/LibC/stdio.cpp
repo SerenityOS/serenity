@@ -889,10 +889,16 @@ ALWAYS_INLINE void sized_buffer_putch(char*& bufptr, char ch)
 
 int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
 {
-    __vsnprintf_space_remaining = size;
+    if (size) {
+        __vsnprintf_space_remaining = size - 1;
+    } else {
+        __vsnprintf_space_remaining = 0;
+    }
     int ret = printf_internal(sized_buffer_putch, buffer, fmt, ap);
     if (__vsnprintf_space_remaining) {
         buffer[ret] = '\0';
+    } else if (size > 0) {
+        buffer[size - 1] = '\0';
     }
     return ret;
 }
