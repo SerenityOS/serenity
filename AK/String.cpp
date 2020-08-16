@@ -210,7 +210,7 @@ String String::number(unsigned long long value)
 {
     int size;
     char buffer[32];
-    size = sprintf(buffer, "%llu", value);
+    size = snprintf(buffer, sizeof(buffer), "%llu", value);
     return String(buffer, size);
 }
 
@@ -218,35 +218,35 @@ String String::number(unsigned long value)
 {
     int size;
     char buffer[32];
-    size = sprintf(buffer, "%lu", value);
+    size = snprintf(buffer, sizeof(buffer), "%lu", value);
     return String(buffer, size);
 }
 
 String String::number(unsigned value)
 {
     char buffer[32];
-    int size = sprintf(buffer, "%u", value);
+    int size = snprintf(buffer, sizeof(buffer), "%u", value);
     return String(buffer, size);
 }
 
 String String::number(long long value)
 {
     char buffer[32];
-    int size = sprintf(buffer, "%lld", value);
+    int size = snprintf(buffer, sizeof(buffer), "%lld", value);
     return String(buffer, size);
 }
 
 String String::number(long value)
 {
     char buffer[32];
-    int size = sprintf(buffer, "%ld", value);
+    int size = snprintf(buffer, sizeof(buffer), "%ld", value);
     return String(buffer, size);
 }
 
 String String::number(int value)
 {
     char buffer[32];
-    int size = sprintf(buffer, "%d", value);
+    int size = snprintf(buffer, sizeof(buffer), "%d", value);
     return String(buffer, size);
 }
 
