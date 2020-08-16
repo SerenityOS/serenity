@@ -28,6 +28,7 @@
 
 #include <AK/Traits.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/ModelRole.h>
 
 namespace GUI {
 
@@ -35,7 +36,7 @@ class ModelIndex {
     friend class Model;
 
 public:
-    ModelIndex() {}
+    ModelIndex() { }
 
     bool is_valid() const { return m_row != -1 && m_column != -1; }
     int row() const { return m_row; }
@@ -56,6 +57,8 @@ public:
     }
 
     const Model* model() const { return m_model; }
+
+    Variant data(ModelRole = ModelRole::Display) const;
 
 private:
     ModelIndex(const Model& model, int row, int column, void* internal_data)

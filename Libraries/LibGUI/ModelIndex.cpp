@@ -25,9 +25,19 @@
  */
 
 #include <AK/String.h>
-#include <LibGUI/ModelIndex.h>
+#include <LibGUI/Model.h>
+#include <LibGUI/Variant.h>
 
 namespace GUI {
+
+Variant ModelIndex::data(ModelRole role) const
+{
+    if (!is_valid())
+        return {};
+
+    ASSERT(model());
+    return model()->data(*this, role);
+}
 
 const LogStream& operator<<(const LogStream& stream, const ModelIndex& value)
 {
