@@ -176,7 +176,6 @@ private:
 
     NonnullRefPtr<CSS::StyleProperties> m_specified_style;
     CSS::Position m_position;
-    CSS::TextAlign m_text_align;
 };
 
 class LayoutNodeWithStyleAndBoxModelMetrics : public LayoutNodeWithStyle {
