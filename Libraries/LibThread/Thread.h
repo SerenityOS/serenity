@@ -45,7 +45,7 @@ public:
 
 private:
     Function<int()> m_action;
-    pthread_t m_tid;
+    pthread_t m_tid { 0 };
     String m_thread_name;
 };
 
