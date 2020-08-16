@@ -170,7 +170,7 @@ int main(int argc, char** argv)
     //
 
     auto& header = background.add<GUI::Label>();
-    header.set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold11.font"));
+    header.set_font(Gfx::Font::load_from_file("/res/fonts/PebbletonBold14.font"));
     header.set_text("Welcome to SerenityOS!");
     header.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
