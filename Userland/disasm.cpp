@@ -73,7 +73,7 @@ int main(int argc, char** argv)
         NonnullRefPtr<ELF::Loader> elf_loader = ELF::Loader::create(asm_data, asm_size);
         if (elf_loader->image().is_valid()) {
             elf = elf_loader;
-            symbol_provider = new X86::ELFSymbolProvider(*elf);
+            symbol_provider = make<X86::ELFSymbolProvider>(*elf);
             elf->image().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
                 // FIXME: Disassemble all SHT_PROGBITS sections, not just .text.
                 if (section.name() != ".text")
