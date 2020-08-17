@@ -1,5 +1,6 @@
 set(SOURCES
     Editor.cpp
+    InternalFunctions.cpp
     SuggestionManager.cpp
     XtermSuggestionDisplay.cpp
 )
