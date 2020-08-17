@@ -27,6 +27,7 @@
 #include "ChessWidget.h"
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Menu.h>
@@ -103,7 +104,12 @@ int main(int argc, char** argv)
             action->set_checked(true);
         board_theme_menu.add_action(*action);
     }
-
+    
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("Chess", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-chess.png"), window);
+    }));
+    
     app->set_menubar(move(menubar));
 
     window->show();
