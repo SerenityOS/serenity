@@ -26,7 +26,7 @@
 
 #include <AK/Span.h>
 #include <AK/Types.h>
-#include <Libraries/LibCrypto/Checksum/CRC32.h>
+#include <LibCrypto/Checksum/CRC32.h>
 
 namespace Crypto::Checksum {
 
