@@ -153,7 +153,10 @@ bool Chess::is_legal_no_check(const Move& move, Colour colour) const
     if (move.to.rank > 7 || move.to.file > 7)
         return false;
 
-    if (move.promote_to == Type::Pawn || move.promote_to == Type::King || move.promote_to == Type::None)
+    if (piece.type != Type::Pawn && move.promote_to != Type::None)
+        return false;
+
+    if (move.promote_to == Type::Pawn || move.promote_to == Type::King)
         return false;
 
     if (piece.type == Type::Pawn) {
@@ -161,6 +164,14 @@ bool Chess::is_legal_no_check(const Move& move, Colour colour) const
         unsigned start_rank = (colour == Colour::White) ? 1 : 6;
         unsigned other_start_rank = (colour == Colour::White) ? 6 : 1;
         unsigned en_passant_rank = (colour == Colour::White) ? 4 : 3;
+        unsigned promotion_rank = (colour == Colour::White) ? 7 : 0;
+
+        if (move.to.rank == promotion_rank) {
+            if (move.promote_to == Type::Pawn || move.promote_to == Type::King || move.promote_to == Type::None)
+                return false;
+        } else if (move.promote_to != Type::None) {
+            return false;
+        }
 
         if (move.to.rank == move.from.rank + dir && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
             // Regular pawn move.
@@ -457,7 +468,9 @@ bool Chess::is_promotion_move(const Move& move, Colour colour) const
     if (colour == Colour::None)
         colour = turn();
 
-    if (!is_legal(move, colour))
+    Move queen_move = move;
+    queen_move.promote_to = Type::Queen;
+    if (!is_legal(queen_move, colour))
         return false;
 
     if (get_piece(move.from).type == Type::Pawn && ((colour == Colour::Black && move.to.rank == 0) || (colour == Colour::White && move.to.rank == 7)))
