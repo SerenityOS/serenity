@@ -27,8 +27,11 @@
 #include "DirectoryView.h"
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SortingProxyModel.h>
+#include <serenity.h>
+#include <spawn.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -97,6 +100,10 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
     }
 
     if (S_ISDIR(st.st_mode)) {
+        if (is_desktop()) {
+            Desktop::Launcher::open(URL::create_with_file_protocol(path));
+            return;
+        }
         open(path);
         return;
     }
@@ -104,33 +111,36 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
     auto url = URL::create_with_file_protocol(path);
     auto launcher_handlers = get_launch_handlers(url);
     auto default_launcher = get_default_launch_handler(launcher_handlers);
-    if (default_launcher && on_launch) {
-        on_launch(url, *default_launcher);
+    if (default_launcher) {
+        launch(url, *default_launcher);
     } else {
         auto error_message = String::format("Could not open %s", path.characters());
         GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
     }
 }
 
-DirectoryView::DirectoryView()
-    : m_model(GUI::FileSystemModel::create())
+DirectoryView::DirectoryView(Mode mode)
+    : m_mode(mode)
+    , m_model(GUI::FileSystemModel::create())
     , m_sorting_model(GUI::SortingProxyModel::create(m_model))
 {
     set_active_widget(nullptr);
     set_content_margins({ 2, 2, 2, 2 });
-    m_icon_view = add<GUI::IconView>();
-    m_icon_view->set_model(m_sorting_model);
 
-    m_columns_view = add<GUI::ColumnsView>();
-    m_columns_view->set_model(m_sorting_model);
+    setup_model();
 
-    m_table_view = add<GUI::TableView>();
-    m_table_view->set_model(m_sorting_model);
+    setup_icon_view();
+    if (mode != Mode::Desktop) {
+        setup_columns_view();
+        setup_table_view();
+    }
 
-    m_table_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
+    set_view_mode(ViewMode::Icon);
+}
 
-    m_icon_view->set_model_column(GUI::FileSystemModel::Column::Name);
-    m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);
+void DirectoryView::setup_model()
+{
+    m_model->set_root_path(Core::StandardPaths::desktop_directory());
 
     m_model->on_error = [this](int error, const char* error_string) {
         bool quit = false;
@@ -144,8 +154,10 @@ DirectoryView::DirectoryView()
     };
 
     m_model->on_complete = [this] {
-        m_table_view->selection().clear();
-        m_icon_view->selection().clear();
+        if (m_table_view)
+            m_table_view->selection().clear();
+        if (m_icon_view)
+            m_icon_view->selection().clear();
 
         add_path_to_history(model().root_path());
 
@@ -159,13 +171,72 @@ DirectoryView::DirectoryView()
         if (on_thumbnail_progress)
             on_thumbnail_progress(done, total);
     };
+}
 
+void DirectoryView::setup_icon_view()
+{
+    m_icon_view = add<GUI::IconView>();
+
+    if (is_desktop()) {
+        m_icon_view->set_frame_shape(Gfx::FrameShape::NoFrame);
+        m_icon_view->set_scrollbars_enabled(false);
+        m_icon_view->set_fill_with_background_color(false);
+    }
+
+    m_icon_view->set_model(m_sorting_model);
+    m_icon_view->set_model_column(GUI::FileSystemModel::Column::Name);
     m_icon_view->on_activation = [&](auto& index) {
         handle_activation(map_index(index));
     };
+    m_icon_view->on_selection_change = [this] {
+        update_statusbar();
+        if (on_selection_change)
+            on_selection_change(*m_icon_view);
+    };
+    m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
+        if (on_context_menu_request)
+            on_context_menu_request(*m_icon_view, map_index(index), event);
+    };
+    m_icon_view->on_drop = [this](auto& index, auto& event) {
+        if (on_drop)
+            on_drop(*m_icon_view, map_index(index), event);
+    };
+}
+
+void DirectoryView::setup_columns_view()
+{
+    m_columns_view = add<GUI::ColumnsView>();
+    m_columns_view->set_model(m_sorting_model);
+    m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);
+
     m_columns_view->on_activation = [&](auto& index) {
         handle_activation(map_index(index));
     };
+
+    m_columns_view->on_selection_change = [this] {
+        update_statusbar();
+        if (on_selection_change)
+            on_selection_change(*m_columns_view);
+    };
+
+    m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
+        if (on_context_menu_request)
+            on_context_menu_request(*m_columns_view, map_index(index), event);
+    };
+
+    m_columns_view->on_drop = [this](auto& index, auto& event) {
+        if (on_drop)
+            on_drop(*m_columns_view, map_index(index), event);
+    };
+}
+
+void DirectoryView::setup_table_view()
+{
+    m_table_view = add<GUI::TableView>();
+    m_table_view->set_model(m_sorting_model);
+
+    m_table_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
+
     m_table_view->on_activation = [&](auto& index) {
         handle_activation(map_index(index));
     };
@@ -175,44 +246,16 @@ DirectoryView::DirectoryView()
         if (on_selection_change)
             on_selection_change(*m_table_view);
     };
-    m_icon_view->on_selection_change = [this] {
-        update_statusbar();
-        if (on_selection_change)
-            on_selection_change(*m_icon_view);
-    };
-    m_columns_view->on_selection_change = [this] {
-        update_statusbar();
-        if (on_selection_change)
-            on_selection_change(*m_columns_view);
-    };
 
     m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
             on_context_menu_request(*m_table_view, map_index(index), event);
-    };
-    m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
-        if (on_context_menu_request)
-            on_context_menu_request(*m_icon_view, map_index(index), event);
-    };
-    m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
-        if (on_context_menu_request)
-            on_context_menu_request(*m_columns_view, map_index(index), event);
     };
 
     m_table_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
             on_drop(*m_table_view, map_index(index), event);
     };
-    m_icon_view->on_drop = [this](auto& index, auto& event) {
-        if (on_drop)
-            on_drop(*m_icon_view, map_index(index), event);
-    };
-    m_columns_view->on_drop = [this](auto& index, auto& event) {
-        if (on_drop)
-            on_drop(*m_columns_view, map_index(index), event);
-    };
-
-    set_view_mode(ViewMode::Icon);
 }
 
 DirectoryView::~DirectoryView()
@@ -353,4 +396,36 @@ void DirectoryView::update_statusbar()
 void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
 {
     m_model->set_should_show_dotfiles(show_dotfiles);
+}
+
+void DirectoryView::launch(const URL&, const LauncherHandler& launcher_handler)
+{
+    pid_t child;
+    if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
+        const char* argv[] = { launcher_handler.details().name.characters(), nullptr };
+        posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+        if (disown(child) < 0)
+            perror("disown");
+    } else {
+        for (auto& path : selected_file_paths()) {
+            const char* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
+            posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+            if (disown(child) < 0)
+                perror("disown");
+        }
+    }
+}
+
+Vector<String> DirectoryView::selected_file_paths() const
+{
+    Vector<String> paths;
+    auto& view = current_view();
+    auto& model = *view.model();
+    view.selection().for_each_index([&](const GUI::ModelIndex& index) {
+        auto parent_index = model.parent_index(index);
+        auto name_index = model.index(index.row(), GUI::FileSystemModel::Column::Name, parent_index);
+        auto path = name_index.data(GUI::ModelRole::Custom).to_string();
+        paths.append(path);
+    });
+    return paths;
 }

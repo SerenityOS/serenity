@@ -66,7 +66,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static int run_in_desktop_mode(RefPtr<Core::ConfigFile>, String initial_location);
+static int run_in_desktop_mode(RefPtr<Core::ConfigFile>);
 static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location);
 
 static Gfx::Bitmap& folder_icon()
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     }
 
     if (app->args().contains_slow("--desktop") || app->args().contains_slow("-d"))
-        return run_in_desktop_mode(move(config), Core::StandardPaths::desktop_directory());
+        return run_in_desktop_mode(move(config));
 
     // our initial location is defined as, in order of precedence:
     // 1. the first command-line argument (e.g. FileManager /bin)
@@ -147,14 +147,13 @@ private:
     }
 };
 
-int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location)
+int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
 {
     static constexpr const char* process_name = "FileManager (Desktop)";
     set_process_name(process_name, strlen(process_name));
     pthread_setname_np(pthread_self(), process_name);
 
     (void)config;
-    (void)initial_location;
     auto window = GUI::Window::construct();
     window->set_title("Desktop Manager");
     window->set_window_type(GUI::WindowType::Desktop);
@@ -163,66 +162,12 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     auto& desktop_widget = window->set_main_widget<DesktopWidget>();
     desktop_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& icon_view = desktop_widget.add<GUI::IconView>();
-    icon_view.set_frame_thickness(0);
-    icon_view.set_scrollbars_enabled(false);
-    icon_view.set_fill_with_background_color(false);
-
-    auto model = GUI::FileSystemModel::create(initial_location);
-    icon_view.set_model(model);
-    icon_view.set_model_column(GUI::FileSystemModel::Column::Name);
-
-    icon_view.on_activation = [&](auto& index) {
-        if (!index.is_valid())
-            return;
-        auto& node = model->node(index);
-        auto path = node.full_path(model);
-        Desktop::Launcher::open(URL::create_with_file_protocol(path));
-    };
+    auto& directory_view = desktop_widget.add<DirectoryView>(DirectoryView::Mode::Desktop);
+    (void)directory_view;
 
     auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
 
-    auto mkdir_action = GUI::Action::create("New directory...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
-        String value;
-        if (GUI::InputBox::show(value, window, "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto new_dir_path = LexicalPath::canonicalized_path(
-                String::format("%s/%s",
-                    model->root_path().characters(),
-                    value.characters()));
-            int rc = mkdir(new_dir_path.characters(), 0777);
-            if (rc < 0) {
-                GUI::MessageBox::show(window, String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-            }
-        }
-    });
-
-    auto touch_action = GUI::Action::create("New file...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
-        String value;
-        if (GUI::InputBox::show(value, window, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto new_file_path = LexicalPath::canonicalized_path(
-                String::format("%s/%s",
-                    model->root_path().characters(),
-                    value.characters()));
-            struct stat st;
-            int rc = stat(new_file_path.characters(), &st);
-            if ((rc < 0 && errno != ENOENT)) {
-                GUI::MessageBox::show(window, String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-                return;
-            }
-            if (rc == 0) {
-                GUI::MessageBox::show(window, String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error);
-                return;
-            }
-            int fd = creat(new_file_path.characters(), 0666);
-            if (fd < 0) {
-                GUI::MessageBox::show(window, String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-                return;
-            }
-            rc = close(fd);
-            assert(rc >= 0);
-        }
-    });
-
+#if 0
     auto file_manager_action = GUI::Action::create("Show in FileManager...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"), [&](const GUI::Action&) {
         Desktop::Launcher::open(URL::create_with_file_protocol(model->root_path()));
     });
@@ -238,10 +183,11 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config, String initial_location
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(display_properties_action);
 
-    icon_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+    directory_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (!index.is_valid())
             desktop_view_context_menu->popup(event.screen_position());
     };
+#endif
 
     auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
     auto selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
@@ -296,7 +242,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::SymlinkTarget, true);
     tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     tree_view.set_preferred_size(150, 0);
-    auto& directory_view = splitter.add<DirectoryView>();
+    auto& directory_view = splitter.add<DirectoryView>(DirectoryView::Mode::Normal);
 
     auto& statusbar = widget.add<GUI::StatusBar>();
 
@@ -438,19 +384,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     view_type_action_group->add_action(*view_as_table_action);
     view_type_action_group->add_action(*view_as_columns_action);
 
-    auto selected_file_paths = [&] {
-        Vector<String> paths;
-        auto& view = directory_view.current_view();
-        auto& model = *view.model();
-        view.selection().for_each_index([&](const GUI::ModelIndex& index) {
-            auto parent_index = model.parent_index(index);
-            auto name_index = model.index(index.row(), GUI::FileSystemModel::Column::Name, parent_index);
-            auto path = name_index.data(GUI::ModelRole::Custom).to_string();
-            paths.append(path);
-        });
-        return paths;
-    };
-
     auto tree_view_selected_file_paths = [&] {
         Vector<String> paths;
         auto& view = tree_view;
@@ -465,8 +398,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     });
 
     auto copy_action = GUI::CommonActions::make_copy_action(
-        [&](const GUI::Action&) {
-            Vector<String> paths = selected_file_paths();
+        [&](auto&) {
+            auto paths = directory_view.selected_file_paths();
 
             if (!paths.size())
                 paths = tree_view_selected_file_paths();
@@ -493,7 +426,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 if (action.activator() == directory_context_menu || directory_view.active_widget()->is_focused()) {
                     path = directory_view.path();
                     container_dir_path = path;
-                    selected = selected_file_paths();
+                    selected = directory_view.selected_file_paths();
                 } else {
                     path = directories_model->full_path(tree_view.selection().first());
                     container_dir_path = LexicalPath(path).basename();
@@ -530,7 +463,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
         AK::String target_directory;
         if (action.activator() == directory_context_menu)
-            target_directory = selected_file_paths()[0];
+            target_directory = directory_view.selected_file_paths()[0];
         else
             target_directory = directory_view.path();
 
@@ -554,7 +487,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     auto do_delete = [&](ConfirmBeforeDelete confirm, const GUI::Action&) {
-        Vector<String> paths = selected_file_paths();
+        auto paths = directory_view.selected_file_paths();
 
         if (!paths.size())
             paths = tree_view_selected_file_paths();
@@ -814,23 +747,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     NonnullRefPtrVector<LauncherHandler> current_file_handlers;
     RefPtr<GUI::Action> file_context_menu_action_default_action;
 
-    directory_view.on_launch = [&](const AK::URL&, const LauncherHandler& launcher_handler) {
-        pid_t child;
-        if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
-            const char* argv[] = { launcher_handler.details().name.characters(), nullptr };
-            posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
-            if (disown(child) < 0)
-                perror("disown");
-        } else {
-            for (auto& path : selected_file_paths()) {
-                const char* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
-                posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
-                if (disown(child) < 0)
-                    perror("disown");
-            }
-        }
-    };
-
     directory_view.on_context_menu_request = [&](const GUI::AbstractView&, const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {
             auto& node = directory_view.model().node(index);
@@ -853,7 +769,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 auto default_file_handler = directory_view.get_default_launch_handler(current_file_handlers);
                 if (default_file_handler) {
                     auto file_open_action = default_file_handler->create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
-                        directory_view.on_launch(URL::create_with_file_protocol(full_path), launcher_handler);
+                        directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
                     });
                     if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
                         file_open_action->set_text(String::format("Run %s", file_open_action->text().characters()));
@@ -875,7 +791,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                         if (&handler == default_file_handler.ptr())
                             continue;
                         file_open_with_menu.add_action(handler.create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
-                            directory_view.on_launch(URL::create_with_file_protocol(full_path), launcher_handler);
+                            directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
                         }));
                     }
                 }
