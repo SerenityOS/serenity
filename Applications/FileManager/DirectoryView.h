@@ -128,7 +128,7 @@ public:
 
     void set_should_show_dotfiles(bool);
 
-    GUI::FileSystemModel& model() { return *m_model; }
+    const GUI::FileSystemModel::Node& node(const GUI::ModelIndex&) const;
 
     bool is_desktop() const { return m_mode == Mode::Desktop; }
 
@@ -140,6 +140,7 @@ public:
 private:
     explicit DirectoryView(Mode);
     const GUI::FileSystemModel& model() const { return *m_model; }
+    GUI::FileSystemModel& model() { return *m_model; }
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
@@ -151,7 +152,6 @@ private:
     void setup_table_view();
 
     void handle_activation(const GUI::ModelIndex&);
-    GUI::ModelIndex map_index(const GUI::ModelIndex&) const;
 
     void set_status_message(const StringView&);
     void update_statusbar();
