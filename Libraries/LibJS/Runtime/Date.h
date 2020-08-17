@@ -52,6 +52,11 @@ public:
         return String::format("%s %s", date_string().characters(), time_string().characters());
     }
 
+    // FIXME: One day, implement real locale support. Until then, everyone gets what the Clock MenuApplet displays.
+    String locale_date_string() const { return m_datetime.to_string("%Y-%m-%d"); }
+    String locale_string() const { return m_datetime.to_string(); }
+    String locale_time_string() const { return m_datetime.to_string("%H:%M:%S"); }
+
     virtual Value value_of() const override
     {
         return Value(static_cast<double>(m_datetime.timestamp() * 1000 + m_milliseconds));

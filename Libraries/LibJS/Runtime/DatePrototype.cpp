@@ -67,6 +67,9 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function("getSeconds", get_seconds, 0, attr);
     define_native_function("getTime", get_time, 0, attr);
     define_native_function("toDateString", to_date_string, 0, attr);
+    define_native_function("toLocaleDateString", to_locale_date_string, 0, attr);
+    define_native_function("toLocaleString", to_locale_string, 0, attr);
+    define_native_function("toLocaleTimeString", to_locale_time_string, 0, attr);
     define_native_function("toTimeString", to_time_string, 0, attr);
     define_native_function("toString", to_string, 0, attr);
 }
@@ -163,6 +166,36 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
     if (!this_object)
         return {};
     auto string = this_object->date_string();
+    return js_string(interpreter, move(string));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
+{
+    auto* this_object = typed_this(interpreter, global_object);
+    if (!this_object)
+        return {};
+    // FIXME: Optional locales, options params.
+    auto string = this_object->locale_date_string();
+    return js_string(interpreter, move(string));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
+{
+    auto* this_object = typed_this(interpreter, global_object);
+    if (!this_object)
+        return {};
+    // FIXME: Optional locales, options params.
+    auto string = this_object->locale_string();
+    return js_string(interpreter, move(string));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
+{
+    auto* this_object = typed_this(interpreter, global_object);
+    if (!this_object)
+        return {};
+    // FIXME: Optional locales, options params.
+    auto string = this_object->locale_time_string();
     return js_string(interpreter, move(string));
 }
 
