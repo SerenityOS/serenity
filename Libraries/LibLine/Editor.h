@@ -53,38 +53,6 @@
 
 namespace Line {
 
-struct Configuration {
-    enum RefreshBehaviour {
-        Lazy,
-        Eager,
-    };
-    enum OperationMode {
-        Unset,
-        Full,
-        NoEscapeSequences,
-        NonInteractive,
-    };
-
-    Configuration()
-    {
-    }
-
-    template<typename Arg, typename... Rest>
-    Configuration(Arg arg, Rest... rest)
-        : Configuration(rest...)
-    {
-        set(arg);
-    }
-
-    void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
-    void set(OperationMode mode) { operation_mode = mode; }
-
-    static Configuration from_config(const StringView& libname = "line");
-
-    RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
-    OperationMode operation_mode { OperationMode::Unset };
-};
-
 struct Key {
     enum Modifier : int {
         None = 0,
@@ -117,6 +85,40 @@ struct KeyBinding {
         Insertion,
     } kind { Kind::InternalFunction };
     String binding;
+};
+
+struct Configuration {
+    enum RefreshBehaviour {
+        Lazy,
+        Eager,
+    };
+    enum OperationMode {
+        Unset,
+        Full,
+        NoEscapeSequences,
+        NonInteractive,
+    };
+
+    Configuration()
+    {
+    }
+
+    template<typename Arg, typename... Rest>
+    Configuration(Arg arg, Rest... rest)
+        : Configuration(rest...)
+    {
+        set(arg);
+    }
+
+    void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
+    void set(OperationMode mode) { operation_mode = mode; }
+    void set(const KeyBinding& binding) { keybindings.append(binding); }
+
+    static Configuration from_config(const StringView& libname = "line");
+
+    RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
+    OperationMode operation_mode { OperationMode::Unset };
+    Vector<KeyBinding> keybindings;
 };
 
 #define ENUMERATE_EDITOR_INTERNAL_FUNCTIONS(M) \

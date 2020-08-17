@@ -25,6 +25,7 @@
  */
 
 #include "Editor.h"
+#include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
@@ -70,6 +71,52 @@ Configuration Configuration::from_config(const StringView& libname)
         configuration.set(Configuration::OperationMode::NonInteractive);
     else
         configuration.set(Configuration::OperationMode::Unset);
+
+    // Read keybinds.
+
+    for (auto& binding_key : config_file->keys("keybinds")) {
+        GenericLexer key_lexer(binding_key);
+        auto has_ctrl = false;
+        auto alt = false;
+        unsigned key = 0;
+
+        while (!key && !key_lexer.is_eof()) {
+            if (key_lexer.next_is("alt+")) {
+                alt = key_lexer.consume_specific("alt+");
+                continue;
+            }
+            if (key_lexer.next_is("^[")) {
+                alt = key_lexer.consume_specific("^[");
+                continue;
+            }
+            if (key_lexer.next_is("^")) {
+                has_ctrl = key_lexer.consume_specific("^");
+                continue;
+            }
+            if (key_lexer.next_is("ctrl+")) {
+                has_ctrl = key_lexer.consume_specific("ctrl+");
+                continue;
+            }
+            // FIXME: Support utf?
+            key = key_lexer.consume();
+        }
+
+        if (has_ctrl)
+            key = ctrl(key);
+
+        auto value = config_file->read_entry("keybinds", binding_key);
+        if (value.starts_with("internal:")) {
+            configuration.set(KeyBinding {
+                Key { key, alt ? Key::Alt : Key::None },
+                KeyBinding::Kind::InternalFunction,
+                value.substring(9, value.length() - 9) });
+        } else {
+            configuration.set(KeyBinding {
+                Key { key, alt ? Key::Alt : Key::None },
+                KeyBinding::Kind::Insertion,
+                value });
+        }
+    }
 
     return configuration;
 }
@@ -118,6 +165,9 @@ Editor::Editor(Configuration configuration)
     m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns);
 
     set_default_keybinds();
+
+    for (auto& keybind : m_configuration.keybindings)
+        register_key_input_callback(keybind);
 }
 
 Editor::~Editor()
