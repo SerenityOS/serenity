@@ -144,6 +144,8 @@ bool copy_file(const String& src_path, const String& dst_path, const struct stat
         }
     }
 
+    ScopeGuard close_fd_guard([dst_fd]() { close(dst_fd); });
+
     if (src_stat.st_size > 0) {
         if (ftruncate(dst_fd, src_stat.st_size) < 0) {
             perror("cp: ftruncate");
@@ -180,7 +182,6 @@ bool copy_file(const String& src_path, const String& dst_path, const struct stat
     }
 
     close(src_fd);
-    close(dst_fd);
     return true;
 }
 
