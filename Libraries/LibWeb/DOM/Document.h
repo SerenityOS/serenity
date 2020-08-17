@@ -89,6 +89,7 @@ public:
     const HTML::HTMLHtmlElement* html_element() const;
     const HTML::HTMLHeadElement* head() const;
     const HTML::HTMLElement* body() const;
+    void set_body(HTML::HTMLElement& new_body);
 
     String title() const;
 
@@ -126,8 +127,6 @@ public:
 
     Vector<const Element*> get_elements_by_name(const String&) const;
     NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
-    RefPtr<Element> query_selector(const StringView&);
-    NonnullRefPtrVector<Element> query_selector_all(const StringView&);
 
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }
@@ -137,7 +136,9 @@ public:
     JS::Value run_javascript(const StringView&);
 
     NonnullRefPtr<Element> create_element(const String& tag_name);
+    NonnullRefPtr<DocumentFragment> create_document_fragment();
     NonnullRefPtr<Text> create_text_node(const String& data);
+    NonnullRefPtr<Comment> create_comment(const String& data);
 
     void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
     HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script; }

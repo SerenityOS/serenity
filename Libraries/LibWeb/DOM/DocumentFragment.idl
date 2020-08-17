@@ -1,0 +1,7 @@
+interface DocumentFragment : Node {
+
+    Element? getElementById(DOMString id);
+    Element? querySelector(DOMString selectors);
+    ArrayFromVector querySelectorAll(DOMString selectors);
+
+}
