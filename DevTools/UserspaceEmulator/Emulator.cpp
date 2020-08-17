@@ -912,10 +912,7 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
     if (request == TCSETS) {
         struct termios termios;
         mmu().copy_from_vm(&termios, arg, sizeof(termios));
-        int rc = syscall(SC_ioctl, fd, request, &termios);
-        if (rc < 0)
-            return rc;
-        return rc;
+        return syscall(SC_ioctl, fd, request, &termios);
     }
     dbg() << "Unsupported ioctl: " << request;
     dump_backtrace();
