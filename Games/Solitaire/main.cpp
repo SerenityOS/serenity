@@ -54,7 +54,9 @@ int main(int argc, char** argv)
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Solitaire");
 
-    app_menu.add_action(GUI::Action::create("Restart game", [&](auto&) { widget->setup(); }));
+    app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
+        widget->setup();
+    }));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
