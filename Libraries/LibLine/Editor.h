@@ -34,6 +34,7 @@
 #include <AK/QuickSort.h>
 #include <AK/Result.h>
 #include <AK/String.h>
+#include <AK/Traits.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -84,6 +85,70 @@ struct Configuration {
     OperationMode operation_mode { OperationMode::Unset };
 };
 
+struct Key {
+    enum Modifier : int {
+        None = 0,
+        Alt = 1,
+    };
+
+    int modifiers { None };
+    unsigned key { 0 };
+
+    Key(unsigned c)
+        : modifiers(None)
+        , key(c) {};
+
+    Key(unsigned c, int modifiers)
+        : modifiers(modifiers)
+        , key(c)
+    {
+    }
+
+    bool operator==(const Key& other) const
+    {
+        return other.key == key && other.modifiers == modifiers;
+    }
+};
+
+struct KeyBinding {
+    Key key;
+    enum class Kind {
+        InternalFunction,
+        Insertion,
+    } kind { Kind::InternalFunction };
+    String binding;
+};
+
+#define ENUMERATE_EDITOR_INTERNAL_FUNCTIONS(M) \
+    M(clear_screen)                            \
+    M(cursor_left_character)                   \
+    M(cursor_left_word)                        \
+    M(cursor_right_character)                  \
+    M(cursor_right_word)                       \
+    M(enter_search)                            \
+    M(erase_character_backwards)               \
+    M(erase_character_forwards)                \
+    M(erase_to_beginning)                      \
+    M(erase_to_end)                            \
+    M(erase_word_backwards)                    \
+    M(finish_edit)                             \
+    M(go_end)                                  \
+    M(go_home)                                 \
+    M(kill_line)                               \
+    M(search_backwards)                        \
+    M(search_forwards)                         \
+    M(transpose_characters)                    \
+    M(transpose_words)                         \
+    M(insert_last_words)                       \
+    M(erase_alnum_word_backwards)              \
+    M(erase_alnum_word_forwards)               \
+    M(capitalize_word)                         \
+    M(lowercase_word)                          \
+    M(uppercase_word)
+
+#define EDITOR_INTERNAL_FUNCTION(name) \
+    [](auto& editor) { editor.name();  return false; }
+
 class Editor : public Core::Object {
     C_OBJECT(Editor);
 
@@ -103,13 +168,29 @@ public:
     void add_to_history(const String&);
     const Vector<String>& history() const { return m_history; }
 
-    void register_character_input_callback(char ch, Function<bool(Editor&)> callback);
+    void register_key_input_callback(const KeyBinding&);
+    void register_key_input_callback(Key, Function<bool(Editor&)> callback);
+
     StringMetrics actual_rendered_string_metrics(const StringView&) const;
     StringMetrics actual_rendered_string_metrics(const Utf32View&) const;
 
     Function<Vector<CompletionSuggestion>(const Editor&)> on_tab_complete;
     Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
+
+    static Function<bool(Editor&)> find_internal_function(const StringView& name);
+    enum class CaseChangeOp {
+        Lowercase,
+        Uppercase,
+        Capital,
+    };
+    void case_change_word(CaseChangeOp);
+#define __ENUMERATE_EDITOR_INTERNAL_FUNCTION(name) \
+    void name();
+
+    ENUMERATE_EDITOR_INTERNAL_FUNCTIONS(__ENUMERATE_EDITOR_INTERNAL_FUNCTION)
+
+#undef __ENUMERATE_EDITOR_INTERNAL_FUNCTION
 
     // FIXME: we will have to kindly ask our instantiators to set our signal handlers,
     // since we can not do this cleanly ourselves. (signal() limitation: cannot give member functions)
@@ -181,6 +262,8 @@ public:
 
 private:
     explicit Editor(Configuration configuration = Configuration::from_config());
+
+    void set_default_keybinds();
 
     enum VTState {
         Free = 1,
@@ -364,7 +447,7 @@ private:
     };
     TabDirection m_tab_direction { TabDirection::Forward };
 
-    HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
+    HashMap<Key, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
     // TODO: handle signals internally.
     struct termios m_termios {
@@ -401,6 +484,16 @@ private:
     bool m_is_editing { false };
 
     Configuration m_configuration;
+};
+
+}
+
+namespace AK {
+
+template<>
+struct Traits<Line::Key> : public GenericTraits<Line::Key> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(Line::Key k) { return pair_int_hash(k.key, k.modifiers); }
 };
 
 }
