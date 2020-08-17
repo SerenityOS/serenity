@@ -4,12 +4,17 @@ interface Document : Node {
     Element? querySelector(DOMString selectors);
     ArrayFromVector getElementsByTagName(DOMString tagName);
     ArrayFromVector querySelectorAll(DOMString selectors);
+
     Element createElement(DOMString tagName);
+    DocumentFragment createDocumentFragment();
+    Text createTextNode(DOMString data);
+    Comment createComment(DOMString data);
 
     readonly attribute DOMString compatMode;
     readonly attribute DocumentType? doctype;
 
     readonly attribute Element? documentElement;
-    readonly attribute HTMLElement? body;
+    attribute HTMLElement? body;
+    readonly attribute HTMLHeadElement? head;
 
 }

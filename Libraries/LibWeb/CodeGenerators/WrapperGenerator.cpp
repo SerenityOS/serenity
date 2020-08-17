@@ -486,11 +486,15 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/DOM/Element.h>";
     out() << "#include <LibWeb/HTML/HTMLElement.h>";
     out() << "#include <LibWeb/DOM/EventListener.h>";
+    out() << "#include <LibWeb/Bindings/CommentWrapper.h>";
     out() << "#include <LibWeb/Bindings/DocumentWrapper.h>";
+    out() << "#include <LibWeb/Bindings/DocumentFragmentWrapper.h>";
     out() << "#include <LibWeb/Bindings/DocumentTypeWrapper.h>";
     out() << "#include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>";
+    out() << "#include <LibWeb/Bindings/HTMLHeadElementWrapper.h>";
     out() << "#include <LibWeb/Bindings/HTMLImageElementWrapper.h>";
     out() << "#include <LibWeb/Bindings/ImageDataWrapper.h>";
+    out() << "#include <LibWeb/Bindings/TextWrapper.h>";
     out() << "#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>";
 
     // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
@@ -681,7 +685,11 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "        return {};";
         if (function.length() > 0) {
             out() << "    if (interpreter.argument_count() < " << function.length() << ")";
-            out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
+
+            if (function.length() == 1)
+                out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, \"" << function.name << "\");";
+            else
+                out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
         }
 
         StringBuilder arguments_builder;

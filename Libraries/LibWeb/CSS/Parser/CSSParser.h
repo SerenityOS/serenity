@@ -34,6 +34,7 @@ class ParsingContext {
 public:
     ParsingContext();
     explicit ParsingContext(const DOM::Document&);
+    explicit ParsingContext(const DOM::ParentNode&);
 
     bool in_quirks_mode() const;
 

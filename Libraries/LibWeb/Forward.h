@@ -35,7 +35,10 @@ class StyleSheet;
 }
 
 namespace Web::DOM {
+class CharacterData;
+class Comment;
 class Document;
+class DocumentFragment;
 class DocumentType;
 class Element;
 class Event;
@@ -155,6 +158,7 @@ namespace Web::Bindings {
 
 class CanvasRenderingContext2DWrapper;
 class CharacterDataWrapper;
+class CommentWrapper;
 class DocumentTypeWrapper;
 class DocumentWrapper;
 class ElementWrapper;
