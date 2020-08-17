@@ -30,10 +30,10 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibDebug/Dwarf/DIE.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
+#include <LibDebug/Dwarf/LineProgram.h>
 #include <LibELF/Loader.h>
-#include <Libraries/LibDebug/Dwarf/DIE.h>
-#include <Libraries/LibDebug/Dwarf/LineProgram.h>
 #include <sys/arch/i386/regs.h>
 
 class DebugInfo {

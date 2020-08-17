@@ -32,7 +32,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
-#include <Libraries/LibELF/Loader.h>
+#include <LibELF/Loader.h>
 
 namespace Dwarf {
 
