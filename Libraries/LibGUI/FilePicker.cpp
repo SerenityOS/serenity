@@ -202,7 +202,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         auto& filter_model = (SortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_source(index);
         const FileSystemModel::Node& node = m_model->node(local_index);
-        LexicalPath path { node.full_path(m_model) };
+        LexicalPath path { node.full_path() };
 
         if (have_preview())
             clear_preview();
@@ -240,7 +240,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         auto& filter_model = (SortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_source(index);
         const FileSystemModel::Node& node = m_model->node(local_index);
-        auto path = node.full_path(m_model);
+        auto path = node.full_path();
 
         if (node.is_directory()) {
             set_path(path);

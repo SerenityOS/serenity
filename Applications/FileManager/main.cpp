@@ -705,11 +705,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             auto& node = directory_view.model().node(index);
 
             if (node.is_directory()) {
-                auto should_get_enabled = access(node.full_path(directory_view.model()).characters(), W_OK) == 0 && GUI::Clipboard::the().type() == "text/uri-list";
+                auto should_get_enabled = access(node.full_path().characters(), W_OK) == 0 && GUI::Clipboard::the().type() == "text/uri-list";
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position());
             } else {
-                auto full_path = node.full_path(directory_view.model());
+                auto full_path = node.full_path();
                 current_file_handlers = directory_view.get_launch_handlers(full_path);
 
                 file_context_menu = GUI::Menu::construct("Directory View File");
@@ -774,10 +774,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             return;
 
         for (auto& url_to_copy : urls) {
-            if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path(directory_view.model()))
+            if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
                 continue;
             auto new_path = String::format("%s/%s",
-                target_node.full_path(directory_view.model()).characters(),
+                target_node.full_path().characters(),
                 LexicalPath(url_to_copy.path()).basename().characters());
 
             if (url_to_copy.path() == new_path)

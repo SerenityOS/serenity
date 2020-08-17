@@ -44,13 +44,13 @@
 
 namespace GUI {
 
-ModelIndex FileSystemModel::Node::index(const FileSystemModel& model, int column) const
+ModelIndex FileSystemModel::Node::index(int column) const
 {
     if (!parent)
         return {};
     for (size_t row = 0; row < parent->children.size(); ++row) {
         if (&parent->children[row] == this)
-            return model.create_index(row, column, const_cast<Node*>(this));
+            return m_model.create_index(row, column, const_cast<Node*>(this));
     }
     ASSERT_NOT_REACHED();
 }
@@ -85,15 +85,15 @@ bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
     return true;
 }
 
-void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
+void FileSystemModel::Node::traverse_if_needed()
 {
     if (!is_directory() || has_traversed)
         return;
     has_traversed = true;
     total_size = 0;
 
-    auto full_path = this->full_path(model);
-    Core::DirIterator di(full_path, model.should_show_dotfiles() ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
+    auto full_path = this->full_path();
+    Core::DirIterator di(full_path, m_model.should_show_dotfiles() ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
     if (di.has_error()) {
         m_error = di.error();
         fprintf(stderr, "DirIterator: %s\n", di.error_string());
@@ -108,11 +108,11 @@ void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
 
     for (auto& name : child_names) {
         String child_path = String::format("%s/%s", full_path.characters(), name.characters());
-        NonnullOwnPtr<Node> child = make<Node>();
+        auto child = adopt_own(*new Node(m_model));
         bool ok = child->fetch_data(child_path, false);
         if (!ok)
             continue;
-        if (model.m_mode == DirectoriesOnly && !S_ISDIR(child->mode))
+        if (m_model.m_mode == DirectoriesOnly && !S_ISDIR(child->mode))
             continue;
         child->name = name;
         child->parent = this;
@@ -131,7 +131,7 @@ void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
     fcntl(m_watch_fd, F_SETFD, FD_CLOEXEC);
     dbg() << "Watching " << full_path << " for changes, m_watch_fd = " << m_watch_fd;
     m_notifier = Core::Notifier::construct(m_watch_fd, Core::Notifier::Event::Read);
-    m_notifier->on_ready_to_read = [this, &model] {
+    m_notifier->on_ready_to_read = [this] {
         char buffer[32];
         int rc = read(m_notifier->fd(), buffer, sizeof(buffer));
         ASSERT(rc >= 0);
@@ -139,27 +139,27 @@ void FileSystemModel::Node::traverse_if_needed(const FileSystemModel& model)
         has_traversed = false;
         mode = 0;
         children.clear();
-        reify_if_needed(model);
-        const_cast<FileSystemModel&>(model).did_update();
+        reify_if_needed();
+        m_model.did_update();
     };
 }
 
-void FileSystemModel::Node::reify_if_needed(const FileSystemModel& model)
+void FileSystemModel::Node::reify_if_needed()
 {
-    traverse_if_needed(model);
+    traverse_if_needed();
     if (mode != 0)
         return;
-    fetch_data(full_path(model), parent == nullptr);
+    fetch_data(full_path(), parent == nullptr);
 }
 
-String FileSystemModel::Node::full_path(const FileSystemModel& model) const
+String FileSystemModel::Node::full_path() const
 {
     Vector<String, 32> lineage;
     for (auto* ancestor = parent; ancestor; ancestor = ancestor->parent) {
         lineage.append(ancestor->name);
     }
     StringBuilder builder;
-    builder.append(model.root_path());
+    builder.append(m_model.root_path());
     for (int i = lineage.size() - 1; i >= 0; --i) {
         builder.append('/');
         builder.append(lineage[i]);
@@ -174,17 +174,17 @@ ModelIndex FileSystemModel::index(const StringView& path, int column) const
     LexicalPath lexical_path(path);
     const Node* node = m_root;
     if (lexical_path.string() == "/")
-        return m_root->index(*this, column);
+        return m_root->index(column);
     for (size_t i = 0; i < lexical_path.parts().size(); ++i) {
         auto& part = lexical_path.parts()[i];
         bool found = false;
         for (auto& child : node->children) {
             if (child.name == part) {
-                const_cast<Node&>(child).reify_if_needed(*this);
+                const_cast<Node&>(child).reify_if_needed();
                 node = &child;
                 found = true;
                 if (i == lexical_path.parts().size() - 1)
-                    return child.index(*this, column);
+                    return child.index(column);
                 break;
             }
         }
@@ -197,8 +197,8 @@ ModelIndex FileSystemModel::index(const StringView& path, int column) const
 String FileSystemModel::full_path(const ModelIndex& index) const
 {
     auto& node = this->node(index);
-    const_cast<Node&>(node).reify_if_needed(*this);
-    return node.full_path(*this);
+    const_cast<Node&>(node).reify_if_needed();
+    return node.full_path();
 }
 
 FileSystemModel::FileSystemModel(const StringView& root_path, Mode mode)
@@ -303,8 +303,8 @@ void FileSystemModel::set_root_path(const StringView& root_path)
 
 void FileSystemModel::update()
 {
-    m_root = make<Node>();
-    m_root->reify_if_needed(*this);
+    m_root = adopt_own(*new Node(*this));
+    m_root->reify_if_needed();
 
     did_update();
 }
@@ -312,7 +312,7 @@ void FileSystemModel::update()
 int FileSystemModel::row_count(const ModelIndex& index) const
 {
     Node& node = const_cast<Node&>(this->node(index));
-    node.reify_if_needed(*this);
+    node.reify_if_needed();
     if (node.is_directory())
         return node.children.size();
     return 0;
@@ -331,7 +331,7 @@ ModelIndex FileSystemModel::index(int row, int column, const ModelIndex& parent)
     if (row < 0 || column < 0)
         return {};
     auto& node = this->node(parent);
-    const_cast<Node&>(node).reify_if_needed(*this);
+    const_cast<Node&>(node).reify_if_needed();
     if (static_cast<size_t>(row) >= node.children.size())
         return {};
     return create_index(row, column, &node.children[row]);
@@ -346,7 +346,7 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
         ASSERT(&node == m_root);
         return {};
     }
-    return node.parent->index(*this, index.column());
+    return node.parent->index(index.column());
 }
 
 Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
@@ -377,14 +377,14 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
     if (role == ModelRole::Custom) {
         // For GUI::FileSystemModel, custom role means the full path.
         ASSERT(index.column() == Column::Name);
-        return node.full_path(*this);
+        return node.full_path();
     }
 
     if (role == ModelRole::DragData) {
         if (index.column() == Column::Name) {
             StringBuilder builder;
             builder.append("file://");
-            builder.append(node.full_path(*this));
+            builder.append(node.full_path());
             return builder.to_string();
         }
         return {};
@@ -454,7 +454,7 @@ Icon FileSystemModel::icon_for(const Node& node) const
     }
 
     if (node.is_directory()) {
-        if (node.full_path(*this) == Core::StandardPaths::home_directory()) {
+        if (node.full_path() == Core::StandardPaths::home_directory()) {
             if (node.is_selected())
                 return FileIconProvider::home_directory_open_icon();
             return FileIconProvider::home_directory_icon();
@@ -489,7 +489,7 @@ bool FileSystemModel::fetch_thumbnail_for(const Node& node)
 {
     // See if we already have the thumbnail
     // we're looking for in the cache.
-    auto path = node.full_path(*this);
+    auto path = node.full_path();
     auto it = s_thumbnail_cache.find(path);
     if (it != s_thumbnail_cache.end()) {
         if (!(*it).value)

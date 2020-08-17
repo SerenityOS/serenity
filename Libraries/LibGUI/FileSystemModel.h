@@ -87,10 +87,17 @@ public:
         int error() const { return m_error; }
         const char* error_string() const { return strerror(m_error); }
 
-        String full_path(const FileSystemModel&) const;
+        String full_path() const;
 
     private:
         friend class FileSystemModel;
+
+        explicit Node(FileSystemModel& model)
+            : m_model(model)
+        {
+        }
+
+        FileSystemModel& m_model;
 
         Node* parent { nullptr };
         NonnullOwnPtrVector<Node> children;
@@ -103,9 +110,9 @@ public:
 
         int m_error { 0 };
 
-        ModelIndex index(const FileSystemModel&, int column) const;
-        void traverse_if_needed(const FileSystemModel&);
-        void reify_if_needed(const FileSystemModel&);
+        ModelIndex index(int column) const;
+        void traverse_if_needed();
+        void reify_if_needed();
         bool fetch_data(const String& full_path, bool is_root);
     };
 

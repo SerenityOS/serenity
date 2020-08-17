@@ -93,7 +93,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
         return;
     dbgprintf("on activation: %d,%d, this=%p, m_model=%p\n", index.row(), index.column(), this, m_model.ptr());
     auto& node = model().node(index);
-    auto path = node.full_path(model());
+    auto path = node.full_path();
 
     struct stat st;
     if (stat(path.characters(), &st) < 0) {
