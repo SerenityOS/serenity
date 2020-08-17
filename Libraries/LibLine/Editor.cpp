@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
@@ -46,6 +47,32 @@ constexpr u32 ctrl(char c) { return c & 0x3f; }
 }
 
 namespace Line {
+
+Configuration Configuration::from_config(const StringView& libname)
+{
+    Configuration configuration;
+    auto config_file = Core::ConfigFile::get_for_lib(libname);
+
+    // Read behaviour options.
+    auto refresh = config_file->read_entry("behaviour", "refresh", "lazy");
+    auto operation = config_file->read_entry("behaviour", "operation_mode");
+
+    if (refresh.equals_ignoring_case("lazy"))
+        configuration.set(Configuration::Lazy);
+    else if (refresh.equals_ignoring_case("eager"))
+        configuration.set(Configuration::Eager);
+
+    if (operation.equals_ignoring_case("full"))
+        configuration.set(Configuration::OperationMode::Full);
+    else if (operation.equals_ignoring_case("noescapesequences"))
+        configuration.set(Configuration::OperationMode::NoEscapeSequences);
+    else if (operation.equals_ignoring_case("noninteractive"))
+        configuration.set(Configuration::OperationMode::NonInteractive);
+    else
+        configuration.set(Configuration::OperationMode::Unset);
+
+    return configuration;
+}
 
 Editor::Editor(Configuration configuration)
     : m_configuration(move(configuration))
