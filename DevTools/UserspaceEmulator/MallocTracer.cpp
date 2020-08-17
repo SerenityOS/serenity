@@ -138,7 +138,7 @@ void MallocTracer::audit_read(FlatPtr address, size_t size)
         Emulator::the().dump_backtrace();
         report("==%d==  Address is %zu byte(s) into block of size %zu, allocated at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
-        report("==%d==  Later freed at:\n", getpid(), offset_into_mallocation, mallocation->size);
+        report("==%d==  Later freed at:\n", getpid());
         Emulator::the().dump_backtrace(mallocation->free_backtrace);
         return;
     }
@@ -173,7 +173,7 @@ void MallocTracer::audit_write(FlatPtr address, size_t size)
         Emulator::the().dump_backtrace();
         report("==%d==  Address is %zu byte(s) into block of size %zu, allocated at:\n", getpid(), offset_into_mallocation, mallocation->size);
         Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
-        report("==%d==  Later freed at:\n", getpid(), offset_into_mallocation, mallocation->size);
+        report("==%d==  Later freed at:\n", getpid());
         Emulator::the().dump_backtrace(mallocation->free_backtrace);
         return;
     }
