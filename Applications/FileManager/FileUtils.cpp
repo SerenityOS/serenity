@@ -26,6 +26,7 @@
 
 #include "FileUtils.h"
 #include <AK/LexicalPath.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <stdio.h>
@@ -85,6 +86,8 @@ bool copy_file_or_directory(const String& src_path, const String& dst_path)
     if (src_fd < 0) {
         return false;
     }
+
+    ScopeGuard close_fd_guard([src_fd]() { close(src_fd); });
 
     struct stat src_stat;
     int rc = fstat(src_fd, &src_stat);
