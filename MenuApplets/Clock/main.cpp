@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
@@ -65,17 +66,7 @@ private:
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
-        time_t now = time(nullptr);
-        auto* tm = localtime(&now);
-
-        auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u",
-            tm->tm_year + 1900,
-            tm->tm_mon + 1,
-            tm->tm_mday,
-            tm->tm_hour,
-            tm->tm_min,
-            tm->tm_sec);
-
+        auto time_text = Core::DateTime::now().to_string();
         GUI::Painter painter(*this);
         painter.fill_rect(event.rect(), palette().window());
         painter.draw_text(event.rect(), time_text, Gfx::Font::default_font(), Gfx::TextAlignment::Center, palette().window_text());
