@@ -43,8 +43,8 @@
 //#define MALLOC_DEBUG
 #define RECYCLE_BIG_ALLOCATIONS
 
-#define MAGIC_PAGE_HEADER 0x42657274
-#define MAGIC_BIGALLOC_HEADER 0x42697267
+#define MAGIC_PAGE_HEADER 0x42657274 // 'Bert'
+#define MAGIC_BIGALLOC_HEADER 0x42697267 // 'Birg'
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
 ALWAYS_INLINE static void ue_notify_malloc(const void* ptr, size_t size)
