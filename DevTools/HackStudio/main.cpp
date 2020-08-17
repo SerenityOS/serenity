@@ -608,29 +608,8 @@ int main_impl(int argc, char** argv)
         debugger_thread->start();
     });
 
-    auto continue_action = GUI::Action::create("Continue", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-continue.png"), [&](auto&) {
-        pthread_mutex_lock(Debugger::the().continue_mutex());
-        Debugger::the().set_continue_type(Debugger::ContinueType::Continue);
-        pthread_cond_signal(Debugger::the().continue_cond());
-        pthread_mutex_unlock(Debugger::the().continue_mutex());
-    });
-
-    auto single_step_action = GUI::Action::create("Single Step", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-single-step.png"), [&](auto&) {
-        pthread_mutex_lock(Debugger::the().continue_mutex());
-        Debugger::the().set_continue_type(Debugger::ContinueType::SourceSingleStep);
-        pthread_cond_signal(Debugger::the().continue_cond());
-        pthread_mutex_unlock(Debugger::the().continue_mutex());
-    });
-    continue_action->set_enabled(false);
-    single_step_action->set_enabled(false);
-
-    toolbar.add_action(run_action);
-    toolbar.add_action(stop_action);
-
     toolbar.add_separator();
     toolbar.add_action(debug_action);
-    toolbar.add_action(continue_action);
-    toolbar.add_action(single_step_action);
 
     RefPtr<EditorWrapper> current_editor_in_execution;
     Debugger::initialize(
@@ -652,8 +631,8 @@ int main_impl(int argc, char** argv)
                         current_editor_in_execution = get_editor_of_file(source_position.value().file_path);
                         current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
                         debug_info_widget.update_state(*Debugger::the().session(), regs);
-                        continue_action->set_enabled(true);
-                        single_step_action->set_enabled(true);
+                        debug_info_widget.continue_action().set_enabled(true);
+                        debug_info_widget.singlestep_action().set_enabled(true);
                         reveal_action_tab(debug_info_widget);
                     }));
             Core::EventLoop::wake();
@@ -663,8 +642,8 @@ int main_impl(int argc, char** argv)
         [&]() {
             dbg() << "Program continued";
             Core::EventLoop::main().post_event(*g_window, make<Core::DeferredInvocationEvent>([&](auto&) {
-                continue_action->set_enabled(false);
-                single_step_action->set_enabled(false);
+                debug_info_widget.continue_action().set_enabled(false);
+                debug_info_widget.singlestep_action().set_enabled(false);
                 if (current_editor_in_execution) {
                     current_editor_in_execution->editor().clear_execution_position();
                 }
