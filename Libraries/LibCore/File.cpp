@@ -203,4 +203,34 @@ String File::read_link(const StringView& link_path)
 
 #endif
 
+static RefPtr<File> stdin_file;
+static RefPtr<File> stdout_file;
+static RefPtr<File> stderr_file;
+
+NonnullRefPtr<File> File::stdin()
+{
+    if (!stdin_file) {
+        stdin_file = File::construct();
+        stdin_file->open(STDIN_FILENO, IODevice::ReadOnly, ShouldCloseFileDescription::No);
+    }
+    return *stdin_file;
+}
+
+NonnullRefPtr<File> File::stdout()
+{
+    if (!stdout_file) {
+        stdout_file = File::construct();
+        stdout_file->open(STDOUT_FILENO, IODevice::WriteOnly, ShouldCloseFileDescription::No);
+    }
+    return *stdout_file;
+}
+
+NonnullRefPtr<File> File::stderr()
+{
+    if (!stderr_file) {
+        stderr_file = File::construct();
+        stderr_file->open(STDERR_FILENO, IODevice::WriteOnly, ShouldCloseFileDescription::No);
+    }
+    return *stderr_file;
+}
 }

@@ -57,6 +57,10 @@ public:
     };
     bool open(int fd, IODevice::OpenMode, ShouldCloseFileDescription);
 
+    static NonnullRefPtr<File> stdin();
+    static NonnullRefPtr<File> stdout();
+    static NonnullRefPtr<File> stderr();
+
 private:
     File(Object* parent = nullptr)
         : IODevice(parent)
