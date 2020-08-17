@@ -29,6 +29,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -82,23 +83,21 @@ bool copy_file_or_directory(const String& src_path, const String& dst_path)
         return copy_file_or_directory(src_path, get_duplicate_name(dst_path, duplicate_count));
     }
 
-    int src_fd = open(src_path.characters(), O_RDONLY);
-    if (src_fd < 0) {
+    auto source_or_error = Core::File::open(src_path, Core::IODevice::ReadOnly);
+    if (source_or_error.is_error())
         return false;
-    }
 
-    ScopeGuard close_fd_guard([src_fd]() { close(src_fd); });
+    auto& source = *source_or_error.value();
 
     struct stat src_stat;
-    int rc = fstat(src_fd, &src_stat);
-    if (rc < 0) {
+    int rc = fstat(source.fd(), &src_stat);
+    if (rc < 0)
         return false;
-    }
 
-    if (S_ISDIR(src_stat.st_mode)) {
+    if (source.is_directory())
         return copy_directory(src_path, dst_path, src_stat);
-    }
-    return copy_file(src_path, dst_path, src_stat, src_fd);
+
+    return copy_file(dst_path, src_stat, source);
 }
 
 bool copy_directory(const String& src_path, const String& dst_path, const struct stat& src_stat)
@@ -130,14 +129,14 @@ bool copy_directory(const String& src_path, const String& dst_path, const struct
     return true;
 }
 
-bool copy_file(const String& src_path, const String& dst_path, const struct stat& src_stat, int src_fd)
+bool copy_file(const String& dst_path, const struct stat& src_stat, Core::File& source)
 {
     int dst_fd = creat(dst_path.characters(), 0666);
     if (dst_fd < 0) {
         if (errno != EISDIR) {
             return false;
         }
-        auto dst_dir_path = String::format("%s/%s", dst_path.characters(), LexicalPath(src_path).basename().characters());
+        auto dst_dir_path = String::format("%s/%s", dst_path.characters(), LexicalPath(source.filename()).basename().characters());
         dst_fd = creat(dst_dir_path.characters(), 0666);
         if (dst_fd < 0) {
             return false;
@@ -155,7 +154,7 @@ bool copy_file(const String& src_path, const String& dst_path, const struct stat
 
     for (;;) {
         char buffer[32768];
-        ssize_t nread = read(src_fd, buffer, sizeof(buffer));
+        ssize_t nread = read(source.fd(), buffer, sizeof(buffer));
         if (nread < 0) {
             return false;
         }
@@ -181,7 +180,6 @@ bool copy_file(const String& src_path, const String& dst_path, const struct stat
         return false;
     }
 
-    close(src_fd);
     return true;
 }
 
