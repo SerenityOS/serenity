@@ -78,6 +78,7 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::CommonActions::make_undo_action([&](auto&) {
         game.undo();
     }));
+    app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
