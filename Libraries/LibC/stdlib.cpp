@@ -201,6 +201,10 @@ extern "C" {
 void exit(int status)
 {
     __cxa_finalize(nullptr);
+
+    if (getenv("LIBC_DUMP_MALLOC_STATS"))
+        serenity_dump_malloc_stats();
+
     extern void _fini();
     _fini();
     fflush(stdout);

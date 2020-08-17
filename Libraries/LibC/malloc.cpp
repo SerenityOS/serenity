@@ -25,6 +25,7 @@
  */
 
 #include <AK/InlineLinkedList.h>
+#include <AK/LogStream.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <LibThread/Lock.h>
@@ -71,6 +72,29 @@ static bool s_scrub_free = true;
 static bool s_profiling = false;
 static unsigned short size_classes[] = { 8, 16, 32, 64, 128, 252, 508, 1016, 2036, 4090, 8188, 16376, 32756, 0 };
 static constexpr size_t num_size_classes = sizeof(size_classes) / sizeof(unsigned short);
+
+struct MallocStats {
+    size_t number_of_malloc_calls;
+
+    size_t number_of_big_allocator_hits;
+    size_t number_of_big_allocator_purge_hits;
+    size_t number_of_big_allocs;
+
+    size_t number_of_empty_block_hits;
+    size_t number_of_empty_block_purge_hits;
+    size_t number_of_block_allocs;
+    size_t number_of_blocks_full;
+
+    size_t number_of_free_calls;
+
+    size_t number_of_big_allocator_keeps;
+    size_t number_of_big_allocator_frees;
+
+    size_t number_of_freed_full_blocks;
+    size_t number_of_keeps;
+    size_t number_of_frees;
+};
+static MallocStats g_malloc_stats = {};
 
 constexpr size_t block_size = 64 * KiB;
 constexpr size_t block_mask = ~(block_size - 1);
@@ -207,6 +231,8 @@ static void* malloc_impl(size_t size)
     if (!size)
         return nullptr;
 
+    g_malloc_stats.number_of_malloc_calls++;
+
     size_t good_size;
     auto* allocator = allocator_for_size(size, good_size);
 
@@ -215,6 +241,7 @@ static void* malloc_impl(size_t size)
 #ifdef RECYCLE_BIG_ALLOCATIONS
         if (auto* allocator = big_allocator_for_size(real_size)) {
             if (!allocator->blocks.is_empty()) {
+                g_malloc_stats.number_of_big_allocator_hits++;
                 auto* block = allocator->blocks.take_last();
                 int rc = madvise(block, real_size, MADV_SET_NONVOLATILE);
                 bool this_block_was_purged = rc == 1;
@@ -226,14 +253,17 @@ static void* malloc_impl(size_t size)
                     perror("mprotect");
                     ASSERT_NOT_REACHED();
                 }
-                if (this_block_was_purged)
+                if (this_block_was_purged) {
+                    g_malloc_stats.number_of_big_allocator_purge_hits++;
                     new (block) BigAllocationBlock(real_size);
+                }
 
                 ue_notify_malloc(&block->m_slot[0], size);
                 return &block->m_slot[0];
             }
         }
 #endif
+        g_malloc_stats.number_of_big_allocs++;
         auto* block = (BigAllocationBlock*)os_alloc(real_size, "malloc: BigAllocationBlock");
         new (block) BigAllocationBlock(real_size);
         ue_notify_malloc(&block->m_slot[0], size);
@@ -248,6 +278,7 @@ static void* malloc_impl(size_t size)
     }
 
     if (!block && allocator->empty_block_count) {
+        g_malloc_stats.number_of_empty_block_hits++;
         block = allocator->empty_blocks[--allocator->empty_block_count];
         int rc = madvise(block, block_size, MADV_SET_NONVOLATILE);
         bool this_block_was_purged = rc == 1;
@@ -260,12 +291,15 @@ static void* malloc_impl(size_t size)
             perror("mprotect");
             ASSERT_NOT_REACHED();
         }
-        if (this_block_was_purged)
+        if (this_block_was_purged) {
+            g_malloc_stats.number_of_empty_block_purge_hits++;
             new (block) ChunkedBlock(good_size);
+        }
         allocator->usable_blocks.append(block);
     }
 
     if (!block) {
+        g_malloc_stats.number_of_block_allocs++;
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
         block = (ChunkedBlock*)os_alloc(block_size, buffer);
@@ -278,6 +312,7 @@ static void* malloc_impl(size_t size)
     void* ptr = block->m_freelist;
     block->m_freelist = block->m_freelist->next;
     if (block->is_full()) {
+        g_malloc_stats.number_of_blocks_full++;
 #ifdef MALLOC_DEBUG
         dbgprintf("Block %p is now full in size class %zu\n", block, good_size);
 #endif
@@ -302,6 +337,8 @@ static void free_impl(void* ptr)
     if (!ptr)
         return;
 
+    g_malloc_stats.number_of_free_calls++;
+
     LOCKER(malloc_lock());
 
     void* block_base = (void*)((FlatPtr)ptr & block_mask);
@@ -312,6 +349,7 @@ static void free_impl(void* ptr)
 #ifdef RECYCLE_BIG_ALLOCATIONS
         if (auto* allocator = big_allocator_for_size(block->m_size)) {
             if (allocator->blocks.size() < number_of_big_blocks_to_keep_around_per_size_class) {
+                g_malloc_stats.number_of_big_allocator_keeps++;
                 allocator->blocks.append(block);
                 size_t this_block_size = block->m_size;
                 if (mprotect(block, this_block_size, PROT_NONE) < 0) {
@@ -326,6 +364,7 @@ static void free_impl(void* ptr)
             }
         }
 #endif
+        g_malloc_stats.number_of_big_allocator_frees++;
         os_free(block, block->m_size);
         return;
     }
@@ -350,6 +389,7 @@ static void free_impl(void* ptr)
 #ifdef MALLOC_DEBUG
         dbgprintf("Block %p no longer full in size class %u\n", block, good_size);
 #endif
+        g_malloc_stats.number_of_freed_full_blocks++;
         allocator->full_blocks.remove(block);
         allocator->usable_blocks.prepend(block);
     }
@@ -363,6 +403,7 @@ static void free_impl(void* ptr)
 #ifdef MALLOC_DEBUG
             dbgprintf("Keeping block %p around for size class %u\n", block, good_size);
 #endif
+            g_malloc_stats.number_of_keeps++;
             allocator->usable_blocks.remove(block);
             allocator->empty_blocks[allocator->empty_block_count++] = block;
             mprotect(block, block_size, PROT_NONE);
@@ -372,6 +413,7 @@ static void free_impl(void* ptr)
 #ifdef MALLOC_DEBUG
         dbgprintf("Releasing block %p for size class %u\n", block, good_size);
 #endif
+        g_malloc_stats.number_of_frees++;
         allocator->usable_blocks.remove(block);
         --allocator->block_count;
         os_free(block, block_size);
@@ -453,5 +495,28 @@ void __malloc_init()
     }
 
     new (&big_allocators()[0])(BigAllocator);
+}
+
+void serenity_dump_malloc_stats()
+{
+    dbg() << "# malloc() calls: " << g_malloc_stats.number_of_malloc_calls;
+    dbg();
+    dbg() << "big alloc hits: " << g_malloc_stats.number_of_big_allocator_hits;
+    dbg() << "big alloc hits that were purged: " << g_malloc_stats.number_of_big_allocator_purge_hits;
+    dbg() << "big allocs: " << g_malloc_stats.number_of_big_allocs;
+    dbg();
+    dbg() << "empty block hits: " << g_malloc_stats.number_of_empty_block_hits;
+    dbg() << "empty block hits that were purged: " << g_malloc_stats.number_of_empty_block_purge_hits;
+    dbg() << "block allocs: " << g_malloc_stats.number_of_block_allocs;
+    dbg() << "filled blocks: " << g_malloc_stats.number_of_blocks_full;
+    dbg();
+    dbg() << "# free() calls: " << g_malloc_stats.number_of_free_calls;
+    dbg();
+    dbg() << "big alloc keeps: " << g_malloc_stats.number_of_big_allocator_keeps;
+    dbg() << "big alloc frees: " << g_malloc_stats.number_of_big_allocator_frees;
+    dbg();
+    dbg() << "full block frees: " << g_malloc_stats.number_of_freed_full_blocks;
+    dbg() << "number of keeps: " << g_malloc_stats.number_of_keeps;
+    dbg() << "number of frees: " << g_malloc_stats.number_of_frees;
 }
 }
