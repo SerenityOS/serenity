@@ -167,18 +167,20 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
 
     auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
 
-#if 0
     auto file_manager_action = GUI::Action::create("Show in FileManager...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"), [&](const GUI::Action&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol(model->root_path()));
+        Desktop::Launcher::open(URL::create_with_file_protocol(directory_view.path()));
     });
 
     auto display_properties_action = GUI::Action::create("Display settings...", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
     });
 
+#if 0
     desktop_view_context_menu->add_action(mkdir_action);
     desktop_view_context_menu->add_action(touch_action);
     desktop_view_context_menu->add_separator();
+#endif
+
     desktop_view_context_menu->add_action(file_manager_action);
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(display_properties_action);
@@ -187,7 +189,6 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
         if (!index.is_valid())
             desktop_view_context_menu->popup(event.screen_position());
     };
-#endif
 
     auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
     auto selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
