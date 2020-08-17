@@ -155,6 +155,7 @@ set(SOURCES
     Loader/ImageResource.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
+    OutOfProcessWebView.cpp
     Page/EventHandler.cpp
     Page/Frame.cpp
     Page/Page.cpp
@@ -168,7 +169,6 @@ set(SOURCES
     StylePropertiesModel.cpp
     URLEncoder.cpp
     WebContentClient.cpp
-    WebContentView.cpp
 )
 
 set(GENERATED_SOURCES

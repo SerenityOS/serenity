@@ -31,7 +31,7 @@
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
-class WebContentView;
+class OutOfProcessWebView;
 
 class WebContentClient
     : public IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>
@@ -42,7 +42,7 @@ public:
     virtual void handshake() override;
 
 private:
-    WebContentClient(WebContentView&);
+    WebContentClient(OutOfProcessWebView&);
 
     virtual void handle(const Messages::WebContentClient::DidPaint&) override;
     virtual void handle(const Messages::WebContentClient::DidFinishLoad&) override;
@@ -59,5 +59,5 @@ private:
     virtual void handle(const Messages::WebContentClient::DidRequestContextMenu&) override;
     virtual void handle(const Messages::WebContentClient::DidRequestLinkContextMenu&) override;
 
-    WebContentView& m_view;
+    OutOfProcessWebView& m_view;
 };
