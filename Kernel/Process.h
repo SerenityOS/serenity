@@ -657,7 +657,7 @@ private:
     RingLevel m_ring { Ring0 };
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
-    Atomic<u16> m_thread_count { 0 };
+    Atomic<u32> m_thread_count { 0 };
 
     bool m_dead { false };
     bool m_profiling { false };
