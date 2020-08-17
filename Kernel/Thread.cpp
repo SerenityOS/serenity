@@ -614,9 +614,6 @@ void Thread::push_value_on_stack(FlatPtr value)
 
 RegisterState& Thread::get_register_dump_from_stack()
 {
-    // The userspace registers should be stored at the top of the stack
-    // We have to subtract 2 because the processor decrements the kernel
-    // stack before pushing the args.
     return *(RegisterState*)(kernel_stack_top() - sizeof(RegisterState));
 }
 
