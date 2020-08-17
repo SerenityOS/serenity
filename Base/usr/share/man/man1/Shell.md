@@ -38,3 +38,7 @@ Shell -c 'rm foo*'
 # Execute the contents of a file with some arguments
 Shell foo a b c
 ```
+
+## See also
+
+* [`Shell-vars`(7)](../man7/Shell-vars.md) For details on local and environment variables used by the shell
