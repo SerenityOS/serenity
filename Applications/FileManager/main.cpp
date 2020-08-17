@@ -747,7 +747,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     NonnullRefPtrVector<LauncherHandler> current_file_handlers;
     RefPtr<GUI::Action> file_context_menu_action_default_action;
 
-    directory_view.on_context_menu_request = [&](const GUI::AbstractView&, const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+    directory_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {
             auto& node = directory_view.model().node(index);
 
@@ -807,7 +807,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }
     };
 
-    directory_view.on_drop = [&](const GUI::AbstractView&, const GUI::ModelIndex& index, const GUI::DropEvent& event) {
+    directory_view.on_drop = [&](const GUI::ModelIndex& index, const GUI::DropEvent& event) {
         if (!event.mime_data().has_urls())
             return;
         auto urls = event.mime_data().urls();

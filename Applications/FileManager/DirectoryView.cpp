@@ -195,11 +195,11 @@ void DirectoryView::setup_icon_view()
     };
     m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(*m_icon_view, map_index(index), event);
+            on_context_menu_request(map_index(index), event);
     };
     m_icon_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(*m_icon_view, map_index(index), event);
+            on_drop(map_index(index), event);
     };
 }
 
@@ -221,12 +221,12 @@ void DirectoryView::setup_columns_view()
 
     m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(*m_columns_view, map_index(index), event);
+            on_context_menu_request(map_index(index), event);
     };
 
     m_columns_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(*m_columns_view, map_index(index), event);
+            on_drop(map_index(index), event);
     };
 }
 
@@ -249,12 +249,12 @@ void DirectoryView::setup_table_view()
 
     m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(*m_table_view, map_index(index), event);
+            on_context_menu_request(map_index(index), event);
     };
 
     m_table_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(*m_table_view, map_index(index), event);
+            on_drop(map_index(index), event);
     };
 }
 
