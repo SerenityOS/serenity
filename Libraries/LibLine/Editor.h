@@ -46,6 +46,7 @@
 #include <LibLine/SuggestionDisplay.h>
 #include <LibLine/SuggestionManager.h>
 #include <LibLine/VT.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <termios.h>
 
@@ -161,6 +162,11 @@ public:
 
     const struct termios& termios() const { return m_termios; }
     const struct termios& default_termios() const { return m_default_termios; }
+    struct winsize terminal_size() const
+    {
+        winsize ws { (u16)m_num_lines, (u16)m_num_columns, 0, 0 };
+        return ws;
+    }
 
     void finish()
     {
