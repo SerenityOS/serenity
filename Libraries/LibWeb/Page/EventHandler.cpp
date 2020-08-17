@@ -176,6 +176,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
+    bool is_hovering_text = false;
     auto result = layout_root()->hit_test(position, HitTestType::Exact);
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
@@ -190,6 +191,8 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         hovered_node_changed = node != document.hovered_node();
         document.set_hovered_node(node);
         if (node) {
+            if (node->is_text())
+                is_hovering_text = true;
             hovered_link_element = node->enclosing_link_element();
             if (hovered_link_element) {
 #ifdef HTML_DEBUG
@@ -211,7 +214,14 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             page_client.page_did_change_selection();
         }
     }
-    page_client.page_did_request_cursor_change(is_hovering_link ? GUI::StandardCursor::Hand : GUI::StandardCursor::None);
+
+    if (is_hovering_link)
+        page_client.page_did_request_cursor_change(GUI::StandardCursor::Hand);
+    else if (is_hovering_text)
+        page_client.page_did_request_cursor_change(GUI::StandardCursor::IBeam);
+    else
+        page_client.page_did_request_cursor_change(GUI::StandardCursor::None);
+
     if (hovered_node_changed) {
         RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element() : nullptr;
         if (hovered_html_element && !hovered_html_element->title().is_null()) {
