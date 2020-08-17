@@ -143,7 +143,7 @@ class LoadRequest;
 class Origin;
 class Page;
 class PageClient;
-class PageView;
+class InProcessWebView;
 class PaintContext;
 class Resource;
 class ResourceLoader;

@@ -44,7 +44,7 @@
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 #include <sys/time.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
@@ -136,7 +136,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerObject::change_page)
 
 class TestRunner {
 public:
-    TestRunner(String web_test_root, String js_test_root, Web::PageView& page_view, bool print_times)
+    TestRunner(String web_test_root, String js_test_root, Web::InProcessWebView& page_view, bool print_times)
         : m_web_test_root(move(web_test_root))
         , m_js_test_root(move(js_test_root))
         , m_print_times(print_times)
@@ -158,7 +158,7 @@ private:
     double m_total_elapsed_time_in_ms { 0 };
     JSTestRunnerCounts m_counts;
 
-    RefPtr<Web::PageView> m_page_view;
+    RefPtr<Web::InProcessWebView> m_page_view;
 
     RefPtr<JS::Program> m_js_test_common;
     RefPtr<JS::Program> m_web_test_common;
@@ -643,7 +643,7 @@ int main(int argc, char** argv)
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
-    auto& view = main_widget.add<Web::PageView>();
+    auto& view = main_widget.add<Web::InProcessWebView>();
 
     view.set_document(adopt(*new Web::DOM::Document));
 

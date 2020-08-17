@@ -26,7 +26,7 @@
 
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 
 namespace Web {
 

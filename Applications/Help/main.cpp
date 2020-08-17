@@ -48,7 +48,7 @@
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
     left_tab_bar.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     left_tab_bar.set_preferred_size(200, 500);
 
-    auto& page_view = splitter.add<Web::PageView>();
+    auto& page_view = splitter.add<Web::InProcessWebView>();
 
     History history;
 

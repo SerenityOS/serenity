@@ -39,7 +39,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 
 IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name)
     : m_client(client)
@@ -52,7 +52,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     // Make a container for the log buffer view + (optional) member list.
     auto& container = add<GUI::HorizontalSplitter>();
 
-    m_page_view = container.add<Web::PageView>();
+    m_page_view = container.add<Web::InProcessWebView>();
 
     if (m_type == Channel) {
         auto& member_view = container.add<GUI::TableView>();

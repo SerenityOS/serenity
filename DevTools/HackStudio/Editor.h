@@ -81,7 +81,7 @@ private:
     explicit Editor();
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
-    RefPtr<Web::PageView> m_documentation_page_view;
+    RefPtr<Web::InProcessWebView> m_documentation_page_view;
     String m_last_parsed_token;
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };

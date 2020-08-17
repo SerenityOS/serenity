@@ -34,14 +34,14 @@
 
 namespace Web {
 
-class PageView final
+class InProcessWebView final
     : public GUI::ScrollableWidget
     , public WebViewHooks
     , public PageClient {
-    C_OBJECT(PageView);
+    C_OBJECT(InProcessWebView);
 
 public:
-    virtual ~PageView() override;
+    virtual ~InProcessWebView() override;
 
     void load_html(const StringView&, const URL&);
     void load_empty_document();
@@ -70,7 +70,7 @@ public:
     void select_all();
 
 private:
-    PageView();
+    InProcessWebView();
 
     Page& page() { return *m_page; }
     const Page& page() const { return *m_page; }

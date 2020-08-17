@@ -34,7 +34,7 @@
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web {
@@ -196,7 +196,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             hovered_link_element = node->enclosing_link_element();
             if (hovered_link_element) {
 #ifdef HTML_DEBUG
-                dbg() << "PageView: hovering over a link to " << hovered_link_element->href();
+                dbg() << "InProcessWebView: hovering over a link to " << hovered_link_element->href();
 #endif
                 is_hovering_link = true;
             }

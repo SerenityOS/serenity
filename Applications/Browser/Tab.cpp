@@ -56,7 +56,7 @@
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/WebContentView.h>
 
 namespace Browser {
@@ -83,7 +83,7 @@ Tab::Tab(Type type)
     auto& toolbar = m_toolbar_container->add<GUI::ToolBar>();
 
     if (m_type == Type::InProcessWebView)
-        m_page_view = widget.add<Web::PageView>();
+        m_page_view = widget.add<Web::InProcessWebView>();
     else
         m_web_content_view = widget.add<WebContentView>();
 
