@@ -28,8 +28,11 @@
 
 #include "Debugger.h"
 #include <AK/NonnullOwnPtr.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Widget.h>
 #include <sys/arch/i386/regs.h>
 
@@ -38,17 +41,24 @@ namespace HackStudio {
 class DebugInfoWidget final : public GUI::Widget {
     C_OBJECT(DebugInfoWidget)
 public:
-    virtual ~DebugInfoWidget() override { }
+    virtual ~DebugInfoWidget() override {}
 
     void update_state(const DebugSession&, const PtraceRegisters&);
     void program_stopped();
 
+    GUI::Action& continue_action();
+    GUI::Action& singlestep_action();
+
 private:
     explicit DebugInfoWidget();
+    void init_toolbar();
 
     RefPtr<GUI::TreeView> m_variables_view;
     RefPtr<GUI::ListView> m_backtrace_view;
     RefPtr<GUI::Menu> m_variable_context_menu;
+    RefPtr<GUI::ToolBar> m_toolbar;
+    RefPtr<GUI::Action> m_continue_action;
+    RefPtr<GUI::Action> m_singlestep_action;
 };
 
 }

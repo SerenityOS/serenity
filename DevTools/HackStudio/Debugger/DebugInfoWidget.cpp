@@ -32,6 +32,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/Layout.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
@@ -40,10 +41,38 @@
 
 namespace HackStudio {
 
+void DebugInfoWidget::init_toolbar()
+{
+    m_continue_action = GUI::Action::create("Continue", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-continue.png"), [&](auto&) {
+        pthread_mutex_lock(Debugger::the().continue_mutex());
+        Debugger::the().set_continue_type(Debugger::ContinueType::Continue);
+        pthread_cond_signal(Debugger::the().continue_cond());
+        pthread_mutex_unlock(Debugger::the().continue_mutex());
+    });
+
+    m_singlestep_action = GUI::Action::create("Single Step", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-single-step.png"), [&](auto&) {
+        pthread_mutex_lock(Debugger::the().continue_mutex());
+        Debugger::the().set_continue_type(Debugger::ContinueType::SourceSingleStep);
+        pthread_cond_signal(Debugger::the().continue_cond());
+        pthread_mutex_unlock(Debugger::the().continue_mutex());
+    });
+    m_continue_action->set_enabled(false);
+    m_singlestep_action->set_enabled(false);
+
+    m_toolbar->add_action(*m_continue_action);
+    m_toolbar->add_action(*m_singlestep_action);
+}
+
 DebugInfoWidget::DebugInfoWidget()
 {
-    set_layout<GUI::HorizontalBoxLayout>();
-    auto& splitter = add<GUI::HorizontalSplitter>();
+    set_layout<GUI::VerticalBoxLayout>();
+    auto& toolbar_container = add<GUI::ToolBarContainer>();
+    m_toolbar = toolbar_container.add<GUI::ToolBar>();
+    init_toolbar();
+    auto& bottom_box = add<GUI::Widget>();
+    bottom_box.set_layout<GUI::HorizontalBoxLayout>();
+
+    auto& splitter = bottom_box.add<GUI::HorizontalSplitter>();
     m_backtrace_view = splitter.add<GUI::ListView>();
     m_variables_view = splitter.add<GUI::TreeView>();
 
@@ -109,6 +138,18 @@ void DebugInfoWidget::update_state(const DebugSession& debug_session, const Ptra
 void DebugInfoWidget::program_stopped()
 {
     m_variables_view->set_model({});
+}
+
+GUI::Action& DebugInfoWidget::continue_action()
+{
+    ASSERT(m_continue_action);
+    return *m_continue_action;
+}
+
+GUI::Action& DebugInfoWidget::singlestep_action()
+{
+    ASSERT(m_singlestep_action);
+    return *m_singlestep_action;
 }
 
 }
