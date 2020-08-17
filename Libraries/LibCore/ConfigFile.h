@@ -37,6 +37,7 @@ namespace Core {
 
 class ConfigFile : public RefCounted<ConfigFile> {
 public:
+    static NonnullRefPtr<ConfigFile> get_for_lib(const String& lib_name);
     static NonnullRefPtr<ConfigFile> get_for_app(const String& app_name);
     static NonnullRefPtr<ConfigFile> get_for_system(const String& app_name);
     static NonnullRefPtr<ConfigFile> open(const String& path);
