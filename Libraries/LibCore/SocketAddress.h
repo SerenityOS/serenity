@@ -95,7 +95,7 @@ public:
     sockaddr_in to_sockaddr_in() const
     {
         ASSERT(type() == Type::IPv4);
-        sockaddr_in address;
+        sockaddr_in address {};
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = m_ipv4_address.to_in_addr_t();
         address.sin_port = htons(m_port);
