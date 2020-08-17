@@ -1227,7 +1227,7 @@ void VT::clear_to_end_of_line()
     fflush(stderr);
 }
 
-StringMetrics Editor::actual_rendered_string_metrics(const StringView& string) const
+StringMetrics Editor::actual_rendered_string_metrics(const StringView& string)
 {
     size_t length { 0 };
     StringMetrics metrics;
@@ -1251,7 +1251,7 @@ StringMetrics Editor::actual_rendered_string_metrics(const StringView& string) c
     return metrics;
 }
 
-StringMetrics Editor::actual_rendered_string_metrics(const Utf32View& view) const
+StringMetrics Editor::actual_rendered_string_metrics(const Utf32View& view)
 {
     size_t length { 0 };
     StringMetrics metrics;
@@ -1271,7 +1271,7 @@ StringMetrics Editor::actual_rendered_string_metrics(const Utf32View& view) cons
     return metrics;
 }
 
-Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metrics, size_t& length, u32 c, u32 next_c, VTState state) const
+Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metrics, size_t& length, u32 c, u32 next_c, VTState state)
 {
     switch (state) {
     case Free:

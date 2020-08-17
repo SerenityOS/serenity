@@ -173,8 +173,8 @@ public:
     void register_key_input_callback(const KeyBinding&);
     void register_key_input_callback(Key, Function<bool(Editor&)> callback);
 
-    StringMetrics actual_rendered_string_metrics(const StringView&) const;
-    StringMetrics actual_rendered_string_metrics(const Utf32View&) const;
+    static StringMetrics actual_rendered_string_metrics(const StringView&);
+    static StringMetrics actual_rendered_string_metrics(const Utf32View&);
 
     Function<Vector<CompletionSuggestion>(const Editor&)> on_tab_complete;
     Function<void()> on_interrupt_handled;
@@ -275,7 +275,7 @@ private:
         Title = 9,
     };
 
-    VTState actual_rendered_string_length_step(StringMetrics&, size_t& length, u32, u32, VTState) const;
+    static VTState actual_rendered_string_length_step(StringMetrics&, size_t& length, u32, u32, VTState);
 
     // ^Core::Object
     virtual void save_to(JsonObject&) override;
