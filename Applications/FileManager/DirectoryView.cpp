@@ -25,9 +25,11 @@
  */
 
 #include "DirectoryView.h"
+#include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <serenity.h>
@@ -127,6 +129,8 @@ DirectoryView::DirectoryView(Mode mode)
     set_active_widget(nullptr);
     set_content_margins({ 2, 2, 2, 2 });
 
+    setup_actions();
+
     setup_model();
 
     setup_icon_view();
@@ -161,8 +165,12 @@ void DirectoryView::setup_model()
 
         add_path_to_history(model().root_path());
 
+        bool can_write_in_path = access(model().root_path().characters(), W_OK) == 0;
+
+        m_mkdir_action->set_enabled(can_write_in_path);
+
         if (on_path_change)
-            on_path_change(model().root_path());
+            on_path_change(model().root_path(), can_write_in_path);
     };
 
     m_model->register_client(*this);
@@ -428,4 +436,22 @@ Vector<String> DirectoryView::selected_file_paths() const
         paths.append(path);
     });
     return paths;
+}
+
+void DirectoryView::setup_actions()
+{
+    m_mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
+        String value;
+        if (GUI::InputBox::show(value, window(), "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
+            auto new_dir_path = LexicalPath::canonicalized_path(
+                String::format("%s/%s",
+                    path().characters(),
+                    value.characters()));
+            int rc = mkdir(new_dir_path.characters(), 0777);
+            if (rc < 0) {
+                auto saved_errno = errno;
+                GUI::MessageBox::show(window(), String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+            }
+        }
+    });
 }

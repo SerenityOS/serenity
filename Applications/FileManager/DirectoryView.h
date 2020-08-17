@@ -79,7 +79,7 @@ public:
 
     void launch(const AK::URL&, const LauncherHandler&);
 
-    Function<void(const StringView&)> on_path_change;
+    Function<void(const StringView& path, bool can_write_in_path)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
     Function<void(const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;
     Function<void(const GUI::ModelIndex&, const GUI::DropEvent&)> on_drop;
@@ -134,6 +134,8 @@ public:
 
     Vector<String> selected_file_paths() const;
 
+    GUI::Action& mkdir_action() { return *m_mkdir_action; }
+
 private:
     explicit DirectoryView(Mode);
     const GUI::FileSystemModel& model() const { return *m_model; }
@@ -141,6 +143,7 @@ private:
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
+    void setup_actions();
     void setup_model();
     void setup_icon_view();
     void setup_columns_view();
@@ -164,4 +167,6 @@ private:
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::IconView> m_icon_view;
     RefPtr<GUI::ColumnsView> m_columns_view;
+
+    RefPtr<GUI::Action> m_mkdir_action;
 };
