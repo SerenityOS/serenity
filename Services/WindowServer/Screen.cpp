@@ -66,6 +66,7 @@ Screen::Screen(unsigned desired_width, unsigned desired_height)
 
 Screen::~Screen()
 {
+    close(m_framebuffer_fd);
 }
 
 bool Screen::set_resolution(int width, int height)
