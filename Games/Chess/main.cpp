@@ -61,6 +61,7 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
         widget.reset();
     }));
+    app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
@@ -104,12 +105,12 @@ int main(int argc, char** argv)
             action->set_checked(true);
         board_theme_menu.add_action(*action);
     }
-    
+
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Chess", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-chess.png"), window);
     }));
-    
+
     app->set_menubar(move(menubar));
 
     window->show();
