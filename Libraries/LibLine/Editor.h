@@ -77,6 +77,8 @@ struct Configuration {
     void set(RefreshBehaviour refresh) { refresh_behaviour = refresh; }
     void set(OperationMode mode) { operation_mode = mode; }
 
+    static Configuration from_config(const StringView& libname = "line");
+
     RefreshBehaviour refresh_behaviour { RefreshBehaviour::Lazy };
     OperationMode operation_mode { OperationMode::Unset };
 };
@@ -172,7 +174,7 @@ public:
     const Utf32View buffer_view() const { return { m_buffer.data(), m_buffer.size() }; }
 
 private:
-    explicit Editor(Configuration configuration = {});
+    explicit Editor(Configuration configuration = Configuration::from_config());
 
     enum VTState {
         Free = 1,
@@ -359,8 +361,10 @@ private:
     HashMap<char, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
     // TODO: handle signals internally.
-    struct termios m_termios {};
-    struct termios m_default_termios {};
+    struct termios m_termios {
+    };
+    struct termios m_default_termios {
+    };
     bool m_was_interrupted { false };
     bool m_was_resized { false };
 
