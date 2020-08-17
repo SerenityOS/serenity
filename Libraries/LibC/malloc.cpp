@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Bitmap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
