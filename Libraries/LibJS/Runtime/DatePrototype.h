@@ -48,6 +48,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_seconds);
     JS_DECLARE_NATIVE_FUNCTION(get_time);
     JS_DECLARE_NATIVE_FUNCTION(to_date_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_date_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_time_string);
     JS_DECLARE_NATIVE_FUNCTION(to_time_string);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
 };
