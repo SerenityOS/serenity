@@ -32,6 +32,7 @@
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Shape.h>
 
 namespace JS {
@@ -53,6 +54,7 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
     define_property("length", Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function("from", from, 1, attr);
     define_native_function("isArray", is_array, 1, attr);
     define_native_function("of", of, 0, attr);
 }
@@ -82,6 +84,44 @@ Value ArrayConstructor::call(Interpreter& interpreter)
 Value ArrayConstructor::construct(Interpreter& interpreter, Function&)
 {
     return call(interpreter);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
+{
+    auto value = interpreter.argument(0);
+    auto object = value.to_object(interpreter, global_object);
+    if (!object)
+        return {};
+
+    auto* array = Array::create(global_object);
+
+    // Array.from() lets you create Arrays from:
+    if (auto size = object->indexed_properties().array_like_size()) {
+        // * array-like objects (objects with a length property and indexed elements)
+        Vector<Value> elements;
+        elements.ensure_capacity(size);
+        for (size_t i = 0; i < size; ++i) {
+            elements.append(object->get(i));
+            if (interpreter.exception())
+                return {};
+        }
+        array->set_indexed_property_elements(move(elements));
+    } else {
+        // * iterable objects
+        get_iterator_values(global_object, value, [&](Value& element) {
+            if (interpreter.exception())
+                return IterationDecision::Break;
+            array->indexed_properties().append(element);
+            return IterationDecision::Continue;
+        });
+        if (interpreter.exception())
+            return {};
+    }
+
+    // FIXME: if interpreter.argument_count() >= 2: mapFn
+    // FIXME: if interpreter.argument_count() >= 3: thisArg
+
+    return array;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
