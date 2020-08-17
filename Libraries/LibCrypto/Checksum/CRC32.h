@@ -29,7 +29,7 @@
 #include <AK/LogStream.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
-#include <Libraries/LibCrypto/Checksum/ChecksumFunction.h>
+#include <LibCrypto/Checksum/ChecksumFunction.h>
 
 namespace Crypto::Checksum {
 
