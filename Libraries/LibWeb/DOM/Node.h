@@ -79,12 +79,14 @@ public:
 
     RefPtr<Node> append_child(NonnullRefPtr<Node>, bool notify = true);
     RefPtr<Node> insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify = true);
+    void remove_all_children();
 
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style);
 
     virtual FlyString node_name() const = 0;
 
     virtual String text_content() const;
+    void set_text_content(const String&);
 
     Document& document() { return *m_document; }
     const Document& document() const { return *m_document; }

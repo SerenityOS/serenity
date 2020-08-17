@@ -84,12 +84,23 @@ String Node::text_content() const
         auto text = child->text_content();
         if (!text.is_empty()) {
             builder.append(child->text_content());
-            builder.append(' ');
         }
     }
-    if (builder.length() > 1)
-        builder.trim(1);
     return builder.to_string();
+}
+
+void Node::set_text_content(const String& content)
+{
+    if (is_text()) {
+        downcast<Text>(this)->set_data(content);
+    } else {
+        remove_all_children();
+        append_child(document().create_text_node(content));
+    }
+
+    set_needs_style_update(true);
+    document().schedule_style_update();
+    document().invalidate_layout();
 }
 
 RefPtr<LayoutNode> Node::create_layout_node(const CSS::StyleProperties*)
@@ -195,6 +206,13 @@ RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, b
     }
     TreeNode<Node>::insert_before(node, child, notify);
     return node;
+}
+
+void Node::remove_all_children()
+{
+    while (RefPtr<Node> child = first_child()) {
+        remove_child(*child);
+    }
 }
 
 void Node::set_document(Badge<Document>, Document& document)
