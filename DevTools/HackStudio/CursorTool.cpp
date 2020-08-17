@@ -31,6 +31,8 @@
 #include <AK/LogStream.h>
 #include <LibGfx/Palette.h>
 
+namespace HackStudio {
+
 void CursorTool::on_mousedown(GUI::MouseEvent& event)
 {
     dbg() << "CursorTool::on_mousedown";
@@ -185,4 +187,6 @@ void CursorTool::on_second_paint(GUI::Painter& painter, GUI::PaintEvent&)
     auto rect = rubber_band_rect();
     painter.fill_rect(rect, m_editor.palette().rubber_band_fill());
     painter.draw_rect(rect, m_editor.palette().rubber_band_border());
+}
+
 }

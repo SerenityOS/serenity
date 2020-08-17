@@ -32,6 +32,8 @@
 #include <LibGUI/TreeView.h>
 #include <sys/arch/i386/regs.h>
 
+namespace HackStudio {
+
 class VariablesModel final : public GUI::Model {
 public:
     static RefPtr<VariablesModel> create(const PtraceRegisters& regs);
@@ -57,3 +59,5 @@ private:
 
     GUI::Icon m_variable_icon;
 };
+
+}

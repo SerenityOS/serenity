@@ -44,6 +44,8 @@
 
 // #define EDITOR_DEBUG
 
+namespace HackStudio {
+
 Editor::Editor()
 {
     m_documentation_tooltip_window = GUI::Window::construct();
@@ -416,4 +418,6 @@ void Editor::set_document(GUI::TextDocument& doc)
 {
     ASSERT(doc.is_code_document());
     GUI::TextEditor::set_document(doc);
+}
+
 }

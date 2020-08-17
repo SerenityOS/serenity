@@ -28,6 +28,8 @@
 #include <LibCore/File.h>
 #include <string.h>
 
+namespace HackStudio {
+
 ProjectFile::ProjectFile(const String& name)
     : m_name(name)
 {
@@ -44,4 +46,6 @@ const GUI::TextDocument& ProjectFile::document() const
         m_document->set_text(file->read_all());
     }
     return *m_document;
+}
+
 }

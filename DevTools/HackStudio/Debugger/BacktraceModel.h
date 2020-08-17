@@ -33,6 +33,8 @@
 
 class DebugSession;
 
+namespace HackStudio {
+
 class BacktraceModel final : public GUI::Model {
 public:
     static NonnullRefPtr<BacktraceModel> create(const DebugSession&, const PtraceRegisters& regs);
@@ -47,7 +49,7 @@ public:
 
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
-    virtual void update() override {}
+    virtual void update() override { }
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex&) const override;
 
     struct FrameInfo {
@@ -68,3 +70,5 @@ private:
 
     Vector<FrameInfo> m_frames;
 };
+
+}

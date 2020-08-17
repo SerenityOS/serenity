@@ -33,6 +33,8 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 
+namespace HackStudio {
+
 struct Match {
     String filename;
     GUI::TextRange range;
@@ -161,4 +163,6 @@ void FindInFilesWidget::focus_textbox_and_select_all()
 {
     m_textbox->select_all();
     m_textbox->set_focus(true);
+}
+
 }

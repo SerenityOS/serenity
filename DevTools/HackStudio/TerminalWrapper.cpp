@@ -41,6 +41,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+namespace HackStudio {
+
 void TerminalWrapper::run_command(const String& command)
 {
     if (m_pid != -1) {
@@ -182,4 +184,6 @@ TerminalWrapper::TerminalWrapper(bool user_spawned)
 
 TerminalWrapper::~TerminalWrapper()
 {
+}
+
 }

@@ -30,6 +30,8 @@
 #include "WidgetTreeModel.h"
 #include <LibGUI/Painter.h>
 
+namespace HackStudio {
+
 FormEditorWidget::FormEditorWidget()
     : m_tool(make<CursorTool>(*this))
 {
@@ -62,4 +64,6 @@ void FormEditorWidget::set_tool(NonnullOwnPtr<Tool> tool)
 WidgetTreeModel& FormEditorWidget::model()
 {
     return *m_widget_tree_model;
+}
+
 }

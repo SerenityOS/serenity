@@ -27,6 +27,8 @@
 #include "BacktraceModel.h"
 #include "Debugger.h"
 
+namespace HackStudio {
+
 NonnullRefPtr<BacktraceModel> BacktraceModel::create(const DebugSession& debug_session, const PtraceRegisters& regs)
 {
     return adopt(*new BacktraceModel(create_backtrace(debug_session, regs)));
@@ -65,4 +67,6 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const DebugSe
         current_ebp = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp)).value();
     } while (current_ebp && current_instruction);
     return frames;
+}
+
 }

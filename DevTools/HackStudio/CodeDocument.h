@@ -28,6 +28,8 @@
 
 #include <LibGUI/TextDocument.h>
 
+namespace HackStudio {
+
 class CodeDocument final : public GUI::TextDocument {
 public:
     virtual ~CodeDocument() override;
@@ -47,3 +49,5 @@ private:
     Vector<size_t> m_breakpoint_lines;
     Optional<size_t> m_execution_position;
 };
+
+}

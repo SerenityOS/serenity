@@ -28,6 +28,8 @@
 
 #include <LibGUI/Widget.h>
 
+namespace HackStudio {
+
 class Locator final : public GUI::Widget {
     C_OBJECT(Locator)
 public:
@@ -46,3 +48,5 @@ private:
     RefPtr<GUI::Window> m_popup_window;
     RefPtr<GUI::TableView> m_suggestion_view;
 };
+
+}

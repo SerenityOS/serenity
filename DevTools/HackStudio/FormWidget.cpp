@@ -29,6 +29,8 @@
 #include "Tool.h"
 #include <LibGUI/Painter.h>
 
+namespace HackStudio {
+
 FormWidget::FormWidget()
 {
     set_fill_with_background_color(true);
@@ -98,4 +100,6 @@ void FormWidget::mousemove_event(GUI::MouseEvent& event)
 void FormWidget::keydown_event(GUI::KeyEvent& event)
 {
     editor().tool().on_keydown(event);
+}
+
 }

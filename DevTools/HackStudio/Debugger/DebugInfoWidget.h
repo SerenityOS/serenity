@@ -27,16 +27,18 @@
 #pragma once
 
 #include "Debugger.h"
-#include "LibGUI/ListView.h"
 #include <AK/NonnullOwnPtr.h>
+#include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>
 #include <sys/arch/i386/regs.h>
 
+namespace HackStudio {
+
 class DebugInfoWidget final : public GUI::Widget {
     C_OBJECT(DebugInfoWidget)
 public:
-    virtual ~DebugInfoWidget() override {}
+    virtual ~DebugInfoWidget() override { }
 
     void update_state(const DebugSession&, const PtraceRegisters&);
     void program_stopped();
@@ -48,3 +50,5 @@ private:
     RefPtr<GUI::ListView> m_backtrace_view;
     RefPtr<GUI::Menu> m_variable_context_menu;
 };
+
+}

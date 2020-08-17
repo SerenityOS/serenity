@@ -28,9 +28,7 @@
 
 #include "Tool.h"
 
-namespace GUI {
-class WidgetClassRegistration;
-}
+namespace HackStudio {
 
 class WidgetTool final : public Tool {
 public:
@@ -39,7 +37,7 @@ public:
         , m_meta_class(meta_class)
     {
     }
-    virtual ~WidgetTool() override {}
+    virtual ~WidgetTool() override { }
 
 private:
     virtual const char* class_name() const override { return "WidgetTool"; }
@@ -50,3 +48,5 @@ private:
 
     const GUI::WidgetClassRegistration& m_meta_class;
 };
+
+}

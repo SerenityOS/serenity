@@ -33,6 +33,8 @@
 #include <LibGUI/Label.h>
 #include <LibGfx/Font.h>
 
+namespace HackStudio {
+
 EditorWrapper::EditorWrapper(BreakpointChangeCallback breakpoint_change_callback)
 {
     set_layout<GUI::VerticalBoxLayout>();
@@ -81,4 +83,6 @@ EditorWrapper::~EditorWrapper()
 void EditorWrapper::set_editor_has_focus(Badge<Editor>, bool focus)
 {
     m_filename_label->set_font(focus ? Gfx::Font::default_bold_font() : Gfx::Font::default_font());
+}
+
 }

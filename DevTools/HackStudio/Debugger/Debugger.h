@@ -33,6 +33,8 @@
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 
+namespace HackStudio {
+
 class Debugger {
 public:
     static Debugger& the();
@@ -110,3 +112,5 @@ private:
 
     ContinueType m_continue_type { ContinueType::Continue };
 };
+
+}

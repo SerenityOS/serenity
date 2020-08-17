@@ -27,6 +27,8 @@
 #include "WidgetTool.h"
 #include <AK/LogStream.h>
 
+namespace HackStudio {
+
 void WidgetTool::on_mousedown(GUI::MouseEvent& event)
 {
     (void)event;
@@ -49,4 +51,6 @@ void WidgetTool::on_keydown(GUI::KeyEvent& event)
 {
     (void)event;
     dbg() << "WidgetTool::on_keydown";
+}
+
 }

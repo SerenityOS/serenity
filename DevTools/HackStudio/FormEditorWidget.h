@@ -29,6 +29,8 @@
 #include <AK/HashTable.h>
 #include <LibGUI/ScrollableWidget.h>
 
+namespace HackStudio {
+
 class FormWidget;
 class Tool;
 class WidgetTreeModel;
@@ -112,7 +114,7 @@ public:
             }
         }
 
-        WidgetSelection() {}
+        WidgetSelection() { }
 
     private:
         HashTable<GUI::Widget*> m_widgets;
@@ -131,3 +133,5 @@ private:
     NonnullOwnPtr<Tool> m_tool;
     WidgetSelection m_selection;
 };
+
+}

@@ -31,13 +31,15 @@
 #include <LibGUI/Forward.h>
 #include <LibGfx/Point.h>
 
+namespace HackStudio {
+
 class CursorTool final : public Tool {
 public:
     explicit CursorTool(FormEditorWidget& editor)
         : Tool(editor)
     {
     }
-    virtual ~CursorTool() override {}
+    virtual ~CursorTool() override { }
 
 private:
     virtual const char* class_name() const override { return "CursorTool"; }
@@ -58,3 +60,5 @@ private:
     Gfx::IntPoint m_rubber_band_origin;
     Gfx::IntPoint m_rubber_band_position;
 };
+
+}

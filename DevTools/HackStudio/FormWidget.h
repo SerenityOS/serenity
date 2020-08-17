@@ -29,6 +29,8 @@
 #include <AK/Badge.h>
 #include <LibGUI/Widget.h>
 
+namespace HackStudio {
+
 class CursorTool;
 class FormEditorWidget;
 
@@ -57,3 +59,5 @@ private:
 
     int m_grid_size { 5 };
 };
+
+}
