@@ -33,13 +33,13 @@
 
 class WebContentClient;
 
-class WebContentView final
+class OutOfProcessWebView final
     : public GUI::ScrollableWidget
     , public Web::WebViewHooks {
-    C_OBJECT(WebContentView);
+    C_OBJECT(OutOfProcessWebView);
 
 public:
-    virtual ~WebContentView() override;
+    virtual ~OutOfProcessWebView() override;
 
     URL url() const { return m_url; }
     void load(const URL&);
@@ -59,7 +59,7 @@ public:
     void notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers);
 
 private:
-    WebContentView();
+    OutOfProcessWebView();
 
     // ^Widget
     virtual bool accepts_focus() const override { return true; }

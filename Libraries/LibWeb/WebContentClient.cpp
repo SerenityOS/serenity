@@ -25,10 +25,10 @@
  */
 
 #include "WebContentClient.h"
-#include "WebContentView.h"
+#include "OutOfProcessWebView.h"
 #include <AK/SharedBuffer.h>
 
-WebContentClient::WebContentClient(WebContentView& view)
+WebContentClient::WebContentClient(OutOfProcessWebView& view)
     : IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, "/tmp/portal/webcontent")
     , m_view(view)
 {

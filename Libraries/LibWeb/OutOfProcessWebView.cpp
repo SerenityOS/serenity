@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "WebContentView.h"
+#include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
 #include <AK/SharedBuffer.h>
 #include <LibGUI/Painter.h>
@@ -32,24 +32,24 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/SystemTheme.h>
 
-WebContentView::WebContentView()
+OutOfProcessWebView::OutOfProcessWebView()
 {
     set_should_hide_unnecessary_scrollbars(true);
     m_client = WebContentClient::construct(*this);
     client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
 }
 
-WebContentView::~WebContentView()
+OutOfProcessWebView::~OutOfProcessWebView()
 {
 }
 
-void WebContentView::load(const URL& url)
+void OutOfProcessWebView::load(const URL& url)
 {
     m_url = url;
     client().post_message(Messages::WebContentServer::LoadURL(url));
 }
 
-void WebContentView::paint_event(GUI::PaintEvent& event)
+void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 {
     GUI::ScrollableWidget::paint_event(event);
 
@@ -62,7 +62,7 @@ void WebContentView::paint_event(GUI::PaintEvent& event)
     painter.blit({ 0, 0 }, *m_front_bitmap, m_front_bitmap->rect());
 }
 
-void WebContentView::resize_event(GUI::ResizeEvent& event)
+void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
     GUI::ScrollableWidget::resize_event(event);
 
@@ -76,27 +76,27 @@ void WebContentView::resize_event(GUI::ResizeEvent& event)
     request_repaint();
 }
 
-void WebContentView::keydown_event(GUI::KeyEvent& event)
+void OutOfProcessWebView::keydown_event(GUI::KeyEvent& event)
 {
     client().post_message(Messages::WebContentServer::KeyDown(event.key(), event.modifiers(), event.code_point()));
 }
 
-void WebContentView::mousedown_event(GUI::MouseEvent& event)
+void OutOfProcessWebView::mousedown_event(GUI::MouseEvent& event)
 {
     client().post_message(Messages::WebContentServer::MouseDown(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
 }
 
-void WebContentView::mouseup_event(GUI::MouseEvent& event)
+void OutOfProcessWebView::mouseup_event(GUI::MouseEvent& event)
 {
     client().post_message(Messages::WebContentServer::MouseUp(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
 }
 
-void WebContentView::mousemove_event(GUI::MouseEvent& event)
+void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
 {
     client().post_message(Messages::WebContentServer::MouseMove(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
 }
 
-void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id)
+void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id)
 {
     if (m_back_bitmap->shbuf_id() == shbuf_id) {
         swap(m_back_bitmap, m_front_bitmap);
@@ -104,7 +104,7 @@ void WebContentView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_
     }
 }
 
-void WebContentView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] const Gfx::IntRect& content_rect)
+void OutOfProcessWebView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] const Gfx::IntRect& content_rect)
 {
 #ifdef DEBUG_SPAM
     dbg() << "server did invalidate content_rect: " << content_rect << ", current shbuf_id=" << m_bitmap->shbuf_id();
@@ -112,28 +112,28 @@ void WebContentView::notify_server_did_invalidate_content_rect(Badge<WebContentC
     request_repaint();
 }
 
-void WebContentView::notify_server_did_change_selection(Badge<WebContentClient>)
+void OutOfProcessWebView::notify_server_did_change_selection(Badge<WebContentClient>)
 {
     request_repaint();
 }
 
-void WebContentView::notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size)
+void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size)
 {
     set_content_size(content_size);
 }
 
-void WebContentView::notify_server_did_change_title(Badge<WebContentClient>, const String& title)
+void OutOfProcessWebView::notify_server_did_change_title(Badge<WebContentClient>, const String& title)
 {
     if (on_title_change)
         on_title_change(title);
 }
 
-void WebContentView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect& rect)
+void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect& rect)
 {
     scroll_into_view(rect, true, true);
 }
 
-void WebContentView::notify_server_did_hover_link(Badge<WebContentClient>, const URL& url)
+void OutOfProcessWebView::notify_server_did_hover_link(Badge<WebContentClient>, const URL& url)
 {
     if (window())
         window()->set_override_cursor(GUI::StandardCursor::Hand);
@@ -141,7 +141,7 @@ void WebContentView::notify_server_did_hover_link(Badge<WebContentClient>, const
         on_link_hover(url);
 }
 
-void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
+void OutOfProcessWebView::notify_server_did_unhover_link(Badge<WebContentClient>)
 {
     if (window())
         window()->set_override_cursor(GUI::StandardCursor::None);
@@ -149,48 +149,48 @@ void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
         on_link_hover({});
 }
 
-void WebContentView::notify_server_did_click_link(Badge<WebContentClient>, const URL& url, const String& target, unsigned int modifiers)
+void OutOfProcessWebView::notify_server_did_click_link(Badge<WebContentClient>, const URL& url, const String& target, unsigned int modifiers)
 {
     if (on_link_click)
         on_link_click(url, target, modifiers);
 }
 
-void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>, const URL& url, const String& target, unsigned int modifiers)
+void OutOfProcessWebView::notify_server_did_middle_click_link(Badge<WebContentClient>, const URL& url, const String& target, unsigned int modifiers)
 {
     if (on_link_middle_click)
         on_link_middle_click(url, target, modifiers);
 }
 
-void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, const URL& url)
+void OutOfProcessWebView::notify_server_did_start_loading(Badge<WebContentClient>, const URL& url)
 {
     if (on_load_start)
         on_load_start(url);
 }
 
-void WebContentView::notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position)
+void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position)
 {
     if (on_context_menu_request)
         on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void WebContentView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position, const URL& url, const String&, unsigned)
+void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position, const URL& url, const String&, unsigned)
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void WebContentView::did_scroll()
+void OutOfProcessWebView::did_scroll()
 {
     client().post_message(Messages::WebContentServer::SetViewportRect(visible_content_rect()));
     request_repaint();
 }
 
-void WebContentView::request_repaint()
+void OutOfProcessWebView::request_repaint()
 {
     client().post_message(Messages::WebContentServer::Paint(m_back_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_back_bitmap->shbuf_id()));
 }
 
-WebContentClient& WebContentView::client()
+WebContentClient& OutOfProcessWebView::client()
 {
     return *m_client;
 }

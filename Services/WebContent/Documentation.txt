@@ -4,9 +4,9 @@ Multi-process model:
 
 Server                                                 Client
 
-WebContent                                             GUI process (WebContentView embedder) 
+WebContent                                             GUI process (OutOfProcessWebView embedder) 
 
-                                                       WebContentView (this is a GUI::Widget)
+                                                       OutOfProcessWebView (this is a GUI::Widget)
 WebContent::ClientConnection               <--->         WebContentClient
   WebContent::PageHost (Web::PageClient)
     Web::Page

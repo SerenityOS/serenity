@@ -38,9 +38,9 @@ The same basic concept applies to **ProtocolServer** and **ImageDecoder** as wel
 
 ![](classes.png)
 
-In the GUI application process, a `WebContentView` widget is placed somewhere in a window, and it takes care of spawning all of the helper processes, etc.
+In the GUI application process, a `OutOfProcessWebView` widget is placed somewhere in a window, and it takes care of spawning all of the helper processes, etc.
 
-Internally, the `WebContentView` has a `WebContentClient` object that implements the client side of the **WebContent** IPC protocol.
+Internally, the `OutOfProcessWebView` has a `WebContentClient` object that implements the client side of the **WebContent** IPC protocol.
 
 The `WebContentClient` speaks to a `WebContent::ClientConnection` in the **WebContent** process. Internally, the `WebContent::ClientConnection` has a `WebContent::PageHost` which hosts the **LibWeb** engine's main `Web::Page` object.
 
