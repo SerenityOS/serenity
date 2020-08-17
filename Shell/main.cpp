@@ -176,7 +176,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    editor = Line::Editor::construct(Line::Configuration {});
+    editor = Line::Editor::construct();
 
     auto shell = Shell::construct();
     s_shell = shell.ptr();
