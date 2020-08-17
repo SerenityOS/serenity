@@ -57,6 +57,11 @@ class DirectoryView final
     C_OBJECT(DirectoryView);
 
 public:
+    enum class Mode {
+        Desktop,
+        Normal,
+    };
+
     virtual ~DirectoryView() override;
 
     void open(const StringView& path);
@@ -72,7 +77,8 @@ public:
 
     void refresh();
 
-    Function<void(const AK::URL&, const LauncherHandler&)> on_launch;
+    void launch(const AK::URL&, const LauncherHandler&);
+
     Function<void(const StringView&)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
     Function<void(const GUI::AbstractView&, const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;
@@ -104,24 +110,41 @@ public:
         }
     }
 
+    const GUI::AbstractView& current_view() const
+    {
+        return const_cast<DirectoryView*>(this)->current_view();
+    }
+
     template<typename Callback>
     void for_each_view_implementation(Callback callback)
     {
-        callback(*m_table_view);
-        callback(*m_icon_view);
-        callback(*m_columns_view);
+        if (m_icon_view)
+            callback(*m_icon_view);
+        if (m_table_view)
+            callback(*m_table_view);
+        if (m_columns_view)
+            callback(*m_columns_view);
     }
 
     void set_should_show_dotfiles(bool);
 
     GUI::FileSystemModel& model() { return *m_model; }
 
+    bool is_desktop() const { return m_mode == Mode::Desktop; }
+
+    Vector<String> selected_file_paths() const;
+
 private:
-    DirectoryView();
+    explicit DirectoryView(Mode);
     const GUI::FileSystemModel& model() const { return *m_model; }
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
+
+    void setup_model();
+    void setup_icon_view();
+    void setup_columns_view();
+    void setup_table_view();
 
     void handle_activation(const GUI::ModelIndex&);
     GUI::ModelIndex map_index(const GUI::ModelIndex&) const;
@@ -129,6 +152,7 @@ private:
     void set_status_message(const StringView&);
     void update_statusbar();
 
+    Mode m_mode { Mode::Normal };
     ViewMode m_view_mode { Invalid };
 
     NonnullRefPtr<GUI::FileSystemModel> m_model;
