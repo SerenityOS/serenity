@@ -55,7 +55,7 @@
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <stdio.h>
 

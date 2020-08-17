@@ -87,7 +87,7 @@ private:
 
     History m_history;
 
-    RefPtr<Web::PageView> m_page_view;
+    RefPtr<Web::InProcessWebView> m_page_view;
     RefPtr<WebContentView> m_web_content_view;
 
     RefPtr<GUI::Action> m_go_back_action;

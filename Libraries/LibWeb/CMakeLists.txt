@@ -124,6 +124,7 @@ set(SOURCES
     HTML/Parser/HTMLTokenizer.cpp
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
+    InProcessWebView.cpp
     Layout/BoxModelMetrics.cpp
     Layout/LayoutBlock.cpp
     Layout/LayoutBox.cpp
@@ -157,7 +158,6 @@ set(SOURCES
     Page/EventHandler.cpp
     Page/Frame.cpp
     Page/Page.cpp
-    PageView.cpp
     Painting/StackingContext.cpp
     SVG/SVGElement.cpp
     SVG/SVGGeometryElement.cpp

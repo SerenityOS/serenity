@@ -33,7 +33,7 @@
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 
 namespace Web::DOM {
 

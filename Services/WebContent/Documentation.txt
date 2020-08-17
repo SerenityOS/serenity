@@ -19,7 +19,7 @@ WebContent::ClientConnection               <--->         WebContentClient
 Single process model:
 =====================
 
-Web::PageView (this is a GUI::Widget, and also a Web::PageClient)
+Web::InProcessWebView (this is a GUI::Widget, and also a Web::PageClient)
   Web::Page
     Web::Frame
       Web::Document

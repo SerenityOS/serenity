@@ -31,7 +31,7 @@
 #include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 
 namespace Web {
 
@@ -124,7 +124,7 @@ void Frame::set_needs_display(const Gfx::IntRect& rect)
         host_element()->layout_node()->set_needs_display();
 }
 
-void Frame::did_scroll(Badge<PageView>)
+void Frame::did_scroll(Badge<InProcessWebView>)
 {
     if (!m_document)
         return;

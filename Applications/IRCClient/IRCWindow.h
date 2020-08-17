@@ -74,7 +74,7 @@ private:
     void* m_owner { nullptr };
     Type m_type;
     String m_name;
-    RefPtr<Web::PageView> m_page_view;
+    RefPtr<Web::InProcessWebView> m_page_view;
     RefPtr<GUI::TextBox> m_text_box;
     RefPtr<IRCLogBuffer> m_log_buffer;
     RefPtr<GUI::Menu> m_context_menu;

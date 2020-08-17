@@ -33,7 +33,7 @@
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 
 namespace Web::HTML {
 
@@ -50,7 +50,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperti
 {
     ASSERT(document().frame());
     auto& frame = *document().frame();
-    auto& page_view = const_cast<PageView&>(static_cast<const PageView&>(frame.page().client()));
+    auto& page_view = const_cast<InProcessWebView&>(static_cast<const InProcessWebView&>(frame.page().client()));
 
     if (type() == "hidden")
         return nullptr;

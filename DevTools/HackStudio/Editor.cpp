@@ -40,7 +40,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 
 // #define EDITOR_DEBUG
 
@@ -51,7 +51,7 @@ Editor::Editor()
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::PageView>();
+    m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::InProcessWebView>();
 }
 
 Editor::~Editor()

@@ -52,7 +52,7 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGfx/Font.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 #include <string.h>
 
 TextEditorWidget::TextEditorWidget()
@@ -92,7 +92,7 @@ TextEditorWidget::TextEditorWidget()
         m_statusbar->set_text(builder.to_string());
     };
 
-    m_page_view = splitter.add<Web::PageView>();
+    m_page_view = splitter.add<Web::InProcessWebView>();
     m_page_view->set_visible(false);
     m_page_view->on_link_hover = [this, update_statusbar_cursor_position = move(update_statusbar_cursor_position)](auto& url) {
         if (url.is_valid())

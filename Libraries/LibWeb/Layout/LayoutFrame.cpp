@@ -33,7 +33,7 @@
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutFrame.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/PageView.h>
+#include <LibWeb/InProcessWebView.h>
 
 //#define DEBUG_HIGHLIGHT_FOCUSED_FRAME
 

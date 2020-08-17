@@ -66,7 +66,7 @@ public:
     void set_viewport_rect(const Gfx::IntRect&);
     Gfx::IntRect viewport_rect() const { return m_viewport_rect; }
 
-    void did_scroll(Badge<PageView>);
+    void did_scroll(Badge<InProcessWebView>);
 
     FrameLoader& loader() { return m_loader; }
     const FrameLoader& loader() const { return m_loader; }
