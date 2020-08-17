@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Luke Wilde <luke.wilde@live.co.uk>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,13 +30,6 @@
 #include <LibWeb/Dump.h>
 
 namespace Web::DOM {
-
-void ParentNode::remove_all_children()
-{
-    while (RefPtr<Node> child = first_child()) {
-        remove_child(*child);
-    }
-}
 
 RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 {

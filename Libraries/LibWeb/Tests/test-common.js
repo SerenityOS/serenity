@@ -1,8 +1,7 @@
 // NOTE: The tester loads in LibJS's test-common to prevent duplication.
 
 // NOTE: "window.libweb_tester" is set to a special tester object.
-//       The object currently provides the following functions:
-//       - changePage(url) - change page to given URL. Everything afterwards will refer to the new page.
+//       See libweb_tester.d.ts for definitions.
 
 let __PageToLoad__;
 

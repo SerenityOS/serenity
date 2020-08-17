@@ -193,7 +193,7 @@ static Vector<String> get_test_paths(const String& test_root)
     Vector<String> paths;
 
     iterate_directory_recursively(test_root, [&](const String& file_path) {
-        if (!file_path.ends_with("test-common.js"))
+        if (!file_path.ends_with("test-common.js") && !file_path.ends_with(".html") && !file_path.ends_with(".ts"))
             paths.append(file_path);
     });
 
