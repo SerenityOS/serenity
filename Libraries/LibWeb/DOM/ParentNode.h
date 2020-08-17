@@ -35,8 +35,6 @@ public:
     template<typename F> void for_each_child(F) const;
     template<typename F> void for_each_child(F);
 
-    void remove_all_children();
-
 protected:
     explicit ParentNode(Document& document, NodeType type)
         : Node(document, type)
