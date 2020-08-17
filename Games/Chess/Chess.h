@@ -91,7 +91,7 @@ public:
         Square to;
         Type promote_to;
         Move(const StringView& algebraic);
-        Move(const Square& from, const Square& to, const Type& promote_to = Type::Queen)
+        Move(const Square& from, const Square& to, const Type& promote_to = Type::None)
             : from(from)
             , to(to)
             , promote_to(promote_to)
@@ -200,15 +200,17 @@ void Chess::generate_moves(Callback callback, Colour colour) const
 
         bool keep_going = true;
         if (piece.type == Type::Pawn) {
-            keep_going =
-                try_move({sq, {sq.rank+1, sq.file}}) &&
-                try_move({sq, {sq.rank+2, sq.file}}) &&
-                try_move({sq, {sq.rank-1, sq.file}}) &&
-                try_move({sq, {sq.rank-2, sq.file}}) &&
-                try_move({sq, {sq.rank+1, sq.file+1}}) &&
-                try_move({sq, {sq.rank+1, sq.file-1}}) &&
-                try_move({sq, {sq.rank-1, sq.file+1}}) &&
-                try_move({sq, {sq.rank-1, sq.file-1}});
+            for (auto& piece : Vector({Type::None, Type::Knight, Type::Bishop, Type::Rook, Type::Queen})) {
+                keep_going =
+                    try_move({sq, {sq.rank+1, sq.file}, piece}) &&
+                    try_move({sq, {sq.rank+2, sq.file}, piece}) &&
+                    try_move({sq, {sq.rank-1, sq.file}, piece}) &&
+                    try_move({sq, {sq.rank-2, sq.file}, piece}) &&
+                    try_move({sq, {sq.rank+1, sq.file+1}}) &&
+                    try_move({sq, {sq.rank+1, sq.file-1}}) &&
+                    try_move({sq, {sq.rank-1, sq.file+1}}) &&
+                    try_move({sq, {sq.rank-1, sq.file-1}});
+            }
         } else if (piece.type == Type::Knight) {
             keep_going =
                 try_move({sq, {sq.rank+2, sq.file+1}}) &&
