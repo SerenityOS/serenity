@@ -176,10 +176,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
     });
 
     desktop_view_context_menu->add_action(directory_view.mkdir_action());
-
-#if 0
-    desktop_view_context_menu->add_action(touch_action);
-#endif
+    desktop_view_context_menu->add_action(directory_view.touch_action());
 
     desktop_view_context_menu->add_separator();
 
@@ -292,34 +289,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto open_parent_directory_action = GUI::Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
         directory_view.open_parent_directory();
-    });
-
-    auto touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
-        String value;
-        if (GUI::InputBox::show(value, window, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto new_file_path = LexicalPath::canonicalized_path(
-                String::format("%s/%s",
-                    directory_view.path().characters(),
-                    value.characters()));
-            struct stat st;
-            int rc = stat(new_file_path.characters(), &st);
-            if ((rc < 0 && errno != ENOENT)) {
-                GUI::MessageBox::show(window, String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-                return;
-            }
-            if (rc == 0) {
-                GUI::MessageBox::show(window, String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error);
-                return;
-            }
-            int fd = creat(new_file_path.characters(), 0666);
-            if (fd < 0) {
-                GUI::MessageBox::show(window, String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-                return;
-            }
-            rc = close(fd);
-            assert(rc >= 0);
-            refresh_tree_view();
-        }
     });
 
     auto open_terminal_action = GUI::Action::create("Open Terminal here...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](const GUI::Action&) {
@@ -587,7 +556,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto& app_menu = menubar->add_menu("File Manager");
     app_menu.add_action(directory_view.mkdir_action());
-    app_menu.add_action(touch_action);
+    app_menu.add_action(directory_view.touch_action());
     app_menu.add_action(copy_action);
     app_menu.add_action(paste_action);
     app_menu.add_action(delete_action);
@@ -633,7 +602,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     main_toolbar.add_separator();
     main_toolbar.add_action(directory_view.mkdir_action());
-    main_toolbar.add_action(touch_action);
+    main_toolbar.add_action(directory_view.touch_action());
     main_toolbar.add_action(copy_action);
     main_toolbar.add_action(paste_action);
     main_toolbar.add_action(delete_action);
@@ -669,7 +638,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             return;
         }
 
-        touch_action->set_enabled(can_write_in_path);
         paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().type() == "text/uri-list");
         go_forward_action->set_enabled(directory_view.path_history_position() < directory_view.path_history_size() - 1);
         go_back_action->set_enabled(directory_view.path_history_position() > 0);
@@ -713,7 +681,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_context_menu->add_action(properties_action);
 
     directory_view_context_menu->add_action(directory_view.mkdir_action());
-    directory_view_context_menu->add_action(touch_action);
+    directory_view_context_menu->add_action(directory_view.touch_action());
     directory_view_context_menu->add_action(paste_action);
     directory_view_context_menu->add_action(open_terminal_action);
     directory_view_context_menu->add_separator();
@@ -726,7 +694,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view_directory_context_menu->add_action(properties_action);
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(directory_view.mkdir_action());
-    tree_view_directory_context_menu->add_action(touch_action);
+    tree_view_directory_context_menu->add_action(directory_view.touch_action());
 
     RefPtr<GUI::Menu> file_context_menu;
     NonnullRefPtrVector<LauncherHandler> current_file_handlers;

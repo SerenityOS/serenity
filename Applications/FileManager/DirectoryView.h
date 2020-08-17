@@ -135,6 +135,7 @@ public:
     Vector<String> selected_file_paths() const;
 
     GUI::Action& mkdir_action() { return *m_mkdir_action; }
+    GUI::Action& touch_action() { return *m_touch_action; }
 
 private:
     explicit DirectoryView(Mode);
@@ -169,4 +170,5 @@ private:
     RefPtr<GUI::ColumnsView> m_columns_view;
 
     RefPtr<GUI::Action> m_mkdir_action;
+    RefPtr<GUI::Action> m_touch_action;
 };
