@@ -168,6 +168,7 @@ void DirectoryView::setup_model()
         bool can_write_in_path = access(model().root_path().characters(), W_OK) == 0;
 
         m_mkdir_action->set_enabled(can_write_in_path);
+        m_touch_action->set_enabled(can_write_in_path);
 
         if (on_path_change)
             on_path_change(model().root_path(), can_write_in_path);
@@ -452,6 +453,35 @@ void DirectoryView::setup_actions()
                 auto saved_errno = errno;
                 GUI::MessageBox::show(window(), String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
             }
+        }
+    });
+
+    m_touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+        String value;
+        if (GUI::InputBox::show(value, window(), "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
+            auto new_file_path = LexicalPath::canonicalized_path(
+                String::format("%s/%s",
+                    path().characters(),
+                    value.characters()));
+            struct stat st;
+            int rc = stat(new_file_path.characters(), &st);
+            if ((rc < 0 && errno != ENOENT)) {
+                auto saved_errno = errno;
+                GUI::MessageBox::show(window(), String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+                return;
+            }
+            if (rc == 0) {
+                GUI::MessageBox::show(window(), String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error);
+                return;
+            }
+            int fd = creat(new_file_path.characters(), 0666);
+            if (fd < 0) {
+                auto saved_errno = errno;
+                GUI::MessageBox::show(window(), String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+                return;
+            }
+            rc = close(fd);
+            ASSERT(rc >= 0);
         }
     });
 }
