@@ -80,6 +80,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+using namespace HackStudio;
+
+namespace HackStudio {
+
 NonnullRefPtrVector<EditorWrapper> g_all_editor_wrappers;
 RefPtr<EditorWrapper> g_current_editor_wrapper;
 Function<void(String)> g_open_file;
@@ -172,7 +176,7 @@ static String get_project_executable_path()
     return g_project->path().substring(0, g_project->path().index_of(".").value());
 }
 
-int main(int argc, char** argv)
+int main_impl(int argc, char** argv)
 {
     if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec unix fattr thread", nullptr) < 0) {
         perror("pledge");
@@ -819,4 +823,11 @@ bool make_is_available()
     waitpid(pid, &wstatus, 0);
     posix_spawn_file_actions_destroy(&action);
     return WEXITSTATUS(wstatus) == 0;
+}
+
+}
+
+int main(int argc, char** argv)
+{
+    return main_impl(argc, argv);
 }

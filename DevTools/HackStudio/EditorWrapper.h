@@ -32,6 +32,8 @@
 #include <LibGUI/Widget.h>
 #include <string.h>
 
+namespace HackStudio {
+
 class Editor;
 
 class EditorWrapper : public GUI::Widget {
@@ -55,6 +57,8 @@ private:
     RefPtr<Editor> m_editor;
 };
 
-AK_BEGIN_TYPE_TRAITS(EditorWrapper)
+}
+
+AK_BEGIN_TYPE_TRAITS(HackStudio::EditorWrapper)
 static bool is_type(const Core::Object& object) { return !strcmp(object.class_name(), "EditorWrapper"); }
 AK_END_TYPE_TRAITS()

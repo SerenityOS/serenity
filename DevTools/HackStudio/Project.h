@@ -33,6 +33,8 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Model.h>
 
+namespace HackStudio {
+
 enum class ProjectType {
     Unknown,
     Cpp,
@@ -88,3 +90,5 @@ private:
     GUI::Icon m_header_icon;
     GUI::Icon m_project_icon;
 };
+
+}

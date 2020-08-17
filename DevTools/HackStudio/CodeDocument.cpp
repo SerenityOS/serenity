@@ -23,12 +23,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include "CodeDocument.h"
+
+namespace HackStudio {
 
 NonnullRefPtr<CodeDocument> CodeDocument::create(Client* client)
 {
     return adopt(*new CodeDocument(client));
 }
+
 CodeDocument::CodeDocument(Client* client)
     : TextDocument(client)
 {
@@ -36,4 +40,6 @@ CodeDocument::CodeDocument(Client* client)
 
 CodeDocument::~CodeDocument()
 {
+}
+
 }

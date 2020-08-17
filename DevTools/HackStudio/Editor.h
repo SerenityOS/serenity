@@ -32,6 +32,8 @@
 #include <LibGUI/TextEditor.h>
 #include <LibWeb/Forward.h>
 
+namespace HackStudio {
+
 class EditorWrapper;
 
 class Editor final : public GUI::TextEditor {
@@ -86,3 +88,5 @@ private:
     bool m_hovering_link { false };
     bool m_holding_ctrl { false };
 };
+
+}

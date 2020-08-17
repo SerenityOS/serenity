@@ -28,6 +28,8 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 
+namespace HackStudio {
+
 GUI::ModelIndex VariablesModel::index(int row, int column, const GUI::ModelIndex& parent_index) const
 {
     if (!parent_index.is_valid())
@@ -183,4 +185,6 @@ RefPtr<VariablesModel> VariablesModel::create(const PtraceRegisters& regs)
 {
     auto variables = Debugger::the().session()->debug_info().get_variables_in_current_scope(regs);
     return adopt(*new VariablesModel(move(variables), regs));
+}
+
 }

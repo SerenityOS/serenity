@@ -29,6 +29,8 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 
+namespace HackStudio {
+
 class WidgetTreeModel final : public GUI::Model {
 public:
     static NonnullRefPtr<WidgetTreeModel> create(GUI::Widget& root) { return adopt(*new WidgetTreeModel(root)); }
@@ -49,3 +51,5 @@ private:
     NonnullRefPtr<GUI::Widget> m_root;
     GUI::Icon m_widget_icon;
 };
+
+}

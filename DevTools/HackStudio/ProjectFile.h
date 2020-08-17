@@ -32,6 +32,8 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 
+namespace HackStudio {
+
 class ProjectFile : public RefCounted<ProjectFile> {
 public:
     static NonnullRefPtr<ProjectFile> construct_with_name(const String& name)
@@ -49,3 +51,5 @@ private:
     String m_name;
     mutable RefPtr<CodeDocument> m_document;
 };
+
+}

@@ -31,6 +31,8 @@
 #include <AK/String.h>
 #include <LibGUI/TextEditor.h>
 
+namespace HackStudio {
+
 GUI::TextEditor& current_editor();
 void open_file(const String&);
 
@@ -38,3 +40,5 @@ extern RefPtr<EditorWrapper> g_current_editor_wrapper;
 extern Function<void(String)> g_open_file;
 extern OwnPtr<Project> g_project;
 extern String g_currently_open_file;
+
+}

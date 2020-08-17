@@ -36,6 +36,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+namespace HackStudio {
+
 struct Project::ProjectTreeNode : public RefCounted<ProjectTreeNode> {
     enum class Type {
         Invalid,
@@ -357,4 +359,6 @@ void Project::rebuild_tree()
 
     m_root_node = move(root);
     m_model->update();
+}
+
 }

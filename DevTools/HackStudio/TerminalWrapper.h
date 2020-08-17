@@ -28,8 +28,11 @@
 
 #include <LibGUI/Widget.h>
 
-class ProcessStateWidget;
 class TerminalWidget;
+
+namespace HackStudio {
+
+class ProcessStateWidget;
 
 class TerminalWrapper final : public GUI::Widget {
     C_OBJECT(TerminalWrapper)
@@ -52,3 +55,5 @@ private:
     pid_t m_pid { -1 };
     bool m_user_spawned { true };
 };
+
+}

@@ -32,6 +32,8 @@
 #include <LibGfx/Font.h>
 #include <unistd.h>
 
+namespace HackStudio {
+
 ProcessStateWidget::ProcessStateWidget()
 {
     set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -95,4 +97,6 @@ void ProcessStateWidget::set_tty_fd(int tty_fd)
     }
     set_visible(true);
     refresh();
+}
+
 }

@@ -32,6 +32,8 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 
+namespace HackStudio {
+
 static RefPtr<Gfx::Bitmap> s_file_icon;
 static RefPtr<Gfx::Bitmap> s_cplusplus_icon;
 static RefPtr<Gfx::Bitmap> s_header_icon;
@@ -186,4 +188,6 @@ void Locator::update_suggestions()
     m_popup_window->move_to(screen_relative_rect().top_left().translated(0, -m_popup_window->height()));
     dbg() << "Popup rect: " << m_popup_window->rect();
     m_popup_window->show();
+}
+
 }

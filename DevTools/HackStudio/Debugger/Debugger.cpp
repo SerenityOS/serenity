@@ -26,6 +26,8 @@
 
 #include "Debugger.h"
 
+namespace HackStudio {
+
 static Debugger* s_the;
 
 Debugger& Debugger::the()
@@ -183,8 +185,11 @@ void Debugger::DebuggingState::set_single_stepping(DebugInfo::SourcePosition ori
     m_state = State::SingleStepping;
     m_original_source_position = original_source_position;
 }
+
 bool Debugger::DebuggingState::should_stop_single_stepping(const DebugInfo::SourcePosition& current_source_position) const
 {
     ASSERT(m_state == State::SingleStepping);
     return m_original_source_position.value() != current_source_position;
+}
+
 }

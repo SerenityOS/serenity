@@ -38,6 +38,8 @@
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TreeView.h>
 
+namespace HackStudio {
+
 DebugInfoWidget::DebugInfoWidget()
 {
     set_layout<GUI::HorizontalBoxLayout>();
@@ -107,4 +109,6 @@ void DebugInfoWidget::update_state(const DebugSession& debug_session, const Ptra
 void DebugInfoWidget::program_stopped()
 {
     m_variables_view->set_model({});
+}
+
 }

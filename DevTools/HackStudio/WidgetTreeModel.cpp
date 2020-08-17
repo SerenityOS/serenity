@@ -27,7 +27,8 @@
 #include "WidgetTreeModel.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/Widget.h>
-#include <stdio.h>
+
+namespace HackStudio {
 
 WidgetTreeModel::WidgetTreeModel(GUI::Widget& root)
     : m_root(root)
@@ -111,4 +112,6 @@ GUI::ModelIndex WidgetTreeModel::index_for_widget(GUI::Widget& widget) const
         ++parent_child_index;
     }
     return {};
+}
+
 }

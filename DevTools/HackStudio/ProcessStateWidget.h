@@ -28,6 +28,8 @@
 
 #include <LibGUI/Widget.h>
 
+namespace HackStudio {
+
 class ProcessStateWidget final : public GUI::Widget {
     C_OBJECT(ProcessStateWidget)
 public:
@@ -49,3 +51,5 @@ private:
 
     int m_tty_fd { -1 };
 };
+
+}
