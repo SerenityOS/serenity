@@ -1100,11 +1100,20 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
         }
     }
 
-    Line::VT::apply_style(Line::Style { Line::Style::Background(Line::Style::XtermColor::Cyan), Line::Style::Foreground(Line::Style::XtermColor::Black) });
-    putc('%', stderr);
-    Line::VT::apply_style(Line::Style::reset_style());
+    // Black with Cyan background.
+    constexpr auto default_mark = "\e[30;46m%\e[0m";
+    String eol_mark = getenv("PROMPT_EOL_MARK");
+    if (eol_mark.is_null())
+        eol_mark = default_mark;
+    size_t eol_mark_length = Line::Editor::actual_rendered_string_metrics(eol_mark).line_lengths.last();
+    if (eol_mark_length >= ws.ws_col) {
+        eol_mark = default_mark;
+        eol_mark_length = 1;
+    }
 
-    for (auto i = 2; i < ws.ws_col; ++i)
+    fputs(eol_mark.characters(), stderr);
+
+    for (auto i = 1 + eol_mark_length; i < ws.ws_col; ++i)
         putc(' ', stderr);
 
     putc('\r', stderr);
