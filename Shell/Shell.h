@@ -187,6 +187,7 @@ private:
 
     // ^Core::Object
     virtual void save_to(JsonObject&) override;
+    void bring_cursor_to_beginning_of_a_line() const;
 
     void cache_path();
     void add_entry_to_cache(const String&);
