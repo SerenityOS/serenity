@@ -175,11 +175,13 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
         Desktop::Launcher::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
     });
 
+    desktop_view_context_menu->add_action(directory_view.mkdir_action());
+
 #if 0
-    desktop_view_context_menu->add_action(mkdir_action);
     desktop_view_context_menu->add_action(touch_action);
-    desktop_view_context_menu->add_separator();
 #endif
+
+    desktop_view_context_menu->add_separator();
 
     desktop_view_context_menu->add_action(file_manager_action);
     desktop_view_context_menu->add_separator();
@@ -290,22 +292,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto open_parent_directory_action = GUI::Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
         directory_view.open_parent_directory();
-    });
-
-    auto mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
-        String value;
-        if (GUI::InputBox::show(value, window, "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto new_dir_path = LexicalPath::canonicalized_path(
-                String::format("%s/%s",
-                    directory_view.path().characters(),
-                    value.characters()));
-            int rc = mkdir(new_dir_path.characters(), 0777);
-            if (rc < 0) {
-                GUI::MessageBox::show(window, String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-            } else {
-                refresh_tree_view();
-            }
-        }
     });
 
     auto touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
@@ -600,7 +586,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("File Manager");
-    app_menu.add_action(mkdir_action);
+    app_menu.add_action(directory_view.mkdir_action());
     app_menu.add_action(touch_action);
     app_menu.add_action(copy_action);
     app_menu.add_action(paste_action);
@@ -646,7 +632,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(go_home_action);
 
     main_toolbar.add_separator();
-    main_toolbar.add_action(mkdir_action);
+    main_toolbar.add_action(directory_view.mkdir_action());
     main_toolbar.add_action(touch_action);
     main_toolbar.add_action(copy_action);
     main_toolbar.add_action(paste_action);
@@ -658,7 +644,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(*view_as_table_action);
     main_toolbar.add_action(*view_as_columns_action);
 
-    directory_view.on_path_change = [&](const String& new_path) {
+    directory_view.on_path_change = [&](const String& new_path, bool can_write_in_path) {
         const Gfx::Bitmap* icon = nullptr;
         if (new_path == Core::StandardPaths::home_directory())
             icon = &home_directory_icon();
@@ -683,8 +669,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             return;
         }
 
-        auto can_write_in_path = access(new_path.characters(), W_OK) == 0;
-        mkdir_action->set_enabled(can_write_in_path);
         touch_action->set_enabled(can_write_in_path);
         paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().type() == "text/uri-list");
         go_forward_action->set_enabled(directory_view.path_history_position() < directory_view.path_history_size() - 1);
@@ -728,7 +712,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
-    directory_view_context_menu->add_action(mkdir_action);
+    directory_view_context_menu->add_action(directory_view.mkdir_action());
     directory_view_context_menu->add_action(touch_action);
     directory_view_context_menu->add_action(paste_action);
     directory_view_context_menu->add_action(open_terminal_action);
@@ -741,7 +725,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(properties_action);
     tree_view_directory_context_menu->add_separator();
-    tree_view_directory_context_menu->add_action(mkdir_action);
+    tree_view_directory_context_menu->add_action(directory_view.mkdir_action());
     tree_view_directory_context_menu->add_action(touch_action);
 
     RefPtr<GUI::Menu> file_context_menu;
