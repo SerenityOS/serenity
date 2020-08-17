@@ -1087,9 +1087,33 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
     return suggestions;
 }
 
+void Shell::bring_cursor_to_beginning_of_a_line() const
+{
+    struct winsize ws;
+    if (editor) {
+        ws = editor->terminal_size();
+    } else {
+        if (ioctl(STDERR_FILENO, TIOCGWINSZ, &ws) < 0) {
+            // Very annoying assumptions.
+            ws.ws_col = 80;
+            ws.ws_row = 25;
+        }
+    }
+
+    Line::VT::apply_style(Line::Style { Line::Style::Background(Line::Style::XtermColor::Cyan), Line::Style::Foreground(Line::Style::XtermColor::Black) });
+    putc('%', stderr);
+    Line::VT::apply_style(Line::Style::reset_style());
+
+    for (auto i = 2; i < ws.ws_col; ++i)
+        putc(' ', stderr);
+
+    putc('\r', stderr);
+}
+
 bool Shell::read_single_line()
 {
     restore_ios();
+    bring_cursor_to_beginning_of_a_line();
     auto line_result = editor->get_line(prompt());
 
     if (line_result.is_error()) {
