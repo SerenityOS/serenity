@@ -169,7 +169,7 @@ The general syntax follows the form `for name in expr { sequence }`, and allows 
 
 A for-loop evaluates the _sequence_ once per every element in the _expr_, seetting the local variable _name_ to the element being processed.
 
-The Shell shall cancel the for loop if two consecutive commands are interrupted via any of SIGINT (\^C), SIGQUIT (\^\\) or SIGKILL.
+The Shell shall cancel the for loop if two consecutive commands are interrupted via SIGINT (\^C), and any other terminating signal aborts the loop entirely.
 
 #### Examples
 ```sh
