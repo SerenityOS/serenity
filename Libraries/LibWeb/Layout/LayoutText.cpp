@@ -197,7 +197,7 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
     // Collapse whitespace into single spaces
     if (do_collapse) {
         auto utf8_view = Utf8View(node().data());
-        StringBuilder builder(node().data().length());
+        StringBuilder builder;
         auto it = utf8_view.begin();
         auto skip_over_whitespace = [&] {
             auto prev = it;

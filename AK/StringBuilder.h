@@ -28,6 +28,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Forward.h>
+#include <AK/Rope.h>
 #include <stdarg.h>
 
 namespace AK {
@@ -36,8 +37,8 @@ class StringBuilder {
 public:
     using OutputType = String;
 
-    explicit StringBuilder(size_t initial_capacity = 16);
-    ~StringBuilder() {}
+    StringBuilder() { }
+    ~StringBuilder() { }
 
     void append(const StringView&);
     void append(const Utf32View&);
@@ -54,9 +55,9 @@ public:
     StringView string_view() const;
     void clear();
 
-    size_t length() const { return m_length; }
-    bool is_empty() const { return m_length == 0; }
-    void trim(size_t count) { m_length -= count; }
+    size_t length() const { return m_immediate_buffer_index + m_rope.length(); }
+    bool is_empty() const { return m_immediate_buffer_index == 0 && m_rope.length() == 0; }
+    void trim(size_t count);
 
     template<class SeparatorType, class CollectionType>
     void join(const SeparatorType& separator, const CollectionType& collection)
@@ -72,10 +73,16 @@ public:
     }
 
 private:
+    constexpr static size_t immediate_buffer_size = 64;
     void will_append(size_t);
+    void append_internal(const StringView&);
+    void flush();
 
-    ByteBuffer m_buffer;
-    size_t m_length { 0 };
+    Rope m_rope;
+    u8 m_immediate_buffer_bytes[immediate_buffer_size];
+    size_t m_immediate_buffer_index { 0 };
+
+    mutable String m_last_built_string;
 };
 
 }

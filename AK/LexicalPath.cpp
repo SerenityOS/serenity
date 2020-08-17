@@ -48,7 +48,6 @@ void LexicalPath::canonicalize()
     m_is_absolute = m_string[0] == '/';
     auto parts = m_string.split_view('/');
 
-    size_t approximate_canonical_length = 0;
     Vector<String> canonical_parts;
 
     for (size_t i = 0; i < parts.size(); ++i) {
@@ -70,7 +69,6 @@ void LexicalPath::canonicalize()
             }
         }
         if (!part.is_empty()) {
-            approximate_canonical_length += part.length() + 1;
             canonical_parts.append(part);
         }
     }
@@ -79,7 +77,7 @@ void LexicalPath::canonicalize()
         return;
     }
 
-    StringBuilder dirname_builder(approximate_canonical_length);
+    StringBuilder dirname_builder;
     for (size_t i = 0; i < canonical_parts.size() - 1; ++i) {
         auto& canonical_part = canonical_parts[i];
         if (m_is_absolute || i != 0)
@@ -92,13 +90,13 @@ void LexicalPath::canonicalize()
 
     Optional<size_t> last_dot = StringView(m_basename).find_last_of('.');
     if (last_dot.has_value()) {
-      m_title = m_basename.substring(0, last_dot.value());
-      m_extension = m_basename.substring(last_dot.value() + 1, m_basename.length() - last_dot.value() - 1);
+        m_title = m_basename.substring(0, last_dot.value());
+        m_extension = m_basename.substring(last_dot.value() + 1, m_basename.length() - last_dot.value() - 1);
     } else {
-      m_title = m_basename;
+        m_title = m_basename;
     }
 
-    StringBuilder builder(approximate_canonical_length);
+    StringBuilder builder;
     for (size_t i = 0; i < canonical_parts.size(); ++i) {
         auto& canonical_part = canonical_parts[i];
         if (m_is_absolute || i != 0)

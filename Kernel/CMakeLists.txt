@@ -206,6 +206,7 @@ set(AK_SOURCES
     ../AK/StringImpl.cpp
     ../AK/StringUtils.cpp
     ../AK/StringView.cpp
+    ../AK/Rope.cpp
 )
 
 set(ELF_SOURCES

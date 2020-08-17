@@ -235,7 +235,7 @@ TEST_CASE(split)
 
 TEST_CASE(builder_zero_initial_capacity)
 {
-    StringBuilder builder(0);
+    StringBuilder builder;
     builder.append("");
     auto built = builder.build();
     EXPECT_EQ(built.is_null(), false);

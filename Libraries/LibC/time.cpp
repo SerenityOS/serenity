@@ -163,7 +163,7 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
         "July", "Auguest", "September", "October", "November", "December"
     };
 
-    StringBuilder builder { max_size - 1 };
+    StringBuilder builder;
 
     const int format_len = strlen(format);
     for (int i = 0; i < format_len; ++i) {

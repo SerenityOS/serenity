@@ -578,7 +578,7 @@ Value add(Interpreter& interpreter, Value lhs, Value rhs)
         auto rhs_string = rhs_primitive.to_string(interpreter);
         if (interpreter.exception())
             return {};
-        StringBuilder builder(lhs_string.length() + rhs_string.length());
+        StringBuilder builder;
         builder.append(lhs_string);
         builder.append(rhs_string);
         return js_string(interpreter, builder.to_string());

@@ -36,22 +36,41 @@ namespace AK {
 
 inline void StringBuilder::will_append(size_t size)
 {
-    if ((m_length + size) > m_buffer.size())
-        m_buffer.grow(max(static_cast<size_t>(16), m_buffer.size() * 2 + size));
+    if (m_immediate_buffer_index + size >= immediate_buffer_size)
+        flush();
 }
 
-StringBuilder::StringBuilder(size_t initial_capacity)
+inline void StringBuilder::flush()
 {
-    m_buffer.grow((int)initial_capacity);
+    if (m_immediate_buffer_index > 0)
+        m_rope.insert({ m_immediate_buffer_bytes, m_immediate_buffer_index }, m_rope.length());
+    m_immediate_buffer_index = 0;
+}
+
+void StringBuilder::append_internal(const StringView& str)
+{
+    will_append(str.length());
+
+    if (str.length() < immediate_buffer_size) {
+        // There is enough space in the inline buffer, insert there instead.
+        __builtin_memcpy(
+            m_immediate_buffer_bytes + m_immediate_buffer_index,
+            str.characters_without_null_termination(),
+            str.length());
+        m_immediate_buffer_index += str.length();
+        will_append(0);
+    } else {
+        // There is not enough space in the inline buffer.
+        m_rope.insert(str, m_rope.length());
+    }
 }
 
 void StringBuilder::append(const StringView& str)
 {
     if (str.is_empty())
         return;
-    will_append(str.length());
-    memcpy(m_buffer.data() + m_length, str.characters_without_null_termination(), str.length());
-    m_length += str.length();
+
+    append_internal(str);
 }
 
 void StringBuilder::append(const char* characters, size_t length)
@@ -61,9 +80,7 @@ void StringBuilder::append(const char* characters, size_t length)
 
 void StringBuilder::append(char ch)
 {
-    will_append(1);
-    m_buffer.data()[m_length] = ch;
-    m_length += 1;
+    append({ &ch, 1 });
 }
 
 void StringBuilder::appendvf(const char* fmt, va_list ap)
@@ -85,32 +102,32 @@ void StringBuilder::appendf(const char* fmt, ...)
 
 ByteBuffer StringBuilder::to_byte_buffer() const
 {
-    ByteBuffer buffer_copy = m_buffer.isolated_copy();
-    buffer_copy.trim(m_length);
-    return buffer_copy;
+    auto string = to_string();
+    return ByteBuffer::copy(string.characters(), string.length());
 }
 
 String StringBuilder::to_string() const
 {
-    if (is_empty())
-        return String::empty();
-    return String((const char*)m_buffer.data(), m_length);
+    return build();
 }
 
 String StringBuilder::build() const
 {
-    return to_string();
+    const_cast<StringBuilder*>(this)->flush();
+    return m_last_built_string = m_rope.to_string();
 }
 
 StringView StringBuilder::string_view() const
 {
-    return StringView { (const char*)m_buffer.data(), m_length };
+    build();
+    return m_last_built_string;
 }
 
 void StringBuilder::clear()
 {
-    m_buffer.clear();
-    m_length = 0;
+    m_immediate_buffer_index = 0;
+    m_rope.~Rope();
+    new (&m_rope) Rope;
 }
 
 void StringBuilder::append_code_point(u32 code_point)
@@ -142,6 +159,19 @@ void StringBuilder::append(const Utf32View& utf32_view)
         auto code_point = utf32_view.code_points()[i];
         append_code_point(code_point);
     }
+}
+
+void StringBuilder::trim(size_t count)
+{
+    if (count <= m_immediate_buffer_index) {
+        m_immediate_buffer_index -= count;
+        return;
+    }
+    if (m_immediate_buffer_index > 0) {
+        count -= m_immediate_buffer_index;
+        m_immediate_buffer_index = 0;
+    }
+    m_rope = m_rope.slice(0, count);
 }
 
 }
