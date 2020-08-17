@@ -74,6 +74,41 @@ Configuration Configuration::from_config(const StringView& libname)
     return configuration;
 }
 
+void Editor::set_default_keybinds()
+{
+    register_key_input_callback(ctrl('N'), EDITOR_INTERNAL_FUNCTION(search_forwards));
+    register_key_input_callback(ctrl('P'), EDITOR_INTERNAL_FUNCTION(search_backwards));
+    // Normally ^W. `stty werase \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
+    register_key_input_callback(m_termios.c_cc[VWERASE], EDITOR_INTERNAL_FUNCTION(erase_word_backwards));
+    // Normally ^U. `stty kill \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
+    register_key_input_callback(m_termios.c_cc[VKILL], EDITOR_INTERNAL_FUNCTION(kill_line));
+    register_key_input_callback(ctrl('A'), EDITOR_INTERNAL_FUNCTION(go_home));
+    register_key_input_callback(ctrl('B'), EDITOR_INTERNAL_FUNCTION(cursor_left_character));
+    register_key_input_callback(ctrl('D'), EDITOR_INTERNAL_FUNCTION(erase_character_forwards));
+    register_key_input_callback(ctrl('E'), EDITOR_INTERNAL_FUNCTION(go_end));
+    register_key_input_callback(ctrl('F'), EDITOR_INTERNAL_FUNCTION(cursor_right_character));
+    // ^H: ctrl('H') == '\b'
+    register_key_input_callback(ctrl('H'), EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
+    register_key_input_callback(m_termios.c_cc[VERASE], EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
+    register_key_input_callback(ctrl('K'), EDITOR_INTERNAL_FUNCTION(erase_to_end));
+    register_key_input_callback(ctrl('L'), EDITOR_INTERNAL_FUNCTION(clear_screen));
+    register_key_input_callback(ctrl('R'), EDITOR_INTERNAL_FUNCTION(enter_search));
+    register_key_input_callback(ctrl('T'), EDITOR_INTERNAL_FUNCTION(transpose_characters));
+    register_key_input_callback('\n', EDITOR_INTERNAL_FUNCTION(finish));
+
+    // ^[.: alt-.: insert last arg of previous command (similar to `!$`)
+    register_key_input_callback({ '.', Key::Alt }, EDITOR_INTERNAL_FUNCTION(insert_last_words));
+    register_key_input_callback({ 'b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_left_word));
+    register_key_input_callback({ 'f', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_right_word));
+    // ^[^H: alt-backspace: backward delete word
+    register_key_input_callback({ '\b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(erase_alnum_word_backwards));
+    register_key_input_callback({ 'd', Key::Alt }, EDITOR_INTERNAL_FUNCTION(erase_alnum_word_forwards));
+    register_key_input_callback({ 'c', Key::Alt }, EDITOR_INTERNAL_FUNCTION(capitalize_word));
+    register_key_input_callback({ 'l', Key::Alt }, EDITOR_INTERNAL_FUNCTION(lowercase_word));
+    register_key_input_callback({ 'u', Key::Alt }, EDITOR_INTERNAL_FUNCTION(uppercase_word));
+    register_key_input_callback({ 't', Key::Alt }, EDITOR_INTERNAL_FUNCTION(transpose_words));
+}
+
 Editor::Editor(Configuration configuration)
     : m_configuration(move(configuration))
 {
@@ -81,6 +116,8 @@ Editor::Editor(Configuration configuration)
     m_pending_chars = ByteBuffer::create_uninitialized(0);
     get_terminal_size();
     m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns);
+
+    set_default_keybinds();
 }
 
 Editor::~Editor()
@@ -161,13 +198,26 @@ void Editor::insert(const u32 cp)
     m_inline_search_cursor = m_cursor;
 }
 
-void Editor::register_character_input_callback(char ch, Function<bool(Editor&)> callback)
+void Editor::register_key_input_callback(const KeyBinding& binding)
 {
-    if (m_key_callbacks.contains(ch)) {
-        dbg() << "Key callback registered twice for " << ch;
-        ASSERT_NOT_REACHED();
+    if (binding.kind == KeyBinding::Kind::InternalFunction) {
+        auto internal_function = find_internal_function(binding.binding);
+        if (!internal_function) {
+            dbg() << "LibLine: Unknown internal function '" << binding.binding << "'";
+            return;
+        }
+        return register_key_input_callback(binding.key, move(internal_function));
     }
-    m_key_callbacks.set(ch, make<KeyCallback>(move(callback)));
+
+    return register_key_input_callback(binding.key, [binding = String(binding.binding)](auto& editor) {
+        editor.insert(binding);
+        return false;
+    });
+}
+
+void Editor::register_key_input_callback(Key key, Function<bool(Editor&)> callback)
+{
+    m_key_callbacks.set(key, make<KeyCallback>(move(callback)));
 }
 
 static size_t code_point_length_in_utf8(u32 code_point)
@@ -480,111 +530,6 @@ void Editor::handle_read_event()
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
     size_t consumed_code_points = 0;
 
-    enum Amount {
-        Character,
-        Word,
-    };
-    auto do_cursor_left = [&](Amount amount) {
-        if (m_cursor > 0) {
-            if (amount == Word) {
-                auto skipped_at_least_one_character = false;
-                for (;;) {
-                    if (m_cursor == 0)
-                        break;
-                    if (skipped_at_least_one_character && !isalnum(m_buffer[m_cursor - 1])) // stop *after* a non-alnum, but only if it changes the position
-                        break;
-                    skipped_at_least_one_character = true;
-                    --m_cursor;
-                }
-            } else {
-                --m_cursor;
-            }
-        }
-        m_inline_search_cursor = m_cursor;
-    };
-    auto do_cursor_right = [&](Amount amount) {
-        if (m_cursor < m_buffer.size()) {
-            if (amount == Word) {
-                // Temporarily put a space at the end of our buffer,
-                // doing this greatly simplifies the logic below.
-                m_buffer.append(' ');
-                for (;;) {
-                    if (m_cursor >= m_buffer.size())
-                        break;
-                    if (!isalnum(m_buffer[++m_cursor]))
-                        break;
-                }
-                m_buffer.take_last();
-            } else {
-                ++m_cursor;
-            }
-        }
-        m_inline_search_cursor = m_cursor;
-        m_search_offset = 0;
-    };
-
-    auto do_search_backwards = [&] {
-        m_searching_backwards = true;
-        auto inline_search_cursor = m_inline_search_cursor;
-        StringBuilder builder;
-        builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
-        String search_phrase = builder.to_string();
-        if (search(search_phrase, true, true)) {
-            ++m_search_offset;
-        } else {
-            insert(search_phrase);
-        }
-        m_inline_search_cursor = inline_search_cursor;
-    };
-
-    auto do_search_forwards = [&] {
-        auto inline_search_cursor = m_inline_search_cursor;
-        StringBuilder builder;
-        builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
-        String search_phrase = builder.to_string();
-        auto search_changed_directions = m_searching_backwards;
-        m_searching_backwards = false;
-        if (m_search_offset > 0) {
-            m_search_offset -= 1 + search_changed_directions;
-            if (!search(search_phrase, true, true)) {
-                insert(search_phrase);
-            }
-        } else {
-            m_search_offset = 0;
-            m_cursor = 0;
-            m_buffer.clear();
-            insert(search_phrase);
-            m_refresh_needed = true;
-        }
-        m_inline_search_cursor = inline_search_cursor;
-    };
-
-    auto do_backspace = [&] {
-        if (m_is_searching) {
-            return;
-        }
-        if (m_cursor == 0) {
-            fputc('\a', stderr);
-            fflush(stderr);
-            return;
-        }
-        remove_at_index(m_cursor - 1);
-        --m_cursor;
-        m_inline_search_cursor = m_cursor;
-        // We will have to redraw :(
-        m_refresh_needed = true;
-    };
-
-    auto do_delete = [&] {
-        if (m_cursor == m_buffer.size()) {
-            fputc('\a', stderr);
-            fflush(stderr);
-            return;
-        }
-        remove_at_index(m_cursor);
-        m_refresh_needed = true;
-    };
-
     for (auto code_point : input_view) {
         if (m_finish)
             break;
@@ -600,131 +545,16 @@ void Editor::handle_read_event()
             case '[':
                 m_state = InputState::GotEscapeFollowedByLeftBracket;
                 continue;
-            case '.': // ^[.: alt-.: insert last arg of previous command (similar to `!$`)
-            {
-                if (!m_history.is_empty()) {
-                    // FIXME: This isn't quite right: if the last arg was `"foo bar"` or `foo\ bar` (but not `foo\\ bar`), we should insert that whole arg as last token.
-                    if (auto last_words = m_history.last().split_view(' '); !last_words.is_empty())
-                        insert(last_words.last());
-                }
+            default: {
                 m_state = InputState::Free;
-                continue;
-            }
-            case 'b': // ^[b: alt-b
-                do_cursor_left(Word);
-                m_state = InputState::Free;
-                continue;
-            case 'f': // ^[f: alt-f
-                do_cursor_right(Word);
-                m_state = InputState::Free;
-                continue;
-            case '\b': // ^[^H: alt-backspace: backward delete word
-            {
-                // A word here is contiguous alnums. `foo=bar baz` is three words.
-                bool has_seen_alnum = false;
-                while (m_cursor > 0) {
-                    if (!isalnum(m_buffer[m_cursor - 1])) {
-                        if (has_seen_alnum)
-                            break;
-                    } else {
-                        has_seen_alnum = true;
+                auto cb = m_key_callbacks.get({ code_point, Key::Alt });
+                if (cb.has_value()) {
+                    if (!cb.value()->callback(*this)) {
+                        // There's nothing interesting to do here.
                     }
-                    do_backspace();
                 }
-                m_state = InputState::Free;
                 continue;
             }
-            case 'd': // ^[d: alt-d: forward delete word
-            {
-                // A word here is contiguous alnums. `foo=bar baz` is three words.
-                bool has_seen_alnum = false;
-                while (m_cursor < m_buffer.size()) {
-                    if (!isalnum(m_buffer[m_cursor])) {
-                        if (has_seen_alnum)
-                            break;
-                    } else {
-                        has_seen_alnum = true;
-                    }
-                    do_delete();
-                }
-                m_state = InputState::Free;
-                continue;
-            }
-            case 'c': // ^[c: alt-c: capitalize word
-            case 'l': // ^[l: alt-l: lowercase word
-            case 'u': // ^[u: alt-u: uppercase word
-            {
-                // A word here is contiguous alnums. `foo=bar baz` is three words.
-                while (m_cursor < m_buffer.size() && !isalnum(m_buffer[m_cursor]))
-                    ++m_cursor;
-                size_t start = m_cursor;
-                while (m_cursor < m_buffer.size() && isalnum(m_buffer[m_cursor])) {
-                    if (code_point == 'u' || (code_point == 'c' && m_cursor == start)) {
-                        m_buffer[m_cursor] = toupper(m_buffer[m_cursor]);
-                    } else {
-                        ASSERT(code_point == 'l' || (code_point == 'c' && m_cursor > start));
-                        m_buffer[m_cursor] = tolower(m_buffer[m_cursor]);
-                    }
-                    ++m_cursor;
-                    m_refresh_needed = true;
-                }
-                m_state = InputState::Free;
-                continue;
-            }
-            case 't': // ^[t: alt-t: transpose words
-            {
-                // A word here is contiguous alnums. `foo=bar baz` is three words.
-
-                // 'abcd,.:efg...' should become 'efg...,.:abcd' if caret is after
-                // 'efg...'. If it's in 'efg', it should become 'efg,.:abcd...'
-                // with the caret after it, which then becomes 'abcd...,.:efg'
-                // when alt-t is pressed a second time.
-
-                // Move to end of word under (or after) caret.
-                size_t cursor = m_cursor;
-                while (cursor < m_buffer.size() && !isalnum(m_buffer[cursor]))
-                    ++cursor;
-                while (cursor < m_buffer.size() && isalnum(m_buffer[cursor]))
-                    ++cursor;
-
-                // Move left over second word and the space to its right.
-                size_t end = cursor;
-                size_t start = cursor;
-                while (start > 0 && !isalnum(m_buffer[start - 1]))
-                    --start;
-                while (start > 0 && isalnum(m_buffer[start - 1]))
-                    --start;
-                size_t start_second_word = start;
-
-                // Move left over space between the two words.
-                while (start > 0 && !isalnum(m_buffer[start - 1]))
-                    --start;
-                size_t start_gap = start;
-
-                // Move left over first word.
-                while (start > 0 && isalnum(m_buffer[start - 1]))
-                    --start;
-
-                if (start != start_gap) {
-                    // To swap the two words, swap each word (and the gap) individually, and then swap the whole range.
-                    auto swap_range = [this](auto from, auto to) {
-                        for (size_t i = 0; i < (to - from) / 2; ++i)
-                            swap(m_buffer[from + i], m_buffer[to - 1 - i]);
-                    };
-                    swap_range(start, start_gap);
-                    swap_range(start_gap, start_second_word);
-                    swap_range(start_second_word, end);
-                    swap_range(start, end);
-                    m_cursor = cursor;
-                    // FIXME: Update anchored styles too.
-                    m_refresh_needed = true;
-                }
-                m_state = InputState::Free;
-                continue;
-            }
-            default:
-                m_state = InputState::Free;
-                continue;
             }
         case InputState::GotEscapeFollowedByLeftBracket:
             switch (code_point) {
@@ -732,37 +562,39 @@ void Editor::handle_read_event()
                 ctrl_held = true;
                 continue;
             case 'A': // ^[[A: arrow up
-                do_search_backwards();
+                search_backwards();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'B': // ^[[B: arrow down
-                do_search_forwards();
+                search_forwards();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'D': // ^[[D: arrow left
-                do_cursor_left(ctrl_held ? Word : Character);
+                if (ctrl_held)
+                    cursor_left_word();
+                else
+                    cursor_left_character();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'C': // ^[[C: arrow right
-                do_cursor_right(ctrl_held ? Word : Character);
+                if (ctrl_held)
+                    cursor_right_word();
+                else
+                    cursor_right_character();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'H': // ^[[H: home
-                m_cursor = 0;
-                m_inline_search_cursor = m_cursor;
-                m_search_offset = 0;
+                go_home();
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'F': // ^[[F: end
-                m_cursor = m_buffer.size();
+                go_end();
                 m_state = InputState::Free;
-                m_inline_search_cursor = m_cursor;
-                m_search_offset = 0;
                 ctrl_held = false;
                 continue;
             case 'Z': // ^[[Z: shift+tab
@@ -771,7 +603,7 @@ void Editor::handle_read_event()
                 ctrl_held = false;
                 break;
             case '3': // ^[[3~: delete
-                do_delete();
+                erase_character_forwards();
                 m_search_offset = 0;
                 m_state = InputState::ExpectTerminator;
                 ctrl_held = false;
@@ -794,24 +626,19 @@ void Editor::handle_read_event()
             break;
         }
 
+        // Normally ^D. `stty eof \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
+        // Process this here since the keybinds might override its behaviour.
+        if (code_point == m_termios.c_cc[VEOF] && m_cursor == 0) {
+            finish_edit();
+            continue;
+        }
+
         auto cb = m_key_callbacks.get(code_point);
         if (cb.has_value()) {
             if (!cb.value()->callback(*this)) {
                 continue;
             }
         }
-
-        // ^N
-        if (code_point == ctrl('N')) {
-            do_search_forwards();
-            continue;
-        }
-        // ^P
-        if (code_point == ctrl('P')) {
-            do_search_backwards();
-            continue;
-        }
-
         m_search_offset = 0; // reset search offset on any key
 
         if (code_point == '\t' || reverse_tab) {
@@ -928,215 +755,6 @@ void Editor::handle_read_event()
             m_suggestion_display->finish();
         }
         m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
-
-        // Normally ^W. `stty werase \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
-        if (code_point == m_termios.c_cc[VWERASE]) {
-            // A word here is space-separated. `foo=bar baz` is two words.
-            bool has_seen_nonspace = false;
-            while (m_cursor > 0) {
-                if (isspace(m_buffer[m_cursor - 1])) {
-                    if (has_seen_nonspace)
-                        break;
-                } else {
-                    has_seen_nonspace = true;
-                }
-                do_backspace();
-            }
-            continue;
-        }
-        // Normally ^U. `stty kill \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
-        if (code_point == m_termios.c_cc[VKILL]) {
-            for (size_t i = 0; i < m_cursor; ++i)
-                remove_at_index(0);
-            m_cursor = 0;
-            m_refresh_needed = true;
-            continue;
-        }
-        // Normally ^D. `stty eof \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
-        // Handle it before ctrl shortcuts below and only continue if the buffer is empty, so that the editing shortcuts can take effect else.
-        if (code_point == m_termios.c_cc[VEOF] && m_buffer.is_empty()) {
-            fprintf(stderr, "<EOF>\n");
-            if (!m_always_refresh) {
-                m_input_error = Error::Eof;
-                finish();
-            }
-            continue;
-        }
-        // ^A
-        if (code_point == ctrl('A')) {
-            m_cursor = 0;
-            continue;
-        }
-        // ^B
-        if (code_point == ctrl('B')) {
-            do_cursor_left(Character);
-            continue;
-        }
-        // ^D
-        if (code_point == ctrl('D')) {
-            do_delete();
-            continue;
-        }
-        // ^E
-        if (code_point == ctrl('E')) {
-            m_cursor = m_buffer.size();
-            continue;
-        }
-        // ^F
-        if (code_point == ctrl('F')) {
-            do_cursor_right(Character);
-            continue;
-        }
-        // ^H: ctrl('H') == '\b'
-        if (code_point == '\b' || code_point == m_termios.c_cc[VERASE]) {
-            do_backspace();
-            continue;
-        }
-        // ^K
-        if (code_point == ctrl('K')) {
-            while (m_cursor < m_buffer.size())
-                do_delete();
-            continue;
-        }
-        // ^L
-        if (code_point == ctrl('L')) {
-            fprintf(stderr, "\033[3J\033[H\033[2J"); // Clear screen.
-            VT::move_absolute(1, 1);
-            set_origin(1, 1);
-            m_refresh_needed = true;
-            continue;
-        }
-        // ^R
-        if (code_point == ctrl('R')) {
-            if (m_is_searching) {
-                // how did we get here?
-                ASSERT_NOT_REACHED();
-            } else {
-                m_is_searching = true;
-                m_search_offset = 0;
-                m_pre_search_buffer.clear();
-                for (auto code_point : m_buffer)
-                    m_pre_search_buffer.append(code_point);
-                m_pre_search_cursor = m_cursor;
-
-                // Disable our own notifier so as to avoid interfering with the search editor.
-                m_notifier->set_enabled(false);
-
-                m_search_editor = Editor::construct(Configuration { Configuration::Eager }); // Has anyone seen 'Inception'?
-                add_child(*m_search_editor);
-
-                m_search_editor->on_display_refresh = [this](Editor& search_editor) {
-                    StringBuilder builder;
-                    builder.append(Utf32View { search_editor.buffer().data(), search_editor.buffer().size() });
-                    search(builder.build());
-                    refresh_display();
-                    return;
-                };
-
-                // Whenever the search editor gets a ^R, cycle between history entries.
-                m_search_editor->register_character_input_callback(ctrl('R'), [this](Editor& search_editor) {
-                    ++m_search_offset;
-                    search_editor.m_refresh_needed = true;
-                    return false; // Do not process this key event
-                });
-
-                // Whenever the search editor gets a backspace, cycle back between history entries
-                // unless we're at the zeroth entry, in which case, allow the deletion.
-                m_search_editor->register_character_input_callback(m_termios.c_cc[VERASE], [this](Editor& search_editor) {
-                    if (m_search_offset > 0) {
-                        --m_search_offset;
-                        search_editor.m_refresh_needed = true;
-                        return false; // Do not process this key event
-                    }
-                    return true;
-                });
-
-                // ^L - This is a source of issues, as the search editor refreshes first,
-                // and we end up with the wrong order of prompts, so we will first refresh
-                // ourselves, then refresh the search editor, and then tell him not to process
-                // this event.
-                m_search_editor->register_character_input_callback(ctrl('L'), [this](auto& search_editor) {
-                    fprintf(stderr, "\033[3J\033[H\033[2J"); // Clear screen.
-
-                    // refresh our own prompt
-                    set_origin(1, 1);
-                    m_refresh_needed = true;
-                    refresh_display();
-
-                    // move the search prompt below ours
-                    // and tell it to redraw itself
-                    search_editor.set_origin(2, 1);
-                    search_editor.m_refresh_needed = true;
-
-                    return false;
-                });
-
-                // quit without clearing the current buffer
-                m_search_editor->register_character_input_callback('\t', [this](Editor& search_editor) {
-                    search_editor.finish();
-                    m_reset_buffer_on_search_end = false;
-                    return false;
-                });
-
-                fprintf(stderr, "\n");
-                fflush(stderr);
-
-                auto search_prompt = "\x1b[32msearch:\x1b[0m ";
-                auto search_string_result = m_search_editor->get_line(search_prompt);
-
-                remove_child(*m_search_editor);
-                m_search_editor = nullptr;
-                m_is_searching = false;
-                m_search_offset = 0;
-
-                // Re-enable the notifier after discarding the search editor.
-                m_notifier->set_enabled(true);
-
-                if (search_string_result.is_error()) {
-                    // Somethine broke, fail
-                    m_input_error = search_string_result.error();
-                    finish();
-                    return;
-                }
-
-                auto& search_string = search_string_result.value();
-
-                // Manually cleanup the search line.
-                reposition_cursor();
-                auto search_metrics = actual_rendered_string_metrics(search_string);
-                auto metrics = actual_rendered_string_metrics(search_prompt);
-                VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns));
-
-                reposition_cursor();
-
-                if (!m_reset_buffer_on_search_end || search_metrics.total_length == 0) {
-                    // If the entry was empty, or we purposely quit without a newline,
-                    // do not return anything; instead, just end the search.
-                    end_search();
-                    continue;
-                }
-
-                // Return the string,
-                finish();
-                continue;
-            }
-            continue;
-        }
-        // ^T
-        if (code_point == ctrl('T')) {
-            if (m_cursor > 0 && m_buffer.size() >= 2) {
-                if (m_cursor < m_buffer.size())
-                    ++m_cursor;
-                swap(m_buffer[m_cursor - 1], m_buffer[m_cursor - 2]);
-                // FIXME: Update anchored styles too.
-                m_refresh_needed = true;
-            }
-            continue;
-        }
-        if (code_point == '\n') {
-            finish();
-            continue;
-        }
 
         insert(code_point);
     }
