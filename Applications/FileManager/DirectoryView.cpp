@@ -92,7 +92,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
     if (!index.is_valid())
         return;
     dbgprintf("on activation: %d,%d, this=%p, m_model=%p\n", index.row(), index.column(), this, m_model.ptr());
-    auto& node = model().node(index);
+    auto& node = this->node(index);
     auto path = node.full_path();
 
     struct stat st;
@@ -140,6 +140,11 @@ DirectoryView::DirectoryView(Mode mode)
     }
 
     set_view_mode(ViewMode::Icon);
+}
+
+const GUI::FileSystemModel::Node& DirectoryView::node(const GUI::ModelIndex& index) const
+{
+    return model().node(m_sorting_model->map_to_source(index));
 }
 
 void DirectoryView::setup_model()
@@ -195,7 +200,7 @@ void DirectoryView::setup_icon_view()
     m_icon_view->set_model(m_sorting_model);
     m_icon_view->set_model_column(GUI::FileSystemModel::Column::Name);
     m_icon_view->on_activation = [&](auto& index) {
-        handle_activation(map_index(index));
+        handle_activation(index);
     };
     m_icon_view->on_selection_change = [this] {
         update_statusbar();
@@ -204,11 +209,11 @@ void DirectoryView::setup_icon_view()
     };
     m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(map_index(index), event);
+            on_context_menu_request(index, event);
     };
     m_icon_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(map_index(index), event);
+            on_drop(index, event);
     };
 }
 
@@ -219,7 +224,7 @@ void DirectoryView::setup_columns_view()
     m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);
 
     m_columns_view->on_activation = [&](auto& index) {
-        handle_activation(map_index(index));
+        handle_activation(index);
     };
 
     m_columns_view->on_selection_change = [this] {
@@ -230,12 +235,12 @@ void DirectoryView::setup_columns_view()
 
     m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(map_index(index), event);
+            on_context_menu_request(index, event);
     };
 
     m_columns_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(map_index(index), event);
+            on_drop(index, event);
     };
 }
 
@@ -247,7 +252,7 @@ void DirectoryView::setup_table_view()
     m_table_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
     m_table_view->on_activation = [&](auto& index) {
-        handle_activation(map_index(index));
+        handle_activation(index);
     };
 
     m_table_view->on_selection_change = [this] {
@@ -258,12 +263,12 @@ void DirectoryView::setup_table_view()
 
     m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
-            on_context_menu_request(map_index(index), event);
+            on_context_menu_request(index, event);
     };
 
     m_table_view->on_drop = [this](auto& index, auto& event) {
         if (on_drop)
-            on_drop(map_index(index), event);
+            on_drop(index, event);
     };
 }
 
@@ -356,11 +361,6 @@ void DirectoryView::open_next_directory()
     }
 }
 
-GUI::ModelIndex DirectoryView::map_index(const GUI::ModelIndex& index) const
-{
-    return m_sorting_model->map_to_source(index);
-}
-
 void DirectoryView::update_statusbar()
 {
     size_t total_size = model().node({}).total_size;
@@ -392,7 +392,7 @@ void DirectoryView::update_statusbar()
     builder.append(')');
 
     if (selected_item_count == 1) {
-        auto& node = model().node(map_index(current_view().selection().first()));
+        auto& node = this->node(current_view().selection().first());
         if (!node.symlink_target.is_empty()) {
             builder.append(" -> ");
             builder.append(node.symlink_target);

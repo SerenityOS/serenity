@@ -702,7 +702,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     directory_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {
-            auto& node = directory_view.model().node(index);
+            auto& node = directory_view.node(index);
 
             if (node.is_directory()) {
                 auto should_get_enabled = access(node.full_path().characters(), W_OK) == 0 && GUI::Clipboard::the().type() == "text/uri-list";
@@ -769,7 +769,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             return;
         }
 
-        auto& target_node = directory_view.model().node(index);
+        auto& target_node = directory_view.node(index);
         if (!target_node.is_directory())
             return;
 
