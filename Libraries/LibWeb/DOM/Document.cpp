@@ -32,21 +32,20 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
-#include <LibWeb/CSS/Parser/CSSParser.h>
-#include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleResolver.h>
+#include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
@@ -149,7 +148,37 @@ const HTML::HTMLElement* Document::body() const
     auto* html = html_element();
     if (!html)
         return nullptr;
-    return html->first_child_of_type<HTML::HTMLBodyElement>();
+    auto* first_body = html->first_child_of_type<HTML::HTMLBodyElement>();
+    if (first_body)
+        return first_body;
+    auto* first_frameset = html->first_child_of_type<HTML::HTMLFrameSetElement>();
+    if (first_frameset)
+        return first_frameset;
+    return nullptr;
+}
+
+void Document::set_body(HTML::HTMLElement& new_body)
+{
+    if (!is<HTML::HTMLBodyElement>(new_body) && !is<HTML::HTMLFrameSetElement>(new_body)) {
+        // FIXME: throw a "HierarchyRequestError" DOMException.
+        return;
+    }
+
+    auto* existing_body = body();
+    if (existing_body) {
+        TODO();
+        return;
+    }
+
+    auto* html = document_element();
+    if (!html) {
+        // FIXME: throw a "HierarchyRequestError" DOMException.
+        return;
+    }
+
+    // FIXME: Implement this once there's a non-const first_child_of_type:
+    //        "Otherwise, the body element is null, but there's a document element. Append the new value to the document element."
+    TODO();
 }
 
 String Document::title() const
@@ -351,45 +380,6 @@ NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const FlyString&
     return elements;
 }
 
-RefPtr<Element> Document::query_selector(const StringView& selector_text)
-{
-    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
-    if (!selector.has_value())
-        return {};
-
-    dump_selector(selector.value());
-
-    RefPtr<Element> result;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (SelectorEngine::matches(selector.value(), element)) {
-            result = element;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-
-    return result;
-}
-
-NonnullRefPtrVector<Element> Document::query_selector_all(const StringView& selector_text)
-{
-    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
-    if (!selector.has_value())
-        return {};
-
-    dump_selector(selector.value());
-
-    NonnullRefPtrVector<Element> elements;
-    for_each_in_subtree_of_type<Element>([&](auto& element) {
-        if (SelectorEngine::matches(selector.value(), element)) {
-            elements.append(element);
-        }
-        return IterationDecision::Continue;
-    });
-
-    return elements;
-}
-
 Color Document::link_color() const
 {
     if (m_link_color.has_value())
@@ -444,9 +434,19 @@ NonnullRefPtr<Element> Document::create_element(const String& tag_name)
     return DOM::create_element(*this, tag_name);
 }
 
+NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
+{
+    return adopt(*new DocumentFragment(*this));
+}
+
 NonnullRefPtr<Text> Document::create_text_node(const String& data)
 {
     return adopt(*new Text(*this, data));
+}
+
+NonnullRefPtr<Comment> Document::create_comment(const String& data)
+{
+    return adopt(*new Comment(*this, data));
 }
 
 void Document::set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement* script)

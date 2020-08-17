@@ -58,6 +58,11 @@ ParsingContext::ParsingContext(const DOM::Document& document)
 {
 }
 
+ParsingContext::ParsingContext(const DOM::ParentNode& parent_node)
+    : m_document(&parent_node.document())
+{
+}
+
 bool ParsingContext::in_quirks_mode() const
 {
     return m_document ? m_document->in_quirks_mode() : false;

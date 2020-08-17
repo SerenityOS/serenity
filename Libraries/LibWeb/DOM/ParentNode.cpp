@@ -24,43 +24,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibWeb/DOM/Node.h>
+#include <LibWeb/CSS/Parser/CSSParser.h>
+#include <LibWeb/CSS/SelectorEngine.h>
+#include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/Dump.h>
 
 namespace Web::DOM {
 
-class ParentNode : public Node {
-public:
-    template<typename F> void for_each_child(F) const;
-    template<typename F> void for_each_child(F);
-
-    RefPtr<Element> query_selector(const StringView&);
-    NonnullRefPtrVector<Element> query_selector_all(const StringView&);
-
-protected:
-    ParentNode(Document& document, NodeType type)
-        : Node(document, type)
-    {
+void ParentNode::remove_all_children()
+{
+    while (RefPtr<Node> child = first_child()) {
+        remove_child(*child);
     }
-};
+}
 
-template<typename Callback>
-inline void ParentNode::for_each_child(Callback callback) const
+RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 {
-    for (auto* node = first_child(); node; node = node->next_sibling())
-        callback(*node);
+    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
+    if (!selector.has_value())
+        return {};
+
+    dump_selector(selector.value());
+
+    RefPtr<Element> result;
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (SelectorEngine::matches(selector.value(), element)) {
+            result = element;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    return result;
 }
 
-template<typename Callback>
-inline void ParentNode::for_each_child(Callback callback)
+NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& selector_text)
 {
-    for (auto* node = first_child(); node; node = node->next_sibling())
-        callback(*node);
+    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
+    if (!selector.has_value())
+        return {};
+
+    dump_selector(selector.value());
+
+    NonnullRefPtrVector<Element> elements;
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (SelectorEngine::matches(selector.value(), element)) {
+            elements.append(element);
+        }
+        return IterationDecision::Continue;
+    });
+
+    return elements;
 }
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::DOM::ParentNode)
-static bool is_type(const Web::DOM::Node& node) { return node.is_parent_node(); }
-AK_END_TYPE_TRAITS()

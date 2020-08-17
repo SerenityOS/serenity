@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Luke Wilde <luke.wilde@live.co.uk>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,43 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <LibWeb/DOM/Node.h>
+#include <LibWeb/DOM/DocumentFragment.h>
 
 namespace Web::DOM {
 
-class ParentNode : public Node {
-public:
-    template<typename F> void for_each_child(F) const;
-    template<typename F> void for_each_child(F);
-
-    RefPtr<Element> query_selector(const StringView&);
-    NonnullRefPtrVector<Element> query_selector_all(const StringView&);
-
-protected:
-    ParentNode(Document& document, NodeType type)
-        : Node(document, type)
-    {
-    }
-};
-
-template<typename Callback>
-inline void ParentNode::for_each_child(Callback callback) const
+DocumentFragment::DocumentFragment(Document& document)
+    : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
 {
-    for (auto* node = first_child(); node; node = node->next_sibling())
-        callback(*node);
 }
 
-template<typename Callback>
-inline void ParentNode::for_each_child(Callback callback)
+DocumentFragment::~DocumentFragment()
 {
-    for (auto* node = first_child(); node; node = node->next_sibling())
-        callback(*node);
 }
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::DOM::ParentNode)
-static bool is_type(const Web::DOM::Node& node) { return node.is_parent_node(); }
-AK_END_TYPE_TRAITS()

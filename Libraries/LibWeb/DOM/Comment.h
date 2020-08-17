@@ -33,6 +33,8 @@ namespace Web::DOM {
 
 class Comment final : public CharacterData {
 public:
+    using WrapperType = Bindings::CommentWrapper;
+
     explicit Comment(Document&, const String&);
     virtual ~Comment() override;
 

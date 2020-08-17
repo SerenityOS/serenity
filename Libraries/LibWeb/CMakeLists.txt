@@ -27,6 +27,7 @@ set(SOURCES
     DOM/CharacterData.idl
     DOM/Comment.cpp
     DOM/Document.cpp
+    DOM/DocumentFragment.cpp
     DOM/DocumentType.cpp
     DOM/Element.cpp
     DOM/ElementFactory.cpp
@@ -210,7 +211,9 @@ function(libweb_js_wrapper class)
 endfunction()
 
 libweb_js_wrapper(DOM/CharacterData)
+libweb_js_wrapper(DOM/Comment)
 libweb_js_wrapper(DOM/Document)
+libweb_js_wrapper(DOM/DocumentFragment)
 libweb_js_wrapper(DOM/DocumentType)
 libweb_js_wrapper(DOM/Element)
 libweb_js_wrapper(DOM/Event)

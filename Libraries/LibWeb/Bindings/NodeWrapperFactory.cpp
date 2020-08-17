@@ -26,8 +26,10 @@
  */
 
 #include <LibWeb/Bindings/CharacterDataWrapper.h>
-#include <LibWeb/Bindings/DocumentTypeWrapper.h>
+#include <LibWeb/Bindings/CommentWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/DocumentFragmentWrapper.h>
+#include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/HTMLAnchorElementWrapper.h>
 #include <LibWeb/Bindings/HTMLAreaElementWrapper.h>
 #include <LibWeb/Bindings/HTMLAudioElementWrapper.h>
@@ -315,6 +317,10 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLElement>(node)));
     if (is<DOM::Element>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Element>(node)));
+    if (is<DOM::DocumentFragment>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::DocumentFragment>(node)));
+    if (is<DOM::Comment>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Comment>(node)));
     if (is<DOM::Text>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Text>(node)));
     if (is<DOM::CharacterData>(node))

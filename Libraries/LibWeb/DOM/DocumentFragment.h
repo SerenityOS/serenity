@@ -36,10 +36,8 @@ class DocumentFragment
     : public ParentNode
     , public NonElementParentNode<DocumentFragment> {
 public:
-    DocumentFragment(Document& document)
-        : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
-    {
-    }
+    DocumentFragment(Document& document);
+    virtual ~DocumentFragment() override;
 
     virtual FlyString node_name() const override { return "#document-fragment"; }
 };
