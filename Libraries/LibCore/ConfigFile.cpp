@@ -34,6 +34,14 @@
 
 namespace Core {
 
+NonnullRefPtr<ConfigFile> ConfigFile::get_for_lib(const String& lib_name)
+{
+    String directory = StandardPaths::config_directory();
+    auto path = String::format("%s/lib/%s.ini", directory.characters(), lib_name.characters());
+
+    return adopt(*new ConfigFile(path));
+}
+
 NonnullRefPtr<ConfigFile> ConfigFile::get_for_app(const String& app_name)
 {
     String directory = StandardPaths::config_directory();
