@@ -135,8 +135,8 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry
     callback({ "..", m_parent, 0 });
 
     for (auto& it : m_children) {
-        auto& entry = it.value.entry;
-        callback({ { entry.name, entry.name_length }, entry.inode, entry.file_type });
+        auto& entry = it.value;
+        callback({ entry.name, entry.inode->identifier(), 0 });
     }
     return KSuccess;
 }
@@ -218,7 +218,7 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
     auto it = m_children.find(name);
     if (it == m_children.end())
         return {};
-    return it->value.inode;
+    return fs().get_inode(it->value.inode->identifier());
 }
 
 KResultOr<size_t> TmpFSInode::directory_entry_count() const
@@ -295,10 +295,7 @@ KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
     ASSERT(is_directory());
     ASSERT(child.fsid() == fsid());
 
-    String owned_name = name;
-    FS::DirectoryEntry entry = { owned_name.characters(), owned_name.length(), child.identifier(), 0 };
-
-    m_children.set(owned_name, { entry, static_cast<TmpFSInode&>(child) });
+    m_children.set(name, { name, static_cast<TmpFSInode&>(child) });
     did_add_child(name);
     return KSuccess;
 }
