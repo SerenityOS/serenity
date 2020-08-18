@@ -50,6 +50,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
+    void pick_font();
     void game_over();
     Gfx::IntRect score_rect() const;
 

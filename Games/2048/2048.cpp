@@ -37,7 +37,6 @@
 
 TwentyFortyEightGame::TwentyFortyEightGame()
 {
-    set_font(GUI::FontDatabase::the().get_by_name("Liza Regular"));
     srand(time(nullptr));
     reset();
 }
@@ -59,6 +58,30 @@ void TwentyFortyEightGame::add_tile(Board& board, int max_tile_value)
     int value = rand() % max_tile_value;
     value = round_up_to_power_of_two(value, max_tile_value);
     board[row][column] = max(2, value);
+}
+
+void TwentyFortyEightGame::pick_font()
+{
+    constexpr static auto liza_regular = "Liza Regular";
+    String best_font_name = liza_regular;
+    int best_font_size = -1;
+    auto& font_database = GUI::FontDatabase::the();
+    font_database.for_each_font([&](const StringView& font_name) {
+        // Only consider variations of Liza Regular.
+        if (!font_name.starts_with(liza_regular))
+            return;
+        auto metadata = font_database.get_metadata_by_name(font_name);
+        if (!metadata.has_value())
+            return;
+        auto size = metadata.value().glyph_height;
+        if (size * 2 <= m_cell_size && size > best_font_size) {
+            best_font_name = font_name;
+            best_font_size = size;
+        }
+    });
+
+    auto font = font_database.get_by_name(best_font_name);
+    set_font(font);
 }
 
 void TwentyFortyEightGame::reset()
@@ -222,6 +245,8 @@ void TwentyFortyEightGame::resize_event(GUI::ResizeEvent&)
         width() / (m_columns * (padding_ratio + 1) + 1),
         (height() - score_height) / (m_rows * (padding_ratio + 1) + 1));
     m_cell_size = m_padding * padding_ratio;
+
+    pick_font();
 }
 
 void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
