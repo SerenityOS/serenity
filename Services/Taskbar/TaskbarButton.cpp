@@ -47,13 +47,27 @@ void TaskbarButton::context_menu_event(GUI::ContextMenuEvent&)
     GUI::WindowServerConnection::the().post_message(Messages::WindowServer::WM_PopupWindowMenu(m_identifier.client_id(), m_identifier.window_id(), screen_relative_rect().location()));
 }
 
-void TaskbarButton::resize_event(GUI::ResizeEvent& event)
+void TaskbarButton::update_taskbar_rect()
 {
     GUI::WindowServerConnection::the().post_message(
         Messages::WindowServer::WM_SetWindowTaskbarRect(
             m_identifier.client_id(),
             m_identifier.window_id(),
             screen_relative_rect()));
+}
+
+void TaskbarButton::clear_taskbar_rect()
+{
+    GUI::WindowServerConnection::the().post_message(
+        Messages::WindowServer::WM_SetWindowTaskbarRect(
+            m_identifier.client_id(),
+            m_identifier.window_id(),
+            {}));
+}
+
+void TaskbarButton::resize_event(GUI::ResizeEvent& event)
+{
+    update_taskbar_rect();
     return GUI::Button::resize_event(event);
 }
 
