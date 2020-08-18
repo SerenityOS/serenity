@@ -108,4 +108,4 @@ TEST_CASE(seeking_slicing_offset)
     EXPECT(compare({ expected2, sizeof(expected2) }, { actual2, sizeof(actual2) }));
 }
 
-TEST_MAIN(MemoryStream)
+TEST_MAIN(Stream)
