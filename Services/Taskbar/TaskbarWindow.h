@@ -43,7 +43,7 @@ private:
     void on_screen_rect_change(const Gfx::IntRect&);
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
     void add_window_button(::Window&, const WindowIdentifier&);
-    void remove_window_button(::Window&);
+    void remove_window_button(::Window&, bool);
     void update_window_button(::Window&, bool);
     ::Window* find_window_owner(::Window&) const;
 

@@ -34,6 +34,9 @@ class TaskbarButton final : public GUI::Button {
 public:
     virtual ~TaskbarButton() override;
 
+    void update_taskbar_rect();
+    void clear_taskbar_rect();
+
 private:
     explicit TaskbarButton(const WindowIdentifier&);
 

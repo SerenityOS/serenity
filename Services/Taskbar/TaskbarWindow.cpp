@@ -58,6 +58,14 @@ private:
         painter.fill_rect(rect(), palette().button());
         painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
     }
+    
+    virtual void did_layout() override
+    {
+        WindowList::the().for_each_window([&](auto& window) {
+            if (auto* button = window.button())
+                static_cast<TaskbarButton*>(button)->update_taskbar_rect();
+        });
+    }
 };
 
 TaskbarWindow::TaskbarWindow()
@@ -184,11 +192,13 @@ void TaskbarWindow::add_window_button(::Window& window, const WindowIdentifier& 
     };
 }
 
-void TaskbarWindow::remove_window_button(::Window& window)
+void TaskbarWindow::remove_window_button(::Window& window, bool was_removed)
 {
     auto* button = window.button();
     if (!button)
         return;
+    if (!was_removed)
+        static_cast<TaskbarButton*>(button)->clear_taskbar_rect();
     window.set_button(nullptr);
     button->remove_from_parent();
 }
@@ -235,6 +245,8 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             removed_event.client_id(),
             removed_event.window_id());
 #endif
+        if (auto* window = WindowList::the().window(identifier))
+            remove_window_button(*window, true);
         WindowList::the().remove_window(identifier);
         update();
         break;
@@ -285,7 +297,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         if (!window.is_modal())
             add_window_button(window, identifier);
         else
-            remove_window_button(window);
+            remove_window_button(window, false);
         window.set_title(changed_event.title());
         window.set_rect(changed_event.rect());
         window.set_modal(changed_event.is_modal());
