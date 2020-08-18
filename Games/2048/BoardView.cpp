@@ -39,16 +39,6 @@ BoardView::~BoardView()
 {
 }
 
-void BoardView::set_score(size_t score)
-{
-    if (m_score == score && !m_score_text.is_null())
-        return;
-
-    m_score = score;
-    m_score_text = String::format("Score: %d", score);
-    update();
-}
-
 void BoardView::set_board(const Game::Board* board)
 {
     if (m_board == board)
@@ -82,12 +72,6 @@ void BoardView::pick_font()
     set_font(font);
 }
 
-Gfx::IntRect BoardView::score_rect() const
-{
-    int score_width = font().width(m_score_text);
-    return { 0, 2, score_width, font().glyph_height() };
-}
-
 size_t BoardView::rows() const
 {
     if (!m_board)
@@ -106,12 +90,10 @@ size_t BoardView::columns() const
 
 void BoardView::resize_event(GUI::ResizeEvent&)
 {
-    int score_height = font().glyph_height() + 2;
-
     constexpr float padding_ratio = 7;
     m_padding = min(
         width() / (columns() * (padding_ratio + 1) + 1),
-        (height() - score_height) / (rows() * (padding_ratio + 1) + 1));
+        height() / (rows() * (padding_ratio + 1) + 1));
     m_cell_size = m_padding * padding_ratio;
 
     pick_font();
@@ -195,17 +177,13 @@ void BoardView::paint_event(GUI::PaintEvent&)
     }
     auto& board = *m_board;
 
-    painter.draw_text(score_rect(), m_score_text, font(), Gfx::TextAlignment::TopLeft, palette().color(ColorRole::BaseText));
-
-    int score_height = font().glyph_height() + 2;
-
     Gfx::IntRect field_rect {
         0,
         0,
         static_cast<int>(m_padding + (m_cell_size + m_padding) * columns()),
         static_cast<int>(m_padding + (m_cell_size + m_padding) * rows())
     };
-    field_rect.center_within({ 0, score_height, width(), height() - score_height });
+    field_rect.center_within(rect());
     painter.fill_rect(field_rect, background_color);
 
     for (size_t column = 0; column < columns(); ++column) {

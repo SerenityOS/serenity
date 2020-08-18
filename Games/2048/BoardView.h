@@ -36,7 +36,6 @@ public:
     BoardView(const Game::Board*);
     virtual ~BoardView() override;
 
-    void set_score(size_t score);
     void set_board(const Game::Board* board);
 
     Function<void(Game::Direction)> on_move;
@@ -50,7 +49,6 @@ private:
     size_t columns() const;
 
     void pick_font();
-    Gfx::IntRect score_rect() const;
 
     Color background_color_for_cell(u32 value);
     Color text_color_for_cell(u32 value);
@@ -58,7 +56,5 @@ private:
     float m_padding { 0 };
     float m_cell_size { 0 };
 
-    size_t m_score { 0 };
-    String m_score_text;
     const Game::Board* m_board { nullptr };
 };

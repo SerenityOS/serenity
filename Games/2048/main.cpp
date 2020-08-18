@@ -34,6 +34,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/StatusBar.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
 #include <time.h>
@@ -70,15 +71,20 @@ int main(int argc, char** argv)
     window->set_title("2048");
     window->resize(324, 336);
 
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.set_layout<GUI::VerticalBoxLayout>();
+    main_widget.set_fill_with_background_color(true);
+
     Game game { 4, 4 };
 
-    auto& board_view = window->set_main_widget<BoardView>(&game.board());
-    board_view.set_fill_with_background_color(true);
+    auto& board_view = main_widget.add<BoardView>(&game.board());
+    board_view.set_focus(true);
+    auto& statusbar = main_widget.add<GUI::StatusBar>();
 
     auto update = [&]() {
         board_view.set_board(&game.board());
-        board_view.set_score(game.score());
         board_view.update();
+        statusbar.set_text(String::format("Score: %d", game.score()));
     };
 
     update();
