@@ -1428,12 +1428,6 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     bool success = set_inode_allocation_state(inode_id, true);
     ASSERT(success);
 
-    unsigned initial_links_count;
-    if (is_directory(mode))
-        initial_links_count = 2; // (parent directory + "." entry in self)
-    else
-        initial_links_count = 1;
-
     struct timeval now;
     kgettimeofday(now);
     ext2_inode e2inode;
@@ -1446,7 +1440,9 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     e2inode.i_ctime = now.tv_sec;
     e2inode.i_mtime = now.tv_sec;
     e2inode.i_dtime = 0;
-    e2inode.i_links_count = initial_links_count;
+
+    // For directories, add +1 link count for the "." entry in self.
+    e2inode.i_links_count = is_directory(mode);
 
     if (is_character_device(mode))
         e2inode.i_block[0] = dev;
