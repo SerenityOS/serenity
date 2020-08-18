@@ -138,10 +138,6 @@ public:
     const Cursor& drag_cursor() const { return *m_drag_cursor; }
     const Cursor& wait_cursor() const { return *m_wait_cursor; }
 
-    void invalidate(const Gfx::IntRect&);
-    void invalidate();
-    void flush(const Gfx::IntRect&);
-
     const Gfx::Font& font() const;
     const Gfx::Font& window_title_font() const;
 

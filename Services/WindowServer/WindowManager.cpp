@@ -74,7 +74,8 @@ WindowManager::WindowManager(const Gfx::PaletteImpl& palette)
 
     reload_config(false);
 
-    invalidate();
+    Compositor::the().invalidate_screen();
+    Compositor::the().invalidate_occlusions();
     Compositor::the().compose();
 }
 
@@ -188,7 +189,7 @@ void WindowManager::add_window(Window& window)
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    Compositor::the().recompute_occlusions();
+    Compositor::the().invalidate_occlusions();
 
     if (window.listens_to_wm_events()) {
         for_each_window([&](Window& other_window) {
@@ -228,6 +229,8 @@ void WindowManager::move_to_front_and_make_active(Window& window)
     for_each_window_in_modal_stack(window, [&](auto& w, bool is_stack_top) {
         move_window_to_front(w, is_stack_top, is_stack_top);
     });
+
+    Compositor::the().invalidate_occlusions();
 }
 
 void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
@@ -236,8 +239,6 @@ void WindowManager::do_move_to_front(Window& window, bool make_active, bool make
         window.invalidate();
     m_windows_in_order.remove(&window);
     m_windows_in_order.append(&window);
-
-    Compositor::the().recompute_occlusions();
 
     if (make_active)
         set_active_window(&window, make_input);
@@ -258,16 +259,18 @@ void WindowManager::do_move_to_front(Window& window, bool make_active, bool make
 
 void WindowManager::remove_window(Window& window)
 {
-    window.invalidate();
     m_windows_in_order.remove(&window);
     auto* active = active_window();
     auto* active_input = active_input_window();
     if (active == &window || active_input == &window || (active && window.is_descendant_of(*active)) || (active_input && active_input != active && window.is_descendant_of(*active_input)))
         pick_new_active_window(&window);
+
+    Compositor::the().invalidate_screen(window.frame().rect());
+
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    Compositor::the().recompute_occlusions();
+    Compositor::the().invalidate_occlusions();
 
     for_each_window_listening_to_wm_events([&window](Window& listener) {
         if (!(listener.wm_event_mask() & WMEventMask::WindowRemovals))
@@ -345,7 +348,6 @@ void WindowManager::notify_title_changed(Window& window)
 #ifdef WINDOWMANAGER_DEBUG
     dbg() << "[WM] Window{" << &window << "} title set to \"" << window.title() << '"';
 #endif
-    invalidate(window.frame().rect());
     if (m_switcher.is_visible())
         m_switcher.refresh();
 
@@ -375,8 +377,6 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    Compositor::the().recompute_occlusions();
-
     tell_wm_listeners_window_rect_changed(window);
 
     if (window.type() == WindowType::MenuApplet)
@@ -387,7 +387,7 @@ void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_
 
 void WindowManager::notify_opacity_changed(Window&)
 {
-    Compositor::the().recompute_occlusions();
+    Compositor::the().invalidate_occlusions();
 }
 
 void WindowManager::notify_minimization_state_changed(Window& window)
@@ -965,7 +965,6 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 if (new_opacity > 1.0f)
                     new_opacity = 1.0f;
                 window.set_opacity(new_opacity);
-                window.invalidate();
                 return;
             }
 
@@ -1255,16 +1254,6 @@ void WindowManager::set_hovered_window(Window* window)
         Core::EventLoop::current().post_event(*m_hovered_window, make<Event>(Event::WindowEntered));
 }
 
-void WindowManager::invalidate()
-{
-    Compositor::the().invalidate();
-}
-
-void WindowManager::invalidate(const Gfx::IntRect& rect)
-{
-    Compositor::the().invalidate(rect);
-}
-
 const ClientConnection* WindowManager::active_client() const
 {
     if (m_active_window)
@@ -1410,7 +1399,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();
-    invalidate();
+    Compositor::the().invalidate_screen();
     return true;
 }
 

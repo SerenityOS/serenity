@@ -234,17 +234,31 @@ Gfx::IntRect WindowFrame::rect() const
 
 void WindowFrame::invalidate_title_bar()
 {
-    Compositor::the().invalidate(title_bar_rect().translated(rect().location()));
+    invalidate(title_bar_rect());
+}
+
+void WindowFrame::invalidate(Gfx::IntRect relative_rect)
+{
+    auto frame_rect = rect();
+    auto window_rect = m_window.rect();
+    relative_rect.move_by(frame_rect.x() - window_rect.x(), frame_rect.y() - window_rect.y());
+    m_window.invalidate(relative_rect);
 }
 
 void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
 {
     layout_buttons();
 
-    auto& wm = WindowManager::the();
-    wm.invalidate(frame_rect_for_window(m_window, old_rect));
-    wm.invalidate(frame_rect_for_window(m_window, new_rect));
-    wm.notify_rect_changed(m_window, old_rect, new_rect);
+    auto old_frame_rect = frame_rect_for_window(m_window, old_rect);
+    auto& compositor = Compositor::the();
+    for (auto& dirty : old_frame_rect.shatter(rect()))
+        compositor.invalidate_screen(dirty);
+    if (!m_window.is_opaque())
+        compositor.invalidate_screen(rect());
+
+    compositor.invalidate_occlusions();
+
+    WindowManager::the().notify_rect_changed(m_window, old_rect, new_rect);
 }
 
 void WindowFrame::layout_buttons()
