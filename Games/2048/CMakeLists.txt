@@ -1,6 +1,7 @@
 set(SOURCES
+    BoardView.cpp
+    Game.cpp
     main.cpp
-    2048.cpp
 )
 
 serenity_bin(2048)
