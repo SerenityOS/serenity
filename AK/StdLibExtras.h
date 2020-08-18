@@ -40,6 +40,9 @@ inline constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned powe
 
 namespace AK {
 
+template<typename T>
+auto declval() -> T;
+
 template<typename T, typename SizeType = decltype(sizeof(T)), SizeType N>
 constexpr SizeType array_size(T (&)[N])
 {
@@ -498,6 +501,7 @@ using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
 using AK::Conditional;
+using AK::declval;
 using AK::exchange;
 using AK::forward;
 using AK::IsBaseOf;

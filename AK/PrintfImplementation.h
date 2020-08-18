@@ -32,6 +32,8 @@
 #include <AK/Types.h>
 #include <stdarg.h>
 
+namespace PrintfImplementation {
+
 static constexpr const char* printf_hex_digits_lower = "0123456789abcdef";
 static constexpr const char* printf_hex_digits_upper = "0123456789ABCDEF";
 
@@ -283,169 +285,240 @@ ALWAYS_INLINE int print_signed_number(PutChFunc putch, char*& bufptr, int number
     return print_number(putch, bufptr, number, left_pad, zero_pad, field_width);
 }
 
-template<typename PutChFunc>
-ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, va_list ap)
-{
-    const char* p;
+struct ModifierState {
+    bool left_pad { false };
+    bool zero_pad { false };
+    bool dot { false };
+    unsigned field_width { 0 };
+    bool has_fraction_length { false };
+    unsigned fraction_length { 6 };
+    unsigned long_qualifiers { 0 };
+    bool size_qualifier { false };
+    bool alternate_form { 0 };
+    bool always_sign { false };
+};
 
+template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument>
+struct PrintfImpl {
+    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
+        : m_bufptr(bufptr)
+        , m_nwritten(nwritten)
+        , m_putch(putch)
+    {
+    }
+
+    ALWAYS_INLINE int format_s(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        const char* sp = NextArgument<const char*>()(ap);
+        if (!sp)
+            sp = "(null)";
+        return print_string(m_putch, m_bufptr, sp, strlen(sp), state.left_pad, state.field_width, state.dot);
+    }
+    ALWAYS_INLINE int format_d(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        if (state.long_qualifiers >= 2)
+            return print_i64(m_putch, m_bufptr, NextArgument<i64>()(ap), state.left_pad, state.zero_pad, state.field_width);
+
+        return print_signed_number(m_putch, m_bufptr, NextArgument<int>()(ap), state.left_pad, state.zero_pad, state.field_width, state.always_sign);
+    }
+    ALWAYS_INLINE int format_i(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        return format_d(state, ap);
+    }
+    ALWAYS_INLINE int format_u(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        if (state.long_qualifiers >= 2)
+            return print_u64(m_putch, m_bufptr, NextArgument<u64>()(ap), state.left_pad, state.zero_pad, state.field_width);
+        return print_number(m_putch, m_bufptr, NextArgument<u32>()(ap), state.left_pad, state.zero_pad, state.field_width);
+    }
+    ALWAYS_INLINE int format_Q(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        return print_u64(m_putch, m_bufptr, NextArgument<u64>()(ap), state.left_pad, state.zero_pad, state.field_width);
+    }
+    ALWAYS_INLINE int format_q(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, false, state.left_pad, state.zero_pad, 16);
+    }
+    ALWAYS_INLINE int format_g(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        return format_f(state, ap);
+    }
+    ALWAYS_INLINE int format_f(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.left_pad, state.zero_pad, state.field_width, state.fraction_length);
+    }
+    ALWAYS_INLINE int format_o(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        if (state.alternate_form)
+            m_putch(m_bufptr, '0');
+
+        return (state.alternate_form ? 1 : 0) + print_octal_number(m_putch, m_bufptr, NextArgument<u32>()(ap), state.left_pad, state.zero_pad, state.field_width);
+    }
+    ALWAYS_INLINE int format_x(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        if (state.long_qualifiers >= 2)
+            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
+        return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
+    }
+    ALWAYS_INLINE int format_X(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        if (state.long_qualifiers >= 2)
+            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
+        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
+    }
+    ALWAYS_INLINE int format_n(const ModifierState&, ArgumentListRefT ap) const
+    {
+        *NextArgument<int*>()(ap) = m_nwritten;
+        return 0;
+    }
+    ALWAYS_INLINE int format_p(const ModifierState&, ArgumentListRefT ap) const
+    {
+        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), false, true, false, true, 8);
+    }
+    ALWAYS_INLINE int format_P(const ModifierState&, ArgumentListRefT ap) const
+    {
+        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), true, true, false, true, 8);
+    }
+    ALWAYS_INLINE int format_percent(const ModifierState&, ArgumentListRefT) const
+    {
+        m_putch(m_bufptr, '%');
+        return 1;
+    }
+    ALWAYS_INLINE int format_w(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        return print_hex(m_putch, m_bufptr, NextArgument<int>()(ap), false, state.alternate_form, false, true, 4);
+    }
+    ALWAYS_INLINE int format_b(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        return print_hex(m_putch, m_bufptr, NextArgument<int>()(ap), false, state.alternate_form, false, true, 2);
+    }
+    ALWAYS_INLINE int format_c(const ModifierState& state, ArgumentListRefT ap) const
+    {
+        char c = NextArgument<int>()(ap);
+        return print_string(m_putch, m_bufptr, &c, 1, state.left_pad, state.field_width, state.dot);
+    }
+    ALWAYS_INLINE int format_unrecognized(char format_op, const char* fmt, const ModifierState&, ArgumentListRefT) const
+    {
+        dbg() << "printf_internal: Unimplemented format specifier " << format_op << " (fmt: " << fmt << ")";
+        return 0;
+    }
+
+protected:
+    char*& m_bufptr;
+    const int& m_nwritten;
+    PutChFunc& m_putch;
+};
+
+template<typename T, typename V>
+struct VaArgNextArgument {
+    ALWAYS_INLINE T operator()(V ap) const
+    {
+        return va_arg(ap, T);
+    }
+};
+
+#define PRINTF_IMPL_DELEGATE_TO_IMPL(c)    \
+    case* #c:                              \
+        ret += impl.format_##c(state, ap); \
+        break;
+
+template<typename PutChFunc, template<typename T, typename U, template<typename X, typename Y> typename V> typename Impl = PrintfImpl, typename ArgumentListT = va_list, template<typename T, typename V = decltype(declval<ArgumentListT&>())> typename NextArgument = VaArgNextArgument>
+ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, ArgumentListT ap)
+{
     int ret = 0;
     char* bufptr = buffer;
 
-    for (p = fmt; *p; ++p) {
-        bool left_pad = false;
-        bool zero_pad = false;
-        bool dot = false;
-        unsigned field_width = 0;
-        bool has_fraction_length = false;
-        unsigned fraction_length = 6;
-        unsigned long_qualifiers = 0;
-        bool size_qualifier = false;
-        (void)size_qualifier;
-        bool alternate_form = 0;
-        bool always_sign = false;
+    Impl<PutChFunc, ArgumentListT&, NextArgument> impl { putch, bufptr, ret };
+
+    for (const char* p = fmt; *p; ++p) {
+        ModifierState state;
         if (*p == '%' && *(p + 1)) {
         one_more:
             ++p;
             if (*p == '.') {
-                dot = true;
+                state.dot = true;
                 if (*(p + 1))
                     goto one_more;
             }
             if (*p == '-') {
-                left_pad = true;
+                state.left_pad = true;
                 if (*(p + 1))
                     goto one_more;
             }
             if (*p == '+') {
-                always_sign = true;
+                state.always_sign = true;
                 if (*(p + 1))
                     goto one_more;
             }
-            if (!zero_pad && !field_width && *p == '0') {
-                zero_pad = true;
+            if (!state.zero_pad && !state.field_width && *p == '0') {
+                state.zero_pad = true;
                 if (*(p + 1))
                     goto one_more;
             }
             if (*p >= '0' && *p <= '9') {
-                if (!dot) {
-                    field_width *= 10;
-                    field_width += *p - '0';
+                if (!state.dot) {
+                    state.field_width *= 10;
+                    state.field_width += *p - '0';
                     if (*(p + 1))
                         goto one_more;
                 } else {
-                    if (!has_fraction_length) {
-                        has_fraction_length = true;
-                        fraction_length = 0;
+                    if (!state.has_fraction_length) {
+                        state.has_fraction_length = true;
+                        state.fraction_length = 0;
                     }
-                    fraction_length *= 10;
-                    fraction_length += *p - '0';
+                    state.fraction_length *= 10;
+                    state.fraction_length += *p - '0';
                     if (*(p + 1))
                         goto one_more;
                 }
             }
             if (*p == '*') {
-                field_width = va_arg(ap, int);
+                state.field_width = NextArgument<int>()(ap);
                 if (*(p + 1))
                     goto one_more;
             }
             if (*p == 'l') {
-                ++long_qualifiers;
+                ++state.long_qualifiers;
                 if (*(p + 1))
                     goto one_more;
             }
             if (*p == 'z') {
-                size_qualifier = true;
+                state.size_qualifier = true;
                 if (*(p + 1))
                     goto one_more;
             }
             if (*p == '#') {
-                alternate_form = true;
+                state.alternate_form = true;
                 if (*(p + 1))
                     goto one_more;
             }
             switch (*p) {
-            case 's': {
-                const char* sp = va_arg(ap, const char*);
-                if (!sp)
-                    sp = "(null)";
-                ret += print_string(putch, bufptr, sp, strlen(sp), left_pad, field_width, dot);
-            } break;
-
-            case 'd':
-            case 'i':
-                if (long_qualifiers >= 2)
-                    ret += print_i64(putch, bufptr, va_arg(ap, i64), left_pad, zero_pad, field_width);
-                else
-                    ret += print_signed_number(putch, bufptr, va_arg(ap, int), left_pad, zero_pad, field_width, always_sign);
-                break;
-
-            case 'u':
-                if (long_qualifiers >= 2)
-                    ret += print_u64(putch, bufptr, va_arg(ap, u64), left_pad, zero_pad, field_width);
-                else
-                    ret += print_number(putch, bufptr, va_arg(ap, u32), left_pad, zero_pad, field_width);
-                break;
-
-            case 'Q':
-                ret += print_u64(putch, bufptr, va_arg(ap, u64), left_pad, zero_pad, field_width);
-                break;
-
-            case 'q':
-                ret += print_hex(putch, bufptr, va_arg(ap, u64), false, false, left_pad, zero_pad, 16);
-                break;
-
-#if !defined(KERNEL)
-            case 'g':
-            case 'f':
-                ret += print_double(putch, bufptr, va_arg(ap, double), left_pad, zero_pad, field_width, fraction_length);
-                break;
-#endif
-
-            case 'o':
-                if (alternate_form) {
-                    putch(bufptr, '0');
-                    ++ret;
-                }
-                ret += print_octal_number(putch, bufptr, va_arg(ap, u32), left_pad, zero_pad, field_width);
-                break;
-
-            case 'X':
-            case 'x':
-                if (long_qualifiers >= 2)
-                    ret += print_hex(putch, bufptr, va_arg(ap, u64), *p == 'X', alternate_form, left_pad, zero_pad, field_width);
-                else
-                    ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'X', alternate_form, left_pad, zero_pad, field_width);
-                break;
-
-            case 'w':
-                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, false, true, 4);
-                break;
-
-            case 'b':
-                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, false, true, 2);
-                break;
-
-            case 'c': {
-                char c = va_arg(ap, int);
-                ret += print_string(putch, bufptr, &c, 1, left_pad, field_width, dot);
-            } break;
-
             case '%':
-                putch(bufptr, '%');
-                ++ret;
+                ret += impl.format_percent(state, ap);
                 break;
 
-            case 'P':
-            case 'p':
-                ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, false, true, 8);
-                break;
-
-            case 'n':
-                *va_arg(ap, int*) = ret;
-                break;
-
+                PRINTF_IMPL_DELEGATE_TO_IMPL(P);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(Q);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(X);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(b);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(c);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(d);
+#ifndef KERNEL
+                PRINTF_IMPL_DELEGATE_TO_IMPL(f);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(g);
+#endif
+                PRINTF_IMPL_DELEGATE_TO_IMPL(i);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(n);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(o);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(p);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(q);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(s);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(u);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(w);
+                PRINTF_IMPL_DELEGATE_TO_IMPL(x);
             default:
-                dbg() << "printf_internal: Unimplemented format specifier " << *p << " (fmt: " << fmt << ")";
+                ret += impl.format_unrecognized(*p, fmt, state, ap);
+                break;
             }
         } else {
             putch(bufptr, *p);
@@ -454,3 +527,9 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
     }
     return ret;
 }
+
+#undef PRINTF_IMPL_DELEGATE_TO_IMPL
+
+}
+
+using PrintfImplementation::printf_internal;
