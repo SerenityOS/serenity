@@ -43,6 +43,7 @@ public:
         King,
         None,
     };
+    static String char_for_piece(Type type);
 
     enum class Colour {
         White,
@@ -55,6 +56,7 @@ public:
         Colour colour;
         Type type;
         bool operator==(const Piece& other) const { return colour == other.colour && type == other.type; }
+
     };
     static constexpr Piece EmptyPiece = { Colour::None, Type::None };
 
@@ -84,6 +86,7 @@ public:
 
         bool in_bounds() const { return rank < 8 && file < 8; }
         bool is_light() const { return (rank % 2) != (file % 2); }
+        String to_algebraic() const;
     };
 
     struct Move {
@@ -98,6 +101,8 @@ public:
         {
         }
         bool operator==(const Move& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
+
+        String to_long_algebraic() const;
     };
 
     Chess();
