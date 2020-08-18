@@ -69,16 +69,6 @@ public:
 
     virtual KResult prepare_to_unmount() const { return KSuccess; }
 
-    // FIXME: This data structure is very clunky and unpleasant. Replace it with something nicer.
-    struct DirectoryEntry {
-        DirectoryEntry(const char* name, InodeIdentifier, u8 file_type);
-        DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, u8 file_type);
-        char name[256];
-        size_t name_length { 0 };
-        InodeIdentifier inode;
-        u8 file_type { 0 };
-    };
-
     struct DirectoryEntryView {
         DirectoryEntryView(const StringView& name, InodeIdentifier, u8 file_type);
 
