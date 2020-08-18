@@ -59,7 +59,7 @@ public:
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
+    virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>) override;
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
 
@@ -110,8 +110,8 @@ protected:
 private:
     virtual bool is_ipv4() const override { return true; }
 
-    KResultOr<size_t> receive_byte_buffered(FileDescription&, void* buffer, size_t buffer_length, int flags, sockaddr*, socklen_t*);
-    KResultOr<size_t> receive_packet_buffered(FileDescription&, void* buffer, size_t buffer_length, int flags, sockaddr*, socklen_t*);
+    KResultOr<size_t> receive_byte_buffered(FileDescription&, void* buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>);
+    KResultOr<size_t> receive_packet_buffered(FileDescription&, void* buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>);
 
     IPv4Address m_local_address;
     IPv4Address m_peer_address;
