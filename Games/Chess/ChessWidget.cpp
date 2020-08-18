@@ -123,22 +123,22 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     }
 
     if (board().apply_move(move)) {
-        if (board().game_result() != Chess::Result::NotFinished) {
+        if (board().game_result() != Chess::Board::Result::NotFinished) {
 
             bool over = true;
             String msg;
             switch (board().game_result()) {
-            case Chess::Result::CheckMate:
+            case Chess::Board::Result::CheckMate:
                 if (board().turn() == Chess::Colour::White) {
                     msg = "Black wins by Checkmate.";
                 } else {
                     msg = "White wins by Checkmate.";
                 }
                 break;
-            case Chess::Result::StaleMate:
+            case Chess::Board::Result::StaleMate:
                 msg = "Draw by Stalemate.";
                 break;
-            case Chess::Result::FiftyMoveRule:
+            case Chess::Board::Result::FiftyMoveRule:
                 update();
                 if (GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?", "Claim Draw?",
                         GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
@@ -148,10 +148,10 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                     over = false;
                 }
                 break;
-            case Chess::Result::SeventyFiveMoveRule:
+            case Chess::Board::Result::SeventyFiveMoveRule:
                 msg = "Draw by 75 move rule.";
                 break;
-            case Chess::Result::ThreeFoldRepitition:
+            case Chess::Board::Result::ThreeFoldRepitition:
                 update();
                 if (GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?", "Claim Draw?",
                         GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
@@ -161,10 +161,10 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                     over = false;
                 }
                 break;
-            case Chess::Result::FiveFoldRepitition:
+            case Chess::Board::Result::FiveFoldRepitition:
                 msg = "Draw by fivefold repitition.";
                 break;
-            case Chess::Result::InsufficientMaterial:
+            case Chess::Board::Result::InsufficientMaterial:
                 msg = "Draw by insufficient material.";
                 break;
             default:
@@ -239,7 +239,7 @@ RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(const Chess::Piece& piece) co
 
 void ChessWidget::reset()
 {
-    m_board = Chess();
+    m_board = Chess::Board();
     m_drag_enabled = true;
     update();
 }
