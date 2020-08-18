@@ -188,7 +188,7 @@ int Process::sys$shutdown(int sockfd, int how)
     return socket.shutdown(how);
 }
 
-ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
+ssize_t Process::sys$sendto(Userspace<const Syscall::SC_sendto_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
     Syscall::SC_sendto_params params;
@@ -196,7 +196,7 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
         return -EFAULT;
 
     int flags = params.flags;
-    const sockaddr* addr = params.addr;
+    Userspace<const sockaddr*> addr = params.addr;
     socklen_t addr_length = params.addr_length;
 
     if (!validate(params.data))

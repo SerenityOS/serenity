@@ -60,7 +60,7 @@ public:
     virtual void detach(FileDescription&) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
+    virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
     virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
     virtual KResult chown(FileDescription&, uid_t, gid_t) override;

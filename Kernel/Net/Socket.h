@@ -107,7 +107,7 @@ public:
     virtual bool is_ipv4() const { return false; }
     virtual void attach(FileDescription&) = 0;
     virtual void detach(FileDescription&) = 0;
-    virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
+    virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
     virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t);
