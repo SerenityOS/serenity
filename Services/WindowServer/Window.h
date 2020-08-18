@@ -153,7 +153,7 @@ public:
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::IntRect&);
 
-    void set_taskbar_rect(const Gfx::IntRect& rect) { m_taskbar_rect = rect; }
+    void set_taskbar_rect(const Gfx::IntRect&);
     const Gfx::IntRect& taskbar_rect() const { return m_taskbar_rect; }
 
     void move_to(const Gfx::IntPoint& position) { set_rect({ position, size() }); }
@@ -221,11 +221,11 @@ public:
     void request_update(const Gfx::IntRect&, bool ignore_occlusion = false);
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
+    bool has_taskbar_rect() const { return m_have_taskbar_rect; };
     bool in_minimize_animation() const { return m_minimize_animation_step != -1; }
-
     int minimize_animation_index() const { return m_minimize_animation_step; }
     void step_minimize_animation() { m_minimize_animation_step += 1; }
-    void start_minimize_animation() { m_minimize_animation_step = 0; }
+    void start_minimize_animation();
     void end_minimize_animation() { m_minimize_animation_step = -1; }
 
     Gfx::IntRect tiled_rect(WindowTileType) const;
@@ -321,6 +321,7 @@ private:
     bool m_accessory { false };
     bool m_destroyed { false };
     bool m_default_positioned { false };
+    bool m_have_taskbar_rect { false };
     bool m_invalidated { true };
     bool m_invalidated_all { true };
     bool m_invalidated_frame { true };

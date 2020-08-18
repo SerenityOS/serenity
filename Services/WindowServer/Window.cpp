@@ -243,6 +243,36 @@ void Window::set_minimizable(bool minimizable)
     // TODO: Hide/show (or alternatively change enabled state of) window minimize button dynamically depending on value of m_minimizable
 }
 
+void Window::set_taskbar_rect(const Gfx::IntRect& rect)
+{
+    m_taskbar_rect = rect;
+    m_have_taskbar_rect = !m_taskbar_rect.is_empty();
+}
+
+void Window::start_minimize_animation()
+{
+    if (!m_have_taskbar_rect) {
+        // If this is a modal window, it may not have its own taskbar
+        // button, so there is no rectangle. In that case, walk the
+        // modal stack until we find a window that may have one
+        WindowManager::the().for_each_window_in_modal_stack(*this, [&](Window& w, bool) {
+            if (w.has_taskbar_rect()) {
+                // We purposely do NOT set m_have_taskbar_rect to true here
+                // because we want to only copy the rectangle from the
+                // window that has it, but since this window wouldn't receive
+                // any updates down the road we want to query it again
+                // next time we want to start the animation
+                m_taskbar_rect = w.taskbar_rect();
+
+                ASSERT(!m_have_taskbar_rect); // should remain unset!
+                return IterationDecision::Break;
+            };
+            return IterationDecision::Continue;
+        });
+    }
+    m_minimize_animation_step = 0;
+}
+
 void Window::set_opacity(float opacity)
 {
     if (m_opacity == opacity)
