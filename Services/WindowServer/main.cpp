@@ -111,7 +111,7 @@ int main(int, char**)
         return 1;
     }
 
-    dbgprintf("Entering WindowServer main loop.\n");
+    dbg() << "Entering WindowServer main loop";
     loop.exec();
     ASSERT_NOT_REACHED();
 }
