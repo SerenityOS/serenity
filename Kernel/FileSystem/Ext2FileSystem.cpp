@@ -45,6 +45,12 @@ static const size_t max_link_count = 65535;
 static const size_t max_block_size = 4096;
 static const ssize_t max_inline_symlink_length = 60;
 
+struct Ext2FSDirectoryEntry {
+    String name;
+    InodeIdentifier inode;
+    u8 file_type { 0 };
+};
+
 static u8 to_ext2_file_type(mode_t mode)
 {
     if (is_regular_file(mode))
@@ -880,13 +886,13 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     return KSuccess;
 }
 
-bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
+bool Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
 {
     LOCKER(m_lock);
 
     int directory_size = 0;
     for (auto& entry : entries)
-        directory_size += EXT2_DIR_REC_LEN(entry.name_length);
+        directory_size += EXT2_DIR_REC_LEN(entry.name.length());
 
     auto block_size = fs().block_size();
 
@@ -903,7 +909,7 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
     for (size_t i = 0; i < entries.size(); ++i) {
         auto& entry = entries[i];
 
-        int record_length = EXT2_DIR_REC_LEN(entry.name_length);
+        int record_length = EXT2_DIR_REC_LEN(entry.name.length());
         if (i == entries.size() - 1)
             record_length += occupied_size - directory_size;
 
@@ -917,11 +923,11 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
 
         stream << u32(entry.inode.index());
         stream << u16(record_length);
-        stream << u8(entry.name_length);
+        stream << u8(entry.name.length());
         stream << u8(entry.file_type);
         stream << entry.name;
 
-        int padding = record_length - entry.name_length - 8;
+        int padding = record_length - entry.name.length() - 8;
         for (int j = 0; j < padding; ++j)
             stream << u8(0);
     }
@@ -954,14 +960,14 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
     dbg() << "Ext2FSInode::add_child(): Adding inode " << child.index() << " with name '" << name << "' and mode " << mode << " to directory " << index();
 #endif
 
-    Vector<FS::DirectoryEntry> entries;
+    Vector<Ext2FSDirectoryEntry> entries;
     bool name_already_exists = false;
     KResult result = traverse_as_directory([&](auto& entry) {
         if (name == entry.name) {
             name_already_exists = true;
             return false;
         }
-        entries.append({ entry.name.characters_without_null_termination(), entry.name.length(), entry.inode, entry.file_type });
+        entries.append({ entry.name, entry.inode, entry.file_type });
         return true;
     });
 
@@ -977,7 +983,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
     if (result.is_error())
         return result;
 
-    entries.empend(name.characters_without_null_termination(), name.length(), child.identifier(), to_ext2_file_type(mode));
+    entries.empend(name, child.identifier(), to_ext2_file_type(mode));
     bool success = write_directory(entries);
     if (success)
         m_lookup_cache.set(name, child.index());
@@ -1005,10 +1011,10 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     dbg() << "Ext2FSInode::remove_child(): Removing '" << name << "' in directory " << index();
 #endif
 
-    Vector<FS::DirectoryEntry> entries;
+    Vector<Ext2FSDirectoryEntry> entries;
     KResult result = traverse_as_directory([&](auto& entry) {
         if (name != entry.name)
-            entries.append({ entry.name.characters_without_null_termination(), entry.name.length(), entry.inode, entry.file_type });
+            entries.append({ entry.name, entry.inode, entry.file_type });
         return true;
     });
     if (result.is_error())
@@ -1364,7 +1370,7 @@ KResult Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, 
     dbg() << "Ext2FS: create_directory: created new directory named '" << name << "' with inode " << inode->identifier();
 #endif
 
-    Vector<DirectoryEntry> entries;
+    Vector<Ext2FSDirectoryEntry> entries;
     entries.empend(".", inode->identifier(), EXT2_FT_DIR);
     entries.empend("..", parent_id, EXT2_FT_DIR);
 

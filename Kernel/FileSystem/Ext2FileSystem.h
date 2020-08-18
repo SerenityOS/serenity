@@ -41,6 +41,7 @@ struct ext2_super_block;
 namespace Kernel {
 
 class Ext2FS;
+struct Ext2FSDirectoryEntry;
 
 class Ext2FSInode final : public Inode {
     friend class Ext2FS;
@@ -76,7 +77,7 @@ private:
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(u64) override;
 
-    bool write_directory(const Vector<FS::DirectoryEntry>&);
+    bool write_directory(const Vector<Ext2FSDirectoryEntry>&);
     void populate_lookup_cache() const;
     KResult resize(u64);
 
