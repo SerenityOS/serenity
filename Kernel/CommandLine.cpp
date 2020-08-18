@@ -46,7 +46,9 @@ CommandLine::CommandLine(const String& string)
 {
     s_the = this;
 
-    for (auto str : m_string.split(' ')) {
+    const auto& args = m_string.split(' ');
+    m_params.ensure_capacity(args.size());
+    for (auto&& str : args) {
         if (str == "") {
             continue;
         }
@@ -54,9 +56,9 @@ CommandLine::CommandLine(const String& string)
         auto pair = str.split_limit('=', 2);
 
         if (pair.size() == 1) {
-            m_params.set(pair[0], "");
+            m_params.set(move(pair[0]), "");
         } else {
-            m_params.set(pair[0], pair[1]);
+            m_params.set(move(pair[0]), move(pair[1]));
         }
     }
 }
