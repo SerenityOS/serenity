@@ -334,11 +334,7 @@ bool Board::in_check(Colour colour) const
 
     bool check = false;
     Square::for_each([&](const Square& square) {
-        if (is_legal({ square, king_square }, opposing_colour(colour))) {
-            check = true;
-            return IterationDecision::Break;
-        } else if (get_piece(square) == Piece(opposing_colour(colour), Type::King) && is_legal_no_check({ square, king_square }, opposing_colour(colour))) {
-            // The King is a special case, because it would be in check if it put the opposing king in check.
+        if (is_legal_no_check({ square, king_square }, opposing_colour(colour))) {
             check = true;
             return IterationDecision::Break;
         }
