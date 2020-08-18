@@ -290,7 +290,7 @@ struct SC_sendto_params {
     int sockfd;
     ImmutableBufferArgument<void, size_t> data;
     int flags;
-    const sockaddr* addr;
+    Userspace<const sockaddr*> addr;
     socklen_t addr_length;
 };
 
