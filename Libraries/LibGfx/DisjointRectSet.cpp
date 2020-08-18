@@ -173,10 +173,13 @@ DisjointRectSet DisjointRectSet::shatter(const DisjointRectSet& hammer) const
         return clone();
 
     // TODO: This could use some optimization
-    auto shards = clone();
-    for (auto& hammer_rect : hammer.m_rects) {
-        auto shattered = shards.shatter(hammer_rect);
-        shards = move(shattered);
+    DisjointRectSet shards = shatter(hammer.m_rects[0]);
+    auto rects_count = hammer.m_rects.size();
+    for (size_t i = 1; i < rects_count && !shards.is_empty(); i++) {
+        if (hammer.m_rects[i].intersects(shards.m_rects)) {
+            auto shattered = shards.shatter(hammer.m_rects[i]);
+            shards = move(shattered);
+        }
     }
     // Since there should be no overlaps, we don't need to call shatter()
     return shards;
