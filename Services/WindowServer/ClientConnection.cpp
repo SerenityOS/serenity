@@ -584,7 +584,7 @@ OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::
     }
 
     if (message.flush_immediately())
-        window.invalidate();
+        window.invalidate(false);
 
     return make<Messages::WindowServer::SetWindowBackingStoreResponse>();
 }
