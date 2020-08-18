@@ -32,80 +32,82 @@
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 
-class Chess {
-public:
-    enum class Type {
-        Pawn,
-        Knight,
-        Bishop,
-        Rook,
-        Queen,
-        King,
-        None,
-    };
-    static String char_for_piece(Type type);
+namespace Chess {
 
-    enum class Colour {
-        White,
-        Black,
-        None,
-    };
-    static Colour opposing_colour(Colour colour) { return (colour == Colour::White) ? Colour::Black : Colour::White; }
+enum class Type {
+    Pawn,
+    Knight,
+    Bishop,
+    Rook,
+    Queen,
+    King,
+    None,
+};
 
-    struct Piece {
-        Colour colour;
-        Type type;
-        bool operator==(const Piece& other) const { return colour == other.colour && type == other.type; }
+String char_for_piece(Type type);
 
-    };
-    static constexpr Piece EmptyPiece = { Colour::None, Type::None };
+enum class Colour {
+    White,
+    Black,
+    None,
+};
 
-    struct Square {
-        unsigned rank; // zero indexed;
-        unsigned file;
-        Square(const StringView& name);
-        Square(const unsigned& rank, const unsigned& file)
-            : rank(rank)
-            , file(file)
-        {
-        }
-        bool operator==(const Square& other) const { return rank == other.rank && file == other.file; }
+Colour opposing_colour(Colour colour);
 
-        template<typename Callback>
-        static void for_each(Callback callback)
-        {
-            for (int rank = 0; rank < 8; ++rank) {
-                for (int file = 0; file < 8; ++file) {
-                    if (callback(Square(rank, file)) == IterationDecision::Break) {
-                        goto exit;
-                    }
-                }
+struct Piece {
+    Colour colour;
+    Type type;
+    bool operator==(const Piece& other) const { return colour == other.colour && type == other.type; }
+};
+
+constexpr Piece EmptyPiece = { Colour::None, Type::None };
+
+struct Square {
+    unsigned rank; // zero indexed;
+    unsigned file;
+    Square(const StringView& name);
+    Square(const unsigned& rank, const unsigned& file)
+        : rank(rank)
+        , file(file)
+    {
+    }
+    bool operator==(const Square& other) const { return rank == other.rank && file == other.file; }
+
+    template<typename Callback>
+    static void for_each(Callback callback)
+    {
+        for (int rank = 0; rank < 8; ++rank) {
+            for (int file = 0; file < 8; ++file) {
+                if (callback(Square(rank, file)) == IterationDecision::Break)
+                    return;
             }
-        exit:;
         }
+    }
 
-        bool in_bounds() const { return rank < 8 && file < 8; }
-        bool is_light() const { return (rank % 2) != (file % 2); }
-        String to_algebraic() const;
-    };
+    bool in_bounds() const { return rank < 8 && file < 8; }
+    bool is_light() const { return (rank % 2) != (file % 2); }
+    String to_algebraic() const;
+};
 
-    struct Move {
-        Square from;
-        Square to;
-        Type promote_to;
-        Move(const StringView& algebraic);
-        Move(const Square& from, const Square& to, const Type& promote_to = Type::None)
-            : from(from)
-            , to(to)
-            , promote_to(promote_to)
-        {
-        }
-        bool operator==(const Move& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
+struct Move {
+    Square from;
+    Square to;
+    Type promote_to;
+    Move(const StringView& algebraic);
+    Move(const Square& from, const Square& to, const Type& promote_to = Type::None)
+        : from(from)
+        , to(to)
+        , promote_to(promote_to)
+    {
+    }
+    bool operator==(const Move& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
 
-        String to_long_algebraic() const;
-    };
+    String to_long_algebraic() const;
+};
 
-    Chess();
+class Board {
+public:
+    Board();
 
     Piece get_piece(const Square&) const;
     Piece set_piece(const Square&, const Piece&);
@@ -135,7 +137,7 @@ public:
 
     Colour turn() const { return m_turn; };
 
-    bool operator==(const Chess& other) const;
+    bool operator==(const Board& other) const;
 
 private:
     bool is_legal_no_check(const Move&, Colour colour) const;
@@ -151,41 +153,12 @@ private:
     bool m_black_can_castle_kingside { true };
     bool m_black_can_castle_queenside { true };
 
-    HashMap<Chess, int> m_previous_states;
-    friend struct AK::Traits<Chess>;
-};
-
-template<>
-struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
-    static unsigned hash(Chess::Piece piece)
-    {
-        return pair_int_hash(static_cast<u32>(piece.colour), static_cast<u32>(piece.type));
-    }
-};
-
-template<>
-struct AK::Traits<Chess> : public GenericTraits<Chess> {
-    static unsigned hash(Chess chess)
-    {
-        unsigned hash = 0;
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_queenside));
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_kingside));
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_queenside));
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_kingside));
-
-        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_kingside));
-
-        Chess::Square::for_each([&](Chess::Square sq) {
-            hash = pair_int_hash(hash, Traits<Chess::Piece>::hash(chess.get_piece(sq)));
-            return IterationDecision::Continue;
-        });
-
-        return hash;
-    }
+    HashMap<Board, int> m_previous_states;
+    friend struct AK::Traits<Board>;
 };
 
 template<typename Callback>
-void Chess::generate_moves(Callback callback, Colour colour) const
+void Board::generate_moves(Callback callback, Colour colour) const
 {
     if (colour == Colour::None)
         colour = turn();
@@ -205,27 +178,25 @@ void Chess::generate_moves(Callback callback, Colour colour) const
 
         bool keep_going = true;
         if (piece.type == Type::Pawn) {
-            for (auto& piece : Vector({Type::None, Type::Knight, Type::Bishop, Type::Rook, Type::Queen})) {
-                keep_going =
-                    try_move({sq, {sq.rank+1, sq.file}, piece}) &&
-                    try_move({sq, {sq.rank+2, sq.file}, piece}) &&
-                    try_move({sq, {sq.rank-1, sq.file}, piece}) &&
-                    try_move({sq, {sq.rank-2, sq.file}, piece}) &&
-                    try_move({sq, {sq.rank+1, sq.file+1}}) &&
-                    try_move({sq, {sq.rank+1, sq.file-1}}) &&
-                    try_move({sq, {sq.rank-1, sq.file+1}}) &&
-                    try_move({sq, {sq.rank-1, sq.file-1}});
+            for (auto& piece : Vector({ Type::None, Type::Knight, Type::Bishop, Type::Rook, Type::Queen })) {
+                keep_going = try_move({ sq, { sq.rank + 1, sq.file }, piece })
+                    && try_move({ sq, { sq.rank + 2, sq.file }, piece })
+                    && try_move({ sq, { sq.rank - 1, sq.file }, piece })
+                    && try_move({ sq, { sq.rank - 2, sq.file }, piece })
+                    && try_move({ sq, { sq.rank + 1, sq.file + 1 }, piece })
+                    && try_move({ sq, { sq.rank + 1, sq.file - 1 }, piece })
+                    && try_move({ sq, { sq.rank - 1, sq.file + 1 }, piece })
+                    && try_move({ sq, { sq.rank - 1, sq.file - 1 }, piece });
             }
         } else if (piece.type == Type::Knight) {
-            keep_going =
-                try_move({sq, {sq.rank+2, sq.file+1}}) &&
-                try_move({sq, {sq.rank+2, sq.file-1}}) &&
-                try_move({sq, {sq.rank+1, sq.file+2}}) &&
-                try_move({sq, {sq.rank+1, sq.file-2}}) &&
-                try_move({sq, {sq.rank-2, sq.file+1}}) &&
-                try_move({sq, {sq.rank-2, sq.file-1}}) &&
-                try_move({sq, {sq.rank-1, sq.file+2}}) &&
-                try_move({sq, {sq.rank-1, sq.file-2}});
+            keep_going = try_move({ sq, { sq.rank + 2, sq.file + 1 } })
+                && try_move({ sq, { sq.rank + 2, sq.file - 1 } })
+                && try_move({ sq, { sq.rank + 1, sq.file + 2 } })
+                && try_move({ sq, { sq.rank + 1, sq.file - 2 } })
+                && try_move({ sq, { sq.rank - 2, sq.file + 1 } })
+                && try_move({ sq, { sq.rank - 2, sq.file - 1 } })
+                && try_move({ sq, { sq.rank - 1, sq.file + 2 } })
+                && try_move({ sq, { sq.rank - 1, sq.file - 2 } });
         } else if (piece.type == Type::Bishop) {
             for (int dr = -1; dr <= 1; dr += 2) {
                 for (int df = -1; df <= 1; df += 2) {
@@ -280,3 +251,34 @@ void Chess::generate_moves(Callback callback, Colour colour) const
         }
     });
 }
+
+}
+
+template<>
+struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
+    static unsigned hash(Chess::Piece piece)
+    {
+        return pair_int_hash(static_cast<u32>(piece.colour), static_cast<u32>(piece.type));
+    }
+};
+
+template<>
+struct AK::Traits<Chess::Board> : public GenericTraits<Chess::Board> {
+    static unsigned hash(Chess::Board chess)
+    {
+        unsigned hash = 0;
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_queenside));
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_kingside));
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_queenside));
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_kingside));
+
+        hash = pair_int_hash(hash, static_cast<u32>(chess.m_black_can_castle_kingside));
+
+        Chess::Square::for_each([&](Chess::Square sq) {
+            hash = pair_int_hash(hash, Traits<Chess::Piece>::hash(chess.get_piece(sq)));
+            return IterationDecision::Continue;
+        });
+
+        return hash;
+    }
+};

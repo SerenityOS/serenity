@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include "Chess.h"
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <LibChess/Chess.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
 
@@ -47,7 +47,7 @@ public:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
 
-    Chess& board() { return m_board; };
+    Chess::Board& board() { return m_board; };
 
     Chess::Colour side() const { return m_side; };
     void set_side(Chess::Colour side) { m_side = side; };
@@ -74,7 +74,7 @@ public:
     void set_board_theme(const StringView& name);
 
 private:
-    Chess m_board;
+    Chess::Board m_board;
     BoardTheme m_board_theme { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
     Color m_move_highlight_color { Color::from_rgba(0x66ccee00) };
     Chess::Colour m_side { Chess::Colour::White };
