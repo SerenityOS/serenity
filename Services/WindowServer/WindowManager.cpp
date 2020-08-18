@@ -1075,16 +1075,16 @@ void WindowManager::event(Core::Event& event)
             if (key_event.type() == Event::KeyDown && key_event.modifiers() == Mod_Logo) {
                 if (key_event.key() == Key_Down) {
                     if (m_active_input_window->is_resizable() && m_active_input_window->is_maximized()) {
-                        m_active_input_window->set_maximized(false);
+                        maximize_windows(*m_active_input_window, false);
                         return;
                     }
                     if (m_active_input_window->is_minimizable())
-                        m_active_input_window->set_minimized(true);
+                        minimize_windows(*m_active_input_window, true);
                     return;
                 }
                 if (m_active_input_window->is_resizable()) {
                     if (key_event.key() == Key_Up) {
-                        m_active_input_window->set_maximized(!m_active_input_window->is_maximized());
+                        maximize_windows(*m_active_input_window, !m_active_input_window->is_maximized());
                         return;
                     }
                     if (key_event.key() == Key_Left) {
@@ -1093,7 +1093,7 @@ void WindowManager::event(Core::Event& event)
                             return;
                         }
                         if (m_active_input_window->is_maximized())
-                            m_active_input_window->set_maximized(false);
+                            maximize_windows(*m_active_input_window, false);
                         m_active_input_window->set_tiled(WindowTileType::Left);
                         return;
                     }
@@ -1103,7 +1103,7 @@ void WindowManager::event(Core::Event& event)
                             return;
                         }
                         if (m_active_input_window->is_maximized())
-                            m_active_input_window->set_maximized(false);
+                            maximize_windows(*m_active_input_window, false);
                         m_active_input_window->set_tiled(WindowTileType::Right);
                         return;
                     }
