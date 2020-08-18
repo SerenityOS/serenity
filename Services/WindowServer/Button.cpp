@@ -65,7 +65,7 @@ void Button::on_mouse_event(const MouseEvent& event)
     if (event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
         m_pressed = true;
         wm.set_cursor_tracking_button(this);
-        wm.invalidate(screen_rect());
+        m_frame.invalidate(m_relative_rect);
         return;
     }
 
@@ -85,7 +85,7 @@ void Button::on_mouse_event(const MouseEvent& event)
             // However, we don't know that rect yet. We can make an educated
             // guess which also looks okay even when wrong:
             m_hovered = false;
-            wm.invalidate(screen_rect());
+            m_frame.invalidate(m_relative_rect);
         }
         return;
     }
@@ -95,7 +95,7 @@ void Button::on_mouse_event(const MouseEvent& event)
         m_hovered = rect().contains(event.position());
         wm.set_hovered_button(m_hovered ? this : nullptr);
         if (old_hovered != m_hovered)
-            wm.invalidate(screen_rect());
+            m_frame.invalidate(m_relative_rect);
     }
 
     if (event.type() == Event::MouseMove && event.buttons() & (unsigned)MouseButton::Left) {
@@ -104,7 +104,7 @@ void Button::on_mouse_event(const MouseEvent& event)
         bool old_pressed = m_pressed;
         m_pressed = m_hovered;
         if (old_pressed != m_pressed)
-            wm.invalidate(screen_rect());
+            m_frame.invalidate(m_relative_rect);
     }
 }
 

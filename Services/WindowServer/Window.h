@@ -167,8 +167,13 @@ public:
 
     Gfx::IntSize size() const { return m_rect.size(); }
 
-    void invalidate();
+    void invalidate(bool with_frame = true);
     void invalidate(const Gfx::IntRect&);
+    bool invalidate_no_notify(const Gfx::IntRect& rect);
+
+    void prepare_dirty_rects();
+    void clear_dirty_rects();
+    Gfx::DisjointRectSet& dirty_rects() { return m_dirty_rects; }
 
     virtual void event(Core::Event&) override;
 
@@ -262,6 +267,21 @@ public:
     bool default_positioned() const { return m_default_positioned; }
     void set_default_positioned(bool p) { m_default_positioned = p; }
 
+    bool is_invalidated() const { return m_invalidated; }
+
+    bool is_opaque() const
+    {
+        if (opacity() < 1.0f)
+            return false;
+        if (has_alpha_channel())
+            return false;
+        return true;
+    }
+
+    Gfx::DisjointRectSet& opaque_rects() { return m_opaque_rects; }
+    Gfx::DisjointRectSet& transparency_rects() { return m_transparency_rects; }
+    Gfx::DisjointRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
@@ -281,6 +301,10 @@ private:
     Gfx::IntRect m_rect;
     Gfx::IntRect m_saved_nonfullscreen_rect;
     Gfx::IntRect m_taskbar_rect;
+    Gfx::DisjointRectSet m_dirty_rects;
+    Gfx::DisjointRectSet m_opaque_rects;
+    Gfx::DisjointRectSet m_transparency_rects;
+    Gfx::DisjointRectSet m_transparency_wallpaper_rects;
     WindowType m_type { WindowType::Normal };
     bool m_global_cursor_tracking_enabled { false };
     bool m_automatic_cursor_tracking_enabled { false };
@@ -297,6 +321,9 @@ private:
     bool m_accessory { false };
     bool m_destroyed { false };
     bool m_default_positioned { false };
+    bool m_invalidated { true };
+    bool m_invalidated_all { true };
+    bool m_invalidated_frame { true };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };

@@ -52,8 +52,9 @@ public:
     static Compositor& the();
 
     void compose();
-    void invalidate();
-    void invalidate(const Gfx::IntRect&);
+    void invalidate_window();
+    void invalidate_screen();
+    void invalidate_screen(const Gfx::IntRect&);
 
     bool set_resolution(int desired_width, int desired_height);
 
@@ -70,34 +71,45 @@ public:
     void increment_display_link_count(Badge<ClientConnection>);
     void decrement_display_link_count(Badge<ClientConnection>);
 
-    void recompute_occlusions();
+    void invalidate_occlusions() { m_occlusions_dirty = true; }
 
 private:
     Compositor();
     void init_bitmaps();
     void flip_buffers();
     void flush(const Gfx::IntRect&);
-    void draw_cursor();
-    void draw_geometry_label();
     void draw_menubar();
-    void run_animations();
+    void run_animations(Gfx::DisjointRectSet&);
     void notify_display_links();
-    bool any_opaque_window_contains_rect(const Gfx::IntRect&);
+    void start_compose_async_timer();
+    void recompute_occlusions();
     bool any_opaque_window_above_this_one_contains_rect(const Window&, const Gfx::IntRect&);
+    void draw_cursor(const Gfx::IntRect&);
+    void restore_cursor_back();
+    bool draw_geometry_label(Gfx::IntRect&);
 
     RefPtr<Core::Timer> m_compose_timer;
     RefPtr<Core::Timer> m_immediate_compose_timer;
     bool m_flash_flush { false };
     bool m_buffers_are_flipped { false };
     bool m_screen_can_set_buffer { false };
+    bool m_occlusions_dirty { true };
+    bool m_invalidated_any { true };
+    bool m_invalidated_window { false };
+    bool m_invalidated_cursor { false };
 
     RefPtr<Gfx::Bitmap> m_front_bitmap;
     RefPtr<Gfx::Bitmap> m_back_bitmap;
+    RefPtr<Gfx::Bitmap> m_temp_bitmap;
     OwnPtr<Gfx::Painter> m_back_painter;
     OwnPtr<Gfx::Painter> m_front_painter;
+    OwnPtr<Gfx::Painter> m_temp_painter;
 
-    Gfx::DisjointRectSet m_dirty_rects;
+    Gfx::DisjointRectSet m_dirty_screen_rects;
+    Gfx::DisjointRectSet m_opaque_wallpaper_rects;
 
+    RefPtr<Gfx::Bitmap> m_cursor_back_bitmap;
+    OwnPtr<Gfx::Painter> m_cursor_back_painter;
     Gfx::IntRect m_last_cursor_rect;
     Gfx::IntRect m_last_dnd_rect;
     Gfx::IntRect m_last_geometry_label_rect;

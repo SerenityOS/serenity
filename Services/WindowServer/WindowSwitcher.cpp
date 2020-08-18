@@ -57,7 +57,7 @@ void WindowSwitcher::set_visible(bool visible)
     if (m_visible == visible)
         return;
     m_visible = visible;
-    Compositor::the().recompute_occlusions();
+    Compositor::the().invalidate_occlusions();
     if (m_switcher_window)
         m_switcher_window->set_visible(visible);
     if (!m_visible)
@@ -162,7 +162,7 @@ void WindowSwitcher::select_window_at_index(int index)
 void WindowSwitcher::redraw()
 {
     draw();
-    Compositor::the().invalidate(m_rect);
+    Compositor::the().invalidate_screen(m_rect);
 }
 
 Gfx::IntRect WindowSwitcher::item_rect(int index) const

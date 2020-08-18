@@ -129,7 +129,7 @@ Window::~Window()
 void Window::destroy()
 {
     m_destroyed = true;
-    invalidate();
+    set_visible(false);
 }
 
 void Window::set_title(const String& title)
@@ -137,21 +137,23 @@ void Window::set_title(const String& title)
     if (m_title == title)
         return;
     m_title = title;
+    frame().invalidate_title_bar();
     WindowManager::the().notify_title_changed(*this);
 }
 
 void Window::set_rect(const Gfx::IntRect& rect)
 {
     ASSERT(!rect.is_empty());
-    Gfx::IntRect old_rect;
     if (m_rect == rect)
         return;
-    old_rect = m_rect;
+    auto old_rect = m_rect;
     m_rect = rect;
     if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
         m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_rect.size());
     }
-    m_frame.notify_window_rect_changed(old_rect, rect);
+
+    invalidate(true);
+    m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
 void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
@@ -170,7 +172,8 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
         }
     }
 
-    m_frame.notify_window_rect_changed(old_rect, rect);
+    invalidate(true);
+    m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
 void Window::handle_mouse_event(const MouseEvent& event)
@@ -222,11 +225,12 @@ void Window::set_minimized(bool minimized)
         return;
     m_minimized = minimized;
     update_menu_item_text(PopupMenuItem::Minimize);
+    Compositor::the().invalidate_occlusions();
+    Compositor::the().invalidate_screen(frame().rect());
     if (!is_blocked_by_modal_window())
         start_minimize_animation();
     if (!minimized)
         request_update({ {}, size() });
-    invalidate();
     WindowManager::the().notify_minimization_state_changed(*this);
 }
 
@@ -243,7 +247,11 @@ void Window::set_opacity(float opacity)
 {
     if (m_opacity == opacity)
         return;
+    bool was_opaque = is_opaque();
     m_opacity = opacity;
+    if (was_opaque != is_opaque())
+        Compositor::the().invalidate_occlusions();
+    Compositor::the().invalidate_screen(frame().rect());
     WindowManager::the().notify_opacity_changed(*this);
 }
 
@@ -359,12 +367,21 @@ void Window::set_visible(bool b)
     if (m_visible == b)
         return;
     m_visible = b;
-    invalidate();
+
+    Compositor::the().invalidate_occlusions();
+    if (m_visible)
+         invalidate(true);
+    else
+         Compositor::the().invalidate_screen(frame().rect());
 }
 
-void Window::invalidate()
+void Window::invalidate(bool invalidate_frame)
 {
-    Compositor::the().invalidate(frame().rect());
+    m_invalidated = true;
+    m_invalidated_all = true;
+    m_invalidated_frame |= invalidate_frame;
+    m_dirty_rects.clear();
+    Compositor::the().invalidate_window();
 }
 
 void Window::invalidate(const Gfx::IntRect& rect)
@@ -374,16 +391,46 @@ void Window::invalidate(const Gfx::IntRect& rect)
         return;
     }
 
-    if (rect.is_empty()) {
-        invalidate();
-        return;
-    }
+    if (invalidate_no_notify(rect))
+        Compositor::the().invalidate_window();
+}
+
+bool Window::invalidate_no_notify(const Gfx::IntRect& rect)
+{
+    if (m_invalidated_all || rect.is_empty())
+        return false;
+
     auto outer_rect = frame().rect();
     auto inner_rect = rect;
     inner_rect.move_by(position());
     // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
     inner_rect.intersect(outer_rect);
-    Compositor::the().invalidate(inner_rect);
+    if (inner_rect.is_empty())
+        return false;
+
+    m_invalidated = true;
+    m_dirty_rects.add(inner_rect.translated(-outer_rect.location()));
+    return true;
+}
+
+void Window::prepare_dirty_rects()
+{
+    if (m_invalidated_all) {
+        if (m_invalidated_frame)
+            m_dirty_rects = frame().rect();
+        else
+            m_dirty_rects = rect();
+    } else {
+        m_dirty_rects.move_by(frame().rect().location());
+    }
+}
+
+void Window::clear_dirty_rects()
+{
+    m_invalidated_all = false;
+    m_invalidated_frame = false;
+    m_invalidated = false;
+    m_dirty_rects.clear_with_capacity();
 }
 
 bool Window::is_active() const
@@ -414,6 +461,8 @@ void Window::set_default_icon()
 
 void Window::request_update(const Gfx::IntRect& rect, bool ignore_occlusion)
 {
+    if (rect.is_empty())
+        return;
     if (m_pending_paint_rects.is_empty()) {
         deferred_invoke([this, ignore_occlusion](auto&) {
             client()->post_paint_message(*this, ignore_occlusion);
@@ -511,6 +560,7 @@ void Window::set_fullscreen(bool fullscreen)
     } else if (!m_saved_nonfullscreen_rect.is_empty()) {
         new_window_rect = m_saved_nonfullscreen_rect;
     }
+
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect, new_window_rect));
     set_rect(new_window_rect);
 }
