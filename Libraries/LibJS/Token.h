@@ -153,7 +153,9 @@ enum class TokenType {
 #define __ENUMERATE_JS_TOKEN(x) x,
     ENUMERATE_JS_TOKENS
 #undef __ENUMERATE_JS_TOKEN
+        _COUNT_OF_TOKENS
 };
+constexpr size_t cs_num_of_js_tokens = static_cast<size_t>(TokenType::_COUNT_OF_TOKENS);
 
 class Token {
 public:
@@ -195,12 +197,4 @@ private:
     size_t m_line_column;
 };
 
-}
-
-namespace AK {
-template<>
-struct Traits<JS::TokenType> : public GenericTraits<JS::TokenType> {
-    static constexpr bool is_trivial() { return true; }
-    static unsigned hash(JS::TokenType t) { return int_hash((int)t); }
-};
 }

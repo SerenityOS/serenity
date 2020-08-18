@@ -121,7 +121,6 @@ public:
 private:
     friend class ScopePusher;
 
-    int operator_precedence(TokenType) const;
     Associativity operator_associativity(TokenType) const;
     bool match_expression() const;
     bool match_unary_prefixed_expression() const;

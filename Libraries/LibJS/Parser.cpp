@@ -26,7 +26,6 @@
  */
 
 #include "Parser.h"
-#include <AK/HashMap.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 
@@ -66,7 +65,117 @@ public:
     unsigned m_mask { 0 };
 };
 
-static HashMap<TokenType, int> g_operator_precedence;
+class OperatorPrecedenceTable {
+public:
+    constexpr OperatorPrecedenceTable()
+        : m_token_precedence()
+    {
+        for (size_t i = 0; i < array_size(m_operator_precedence); ++i) {
+            auto& op = m_operator_precedence[i];
+            m_token_precedence[static_cast<size_t>(op.token)] = op.precedence;
+        }
+    }
+
+    constexpr int get(TokenType token) const
+    {
+        int p = m_token_precedence[static_cast<size_t>(token)];
+        if (p == 0) {
+            fprintf(stderr, "Internal Error: No precedence for operator %s\n", Token::name(token));
+            ASSERT_NOT_REACHED();
+            return -1;
+        }
+
+        return p;
+    }
+
+private:
+    int m_token_precedence[cs_num_of_js_tokens];
+
+    struct OperatorPrecedence {
+        TokenType token;
+        int precedence;
+    };
+
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+    static constexpr const OperatorPrecedence m_operator_precedence[] = {
+        { TokenType::Period, 20 },
+        { TokenType::BracketOpen, 20 },
+        { TokenType::ParenOpen, 20 },
+        { TokenType::QuestionMarkPeriod, 20 },
+
+        { TokenType::New, 19 },
+
+        { TokenType::PlusPlus, 18 },
+        { TokenType::MinusMinus, 18 },
+
+        { TokenType::ExclamationMark, 17 },
+        { TokenType::Tilde, 17 },
+        { TokenType::Typeof, 17 },
+        { TokenType::Void, 17 },
+        { TokenType::Delete, 17 },
+        { TokenType::Await, 17 },
+
+        { TokenType::DoubleAsterisk, 16 },
+
+        { TokenType::Asterisk, 15 },
+        { TokenType::Slash, 15 },
+        { TokenType::Percent, 15 },
+
+        { TokenType::Plus, 14 },
+        { TokenType::Minus, 14 },
+
+        { TokenType::ShiftLeft, 13 },
+        { TokenType::ShiftRight, 13 },
+        { TokenType::UnsignedShiftRight, 13 },
+
+        { TokenType::LessThan, 12 },
+        { TokenType::LessThanEquals, 12 },
+        { TokenType::GreaterThan, 12 },
+        { TokenType::GreaterThanEquals, 12 },
+        { TokenType::In, 12 },
+        { TokenType::Instanceof, 12 },
+
+        { TokenType::EqualsEquals, 11 },
+        { TokenType::ExclamationMarkEquals, 11 },
+        { TokenType::EqualsEqualsEquals, 11 },
+        { TokenType::ExclamationMarkEqualsEquals, 11 },
+
+        { TokenType::Ampersand, 10 },
+
+        { TokenType::Caret, 9 },
+
+        { TokenType::Pipe, 8 },
+
+        { TokenType::DoubleQuestionMark, 7 },
+
+        { TokenType::DoubleAmpersand, 6 },
+
+        { TokenType::DoublePipe, 5 },
+
+        { TokenType::QuestionMark, 4 },
+
+        { TokenType::Equals, 3 },
+        { TokenType::PlusEquals, 3 },
+        { TokenType::MinusEquals, 3 },
+        { TokenType::DoubleAsteriskEquals, 3 },
+        { TokenType::AsteriskEquals, 3 },
+        { TokenType::SlashEquals, 3 },
+        { TokenType::PercentEquals, 3 },
+        { TokenType::ShiftLeftEquals, 3 },
+        { TokenType::ShiftRightEquals, 3 },
+        { TokenType::UnsignedShiftRightEquals, 3 },
+        { TokenType::AmpersandEquals, 3 },
+        { TokenType::PipeEquals, 3 },
+        { TokenType::CaretEquals, 3 },
+
+        { TokenType::Yield, 2 },
+
+        { TokenType::Comma, 1 },
+    };
+};
+
+constexpr OperatorPrecedenceTable g_operator_precedence;
+
 Parser::ParserState::ParserState(Lexer lexer)
     : m_lexer(move(lexer))
     , m_current_token(m_lexer.next())
@@ -76,94 +185,6 @@ Parser::ParserState::ParserState(Lexer lexer)
 Parser::Parser(Lexer lexer)
     : m_parser_state(move(lexer))
 {
-    if (g_operator_precedence.is_empty()) {
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
-        g_operator_precedence.set(TokenType::Period, 20);
-        g_operator_precedence.set(TokenType::BracketOpen, 20);
-        g_operator_precedence.set(TokenType::ParenOpen, 20);
-        g_operator_precedence.set(TokenType::QuestionMarkPeriod, 20);
-
-        g_operator_precedence.set(TokenType::New, 19);
-
-        g_operator_precedence.set(TokenType::PlusPlus, 18);
-        g_operator_precedence.set(TokenType::MinusMinus, 18);
-
-        g_operator_precedence.set(TokenType::ExclamationMark, 17);
-        g_operator_precedence.set(TokenType::Tilde, 17);
-        g_operator_precedence.set(TokenType::Typeof, 17);
-        g_operator_precedence.set(TokenType::Void, 17);
-        g_operator_precedence.set(TokenType::Delete, 17);
-        g_operator_precedence.set(TokenType::Await, 17);
-
-        g_operator_precedence.set(TokenType::DoubleAsterisk, 16);
-
-        g_operator_precedence.set(TokenType::Asterisk, 15);
-        g_operator_precedence.set(TokenType::Slash, 15);
-        g_operator_precedence.set(TokenType::Percent, 15);
-
-        g_operator_precedence.set(TokenType::Plus, 14);
-        g_operator_precedence.set(TokenType::Minus, 14);
-
-        g_operator_precedence.set(TokenType::ShiftLeft, 13);
-        g_operator_precedence.set(TokenType::ShiftRight, 13);
-        g_operator_precedence.set(TokenType::UnsignedShiftRight, 13);
-
-        g_operator_precedence.set(TokenType::LessThan, 12);
-        g_operator_precedence.set(TokenType::LessThanEquals, 12);
-        g_operator_precedence.set(TokenType::GreaterThan, 12);
-        g_operator_precedence.set(TokenType::GreaterThanEquals, 12);
-        g_operator_precedence.set(TokenType::In, 12);
-        g_operator_precedence.set(TokenType::Instanceof, 12);
-
-        g_operator_precedence.set(TokenType::EqualsEquals, 11);
-        g_operator_precedence.set(TokenType::ExclamationMarkEquals, 11);
-        g_operator_precedence.set(TokenType::EqualsEqualsEquals, 11);
-        g_operator_precedence.set(TokenType::ExclamationMarkEqualsEquals, 11);
-
-        g_operator_precedence.set(TokenType::Ampersand, 10);
-
-        g_operator_precedence.set(TokenType::Caret, 9);
-
-        g_operator_precedence.set(TokenType::Pipe, 8);
-
-        g_operator_precedence.set(TokenType::DoubleQuestionMark, 7);
-
-        g_operator_precedence.set(TokenType::DoubleAmpersand, 6);
-
-        g_operator_precedence.set(TokenType::DoublePipe, 5);
-
-        g_operator_precedence.set(TokenType::QuestionMark, 4);
-
-        g_operator_precedence.set(TokenType::Equals, 3);
-        g_operator_precedence.set(TokenType::PlusEquals, 3);
-        g_operator_precedence.set(TokenType::MinusEquals, 3);
-        g_operator_precedence.set(TokenType::DoubleAsteriskEquals, 3);
-        g_operator_precedence.set(TokenType::AsteriskEquals, 3);
-        g_operator_precedence.set(TokenType::SlashEquals, 3);
-        g_operator_precedence.set(TokenType::PercentEquals, 3);
-        g_operator_precedence.set(TokenType::ShiftLeftEquals, 3);
-        g_operator_precedence.set(TokenType::ShiftRightEquals, 3);
-        g_operator_precedence.set(TokenType::UnsignedShiftRightEquals, 3);
-        g_operator_precedence.set(TokenType::AmpersandEquals, 3);
-        g_operator_precedence.set(TokenType::PipeEquals, 3);
-        g_operator_precedence.set(TokenType::CaretEquals, 3);
-
-        g_operator_precedence.set(TokenType::Yield, 2);
-
-        g_operator_precedence.set(TokenType::Comma, 1);
-    }
-}
-
-int Parser::operator_precedence(TokenType type) const
-{
-    auto it = g_operator_precedence.find(type);
-    if (it == g_operator_precedence.end()) {
-        fprintf(stderr, "Internal Error: No precedence for operator %s\n", Token::name(type));
-        ASSERT_NOT_REACHED();
-        return -1;
-    }
-
-    return it->value;
 }
 
 Associativity Parser::operator_associativity(TokenType type) const
@@ -627,7 +648,7 @@ NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
 
 NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
 {
-    auto precedence = operator_precedence(m_parser_state.m_current_token.type());
+    auto precedence = g_operator_precedence.get(m_parser_state.m_current_token.type());
     auto associativity = operator_associativity(m_parser_state.m_current_token.type());
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::PlusPlus: {
@@ -918,7 +939,7 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
         expression = create_ast_node<TaggedTemplateLiteral>(move(expression), move(template_literal));
     }
     while (match_secondary_expression(forbidden)) {
-        int new_precedence = operator_precedence(m_parser_state.m_current_token.type());
+        int new_precedence = g_operator_precedence.get(m_parser_state.m_current_token.type());
         if (new_precedence < min_precedence)
             break;
         if (new_precedence == min_precedence && associativity == Associativity::Left)
@@ -1135,7 +1156,7 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
 {
     consume(TokenType::New);
 
-    auto callee = parse_expression(g_operator_precedence.get(TokenType::New).value(), Associativity::Right, { TokenType::ParenOpen });
+    auto callee = parse_expression(g_operator_precedence.get(TokenType::New), Associativity::Right, { TokenType::ParenOpen });
 
     Vector<CallExpression::Argument> arguments;
 
