@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
     window->set_double_buffering_enabled(false);
     window->set_title("2048");
-    window->resize(324, 336);
+    window->resize(315, 336);
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
