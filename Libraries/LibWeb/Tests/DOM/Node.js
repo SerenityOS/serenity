@@ -1,4 +1,4 @@
-loadPage("file:///res/html/misc/small.html");
+loadPage("file:///res/html/misc/innertext_textcontent.html");
 
 afterInitialPageLoad(() => {
     test("Node.textContent", () => {
@@ -16,5 +16,13 @@ afterInitialPageLoad(() => {
         expect(p.textContent).toBe("bar");
         expect(p.firstChild.textContent).toBe("bar");
         expect(p.firstChild.firstChild).toBe(null);
+
+        var p = document.getElementById("source");
+        expect(p.textContent).toBe(`
+            #source { color: red;  } #text { text-transform: uppercase; }
+            Take   a look athow this textis interpreted
+                   below.
+            HIDDEN TEXT
+        `);
     });
 });
