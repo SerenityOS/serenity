@@ -25,6 +25,7 @@
  */
 
 #include "Game.h"
+#include <stdlib.h>
 
 Game::Game(size_t rows, size_t columns)
     : m_rows(rows)
@@ -37,11 +38,11 @@ Game::Game(size_t rows, size_t columns)
             row.append(0);
     }
 
-    add_tile(2);
-    add_tile(2);
+    add_random_tile();
+    add_random_tile();
 }
 
-void Game::add_tile(u32 max_tile_value)
+void Game::add_random_tile()
 {
     int row;
     int column;
@@ -50,9 +51,8 @@ void Game::add_tile(u32 max_tile_value)
         column = rand() % m_columns;
     } while (m_board[row][column] != 0);
 
-    int value = rand() % max_tile_value;
-    value = round_up_to_power_of_two(value, max_tile_value);
-    m_board[row][column] = max(2, value);
+    size_t value = rand() < RAND_MAX * 0.9 ? 2 : 4;
+    m_board[row][column] = value;
 }
 
 static Game::Board transpose(const Game::Board& board)
@@ -198,7 +198,7 @@ Game::MoveOutcome Game::attempt_move(Direction direction)
     if (moved) {
         m_board = new_board;
         m_turns++;
-        add_tile(4);
+        add_random_tile();
         m_score += successful_merge_score;
     }
 

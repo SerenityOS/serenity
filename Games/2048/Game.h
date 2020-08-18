@@ -57,7 +57,7 @@ public:
     const Board& board() const { return m_board; }
 
 private:
-    void add_tile(u32 max_tile_value);
+    void add_random_tile();
 
     size_t m_rows { 0 };
     size_t m_columns { 0 };
