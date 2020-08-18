@@ -78,13 +78,9 @@ const HTML::HTMLElement* Node::enclosing_html_element() const
 
 String Node::text_content() const
 {
-    Vector<String> strings;
     StringBuilder builder;
     for (auto* child = first_child(); child; child = child->next_sibling()) {
-        auto text = child->text_content();
-        if (!text.is_empty()) {
-            builder.append(child->text_content());
-        }
+        builder.append(child->text_content());
     }
     return builder.to_string();
 }
