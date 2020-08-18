@@ -78,6 +78,11 @@ int main(int argc, char** argv)
         return;
     }));
 
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("Calendar", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-calendar.png"), window);
+    }));
+
     app->set_menubar(move(menubar));
 
     app->exec();
