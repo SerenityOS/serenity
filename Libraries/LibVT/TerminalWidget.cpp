@@ -106,7 +106,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     };
     set_scroll_length(m_config->read_num_entry("Window", "ScrollLength", 4));
 
-    dbgprintf("Terminal: Load config file from %s\n", m_config->file_name().characters());
+    dbg() << "Load config file from " << m_config->file_name();
     m_cursor_blink_timer->set_interval(m_config->read_num_entry("Text",
         "CursorBlinkInterval",
         500));
