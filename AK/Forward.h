@@ -50,6 +50,7 @@ class Utf32View;
 class Utf8View;
 class InputStream;
 class InputMemoryStream;
+class DuplexMemoryStream;
 
 template<typename T>
 class Span;
@@ -125,6 +126,7 @@ using AK::Bytes;
 using AK::CircularQueue;
 using AK::DebugLogStream;
 using AK::DoublyLinkedList;
+using AK::DuplexMemoryStream;
 using AK::FixedArray;
 using AK::FlyString;
 using AK::Function;
