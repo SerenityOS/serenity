@@ -798,7 +798,7 @@ void Plan9FSInode::flush_metadata()
 KResultOr<size_t> Plan9FSInode::directory_entry_count() const
 {
     size_t count = 0;
-    KResult result = traverse_as_directory([&count](const FS::DirectoryEntry&) {
+    KResult result = traverse_as_directory([&count](auto&) {
         count++;
         return true;
     });
@@ -809,7 +809,7 @@ KResultOr<size_t> Plan9FSInode::directory_entry_count() const
     return count;
 }
 
-KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
     KResult result = KSuccess;
 
@@ -857,17 +857,7 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEnt
                 u8 type;
                 StringView name;
                 decoder >> qid >> offset >> type >> name;
-
-                FS::DirectoryEntry entry {
-                    "",
-                    name.length(),
-                    { fsid(), fs().allocate_fid() },
-                    0
-                };
-                size_t size_to_copy = min(sizeof(entry.name) - 1, name.length());
-                memcpy(entry.name, name.characters_without_null_termination(), size_to_copy);
-                entry.name[size_to_copy] = 0;
-                callback(entry);
+                callback({ name, { fsid(), fs().allocate_fid() }, 0 });
             }
         }
 

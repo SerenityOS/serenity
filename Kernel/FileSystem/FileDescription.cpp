@@ -191,7 +191,7 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
     KResult result = VFS::the().traverse_directory_inode(*m_inode, [&stream](auto& entry) {
         stream << (u32)entry.inode.index();
         stream << (u8)entry.file_type;
-        stream << (u32)entry.name_length;
+        stream << (u32)entry.name.length();
         stream << entry.name;
         return true;
     });

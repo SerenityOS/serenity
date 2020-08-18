@@ -85,6 +85,13 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, 
     name[nl] = '\0';
 }
 
+FS::DirectoryEntryView::DirectoryEntryView(const StringView& n, InodeIdentifier i, u8 ft)
+    : name(n)
+    , inode(i)
+    , file_type(ft)
+{
+}
+
 void FS::sync()
 {
     Inode::sync();

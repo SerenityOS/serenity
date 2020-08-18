@@ -1246,7 +1246,7 @@ InodeIdentifier ProcFS::ProcFSDirectoryEntry::identifier(unsigned fsid) const
     return to_identifier(fsid, PDI_Root, 0, (ProcFileType)proc_file_type);
 }
 
-KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
 #ifdef PROCFS_DEBUG
     dbg() << "ProcFS: traverse_as_directory " << index();
@@ -1258,8 +1258,8 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     auto proc_file_type = to_proc_file_type(identifier());
     auto parent_id = to_parent_id(identifier());
 
-    callback({ ".", 1, identifier(), 2 });
-    callback({ "..", 2, parent_id, 2 });
+    callback({ ".", identifier(), 2 });
+    callback({ "..", parent_id, 2 });
 
     switch (proc_file_type) {
     case FI_Root:
@@ -1268,28 +1268,28 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
             if (!entry.name)
                 continue;
             if (entry.proc_file_type > __FI_Root_Start && entry.proc_file_type < __FI_Root_End)
-                callback({ entry.name, strlen(entry.name), to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type), 0 });
+                callback({ { entry.name, strlen(entry.name) }, to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type), 0 });
         }
         for (auto pid_child : Process::all_pids()) {
             char name[16];
             size_t name_length = (size_t)sprintf(name, "%d", pid_child.value());
-            callback({ name, name_length, to_identifier(fsid(), PDI_Root, pid_child, FI_PID), 0 });
+            callback({ { name, name_length }, to_identifier(fsid(), PDI_Root, pid_child, FI_PID), 0 });
         }
         break;
 
     case FI_Root_sys:
         for (size_t i = 1; i < sys_variables().size(); ++i) {
             auto& variable = sys_variables()[i];
-            callback({ variable.name.characters(), variable.name.length(), sys_var_to_identifier(fsid(), i), 0 });
+            callback({ variable.name, sys_var_to_identifier(fsid(), i), 0 });
         }
         break;
 
     case FI_Root_net:
-        callback({ "adapters", 8, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_adapters), 0 });
-        callback({ "arp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_arp), 0 });
-        callback({ "tcp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_tcp), 0 });
-        callback({ "udp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_udp), 0 });
-        callback({ "local", 5, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_local), 0 });
+        callback({ "adapters", to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_adapters), 0 });
+        callback({ "arp", to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_arp), 0 });
+        callback({ "tcp", to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_tcp), 0 });
+        callback({ "udp", to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_udp), 0 });
+        callback({ "local", to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_local), 0 });
         break;
 
     case FI_PID: {
@@ -1302,7 +1302,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
                 if (entry.proc_file_type == FI_PID_exe && !process->executable())
                     continue;
                 // FIXME: strlen() here is sad.
-                callback({ entry.name, strlen(entry.name), to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
+                callback({ { entry.name, strlen(entry.name) }, to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
             }
         }
     } break;
@@ -1318,7 +1318,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
                 continue;
             char name[16];
             size_t name_length = (size_t)sprintf(name, "%d", i);
-            callback({ name, name_length, to_identifier_with_fd(fsid(), pid, i), 0 });
+            callback({ { name, name_length }, to_identifier_with_fd(fsid(), pid, i), 0 });
         }
     } break;
 
@@ -1331,7 +1331,7 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
             int tid = thread.tid().value();
             char name[16];
             size_t name_length = (size_t)sprintf(name, "%d", tid);
-            callback({ name, name_length, to_identifier_with_stack(fsid(), tid), 0 });
+            callback({ { name, name_length }, to_identifier_with_stack(fsid(), tid), 0 });
             return IterationDecision::Continue;
         });
     } break;
@@ -1635,7 +1635,7 @@ KResultOr<size_t> ProcFSInode::directory_entry_count() const
 {
     ASSERT(is_directory());
     size_t count = 0;
-    KResult result = traverse_as_directory([&count](const FS::DirectoryEntry&) {
+    KResult result = traverse_as_directory([&count](auto&) {
         ++count;
         return true;
     });

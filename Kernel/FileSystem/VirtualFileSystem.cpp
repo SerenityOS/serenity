@@ -191,9 +191,9 @@ bool VFS::is_vfs_root(InodeIdentifier inode) const
     return inode == root_inode_id();
 }
 
-KResult VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
+KResult VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntryView&)> callback)
 {
-    return dir_inode.traverse_as_directory([&](const FS::DirectoryEntry& entry) {
+    return dir_inode.traverse_as_directory([&](auto& entry) {
         InodeIdentifier resolved_inode;
         if (auto mount = find_mount_for_host(entry.inode))
             resolved_inode = mount->guest().identifier();
@@ -202,13 +202,13 @@ KResult VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::
 
         // FIXME: This is now broken considering chroot and bind mounts.
         bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode()->identifier();
-        if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && !strcmp(entry.name, "..")) {
+        if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && entry.name == "..") {
             auto mount = find_mount_for_guest(dir_inode);
             ASSERT(mount);
             ASSERT(mount->host());
             resolved_inode = mount->host()->identifier();
         }
-        callback(FS::DirectoryEntry(entry.name, entry.name_length, resolved_inode, entry.file_type));
+        callback({ entry.name, resolved_inode, entry.file_type });
         return true;
     });
 }

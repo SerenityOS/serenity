@@ -29,6 +29,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
@@ -74,6 +75,14 @@ public:
         DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, u8 file_type);
         char name[256];
         size_t name_length { 0 };
+        InodeIdentifier inode;
+        u8 file_type { 0 };
+    };
+
+    struct DirectoryEntryView {
+        DirectoryEntryView(const StringView& name, InodeIdentifier, u8 file_type);
+
+        StringView name;
         InodeIdentifier inode;
         u8 file_type { 0 };
     };
