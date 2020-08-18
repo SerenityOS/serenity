@@ -239,7 +239,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const void* data, size_t 
     return nsent_or_error;
 }
 
-KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, void* buffer, size_t buffer_length, int, sockaddr*, socklen_t*)
+KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, void* buffer, size_t buffer_length, int, Userspace<sockaddr*>, Userspace<socklen_t*>)
 {
     Locker locker(lock());
     if (m_receive_buffer.is_empty()) {
@@ -270,7 +270,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
     return nreceived;
 }
 
-KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
+KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, void* buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length)
 {
     Locker locker(lock());
     ReceivedPacket packet;
@@ -324,12 +324,17 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
 #ifdef IPV4_SOCKET_DEBUG
         dbg() << "Incoming packet is from: " << packet.peer_address << ":" << packet.peer_port;
 #endif
-        auto& ia = *(sockaddr_in*)addr;
-        memcpy(&ia.sin_addr, &packet.peer_address, sizeof(IPv4Address));
-        ia.sin_port = htons(packet.peer_port);
-        ia.sin_family = AF_INET;
+
+        sockaddr_in out_addr {};
+        memcpy(&out_addr.sin_addr, &packet.peer_address, sizeof(IPv4Address));
+        out_addr.sin_port = htons(packet.peer_port);
+        out_addr.sin_family = AF_INET;
+        Userspace<sockaddr_in*> dest_addr = addr.ptr();
+        copy_to_user(dest_addr, &out_addr);
+
+        socklen_t out_length = sizeof(sockaddr_in);
         ASSERT(addr_length);
-        *addr_length = sizeof(sockaddr_in);
+        copy_to_user(addr_length, &out_length);
     }
 
     if (type() == SOCK_RAW) {
@@ -341,10 +346,15 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
 }
 
-KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
+KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length)
 {
-    if (addr_length && *addr_length < sizeof(sockaddr_in))
-        return KResult(-EINVAL);
+    if (user_addr_length) {
+        socklen_t addr_length;
+        if (!Process::current()->validate_read_and_copy_typed(&addr_length, user_addr_length))
+            return KResult(-EFAULT);
+        if (addr_length < sizeof(sockaddr_in))
+            return KResult(-EINVAL);
+    }
 
 #ifdef IPV4_SOCKET_DEBUG
     klog() << "recvfrom: type=" << type() << ", local_port=" << local_port();
@@ -352,9 +362,9 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, void* buffe
 
     KResultOr<size_t> nreceived = 0;
     if (buffer_mode() == BufferMode::Bytes)
-        nreceived = receive_byte_buffered(description, buffer, buffer_length, flags, addr, addr_length);
+        nreceived = receive_byte_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length);
     else
-        nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, addr, addr_length);
+        nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length);
 
     if (!nreceived.is_error())
         Thread::current()->did_ipv4_socket_read(nreceived.value());
