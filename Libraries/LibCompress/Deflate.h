@@ -28,6 +28,7 @@
 
 #include <AK/CircularQueue.h>
 #include <AK/Span.h>
+#include <AK/Stream.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <cstring>
@@ -65,34 +66,120 @@ private:
     Vector<u32> m_symbol_values;
 };
 
-class Deflate {
+// Implements a DEFLATE decompressor according to RFC 1951.
+class DeflateStream final : public InputStream {
 public:
-    Deflate(ReadonlyBytes data)
+    // FIXME: This should really return a ByteBuffer.
+    static Vector<u8> decompress_all(ReadonlyBytes bytes)
+    {
+        DeflateStream stream { bytes };
+        while (stream.read_next_block()) {
+        }
+
+        Vector<u8> vector;
+        vector.resize(stream.m_intermediate_stream.remaining());
+        stream >> vector;
+
+        return vector;
+    }
+
+    DeflateStream(ReadonlyBytes data)
         : m_reader(data)
         , m_literal_length_codes(generate_literal_length_codes())
         , m_fixed_distance_codes(generate_fixed_distance_codes())
     {
     }
 
-    Vector<u8> decompress();
+    // FIXME: Accept an InputStream.
+
+    size_t read(Bytes bytes) override
+    {
+        if (m_intermediate_stream.remaining() >= bytes.size())
+            return m_intermediate_stream.read_or_error(bytes);
+
+        while (read_next_block()) {
+            if (m_intermediate_stream.remaining() >= bytes.size())
+                return m_intermediate_stream.read_or_error(bytes);
+        }
+
+        return m_intermediate_stream.read(bytes);
+    }
+
+    bool read_or_error(Bytes bytes) override
+    {
+        if (m_intermediate_stream.remaining() >= bytes.size()) {
+            m_intermediate_stream.read_or_error(bytes);
+            return true;
+        }
+
+        while (read_next_block()) {
+            if (m_intermediate_stream.remaining() >= bytes.size()) {
+                m_intermediate_stream.read_or_error(bytes);
+                return true;
+            }
+        }
+
+        m_error = true;
+        return false;
+    }
+
+    bool eof() const override
+    {
+        if (!m_intermediate_stream.eof())
+            return false;
+
+        while (read_next_block()) {
+            if (!m_intermediate_stream.eof())
+                return false;
+        }
+
+        return true;
+    }
+
+    bool discard_or_error(size_t count) override
+    {
+        if (m_intermediate_stream.remaining() >= count) {
+            m_intermediate_stream.discard_or_error(count);
+            return true;
+        }
+
+        while (read_next_block()) {
+            if (m_intermediate_stream.remaining() >= count) {
+                m_intermediate_stream.discard_or_error(count);
+                return true;
+            }
+        }
+
+        m_error = true;
+        return false;
+    }
 
 private:
-    void decompress_uncompressed_block();
-    void decompress_static_block();
-    void decompress_dynamic_block();
-    void decompress_huffman_block(CanonicalCode&, CanonicalCode*);
-    Vector<CanonicalCode> decode_huffman_codes();
-    void copy_from_history(u32, u32);
-    u32 decode_run_length(u32);
-    u32 decode_distance(u32);
-    Vector<u8> generate_literal_length_codes();
-    Vector<u8> generate_fixed_distance_codes();
+    void decompress_uncompressed_block() const;
+    void decompress_static_block() const;
+    void decompress_dynamic_block() const;
+    void decompress_huffman_block(CanonicalCode&, CanonicalCode*) const;
 
-    BitStreamReader m_reader;
-    CircularQueue<u8, 32 * 1024> m_history_buffer;
-    Vector<u8, 256> m_output_buffer;
+    Vector<CanonicalCode> decode_huffman_codes() const;
+    u32 decode_run_length(u32) const;
+    u32 decode_distance(u32) const;
 
-    CanonicalCode m_literal_length_codes;
-    CanonicalCode m_fixed_distance_codes;
+    void copy_from_history(u32, u32) const;
+
+    Vector<u8> generate_literal_length_codes() const;
+    Vector<u8> generate_fixed_distance_codes() const;
+
+    mutable BitStreamReader m_reader;
+
+    mutable CanonicalCode m_literal_length_codes;
+    mutable CanonicalCode m_fixed_distance_codes;
+
+    // FIXME: Theoretically, blocks can be extremly large, reading a single block could
+    //        exhaust memory. Maybe wait for C++20 coroutines?
+    bool read_next_block() const;
+
+    mutable bool m_read_last_block { false };
+    mutable DuplexMemoryStream m_intermediate_stream;
 };
+
 }
