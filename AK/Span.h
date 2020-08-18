@@ -142,16 +142,20 @@ public:
 
     ALWAYS_INLINE bool is_empty() const { return this->m_size == 0; }
 
-    ALWAYS_INLINE Span slice(size_t start, size_t size) const
+    ALWAYS_INLINE Span slice(size_t start, size_t length) const
     {
-        ASSERT(start + size <= this->m_size);
-        return { this->m_values + start, size };
+        ASSERT(start + length <= size());
+        return { this->m_values + start, length };
     }
-
     ALWAYS_INLINE Span slice(size_t start) const
     {
-        ASSERT(start < this->m_size);
-        return { this->m_values + start, this->m_size - start };
+        ASSERT(start <= size());
+        return { this->m_values + start, size() - start };
+    }
+
+    ALWAYS_INLINE Span trim(size_t length) const
+    {
+        return { this->m_values, min(size(), length) };
     }
 
     ALWAYS_INLINE T* offset(size_t start) const
