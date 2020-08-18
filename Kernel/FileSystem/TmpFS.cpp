@@ -218,7 +218,7 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
     auto it = m_children.find(name);
     if (it == m_children.end())
         return {};
-    return fs().get_inode(it->value.entry.inode);
+    return it->value.inode;
 }
 
 KResultOr<size_t> TmpFSInode::directory_entry_count() const
