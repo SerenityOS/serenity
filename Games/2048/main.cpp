@@ -24,7 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "2048.h"
+#include "BoardView.h"
+#include "Game.h"
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -32,8 +33,10 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
+#include <time.h>
 
 int main(int argc, char** argv)
 {
@@ -41,6 +44,8 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+
+    srand(time(nullptr));
 
     auto app = GUI::Application::construct(argc, argv);
 
@@ -65,18 +70,69 @@ int main(int argc, char** argv)
     window->set_title("2048");
     window->resize(324, 336);
 
-    auto& game = window->set_main_widget<TwentyFortyEightGame>();
-    game.set_fill_with_background_color(true);
+    Game game { 4, 4 };
+
+    auto& board_view = window->set_main_widget<BoardView>(&game.board());
+    board_view.set_fill_with_background_color(true);
+
+    auto update = [&]() {
+        board_view.set_board(&game.board());
+        board_view.set_score(game.score());
+        board_view.update();
+    };
+
+    update();
+
+    auto start_a_new_game = [&]() {
+        game = Game(4, 4);
+        update();
+    };
+
+    Vector<Game> undo_stack;
+
+    board_view.on_move = [&](Game::Direction direction) {
+        undo_stack.append(game);
+        auto outcome = game.attempt_move(direction);
+        switch (outcome) {
+        case Game::MoveOutcome::OK:
+            if (undo_stack.size() >= 16)
+                undo_stack.take_first();
+            update();
+            break;
+        case Game::MoveOutcome::InvalidMove:
+            undo_stack.take_last();
+            break;
+        case Game::MoveOutcome::Won:
+            update();
+            GUI::MessageBox::show(window,
+                String::format("Score = %d in %zu turns", game.score(), game.turns()),
+                "You won!",
+                GUI::MessageBox::Type::Information);
+            start_a_new_game();
+            break;
+        case Game::MoveOutcome::GameOver:
+            update();
+            GUI::MessageBox::show(window,
+                String::format("Score = %d in %zu turns", game.score(), game.turns()),
+                "You lost!",
+                GUI::MessageBox::Type::Information);
+            start_a_new_game();
+            break;
+        }
+    };
 
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("2048");
 
     app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
-        game.reset();
+        start_a_new_game();
     }));
     app_menu.add_action(GUI::CommonActions::make_undo_action([&](auto&) {
-        game.undo();
+        if (undo_stack.is_empty())
+            return;
+        game = undo_stack.take_last();
+        update();
     }));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {

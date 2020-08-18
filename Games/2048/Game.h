@@ -26,47 +26,43 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
-#include <LibGUI/Widget.h>
+#include <AK/Vector.h>
 
-class TwentyFortyEightGame final : public GUI::Widget {
-    C_OBJECT(TwentyFortyEightGame)
+class Game final {
 public:
-    virtual ~TwentyFortyEightGame() override;
+    Game(size_t rows, size_t columns);
+    Game(const Game&) = default;
 
-    void reset();
-    int score() const;
-    void undo();
-
-    struct State {
-        Vector<Vector<u32>> board;
-        size_t score { 0 };
-        String score_text;
+    enum class MoveOutcome {
+        OK,
+        InvalidMove,
+        GameOver,
+        Won,
     };
 
+    enum class Direction {
+        Up,
+        Down,
+        Left,
+        Right,
+    };
+
+    MoveOutcome attempt_move(Direction);
+
+    size_t score() const { return m_score; }
+    size_t turns() const { return m_turns; }
+
+    using Board = Vector<Vector<u32>>;
+
+    const Board& board() const { return m_board; }
+
 private:
-    TwentyFortyEightGame();
-    virtual void resize_event(GUI::ResizeEvent&) override;
-    virtual void paint_event(GUI::PaintEvent&) override;
-    virtual void keydown_event(GUI::KeyEvent&) override;
+    void add_tile(u32 max_tile_value);
 
-    void pick_font();
-    void game_over();
-    Gfx::IntRect score_rect() const;
+    size_t m_rows { 0 };
+    size_t m_columns { 0 };
 
-    template<typename Board>
-    void add_tile(Board& board, int max_tile_value);
-
-    int m_rows { 4 };
-    int m_columns { 4 };
-    u32 m_starting_tile { 2 };
-    size_t m_current_turn { 0 };
-
-    Color background_color_for_cell(u32 value);
-    Color text_color_for_cell(u32 value);
-
-    float m_padding { 0 };
-    float m_cell_size { 0 };
-
-    Vector<State, 16> m_states;
+    Board m_board;
+    size_t m_score { 0 };
+    size_t m_turns { 0 };
 };
