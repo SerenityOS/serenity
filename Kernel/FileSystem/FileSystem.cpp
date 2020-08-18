@@ -65,26 +65,6 @@ FS* FS::from_fsid(u32 id)
     return nullptr;
 }
 
-FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, u8 ft)
-    : name_length(strlen(n))
-    , inode(i)
-    , file_type(ft)
-{
-    ASSERT(name_length < (int)sizeof(name));
-    memcpy(name, n, name_length);
-    name[name_length] = '\0';
-}
-
-FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, u8 ft)
-    : name_length(nl)
-    , inode(i)
-    , file_type(ft)
-{
-    ASSERT(name_length < (int)sizeof(name));
-    memcpy(name, n, nl);
-    name[nl] = '\0';
-}
-
 FS::DirectoryEntryView::DirectoryEntryView(const StringView& n, InodeIdentifier i, u8 ft)
     : name(n)
     , inode(i)
