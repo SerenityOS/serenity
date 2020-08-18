@@ -218,7 +218,7 @@ ssize_t Process::sys$sendto(Userspace<const Syscall::SC_sendto_params*> user_par
     return result.value();
 }
 
-ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
+ssize_t Process::sys$recvfrom(Userspace<const Syscall::SC_recvfrom_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -227,18 +227,21 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
         return -EFAULT;
 
     int flags = params.flags;
-    sockaddr* addr = params.addr;
-    socklen_t* addr_length = params.addr_length;
+    Userspace<sockaddr*> user_addr = params.addr;
+    Userspace<socklen_t*> user_addr_length = params.addr_length;
 
     SmapDisabler disabler;
     if (!validate(params.buffer))
         return -EFAULT;
-    if (addr_length) {
-        if (!validate_write_typed(addr_length))
+    if (user_addr_length) {
+        socklen_t addr_length;
+        if (!validate_read_and_copy_typed(&addr_length, user_addr_length))
             return -EFAULT;
-        if (!validate_write(addr, *addr_length))
+        if (!validate_write_typed(user_addr_length))
             return -EFAULT;
-    } else if (addr) {
+        if (!validate_write(user_addr, addr_length))
+            return -EFAULT;
+    } else if (user_addr) {
         return -EINVAL;
     }
     auto description = file_description(params.sockfd);
@@ -255,7 +258,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     if (flags & MSG_DONTWAIT)
         description->set_blocking(false);
 
-    auto result = socket.recvfrom(*description, params.buffer.data, params.buffer.size, flags, addr, addr_length);
+    auto result = socket.recvfrom(*description, params.buffer.data, params.buffer.size, flags, user_addr, user_addr_length);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
 

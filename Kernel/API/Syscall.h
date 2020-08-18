@@ -298,8 +298,8 @@ struct SC_recvfrom_params {
     int sockfd;
     MutableBufferArgument<void, size_t> buffer;
     int flags;
-    sockaddr* addr;
-    socklen_t* addr_length;
+    Userspace<sockaddr*> addr;
+    Userspace<socklen_t*> addr_length;
 };
 
 struct SC_getsockopt_params {

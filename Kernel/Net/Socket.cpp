@@ -195,7 +195,7 @@ KResultOr<size_t> Socket::read(FileDescription& description, size_t, u8* buffer,
 {
     if (is_shut_down_for_reading())
         return 0;
-    return recvfrom(description, buffer, size, 0, nullptr, 0);
+    return recvfrom(description, buffer, size, 0, {}, 0);
 }
 
 KResultOr<size_t> Socket::write(FileDescription& description, size_t, const u8* data, size_t size)
