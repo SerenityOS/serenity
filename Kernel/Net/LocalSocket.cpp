@@ -260,7 +260,7 @@ bool LocalSocket::can_write(const FileDescription& description, size_t) const
     return false;
 }
 
-KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
+KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, Userspace<const sockaddr*>, socklen_t)
 {
     if (!has_attached_peer(description))
         return KResult(-EPIPE);

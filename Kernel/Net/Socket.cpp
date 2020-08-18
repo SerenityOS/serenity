@@ -202,7 +202,7 @@ KResultOr<size_t> Socket::write(FileDescription& description, size_t, const u8* 
 {
     if (is_shut_down_for_writing())
         return -EPIPE;
-    return sendto(description, data, size, 0, nullptr, 0);
+    return sendto(description, data, size, 0, {}, 0);
 }
 
 KResult Socket::shutdown(int how)
