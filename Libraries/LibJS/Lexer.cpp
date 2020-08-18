@@ -32,117 +32,143 @@
 
 namespace JS {
 
-HashMap<String, TokenType> Lexer::s_keywords;
-HashMap<String, TokenType> Lexer::s_three_char_tokens;
-HashMap<String, TokenType> Lexer::s_two_char_tokens;
-HashMap<char, TokenType> Lexer::s_single_char_tokens;
+namespace {
+template<typename K = const char*, typename V = const TokenType>
+struct JsToken {
+    K key;
+    V value;
+};
+
+}
+
+constexpr const JsToken<> s_known_keywords[] = {
+    { "await", TokenType::Await },
+    { "break", TokenType::Break },
+    { "case", TokenType::Case },
+    { "catch", TokenType::Catch },
+    { "class", TokenType::Class },
+    { "const", TokenType::Const },
+    { "continue", TokenType::Continue },
+    { "debugger", TokenType::Debugger },
+    { "default", TokenType::Default },
+    { "delete", TokenType::Delete },
+    { "do", TokenType::Do },
+    { "else", TokenType::Else },
+    { "enum", TokenType::Enum },
+    { "export", TokenType::Export },
+    { "extends", TokenType::Extends },
+    { "false", TokenType::BoolLiteral },
+    { "finally", TokenType::Finally },
+    { "for", TokenType::For },
+    { "function", TokenType::Function },
+    { "if", TokenType::If },
+    { "import", TokenType::Import },
+    { "in", TokenType::In },
+    { "instanceof", TokenType::Instanceof },
+    { "let", TokenType::Let },
+    { "new", TokenType::New },
+    { "null", TokenType::NullLiteral },
+    { "return", TokenType::Return },
+    { "super", TokenType::Super },
+    { "switch", TokenType::Switch },
+    { "this", TokenType::This },
+    { "throw", TokenType::Throw },
+    { "true", TokenType::BoolLiteral },
+    { "try", TokenType::Try },
+    { "typeof", TokenType::Typeof },
+    { "var", TokenType::Var },
+    { "void", TokenType::Void },
+    { "while", TokenType::While },
+    { "with", TokenType::With },
+    { "yield", TokenType::Yield }
+};
+
+constexpr const JsToken<> s_known_three_char_tokens[] = {
+    { "===", TokenType::EqualsEqualsEquals },
+    { "!==", TokenType::ExclamationMarkEqualsEquals },
+    { "**=", TokenType::DoubleAsteriskEquals },
+    { "<<=", TokenType::ShiftLeftEquals },
+    { ">>=", TokenType::ShiftRightEquals },
+    { ">>>", TokenType::UnsignedShiftRight },
+    { "...", TokenType::TripleDot }
+};
+
+constexpr const JsToken<> s_known_two_char_tokens[] = {
+    { "=>", TokenType::Arrow },
+    { "+=", TokenType::PlusEquals },
+    { "-=", TokenType::MinusEquals },
+    { "*=", TokenType::AsteriskEquals },
+    { "/=", TokenType::SlashEquals },
+    { "%=", TokenType::PercentEquals },
+    { "&=", TokenType::AmpersandEquals },
+    { "|=", TokenType::PipeEquals },
+    { "^=", TokenType::CaretEquals },
+    { "&&", TokenType::DoubleAmpersand },
+    { "||", TokenType::DoublePipe },
+    { "??", TokenType::DoubleQuestionMark },
+    { "**", TokenType::DoubleAsterisk },
+    { "==", TokenType::EqualsEquals },
+    { "<=", TokenType::LessThanEquals },
+    { ">=", TokenType::GreaterThanEquals },
+    { "!=", TokenType::ExclamationMarkEquals },
+    { "--", TokenType::MinusMinus },
+    { "++", TokenType::PlusPlus },
+    { "<<", TokenType::ShiftLeft },
+    { ">>", TokenType::ShiftRight },
+    { "?.", TokenType::QuestionMarkPeriod }
+};
+
+constexpr const JsToken<const char> s_known_single_char_tokens[] = {
+    { '&', TokenType::Ampersand },
+    { '*', TokenType::Asterisk },
+    { '[', TokenType::BracketOpen },
+    { ']', TokenType::BracketClose },
+    { '^', TokenType::Caret },
+    { ':', TokenType::Colon },
+    { ',', TokenType::Comma },
+    { '{', TokenType::CurlyOpen },
+    { '}', TokenType::CurlyClose },
+    { '=', TokenType::Equals },
+    { '!', TokenType::ExclamationMark },
+    { '-', TokenType::Minus },
+    { '(', TokenType::ParenOpen },
+    { ')', TokenType::ParenClose },
+    { '%', TokenType::Percent },
+    { '.', TokenType::Period },
+    { '|', TokenType::Pipe },
+    { '+', TokenType::Plus },
+    { '?', TokenType::QuestionMark },
+    { ';', TokenType::Semicolon },
+    { '/', TokenType::Slash },
+    { '~', TokenType::Tilde },
+    { '<', TokenType::LessThan },
+    { '>', TokenType::GreaterThan },
+
+};
+
+HashMap<String, TokenType> Lexer::s_keywords(array_size(s_known_keywords));
+HashMap<String, TokenType> Lexer::s_three_char_tokens(array_size(s_known_three_char_tokens));
+HashMap<String, TokenType> Lexer::s_two_char_tokens(array_size(s_known_two_char_tokens));
+HashMap<char, TokenType> Lexer::s_single_char_tokens(array_size(s_known_single_char_tokens));
 
 Lexer::Lexer(StringView source)
     : m_source(source)
     , m_current_token(TokenType::Eof, StringView(nullptr), StringView(nullptr), 0, 0)
 {
     if (s_keywords.is_empty()) {
-        s_keywords.set("await", TokenType::Await);
-        s_keywords.set("break", TokenType::Break);
-        s_keywords.set("case", TokenType::Case);
-        s_keywords.set("catch", TokenType::Catch);
-        s_keywords.set("class", TokenType::Class);
-        s_keywords.set("const", TokenType::Const);
-        s_keywords.set("continue", TokenType::Continue);
-        s_keywords.set("debugger", TokenType::Debugger);
-        s_keywords.set("default", TokenType::Default);
-        s_keywords.set("delete", TokenType::Delete);
-        s_keywords.set("do", TokenType::Do);
-        s_keywords.set("else", TokenType::Else);
-        s_keywords.set("enum", TokenType::Enum);
-        s_keywords.set("export", TokenType::Export);
-        s_keywords.set("extends", TokenType::Extends);
-        s_keywords.set("false", TokenType::BoolLiteral);
-        s_keywords.set("finally", TokenType::Finally);
-        s_keywords.set("for", TokenType::For);
-        s_keywords.set("function", TokenType::Function);
-        s_keywords.set("if", TokenType::If);
-        s_keywords.set("import", TokenType::Import);
-        s_keywords.set("in", TokenType::In);
-        s_keywords.set("instanceof", TokenType::Instanceof);
-        s_keywords.set("let", TokenType::Let);
-        s_keywords.set("new", TokenType::New);
-        s_keywords.set("null", TokenType::NullLiteral);
-        s_keywords.set("return", TokenType::Return);
-        s_keywords.set("super", TokenType::Super);
-        s_keywords.set("switch", TokenType::Switch);
-        s_keywords.set("this", TokenType::This);
-        s_keywords.set("throw", TokenType::Throw);
-        s_keywords.set("true", TokenType::BoolLiteral);
-        s_keywords.set("try", TokenType::Try);
-        s_keywords.set("typeof", TokenType::Typeof);
-        s_keywords.set("var", TokenType::Var);
-        s_keywords.set("void", TokenType::Void);
-        s_keywords.set("while", TokenType::While);
-        s_keywords.set("with", TokenType::With);
-        s_keywords.set("yield", TokenType::Yield);
+        s_keywords.set_from(s_known_keywords);
     }
 
     if (s_three_char_tokens.is_empty()) {
-        s_three_char_tokens.set("===", TokenType::EqualsEqualsEquals);
-        s_three_char_tokens.set("!==", TokenType::ExclamationMarkEqualsEquals);
-        s_three_char_tokens.set("**=", TokenType::DoubleAsteriskEquals);
-        s_three_char_tokens.set("<<=", TokenType::ShiftLeftEquals);
-        s_three_char_tokens.set(">>=", TokenType::ShiftRightEquals);
-        s_three_char_tokens.set(">>>", TokenType::UnsignedShiftRight);
-        s_three_char_tokens.set("...", TokenType::TripleDot);
+        s_three_char_tokens.set_from(s_known_three_char_tokens);
     }
 
     if (s_two_char_tokens.is_empty()) {
-        s_two_char_tokens.set("=>", TokenType::Arrow);
-        s_two_char_tokens.set("+=", TokenType::PlusEquals);
-        s_two_char_tokens.set("-=", TokenType::MinusEquals);
-        s_two_char_tokens.set("*=", TokenType::AsteriskEquals);
-        s_two_char_tokens.set("/=", TokenType::SlashEquals);
-        s_two_char_tokens.set("%=", TokenType::PercentEquals);
-        s_two_char_tokens.set("&=", TokenType::AmpersandEquals);
-        s_two_char_tokens.set("|=", TokenType::PipeEquals);
-        s_two_char_tokens.set("^=", TokenType::CaretEquals);
-        s_two_char_tokens.set("&&", TokenType::DoubleAmpersand);
-        s_two_char_tokens.set("||", TokenType::DoublePipe);
-        s_two_char_tokens.set("??", TokenType::DoubleQuestionMark);
-        s_two_char_tokens.set("**", TokenType::DoubleAsterisk);
-        s_two_char_tokens.set("==", TokenType::EqualsEquals);
-        s_two_char_tokens.set("<=", TokenType::LessThanEquals);
-        s_two_char_tokens.set(">=", TokenType::GreaterThanEquals);
-        s_two_char_tokens.set("!=", TokenType::ExclamationMarkEquals);
-        s_two_char_tokens.set("--", TokenType::MinusMinus);
-        s_two_char_tokens.set("++", TokenType::PlusPlus);
-        s_two_char_tokens.set("<<", TokenType::ShiftLeft);
-        s_two_char_tokens.set(">>", TokenType::ShiftRight);
-        s_two_char_tokens.set("?.", TokenType::QuestionMarkPeriod);
+        s_three_char_tokens.set_from(s_known_two_char_tokens);
     }
 
     if (s_single_char_tokens.is_empty()) {
-        s_single_char_tokens.set('&', TokenType::Ampersand);
-        s_single_char_tokens.set('*', TokenType::Asterisk);
-        s_single_char_tokens.set('[', TokenType::BracketOpen);
-        s_single_char_tokens.set(']', TokenType::BracketClose);
-        s_single_char_tokens.set('^', TokenType::Caret);
-        s_single_char_tokens.set(':', TokenType::Colon);
-        s_single_char_tokens.set(',', TokenType::Comma);
-        s_single_char_tokens.set('{', TokenType::CurlyOpen);
-        s_single_char_tokens.set('}', TokenType::CurlyClose);
-        s_single_char_tokens.set('=', TokenType::Equals);
-        s_single_char_tokens.set('!', TokenType::ExclamationMark);
-        s_single_char_tokens.set('-', TokenType::Minus);
-        s_single_char_tokens.set('(', TokenType::ParenOpen);
-        s_single_char_tokens.set(')', TokenType::ParenClose);
-        s_single_char_tokens.set('%', TokenType::Percent);
-        s_single_char_tokens.set('.', TokenType::Period);
-        s_single_char_tokens.set('|', TokenType::Pipe);
-        s_single_char_tokens.set('+', TokenType::Plus);
-        s_single_char_tokens.set('?', TokenType::QuestionMark);
-        s_single_char_tokens.set(';', TokenType::Semicolon);
-        s_single_char_tokens.set('/', TokenType::Slash);
-        s_single_char_tokens.set('~', TokenType::Tilde);
-        s_single_char_tokens.set('<', TokenType::LessThan);
-        s_single_char_tokens.set('>', TokenType::GreaterThan);
+        s_single_char_tokens.set_from(s_known_single_char_tokens);
     }
     consume();
 }
@@ -248,17 +274,17 @@ bool Lexer::slash_means_division() const
 {
     auto type = m_current_token.type();
     return type == TokenType::BigIntLiteral
-           || type == TokenType::BoolLiteral
-           || type == TokenType::BracketClose
-           || type == TokenType::CurlyClose
-           || type == TokenType::Identifier
-           || type == TokenType::NullLiteral
-           || type == TokenType::NumericLiteral
-           || type == TokenType::ParenClose
-           || type == TokenType::RegexLiteral
-           || type == TokenType::StringLiteral
-           || type == TokenType::TemplateLiteralEnd
-           || type == TokenType::This;
+        || type == TokenType::BoolLiteral
+        || type == TokenType::BracketClose
+        || type == TokenType::CurlyClose
+        || type == TokenType::Identifier
+        || type == TokenType::NullLiteral
+        || type == TokenType::NumericLiteral
+        || type == TokenType::ParenClose
+        || type == TokenType::RegexLiteral
+        || type == TokenType::StringLiteral
+        || type == TokenType::TemplateLiteralEnd
+        || type == TokenType::This;
 }
 
 Token Lexer::next()
