@@ -124,7 +124,7 @@ InodeMetadata TmpFSInode::metadata() const
     return m_metadata;
 }
 
-KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
     LOCKER(m_lock, Lock::Mode::Shared);
 
@@ -134,8 +134,10 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry
     callback({ ".", identifier(), 0 });
     callback({ "..", m_parent, 0 });
 
-    for (auto& it : m_children)
-        callback(it.value.entry);
+    for (auto& it : m_children) {
+        auto& entry = it.value.entry;
+        callback({ { entry.name, entry.name_length }, entry.inode, entry.file_type });
+    }
     return KSuccess;
 }
 

@@ -70,7 +70,7 @@ public:
     KResultOr<KBuffer> read_entire(FileDescription* = nullptr) const;
 
     virtual ssize_t read_bytes(off_t, ssize_t, u8* buffer, FileDescription*) const = 0;
-    virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const = 0;
+    virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const = 0;
     virtual RefPtr<Inode> lookup(StringView name) = 0;
     virtual ssize_t write_bytes(off_t, ssize_t, const u8* data, FileDescription*) = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) = 0;

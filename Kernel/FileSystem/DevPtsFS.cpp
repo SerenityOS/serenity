@@ -136,18 +136,18 @@ InodeMetadata DevPtsFSInode::metadata() const
     return m_metadata;
 }
 
-KResult DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
     if (identifier().index() > 1)
         return KResult(-ENOTDIR);
 
-    callback({ ".", 1, identifier(), 0 });
-    callback({ "..", 2, identifier(), 0 });
+    callback({ ".", identifier(), 0 });
+    callback({ "..", identifier(), 0 });
 
     for (unsigned pty_index : *ptys) {
         String name = String::number(pty_index);
         InodeIdentifier identifier = { fsid(), pty_index_to_inode_index(pty_index) };
-        callback({ name.characters(), name.length(), identifier, 0 });
+        callback({ name, identifier, 0 });
     }
 
     return KSuccess;

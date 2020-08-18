@@ -849,7 +849,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     return nwritten;
 }
 
-KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
+KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
@@ -871,7 +871,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
 #ifdef EXT2_DEBUG
             dbg() << "Ext2Inode::traverse_as_directory: " << entry->inode << ", name_len: " << entry->name_len << ", rec_len: " << entry->rec_len << ", file_type: " << entry->file_type << ", name: " << String(entry->name, entry->name_len);
 #endif
-            if (!callback({ entry->name, entry->name_len, { fsid(), entry->inode }, entry->file_type }))
+            if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }))
                 break;
         }
         entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
@@ -961,7 +961,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
             name_already_exists = true;
             return false;
         }
-        entries.append(entry);
+        entries.append({ entry.name.characters_without_null_termination(), entry.name.length(), entry.inode, entry.file_type });
         return true;
     });
 
@@ -1008,7 +1008,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     Vector<FS::DirectoryEntry> entries;
     KResult result = traverse_as_directory([&](auto& entry) {
         if (name != entry.name)
-            entries.append(entry);
+            entries.append({ entry.name.characters_without_null_termination(), entry.name.length(), entry.inode, entry.file_type });
         return true;
     });
     if (result.is_error())
@@ -1478,7 +1478,7 @@ void Ext2FSInode::populate_lookup_cache() const
     HashMap<String, unsigned> children;
 
     KResult result = traverse_as_directory([&children](auto& entry) {
-        children.set(String(entry.name, entry.name_length), entry.inode.index());
+        children.set(entry.name, entry.inode.index());
         return true;
     });
 
