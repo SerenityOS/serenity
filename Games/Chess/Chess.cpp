@@ -27,8 +27,29 @@
 #include "Chess.h"
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <stdlib.h>
+
+String Chess::char_for_piece(Chess::Type type)
+{
+    switch (type) {
+    case Type::Knight:
+        return "N";
+    case Type::Bishop:
+        return "B";
+    case Type::Rook:
+        return "R";
+    case Type::Queen:
+        return "Q";
+    case Type::King:
+        return "K";
+    case Type::Pawn:
+    default:
+        return "";
+    }
+}
 
 Chess::Square::Square(const StringView& name)
 {
@@ -49,6 +70,23 @@ Chess::Square::Square(const StringView& name)
     } else {
         ASSERT_NOT_REACHED();
     }
+}
+
+String Chess::Square::to_algebraic() const
+{
+    StringBuilder builder;
+    builder.append(file - 'a');
+    builder.append(rank - '1');
+    return builder.build();
+}
+
+String Chess::Move::to_long_algebraic() const
+{
+    StringBuilder builder;
+    builder.append(from.to_algebraic());
+    builder.append(to.to_algebraic());
+    builder.append(char_for_piece(promote_to).to_lowercase());
+    return builder.build();
 }
 
 Chess::Chess()
