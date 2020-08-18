@@ -283,39 +283,48 @@ void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
     }
 }
 
+Gfx::Color TwentyFortyEightGame::background_color_for_cell(u32 value)
+{
+    switch (value) {
+    case 0:
+        return Color::from_rgb(0xcdc1b4);
+    case 2:
+        return Color::from_rgb(0xeee4da);
+    case 4:
+        return Color::from_rgb(0xede0c8);
+    case 8:
+        return Color::from_rgb(0xf2b179);
+    case 16:
+        return Color::from_rgb(0xf59563);
+    case 32:
+        return Color::from_rgb(0xf67c5f);
+    case 64:
+        return Color::from_rgb(0xf65e3b);
+    case 128:
+        return Color::from_rgb(0xedcf72);
+    case 256:
+        return Color::from_rgb(0xedcc61);
+    case 512:
+        return Color::from_rgb(0xedc850);
+    case 1024:
+        return Color::from_rgb(0xedc53f);
+    case 2048:
+        return Color::from_rgb(0xedc22e);
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+Gfx::Color TwentyFortyEightGame::text_color_for_cell(u32 value)
+{
+    if (value <= 4)
+        return Color::from_rgb(0x776e65);
+    return Color::from_rgb(0xf9f6f2);
+}
+
 void TwentyFortyEightGame::paint_event(GUI::PaintEvent&)
 {
-    static auto color_for_entry = [&](u32 entry) -> Color {
-        constexpr static u8 blend_alpha = 128;
-        switch (entry) {
-        case 0:
-            return palette().base().lightened();
-        case 2:
-            return palette().base().blend(Color(Color::LightGray).with_alpha(blend_alpha));
-        case 4:
-            return palette().base().blend(Color(Color::WarmGray).with_alpha(blend_alpha));
-        case 8:
-            return palette().base().blend(Color(Color::MidMagenta).with_alpha(blend_alpha));
-        case 16:
-            return palette().base().blend(Color(Color::Magenta).with_alpha(blend_alpha));
-        case 32:
-            return palette().base().blend(Color(Color::Cyan).with_alpha(blend_alpha));
-        case 64:
-            return palette().base().blend(Color(Color::DarkCyan).with_alpha(blend_alpha));
-        case 128:
-            return palette().base().blend(Color(Color::MidBlue).with_alpha(blend_alpha));
-        case 256:
-            return palette().base().blend(Color(Color::Blue).with_alpha(blend_alpha));
-        case 512:
-            return palette().base().blend(Color(Color::DarkBlue).with_alpha(blend_alpha));
-        case 1024:
-            return palette().base().blend(Color(Color::Yellow).with_alpha(blend_alpha));
-        case 2048:
-            return palette().base().blend(Color(Color::Green).with_alpha(blend_alpha));
-        default:
-            ASSERT_NOT_REACHED();
-        }
-    };
+    Color background_color = Color::from_rgb(0xbbada0);
 
     GUI::Painter painter(*this);
 
@@ -330,7 +339,7 @@ void TwentyFortyEightGame::paint_event(GUI::PaintEvent&)
         static_cast<int>(m_padding + (m_cell_size + m_padding) * m_rows)
     };
     field_rect.center_within({ 0, score_height, width(), height() - score_height });
-    painter.fill_rect(field_rect, Color::White);
+    painter.fill_rect(field_rect, background_color);
 
     for (auto column = 0; column < m_columns; ++column) {
         for (auto row = 0; row < m_rows; ++row) {
@@ -341,9 +350,9 @@ void TwentyFortyEightGame::paint_event(GUI::PaintEvent&)
                 m_cell_size,
             };
             auto entry = m_states.last().board[row][column];
-            painter.fill_rect(rect, color_for_entry(entry));
+            painter.fill_rect(rect, background_color_for_cell(entry));
             if (entry > 0)
-                painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, palette().color(ColorRole::BaseText));
+                painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
         }
     }
 }

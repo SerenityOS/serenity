@@ -61,6 +61,8 @@ private:
     u32 m_starting_tile { 2 };
     size_t m_current_turn { 0 };
 
+    Color background_color_for_cell(u32 value);
+    Color text_color_for_cell(u32 value);
 
     float m_padding { 0 };
     float m_cell_size { 0 };
