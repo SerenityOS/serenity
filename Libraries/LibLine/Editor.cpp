@@ -163,11 +163,6 @@ Editor::Editor(Configuration configuration)
     m_pending_chars = ByteBuffer::create_uninitialized(0);
     get_terminal_size();
     m_suggestion_display = make<XtermSuggestionDisplay>(m_num_lines, m_num_columns);
-
-    set_default_keybinds();
-
-    for (auto& keybind : m_configuration.keybindings)
-        register_key_input_callback(keybind);
 }
 
 Editor::~Editor()
@@ -404,6 +399,11 @@ void Editor::initialize()
     }
 
     m_termios = termios;
+
+    set_default_keybinds();
+    for (auto& keybind : m_configuration.keybindings)
+        register_key_input_callback(keybind);
+
     m_initialized = true;
 }
 
