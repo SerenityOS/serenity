@@ -24,9 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Assertions.h>
-#include <AK/HashMap.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
@@ -34,8 +31,8 @@
 
 namespace Kernel {
 
-ProcessorInfo::ProcessorInfo(Processor& processor):
-    m_processor(processor)
+ProcessorInfo::ProcessorInfo(Processor& processor)
+    : m_processor(processor)
 {
     {
         CPUID cpuid(0);
