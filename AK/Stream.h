@@ -309,8 +309,26 @@ public:
         }
 
         m_read_offset += nread;
+
         try_discard_chunks();
+
         return nread;
+    }
+
+    size_t read(Bytes bytes, size_t offset)
+    {
+        const auto backup = this->roffset();
+
+        bool do_discard_chunks = false;
+        exchange(m_do_discard_chunks, do_discard_chunks);
+
+        rseek(offset);
+        const auto count = read(bytes);
+        rseek(backup);
+
+        exchange(m_do_discard_chunks, do_discard_chunks);
+
+        return count;
     }
 
     bool read_or_error(Bytes bytes) override
@@ -344,20 +362,24 @@ public:
         return true;
     }
 
-    void seek(size_t offset)
+    size_t roffset() const { return m_read_offset; }
+    size_t woffset() const { return m_write_offset; }
+
+    void rseek(size_t offset)
     {
         ASSERT(offset >= m_base_offset);
         ASSERT(offset <= m_write_offset);
         m_read_offset = offset;
     }
 
-    size_t offset() const { return m_read_offset; }
-
     size_t remaining() const { return m_write_offset - m_read_offset; }
 
 private:
     void try_discard_chunks()
     {
+        if (!m_do_discard_chunks)
+            return;
+
         while (m_read_offset - m_base_offset >= history_size + chunk_size) {
             m_chunks.take_first();
             m_base_offset += chunk_size;
@@ -368,7 +390,9 @@ private:
     size_t m_write_offset { 0 };
     size_t m_read_offset { 0 };
     size_t m_base_offset { 0 };
+    bool m_do_discard_chunks { false };
 };
+
 }
 
 using AK::DuplexMemoryStream;

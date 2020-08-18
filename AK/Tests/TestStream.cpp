@@ -146,7 +146,7 @@ TEST_CASE(duplex_seek_into_history)
     // We now have 128KiB on the stream. Because the stream has a
     // history size of 64KiB, we should be able to seek to 64KiB.
     static_assert(DuplexMemoryStream::history_size == 64 * 1024);
-    stream.seek(64 * 1024);
+    stream.rseek(64 * 1024);
 
     EXPECT_EQ(stream.remaining(), 192 * 1024ul);
 
@@ -166,10 +166,10 @@ TEST_CASE(duplex_wild_seeking)
 
     stream << input2;
     stream << input0 << input1;
-    stream.seek(0);
+    stream.rseek(0);
     stream << input2 << input0;
 
-    stream.seek(4);
+    stream.rseek(4);
     stream >> output0 >> output1 >> output2;
 
     EXPECT(!stream.eof());

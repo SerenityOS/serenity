@@ -49,4 +49,5 @@ private:
     ReadonlyBytes m_input_data;
     ReadonlyBytes m_data_bytes;
 };
+
 }
