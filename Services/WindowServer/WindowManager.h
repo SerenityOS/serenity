@@ -182,7 +182,7 @@ public:
     void maximize_windows(Window&, bool);
 
     template<typename Function>
-    void for_each_window_in_modal_stack(Window& window, Function f)
+    IterationDecision for_each_window_in_modal_stack(Window& window, Function f)
     {
         auto* blocking_modal_window = window.is_blocked_by_modal_window();
         if (blocking_modal_window || window.is_modal()) {
@@ -198,13 +198,15 @@ public:
             }
             if (!modal_stack.is_empty()) {
                 for (size_t i = modal_stack.size(); i > 0; i--) {
-                    f(*modal_stack[i - 1], false);
+                    IterationDecision decision = f(*modal_stack[i - 1], false);
+                    if (decision != IterationDecision::Continue)
+                        return decision;
                 }
             }
-            f(*modal_stack_top, true);
+            return f(*modal_stack_top, true);
         } else {
             // Not a modal window stack, just "iterate" over this window
-            f(window, true);
+            return f(window, true);
         }
     }
 

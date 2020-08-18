@@ -228,6 +228,7 @@ void WindowManager::move_to_front_and_make_active(Window& window)
     // active input from any accessory window)
     for_each_window_in_modal_stack(window, [&](auto& w, bool is_stack_top) {
         move_window_to_front(w, is_stack_top, is_stack_top);
+        return IterationDecision::Continue;
     });
 
     Compositor::the().invalidate_occlusions();
@@ -1416,6 +1417,7 @@ void WindowManager::minimize_windows(Window& window, bool minimized)
 {
     for_each_window_in_modal_stack(window, [&](auto& w, bool) {
         w.set_minimized(minimized);
+        return IterationDecision::Continue;
     });
 }
 
@@ -1426,6 +1428,7 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
             w.set_maximized(maximized);
         if (w.is_minimized())
             w.set_minimized(false);
+        return IterationDecision::Continue;
     });
 }
 
