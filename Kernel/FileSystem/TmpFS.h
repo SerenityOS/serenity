@@ -104,7 +104,7 @@ private:
 
     Optional<KBuffer> m_content;
     struct Child {
-        FS::DirectoryEntry entry;
+        String name;
         NonnullRefPtr<TmpFSInode> inode;
     };
     HashMap<String, Child> m_children;
