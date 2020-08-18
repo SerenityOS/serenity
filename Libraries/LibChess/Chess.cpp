@@ -24,15 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Chess.h"
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <LibChess/Chess.h>
 #include <stdlib.h>
 
-String Chess::char_for_piece(Chess::Type type)
+namespace Chess {
+
+String char_for_piece(Chess::Type type)
 {
     switch (type) {
     case Type::Knight:
@@ -51,7 +53,12 @@ String Chess::char_for_piece(Chess::Type type)
     }
 }
 
-Chess::Square::Square(const StringView& name)
+Colour opposing_colour(Colour colour)
+{
+    return (colour == Colour::White) ? Colour::Black : Colour::White;
+}
+
+Square::Square(const StringView& name)
 {
     ASSERT(name.length() == 2);
     char filec = name[0];
@@ -72,7 +79,7 @@ Chess::Square::Square(const StringView& name)
     }
 }
 
-String Chess::Square::to_algebraic() const
+String Square::to_algebraic() const
 {
     StringBuilder builder;
     builder.append(file - 'a');
@@ -80,7 +87,7 @@ String Chess::Square::to_algebraic() const
     return builder.build();
 }
 
-String Chess::Move::to_long_algebraic() const
+String Move::to_long_algebraic() const
 {
     StringBuilder builder;
     builder.append(from.to_algebraic());
@@ -89,7 +96,7 @@ String Chess::Move::to_long_algebraic() const
     return builder.build();
 }
 
-Chess::Chess()
+Board::Board()
 {
     // Fill empty spaces.
     for (unsigned rank = 2; rank < 6; ++rank) {
@@ -129,21 +136,21 @@ Chess::Chess()
     set_piece(Square("h8"), { Colour::Black, Type::Rook });
 }
 
-Chess::Piece Chess::get_piece(const Square& square) const
+Piece Board::get_piece(const Square& square) const
 {
     ASSERT(square.rank < 8);
     ASSERT(square.file < 8);
     return m_board[square.rank][square.file];
 }
 
-Chess::Piece Chess::set_piece(const Square& square, const Piece& piece)
+Piece Board::set_piece(const Square& square, const Piece& piece)
 {
     ASSERT(square.rank < 8);
     ASSERT(square.file < 8);
     return m_board[square.rank][square.file] = piece;
 }
 
-bool Chess::is_legal(const Move& move, Colour colour) const
+bool Board::is_legal(const Move& move, Colour colour) const
 {
     if (colour == Colour::None)
         colour = turn();
@@ -151,7 +158,7 @@ bool Chess::is_legal(const Move& move, Colour colour) const
     if (!is_legal_no_check(move, colour))
         return false;
 
-    Chess clone = *this;
+    Board clone = *this;
     clone.apply_illegal_move(move, colour);
     if (clone.in_check(colour))
         return false;
@@ -172,7 +179,7 @@ bool Chess::is_legal(const Move& move, Colour colour) const
         }
     }
     for (auto& square : check_squares) {
-        Chess clone = *this;
+        Board clone = *this;
         clone.set_piece(move.from, EmptyPiece);
         clone.set_piece(square, { colour, Type::King });
         if (clone.in_check(colour))
@@ -182,7 +189,7 @@ bool Chess::is_legal(const Move& move, Colour colour) const
     return true;
 }
 
-bool Chess::is_legal_no_check(const Move& move, Colour colour) const
+bool Board::is_legal_no_check(const Move& move, Colour colour) const
 {
     auto piece = get_piece(move.from);
     if (piece.colour != colour)
@@ -314,7 +321,7 @@ bool Chess::is_legal_no_check(const Move& move, Colour colour) const
     return false;
 }
 
-bool Chess::in_check(Colour colour) const
+bool Board::in_check(Colour colour) const
 {
     Square king_square = { 50, 50 };
     Square::for_each([&](const Square& square) {
@@ -341,7 +348,7 @@ bool Chess::in_check(Colour colour) const
     return check;
 }
 
-bool Chess::apply_move(const Move& move, Colour colour)
+bool Board::apply_move(const Move& move, Colour colour)
 {
     if (colour == Colour::None)
         colour = turn();
@@ -352,9 +359,9 @@ bool Chess::apply_move(const Move& move, Colour colour)
     return apply_illegal_move(move, colour);
 }
 
-bool Chess::apply_illegal_move(const Move& move, Colour colour)
+bool Board::apply_illegal_move(const Move& move, Colour colour)
 {
-    Chess clone = *this;
+    Board clone = *this;
     clone.m_previous_states = {};
     auto state_count = 0;
     if (m_previous_states.contains(clone))
@@ -431,7 +438,7 @@ bool Chess::apply_illegal_move(const Move& move, Colour colour)
     return true;
 }
 
-Chess::Result Chess::game_result() const
+Board::Result Board::game_result() const
 {
     bool sufficient_material = false;
     bool no_more_pieces_allowed = false;
@@ -501,7 +508,7 @@ Chess::Result Chess::game_result() const
     return Result::StaleMate;
 }
 
-bool Chess::is_promotion_move(const Move& move, Colour colour) const
+bool Board::is_promotion_move(const Move& move, Colour colour) const
 {
     if (colour == Colour::None)
         colour = turn();
@@ -517,7 +524,7 @@ bool Chess::is_promotion_move(const Move& move, Colour colour) const
     return false;
 }
 
-bool Chess::operator==(const Chess& other) const
+bool Board::operator==(const Board& other) const
 {
     bool equal_squares = true;
     Square::for_each([&](Square sq) {
@@ -540,4 +547,6 @@ bool Chess::operator==(const Chess& other) const
         return false;
 
     return turn() == other.turn();
+}
+
 }

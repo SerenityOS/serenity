@@ -1,5 +1,6 @@
 add_subdirectory(LibAudio)
 add_subdirectory(LibC)
+add_subdirectory(LibChess)
 add_subdirectory(LibCore)
 add_subdirectory(LibCrypt)
 add_subdirectory(LibCrypto)
