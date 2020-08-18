@@ -46,6 +46,7 @@ public:
 
 private:
     TwentyFortyEightGame();
+    virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
@@ -59,6 +60,10 @@ private:
     int m_columns { 4 };
     u32 m_starting_tile { 2 };
     size_t m_current_turn { 0 };
+
+
+    float m_padding { 0 };
+    float m_cell_size { 0 };
 
     Vector<State, 16> m_states;
 };

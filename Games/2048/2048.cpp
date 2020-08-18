@@ -213,6 +213,17 @@ static bool is_stalled(const TwentyFortyEightGame::State& state)
     return true;
 }
 
+void TwentyFortyEightGame::resize_event(GUI::ResizeEvent&)
+{
+    int score_height = font().glyph_height() + 2;
+
+    constexpr float padding_ratio = 7;
+    m_padding = min(
+        width() / (m_columns * (padding_ratio + 1) + 1),
+        (height() - score_height) / (m_rows * (padding_ratio + 1) + 1));
+    m_cell_size = m_padding * padding_ratio;
+}
+
 void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
 {
     auto& previous_state = m_states.last();
@@ -221,19 +232,19 @@ void TwentyFortyEightGame::keydown_event(GUI::KeyEvent& event)
     switch (event.key()) {
     case KeyCode::Key_A:
     case KeyCode::Key_Left:
-        new_state.board = transpose(slide_left(transpose(previous_state.board), successful_merge_score));
+        new_state.board = slide_left(previous_state.board, successful_merge_score);
         break;
     case KeyCode::Key_D:
     case KeyCode::Key_Right:
-        new_state.board = transpose(reverse(slide_left(reverse(transpose(previous_state.board)), successful_merge_score)));
+        new_state.board = reverse(slide_left(reverse(previous_state.board), successful_merge_score));
         break;
     case KeyCode::Key_W:
     case KeyCode::Key_Up:
-        new_state.board = slide_left(previous_state.board, successful_merge_score);
+        new_state.board = transpose(slide_left(transpose(previous_state.board), successful_merge_score));
         break;
     case KeyCode::Key_S:
     case KeyCode::Key_Down:
-        new_state.board = reverse(slide_left(reverse(previous_state.board), successful_merge_score));
+        new_state.board = transpose(reverse(slide_left(reverse(transpose(previous_state.board)), successful_merge_score)));
         break;
     default:
         return;
@@ -310,25 +321,30 @@ void TwentyFortyEightGame::paint_event(GUI::PaintEvent&)
 
     painter.draw_text(score_rect(), m_states.last().score_text, font(), Gfx::TextAlignment::TopLeft, palette().color(ColorRole::BaseText));
 
-    painter.translate(0, font().glyph_height() + 2);
+    int score_height = font().glyph_height() + 2;
 
-    constexpr size_t column_padding = 2, row_padding = 2;
-    size_t column_offset = column_padding, row_offset = row_padding;
-    float column_size = (height() - font().glyph_height() - 2 - column_padding) / m_columns, row_size = (width() - 2 * row_padding) / m_rows;
+    Gfx::IntRect field_rect {
+        0,
+        0,
+        static_cast<int>(m_padding + (m_cell_size + m_padding) * m_columns),
+        static_cast<int>(m_padding + (m_cell_size + m_padding) * m_rows)
+    };
+    field_rect.center_within({ 0, score_height, width(), height() - score_height });
+    painter.fill_rect(field_rect, Color::White);
 
     for (auto column = 0; column < m_columns; ++column) {
         for (auto row = 0; row < m_rows; ++row) {
-            auto rect = Gfx::IntRect(column_offset, row_offset, column_size - column_padding, row_size - row_padding);
-            painter.draw_rect(rect, Color::White);
+            auto rect = Gfx::IntRect {
+                field_rect.x() + m_padding + (m_cell_size + m_padding) * column,
+                field_rect.y() + m_padding + (m_cell_size + m_padding) * row,
+                m_cell_size,
+                m_cell_size,
+            };
             auto entry = m_states.last().board[row][column];
-            painter.fill_rect(rect.shrunken(1, 1), color_for_entry(entry));
+            painter.fill_rect(rect, color_for_entry(entry));
             if (entry > 0)
                 painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, palette().color(ColorRole::BaseText));
-
-            column_offset += column_size;
         }
-        column_offset = column_padding;
-        row_offset += row_size;
     }
 }
 
