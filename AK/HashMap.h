@@ -48,6 +48,10 @@ private:
 
 public:
     HashMap() {}
+    HashMap(size_t capacity)
+        : m_table(capacity)
+    {
+    }
 
     bool is_empty() const { return m_table.is_empty(); }
     size_t size() const { return m_table.size(); }
@@ -56,6 +60,16 @@ public:
 
     HashSetResult set(const K& key, const V& value) { return m_table.set({ key, value }); }
     HashSetResult set(const K& key, V&& value) { return m_table.set({ key, move(value) }); }
+
+    template<typename U, size_t N>
+    void set_from(U (&from_array)[N])
+    {
+        ensure_capacity(size() + N);
+        for (size_t i = 0; i < N; ++i) {
+            set(from_array[i].key, from_array[i].value);
+        }
+    }
+
     bool remove(const K& key)
     {
         auto it = find(key);
