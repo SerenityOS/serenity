@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
     main_widget.set_fill_with_background_color(true);
 
-    Game game { 4, 4 };
+    Game game { 4 };
 
     auto& board_view = main_widget.add<BoardView>(&game.board());
     board_view.set_focus(true);
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     update();
 
     auto start_a_new_game = [&]() {
-        game = Game(4, 4);
+        game = Game(4);
         update();
     };
 

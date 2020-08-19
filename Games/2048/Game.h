@@ -30,7 +30,7 @@
 
 class Game final {
 public:
-    Game(size_t rows, size_t columns);
+    Game(size_t);
     Game(const Game&) = default;
 
     enum class MoveOutcome {
@@ -59,8 +59,7 @@ public:
 private:
     void add_random_tile();
 
-    size_t m_rows { 0 };
-    size_t m_columns { 0 };
+    size_t m_grid_size { 0 };
 
     Board m_board;
     size_t m_score { 0 };
