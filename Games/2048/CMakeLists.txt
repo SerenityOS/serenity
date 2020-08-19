@@ -1,6 +1,7 @@
 set(SOURCES
     BoardView.cpp
     Game.cpp
+    GameSizeDialog.cpp
     main.cpp
 )
 
