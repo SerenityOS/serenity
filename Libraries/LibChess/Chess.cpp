@@ -53,6 +53,25 @@ String char_for_piece(Chess::Type type)
     }
 }
 
+Chess::Type piece_for_char_promotion(const StringView& str)
+{
+    String string = String(str).to_lowercase();
+    if (string == "")
+        return Type::None;
+    if (string == "n")
+        return Type::Knight;
+    if (string == "b")
+        return Type::Bishop;
+    if (string == "r")
+        return Type::Rook;
+    if (string == "q")
+        return Type::Queen;
+    if (string == "k")
+        return Type::King;
+
+    return Type::None;
+}
+
 Colour opposing_colour(Colour colour)
 {
     return (colour == Colour::White) ? Colour::Black : Colour::White;
@@ -82,9 +101,16 @@ Square::Square(const StringView& name)
 String Square::to_algebraic() const
 {
     StringBuilder builder;
-    builder.append(file - 'a');
-    builder.append(rank - '1');
+    builder.append(file + 'a');
+    builder.append(rank + '1');
     return builder.build();
+}
+
+Move::Move(const StringView& algebraic)
+    : from(algebraic.substring_view(0, 2))
+    , to(algebraic.substring_view(2, 2))
+    , promote_to(piece_for_char_promotion((algebraic.length() >= 5) ? algebraic.substring_view(4, 1) : ""))
+{
 }
 
 String Move::to_long_algebraic() const

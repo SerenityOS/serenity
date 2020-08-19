@@ -45,6 +45,7 @@ enum class Type {
 };
 
 String char_for_piece(Type type);
+Chess::Type piece_for_char_promotion(const StringView& str);
 
 enum class Colour {
     White,
