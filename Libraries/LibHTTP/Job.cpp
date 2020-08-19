@@ -117,12 +117,12 @@ void Job::on_socket_connected()
             m_state = State::InHeaders;
             return;
         }
-        if (m_state == State::InHeaders || m_state == State::AfterChunkedEncodingTrailer) {
+        if (m_state == State::InHeaders || m_state == State::Trailers) {
             if (!can_read_line())
                 return;
             auto line = read_line(PAGE_SIZE);
             if (line.is_null()) {
-                if (m_state == State::AfterChunkedEncodingTrailer) {
+                if (m_state == State::Trailers) {
                     // Some servers like to send two ending chunks
                     // use this fact as an excuse to ignore anything after the last chunk
                     // that is not a valid trailing header.
@@ -133,7 +133,7 @@ void Job::on_socket_connected()
             }
             auto chomped_line = String::copy(line, Chomp);
             if (chomped_line.is_empty()) {
-                if (m_state == State::AfterChunkedEncodingTrailer) {
+                if (m_state == State::Trailers) {
                     return finish_up();
                 } else {
                     m_state = State::InBody;
@@ -142,7 +142,7 @@ void Job::on_socket_connected()
             }
             auto parts = chomped_line.split(':');
             if (parts.is_empty()) {
-                if (m_state == State::AfterChunkedEncodingTrailer) {
+                if (m_state == State::Trailers) {
                     // Some servers like to send two ending chunks
                     // use this fact as an excuse to ignore anything after the last chunk
                     // that is not a valid trailing header.
@@ -153,7 +153,7 @@ void Job::on_socket_connected()
             }
             auto name = parts[0];
             if (chomped_line.length() < name.length() + 2) {
-                if (m_state == State::AfterChunkedEncodingTrailer) {
+                if (m_state == State::Trailers) {
                     // Some servers like to send two ending chunks
                     // use this fact as an excuse to ignore anything after the last chunk
                     // that is not a valid trailing header.
@@ -186,7 +186,7 @@ void Job::on_socket_connected()
 #endif
                     if (size_lines.size() == 0) {
                         dbg() << "Job: Reached end of stream";
-                        m_state = State::AfterChunkedEncodingTrailer;
+                        finish_up();
                         return IterationDecision::Break;
                     } else {
                         auto chunk = size_lines[0].split_view(';', true);
@@ -264,6 +264,12 @@ void Job::on_socket_connected()
 #ifdef JOB_DEBUG
                     dbg() << "Job: Finished a chunk of " << m_current_chunk_total_size.value() << " bytes";
 #endif
+
+                    if (m_current_chunk_total_size.value() == 0) {
+                        m_state = State::Trailers;
+                        return IterationDecision::Break;
+                    }
+
                     // we've read everything, now let's get the next chunk
                     size = -1;
                     auto line = read_line(PAGE_SIZE);
@@ -271,11 +277,6 @@ void Job::on_socket_connected()
                     dbg() << "Line following (should be empty): _" << line << "_";
 #endif
                     (void)line;
-
-                    if (m_current_chunk_total_size.value() == 0) {
-                        m_state = State::AfterChunkedEncodingTrailer;
-                        return IterationDecision::Break;
-                    }
                 }
                 m_current_chunk_remaining_size = size;
             }

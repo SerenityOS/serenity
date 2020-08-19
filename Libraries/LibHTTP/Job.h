@@ -65,8 +65,8 @@ protected:
         InStatus,
         InHeaders,
         InBody,
+        Trailers,
         Finished,
-        AfterChunkedEncodingTrailer,
     };
 
     HttpRequest m_request;
