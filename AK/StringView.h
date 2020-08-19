@@ -57,6 +57,11 @@ public:
         , m_length(cstring ? __builtin_strlen(cstring) : 0)
     {
     }
+    ALWAYS_INLINE StringView(ReadonlyBytes bytes)
+        : m_characters(reinterpret_cast<const char*>(bytes.data()))
+        , m_length(bytes.size())
+    {
+    }
 
     StringView(const ByteBuffer&);
     StringView(const String&);
