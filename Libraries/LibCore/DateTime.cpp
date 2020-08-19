@@ -146,7 +146,7 @@ String DateTime::to_string(const String& format) const
     };
     const char mon_long_names[12][10] = {
         "January", "February", "March", "April", "May", "June",
-        "July", "Auguest", "September", "October", "November", "December"
+        "July", "August", "September", "October", "November", "December"
     };
 
     struct tm tm;
