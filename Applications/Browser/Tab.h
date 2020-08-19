@@ -109,6 +109,8 @@ private:
 
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;
+
+    bool m_is_history_navigation { false };
 };
 
 URL url_from_user_input(const String& input);
