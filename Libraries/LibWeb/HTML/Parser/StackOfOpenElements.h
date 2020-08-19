@@ -65,7 +65,11 @@ public:
 
     DOM::Element* topmost_special_node_below(const DOM::Element&);
 
-    DOM::Element* last_element_with_tag_name(const FlyString&);
+    struct LastElementResult {
+        DOM::Element* element;
+        ssize_t index;
+    };
+    LastElementResult last_element_with_tag_name(const FlyString&);
     DOM::Element* element_before(const DOM::Element&);
 
 private:

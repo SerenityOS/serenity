@@ -159,6 +159,7 @@ namespace Web::Bindings {
 class CanvasRenderingContext2DWrapper;
 class CharacterDataWrapper;
 class CommentWrapper;
+class DocumentFragmentWrapper;
 class DocumentTypeWrapper;
 class DocumentWrapper;
 class ElementWrapper;

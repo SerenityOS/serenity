@@ -36,6 +36,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutText.h>
@@ -67,9 +68,14 @@ void dump_tree(const DOM::Node& node)
     }
     ++indent;
     if (is<DOM::ParentNode>(node)) {
-        static_cast<const DOM::ParentNode&>(node).for_each_child([](auto& child) {
-            dump_tree(child);
-        });
+        if (!is<HTML::HTMLTemplateElement>(node)) {
+            static_cast<const DOM::ParentNode&>(node).for_each_child([](auto& child) {
+                dump_tree(child);
+            });
+        } else {
+            auto& template_element = downcast<HTML::HTMLTemplateElement>(node);
+            dump_tree(template_element.content());
+        }
     }
     --indent;
 }
