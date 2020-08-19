@@ -44,7 +44,18 @@ void BoardView::set_board(const Game::Board* board)
     if (m_board == board)
         return;
 
+    if (!board) {
+        m_board = nullptr;
+        return;
+    }
+
+    bool must_resize = !m_board || m_board->size() != board->size();
+
     m_board = board;
+
+    if (must_resize)
+        resize();
+
     update();
 }
 
@@ -89,6 +100,11 @@ size_t BoardView::columns() const
 }
 
 void BoardView::resize_event(GUI::ResizeEvent&)
+{
+    resize();
+}
+
+void BoardView::resize()
 {
     constexpr float padding_ratio = 7;
     m_padding = min(
@@ -154,7 +170,8 @@ Gfx::Color BoardView::background_color_for_cell(u32 value)
     case 2048:
         return Color::from_rgb(0xedc22e);
     default:
-        ASSERT_NOT_REACHED();
+        ASSERT(value > 2048);
+        return Color::from_rgb(0x3c3a32);
     }
 }
 

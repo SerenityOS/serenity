@@ -25,11 +25,19 @@
  */
 
 #include "Game.h"
+#include <AK/String.h>
 #include <stdlib.h>
 
-Game::Game(size_t grid_size)
+Game::Game(size_t grid_size, size_t target_tile)
     : m_grid_size(grid_size)
 {
+    if (target_tile == 0)
+        m_target_tile = 2048;
+    else if ((target_tile & (target_tile - 1)) != 0)
+        m_target_tile = 1 << max_power_for_board(grid_size);
+    else
+        m_target_tile = target_tile;
+
     m_board.resize(grid_size);
     for (auto& row : m_board) {
         row.ensure_capacity(grid_size);
@@ -132,10 +140,10 @@ static Game::Board slide_left(const Game::Board& board, size_t& successful_merge
     return new_board;
 }
 
-static bool is_complete(const Game::Board& board)
+static bool is_complete(const Game::Board& board, size_t target)
 {
     for (auto& row : board) {
-        if (row.contains_slow(2048))
+        if (row.contains_slow(target))
             return true;
     }
 
@@ -201,11 +209,21 @@ Game::MoveOutcome Game::attempt_move(Direction direction)
         m_score += successful_merge_score;
     }
 
-    if (is_complete(m_board))
+    if (is_complete(m_board, m_target_tile))
         return MoveOutcome::Won;
     if (is_stalled(m_board))
         return MoveOutcome::GameOver;
     if (moved)
         return MoveOutcome::OK;
     return MoveOutcome::InvalidMove;
+}
+
+u32 Game::largest_tile() const
+{
+    u32 tile = 0;
+    for (auto& row : board()) {
+        for (auto& cell : row)
+            tile = max(tile, cell);
+    }
+    return tile;
 }

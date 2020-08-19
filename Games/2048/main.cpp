@@ -26,6 +26,8 @@
 
 #include "BoardView.h"
 #include "Game.h"
+#include "GameSizeDialog.h"
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -52,12 +54,27 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
 
-    if (pledge("stdio rpath shared_buffer wpath accept", nullptr) < 0) {
+    auto config = Core::ConfigFile::get_for_app("2048");
+
+    size_t board_size = config->read_num_entry("", "board_size", 4);
+    u32 target_tile = config->read_num_entry("", "target_tile", 0);
+
+    config->write_num_entry("", "board_size", board_size);
+    config->write_num_entry("", "target_tile", target_tile);
+
+    config->sync();
+
+    if (pledge("stdio rpath shared_buffer wpath cpath accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(config->file_name().characters(), "crw") < 0) {
         perror("unveil");
         return 1;
     }
@@ -75,7 +92,7 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
     main_widget.set_fill_with_background_color(true);
 
-    Game game { 4 };
+    Game game { board_size, target_tile };
 
     auto& board_view = main_widget.add<BoardView>(&game.board());
     board_view.set_focus(true);
@@ -89,12 +106,44 @@ int main(int argc, char** argv)
 
     update();
 
-    auto start_a_new_game = [&]() {
-        game = Game(4);
-        update();
-    };
-
     Vector<Game> undo_stack;
+
+    auto change_settings = [&] {
+        auto size_dialog = GameSizeDialog::construct(window);
+        if (size_dialog->exec() || size_dialog->result() != GUI::Dialog::ExecOK)
+            return;
+
+        board_size = size_dialog->board_size();
+        target_tile = size_dialog->target_tile();
+
+        if (!size_dialog->temporary()) {
+
+            config->write_num_entry("", "board_size", board_size);
+            config->write_num_entry("", "target_tile", target_tile);
+
+            if (!config->sync()) {
+                GUI::MessageBox::show(window, "Configuration could not be synced", "Error", GUI::MessageBox::Type::Error);
+                return;
+            }
+            GUI::MessageBox::show(window, "New settings have been saved and will be applied on a new game", "Settings Changed Successfully", GUI::MessageBox::Type::Information);
+            return;
+        }
+
+        GUI::MessageBox::show(window, "New settings have been set and will be applied on the next game", "Settings Changed Successfully", GUI::MessageBox::Type::Information);
+    };
+    auto start_a_new_game = [&] {
+        // Do not leak game states between games.
+        undo_stack.clear();
+
+        game = Game(board_size, target_tile);
+
+        // This ensures that the sizes are correct.
+        board_view.set_board(nullptr);
+        board_view.set_board(&game.board());
+
+        update();
+        window->update();
+    };
 
     board_view.on_move = [&](Game::Direction direction) {
         undo_stack.append(game);
@@ -111,7 +160,7 @@ int main(int argc, char** argv)
         case Game::MoveOutcome::Won:
             update();
             GUI::MessageBox::show(window,
-                String::format("Score = %d in %zu turns", game.score(), game.turns()),
+                String::format("You reached %d in %zu turns with a score of %d", game.target_tile(), game.turns(), game.score()),
                 "You won!",
                 GUI::MessageBox::Type::Information);
             start_a_new_game();
@@ -119,7 +168,7 @@ int main(int argc, char** argv)
         case Game::MoveOutcome::GameOver:
             update();
             GUI::MessageBox::show(window,
-                String::format("Score = %d in %zu turns", game.score(), game.turns()),
+                String::format("You reached %d in %zu turns with a score of %d", game.largest_tile(), game.turns(), game.score()),
                 "You lost!",
                 GUI::MessageBox::Type::Information);
             start_a_new_game();
@@ -134,13 +183,20 @@ int main(int argc, char** argv)
     app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
         start_a_new_game();
     }));
+
     app_menu.add_action(GUI::CommonActions::make_undo_action([&](auto&) {
         if (undo_stack.is_empty())
             return;
         game = undo_stack.take_last();
         update();
     }));
+
     app_menu.add_separator();
+
+    app_menu.add_action(GUI::Action::create("Settings", [&](auto&) {
+        change_settings();
+    }));
+
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));

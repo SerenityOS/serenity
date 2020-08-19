@@ -49,6 +49,7 @@ private:
     size_t columns() const;
 
     void pick_font();
+    void resize();
 
     Color background_color_for_cell(u32 value);
     Color text_color_for_cell(u32 value);
