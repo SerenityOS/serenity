@@ -594,8 +594,6 @@ private:
     void update_state_for_thread(Thread::State previous_state);
 };
 
-HashTable<Thread*>& thread_table();
-
 template<typename Callback>
 inline IterationDecision Thread::for_each_living(Callback callback)
 {
