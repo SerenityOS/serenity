@@ -39,14 +39,19 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Font.h>
 
-AddEventDialog::AddEventDialog(RefPtr<Calendar> calendar, Core::DateTime date_time, Window* parent_window)
+static const char* short_month_names[] = {
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
+AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     : Dialog(parent_window)
-    , m_calendar(calendar)
     , m_date_time(date_time)
 {
     resize(158, 100);
     set_title("Add Event");
     set_resizable(false);
+    set_icon(parent_window->icon());
 
     auto& widget = set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
@@ -148,7 +153,7 @@ String AddEventDialog::MonthListModel::column_name(int column) const
 
 GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto& month = Calendar::name_of_month(index.row() + 1);
+    auto& month = short_month_names[index.row()];
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Month:
