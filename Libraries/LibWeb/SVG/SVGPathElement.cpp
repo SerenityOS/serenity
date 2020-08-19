@@ -133,6 +133,9 @@ void PathDataParser::parse_drawto() {
         parse_smooth_quadratic_bezier_curveto();
     } else if (match('A') || match('a')) {
         parse_elliptical_arc();
+    } else {
+        dbg() << "PathDataParser::parse_drawto failed to match: '" << ch() << "'";
+        TODO();
     }
 }
 
