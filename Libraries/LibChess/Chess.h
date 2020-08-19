@@ -31,6 +31,7 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
+#include <AK/Vector.h>
 
 namespace Chess {
 
@@ -136,7 +137,8 @@ public:
     void generate_moves(Callback callback, Colour colour = Colour::None) const;
     Result game_result() const;
 
-    Colour turn() const { return m_turn; };
+    Colour turn() const { return m_turn; }
+    const Vector<Move>& moves() const { return m_moves; }
 
     bool operator==(const Board& other) const;
 
@@ -155,6 +157,7 @@ private:
     bool m_black_can_castle_queenside { true };
 
     HashMap<Board, int> m_previous_states;
+    Vector<Move> m_moves;
     friend struct AK::Traits<Board>;
 };
 

@@ -175,6 +175,8 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 update();
                 GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
             }
+        } else {
+            maybe_input_engine_move();
         }
     }
 
@@ -240,7 +242,9 @@ RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(const Chess::Piece& piece) co
 void ChessWidget::reset()
 {
     m_board = Chess::Board();
+    m_side = (arc4random() % 2) ? Chess::Colour::White : Chess::Colour::Black;
     m_drag_enabled = true;
+    maybe_input_engine_move();
     update();
 }
 
@@ -257,4 +261,20 @@ void ChessWidget::set_board_theme(const StringView& name)
     } else {
         set_board_theme("Beige");
     }
+}
+
+void ChessWidget::maybe_input_engine_move()
+{
+    if (!m_engine || board().turn() == side())
+        return;
+
+    bool drag_was_enabled = drag_enabled();
+    if (drag_was_enabled)
+        set_drag_enabled(false);
+
+    m_engine->get_best_move(board(), 500, [this, drag_was_enabled](Chess::Move move) {
+        set_drag_enabled(drag_was_enabled);
+        ASSERT(board().apply_move(move));
+        update();
+    });
 }
