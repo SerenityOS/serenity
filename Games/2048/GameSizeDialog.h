@@ -26,53 +26,20 @@
 
 #pragma once
 
-#include <AK/Vector.h>
+#include <AK/Types.h>
+#include <LibGUI/Dialog.h>
 
-class Game final {
+class GameSizeDialog : public GUI::Dialog {
+    C_OBJECT(GameSizeDialog)
 public:
-    Game(size_t board_size, size_t target_tile = 0);
-    Game(const Game&) = default;
+    GameSizeDialog(GUI::Window* parent);
 
-    enum class MoveOutcome {
-        OK,
-        InvalidMove,
-        GameOver,
-        Won,
-    };
-
-    enum class Direction {
-        Up,
-        Down,
-        Left,
-        Right,
-    };
-
-    MoveOutcome attempt_move(Direction);
-
-    size_t score() const { return m_score; }
-    size_t turns() const { return m_turns; }
-    u32 target_tile() const { return m_target_tile; }
-    u32 largest_tile() const;
-
-    using Board = Vector<Vector<u32>>;
-
-    const Board& board() const { return m_board; }
-
-    static size_t max_power_for_board(size_t size)
-    {
-        if (size >= 6)
-            return 31;
-
-        return size * size + 1;
-    }
+    size_t board_size() const { return m_board_size; }
+    u32 target_tile() const { return 1u << m_target_tile_power; }
+    bool temporary() const { return m_temporary; }
 
 private:
-    void add_random_tile();
-
-    size_t m_grid_size { 0 };
-    u32 m_target_tile { 0 };
-
-    Board m_board;
-    size_t m_score { 0 };
-    size_t m_turns { 0 };
+    size_t m_board_size { 4 };
+    size_t m_target_tile_power { 11 };
+    bool m_temporary { true };
 };
