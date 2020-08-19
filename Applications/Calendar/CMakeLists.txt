@@ -1,7 +1,5 @@
 set(SOURCES
     AddEventDialog.cpp
-    Calendar.cpp
-    CalendarWidget.cpp
     main.cpp
 )
 
