@@ -40,7 +40,6 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     auto& widget = window->set_main_widget<ChessWidget>();
-    widget.set_side(Chess::Colour::White);
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Chess");
 
@@ -106,6 +105,27 @@ int main(int argc, char** argv)
         board_theme_menu.add_action(*action);
     }
 
+    auto& engine_menu = menubar->add_menu("Engine");
+
+    GUI::ActionGroup engines_action_group;
+    engines_action_group.set_exclusive(true);
+    auto& engine_submenu = engine_menu.add_submenu("Engine");
+    for (auto& engine : Vector({ "Human", "ChessEngine" })) {
+        auto action = GUI::Action::create_checkable(engine, [&](auto& action) {
+            if (action.text() == "Human") {
+                widget.set_engine(nullptr);
+            } else {
+                widget.set_engine(Engine::construct(action.text()));
+                widget.maybe_input_engine_move();
+            }
+        });
+        engines_action_group.add_action(*action);
+        if (engine == String("Human"))
+            action->set_checked(true);
+
+        engine_submenu.add_action(*action);
+    }
+
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("Chess", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-chess.png"), window);
@@ -114,6 +134,7 @@ int main(int argc, char** argv)
     app->set_menubar(move(menubar));
 
     window->show();
+    widget.reset();
 
     return app->exec();
 }

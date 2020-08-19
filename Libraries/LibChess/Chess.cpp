@@ -385,10 +385,13 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
 {
     Board clone = *this;
     clone.m_previous_states = {};
+    clone.m_moves = {};
     auto state_count = 0;
     if (m_previous_states.contains(clone))
         state_count = m_previous_states.get(clone).value();
+
     m_previous_states.set(clone, state_count + 1);
+    m_moves.append(move);
 
     m_turn = opposing_colour(colour);
 
