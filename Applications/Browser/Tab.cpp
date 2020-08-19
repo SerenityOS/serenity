@@ -132,6 +132,12 @@ Tab::Tab(Type type)
     hooks().on_load_start = [this](auto& url) {
         m_location_box->set_icon(nullptr);
         m_location_box->set_text(url.to_string());
+
+        // don't add to history if back or forward is pressed
+        if (!m_is_history_navigation)
+            m_history.push(url);
+        m_is_history_navigation = false;
+
         update_actions();
         update_bookmark_button(url.to_string());
     };
@@ -404,8 +410,7 @@ Tab::~Tab()
 
 void Tab::load(const URL& url, LoadType load_type)
 {
-    if (load_type == LoadType::Normal)
-        m_history.push(url);
+    m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
 
     if (m_type == Type::InProcessWebView)
         m_page_view->load(url);
