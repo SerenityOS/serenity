@@ -50,11 +50,7 @@ String Shortcut::to_string() const
         parts.append("(Invalid)");
 
     StringBuilder builder;
-    for (size_t i = 0; i < parts.size(); ++i) {
-        builder.append(parts[i]);
-        if (i != parts.size() - 1)
-            builder.append('+');
-    }
+    builder.join('+', parts);
     return builder.to_string();
 }
 
