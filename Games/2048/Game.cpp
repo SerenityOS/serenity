@@ -27,14 +27,13 @@
 #include "Game.h"
 #include <stdlib.h>
 
-Game::Game(size_t rows, size_t columns)
-    : m_rows(rows)
-    , m_columns(columns)
+Game::Game(size_t grid_size)
+    : m_grid_size(grid_size)
 {
-    m_board.resize(rows);
+    m_board.resize(grid_size);
     for (auto& row : m_board) {
-        row.ensure_capacity(columns);
-        for (size_t i = 0; i < columns; i++)
+        row.ensure_capacity(grid_size);
+        for (size_t i = 0; i < grid_size; i++)
             row.append(0);
     }
 
@@ -47,8 +46,8 @@ void Game::add_random_tile()
     int row;
     int column;
     do {
-        row = rand() % m_rows;
-        column = rand() % m_columns;
+        row = rand() % m_grid_size;
+        column = rand() % m_grid_size;
     } while (m_board[row][column] != 0);
 
     size_t value = rand() < RAND_MAX * 0.9 ? 2 : 4;
