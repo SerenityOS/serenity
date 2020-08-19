@@ -45,11 +45,11 @@ public:
     {
         u32 prev_flags;
         Processor::current().enter_critical(prev_flags);
-        BaseType expected;
-        do {
+        BaseType expected = 0;
+        while (!m_lock.compare_exchange_strong(expected, 1, AK::memory_order_acq_rel)) {
             Processor::wait_check();
             expected = 0;
-        } while (!m_lock.compare_exchange_strong(expected, 1, AK::memory_order_acq_rel));
+        }
         return prev_flags;
     }
 
