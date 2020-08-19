@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "Engine.h"
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
@@ -73,6 +74,10 @@ public:
     void set_board_theme(const BoardTheme& theme) { m_board_theme = theme; }
     void set_board_theme(const StringView& name);
 
+    void set_engine(RefPtr<Engine> engine) { m_engine = engine; }
+
+    void maybe_input_engine_move();
+
 private:
     Chess::Board m_board;
     BoardTheme m_board_theme { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
@@ -84,4 +89,5 @@ private:
     Gfx::IntPoint m_drag_point;
     bool m_dragging_piece { false };
     bool m_drag_enabled { true };
+    RefPtr<Engine> m_engine;
 };
