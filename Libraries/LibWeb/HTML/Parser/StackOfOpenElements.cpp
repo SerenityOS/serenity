@@ -133,14 +133,14 @@ DOM::Element* StackOfOpenElements::topmost_special_node_below(const DOM::Element
     return found_element;
 }
 
-DOM::Element* StackOfOpenElements::last_element_with_tag_name(const FlyString& tag_name)
+StackOfOpenElements::LastElementResult StackOfOpenElements::last_element_with_tag_name(const FlyString& tag_name)
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& element = m_elements[i];
         if (element.local_name() == tag_name)
-            return &element;
+            return { &element, i };
     }
-    return nullptr;
+    return { nullptr, -1 };
 }
 
 DOM::Element* StackOfOpenElements::element_before(const DOM::Element& target)

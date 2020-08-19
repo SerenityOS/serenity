@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -36,6 +37,14 @@ public:
 
     HTMLTemplateElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLTemplateElement() override;
+
+    NonnullRefPtr<DOM::DocumentFragment> content() { return *m_content; }
+    const NonnullRefPtr<DOM::DocumentFragment> content() const { return *m_content; }
+
+private:
+    DOM::Document& appropriate_template_contents_owner_document(DOM::Document&);
+
+    RefPtr<DOM::DocumentFragment> m_content;
 };
 
 }

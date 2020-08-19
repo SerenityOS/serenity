@@ -167,6 +167,13 @@ public:
 
     void set_focused_element(Element*);
 
+    bool created_for_appropriate_template_contents() const { return m_created_for_appropriate_template_contents; }
+    void set_created_for_appropriate_template_contents(bool value) { m_created_for_appropriate_template_contents = value; }
+
+    Document* associated_inert_template_document() { return m_associated_inert_template_document; }
+    const Document* associated_inert_template_document() const { return m_associated_inert_template_document; }
+    void set_associated_inert_template_document(Document& document) { m_associated_inert_template_document = document; }
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
@@ -199,6 +206,9 @@ private:
     bool m_editable { false };
 
     WeakPtr<Element> m_focused_element;
+
+    bool m_created_for_appropriate_template_contents { false };
+    RefPtr<Document> m_associated_inert_template_document;
 };
 
 }

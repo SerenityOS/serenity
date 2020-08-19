@@ -63,6 +63,8 @@ GUI::ModelIndex DOMTreeModel::parent_index(const GUI::ModelIndex& index) const
     if (!node.parent())
         return {};
 
+    // FIXME: Handle the template element (child elements are not stored in it, all of its children are in its document fragment "content")
+
     // No grandparent? Parent is the document!
     if (!node.parent()->parent()) {
         return create_index(0, 0, m_document.ptr());
