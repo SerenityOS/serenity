@@ -874,6 +874,11 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
 {
     HashTable<Window*> windows_who_received_mouse_event_due_to_cursor_tracking;
 
+    // We need to process ongoing drag events first. Otherwise, global tracking
+    // and dnd collides, leading to duplicate GUI::DragOperation instances
+    if (process_ongoing_drag(event, hovered_window))
+        return;
+
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->is_blocked_by_modal_window())
             continue;
@@ -883,9 +888,6 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     }
 
     hovered_window = nullptr;
-
-    if (process_ongoing_drag(event, hovered_window))
-        return;
 
     if (process_ongoing_window_move(event, hovered_window))
         return;
