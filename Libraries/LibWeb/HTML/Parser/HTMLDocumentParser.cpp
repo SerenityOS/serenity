@@ -36,6 +36,7 @@
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
+#include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 
@@ -385,18 +386,33 @@ DOM::Element& HTMLDocumentParser::node_before_current_node()
 HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropriate_place_for_inserting_node()
 {
     auto& target = current_node();
+    HTMLDocumentParser::AdjustedInsertionLocation adjusted_insertion_location;
+
     if (m_foster_parenting && target.local_name().is_one_of(HTML::TagNames::table, HTML::TagNames::tbody, HTML::TagNames::tfoot, HTML::TagNames::thead, HTML::TagNames::tr)) {
-        // FIXME: There's a bunch of steps for <template> elements here.
+        auto last_template = m_stack_of_open_elements.last_element_with_tag_name(HTML::TagNames::template_);
         auto last_table = m_stack_of_open_elements.last_element_with_tag_name(HTML::TagNames::table);
-        if (!last_table) {
+        if (last_template.element && (!last_table.element || last_template.index > last_table.index)) {
+            // This returns the template content, so no need to check the parent is a template.
+            return { downcast<HTMLTemplateElement>(last_template.element)->content(), nullptr };
+        }
+        if (!last_table.element) {
             ASSERT(m_parsing_fragment);
+            // Guaranteed not to be a template element (it will be the html element),
+            // so no need to check the parent is a template.
             return { m_stack_of_open_elements.elements().first(), nullptr };
         }
-        if (last_table->parent_node())
-            return { last_table->parent_node(), last_table };
-        return { m_stack_of_open_elements.element_before(*last_table), nullptr };
+        if (last_table.element->parent_node())
+            adjusted_insertion_location = { last_table.element->parent_node(), last_table.element };
+        else
+            adjusted_insertion_location = { m_stack_of_open_elements.element_before(*last_table.element), nullptr };
+    } else {
+        adjusted_insertion_location = { target, nullptr };
     }
-    return { target, nullptr };
+
+    if (is<HTMLTemplateElement>(*adjusted_insertion_location.parent))
+        return { downcast<HTMLTemplateElement>(*adjusted_insertion_location.parent).content(), nullptr };
+
+    return adjusted_insertion_location;
 }
 
 NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLToken& token)
@@ -557,15 +573,29 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::template_) {
-        // FIXME: Support this properly
         insert_html_element(token);
+        m_list_of_active_formatting_elements.add_marker();
+        m_frameset_ok = false;
+        m_insertion_mode = InsertionMode::InTemplate;
+        m_stack_of_template_insertion_modes.append(InsertionMode::InTemplate);
         return;
     }
 
     if (token.is_end_tag() && token.tag_name() == HTML::TagNames::template_) {
-        // FIXME: Support this properly
-        ASSERT(current_node().local_name() == HTML::TagNames::template_);
-        m_stack_of_open_elements.pop();
+        if (!m_stack_of_open_elements.contains(HTML::TagNames::template_)) {
+            PARSE_ERROR();
+            return;
+        }
+
+        generate_all_implied_end_tags_thoroughly();
+
+        if (current_node().local_name() != HTML::TagNames::template_)
+            PARSE_ERROR();
+
+        m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::template_);
+        m_list_of_active_formatting_elements.clear_up_to_the_last_marker();
+        m_stack_of_template_insertion_modes.take_last();
+        reset_the_insertion_mode_appropriately();
         return;
     }
 
@@ -736,6 +766,12 @@ AnythingElse:
 void HTMLDocumentParser::generate_implied_end_tags(const FlyString& exception)
 {
     while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
+        m_stack_of_open_elements.pop();
+}
+
+void HTMLDocumentParser::generate_all_implied_end_tags_thoroughly()
+{
+    while (current_node().local_name().is_one_of(HTML::TagNames::caption, HTML::TagNames::colgroup, HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr))
         m_stack_of_open_elements.pop();
 }
 
@@ -1084,14 +1120,17 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     }
 
     if (token.is_end_of_file()) {
-        // FIXME: If the stack of template insertion modes is not empty,
-        // then process the token using the rules for the "in template" insertion mode.
+        if (!m_stack_of_template_insertion_modes.is_empty()) {
+            process_using_the_rules_for(InsertionMode::InTemplate, token);
+            return;
+        }
 
-        // FIXME: If there is a node in the stack of open elements that is not either
-        // a dd element, a dt element, an li element, an optgroup element, an option element,
-        // a p element, an rb element, an rp element, an rt element, an rtc element,
-        // a tbody element, a td element, a tfoot element, a th element, a thead element,
-        // a tr element, the body element, or the html element, then this is a parse error.
+        for (auto& node : m_stack_of_open_elements.elements()) {
+            if (!node.local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc, HTML::TagNames::tbody, HTML::TagNames::td, HTML::TagNames::tfoot, HTML::TagNames::th, HTML::TagNames::thead, HTML::TagNames::tr, HTML::TagNames::body, HTML::TagNames::html)) {
+                PARSE_ERROR();
+                break;
+            }
+        }
 
         stop_parsing();
         return;
@@ -2697,7 +2736,8 @@ void HTMLDocumentParser::reset_the_insertion_mode_appropriately()
         }
 
         if (node->local_name() == HTML::TagNames::template_) {
-            TODO();
+            m_insertion_mode = m_stack_of_template_insertion_modes.last();
+            return;
         }
 
         if (!last && node->local_name() == HTML::TagNames::head) {
@@ -2774,7 +2814,7 @@ NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Elem
     parser.m_stack_of_open_elements.push(root);
 
     if (context_element.local_name() == HTML::TagNames::template_) {
-        TODO();
+        parser.m_stack_of_template_insertion_modes.append(InsertionMode::InTemplate);
     }
 
     // FIXME: Create a start tag token whose name is the local name of context and whose attributes are the attributes of context.

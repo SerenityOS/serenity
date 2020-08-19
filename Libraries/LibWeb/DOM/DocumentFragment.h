@@ -29,6 +29,7 @@
 #include <AK/FlyString.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/DOM/Element.h>
 
 namespace Web::DOM {
 
@@ -36,10 +37,20 @@ class DocumentFragment
     : public ParentNode
     , public NonElementParentNode<DocumentFragment> {
 public:
-    DocumentFragment(Document& document);
+    using WrapperType = Bindings::DocumentFragmentWrapper;
+
+    explicit DocumentFragment(Document& document);
     virtual ~DocumentFragment() override;
 
     virtual FlyString node_name() const override { return "#document-fragment"; }
+
+    Element& host() { return *m_host; }
+    const Element& host() const { return *m_host; }
+
+    void set_host(Element& host) { m_host = host; }
+
+private:
+    RefPtr<Element> m_host;
 };
 
 }
