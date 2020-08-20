@@ -93,12 +93,10 @@ int main(int argc, char** argv)
     Core::EventLoop loop;
 
     Core::EventLoop::register_signal(SIGINT, [](int) {
-        editor->interrupted();
         s_shell->kill_job(s_shell->current_job(), SIGINT);
     });
 
     Core::EventLoop::register_signal(SIGWINCH, [](int) {
-        editor->resized();
         s_shell->kill_job(s_shell->current_job(), SIGWINCH);
     });
 

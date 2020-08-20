@@ -35,6 +35,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
 #include <ctype.h>
+#include <signal.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
@@ -403,6 +404,14 @@ void Editor::initialize()
     set_default_keybinds();
     for (auto& keybind : m_configuration.keybindings)
         register_key_input_callback(keybind);
+
+    Core::EventLoop::register_signal(SIGINT, [this](int) {
+        interrupted();
+    });
+
+    Core::EventLoop::register_signal(SIGWINCH, [this](int) {
+        resized();
+    });
 
     m_initialized = true;
 }
