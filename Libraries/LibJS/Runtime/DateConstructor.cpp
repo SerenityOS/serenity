@@ -46,6 +46,7 @@ void DateConstructor::initialize(GlobalObject& global_object)
     define_property("length", Value(7), Attribute::Configurable);
 
     define_native_function("now", now, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_function("UTC", utc, 1, Attribute::Writable | Attribute::Configurable);
 }
 
 DateConstructor::~DateConstructor()
@@ -112,4 +113,23 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
     return Value(tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0);
 }
 
+JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
+{
+    auto arg_or = [&interpreter](size_t i, i32 fallback) { return interpreter.argument_count() > i ? interpreter.argument(i).to_i32(interpreter) : fallback; };
+    int year = interpreter.argument(0).to_i32(interpreter);
+    if (year >= 0 && year <= 99)
+      year += 1900;
+
+    struct tm tm = {};
+    tm.tm_year = year - 1900;
+    tm.tm_mon = arg_or(1, 0); // 0-based in both tm and JavaScript
+    tm.tm_mday = arg_or(2, 1);
+    tm.tm_hour = arg_or(3, 0);
+    tm.tm_min = arg_or(4, 0);
+    tm.tm_sec = arg_or(5, 0);
+    // timegm() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
+
+    int milliseconds = arg_or(6, 0);
+    return Value(1000.0 * timegm(&tm) + milliseconds);
+}
 }
