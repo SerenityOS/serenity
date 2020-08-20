@@ -93,7 +93,7 @@ static void time_to_tm(struct tm* tm, time_t t)
     tm->tm_mday += days;
 }
 
-time_t mktime(struct tm* tm)
+static time_t tm_to_time(struct tm* tm, long timezone_adjust)
 {
     int days = 0;
     int seconds = tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
@@ -107,7 +107,12 @@ time_t mktime(struct tm* tm)
         ++tm->tm_yday;
 
     days += tm->tm_yday;
-    return days * __seconds_per_day + seconds + timezone;
+    return days * __seconds_per_day + seconds + timezone_adjust;
+}
+
+time_t mktime(struct tm* tm)
+{
+    return tm_to_time(tm, timezone);
 }
 
 struct tm* localtime(const time_t* t)
@@ -122,6 +127,11 @@ struct tm* localtime_r(const time_t* t, struct tm* tm)
         return nullptr;
     time_to_tm(tm, (*t) - timezone);
     return tm;
+}
+
+time_t timegm(struct tm* tm)
+{
+    return tm_to_time(tm, 0);
 }
 
 struct tm* gmtime(const time_t* t)
