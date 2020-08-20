@@ -25,6 +25,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/Singleton.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Thread.h>
@@ -35,10 +36,7 @@ namespace Kernel {
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
-    static Lockable<HashMap<IPv4Address, MACAddress>>* the;
-    if (!the)
-        the = new Lockable<HashMap<IPv4Address, MACAddress>>;
-    return *the;
+    return Singleton<Lockable<HashMap<IPv4Address, MACAddress>>>::the();
 }
 
 bool RoutingDecision::is_zero() const
