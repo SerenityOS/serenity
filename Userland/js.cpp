@@ -572,11 +572,6 @@ int main(int argc, char** argv)
         signal(SIGINT, [](int) {
             if (!s_editor->is_editing())
                 sigint_handler();
-            s_editor->interrupted();
-        });
-
-        signal(SIGWINCH, [](int) {
-            s_editor->resized();
         });
 
         s_editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
