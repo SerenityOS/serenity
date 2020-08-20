@@ -25,16 +25,16 @@
  */
 
 #include <Kernel/Process.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/SharedBuffer.h>
 
 namespace Kernel {
 
+static auto s_map = make_singleton<Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>>();
+
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 {
-    static Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>* map;
-    if (!map)
-        map = new Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>;
-    return *map;
+    return *s_map;
 }
 
 void SharedBuffer::sanity_check(const char* what)

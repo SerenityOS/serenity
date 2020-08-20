@@ -34,6 +34,7 @@ class Console final : public Kernel::CharacterDevice {
     AK_MAKE_ETERNAL
 public:
     static Console& the();
+    static void initialize();
     static bool is_initialized();
 
     Console();

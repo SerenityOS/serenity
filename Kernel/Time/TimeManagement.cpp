@@ -32,6 +32,7 @@
 #include <Kernel/Time/HardwareTimer.h>
 #include <Kernel/Time/PIT.h>
 #include <Kernel/Time/RTC.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
 
@@ -39,12 +40,11 @@
 
 namespace Kernel {
 
-static TimeManagement* s_time_management;
+static auto s_the = make_singleton<TimeManagement>();
 
 TimeManagement& TimeManagement::the()
 {
-    ASSERT(s_time_management);
-    return *s_time_management;
+    return *s_the;
 }
 
 bool TimeManagement::is_system_timer(const HardwareTimer& timer) const
@@ -65,11 +65,9 @@ time_t TimeManagement::epoch_time() const
 
 void TimeManagement::initialize()
 {
-    ASSERT(!s_time_management);
-    if (kernel_command_line().lookup("time").value_or("modern") == "legacy")
-        s_time_management = new TimeManagement(false);
-    else
-        s_time_management = new TimeManagement(true);
+    ASSERT(!s_the.is_initialized());
+    s_the.ensure_instance();
+
 }
 time_t TimeManagement::seconds_since_boot() const
 {
@@ -90,8 +88,9 @@ time_t TimeManagement::boot_time() const
     return RTC::boot_time();
 }
 
-TimeManagement::TimeManagement(bool probe_non_legacy_hardware_timers)
+TimeManagement::TimeManagement()
 {
+    bool probe_non_legacy_hardware_timers = !(kernel_command_line().lookup("time").value_or("modern") == "legacy");
     if (ACPI::is_enabled()) {
         if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
             RTC::initialize();
@@ -117,7 +116,8 @@ TimeManagement::TimeManagement(bool probe_non_legacy_hardware_timers)
 
 timeval TimeManagement::now_as_timeval()
 {
-    return { s_time_management->epoch_time(), (suseconds_t)s_time_management->ticks_this_second() * (suseconds_t)1000 };
+    auto* time_management = s_the.ptr();
+    return { time_management->epoch_time(), (suseconds_t)time_management->ticks_this_second() * (suseconds_t)1000 };
 }
 
 Vector<HardwareTimer*> TimeManagement::scan_and_initialize_periodic_timers()

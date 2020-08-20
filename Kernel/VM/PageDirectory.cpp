@@ -27,6 +27,7 @@
 #include <AK/Memory.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -37,13 +38,12 @@ static const FlatPtr userspace_range_base = 0x00800000;
 static const FlatPtr userspace_range_ceiling = 0xbe000000;
 static const FlatPtr kernelspace_range_base = 0xc0800000;
 
+static auto s_cr3_map = make_singleton<HashMap<u32, PageDirectory*>>();
+
 static HashMap<u32, PageDirectory*>& cr3_map()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    static HashMap<u32, PageDirectory*>* map;
-    if (!map)
-        map = new HashMap<u32, PageDirectory*>;
-    return *map;
+    return *s_cr3_map;
 }
 
 RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)

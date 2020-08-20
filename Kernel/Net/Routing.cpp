@@ -28,17 +28,17 @@
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Thread.h>
+#include <Kernel/Singleton.h>
 
 //#define ROUTING_DEBUG
 
 namespace Kernel {
 
+static auto s_arp_table = make_singleton<Lockable<HashMap<IPv4Address, MACAddress>>>();
+
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
-    static Lockable<HashMap<IPv4Address, MACAddress>>* the;
-    if (!the)
-        the = new Lockable<HashMap<IPv4Address, MACAddress>>;
-    return *the;
+    return *s_arp_table;
 }
 
 bool RoutingDecision::is_zero() const

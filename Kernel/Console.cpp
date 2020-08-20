@@ -27,29 +27,33 @@
 #include <Kernel/Console.h>
 #include <Kernel/IO.h>
 #include <Kernel/kstdio.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/SpinLock.h>
 
 // Bytes output to 0xE9 end up on the Bochs console. It's very handy.
 #define CONSOLE_OUT_TO_E9
 
-static Console* s_the;
+static auto s_the = Kernel::make_singleton<Console>();
 static Kernel::SpinLock g_console_lock;
+
+void Console::initialize()
+{
+    s_the.ensure_instance();
+}
 
 Console& Console::the()
 {
-    ASSERT(s_the);
     return *s_the;
 }
 
 bool Console::is_initialized()
 {
-    return s_the != nullptr;
+    return s_the.is_initialized();
 }
 
 Console::Console()
     : CharacterDevice(5, 1)
 {
-    s_the = this;
 }
 
 Console::~Console()

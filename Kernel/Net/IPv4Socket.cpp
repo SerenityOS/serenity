@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
@@ -45,11 +46,10 @@
 
 namespace Kernel {
 
+static auto s_table = make_singleton<Lockable<HashTable<IPv4Socket*>>>();
+
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
-    static Lockable<HashTable<IPv4Socket*>>* s_table;
-    if (!s_table)
-        s_table = new Lockable<HashTable<IPv4Socket*>>;
     return *s_table;
 }
 

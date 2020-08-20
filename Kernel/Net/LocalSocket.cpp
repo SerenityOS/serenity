@@ -29,6 +29,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
@@ -37,11 +38,10 @@
 
 namespace Kernel {
 
+static auto s_list = make_singleton<Lockable<InlineLinkedList<LocalSocket>>>();
+
 Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
 {
-    static Lockable<InlineLinkedList<LocalSocket>>* s_list;
-    if (!s_list)
-        s_list = new Lockable<InlineLinkedList<LocalSocket>>();
     return *s_list;
 }
 
