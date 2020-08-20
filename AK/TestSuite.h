@@ -63,32 +63,6 @@ private:
     std::chrono::time_point<clock> m_started;
 };
 
-class TestException {
-public:
-    TestException(const String& file, int line, const String& s)
-        : file(file)
-        , line(line)
-        , reason(s)
-    {
-    }
-
-    String to_string() const
-    {
-        String outfile = file;
-        // ###
-        //auto slash = file.lastIndexOf("/");
-        //if (slash > 0) {
-        //    outfile = outfile.right(outfile.length() - slash - 1);
-        //}
-        return String::format("%s:%d: %s", outfile.characters(), line, reason.characters());
-    }
-
-private:
-    String file;
-    int line = 0;
-    String reason;
-};
-
 typedef AK::Function<void()> TestFunction;
 
 class TestCase : public RefCounted<TestCase> {
@@ -207,12 +181,7 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
     for (const auto& t : tests) {
         dbg() << "START Running " << (t.is_benchmark() ? "benchmark" : "test") << " " << t.name();
         TestElapsedTimer timer;
-        try {
-            t.func()();
-        } catch (const TestException& t) {
-            fprintf(stderr, "\033[31;1mFAIL\033[0m: %s\n", t.to_string().characters());
-            exit(1);
-        }
+        t.func()();
         auto time = timer.elapsed();
         fprintf(stderr, "\033[32;1mPASS\033[0m: %d ms running %s %s\n", (int)time, (t.is_benchmark() ? "benchmark" : "test"), t.name().characters());
         if (t.is_benchmark()) {
@@ -230,7 +199,6 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
 }
 
 using AK::TestCase;
-using AK::TestException;
 using AK::TestSuite;
 
 #define xstr(s) ___str(s)
