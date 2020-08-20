@@ -197,6 +197,11 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8
                 return false;
             }
             break;
+        case PT_GNU_STACK:
+            if (program_header.p_flags & PF_X) {
+                dbgprintf("Possible shenanigans! Validating an ELF with executable stack.\n");
+            }
+            break;
         default:
             // Not handling other program header types in other code so... let's not surprise them
             dbgprintf("Found program header (%zu) of unrecognized type %x!\n", header_index, program_header.p_type);
