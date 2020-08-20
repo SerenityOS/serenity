@@ -272,7 +272,7 @@ void ChessWidget::maybe_input_engine_move()
     if (drag_was_enabled)
         set_drag_enabled(false);
 
-    m_engine->get_best_move(board(), 500, [this, drag_was_enabled](Chess::Move move) {
+    m_engine->get_best_move(board(), 4000, [this, drag_was_enabled](Chess::Move move) {
         set_drag_enabled(drag_was_enabled);
         ASSERT(board().apply_move(move));
         update();
