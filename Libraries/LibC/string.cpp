@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/MemMem.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
@@ -189,57 +190,9 @@ void* memmove(void* dest, const void* src, size_t n)
     return dest;
 }
 
-namespace {
-const static void* bitap_bitwise(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
-{
-    ASSERT(needle_length < 32);
-
-    u64 lookup = 0xfffffffe;
-
-    constexpr size_t mask_length = (size_t)((u8)-1) + 1;
-    u64 needle_mask[mask_length];
-
-    for (size_t i = 0; i < mask_length; ++i)
-        needle_mask[i] = 0xffffffff;
-
-    for (size_t i = 0; i < needle_length; ++i)
-        needle_mask[((const u8*)needle)[i]] &= ~(0x00000001 << i);
-
-    for (size_t i = 0; i < haystack_length; ++i) {
-        lookup |= needle_mask[((const u8*)haystack)[i]];
-        lookup <<= 1;
-
-        if (!(lookup & (0x00000001 << needle_length)))
-            return ((const u8*)haystack) + i - needle_length + 1;
-    }
-
-    return nullptr;
-}
-}
-
 const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
 {
-    if (needle_length == 0)
-        return haystack;
-
-    if (haystack_length < needle_length)
-        return nullptr;
-
-    if (haystack_length == needle_length)
-        return memcmp(haystack, needle, haystack_length) == 0 ? haystack : nullptr;
-
-    if (needle_length < 32)
-        return bitap_bitwise(haystack, haystack_length, needle, needle_length);
-
-    // Fallback to a slower search.
-    auto length_diff = haystack_length - needle_length;
-    for (size_t i = 0; i < length_diff; ++i) {
-        const auto* start = ((const u8*)haystack) + i;
-        if (memcmp(start, needle, needle_length) == 0)
-            return start;
-    }
-
-    return nullptr;
+    return AK::memmem(haystack, haystack_length, needle, needle_length);
 }
 
 char* strcpy(char* dest, const char* src)
