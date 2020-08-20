@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -64,18 +65,12 @@ void TCPSocket::set_state(State new_state)
 
 Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
 {
-    static Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>* s_map;
-    if (!s_map)
-        s_map = new Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>;
-    return *s_map;
+    return Singleton<Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>>::the();
 }
 
 Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 {
-    static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>* s_map;
-    if (!s_map)
-        s_map = new Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>;
-    return *s_map;
+    return Singleton<Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>>::the();
 }
 
 RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
