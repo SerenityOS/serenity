@@ -29,8 +29,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/LocalSocket.h>
-#include <fcntl.h>
+#include <LibCore/Socket.h>
 #include <grp.h>
 #include <libgen.h>
 #include <pwd.h>
@@ -168,13 +167,13 @@ void Service::handle_socket_connection()
     dbg() << "Ready to read on behalf of " << name();
 #endif
     if (m_accept_socket_connections) {
-       int accepted_fd = accept(m_socket_fd, nullptr, nullptr);
-       if (accepted_fd < 0) {
-           perror("accept");
-           return;
-       }
-       spawn(accepted_fd);
-       close(accepted_fd);
+        int accepted_fd = accept(m_socket_fd, nullptr, nullptr);
+        if (accepted_fd < 0) {
+            perror("accept");
+            return;
+        }
+        spawn(accepted_fd);
+        close(accepted_fd);
     } else {
         remove_child(*m_socket_notifier);
         m_socket_notifier = nullptr;
