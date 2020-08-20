@@ -278,7 +278,9 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
         const int clear_code = decoder.add_control_code();
         const int end_of_information_code = decoder.add_control_code();
 
-        auto background_rgb = context.logical_screen.color_map[context.background_color_index];
+        auto& color_map = image.use_global_color_map ? context.logical_screen.color_map : image.color_map;
+
+        auto background_rgb = color_map[context.background_color_index];
         Color background_color = Color(background_rgb.r, background_rgb.g, background_rgb.b);
 
         image.bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
@@ -315,7 +317,7 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
             auto colors = decoder.get_output();
 
             for (const auto& color : colors) {
-                auto rgb = context.logical_screen.color_map[color];
+                auto rgb = color_map[color];
 
                 int x = pixel_index % image.width + image.x;
                 int y = pixel_index / image.width + image.y;
@@ -410,7 +412,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     for (;;) {
         u8 sentinel = 0;
         stream >> sentinel;
-        printf("Sentinel: %02x\n", sentinel);
+        printf("Sentinel: %02x at offset %x\n", sentinel, (unsigned)stream.offset());
 
         if (sentinel == 0x21) {
             u8 extension_type = 0;
@@ -493,6 +495,19 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             stream >> packed_fields;
             if (stream.handle_read_failure())
                 return false;
+
+            image.use_global_color_map = !(packed_fields & 0x80);
+
+            if (!image.use_global_color_map) {
+                size_t local_color_table_size = pow(2, (packed_fields & 7) + 1);
+
+                for (size_t i = 0; i < local_color_table_size; ++i) {
+                    stream >> image.color_map[i].r;
+                    stream >> image.color_map[i].g;
+                    stream >> image.color_map[i].b;
+                }
+            }
+
             printf("Image descriptor: %d,%d %dx%d, %02x\n", image.x, image.y, image.width, image.height, packed_fields);
 
             stream >> image.lzw_min_code_size;
