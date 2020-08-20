@@ -34,6 +34,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -68,7 +69,7 @@
 
 namespace Kernel {
 
-static APIC* s_apic;
+static auto s_apic = make_singleton<APIC>();
 
 class APICIPIInterruptHandler final : public GenericInterruptHandler {
 public:
@@ -132,7 +133,7 @@ private:
 
 bool APIC::initialized()
 {
-    return (s_apic != nullptr);
+    return s_apic.is_initialized();
 }
 
 APIC& APIC::the()
@@ -144,7 +145,7 @@ APIC& APIC::the()
 void APIC::initialize()
 {
     ASSERT(!APIC::initialized());
-    s_apic = new APIC();
+    s_apic.ensure_instance();
 }
 
 PhysicalAddress APIC::get_base()

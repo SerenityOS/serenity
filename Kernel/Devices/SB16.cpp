@@ -31,6 +31,7 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/IO.h>
+#include <Kernel/Singleton.h>
 
 //#define SB16_DEBUG
 
@@ -76,18 +77,22 @@ void SB16::set_sample_rate(uint16_t hz)
     dsp_write((u8)hz);
 }
 
-static SB16* s_the;
+static auto s_the = make_singleton<SB16>();
 
 SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)
     , CharacterDevice(42, 42) // ### ?
 {
-    s_the = this;
     initialize();
 }
 
 SB16::~SB16()
 {
+}
+
+void SB16::create()
+{
+    s_the.ensure_instance();
 }
 
 SB16& SB16::the()

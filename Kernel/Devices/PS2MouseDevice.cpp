@@ -28,6 +28,7 @@
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/IO.h>
+#include <Kernel/Singleton.h>
 
 namespace Kernel {
 
@@ -56,18 +57,22 @@ namespace Kernel {
 
 //#define PS2MOUSE_DEBUG
 
-static PS2MouseDevice* s_the;
+static auto s_the = make_singleton<PS2MouseDevice>();
 
 PS2MouseDevice::PS2MouseDevice()
     : IRQHandler(IRQ_MOUSE)
     , CharacterDevice(10, 1)
 {
-    s_the = this;
     initialize();
 }
 
 PS2MouseDevice::~PS2MouseDevice()
 {
+}
+
+void PS2MouseDevice::create()
+{
+   s_the.ensure_instance();
 }
 
 PS2MouseDevice& PS2MouseDevice::the()

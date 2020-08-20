@@ -28,17 +28,15 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
-static KernelRng* s_the;
+static auto s_the = make_singleton<KernelRng>();
 
 KernelRng& KernelRng::the()
 {
-    if (!s_the) {
-        s_the = new KernelRng;
-    }
     return *s_the;
 }
 
