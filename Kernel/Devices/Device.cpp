@@ -24,19 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
 
-static HashMap<u32, Device*>* s_all_devices;
-
 HashMap<u32, Device*>& Device::all_devices()
 {
-    if (s_all_devices == nullptr)
-        s_all_devices = new HashMap<u32, Device*>;
-    return *s_all_devices;
+    return Singleton<HashMap<u32, Device*>>::the();
 }
 
 void Device::for_each(Function<void(Device&)> callback)
