@@ -126,6 +126,8 @@ void AppletManager::draw_applet(const Window& applet)
         return;
 
     Gfx::Painter painter(*MenuManager::the().window().backing_store());
+    Gfx::PainterStateSaver saver(painter);
+    painter.add_clip_rect(applet.rect_in_menubar());
     painter.fill_rect(applet.rect_in_menubar(), WindowManager::the().palette().window());
     painter.blit(applet.rect_in_menubar().location(), *applet.backing_store(), applet.backing_store()->rect());
 }
