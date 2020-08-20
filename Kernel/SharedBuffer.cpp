@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Process.h>
 #include <Kernel/SharedBuffer.h>
 
@@ -31,10 +32,7 @@ namespace Kernel {
 
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 {
-    static Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>* map;
-    if (!map)
-        map = new Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>;
-    return *map;
+    return Singleton<Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>>::the();
 }
 
 void SharedBuffer::sanity_check(const char* what)
