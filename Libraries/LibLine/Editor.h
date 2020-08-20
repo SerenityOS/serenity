@@ -196,13 +196,7 @@ public:
 
     // FIXME: we will have to kindly ask our instantiators to set our signal handlers,
     // since we can not do this cleanly ourselves. (signal() limitation: cannot give member functions)
-    void interrupted()
-    {
-        if (m_is_editing) {
-            m_was_interrupted = true;
-            handle_interrupt_event();
-        }
-    }
+    void interrupted();
     void resized()
     {
         m_was_resized = true;
@@ -277,6 +271,11 @@ private:
 
     static VTState actual_rendered_string_length_step(StringMetrics&, size_t& length, u32, u32, VTState);
 
+    enum LoopExitCode {
+        Exit = 0,
+        Retry
+    };
+
     // ^Core::Object
     virtual void save_to(JsonObject&) override;
 
@@ -336,6 +335,7 @@ private:
 
     void refresh_display();
     void cleanup();
+    void really_quit_event_loop();
 
     void restore()
     {

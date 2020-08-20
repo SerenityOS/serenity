@@ -407,6 +407,55 @@ void Editor::initialize()
     m_initialized = true;
 }
 
+void Editor::interrupted()
+{
+    if (!m_is_editing)
+        return;
+
+    m_was_interrupted = true;
+    handle_interrupt_event();
+    if (!m_finish)
+        return;
+
+    m_finish = false;
+    reposition_cursor(true);
+    if (m_suggestion_display->cleanup())
+        reposition_cursor();
+    cleanup();
+    fprintf(stderr, "\n");
+    fflush(stderr);
+    m_buffer.clear();
+    m_is_editing = false;
+    restore();
+    m_notifier->set_event_mask(Core::Notifier::None);
+    deferred_invoke([this](auto&) {
+        remove_child(*m_notifier);
+        m_notifier = nullptr;
+        Core::EventLoop::current().quit(Retry);
+    });
+}
+
+void Editor::really_quit_event_loop()
+{
+    m_finish = false;
+    reposition_cursor(true);
+    fprintf(stderr, "\n");
+    fflush(stderr);
+    auto string = line();
+    m_buffer.clear();
+    m_is_editing = false;
+    restore();
+
+    m_returned_line = string;
+
+    m_notifier->set_event_mask(Core::Notifier::None);
+    deferred_invoke([this](auto&) {
+        remove_child(*m_notifier);
+        m_notifier = nullptr;
+        Core::EventLoop::current().quit(Exit);
+    });
+}
+
 auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 {
     initialize();
@@ -454,8 +503,9 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     add_child(*m_notifier);
 
     m_notifier->on_ready_to_read = [&] {
-        if (m_was_interrupted)
+        if (m_was_interrupted) {
             handle_interrupt_event();
+        }
 
         handle_read_event();
 
@@ -464,28 +514,12 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 
         refresh_display();
 
-        if (m_finish) {
-            m_finish = false;
-            reposition_cursor(true);
-            fprintf(stderr, "\n");
-            fflush(stderr);
-            auto string = line();
-            m_buffer.clear();
-            m_is_editing = false;
-            restore();
-
-            m_returned_line = string;
-
-            m_notifier->set_event_mask(Core::Notifier::None);
-            deferred_invoke([this](auto&) {
-                remove_child(*m_notifier);
-                m_notifier = nullptr;
-                Core::EventLoop::current().quit(0);
-            });
-        }
+        if (m_finish)
+            really_quit_event_loop();
     };
 
-    loop.exec();
+    if (loop.exec() == Retry)
+        return get_line(prompt);
 
     return m_input_error.has_value() ? Result<String, Editor::Error> { m_input_error.value() } : Result<String, Editor::Error> { m_returned_line };
 }
@@ -512,17 +546,29 @@ void Editor::handle_interrupt_event()
 {
     m_was_interrupted = false;
 
-    if (!m_buffer.is_empty())
-        fprintf(stderr, "^C");
+    auto cb = m_key_callbacks.get(ctrl('C'));
+    if (cb.has_value()) {
+        if (!cb.value()->callback(*this)) {
+            // Oh well.
+            return;
+        }
+    }
 
-    m_buffer.clear();
-    m_cursor = 0;
+    if (!m_buffer.is_empty()) {
+        fprintf(stderr, "^C");
+        fflush(stderr);
+    }
 
     if (on_interrupt_handled)
         on_interrupt_handled();
 
-    m_refresh_needed = true;
-    refresh_display();
+    if (m_buffer.is_empty())
+        return;
+
+    m_buffer.clear();
+    m_cursor = 0;
+
+    finish();
 }
 
 void Editor::handle_read_event()

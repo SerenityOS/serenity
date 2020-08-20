@@ -168,6 +168,7 @@ void Editor::finish_edit()
     if (!m_always_refresh) {
         m_input_error = Error::Eof;
         finish();
+        really_quit_event_loop();
     }
 }
 
