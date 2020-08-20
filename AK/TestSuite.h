@@ -42,25 +42,30 @@
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
-#include <chrono>
+
+#include <sys/time.h>
 
 namespace AK {
 
 class TestElapsedTimer {
-    typedef std::chrono::high_resolution_clock clock;
-
 public:
     TestElapsedTimer() { restart(); }
-    void restart() { m_started = clock::now(); }
-    int64_t elapsed()
+
+    void restart() { gettimeofday(&m_started, nullptr); }
+
+    u64 elapsed_milliseconds()
     {
-        auto end = clock::now();
-        auto elapsed = end - m_started;
-        return std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+        struct timeval now;
+        gettimeofday(&now, nullptr);
+
+        struct timeval delta;
+        timersub(&now, &m_started, &delta);
+
+        return delta.tv_sec * 1000 + delta.tv_usec / 1000;
     }
 
 private:
-    std::chrono::time_point<clock> m_started;
+    struct timeval m_started;
 };
 
 typedef AK::Function<void()> TestFunction;
@@ -182,7 +187,7 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
         dbg() << "START Running " << (t.is_benchmark() ? "benchmark" : "test") << " " << t.name();
         TestElapsedTimer timer;
         t.func()();
-        auto time = timer.elapsed();
+        auto time = timer.elapsed_milliseconds();
         fprintf(stderr, "\033[32;1mPASS\033[0m: %d ms running %s %s\n", (int)time, (t.is_benchmark() ? "benchmark" : "test"), t.name().characters());
         if (t.is_benchmark()) {
             m_benchtime += time;
@@ -192,8 +197,8 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
             test_count++;
         }
     }
-    dbg() << "Finished " << test_count << " tests and " << benchmark_count << " benchmarks in " << (int)global_timer.elapsed() << " ms ("
-          << (int)m_testtime << " tests, " << (int)m_benchtime << " benchmarks, " << int(global_timer.elapsed() - (m_testtime + m_benchtime)) << " other)";
+    dbg() << "Finished " << test_count << " tests and " << benchmark_count << " benchmarks in " << (int)global_timer.elapsed_milliseconds() << " ms ("
+          << (int)m_testtime << " tests, " << (int)m_benchtime << " benchmarks, " << int(global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime)) << " other)";
 }
 
 }
