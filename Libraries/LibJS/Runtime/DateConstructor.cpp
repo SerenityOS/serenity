@@ -60,13 +60,48 @@ Value DateConstructor::call(Interpreter& interpreter)
     return js_string(interpreter, static_cast<Date&>(date.as_object()).string());
 }
 
-Value DateConstructor::construct(Interpreter&, Function&)
+Value DateConstructor::construct(Interpreter& interpreter, Function&)
 {
-    // TODO: Support args
-    struct timeval tv;
-    gettimeofday(&tv, nullptr);
-    auto datetime = Core::DateTime::now();
-    auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
+    if (interpreter.argument_count() == 0) {
+        struct timeval tv;
+        gettimeofday(&tv, nullptr);
+        auto datetime = Core::DateTime::now();
+        auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
+        return Date::create(global_object(), datetime, milliseconds);
+    }
+    if (interpreter.argument_count() == 1 && interpreter.argument(0).is_string()) {
+        // FIXME: Parse simplified ISO8601-like string, like Date.parse() will do.
+        struct timeval tv;
+        gettimeofday(&tv, nullptr);
+        auto datetime = Core::DateTime::now();
+        auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
+        return Date::create(global_object(), datetime, milliseconds);
+    }
+    if (interpreter.argument_count() == 1) {
+        // A timestamp since the epoch, in UTC.
+        // FIXME: Date() probably should use a double as internal representation, so that NaN arguments and larger offsets are handled correctly.
+        // FIXME: DateTime::from_timestamp() seems to not support negative offsets.
+        double value = interpreter.argument(0).to_double(interpreter);
+        auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value / 1000));
+        auto milliseconds = static_cast<u16>(fmod(value, 1000));
+        return Date::create(global_object(), datetime, milliseconds);
+    }
+    // A date/time in components, in local time.
+    // FIXME: This doesn't construct an "Invalid Date" object if one of the parameters is NaN.
+    // FIXME: This doesn't range-check args and convert months > 12 to year increments etc.
+    auto arg_or = [&interpreter](size_t i, i32 fallback) { return interpreter.argument_count() > i ? interpreter.argument(i).to_i32(interpreter) : fallback; };
+    int year = interpreter.argument(0).to_i32(interpreter);
+    int month_index = interpreter.argument(1).to_i32(interpreter);
+    int day = arg_or(2, 1);
+    int hours = arg_or(3, 0);
+    int minutes = arg_or(4, 0);
+    int seconds = arg_or(5, 0);
+    int milliseconds = arg_or(6, 0);
+
+    if (year >= 0 && year <= 99)
+      year += 1900;
+    int month = month_index + 1;
+    auto datetime = Core::DateTime::create(year, month, day, hours, minutes, seconds);
     return Date::create(global_object(), datetime, milliseconds);
 }
 
