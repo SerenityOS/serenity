@@ -469,6 +469,7 @@ typedef struct {
 
 #define PT_GNU_EH_FRAME 0x6474e550 /* Exception handling info */
 #define PT_GNU_RELRO 0x6474e552    /* Read-only after relocation */
+#define PT_GNU_STACK 0x6474e551    /* Stack permissions info */
 
 #define PT_OPENBSD_RANDOMIZE 0x65a3dbe6 /* fill with random data */
 #define PT_OPENBSD_WXNEEDED 0x65a3dbe7  /* program performs W^X violations */
