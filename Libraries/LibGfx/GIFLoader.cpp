@@ -43,13 +43,13 @@ struct RGB {
 };
 
 struct ImageDescriptor {
-    u16 x;
-    u16 y;
-    u16 width;
-    u16 height;
-    bool use_global_color_map;
+    u16 x { 0 };
+    u16 y { 0 };
+    u16 width { 0 };
+    u16 height { 0 };
+    bool use_global_color_map { true };
     RGB color_map[256];
-    u8 lzw_min_code_size;
+    u8 lzw_min_code_size { 0 };
     Vector<u8> lzw_encoded_bytes;
     RefPtr<Gfx::Bitmap> bitmap;
 
