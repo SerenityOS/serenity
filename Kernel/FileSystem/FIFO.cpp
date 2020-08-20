@@ -25,6 +25,7 @@
  */
 
 #include <AK/HashTable.h>
+#include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/FIFO.h>
@@ -39,10 +40,7 @@ namespace Kernel {
 
 static Lockable<HashTable<FIFO*>>& all_fifos()
 {
-    static Lockable<HashTable<FIFO*>>* s_table;
-    if (!s_table)
-        s_table = new Lockable<HashTable<FIFO*>>;
-    return *s_table;
+    return Singleton<Lockable<HashTable<FIFO*>>>::the();
 }
 
 static int s_next_fifo_id = 1;
