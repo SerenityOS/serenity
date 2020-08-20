@@ -352,6 +352,7 @@ private:
 class Node : public RefCounted<Node> {
 public:
     virtual void dump(int level) const = 0;
+    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(RefPtr<Value>)> callback);
     virtual RefPtr<Value> run(RefPtr<Shell>) = 0;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) = 0;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&);
@@ -657,6 +658,7 @@ public:
     virtual ~Execute();
     void capture_stdout() { m_capture_stdout = true; }
     RefPtr<Node> command() { return m_command; }
+    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(RefPtr<Value>)> callback) override;
 
 private:
     virtual void dump(int level) const override;
