@@ -33,16 +33,16 @@
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Random.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel {
 
+static auto s_table = make_singleton<Lockable<HashTable<NetworkAdapter*>>>();
+
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {
-    static Lockable<HashTable<NetworkAdapter*>>* table;
-    if (!table)
-        table = new Lockable<HashTable<NetworkAdapter*>>;
-    return *table;
+    return *s_table;
 }
 
 void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)

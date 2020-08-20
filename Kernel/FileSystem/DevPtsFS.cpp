@@ -28,6 +28,7 @@
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/TTY/SlavePTY.h>
 
 namespace Kernel {
@@ -45,14 +46,10 @@ DevPtsFS::~DevPtsFS()
 {
 }
 
-static HashTable<unsigned>* ptys;
+static auto s_ptys = make_singleton<HashTable<unsigned>>();
 
 bool DevPtsFS::initialize()
 {
-    if (ptys == nullptr) {
-        ptys = new HashTable<unsigned>();
-    }
-
     m_root_inode = adopt(*new DevPtsFSInode(*this, 1));
     m_root_inode->m_metadata.inode = { fsid(), 1 };
     m_root_inode->m_metadata.mode = 0040555;
@@ -104,12 +101,12 @@ RefPtr<Inode> DevPtsFS::get_inode(InodeIdentifier inode_id) const
 
 void DevPtsFS::register_slave_pty(SlavePTY& slave_pty)
 {
-    ptys->set(slave_pty.index());
+    s_ptys->set(slave_pty.index());
 }
 
 void DevPtsFS::unregister_slave_pty(SlavePTY& slave_pty)
 {
-    ptys->remove(slave_pty.index());
+    s_ptys->remove(slave_pty.index());
 }
 
 DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, unsigned index)
@@ -144,7 +141,7 @@ KResult DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEn
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
 
-    for (unsigned pty_index : *ptys) {
+    for (unsigned pty_index : *s_ptys) {
         String name = String::number(pty_index);
         InodeIdentifier identifier = { fsid(), pty_index_to_inode_index(pty_index) };
         callback({ name, identifier, 0 });
@@ -157,7 +154,7 @@ KResultOr<size_t> DevPtsFSInode::directory_entry_count() const
 {
     ASSERT(identifier().index() == 1);
 
-    return 2 + ptys->size();
+    return 2 + s_ptys->size();
 }
 
 RefPtr<Inode> DevPtsFSInode::lookup(StringView name)
@@ -170,7 +167,7 @@ RefPtr<Inode> DevPtsFSInode::lookup(StringView name)
     auto& fs = static_cast<DevPtsFS&>(this->fs());
 
     auto pty_index = name.to_uint();
-    if (pty_index.has_value() && ptys->contains(pty_index.value())) {
+    if (pty_index.has_value() && s_ptys->contains(pty_index.value())) {
         return fs.get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
     }
 
