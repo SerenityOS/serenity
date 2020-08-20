@@ -53,8 +53,7 @@ DateTime DateTime::create(unsigned year, unsigned month, unsigned day, unsigned 
     tm.tm_mday = (int)day;
     tm.tm_mon = (int)month - 1;
     tm.tm_year = (int)year - 1900;
-    tm.tm_wday = (int)dt.weekday();
-    tm.tm_yday = (int)dt.day_of_year();
+    // mktime() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
     dt.m_timestamp = mktime(&tm);
 
     return dt;
