@@ -108,14 +108,16 @@ int main(int argc, char** argv)
         case Game::MoveOutcome::InvalidMove:
             undo_stack.take_last();
             break;
-        case Game::MoveOutcome::Won:
+        case Game::MoveOutcome::Won: {
             update();
-            GUI::MessageBox::show(window,
-                String::format("Score = %d in %zu turns", game.score(), game.turns()),
+            const auto result = GUI::MessageBox::show(window,
+                String::format("Score = %d in %zu turns. Start new game?", game.score(), game.turns()),
                 "You won!",
-                GUI::MessageBox::Type::Information);
-            start_a_new_game();
-            break;
+                GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+
+            if (result == GUI::Dialog::ExecYes)
+                start_a_new_game();
+        } break;
         case Game::MoveOutcome::GameOver:
             update();
             GUI::MessageBox::show(window,

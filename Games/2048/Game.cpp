@@ -202,8 +202,10 @@ Game::MoveOutcome Game::attempt_move(Direction direction)
         m_score += successful_merge_score;
     }
 
-    if (is_complete(m_board))
+    if (is_complete(m_board) && !m_already_won) {
+        m_already_won = true;
         return MoveOutcome::Won;
+    }
     if (is_stalled(m_board))
         return MoveOutcome::GameOver;
     if (moved)

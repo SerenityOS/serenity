@@ -65,4 +65,6 @@ private:
     Board m_board;
     size_t m_score { 0 };
     size_t m_turns { 0 };
+
+    bool m_already_won { false };
 };
