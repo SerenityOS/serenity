@@ -155,7 +155,7 @@ time_t now()
     unsigned year, month, day, hour, minute, second;
     read_registers(year, month, day, hour, minute, second);
 
-    klog() << "RTC: Year: " << year << ", month: " << month << ", day: " << day;
+    klog() << "RTC: Year: " << year << ", month: " << month << ", day: " << day << ", hour: " << hour << ", minute: " << minute << ", second: " << second;
 
     ASSERT(year >= 2018);
 
