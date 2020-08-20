@@ -425,8 +425,8 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
         if (move.to == Square("a8") || move.to == Square("c8")) {
             set_piece(Square("e8"), EmptyPiece);
             set_piece(Square("a8"), EmptyPiece);
-            set_piece(Square("c8"), { Colour::White, Type::King });
-            set_piece(Square("d8"), { Colour::White, Type::Rook });
+            set_piece(Square("c8"), { Colour::Black, Type::King });
+            set_piece(Square("d8"), { Colour::Black, Type::Rook });
             return true;
         } else if (move.to == Square("h8") || move.to == Square("g8")) {
             set_piece(Square("e8"), EmptyPiece);
@@ -461,6 +461,23 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
     set_piece(move.from, EmptyPiece);
 
     return true;
+}
+
+Move Board::random_move(Colour colour) const
+{
+    if (colour == Colour::None)
+        colour = turn();
+
+    Move move = { { 50, 50 }, { 50, 50 } };
+    int probability = 1;
+    generate_moves([&](Move m) {
+        if (rand() % probability == 0)
+            move = m;
+        ++probability;
+        return IterationDecision::Continue;
+    });
+
+    return move;
 }
 
 Board::Result Board::game_result() const
@@ -531,6 +548,65 @@ Board::Result Board::game_result() const
         return Result::CheckMate;
 
     return Result::StaleMate;
+}
+
+Colour Board::game_winner() const
+{
+    if (game_result() == Result::CheckMate)
+        return opposing_colour(turn());
+
+    return Colour::None;
+}
+
+int Board::game_score() const
+{
+    switch (game_winner()) {
+    case Colour::White:
+        return +1;
+    case Colour::Black:
+        return -1;
+    case Colour::None:
+        return 0;
+    }
+    return 0;
+}
+
+bool Board::game_finished() const
+{
+    return game_result() != Result::NotFinished;
+}
+
+int Board::material_imbalance() const
+{
+    int imbalance = 0;
+    Square::for_each([&](Square square) {
+        int value = 0;
+        switch (get_piece(square).type) {
+        case Type::Pawn:
+            value = 1;
+            break;
+        case Type::Knight:
+        case Type::Bishop:
+            value = 3;
+            break;
+        case Type::Rook:
+            value = 5;
+            break;
+        case Type::Queen:
+            value = 9;
+            break;
+        default:
+            break;
+        }
+
+        if (get_piece(square).colour == Colour::White) {
+            imbalance += value;
+        } else {
+            imbalance -= value;
+        }
+        return IterationDecision::Continue;
+    });
+    return imbalance;
 }
 
 bool Board::is_promotion_move(const Move& move, Colour colour) const

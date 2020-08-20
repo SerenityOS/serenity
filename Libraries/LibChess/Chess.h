@@ -135,7 +135,12 @@ public:
 
     template<typename Callback>
     void generate_moves(Callback callback, Colour colour = Colour::None) const;
+    Move random_move(Colour colour = Colour::None) const;
     Result game_result() const;
+    Colour game_winner() const;
+    int game_score() const;
+    bool game_finished() const;
+    int material_imbalance() const;
 
     Colour turn() const { return m_turn; }
     const Vector<Move>& moves() const { return m_moves; }
