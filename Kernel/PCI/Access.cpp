@@ -233,5 +233,47 @@ size_t get_BAR_space_size(Address address, u8 bar_number)
     return space_size;
 }
 
+u8 Capability::read8(u32 field) const
+{
+    return PCI::read8(m_address, m_ptr + field);
+}
+
+u16 Capability::read16(u32 field) const
+{
+    return PCI::read16(m_address, m_ptr + field);
+}
+
+u32 Capability::read32(u32 field) const
+{
+    return PCI::read32(m_address, m_ptr + field);
+}
+
+void Capability::write8(u32 field, u8 value)
+{
+    PCI::write8(m_address, m_ptr + field, value);
+}
+
+void Capability::write16(u32 field, u16 value)
+{
+    PCI::write16(m_address, m_ptr + field, value);
+}
+
+void Capability::write32(u32 field, u32 value)
+{
+    PCI::write32(m_address, m_ptr + field, value);
+}
+
+void enumerate_capabilities(Address address, Function<void(Capability&)> callback)
+{
+    if (!(read16(address, PCI_STATUS) & (1 << 4)))
+        return;
+    u8 capability_ptr = read8(address, PCI_CAPABILITIES_POINTER) & ~3;
+    while (capability_ptr != 0) {
+        Capability capability(address, read8(address, capability_ptr), capability_ptr);
+        callback(capability);
+        capability_ptr = read8(address, capability_ptr + 1) & ~3;
+    }
+}
+
 }
 }

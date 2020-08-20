@@ -65,6 +65,9 @@ namespace Kernel {
 #define PCI_MAX_BUSES 256
 #define PCI_MAX_FUNCTIONS_PER_DEVICE 8
 
+#define PCI_CAPABILITY_NULL 0x0
+#define PCI_CAPABILITY_VENDOR_SPECIFIC 0x9
+
 //#define PCI_DEBUG 1
 
 namespace PCI {
@@ -215,6 +218,32 @@ u16 get_subsystem_vendor_id(Address);
 size_t get_BAR_space_size(Address, u8);
 void enable_bus_mastering(Address);
 void disable_bus_mastering(Address);
+
+class Capability {
+public:
+    Capability(const Address& address, u8 id, u8 ptr)
+        : m_address(address)
+        , m_id(id)
+        , m_ptr(ptr)
+    {
+    }
+
+    u8 id() const { return m_id; }
+    bool is_vendor_specific() const { return m_id == PCI_CAPABILITY_VENDOR_SPECIFIC; }
+
+    u8 read8(u32) const;
+    u16 read16(u32) const;
+    u32 read32(u32) const;
+    void write8(u32, u8);
+    void write16(u32, u16);
+    void write32(u32, u32);
+
+private:
+    Address m_address;
+    const u8 m_id;
+    const u8 m_ptr;
+};
+void enumerate_capabilities(Address, Function<void(Capability&)>);
 
 class Access;
 class MMIOAccess;
