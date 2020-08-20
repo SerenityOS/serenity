@@ -453,7 +453,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 
 void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
 {
-    ASSERT(s_mm_lock.is_locked());
+    ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_super_physical_regions) {
         if (!region.contains(page)) {
             klog() << "MM: deallocate_supervisor_physical_page: " << page.paddr() << " not in " << region.lower() << " -> " << region.upper();
