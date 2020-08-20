@@ -24,79 +24,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/TestSuite.h>
+
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Zlib.h>
-#include <LibCore/ArgsParser.h>
 
-auto main(int argc, char** argv) -> int
+bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
 {
-    const char* mode = nullptr;
-    const char* type = nullptr;
+    if (lhs.size() != rhs.size())
+        return false;
 
-    Core::ArgsParser parser;
-    parser.add_positional_argument(type, "Type of algorithm to apply (Only Zlib and DEFLATE is present at the moment)", "type", Core::ArgsParser::Required::No);
-    parser.add_positional_argument(mode, "Mode to operate in (compress|decompress; Only decompress is valid at the moment)", "mode", Core::ArgsParser::Required::No);
-    parser.parse(argc, argv);
-
-    if (type == nullptr) {
-        type = "deflate";
+    for (size_t idx = 0; idx < lhs.size(); ++idx) {
+        if (lhs[idx] != rhs[idx])
+            return false;
     }
 
-    if (mode == nullptr) {
-        mode = "decompress";
-    }
-
-    StringView mode_sv { mode };
-    StringView type_sv { type };
-    if (mode_sv == "decompress") {
-        if (type_sv == "deflate") {
-            // Deflated bytes for the string "This is a simple text file :)"
-            u8 data_bytes[] = {
-                0x0B, 0xC9, 0xC8, 0x2C,
-                0x56, 0x00, 0xA2, 0x44,
-                0x85, 0xE2, 0xCC, 0xDC,
-                0x82, 0x9C, 0x54, 0x85,
-                0x92, 0xD4, 0x8A, 0x12,
-                0x85, 0xB4, 0x4C, 0x20,
-                0xCB, 0x4A, 0x13, 0x00
-            };
-
-            auto deflated = Compress::DeflateStream::decompress_all({ data_bytes, 4 * 7 });
-            auto decompressed = String((const char*)deflated.data(), deflated.size());
-
-            if (decompressed.equals_ignoring_case("This is a simple text file :)")) {
-                printf("Test PASSED");
-                return 0;
-            } else {
-                printf("Test FAILED");
-                return 1;
-            }
-        }
-
-        if (type_sv == "zlib") {
-            // zlib bytes for the string "This is a simple text file :)"
-            u8 data_bytes[] = {
-                0x78, 0x01, 0x01, 0x1D, 0x00, 0xE2, 0xFF, 0x54,
-                0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61,
-                0x20, 0x73, 0x69, 0x6D, 0x70, 0x6C, 0x65, 0x20,
-                0x74, 0x65, 0x78, 0x74, 0x20, 0x66, 0x69, 0x6C,
-                0x65, 0x20, 0x3A, 0x29, 0x99, 0x5E, 0x09, 0xE8
-            };
-
-            auto deflater = Compress::Zlib({ data_bytes, 8 * 5 });
-            auto deflated = deflater.decompress();
-            auto decompressed = String((const char*)deflated.data(), deflated.size());
-
-            if (decompressed.equals_ignoring_case("This is a simple text file :)")) {
-                printf("Test PASSED");
-                return 0;
-            } else {
-                printf("Test FAILED");
-                return 1;
-            }
-        }
-    }
-
-    printf("Unknown arguments passed to test!");
-    return 1;
+    return true;
 }
+
+TEST_CASE(deflate_decompress_compressed_block)
+{
+    const u8 compressed[] = {
+        0x0B, 0xC9, 0xC8, 0x2C, 0x56, 0x00, 0xA2, 0x44, 0x85, 0xE2, 0xCC, 0xDC,
+        0x82, 0x9C, 0x54, 0x85, 0x92, 0xD4, 0x8A, 0x12, 0x85, 0xB4, 0x4C, 0x20,
+        0xCB, 0x4A, 0x13, 0x00
+    };
+
+    const u8 uncompressed[] = "This is a simple text file :)";
+
+    const auto decompressed = Compress::DeflateStream::decompress_all({ compressed, sizeof(compressed) });
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.span()));
+}
+
+TEST_CASE(zlib_simple_decompress)
+{
+    const u8 compressed[] = {
+        0x78, 0x01, 0x01, 0x1D, 0x00, 0xE2, 0xFF, 0x54, 0x68, 0x69, 0x73, 0x20,
+        0x69, 0x73, 0x20, 0x61, 0x20, 0x73, 0x69, 0x6D, 0x70, 0x6C, 0x65, 0x20,
+        0x74, 0x65, 0x78, 0x74, 0x20, 0x66, 0x69, 0x6C, 0x65, 0x20, 0x3A, 0x29,
+        0x99, 0x5E, 0x09, 0xE8
+    };
+
+    const u8 uncompressed[] = "This is a simple text file :)";
+
+    const auto decompressed = Compress::Zlib { { compressed, sizeof(compressed) } }.decompress();
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.span()));
+}
+
+TEST_MAIN(Compress)
