@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -39,10 +40,7 @@ namespace Kernel {
 
 Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
 {
-    static Lockable<InlineLinkedList<LocalSocket>>* s_list;
-    if (!s_list)
-        s_list = new Lockable<InlineLinkedList<LocalSocket>>();
-    return *s_list;
+    return Singleton<Lockable<InlineLinkedList<LocalSocket>>>::the();
 }
 
 void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
@@ -348,7 +346,6 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
 {
     if (level != SOL_SOCKET)
         return Socket::getsockopt(description, level, option, value, value_size);
-
 
     socklen_t size;
     if (!Process::current()->validate_read_and_copy_typed(&size, value_size))
