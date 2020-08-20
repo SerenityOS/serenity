@@ -232,6 +232,7 @@ void Editor::enter_search()
         m_notifier->set_enabled(false);
 
         m_search_editor = Editor::construct(Configuration { Configuration::Eager }); // Has anyone seen 'Inception'?
+        m_search_editor->initialize();
         add_child(*m_search_editor);
 
         m_search_editor->on_display_refresh = [this](Editor& search_editor) {
@@ -239,7 +240,6 @@ void Editor::enter_search()
             builder.append(Utf32View { search_editor.buffer().data(), search_editor.buffer().size() });
             search(builder.build());
             refresh_display();
-            return;
         };
 
         // Whenever the search editor gets a ^R, cycle between history entries.
@@ -257,7 +257,9 @@ void Editor::enter_search()
                 search_editor.m_refresh_needed = true;
                 return false; // Do not process this key event
             }
-            return true;
+
+            search_editor.erase_character_backwards();
+            return false;
         });
 
         // ^L - This is a source of issues, as the search editor refreshes first,
