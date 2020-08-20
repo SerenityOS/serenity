@@ -31,6 +31,7 @@
 
 namespace Core {
 
+// Represents a time in local time.
 class DateTime {
 public:
     time_t timestamp() const { return m_timestamp; }
