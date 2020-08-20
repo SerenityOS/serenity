@@ -194,8 +194,6 @@ public:
 
 #undef __ENUMERATE_EDITOR_INTERNAL_FUNCTION
 
-    // FIXME: we will have to kindly ask our instantiators to set our signal handlers,
-    // since we can not do this cleanly ourselves. (signal() limitation: cannot give member functions)
     void interrupted();
     void resized()
     {
@@ -451,7 +449,6 @@ private:
 
     HashMap<Key, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
 
-    // TODO: handle signals internally.
     struct termios m_termios {
     };
     struct termios m_default_termios {
