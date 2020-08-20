@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
@@ -43,10 +44,7 @@ void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
 
 Lockable<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
 {
-    static Lockable<HashMap<u16, UDPSocket*>>* s_map;
-    if (!s_map)
-        s_map = new Lockable<HashMap<u16, UDPSocket*>>;
-    return *s_map;
+    return Singleton<Lockable<HashMap<u16, UDPSocket*>>>::the();
 }
 
 SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
