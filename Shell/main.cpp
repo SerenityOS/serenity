@@ -238,10 +238,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    editor->on_interrupt_handled = [&] {
-        editor->finish();
-    };
-
     shell->add_child(*editor);
 
     Core::EventLoop::current().post_event(*shell, make<Core::CustomEvent>(Shell::ShellEventType::ReadLine));
