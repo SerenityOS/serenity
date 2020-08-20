@@ -617,65 +617,73 @@ RegisterState& Thread::get_register_dump_from_stack()
     return *(RegisterState*)(kernel_stack_top() - sizeof(RegisterState));
 }
 
-u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue> auxv)
+u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue> auxiliary_values)
 {
     auto* region = m_process->allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
     ASSERT(region);
     region->set_stack(true);
 
-    u32 new_esp = region->vaddr().offset(default_userspace_stack_size).get();
-
-    // FIXME: This is weird, we put the argument contents at the base of the stack,
-    //        and the argument pointers at the top? Why?
-    char* stack_base = (char*)region->vaddr().get();
-    int argc = arguments.size();
-    char** argv = (char**)stack_base;
-    char** env = argv + arguments.size() + 1;
-    auxv_t* auxvp = (auxv_t*)((char*)(env + environment.size() + 1));
-    char* bufptr = stack_base + (sizeof(char*) * (arguments.size() + 1)) + (sizeof(char*) * (environment.size() + 1) + (sizeof(auxv_t) * auxv.size()));
-
-    SmapDisabler disabler;
-
-    for (size_t i = 0; i < arguments.size(); ++i) {
-        argv[i] = bufptr;
-        memcpy(bufptr, arguments[i].characters(), arguments[i].length());
-        bufptr += arguments[i].length();
-        *(bufptr++) = '\0';
-    }
-    argv[arguments.size()] = nullptr;
-
-    for (size_t i = 0; i < environment.size(); ++i) {
-        env[i] = bufptr;
-        memcpy(bufptr, environment[i].characters(), environment[i].length());
-        bufptr += environment[i].length();
-        *(bufptr++) = '\0';
-    }
-    env[environment.size()] = nullptr;
-
-    for (size_t i = 0; i < auxv.size(); ++i) {
-        *auxvp = auxv[i].auxv;
-        if (!auxv[i].optional_string.is_empty()) {
-            auxvp->a_un.a_ptr = bufptr;
-            memcpy(bufptr, auxv[i].optional_string.characters(), auxv[i].optional_string.length());
-            bufptr += auxv[i].optional_string.length();
-            *(bufptr++) = '\0';
-        }
-        ++auxvp;
-    }
+    FlatPtr new_esp = region->vaddr().offset(default_userspace_stack_size).get();
 
     auto push_on_new_stack = [&new_esp](u32 value) {
         new_esp -= 4;
-        u32* stack_ptr = (u32*)new_esp;
-        *stack_ptr = value;
+        Userspace<u32*> stack_ptr = new_esp;
+        copy_to_user(stack_ptr, &value);
     };
 
-    // NOTE: The stack needs to be 16-byte aligned.
-    push_on_new_stack((FlatPtr)env);
-    push_on_new_stack((FlatPtr)argv);
-    push_on_new_stack((FlatPtr)argc);
-    push_on_new_stack(0);
+    auto push_aux_value_on_new_stack = [&new_esp](auxv_t value) {
+        new_esp -= sizeof(auxv_t);
+        Userspace<auxv_t*> stack_ptr = new_esp;
+        copy_to_user(stack_ptr, &value);
+    };
 
-    ASSERT((FlatPtr)new_esp % 16 == 0);
+    auto push_string_on_new_stack = [&new_esp](const String& string) {
+        new_esp -= round_up_to_power_of_two(string.length() + 1, 4);
+        Userspace<u32*> stack_ptr = new_esp;
+        copy_to_user(stack_ptr, string.characters(), string.length() + 1);
+    };
+
+    Vector<FlatPtr> argv_entries;
+    for (auto& argument : arguments) {
+        push_string_on_new_stack(argument);
+        argv_entries.append(new_esp);
+    }
+
+    Vector<FlatPtr> env_entries;
+    for (auto& variable : environment) {
+        push_string_on_new_stack(variable);
+        env_entries.append(new_esp);
+    }
+
+    for (auto& value : auxiliary_values) {
+        if (!value.optional_string.is_empty()) {
+            push_string_on_new_stack(value.optional_string);
+            value.auxv.a_un.a_ptr = (void*)new_esp;
+        }
+    }
+
+    for (ssize_t i = auxiliary_values.size() - 1; i >= 0; --i) {
+        auto& value = auxiliary_values[i];
+        push_aux_value_on_new_stack(value.auxv);
+    }
+
+    push_on_new_stack(0);
+    for (ssize_t i = env_entries.size() - 1; i >= 0; --i)
+        push_on_new_stack(env_entries[i]);
+    FlatPtr envp = new_esp;
+
+    push_on_new_stack(0);
+    for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
+        push_on_new_stack(argv_entries[i]);
+    FlatPtr argv = new_esp;
+
+    // NOTE: The stack needs to be 16-byte aligned.
+    new_esp -= new_esp % 16;
+
+    push_on_new_stack((FlatPtr)envp);
+    push_on_new_stack((FlatPtr)argv);
+    push_on_new_stack((FlatPtr)argv_entries.size());
+    push_on_new_stack(0);
 
     return new_esp;
 }
