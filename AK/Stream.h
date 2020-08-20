@@ -29,6 +29,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Concepts.h>
 #include <AK/Forward.h>
+#include <AK/MemMem.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
@@ -297,6 +298,53 @@ public:
         m_read_offset += count;
         try_discard_chunks();
         return true;
+    }
+
+    Optional<size_t> offset_of(ReadonlyBytes value) const
+    {
+        if (value.size() > remaining())
+            return {};
+
+        // First, find which chunk we're in.
+        auto chunk_index = (m_read_offset - m_base_offset) / chunk_size;
+        auto last_written_chunk_index = (m_write_offset - m_base_offset) / chunk_size;
+        auto first_chunk_index = chunk_index;
+        auto last_written_chunk_offset = m_write_offset % chunk_size;
+        auto first_chunk_offset = m_read_offset % chunk_size;
+        size_t last_chunk_offset = 0;
+        auto found_value = false;
+
+        for (; chunk_index <= last_written_chunk_index; ++chunk_index) {
+            auto chunk_bytes = m_chunks[chunk_index].bytes();
+            size_t chunk_offset = 0;
+            if (chunk_index == last_written_chunk_index) {
+                chunk_bytes = chunk_bytes.slice(0, last_written_chunk_offset);
+            }
+            if (chunk_index == first_chunk_index) {
+                chunk_bytes = chunk_bytes.slice(first_chunk_offset);
+                chunk_offset = first_chunk_offset;
+            }
+
+            // See if 'value' is in this chunk,
+            auto position = AK::memmem(chunk_bytes.data(), chunk_bytes.size(), value.data(), value.size());
+            if (!position)
+                continue; // Not in this chunk either :(
+
+            // We found it!
+            found_value = true;
+            last_chunk_offset = (const u8*)position - chunk_bytes.data() + chunk_offset;
+            break;
+        }
+
+        if (found_value) {
+            if (first_chunk_index == chunk_index)
+                return last_chunk_offset - first_chunk_offset;
+
+            return (chunk_index - first_chunk_index) * chunk_size + last_chunk_offset - first_chunk_offset;
+        }
+
+        // No dice.
+        return {};
     }
 
     size_t read(Bytes bytes) override
