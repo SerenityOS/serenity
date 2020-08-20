@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
 #include <LibCore/DateTime.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Interpreter.h>
@@ -46,6 +47,38 @@ Date::Date(Core::DateTime datetime, u16 milliseconds, Object& prototype)
 
 Date::~Date()
 {
+}
+
+String Date::iso_date_string() const
+{
+    time_t timestamp = m_datetime.timestamp();
+    struct tm tm;
+    gmtime_r(&timestamp, &tm);
+    int year = tm.tm_year + 1900;
+    int month = tm.tm_mon + 1;
+
+    StringBuilder builder;
+    if (year < 0)
+        builder.appendf("-%06d", -year);
+    else if (year > 9999)
+        builder.appendf("+%06d", year);
+    else
+        builder.appendf("%04d", year);
+    builder.append('-');
+    builder.appendf("%02d", month);
+    builder.append('-');
+    builder.appendf("%02d", tm.tm_mday);
+    builder.append('T');
+    builder.appendf("%02d", tm.tm_hour);
+    builder.append(':');
+    builder.appendf("%02d", tm.tm_min);
+    builder.append(':');
+    builder.appendf("%02d", tm.tm_sec);
+    builder.append('.');
+    builder.appendf("%03d", m_milliseconds);
+    builder.append('Z');
+
+    return builder.build();
 }
 
 }

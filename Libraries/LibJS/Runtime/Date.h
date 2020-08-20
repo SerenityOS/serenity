@@ -52,6 +52,8 @@ public:
         return String::format("%s %s", date_string().characters(), time_string().characters());
     }
 
+    String iso_date_string() const;
+
     // FIXME: One day, implement real locale support. Until then, everyone gets what the Clock MenuApplet displays.
     String locale_date_string() const { return m_datetime.to_string("%Y-%m-%d"); }
     String locale_string() const { return m_datetime.to_string(); }
