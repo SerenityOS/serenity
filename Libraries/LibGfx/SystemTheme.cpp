@@ -98,72 +98,11 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
         return &path[0];
     };
 
-#define DO_COLOR(x) \
-    data->color[(int)ColorRole::x] = get_color(#x)
-
-    DO_COLOR(DesktopBackground);
-    DO_COLOR(ThreedHighlight);
-    DO_COLOR(ThreedShadow1);
-    DO_COLOR(ThreedShadow2);
-    DO_COLOR(HoverHighlight);
-    DO_COLOR(Selection);
-    DO_COLOR(SelectionText);
-    DO_COLOR(InactiveSelection);
-    DO_COLOR(InactiveSelectionText);
-    DO_COLOR(Window);
-    DO_COLOR(WindowText);
-    DO_COLOR(Base);
-    DO_COLOR(BaseText);
-    DO_COLOR(Button);
-    DO_COLOR(ButtonText);
-    DO_COLOR(DesktopBackground);
-    DO_COLOR(ActiveWindowBorder1);
-    DO_COLOR(ActiveWindowBorder2);
-    DO_COLOR(ActiveWindowTitle);
-    DO_COLOR(ActiveWindowTitleShadow);
-    DO_COLOR(ActiveWindowTitleStripes);
-    DO_COLOR(InactiveWindowBorder1);
-    DO_COLOR(InactiveWindowBorder2);
-    DO_COLOR(InactiveWindowTitle);
-    DO_COLOR(InactiveWindowTitleShadow);
-    DO_COLOR(InactiveWindowTitleStripes);
-    DO_COLOR(MovingWindowBorder1);
-    DO_COLOR(MovingWindowBorder2);
-    DO_COLOR(MovingWindowTitle);
-    DO_COLOR(MovingWindowTitleShadow);
-    DO_COLOR(MovingWindowTitleStripes);
-    DO_COLOR(HighlightWindowBorder1);
-    DO_COLOR(HighlightWindowBorder2);
-    DO_COLOR(HighlightWindowTitle);
-    DO_COLOR(HighlightWindowTitleShadow);
-    DO_COLOR(HighlightWindowTitleStripes);
-    DO_COLOR(MenuStripe);
-    DO_COLOR(MenuBase);
-    DO_COLOR(MenuBaseText);
-    DO_COLOR(MenuSelection);
-    DO_COLOR(MenuSelectionText);
-    DO_COLOR(RubberBandFill);
-    DO_COLOR(RubberBandBorder);
-    DO_COLOR(Link);
-    DO_COLOR(ActiveLink);
-    DO_COLOR(VisitedLink);
-    DO_COLOR(Ruler);
-    DO_COLOR(RulerBorder);
-    DO_COLOR(RulerActiveText);
-    DO_COLOR(RulerInactiveText);
-    DO_COLOR(TextCursor);
-    DO_COLOR(FocusOutline);
-    DO_COLOR(SyntaxComment);
-    DO_COLOR(SyntaxNumber);
-    DO_COLOR(SyntaxString);
-    DO_COLOR(SyntaxType);
-    DO_COLOR(SyntaxPunctuation);
-    DO_COLOR(SyntaxOperator);
-    DO_COLOR(SyntaxKeyword);
-    DO_COLOR(SyntaxControlKeyword);
-    DO_COLOR(SyntaxIdentifier);
-    DO_COLOR(SyntaxPreprocessorStatement);
-    DO_COLOR(SyntaxPreprocessorValue);
+#undef __ENUMERATE_COLOR_ROLE
+#define __ENUMERATE_COLOR_ROLE(role) \
+    data->color[(int)ColorRole::role] = get_color(#role);
+    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
 
 #define DO_METRIC(x) \
     data->metric[(int)MetricRole::x] = get_metric(#x, (int)MetricRole::x)
