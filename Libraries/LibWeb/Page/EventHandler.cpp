@@ -157,6 +157,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             if (result.layout_node && result.layout_node->node()) {
                 m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
                 layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
+                layout_root()->recompute_selection_states();
                 dump_selection("MouseDown");
                 m_in_mouse_selection = true;
             }
@@ -209,6 +210,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             auto hit = layout_root()->hit_test(position, HitTestType::TextCursor);
             if (hit.layout_node && hit.layout_node->node()) {
                 layout_root()->selection().set_end({ hit.layout_node, hit.index_in_node });
+                layout_root()->recompute_selection_states();
             }
             dump_selection("MouseMove");
             page_client.page_did_change_selection();

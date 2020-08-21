@@ -110,6 +110,7 @@ void InProcessWebView::select_all()
         last_layout_node_index_in_node = downcast<LayoutText>(*last_layout_node).text_for_rendering().length() - 1;
 
     layout_root->selection().set({ first_layout_node, 0 }, { last_layout_node, last_layout_node_index_in_node });
+    layout_root->recompute_selection_states();
     update();
 }
 

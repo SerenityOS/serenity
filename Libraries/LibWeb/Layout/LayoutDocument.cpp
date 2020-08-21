@@ -120,4 +120,30 @@ HitTestResult LayoutDocument::hit_test(const Gfx::IntPoint& position, HitTestTyp
     return stacking_context()->hit_test(position, type);
 }
 
+void LayoutDocument::recompute_selection_states()
+{
+    SelectionState state = SelectionState::None;
+
+    auto selection = this->selection().normalized();
+
+    for_each_in_subtree([&](auto& layout_node) {
+        if (!selection.is_valid()) {
+            // Everything gets SelectionState::None.
+        } else if (&layout_node == selection.start().layout_node && &layout_node == selection.end().layout_node) {
+            state = SelectionState::StartAndEnd;
+        } else if (&layout_node == selection.start().layout_node) {
+            state = SelectionState::Start;
+        } else if (&layout_node == selection.end().layout_node) {
+            state = SelectionState::End;
+        } else {
+            if (state == SelectionState::Start)
+                state = SelectionState::Full;
+            else if (state == SelectionState::End || state == SelectionState::StartAndEnd)
+                state = SelectionState::None;
+        }
+        layout_node.set_selection_state(state);
+        return IterationDecision::Continue;
+    });
+}
+
 }
