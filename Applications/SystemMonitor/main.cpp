@@ -66,6 +66,7 @@ static NonnullRefPtr<GUI::Widget> build_file_systems_tab();
 static NonnullRefPtr<GUI::Widget> build_pci_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_devices_tab();
 static NonnullRefPtr<GUI::Widget> build_graphs_tab();
+static NonnullRefPtr<GUI::Widget> build_processors_tab();
 
 class UnavailableProcessWidget final : public GUI::Frame {
     C_OBJECT(UnavailableProcessWidget)
@@ -172,6 +173,8 @@ int main(int argc, char** argv)
 
     auto network_stats_widget = NetworkStatisticsWidget::construct();
     tabwidget.add_widget("Network", network_stats_widget);
+
+    tabwidget.add_widget("Processors", build_processors_tab());
 
     process_table_container.set_layout<GUI::VerticalBoxLayout>();
     process_table_container.layout()->set_spacing(0);
@@ -565,4 +568,30 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         self.add<MemoryStatsWidget>(memory_graph);
     };
     return graphs_container;
+}
+
+NonnullRefPtr<GUI::Widget> build_processors_tab()
+{
+    auto processors_widget = GUI::LazyWidget::construct();
+
+    processors_widget->on_first_show = [](GUI::LazyWidget& self) {
+        self.set_layout<GUI::VerticalBoxLayout>();
+        self.layout()->set_margins({ 4, 4, 4, 4 });
+
+        Vector<GUI::JsonArrayModel::FieldSpec> processors_field;
+        processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);
+        processors_field.empend("cpuid", "CPUID", Gfx::TextAlignment::CenterLeft);
+        processors_field.empend("brandstr", "Brand", Gfx::TextAlignment::CenterLeft);
+        processors_field.empend("features", "Features", Gfx::TextAlignment::CenterLeft);
+        processors_field.empend("family", "Family", Gfx::TextAlignment::CenterRight);
+        processors_field.empend("model", "Model", Gfx::TextAlignment::CenterRight);
+        processors_field.empend("stepping", "Stepping", Gfx::TextAlignment::CenterRight);
+        processors_field.empend("type", "Type", Gfx::TextAlignment::CenterRight);
+
+        auto& processors_table_view = self.add<GUI::TableView>();
+        processors_table_view.set_model(GUI::JsonArrayModel::create("/proc/cpuinfo", move(processors_field)));
+        processors_table_view.model()->update();
+    };
+
+    return processors_widget;
 }
