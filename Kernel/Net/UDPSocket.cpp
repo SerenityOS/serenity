@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
@@ -31,7 +32,6 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/Singleton.h>
 
 namespace Kernel {
 
@@ -42,7 +42,7 @@ void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
         callback(*it.value);
 }
 
-static auto s_map = make_singleton<Lockable<HashMap<u16, UDPSocket*>>>();
+static auto s_map = AK::make_singleton<Lockable<HashMap<u16, UDPSocket*>>>();
 
 Lockable<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
 {

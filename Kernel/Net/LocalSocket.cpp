@@ -24,12 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
@@ -38,7 +38,7 @@
 
 namespace Kernel {
 
-static auto s_list = make_singleton<Lockable<InlineLinkedList<LocalSocket>>>();
+static auto s_list = AK::make_singleton<Lockable<InlineLinkedList<LocalSocket>>>();
 
 Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
 {

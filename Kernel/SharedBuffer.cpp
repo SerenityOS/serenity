@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Process.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/SharedBuffer.h>
 
 namespace Kernel {
 
-static auto s_map = make_singleton<Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>>();
+static auto s_map = AK::make_singleton<Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>>();
 
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 {
