@@ -57,8 +57,18 @@ enum class Colour {
 Colour opposing_colour(Colour colour);
 
 struct Piece {
-    Colour colour;
-    Type type;
+    constexpr Piece()
+        : colour(Colour::None)
+        , type(Type::None)
+    {
+    }
+    constexpr Piece(Colour c, Type t)
+        : colour(c)
+        , type(t)
+    {
+    }
+    Colour colour : 4;
+    Type type : 4;
     bool operator==(const Piece& other) const { return colour == other.colour && type == other.type; }
 };
 
