@@ -330,7 +330,8 @@ int TextEditor::ruler_width() const
     if (!m_ruler_visible)
         return 0;
     int line_count_digits = static_cast<int>(log10(line_count())) + 1;
-    return line_count() < 10 ? (line_count_digits + 1) * font().glyph_width('x') + 4 : line_count_digits * font().glyph_width('x') + 4;
+    constexpr size_t padding = 20;
+    return line_count() < 10 ? (line_count_digits + 1) * font().glyph_width('x') + padding : line_count_digits * font().glyph_width('x') + padding;
 }
 
 Gfx::IntRect TextEditor::ruler_content_rect(size_t line_index) const
