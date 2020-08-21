@@ -50,17 +50,25 @@ void DebugInfoWidget::init_toolbar()
         pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
 
-    m_singlestep_action = GUI::Action::create("Single Step", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-single-step.png"), [&](auto&) {
+    m_singlestep_action = GUI::Action::create("Step Over", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-over.png"), [&](auto&) {
+        pthread_mutex_lock(Debugger::the().continue_mutex());
+        Debugger::the().set_continue_type(Debugger::ContinueType::SourceStepOver);
+        pthread_cond_signal(Debugger::the().continue_cond());
+        pthread_mutex_unlock(Debugger::the().continue_mutex());
+    });
+
+    m_step_in_action = GUI::Action::create("Step In", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-in.png"), [&](auto&) {
         pthread_mutex_lock(Debugger::the().continue_mutex());
         Debugger::the().set_continue_type(Debugger::ContinueType::SourceSingleStep);
         pthread_cond_signal(Debugger::the().continue_cond());
         pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
 
-    m_step_in_action = GUI::Action::create("Step In", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-in.png"), [&](auto&) {
-    });
-
     m_step_out_action = GUI::Action::create("Step Out", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"), [&](auto&) {
+        pthread_mutex_lock(Debugger::the().continue_mutex());
+        Debugger::the().set_continue_type(Debugger::ContinueType::SourceStepOut);
+        pthread_cond_signal(Debugger::the().continue_cond());
+        pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
 
     m_toolbar->add_action(*m_continue_action);
