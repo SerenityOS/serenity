@@ -45,27 +45,29 @@ public:
 
     char peek(size_t offset = 0) const;
 
-    bool next_is(char expected) const;
-    bool next_is(const char* expected) const;
+    bool next_is(char) const;
+    bool next_is(StringView) const;
+    bool next_is(const char*) const;
     bool next_is(Condition) const;
 
     char consume();
-    bool consume_specific(char specific);
-    bool consume_specific(const char* str);
+    bool consume_specific(char);
+    bool consume_specific(StringView);
+    bool consume_specific(const char*);
     StringView consume(size_t count);
     StringView consume_all();
     StringView consume_line();
     StringView consume_while(Condition);
-    StringView consume_until(char stop);
-    StringView consume_until(const char* stop);
+    StringView consume_until(char);
+    StringView consume_until(const char*);
     StringView consume_until(Condition);
     // FIXME: provide an escape character
     StringView consume_quoted_string();
 
     void ignore(size_t count = 1);
     void ignore_while(Condition);
-    void ignore_until(char stop);
-    void ignore_until(const char* stop);
+    void ignore_until(char);
+    void ignore_until(const char*);
     void ignore_until(Condition);
 
 protected:
