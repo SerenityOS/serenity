@@ -180,7 +180,6 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
     auto& window = m_window;
-    Gfx::IntRect outer_rect = { {}, rect().size() };
     String title_text;
     if (window.client() && window.client()->is_unresponsive()) {
         StringBuilder builder;
@@ -192,7 +191,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     }
 
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), outer_rect, m_window.rect(), title_text, m_window.icon(), palette, leftmost_button_rect);
+    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), title_text, m_window.icon(), palette, leftmost_button_rect);
 }
 
 void WindowFrame::paint(Gfx::Painter& painter)
