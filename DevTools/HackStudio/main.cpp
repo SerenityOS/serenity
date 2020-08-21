@@ -631,8 +631,7 @@ int main_impl(int argc, char** argv)
                         current_editor_in_execution = get_editor_of_file(source_position.value().file_path);
                         current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
                         debug_info_widget.update_state(*Debugger::the().session(), regs);
-                        debug_info_widget.continue_action().set_enabled(true);
-                        debug_info_widget.singlestep_action().set_enabled(true);
+                        debug_info_widget.set_debug_actions_enabled(true);
                         reveal_action_tab(debug_info_widget);
                     }));
             Core::EventLoop::wake();
@@ -642,8 +641,7 @@ int main_impl(int argc, char** argv)
         [&]() {
             dbg() << "Program continued";
             Core::EventLoop::main().post_event(*g_window, make<Core::DeferredInvocationEvent>([&](auto&) {
-                debug_info_widget.continue_action().set_enabled(false);
-                debug_info_widget.singlestep_action().set_enabled(false);
+                debug_info_widget.set_debug_actions_enabled(false);
                 if (current_editor_in_execution) {
                     current_editor_in_execution->editor().clear_execution_position();
                 }
