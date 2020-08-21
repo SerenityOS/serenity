@@ -207,10 +207,17 @@ void DebugSession::run(Callback callback)
 
         // Re-enable the breakpoint if it wasn't removed by the user
         if (current_breakpoint.has_value() && m_breakpoints.contains(current_breakpoint.value().address)) {
-            // The current breakpoint was removed in order to make it transparrent to the user.
+            // The current breakpoint was removed to make it transparrent to the user.
             // We now want to re-enable it - the code execution flow could hit it again.
             // To re-enable the breakpoint, we first perform a single step and execute the
             // instruction of the breakpoint, and then redo the INT3 patch in its first byte.
+
+            // If the user manually inserted a breakpoint at were we breaked at originally,
+            // we need to disable that breakpoint because we want to singlestep over it to execute the
+            // instruction we breaked on (we re-enable it again later anyways).
+            if (m_breakpoints.contains(current_breakpoint.value().address) && m_breakpoints.get(current_breakpoint.value().address).value().state == BreakPointState::Enabled) {
+                disable_breakpoint(current_breakpoint.value().address);
+            }
             auto stopped_address = single_step();
             enable_breakpoint(current_breakpoint.value().address);
             did_single_step = true;
