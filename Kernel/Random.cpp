@@ -33,7 +33,7 @@
 
 namespace Kernel {
 
-static auto s_the = AK::make_singleton<KernelRng>();
+static AK::Singleton<KernelRng> s_the;
 
 KernelRng& KernelRng::the()
 {

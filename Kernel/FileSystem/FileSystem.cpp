@@ -38,7 +38,7 @@
 namespace Kernel {
 
 static u32 s_lastFileSystemID;
-static auto s_fs_map = AK::make_singleton<HashMap<u32, FS*>>();
+static AK::Singleton<HashMap<u32, FS*>> s_fs_map;
 
 static HashMap<u32, FS*>& all_fses()
 {

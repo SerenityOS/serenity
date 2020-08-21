@@ -46,7 +46,7 @@
 
 namespace Kernel {
 
-static auto s_table = AK::make_singleton<Lockable<HashTable<IPv4Socket*>>>();
+static AK::Singleton<Lockable<HashTable<IPv4Socket*>>> s_table;
 
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {

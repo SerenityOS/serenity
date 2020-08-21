@@ -41,7 +41,7 @@
 
 namespace Kernel {
 
-static auto s_the = AK::make_singleton<VFS>();
+static AK::Singleton<VFS> s_the;
 static constexpr int symlink_recursion_limit { 5 }; // FIXME: increase?
 static constexpr int root_mount_flags = MS_NODEV | MS_NOSUID | MS_RDONLY;
 

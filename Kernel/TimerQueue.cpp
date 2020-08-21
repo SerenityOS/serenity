@@ -34,7 +34,7 @@
 
 namespace Kernel {
 
-static auto s_the = AK::make_singleton<TimerQueue>();
+static AK::Singleton<TimerQueue> s_the;
 
 TimerQueue& TimerQueue::the()
 {

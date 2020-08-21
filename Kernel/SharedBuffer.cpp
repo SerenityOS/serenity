@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-static auto s_map = AK::make_singleton<Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>>();
+static AK::Singleton<Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>> s_map;
 
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 {

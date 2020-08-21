@@ -36,7 +36,7 @@
 namespace Kernel {
 
 static const unsigned s_max_pty_pairs = 8;
-static auto s_the = AK::make_singleton<PTYMultiplexer>();
+static AK::Singleton<PTYMultiplexer> s_the;
 
 PTYMultiplexer& PTYMultiplexer::the()
 {

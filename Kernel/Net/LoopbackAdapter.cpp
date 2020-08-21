@@ -29,7 +29,7 @@
 
 namespace Kernel {
 
-static auto s_loopback = AK::make_singleton<LoopbackAdapter>();
+static AK::Singleton<LoopbackAdapter> s_loopback;
 
 LoopbackAdapter& LoopbackAdapter::the()
 {
