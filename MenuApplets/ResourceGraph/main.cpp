@@ -48,6 +48,8 @@ class GraphWidget final : public GUI::Frame {
     C_OBJECT(GraphWidget);
 
 public:
+    static constexpr size_t history_size = 30;
+
     GraphWidget(GraphType graph_type, Optional<Gfx::Color> graph_color)
         : m_graph_type(graph_type)
     {
@@ -101,8 +103,8 @@ private:
         auto rect = frame_inner_rect();
         for (auto value : m_history) {
             painter.draw_line(
-                { i, rect.bottom() },
-                { i, (int)(rect.height() - (value * (float)rect.height())) },
+                { rect.x() + i, rect.bottom() },
+                { rect.x() + i, (int)(rect.height() - (value * (float)rect.height())) },
                 m_graph_color);
             ++i;
         }
@@ -156,7 +158,7 @@ private:
 
     GraphType m_graph_type;
     Gfx::Color m_graph_color;
-    CircularQueue<float, 30> m_history;
+    CircularQueue<float, history_size> m_history;
     unsigned m_last_cpu_busy { 0 };
     unsigned m_last_cpu_idle { 0 };
     String m_tooltip;
@@ -211,7 +213,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title(name);
     window->set_window_type(GUI::WindowType::MenuApplet);
-    window->resize(30, 16);
+    window->resize(GraphWidget::history_size + 2, 16);
 
     window->set_main_widget<GraphWidget>(graph_type, graph_color);
     window->show();
