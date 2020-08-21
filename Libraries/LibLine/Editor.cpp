@@ -563,16 +563,11 @@ void Editor::handle_interrupt_event()
         }
     }
 
-    if (!m_buffer.is_empty()) {
-        fprintf(stderr, "^C");
-        fflush(stderr);
-    }
+    fprintf(stderr, "^C");
+    fflush(stderr);
 
     if (on_interrupt_handled)
         on_interrupt_handled();
-
-    if (m_buffer.is_empty())
-        return;
 
     m_buffer.clear();
     m_cursor = 0;
