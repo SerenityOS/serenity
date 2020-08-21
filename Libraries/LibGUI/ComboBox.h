@@ -49,6 +49,7 @@ public:
     const Model* model() const;
     void set_model(NonnullRefPtr<Model>);
 
+    size_t selected_index() const;
     void set_selected_index(size_t index);
 
     bool only_allow_values_from_model() const { return m_only_allow_values_from_model; }
