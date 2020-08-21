@@ -47,6 +47,8 @@ public:
 
         bool operator==(const SourcePosition& other) const { return file_path == other.file_path && line_number == other.line_number; }
         bool operator!=(const SourcePosition& other) const { return !(*this == other); }
+
+        static SourcePosition from_line_info(const LineProgram::LineInfo&);
     };
 
     struct VariableInfo {
@@ -80,7 +82,7 @@ public:
         bool is_function { false };
         String name;
         u32 address_low { 0 };
-        u32 address_high { 0 };
+        u32 address_high { 0 }; // Non-inclusive - the lowest address after address_low that's not in this scope
         Vector<Dwarf::DIE> dies_of_variables;
     };
 
@@ -104,6 +106,8 @@ public:
     }
 
     String name_of_containing_function(u32 address) const;
+    Vector<SourcePosition> source_lines_in_scope(const VariablesScope&) const;
+    Optional<VariablesScope> get_containing_function(u32 address) const;
 
 private:
     void prepare_variable_scopes();

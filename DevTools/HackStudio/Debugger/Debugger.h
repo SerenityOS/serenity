@@ -113,6 +113,8 @@ private:
     void remove_temporary_breakpoints();
     void do_step_out(const PtraceRegisters&);
     void do_step_over(const PtraceRegisters&);
+    void insert_temporary_breakpoint(FlatPtr address);
+    void insert_temporary_breakpoint_at_return_address(const PtraceRegisters&);
 
     OwnPtr<DebugSession> m_debug_session;
     DebuggingState m_state;

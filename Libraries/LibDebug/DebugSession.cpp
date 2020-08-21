@@ -175,6 +175,8 @@ bool DebugSession::enable_breakpoint(void* address)
     auto breakpoint = m_breakpoints.get(address);
     ASSERT(breakpoint.has_value());
 
+    ASSERT(breakpoint.value().state == BreakPointState::Disabled);
+
     if (!poke(reinterpret_cast<u32*>(breakpoint.value().address), (breakpoint.value().original_first_word & ~(uint32_t)0xff) | BREAKPOINT_INSTRUCTION))
         return false;
 
