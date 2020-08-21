@@ -57,6 +57,15 @@ bool GenericLexer::next_is(char expected) const
 }
 
 // Tests if the `expected` string comes next in the input
+bool GenericLexer::next_is(StringView expected) const
+{
+    for (size_t i = 0; i < expected.length(); ++i)
+        if (peek(i) != expected[i])
+            return false;
+    return true;
+}
+
+// Tests if the `expected` string comes next in the input
 bool GenericLexer::next_is(const char* expected) const
 {
     for (size_t i = 0; expected[i] != '\0'; ++i)
@@ -89,13 +98,19 @@ bool GenericLexer::consume_specific(char specific)
 }
 
 // Consume the given string if it is next in the input
-bool GenericLexer::consume_specific(const char* str)
+bool GenericLexer::consume_specific(StringView str)
 {
     if (!next_is(str))
         return false;
 
-    ignore(__builtin_strlen(str));
+    ignore(str.length());
     return true;
+}
+
+// Consume the given string if it is next in the input
+bool GenericLexer::consume_specific(const char* str)
+{
+    return consume_specific(StringView(str));
 }
 
 // Consume a number of characters
