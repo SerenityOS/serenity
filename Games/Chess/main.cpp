@@ -46,7 +46,8 @@ int main(int argc, char** argv)
     auto size = config->read_num_entry("Display", "size", 512);
     window->set_title("Chess");
     window->resize(size, size);
-    window->set_resizable(false);
+    window->set_size_increment({ 8, 8 });
+    window->set_resize_aspect_ratio(1, 1);
 
     auto icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-chess.png");
     window->set_icon(icon);
