@@ -25,6 +25,7 @@
  */
 
 #include <AK/HashTable.h>
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Lock.h>
@@ -33,12 +34,11 @@
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Random.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel {
 
-static auto s_table = make_singleton<Lockable<HashTable<NetworkAdapter*>>>();
+static auto s_table = AK::make_singleton<Lockable<HashTable<NetworkAdapter*>>>();
 
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {

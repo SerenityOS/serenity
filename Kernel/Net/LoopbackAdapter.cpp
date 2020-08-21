@@ -24,12 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Net/LoopbackAdapter.h>
-#include <Kernel/Singleton.h>
 
 namespace Kernel {
 
-static auto s_loopback = make_singleton<LoopbackAdapter>();
+static auto s_loopback = AK::make_singleton<LoopbackAdapter>();
 
 LoopbackAdapter& LoopbackAdapter::the()
 {

@@ -24,11 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/TTY/SlavePTY.h>
 
 namespace Kernel {
@@ -46,7 +46,7 @@ DevPtsFS::~DevPtsFS()
 {
 }
 
-static auto s_ptys = make_singleton<HashTable<unsigned>>();
+static auto s_ptys = AK::make_singleton<HashTable<unsigned>>();
 
 bool DevPtsFS::initialize()
 {

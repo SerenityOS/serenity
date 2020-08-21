@@ -25,13 +25,13 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/Devices/PATADiskDevice.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
@@ -108,7 +108,7 @@ namespace Kernel {
 #define PCI_Mass_Storage_Class 0x1
 #define PCI_IDE_Controller_Subclass 0x1
 
-static auto s_pata_lock = make_singleton<Lock>();
+static auto s_pata_lock = AK::make_singleton<Lock>();
 
 static Lock& s_lock()
 {

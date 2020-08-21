@@ -25,12 +25,12 @@
  */
 
 #include "NullDevice.h"
+#include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/Singleton.h>
 
 namespace Kernel {
 
-static auto s_the = make_singleton<NullDevice>();
+static auto s_the = AK::make_singleton<NullDevice>();
 
 void NullDevice::initialize()
 {

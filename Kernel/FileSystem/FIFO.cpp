@@ -25,20 +25,20 @@
  */
 
 #include <AK/HashTable.h>
+#include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Process.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/Thread.h>
 
 //#define FIFO_DEBUG
 
 namespace Kernel {
 
-static auto s_table = make_singleton<Lockable<HashTable<FIFO*>>>();
+static auto s_table = AK::make_singleton<Lockable<HashTable<FIFO*>>>();
 
 static Lockable<HashTable<FIFO*>>& all_fifos()
 {

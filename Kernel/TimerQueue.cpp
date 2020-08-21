@@ -27,14 +27,14 @@
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
+#include <AK/Singleton.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
 namespace Kernel {
 
-static auto s_the = make_singleton<TimerQueue>();
+static auto s_the = AK::make_singleton<TimerQueue>();
 
 TimerQueue& TimerQueue::the()
 {

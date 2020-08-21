@@ -25,6 +25,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -34,14 +35,13 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
-#include <Kernel/Singleton.h>
 #include <LibC/errno_numbers.h>
 
 //#define VFS_DEBUG
 
 namespace Kernel {
 
-static auto s_the = make_singleton<VFS>();
+static auto s_the = AK::make_singleton<VFS>();
 static constexpr int symlink_recursion_limit { 5 }; // FIXME: increase?
 static constexpr int root_mount_flags = MS_NODEV | MS_NOSUID | MS_RDONLY;
 
