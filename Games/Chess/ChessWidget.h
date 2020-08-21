@@ -78,6 +78,9 @@ public:
 
     void maybe_input_engine_move();
 
+    void set_coordinates(bool coordinates) { m_coordinates = coordinates; }
+    bool coordinates() const { return m_coordinates; }
+
 private:
     Chess::Board m_board;
     BoardTheme m_board_theme { "Beige", Color::from_rgb(0xb58863), Color::from_rgb(0xf0d9b5) };
@@ -90,4 +93,5 @@ private:
     bool m_dragging_piece { false };
     bool m_drag_enabled { true };
     RefPtr<Engine> m_engine;
+    bool m_coordinates { true };
 };
