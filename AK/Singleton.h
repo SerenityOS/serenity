@@ -39,9 +39,18 @@
 
 namespace AK {
 
-template<typename T, T* (*InitFunction)()>
+template<typename T>
+struct SingletonInstanceCreator {
+    static T* create()
+    {
+        return new T();
+    }
+};
+
+template<typename T, T* (*InitFunction)() = SingletonInstanceCreator<T>::create>
 class Singleton {
     AK_MAKE_NONCOPYABLE(Singleton);
+    AK_MAKE_NONMOVABLE(Singleton);
 public:
     Singleton() = default;
 
@@ -109,19 +118,5 @@ public:
 private:
     mutable T* m_obj { nullptr }; // atomic
 };
-
-template<typename T>
-struct SingletonInstanceCreator {
-    static T* create()
-    {
-        return new T();
-    }
-};
-
-template<typename T>
-inline Singleton<T, SingletonInstanceCreator<T>::create> make_singleton()
-{
-    return Singleton<T, SingletonInstanceCreator<T>::create>();
-}
 
 }

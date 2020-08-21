@@ -57,7 +57,7 @@ namespace Kernel {
 
 //#define PS2MOUSE_DEBUG
 
-static auto s_the = AK::make_singleton<PS2MouseDevice>();
+static AK::Singleton<PS2MouseDevice> s_the;
 
 PS2MouseDevice::PS2MouseDevice()
     : IRQHandler(IRQ_MOUSE)

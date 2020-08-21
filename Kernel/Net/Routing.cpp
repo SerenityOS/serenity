@@ -34,7 +34,7 @@
 
 namespace Kernel {
 
-static auto s_arp_table = AK::make_singleton<Lockable<HashMap<IPv4Address, MACAddress>>>();
+static AK::Singleton<Lockable<HashMap<IPv4Address, MACAddress>>> s_arp_table;
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {

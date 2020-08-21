@@ -69,7 +69,7 @@
 
 namespace Kernel {
 
-static auto s_apic = AK::make_singleton<APIC>();
+static AK::Singleton<APIC> s_apic;
 
 class APICIPIInterruptHandler final : public GenericInterruptHandler {
 public:
