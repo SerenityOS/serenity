@@ -196,7 +196,7 @@ int main(int argc, char** argv)
         consume_whitespace();
     };
 
-    while (lexer.tell()< file_contents.size())
+    while (lexer.tell() < file_contents.size())
         parse_endpoint();
 
     out() << "#pragma once";
