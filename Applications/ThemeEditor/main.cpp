@@ -54,8 +54,8 @@ int main(int argc, char** argv)
 
     auto& horizontal_container = main_widget.add<GUI::Widget>();
     horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
-    horizontal_container.set_preferred_size(0, 20);
-    horizontal_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    horizontal_container.set_preferred_size(480, 20);
+    horizontal_container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
 
     auto& combo_box = horizontal_container.add<GUI::ComboBox>();
     auto& color_input = horizontal_container.add<GUI::ColorInput>();
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         preview_widget.set_preview_palette(preview_palette);
     };
 
-    window->resize(500, 500);
+    window->resize(480, 500);
     window->show();
     window->set_title("Theme Editor");
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/themes.png"));
