@@ -102,11 +102,6 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void ChessWidget::resize_event(GUI::ResizeEvent& event)
-{
-    GUI::Widget::resize_event(event);
-}
-
 void ChessWidget::mousedown_event(GUI::MouseEvent& event)
 {
     GUI::Widget::mousedown_event(event);
