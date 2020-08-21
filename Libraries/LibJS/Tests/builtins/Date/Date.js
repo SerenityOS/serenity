@@ -4,6 +4,12 @@ test("basic functionality", () => {
     expect(Date.prototype).not.toHaveProperty("length");
 });
 
+test("string constructor", () => {
+    // The string constructor is the same as calling the timestamp constructor with the result of Date.parse(arguments).
+    // Since that has exhaustive tests in Date.parse.js, just do some light smoke testing here.
+    expect(new Date("2017-09-07T21:08:59.001Z").toISOString()).toBe("2017-09-07T21:08:59.001Z");
+});
+
 test("timestamp constructor", () => {
     // The timestamp constructor takes a timestamp in milliseconds since the start of the epoch, in UTC.
 

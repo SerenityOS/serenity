@@ -173,21 +173,16 @@ Value DateConstructor::construct(Interpreter& interpreter, Function&)
         auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
         return Date::create(global_object(), datetime, milliseconds);
     }
-    if (interpreter.argument_count() == 1 && interpreter.argument(0).is_string()) {
-        // FIXME: Parse simplified ISO8601-like string, like Date.parse() will do.
-        struct timeval tv;
-        gettimeofday(&tv, nullptr);
-        auto datetime = Core::DateTime::now();
-        auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
-        return Date::create(global_object(), datetime, milliseconds);
-    }
     if (interpreter.argument_count() == 1) {
+        auto value = interpreter.argument(0);
+        if (value.is_string())
+            value = parse_simplified_iso8601(value.as_string().string());
         // A timestamp since the epoch, in UTC.
         // FIXME: Date() probably should use a double as internal representation, so that NaN arguments and larger offsets are handled correctly.
         // FIXME: DateTime::from_timestamp() seems to not support negative offsets.
-        double value = interpreter.argument(0).to_double(interpreter);
-        auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value / 1000));
-        auto milliseconds = static_cast<u16>(fmod(value, 1000));
+        double value_as_double = value.to_double(interpreter);
+        auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
+        auto milliseconds = static_cast<u16>(fmod(value_as_double, 1000));
         return Date::create(global_object(), datetime, milliseconds);
     }
     // A date/time in components, in local time.
