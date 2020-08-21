@@ -53,6 +53,7 @@ int main(int argc, char** argv)
 
     widget.set_piece_set(config->read_entry("Style", "PieceSet", "test"));
     widget.set_board_theme(config->read_entry("Style", "BoardTheme", "Beige"));
+    widget.set_coordinates(config->read_bool_entry("Style", "Coordinates", true));
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Chess");
@@ -104,6 +105,15 @@ int main(int argc, char** argv)
             action->set_checked(true);
         board_theme_menu.add_action(*action);
     }
+
+    auto coordinates_action = GUI::Action::create_checkable("Coordinates", [&](auto& action) {
+        widget.set_coordinates(action.is_checked());
+        widget.update();
+        config->write_bool_entry("Style", "Coordinates", action.is_checked());
+        config->sync();
+    });
+    coordinates_action->set_checked(widget.coordinates());
+    style_menu.add_action(coordinates_action);
 
     auto& engine_menu = menubar->add_menu("Engine");
 
