@@ -179,6 +179,10 @@ public:
     void set_size_increment(const Gfx::IntSize&);
     Gfx::IntSize base_size() const { return m_base_size; }
     void set_base_size(const Gfx::IntSize&);
+    const Optional<Gfx::IntSize>& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
+    void set_resize_aspect_ratio(int width, int height) { set_resize_aspect_ratio(Gfx::IntSize(width, height)); }
+    void set_no_resize_aspect_ratio() { set_resize_aspect_ratio({}); }
+    void set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio);
 
     void set_override_cursor(StandardCursor);
     void set_override_cursor(const Gfx::Bitmap&);
@@ -260,6 +264,7 @@ private:
     bool m_double_buffering_enabled { true };
     bool m_modal { false };
     bool m_resizable { true };
+    Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     bool m_minimizable { true };
     bool m_fullscreen { false };
     bool m_frameless { false };
