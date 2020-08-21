@@ -25,8 +25,9 @@
  */
 
 #include <AK/TestSuite.h>
-#include <AK/String.h>
+
 #include <AK/CircularQueue.h>
+#include <AK/String.h>
 
 TEST_CASE(basic)
 {
