@@ -43,6 +43,7 @@ endpoint WindowServer = 2
         float opacity,
         Gfx::IntSize base_size,
         Gfx::IntSize size_increment,
+        Optional<Gfx::IntSize> resize_aspect_ratio,
         i32 type,
         [UTF8] String title,
         i32 parent_window_id) => (i32 window_id)
@@ -99,6 +100,7 @@ endpoint WindowServer = 2
     GetSystemTheme() => ([UTF8] String theme_name)
 
     SetWindowBaseSizeAndSizeIncrement(i32 window_id, Gfx::IntSize base_size, Gfx::IntSize size_increment) => ()
+    SetWindowResizeAspectRatio(i32 window_id, Optional<Gfx::IntSize> resize_aspect_ratio) => ()
 
     EnableDisplayLink() =|
     DisableDisplayLink() =|

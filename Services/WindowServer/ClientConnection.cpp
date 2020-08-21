@@ -479,6 +479,7 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_opacity(message.opacity());
     window->set_size_increment(message.size_increment());
     window->set_base_size(message.base_size());
+    window->set_resize_aspect_ratio(message.resize_aspect_ratio());
     window->invalidate();
     if (window->type() == WindowType::MenuApplet)
         AppletManager::the().add_applet(*window);
@@ -814,6 +815,20 @@ OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> Client
     window.set_size_increment(message.size_increment());
 
     return make<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse>();
+}
+
+OwnPtr<Messages::WindowServer::SetWindowResizeAspectRatioResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowResizeAspectRatio& message)
+{
+    auto it = m_windows.find(message.window_id());
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowResizeAspectRatioResponse: Bad window ID");
+        return nullptr;
+    }
+
+    auto& window = *it->value;
+    window.set_resize_aspect_ratio(message.resize_aspect_ratio());
+
+    return make<Messages::WindowServer::SetWindowResizeAspectRatioResponse>();
 }
 
 void ClientConnection::handle(const Messages::WindowServer::EnableDisplayLink&)

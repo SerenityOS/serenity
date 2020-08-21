@@ -297,7 +297,7 @@ void Window::set_maximized(bool maximized)
 {
     if (m_maximized == maximized)
         return;
-    if (maximized && !is_resizable())
+    if (maximized && (!is_resizable() || resize_aspect_ratio().has_value()))
         return;
     set_tiled(WindowTileType::None);
     m_maximized = maximized;
@@ -614,6 +614,9 @@ Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
 void Window::set_tiled(WindowTileType tiled)
 {
     if (m_tiled == tiled)
+        return;
+
+    if (resize_aspect_ratio().has_value())
         return;
 
     m_tiled = tiled;

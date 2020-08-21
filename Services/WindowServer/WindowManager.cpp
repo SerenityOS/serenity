@@ -643,6 +643,15 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
         new_rect.set_height(m_resize_window->base_size().height() + vertical_incs * m_resize_window->size_increment().height());
     }
 
+    if (m_resize_window->resize_aspect_ratio().has_value()) {
+        auto& ratio = m_resize_window->resize_aspect_ratio().value();
+        if (abs(change_w) > abs(change_h)) {
+            new_rect.set_height(new_rect.width() * ratio.height() / ratio.width());
+        } else {
+            new_rect.set_width(new_rect.height() * ratio.width() / ratio.height());
+        }
+    }
+
     // Second, set its position so that the sides of the window
     // that end up moving are the same ones as the user is dragging,
     // no matter which part of the logic above caused us to decide
