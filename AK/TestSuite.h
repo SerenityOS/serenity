@@ -28,20 +28,32 @@
 
 #define AK_TEST_SUITE
 
-#include <stdio.h>
-
-#define ASSERT(x)                                             \
-    if (!(x)) {                                               \
-        fprintf(stderr, "\033[33;1mASSERT\033[0m: " #x "\n"); \
+#define ASSERT(x)                                                                                         \
+    {                                                                                                     \
+        if (!(x))                                                                                         \
+            fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: ASSERT(%s) failed\n", __FILE__, __LINE__, #x); \
     }
 
-#define ASSERT_NOT_REACHED() fprintf(stderr, "\033[31;1mASSERT_NOT_REACHED\033[0m\n");
-#define RELEASE_ASSERT ASSERT
-#define TODO ASSERT_NOT_REACHED
+#define RELEASE_ASSERT(x)                                                                                         \
+    {                                                                                                             \
+        if (!(x))                                                                                                 \
+            fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: RELEASE_ASSERT(%s) failed\n", __FILE__, __LINE__, #x); \
+    }
+
+#define ASSERT_NOT_REACHED() \
+    fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: ASSERT_NOT_REACHED() called\n", __FILE__, __LINE__);
+
+#define TODO \
+    fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: TODO() called\n", __FILE__, __LINE__);
+
+#include <stdio.h>
 
 #include <AK/Function.h>
+#include <AK/LogStream.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
+
+#include <LibCore/ArgsParser.h>
 
 #include <sys/time.h>
 
@@ -68,7 +80,7 @@ private:
     struct timeval m_started;
 };
 
-typedef AK::Function<void()> TestFunction;
+using TestFunction = AK::Function<void()>;
 
 class TestCase : public RefCounted<TestCase> {
 public:
@@ -100,11 +112,12 @@ public:
 
     static void release()
     {
-        delete s_global;
+        if (s_global)
+            delete s_global;
         s_global = nullptr;
     }
 
-    void run(const NonnullRefPtrVector<TestCase>& tests);
+    void run(const NonnullRefPtrVector<TestCase>&);
     void main(const String& suite_name, int argc, char** argv);
     NonnullRefPtrVector<TestCase> find_cases(const String& search, bool find_tests, bool find_benchmarks);
     void add_case(const NonnullRefPtr<TestCase>& test_case)
@@ -115,47 +128,40 @@ public:
 private:
     static TestSuite* s_global;
     NonnullRefPtrVector<TestCase> m_cases;
-    uint64_t m_testtime = 0;
-    uint64_t m_benchtime = 0;
+    u64 m_testtime = 0;
+    u64 m_benchtime = 0;
     String m_suite_name;
 };
 
 void TestSuite::main(const String& suite_name, int argc, char** argv)
 {
     m_suite_name = suite_name;
-    bool find_tests = true;
-    bool find_benchmarks = true;
 
-    String search_string;
-    for (int i = 1; i < argc; i++) {
-        if (!String(argv[i]).starts_with("--")) {
-            search_string = argv[i];
-        } else if (String(argv[i]) == String("--bench")) {
-            find_tests = false;
-        } else if (String(argv[i]) == String("--test")) {
-            find_benchmarks = false;
-        } else if (String(argv[i]) == String("--help")) {
-            dbg() << "Available tests for " << suite_name << ":";
-            const auto& tests = find_cases("*", true, false);
-            for (const auto& t : tests) {
-                dbg() << "\t" << t.name();
-            }
-            dbg() << "Available benchmarks for " << suite_name << ":";
-            const auto& benches = find_cases("*", false, true);
-            for (const auto& t : benches) {
-                dbg() << "\t" << t.name();
-            }
-            exit(0);
+    Core::ArgsParser args_parser;
+
+    bool do_tests_only = false;
+    bool do_benchmarks_only = false;
+    bool do_list_cases = false;
+    const char* search_string = "*";
+
+    args_parser.add_option(do_tests_only, "Only run tests.", "tests", 0);
+    args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0);
+    args_parser.add_option(do_list_cases, "List avaliable test cases.", "list", 0);
+    args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    const auto& matching_tests = find_cases(search_string, !do_benchmarks_only, !do_tests_only);
+
+    if (do_list_cases) {
+        out() << "Avaliable cases for " << suite_name << ":";
+        for (const auto& test : matching_tests) {
+            out() << "    " << test.name();
         }
-    }
+    } else {
+        out() << "Running " << matching_tests.size() << " cases out of " << m_cases.size();
 
-    const auto& matches = find_cases(search_string, find_tests, find_benchmarks);
-    if (matches.size() == 0) {
-        dbg() << "0 matches when searching for " << search_string << " (out of " << m_cases.size() << ")";
-        exit(1);
+        run(matching_tests);
     }
-    dbg() << "Running " << matches.size() << " cases out of " << m_cases.size();
-    run(matches);
 }
 
 NonnullRefPtrVector<TestCase> TestSuite::find_cases(const String& search, bool find_tests, bool find_benchmarks)
@@ -180,15 +186,21 @@ NonnullRefPtrVector<TestCase> TestSuite::find_cases(const String& search, bool f
 
 void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
 {
-    int test_count = 0;
-    int benchmark_count = 0;
+    size_t test_count = 0;
+    size_t benchmark_count = 0;
     TestElapsedTimer global_timer;
+
     for (const auto& t : tests) {
-        dbg() << "START Running " << (t.is_benchmark() ? "benchmark" : "test") << " " << t.name();
+        const auto test_type = t.is_benchmark() ? "benchmark" : "test";
+
+        dbg() << "START Running " << test_type << " " << t.name();
+
         TestElapsedTimer timer;
         t.func()();
-        auto time = timer.elapsed_milliseconds();
-        fprintf(stderr, "\033[32;1mPASS\033[0m: %d ms running %s %s\n", (int)time, (t.is_benchmark() ? "benchmark" : "test"), t.name().characters());
+        const auto time = timer.elapsed_milliseconds();
+
+        warn() << "\033[32;1mPASS\033[0m: " << time << " ms running " << test_type << " " << t.name();
+
         if (t.is_benchmark()) {
             m_benchtime += time;
             benchmark_count++;
@@ -197,8 +209,9 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
             test_count++;
         }
     }
-    dbg() << "Finished " << test_count << " tests and " << benchmark_count << " benchmarks in " << (int)global_timer.elapsed_milliseconds() << " ms ("
-          << (int)m_testtime << " tests, " << (int)m_benchtime << " benchmarks, " << int(global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime)) << " other)";
+
+    dbg() << "Finished " << test_count << " tests and " << benchmark_count << " benchmarks in " << global_timer.elapsed_milliseconds() << " ms ("
+          << m_testtime << " tests, " << m_benchtime << " benchmarks, " << (global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime)) << " other)";
 }
 
 }
@@ -206,57 +219,52 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
 using AK::TestCase;
 using AK::TestSuite;
 
-#define xstr(s) ___str(s)
-#define ___str(s) #s
+#define __TESTCASE_FUNC(x) __test_##x
+#define __TESTCASE_TYPE(x) __TestCase_##x
 
-#define TESTCASE_TYPE_NAME(x) TestCase_##x
+#define TEST_CASE(x)                                                                           \
+    static void __TESTCASE_FUNC(x)();                                                          \
+    struct __TESTCASE_TYPE(x) {                                                                \
+        __TESTCASE_TYPE(x)                                                                     \
+        () { TestSuite::the().add_case(adopt(*new TestCase(#x, __TESTCASE_FUNC(x), false))); } \
+    };                                                                                         \
+    static struct __TESTCASE_TYPE(x) __TESTCASE_TYPE(x);                                       \
+    static void __TESTCASE_FUNC(x)()
 
-/*! Define a test case function. */
-#define TEST_CASE(x)                                                                 \
-    static void x();                                                                 \
-    struct TESTCASE_TYPE_NAME(x) {                                                   \
-        TESTCASE_TYPE_NAME(x)                                                        \
-        () { TestSuite::the().add_case(adopt(*new TestCase(___str(x), x, false))); } \
-    };                                                                               \
-    static struct TESTCASE_TYPE_NAME(x) TESTCASE_TYPE_NAME(x);                       \
-    static void x()
+#define __BENCHMARK_FUNC(x) __benchmark_##x
+#define __BENCHMARK_TYPE(x) __BenchmarkCase_##x
 
-#define BENCHMARK_TYPE_NAME(x) TestCase_##x
+#define BENCHMARK_CASE(x)                                                                      \
+    static void __BENCHMARK_FUNC(x)();                                                         \
+    struct __BENCHMARK_TYPE(x) {                                                               \
+        __BENCHMARK_TYPE(x)                                                                    \
+        () { TestSuite::the().add_case(adopt(*new TestCase(#x, __BENCHMARK_FUNC(x), true))); } \
+    };                                                                                         \
+    static struct __BENCHMARK_TYPE(x) __BENCHMARK_TYPE(x);                                     \
+    static void __BENCHMARK_FUNC(x)()
 
-#define BENCHMARK_CASE(x)                                                           \
-    static void x();                                                                \
-    struct BENCHMARK_TYPE_NAME(x) {                                                 \
-        BENCHMARK_TYPE_NAME(x)                                                      \
-        () { TestSuite::the().add_case(adopt(*new TestCase(___str(x), x, true))); } \
-    };                                                                              \
-    static struct BENCHMARK_TYPE_NAME(x) BENCHMARK_TYPE_NAME(x);                    \
-    static void x()
-
-/*! Define the main function of the testsuite. All TEST_CASE functions will be executed. */
-#define TEST_MAIN(SuiteName)                                                       \
-    TestSuite* TestSuite::s_global = nullptr;                                      \
-    template<size_t N>                                                             \
-    constexpr size_t compiletime_lenof(const char(&)[N])                           \
-    {                                                                              \
-        return N - 1;                                                              \
-    }                                                                              \
-    int main(int argc, char** argv)                                                \
-    {                                                                              \
-        static_assert(compiletime_lenof(___str(SuiteName)) != 0, "Set SuiteName"); \
-        TestSuite::the().main(___str(SuiteName), argc, argv);                      \
-        TestSuite::release();                                                      \
-        return 0;                                                                  \
+#define TEST_MAIN(x)                                                \
+    TestSuite* TestSuite::s_global = nullptr;                       \
+    template<size_t N>                                              \
+    constexpr size_t compiletime_lenof(const char(&)[N])            \
+    {                                                               \
+        return N - 1;                                               \
+    }                                                               \
+    int main(int argc, char** argv)                                 \
+    {                                                               \
+        static_assert(compiletime_lenof(#x) != 0, "Set SuiteName"); \
+        TestSuite::the().main(#x, argc, argv);                      \
+        TestSuite::release();                                       \
     }
 
-#define assertEqual(one, two)                                                                                                                                              \
-    do {                                                                                                                                                                   \
-        auto ___aev1 = one;                                                                                                                                                \
-        auto ___aev2 = two;                                                                                                                                                \
-        if (___aev1 != ___aev2) {                                                                                                                                          \
-            dbg() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": assertEqual(" ___str(one) ", " ___str(two) ") failed"; \
-        }                                                                                                                                                                  \
-    } while (0)
+#define EXPECT_EQ(a, b)                                                                                           \
+    {                                                                                                             \
+        if ((a) != (b))                                                                                           \
+            warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT_EQ(" #a ", " #b ") failed"; \
+    }
 
-#define EXPECT_EQ(one, two) assertEqual(one, two)
-
-#define EXPECT(one) assertEqual(one, true)
+#define EXPECT(x)                                                                                      \
+    {                                                                                                  \
+        if (!(x))                                                                                      \
+            warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT(" #x ") failed"; \
+    }
