@@ -67,9 +67,11 @@ Gfx::IntRect ClassicWindowTheme::title_bar_text_rect(WindowType window_type, con
     };
 }
 
-void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& outer_rect, const IntRect& window_rect, const StringView& title_text, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect) const
+void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, const StringView& title_text, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect) const
 {
-    Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
+    auto frame_rect = frame_rect_for_window(WindowType::Normal, window_rect, palette);
+    frame_rect.set_location({ 0, 0 });
+    Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
 
     auto& title_font = Font::default_bold_font();
 
