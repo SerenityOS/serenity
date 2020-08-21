@@ -888,6 +888,7 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf8View& text, const 
         break;
     case TextAlignment::TopRight:
     case TextAlignment::CenterRight:
+    case TextAlignment::BottomRight:
         rect.set_x(rect.right() - font.width(final_text));
         break;
     case TextAlignment::Center: {
@@ -1036,6 +1037,9 @@ void Painter::draw_text(const IntRect& rect, const StringView& raw_text, const F
         break;
     case TextAlignment::Center:
         bounding_rect.center_within(rect);
+        break;
+    case TextAlignment::BottomRight:
+        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), (rect.bottom() + 1) - bounding_rect.height() });
         break;
     default:
         ASSERT_NOT_REACHED();

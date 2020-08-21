@@ -134,6 +134,10 @@ void Rect<T>::align_within(const Rect<T>& other, TextAlignment alignment)
         set_x(other.x() + other.width() - width());
         center_vertically_within(other);
         return;
+    case TextAlignment::BottomRight:
+        set_x(other.x() + other.width() - width());
+        set_y(other.y() + other.height() - height());
+        return;
     }
 }
 
