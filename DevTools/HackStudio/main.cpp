@@ -614,8 +614,6 @@ int main_impl(int argc, char** argv)
     RefPtr<EditorWrapper> current_editor_in_execution;
     Debugger::initialize(
         [&](const PtraceRegisters& regs) {
-            dbg() << "Program stopped";
-
             ASSERT(Debugger::the().session());
             const auto& debug_session = *Debugger::the().session();
             auto source_position = debug_session.debug_info().get_source_position(regs.eip);
@@ -639,7 +637,6 @@ int main_impl(int argc, char** argv)
             return Debugger::HasControlPassedToUser::Yes;
         },
         [&]() {
-            dbg() << "Program continued";
             Core::EventLoop::main().post_event(*g_window, make<Core::DeferredInvocationEvent>([&](auto&) {
                 debug_info_widget.set_debug_actions_enabled(false);
                 if (current_editor_in_execution) {
@@ -649,7 +646,6 @@ int main_impl(int argc, char** argv)
             Core::EventLoop::wake();
         },
         [&]() {
-            dbg() << "Program exited";
             Core::EventLoop::main().post_event(*g_window, make<Core::DeferredInvocationEvent>([&](auto&) {
                 debug_info_widget.program_stopped();
                 hide_action_tabs();

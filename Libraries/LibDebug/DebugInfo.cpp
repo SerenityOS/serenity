@@ -138,7 +138,7 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(u32 target_ad
     // TODO: We can do a binray search here
     for (size_t i = 0; i < m_sorted_lines.size() - 1; ++i) {
         if (m_sorted_lines[i + 1].address > target_address) {
-            return Optional<SourcePosition>({ m_sorted_lines[i].file, m_sorted_lines[i].line, m_sorted_lines[i].address });
+            return SourcePosition::from_line_info(m_sorted_lines[i]);
         }
     }
     return {};
@@ -301,10 +301,37 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
 
 String DebugInfo::name_of_containing_function(u32 address) const
 {
+    auto function = get_containing_function(address);
+    if (!function.has_value())
+        return {};
+    return function.value().name;
+}
+
+Optional<DebugInfo::VariablesScope> DebugInfo::get_containing_function(u32 address) const
+{
     for (const auto& scope : m_scopes) {
         if (!scope.is_function || address < scope.address_low || address >= scope.address_high)
             continue;
-        return scope.name;
+        return scope;
     }
     return {};
+}
+
+Vector<DebugInfo::SourcePosition> DebugInfo::source_lines_in_scope(const VariablesScope& scope) const
+{
+    Vector<DebugInfo::SourcePosition> source_lines;
+    for (const auto& line : m_sorted_lines) {
+        if (line.address < scope.address_low)
+            continue;
+
+        if (line.address >= scope.address_high)
+            break;
+        source_lines.append(SourcePosition::from_line_info(line));
+    }
+    return source_lines;
+}
+
+DebugInfo::SourcePosition DebugInfo::SourcePosition::from_line_info(const LineProgram::LineInfo& line)
+{
+    return { line.file, line.line, line.address };
 }

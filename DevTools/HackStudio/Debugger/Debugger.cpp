@@ -205,6 +205,7 @@ bool Debugger::DebuggingState::should_stop_single_stepping(const DebugInfo::Sour
 void Debugger::remove_temporary_breakpoints()
 {
     for (auto breakpoint_address : m_state.temporary_breakpoints()) {
+        ASSERT(m_debug_session->breakpoint_exists((void*)breakpoint_address));
         bool rc = m_debug_session->remove_breakpoint((void*)breakpoint_address);
         ASSERT(rc);
     }
@@ -222,17 +223,40 @@ void Debugger::DebuggingState::add_temporary_breakpoint(u32 address)
 
 void Debugger::do_step_out(const PtraceRegisters& regs)
 {
+    // To step out, we simply insert a temporary breakpoint at the
+    // instruction the current function returns to, and continue
+    // execution until we hit that instruction (or some other breakpoint).
+    insert_temporary_breakpoint_at_return_address(regs);
+}
+
+void Debugger::do_step_over(const PtraceRegisters& regs)
+{
+    // To step over, we insert a temporary breakpoint at each line in the current function,
+    // as well as at the current function's return point, and continue execution.
+    auto current_function = m_debug_session->debug_info().get_containing_function(regs.eip);
+    ASSERT(current_function.has_value());
+    auto lines_in_current_function = m_debug_session->debug_info().source_lines_in_scope(current_function.value());
+    for (const auto& line : lines_in_current_function) {
+        insert_temporary_breakpoint(line.address_of_first_statement);
+    }
+    insert_temporary_breakpoint_at_return_address(regs);
+}
+
+void Debugger::insert_temporary_breakpoint_at_return_address(const PtraceRegisters& regs)
+{
     auto frame_info = StackFrameUtils::get_info(*m_debug_session, regs.ebp);
     ASSERT(frame_info.has_value());
     u32 return_address = frame_info.value().return_address;
-    bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(return_address));
-    ASSERT(success);
-    m_state.add_temporary_breakpoint(return_address);
+    insert_temporary_breakpoint(return_address);
 }
 
-void Debugger::do_step_over(const PtraceRegisters&)
+void Debugger::insert_temporary_breakpoint(FlatPtr address)
 {
-    // TODO: Implement
+    if (m_debug_session->breakpoint_exists((void*)address))
+        return;
+    bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(address));
+    ASSERT(success);
+    m_state.add_temporary_breakpoint(address);
 }
 
 }
