@@ -26,7 +26,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
-#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
@@ -51,7 +50,11 @@ extern FlatPtr end_of_kernel_bss;
 
 namespace Kernel {
 
-static auto s_the = AK::make_singleton<MemoryManager>();
+// NOTE: We can NOT use AK::Singleton for this class, because
+// MemoryManager::initialize is called *before* global constructors are
+// run. If we do, then AK::Singleton would get re-initialized, causing
+// the memory manager to be initialized twice!
+static MemoryManager* s_the;
 RecursiveSpinLock s_mm_lock;
 
 MemoryManager& MM
@@ -61,8 +64,6 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager()
 {
-    ASSERT(!s_the.is_initialized());
-
     ScopedSpinLock lock(s_mm_lock);
     m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
     parse_memory_map();
@@ -220,7 +221,7 @@ void MemoryManager::initialize(u32 cpu)
     Processor::current().set_mm_data(*mm_data);
 
     if (cpu == 0)
-        s_the.ensure_instance();
+        s_the = new MemoryManager;
 }
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
