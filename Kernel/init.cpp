@@ -113,6 +113,10 @@ extern "C" [[noreturn]] void init()
 {
     setup_serial_debug();
 
+    // We need to copy the command line before kmalloc is initialized,
+    // as it may overwrite parts of multiboot!
+    CommandLine::early_initialize(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline)));
+
     s_bsp_processor.early_initialize(0);
 
     // Invoke the constructors needed for the kernel heap
@@ -123,7 +127,7 @@ extern "C" [[noreturn]] void init()
 
     s_bsp_processor.initialize(0);
 
-    CommandLine::initialize(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline)));
+    CommandLine::initialize();
     MemoryManager::initialize(0);
 
     // Invoke all static global constructors in the kernel.
