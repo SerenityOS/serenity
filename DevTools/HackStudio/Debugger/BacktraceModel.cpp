@@ -26,6 +26,7 @@
 
 #include "BacktraceModel.h"
 #include "Debugger.h"
+#include <LibDebug/StackFrameUtils.h>
 
 namespace HackStudio {
 
@@ -63,8 +64,10 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const DebugSe
         }
 
         frames.append({ name, current_instruction, current_ebp });
-        current_instruction = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp + 4)).value();
-        current_ebp = Debugger::the().session()->peek(reinterpret_cast<u32*>(current_ebp)).value();
+        auto frame_info = StackFrameUtils::get_info(*Debugger::the().session(), current_ebp);
+        ASSERT(frame_info.has_value());
+        current_instruction = frame_info.value().return_address;
+        current_ebp = frame_info.value().next_ebp;
     } while (current_ebp && current_instruction);
     return frames;
 }
