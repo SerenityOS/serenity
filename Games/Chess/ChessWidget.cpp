@@ -29,6 +29,7 @@
 #include <AK/String.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Font.h>
 
 ChessWidget::ChessWidget(const StringView& set)
 {
@@ -53,6 +54,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
     size_t tile_width = width() / 8;
     size_t tile_height = height() / 8;
+    unsigned coord_rank_file = (side() == Chess::Colour::White) ? 0 : 7;
 
     Chess::Square::for_each([&](Chess::Square sq) {
         Gfx::IntRect tile_rect;
@@ -66,6 +68,19 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
         if (board().last_move().has_value() && (board().last_move().value().to == sq || board().last_move().value().from == sq)) {
             painter.fill_rect(tile_rect, m_move_highlight_color);
+        }
+
+        if (m_coordinates) {
+            auto coord = sq.to_algebraic();
+            auto text_color = (sq.is_light()) ? board_theme().dark_square_color : board_theme().light_square_color;
+
+            auto shrunken_rect = tile_rect;
+            shrunken_rect.shrink(4, 4);
+            if (sq.rank == coord_rank_file)
+                painter.draw_text(shrunken_rect, coord.substring_view(0, 1), Gfx::Font::default_bold_font(), Gfx::TextAlignment::BottomRight, text_color);
+
+            if (sq.file == coord_rank_file)
+                painter.draw_text(shrunken_rect, coord.substring_view(1, 1), Gfx::Font::default_bold_font(), Gfx::TextAlignment::TopLeft, text_color);
         }
 
         if (!(m_dragging_piece && sq == m_moving_square)) {
