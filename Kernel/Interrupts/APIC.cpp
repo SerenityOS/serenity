@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
+#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/ACPI/Parser.h>
@@ -34,7 +35,6 @@
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -69,7 +69,7 @@
 
 namespace Kernel {
 
-static auto s_apic = make_singleton<APIC>();
+static auto s_apic = AK::make_singleton<APIC>();
 
 class APICIPIInterruptHandler final : public GenericInterruptHandler {
 public:

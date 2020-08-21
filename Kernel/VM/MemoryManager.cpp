@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
+#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
@@ -39,7 +40,6 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/StdLib.h>
 
 //#define MM_DEBUG
@@ -51,7 +51,7 @@ extern FlatPtr end_of_kernel_bss;
 
 namespace Kernel {
 
-static auto s_the = make_singleton<MemoryManager>();
+static auto s_the = AK::make_singleton<MemoryManager>();
 RecursiveSpinLock s_mm_lock;
 
 MemoryManager& MM

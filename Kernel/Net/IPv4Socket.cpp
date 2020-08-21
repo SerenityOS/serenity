@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
@@ -46,7 +46,7 @@
 
 namespace Kernel {
 
-static auto s_table = make_singleton<Lockable<HashTable<IPv4Socket*>>>();
+static auto s_table = AK::make_singleton<Lockable<HashTable<IPv4Socket*>>>();
 
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {

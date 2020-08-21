@@ -25,15 +25,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
-static auto s_the = make_singleton<KernelRng>();
+static auto s_the = AK::make_singleton<KernelRng>();
 
 KernelRng& KernelRng::the()
 {
