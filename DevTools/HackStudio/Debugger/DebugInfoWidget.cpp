@@ -56,11 +56,19 @@ void DebugInfoWidget::init_toolbar()
         pthread_cond_signal(Debugger::the().continue_cond());
         pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
-    m_continue_action->set_enabled(false);
-    m_singlestep_action->set_enabled(false);
+
+    m_step_in_action = GUI::Action::create("Step In", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-in.png"), [&](auto&) {
+    });
+
+    m_step_out_action = GUI::Action::create("Step Out", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"), [&](auto&) {
+    });
 
     m_toolbar->add_action(*m_continue_action);
     m_toolbar->add_action(*m_singlestep_action);
+    m_toolbar->add_action(*m_step_in_action);
+    m_toolbar->add_action(*m_step_out_action);
+
+    set_debug_actions_enabled(false);
 }
 
 DebugInfoWidget::DebugInfoWidget()
@@ -140,16 +148,11 @@ void DebugInfoWidget::program_stopped()
     m_variables_view->set_model({});
 }
 
-GUI::Action& DebugInfoWidget::continue_action()
+void DebugInfoWidget::set_debug_actions_enabled(bool enabled)
 {
-    ASSERT(m_continue_action);
-    return *m_continue_action;
+    m_continue_action->set_enabled(enabled);
+    m_singlestep_action->set_enabled(enabled);
+    m_step_in_action->set_enabled(enabled);
+    m_step_out_action->set_enabled(enabled);
 }
-
-GUI::Action& DebugInfoWidget::singlestep_action()
-{
-    ASSERT(m_singlestep_action);
-    return *m_singlestep_action;
-}
-
 }
