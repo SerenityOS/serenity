@@ -100,6 +100,12 @@ int LineBoxFragment::text_index_at(float x) const
 
 Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 {
+    if (layout_node().selection_state() == LayoutNode::SelectionState::None)
+        return {};
+
+    if (layout_node().selection_state() == LayoutNode::SelectionState::Full)
+        return absolute_rect();
+
     auto selection = layout_node().root().selection().normalized();
     if (!selection.is_valid())
         return {};
@@ -110,7 +116,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
     const auto end_index = m_start + m_length;
     auto text = this->text();
 
-    if (&layout_node() == selection.start().layout_node && &layout_node() == selection.end().layout_node) {
+    if (layout_node().selection_state() == LayoutNode::SelectionState::StartAndEnd) {
         // we are in the start/end node (both the same)
         if (start_index > selection.end().index_in_node)
             return {};
@@ -128,7 +134,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 
         return rect;
     }
-    if (&layout_node() == selection.start().layout_node) {
+    if (layout_node().selection_state() == LayoutNode::SelectionState::Start) {
         // we are in the start node
         if (end_index < selection.start().index_in_node)
             return {};
@@ -144,7 +150,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 
         return rect;
     }
-    if (&layout_node() == selection.end().layout_node) {
+    if (layout_node().selection_state() == LayoutNode::SelectionState::End) {
         // we are in the end node
         if (start_index > selection.end().index_in_node)
             return {};
@@ -160,18 +166,6 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 
         return rect;
     }
-
-    // are we in between start and end?
-    auto* node = selection.start().layout_node.ptr();
-    bool is_fully_selected = false;
-    for (; node && node != selection.end().layout_node.ptr(); node = node->next_in_pre_order()) {
-        if (node == &layout_node()) {
-            is_fully_selected = true;
-            break;
-        }
-    }
-    if (is_fully_selected)
-        return absolute_rect();
     return {};
 }
 

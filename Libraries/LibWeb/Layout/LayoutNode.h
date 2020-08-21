@@ -43,6 +43,14 @@ namespace Web {
 struct HitTestResult {
     RefPtr<LayoutNode> layout_node;
     int index_in_node { 0 };
+
+    enum InternalPosition {
+        None,
+        Before,
+        Inside,
+        After,
+    };
+    InternalPosition internal_position { None };
 };
 
 enum class HitTestType {
@@ -142,6 +150,17 @@ public:
 
     float font_size() const;
 
+    enum class SelectionState {
+        None,        // No selection
+        Start,       // Selection starts in this LayoutNode
+        End,         // Selection ends in this LayoutNode
+        StartAndEnd, // Selection starts and ends in this LayoutNode
+        Full,        // Selection starts before and ends after this LayoutNode
+    };
+
+    SelectionState selection_state() const { return m_selection_state; }
+    void set_selection_state(SelectionState state) { m_selection_state = state; }
+
 protected:
     LayoutNode(DOM::Document&, DOM::Node*);
 
@@ -155,6 +174,7 @@ private:
     bool m_has_style { false };
     bool m_visible { true };
     bool m_children_are_inline { false };
+    SelectionState m_selection_state { SelectionState::None };
 };
 
 class LayoutNodeWithStyle : public LayoutNode {

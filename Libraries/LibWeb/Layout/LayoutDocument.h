@@ -54,6 +54,8 @@ public:
 
     void build_stacking_context_tree();
 
+    void recompute_selection_states();
+
 private:
     LayoutRange m_selection;
 };
