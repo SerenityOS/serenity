@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
@@ -74,86 +75,51 @@ int main(int argc, char** argv)
     }
 
     auto file_contents = file->read_all();
+    GenericLexer lexer(file_contents);
 
     Vector<Endpoint> endpoints;
 
-    Vector<char> buffer;
-
-    size_t index = 0;
-
-    auto peek = [&](size_t offset = 0) -> char {
-        if ((index + offset) < file_contents.size())
-            return file_contents[index + offset];
-        return 0;
-    };
-
-    auto consume_one = [&]() -> char {
-        return file_contents[index++];
-    };
-
-    auto extract_while = [&](Function<bool(char)> condition) -> String {
-        StringBuilder builder;
-        while (condition(peek()))
-            builder.append(consume_one());
-        return builder.to_string();
-    };
-
-    auto consume_specific = [&](char ch) {
-        if (peek() != ch) {
-            warn() << "consume_specific: wanted '" << ch << "', but got '" << peek() << "' at index " << index;
-        }
-        ASSERT(peek() == ch);
-        ++index;
-        return ch;
-    };
-
-    auto consume_string = [&](const char* str) {
-        for (size_t i = 0, length = strlen(str); i < length; ++i)
-            consume_specific(str[i]);
+    auto assert_specific = [&](char ch) {
+        if (lexer.peek() != ch)
+            warn() << "assert_specific: wanted '" << ch << "', but got '" << lexer.peek() << "' at index " << lexer.tell();
+        bool saw_expected = lexer.consume_specific(ch);
+        ASSERT(saw_expected);
     };
 
     auto consume_whitespace = [&] {
-        while (isspace(peek()))
-            ++index;
-        if (peek() == '/' && peek(1) == '/') {
-            while (peek() != '\n')
-                ++index;
-        }
+        lexer.ignore_while([](char ch) { return isspace(ch); });
+        if (lexer.peek() == '/' && lexer.peek(1) == '/')
+            lexer.ignore_until([](char ch) { return ch == '\n'; });
     };
 
     auto parse_parameter = [&](Vector<Parameter>& storage) {
         for (;;) {
             Parameter parameter;
             consume_whitespace();
-            if (peek() == ')')
+            if (lexer.peek() == ')')
                 break;
-            if (peek() == '[') {
-                consume_one();
+            if (lexer.consume_specific('[')) {
                 for (;;) {
-                    if (peek() == ']') {
-                        consume_one();
+                    if (lexer.consume_specific(']')) {
                         consume_whitespace();
                         break;
                     }
-                    if (peek() == ',') {
-                        consume_one();
+                    if (lexer.consume_specific(',')) {
                         consume_whitespace();
                     }
-                    auto attribute = extract_while([](char ch) { return ch != ']' && ch != ','; });
+                    auto attribute = lexer.consume_until([](char ch) { return ch == ']' || ch == ','; });
                     parameter.attributes.append(attribute);
                     consume_whitespace();
                 }
             }
-            parameter.type = extract_while([](char ch) { return !isspace(ch); });
+            parameter.type = lexer.consume_until([](char ch) { return isspace(ch); });
             consume_whitespace();
-            parameter.name = extract_while([](char ch) { return !isspace(ch) && ch != ',' && ch != ')'; });
+            parameter.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == ',' || ch == ')'; });
             consume_whitespace();
             storage.append(move(parameter));
-            if (peek() == ',') {
-                consume_one();
+            if (lexer.consume_specific(','))
                 continue;
-            }
-            if (peek() == ')')
+            if (lexer.peek() == ')')
                 break;
         }
     };
@@ -163,11 +129,9 @@ int main(int argc, char** argv)
             consume_whitespace();
             parse_parameter(storage);
             consume_whitespace();
-            if (peek() == ',') {
-                consume_one();
+            if (lexer.consume_specific(','))
                 continue;
-            }
-            if (peek() == ')')
+            if (lexer.peek() == ')')
                 break;
         }
     };
@@ -175,18 +139,15 @@ int main(int argc, char** argv)
     auto parse_message = [&] {
         Message message;
         consume_whitespace();
-        Vector<char> buffer;
-        while (!isspace(peek()) && peek() != '(')
-            buffer.append(consume_one());
-        message.name = String::copy(buffer);
+        message.name = lexer.consume_until([](char ch) { return isspace(ch) || ch == '('; });
         consume_whitespace();
-        consume_specific('(');
+        assert_specific('(');
         parse_parameters(message.inputs);
-        consume_specific(')');
+        assert_specific(')');
         consume_whitespace();
-        consume_specific('=');
+        assert_specific('=');
 
-        auto type = consume_one();
+        auto type = lexer.consume();
         if (type == '>')
             message.is_synchronous = true;
         else if (type == '|')
@@ -197,9 +158,9 @@ int main(int argc, char** argv)
         consume_whitespace();
 
         if (message.is_synchronous) {
-            consume_specific('(');
+            assert_specific('(');
             parse_parameters(message.outputs);
-            consume_specific(')');
+            assert_specific(')');
         }
 
         consume_whitespace();
@@ -212,7 +173,7 @@ int main(int argc, char** argv)
             consume_whitespace();
             parse_message();
             consume_whitespace();
-            if (peek() == '}')
+            if (lexer.peek() == '}')
                 break;
         }
     };
@@ -220,22 +181,22 @@ int main(int argc, char** argv)
     auto parse_endpoint = [&] {
         endpoints.empend();
         consume_whitespace();
-        consume_string("endpoint");
+        lexer.consume_specific("endpoint");
         consume_whitespace();
-        endpoints.last().name = extract_while([](char ch) { return !isspace(ch); });
+        endpoints.last().name = lexer.consume_while([](char ch) { return !isspace(ch); });
         consume_whitespace();
-        consume_specific('=');
+        assert_specific('=');
         consume_whitespace();
-        auto magic_string = extract_while([](char ch) { return !isspace(ch) && ch != '{'; });
+        auto magic_string = lexer.consume_while([](char ch) { return !isspace(ch) && ch != '{'; });
         endpoints.last().magic = magic_string.to_int().value();
         consume_whitespace();
-        consume_specific('{');
+        assert_specific('{');
         parse_messages();
-        consume_specific('}');
+        assert_specific('}');
         consume_whitespace();
     };
 
-    while (index < file_contents.size())
+    while (lexer.tell()< file_contents.size())
         parse_endpoint();
 
     out() << "#pragma once";
