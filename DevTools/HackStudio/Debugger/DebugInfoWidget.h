@@ -45,9 +45,7 @@ public:
 
     void update_state(const DebugSession&, const PtraceRegisters&);
     void program_stopped();
-
-    GUI::Action& continue_action();
-    GUI::Action& singlestep_action();
+    void set_debug_actions_enabled(bool enabled);
 
 private:
     explicit DebugInfoWidget();
@@ -59,6 +57,8 @@ private:
     RefPtr<GUI::ToolBar> m_toolbar;
     RefPtr<GUI::Action> m_continue_action;
     RefPtr<GUI::Action> m_singlestep_action;
+    RefPtr<GUI::Action> m_step_in_action;
+    RefPtr<GUI::Action> m_step_out_action;
 };
 
 }

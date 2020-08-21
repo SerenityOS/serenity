@@ -78,7 +78,7 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     auto address = session->debug_info().get_instruction_from_source(position.file_path, position.line_number);
     if (!address.has_value()) {
         dbg() << "Warning: couldn't get instruction address from source";
-        // TODO: Currently, the GUI will indicate that a breakpoint was inserted/remove at this line,
+        // TODO: Currently, the GUI will indicate that a breakpoint was inserted/removed at this line,
         // regardless of whether we actually succeeded to insert it. (For example a breakpoint on a comment, or an include statemanet).
         // We should indicate failure via a return value from this function, and not update the breakpoint GUI if we fail.
         return;
