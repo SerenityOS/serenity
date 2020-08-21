@@ -33,76 +33,99 @@
 
 namespace Gfx {
 
+#define ENUMERATE_COLOR_ROLES(C)   \
+    C(ActiveLink)                  \
+    C(ActiveWindowBorder1)         \
+    C(ActiveWindowBorder2)         \
+    C(ActiveWindowTitle)           \
+    C(ActiveWindowTitleShadow)     \
+    C(ActiveWindowTitleStripes)    \
+    C(Base)                        \
+    C(BaseText)                    \
+    C(Button)                      \
+    C(ButtonText)                  \
+    C(DesktopBackground)           \
+    C(FocusOutline)                \
+    C(HighlightWindowBorder1)      \
+    C(HighlightWindowBorder2)      \
+    C(HighlightWindowTitle)        \
+    C(HighlightWindowTitleShadow)  \
+    C(HighlightWindowTitleStripes) \
+    C(HoverHighlight)              \
+    C(InactiveSelection)           \
+    C(InactiveSelectionText)       \
+    C(InactiveWindowBorder1)       \
+    C(InactiveWindowBorder2)       \
+    C(InactiveWindowTitle)         \
+    C(InactiveWindowTitleShadow)   \
+    C(InactiveWindowTitleStripes)  \
+    C(Link)                        \
+    C(MenuBase)                    \
+    C(MenuBaseText)                \
+    C(MenuSelection)               \
+    C(MenuSelectionText)           \
+    C(MenuStripe)                  \
+    C(MovingWindowBorder1)         \
+    C(MovingWindowBorder2)         \
+    C(MovingWindowTitle)           \
+    C(MovingWindowTitleShadow)     \
+    C(MovingWindowTitleStripes)    \
+    C(RubberBandBorder)            \
+    C(RubberBandFill)              \
+    C(Ruler)                       \
+    C(RulerActiveText)             \
+    C(RulerBorder)                 \
+    C(RulerInactiveText)           \
+    C(Selection)                   \
+    C(SelectionText)               \
+    C(SyntaxComment)               \
+    C(SyntaxControlKeyword)        \
+    C(SyntaxIdentifier)            \
+    C(SyntaxKeyword)               \
+    C(SyntaxNumber)                \
+    C(SyntaxOperator)              \
+    C(SyntaxPreprocessorStatement) \
+    C(SyntaxPreprocessorValue)     \
+    C(SyntaxPunctuation)           \
+    C(SyntaxString)                \
+    C(SyntaxType)                  \
+    C(TextCursor)                  \
+    C(ThreedHighlight)             \
+    C(ThreedShadow1)               \
+    C(ThreedShadow2)               \
+    C(VisitedLink)                 \
+    C(Window)                      \
+    C(WindowText)
+
 enum class ColorRole {
     NoRole,
-    DesktopBackground,
-    ActiveWindowBorder1,
-    ActiveWindowBorder2,
-    ActiveWindowTitle,
-    ActiveWindowTitleShadow,
-    ActiveWindowTitleStripes,
-    InactiveWindowBorder1,
-    InactiveWindowBorder2,
-    InactiveWindowTitle,
-    InactiveWindowTitleShadow,
-    InactiveWindowTitleStripes,
-    MovingWindowBorder1,
-    MovingWindowBorder2,
-    MovingWindowTitle,
-    MovingWindowTitleShadow,
-    MovingWindowTitleStripes,
-    HighlightWindowBorder1,
-    HighlightWindowBorder2,
-    HighlightWindowTitle,
-    HighlightWindowTitleStripes,
-    HighlightWindowTitleShadow,
-    MenuStripe,
-    MenuBase,
-    MenuBaseText,
-    MenuSelection,
-    MenuSelectionText,
-    Window,
-    WindowText,
-    Button,
-    ButtonText,
-    Base,
-    BaseText,
-    ThreedHighlight,
-    ThreedShadow1,
-    ThreedShadow2,
-    HoverHighlight,
-    Selection,
-    SelectionText,
-    InactiveSelection,
-    InactiveSelectionText,
-    RubberBandFill,
-    RubberBandBorder,
-    Link,
-    ActiveLink,
-    VisitedLink,
-    Ruler,
-    RulerBorder,
-    RulerActiveText,
-    RulerInactiveText,
-    TextCursor,
-    FocusOutline,
-    SyntaxComment,
-    SyntaxNumber,
-    SyntaxString,
-    SyntaxType,
-    SyntaxPunctuation,
-    SyntaxOperator,
-    SyntaxKeyword,
-    SyntaxControlKeyword,
-    SyntaxIdentifier,
-    SyntaxPreprocessorStatement,
-    SyntaxPreprocessorValue,
 
-    __Count,
+#undef __ENUMERATE_COLOR_ROLE
+#define __ENUMERATE_COLOR_ROLE(role) role,
+    ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
+
+        __Count,
 
     Background = Window,
     DisabledText = ThreedShadow1,
 };
+
+inline const char* to_string(ColorRole role)
+{
+    switch (role) {
+    case ColorRole::NoRole:
+        return "NoRole";
+#undef __ENUMERATE_COLOR_ROLE
+#define __ENUMERATE_COLOR_ROLE(role) \
+    case ColorRole::role:            \
+        return #role;
+        ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
 
 enum class MetricRole {
     NoRole,
