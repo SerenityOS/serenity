@@ -36,7 +36,8 @@ class CommandLine {
     AK_MAKE_ETERNAL;
 
 public:
-    static void initialize(const String&);
+    static void early_initialize(const char* cmd_line);
+    static void initialize();
 
     const String& string() const { return m_string; }
     Optional<String> lookup(const String& key) const;
