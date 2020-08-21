@@ -45,6 +45,7 @@ private:
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(now);
+    JS_DECLARE_NATIVE_FUNCTION(parse);
     JS_DECLARE_NATIVE_FUNCTION(utc);
 };
 
