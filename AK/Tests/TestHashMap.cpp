@@ -26,8 +26,8 @@
 
 #include <AK/TestSuite.h>
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 
 TEST_CASE(construct)
 {
@@ -88,24 +88,13 @@ TEST_CASE(case_insensitive)
     EXPECT_EQ(casemap.size(), 1u);
 }
 
-TEST_CASE(assert_on_iteration_during_clear)
-{
-    struct Object {
-        ~Object()
-        {
-            m_map->begin();
-        }
-        HashMap<int, Object>* m_map;
-    };
-    HashMap<int, Object> map;
-    map.set(0, { &map });
-    map.clear();
-}
-
 TEST_CASE(hashmap_of_nonnullownptr_get)
 {
     struct Object {
-        Object(const String& s) : string(s) {}
+        Object(const String& s)
+            : string(s)
+        {
+        }
         String string;
     };
 
