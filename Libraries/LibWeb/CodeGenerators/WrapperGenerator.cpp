@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
@@ -120,101 +121,59 @@ static OwnPtr<Interface> parse_interface(const StringView& input)
 {
     auto interface = make<Interface>();
 
-    size_t index = 0;
+    GenericLexer lexer(input);
 
-    auto peek = [&](size_t offset = 0) -> char {
-        if (index + offset > input.length())
-            return 0;
-        return input[index + offset];
-    };
-
-    auto consume = [&] {
-        return input[index++];
-    };
-
-    auto consume_if = [&](auto ch) {
-        if (peek() == ch) {
-            consume();
-            return true;
-        }
-        return false;
-    };
-
-    auto consume_specific = [&](char ch) {
-        auto consumed = consume();
+    auto assert_specific = [&](char ch) {
+        auto consumed = lexer.consume();
         if (consumed != ch) {
-            dbg() << "Expected '" << ch << "' at offset " << index << " but got '" << consumed << "'";
+            dbg() << "Expected '" << ch << "' at offset " << lexer.tell() << " but got '" << consumed << "'";
             ASSERT_NOT_REACHED();
         }
     };
 
     auto consume_whitespace = [&] {
-        while (isspace(peek()))
-            consume();
+        lexer.consume_while([](char ch) { return isspace(ch); });
     };
 
-    auto consume_string = [&](const StringView& string) {
-        for (size_t i = 0; i < string.length(); ++i) {
-            ASSERT(consume() == string[i]);
-        }
+    auto assert_string = [&](const StringView& expected) {
+        bool saw_expected = lexer.consume_specific(expected);
+        ASSERT(saw_expected);
     };
 
-    auto next_is = [&](const StringView& string) {
-        for (size_t i = 0; i < string.length(); ++i) {
-            if (peek(i) != string[i])
-                return false;
-        }
-        return true;
-    };
-
-    auto consume_while = [&](auto condition) {
-        StringBuilder builder;
-        while (index < input.length() && condition(peek())) {
-            builder.append(consume());
-        }
-        return builder.to_string();
-    };
-
-    consume_string("interface");
+    assert_string("interface");
     consume_whitespace();
-    interface->name = consume_while([](auto ch) { return !isspace(ch); });
+    interface->name = lexer.consume_until([](auto ch) { return isspace(ch); });
     consume_whitespace();
-    if (consume_if(':')) {
+    if (lexer.consume_specific(':')) {
         consume_whitespace();
-        interface->parent_name = consume_while([](auto ch) { return !isspace(ch); });
+        interface->parent_name = lexer.consume_until([](auto ch) { return isspace(ch); });
         consume_whitespace();
     }
-    consume_specific('{');
+    assert_specific('{');
 
     auto parse_type = [&] {
-        auto name = consume_while([](auto ch) { return !isspace(ch) && ch != '?'; });
-        auto nullable = peek() == '?';
-        if (nullable)
-            consume_specific('?');
+        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '?'; });
+        auto nullable = lexer.consume_specific('?');
         return Type { name, nullable };
     };
 
     auto parse_attribute = [&](HashMap<String, String>& extended_attributes) {
-        bool readonly = false;
-        bool unsigned_ = false;
-        if (next_is("readonly")) {
-            consume_string("readonly");
-            readonly = true;
+        bool readonly = lexer.consume_specific("readonly");
+        if (readonly)
             consume_whitespace();
-        }
-        if (next_is("attribute")) {
-            consume_string("attribute");
+
+        if (lexer.consume_specific("attribute"))
             consume_whitespace();
-        }
-        if (next_is("unsigned")) {
-            consume_string("unsigned");
-            unsigned_ = true;
+
+        bool unsigned_ = lexer.consume_specific("unsigned");
+        if (unsigned_)
             consume_whitespace();
-        }
+
         auto type = parse_type();
         consume_whitespace();
-        auto name = consume_while([](auto ch) { return !isspace(ch) && ch != ';'; });
-        consume_specific(';');
+        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ';'; });
+        consume_whitespace();
+        assert_specific(';');
         Attribute attribute;
         attribute.readonly = readonly;
         attribute.unsigned_ = unsigned_;
@@ -229,25 +188,27 @@ static OwnPtr<Interface> parse_interface(const StringView& input)
     auto parse_function = [&](HashMap<String, String>& extended_attributes) {
         auto return_type = parse_type();
         consume_whitespace();
-        auto name = consume_while([](auto ch) { return !isspace(ch) && ch != '('; });
-        consume_specific('(');
+        auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == '('; });
+        consume_whitespace();
+        assert_specific('(');
 
         Vector<Parameter> parameters;
 
         for (;;) {
-            if (consume_if(')'))
+            if (lexer.consume_specific(')'))
                 break;
             auto type = parse_type();
             consume_whitespace();
-            auto name = consume_while([](auto ch) { return !isspace(ch) && ch != ',' && ch != ')'; });
+            auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
             parameters.append({ move(type), move(name) });
-            if (consume_if(')'))
+            if (lexer.consume_specific(')'))
                 break;
-            consume_specific(',');
+            assert_specific(',');
             consume_whitespace();
         }
 
-        consume_specific(';');
+        consume_whitespace();
+        assert_specific(';');
 
         interface->functions.append(Function { return_type, name, move(parameters), move(extended_attributes) });
     };
@@ -256,11 +217,11 @@ static OwnPtr<Interface> parse_interface(const StringView& input)
         HashMap<String, String> extended_attributes;
         for (;;) {
             consume_whitespace();
-            if (consume_if(']'))
+            if (lexer.consume_specific(']'))
                 break;
-            auto name = consume_while([](auto ch) { return ch != ']' && ch != '=' && ch != ','; });
-            if (consume_if('=')) {
-                auto value = consume_while([](auto ch) { return ch != ']' && ch != ','; });
+            auto name = lexer.consume_until([](auto ch) { return ch == ']' || ch == '=' || ch == ','; });
+            if (lexer.consume_specific('=')) {
+                auto value = lexer.consume_until([](auto ch) { return ch == ']' || ch == ','; });
                 extended_attributes.set(name, value);
             } else {
                 extended_attributes.set(name, {});
@@ -275,14 +236,14 @@ static OwnPtr<Interface> parse_interface(const StringView& input)
 
         consume_whitespace();
 
-        if (consume_if('}'))
+        if (lexer.consume_specific('}'))
             break;
 
-        if (consume_if('[')) {
+        if (lexer.consume_specific('[')) {
             extended_attributes = parse_extended_attributes();
         }
 
-        if (next_is("readonly") || next_is("attribute")) {
+        if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
             parse_attribute(extended_attributes);
             continue;
         }
