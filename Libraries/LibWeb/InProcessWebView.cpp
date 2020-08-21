@@ -115,8 +115,7 @@ void InProcessWebView::select_all()
 
 String InProcessWebView::selected_text() const
 {
-    // FIXME: Use focused frame
-    return page().main_frame().selected_text();
+    return page().focused_frame().selected_text();
 }
 
 void InProcessWebView::page_did_layout()
