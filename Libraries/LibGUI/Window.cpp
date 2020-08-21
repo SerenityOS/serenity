@@ -107,6 +107,7 @@ void Window::show()
         m_opacity_when_windowless,
         m_base_size,
         m_size_increment,
+        m_resize_aspect_ratio,
         (i32)m_window_type,
         m_title_when_windowless,
         parent_window ? parent_window->window_id() : 0);
@@ -835,6 +836,16 @@ void Window::set_size_increment(const Gfx::IntSize& size_increment)
     m_size_increment = size_increment;
     if (is_visible())
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement>(m_window_id, m_base_size, m_size_increment);
+}
+
+void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
+{
+    if (m_resize_aspect_ratio == ratio)
+        return;
+
+    m_resize_aspect_ratio = ratio;
+    if (is_visible())
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowResizeAspectRatio>(m_window_id, m_resize_aspect_ratio);
 }
 
 void Window::did_add_widget(Badge<Widget>, Widget& widget)

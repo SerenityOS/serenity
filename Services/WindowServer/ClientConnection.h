@@ -138,6 +138,7 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetSystemThemeResponse> handle(const Messages::WindowServer::SetSystemTheme&) override;
     virtual OwnPtr<Messages::WindowServer::GetSystemThemeResponse> handle(const Messages::WindowServer::GetSystemTheme&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowResizeAspectRatioResponse> handle(const Messages::WindowServer::SetWindowResizeAspectRatio&) override;
     virtual void handle(const Messages::WindowServer::EnableDisplayLink&) override;
     virtual void handle(const Messages::WindowServer::DisableDisplayLink&) override;
     virtual void handle(const Messages::WindowServer::SetWindowProgress&) override;

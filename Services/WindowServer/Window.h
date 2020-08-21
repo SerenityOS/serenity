@@ -207,6 +207,9 @@ public:
     Gfx::IntSize size_increment() const { return m_size_increment; }
     void set_size_increment(const Gfx::IntSize& increment) { m_size_increment = increment; }
 
+    const Optional<Gfx::IntSize>& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
+    void set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio) { m_resize_aspect_ratio = ratio; }
+
     Gfx::IntSize base_size() const { return m_base_size; }
     void set_base_size(const Gfx::IntSize& size) { m_base_size = size; }
 
@@ -314,6 +317,7 @@ private:
     bool m_minimizable { false };
     bool m_frameless { false };
     bool m_resizable { false };
+    Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     bool m_listens_to_wm_events { false };
     bool m_minimized { false };
     bool m_maximized { false };
