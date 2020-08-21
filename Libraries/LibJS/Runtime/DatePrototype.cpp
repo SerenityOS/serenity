@@ -73,6 +73,13 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function("toLocaleTimeString", to_locale_time_string, 0, attr);
     define_native_function("toTimeString", to_time_string, 0, attr);
     define_native_function("toString", to_string, 0, attr);
+
+    // Aliases.
+    define_native_function("valueOf", get_time, 0, attr);
+    // toJSON() isn't quite an alias for toISOString():
+    // - it returns null instead of throwing RangeError
+    // - its .length is 1, not 0
+    // - it can be transferred to other prototypes
 }
 
 DatePrototype::~DatePrototype()
