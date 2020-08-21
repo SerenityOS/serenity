@@ -7,6 +7,7 @@ set(SOURCES
     Dwarf/DwarfInfo.cpp
     Dwarf/Expression.cpp
     Dwarf/LineProgram.cpp
+    StackFrameUtils.cpp
 )
 
 serenity_lib(LibDebug debug)

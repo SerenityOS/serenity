@@ -66,6 +66,8 @@ public:
     enum class ContinueType {
         Continue,
         SourceSingleStep,
+        SourceStepOut,
+        SourceStepOver,
     };
 
     void set_continue_type(ContinueType type) { m_continue_type = type; }
@@ -75,17 +77,27 @@ private:
     class DebuggingState {
     public:
         enum State {
-            Normal,
+            Normal, // Continue normally until we hit a breakpoint / program terminates
             SingleStepping,
+            SteppingOut,
+            SteppingOver,
         };
         State get() const { return m_state; }
+
         void set_normal();
         void set_single_stepping(DebugInfo::SourcePosition original_source_position);
+        void set_stepping_out() { m_state = State::SteppingOut; }
+        void set_stepping_over() { m_state = State::SteppingOver; }
+
         bool should_stop_single_stepping(const DebugInfo::SourcePosition& current_source_position) const;
+        void clear_temporary_breakpoints();
+        void add_temporary_breakpoint(u32 address);
+        const Vector<u32>& temporary_breakpoints() const { return m_addresses_of_temporary_breakpoints; }
 
     private:
         State m_state { Normal };
         Optional<DebugInfo::SourcePosition> m_original_source_position; // The source position at which we started the current single step
+        Vector<u32> m_addresses_of_temporary_breakpoints;
     };
 
     explicit Debugger(
@@ -98,12 +110,18 @@ private:
     void start();
     int debugger_loop();
 
+    void remove_temporary_breakpoints();
+    void do_step_out(const PtraceRegisters&);
+    void do_step_over(const PtraceRegisters&);
+
     OwnPtr<DebugSession> m_debug_session;
+    DebuggingState m_state;
 
     pthread_mutex_t m_continue_mutex {};
     pthread_cond_t m_continue_cond {};
 
     Vector<DebugInfo::SourcePosition> m_breakpoints;
+
     String m_executable_path;
 
     Function<HasControlPassedToUser(const PtraceRegisters&)> m_on_stopped_callback;

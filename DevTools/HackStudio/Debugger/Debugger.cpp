@@ -25,6 +25,7 @@
  */
 
 #include "Debugger.h"
+#include <LibDebug/StackFrameUtils.h>
 
 namespace HackStudio {
 
@@ -127,7 +128,7 @@ void Debugger::start()
 
 int Debugger::debugger_loop()
 {
-    DebuggingState state;
+    ASSERT(m_debug_session);
 
     m_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == DebugSession::DebugBreakReason::Exited) {
@@ -135,14 +136,15 @@ int Debugger::debugger_loop()
             m_on_exit_callback();
             return DebugSession::DebugDecision::Detach;
         }
+        remove_temporary_breakpoints();
         ASSERT(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
 
         auto source_position = m_debug_session->debug_info().get_source_position(regs.eip);
-        if (state.get() == Debugger::DebuggingState::SingleStepping) {
+        if (m_state.get() == Debugger::DebuggingState::SingleStepping) {
             ASSERT(source_position.has_value());
-            if (state.should_stop_single_stepping(source_position.value())) {
-                state.set_normal();
+            if (m_state.should_stop_single_stepping(source_position.value())) {
+                m_state.set_normal();
             } else {
                 return DebugSession::DebugDecision::SingleStep;
             }
@@ -160,13 +162,21 @@ int Debugger::debugger_loop()
             m_continue_type = ContinueType::Continue;
         }
 
-        if (m_continue_type == ContinueType::Continue) {
+        switch (m_continue_type) {
+        case ContinueType::Continue:
+            m_state.set_normal();
             return DebugSession::DebugDecision::Continue;
-        }
-
-        if (m_continue_type == ContinueType::SourceSingleStep) {
-            state.set_single_stepping(source_position.value());
+        case ContinueType::SourceSingleStep:
+            m_state.set_single_stepping(source_position.value());
             return DebugSession::DebugDecision::SingleStep;
+        case ContinueType::SourceStepOut:
+            m_state.set_stepping_out();
+            do_step_out(regs);
+            return DebugSession::DebugDecision::Continue;
+        case ContinueType::SourceStepOver:
+            m_state.set_stepping_over();
+            do_step_over(regs);
+            return DebugSession::DebugDecision::Continue;
         }
         ASSERT_NOT_REACHED();
     });
@@ -190,6 +200,39 @@ bool Debugger::DebuggingState::should_stop_single_stepping(const DebugInfo::Sour
 {
     ASSERT(m_state == State::SingleStepping);
     return m_original_source_position.value() != current_source_position;
+}
+
+void Debugger::remove_temporary_breakpoints()
+{
+    for (auto breakpoint_address : m_state.temporary_breakpoints()) {
+        bool rc = m_debug_session->remove_breakpoint((void*)breakpoint_address);
+        ASSERT(rc);
+    }
+    m_state.clear_temporary_breakpoints();
+}
+
+void Debugger::DebuggingState::clear_temporary_breakpoints()
+{
+    m_addresses_of_temporary_breakpoints.clear();
+}
+void Debugger::DebuggingState::add_temporary_breakpoint(u32 address)
+{
+    m_addresses_of_temporary_breakpoints.append(address);
+}
+
+void Debugger::do_step_out(const PtraceRegisters& regs)
+{
+    auto frame_info = StackFrameUtils::get_info(*m_debug_session, regs.ebp);
+    ASSERT(frame_info.has_value());
+    u32 return_address = frame_info.value().return_address;
+    bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(return_address));
+    ASSERT(success);
+    m_state.add_temporary_breakpoint(return_address);
+}
+
+void Debugger::do_step_over(const PtraceRegisters&)
+{
+    // TODO: Implement
 }
 
 }
