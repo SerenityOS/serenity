@@ -163,6 +163,11 @@ void ComboBox::set_selected_index(size_t index)
         this->m_list_view->selection().set(model_index);
 }
 
+size_t ComboBox::selected_index() const
+{
+    return m_list_view->selection().first().row();
+}
+
 void ComboBox::select_all()
 {
     m_editor->select_all();
