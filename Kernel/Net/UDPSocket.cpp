@@ -42,7 +42,7 @@ void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
         callback(*it.value);
 }
 
-static auto s_map = AK::make_singleton<Lockable<HashMap<u16, UDPSocket*>>>();
+static AK::Singleton<Lockable<HashMap<u16, UDPSocket*>>> s_map;
 
 Lockable<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
 {
