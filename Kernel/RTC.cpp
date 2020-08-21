@@ -128,17 +128,22 @@ void read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& ho
     month = CMOS::read(0x08);
     year = CMOS::read(0x09);
 
+    bool is_pm = hour & 0x80;
+
     if (!(status_b & 0x04)) {
         second = bcd_to_binary(second);
         minute = bcd_to_binary(minute);
-        hour = bcd_to_binary(hour & 0x70);
+        hour = bcd_to_binary(hour & 0x7F);
         day = bcd_to_binary(day);
         month = bcd_to_binary(month);
         year = bcd_to_binary(year);
     }
 
-    if (!(status_b & 0x02) && (hour & 0x80)) {
-        hour = ((hour & 0x7F) + 12) % 24;
+    if (!(status_b & 0x02)) {
+        // In the 12 hour clock, midnight and noon are 12, not 0. Map it to 0.
+        hour %= 12;
+        if (is_pm)
+            hour += 12;
     }
 
     year += 2000;
