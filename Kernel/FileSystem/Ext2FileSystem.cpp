@@ -915,7 +915,7 @@ bool Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
 
 #ifdef EXT2_DEBUG
         dbg() << "* Inode: " << entry.inode
-              << ", name_len: " << u16(entry.name_length)
+              << ", name_len: " << u16(entry.name.length())
               << ", rec_len: " << u16(record_length)
               << ", file_type: " << u8(entry.file_type)
               << ", name: " << entry.name;
