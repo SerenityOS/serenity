@@ -63,14 +63,15 @@ class ExpectationError extends Error {
 
         toBe(value) {
             this.__doMatcher(() => {
-                this.__expect(Object.is(this.target, value));
+                this.__expect(Object.is(this.target, value),
+                              () => ("toBe: expected _" + String(value) + "_, got _" + String(this.target) + "_"));
             });
         }
 
         // FIXME: Take a precision argument like jest's toBeCloseTo matcher
         toBeCloseTo(value) {
-            this.__expect(typeof this.target === "number");
-            this.__expect(typeof value === "number");
+            this.__expect(typeof this.target === "number", () => "toBeCloseTo: target not of type number");
+            this.__expect(typeof value === "number", () => "toBeCloseTo: argument not of type number");
 
             this.__doMatcher(() => {
                 this.__expect(Math.abs(this.target - value) < 0.000001);
@@ -78,7 +79,7 @@ class ExpectationError extends Error {
         }
 
         toHaveLength(length) {
-            this.__expect(typeof this.target.length === "number");
+            this.__expect(typeof this.target.length === "number", () => "toHaveLength: target.length not of type number");
 
             this.__doMatcher(() => {
                 this.__expect(Object.is(this.target.length, length));
@@ -120,7 +121,7 @@ class ExpectationError extends Error {
 
         toBeDefined() {
             this.__doMatcher(() => {
-                this.__expect(this.target !== undefined);
+                this.__expect(this.target !== undefined, () => "toBeDefined: target was undefined");
             });
         }
 
@@ -138,13 +139,13 @@ class ExpectationError extends Error {
 
         toBeUndefined() {
             this.__doMatcher(() => {
-                this.__expect(this.target === undefined);
+                this.__expect(this.target === undefined, () => "toBeUndefined: target was not undefined");
             });
         }
 
         toBeNaN() {
             this.__doMatcher(() => {
-                this.__expect(isNaN(this.target));
+                this.__expect(isNaN(this.target), () => ("toBeNaN: target was _" + String(this.target) + "_, not NaN"));
             });
         }
 
@@ -258,9 +259,8 @@ class ExpectationError extends Error {
 
         // jest-extended
         fail(message) {
-            // FIXME: message is currently ignored
             this.__doMatcher(() => {
-                this.__expect(false);
+                this.__expect(false, message);
             });
         }
 
@@ -391,12 +391,17 @@ class ExpectationError extends Error {
                 } catch (e) {
                     if (e.name === "ExpectationError") threw = true;
                 }
-                if (!threw) throw new ExpectationError();
+                if (!threw) throw new ExpectationError("not: test didn't fail");
             }
         }
 
-        __expect(value) {
-            if (value !== true) throw new ExpectationError();
+        __expect(value, details) {
+            if (value !== true) {
+                if (details !== undefined)
+                     throw new ExpectationError(details());
+                else
+                     throw new ExpectationError();
+            }
         }
     }
 
@@ -432,6 +437,7 @@ class ExpectationError extends Error {
         } catch (e) {
             suite[message] = {
                 result: "fail",
+                details: String(e),
             };
         }
     };
