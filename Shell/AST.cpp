@@ -26,9 +26,11 @@
 
 #include "AST.h"
 #include "Shell.h"
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <signal.h>
 
@@ -793,37 +795,36 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
 
     size_t consecutive_interruptions = 0;
 
-    NonnullRefPtrVector<Value> values;
-    auto resolved = m_iterated_expression->run(shell)->resolve_without_cast(shell);
-    if (resolved->is_list_without_resolution())
-        values = static_cast<ListValue*>(resolved.ptr())->values();
-    else
-        values = create<ListValue>(resolved->resolve_as_list(shell))->values();
-
-    for (auto& value : values) {
+    m_iterated_expression->for_each_entry(shell, [&](auto value) {
         if (consecutive_interruptions == 2)
-            break;
+            return IterationDecision::Break;
 
-        auto frame = shell->push_frame();
-        shell->set_local_variable(m_variable_name, value);
+        RefPtr<Value> block_value;
 
-        auto block_value = m_block->run(shell)->resolve_without_cast(shell);
+        {
+            auto frame = shell->push_frame();
+            shell->set_local_variable(m_variable_name, value);
+
+            block_value = m_block->run(shell);
+        }
+
         if (block_value->is_job()) {
             auto job = static_cast<JobValue*>(block_value.ptr())->job();
             if (!job || job->is_running_in_background())
-                continue;
+                return IterationDecision::Continue;
             shell->block_on_job(job);
 
             if (job->signaled()) {
                 if (job->termination_signal() == SIGINT)
                     ++consecutive_interruptions;
                 else
-                    break;
+                    return IterationDecision::Break;
             } else {
                 consecutive_interruptions = 0;
             }
         }
-    }
+        return IterationDecision::Continue;
+    });
 
     return create<ListValue>({});
 }
@@ -923,10 +924,12 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Ref
         }
         auto& last_in_commands = commands.last();
 
-        last_in_commands.redirections.prepend(FdRedirection::create(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
-        last_in_commands.should_wait = true;
+        last_in_commands.redirections.append(FdRedirection::create(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
+        last_in_commands.should_wait = false;
         last_in_commands.should_notify_if_in_background = false;
         last_in_commands.is_pipe_source = false;
+
+        Core::EventLoop loop;
 
         auto notifier = Core::Notifier::construct(pipefd[0], Core::Notifier::Read);
         DuplexMemoryStream stream;
@@ -947,8 +950,8 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Ref
 
                     if (shell->options.inline_exec_keep_empty_segments)
                         if (callback(create<StringValue>("")) == IterationDecision::Break) {
+                            loop.quit(Break);
                             notifier->set_enabled(false);
-                            // FIXME: Kill all the jobs here.
                             return Break;
                         }
                 } else {
@@ -958,8 +961,8 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Ref
 
                     auto str = StringView(entry.data(), entry.size() - ifs.length());
                     if (callback(create<StringValue>(str)) == IterationDecision::Break) {
+                        loop.quit(Break);
                         notifier->set_enabled(false);
-                        // FIXME: Kill all the jobs here.
                         return Break;
                     }
                 }
@@ -969,42 +972,51 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Ref
 
             return NothingLeft;
         };
-        auto try_read = [&] {
-            constexpr static auto buffer_size = 4096;
+
+        notifier->on_ready_to_read = [&] {
+            constexpr static auto buffer_size = 16;
             u8 buffer[buffer_size];
             size_t remaining_size = buffer_size;
 
             for (;;) {
+                notifier->set_event_mask(Core::Notifier::None);
+                bool should_enable_notifier = false;
+
+                ScopeGuard notifier_enabler { [&] {
+                    if (should_enable_notifier)
+                        notifier->set_event_mask(Core::Notifier::Read);
+                } };
+
                 if (check_and_call() == Break)
                     return;
 
                 auto read_size = read(pipefd[0], buffer, remaining_size);
                 if (read_size < 0) {
-                    if (errno == EINTR)
+                    int saved_errno = errno;
+                    if (saved_errno == EINTR) {
+                        should_enable_notifier = true;
                         continue;
-                    if (errno == 0)
-                        break;
-                    dbg() << "read() failed: " << strerror(errno);
+                    }
+                    if (saved_errno == 0)
+                        continue;
+                    dbg() << "read() failed: " << strerror(saved_errno);
                     break;
                 }
                 if (read_size == 0)
                     break;
 
+                should_enable_notifier = true;
                 stream.write({ buffer, (size_t)read_size });
             }
+
+            loop.quit(Break);
         };
 
-        notifier->on_ready_to_read = [&] {
-            try_read();
-        };
+        shell->run_commands(commands);
 
-        for (auto& job : shell->run_commands(commands)) {
-            shell->block_on_job(job);
-        }
+        loop.exec();
 
         notifier->on_ready_to_read = nullptr;
-
-        try_read();
 
         if (close(pipefd[0]) < 0) {
             dbg() << "close() failed: " << strerror(errno);
