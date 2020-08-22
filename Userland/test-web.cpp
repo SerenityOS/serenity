@@ -45,6 +45,7 @@
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/InProcessWebView.h>
+#include <signal.h>
 #include <sys/time.h>
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
@@ -164,6 +165,21 @@ private:
     RefPtr<JS::Program> m_web_test_common;
 };
 
+static void cleanup_and_exit()
+{
+    // Clear the taskbar progress.
+#ifdef __serenity__
+    fprintf(stderr, "\033]9;-1;\033\\");
+#endif
+    exit(1);
+}
+
+static void handle_sigabrt(int)
+{
+    dbg() << "test-web: SIGABRT received, cleaning up.";
+    cleanup_and_exit();
+}
+
 static double get_time_in_ms()
 {
     struct timeval tv1;
@@ -210,7 +226,7 @@ void TestRunner::run()
     g_on_page_change = [this](auto& page_to_load) {
         if (!page_to_load.is_valid()) {
             printf("Invalid page URL (%s) on page change", page_to_load.to_string().characters());
-            exit(1);
+            cleanup_and_exit();
         }
 
         ASSERT(m_page_view->document());
@@ -228,7 +244,7 @@ void TestRunner::run()
             },
             [page_to_load](auto error) {
                 printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
-                exit(1);
+                cleanup_and_exit();
             });
     };
 
@@ -253,7 +269,7 @@ static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& 
     auto result = file->open(Core::IODevice::ReadOnly);
     if (!result) {
         printf("Failed to open the following file: \"%s\"\n", file_path.characters());
-        exit(1);
+        cleanup_and_exit();
     }
 
     auto contents = file->read_all();
@@ -293,7 +309,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         auto result = parse_file(String::format("%s/test-common.js", m_js_test_root.characters()));
         if (result.is_error()) {
             printf("Unable to parse %s/test-common.js", m_js_test_root.characters());
-            exit(1);
+            cleanup_and_exit();
         }
         m_js_test_common = result.value();
     }
@@ -302,7 +318,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         auto result = parse_file(String::format("%s/test-common.js", m_web_test_root.characters()));
         if (result.is_error()) {
             printf("Unable to parse %s/test-common.js", m_web_test_root.characters());
-            exit(1);
+            cleanup_and_exit();
         }
         m_web_test_common = result.value();
     }
@@ -317,7 +333,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     auto page_to_load = URL(old_interpreter.get_variable("__PageToLoad__", old_interpreter.global_object()).as_string().string());
     if (!page_to_load.is_valid()) {
         printf("Invalid page URL for %s", test_path.characters());
-        exit(1);
+        cleanup_and_exit();
     }
 
     JSFileResult file_result;
@@ -356,7 +372,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             auto test_json = get_test_results(new_interpreter);
             if (!test_json.has_value()) {
                 printf("Received malformed JSON from test \"%s\"\n", test_path.characters());
-                exit(1);
+                cleanup_and_exit();
             }
 
             file_result = { test_path.substring(m_web_test_root.length() + 1, test_path.length() - m_web_test_root.length() - 1) };
@@ -418,7 +434,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         },
         [page_to_load](auto error) {
             printf("Failed to load test page: %s (%s)", page_to_load.to_string().characters(), error.characters());
-            exit(1);
+            cleanup_and_exit();
         });
 
     return file_result;
@@ -632,6 +648,16 @@ int main(int argc, char** argv)
 {
     bool print_times = false;
     bool show_window = false;
+
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_flags = SA_NOCLDWAIT;
+    act.sa_handler = handle_sigabrt;
+    int rc = sigaction(SIGABRT, &act, nullptr);
+    if (rc < 0) {
+        perror("sigaction");
+        return 1;
+    }
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');

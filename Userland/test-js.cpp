@@ -38,6 +38,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <sys/time.h>
 
@@ -145,6 +146,21 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)
     return JS::Value(interpreter.in_strict_mode());
 }
 
+static void cleanup_and_exit()
+{
+    // Clear the taskbar progress.
+#ifdef __serenity__
+    fprintf(stderr, "\033]9;-1;\033\\");
+#endif
+    exit(1);
+}
+
+static void handle_sigabrt(int)
+{
+    dbg() << "test-js: SIGABRT received, cleaning up.";
+    cleanup_and_exit();
+}
+
 static double get_time_in_ms()
 {
     struct timeval tv1;
@@ -208,7 +224,7 @@ static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& 
     auto result = file->open(Core::IODevice::ReadOnly);
     if (!result) {
         printf("Failed to open the following file: \"%s\"\n", file_path.characters());
-        exit(1);
+        cleanup_and_exit();
     }
 
     auto contents = file->read_all();
@@ -249,7 +265,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             printf("Unable to parse test-common.js\n");
             printf("%s\n", result.error().error.to_string().characters());
             printf("%s\n", result.error().hint.characters());
-            exit(1);
+            cleanup_and_exit();;
         }
         m_test_program = result.value();
     }
@@ -264,7 +280,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     auto test_json = get_test_results(*interpreter);
     if (!test_json.has_value()) {
         printf("Received malformed JSON from test \"%s\"\n", test_path.characters());
-        exit(1);
+        cleanup_and_exit();
     }
 
     JSFileResult file_result { test_path.substring(m_test_root.length() + 1, test_path.length() - m_test_root.length() - 1) };
@@ -539,6 +555,16 @@ void TestRunner::print_test_results() const
 int main(int argc, char** argv)
 {
     bool print_times = false;
+
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_flags = SA_NOCLDWAIT;
+    act.sa_handler = handle_sigabrt;
+    int rc = sigaction(SIGABRT, &act, nullptr);
+    if (rc < 0) {
+        perror("sigaction");
+        return 1;
+    }
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
