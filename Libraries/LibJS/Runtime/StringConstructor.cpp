@@ -59,6 +59,8 @@ Value StringConstructor::call(Interpreter& interpreter)
 {
     if (!interpreter.argument_count())
         return js_string(interpreter, "");
+    if (interpreter.argument(0).is_symbol())
+        return js_string(interpreter, interpreter.argument(0).as_symbol().to_string());
     auto* string = interpreter.argument(0).to_primitive_string(interpreter);
     if (interpreter.exception())
         return {};
