@@ -33,7 +33,6 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/Singleton.h>
 
 //#define TCP_SOCKET_DEBUG
 
@@ -71,10 +70,11 @@ Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_socket
     return *s_map;
 }
 
-static auto s_map = make_singleton<Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>>();
-
 Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 {
+    static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>* s_map;
+    if (!s_map)
+        s_map = new Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>;
     return *s_map;
 }
 

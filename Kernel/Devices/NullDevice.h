@@ -36,7 +36,6 @@ public:
     NullDevice();
     virtual ~NullDevice() override;
 
-    static void initialize();
     static NullDevice& the();
 
 private:

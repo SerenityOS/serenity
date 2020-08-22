@@ -31,17 +31,17 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Process.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/Thread.h>
 
 //#define FIFO_DEBUG
 
 namespace Kernel {
 
-static auto s_table = make_singleton<Lockable<HashTable<FIFO*>>>();
-
 static Lockable<HashTable<FIFO*>>& all_fifos()
 {
+    static Lockable<HashTable<FIFO*>>* s_table;
+    if (!s_table)
+        s_table = new Lockable<HashTable<FIFO*>>;
     return *s_table;
 }
 

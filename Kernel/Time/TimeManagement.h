@@ -42,7 +42,6 @@ class TimeManagement {
     AK_MAKE_ETERNAL;
 
 public:
-    TimeManagement();
     static bool initialized();
     static void initialize();
     static TimeManagement& the();
@@ -64,6 +63,7 @@ public:
     static timeval now_as_timeval();
 
 private:
+    explicit TimeManagement(bool probe_non_legacy_hardware_timers);
     bool probe_and_set_legacy_hardware_timers();
     bool probe_and_set_non_legacy_hardware_timers();
     Vector<HardwareTimer*> scan_and_initialize_periodic_timers();

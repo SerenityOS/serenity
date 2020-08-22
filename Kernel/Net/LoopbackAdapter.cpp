@@ -25,15 +25,15 @@
  */
 
 #include <Kernel/Net/LoopbackAdapter.h>
-#include <Kernel/Singleton.h>
 
 namespace Kernel {
 
-static auto s_loopback = make_singleton<LoopbackAdapter>();
-
 LoopbackAdapter& LoopbackAdapter::the()
 {
-    return *s_loopback;
+    static LoopbackAdapter* the;
+    if (!the)
+        the = new LoopbackAdapter;
+    return *the;
 }
 
 LoopbackAdapter::LoopbackAdapter()

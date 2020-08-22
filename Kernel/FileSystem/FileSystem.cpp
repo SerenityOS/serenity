@@ -31,17 +31,18 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
 
 static u32 s_lastFileSystemID;
-static auto s_fs_map = make_singleton<HashMap<u32, FS*>>();
+static HashMap<u32, FS*>* s_fs_map;
 
 static HashMap<u32, FS*>& all_fses()
 {
+    if (!s_fs_map)
+        s_fs_map = new HashMap<u32, FS*>();
     return *s_fs_map;
 }
 

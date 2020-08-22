@@ -56,7 +56,6 @@ struct Timer {
 
 class TimerQueue {
 public:
-    TimerQueue();
     static TimerQueue& the();
 
     TimerId add_timer(NonnullOwnPtr<Timer>&&);
@@ -65,6 +64,8 @@ public:
     void fire();
 
 private:
+    TimerQueue();
+
     void update_next_timer_due();
 
     u64 microseconds_to_ticks(u64 micro_seconds) { return micro_seconds * (m_ticks_per_second / 1'000'000); }
