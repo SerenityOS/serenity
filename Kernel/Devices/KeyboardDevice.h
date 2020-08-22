@@ -45,7 +45,6 @@ class KeyboardDevice final : public IRQHandler
 public:
     using Event = KeyEvent;
 
-    static void initialize();
     static KeyboardDevice& the();
 
     virtual ~KeyboardDevice() override;

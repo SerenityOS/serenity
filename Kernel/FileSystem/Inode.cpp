@@ -33,19 +33,20 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
 namespace Kernel {
 
 static SpinLock s_all_inodes_lock;
-static auto s_list = make_singleton<InlineLinkedList<Inode>>();
 
 InlineLinkedList<Inode>& Inode::all_with_lock()
 {
     ASSERT(s_all_inodes_lock.is_locked());
 
-    return *s_list;
+    static InlineLinkedList<Inode>* list;
+    if (!list)
+        list = new InlineLinkedList<Inode>;
+    return *list;
 }
 
 void Inode::sync()

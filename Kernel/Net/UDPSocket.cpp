@@ -31,7 +31,6 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/Singleton.h>
 
 namespace Kernel {
 
@@ -42,10 +41,11 @@ void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
         callback(*it.value);
 }
 
-static auto s_map = make_singleton<Lockable<HashMap<u16, UDPSocket*>>>();
-
 Lockable<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
 {
+    static Lockable<HashMap<u16, UDPSocket*>>* s_map;
+    if (!s_map)
+        s_map = new Lockable<HashMap<u16, UDPSocket*>>;
     return *s_map;
 }
 

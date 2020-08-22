@@ -40,7 +40,6 @@ public:
     PS2MouseDevice();
     virtual ~PS2MouseDevice() override;
 
-    static void create();
     static PS2MouseDevice& the();
 
     // ^CharacterDevice

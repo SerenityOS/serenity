@@ -127,7 +127,6 @@ class KernelRng : public Lockable<FortunaPRNG<Crypto::Cipher::AESCipher, Crypto:
     AK_MAKE_ETERNAL;
 
 public:
-    KernelRng();
     static KernelRng& the();
 
     void wait_for_entropy();
@@ -135,6 +134,8 @@ public:
     void wake_if_ready();
 
 private:
+    KernelRng();
+
     WaitQueue m_seed_queue;
 };
 

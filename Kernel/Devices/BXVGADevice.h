@@ -36,7 +36,6 @@ namespace Kernel {
 class BXVGADevice final : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
-    static void initialize();
     static BXVGADevice& the();
 
     BXVGADevice();

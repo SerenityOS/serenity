@@ -63,9 +63,9 @@ class VMWareBackdoor {
     AK_MAKE_ETERNAL;
 
 public:
-    VMWareBackdoor();
     static VMWareBackdoor* the();
 
+    static VMWareBackdoor* initialize();
     bool vmmouse_is_absolute() const;
     void enable_absolute_vmmouse();
     void disable_absolute_vmmouse();
@@ -76,6 +76,7 @@ public:
 private:
     void send_high_bandwidth(VMWareCommand& command);
     void get_high_bandwidth(VMWareCommand& command);
+    VMWareBackdoor();
     bool detect_vmmouse();
     bool m_vmmouse_absolute { false };
 };

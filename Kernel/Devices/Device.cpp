@@ -26,15 +26,16 @@
 
 #include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
-#include <Kernel/Singleton.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
 
-static auto s_all_devices = make_singleton<HashMap<u32, Device*>>();
+static HashMap<u32, Device*>* s_all_devices;
 
 HashMap<u32, Device*>& Device::all_devices()
 {
+    if (s_all_devices == nullptr)
+        s_all_devices = new HashMap<u32, Device*>;
     return *s_all_devices;
 }
 

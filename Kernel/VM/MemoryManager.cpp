@@ -39,7 +39,6 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/StdLib.h>
 
 //#define MM_DEBUG
@@ -51,7 +50,7 @@ extern FlatPtr end_of_kernel_bss;
 
 namespace Kernel {
 
-static auto s_the = make_singleton<MemoryManager>();
+static MemoryManager* s_the;
 RecursiveSpinLock s_mm_lock;
 
 MemoryManager& MM
@@ -61,8 +60,6 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager()
 {
-    ASSERT(!s_the.is_initialized());
-
     ScopedSpinLock lock(s_mm_lock);
     m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
     parse_memory_map();
@@ -220,7 +217,7 @@ void MemoryManager::initialize(u32 cpu)
     Processor::current().set_mm_data(*mm_data);
 
     if (cpu == 0)
-        s_the.ensure_instance();
+        s_the = new MemoryManager;
 }
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)

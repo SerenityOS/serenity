@@ -28,16 +28,17 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Singleton.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
 namespace Kernel {
 
-static auto s_the = make_singleton<TimerQueue>();
+static TimerQueue* s_the;
 
 TimerQueue& TimerQueue::the()
 {
+    if (!s_the)
+        s_the = new TimerQueue;
     return *s_the;
 }
 
