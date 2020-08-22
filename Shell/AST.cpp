@@ -87,6 +87,16 @@ void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(RefPtr
         callback(value);
         return;
     }
+
+    if (value->is_list_without_resolution()) {
+        auto list = value->resolve_without_cast(shell);
+        for (auto& element : static_cast<ListValue*>(list.ptr())->values()) {
+            if (callback(element) == IterationDecision::Break)
+                break;
+        }
+        return;
+    }
+
     auto list = value->resolve_as_list(shell);
     for (auto& element : list) {
         if (callback(create<StringValue>(move(element))) == IterationDecision::Break)
