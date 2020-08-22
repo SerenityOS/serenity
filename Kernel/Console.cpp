@@ -24,16 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Singleton.h>
 #include <Kernel/Console.h>
 #include <Kernel/IO.h>
 #include <Kernel/kstdio.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/SpinLock.h>
 
 // Bytes output to 0xE9 end up on the Bochs console. It's very handy.
 #define CONSOLE_OUT_TO_E9
 
-static auto s_the = AK::make_singleton<Console>();
+static auto s_the = Kernel::make_singleton<Console>();
 static Kernel::SpinLock g_console_lock;
 
 void Console::initialize()

@@ -27,7 +27,6 @@
 #include <AK/FlyString.h>
 #include <AK/HashTable.h>
 #include <AK/Optional.h>
-#include <AK/Singleton.h>
 #include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
@@ -48,11 +47,12 @@ struct FlyStringImplTraits : public AK::Traits<StringImpl*> {
     }
 };
 
-static auto s_table = make_singleton<HashTable<StringImpl*, FlyStringImplTraits>>();
-
 static HashTable<StringImpl*, FlyStringImplTraits>& fly_impls()
 {
-    return *s_table;
+    static HashTable<StringImpl*, FlyStringImplTraits>* table;
+    if (!table)
+        table = new HashTable<StringImpl*, FlyStringImplTraits>;
+    return *table;
 }
 
 void FlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)

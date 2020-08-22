@@ -25,7 +25,6 @@
  */
 
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -34,12 +33,13 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Net/LocalSocket.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
 namespace Kernel {
 
 static SpinLock s_all_inodes_lock;
-static auto s_list = AK::make_singleton<InlineLinkedList<Inode>>();
+static auto s_list = make_singleton<InlineLinkedList<Inode>>();
 
 InlineLinkedList<Inode>& Inode::all_with_lock()
 {
