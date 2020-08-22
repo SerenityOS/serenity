@@ -26,19 +26,19 @@
 
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
-#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Net/LocalSocket.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
 
 static u32 s_lastFileSystemID;
-static auto s_fs_map = AK::make_singleton<HashMap<u32, FS*>>();
+static auto s_fs_map = make_singleton<HashMap<u32, FS*>>();
 
 static HashMap<u32, FS*>& all_fses()
 {

@@ -25,11 +25,11 @@
  */
 
 #include <AK/Checked.h>
-#include <AK/Singleton.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/Process.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
@@ -57,7 +57,7 @@ namespace Kernel {
 #define VBE_DISPI_ENABLED 0x01
 #define VBE_DISPI_LFB_ENABLED 0x40
 
-static auto s_the = AK::make_singleton<BXVGADevice>();
+static auto s_the = make_singleton<BXVGADevice>();
 
 void BXVGADevice::initialize()
 {

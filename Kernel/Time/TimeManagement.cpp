@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Singleton.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Scheduler.h>
@@ -33,6 +32,7 @@
 #include <Kernel/Time/HardwareTimer.h>
 #include <Kernel/Time/PIT.h>
 #include <Kernel/Time/RTC.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
 
@@ -40,7 +40,7 @@
 
 namespace Kernel {
 
-static auto s_the = AK::make_singleton<TimeManagement>();
+static auto s_the = make_singleton<TimeManagement>();
 
 TimeManagement& TimeManagement::the()
 {

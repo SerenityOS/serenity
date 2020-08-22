@@ -26,33 +26,20 @@
 
 #pragma once
 
-#include <AK/Assertions.h>
 #include <AK/Atomic.h>
-#include <AK/kmalloc.h>
-#ifdef KERNEL
 #include <Kernel/Arch/i386/CPU.h>
-#endif
 
-#ifndef __serenity__
-#    include <new>
-#endif
-
-namespace AK {
+namespace Kernel {
 
 template<typename T, T* (*InitFunction)()>
 class Singleton {
-    AK_MAKE_NONCOPYABLE(Singleton);
 public:
-    Singleton() = default;
-
     T* ptr() const
     {
         T* obj = AK::atomic_load(&m_obj, AK::memory_order_consume);
         if (FlatPtr(obj) <= 0x1) {
             // If this is the first time, see if we get to initialize it
-#ifdef KERNEL
-            Kernel::ScopedCritical critical;
-#endif
+            ScopedCritical critical;
             if (obj == nullptr && AK::atomic_compare_exchange_strong(&m_obj, obj, (T*)0x1, AK::memory_order_acq_rel)) {
                 // We're the first one
                 obj = InitFunction();
@@ -60,11 +47,7 @@ public:
             } else {
                 // Someone else was faster, wait until they're done
                 while (obj == (T*)0x1) {
-#ifdef KERNEL
-                    Kernel::Processor::wait_check();
-#else
-                    // TODO: yield
-#endif
+                    Processor::wait_check();
                     obj = AK::atomic_load(&m_obj, AK::memory_order_consume);
                 }
             }
@@ -119,7 +102,7 @@ struct SingletonInstanceCreator {
 };
 
 template<typename T>
-inline Singleton<T, SingletonInstanceCreator<T>::create> make_singleton()
+static Singleton<T, SingletonInstanceCreator<T>::create> make_singleton()
 {
     return Singleton<T, SingletonInstanceCreator<T>::create>();
 }

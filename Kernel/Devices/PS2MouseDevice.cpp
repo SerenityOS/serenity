@@ -25,10 +25,10 @@
  */
 
 #include <AK/Memory.h>
-#include <AK/Singleton.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/IO.h>
+#include <Kernel/Singleton.h>
 
 namespace Kernel {
 
@@ -57,7 +57,7 @@ namespace Kernel {
 
 //#define PS2MOUSE_DEBUG
 
-static auto s_the = AK::make_singleton<PS2MouseDevice>();
+static auto s_the = make_singleton<PS2MouseDevice>();
 
 PS2MouseDevice::PS2MouseDevice()
     : IRQHandler(IRQ_MOUSE)

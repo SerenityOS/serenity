@@ -26,9 +26,9 @@
 
 #include "PTYMultiplexer.h"
 #include "MasterPTY.h"
-#include <AK/Singleton.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
+#include <Kernel/Singleton.h>
 #include <LibC/errno_numbers.h>
 
 //#define PTMX_DEBUG
@@ -36,7 +36,7 @@
 namespace Kernel {
 
 static const unsigned s_max_pty_pairs = 8;
-static auto s_the = AK::make_singleton<PTYMultiplexer>();
+static auto s_the = make_singleton<PTYMultiplexer>();
 
 PTYMultiplexer& PTYMultiplexer::the()
 {

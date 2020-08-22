@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -34,6 +33,7 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/Singleton.h>
 
 //#define TCP_SOCKET_DEBUG
 
@@ -63,18 +63,19 @@ void TCPSocket::set_state(State new_state)
     }
 }
 
-static auto s_socket_closing = AK::make_singleton<Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>>();
-
 Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
 {
-    return *s_socket_closing;
+    static Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>* s_map;
+    if (!s_map)
+        s_map = new Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>;
+    return *s_map;
 }
 
-static auto s_socket_tuples = AK::make_singleton<Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>>();
+static auto s_map = make_singleton<Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>>();
 
 Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 {
-    return *s_socket_tuples;
+    return *s_map;
 }
 
 RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)

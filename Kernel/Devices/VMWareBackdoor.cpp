@@ -26,13 +26,13 @@
 
 #include <AK/Assertions.h>
 #include <AK/OwnPtr.h>
-#include <AK/Singleton.h>
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/IO.h>
+#include <Kernel/Singleton.h>
 
 namespace Kernel {
 
@@ -111,7 +111,7 @@ private:
     OwnPtr<VMWareBackdoor> m_backdoor;
 };
 
-static auto s_vmware_backdoor = AK::make_singleton<VMWareBackdoorDetector>();
+static auto s_vmware_backdoor = make_singleton<VMWareBackdoorDetector>();
 
 VMWareBackdoor* VMWareBackdoor::the()
 {

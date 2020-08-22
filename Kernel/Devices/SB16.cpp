@@ -25,13 +25,13 @@
  */
 
 #include <AK/Memory.h>
-#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/IO.h>
+#include <Kernel/Singleton.h>
 
 //#define SB16_DEBUG
 
@@ -77,7 +77,7 @@ void SB16::set_sample_rate(uint16_t hz)
     dsp_write((u8)hz);
 }
 
-static auto s_the = AK::make_singleton<SB16>();
+static auto s_the = make_singleton<SB16>();
 
 SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)

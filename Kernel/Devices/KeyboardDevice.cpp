@@ -26,12 +26,12 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/IO.h>
+#include <Kernel/Singleton.h>
 #include <Kernel/TTY/VirtualConsole.h>
 
 //#define KEYBOARD_DEBUG
@@ -336,7 +336,7 @@ void KeyboardDevice::handle_irq(const RegisterState&)
     }
 }
 
-static auto s_the = AK::make_singleton<KeyboardDevice>();
+static auto s_the = make_singleton<KeyboardDevice>();
 
 void KeyboardDevice::initialize()
 {
