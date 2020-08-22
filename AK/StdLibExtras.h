@@ -40,7 +40,6 @@ inline constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned powe
 
 namespace AK {
 
-
 template<typename T, typename SizeType = decltype(sizeof(T)), SizeType N>
 constexpr SizeType array_size(T (&)[N])
 {
@@ -501,6 +500,9 @@ template<typename ReferenceType, typename T>
 using CopyConst =
     typename Conditional<IsConst<ReferenceType>::value, typename AddConst<T>::Type, typename RemoveConst<T>::Type>::Type;
 
+template<typename... Ts>
+using Void = void;
+
 }
 
 using AK::AddConst;
@@ -523,3 +525,4 @@ using AK::min;
 using AK::move;
 using AK::RemoveConst;
 using AK::swap;
+using AK::Void;
