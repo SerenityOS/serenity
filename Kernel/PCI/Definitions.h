@@ -89,7 +89,7 @@ inline const LogStream& operator<<(const LogStream& stream, const ID value)
 }
 struct Address {
 public:
-    Address() {}
+    Address() { }
     Address(u16 seg)
         : m_seg(seg)
         , m_bus(0)
@@ -115,6 +115,13 @@ public:
 
     bool is_null() const { return !m_bus && !m_slot && !m_function; }
     operator bool() const { return !is_null(); }
+
+    // Disable default implementations that would use surprising integer promotion.
+    bool operator==(const Address&) const = delete;
+    bool operator<=(const Address&) const = delete;
+    bool operator>=(const Address&) const = delete;
+    bool operator<(const Address&) const = delete;
+    bool operator>(const Address&) const = delete;
 
     u16 seg() const { return m_seg; }
     u8 bus() const { return m_bus; }
