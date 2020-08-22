@@ -30,9 +30,7 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <ctype.h>
-#include <memory.h>
 #include <stdio.h>
-#include <string.h>
 
 struct Testcase {
     const char* dest;
