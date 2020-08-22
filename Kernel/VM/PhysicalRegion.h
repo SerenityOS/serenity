@@ -49,12 +49,12 @@ public:
     unsigned size() const { return m_pages; }
     unsigned used() const { return m_used; }
     unsigned free() const { return m_pages - m_used; }
-    bool contains(PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
+    bool contains(const PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
 
     RefPtr<PhysicalPage> take_free_page(bool supervisor);
     NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, bool supervisor);
     void return_page_at(PhysicalAddress addr);
-    void return_page(PhysicalPage&& page) { return_page_at(page.paddr()); }
+    void return_page(const PhysicalPage& page) { return_page_at(page.paddr()); }
 
 private:
     unsigned find_contiguous_free_pages(size_t count);
