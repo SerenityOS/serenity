@@ -38,7 +38,7 @@ static String number_string_with_one_decimal(float number, const char* suffix)
     return String::format("%d.%d %s", (int)number, (int)(decimals * 10), suffix);
 }
 
-static String human_readable_size(size_t size)
+static inline String human_readable_size(size_t size)
 {
     if (size < 1 * KiB)
         return String::format("%zu B", size);
@@ -51,4 +51,4 @@ static String human_readable_size(size_t size)
 
 }
 
-using namespace AK;
+using AK::human_readable_size;
