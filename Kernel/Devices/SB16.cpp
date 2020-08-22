@@ -77,7 +77,7 @@ void SB16::set_sample_rate(uint16_t hz)
     dsp_write((u8)hz);
 }
 
-static AK::Singleton<SB16> s_the;
+static auto s_the = AK::make_singleton<SB16>();
 
 SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)

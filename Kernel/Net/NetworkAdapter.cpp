@@ -38,7 +38,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<Lockable<HashTable<NetworkAdapter*>>> s_table;
+static auto s_table = AK::make_singleton<Lockable<HashTable<NetworkAdapter*>>>();
 
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {

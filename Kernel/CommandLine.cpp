@@ -38,7 +38,6 @@ const CommandLine& kernel_command_line()
 
 void CommandLine::initialize(const String& string)
 {
-    ASSERT(!s_the);
     s_the = new CommandLine(string);
 }
 
@@ -46,7 +45,7 @@ CommandLine::CommandLine(const String& string)
     : m_string(string)
 {
     s_the = this;
-klog() << "CommandLine: " << string;
+
     for (auto str : m_string.split(' ')) {
         if (str == "") {
             continue;

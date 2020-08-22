@@ -57,7 +57,7 @@ namespace Kernel {
 #define VBE_DISPI_ENABLED 0x01
 #define VBE_DISPI_LFB_ENABLED 0x40
 
-static AK::Singleton<BXVGADevice> s_the;
+static auto s_the = AK::make_singleton<BXVGADevice>();
 
 void BXVGADevice::initialize()
 {

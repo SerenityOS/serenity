@@ -33,7 +33,7 @@
 // Bytes output to 0xE9 end up on the Bochs console. It's very handy.
 #define CONSOLE_OUT_TO_E9
 
-static AK::Singleton<Console> s_the;
+static auto s_the = AK::make_singleton<Console>();
 static Kernel::SpinLock g_console_lock;
 
 void Console::initialize()

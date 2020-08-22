@@ -38,7 +38,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<Lockable<HashTable<FIFO*>>> s_table;
+static auto s_table = AK::make_singleton<Lockable<HashTable<FIFO*>>>();
 
 static Lockable<HashTable<FIFO*>>& all_fifos()
 {

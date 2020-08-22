@@ -108,7 +108,7 @@ namespace Kernel {
 #define PCI_Mass_Storage_Class 0x1
 #define PCI_IDE_Controller_Subclass 0x1
 
-static AK::Singleton<Lock> s_pata_lock;
+static auto s_pata_lock = AK::make_singleton<Lock>();
 
 static Lock& s_lock()
 {

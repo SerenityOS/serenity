@@ -39,7 +39,7 @@
 namespace Kernel {
 
 static SpinLock s_all_inodes_lock;
-static AK::Singleton<InlineLinkedList<Inode>> s_list;
+static auto s_list = AK::make_singleton<InlineLinkedList<Inode>>();
 
 InlineLinkedList<Inode>& Inode::all_with_lock()
 {
