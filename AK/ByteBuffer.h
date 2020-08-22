@@ -147,6 +147,14 @@ public:
     bool operator!() const { return is_null(); }
     bool is_null() const { return m_impl == nullptr; }
 
+    // Disable default implementations that would use surprising integer promotion.
+    bool operator==(const ByteBuffer& other) const;
+    bool operator!=(const ByteBuffer& other) const { return !(*this == other); }
+    bool operator<=(const ByteBuffer& other) const = delete;
+    bool operator>=(const ByteBuffer& other) const = delete;
+    bool operator<(const ByteBuffer& other) const = delete;
+    bool operator>(const ByteBuffer& other) const = delete;
+
     u8& operator[](size_t i)
     {
         ASSERT(m_impl);
