@@ -52,7 +52,7 @@ enum class Kind {
     SetOf
 };
 
-static StringView kind_name(Kind kind)
+static inline StringView kind_name(Kind kind)
 {
     switch (kind) {
     case Kind::Eol:
