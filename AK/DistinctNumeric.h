@@ -41,7 +41,7 @@ namespace AK {
  * - No matter the values of these, `DistinctNumeric` always implements `==` and `!=`.
  * - If `Incr` is true, then `++a`, `a++`, `--a`, and `a--` are implemented.
  * - If `Cmp` is true, then `a>b`, `a<b`, `a>=b`, and `a<=b` are implemented.
- * - If `Bool` is true, then `!a`, `a&&b`, and `a||b` are implemented (through `operator bool()`.
+ * - If `Bool` is true, then `!a`, `a&&b`, and `a||b` are implemented (but not `operator bool()`, because of overzealous integer promotion rules).
  * - If `Flags` is true, then `~a`, `a&b`, `a|b`, `a^b`, `a&=b`, `a|=b`, and `a^=b` are implemented.
  * - If `Shift` is true, then `a<<b`, `a>>b`, `a<<=b`, `a>>=b` are implemented.
  * - If `Arith` is true, then `a+b`, `a-b`, `+a`, `-a`, `a*b`, `a/b`, `a%b`, and the respective `a_=b` versions are implemented.
