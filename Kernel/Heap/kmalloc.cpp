@@ -40,7 +40,6 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/VM/MemoryManager.h>
 
 #define SANITIZE_KMALLOC
 
@@ -49,15 +48,12 @@ struct AllocationHeader {
     u8 data[0];
 };
 
+#define BASE_PHYSICAL (0xc0000000 + (4 * MiB))
 #define CHUNK_SIZE 32
 #define POOL_SIZE (3 * MiB)
-#define ETERNAL_RANGE_SIZE (2 * MiB)
 
-// We need to make sure to not stomp on global variables or other parts
-// of the kernel image!
-extern u32 end_of_kernel_bss;
-#define ETERNAL_BASE_PHYSICAL ((u8*)PAGE_ROUND_UP(&end_of_kernel_bss))
-#define BASE_PHYSICAL (ETERNAL_BASE_PHYSICAL + ETERNAL_RANGE_SIZE)
+#define ETERNAL_BASE_PHYSICAL (0xc0000000 + (2 * MiB))
+#define ETERNAL_RANGE_SIZE (2 * MiB)
 
 static u8 alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
