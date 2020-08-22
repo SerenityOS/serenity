@@ -25,6 +25,7 @@
  */
 
 #include <AK/Demangle.h>
+#include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
@@ -392,7 +393,19 @@ void Process::dump_regions()
 {
     klog() << "Process regions:";
     klog() << "BEGIN       END         SIZE        ACCESS  NAME";
-    for (auto& region : m_regions) {
+
+    ScopedSpinLock lock(m_lock);
+
+    Vector<Region*> sorted_regions;
+    sorted_regions.ensure_capacity(m_regions.size());
+    for (auto& region : m_regions)
+        sorted_regions.append(&region);
+    quick_sort(sorted_regions, [](auto& a, auto& b) {
+        return a->vaddr() < b->vaddr();
+    });
+
+    for (auto& sorted_region : sorted_regions) {
+        auto& region = *sorted_region;
         klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_purgeable() ? 'P' : ' ') << "    " << region.name().characters();
     }
     MM.dump_kernel_regions();
