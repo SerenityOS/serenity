@@ -52,6 +52,7 @@ enum class TestResult {
 struct JSTest {
     String name;
     TestResult result;
+    String details;
 };
 
 struct JSSuite {
@@ -281,7 +282,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
         ASSERT(suite_value.is_object());
 
         suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
-            JSTest test { test_name, TestResult::Fail };
+            JSTest test { test_name, TestResult::Fail, "" };
 
             ASSERT(test_value.is_object());
             ASSERT(test_value.as_object().has("result"));
@@ -296,6 +297,10 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
                 test.result = TestResult::Fail;
                 m_counts.tests_failed++;
                 suite.most_severe_test_result = TestResult::Fail;
+                ASSERT(test_value.as_object().has("details"));
+                auto details = test_value.as_object().get("details");
+                ASSERT(result.is_string());
+                test.details = details.as_string();
             } else {
                 test.result = TestResult::Skip;
                 if (suite.most_severe_test_result == TestResult::Pass)
@@ -476,7 +481,8 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
                 printf("         Test:   ");
                 if (test.result == TestResult::Fail) {
                     print_modifiers({ CLEAR, FG_RED });
-                    printf("%s (failed)\n", test.name.characters());
+                    printf("%s (failed):\n", test.name.characters());
+                    printf("                 %s\n", test.details.characters());
                 } else {
                     print_modifiers({ CLEAR, FG_ORANGE });
                     printf("%s (skipped)\n", test.name.characters());
