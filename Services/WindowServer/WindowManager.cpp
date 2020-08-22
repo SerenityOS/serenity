@@ -179,7 +179,7 @@ void WindowManager::add_window(Window& window)
     m_windows_in_order.append(&window);
 
     if (window.is_fullscreen()) {
-        Core::EventLoop::current().post_event(window, make<ResizeEvent>(window.rect(), Screen::the().rect()));
+        Core::EventLoop::current().post_event(window, make<ResizeEvent>(Screen::the().rect()));
         window.set_rect(Screen::the().rect());
     }
 
@@ -577,7 +577,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
 #ifdef RESIZE_DEBUG
         dbg() << "[WM] Finish resizing Window{" << m_resize_window << "}";
 #endif
-        Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
+        Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
         m_resize_window->invalidate();
         if (m_resize_window->rect().contains(event.position()))
             hovered_window = m_resize_window;
@@ -588,8 +588,6 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
 
     if (event.type() != Event::MouseMove)
         return false;
-
-    auto old_rect = m_resize_window->rect();
 
     int diff_x = event.x() - m_resize_origin.x();
     int diff_y = event.y() - m_resize_origin.y();
@@ -679,7 +677,7 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
     dbg() << "[WM] Resizing, original: " << m_resize_window_original_rect << ", now: " << new_rect;
 #endif
     m_resize_window->set_rect(new_rect);
-    Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(old_rect, new_rect));
+    Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(new_rect));
     return true;
 }
 

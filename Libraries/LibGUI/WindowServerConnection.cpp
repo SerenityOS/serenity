@@ -90,7 +90,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::Paint& message
 void WindowServerConnection::handle(const Messages::WindowClient::WindowResized& message)
 {
     if (auto* window = Window::from_window_id(message.window_id())) {
-        Core::EventLoop::current().post_event(*window, make<ResizeEvent>(message.old_rect().size(), message.new_rect().size()));
+        Core::EventLoop::current().post_event(*window, make<ResizeEvent>(message.new_rect().size()));
     }
 }
 

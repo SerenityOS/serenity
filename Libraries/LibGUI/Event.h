@@ -221,18 +221,15 @@ private:
 
 class ResizeEvent final : public Event {
 public:
-    explicit ResizeEvent(const Gfx::IntSize& old_size, const Gfx::IntSize& size)
+    explicit ResizeEvent(const Gfx::IntSize& size)
         : Event(Event::Resize)
-        , m_old_size(old_size)
         , m_size(size)
     {
     }
 
-    const Gfx::IntSize& old_size() const { return m_old_size; }
     const Gfx::IntSize& size() const { return m_size; }
 
 private:
-    Gfx::IntSize m_old_size;
     Gfx::IntSize m_size;
 };
 

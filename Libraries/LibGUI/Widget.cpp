@@ -151,7 +151,7 @@ void Widget::set_relative_rect(const Gfx::IntRect& a_rect)
     m_relative_rect = rect;
 
     if (size_changed) {
-        ResizeEvent resize_event(m_relative_rect.size(), rect.size());
+        ResizeEvent resize_event(rect.size());
         event(resize_event);
     }
 
