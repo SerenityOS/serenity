@@ -40,11 +40,17 @@
             fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: RELEASE_ASSERT(%s) failed\n", __FILE__, __LINE__, #x); \
     }
 
-#define ASSERT_NOT_REACHED() \
-    fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: ASSERT_NOT_REACHED() called\n", __FILE__, __LINE__);
+#define ASSERT_NOT_REACHED()                                                                                \
+    {                                                                                                       \
+        fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: ASSERT_NOT_REACHED() called\n", __FILE__, __LINE__); \
+        abort();                                                                                            \
+    }
 
-#define TODO \
-    fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: TODO() called\n", __FILE__, __LINE__);
+#define TODO()                                                                                \
+    {                                                                                         \
+        fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: TODO() called\n", __FILE__, __LINE__); \
+        abort();                                                                              \
+    }
 
 #include <stdio.h>
 
