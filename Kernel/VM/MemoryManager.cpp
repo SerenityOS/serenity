@@ -382,7 +382,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmo
     return allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
 }
 
-void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
+void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
 {
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_user_physical_regions) {
@@ -391,7 +391,7 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
             continue;
         }
 
-        region.return_page(move(page));
+        region.return_page(page);
         --m_user_physical_pages_used;
 
         return;
@@ -452,7 +452,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
     return page;
 }
 
-void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
+void MemoryManager::deallocate_supervisor_physical_page(const PhysicalPage& page)
 {
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_super_physical_regions) {
@@ -461,7 +461,7 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
             continue;
         }
 
-        region.return_page(move(page));
+        region.return_page(page);
         --m_super_physical_pages_used;
         return;
     }
