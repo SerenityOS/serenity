@@ -220,6 +220,35 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
           << m_testtime << " tests, " << m_benchtime << " benchmarks, " << (global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime)) << " other)";
 }
 
+// Use SFINAE to print if we can.
+// This trick is good enough for TestSuite.h, but not flexible enough to be put into LogStream.h.
+template<typename Stream, typename LHS, typename RHS, typename = void>
+struct MaybeStream {
+    static const Stream& call(const Stream& stream, const LHS&, const RHS&)
+    {
+        return stream;
+    }
+};
+template<typename Stream, typename LHS, typename RHS>
+struct MaybeStream<Stream, LHS, RHS, AK::Void<decltype(*reinterpret_cast<const Stream*>(0) << "" << *reinterpret_cast<const LHS*>(0) << "" << *reinterpret_cast<const RHS*>(0) << "")>> {
+    static const Stream& call(const Stream& stream, const LHS& lhs, const RHS& rhs)
+    {
+        return stream << ": LHS=\"" << lhs << "\", RHS=\"" << rhs << "\"";
+    }
+};
+template<typename Stream, typename LHS, typename RHS>
+static const Stream& maybe_print_rhs_lhs(const Stream& stream, const LHS& lhs, const RHS& rhs)
+{
+    return MaybeStream<Stream, LHS, RHS>::call(stream, lhs, rhs);
+}
+template<typename Stream, typename LHS, typename RHS>
+static const Stream& force_print_rhs_lhs(const Stream& stream, const LHS& lhs, const RHS& rhs)
+{
+    using _ = decltype(*reinterpret_cast<const Stream*>(0) << "" << *reinterpret_cast<const LHS*>(0) << "" << *reinterpret_cast<const RHS*>(0) << "");
+    (void)sizeof(_);
+    return MaybeStream<Stream, LHS, RHS>::call(stream, lhs, rhs);
+}
+
 }
 
 using AK::TestCase;
@@ -263,10 +292,22 @@ using AK::TestSuite;
         TestSuite::release();                                       \
     }
 
-#define EXPECT_EQ(a, b)                                                                                           \
-    {                                                                                                             \
-        if ((a) != (b))                                                                                           \
-            warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT_EQ(" #a ", " #b ") failed"; \
+#define EXPECT_EQ(a, b)                                                                                                                              \
+    {                                                                                                                                                \
+        auto lhs = (a);                                                                                                                              \
+        auto rhs = (b);                                                                                                                              \
+        if (lhs != rhs)                                                                                                                              \
+            AK::maybe_print_rhs_lhs(warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT_EQ(" #a ", " #b ") failed", lhs, rhs); \
+    }
+
+// If you're stuck and `EXPECT_EQ` seems to refuse to print anything useful,
+// try this: It'll spit out a nice compiler error telling you why it doesn't print.
+#define EXPECT_EQ_FORCE(a, b)                                                                                                                        \
+    {                                                                                                                                                \
+        auto lhs = (a);                                                                                                                              \
+        auto rhs = (b);                                                                                                                              \
+        if (lhs != rhs)                                                                                                                              \
+            AK::force_print_rhs_lhs(warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT_EQ(" #a ", " #b ") failed", lhs, rhs); \
     }
 
 #define EXPECT(x)                                                                                      \
