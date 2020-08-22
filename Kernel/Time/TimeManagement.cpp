@@ -40,7 +40,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<TimeManagement> s_the;
+static auto s_the = AK::make_singleton<TimeManagement>();
 
 TimeManagement& TimeManagement::the()
 {

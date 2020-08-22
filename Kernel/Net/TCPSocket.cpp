@@ -63,14 +63,14 @@ void TCPSocket::set_state(State new_state)
     }
 }
 
-static AK::Singleton<Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
+static auto s_socket_closing = AK::make_singleton<Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>>();
 
 Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
 {
     return *s_socket_closing;
 }
 
-static AK::Singleton<Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>> s_socket_tuples;
+static auto s_socket_tuples = AK::make_singleton<Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>>();
 
 Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 {

@@ -336,7 +336,7 @@ void KeyboardDevice::handle_irq(const RegisterState&)
     }
 }
 
-static AK::Singleton<KeyboardDevice> s_the;
+static auto s_the = AK::make_singleton<KeyboardDevice>();
 
 void KeyboardDevice::initialize()
 {

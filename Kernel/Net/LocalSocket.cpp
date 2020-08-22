@@ -38,7 +38,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<Lockable<InlineLinkedList<LocalSocket>>> s_list;
+static auto s_list = AK::make_singleton<Lockable<InlineLinkedList<LocalSocket>>>();
 
 Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
 {

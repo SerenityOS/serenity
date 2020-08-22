@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<NullDevice> s_the;
+static auto s_the = AK::make_singleton<NullDevice>();
 
 void NullDevice::initialize()
 {
