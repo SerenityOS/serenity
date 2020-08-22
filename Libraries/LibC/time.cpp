@@ -93,21 +93,28 @@ static void time_to_tm(struct tm* tm, time_t t)
     tm->tm_mday += days;
 }
 
-static time_t tm_to_time(struct tm* tm, long timezone_adjust)
+static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 {
     int days = 0;
-    int seconds = tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
-    for (int year = 70; year < tm->tm_year; ++year)
-        days += 365 + __is_leap_year(1900 + year);
+    if (tm->tm_year >= 70) {
+        for (int year = 70; year < tm->tm_year; ++year)
+            days += 365 + __is_leap_year(1900 + year);
+    } else {
+        for (int year = tm->tm_year; year < 70; ++year)
+            days -= 365 + __is_leap_year(1900 + year);
+    }
 
     tm->tm_yday = tm->tm_mday - 1;
+    // FIXME: What if tm->tm_mon < 0 or tm->tm_mon > 12?
     for (int month = 0; month < tm->tm_mon; ++month)
         tm->tm_yday += __days_per_month[month];
     if (tm->tm_mon > 1 && __is_leap_year(1900 + tm->tm_year))
         ++tm->tm_yday;
 
     days += tm->tm_yday;
-    return days * __seconds_per_day + seconds + timezone_adjust;
+
+    int seconds = tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
+    return static_cast<time_t>(days) * __seconds_per_day + seconds + timezone_adjust_seconds;
 }
 
 time_t mktime(struct tm* tm)
