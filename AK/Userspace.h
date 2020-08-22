@@ -48,6 +48,13 @@ public:
     operator bool() const { return m_ptr; }
     operator FlatPtr() const { return (FlatPtr)m_ptr; }
 
+    // Disable default implementations that would use surprising integer promotion.
+    bool operator==(const Userspace&) const = delete;
+    bool operator<=(const Userspace&) const = delete;
+    bool operator>=(const Userspace&) const = delete;
+    bool operator<(const Userspace&) const = delete;
+    bool operator>(const Userspace&) const = delete;
+
 #ifdef KERNEL
     Userspace(FlatPtr ptr)
         : m_ptr(ptr)
@@ -86,5 +93,5 @@ inline Userspace<T> static_ptr_cast(const Userspace<U>& ptr)
 
 }
 
-using AK::Userspace;
 using AK::static_ptr_cast;
+using AK::Userspace;
