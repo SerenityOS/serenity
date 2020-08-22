@@ -85,6 +85,7 @@ class MemoryManager {
     friend Optional<KBuffer> procfs$memstat(InodeIdentifier);
 
 public:
+    MemoryManager();
     static MemoryManager& the();
 
     static void initialize(u32 cpu);
@@ -160,7 +161,6 @@ public:
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
 private:
-    MemoryManager();
     ~MemoryManager();
 
     enum class AccessSpace { Kernel,
