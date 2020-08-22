@@ -97,6 +97,12 @@ public:
         return *this;
     }
 
+    template<typename O>
+    bool operator==(const Optional<O>& other) const
+    {
+        return has_value() == other.has_value() && (!has_value() || value() == other.value());
+    }
+
     ALWAYS_INLINE ~Optional()
     {
         clear();
