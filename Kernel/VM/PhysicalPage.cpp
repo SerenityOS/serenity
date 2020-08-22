@@ -42,18 +42,14 @@ PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_retu
 {
 }
 
-void PhysicalPage::return_to_freelist() &&
+void PhysicalPage::return_to_freelist() const
 {
     ASSERT((paddr().get() & ~PAGE_MASK) == 0);
 
-    InterruptDisabler disabler;
-
-    m_ref_count = 1;
-
     if (m_supervisor)
-        MM.deallocate_supervisor_physical_page(move(*this));
+        MM.deallocate_supervisor_physical_page(*this);
     else
-        MM.deallocate_user_physical_page(move(*this));
+        MM.deallocate_user_physical_page(*this);
 
 #ifdef MM_DEBUG
     dbg() << "MM: P" << String::format("%x", m_paddr.get()) << " released to freelist";
