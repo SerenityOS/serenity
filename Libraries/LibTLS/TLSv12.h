@@ -515,5 +515,4 @@ static constexpr const u8 RSA_SIGN_SHA512_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7
 
 }
 
-using namespace Crypto;
 }
