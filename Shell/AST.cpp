@@ -336,7 +336,19 @@ void Background::dump(int level) const
 
 RefPtr<Value> Background::run(RefPtr<Shell> shell)
 {
-    auto commands = m_command->run(shell)->resolve_as_commands(shell);
+    // FIXME: Currently this does not work correctly if `m_command.would_execute()',
+    //        as it runs the node, which means nodes likes And and Or will evaluate
+    //        all but their last subnode before yielding to this, causing a command
+    //        like `foo && bar&` to effectively be `foo && (bar&)`.
+    auto value = m_command->run(shell)->resolve_without_cast(shell);
+    if (value->is_job()) {
+        auto job = static_cast<JobValue*>(value.ptr())->job();
+        job->set_running_in_background(true);
+        job->set_should_announce_exit(true);
+        return value;
+    }
+
+    auto commands = value->resolve_as_commands(shell);
     auto& last = commands.last();
     last.should_wait = false;
 
@@ -1021,6 +1033,9 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Ref
 
 RefPtr<Value> Execute::run(RefPtr<Shell> shell)
 {
+    if (m_command->would_execute())
+        return m_command->run(shell);
+
     NonnullRefPtrVector<Value> values;
     for_each_entry(shell, [&](auto value) {
         values.append(*value);

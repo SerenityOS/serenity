@@ -458,6 +458,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Background"; }
+    virtual bool would_execute() const override { return m_command->would_execute(); }
 
     RefPtr<Node> m_command;
 };
