@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/NeverDestroyed.h>
 #include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -39,17 +40,17 @@
 
 namespace GUI {
 
-static WeakPtr<Application> s_the;
+static NeverDestroyed<WeakPtr<Application>> s_the;
 
 Application* Application::the()
 {
-    return s_the;
+    return *s_the;
 }
 
 Application::Application(int argc, char** argv)
 {
-    ASSERT(!s_the);
-    s_the = make_weak_ptr();
+    ASSERT(!*s_the);
+    *s_the = make_weak_ptr();
     m_event_loop = make<Core::EventLoop>();
     WindowServerConnection::the();
     Clipboard::initialize({});
