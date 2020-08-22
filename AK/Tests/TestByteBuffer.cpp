@@ -53,17 +53,21 @@ TEST_CASE(equality_operator)
     EXPECT_EQ(d == d, true);
 }
 
-TEST_CASE(other_operators)
+/*
+ * FIXME: These `negative_*` tests should cause precisely one compilation error
+ * each, and always for the specified reason. Currently we do not have a harness
+ * for that, so in order to run the test you need to set the #define to 1, compile
+ * it, and check the error messages manually.
+ */
+#define COMPILE_NEGATIVE_TESTS 0
+#if COMPILE_NEGATIVE_TESTS
+TEST_CASE(negative_operator_lt)
 {
-    ByteBuffer a = ByteBuffer::copy("Hello, world", 7);
-    ByteBuffer b = ByteBuffer::copy("Hello, friend", 7);
-    // `a` and `b` are both "Hello, ".
-    ByteBuffer c = ByteBuffer::copy("asdf", 4);
-    ByteBuffer d;
-    EXPECT_EQ(a < a, true);
-    EXPECT_EQ(a <= b, true);
-    EXPECT_EQ(a >= c, false);
-    EXPECT_EQ(a > d, false);
+    ByteBuffer a = ByteBuffer::copy("Hello, world", 10);
+    ByteBuffer b = ByteBuffer::copy("Hello, friend", 10);
+    (void)(a < b);
+    // error: error: use of deleted function ‘bool AK::ByteBuffer::operator<(const AK::ByteBuffer&) const’
 }
+#endif /* COMPILE_NEGATIVE_TESTS */
 
 TEST_MAIN(ByteBuffer)
