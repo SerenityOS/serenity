@@ -245,7 +245,9 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     if (!m_test_program) {
         auto result = parse_file(String::format("%s/test-common.js", m_test_root.characters()));
         if (result.is_error()) {
-            printf("Unable to parse test-common.js");
+            printf("Unable to parse test-common.js\n");
+            printf("%s\n", result.error().error.to_string().characters());
+            printf("%s\n", result.error().hint.characters());
             exit(1);
         }
         m_test_program = result.value();
