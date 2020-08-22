@@ -98,7 +98,7 @@ TEST_CASE(fraction_MiB)
 TEST_CASE(border_MiB_GiB)
 {
     EXPECT_EQ(human_readable_size(1000 * MiB), "1000.0 MiB");
-    EXPECT_EQ(human_readable_size(1024 * MiB - 1), "1024.0 MiB"); // TODO
+    EXPECT_EQ(human_readable_size(1024 * MiB - 1), "1023.9 MiB");
     EXPECT_EQ(human_readable_size(1024 * MiB), "1.0 GiB");
     EXPECT_EQ(human_readable_size(1024 * MiB + 1), "1.0 GiB");
 }
@@ -114,9 +114,9 @@ TEST_CASE(fraction_GiB)
     EXPECT_EQ(human_readable_size(1154272461), "1.0 GiB");
 
     EXPECT_EQ(human_readable_size(1181115968), "1.0 GiB");
-    EXPECT_EQ(human_readable_size(1181115969), "1.1 GiB"); // TODO
-    EXPECT_EQ(human_readable_size(1181116000), "1.1 GiB"); // TODO
-    EXPECT_EQ(human_readable_size(1181116006), "1.1 GiB"); // TODO
+    EXPECT_EQ(human_readable_size(1181115969), "1.0 GiB");
+    EXPECT_EQ(human_readable_size(1181116000), "1.0 GiB");
+    EXPECT_EQ(human_readable_size(1181116006), "1.0 GiB");
     // 1024 * 1024 * 1024 * 1.1 = 1181116006.4
     EXPECT_EQ(human_readable_size(1181116007), "1.1 GiB");
     EXPECT_EQ(human_readable_size(1202590842), "1.1 GiB");
@@ -124,9 +124,9 @@ TEST_CASE(fraction_GiB)
 
 TEST_CASE(extremes_4byte)
 {
-    EXPECT_EQ(human_readable_size(0x7fffffff), "2.0 GiB"); // TODO
+    EXPECT_EQ(human_readable_size(0x7fffffff), "1.9 GiB");
     EXPECT_EQ(human_readable_size(0x80000000), "2.0 GiB");
-    EXPECT_EQ(human_readable_size(0xffffffff), "4.0 GiB"); // TODO
+    EXPECT_EQ(human_readable_size(0xffffffff), "3.9 GiB");
 }
 
 template<int>
@@ -149,10 +149,10 @@ void actual_extremes_8byte<8>()
     EXPECT_EQ(human_readable_size(0x800000000ULL), "32.0 GiB");
     EXPECT_EQ(human_readable_size(0x10000000000ULL), "1024.0 GiB");
 
-    // Ehh, too bad.
-    EXPECT_EQ(human_readable_size(0x7fffffffffffffffULL), "-2147483648.-2147483648 GiB");
-    EXPECT_EQ(human_readable_size(0x8000000000000000ULL), "-2147483648.-2147483648 GiB");
-    EXPECT_EQ(human_readable_size(0xffffffffffffffffULL), "-2147483648.-2147483648 GiB");
+    // Oh yeah! These are *correct*!
+    EXPECT_EQ(human_readable_size(0x7fffffffffffffffULL), "8589934591.9 GiB");
+    EXPECT_EQ(human_readable_size(0x8000000000000000ULL), "8589934592.0 GiB");
+    EXPECT_EQ(human_readable_size(0xffffffffffffffffULL), "17179869183.9 GiB");
 }
 
 TEST_CASE(extremes_8byte)
