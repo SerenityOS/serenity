@@ -56,12 +56,12 @@ public:
         WindowResized,
     };
 
-    Event() {}
+    Event() { }
     explicit Event(Type type)
         : Core::Event(type)
     {
     }
-    virtual ~Event() {}
+    virtual ~Event() { }
 
     bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseDoubleClick || type() == MouseUp || type() == MouseWheel; }
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
@@ -144,18 +144,15 @@ private:
 
 class ResizeEvent final : public Event {
 public:
-    ResizeEvent(const Gfx::IntRect& old_rect, const Gfx::IntRect& rect)
+    ResizeEvent(const Gfx::IntRect& rect)
         : Event(Event::WindowResized)
-        , m_old_rect(old_rect)
         , m_rect(rect)
     {
     }
 
-    Gfx::IntRect old_rect() const { return m_old_rect; }
     Gfx::IntRect rect() const { return m_rect; }
 
 private:
-    Gfx::IntRect m_old_rect;
     Gfx::IntRect m_rect;
 };
 

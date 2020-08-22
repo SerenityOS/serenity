@@ -16,7 +16,7 @@ endpoint WindowClient = 4
     WindowDeactivated(i32 window_id) =|
     WindowStateChanged(i32 window_id, bool minimized, bool occluded) =|
     WindowCloseRequest(i32 window_id) =|
-    WindowResized(i32 window_id, Gfx::IntRect old_rect, Gfx::IntRect new_rect) =|
+    WindowResized(i32 window_id, Gfx::IntRect new_rect) =|
 
     MenuItemActivated(i32 menu_id, i32 identifier) =|
 

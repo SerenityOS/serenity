@@ -302,7 +302,6 @@ void Window::set_maximized(bool maximized)
     set_tiled(WindowTileType::None);
     m_maximized = maximized;
     update_menu_item_text(PopupMenuItem::Maximize);
-    auto old_rect = m_rect;
     if (maximized) {
         m_unmaximized_rect = m_rect;
         set_rect(WindowManager::the().maximized_window_rect(*this));
@@ -310,7 +309,7 @@ void Window::set_maximized(bool maximized)
         set_rect(m_unmaximized_rect);
     }
     m_frame.did_set_maximized({}, maximized);
-    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
     set_default_positioned(false);
 }
 
@@ -376,11 +375,7 @@ void Window::event(Core::Event& event)
         m_client->post_message(Messages::WindowClient::WindowCloseRequest(m_window_id));
         break;
     case Event::WindowResized:
-        m_client->post_message(
-            Messages::WindowClient::WindowResized(
-                m_window_id,
-                static_cast<const ResizeEvent&>(event).old_rect(),
-                static_cast<const ResizeEvent&>(event).rect()));
+        m_client->post_message(Messages::WindowClient::WindowResized(m_window_id, static_cast<const ResizeEvent&>(event).rect()));
         break;
     default:
         break;
@@ -400,9 +395,9 @@ void Window::set_visible(bool b)
 
     Compositor::the().invalidate_occlusions();
     if (m_visible)
-         invalidate(true);
+        invalidate(true);
     else
-         Compositor::the().invalidate_screen(frame().rect());
+        Compositor::the().invalidate_screen(frame().rect());
 }
 
 void Window::invalidate(bool invalidate_frame)
@@ -472,7 +467,7 @@ Window* Window::is_blocked_by_modal_window()
 {
     // A window is blocked if any immediate child, or any child further
     // down the chain is modal
-    for (auto& window: m_child_windows) {
+    for (auto& window : m_child_windows) {
         if (window && !window->is_destroyed()) {
             if (window->is_modal())
                 return window;
@@ -591,7 +586,7 @@ void Window::set_fullscreen(bool fullscreen)
         new_window_rect = m_saved_nonfullscreen_rect;
     }
 
-    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect, new_window_rect));
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(new_window_rect));
     set_rect(new_window_rect);
 }
 
@@ -622,11 +617,10 @@ void Window::set_tiled(WindowTileType tiled)
         return;
 
     m_tiled = tiled;
-    auto old_rect = m_rect;
     if (tiled != WindowTileType::None)
         m_untiled_rect = m_rect;
     set_rect(tiled_rect(tiled));
-    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
+    Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
 }
 
 void Window::detach_client(Badge<ClientConnection>)
@@ -639,7 +633,6 @@ void Window::recalculate_rect()
     if (!is_resizable())
         return;
 
-    auto old_rect = m_rect;
     bool send_event = true;
     if (m_tiled != WindowTileType::None) {
         set_rect(tiled_rect(m_tiled));
@@ -652,7 +645,7 @@ void Window::recalculate_rect()
     }
 
     if (send_event) {
-        Core::EventLoop::current().post_event(*this, make<ResizeEvent>(old_rect, m_rect));
+        Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
     }
 }
 
