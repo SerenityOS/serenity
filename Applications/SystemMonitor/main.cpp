@@ -304,6 +304,7 @@ int main(int argc, char** argv)
     process_tab_unused_widget.set_visible(true);
 
     auto& process_tab_widget = process_container_splitter.add<GUI::TabWidget>();
+    process_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
     process_tab_widget.set_visible(false);
 
     auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
