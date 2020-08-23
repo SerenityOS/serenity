@@ -135,12 +135,12 @@ next_entry:
     __grdb_entry->gr_passwd = __grdb_entry->passwd_buffer;
     for (size_t i = 0; i < members.size(); ++i) {
         __grdb_entry->members[i] = __grdb_entry->members_buffer[i];
-        strcpy(__grdb_entry->members_buffer[i], members[i].characters());
+        strlcpy(__grdb_entry->members_buffer[i], members[i].characters(), sizeof(__grdb_entry->members_buffer[i]));
     }
     __grdb_entry->members[members.size()] = nullptr;
     __grdb_entry->gr_mem = __grdb_entry->members;
-    strncpy(__grdb_entry->name_buffer, e_name.characters(), GRDB_STR_MAX_LEN - 1);
-    strncpy(__grdb_entry->passwd_buffer, e_passwd.characters(), GRDB_STR_MAX_LEN - 1);
+    strlcpy(__grdb_entry->name_buffer, e_name.characters(), GRDB_STR_MAX_LEN);
+    strlcpy(__grdb_entry->passwd_buffer, e_passwd.characters(), GRDB_STR_MAX_LEN);
     return __grdb_entry;
 }
 
