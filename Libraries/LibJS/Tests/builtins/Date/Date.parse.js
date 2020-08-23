@@ -9,10 +9,9 @@ test("basic functionality", () => {
     expect(Date.parse("2020T13:14-15:16")).toBe(1577939400000);
     expect(Date.parse("2020T23:59Z")).toBe(1577923140000);
 
-    // FIXME: Real extended year tests are blocked on better time_t handling in LibC.
-    expect(Date.parse("+002020")).toBe(1577836800000);
-    expect(Date.parse("+002000-11")).toBe(973036800000);
-    expect(Date.parse("+002020T23:59Z")).toBe(1577923140000);
+    expect(Date.parse("+020000")).toBe(568971820800000);
+    expect(Date.parse("+020000-01")).toBe(568971820800000);
+    expect(Date.parse("+020000-01T00:00:00.000Z")).toBe(568971820800000);
 
     expect(Date.parse(2020)).toBe(1577836800000);
 
