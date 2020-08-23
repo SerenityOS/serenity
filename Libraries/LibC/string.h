@@ -48,6 +48,7 @@ void* memset(void*, int, size_t);
 __attribute__((malloc)) char* strdup(const char*);
 __attribute__((malloc)) char* strndup(const char*, size_t);
 char* strcpy(char* dest, const char* src);
+size_t strlcpy(char* dest, const char* src, size_t);
 char* strncpy(char* dest, const char* src, size_t);
 char* strchr(const char*, int c);
 char* strchrnul(const char*, int c);
