@@ -197,6 +197,7 @@ void TabWidget::paint_event(PaintEvent& event)
             painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), palette().button());
         } else if (m_tab_position == TabPosition::Bottom) {
             painter.set_pixel(button_rect.top_left().translated(0, -1), palette().threed_highlight());
+            painter.set_pixel(button_rect.top_right().translated(-1, -1), palette().threed_shadow1());
             painter.draw_line(button_rect.top_left().translated(1, -1), button_rect.top_right().translated(-2, -1), palette().button());
             painter.draw_line(button_rect.top_left().translated(1, -2), button_rect.top_right().translated(-2, -2), palette().button());
         }
