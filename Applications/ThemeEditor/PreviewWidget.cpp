@@ -25,17 +25,76 @@
  */
 
 #include "PreviewWidget.h"
+#include <AK/StringView.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/RadioButton.h>
+#include <LibGUI/StatusBar.h>
+#include <LibGUI/TextEditor.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/WindowTheme.h>
 
 namespace ThemeEditor {
+
+class MiniWidgetGallery final : public GUI::Widget {
+    C_OBJECT(MiniWidgetGallery);
+
+public:
+    void set_preview_palette(const Gfx::Palette& palette)
+    {
+        set_palette(palette);
+        Function<void(GUI::Widget&)> recurse = [&](GUI::Widget& parent_widget) {
+            parent_widget.for_each_child_widget([&](auto& widget) {
+                widget.set_palette(palette);
+                recurse(widget);
+                return IterationDecision::Continue;
+            });
+        };
+        recurse(*this);
+    }
+
+private:
+    MiniWidgetGallery()
+    {
+        set_fill_with_background_color(true);
+        m_button = add<GUI::Button>();
+        m_button->set_text("Button");
+        m_checkbox = add<GUI::CheckBox>();
+        m_checkbox->set_text("Check box");
+        m_radio = add<GUI::RadioButton>();
+        m_radio->set_text("Radio button");
+        m_statusbar = add<GUI::StatusBar>();
+        m_statusbar->set_text("Status bar");
+        m_editor = add<GUI::TextEditor>();
+        m_editor->set_text("Text editor\nwith multiple\nlines.");
+    }
+
+    virtual void resize_event(GUI::ResizeEvent&) override
+    {
+        m_editor->set_relative_rect(10, 70, 200, 140);
+        m_button->set_relative_rect(10, 10, 200, 20);
+        m_checkbox->set_relative_rect(10, 30, 200, 20);
+        m_radio->set_relative_rect(10, 50, 200, 20);
+        m_statusbar->set_relative_rect(0, height() - 16, width(), 16);
+    }
+
+    RefPtr<GUI::TextEditor> m_editor;
+    RefPtr<GUI::Button> m_button;
+    RefPtr<GUI::CheckBox> m_checkbox;
+    RefPtr<GUI::RadioButton> m_radio;
+    RefPtr<GUI::StatusBar> m_statusbar;
+};
 
 PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
     : m_preview_palette(preview_palette)
 {
     m_active_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
     m_inactive_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
+
+    m_gallery = add<MiniWidgetGallery>();
+    set_greedy_for_hits(true);
 }
 
 PreviewWidget::~PreviewWidget()
@@ -45,6 +104,7 @@ PreviewWidget::~PreviewWidget()
 void PreviewWidget::set_preview_palette(const Gfx::Palette& palette)
 {
     m_preview_palette = palette;
+    m_gallery->set_preview_palette(palette);
     update();
 }
 
@@ -60,19 +120,10 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
     auto paint_window = [&](auto& title, const Gfx::IntRect& rect, auto state, const Gfx::Bitmap& icon) {
         Gfx::IntRect leftmost_button_rect { 300, 4, 16, 16 };
-
-        {
-            Gfx::PainterStateSaver saver(painter);
-            auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
-            painter.translate(frame_rect.location());
-            Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, leftmost_button_rect);
-        }
-
-        painter.fill_rect(rect, m_preview_palette.window());
-
-        Gfx::IntRect button_rect { 0, 0, 100, 20 };
-        button_rect.center_within(rect);
-        Gfx::StylePainter::current().paint_button(painter, button_rect, m_preview_palette, Gfx::ButtonStyle::Normal, false);
+        Gfx::PainterStateSaver saver(painter);
+        auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
+        painter.translate(frame_rect.location());
+        Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, leftmost_button_rect);
     };
 
     Gfx::IntRect active_rect { 0, 0, 320, 240 };
@@ -81,6 +132,13 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
     paint_window("Inactive window", inactive_rect, Gfx::WindowTheme::WindowState::Inactive, *m_active_window_icon);
     paint_window("Active window", active_rect, Gfx::WindowTheme::WindowState::Active, *m_inactive_window_icon);
+}
+
+void PreviewWidget::resize_event(GUI::ResizeEvent&)
+{
+    Gfx::IntRect gallery_rect { 0, 0, 320, 240 };
+    gallery_rect.center_within(rect());
+    m_gallery->set_relative_rect(gallery_rect);
 }
 
 }
