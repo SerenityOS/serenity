@@ -42,7 +42,17 @@ public:
 
     Core::DateTime& datetime() { return m_datetime; }
     const Core::DateTime& datetime() const { return m_datetime; }
-    u16 milliseconds() { return m_milliseconds; }
+
+    int date() const { return datetime().day(); }
+    int day() const { return datetime().weekday(); }
+    int full_year() const { return datetime().year(); }
+    int hours() const { return datetime().hour(); }
+    u16 milliseconds() const { return m_milliseconds; }
+    int minutes() const { return datetime().minute(); }
+    int month() const { return datetime().month() - 1; }
+    int seconds() const { return datetime().second(); }
+    double time() const { return datetime().timestamp() * 1000.0 + milliseconds(); }
+    int year() const { return datetime().day(); }
 
     String date_string() const { return m_datetime.to_string("%a %b %d %Y"); }
     // FIXME: Deal with timezones once SerenityOS has a working tzset(3)
