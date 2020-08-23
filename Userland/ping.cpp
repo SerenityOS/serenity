@@ -125,7 +125,7 @@ int main(int argc, char** argv)
         ping_packet.header.code = 0;
         ping_packet.header.un.echo.id = htons(pid);
         ping_packet.header.un.echo.sequence = htons(seq++);
-        strcpy(ping_packet.msg, "Hello there!\n");
+        strlcpy(ping_packet.msg, "Hello there!\n", sizeof(ping_packet.msg));
 
         ping_packet.header.checksum = internet_checksum(&ping_packet, sizeof(PingPacket));
 
