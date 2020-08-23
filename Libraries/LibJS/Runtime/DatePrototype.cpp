@@ -91,8 +91,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
     auto* this_object = typed_this(interpreter, global_object);
     if (!this_object)
         return {};
-    auto date = this_object->datetime().day();
-    return Value(static_cast<double>(date));
+    return Value(static_cast<double>(this_object->date()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
@@ -100,8 +99,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
     auto* this_object = typed_this(interpreter, global_object);
     if (!this_object)
         return {};
-    auto day = this_object->datetime().weekday();
-    return Value(static_cast<double>(day));
+    return Value(static_cast<double>(this_object->day()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
@@ -109,8 +107,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
     auto* this_object = typed_this(interpreter, global_object);
     if (!this_object)
         return {};
-    auto full_year = this_object->datetime().year();
-    return Value(static_cast<double>(full_year));
+    return Value(static_cast<double>(this_object->full_year()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
@@ -118,8 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
     auto* this_object = typed_this(interpreter, global_object);
     if (!this_object)
         return {};
-    auto hours = this_object->datetime().hour();
-    return Value(static_cast<double>(hours));
+    return Value(static_cast<double>(this_object->hours()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
@@ -127,8 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
     auto* this_object = typed_this(interpreter, global_object);
     if (!this_object)
         return {};
-    auto milliseconds = this_object->milliseconds();
-    return Value(static_cast<double>(milliseconds));
+    return Value(static_cast<double>(this_object->milliseconds()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
@@ -136,8 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
     auto* this_object = typed_this(interpreter, global_object);
     if (!this_object)
         return {};
-    auto minutes = this_object->datetime().minute();
-    return Value(static_cast<double>(minutes));
+    return Value(static_cast<double>(this_object->minutes()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
@@ -145,8 +139,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
     auto* this_object = typed_this(interpreter, global_object);
     if (!this_object)
         return {};
-    auto months = this_object->datetime().month() - 1;
-    return Value(static_cast<double>(months));
+    return Value(static_cast<double>(this_object->month()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
@@ -154,8 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
     auto* this_object = typed_this(interpreter, global_object);
     if (!this_object)
         return {};
-    auto seconds = this_object->datetime().second();
-    return Value(static_cast<double>(seconds));
+    return Value(static_cast<double>(this_object->seconds()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
