@@ -59,6 +59,7 @@ public:
     ~StringImpl();
 
     size_t length() const { return m_length; }
+    // Includes NUL-terminator.
     const char* characters() const { return &m_inline_buffer[0]; }
 
     ALWAYS_INLINE ReadonlyBytes bytes() const { return { characters(), length() }; }

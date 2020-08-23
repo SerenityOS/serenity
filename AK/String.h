@@ -142,6 +142,7 @@ public:
     bool is_null() const { return !m_impl; }
     ALWAYS_INLINE bool is_empty() const { return length() == 0; }
     ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
+    // Includes NUL-terminator, if non-nullptr.
     ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
 
     ALWAYS_INLINE ReadonlyBytes bytes() const { return m_impl ? m_impl->bytes() : nullptr; }
