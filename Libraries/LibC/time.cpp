@@ -69,16 +69,24 @@ static const int __seconds_per_day = 60 * 60 * 24;
 
 static void time_to_tm(struct tm* tm, time_t t)
 {
+    tm->tm_wday = (4 * __seconds_per_day + t) % (7 * __seconds_per_day); // 1970-01-01 was a Thursday.
+    if (tm->tm_wday < 0)
+        tm->tm_wday += 7 * __seconds_per_day;
+    tm->tm_wday /= __seconds_per_day;
+
+    int year = 1970;
+    for (; t >= (365 + __is_leap_year(year)) * __seconds_per_day; ++year)
+        t -= (365 + __is_leap_year(year)) * __seconds_per_day;
+    for (; t < 0; --year)
+        t += (365 + __is_leap_year(year - 1)) * __seconds_per_day;
+    ASSERT(t >= 0);
+
     int days = t / __seconds_per_day;
     int remaining = t % __seconds_per_day;
     tm->tm_sec = remaining % 60;
     remaining /= 60;
     tm->tm_min = remaining % 60;
     tm->tm_hour = remaining / 60;
-    tm->tm_wday = (4 + days) % 7;
-    int year;
-    for (year = 1970; days >= 365 + __is_leap_year(year); ++year)
-        days -= 365 + __is_leap_year(year);
     tm->tm_year = year - 1900;
     tm->tm_yday = days;
     tm->tm_mday = 1;
