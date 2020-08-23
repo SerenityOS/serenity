@@ -118,12 +118,36 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
     painter.fill_rect(frame_inner_rect(), m_preview_palette.desktop_background());
 
+    struct Button {
+        Gfx::IntRect rect;
+    };
+
     auto paint_window = [&](auto& title, const Gfx::IntRect& rect, auto state, const Gfx::Bitmap& icon) {
-        Gfx::IntRect leftmost_button_rect { 300, 4, 16, 16 };
-        Gfx::PainterStateSaver saver(painter);
+        int window_button_width = m_preview_palette.window_title_button_width();
+        int window_button_height = m_preview_palette.window_title_button_height();
+        auto title_bar_text_rect = Gfx::WindowTheme::current().title_bar_text_rect(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
+        int pos = title_bar_text_rect.right() + 1;
+
+        Vector<Button> buttons;
+        buttons.append(Button { {} });
+        buttons.append(Button { {} });
+        buttons.append(Button { {} });
+
+        for (auto& button : buttons) {
+            pos -= window_button_width;
+            Gfx::IntRect rect { pos, 0, window_button_width, window_button_height };
+            rect.center_vertically_within(title_bar_text_rect);
+            button.rect = rect;
+        }
+
         auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
+        Gfx::PainterStateSaver saver(painter);
         painter.translate(frame_rect.location());
-        Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, leftmost_button_rect);
+        Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, buttons.last().rect);
+
+        for (auto& button : buttons) {
+            Gfx::StylePainter::paint_button(painter, button.rect, m_preview_palette, Gfx::ButtonStyle::Normal, false);
+        }
     };
 
     Gfx::IntRect active_rect { 0, 0, 320, 240 };
