@@ -54,6 +54,10 @@ private:
     RefPtr<Gfx::Bitmap> m_inactive_window_icon;
 
     RefPtr<MiniWidgetGallery> m_gallery;
+
+    RefPtr<Gfx::Bitmap> m_close_bitmap;
+    RefPtr<Gfx::Bitmap> m_maximize_bitmap;
+    RefPtr<Gfx::Bitmap> m_minimize_bitmap;
 };
 
 }
