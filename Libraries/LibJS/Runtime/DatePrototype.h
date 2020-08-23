@@ -47,6 +47,14 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_month);
     JS_DECLARE_NATIVE_FUNCTION(get_seconds);
     JS_DECLARE_NATIVE_FUNCTION(get_time);
+    JS_DECLARE_NATIVE_FUNCTION(get_utc_date);
+    JS_DECLARE_NATIVE_FUNCTION(get_utc_day);
+    JS_DECLARE_NATIVE_FUNCTION(get_utc_full_year);
+    JS_DECLARE_NATIVE_FUNCTION(get_utc_hours);
+    JS_DECLARE_NATIVE_FUNCTION(get_utc_milliseconds);
+    JS_DECLARE_NATIVE_FUNCTION(get_utc_minutes);
+    JS_DECLARE_NATIVE_FUNCTION(get_utc_month);
+    JS_DECLARE_NATIVE_FUNCTION(get_utc_seconds);
     JS_DECLARE_NATIVE_FUNCTION(to_date_string);
     JS_DECLARE_NATIVE_FUNCTION(to_iso_string);
     JS_DECLARE_NATIVE_FUNCTION(to_locale_date_string);
