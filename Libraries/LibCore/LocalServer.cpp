@@ -121,7 +121,12 @@ bool LocalServer::listen(const String& address)
 #endif
 
     auto socket_address = SocketAddress::local(address);
-    auto un = socket_address.to_sockaddr_un();
+    auto un_optional = socket_address.to_sockaddr_un();
+    if (!un_optional.has_value()) {
+        perror("bind");
+        return false;
+    }
+    auto un = un_optional.value();
     rc = ::bind(m_fd, (const sockaddr*)&un, sizeof(un));
     if (rc < 0) {
         perror("bind");

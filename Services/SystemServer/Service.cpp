@@ -135,7 +135,12 @@ void Service::setup_socket()
     }
 
     auto socket_address = Core::SocketAddress::local(m_socket_path);
-    auto un = socket_address.to_sockaddr_un();
+    auto un_optional = socket_address.to_sockaddr_un();
+    if (!un_optional.has_value()) {
+        dbg() << "Socket name " << m_socket_path << " is too long. BUG! This should have failed earlier!";
+        ASSERT_NOT_REACHED();
+    }
+    auto un = un_optional.value();
     int rc = bind(m_socket_fd, (const sockaddr*)&un, sizeof(un));
     if (rc < 0) {
         perror("bind");
@@ -358,6 +363,8 @@ Service::Service(const Core::ConfigFile& config, const StringView& name)
     ASSERT(!m_accept_socket_connections || (!m_socket_path.is_null() && m_lazy && m_multi_instance));
     // MultiInstance doesn't work with KeepAlive.
     ASSERT(!m_multi_instance || !m_keep_alive);
+    // Socket path (plus NUL) must fit into the structs sent to the Kernel.
+    ASSERT(m_socket_path.length() < UNIX_PATH_MAX);
 
     if (!m_socket_path.is_null() && is_enabled()) {
         auto socket_permissions_string = config.read_entry(name, "SocketPermissions", "0600");
