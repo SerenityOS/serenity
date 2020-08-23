@@ -93,6 +93,10 @@ PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
     m_active_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
     m_inactive_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
 
+    m_close_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png");
+    m_maximize_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-maximize.png");;
+    m_minimize_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-minimize.png");;
+
     m_gallery = add<MiniWidgetGallery>();
     set_greedy_for_hits(true);
 }
@@ -120,6 +124,7 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
     struct Button {
         Gfx::IntRect rect;
+        RefPtr<Gfx::Bitmap> bitmap;
     };
 
     auto paint_window = [&](auto& title, const Gfx::IntRect& rect, auto state, const Gfx::Bitmap& icon) {
@@ -129,9 +134,9 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
         int pos = title_bar_text_rect.right() + 1;
 
         Vector<Button> buttons;
-        buttons.append(Button { {} });
-        buttons.append(Button { {} });
-        buttons.append(Button { {} });
+        buttons.append(Button { {}, m_close_bitmap });
+        buttons.append(Button { {}, m_maximize_bitmap });
+        buttons.append(Button { {}, m_minimize_bitmap });
 
         for (auto& button : buttons) {
             pos -= window_button_width;
@@ -147,6 +152,9 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
         for (auto& button : buttons) {
             Gfx::StylePainter::paint_button(painter, button.rect, m_preview_palette, Gfx::ButtonStyle::Normal, false);
+            auto bitmap_rect = button.bitmap->rect();
+            bitmap_rect.center_within(button.rect);
+            painter.blit(bitmap_rect.location(), *button.bitmap, button.bitmap->rect());
         }
     };
 
