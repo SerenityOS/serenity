@@ -135,9 +135,11 @@ ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowS
     }
 }
 
-void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRect& outer_rect, const IntRect& window_rect, const Palette& palette, const IntRect& close_button_rect) const
+void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRect& window_rect, const Palette& palette, const IntRect& close_button_rect) const
 {
-    Gfx::StylePainter::paint_window_frame(painter, outer_rect, palette);
+    auto frame_rect = frame_rect_for_window(WindowType::Notification, window_rect, palette);
+    frame_rect.set_location({ 0, 0 });
+    Gfx::StylePainter::paint_window_frame(painter, frame_rect, palette);
 
     auto titlebar_rect = title_bar_rect(WindowType::Notification, window_rect, palette);
     painter.fill_rect_with_gradient(Gfx::Orientation::Vertical, titlebar_rect, palette.active_window_border1(), palette.active_window_border2());
