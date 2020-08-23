@@ -43,7 +43,7 @@ public:
         Local
     };
 
-    SocketAddress() {}
+    SocketAddress() { }
     SocketAddress(const IPv4Address& address)
         : m_type(Type::IPv4)
         , m_ipv4_address(address)
@@ -82,12 +82,14 @@ public:
         }
     }
 
-    sockaddr_un to_sockaddr_un() const
+    Optional<sockaddr_un> to_sockaddr_un() const
     {
         ASSERT(type() == Type::Local);
         sockaddr_un address;
         address.sun_family = AF_LOCAL;
-        RELEASE_ASSERT(m_local_address.length() < (int)sizeof(address.sun_path));
+        if (m_local_address.length() >= sizeof(address.sun_path)) {
+            return {};
+        }
         strcpy(address.sun_path, m_local_address.characters());
         return address;
     }
