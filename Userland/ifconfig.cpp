@@ -116,7 +116,7 @@ int main(int argc, char** argv)
             struct ifreq ifr;
             memset(&ifr, 0, sizeof(ifr));
 
-            strncpy(ifr.ifr_name, ifname.characters(), IFNAMSIZ);
+            strlcpy(ifr.ifr_name, ifname.characters(), IFNAMSIZ);
             ifr.ifr_addr.sa_family = AF_INET;
             ((sockaddr_in&)ifr.ifr_addr).sin_addr.s_addr = address.value().to_in_addr_t();
 
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
             struct ifreq ifr;
             memset(&ifr, 0, sizeof(ifr));
 
-            strncpy(ifr.ifr_name, ifname.characters(), IFNAMSIZ);
+            strlcpy(ifr.ifr_name, ifname.characters(), IFNAMSIZ);
             ifr.ifr_netmask.sa_family = AF_INET;
             ((sockaddr_in&)ifr.ifr_netmask).sin_addr.s_addr = address.value().to_in_addr_t();
 
