@@ -214,6 +214,14 @@ char* strncpy(char* dest, const char* src, size_t n)
     return dest;
 }
 
+size_t strlcpy(char* dest, const char* src, size_t n)
+{
+    (void)dest;
+    (void)src;
+    (void)n;
+    return 42; // TODO
+}
+
 char* strchr(const char* str, int c)
 {
     char ch = c;
