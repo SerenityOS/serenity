@@ -172,8 +172,7 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
 void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    Gfx::IntRect outer_rect = { {}, rect().size() };
-    Gfx::WindowTheme::current().paint_notification_frame(painter, outer_rect, m_window.rect(), palette, m_buttons.last().relative_rect());
+    Gfx::WindowTheme::current().paint_notification_frame(painter, m_window.rect(), palette, m_buttons.last().relative_rect());
 }
 
 void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
