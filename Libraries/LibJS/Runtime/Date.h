@@ -54,6 +54,15 @@ public:
     double time() const { return datetime().timestamp() * 1000.0 + milliseconds(); }
     int year() const { return datetime().day(); }
 
+    int utc_date() const;
+    int utc_day() const;
+    int utc_full_year() const;
+    int utc_hours() const;
+    int utc_milliseconds() const { return milliseconds(); }
+    int utc_minutes() const;
+    int utc_month() const;
+    int utc_seconds() const { return seconds(); }
+
     String date_string() const { return m_datetime.to_string("%a %b %d %Y"); }
     // FIXME: Deal with timezones once SerenityOS has a working tzset(3)
     String time_string() const { return m_datetime.to_string("%T GMT+0000 (UTC)"); }
@@ -75,6 +84,7 @@ public:
     }
 
 private:
+    tm to_utc_tm() const;
     virtual bool is_date() const final { return true; }
 
     Core::DateTime m_datetime;

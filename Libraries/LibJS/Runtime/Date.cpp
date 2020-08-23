@@ -49,11 +49,47 @@ Date::~Date()
 {
 }
 
-String Date::iso_date_string() const
+tm Date::to_utc_tm() const
 {
     time_t timestamp = m_datetime.timestamp();
     struct tm tm;
     gmtime_r(&timestamp, &tm);
+    return tm;
+}
+
+int Date::utc_date() const
+{
+    return to_utc_tm().tm_mday;
+}
+
+int Date::utc_day() const
+{
+    return to_utc_tm().tm_wday;
+}
+
+int Date::utc_full_year() const
+{
+    return to_utc_tm().tm_year + 1900;
+}
+
+int Date::utc_hours() const
+{
+    return to_utc_tm().tm_hour;
+}
+
+int Date::utc_minutes() const
+{
+    return to_utc_tm().tm_min;
+}
+
+int Date::utc_month() const
+{
+    return to_utc_tm().tm_mon;
+}
+
+String Date::iso_date_string() const
+{
+    auto tm = to_utc_tm();
     int year = tm.tm_year + 1900;
     int month = tm.tm_mon + 1;
 
