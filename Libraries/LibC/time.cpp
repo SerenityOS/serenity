@@ -185,7 +185,7 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
         "July", "Auguest", "September", "October", "November", "December"
     };
 
-    StringBuilder builder { max_size - 1 };
+    StringBuilder builder { max_size };
 
     const int format_len = strlen(format);
     for (int i = 0; i < format_len; ++i) {
@@ -307,10 +307,12 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                 return 0;
             }
         }
-        if (builder.length() > max_size - 1)
+        if (builder.length() + 1 > max_size)
             return 0;
     }
 
+    if (builder.length() + 1 > max_size)
+        return 0;
     strcpy(destination, builder.build().characters());
     return builder.length();
 }
