@@ -34,7 +34,7 @@ namespace GUI {
 
 class ModelEditingDelegate {
 public:
-    virtual ~ModelEditingDelegate() {}
+    virtual ~ModelEditingDelegate() { }
 
     void bind(Model& model, const ModelIndex& index)
     {
@@ -53,10 +53,10 @@ public:
     virtual Variant value() const = 0;
     virtual void set_value(const Variant&) = 0;
 
-    virtual void will_begin_editing() {}
+    virtual void will_begin_editing() { }
 
 protected:
-    ModelEditingDelegate() {}
+    ModelEditingDelegate() { }
 
     virtual RefPtr<Widget> create_widget() = 0;
     void commit()
@@ -64,6 +64,8 @@ protected:
         if (on_commit)
             on_commit();
     }
+
+    const ModelIndex& index() const { return m_index; }
 
 private:
     RefPtr<Model> m_model;
@@ -73,8 +75,8 @@ private:
 
 class StringModelEditingDelegate : public ModelEditingDelegate {
 public:
-    StringModelEditingDelegate() {}
-    virtual ~StringModelEditingDelegate() override {}
+    StringModelEditingDelegate() { }
+    virtual ~StringModelEditingDelegate() override { }
 
     virtual RefPtr<Widget> create_widget() override
     {
