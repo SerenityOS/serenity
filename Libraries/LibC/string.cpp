@@ -216,10 +216,15 @@ char* strncpy(char* dest, const char* src, size_t n)
 
 size_t strlcpy(char* dest, const char* src, size_t n)
 {
-    (void)dest;
-    (void)src;
-    (void)n;
-    return 42; // TODO
+    size_t i;
+    // Would like to test i < n - 1 here, but n might be 0.
+    for (i = 0; i + 1 < n && src[i] != '\0'; ++i)
+        dest[i] = src[i];
+    if (n)
+        dest[i] = '\0';
+    for (; src[i] != '\0'; ++i)
+        ; // Determine the length of src, don't copy.
+    return i;
 }
 
 char* strchr(const char* str, int c)
