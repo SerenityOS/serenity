@@ -554,7 +554,7 @@ char* getlogin()
 {
     static char __getlogin_buffer[256];
     if (auto* passwd = getpwuid(getuid())) {
-        strncpy(__getlogin_buffer, passwd->pw_name, sizeof(__getlogin_buffer) - 1);
+        strlcpy(__getlogin_buffer, passwd->pw_name, sizeof(__getlogin_buffer));
         endpwent();
         return __getlogin_buffer;
     }

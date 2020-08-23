@@ -86,7 +86,7 @@ static int connect_to_lookup_server()
 
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
-    strcpy(address.sun_path, "/tmp/portal/lookup");
+    strlcpy(address.sun_path, "/tmp/portal/lookup", sizeof(address.sun_path));
 
     if (connect(fd, (const sockaddr*)&address, sizeof(address)) < 0) {
         perror("connect_to_lookup_server");
@@ -102,7 +102,7 @@ hostent* gethostbyname(const char* name)
     if (ipv4_address.has_value()) {
         auto ip4_string = ipv4_address.value().to_string();
         ASSERT(ip4_string.length() < sizeof(__gethostbyname_name_buffer));
-        strncpy(__gethostbyname_name_buffer, ip4_string.characters(), ip4_string.length());
+        strlcpy(__gethostbyname_name_buffer, ip4_string.characters(), sizeof(__gethostbyname_name_buffer));
         __gethostbyname_buffer.h_name = __gethostbyname_name_buffer;
         __gethostbyname_buffer.h_aliases = nullptr;
         __gethostbyname_buffer.h_addrtype = AF_INET;
@@ -152,7 +152,7 @@ hostent* gethostbyname(const char* name)
     if (rc <= 0)
         return nullptr;
 
-    strncpy(__gethostbyname_name_buffer, name, sizeof(__gethostbyaddr_name_buffer) - 1);
+    strlcpy(__gethostbyname_name_buffer, name, sizeof(__gethostbyaddr_name_buffer));
 
     __gethostbyname_buffer.h_name = __gethostbyname_name_buffer;
     __gethostbyname_buffer.h_aliases = nullptr;
@@ -216,7 +216,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 
     auto& response = responses[0];
 
-    strncpy(__gethostbyaddr_name_buffer, response.characters(), max(sizeof(__gethostbyaddr_name_buffer), response.length()));
+    strlcpy(__gethostbyaddr_name_buffer, response.characters(), sizeof(__gethostbyaddr_name_buffer));
 
     __gethostbyaddr_buffer.h_name = __gethostbyaddr_name_buffer;
     __gethostbyaddr_buffer.h_aliases = nullptr;
@@ -374,7 +374,7 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
         return false;
     }
     if (sizeof(__getserv_name_buffer) >= split_line[0].length() + 1) {
-        strncpy(__getserv_name_buffer, split_line[0].characters(), split_line[0].length() + 1);
+        strlcpy(__getserv_name_buffer, split_line[0].characters(), sizeof(__getserv_name_buffer));
     } else {
         perror("invalid buffer length: service name");
         return false;
@@ -397,7 +397,7 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
     port_protocol_split[1].replace("\n", "", true);
 
     if (sizeof(__getserv_protocol_buffer) >= port_protocol_split[1].length()) {
-        strncpy(__getserv_protocol_buffer, port_protocol_split[1].characters(), port_protocol_split[1].length() + 1);
+        strlcpy(__getserv_protocol_buffer, port_protocol_split[1].characters(), sizeof(__getserv_protocol_buffer));
     } else {
         perror("malformed services file: protocol");
         return false;
@@ -566,7 +566,7 @@ static bool fill_getproto_buffers(char* line, ssize_t read)
         return false;
     }
     if (sizeof(__getproto_name_buffer) >= split_line[0].length() + 1) {
-        strncpy(__getproto_name_buffer, split_line[0].characters(), split_line[0].length() + 1);
+        strlcpy(__getproto_name_buffer, split_line[0].characters(), sizeof(__getproto_name_buffer));
     } else {
         perror("invalid buffer length: protocol name");
         return false;
