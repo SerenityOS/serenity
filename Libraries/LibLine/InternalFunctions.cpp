@@ -48,40 +48,45 @@ Function<bool(Editor&)> Editor::find_internal_function(const StringView& name)
 
 void Editor::search_forwards()
 {
-    auto inline_search_cursor = m_inline_search_cursor;
+    ScopedValueRollback inline_search_cursor_rollback { m_inline_search_cursor };
     StringBuilder builder;
-    builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
+    builder.append(Utf32View { m_buffer.data(), m_inline_search_cursor });
     String search_phrase = builder.to_string();
-    auto search_changed_directions = m_searching_backwards;
-    m_searching_backwards = false;
+    if (m_search_offset_state == SearchOffsetState::Backwards)
+        --m_search_offset;
     if (m_search_offset > 0) {
-        m_search_offset -= 1 + search_changed_directions;
-        if (!search(search_phrase, true, true)) {
-            insert(search_phrase);
+        ScopedValueRollback search_offset_rollback { m_search_offset };
+        --m_search_offset;
+        if (search(search_phrase, true)) {
+            m_search_offset_state = SearchOffsetState::Forwards;
+            search_offset_rollback.set_override_rollback_value(m_search_offset);
+        } else {
+            m_search_offset_state = SearchOffsetState::Unbiased;
         }
     } else {
-        m_search_offset = 0;
+        m_search_offset_state = SearchOffsetState::Unbiased;
         m_cursor = 0;
         m_buffer.clear();
         insert(search_phrase);
         m_refresh_needed = true;
     }
-    m_inline_search_cursor = inline_search_cursor;
 }
 
 void Editor::search_backwards()
 {
-    m_searching_backwards = true;
-    auto inline_search_cursor = m_inline_search_cursor;
+    ScopedValueRollback inline_search_cursor_rollback { m_inline_search_cursor };
     StringBuilder builder;
-    builder.append(Utf32View { m_buffer.data(), inline_search_cursor });
+    builder.append(Utf32View { m_buffer.data(), m_inline_search_cursor });
     String search_phrase = builder.to_string();
-    if (search(search_phrase, true, true)) {
+    if (m_search_offset_state == SearchOffsetState::Forwards)
+        ++m_search_offset;
+    if (search(search_phrase, true)) {
+        m_search_offset_state = SearchOffsetState::Backwards;
         ++m_search_offset;
     } else {
-        insert(search_phrase);
+        m_search_offset_state = SearchOffsetState::Unbiased;
+        --m_search_offset;
     }
-    m_inline_search_cursor = inline_search_cursor;
 }
 
 void Editor::cursor_left_word()
@@ -239,7 +244,10 @@ void Editor::enter_search()
         m_search_editor->on_display_refresh = [this](Editor& search_editor) {
             StringBuilder builder;
             builder.append(Utf32View { search_editor.buffer().data(), search_editor.buffer().size() });
-            search(builder.build());
+            if (!search(builder.build())) {
+                m_buffer.clear();
+                m_cursor = 0;
+            }
             refresh_display();
         };
 

@@ -300,7 +300,7 @@ private:
 
     Style find_applicable_style(size_t offset) const;
 
-    bool search(const StringView&, bool allow_empty = false, bool from_beginning = false);
+    bool search(const StringView&, bool allow_empty = false);
     inline void end_search()
     {
         m_is_searching = false;
@@ -323,6 +323,8 @@ private:
         m_cursor = 0;
         m_drawn_cursor = 0;
         m_inline_search_cursor = 0;
+        m_search_offset = 0;
+        m_search_offset_state = SearchOffsetState::Unbiased;
         m_old_prompt_metrics = m_cached_prompt_metrics;
         set_origin(0, 0);
         m_prompt_lines_at_suggestion_initiation = 0;
@@ -404,7 +406,11 @@ private:
     bool m_is_searching { false };
     bool m_reset_buffer_on_search_end { true };
     size_t m_search_offset { 0 };
-    bool m_searching_backwards { true };
+    enum class SearchOffsetState {
+        Unbiased,
+        Backwards,
+        Forwards,
+    } m_search_offset_state { SearchOffsetState::Unbiased };
     size_t m_pre_search_cursor { 0 };
     Vector<u32, 1024> m_pre_search_buffer;
 

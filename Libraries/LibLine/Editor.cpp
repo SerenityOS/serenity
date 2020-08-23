@@ -867,38 +867,42 @@ void Editor::handle_read_event()
     }
 }
 
-bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginning)
+bool Editor::search(const StringView& phrase, bool allow_empty)
 {
 
     int last_matching_offset = -1;
+    bool found = false;
 
     // Do not search for empty strings.
     if (allow_empty || phrase.length() > 0) {
         size_t search_offset = m_search_offset;
         for (size_t i = m_history_cursor; i > 0; --i) {
-            auto contains = from_beginning ? m_history[i - 1].starts_with(phrase) : m_history[i - 1].contains(phrase);
+            auto contains = m_history[i - 1].starts_with(phrase);
             if (contains) {
                 last_matching_offset = i - 1;
-                if (search_offset == 0)
+                if (search_offset == 0) {
+                    found = true;
                     break;
+                }
                 --search_offset;
             }
         }
 
-        if (last_matching_offset == -1) {
+        if (!found) {
             fputc('\a', stderr);
             fflush(stderr);
         }
     }
 
-    m_buffer.clear();
-    m_cursor = 0;
-    if (last_matching_offset >= 0) {
+    if (found) {
+        m_buffer.clear();
+        m_cursor = 0;
         insert(m_history[last_matching_offset]);
+        // Always needed, as we have cleared the buffer above.
+        m_refresh_needed = true;
     }
-    // Always needed, as we have cleared the buffer above.
-    m_refresh_needed = true;
-    return last_matching_offset >= 0;
+
+    return found;
 }
 
 void Editor::recalculate_origin()
