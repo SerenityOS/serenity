@@ -178,8 +178,8 @@ void TabWidget::paint_event(PaintEvent& event)
             continue;
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
-        Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled());
-        auto text_rect = button_rect.translated(0, 1);
+        Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
+        auto text_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, text_rect);
         painter.draw_text(text_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
     }
@@ -189,11 +189,17 @@ void TabWidget::paint_event(PaintEvent& event)
             continue;
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
-        Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled());
-        auto text_rect = button_rect.translated(0, 1);
+        Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
+        auto text_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, text_rect);
         painter.draw_text(text_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
-        painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), palette().button());
+        if (m_tab_position == TabPosition::Top) {
+            painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), palette().button());
+        } else if (m_tab_position == TabPosition::Bottom) {
+            painter.set_pixel(button_rect.top_left().translated(0, -1), palette().threed_highlight());
+            painter.draw_line(button_rect.top_left().translated(1, -1), button_rect.top_right().translated(-2, -1), palette().button());
+            painter.draw_line(button_rect.top_left().translated(1, -2), button_rect.top_right().translated(-2, -2), palette().button());
+        }
         break;
     }
 }
@@ -226,7 +232,7 @@ Gfx::IntRect TabWidget::button_rect(int index) const
     }
     Gfx::IntRect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()), bar_height() };
     if (m_tabs[index].widget != m_active_widget) {
-        rect.move_by(0, 2);
+        rect.move_by(0, m_tab_position == TabPosition::Top ? 2 : 0);
         rect.set_height(rect.height() - 2);
     } else {
         rect.move_by(-2, 0);

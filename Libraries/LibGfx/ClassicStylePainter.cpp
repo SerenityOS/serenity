@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ClassicStylePainter.h>
 #include <LibGfx/Painter.h>
@@ -32,7 +33,7 @@
 
 namespace Gfx {
 
-void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const Palette& palette, bool active, bool hovered, bool enabled)
+void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const Palette& palette, bool active, bool hovered, bool enabled, bool top)
 {
     Color base_color = palette.button();
     Color highlight_color2 = palette.threed_highlight();
@@ -45,32 +46,50 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
 
-    // Base
-    painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, base_color);
+    if (top) {
+        // Base
+        painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, base_color);
 
-    // Top line
-    painter.draw_line({ 2, 0 }, { rect.width() - 3, 0 }, highlight_color2);
+        // Top line
+        painter.draw_line({ 2, 0 }, { rect.width() - 3, 0 }, highlight_color2);
 
-    // Left side
-    painter.draw_line({ 0, 2 }, { 0, rect.height() - 1 }, highlight_color2);
-    painter.set_pixel({ 1, 1 }, highlight_color2);
+        // Left side
+        painter.draw_line({ 0, 2 }, { 0, rect.height() - 1 }, highlight_color2);
+        painter.set_pixel({ 1, 1 }, highlight_color2);
 
-    // Right side
-    painter.draw_line({
-                          rect.width() - 1,
-                          2,
-                      },
-        { rect.width() - 1, rect.height() - 1 }, shadow_color2);
-    painter.draw_line({
-                          rect.width() - 2,
-                          2,
-                      },
-        { rect.width() - 2, rect.height() - 1 }, shadow_color1);
-    painter.set_pixel({
-                          rect.width() - 2,
-                          1,
-                      },
-        shadow_color2);
+        // Right side
+
+        IntPoint top_right_outer { rect.width() - 1, 2 };
+        IntPoint bottom_right_outer { rect.width() - 1, rect.height() - 1 };
+        painter.draw_line(top_right_outer, bottom_right_outer, shadow_color2);
+
+        IntPoint top_right_inner { rect.width() - 2, 2 };
+        IntPoint bottom_right_inner { rect.width() - 2, rect.height() - 1 };
+        painter.draw_line(top_right_inner, bottom_right_inner, shadow_color1);
+
+        painter.set_pixel(rect.width() - 2, 1, shadow_color2);
+    } else {
+        // Base
+        painter.fill_rect({ 0, 0, rect.width() - 1, rect.height() }, base_color);
+
+        // Bottom line
+        painter.draw_line({ 2, rect.height() - 1 }, { rect.width() - 3, rect.height() - 1 }, shadow_color2);
+
+        // Left side
+        painter.draw_line({ 0, 0 }, { 0, rect.height() - 3 }, highlight_color2);
+        painter.set_pixel({ 1, rect.height() - 2 }, highlight_color2);
+
+        // Right side
+        IntPoint top_right_outer { rect.width() - 1, 0 };
+        IntPoint bottom_right_outer { rect.width() - 1, rect.height() - 3 };
+        painter.draw_line(top_right_outer, bottom_right_outer, shadow_color2);
+
+        IntPoint top_right_inner { rect.width() - 2, 0 };
+        IntPoint bottom_right_inner { rect.width() - 2, rect.height() - 3 };
+        painter.draw_line(top_right_inner, bottom_right_inner, shadow_color1);
+
+        painter.set_pixel(rect.width() - 2, rect.height() - 2, shadow_color2);
+    }
 }
 
 static void paint_button_new(Painter& painter, const IntRect& rect, const Palette& palette, bool pressed, bool checked, bool hovered, bool enabled)
@@ -326,5 +345,4 @@ void ClassicStylePainter::paint_radio_button(Painter& painter, const IntRect& re
     auto& bitmap = circle_bitmap(is_checked, is_being_pressed);
     painter.blit(rect.location(), bitmap, bitmap.rect());
 }
-
 }
