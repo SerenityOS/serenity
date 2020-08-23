@@ -1,0 +1,8 @@
+[App]
+Name=Theme Editor
+Executable=/bin/ThemeEditor
+Category=Development
+
+[Icons]
+16x16=/res/icons/16x16/themes.png
+32x32=
