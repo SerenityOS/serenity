@@ -96,13 +96,10 @@ static void time_to_tm(struct tm* tm, time_t t)
 static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 {
     int days = 0;
-    if (tm->tm_year >= 70) {
-        for (int year = 70; year < tm->tm_year; ++year)
-            days += 365 + __is_leap_year(1900 + year);
-    } else {
-        for (int year = tm->tm_year; year < 70; ++year)
-            days -= 365 + __is_leap_year(1900 + year);
-    }
+    for (int year = 70; year < tm->tm_year; ++year)
+        days += 365 + __is_leap_year(1900 + year);
+    for (int year = tm->tm_year; year < 70; ++year)
+        days -= 365 + __is_leap_year(1900 + year);
 
     tm->tm_yday = tm->tm_mday - 1;
     // FIXME: What if tm->tm_mon < 0 or tm->tm_mon > 12?
