@@ -70,7 +70,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
 
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, iface.m_ifname.characters(), IFNAMSIZ);
+    strlcpy(ifr.ifr_name, iface.m_ifname.characters(), IFNAMSIZ);
 
     // set the IP address
     ifr.ifr_addr.sa_family = AF_INET;
