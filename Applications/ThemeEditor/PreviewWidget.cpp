@@ -58,14 +58,14 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
 
     painter.fill_rect(frame_inner_rect(), m_preview_palette.desktop_background());
 
-    auto paint_window = [&](auto& title, const Gfx::IntRect& rect, auto state) {
+    auto paint_window = [&](auto& title, const Gfx::IntRect& rect, auto state, const Gfx::Bitmap& icon) {
         Gfx::IntRect leftmost_button_rect { 300, 4, 16, 16 };
 
         {
             Gfx::PainterStateSaver saver(painter);
             auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
             painter.translate(frame_rect.location());
-            Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, *m_active_window_icon, m_preview_palette, leftmost_button_rect);
+            Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, leftmost_button_rect);
         }
 
         painter.fill_rect(rect, m_preview_palette.window());
@@ -79,8 +79,8 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
     active_rect.center_within(frame_inner_rect());
     Gfx::IntRect inactive_rect = active_rect.translated(-20, -20);
 
-    paint_window("Inactive window", inactive_rect, Gfx::WindowTheme::WindowState::Inactive);
-    paint_window("Active window", active_rect, Gfx::WindowTheme::WindowState::Active);
+    paint_window("Inactive window", inactive_rect, Gfx::WindowTheme::WindowState::Inactive, *m_active_window_icon);
+    paint_window("Active window", active_rect, Gfx::WindowTheme::WindowState::Active, *m_inactive_window_icon);
 }
 
 }
