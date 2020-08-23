@@ -165,7 +165,7 @@ void AbstractTableView::paint_headers(Painter& painter)
         auto text_rect = cell_rect.translated(horizontal_padding(), 0);
         if (pressed)
             text_rect.move_by(1, 1);
-        painter.draw_text(text_rect, text, header_font(), Gfx::TextAlignment::CenterLeft, palette().button_text());
+        painter.draw_text(text_rect, text, header_font(), column_header_alignment(column_index), palette().button_text());
         x_offset += column_width + horizontal_padding() * 2;
     }
 }
@@ -247,6 +247,23 @@ int AbstractTableView::column_width(int column_index) const
     if (!model())
         return 0;
     return column_data(column_index).width;
+}
+
+void AbstractTableView::set_column_width(int column, int width)
+{
+    column_data(column).width = width;
+}
+
+Gfx::TextAlignment AbstractTableView::column_header_alignment(int column_index) const
+{
+    if (!model())
+        return Gfx::TextAlignment::CenterLeft;
+    return column_data(column_index).header_alignment;
+}
+
+void AbstractTableView::set_column_header_alignment(int column, Gfx::TextAlignment alignment)
+{
+    column_data(column).header_alignment = alignment;
 }
 
 void AbstractTableView::mousemove_event(MouseEvent& event)
