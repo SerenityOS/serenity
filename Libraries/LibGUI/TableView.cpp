@@ -84,7 +84,7 @@ void TableView::paint_event(PaintEvent& event)
 
         Color background_color;
         Color key_column_background_color;
-        if (is_selected_row) {
+        if (is_selected_row && highlight_selected_rows()) {
             background_color = is_focused() ? palette().selection() : palette().inactive_selection();
             key_column_background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {

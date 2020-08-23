@@ -32,7 +32,7 @@ namespace GUI {
 
 class TableCellPaintingDelegate {
 public:
-    virtual ~TableCellPaintingDelegate() {}
+    virtual ~TableCellPaintingDelegate() { }
 
     virtual void paint(Painter&, const Gfx::IntRect&, const Gfx::Palette&, const ModelIndex&) = 0;
 };
@@ -43,6 +43,8 @@ public:
 
     bool alternating_row_colors() const { return m_alternating_row_colors; }
     void set_alternating_row_colors(bool b) { m_alternating_row_colors = b; }
+    bool highlight_selected_rows() const { return m_highlight_selected_rows; }
+    void set_highlight_selected_rows(bool b) { m_highlight_selected_rows = b; }
 
     int header_height() const { return m_headers_visible ? 16 : 0; }
 
@@ -51,6 +53,12 @@ public:
 
     bool is_column_hidden(int) const;
     void set_column_hidden(int, bool);
+
+    int column_width(int column) const;
+    void set_column_width(int column, int width);
+
+    Gfx::TextAlignment column_header_alignment(int column) const;
+    void set_column_header_alignment(int column, Gfx::TextAlignment);
 
     void set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>&&);
 
@@ -83,7 +91,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
 
-    virtual void toggle_index(const ModelIndex&) {}
+    virtual void toggle_index(const ModelIndex&) { }
 
     void paint_headers(Painter&);
     Gfx::IntRect header_rect(int column) const;
@@ -97,6 +105,7 @@ protected:
         bool has_initialized_width { false };
         bool visibility { true };
         RefPtr<Action> visibility_action;
+        Gfx::TextAlignment header_alignment { Gfx::TextAlignment::CenterLeft };
         OwnPtr<TableCellPaintingDelegate> cell_painting_delegate;
     };
     ColumnData& column_data(int column) const;
@@ -107,7 +116,6 @@ protected:
     RefPtr<Menu> m_header_context_menu;
 
     Gfx::IntRect column_resize_grabbable_rect(int) const;
-    int column_width(int) const;
     void update_content_size();
     virtual void update_column_sizes();
     virtual int item_count() const;
@@ -116,6 +124,7 @@ private:
     bool m_headers_visible { true };
     bool m_in_column_resize { false };
     bool m_alternating_row_colors { true };
+    bool m_highlight_selected_rows { true };
     int m_horizontal_padding { 5 };
     Gfx::IntPoint m_column_resize_origin;
     int m_column_resize_original_width { 0 };
