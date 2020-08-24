@@ -54,7 +54,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     widget.layout()->set_spacing(0);
 
     auto& banner_image = widget.add<GUI::ImageWidget>();
-    banner_image.load_from_file("/res/brand-banner.png");
+    banner_image.load_from_file("/res/graphics/brand-banner.png");
 
     auto& content_container = widget.add<Widget>();
     content_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fill);

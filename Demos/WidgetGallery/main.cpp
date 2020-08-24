@@ -496,10 +496,10 @@ int main(int argc, char** argv)
 
     auto& banner_image = tab_image.add<GUI::ImageWidget>();
     banner_image.set_frame_thickness(2);
-    banner_image.load_from_file("/res/brand-banner.png");
+    banner_image.load_from_file("/res/graphics/brand-banner.png");
 
     auto& gif_animation_image = tab_image.add<GUI::ImageWidget>();
-    gif_animation_image.load_from_file("/res/download-animation.gif");
+    gif_animation_image.load_from_file("/res/graphics/download-animation.gif");
 
     auto& tab_cursors = tab_widget.add_tab<GUI::Widget>("Cursors");
     tab_cursors.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
