@@ -583,7 +583,15 @@ NonnullRefPtr<GUI::Widget> build_processors_tab()
         processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);
         processors_field.empend("cpuid", "CPUID", Gfx::TextAlignment::CenterLeft);
         processors_field.empend("brandstr", "Brand", Gfx::TextAlignment::CenterLeft);
-        processors_field.empend("features", "Features", Gfx::TextAlignment::CenterLeft);
+        processors_field.empend("Features", Gfx::TextAlignment::CenterLeft, [](auto& object) {
+            StringBuilder builder;
+            auto features = object.get("features").as_array();
+            for (auto& feature : features.values()) {
+                builder.append(feature.to_string());
+                builder.append(' ');
+            }
+            return GUI::Variant(builder.to_string());
+        });
         processors_field.empend("family", "Family", Gfx::TextAlignment::CenterRight);
         processors_field.empend("model", "Model", Gfx::TextAlignment::CenterRight);
         processors_field.empend("stepping", "Stepping", Gfx::TextAlignment::CenterRight);
