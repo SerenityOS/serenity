@@ -45,6 +45,11 @@ NonnullRefPtr<Action> make_save_action(Function<void(Action&)> callback, Core::O
     return Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
 }
 
+NonnullRefPtr<Action> make_save_as_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return Action::create("Save As...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), move(callback), parent);
+}
+
 NonnullRefPtr<Action> make_move_to_front_action(Function<void(Action&)> callback, Core::Object* parent)
 {
     return Action::create("Move to front", { Mod_Ctrl | Mod_Shift, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/move-to-front.png"), move(callback), parent);
