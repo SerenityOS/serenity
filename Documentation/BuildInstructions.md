@@ -84,6 +84,7 @@ Once the toolchain and cmake have been built, go into the `Build/` directory and
 ```bash
 $ cd ..
 $ cd Build
+$ cmake ..
 $ make
 $ make install
 ```
