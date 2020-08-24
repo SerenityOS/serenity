@@ -103,6 +103,16 @@ static void time_to_tm(struct tm* tm, time_t t)
 
 static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 {
+    // "The original values of the tm_wday and tm_yday components of the structure are ignored,
+    // and the original values of the other components are not restricted to the ranges described in <time.h>.
+    // [...]
+    // Upon successful completion, the values of the tm_wday and tm_yday components of the structure shall be set appropriately,
+    // and the other components are set to represent the specified time since the Epoch,
+    // but with their values forced to the ranges indicated in the <time.h> entry;
+    // the final value of tm_mday shall not be set until tm_mon and tm_year are determined."
+
+    // FIXME: Handle tm_isdst eventually.
+
     tm->tm_year += tm->tm_mon / 12;
     tm->tm_mon %= 12;
     if (tm->tm_mon < 0) {
@@ -125,7 +135,9 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
     days += tm->tm_yday;
 
     int seconds = tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
-    return static_cast<time_t>(days) * __seconds_per_day + seconds + timezone_adjust_seconds;
+    auto timestamp = static_cast<time_t>(days) * __seconds_per_day + seconds + timezone_adjust_seconds;
+    time_to_tm(tm, timestamp);
+    return timestamp;
 }
 
 time_t mktime(struct tm* tm)
