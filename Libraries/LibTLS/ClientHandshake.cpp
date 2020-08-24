@@ -216,7 +216,6 @@ ssize_t TLSv12::handle_finished(const ByteBuffer& buffer, WritePacketStage& writ
     size_t index = 3;
 
     u32 size = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
-    index += 3;
 
     if (size < 12) {
 #ifdef TLS_DEBUG
@@ -248,7 +247,7 @@ ssize_t TLSv12::handle_finished(const ByteBuffer& buffer, WritePacketStage& writ
     if (on_tls_ready_to_write)
         on_tls_ready_to_write(*this);
 
-    return handle_message(buffer);
+    return index + size;
 }
 
 void TLSv12::build_random(PacketBuilder& builder)
