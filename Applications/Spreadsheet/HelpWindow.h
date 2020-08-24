@@ -55,7 +55,7 @@ private:
     HelpWindow(GUI::Window* parent = nullptr);
 
     JsonObject m_docs;
-    OutOfProcessWebView* m_webview { nullptr };
+    Web::OutOfProcessWebView* m_webview { nullptr };
     GUI::ListView* m_listview { nullptr };
 };
 

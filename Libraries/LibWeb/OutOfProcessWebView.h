@@ -31,6 +31,8 @@
 #include <LibGUI/Widget.h>
 #include <LibWeb/WebViewHooks.h>
 
+namespace Web {
+
 class WebContentClient;
 
 class OutOfProcessWebView final
@@ -83,3 +85,5 @@ private:
     RefPtr<Gfx::Bitmap> m_front_bitmap;
     RefPtr<Gfx::Bitmap> m_back_bitmap;
 };
+
+}

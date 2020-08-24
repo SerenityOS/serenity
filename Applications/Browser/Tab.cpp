@@ -50,14 +50,14 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutInline.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Page/Frame.h>
-#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/OutOfProcessWebView.h>
+#include <LibWeb/Page/Frame.h>
 
 namespace Browser {
 
@@ -85,7 +85,7 @@ Tab::Tab(Type type)
     if (m_type == Type::InProcessWebView)
         m_page_view = widget.add<Web::InProcessWebView>();
     else
-        m_web_content_view = widget.add<OutOfProcessWebView>();
+        m_web_content_view = widget.add<Web::OutOfProcessWebView>();
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { go_forward(); }, this);

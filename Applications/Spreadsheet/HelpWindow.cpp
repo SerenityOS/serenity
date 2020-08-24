@@ -95,8 +95,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     m_listview = &list_view;
     list_view.set_model(HelpListModel::create());
 
-    // FIXME: This should be in the Web namespace!
-    m_webview = &splitter.add<OutOfProcessWebView>();
+    m_webview = &splitter.add<Web::OutOfProcessWebView>();
 
     list_view.on_activation = [this](auto& index) {
         if (!m_webview)
