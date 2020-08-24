@@ -24,52 +24,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Spreadsheet.h"
-#include "SpreadsheetWidget.h"
-#include <LibCore/ArgsParser.h>
-#include <LibGUI/Application.h>
-#include <LibGUI/Forward.h>
+#pragma once
+
+#include <AK/JsonObject.h>
+#include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibWeb/OutOfProcessWebView.h>
 
-int main(int argc, char* argv[])
-{
-    Core::ArgsParser args_parser;
-    args_parser.parse(argc, argv);
+namespace Spreadsheet {
 
-    auto app = GUI::Application::construct(argc, argv);
+class HelpWindow : public GUI::Window {
+    C_OBJECT(HelpWindow);
 
-    if (pledge("stdio thread rpath accept cpath wpath shared_buffer unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
+public:
+    static NonnullRefPtr<HelpWindow> the()
+    {
+        if (s_the)
+            return *s_the;
+
+        return *(s_the = adopt(*new HelpWindow));
     }
 
-    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    virtual ~HelpWindow() override;
 
-    if (unveil("/etc", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    void set_docs(JsonObject&& docs);
 
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
+private:
+    static RefPtr<HelpWindow> s_the;
+    String render(const GUI::ModelIndex&);
+    HelpWindow(GUI::Window* parent = nullptr);
 
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
+    JsonObject m_docs;
+    OutOfProcessWebView* m_webview { nullptr };
+    GUI::ListView* m_listview { nullptr };
+};
 
-    auto window = GUI::Window::construct();
-    window->set_title("Spreadsheet");
-    window->resize(640, 480);
-
-    window->set_main_widget<Spreadsheet::SpreadsheetWidget>();
-
-    window->show();
-
-    return app->exec();
 }
