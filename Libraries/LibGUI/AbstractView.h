@@ -100,6 +100,7 @@ protected:
     void set_hovered_index(const ModelIndex&);
     void activate(const ModelIndex&);
     void activate_selected();
+    void activate_or_edit_selected();
     void update_edit_widget_position();
 
     bool m_editable { false };

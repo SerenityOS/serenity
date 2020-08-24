@@ -362,7 +362,15 @@ void AbstractView::doubleclick_event(MouseEvent& event)
     else if (!m_selection.contains(index))
         set_selection(index);
 
-    activate_selected();
+    activate_or_edit_selected();
+}
+
+void AbstractView::activate_or_edit_selected()
+{
+    if (is_editable())
+        begin_editing(selection().first());
+    else
+        activate_selected();
 }
 
 void AbstractView::context_menu_event(ContextMenuEvent& event)

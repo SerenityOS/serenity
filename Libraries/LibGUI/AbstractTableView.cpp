@@ -474,10 +474,7 @@ void AbstractTableView::doubleclick_event(MouseEvent& event)
         if (event.y() < header_height())
             return;
         if (!selection().is_empty()) {
-            if (is_editable())
-                begin_editing(selection().first());
-            else
-                activate_selected();
+            activate_or_edit_selected();
         }
     }
 }
