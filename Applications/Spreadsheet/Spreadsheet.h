@@ -135,6 +135,8 @@ public:
     const String& name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }
 
+    JsonObject gather_documentation() const;
+
     Optional<Position> selected_cell() const { return m_selected_cell; }
     const HashMap<Position, NonnullOwnPtr<Cell>>& cells() const { return m_cells; }
     HashMap<Position, NonnullOwnPtr<Cell>>& cells() { return m_cells; }
