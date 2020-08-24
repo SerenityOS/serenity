@@ -195,6 +195,13 @@ Value DateConstructor::construct(Interpreter& interpreter, Function&)
     int seconds = arg_or(5, 0);
     int milliseconds = arg_or(6, 0);
 
+    seconds += milliseconds / 1000;
+    milliseconds %= 1000;
+    if (milliseconds < 0) {
+        seconds -= 1;
+        milliseconds += 1000;
+    }
+
     if (year >= 0 && year <= 99)
         year += 1900;
     int month = month_index + 1;
