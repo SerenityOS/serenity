@@ -163,14 +163,19 @@ String Sheet::add_column()
 void Sheet::update()
 {
     m_visited_cells_in_update.clear();
-    for (auto& it : m_cells) {
-        auto& cell = *it.value;
-        if (has_been_visited(&cell))
+    Vector<Cell*> cells_copy;
+
+    // Grab a copy as updates might insert cells into the table.
+    for (auto& it : m_cells)
+        cells_copy.append(it.value);
+
+    for (auto& cell : cells_copy) {
+        if (has_been_visited(cell))
             continue;
-        m_visited_cells_in_update.set(&cell);
-        if (cell.dirty) {
+        m_visited_cells_in_update.set(cell);
+        if (cell->dirty) {
             // Re-evaluate the cell value, if any.
-            cell.update({});
+            cell->update({});
         }
     }
 
