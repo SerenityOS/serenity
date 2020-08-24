@@ -41,6 +41,10 @@ public:
     ~SpreadsheetView();
 
     const Sheet& sheet() const { return *m_sheet; }
+    Sheet& sheet() { return *m_sheet; }
+
+    Function<void(const Position&, Cell&)> on_selection_changed;
+    Function<void()> on_selection_dropped;
 
 private:
     SpreadsheetView(Sheet&);

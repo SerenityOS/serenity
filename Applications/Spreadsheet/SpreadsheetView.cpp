@@ -71,6 +71,20 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view->aid_create_editing_delegate = [&](auto&) {
         return make<EditingDelegate>(*m_sheet);
     };
+
+    m_table_view->on_selection_change = [&] {
+        if (m_table_view->selection().is_empty() && on_selection_dropped)
+            return on_selection_dropped();
+
+        auto selection = m_table_view->selection().first();
+        Position position { m_sheet->column(selection.column() - 1), (size_t)selection.row() };
+        auto& cell = m_sheet->ensure(position);
+        if (on_selection_changed)
+            on_selection_changed(position, cell);
+
+        m_table_view->model()->update();
+        m_table_view->update();
+    };
 }
 
 void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::Palette& palette, const GUI::ModelIndex& index)

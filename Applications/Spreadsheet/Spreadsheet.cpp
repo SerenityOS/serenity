@@ -208,6 +208,7 @@ JS::Value Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
 
 void Cell::update_data()
 {
+    dbg() << "Update cell " << this << ", dirty=" << dirty;
     TemporaryChange cell_change { sheet->current_evaluated_cell(), this };
     if (!dirty)
         return;
