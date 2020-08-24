@@ -332,7 +332,7 @@ int main_impl(int argc, char** argv)
     GUI::ActionGroup tool_actions;
     tool_actions.set_exclusive(true);
 
-    auto cursor_tool_action = GUI::Action::create_checkable("Cursor", Gfx::Bitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
+    auto cursor_tool_action = GUI::Action::create_checkable("Cursor", Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Cursor.png"), [&](auto&) {
         g_form_editor_widget->set_tool(make<CursorTool>(*g_form_editor_widget));
     });
     cursor_tool_action->set_checked(true);
@@ -341,7 +341,7 @@ int main_impl(int argc, char** argv)
     form_widgets_toolbar.add_action(cursor_tool_action);
 
     GUI::WidgetClassRegistration::for_each([&](const GUI::WidgetClassRegistration& reg) {
-        auto icon_path = String::format("/res/icons/widgets/G%s.png", reg.class_name().characters());
+        auto icon_path = String::format("/res/icons/hackstudio/G%s.png", reg.class_name().characters());
         auto action = GUI::Action::create_checkable(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg](auto&) {
             g_form_editor_widget->set_tool(make<WidgetTool>(*g_form_editor_widget, reg));
             auto widget = reg.construct();
