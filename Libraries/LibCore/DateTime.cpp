@@ -39,23 +39,7 @@ DateTime DateTime::now()
 DateTime DateTime::create(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
 {
     DateTime dt;
-    dt.m_year = year;
-    dt.m_month = month;
-    dt.m_day = day;
-    dt.m_hour = hour;
-    dt.m_minute = minute;
-    dt.m_second = second;
-
-    struct tm tm = {};
-    tm.tm_sec = (int)second;
-    tm.tm_min = (int)minute;
-    tm.tm_hour = (int)hour;
-    tm.tm_mday = (int)day;
-    tm.tm_mon = (int)month - 1;
-    tm.tm_year = (int)year - 1900;
-    // mktime() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
-    dt.m_timestamp = mktime(&tm);
-
+    dt.set_time(year, month, day, hour, minute, second);
     return dt;
 }
 
