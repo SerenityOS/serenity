@@ -25,3 +25,23 @@ test("basic functionality", () => {
 
     expect(Date.UTC(20000, 0)).toBe(568971820800000);
 });
+
+test("out of range", () => {
+    expect(Date.UTC(2020, -20)).toBe(1525132800000);
+    expect(Date.UTC(2020, 20)).toBe(1630454400000);
+
+    expect(Date.UTC(2020, 1, -10)).toBe(1579564800000);
+    expect(Date.UTC(2020, 1, 40)).toBe(1583884800000);
+
+    expect(Date.UTC(2020, 1, 15, -50)).toBe(1581544800000);
+    expect(Date.UTC(2020, 1, 15, 50)).toBe(1581904800000);
+
+    expect(Date.UTC(2020, 1, 15, 12, -123)).toBe(1581760620000);
+    expect(Date.UTC(2020, 1, 15, 12, 123)).toBe(1581775380000);
+
+    expect(Date.UTC(2020, 1, 15, 12, 30, -123)).toBe(1581769677000);
+    expect(Date.UTC(2020, 1, 15, 12, 30, 123)).toBe(1581769923000);
+
+    expect(Date.UTC(2020, 1, 15, 12, 30, 30, -2345)).toBe(1581769827655);
+    expect(Date.UTC(2020, 1, 15, 12, 30, 30, 2345)).toBe(1581769832345);
+});

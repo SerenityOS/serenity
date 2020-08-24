@@ -179,7 +179,6 @@ Value DateConstructor::construct(Interpreter& interpreter, Function&)
             value = parse_simplified_iso8601(value.as_string().string());
         // A timestamp since the epoch, in UTC.
         // FIXME: Date() probably should use a double as internal representation, so that NaN arguments and larger offsets are handled correctly.
-        // FIXME: DateTime::from_timestamp() seems to not support negative offsets.
         double value_as_double = value.to_double(interpreter);
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<u16>(fmod(value_as_double, 1000));
@@ -187,7 +186,6 @@ Value DateConstructor::construct(Interpreter& interpreter, Function&)
     }
     // A date/time in components, in local time.
     // FIXME: This doesn't construct an "Invalid Date" object if one of the parameters is NaN.
-    // FIXME: This doesn't range-check args and convert months > 12 to year increments etc.
     auto arg_or = [&interpreter](size_t i, i32 fallback) { return interpreter.argument_count() > i ? interpreter.argument(i).to_i32(interpreter) : fallback; };
     int year = interpreter.argument(0).to_i32(interpreter);
     int month_index = interpreter.argument(1).to_i32(interpreter);
