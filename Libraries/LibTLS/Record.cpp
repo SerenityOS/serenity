@@ -233,11 +233,13 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
             return (i8)Error::BrokenPacket;
         }
 
-        const u8* message_hmac = decrypted_span.offset(length - mac_size);
+        length -= mac_size;
+
+        const u8* message_hmac = decrypted_span.offset(length);
         u8 temp_buf[5];
         memcpy(temp_buf, buffer.offset_pointer(0), 3);
         *(u16*)(temp_buf + 3) = convert_between_host_and_network(length);
-        auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span, mac_size);
+        auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span.slice(0, length), mac_size);
         auto message_mac = ByteBuffer::wrap(const_cast<u8*>(message_hmac), mac_size);
         if (hmac != message_mac) {
             dbg() << "integrity check failed (mac length " << length << ")";
@@ -250,7 +252,7 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
 
             return (i8)Error::IntegrityCheckFailed;
         }
-        plain = decrypted.slice(0, length - mac_size);
+        plain = decrypted.slice(0, length);
     }
     m_context.remote_sequence_number++;
 
