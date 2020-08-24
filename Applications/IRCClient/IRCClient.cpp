@@ -37,6 +37,7 @@
 #include <LibCore/Notifier.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <strings.h>
 
 #define IRC_DEBUG
 
