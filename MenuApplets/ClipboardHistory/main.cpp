@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     applet_window->set_title("ClipboardHistory");
     applet_window->set_window_type(GUI::WindowType::MenuApplet);
     auto& icon = applet_window->set_main_widget<GUI::ImageWidget>();
-    icon.load_from_file("/res/icons/clipboard.png");
+    icon.load_from_file("/res/icons/16x16/clipboard.png");
     icon.set_fill_with_background_color(true);
     icon.on_click = [& main_window = *main_window] {
         main_window.show();

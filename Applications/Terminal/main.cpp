@@ -280,7 +280,7 @@ int main(int argc, char** argv)
                 perror("disown");
         }
     }));
-    app_menu.add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/gear16.png"),
+    app_menu.add_action(GUI::Action::create("Settings...", Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png"),
         [&](const GUI::Action&) {
             if (!settings_window) {
                 settings_window = create_settings_window(terminal);
