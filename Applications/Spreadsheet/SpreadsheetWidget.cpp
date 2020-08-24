@@ -30,8 +30,11 @@
 #include <AK/JsonObjectSerializer.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Splitter.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGUI/TextEditor.h>
 #include <string.h>
 
 namespace Spreadsheet {
@@ -40,11 +43,60 @@ SpreadsheetWidget::SpreadsheetWidget()
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
-    m_tab_widget = add<GUI::TabWidget>();
+    auto& container = add<GUI::VerticalSplitter>();
+
+    auto& top_bar = container.add<GUI::Frame>();
+    top_bar.set_layout<GUI::HorizontalBoxLayout>().set_spacing(1);
+    top_bar.set_preferred_size(0, 50);
+    top_bar.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    auto& current_cell_label = top_bar.add<GUI::Label>("");
+    current_cell_label.set_preferred_size(50, 0);
+    current_cell_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    auto& cell_value_editor = top_bar.add<GUI::TextEditor>(GUI::TextEditor::Type::SingleLine);
+    cell_value_editor.set_scrollbars_enabled(false);
+
+    cell_value_editor.set_enabled(false);
+    current_cell_label.set_enabled(false);
+
+    m_tab_widget = container.add<GUI::TabWidget>();
     m_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
     m_sheets.append(Sheet::construct("Sheet 1"));
-    m_tab_widget->add_tab<SpreadsheetView>(m_sheets.first().name(), m_sheets.first());
+    auto& tab = m_tab_widget->add_tab<SpreadsheetView>(m_sheets.first().name(), m_sheets.first());
+
+    auto change = [&](auto& selected_widget) {
+        if (m_selected_view) {
+            m_selected_view->on_selection_changed = nullptr;
+            m_selected_view->on_selection_dropped = nullptr;
+        };
+        m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
+        m_selected_view->on_selection_changed = [&](const Position& position, Cell& cell) {
+            StringBuilder builder;
+            builder.append(position.column);
+            builder.appendf("%zu", position.row);
+            current_cell_label.set_enabled(true);
+            current_cell_label.set_text(builder.string_view());
+
+            cell_value_editor.on_change = nullptr;
+            cell_value_editor.set_text(cell.source());
+            cell_value_editor.on_change = [&] {
+                cell.set_data(cell_value_editor.text());
+                m_selected_view->sheet().update();
+            };
+            cell_value_editor.set_enabled(true);
+        };
+        m_selected_view->on_selection_dropped = [&]() {
+            cell_value_editor.set_enabled(false);
+            cell_value_editor.set_text("");
+            current_cell_label.set_enabled(false);
+            current_cell_label.set_text("");
+        };
+    };
+
+    change(tab);
+    m_tab_widget->on_change = [change = move(change)](auto& selected_widget) {
+        change(selected_widget);
+    };
 }
 
 SpreadsheetWidget::~SpreadsheetWidget()

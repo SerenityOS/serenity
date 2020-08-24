@@ -44,6 +44,7 @@ private:
     SpreadsheetWidget();
 
     NonnullRefPtrVector<Sheet> m_sheets;
+    SpreadsheetView* m_selected_view { nullptr };
     RefPtr<GUI::TabWidget> m_tab_widget;
 };
 
