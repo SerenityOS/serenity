@@ -435,7 +435,7 @@ int AbstractTableView::item_count() const
     return model()->row_count();
 }
 
-void AbstractTableView::move_selection(int steps)
+void AbstractTableView::move_selection(int vertical_steps, int horizontal_steps)
 {
     if (!model())
         return;
@@ -443,7 +443,7 @@ void AbstractTableView::move_selection(int steps)
     ModelIndex new_index;
     if (!selection().is_empty()) {
         auto old_index = selection().first();
-        new_index = model.index(old_index.row() + steps, old_index.column());
+        new_index = model.index(old_index.row() + vertical_steps, old_index.column() + horizontal_steps);
     } else {
         new_index = model.index(0, 0);
     }

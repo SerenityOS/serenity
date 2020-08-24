@@ -162,12 +162,20 @@ void TableView::keydown_event(KeyEvent& event)
         activate_selected();
         return;
     }
+    if (event.key() == KeyCode::Key_Left) {
+        move_selection(0, -1);
+        return;
+    }
+    if (event.key() == KeyCode::Key_Right) {
+        move_selection(0, 1);
+        return;
+    }
     if (event.key() == KeyCode::Key_Up) {
-        move_selection(-1);
+        move_selection(-1, 0);
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        move_selection(1);
+        move_selection(1, 0);
         return;
     }
     if (event.key() == KeyCode::Key_PageUp) {

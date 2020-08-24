@@ -78,7 +78,7 @@ public:
 
     virtual void select_all() override;
 
-    void move_selection(int steps);
+    void move_selection(int vertical_steps, int horizontal_steps);
 
 protected:
     virtual ~AbstractTableView() override;
