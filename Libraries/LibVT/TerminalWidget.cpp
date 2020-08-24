@@ -129,7 +129,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
         copy();
     });
 
-    m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/paste16.png"), [this](auto&) {
+    m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), [this](auto&) {
         paste();
     });
 
