@@ -35,7 +35,7 @@ namespace AK {
 
 class URL {
 public:
-    URL() {}
+    URL() { }
     URL(const StringView&);
     URL(const char* string)
         : URL(StringView(string))
@@ -72,6 +72,7 @@ public:
 
     static URL create_with_url_or_path(const String& url_or_path);
     static URL create_with_file_protocol(const String& path);
+    static URL create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64 = false);
 
     bool operator==(const URL& other) const
     {

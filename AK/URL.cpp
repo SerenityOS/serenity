@@ -413,6 +413,18 @@ URL URL::create_with_url_or_path(const String& url_or_path)
     return URL::create_with_file_protocol(path);
 }
 
+URL URL::create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64)
+{
+    URL url;
+    url.m_valid = true;
+    url.set_protocol("data");
+    url.m_data_payload = payload;
+    url.m_data_mime_type = mime_type;
+    url.m_data_payload_is_base64 = is_base64;
+
+    return url;
+}
+
 String URL::basename() const
 {
     if (!m_valid)
