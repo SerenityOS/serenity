@@ -29,7 +29,7 @@
 
 MonitorWidget::MonitorWidget()
 {
-    m_monitor_bitmap = Gfx::Bitmap::load_from_file("/res/monitor.png");
+    m_monitor_bitmap = Gfx::Bitmap::load_from_file("/res/graphics/monitor.png");
     m_monitor_rect = { 8, 9, 320, 180 };
 }
 
