@@ -35,8 +35,6 @@ size_t strlen(const char*);
 size_t strnlen(const char*, size_t maxlen);
 int strcmp(const char*, const char*);
 int strncmp(const char*, const char*, size_t);
-int strcasecmp(const char*, const char*);
-int strncasecmp(const char*, const char*, size_t);
 int memcmp(const void*, const void*, size_t);
 void* memcpy(void*, const void*, size_t);
 void* memmove(void*, const void*, size_t);
