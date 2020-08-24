@@ -61,3 +61,6 @@ inline void* operator new[](size_t, void* p) { return p; }
 #endif
     return kmalloc_impl(size);
 }
+
+extern u8* const kmalloc_start;
+extern u8* const kmalloc_end;
