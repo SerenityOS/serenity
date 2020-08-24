@@ -28,7 +28,10 @@
 #include "SpreadsheetWidget.h"
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
 
 int main(int argc, char* argv[])
@@ -67,7 +70,26 @@ int main(int argc, char* argv[])
     window->set_title("Spreadsheet");
     window->resize(640, 480);
 
-    window->set_main_widget<Spreadsheet::SpreadsheetWidget>();
+    auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>();
+
+    auto menubar = GUI::MenuBar::construct();
+    auto& app_menu = menubar->add_menu("Spreadsheet");
+
+    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        app->quit(0);
+    }));
+
+    auto& file_menu = menubar->add_menu("File");
+    file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
+        String name = "sheet";
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "json");
+        if (!save_path.has_value())
+            return;
+
+        spreadsheet_widget.save(save_path.value());
+    }));
+
+    app->set_menubar(move(menubar));
 
     window->show();
 
