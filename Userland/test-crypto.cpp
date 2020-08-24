@@ -83,6 +83,7 @@ static int sha512_tests();
 static int hmac_md5_tests();
 static int hmac_sha256_tests();
 static int hmac_sha512_tests();
+static int hmac_sha1_tests();
 
 // Public-Key
 static int rsa_tests();
@@ -399,6 +400,10 @@ auto main(int argc, char** argv) -> int
                 return hmac_sha512_tests();
             return run(hmac_sha512);
         }
+        if (suite_sv == "HMAC-SHA1") {
+            if (run_tests)
+                return hmac_sha1_tests();
+        }
         printf("unknown hash function '%s'\n", suite);
         return 1;
     }
@@ -430,6 +435,7 @@ auto main(int argc, char** argv) -> int
         hmac_md5_tests();
         hmac_sha256_tests();
         hmac_sha512_tests();
+        hmac_sha1_tests();
 
         rsa_tests();
 
@@ -533,6 +539,9 @@ static void hmac_sha256_test_process();
 
 static void hmac_sha512_test_name();
 static void hmac_sha512_test_process();
+
+static void hmac_sha1_test_name();
+static void hmac_sha1_test_process();
 
 static void rsa_test_encrypt();
 static void rsa_test_der_parse();
@@ -1110,6 +1119,13 @@ static int hmac_sha512_tests()
     return g_some_test_failed ? 1 : 0;
 }
 
+static int hmac_sha1_tests()
+{
+    hmac_sha1_test_name();
+    hmac_sha1_test_process();
+    return g_some_test_failed ? 1 : 0;
+}
+
 static void hmac_md5_test_name()
 {
     I_TEST((HMAC - MD5 | Class name));
@@ -1144,6 +1160,57 @@ static void hmac_md5_test_process()
 
         if (memcmp(mac_0.data, mac_1.data, hmac.digest_size()) != 0) {
             FAIL(Cannot reuse);
+        } else
+            PASS;
+    }
+}
+
+static void hmac_sha1_test_name()
+{
+    I_TEST((HMAC - SHA1 | Class name));
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA1> hmac("Well Hello Friends");
+    if (hmac.class_name() != "HMAC-SHA1")
+        FAIL(Invalid class name);
+    else
+        PASS;
+}
+
+static void hmac_sha1_test_process()
+{
+    {
+        I_TEST((HMAC - SHA1 | Basic));
+        u8 key[] { 0xc8, 0x52, 0xe5, 0x4a, 0x2c, 0x03, 0x2b, 0xc9, 0x63, 0xd3, 0xc2, 0x79, 0x0f, 0x76, 0x43, 0xef, 0x36, 0xc3, 0x7a, 0xca };
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA1> hmac(ByteBuffer::wrap(key, 20));
+        u8 result[] {
+            0x2c, 0x57, 0x32, 0x61, 0x3b, 0xa7, 0x84, 0x87, 0x0e, 0x4f, 0x42, 0x07, 0x2f, 0xf0, 0xe7, 0x41, 0xd7, 0x15, 0xf4, 0x56
+        };
+        u8 value[] {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x03, 0x03, 0x00, 0x10, 0x14, 0x00, 0x00, 0x0c, 0xa1, 0x91, 0x1a, 0x20, 0x59, 0xb5, 0x45, 0xa9, 0xb4, 0xad, 0x75, 0x3e
+        };
+        auto mac = hmac.process(value, 29);
+        if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
+            FAIL(Invalid mac);
+            print_buffer({ mac.data, hmac.digest_size() }, -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((HMAC - SHA1 | Reuse));
+        u8 key[] { 0xc8, 0x52, 0xe5, 0x4a, 0x2c, 0x03, 0x2b, 0xc9, 0x63, 0xd3, 0xc2, 0x79, 0x0f, 0x76, 0x43, 0xef, 0x36, 0xc3, 0x7a, 0xca };
+        Crypto::Authentication::HMAC<Crypto::Hash::SHA1> hmac(ByteBuffer::wrap(key, 20));
+        u8 result[] {
+            0x2c, 0x57, 0x32, 0x61, 0x3b, 0xa7, 0x84, 0x87, 0x0e, 0x4f, 0x42, 0x07, 0x2f, 0xf0, 0xe7, 0x41, 0xd7, 0x15, 0xf4, 0x56
+        };
+        u8 value[] {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x03, 0x03, 0x00, 0x10, 0x14, 0x00, 0x00, 0x0c, 0xa1, 0x91, 0x1a, 0x20, 0x59, 0xb5, 0x45, 0xa9, 0xb4, 0xad, 0x75, 0x3e
+        };
+        hmac.update(value, 8);
+        hmac.update(value + 8, 5);
+        hmac.update(value + 13, 16);
+        auto mac = hmac.digest();
+        if (memcmp(result, mac.data, hmac.digest_size()) != 0) {
+            FAIL(Invalid mac);
+            print_buffer({ mac.data, hmac.digest_size() }, -1);
         } else
             PASS;
     }
