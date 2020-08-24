@@ -87,6 +87,11 @@ int Date::utc_month() const
     return to_utc_tm().tm_mon;
 }
 
+int Date::utc_seconds() const
+{
+    return to_utc_tm().tm_sec;
+}
+
 String Date::iso_date_string() const
 {
     auto tm = to_utc_tm();
