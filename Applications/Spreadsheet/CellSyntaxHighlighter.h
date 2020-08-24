@@ -26,24 +26,17 @@
 
 #pragma once
 
+#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/SyntaxHighlighter.h>
 
-namespace GUI {
+namespace Spreadsheet {
 
-class JSSyntaxHighlighter : public SyntaxHighlighter {
+class CellSyntaxHighlighter final : public GUI::JSSyntaxHighlighter {
 public:
-    JSSyntaxHighlighter() { }
-    virtual ~JSSyntaxHighlighter() override;
+    CellSyntaxHighlighter() { }
+    virtual ~CellSyntaxHighlighter() override;
 
-    virtual bool is_identifier(void*) const override;
-    virtual bool is_navigatable(void*) const override;
-
-    virtual SyntaxLanguage language() const override { return SyntaxLanguage::JavaScript; }
     virtual void rehighlight(Gfx::Palette) override;
-
-protected:
-    virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
-    virtual bool token_types_equal(void*, void*) const override;
 };
 
 }
