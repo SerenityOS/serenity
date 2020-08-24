@@ -460,6 +460,12 @@ void AbstractTableView::scroll_into_view(const ModelIndex& index, Orientation or
     ScrollableWidget::scroll_into_view(rect, orientation);
 }
 
+void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
+{
+    auto rect = row_rect(index.row()).translated(0, -header_height());
+    ScrollableWidget::scroll_into_view(rect, scroll_horizontally, scroll_vertically);
+}
+
 void AbstractTableView::doubleclick_event(MouseEvent& event)
 {
     if (!model())
