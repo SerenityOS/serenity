@@ -77,6 +77,10 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             return on_selection_dropped();
 
         auto selection = m_table_view->selection().first();
+        // Ignore selecting the row numbers.
+        if (selection.column() == 0)
+            return;
+
         Position position { m_sheet->column(selection.column() - 1), (size_t)selection.row() };
         auto& cell = m_sheet->ensure(position);
         if (on_selection_changed)
