@@ -64,9 +64,8 @@ inline void swap(const SizedObject& a, const SizedObject& b)
 class SizedObjectSlice {
 public:
     SizedObjectSlice() = delete;
-    SizedObjectSlice(void* data, size_t num_elements, size_t element_size)
+    SizedObjectSlice(void* data, size_t element_size)
         : m_data(data)
-        , m_num_elements(num_elements)
         , m_element_size(element_size)
     {
     }
@@ -77,7 +76,6 @@ public:
 
 private:
     void* m_data;
-    size_t m_num_elements;
     size_t m_element_size;
 };
 
@@ -87,7 +85,7 @@ void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, cons
         return;
     }
 
-    SizedObjectSlice slice { bot, nmemb, size };
+    SizedObjectSlice slice { bot, size };
 
     AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data()) < 0; });
 }
@@ -98,7 +96,7 @@ void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, co
         return;
     }
 
-    SizedObjectSlice slice { bot, nmemb, size };
+    SizedObjectSlice slice { bot, size };
 
     AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data(), arg) < 0; });
 }
