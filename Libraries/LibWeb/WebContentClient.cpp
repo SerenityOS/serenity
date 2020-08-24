@@ -28,6 +28,8 @@
 #include "OutOfProcessWebView.h"
 #include <AK/SharedBuffer.h>
 
+namespace Web {
+
 WebContentClient::WebContentClient(OutOfProcessWebView& view)
     : IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, "/tmp/portal/webcontent")
     , m_view(view)
@@ -138,4 +140,6 @@ void WebContentClient::handle(const Messages::WebContentClient::DidRequestContex
 void WebContentClient::handle(const Messages::WebContentClient::DidRequestLinkContextMenu& message)
 {
     m_view.notify_server_did_request_link_context_menu({}, message.content_position(), message.url(), message.target(), message.modifiers());
+}
+
 }

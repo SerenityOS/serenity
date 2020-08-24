@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
-    auto& view = main_widget.add<OutOfProcessWebView>();
+    auto& view = main_widget.add<Web::OutOfProcessWebView>();
     auto& statusbar = main_widget.add<GUI::StatusBar>();
     window->set_title("WebView");
     window->resize(640, 480);

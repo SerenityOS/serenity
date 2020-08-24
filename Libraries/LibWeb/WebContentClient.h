@@ -31,6 +31,8 @@
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
+namespace Web {
+
 class OutOfProcessWebView;
 
 class WebContentClient
@@ -61,3 +63,5 @@ private:
 
     OutOfProcessWebView& m_view;
 };
+
+}
