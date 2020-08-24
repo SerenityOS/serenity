@@ -65,6 +65,15 @@ struct Cell : public Weakable<Cell> {
     {
     }
 
+    Cell(String source, JS::Value&& cell_value, WeakPtr<Sheet> sheet)
+        : dirty(false)
+        , data(move(source))
+        , evaluated_data(move(cell_value))
+        , kind(Formula)
+        , sheet(sheet)
+    {
+    }
+
     bool dirty { false };
     bool evaluated_externally { false };
     String data;
@@ -131,6 +140,7 @@ public:
     static Optional<Position> parse_cell_name(const StringView&);
 
     JsonObject to_json() const;
+    static RefPtr<Sheet> from_json(const JsonObject&);
 
     const String& name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }
@@ -179,7 +189,10 @@ public:
     bool has_been_visited(Cell* cell) const { return m_visited_cells_in_update.contains(cell); }
 
 private:
-    Sheet(const StringView& name);
+    enum class EmptyConstruct { EmptyConstructTag };
+
+    explicit Sheet(EmptyConstruct);
+    explicit Sheet(const StringView& name);
 
     String m_name;
     Vector<String> m_columns;
@@ -191,7 +204,7 @@ private:
 
     size_t m_current_column_name_length { 0 };
 
-    NonnullOwnPtr<JS::Interpreter> m_interpreter;
+    mutable NonnullOwnPtr<JS::Interpreter> m_interpreter;
     HashTable<Cell*> m_visited_cells_in_update;
 };
 
