@@ -96,13 +96,6 @@ bool DateTime::is_leap_year() const
 
 void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)
 {
-    m_year = year;
-    m_month = month;
-    m_day = day;
-    m_hour = hour;
-    m_minute = minute;
-    m_second = second;
-
     struct tm tm = {};
     tm.tm_sec = (int)second;
     tm.tm_min = (int)minute;
@@ -110,9 +103,17 @@ void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned ho
     tm.tm_mday = (int)day;
     tm.tm_mon = (int)month - 1;
     tm.tm_year = (int)year - 1900;
-    tm.tm_wday = (int)weekday();
-    tm.tm_yday = (int)day_of_year();
+    // mktime() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
+
     m_timestamp = mktime(&tm);
+
+    // mktime() normalizes the components to the right ranges (Jan 32 -> Feb 1 etc), so read fields back out from tm.
+    m_year = tm.tm_year + 1900;
+    m_month = tm.tm_mon + 1;
+    m_day = tm.tm_mday;
+    m_hour = tm.tm_hour;
+    m_minute = tm.tm_min;
+    m_second = tm.tm_sec;
 }
 
 String DateTime::to_string(const String& format) const
