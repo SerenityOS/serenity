@@ -71,6 +71,7 @@ public:
     Gfx::IntRect row_rect(int item_index) const;
 
     void scroll_into_view(const ModelIndex&, Orientation);
+    void scroll_into_view(const ModelIndex&, bool scroll_horizontally, bool scroll_vertically);
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&, bool& is_toggle) const;
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
