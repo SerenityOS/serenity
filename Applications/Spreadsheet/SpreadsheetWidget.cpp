@@ -25,11 +25,13 @@
  */
 
 #include "SpreadsheetWidget.h"
+#include "HelpWindow.h"
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
@@ -52,6 +54,17 @@ SpreadsheetWidget::SpreadsheetWidget()
     auto& current_cell_label = top_bar.add<GUI::Label>("");
     current_cell_label.set_preferred_size(50, 0);
     current_cell_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+
+    auto& help_button = top_bar.add<GUI::Button>("🛈");
+    help_button.set_preferred_size(20, 20);
+    help_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    help_button.on_click = [&](auto) {
+        auto docs = m_selected_view->sheet().gather_documentation();
+        auto help_window = HelpWindow::the();
+        help_window->set_docs(move(docs));
+        help_window->show();
+    };
+
     auto& cell_value_editor = top_bar.add<GUI::TextEditor>(GUI::TextEditor::Type::SingleLine);
     cell_value_editor.set_scrollbars_enabled(false);
 

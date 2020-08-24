@@ -1,4 +1,5 @@
 set(SOURCES
+    HelpWindow.cpp
     Spreadsheet.cpp
     SpreadsheetModel.cpp
     SpreadsheetView.cpp
@@ -7,4 +8,4 @@ set(SOURCES
 )
 
 serenity_bin(Spreadsheet)
-target_link_libraries(Spreadsheet LibGUI LibJS)
+target_link_libraries(Spreadsheet LibGUI LibJS LibWeb)

@@ -28,9 +28,11 @@
 #include <AK/GenericLexer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/JsonParser.h>
 #include <LibCore/File.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -208,7 +210,6 @@ JS::Value Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
 
 void Cell::update_data()
 {
-    dbg() << "Update cell " << this << ", dirty=" << dirty;
     TemporaryChange cell_change { sheet->current_evaluated_cell(), this };
     if (!dirty)
         return;
@@ -321,6 +322,37 @@ JsonObject Sheet::to_json() const
         cells.set(key, move(data));
     }
     object.set("cells", move(cells));
+
+    return object;
+}
+
+JsonObject Sheet::gather_documentation() const
+{
+    JsonObject object;
+    const JS::PropertyName doc_name { "__documentation" };
+
+    auto& global_object = m_interpreter->global_object();
+    for (auto& it : global_object.shape().property_table()) {
+        auto value = global_object.get(it.key);
+        if (!value.is_function())
+            continue;
+
+        auto& fn = value.as_function();
+        if (!fn.has_own_property(doc_name))
+            continue;
+
+        auto doc = fn.get(doc_name);
+        if (!doc.is_string())
+            continue;
+
+        JsonParser parser(doc.to_string_without_side_effects());
+        auto doc_object = parser.parse();
+
+        if (doc_object.has_value())
+            object.set(it.key.to_display_string(), doc_object.value());
+        else
+            dbg() << "Sheet::gather_documentation(): Failed to parse the documentation for '" << it.key.to_display_string() << "'!";
+    }
 
     return object;
 }

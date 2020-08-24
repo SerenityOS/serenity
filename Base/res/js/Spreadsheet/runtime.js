@@ -91,3 +91,53 @@ function integer(value) {
     return value | 0
 }
 
+// Cheat the system and add documentation
+range.__documentation = JSON.stringify({
+    name: "range",
+    argc: 2,
+    argnames: ["start", "end", "column step", "row step"],
+    doc:
+        "Generates a list of cell names in a rectangle defined by two " +
+        "_top left_ and _bottom right_ cells `start` and `end`, spaced" +
+        " `column step` columns, and `row step` rows apart.",
+    examples: {
+        'range("A1", "C4")': "Generate a range A1:C4",
+        'range("A1", "C4", 2)': "Generate a range A1:C4, skipping every other column",
+    },
+});
+
+select.__documentation = JSON.stringify({
+    name: "select",
+    argc: 3,
+    argnames: ["criteria", "true value", "false value"],
+    doc: "Selects between the two `true` and `false` values based on the value of `criteria`",
+    examples: {
+        "select(A1, A2, A3)": "Evaluates to A2 if A1 is true, A3 otherwise",
+    },
+});
+
+sumIf.__documentation = JSON.stringify({
+    name: "sumIf",
+    argc: 2,
+    argnames: ["condition", "cell names"],
+    doc:
+        "Calculates the sum of cells the value of which evaluates to true when passed to `condition`",
+    examples: {
+        'sumIf(x => x instanceof Number, range("A1", "C4"))':
+            "Calculates the sum of all numbers within A1:C4",
+    },
+});
+
+countIf.__documentation = JSON.stringify({
+    name: "countIf",
+    argc: 2,
+    argnames: ["condition", "cell names"],
+    doc: "Counts cells the value of which evaluates to true when passed to `condition`",
+    examples: {
+        'countIf(x => x instanceof Number, range("A1", "C4"))':
+            "Counts the number of cells which have numbers within A1:C4",
+    },
+});
+
+now.__documentation = JSON.stringify({
+    name: "now",
