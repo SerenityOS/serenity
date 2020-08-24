@@ -151,11 +151,15 @@ void AbstractView::begin_editing(const ModelIndex& index)
 
 void AbstractView::stop_editing()
 {
+    bool take_back_focus = false;
     m_edit_index = {};
     if (m_edit_widget) {
+        take_back_focus = m_edit_widget->is_focused();
         remove_child(*m_edit_widget);
         m_edit_widget = nullptr;
     }
+    if (take_back_focus)
+        set_focus(true);
 }
 
 void AbstractView::activate(const ModelIndex& index)
