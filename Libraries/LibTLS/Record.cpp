@@ -156,7 +156,7 @@ ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<Readonl
     auto digest = hmac.digest();
     auto mac = ByteBuffer::copy(digest.immutable_data(), digest.data_length());
 #ifdef TLS_DEBUG
-    dbg() << "HMAC of the block for sequence number " << m_context.local_sequence_number;
+    dbg() << "HMAC of the block for sequence number " << sequence_number;
     print_buffer(mac);
 #endif
     return mac;
@@ -242,7 +242,7 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
         auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span.slice(0, length), mac_size);
         auto message_mac = ByteBuffer::wrap(const_cast<u8*>(message_hmac), mac_size);
         if (hmac != message_mac) {
-            dbg() << "integrity check failed (mac length " << length << ")";
+            dbg() << "integrity check failed (mac length " << mac_size << ")";
             dbg() << "mac received:";
             print_buffer(message_mac);
             dbg() << "mac computed:";
