@@ -159,7 +159,7 @@ void TableView::keydown_event(KeyEvent& event)
         return;
     auto& model = *this->model();
     if (event.key() == KeyCode::Key_Return) {
-        activate_selected();
+        activate_or_edit_selected();
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
