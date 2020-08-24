@@ -162,7 +162,7 @@ void AbstractTableView::paint_headers(Painter& painter)
         } else {
             text = model()->column_name(column_index);
         }
-        auto text_rect = cell_rect.translated(horizontal_padding(), 0);
+        auto text_rect = cell_rect.shrunken(horizontal_padding() * 2, 0);
         if (pressed)
             text_rect.move_by(1, 1);
         painter.draw_text(text_rect, text, header_font(), column_header_alignment(column_index), palette().button_text());
