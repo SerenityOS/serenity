@@ -1730,8 +1730,17 @@ static void tls_test_client_hello()
         if (sent_request)
             return;
         sent_request = true;
-        if (!tls.write("GET / HTTP/1.1\r\nHost: github.com\r\nConnection: close\r\n\r\n"_b)) {
-            FAIL(write() failed);
+        if (!tls.write("GET / HTTP/1.1\r\nHost: "_b)) {
+            FAIL(write(0) failed);
+            loop.quit(0);
+        }
+        auto* the_server = (const u8*)(server ?: DEFAULT_SERVER);
+        if (!tls.write(ByteBuffer::wrap(const_cast<u8*>(the_server), strlen((const char*)the_server)))) {
+            FAIL(write(1) failed);
+            loop.quit(0);
+        }
+        if (!tls.write("\r\nConnection : close\r\n\r\n"_b)) {
+            FAIL(write(2) failed);
             loop.quit(0);
         }
     };
@@ -1761,7 +1770,7 @@ static void tls_test_client_hello()
         FAIL(Connection failure);
         loop.quit(1);
     };
-    if (!tls->connect("github.com", 443)) {
+    if (!tls->connect(server ?: DEFAULT_SERVER, port)) {
         FAIL(connect() failed);
         return;
     }
