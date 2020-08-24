@@ -32,9 +32,8 @@
 #include <LibHTTP/HttpJob.h>
 #include <LibWeb/Forward.h>
 
-class OutOfProcessWebView;
-
 namespace Web {
+class OutOfProcessWebView;
 class WebViewHooks;
 }
 
@@ -88,7 +87,7 @@ private:
     History m_history;
 
     RefPtr<Web::InProcessWebView> m_page_view;
-    RefPtr<OutOfProcessWebView> m_web_content_view;
+    RefPtr<Web::OutOfProcessWebView> m_web_content_view;
 
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;

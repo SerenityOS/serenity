@@ -32,6 +32,8 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/SystemTheme.h>
 
+namespace Web {
+
 OutOfProcessWebView::OutOfProcessWebView()
 {
     set_should_hide_unnecessary_scrollbars(true);
@@ -193,4 +195,6 @@ void OutOfProcessWebView::request_repaint()
 WebContentClient& OutOfProcessWebView::client()
 {
     return *m_client;
+}
+
 }
