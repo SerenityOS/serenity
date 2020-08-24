@@ -87,7 +87,7 @@ NonnullRefPtr<Action> make_copy_action(Function<void(Action&)> callback, Core::O
 
 NonnullRefPtr<Action> make_paste_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Paste", { Mod_Ctrl, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/paste16.png"), move(callback), parent);
+    return Action::create("Paste", { Mod_Ctrl, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_fullscreen_action(Function<void(Action&)> callback, Core::Object* parent)

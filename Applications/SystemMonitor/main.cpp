@@ -199,19 +199,19 @@ int main(int argc, char** argv)
         return pid_index.data().to_i32();
     };
 
-    auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/kill16.png"), [&](const GUI::Action&) {
+    auto kill_action = GUI::Action::create("Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"), [&](const GUI::Action&) {
         pid_t pid = selected_id(ProcessModel::Column::PID);
         if (pid != -1)
             kill(pid, SIGKILL);
     });
 
-    auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/stop16.png"), [&](const GUI::Action&) {
+    auto stop_action = GUI::Action::create("Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"), [&](const GUI::Action&) {
         pid_t pid = selected_id(ProcessModel::Column::PID);
         if (pid != -1)
             kill(pid, SIGSTOP);
     });
 
-    auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/continue16.png"), [&](const GUI::Action&) {
+    auto continue_action = GUI::Action::create("Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/continue.png"), [&](const GUI::Action&) {
         pid_t pid = selected_id(ProcessModel::Column::PID);
         if (pid != -1)
             kill(pid, SIGCONT);

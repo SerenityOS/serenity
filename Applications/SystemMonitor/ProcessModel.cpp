@@ -47,10 +47,10 @@ ProcessModel::ProcessModel()
 {
     ASSERT(!s_the);
     s_the = this;
-    m_generic_process_icon = Gfx::Bitmap::load_from_file("/res/icons/gear16.png");
-    m_high_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/highpriority16.png");
-    m_low_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/lowpriority16.png");
-    m_normal_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/normalpriority16.png");
+    m_generic_process_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png");
+    m_high_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/highpriority.png");
+    m_low_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/lowpriority.png");
+    m_normal_priority_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/normalpriority.png");
 
     auto file = Core::File::construct("/proc/cpuinfo");
     if (file->open(Core::IODevice::ReadOnly)) {

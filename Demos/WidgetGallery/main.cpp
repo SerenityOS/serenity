@@ -195,9 +195,9 @@ int main(int argc, char** argv)
     button_vert2_container.set_layout<GUI::VerticalBoxLayout>();
 
     auto& button1 = button_vert1_container.add<GUI::Button>("Button 1");
-    button1.set_icon(Gfx::Bitmap::load_from_file("/res/icons/kill16.png"));
+    button1.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"));
     auto& button2 = button_vert1_container.add<GUI::Button>("Button 2");
-    button2.set_icon(Gfx::Bitmap::load_from_file("/res/icons/kill16.png"));
+    button2.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"));
     button2.set_enabled(false);
     auto& button3 = button_vert2_container.add<GUI::Button>("\xF0\x9F\x98\x88 Button 3");
     (void)button3;

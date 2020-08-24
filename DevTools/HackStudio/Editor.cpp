@@ -392,7 +392,7 @@ void Editor::clear_execution_position()
 
 const Gfx::Bitmap& Editor::breakpoint_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/breakpoint.png");
+    static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/breakpoint.png");
     return *bitmap;
 }
 
