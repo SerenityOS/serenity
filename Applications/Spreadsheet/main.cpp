@@ -107,13 +107,31 @@ int main(int argc, char* argv[])
 
         spreadsheet_widget.load(load_path.value());
     }));
+
     file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
+        if (spreadsheet_widget.current_filename().is_empty()) {
+            String name = "sheet";
+            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "json");
+            if (!save_path.has_value())
+                return;
+
+            spreadsheet_widget.save(save_path.value());
+        } else {
+            spreadsheet_widget.save(spreadsheet_widget.current_filename());
+        }
+    }));
+
+    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+        auto current_filename = spreadsheet_widget.current_filename();
         String name = "sheet";
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "json");
         if (!save_path.has_value())
             return;
 
         spreadsheet_widget.save(save_path.value());
+
+        if (!current_filename.is_empty())
+            spreadsheet_widget.set_filename(current_filename);
     }));
 
     app->set_menubar(move(menubar));

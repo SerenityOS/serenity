@@ -41,6 +41,9 @@ public:
     void save(const StringView& filename);
     void load(const StringView& filename);
 
+    const String& current_filename() const { return m_current_filename; }
+    void set_filename(const String& filename);
+
 private:
     explicit SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
 
@@ -51,6 +54,8 @@ private:
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<GUI::Label> m_current_cell_label;
     RefPtr<GUI::TextEditor> m_cell_value_editor;
+
+    String m_current_filename;
 };
 
 }

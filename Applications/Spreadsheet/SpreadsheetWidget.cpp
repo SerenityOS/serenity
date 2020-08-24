@@ -137,6 +137,20 @@ SpreadsheetWidget::~SpreadsheetWidget()
 {
 }
 
+void SpreadsheetWidget::set_filename(const String& filename)
+{
+    if (m_current_filename == filename)
+        return;
+
+    m_current_filename = filename;
+    StringBuilder builder;
+    builder.append("Spreadsheet - ");
+    builder.append(m_current_filename);
+
+    window()->set_title(builder.string_view());
+    window()->update();
+}
+
 void SpreadsheetWidget::load(const StringView& filename)
 {
     auto file_or_error = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
@@ -195,6 +209,8 @@ void SpreadsheetWidget::load(const StringView& filename)
     }
 
     setup_tabs();
+
+    set_filename(filename);
 }
 
 void SpreadsheetWidget::save(const StringView& filename)
@@ -230,6 +246,8 @@ void SpreadsheetWidget::save(const StringView& filename)
         GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
         return;
     }
+
+    set_filename(filename);
 }
 
 }
