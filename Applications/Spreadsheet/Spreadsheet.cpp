@@ -111,15 +111,20 @@ private:
 };
 
 Sheet::Sheet(const StringView& name)
-    : m_name(name)
-    , m_interpreter(JS::Interpreter::create<SheetGlobalObject>(*this))
+    : Sheet(EmptyConstruct::EmptyConstructTag)
 {
+    m_name = name;
+
     for (size_t i = 0; i < 20; ++i)
         add_row();
 
     for (size_t i = 0; i < 16; ++i)
         add_column();
+}
 
+Sheet::Sheet(EmptyConstruct)
+    : m_interpreter(JS::Interpreter::create<SheetGlobalObject>(*this))
+{
     auto file_or_error = Core::File::open("/res/js/Spreadsheet/runtime.js", Core::IODevice::OpenMode::ReadOnly);
     if (!file_or_error.is_error()) {
         auto buffer = file_or_error.value()->read_all();
@@ -301,6 +306,61 @@ void Cell::reference_from(Cell* other)
     referencing_cells.append(other->make_weak_ptr());
 }
 
+RefPtr<Sheet> Sheet::from_json(const JsonObject& object)
+{
+    auto sheet = adopt(*new Sheet(EmptyConstruct::EmptyConstructTag));
+    auto rows = object.get("rows").to_u32(20);
+    auto columns = object.get("columns");
+    if (!columns.is_array())
+        return nullptr;
+    auto name = object.get("name").as_string_or("Sheet");
+
+    sheet->set_name(name);
+
+    for (size_t i = 0; i < rows; ++i)
+        sheet->add_row();
+
+    // FIXME: Better error checking.
+    columns.as_array().for_each([&](auto& value) {
+        sheet->m_columns.append(value.as_string());
+        return IterationDecision::Continue;
+    });
+
+    auto cells = object.get("cells").as_object();
+    auto json = sheet->interpreter().global_object().get("JSON");
+    auto& parse_function = json.as_object().get("parse").as_function();
+
+    cells.for_each_member([&](auto& name, JsonValue& value) {
+        auto position_option = parse_cell_name(name);
+        if (!position_option.has_value())
+            return IterationDecision::Continue;
+
+        auto position = position_option.value();
+        auto& obj = value.as_object();
+        auto kind = obj.get("kind").as_string_or("LiteralString") == "LiteralString" ? Cell::LiteralString : Cell::Formula;
+
+        OwnPtr<Cell> cell;
+        switch (kind) {
+        case Cell::LiteralString:
+            cell = make<Cell>(obj.get("value").to_string(), sheet->make_weak_ptr());
+            break;
+        case Cell::Formula: {
+            auto& interpreter = sheet->interpreter();
+            JS::MarkedValueList args { interpreter.heap() };
+            args.append(JS::js_string(interpreter, obj.get("value").as_string()));
+            auto value = interpreter.call(parse_function, json, move(args));
+            cell = make<Cell>(obj.get("source").to_string(), move(value), sheet->make_weak_ptr());
+            break;
+        }
+        }
+
+        sheet->m_cells.set(position, cell.release_nonnull());
+        return IterationDecision::Continue;
+    });
+
+    return sheet;
+}
+
 JsonObject Sheet::to_json() const
 {
     JsonObject object;
@@ -322,7 +382,16 @@ JsonObject Sheet::to_json() const
 
         JsonObject data;
         data.set("kind", it.value->kind == Cell::Kind::Formula ? "Formula" : "LiteralString");
-        data.set("value", it.value->data);
+        if (it.value->kind == Cell::Formula) {
+            data.set("source", it.value->data);
+            auto json = m_interpreter->global_object().get("JSON");
+            JS::MarkedValueList args(m_interpreter->heap());
+            args.append(it.value->evaluated_data);
+            auto stringified = m_interpreter->call(json.as_object().get("stringify").as_function(), json, move(args));
+            data.set("value", stringified.to_string_without_side_effects());
+        } else {
+            data.set("value", it.value->data);
+        }
 
         cells.set(key, move(data));
     }

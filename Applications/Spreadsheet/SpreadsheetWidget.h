@@ -39,13 +39,18 @@ public:
     ~SpreadsheetWidget();
 
     void save(const StringView& filename);
+    void load(const StringView& filename);
 
 private:
-    SpreadsheetWidget();
+    explicit SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
+
+    void setup_tabs();
 
     NonnullRefPtrVector<Sheet> m_sheets;
     SpreadsheetView* m_selected_view { nullptr };
     RefPtr<GUI::TabWidget> m_tab_widget;
+    RefPtr<GUI::Label> m_current_cell_label;
+    RefPtr<GUI::TextEditor> m_cell_value_editor;
 };
 
 }
