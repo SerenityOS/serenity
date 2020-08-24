@@ -40,6 +40,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/VM/MemoryManager.h>
 
 #define SANITIZE_KMALLOC
 
@@ -48,12 +49,17 @@ struct AllocationHeader {
     u8 data[0];
 };
 
-#define BASE_PHYSICAL (0xc0000000 + (4 * MiB))
 #define CHUNK_SIZE 32
 #define POOL_SIZE (3 * MiB)
-
-#define ETERNAL_BASE_PHYSICAL (0xc0000000 + (2 * MiB))
 #define ETERNAL_RANGE_SIZE (2 * MiB)
+
+// We need to make sure to not stomp on global variables or other parts
+// of the kernel image!
+extern u32 end_of_kernel_image;
+u8* const kmalloc_start = (u8*)PAGE_ROUND_UP(&end_of_kernel_image);
+u8* const kmalloc_end = kmalloc_start + (ETERNAL_RANGE_SIZE + POOL_SIZE);
+#define ETERNAL_BASE kmalloc_start
+#define KMALLOC_BASE (ETERNAL_BASE + ETERNAL_RANGE_SIZE)
 
 static u8 alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
@@ -72,14 +78,14 @@ static RecursiveSpinLock s_lock; // needs to be recursive because of dump_backtr
 void kmalloc_init()
 {
     memset(&alloc_map, 0, sizeof(alloc_map));
-    memset((void*)BASE_PHYSICAL, 0, POOL_SIZE);
+    memset((void*)KMALLOC_BASE, 0, POOL_SIZE);
     s_lock.initialize();
 
     g_kmalloc_bytes_eternal = 0;
     g_kmalloc_bytes_allocated = 0;
     g_kmalloc_bytes_free = POOL_SIZE;
 
-    s_next_eternal_ptr = (u8*)ETERNAL_BASE_PHYSICAL;
+    s_next_eternal_ptr = (u8*)ETERNAL_BASE;
     s_end_of_eternal_range = s_next_eternal_ptr + ETERNAL_RANGE_SIZE;
 }
 
@@ -117,7 +123,7 @@ void* kmalloc_page_aligned(size_t size)
 
 inline void* kmalloc_allocate(size_t first_chunk, size_t chunks_needed)
 {
-    auto* a = (AllocationHeader*)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
+    auto* a = (AllocationHeader*)(KMALLOC_BASE + (first_chunk * CHUNK_SIZE));
     u8* ptr = a->data;
     a->allocation_size_in_chunks = chunks_needed;
 
@@ -178,7 +184,7 @@ static inline void kfree_impl(void* ptr)
     ++g_kfree_call_count;
 
     auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
-    FlatPtr start = ((FlatPtr)a - (FlatPtr)BASE_PHYSICAL) / CHUNK_SIZE;
+    FlatPtr start = ((FlatPtr)a - (FlatPtr)KMALLOC_BASE) / CHUNK_SIZE;
 
     Bitmap bitmap_wrapper = Bitmap::wrap(alloc_map, POOL_SIZE / CHUNK_SIZE);
     bitmap_wrapper.set_range(start, a->allocation_size_in_chunks, false);

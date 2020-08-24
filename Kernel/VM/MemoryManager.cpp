@@ -30,6 +30,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
@@ -44,6 +45,8 @@
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
 
+extern u8* start_of_kernel_image;
+extern u8* end_of_kernel_image;
 extern FlatPtr start_of_kernel_text;
 extern FlatPtr start_of_kernel_data;
 extern FlatPtr end_of_kernel_bss;
@@ -82,8 +85,12 @@ void MemoryManager::protect_kernel_image()
     }
 
     if (Processor::current().has_feature(CPUFeature::NX)) {
-        // Disable execution of the kernel data and bss segments.
+        // Disable execution of the kernel data and bss segments, as well as the kernel heap.
         for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_bss; i += PAGE_SIZE) {
+            auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
+            pte.set_execute_disabled(true);
+        }
+        for (size_t i = FlatPtr(kmalloc_start); i < FlatPtr(kmalloc_end); i += PAGE_SIZE) {
             auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
@@ -94,6 +101,13 @@ void MemoryManager::parse_memory_map()
 {
     RefPtr<PhysicalRegion> region;
     bool region_is_super = false;
+
+    // We need to make sure we exclude the kmalloc range as well as the kernel image.
+    // The kmalloc range directly follows the kernel image
+    const PhysicalAddress used_range_start(virtual_to_low_physical(FlatPtr(&start_of_kernel_image)));
+    const PhysicalAddress used_range_end(PAGE_ROUND_UP(virtual_to_low_physical(FlatPtr(kmalloc_end))));
+    klog() << "MM: kernel range: " << used_range_start << " - " << PhysicalAddress(PAGE_ROUND_UP(virtual_to_low_physical(FlatPtr(&end_of_kernel_image))));
+    klog() << "MM: kmalloc range: " << PhysicalAddress(virtual_to_low_physical(FlatPtr(kmalloc_start))) << " - " << used_range_end;
 
     auto* mmap = (multiboot_memory_map_t*)(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
     for (; (unsigned long)mmap < (low_physical_to_virtual(multiboot_info_ptr->mmap_addr)) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
@@ -131,6 +145,9 @@ void MemoryManager::parse_memory_map()
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
+            if (addr.get() < used_range_end.get() && addr.get() >= used_range_start.get())
+                continue;
+
             if (page_base < 7 * MiB) {
                 // nothing
             } else if (page_base >= 7 * MiB && page_base < 8 * MiB) {
@@ -153,11 +170,15 @@ void MemoryManager::parse_memory_map()
         }
     }
 
-    for (auto& region : m_super_physical_regions)
+    for (auto& region : m_super_physical_regions) {
         m_super_physical_pages += region.finalize_capacity();
+        klog() << "Super physical region: " << region.lower() << " - " << region.upper();
+    }
 
-    for (auto& region : m_user_physical_regions)
+    for (auto& region : m_user_physical_regions) {
         m_user_physical_pages += region.finalize_capacity();
+        klog() << "User physical region: " << region.lower() << " - " << region.upper();
+    }
 
     ASSERT(m_super_physical_pages > 0);
     ASSERT(m_user_physical_pages > 0);
