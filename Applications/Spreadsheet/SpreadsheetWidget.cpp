@@ -30,6 +30,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
+#include <AK/JsonParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -42,7 +43,8 @@
 
 namespace Spreadsheet {
 
-SpreadsheetWidget::SpreadsheetWidget()
+SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool should_add_sheet_if_empty)
+    : m_sheets(move(sheets))
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
@@ -76,8 +78,23 @@ SpreadsheetWidget::SpreadsheetWidget()
     m_tab_widget = container.add<GUI::TabWidget>();
     m_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
-    m_sheets.append(Sheet::construct("Sheet 1"));
-    auto& tab = m_tab_widget->add_tab<SpreadsheetView>(m_sheets.first().name(), m_sheets.first());
+    m_cell_value_editor = cell_value_editor;
+    m_current_cell_label = current_cell_label;
+
+    if (m_sheets.is_empty() && should_add_sheet_if_empty)
+        m_sheets.append(Sheet::construct("Sheet 1"));
+
+    setup_tabs();
+}
+
+void SpreadsheetWidget::setup_tabs()
+{
+    RefPtr<GUI::Widget> first_tab_widget;
+    for (auto& sheet : m_sheets) {
+        auto& tab = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
+        if (!first_tab_widget)
+            first_tab_widget = &tab;
+    }
 
     auto change = [&](auto& selected_widget) {
         if (m_selected_view) {
@@ -89,26 +106,28 @@ SpreadsheetWidget::SpreadsheetWidget()
             StringBuilder builder;
             builder.append(position.column);
             builder.appendf("%zu", position.row);
-            current_cell_label.set_enabled(true);
-            current_cell_label.set_text(builder.string_view());
+            m_current_cell_label->set_enabled(true);
+            m_current_cell_label->set_text(builder.string_view());
 
-            cell_value_editor.on_change = nullptr;
-            cell_value_editor.set_text(cell.source());
-            cell_value_editor.on_change = [&] {
-                cell.set_data(cell_value_editor.text());
+            m_cell_value_editor->on_change = nullptr;
+            m_cell_value_editor->set_text(cell.source());
+            m_cell_value_editor->on_change = [&] {
+                cell.set_data(m_cell_value_editor->text());
                 m_selected_view->sheet().update();
             };
-            cell_value_editor.set_enabled(true);
+            m_cell_value_editor->set_enabled(true);
         };
         m_selected_view->on_selection_dropped = [&]() {
-            cell_value_editor.set_enabled(false);
-            cell_value_editor.set_text("");
-            current_cell_label.set_enabled(false);
-            current_cell_label.set_text("");
+            m_cell_value_editor->set_enabled(false);
+            m_cell_value_editor->set_text("");
+            m_current_cell_label->set_enabled(false);
+            m_current_cell_label->set_text("");
         };
     };
 
-    change(tab);
+    if (first_tab_widget)
+        change(*first_tab_widget);
+
     m_tab_widget->on_change = [change = move(change)](auto& selected_widget) {
         change(selected_widget);
     };
@@ -116,6 +135,66 @@ SpreadsheetWidget::SpreadsheetWidget()
 
 SpreadsheetWidget::~SpreadsheetWidget()
 {
+}
+
+void SpreadsheetWidget::load(const StringView& filename)
+{
+    auto file_or_error = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
+    if (file_or_error.is_error()) {
+        StringBuilder sb;
+        sb.append("Failed to open ");
+        sb.append(filename);
+        sb.append(" for reading. Error: ");
+        sb.append(file_or_error.error());
+
+        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    auto json_value_option = JsonParser(file_or_error.value()->read_all()).parse();
+    if (!json_value_option.has_value()) {
+        StringBuilder sb;
+        sb.append("Failed to parse ");
+        sb.append(filename);
+
+        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    auto& json_value = json_value_option.value();
+    if (!json_value.is_array()) {
+        StringBuilder sb;
+        sb.append("Did not find a spreadsheet in ");
+        sb.append(filename);
+
+        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    NonnullRefPtrVector<Sheet> sheets;
+
+    auto& json_array = json_value.as_array();
+    json_array.for_each([&](auto& sheet_json) {
+        if (!sheet_json.is_object())
+            return IterationDecision::Continue;
+
+        auto sheet = Sheet::from_json(sheet_json.as_object());
+        if (!sheet)
+            return IterationDecision::Continue;
+
+        sheets.append(sheet.release_nonnull());
+
+        return IterationDecision::Continue;
+    });
+
+    m_sheets.clear();
+    m_sheets = move(sheets);
+
+    while (auto* widget = m_tab_widget->active_widget()) {
+        m_tab_widget->remove_tab(*widget);
+    }
+
+    setup_tabs();
 }
 
 void SpreadsheetWidget::save(const StringView& filename)

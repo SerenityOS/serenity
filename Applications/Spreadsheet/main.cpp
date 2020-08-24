@@ -27,6 +27,7 @@
 #include "Spreadsheet.h"
 #include "SpreadsheetWidget.h"
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Forward.h>
@@ -36,8 +37,19 @@
 
 int main(int argc, char* argv[])
 {
+    const char* filename = nullptr;
+
     Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(filename, "File to read from", "file", Core::ArgsParser::Required::No);
+
     args_parser.parse(argc, argv);
+
+    if (filename) {
+        if (!Core::File::exists(filename) || Core::File::is_directory(filename)) {
+            fprintf(stderr, "File does not exist or is a directory: %s\n", filename);
+            return 1;
+        }
+    }
 
     auto app = GUI::Application::construct(argc, argv);
 
@@ -56,6 +68,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    if (unveil(Core::StandardPaths::home_directory().characters(), "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
@@ -70,7 +87,10 @@ int main(int argc, char* argv[])
     window->set_title("Spreadsheet");
     window->resize(640, 480);
 
-    auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>();
+    auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr);
+
+    if (filename)
+        spreadsheet_widget.load(filename);
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Spreadsheet");
@@ -80,6 +100,13 @@ int main(int argc, char* argv[])
     }));
 
     auto& file_menu = menubar->add_menu("File");
+    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> load_path = GUI::FilePicker::get_open_filepath(window);
+        if (!load_path.has_value())
+            return;
+
+        spreadsheet_widget.load(load_path.value());
+    }));
     file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
         String name = "sheet";
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "json");
