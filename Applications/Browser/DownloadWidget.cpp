@@ -75,7 +75,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     auto& animation_layout = animation_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& browser_image = animation_container.add<GUI::ImageWidget>();
-    browser_image.load_from_file("/res/download-animation.gif");
+    browser_image.load_from_file("/res/graphics/download-animation.gif");
     animation_layout.add_spacer();
 
 
