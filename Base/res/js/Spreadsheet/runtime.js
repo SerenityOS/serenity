@@ -1,94 +1,92 @@
-const sheet = this
+const sheet = this;
 
-function range(start, end, column_step, row_step) {
-    column_step = integer(column_step ?? 1)
-    row_step = integer(row_step ?? 1)
-    start = sheet.parse_cell_name(start) ?? {column: 'A', row: 0}
-    end = sheet.parse_cell_name(end) ?? start
+function range(start, end, columnStep, rowStep) {
+    columnStep = integer(columnStep ?? 1);
+    rowStep = integer(rowStep ?? 1);
+    start = sheet.parse_cell_name(start) ?? { column: "A", row: 0 };
+    end = sheet.parse_cell_name(end) ?? start;
 
     if (end.column.length > 1 || start.column.length > 1)
         throw new TypeError("Only single-letter column names are allowed (TODO)");
 
-    const cells = []
+    const cells = [];
 
-    for (let col = Math.min(start.column.charCodeAt(0), end.column.charCodeAt(0));
+    for (
+        let col = Math.min(start.column.charCodeAt(0), end.column.charCodeAt(0));
         col <= Math.max(start.column.charCodeAt(0), end.column.charCodeAt(0));
-        ++col) {
-        for (let row = Math.min(start.row, end.row);
+        col += columnStep
+    ) {
+        for (
+            let row = Math.min(start.row, end.row);
             row <= Math.max(start.row, end.row);
-            ++row) {
-
-            cells.push(String.fromCharCode(col) + row)
+            row += rowStep
+        ) {
+            cells.push(String.fromCharCode(col) + row);
         }
     }
 
-    return cells
+    return cells;
 }
 
 // FIXME: Remove this and use String.split() eventually
 function split(str, sep) {
-    const parts = []
-    let split_index = -1
-    for(;;) {
-        split_index = str.indexOf(sep)
-        if (split_index == -1) {
-            if (str.length)
-                parts.push(str)
-            return parts
+    const parts = [];
+    let splitIndex = -1;
+    for (;;) {
+        splitIndex = str.indexOf(sep);
+        if (splitIndex == -1) {
+            if (str.length) parts.push(str);
+            return parts;
         }
-        parts.push(str.substring(0, split_index))
-        str = str.slice(split_index + sep.length)
+        parts.push(str.substring(0, splitIndex));
+        str = str.slice(splitIndex + sep.length);
     }
 }
 
 function R(fmt, ...args) {
-    if (args.length !== 0)
-        throw new TypeError("R`` format must be literal")
+    if (args.length !== 0) throw new TypeError("R`` format must be literal");
 
-    fmt = fmt[0]
-    return range(...split(fmt, ':'))
+    fmt = fmt[0];
+    return range(...split(fmt, ":"));
 }
 
 function select(criteria, t, f) {
-    if (criteria)
-        return t;
+    if (criteria) return t;
     return f;
 }
 
-function sumif(condition, cells) {
-    let sum = null
+function sumIf(condition, cells) {
+    let sum = null;
     for (let name of cells) {
-        let cell = sheet[name]
-        if (condition(cell))
-            sum = sum === null ? cell : sum + cell
+        let cell = sheet[name];
+        if (condition(cell)) sum = sum === null ? cell : sum + cell;
     }
-    return sum
+    return sum;
 }
 
-function countif(condition, cells) {
-    let count = 0
+function countIf(condition, cells) {
+    let count = 0;
     for (let name of cells) {
-        let cell = sheet[name]
-        if (condition(cell))
-            count++
+        let cell = sheet[name];
+        if (condition(cell)) count++;
     }
-    return count
+    return count;
 }
 
 function now() {
-    return new Date()
+    return new Date();
 }
 
 function repeat(count, str) {
-    return Array(count + 1).join(str)
+    return Array(count + 1).join(str);
 }
 
-function randrange(min, max) {
-    return Math.random() * (max - min) + min
+function randRange(min, max) {
+    return Math.random() * (max - min) + min;
 }
 
 function integer(value) {
-    return value | 0
+    return value | 0;
 }
 
 // Cheat the system and add documentation
@@ -141,3 +139,36 @@ countIf.__documentation = JSON.stringify({
 
 now.__documentation = JSON.stringify({
     name: "now",
+    argc: 0,
+    argnames: [],
+    doc: "Returns a Date instance for the current moment",
+    examples: {},
+});
+
+repeat.__documentation = JSON.stringify({
+    name: "repeat",
+    argc: 2,
+    argnames: ["string", "count"],
+    doc: "Returns a string equivalent to `string` repeated `count` times",
+    examples: {
+        'repeat("a", 10)': 'Generates the string "aaaaaaaaaa"',
+    },
+});
+
+randRange.__documentation = JSON.stringify({
+    name: "randRange",
+    argc: 2,
+    argnames: ["start", "end"],
+    doc: "Returns a random number in the range (`start`, `end`)",
+    examples: {},
+});
+
+integer.__documentation = JSON.stringify({
+    name: "integer",
+    argc: 1,
+    argnames: ["value"],
+    doc: "Returns the integer value of `value`",
+    examples: {
+        "A1 = integer(A0)": "Sets the value of the cell A1 to the integer value of the cell A0",
+    },
+});
