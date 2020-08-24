@@ -408,6 +408,8 @@ void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_orde
 
     if (model())
         model()->sort(column, sort_order);
+
+    update();
 }
 
 }
