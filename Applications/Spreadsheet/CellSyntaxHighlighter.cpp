@@ -24,26 +24,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "CellSyntaxHighlighter.h"
+#include <LibGUI/JSSyntaxHighlighter.h>
+#include <LibGUI/TextEditor.h>
+#include <LibGfx/Palette.h>
+#include <LibJS/Lexer.h>
 
-#include <LibGUI/SyntaxHighlighter.h>
+namespace Spreadsheet {
 
-namespace GUI {
+void CellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
+{
+    ASSERT(m_editor);
+    auto text = m_editor->text();
+    m_editor->document().spans().clear();
+    if (!text.starts_with('=')) {
+        m_editor->update();
+        return;
+    }
 
-class JSSyntaxHighlighter : public SyntaxHighlighter {
-public:
-    JSSyntaxHighlighter() { }
-    virtual ~JSSyntaxHighlighter() override;
+    JSSyntaxHighlighter::rehighlight(palette);
 
-    virtual bool is_identifier(void*) const override;
-    virtual bool is_navigatable(void*) const override;
+    // Highlight the '='
+    m_editor->document().spans().empend(
+        GUI::TextRange { { 0, 0 }, { 0, 1 } },
+        palette.syntax_keyword(),
+        Optional<Color> {},
+        false,
+        false,
+        nullptr,
+        nullptr);
+}
 
-    virtual SyntaxLanguage language() const override { return SyntaxLanguage::JavaScript; }
-    virtual void rehighlight(Gfx::Palette) override;
-
-protected:
-    virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
-    virtual bool token_types_equal(void*, void*) const override;
-};
+CellSyntaxHighlighter::~CellSyntaxHighlighter()
+{
+}
 
 }

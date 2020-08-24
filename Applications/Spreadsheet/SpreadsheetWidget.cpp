@@ -25,6 +25,7 @@
  */
 
 #include "SpreadsheetWidget.h"
+#include "CellSyntaxHighlighter.h"
 #include "HelpWindow.h"
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
@@ -68,6 +69,7 @@ SpreadsheetWidget::SpreadsheetWidget()
     auto& cell_value_editor = top_bar.add<GUI::TextEditor>(GUI::TextEditor::Type::SingleLine);
     cell_value_editor.set_scrollbars_enabled(false);
 
+    cell_value_editor.set_syntax_highlighter(make<CellSyntaxHighlighter>());
     cell_value_editor.set_enabled(false);
     current_cell_label.set_enabled(false);
 

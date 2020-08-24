@@ -1,4 +1,5 @@
 set(SOURCES
+    CellSyntaxHighlighter.cpp
     HelpWindow.cpp
     Spreadsheet.cpp
     SpreadsheetModel.cpp
