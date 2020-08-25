@@ -78,6 +78,12 @@ private:
     virtual void leave_event(Core::Event&) override;
     virtual void change_event(Event&) override;
 
+    enum class AutomaticScrollingKind {
+        None = 0,
+        DecrementButton,
+        IncrementButton,
+    };
+
     int default_button_size() const { return 16; }
     int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
@@ -91,7 +97,7 @@ private:
     int visible_scrubber_size() const;
     int scrubbable_range_in_pixels() const;
     void on_automatic_scrolling_timer_fired();
-    void set_automatic_scrolling_active(bool);
+    void set_automatic_scrolling_active(bool, AutomaticScrollingKind);
 
     void scroll_to_position(const Gfx::IntPoint&);
     void scroll_by_page(const Gfx::IntPoint&);
@@ -110,12 +116,6 @@ private:
     Gfx::Orientation m_orientation { Gfx::Orientation::Vertical };
     Component m_hovered_component { Component::Invalid };
     bool m_scrubber_in_use { false };
-
-    enum class AutomaticScrollingKind {
-        None = 0,
-        DecrementButton,
-        IncrementButton,
-    };
 
     AutomaticScrollingKind m_automatic_scrolling_kind { AutomaticScrollingKind::None };
     RefPtr<Core::Timer> m_automatic_scrolling_timer;
