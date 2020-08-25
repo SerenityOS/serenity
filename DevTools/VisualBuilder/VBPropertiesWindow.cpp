@@ -87,7 +87,7 @@ VBPropertiesWindow::VBPropertiesWindow()
     widget.layout()->set_margins({ 2, 2, 2, 2 });
 
     m_table_view = widget.add<GUI::TableView>();
-    m_table_view->set_headers_visible(false);
+    m_table_view->set_column_headers_visible(false);
     m_table_view->set_editable(true);
 
     m_table_view->aid_create_editing_delegate = [this](auto& index) -> OwnPtr<GUI::ModelEditingDelegate> {

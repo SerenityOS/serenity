@@ -32,6 +32,7 @@ set(SOURCES
     FontDatabase.cpp
     Frame.cpp
     GroupBox.cpp
+    HeaderView.cpp
     INILexer.cpp
     INISyntaxHighlighter.cpp
     Icon.cpp

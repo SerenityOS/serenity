@@ -46,12 +46,9 @@ public:
     bool highlight_selected_rows() const { return m_highlight_selected_rows; }
     void set_highlight_selected_rows(bool b) { m_highlight_selected_rows = b; }
 
-    int header_height() const { return m_headers_visible ? 16 : 0; }
+    bool column_headers_visible() const;
+    void set_column_headers_visible(bool);
 
-    bool headers_visible() const { return m_headers_visible; }
-    void set_headers_visible(bool headers_visible) { m_headers_visible = headers_visible; }
-
-    bool is_column_hidden(int) const;
     void set_column_hidden(int, bool);
 
     int column_width(int column) const;
@@ -60,7 +57,7 @@ public:
     Gfx::TextAlignment column_header_alignment(int column) const;
     void set_column_header_alignment(int column, Gfx::TextAlignment);
 
-    void set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>&&);
+    void set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>);
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
@@ -80,59 +77,40 @@ public:
 
     void move_selection(int vertical_steps, int horizontal_steps);
 
+    void header_did_change_section_visibility(Badge<HeaderView>, Gfx::Orientation, int section, bool visible);
+    void header_did_change_section_size(Badge<HeaderView>, Gfx::Orientation, int section, int size);
+
+    virtual void did_scroll() override;
+
 protected:
     virtual ~AbstractTableView() override;
     AbstractTableView();
 
-    virtual void did_update_model(unsigned flags) override;
-    virtual void mouseup_event(MouseEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
-    virtual void mousemove_event(MouseEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
-    virtual void leave_event(Core::Event&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
 
+    virtual void did_update_model(unsigned flags) override;
     virtual void toggle_index(const ModelIndex&) { }
 
-    void paint_headers(Painter&);
-    Gfx::IntRect header_rect(int column) const;
-
-    static const Gfx::Font& header_font();
-    void update_headers();
-    void set_hovered_header_index(int);
-
-    struct ColumnData {
-        int width { 0 };
-        bool has_initialized_width { false };
-        bool visibility { true };
-        RefPtr<Action> visibility_action;
-        Gfx::TextAlignment header_alignment { Gfx::TextAlignment::CenterLeft };
-        OwnPtr<TableCellPaintingDelegate> cell_painting_delegate;
-    };
-    ColumnData& column_data(int column) const;
-
-    mutable Vector<ColumnData> m_column_data;
-
-    Menu& ensure_header_context_menu();
-    RefPtr<Menu> m_header_context_menu;
-
-    Gfx::IntRect column_resize_grabbable_rect(int) const;
     void update_content_size();
     virtual void update_column_sizes();
     virtual int item_count() const;
 
+    TableCellPaintingDelegate* column_painting_delegate(int column) const;
+
+    HeaderView& column_header() { return *m_column_header; }
+    const HeaderView& column_header() const { return *m_column_header; }
+
 private:
-    bool m_headers_visible { true };
-    bool m_in_column_resize { false };
+    RefPtr<HeaderView> m_column_header;
+
+    HashMap<int, OwnPtr<TableCellPaintingDelegate>> m_column_painting_delegate;
+
     bool m_alternating_row_colors { true };
     bool m_highlight_selected_rows { true };
     int m_horizontal_padding { 5 };
-    Gfx::IntPoint m_column_resize_origin;
-    int m_column_resize_original_width { 0 };
-    int m_resizing_column { -1 };
-    int m_pressed_column_header_index { -1 };
-    bool m_pressed_column_header_is_pressed { false };
-    int m_hovered_column_header_index { -1 };
 };
 
 }

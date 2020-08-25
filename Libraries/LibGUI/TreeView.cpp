@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
@@ -56,7 +57,7 @@ TreeView::TreeView()
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-    set_headers_visible(false);
+    set_column_headers_visible(false);
     m_expand_bitmap = Gfx::Bitmap::load_from_file("/res/icons/treeview-expand.png");
     m_collapse_bitmap = Gfx::Bitmap::load_from_file("/res/icons/treeview-collapse.png");
 }
@@ -67,7 +68,7 @@ TreeView::~TreeView()
 
 ModelIndex TreeView::index_at_event_position(const Gfx::IntPoint& a_position, bool& is_toggle) const
 {
-    auto position = a_position.translated(0, -header_height()).translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
+    auto position = a_position.translated(0, -column_header().height()).translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
     is_toggle = false;
     if (!model())
         return {};
@@ -229,7 +230,7 @@ void TreeView::paint_event(PaintEvent& event)
     int tree_column = model.tree_column();
     int tree_column_x_offset = this->tree_column_x_offset();
 
-    int y_offset = header_height();
+    int y_offset = column_header().height();
 
     int painted_row_index = 0;
 
@@ -267,7 +268,7 @@ void TreeView::paint_event(PaintEvent& event)
 
         int row_width = 0;
         for (int column_index = 0; column_index < model.column_count(); ++column_index) {
-            if (is_column_hidden(column_index))
+            if (!column_header().is_section_visible(column_index))
                 continue;
             row_width += this->column_width(column_index) + horizontal_padding() * 2;
         }
@@ -280,7 +281,7 @@ void TreeView::paint_event(PaintEvent& event)
 
         int x_offset = 0;
         for (int column_index = 0; column_index < model.column_count(); ++column_index) {
-            if (is_column_hidden(column_index))
+            if (!column_header().is_section_visible(column_index))
                 continue;
             int column_width = this->column_width(column_index);
 
@@ -290,7 +291,7 @@ void TreeView::paint_event(PaintEvent& event)
                 Gfx::IntRect cell_rect(horizontal_padding() + x_offset, rect.y(), column_width, item_height());
                 auto cell_index = model.index(index.row(), column_index, index.parent());
 
-                if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
+                if (auto* delegate = column_painting_delegate(column_index)) {
                     delegate->paint(painter, cell_rect, palette(), cell_index);
                 } else {
                     auto data = cell_index.data();
@@ -357,10 +358,6 @@ void TreeView::paint_event(PaintEvent& event)
 
         return IterationDecision::Continue;
     });
-
-    // Untranslate the painter vertically and do the column headers.
-    painter.translate(0, vertical_scrollbar().value());
-    paint_headers(painter);
 }
 
 void TreeView::scroll_into_view(const ModelIndex& a_index, Orientation orientation)
@@ -538,9 +535,9 @@ void TreeView::update_column_sizes()
     for (int column = 0; column < column_count; ++column) {
         if (column == tree_column)
             continue;
-        if (is_column_hidden(column))
+        if (!column_header().is_section_visible(column))
             continue;
-        int header_width = header_font().width(model.column_name(column));
+        int header_width = column_header().font().width(model.column_name(column));
         int column_width = header_width;
 
         for (int row = 0; row < row_count; ++row) {
@@ -553,24 +550,21 @@ void TreeView::update_column_sizes()
             }
             column_width = max(column_width, cell_width);
         }
-        auto& column_data = this->column_data(column);
-        column_data.width = max(column_data.width, column_width);
-        column_data.has_initialized_width = true;
+
+        set_column_width(column, max(this->column_width(column), column_width));
 
         if (column < tree_column)
             tree_column_x_offset += column_width;
     }
 
-    int tree_column_header_width = header_font().width(model.column_name(tree_column));
+    int tree_column_header_width = column_header().font().width(model.column_name(tree_column));
     int tree_column_width = tree_column_header_width;
     traverse_in_paint_order([&](const ModelIndex&, const Gfx::IntRect& rect, const Gfx::IntRect&, int) {
         tree_column_width = max(rect.right() - tree_column_x_offset, tree_column_width);
         return IterationDecision::Continue;
     });
 
-    auto& column_data = this->column_data(tree_column);
-    column_data.width = max(column_data.width, tree_column_width);
-    column_data.has_initialized_width = true;
+    set_column_width(tree_column, max(this->column_width(tree_column), tree_column_width));
 }
 
 int TreeView::tree_column_x_offset() const
@@ -578,7 +572,7 @@ int TreeView::tree_column_x_offset() const
     int tree_column = model()->tree_column();
     int offset = 0;
     for (int i = 0; i < tree_column; ++i) {
-        if (!is_column_hidden(i)) {
+        if (column_header().is_section_visible(i)) {
             offset += column_width(i);
             offset += horizontal_padding();
         }

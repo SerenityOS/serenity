@@ -56,7 +56,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
 
     if (m_type == Channel) {
         auto& member_view = container.add<GUI::TableView>();
-        member_view.set_headers_visible(false);
+        member_view.set_column_headers_visible(false);
         member_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
         member_view.set_preferred_size(100, 0);
         member_view.set_alternating_row_colors(false);

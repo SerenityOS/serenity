@@ -26,6 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/HeaderView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
@@ -65,7 +66,7 @@ void TableView::paint_event(PaintEvent& event)
         return;
 
     int exposed_width = max(content_size().width(), width());
-    int y_offset = header_height();
+    int y_offset = column_header().height();
 
     bool dummy;
     int first_visible_row = index_at_event_position(frame_inner_rect().top_left(), dummy).row();
@@ -100,7 +101,7 @@ void TableView::paint_event(PaintEvent& event)
 
         int x_offset = 0;
         for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
-            if (is_column_hidden(column_index))
+            if (!column_header().is_section_visible(column_index))
                 continue;
             int column_width = this->column_width(column_index);
             bool is_key_column = m_key_column == column_index;
@@ -110,7 +111,7 @@ void TableView::paint_event(PaintEvent& event)
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
             auto cell_index = model()->index(row_index, column_index);
 
-            if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
+            if (auto* delegate = column_painting_delegate(column_index)) {
                 delegate->paint(painter, cell_rect, palette(), cell_index);
             } else {
                 auto data = cell_index.data();
@@ -143,14 +144,9 @@ void TableView::paint_event(PaintEvent& event)
         ++painted_item_index;
     };
 
-    Gfx::IntRect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
+    Gfx::IntRect unpainted_rect(0, column_header().height() + painted_item_index * item_height(), exposed_width, height());
     if (fill_with_background_color())
         painter.fill_rect(unpainted_rect, widget_background_color);
-
-    // Untranslate the painter vertically and do the column headers.
-    painter.translate(0, vertical_scrollbar().value());
-    if (headers_visible())
-        paint_headers(painter);
 }
 
 void TableView::keydown_event(KeyEvent& event)

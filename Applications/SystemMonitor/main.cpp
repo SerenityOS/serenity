@@ -180,7 +180,7 @@ int main(int argc, char** argv)
     process_table_container.layout()->set_spacing(0);
 
     auto& process_table_view = process_table_container.add<GUI::TableView>();
-    process_table_view.set_headers_visible(true);
+    process_table_view.set_column_headers_visible(true);
     process_table_view.set_model(GUI::SortingProxyModel::create(ProcessModel::create()));
     process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
     process_table_view.model()->update();
