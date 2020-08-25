@@ -57,7 +57,7 @@ public:
     Gfx::TextAlignment column_header_alignment(int column) const;
     void set_column_header_alignment(int column, Gfx::TextAlignment);
 
-    void set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>);
+    void set_column_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>);
 
     int horizontal_padding() const { return m_horizontal_padding; }
 

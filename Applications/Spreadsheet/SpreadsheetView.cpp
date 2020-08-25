@@ -62,7 +62,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
     // FIXME: This is dumb.
     for (size_t i = 0; i < m_sheet->column_count(); ++i) {
-        m_table_view->set_cell_painting_delegate(i + 1, make<TableCellPainter>(*m_table_view));
+        m_table_view->set_column_painting_delegate(i + 1, make<TableCellPainter>(*m_table_view));
         m_table_view->set_column_width(i + 1, 50);
         m_table_view->set_column_header_alignment(i + 1, Gfx::TextAlignment::Center);
     }

@@ -115,7 +115,7 @@ TableCellPaintingDelegate* AbstractTableView::column_painting_delegate(int colum
     return const_cast<TableCellPaintingDelegate*>(m_column_painting_delegate.get(column).value_or(nullptr));
 }
 
-void AbstractTableView::set_cell_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate> delegate)
+void AbstractTableView::set_column_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate> delegate)
 {
     if (!delegate)
         m_column_painting_delegate.remove(column);
