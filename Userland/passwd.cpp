@@ -132,7 +132,7 @@ int main(int argc, char** argv)
     } else {
         auto new_password = Core::get_password("New password: ");
         if (new_password.is_error()) {
-            fprintf(stderr, strerror(new_password.error()));
+            fprintf(stderr, "%s\n", strerror(new_password.error()));
             return 1;
         }
 
