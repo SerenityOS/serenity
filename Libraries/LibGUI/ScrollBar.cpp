@@ -237,8 +237,8 @@ void ScrollBar::paint_event(PaintEvent& event)
 
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
 
-    bool decrement_pressed = m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton;
-    bool increment_pressed = m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton;
+    bool decrement_pressed = m_pressed_component == Component::DecrementButton;
+    bool increment_pressed = m_pressed_component == Component::IncrementButton;
 
     Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, decrement_pressed, m_hovered_component == Component::DecrementButton);
     Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, increment_pressed, m_hovered_component == Component::IncrementButton);
@@ -256,20 +256,20 @@ void ScrollBar::paint_event(PaintEvent& event)
     }
 
     if (has_scrubber())
-        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber || m_scrubber_in_use);
+        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber || m_pressed_component == Component::Scrubber);
 }
 
 void ScrollBar::on_automatic_scrolling_timer_fired()
 {
-    if (m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton && component_at_position(m_last_mouse_position) == Component::DecrementButton) {
+    if (m_pressed_component == Component::DecrementButton && component_at_position(m_last_mouse_position) == Component::DecrementButton) {
         set_value(value() - m_step);
         return;
     }
-    if (m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton && component_at_position(m_last_mouse_position) == Component::IncrementButton) {
+    if (m_pressed_component == Component::IncrementButton && component_at_position(m_last_mouse_position) == Component::IncrementButton) {
         set_value(value() + m_step);
         return;
     }
-    if (m_automatic_scrolling_kind == AutomaticScrollingKind::Gutter && component_at_position(m_last_mouse_position) == Component::Gutter) {
+    if (m_pressed_component == Component::Gutter && component_at_position(m_last_mouse_position) == Component::Gutter) {
         scroll_by_page(m_last_mouse_position);
         return;
     }
@@ -283,27 +283,25 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         return;
 
     m_last_mouse_position = event.position();
-    Component clicked_component = component_at_position(m_last_mouse_position);
+    m_pressed_component = component_at_position(m_last_mouse_position);
 
-    if (clicked_component == Component::DecrementButton) {
-        set_automatic_scrolling_active(true, AutomaticScrollingKind::DecrementButton);
+    if (m_pressed_component == Component::DecrementButton) {
+        set_automatic_scrolling_active(true, Component::DecrementButton);
         update();
         return;
     }
-    if (clicked_component == Component::IncrementButton) {
-        set_automatic_scrolling_active(true, AutomaticScrollingKind::IncrementButton);
+    if (m_pressed_component == Component::IncrementButton) {
+        set_automatic_scrolling_active(true, Component::IncrementButton);
         update();
         return;
     }
 
     if (event.shift()) {
         scroll_to_position(event.position());
-        clicked_component = component_at_position(event.position());
-        ASSERT(clicked_component == Component::Scrubber);
+        m_pressed_component = component_at_position(event.position());
+        ASSERT(m_pressed_component == Component::Scrubber);
     }
-    if (clicked_component == Component::Scrubber) {
-        m_scrubber_in_use = true;
-        m_scrubbing = true;
+    if (m_pressed_component == Component::Scrubber) {
         m_scrub_start_value = value();
         m_scrub_origin = event.position();
         update();
@@ -311,8 +309,8 @@ void ScrollBar::mousedown_event(MouseEvent& event)
     }
     ASSERT(!event.shift());
 
-    ASSERT(clicked_component == Component::Gutter);
-    set_automatic_scrolling_active(true, AutomaticScrollingKind::Gutter);
+    ASSERT(m_pressed_component == Component::Gutter);
+    set_automatic_scrolling_active(true, Component::Gutter);
     update();
 }
 
@@ -320,9 +318,7 @@ void ScrollBar::mouseup_event(MouseEvent& event)
 {
     if (event.button() != MouseButton::Left)
         return;
-    m_scrubber_in_use = false;
-    set_automatic_scrolling_active(false, AutomaticScrollingKind::None);
-    m_scrubbing = false;
+    set_automatic_scrolling_active(false, Component::None);
     update();
 }
 
@@ -334,10 +330,10 @@ void ScrollBar::mousewheel_event(MouseEvent& event)
     Widget::mousewheel_event(event);
 }
 
-void ScrollBar::set_automatic_scrolling_active(bool active, AutomaticScrollingKind kind)
+void ScrollBar::set_automatic_scrolling_active(bool active, Component pressed_component)
 {
-    m_automatic_scrolling_kind = kind;
-    if (m_automatic_scrolling_kind == AutomaticScrollingKind::Gutter)
+    m_pressed_component = pressed_component;
+    if (m_pressed_component == Component::Gutter)
         m_automatic_scrolling_timer->set_interval(200);
     else
         m_automatic_scrolling_timer->set_interval(100);
@@ -383,7 +379,7 @@ ScrollBar::Component ScrollBar::component_at_position(const Gfx::IntPoint& posit
         return Component::IncrementButton;
     if (rect().contains(position))
         return Component::Gutter;
-    return Component::Invalid;
+    return Component::None;
 }
 
 void ScrollBar::mousemove_event(MouseEvent& event)
@@ -395,7 +391,7 @@ void ScrollBar::mousemove_event(MouseEvent& event)
     if (old_hovered_component != m_hovered_component) {
         update();
     }
-    if (!m_scrubbing)
+    if (m_pressed_component != Component::Scrubber)
         return;
     float delta = orientation() == Orientation::Vertical ? (event.y() - m_scrub_origin.y()) : (event.x() - m_scrub_origin.x());
     float scrubbable_range = scrubbable_range_in_pixels();
@@ -406,8 +402,8 @@ void ScrollBar::mousemove_event(MouseEvent& event)
 
 void ScrollBar::leave_event(Core::Event&)
 {
-    if (m_hovered_component != Component::Invalid) {
-        m_hovered_component = Component::Invalid;
+    if (m_hovered_component != Component::None) {
+        m_hovered_component = Component::None;
         update();
     }
 }
@@ -416,7 +412,7 @@ void ScrollBar::change_event(Event& event)
 {
     if (event.type() == Event::Type::EnabledChange) {
         if (!is_enabled())
-            m_scrubbing = false;
+            set_automatic_scrolling_active(false, Component::None);
     }
     return Widget::change_event(event);
 }
