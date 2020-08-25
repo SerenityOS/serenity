@@ -103,6 +103,7 @@ private:
     void scroll_by_page(const Gfx::IntPoint&);
 
     Component component_at_position(const Gfx::IntPoint&);
+    void update_hovered_component(const Gfx::IntPoint&);
 
     int m_min { 0 };
     int m_max { 0 };
