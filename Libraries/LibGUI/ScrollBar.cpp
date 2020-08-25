@@ -377,7 +377,7 @@ ScrollBar::Component ScrollBar::component_at_position(const Gfx::IntPoint& posit
     return Component::Invalid;
 }
 
-void ScrollBar::mousemove_event(MouseEvent& event)
+void ScrollBar::update_hovered_component(const Gfx::IntPoint& position)
 {
     auto old_hovered_component = m_hovered_component;
     m_hovered_component = component_at_position(event.position());
@@ -389,6 +389,11 @@ void ScrollBar::mousemove_event(MouseEvent& event)
         else if (m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton)
             set_automatic_scrolling_active(m_hovered_component == Component::IncrementButton, m_automatic_scrolling_kind);
     }
+}
+
+void ScrollBar::mousemove_event(MouseEvent& event)
+{
+    update_hovered_component(event.position());
     if (!m_scrubbing)
         return;
     float delta = orientation() == Orientation::Vertical ? (event.y() - m_scrub_origin.y()) : (event.x() - m_scrub_origin.x());
