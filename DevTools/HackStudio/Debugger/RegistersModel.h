@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, Luke Wilde <luke.wilde@live.co.uk>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,44 +26,42 @@
 
 #pragma once
 
-#include "Debugger.h"
-#include <AK/NonnullOwnPtr.h>
-#include <LibGUI/Action.h>
-#include <LibGUI/ListView.h>
+#include <AK/Vector.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/TableView.h>
-#include <LibGUI/ToolBar.h>
-#include <LibGUI/ToolBarContainer.h>
-#include <LibGUI/Widget.h>
 #include <sys/arch/i386/regs.h>
 
 namespace HackStudio {
 
-class DebugInfoWidget final : public GUI::Widget {
-    C_OBJECT(DebugInfoWidget)
-public:
-    virtual ~DebugInfoWidget() override {}
+struct RegisterData {
+    String name;
+    u32 value;
+};
 
-    void update_state(const Debug::DebugSession&, const PtraceRegisters&);
-    void program_stopped();
-    void set_debug_actions_enabled(bool enabled);
+class RegistersModel final : public GUI::Model {
+public:
+    static RefPtr<RegistersModel> create(const PtraceRegisters& regs)
+    {
+        return adopt(*new RegistersModel(regs));
+    }
+
+    enum Column {
+        Register,
+        Value,
+        __Count
+    };
+
+    virtual ~RegistersModel() override;
+
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
+    virtual String column_name(int) const override;
+    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+    virtual void update() override;
 
 private:
-    explicit DebugInfoWidget();
-    void init_toolbar();
+    explicit RegistersModel(const PtraceRegisters& regs);
 
-    NonnullRefPtr<GUI::Widget> build_variables_tab();
-    NonnullRefPtr<GUI::Widget> build_registers_tab();
-
-    RefPtr<GUI::TreeView> m_variables_view;
-    RefPtr<GUI::TableView> m_registers_view;
-    RefPtr<GUI::ListView> m_backtrace_view;
-    RefPtr<GUI::Menu> m_variable_context_menu;
-    RefPtr<GUI::ToolBar> m_toolbar;
-    RefPtr<GUI::Action> m_continue_action;
-    RefPtr<GUI::Action> m_singlestep_action;
-    RefPtr<GUI::Action> m_step_in_action;
-    RefPtr<GUI::Action> m_step_out_action;
+    Vector<RegisterData> m_registers;
 };
 
 }
