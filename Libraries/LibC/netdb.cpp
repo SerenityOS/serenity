@@ -41,12 +41,10 @@ extern "C" {
 int h_errno;
 
 static hostent __gethostbyname_buffer;
-static char __gethostbyname_name_buffer[512];
 static in_addr_t __gethostbyname_address;
 static in_addr_t* __gethostbyname_address_list_buffer[2];
 
 static hostent __gethostbyaddr_buffer;
-static char __gethostbyaddr_name_buffer[512];
 static in_addr_t* __gethostbyaddr_address_list_buffer[2];
 
 //Get service entry buffers and file information for the getservent() family of functions
@@ -55,8 +53,8 @@ static const char* services_path = "/etc/services";
 
 static bool fill_getserv_buffers(char* line, ssize_t read);
 static servent __getserv_buffer;
-static char __getserv_name_buffer[512];
-static char __getserv_protocol_buffer[10];
+static String __getserv_name_buffer;
+static String __getserv_protocol_buffer;
 static int __getserv_port_buffer;
 static Vector<ByteBuffer> __getserv_alias_list_buffer;
 static Vector<char*> __getserv_alias_list;
@@ -69,7 +67,7 @@ static const char* protocols_path = "/etc/protocols";
 
 static bool fill_getproto_buffers(char* line, ssize_t read);
 static protoent __getproto_buffer;
-static char __getproto_name_buffer[512];
+static String __getproto_name_buffer;
 static Vector<ByteBuffer> __getproto_alias_list_buffer;
 static Vector<char*> __getproto_alias_list;
 static int __getproto_protocol_buffer;
@@ -98,12 +96,13 @@ static int connect_to_lookup_server()
 
 hostent* gethostbyname(const char* name)
 {
+    static String s_name_buffer;
+
     auto ipv4_address = IPv4Address::from_string(name);
+
     if (ipv4_address.has_value()) {
-        auto ip4_string = ipv4_address.value().to_string();
-        ASSERT(ip4_string.length() < sizeof(__gethostbyname_name_buffer));
-        strlcpy(__gethostbyname_name_buffer, ip4_string.characters(), sizeof(__gethostbyname_name_buffer));
-        __gethostbyname_buffer.h_name = __gethostbyname_name_buffer;
+        s_name_buffer = ipv4_address.value().to_string();
+        __gethostbyname_buffer.h_name = const_cast<char*>(s_name_buffer.characters());
         __gethostbyname_buffer.h_aliases = nullptr;
         __gethostbyname_buffer.h_addrtype = AF_INET;
         new (&__gethostbyname_address) IPv4Address(ipv4_address.value());
@@ -152,9 +151,8 @@ hostent* gethostbyname(const char* name)
     if (rc <= 0)
         return nullptr;
 
-    strlcpy(__gethostbyname_name_buffer, name, sizeof(__gethostbyaddr_name_buffer));
-
-    __gethostbyname_buffer.h_name = __gethostbyname_name_buffer;
+    s_name_buffer = name;
+    __gethostbyname_buffer.h_name = const_cast<char*>(s_name_buffer.characters());
     __gethostbyname_buffer.h_aliases = nullptr;
     __gethostbyname_buffer.h_addrtype = AF_INET;
     __gethostbyname_address_list_buffer[0] = &__gethostbyname_address;
@@ -167,6 +165,8 @@ hostent* gethostbyname(const char* name)
 
 hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 {
+    static String s_name_buffer;
+
     if (type != AF_INET) {
         errno = EAFNOSUPPORT;
         return nullptr;
@@ -214,11 +214,8 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
     if (responses.is_empty())
         return nullptr;
 
-    auto& response = responses[0];
-
-    strlcpy(__gethostbyaddr_name_buffer, response.characters(), sizeof(__gethostbyaddr_name_buffer));
-
-    __gethostbyaddr_buffer.h_name = __gethostbyaddr_name_buffer;
+    s_name_buffer = responses[0];
+    __gethostbyaddr_buffer.h_name = const_cast<char*>(s_name_buffer.characters());
     __gethostbyaddr_buffer.h_aliases = nullptr;
     __gethostbyaddr_buffer.h_addrtype = AF_INET;
     // FIXME: Should we populate the hostent's address list here with a sockaddr_in for the provided host?
@@ -275,9 +272,9 @@ struct servent* getservent()
     if (!fill_getserv_buffers(line, read))
         return nullptr;
 
-    __getserv_buffer.s_name = __getserv_name_buffer;
+    __getserv_buffer.s_name = const_cast<char*>(__getserv_name_buffer.characters());
     __getserv_buffer.s_port = __getserv_port_buffer;
-    __getserv_buffer.s_proto = __getserv_protocol_buffer;
+    __getserv_buffer.s_proto = const_cast<char*>(__getserv_protocol_buffer.characters());
 
     __getserv_alias_list.clear();
     for (auto& alias : __getserv_alias_list_buffer) {
@@ -373,12 +370,7 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
         perror("malformed services file: entry");
         return false;
     }
-    if (sizeof(__getserv_name_buffer) >= split_line[0].length() + 1) {
-        strlcpy(__getserv_name_buffer, split_line[0].characters(), sizeof(__getserv_name_buffer));
-    } else {
-        perror("invalid buffer length: service name");
-        return false;
-    }
+    __getserv_name_buffer = split_line[0];
 
     auto port_protocol_split = String(split_line[1]).split('/');
     if (port_protocol_split.size() < 2) {
@@ -396,13 +388,7 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
     port_protocol_split[1].replace("\t", "", true);
     port_protocol_split[1].replace("\n", "", true);
 
-    if (sizeof(__getserv_protocol_buffer) >= port_protocol_split[1].length()) {
-        strlcpy(__getserv_protocol_buffer, port_protocol_split[1].characters(), sizeof(__getserv_protocol_buffer));
-    } else {
-        perror("malformed services file: protocol");
-        return false;
-    }
-
+    __getserv_protocol_buffer = port_protocol_split[1];
     __getserv_alias_list_buffer.clear();
 
     //If there are aliases for the service, we will fill the alias list buffer.
@@ -468,7 +454,7 @@ struct protoent* getprotoent()
     if (!fill_getproto_buffers(line, read))
         return nullptr;
 
-    __getproto_buffer.p_name = __getproto_name_buffer;
+    __getproto_buffer.p_name = const_cast<char*>(__getproto_name_buffer.characters());
     __getproto_buffer.p_proto = __getproto_protocol_buffer;
 
     __getproto_alias_list.clear();
@@ -565,12 +551,7 @@ static bool fill_getproto_buffers(char* line, ssize_t read)
         perror("malformed protocols file: entry");
         return false;
     }
-    if (sizeof(__getproto_name_buffer) >= split_line[0].length() + 1) {
-        strlcpy(__getproto_name_buffer, split_line[0].characters(), sizeof(__getproto_name_buffer));
-    } else {
-        perror("invalid buffer length: protocol name");
-        return false;
-    }
+    __getproto_name_buffer = split_line[0];
 
     auto number = split_line[1].to_int();
     if (!number.has_value())
