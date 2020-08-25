@@ -81,13 +81,7 @@ unsigned DateTime::days_in_month() const
 
 unsigned DateTime::day_of_year() const
 {
-    static const int seek_table[] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
-    int day_of_year = seek_table[m_month - 1] + m_day;
-
-    if (is_leap_year() && m_month > 3)
-        day_of_year++;
-
-    return day_of_year - 1;
+    return ::day_of_year(m_year, m_month, m_day);
 }
 
 bool DateTime::is_leap_year() const

@@ -28,6 +28,13 @@
 
 namespace AK {
 
+// Month and day start at 1. Month must be >= 1 and <= 12.
+// The return value is 0-indexed, that is Jan 1 is day 0.
+// Day may be negative or larger than the number of days
+// in the given month. If day is negative enough, the result
+// can be negative.
+int day_of_year(int year, unsigned month, int day);
+
 inline bool is_leap_year(int year)
 {
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
@@ -161,6 +168,7 @@ inline bool operator!=(const TimespecType& a, const TimespecType& b)
 
 }
 
+using AK::day_of_year;
 using AK::is_leap_year;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
