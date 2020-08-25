@@ -49,50 +49,6 @@ static bool update_in_progress()
     return CMOS::read(0x0a) & 0x80;
 }
 
-static unsigned days_in_months_since_start_of_year(unsigned month, unsigned year)
-{
-    ASSERT(month <= 11);
-    unsigned days = 0;
-    switch (month) {
-    case 11:
-        days += 30;
-        [[fallthrough]];
-    case 10:
-        days += 31;
-        [[fallthrough]];
-    case 9:
-        days += 30;
-        [[fallthrough]];
-    case 8:
-        days += 31;
-        [[fallthrough]];
-    case 7:
-        days += 31;
-        [[fallthrough]];
-    case 6:
-        days += 30;
-        [[fallthrough]];
-    case 5:
-        days += 31;
-        [[fallthrough]];
-    case 4:
-        days += 30;
-        [[fallthrough]];
-    case 3:
-        days += 31;
-        [[fallthrough]];
-    case 2:
-        if (is_leap_year(year))
-            days += 29;
-        else
-            days += 28;
-        [[fallthrough]];
-    case 1:
-        days += 31;
-    }
-    return days;
-}
-
 static u8 bcd_to_binary(u8 bcd)
 {
     return (bcd & 0x0F) + ((bcd >> 4) * 10);
@@ -149,8 +105,7 @@ time_t now()
     ASSERT(year >= 2018);
 
     return years_to_days_since_epoch(year) * 86400
-        + days_in_months_since_start_of_year(month - 1, year) * 86400
-        + (day - 1) * 86400
+        + day_of_year(year, month, day) * 86400
         + hour * 3600
         + minute * 60
         + second;
