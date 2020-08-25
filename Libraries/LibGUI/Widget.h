@@ -274,6 +274,8 @@ public:
     void set_accepts_emoji_input(bool b) { m_accepts_emoji_input = b; }
     bool accepts_emoji_input() const { return m_accepts_emoji_input; }
 
+    virtual Gfx::IntRect children_clip_rect() const;
+
 protected:
     Widget();
 
