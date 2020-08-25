@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
+#include <AK/Time.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/RTC.h>
 
@@ -46,11 +47,6 @@ time_t boot_time()
 static bool update_in_progress()
 {
     return CMOS::read(0x0a) & 0x80;
-}
-
-inline bool is_leap_year(unsigned year)
-{
-    return ((year % 4 == 0) && ((year % 100 != 0) || (year % 400) == 0));
 }
 
 static unsigned days_in_months_since_start_of_year(unsigned month, unsigned year)
