@@ -228,10 +228,11 @@ public:
         return *this;
     }
 
-    Checked& operator++(int)
+    Checked operator++(int)
     {
+        Checked old { *this };
         add(1);
-        return *this;
+        return old;
     }
 
     template<typename U, typename V>
@@ -278,25 +279,33 @@ private:
 template<typename T>
 inline Checked<T> operator+(const Checked<T>& a, const Checked<T>& b)
 {
-    return Checked<T>(a).add(b);
+    Checked<T> c { a };
+    c.add(b.value());
+    return c;
 }
 
 template<typename T>
 inline Checked<T> operator-(const Checked<T>& a, const Checked<T>& b)
 {
-    return Checked<T>(a).sub(b);
+    Checked<T> c { a };
+    c.sub(b.value());
+    return c;
 }
 
 template<typename T>
 inline Checked<T> operator*(const Checked<T>& a, const Checked<T>& b)
 {
-    return Checked<T>(a).mul(b);
+    Checked<T> c { a };
+    c.mul(b.value());
+    return c;
 }
 
 template<typename T>
 inline Checked<T> operator/(const Checked<T>& a, const Checked<T>& b)
 {
-    return Checked<T>(a).div(b);
+    Checked<T> c { a };
+    c.div(b.value());
+    return c;
 }
 
 template<typename T>
