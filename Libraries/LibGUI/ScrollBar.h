@@ -111,13 +111,13 @@ private:
     Component m_hovered_component { Component::Invalid };
     bool m_scrubber_in_use { false };
 
-    enum class AutomaticScrollingDirection {
+    enum class AutomaticScrollingKind {
         None = 0,
-        Decrement,
-        Increment,
+        DecrementButton,
+        IncrementButton,
     };
 
-    AutomaticScrollingDirection m_automatic_scrolling_direction { AutomaticScrollingDirection::None };
+    AutomaticScrollingKind m_automatic_scrolling_kind { AutomaticScrollingKind::None };
     RefPtr<Core::Timer> m_automatic_scrolling_timer;
 };
 
