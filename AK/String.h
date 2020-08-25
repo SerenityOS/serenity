@@ -146,6 +146,8 @@ public:
     // Includes NUL-terminator, if non-nullptr.
     ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
 
+    [[nodiscard]] bool copy_characters_to_buffer(char* buffer, size_t buffer_size) const;
+
     ALWAYS_INLINE ReadonlyBytes bytes() const { return m_impl ? m_impl->bytes() : nullptr; }
 
     ALWAYS_INLINE const char& operator[](size_t i) const

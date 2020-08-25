@@ -106,6 +106,18 @@ String String::empty()
     return StringImpl::the_empty_stringimpl();
 }
 
+bool String::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
+{
+    // We must fit at least the NUL-terminator.
+    ASSERT(buffer_size > 0);
+
+    size_t characters_to_copy = min(length(), buffer_size - 1);
+    __builtin_memcpy(buffer, characters(), characters_to_copy);
+    buffer[characters_to_copy] = 0;
+
+    return characters_to_copy == length();
+}
+
 String String::isolated_copy() const
 {
     if (!m_impl)
