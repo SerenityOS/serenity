@@ -27,7 +27,6 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
-#include <LibCore/Timer.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>

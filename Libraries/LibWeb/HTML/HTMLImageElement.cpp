@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibWeb/CSS/Parser/CSSParser.h>
