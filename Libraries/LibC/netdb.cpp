@@ -82,9 +82,10 @@ static int connect_to_lookup_server()
         return -1;
     }
 
-    sockaddr_un address;
-    address.sun_family = AF_LOCAL;
-    strlcpy(address.sun_path, "/tmp/portal/lookup", sizeof(address.sun_path));
+    sockaddr_un address {
+        AF_LOCAL,
+        "/tmp/portal/lookup"
+    };
 
     if (connect(fd, (const sockaddr*)&address, sizeof(address)) < 0) {
         perror("connect_to_lookup_server");
