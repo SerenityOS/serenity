@@ -304,10 +304,9 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
             return 0;
     }
 
-    if (builder.length() + 1 > max_size)
-        return 0;
-    strcpy(destination, builder.build().characters());
-    return builder.length();
+    auto str = builder.build();
+    bool fits = str.copy_characters_to_buffer(destination, max_size);
+    return fits ? str.length() : 0;
 }
 
 long timezone = 0;

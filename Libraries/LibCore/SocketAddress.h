@@ -87,10 +87,9 @@ public:
         ASSERT(type() == Type::Local);
         sockaddr_un address;
         address.sun_family = AF_LOCAL;
-        if (m_local_address.length() >= sizeof(address.sun_path)) {
+        bool fits = m_local_address.copy_characters_to_buffer(address.sun_path, sizeof(address.sun_path));
+        if (!fits)
             return {};
-        }
-        strcpy(address.sun_path, m_local_address.characters());
         return address;
     }
 

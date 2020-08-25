@@ -55,7 +55,11 @@ char* crypt_r(const char* key, const char* salt, struct crypt_data* data)
             size_t salt_len = min(strcspn(salt_value, "$"), crypt_salt_max);
             size_t header_len = salt_len + 3;
 
-            strncpy(data->result, salt, header_len);
+            bool fits = String(salt, header_len).copy_characters_to_buffer(data->result, sizeof(data->result));
+            if (!fits) {
+                errno = EINVAL;
+                return nullptr;
+            }
             data->result[header_len] = '$';
 
             Crypto::Hash::SHA256 sha;
@@ -65,7 +69,11 @@ char* crypt_r(const char* key, const char* salt, struct crypt_data* data)
             auto digest = sha.digest();
             auto string = encode_base64(ReadonlyBytes(digest.immutable_data(), digest.data_length()));
 
-            strncpy(data->result + header_len + 1, string.characters(), sha_string_length);
+            fits = string.copy_characters_to_buffer(data->result + header_len + 1, sizeof(data->result) - header_len - 1);
+            if (!fits) {
+                errno = EINVAL;
+                return nullptr;
+            }
 
             return data->result;
         }

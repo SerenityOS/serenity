@@ -116,7 +116,11 @@ int main(int argc, char** argv)
             struct ifreq ifr;
             memset(&ifr, 0, sizeof(ifr));
 
-            strlcpy(ifr.ifr_name, ifname.characters(), IFNAMSIZ);
+            bool fits = ifname.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
+            if (!fits) {
+                fprintf(stderr, "Interface name '%s' is too long\n", ifname.characters());
+                return 1;
+            }
             ifr.ifr_addr.sa_family = AF_INET;
             ((sockaddr_in&)ifr.ifr_addr).sin_addr.s_addr = address.value().to_in_addr_t();
 
@@ -144,7 +148,11 @@ int main(int argc, char** argv)
             struct ifreq ifr;
             memset(&ifr, 0, sizeof(ifr));
 
-            strlcpy(ifr.ifr_name, ifname.characters(), IFNAMSIZ);
+            bool fits = ifname.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
+            if (!fits) {
+                fprintf(stderr, "Interface name '%s' is too long\n", ifname.characters());
+                return 1;
+            }
             ifr.ifr_netmask.sa_family = AF_INET;
             ((sockaddr_in&)ifr.ifr_netmask).sin_addr.s_addr = address.value().to_in_addr_t();
 
