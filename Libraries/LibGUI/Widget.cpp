@@ -229,11 +229,12 @@ void Widget::handle_paint_event(PaintEvent& event)
         painter.fill_rect(event.rect(), palette().color(background_role()));
     }
     paint_event(event);
+    auto children_clip_rect = this->children_clip_rect();
     for_each_child_widget([&](auto& child) {
         if (!child.is_visible())
             return IterationDecision::Continue;
         if (child.relative_rect().intersects(event.rect())) {
-            PaintEvent local_event(event.rect().intersected(child.relative_rect()).translated(-child.relative_position()));
+            PaintEvent local_event(event.rect().intersected(children_clip_rect).intersected(child.relative_rect()).translated(-child.relative_position()));
             child.dispatch_event(local_event, this);
         }
         return IterationDecision::Continue;
@@ -870,6 +871,11 @@ void Widget::show_tooltip()
 {
     if (has_tooltip())
         Application::the()->show_tooltip(m_tooltip, screen_relative_rect().center().translated(0, height() / 2), this);
+}
+
+Gfx::IntRect Widget::children_clip_rect() const
+{
+    return rect();
 }
 
 }
