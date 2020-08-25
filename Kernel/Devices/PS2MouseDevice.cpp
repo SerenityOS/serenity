@@ -136,8 +136,15 @@ void PS2MouseDevice::parse_data_packet()
     int x = m_data[1];
     int y = m_data[2];
     int z = 0;
-    if (m_has_wheel)
-        z = (char)m_data[3];
+    if (m_has_wheel) {
+        // FIXME: For non-Intellimouse, this is a full byte.
+        //        However, for now, m_has_wheel is only set for Intellimouse.
+        z = (char)(m_data[3] & 0x0f);
+
+        // -1 in 4 bits
+        if (z == 15)
+            z = -1;
+    }
     bool x_overflow = m_data[0] & 0x40;
     bool y_overflow = m_data[0] & 0x80;
     bool x_sign = m_data[0] & 0x10;
