@@ -31,6 +31,7 @@
 #include <AK/Endian.h>
 #include <AK/Forward.h>
 #include <AK/MemMem.h>
+#include <AK/Optional.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
@@ -101,6 +102,15 @@ template<typename T>
 InputStream& operator<<(InputStream& stream, BigEndian<T> value)
 {
     stream << static_cast<T>(value);
+    return stream;
+}
+
+template<typename T>
+InputStream& operator>>(InputStream& stream, Optional<T>& value)
+{
+    T temporary;
+    stream >> temporary;
+    value = temporary;
     return stream;
 }
 
