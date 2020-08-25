@@ -26,12 +26,13 @@
 
 #pragma once
 
-#include <LibGUI/Frame.h>
+#include <LibGUI/Widget.h>
 
 namespace GUI {
 
-class Splitter : public Frame {
-    C_OBJECT(Splitter)
+class Splitter : public Widget {
+    C_OBJECT(Splitter);
+
 public:
     virtual ~Splitter() override;
 
@@ -65,7 +66,7 @@ private:
 class VerticalSplitter final : public Splitter {
     C_OBJECT(VerticalSplitter)
 public:
-    virtual ~VerticalSplitter() override {}
+    virtual ~VerticalSplitter() override { }
 
 private:
     VerticalSplitter()
@@ -77,7 +78,7 @@ private:
 class HorizontalSplitter final : public Splitter {
     C_OBJECT(HorizontalSplitter)
 public:
-    virtual ~HorizontalSplitter() override {}
+    virtual ~HorizontalSplitter() override { }
 
 private:
     HorizontalSplitter()
