@@ -72,13 +72,10 @@ Object* iterator_next(Object& iterator, Value value)
     }
 
     Value result;
-    if (value.is_empty()) {
+    if (value.is_empty())
         result = interpreter.call(next_method.as_function(), &iterator);
-    } else {
-        MarkedValueList arguments(iterator.heap());
-        arguments.append(value);
-        result = interpreter.call(next_method.as_function(), &iterator, move(arguments));
-    }
+    else
+        result = interpreter.call(next_method.as_function(), &iterator, value);
 
     if (interpreter.exception())
         return {};

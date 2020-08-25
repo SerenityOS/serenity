@@ -96,10 +96,8 @@ void XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
             auto& function = const_cast<DOM::EventListener&>(*listener.listener).function();
             auto& global_object = function.global_object();
             auto* this_value = wrap(global_object, *this);
-            JS::MarkedValueList arguments(global_object.heap());
-            arguments.append(wrap(global_object, *event));
             auto& interpreter = function.interpreter();
-            (void)interpreter.call(function, this_value, move(arguments));
+            (void)interpreter.call(function, this_value, wrap(global_object, *this));
             if (interpreter.exception())
                 interpreter.clear_exception();
         }

@@ -245,7 +245,7 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
         roots.set(symbol.value);
 }
 
-Value Interpreter::call(Function& function, Value this_value, Optional<MarkedValueList> arguments)
+Value Interpreter::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     ASSERT(!exception());
 
