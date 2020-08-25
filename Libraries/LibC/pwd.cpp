@@ -26,55 +26,53 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <errno_numbers.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <unistd.h>
 
 extern "C" {
 
-#define PWDB_STR_MAX_LEN 256
+static FILE* s_stream = nullptr;
+static unsigned s_line_number = 0;
+static struct passwd s_passwd_entry;
 
-struct passwd_with_strings : public passwd {
-    char name_buffer[PWDB_STR_MAX_LEN];
-    char passwd_buffer[PWDB_STR_MAX_LEN];
-    char gecos_buffer[PWDB_STR_MAX_LEN];
-    char dir_buffer[PWDB_STR_MAX_LEN];
-    char shell_buffer[PWDB_STR_MAX_LEN];
-};
-
-static FILE* __pwdb_stream = nullptr;
-static unsigned __pwdb_line_number = 0;
-static struct passwd_with_strings* __pwdb_entry = nullptr;
+static String s_name;
+static String s_passwd;
+static String s_gecos;
+static String s_dir;
+static String s_shell;
 
 void setpwent()
 {
-    __pwdb_line_number = 0;
-    if (__pwdb_stream) {
-        rewind(__pwdb_stream);
+    s_line_number = 0;
+    if (s_stream) {
+        rewind(s_stream);
     } else {
-        __pwdb_stream = fopen("/etc/passwd", "r");
-        if (!__pwdb_stream) {
+        s_stream = fopen("/etc/passwd", "r");
+        if (!s_stream) {
             perror("open /etc/passwd");
         }
-        assert(__pwdb_stream);
-        __pwdb_entry = (struct passwd_with_strings*)mmap_with_name(nullptr, getpagesize(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "setpwent");
     }
 }
 
 void endpwent()
 {
-    __pwdb_line_number = 0;
-    if (__pwdb_stream) {
-        fclose(__pwdb_stream);
-        __pwdb_stream = nullptr;
+    s_line_number = 0;
+    if (s_stream) {
+        fclose(s_stream);
+        s_stream = nullptr;
     }
-    if (__pwdb_entry) {
-        munmap(__pwdb_entry, getpagesize());
-        __pwdb_entry = nullptr;
-    }
+
+    memset(&s_passwd_entry, 0, sizeof(s_passwd_entry));
+
+    s_name = {};
+    s_passwd = {};
+    s_gecos = {};
+    s_dir = {};
+    s_shell = {};
 }
 
 struct passwd* getpwuid(uid_t uid)
@@ -97,61 +95,71 @@ struct passwd* getpwnam(const char* name)
     return nullptr;
 }
 
+static bool parse_pwddb_entry(const String& line)
+{
+    auto parts = line.split_view(':', true);
+    if (parts.size() != 7) {
+        fprintf(stderr, "getpwent(): Malformed entry on line %u\n", s_line_number);
+        return false;
+    }
+
+    s_name = parts[0];
+    s_passwd = parts[1];
+    auto& uid_string = parts[2];
+    auto& gid_string = parts[3];
+    s_gecos = parts[4];
+    s_dir = parts[5];
+    s_shell = parts[6];
+
+    auto uid = uid_string.to_uint();
+    if (!uid.has_value()) {
+        fprintf(stderr, "getpwent(): Malformed UID on line %u\n", s_line_number);
+        return false;
+    }
+    auto gid = gid_string.to_uint();
+    if (!gid.has_value()) {
+        fprintf(stderr, "getpwent(): Malformed GID on line %u\n", s_line_number);
+        return false;
+    }
+
+    s_passwd_entry.pw_name = const_cast<char*>(s_name.characters());
+    s_passwd_entry.pw_passwd = const_cast<char*>(s_passwd.characters());
+    s_passwd_entry.pw_uid = uid.value();
+    s_passwd_entry.pw_gid = gid.value();
+    s_passwd_entry.pw_gecos = const_cast<char*>(s_gecos.characters());
+    s_passwd_entry.pw_dir = const_cast<char*>(s_dir.characters());
+    s_passwd_entry.pw_shell = const_cast<char*>(s_shell.characters());
+
+    return true;
+}
+
 struct passwd* getpwent()
 {
-    if (!__pwdb_stream)
+    if (!s_stream)
         setpwent();
 
-    assert(__pwdb_stream);
-    if (feof(__pwdb_stream))
-        return nullptr;
+    while (true) {
+        if (!s_stream || feof(s_stream))
+            return nullptr;
 
-next_entry:
-    char buffer[1024];
-    ++__pwdb_line_number;
-    char* s = fgets(buffer, sizeof(buffer), __pwdb_stream);
-    if (!s)
-        return nullptr;
-    assert(__pwdb_stream);
-    if (feof(__pwdb_stream))
-        return nullptr;
-    String line(s, Chomp);
-    auto parts = line.split(':', true);
-    if (parts.size() != 7) {
-        fprintf(stderr, "getpwent(): Malformed entry on line %u\n", __pwdb_line_number);
-        goto next_entry;
-    }
-    auto& e_name = parts[0];
-    auto& e_passwd = parts[1];
-    auto& e_uid_string = parts[2];
-    auto& e_gid_string = parts[3];
-    auto& e_gecos = parts[4];
-    auto& e_dir = parts[5];
-    auto& e_shell = parts[6];
-    auto e_uid = e_uid_string.to_uint();
-    if (!e_uid.has_value()) {
-        fprintf(stderr, "getpwent(): Malformed UID on line %u\n", __pwdb_line_number);
-        goto next_entry;
-    }
-    auto e_gid = e_gid_string.to_uint();
-    if (!e_gid.has_value()) {
-        fprintf(stderr, "getpwent(): Malformed GID on line %u\n", __pwdb_line_number);
-        goto next_entry;
-    }
-    __pwdb_entry->pw_uid = e_uid.value();
-    __pwdb_entry->pw_gid = e_gid.value();
-    __pwdb_entry->pw_name = __pwdb_entry->name_buffer;
-    __pwdb_entry->pw_passwd = __pwdb_entry->passwd_buffer;
-    __pwdb_entry->pw_gecos = __pwdb_entry->gecos_buffer;
-    __pwdb_entry->pw_dir = __pwdb_entry->dir_buffer;
-    __pwdb_entry->pw_shell = __pwdb_entry->shell_buffer;
+        if (ferror(s_stream)) {
+            fprintf(stderr, "getpwent(): Read error: %s\n", strerror(ferror(s_stream)));
+            return nullptr;
+        }
 
-    strlcpy(__pwdb_entry->name_buffer, e_name.characters(), PWDB_STR_MAX_LEN);
-    strlcpy(__pwdb_entry->passwd_buffer, e_passwd.characters(), PWDB_STR_MAX_LEN);
-    strlcpy(__pwdb_entry->gecos_buffer, e_gecos.characters(), PWDB_STR_MAX_LEN);
-    strlcpy(__pwdb_entry->dir_buffer, e_dir.characters(), PWDB_STR_MAX_LEN);
-    strlcpy(__pwdb_entry->shell_buffer, e_shell.characters(), PWDB_STR_MAX_LEN);
-    return __pwdb_entry;
+        char buffer[1024];
+        ++s_line_number;
+        char* s = fgets(buffer, sizeof(buffer), s_stream);
+
+        // Silently tolerate an empty line at the end.
+        if ((!s || !s[0]) && feof(s_stream))
+            return nullptr;
+
+        String line(s, Chomp);
+        if (parse_pwddb_entry(line))
+            return &s_passwd_entry;
+        // Otherwise, proceed to the next line.
+    }
 }
 
 int putpwent(const struct passwd* p, FILE* stream)

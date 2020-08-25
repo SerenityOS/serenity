@@ -557,14 +557,14 @@ int set_process_icon(int icon_id)
 
 char* getlogin()
 {
-    static char __getlogin_buffer[256];
-    if (auto* passwd = getpwuid(getuid())) {
-        strlcpy(__getlogin_buffer, passwd->pw_name, sizeof(__getlogin_buffer));
+    static String buffer;
+    if (buffer.is_null()) {
+        if (auto* passwd = getpwuid(getuid())) {
+            buffer = String(passwd->pw_name);
+        }
         endpwent();
-        return __getlogin_buffer;
     }
-    endpwent();
-    return nullptr;
+    return const_cast<char*>(buffer.characters());
 }
 
 int ftruncate(int fd, off_t length)
