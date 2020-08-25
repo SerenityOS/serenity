@@ -235,13 +235,17 @@ void ScrollBar::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
+    Component hovered_component_for_painting = m_hovered_component;
+    if (m_pressed_component != Component::None && m_hovered_component != m_pressed_component)
+        hovered_component_for_painting = Component::None;
+
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
 
     bool decrement_pressed = m_pressed_component == Component::DecrementButton;
     bool increment_pressed = m_pressed_component == Component::IncrementButton;
 
-    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, decrement_pressed, m_hovered_component == Component::DecrementButton);
-    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, increment_pressed, m_hovered_component == Component::IncrementButton);
+    Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, decrement_pressed, hovered_component_for_painting == Component::DecrementButton);
+    Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, increment_pressed, hovered_component_for_painting == Component::IncrementButton);
 
     if (length(orientation()) > default_button_size()) {
         auto decrement_location = decrement_button_rect().location().translated(3, 3);
@@ -256,7 +260,7 @@ void ScrollBar::paint_event(PaintEvent& event)
     }
 
     if (has_scrubber())
-        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber || m_pressed_component == Component::Scrubber);
+        Gfx::StylePainter::paint_button(painter, scrubber_rect(), palette(), Gfx::ButtonStyle::Normal, false, hovered_component_for_painting == Component::Scrubber || m_pressed_component == Component::Scrubber);
 }
 
 void ScrollBar::on_automatic_scrolling_timer_fired()
