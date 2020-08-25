@@ -46,7 +46,7 @@
 
 RefPtr<Line::Editor> editor;
 
-OwnPtr<DebugSession> g_debug_session;
+OwnPtr<Debug::DebugSession> g_debug_session;
 
 static void handle_sigint(int)
 {
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
         "program", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
-    auto result = DebugSession::exec_and_attach(command);
+    auto result = Debug::DebugSession::exec_and_attach(command);
     if (!result) {
         fprintf(stderr, "Failed to start debugging session for: \"%s\"\n", command);
         exit(1);
@@ -201,13 +201,13 @@ int main(int argc, char** argv)
     bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
     ASSERT(rc);
 
-    DebugInfo::SourcePosition previous_source_position;
+    Debug::DebugInfo::SourcePosition previous_source_position;
     bool in_step_line = false;
 
-    g_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
-        if (reason == DebugSession::DebugBreakReason::Exited) {
+    g_debug_session->run([&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
+        if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             printf("Program exited.\n");
-            return DebugSession::DebugDecision::Detach;
+            return Debug::DebugSession::DebugDecision::Detach;
         }
 
         ASSERT(optional_regs.has_value());
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
                     printf("No source information for current instruction! stoppoing.\n");
                 in_step_line = false;
             } else {
-                return DebugSession::DebugDecision::SingleStep;
+                return Debug::DebugSession::DebugDecision::SingleStep;
             }
         }
 
@@ -240,25 +240,25 @@ int main(int argc, char** argv)
             auto command_result = editor->get_line("(sdb) ");
 
             if (command_result.is_error())
-                return DebugSession::DebugDecision::Detach;
+                return Debug::DebugSession::DebugDecision::Detach;
 
             auto& command = command_result.value();
 
             bool success = false;
-            Optional<DebugSession::DebugDecision> decision;
+            Optional<Debug::DebugSession::DebugDecision> decision;
 
             if (command.is_empty() && !editor->history().is_empty()) {
                 command = editor->history().last();
             }
             if (command == "cont") {
-                decision = DebugSession::DebugDecision::Continue;
+                decision = Debug::DebugSession::DebugDecision::Continue;
                 success = true;
             } else if (command == "si") {
-                decision = DebugSession::DebugDecision::SingleStep;
+                decision = Debug::DebugSession::DebugDecision::SingleStep;
                 success = true;
             } else if (command == "sl") {
                 if (source_position.has_value()) {
-                    decision = DebugSession::DebugDecision::SingleStep;
+                    decision = Debug::DebugSession::DebugDecision::SingleStep;
                     in_step_line = true;
                     success = true;
                 } else {

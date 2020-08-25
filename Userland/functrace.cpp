@@ -47,7 +47,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static OwnPtr<DebugSession> g_debug_session;
+static OwnPtr<Debug::DebugSession> g_debug_session;
 static bool g_should_output_color = false;
 
 static void handle_sigint(int)
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
         "program", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
-    auto result = DebugSession::exec_and_attach(command);
+    auto result = Debug::DebugSession::exec_and_attach(command);
     if (!result) {
         fprintf(stderr, "Failed to start debugging session for: \"%s\"\n", command);
         exit(1);
@@ -143,29 +143,29 @@ int main(int argc, char** argv)
     size_t depth = 0;
     bool new_function = true;
 
-    g_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> regs) {
-        if (reason == DebugSession::DebugBreakReason::Exited) {
+    g_debug_session->run([&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> regs) {
+        if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             printf("Program exited.\n");
-            return DebugSession::DebugDecision::Detach;
+            return Debug::DebugSession::DebugDecision::Detach;
         }
 
-        if (reason == DebugSession::DebugBreakReason::Syscall) {
+        if (reason == Debug::DebugSession::DebugBreakReason::Syscall) {
             print_syscall(regs.value(), depth + 1);
-            return DebugSession::DebugDecision::ContinueBreakAtSyscall;
+            return Debug::DebugSession::DebugDecision::ContinueBreakAtSyscall;
         }
 
         if (new_function) {
             auto function_name = g_debug_session->elf().symbolicate(regs.value().eip);
             print_function_call(function_name, depth);
             new_function = false;
-            return DebugSession::ContinueBreakAtSyscall;
+            return Debug::DebugSession::ContinueBreakAtSyscall;
         }
         auto instruction = instrumented->get((void*)regs.value().eip).value();
 
         if (instruction.mnemonic() == "RET") {
             if (depth != 0)
                 --depth;
-            return DebugSession::ContinueBreakAtSyscall;
+            return Debug::DebugSession::ContinueBreakAtSyscall;
         }
 
         // FIXME: we could miss some leaf functions that were called with a jump
@@ -174,6 +174,6 @@ int main(int argc, char** argv)
         ++depth;
         new_function = true;
 
-        return DebugSession::DebugDecision::SingleStep;
+        return Debug::DebugSession::DebugDecision::SingleStep;
     });
 }

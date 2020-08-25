@@ -28,7 +28,7 @@
 
 #include <AK/Stream.h>
 
-namespace Dwarf {
+namespace Debug::Dwarf {
 
 DwarfInfo::DwarfInfo(NonnullRefPtr<const ELF::Loader> elf)
     : m_elf(elf)

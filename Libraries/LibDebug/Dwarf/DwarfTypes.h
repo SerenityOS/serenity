@@ -28,7 +28,7 @@
 
 #include <AK/Types.h>
 
-namespace Dwarf {
+namespace Debug::Dwarf {
 
 struct [[gnu::packed]] CompilationUnitHeader
 {
