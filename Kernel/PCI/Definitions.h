@@ -210,6 +210,7 @@ u32 get_BAR2(Address);
 u32 get_BAR3(Address);
 u32 get_BAR4(Address);
 u32 get_BAR5(Address);
+u32 get_BAR(Address, u8 bar);
 u8 get_revision_id(Address);
 u8 get_subclass(Address);
 u8 get_class(Address);
