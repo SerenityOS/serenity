@@ -42,7 +42,7 @@ public:
 
     ModelSelection& selection() { return m_selection; }
     const ModelSelection& selection() const { return m_selection; }
-    virtual void select_all() = 0;
+    virtual void select_all() { }
 
     bool is_editable() const { return m_editable; }
     void set_editable(bool editable) { m_editable = editable; }
@@ -55,7 +55,7 @@ public:
     virtual void did_update_selection();
 
     virtual Gfx::IntRect content_rect(const ModelIndex&) const { return {}; }
-    virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const = 0;
+    virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const { return {}; }
     void begin_editing(const ModelIndex&);
     void stop_editing();
 
@@ -77,6 +77,9 @@ public:
     void set_last_valid_hovered_index(const ModelIndex&);
 
     void set_key_column_and_sort_order(int column, SortOrder);
+
+    int key_column() const { return m_key_column; }
+    SortOrder sort_order() const { return m_sort_order; }
 
 protected:
     AbstractView();

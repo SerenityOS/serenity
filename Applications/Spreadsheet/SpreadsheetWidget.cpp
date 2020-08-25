@@ -123,7 +123,6 @@ void SpreadsheetWidget::setup_tabs()
             m_current_cell_label->set_enabled(false);
             m_current_cell_label->set_text("");
         };
-        m_selected_view->set_focus(true);
     };
 
     if (first_tab_widget)

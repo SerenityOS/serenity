@@ -43,6 +43,7 @@ class DropEvent;
 class FileSystemModel;
 class Frame;
 class GroupBox;
+class HeaderView;
 class HorizontalBoxLayout;
 class HorizontalSlider;
 class Icon;
