@@ -90,7 +90,7 @@ struct ucred {
 
 struct sockaddr_storage {
     union {
-        char data[sizeof(sockaddr_un)];
+        char data[sizeof(struct sockaddr_un)];
         void* alignment;
     };
 };
