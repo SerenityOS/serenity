@@ -227,7 +227,8 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         pde.set_present(true);
         pde.set_writable(true);
         pde.set_global(&page_directory == m_kernel_page_directory.ptr());
-        page_directory.m_physical_pages.set(page_directory_index, move(page_table));
+        auto result = page_directory.m_physical_pages.set(move(page_table));
+        ASSERT(result == AK::HashSetResult::InsertedNewEntry);
     }
 
     return quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
