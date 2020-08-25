@@ -29,28 +29,28 @@
 #define AK_TEST_SUITE
 
 #define ASSERT(x)                                                                                         \
-    {                                                                                                     \
+    do {                                                                                                  \
         if (!(x))                                                                                         \
             fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: ASSERT(%s) failed\n", __FILE__, __LINE__, #x); \
-    }
+    } while (false)
 
 #define RELEASE_ASSERT(x)                                                                                         \
-    {                                                                                                             \
+    do {                                                                                                          \
         if (!(x))                                                                                                 \
             fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: RELEASE_ASSERT(%s) failed\n", __FILE__, __LINE__, #x); \
-    }
+    } while (false)
 
 #define ASSERT_NOT_REACHED()                                                                                \
-    {                                                                                                       \
+    do {                                                                                                    \
         fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: ASSERT_NOT_REACHED() called\n", __FILE__, __LINE__); \
         abort();                                                                                            \
-    }
+    } while (false)
 
 #define TODO()                                                                                \
-    {                                                                                         \
+    do {                                                                                      \
         fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: TODO() called\n", __FILE__, __LINE__); \
         abort();                                                                              \
-    }
+    } while (false)
 
 #include <stdio.h>
 
@@ -293,25 +293,25 @@ using AK::TestSuite;
     }
 
 #define EXPECT_EQ(a, b)                                                                                                                              \
-    {                                                                                                                                                \
+    do {                                                                                                                                             \
         auto lhs = (a);                                                                                                                              \
         auto rhs = (b);                                                                                                                              \
         if (lhs != rhs)                                                                                                                              \
             AK::maybe_print_rhs_lhs(warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT_EQ(" #a ", " #b ") failed", lhs, rhs); \
-    }
+    } while (false)
 
 // If you're stuck and `EXPECT_EQ` seems to refuse to print anything useful,
 // try this: It'll spit out a nice compiler error telling you why it doesn't print.
 #define EXPECT_EQ_FORCE(a, b)                                                                                                                        \
-    {                                                                                                                                                \
+    do {                                                                                                                                             \
         auto lhs = (a);                                                                                                                              \
         auto rhs = (b);                                                                                                                              \
         if (lhs != rhs)                                                                                                                              \
             AK::force_print_rhs_lhs(warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT_EQ(" #a ", " #b ") failed", lhs, rhs); \
-    }
+    } while (false)
 
 #define EXPECT(x)                                                                                      \
-    {                                                                                                  \
+    do {                                                                                               \
         if (!(x))                                                                                      \
             warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT(" #x ") failed"; \
-    }
+    } while (false)
