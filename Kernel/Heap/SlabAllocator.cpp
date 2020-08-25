@@ -45,67 +45,82 @@ public:
         m_base = kmalloc_eternal(size);
         m_end = (u8*)m_base + size;
         FreeSlab* slabs = (FreeSlab*)m_base;
-        size_t slab_count = size / templated_slab_size;
-        for (size_t i = 1; i < slab_count; ++i) {
+        m_slab_count = size / templated_slab_size;
+        for (size_t i = 1; i < m_slab_count; ++i) {
             slabs[i].next = &slabs[i - 1];
         }
         slabs[0].next = nullptr;
-        m_freelist = &slabs[slab_count - 1];
+        m_freelist = &slabs[m_slab_count - 1];
         m_num_allocated.store(0, AK::MemoryOrder::memory_order_release);
-        m_num_free.store(slab_count, AK::MemoryOrder::memory_order_release);
     }
 
     constexpr size_t slab_size() const { return templated_slab_size; }
+    size_t slab_count() const { return m_slab_count; }
 
     void* alloc()
     {
-        ScopedSpinLock lock(m_lock);
-        if (!m_freelist)
-            return kmalloc(slab_size());
-        ASSERT(m_freelist);
-        void* ptr = m_freelist;
-        m_freelist = m_freelist->next;
-        m_num_allocated.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
-        m_num_free.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+        FreeSlab* free_slab;
+        {
+            // We want to avoid being swapped out in the middle of this
+            ScopedCritical critical;
+            FreeSlab* next_free;
+            free_slab = m_freelist.load(AK::memory_order_consume);
+            do {
+                if (!free_slab)
+                    return kmalloc(slab_size());
+                // It's possible another processor is doing the same thing at
+                // the same time, so next_free *can* be a bogus pointer. However,
+                // in that case compare_exchange_strong would fail and we would
+                // try again.
+                next_free = free_slab->next;
+            } while (!m_freelist.compare_exchange_strong(free_slab, next_free, AK::memory_order_acq_rel));
+
+            m_num_allocated.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
+        }
+
 #ifdef SANITIZE_SLABS
-        memset(ptr, SLAB_ALLOC_SCRUB_BYTE, slab_size());
+        memset(free_slab, SLAB_ALLOC_SCRUB_BYTE, slab_size());
 #endif
-        return ptr;
+        return free_slab;
     }
 
     void dealloc(void* ptr)
     {
-        ScopedSpinLock lock(m_lock);
         ASSERT(ptr);
         if (ptr < m_base || ptr >= m_end) {
             kfree(ptr);
             return;
         }
-        ((FreeSlab*)ptr)->next = m_freelist;
+        FreeSlab* free_slab = (FreeSlab*)ptr;
 #ifdef SANITIZE_SLABS
         if (slab_size() > sizeof(FreeSlab*))
-            memset(((FreeSlab*)ptr)->padding, SLAB_DEALLOC_SCRUB_BYTE, sizeof(FreeSlab::padding));
+            memset(free_slab->padding, SLAB_DEALLOC_SCRUB_BYTE, sizeof(FreeSlab::padding));
 #endif
-        m_freelist = (FreeSlab*)ptr;
+
+        // We want to avoid being swapped out in the middle of this
+        ScopedCritical critical;
+        FreeSlab* next_free = m_freelist.load(AK::memory_order_consume);
+        do {
+            free_slab->next = next_free;
+        } while (!m_freelist.compare_exchange_strong(next_free, free_slab, AK::memory_order_acq_rel));
+
         m_num_allocated.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
-        m_num_free.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
     }
 
     size_t num_allocated() const { return m_num_allocated.load(AK::MemoryOrder::memory_order_consume); }
-    size_t num_free() const { return m_num_free.load(AK::MemoryOrder::memory_order_consume); }
+    size_t num_free() const { return m_slab_count - m_num_allocated.load(AK::MemoryOrder::memory_order_consume); }
 
 private:
     struct FreeSlab {
-        FreeSlab* next { nullptr };
+        FreeSlab* next;
         char padding[templated_slab_size - sizeof(FreeSlab*)];
     };
 
-    FreeSlab* m_freelist { nullptr };
-    Atomic<size_t> m_num_allocated;
-    Atomic<size_t> m_num_free;
+    Atomic<FreeSlab*> m_freelist { nullptr };
+    Atomic<ssize_t> m_num_allocated;
+    size_t m_slab_count;
     void* m_base { nullptr };
     void* m_end { nullptr };
-    SpinLock<u32> m_lock;
 
     static_assert(sizeof(FreeSlab) == templated_slab_size);
 };
@@ -163,7 +178,9 @@ void slab_dealloc(void* ptr, size_t slab_size)
 void slab_alloc_stats(Function<void(size_t slab_size, size_t allocated, size_t free)> callback)
 {
     for_each_allocator([&](auto& allocator) {
-        callback(allocator.slab_size(), allocator.num_allocated(), allocator.num_free());
+        auto num_allocated = allocator.num_allocated();
+        auto num_free = allocator.slab_count() - num_allocated;
+        callback(allocator.slab_size(), num_allocated, num_free);
     });
 }
 
