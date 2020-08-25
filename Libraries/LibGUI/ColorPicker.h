@@ -63,6 +63,7 @@ private:
     RefPtr<SpinBox> m_red_spinbox;
     RefPtr<SpinBox> m_green_spinbox;
     RefPtr<SpinBox> m_blue_spinbox;
+    RefPtr<SpinBox> m_alpha_spinbox;
 };
 
 }

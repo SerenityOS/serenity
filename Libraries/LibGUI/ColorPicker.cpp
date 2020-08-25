@@ -222,7 +222,8 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     enum RGBComponent {
         Red,
         Green,
-        Blue
+        Blue,
+        Alpha
     };
 
     auto& horizontal_container = root_container.add<Widget>();
@@ -282,7 +283,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     auto& html_label = html_container.add<GUI::Label>();
     html_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     html_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    html_label.set_preferred_size({ 70, 0 });
+    html_label.set_preferred_size({ 48, 0 });
     html_label.set_text("HTML:");
 
     m_html_text = html_container.add<GUI::TextBox>();
@@ -312,7 +313,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
         auto& rgb_label = rgb_container.add<GUI::Label>();
         rgb_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         rgb_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-        rgb_label.set_preferred_size({ 70, 0 });
+        rgb_label.set_preferred_size({ 48, 0 });
 
         auto& spinbox = rgb_container.add<SpinBox>();
         spinbox.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -320,6 +321,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
         spinbox.set_min(0);
         spinbox.set_max(255);
         spinbox.set_value(initial_value);
+        spinbox.set_enabled(m_color_has_alpha_channel);
         spinbox.on_change = [this, component](auto value) {
             auto color = m_color;
 
@@ -329,6 +331,8 @@ void ColorPicker::build_ui_custom(Widget& root_container)
                 color.set_green(value);
             if (component == Blue)
                 color.set_blue(value);
+            if (component == Alpha)
+                color.set_alpha(value);
 
             if (m_color == color)
                 return;
@@ -347,12 +351,16 @@ void ColorPicker::build_ui_custom(Widget& root_container)
         } else if (component == Blue) {
             rgb_label.set_text("Blue:");
             m_blue_spinbox = spinbox;
+        } else if (component == Alpha) {
+            rgb_label.set_text("Alpha:");
+            m_alpha_spinbox = spinbox;
         }
     };
 
     make_spinbox(Red, m_color.red());
     make_spinbox(Green, m_color.green());
     make_spinbox(Blue, m_color.blue());
+    make_spinbox(Alpha, m_color.alpha());
 }
 
 void ColorPicker::update_color_widgets()
@@ -367,6 +375,8 @@ void ColorPicker::update_color_widgets()
     m_red_spinbox->set_value(m_color.red());
     m_green_spinbox->set_value(m_color.green());
     m_blue_spinbox->set_value(m_color.blue());
+    m_alpha_spinbox->set_value(m_color.alpha());
+    m_alpha_spinbox->set_enabled(m_color_has_alpha_channel);
 }
 
 void ColorPicker::create_color_button(Widget& container, unsigned rgb)
@@ -454,7 +464,7 @@ CustomColorWidget::CustomColorWidget(Color color)
 
     m_color_slider = add<ColorSlider>(color.to_hsv().hue);
     m_color_slider->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    auto slider_width = 32 + (m_color_slider->frame_thickness() * 2);
+    auto slider_width = 24 + (m_color_slider->frame_thickness() * 2);
     m_color_slider->set_preferred_size(slider_width, size);
     m_color_slider->on_pick = [this](double value) {
         m_color_field->set_hue(value);
@@ -524,6 +534,7 @@ void ColorField::set_hue(double hue)
     create_color_bitmap();
 
     auto color = Color::from_hsv(hsv);
+    color.set_alpha(m_color.alpha());
     set_color(color);
 
     if (on_pick)
@@ -538,6 +549,7 @@ void ColorField::pick_color_at_position(GUI::MouseEvent& event)
     auto inner_rect = frame_inner_rect();
     auto position = event.position().constrained(inner_rect).translated(-frame_thickness(), -frame_thickness());
     auto color = Color::from_hsv(m_hue, (double)position.x() / inner_rect.width(), (double)(inner_rect.height() - position.y()) / inner_rect.height());
+    color.set_alpha(m_color.alpha());
     m_last_position = position;
     m_color = color;
 
