@@ -135,10 +135,10 @@ extern "C" [[noreturn]] void init()
     InterruptManagement::initialize();
     ACPI::initialize();
 
-    new VFS;
-    new KeyboardDevice;
-    new PS2MouseDevice;
-    new Console;
+    VFS::initialize();
+    KeyboardDevice::initialize();
+    PS2MouseDevice::create();
+    Console::initialize();
 
     klog() << "Starting SerenityOS...";
 
@@ -146,7 +146,7 @@ extern "C" [[noreturn]] void init()
 
     TimeManagement::initialize();
 
-    new NullDevice;
+    NullDevice::initialize();
     if (!get_serial_debug())
         new SerialDevice(SERIAL_COM1_ADDR, 64);
     new SerialDevice(SERIAL_COM2_ADDR, 65);
@@ -228,7 +228,7 @@ void init_stage2()
         });
 
         if (bxvga_found) {
-            new BXVGADevice;
+            BXVGADevice::initialize();
         } else {
             if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB || multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT) {
                 new MBVGADevice(
@@ -237,7 +237,7 @@ void init_stage2()
                     multiboot_info_ptr->framebuffer_width,
                     multiboot_info_ptr->framebuffer_height);
             } else {
-                new BXVGADevice;
+                BXVGADevice::initialize();
             }
         }
     }
@@ -252,9 +252,8 @@ void init_stage2()
     new ZeroDevice;
     new FullDevice;
     new RandomDevice;
-    new PTYMultiplexer;
+    PTYMultiplexer::initialize();
     new SB16;
-    VMWareBackdoor::initialize();
 
     bool force_pio = kernel_command_line().contains("force_pio");
 

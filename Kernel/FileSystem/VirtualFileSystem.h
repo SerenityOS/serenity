@@ -78,6 +78,7 @@ public:
         int m_flags;
     };
 
+    static void initialize();
     static VFS& the();
 
     VFS();

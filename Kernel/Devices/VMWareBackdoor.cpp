@@ -25,6 +25,8 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/OwnPtr.h>
+#include <AK/Singleton.h>
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CommandLine.h>
@@ -80,33 +82,40 @@ inline void vmware_high_bandwidth_get(VMWareCommand& command)
                  : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
 }
 
-static VMWareBackdoor* s_vmware_backdoor;
-
-static bool detect_presence()
+class VMWareBackdoorDetector
 {
-    VMWareCommand command;
-    command.bx = ~VMWARE_MAGIC;
-    command.command = VMWARE_CMD_GETVERSION;
-    vmware_out(command);
-    if (command.bx != VMWARE_MAGIC || command.ax == 0xFFFFFFFF)
-        return false;
-    return true;
-}
+public:
+    VMWareBackdoorDetector()
+    {
+        if (detect_presence())
+            m_backdoor = make<VMWareBackdoor>();
+    }
 
-VMWareBackdoor* VMWareBackdoor::initialize()
-{
-    ASSERT(s_vmware_backdoor == nullptr);
-    if (!detect_presence())
-        return nullptr;
+    VMWareBackdoor* get_instance()
+    {
+        return m_backdoor.ptr();
+    }
 
-    s_vmware_backdoor = new VMWareBackdoor;
-    klog() << "VMWare backdoor opened.";
-    return s_vmware_backdoor;
-}
+private:
+    static bool detect_presence()
+    {
+        VMWareCommand command;
+        command.bx = ~VMWARE_MAGIC;
+        command.command = VMWARE_CMD_GETVERSION;
+        vmware_out(command);
+        if (command.bx != VMWARE_MAGIC || command.ax == 0xFFFFFFFF)
+            return false;
+        return true;
+    }
+
+    OwnPtr<VMWareBackdoor> m_backdoor;
+};
+
+static AK::Singleton<VMWareBackdoorDetector> s_vmware_backdoor;
 
 VMWareBackdoor* VMWareBackdoor::the()
 {
-    return s_vmware_backdoor;
+    return s_vmware_backdoor->get_instance();
 }
 
 VMWareBackdoor::VMWareBackdoor()

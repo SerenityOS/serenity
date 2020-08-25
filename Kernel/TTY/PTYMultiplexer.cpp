@@ -26,6 +26,7 @@
 
 #include "PTYMultiplexer.h"
 #include "MasterPTY.h"
+#include <AK/Singleton.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
@@ -35,18 +36,16 @@
 namespace Kernel {
 
 static const unsigned s_max_pty_pairs = 8;
-static PTYMultiplexer* s_the;
+static AK::Singleton<PTYMultiplexer> s_the;
 
 PTYMultiplexer& PTYMultiplexer::the()
 {
-    ASSERT(s_the);
     return *s_the;
 }
 
 PTYMultiplexer::PTYMultiplexer()
     : CharacterDevice(5, 2)
 {
-    s_the = this;
     m_freelist.ensure_capacity(s_max_pty_pairs);
     for (int i = s_max_pty_pairs; i > 0; --i)
         m_freelist.unchecked_append(i - 1);

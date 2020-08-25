@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
+#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/ACPI/Parser.h>
@@ -68,7 +69,7 @@
 
 namespace Kernel {
 
-static APIC* s_apic;
+static AK::Singleton<APIC> s_apic;
 
 class APICIPIInterruptHandler final : public GenericInterruptHandler {
 public:
@@ -132,7 +133,7 @@ private:
 
 bool APIC::initialized()
 {
-    return (s_apic != nullptr);
+    return s_apic.is_initialized();
 }
 
 APIC& APIC::the()
@@ -144,7 +145,7 @@ APIC& APIC::the()
 void APIC::initialize()
 {
     ASSERT(!APIC::initialized());
-    s_apic = new APIC();
+    s_apic.ensure_instance();
 }
 
 PhysicalAddress APIC::get_base()

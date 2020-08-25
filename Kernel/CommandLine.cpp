@@ -38,6 +38,7 @@ const CommandLine& kernel_command_line()
 
 void CommandLine::initialize(const String& string)
 {
+    ASSERT(!s_the);
     s_the = new CommandLine(string);
 }
 

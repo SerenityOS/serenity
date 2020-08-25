@@ -25,22 +25,26 @@
  */
 
 #include "NullDevice.h"
+#include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 
 namespace Kernel {
 
-static NullDevice* s_the;
+static AK::Singleton<NullDevice> s_the;
+
+void NullDevice::initialize()
+{
+    s_the.ensure_instance();
+}
 
 NullDevice& NullDevice::the()
 {
-    ASSERT(s_the);
     return *s_the;
 }
 
 NullDevice::NullDevice()
     : CharacterDevice(1, 3)
 {
-    s_the = this;
 }
 
 NullDevice::~NullDevice()

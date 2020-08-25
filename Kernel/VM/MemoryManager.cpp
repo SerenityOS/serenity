@@ -53,6 +53,10 @@ extern FlatPtr end_of_kernel_bss;
 
 namespace Kernel {
 
+// NOTE: We can NOT use AK::Singleton for this class, because
+// MemoryManager::initialize is called *before* global constructors are
+// run. If we do, then AK::Singleton would get re-initialized, causing
+// the memory manager to be initialized twice!
 static MemoryManager* s_the;
 RecursiveSpinLock s_mm_lock;
 

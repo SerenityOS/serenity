@@ -25,6 +25,7 @@
  */
 
 #include <AK/Memory.h>
+#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Thread.h>
@@ -76,18 +77,22 @@ void SB16::set_sample_rate(uint16_t hz)
     dsp_write((u8)hz);
 }
 
-static SB16* s_the;
+static AK::Singleton<SB16> s_the;
 
 SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)
     , CharacterDevice(42, 42) // ### ?
 {
-    s_the = this;
     initialize();
 }
 
 SB16::~SB16()
 {
+}
+
+void SB16::create()
+{
+    s_the.ensure_instance();
 }
 
 SB16& SB16::the()
