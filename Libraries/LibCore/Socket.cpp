@@ -112,13 +112,12 @@ bool Socket::connect(const SocketAddress& address)
     sockaddr_un saddr;
     saddr.sun_family = AF_LOCAL;
     auto dest_address = address.to_string();
-    if (dest_address.length() >= sizeof(saddr.sun_path)) {
+    bool fits = dest_address.copy_characters_to_buffer(saddr.sun_path, sizeof(saddr.sun_path));
+    if (!fits) {
         fprintf(stderr, "Core::Socket: Failed to connect() to %s: Path is too long!\n", dest_address.characters());
         errno = EINVAL;
         return false;
     }
-    strcpy(saddr.sun_path, address.to_string().characters());
-
     m_destination_address = address;
 
     return common_connect((const sockaddr*)&saddr, sizeof(saddr));

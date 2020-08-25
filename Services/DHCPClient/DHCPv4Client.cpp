@@ -71,7 +71,12 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
 
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
-    strlcpy(ifr.ifr_name, iface.m_ifname.characters(), IFNAMSIZ);
+
+    bool fits = iface.m_ifname.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
+    if (!fits) {
+        dbg() << "Interface name doesn't fit into IFNAMSIZ!";
+        return;
+    }
 
     // set the IP address
     ifr.ifr_addr.sa_family = AF_INET;

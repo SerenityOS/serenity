@@ -27,9 +27,9 @@
 #pragma once
 
 #include "DHCPv4.h"
-#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/UDPServer.h>
 #include <LibCore/UDPSocket.h>
@@ -39,7 +39,7 @@
 #include <sys/socket.h>
 
 struct InterfaceDescriptor {
-    FlyString m_ifname;
+    String m_ifname;
     MACAddress m_mac_address;
 };
 
