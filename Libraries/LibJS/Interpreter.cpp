@@ -324,7 +324,7 @@ Value Interpreter::construct(Function& function, Function& new_target, Optional<
     return this_value;
 }
 
-Value Interpreter::throw_exception(Exception* exception)
+void Interpreter::throw_exception(Exception* exception)
 {
 #ifdef INTERPRETER_DEBUG
     if (exception->value().is_object() && exception->value().as_object().is_error()) {
@@ -341,7 +341,6 @@ Value Interpreter::throw_exception(Exception* exception)
 #endif
     m_exception = exception;
     unwind(ScopeType::Try);
-    return {};
 }
 
 GlobalObject& Interpreter::global_object()

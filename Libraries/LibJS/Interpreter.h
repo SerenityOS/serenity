@@ -176,19 +176,19 @@ public:
     void clear_exception() { m_exception = nullptr; }
 
     template<typename T, typename... Args>
-    Value throw_exception(Args&&... args)
+    void throw_exception(Args&&... args)
     {
         return throw_exception(T::create(global_object(), forward<Args>(args)...));
     }
 
-    Value throw_exception(Exception*);
-    Value throw_exception(Value value)
+    void throw_exception(Exception*);
+    void throw_exception(Value value)
     {
         return throw_exception(heap().allocate<Exception>(global_object(), value));
     }
 
     template<typename T, typename... Args>
-    Value throw_exception(ErrorType type, Args&&... args)
+    void throw_exception(ErrorType type, Args&&... args)
     {
         return throw_exception(T::create(global_object(), String::format(type.message(), forward<Args>(args)...)));
     }

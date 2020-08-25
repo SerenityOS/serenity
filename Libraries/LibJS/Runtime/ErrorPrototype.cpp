@@ -58,8 +58,10 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::name_getter)
     auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
-    if (!this_object->is_error())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
+    if (!this_object->is_error()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
+        return {};
+    }
     return js_string(interpreter, static_cast<const Error*>(this_object)->name());
 }
 
@@ -83,15 +85,19 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::message_getter)
     auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
     if (!this_object)
         return {};
-    if (!this_object->is_error())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
+    if (!this_object->is_error()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
+        return {};
+    }
     return js_string(interpreter, static_cast<const Error*>(this_object)->message());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
-    if (!interpreter.this_value(global_object).is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, interpreter.this_value(global_object).to_string_without_side_effects().characters());
+    if (!interpreter.this_value(global_object).is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, interpreter.this_value(global_object).to_string_without_side_effects().characters());
+        return {};
+    }
     auto& this_object = interpreter.this_value(global_object).as_object();
 
     String name = "Error";
@@ -123,10 +129,10 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     PrototypeName::PrototypeName(GlobalObject& global_object)                 \
-        : Object(*global_object.error_prototype())                             \
+        : Object(*global_object.error_prototype())                            \
     {                                                                         \
     }                                                                         \
-    PrototypeName::~PrototypeName() { }
+    PrototypeName::~PrototypeName() {}
 
 JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE

@@ -140,10 +140,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     auto count_value = interpreter.argument(0).to_number(interpreter);
     if (interpreter.exception())
         return {};
-    if (count_value.as_double() < 0)
-        return interpreter.throw_exception<RangeError>(ErrorType::StringRepeatCountMustBe, "positive");
-    if (count_value.is_infinity())
-        return interpreter.throw_exception<RangeError>(ErrorType::StringRepeatCountMustBe, "finite");
+    if (count_value.as_double() < 0) {
+        interpreter.throw_exception<RangeError>(ErrorType::StringRepeatCountMustBe, "positive");
+        return {};
+    }
+    if (count_value.is_infinity()) {
+        interpreter.throw_exception<RangeError>(ErrorType::StringRepeatCountMustBe, "finite");
+        return {};
+    }
     auto count = count_value.to_size_t(interpreter);
     if (interpreter.exception())
         return {};
@@ -455,8 +459,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
     auto this_object = interpreter.this_value(global_object);
-    if (this_object.is_undefined() || this_object.is_null())
-        return interpreter.throw_exception<TypeError>(ErrorType::ToObjectNullOrUndef);
+    if (this_object.is_undefined() || this_object.is_null()) {
+        interpreter.throw_exception<TypeError>(ErrorType::ToObjectNullOrUndef);
+        return {};
+    }
 
     auto string = this_object.to_string(interpreter);
     if (interpreter.exception())

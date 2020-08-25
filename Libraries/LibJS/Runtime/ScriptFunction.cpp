@@ -135,8 +135,10 @@ Value ScriptFunction::call(Interpreter& interpreter)
 
 Value ScriptFunction::construct(Interpreter& interpreter, Function&)
 {
-    if (m_is_arrow_function)
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, m_name.characters());
+    if (m_is_arrow_function) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, m_name.characters());
+        return {};
+    }
     return call(interpreter);
 }
 

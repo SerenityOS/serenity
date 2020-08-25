@@ -645,12 +645,13 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "    if (!impl)";
         out() << "        return {};";
         if (function.length() > 0) {
-            out() << "    if (interpreter.argument_count() < " << function.length() << ")";
-
+            out() << "    if (interpreter.argument_count() < " << function.length() << ") {";
             if (function.length() == 1)
-                out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, \"" << function.name << "\");";
+                out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, \"" << function.name << "\");";
             else
-                out() << "        return interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
+                out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
+            out() << "        return {};";
+            out() << "    }";
         }
 
         StringBuilder arguments_builder;
