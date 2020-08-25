@@ -73,6 +73,8 @@ private:
     ColorField(Color color);
 
     Color m_color;
+    // save hue seperately so full white color doesn't reset it to 0
+    double m_hue;
 
     RefPtr<Gfx::Bitmap> m_color_bitmap;
     bool m_being_pressed { false };
@@ -137,7 +139,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"));
     set_title(title);
     set_resizable(false);
-    resize(500, 322);
+    resize(500, 326);
 
     build_ui();
 }
@@ -230,7 +232,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     // Left Side
     m_custom_color = horizontal_container.add<CustomColorWidget>(m_color);
     m_custom_color->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    m_custom_color->set_preferred_size(291, 256);
+    m_custom_color->set_preferred_size(299, 260);
     m_custom_color->on_pick = [this](Color color) {
         if (m_color == color)
             return;
@@ -429,16 +431,18 @@ CustomColorWidget::CustomColorWidget(Color color)
     set_layout<HorizontalBoxLayout>();
 
     m_color_field = add<ColorField>(color);
-    m_color_field->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_color_field->set_preferred_size(256, 0);
+    m_color_field->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    auto size = 256 + (m_color_field->frame_thickness() * 2);
+    m_color_field->set_preferred_size(size, size);
     m_color_field->on_pick = [this](Color color) {
         if (on_pick)
             on_pick(color);
     };
 
     m_color_slider = add<ColorSlider>(color.to_hsv().hue);
-    m_color_slider->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_color_slider->set_preferred_size(32, 0);
+    m_color_slider->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    auto slider_width = 32 + (m_color_slider->frame_thickness() * 2);
+    m_color_slider->set_preferred_size(slider_width, size);
     m_color_slider->on_pick = [this](double value) {
         m_color_field->set_hue(value);
     };
@@ -447,10 +451,12 @@ CustomColorWidget::CustomColorWidget(Color color)
 void CustomColorWidget::set_color(Color color)
 {
     m_color_field->set_color(color);
+    m_color_field->set_hue(color.to_hsv().hue);
 }
 
 ColorField::ColorField(Color color)
     : m_color(color)
+    , m_hue(color.to_hsv().hue)
 {
     create_color_bitmap();
 }
@@ -460,12 +466,12 @@ void ColorField::create_color_bitmap()
     m_color_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 256, 256 });
     auto painter = Gfx::Painter(*m_color_bitmap);
 
-    auto hsv = m_color.to_hsv();
-
+    Gfx::HSV hsv;
+    hsv.hue = m_hue;
     for (int x = 0; x < 256; x++) {
-        hsv.saturation = x / 255.0;
+        hsv.saturation = x / 255.0f;
         for (int y = 0; y < 256; y++) {
-            hsv.value = (255 - y) / 255.0;
+            hsv.value = (255 - y) / 255.0f;
             Color color = Color::from_hsv(hsv);
             painter.set_pixel({ x, y }, color);
         }
@@ -478,7 +484,9 @@ void ColorField::set_color(Color color)
         return;
 
     m_color = color;
-    create_color_bitmap();
+    // don't save m_hue here by default, we dont want to set it to 0 in case color is full white
+    // m_hue = color.to_hsv().hue;
+
     recalculate_position();
 }
 
@@ -491,13 +499,17 @@ void ColorField::recalculate_position()
     update();
 }
 
-void ColorField::set_hue(double value)
+void ColorField::set_hue(double hue)
 {
-    auto hsv = m_color.to_hsv();
-    if (hsv.hue == value)
+    if (m_hue == hue)
         return;
 
-    hsv.hue = value;
+    auto hsv = m_color.to_hsv();
+    hsv.hue = hue;
+
+    m_hue = hue;
+    create_color_bitmap();
+
     auto color = Color::from_hsv(hsv);
     set_color(color);
 
@@ -510,14 +522,9 @@ void ColorField::pick_color_at_position(GUI::MouseEvent& event)
     if (!m_being_pressed)
         return;
 
-    auto position = event.position().translated(-frame_thickness(), -frame_thickness());
-    if (!frame_inner_rect().contains(position))
-        return;
-
-    // Map actual event position onto scaled bitmap to get the right pixel
-    auto pixel_x = min(position.x() * m_color_bitmap->width() / frame_inner_rect().width(), m_color_bitmap->width() - 1);
-    auto pixel_y = min(position.y() * m_color_bitmap->height() / frame_inner_rect().height(), m_color_bitmap->height() - 1);
-    auto color = m_color_bitmap->get_pixel({ pixel_x, pixel_y });
+    auto inner_rect = frame_inner_rect();
+    auto position = event.position().constrained(inner_rect).translated(-frame_thickness(), -frame_thickness());
+    auto color = Color::from_hsv(m_hue, (double)position.x() / inner_rect.width(), (double)(inner_rect.height() - position.y()) / inner_rect.height());
     m_last_position = position;
     m_color = color;
 
@@ -609,15 +616,11 @@ void ColorSlider::pick_value_at_position(GUI::MouseEvent& event)
     if (!m_being_pressed)
         return;
 
-    auto position = event.position().translated(-frame_thickness(), -frame_thickness());
-    if (!frame_inner_rect().contains(position))
-        return;
-
-    // Map actual event position onto scaled bitmap to get the right pixel
-    auto pixel_y = min(position.y() * m_color_bitmap->height() / frame_inner_rect().height(), m_color_bitmap->height() - 1);
-    auto color = m_color_bitmap->get_pixel({ 0, pixel_y });
+    auto inner_rect = frame_inner_rect();
+    auto position = event.position().constrained(inner_rect).translated(-frame_thickness(), -frame_thickness());
+    auto hue = (double)position.y() / inner_rect.height() * 360;
     m_last_position = position.y();
-    m_value = color.to_hsv().hue;
+    m_value = hue;
 
     if (on_pick)
         on_pick(m_value);
