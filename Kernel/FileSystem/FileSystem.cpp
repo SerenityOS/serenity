@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/FileSystem.h>
@@ -37,12 +38,10 @@
 namespace Kernel {
 
 static u32 s_lastFileSystemID;
-static HashMap<u32, FS*>* s_fs_map;
+static AK::Singleton<HashMap<u32, FS*>> s_fs_map;
 
 static HashMap<u32, FS*>& all_fses()
 {
-    if (!s_fs_map)
-        s_fs_map = new HashMap<u32, FS*>();
     return *s_fs_map;
 }
 

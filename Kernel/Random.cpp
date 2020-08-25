@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
@@ -32,13 +33,10 @@
 
 namespace Kernel {
 
-static KernelRng* s_the;
+static AK::Singleton<KernelRng> s_the;
 
 KernelRng& KernelRng::the()
 {
-    if (!s_the) {
-        s_the = new KernelRng;
-    }
     return *s_the;
 }
 

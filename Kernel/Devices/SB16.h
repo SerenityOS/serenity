@@ -42,6 +42,7 @@ public:
     SB16();
     virtual ~SB16() override;
 
+    static void create();
     static SB16& the();
 
     // ^CharacterDevice

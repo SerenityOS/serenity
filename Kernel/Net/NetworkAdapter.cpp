@@ -25,6 +25,7 @@
  */
 
 #include <AK/HashTable.h>
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Lock.h>
@@ -37,12 +38,11 @@
 
 namespace Kernel {
 
+static AK::Singleton<Lockable<HashTable<NetworkAdapter*>>> s_table;
+
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {
-    static Lockable<HashTable<NetworkAdapter*>>* table;
-    if (!table)
-        table = new Lockable<HashTable<NetworkAdapter*>>;
-    return *table;
+    return *s_table;
 }
 
 void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)
