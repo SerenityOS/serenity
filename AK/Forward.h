@@ -51,6 +51,10 @@ class Utf8View;
 class InputStream;
 class InputMemoryStream;
 class DuplexMemoryStream;
+class OutputStream;
+
+template<size_t Capacity>
+class CircularDuplexStream;
 
 template<typename T>
 class Span;
@@ -123,6 +127,7 @@ using AK::Bitmap;
 using AK::BufferStream;
 using AK::ByteBuffer;
 using AK::Bytes;
+using AK::CircularDuplexStream;
 using AK::CircularQueue;
 using AK::DebugLogStream;
 using AK::DoublyLinkedList;
@@ -143,6 +148,7 @@ using AK::LogStream;
 using AK::NonnullOwnPtr;
 using AK::NonnullRefPtr;
 using AK::Optional;
+using AK::OutputStream;
 using AK::OwnPtr;
 using AK::ReadonlyBytes;
 using AK::RefPtr;
