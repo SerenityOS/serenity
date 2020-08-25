@@ -27,6 +27,7 @@
 #include "DebugInfoWidget.h"
 #include "BacktraceModel.h"
 #include "Debugger.h"
+#include "RegistersModel.h"
 #include "VariablesModel.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
@@ -37,6 +38,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/TreeView.h>
 
 namespace HackStudio {
@@ -90,7 +92,10 @@ DebugInfoWidget::DebugInfoWidget()
 
     auto& splitter = bottom_box.add<GUI::HorizontalSplitter>();
     m_backtrace_view = splitter.add<GUI::ListView>();
-    m_variables_view = splitter.add<GUI::TreeView>();
+    auto& variables_tab_widget = splitter.add<GUI::TabWidget>();
+    variables_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
+    variables_tab_widget.add_widget("Variables", build_variables_tab());
+    variables_tab_widget.add_widget("Registers", build_registers_tab());
 
     m_backtrace_view->on_selection = [this](auto& index) {
         auto& model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
@@ -104,13 +109,14 @@ DebugInfoWidget::DebugInfoWidget()
 
         m_variables_view->set_model(VariablesModel::create(frame_regs));
     };
+}
 
-    auto edit_variable_action = GUI::Action::create("Change value", [&](auto&) {
-        m_variables_view->on_activation(m_variables_view->selection().first());
-    });
+NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_variables_tab()
+{
+    auto variables_widget = GUI::Widget::construct();
+    variables_widget->set_layout<GUI::HorizontalBoxLayout>();
 
-    m_variable_context_menu = GUI::Menu::construct();
-    m_variable_context_menu->add_action(edit_variable_action);
+    m_variables_view = variables_widget->add<GUI::TreeView>();
 
     auto is_valid_index = [](auto& index) {
         if (!index.is_valid())
@@ -137,12 +143,32 @@ DebugInfoWidget::DebugInfoWidget()
             model.set_variable_value(index, value, window());
         }
     };
+
+    auto edit_variable_action = GUI::Action::create("Change value", [&](auto&) {
+        m_variables_view->on_activation(m_variables_view->selection().first());
+    });
+
+    m_variable_context_menu = GUI::Menu::construct();
+    m_variable_context_menu->add_action(edit_variable_action);
+
+    return variables_widget;
+}
+
+NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_registers_tab()
+{
+    auto registers_widget = GUI::Widget::construct();
+    registers_widget->set_layout<GUI::HorizontalBoxLayout>();
+
+    m_registers_view = registers_widget->add<GUI::TableView>();
+
+    return registers_widget;
 }
 
 void DebugInfoWidget::update_state(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
 {
     m_variables_view->set_model(VariablesModel::create(regs));
     m_backtrace_view->set_model(BacktraceModel::create(debug_session, regs));
+    m_registers_view->set_model(RegistersModel::create(regs));
     auto selected_index = m_backtrace_view->model()->index(0);
     if (!selected_index.is_valid()) {
         dbg() << "Warning: DebugInfoWidget: backtrace selected index is invalid";
@@ -154,6 +180,8 @@ void DebugInfoWidget::update_state(const Debug::DebugSession& debug_session, con
 void DebugInfoWidget::program_stopped()
 {
     m_variables_view->set_model({});
+    m_backtrace_view->set_model({});
+    m_registers_view->set_model({});
 }
 
 void DebugInfoWidget::set_debug_actions_enabled(bool enabled)
@@ -163,4 +191,5 @@ void DebugInfoWidget::set_debug_actions_enabled(bool enabled)
     m_step_in_action->set_enabled(enabled);
     m_step_out_action->set_enabled(enabled);
 }
+
 }

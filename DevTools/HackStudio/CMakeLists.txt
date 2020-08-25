@@ -5,6 +5,7 @@ set(SOURCES
     Debugger/DebugInfoWidget.cpp
     Debugger/DisassemblyModel.cpp
     Debugger/DisassemblyWidget.cpp
+    Debugger/RegistersModel.cpp
     Debugger/VariablesModel.cpp
     Editor.cpp
     EditorWrapper.cpp
