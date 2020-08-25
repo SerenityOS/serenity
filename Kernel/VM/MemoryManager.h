@@ -220,6 +220,7 @@ private:
 template<typename Callback>
 void VMObject::for_each_region(Callback callback)
 {
+    ScopedSpinLock lock(s_mm_lock);
     // FIXME: Figure out a better data structure so we don't have to walk every single region every time an inode changes.
     //        Perhaps VMObject could have a Vector<Region*> with all of his mappers?
     for (auto& region : MM.m_user_regions) {
