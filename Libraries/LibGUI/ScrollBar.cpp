@@ -275,6 +275,7 @@ void ScrollBar::on_automatic_scrolling_timer_fired()
     }
     if (m_pressed_component == Component::Gutter && component_at_position(m_last_mouse_position) == Component::Gutter) {
         scroll_by_page(m_last_mouse_position);
+        m_hovered_component = component_at_position(m_last_mouse_position);
         return;
     }
 }
