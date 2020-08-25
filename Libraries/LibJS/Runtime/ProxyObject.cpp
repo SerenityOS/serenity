@@ -89,9 +89,8 @@ Object* ProxyObject::prototype()
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "getPrototypeOf");
         return nullptr;
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments));
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target));
     if (interpreter().exception())
         return nullptr;
     if (!trap_result.is_object() && !trap_result.is_null()) {
@@ -139,10 +138,8 @@ bool ProxyObject::set_prototype(Object* object)
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "setPrototypeOf");
         return false;
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    arguments.append(Value(object));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target), Value(object)).to_boolean();
     if (interpreter().exception() || !trap_result)
         return false;
     if (m_target.is_extensible())
@@ -172,9 +169,8 @@ bool ProxyObject::is_extensible() const
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "isExtensible");
         return {};
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target)).to_boolean();
     if (interpreter().exception())
         return false;
     if (trap_result != m_target.is_extensible()) {
@@ -200,9 +196,8 @@ bool ProxyObject::prevent_extensions()
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "preventExtensions");
         return {};
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target)).to_boolean();
     if (interpreter().exception())
         return false;
     if (trap_result && m_target.is_extensible()) {
@@ -228,10 +223,8 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(const Prop
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "getOwnPropertyDescriptor");
         return {};
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    arguments.append(js_string(interpreter(), name.to_string()));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments));
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(interpreter(), name.to_string()));
     if (interpreter().exception())
         return {};
     if (!trap_result.is_object() && !trap_result.is_undefined()) {
@@ -285,11 +278,8 @@ bool ProxyObject::define_property(const StringOrSymbol& property_name, const Obj
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "defineProperty");
         return false;
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    arguments.append(property_name.to_value(interpreter()));
-    arguments.append(Value(const_cast<Object*>(&descriptor)));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target), property_name.to_value(interpreter()), Value(const_cast<Object*>(&descriptor))).to_boolean();
     if (interpreter().exception() || !trap_result)
         return false;
     auto target_desc = m_target.get_own_property_descriptor(property_name);
@@ -339,10 +329,8 @@ bool ProxyObject::has_property(const PropertyName& name) const
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "has");
         return false;
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    arguments.append(js_string(interpreter(), name.to_string()));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(interpreter(), name.to_string())).to_boolean();
     if (interpreter().exception())
         return false;
     if (!trap_result) {
@@ -379,11 +367,8 @@ Value ProxyObject::get(const PropertyName& name, Value) const
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "get");
         return {};
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    arguments.append(js_string(interpreter(), name.to_string()));
-    arguments.append(Value(const_cast<ProxyObject*>(this)));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments));
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(interpreter(), name.to_string()), Value(const_cast<ProxyObject*>(this)));
     if (interpreter().exception())
         return {};
     auto target_desc = m_target.get_own_property_descriptor(name);
@@ -417,12 +402,7 @@ bool ProxyObject::put(const PropertyName& name, Value value, Value)
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "set");
         return false;
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    arguments.append(js_string(interpreter(), name.to_string()));
-    arguments.append(value);
-    arguments.append(Value(const_cast<ProxyObject*>(this)));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(interpreter(), name.to_string()), value, Value(const_cast<ProxyObject*>(this))).to_boolean();
     if (interpreter().exception() || !trap_result)
         return false;
     auto target_desc = m_target.get_own_property_descriptor(name);
@@ -455,10 +435,8 @@ Value ProxyObject::delete_property(const PropertyName& name)
         interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "deleteProperty");
         return {};
     }
-    MarkedValueList arguments(interpreter().heap());
-    arguments.append(Value(&m_target));
-    arguments.append(js_string(interpreter(), name.to_string()));
-    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), move(arguments)).to_boolean();
+
+    auto trap_result = interpreter().call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(interpreter(), name.to_string())).to_boolean();
     if (interpreter().exception())
         return {};
     if (!trap_result)

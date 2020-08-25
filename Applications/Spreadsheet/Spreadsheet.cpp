@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace Spreadsheet {
 
@@ -348,9 +349,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object)
             break;
         case Cell::Formula: {
             auto& interpreter = sheet->interpreter();
-            JS::MarkedValueList args { interpreter.heap() };
-            args.append(JS::js_string(interpreter, obj.get("value").as_string()));
-            auto value = interpreter.call(parse_function, json, move(args));
+            auto value = interpreter.call(parse_function, json, JS::js_string(interpreter, obj.get("value").as_string()));
             cell = make<Cell>(obj.get("source").to_string(), move(value), sheet->make_weak_ptr());
             break;
         }
@@ -387,9 +386,7 @@ JsonObject Sheet::to_json() const
         if (it.value->kind == Cell::Formula) {
             data.set("source", it.value->data);
             auto json = m_interpreter->global_object().get("JSON");
-            JS::MarkedValueList args(m_interpreter->heap());
-            args.append(it.value->evaluated_data);
-            auto stringified = m_interpreter->call(json.as_object().get("stringify").as_function(), json, move(args));
+            auto stringified = m_interpreter->call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data);
             data.set("value", stringified.to_string_without_side_effects());
         } else {
             data.set("value", it.value->data);

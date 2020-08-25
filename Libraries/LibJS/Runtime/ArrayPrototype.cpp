@@ -35,7 +35,6 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -136,12 +135,7 @@ static void for_each_item(Interpreter& interpreter, GlobalObject& global_object,
             value = js_undefined();
         }
 
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(value);
-        arguments.append(Value((i32)i));
-        arguments.append(this_object);
-
-        auto callback_result = interpreter.call(*callback_function, this_value, move(arguments));
+        auto callback_result = interpreter.call(*callback_function, this_value, value, Value((i32)i), this_object);
         if (interpreter.exception())
             return;
 
@@ -494,13 +488,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
         if (value.is_empty())
             continue;
 
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(accumulator);
-        arguments.append(value);
-        arguments.append(Value((i32)i));
-        arguments.append(this_object);
-
-        accumulator = interpreter.call(*callback_function, this_value, move(arguments));
+        accumulator = interpreter.call(*callback_function, this_value, accumulator, value, Value((i32)i), this_object);
         if (interpreter.exception())
             return {};
     }
@@ -553,13 +541,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
         if (value.is_empty())
             continue;
 
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(accumulator);
-        arguments.append(value);
-        arguments.append(Value(i));
-        arguments.append(this_object);
-
-        accumulator = interpreter.call(*callback_function, this_value, move(arguments));
+        accumulator = interpreter.call(*callback_function, this_value, accumulator, value, Value((i32)i), this_object);
         if (interpreter.exception())
             return {};
     }

@@ -56,7 +56,8 @@ JSONObject::~JSONObject()
 {
 }
 
-String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global_object, Value value, Value replacer, Value space) {
+String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global_object, Value value, Value replacer, Value space)
+{
 
     StringifyState state;
 
@@ -154,19 +155,14 @@ String JSONObject::serialize_json_property(Interpreter& interpreter, StringifySt
         if (interpreter.exception())
             return {};
         if (to_json.is_function()) {
-            MarkedValueList arguments(interpreter.heap());
-            arguments.append(js_string(interpreter, key.to_string()));
-            value = interpreter.call(to_json.as_function(), value, move(arguments));
+            value = interpreter.call(to_json.as_function(), value, js_string(interpreter, key.to_string()));
             if (interpreter.exception())
                 return {};
         }
     }
 
     if (state.replacer_function) {
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(js_string(interpreter, key.to_string()));
-        arguments.append(value);
-        value = interpreter.call(*state.replacer_function, holder, move(arguments));
+        value = interpreter.call(*state.replacer_function, holder, js_string(interpreter, key.to_string()), value);
         if (interpreter.exception())
             return {};
     }
@@ -494,10 +490,8 @@ Value JSONObject::internalize_json_property(Interpreter& interpreter, Object* ho
             }
         }
     }
-    MarkedValueList arguments(interpreter.heap());
-    arguments.append(js_string(interpreter, name.to_string()));
-    arguments.append(value);
-    return interpreter.call(reviver, Value(holder), move(arguments));
+
+    return interpreter.call(reviver, Value(holder), js_string(interpreter, name.to_string()), value);
 }
 
 }

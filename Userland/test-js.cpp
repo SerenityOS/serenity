@@ -37,7 +37,6 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -265,7 +264,8 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             printf("Unable to parse test-common.js\n");
             printf("%s\n", result.error().error.to_string().characters());
             printf("%s\n", result.error().hint.characters());
-            cleanup_and_exit();;
+            cleanup_and_exit();
+            ;
         }
         m_test_program = result.value();
     }
