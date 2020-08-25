@@ -95,6 +95,11 @@ static void ensure_caps()
     caps->set("li", "25");
 }
 
+// Unfortunately, tgetstr() doesn't accept a size argument for the buffer
+// pointed to by area, so we have to use bare strcpy().
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 char* tgetstr(const char* id, char** area)
 {
     ensure_caps();
@@ -112,6 +117,8 @@ char* tgetstr(const char* id, char** area)
     fprintf(stderr, "tgetstr: missing cap id='%s'\n", id);
     return nullptr;
 }
+
+#pragma GCC diagnostic pop
 
 int tgetflag(const char* id)
 {
