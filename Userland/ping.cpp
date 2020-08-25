@@ -125,7 +125,10 @@ int main(int argc, char** argv)
         ping_packet.header.code = 0;
         ping_packet.header.un.echo.id = htons(pid);
         ping_packet.header.un.echo.sequence = htons(seq++);
-        strlcpy(ping_packet.msg, "Hello there!\n", sizeof(ping_packet.msg));
+
+        bool fits = String("Hello there!\n").copy_characters_to_buffer(ping_packet.msg, sizeof(ping_packet.msg));
+        // It's a constant string, we can be sure that it fits.
+        ASSERT(fits);
 
         ping_packet.header.checksum = internet_checksum(&ping_packet, sizeof(PingPacket));
 
