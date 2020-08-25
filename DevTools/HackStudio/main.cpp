@@ -27,6 +27,7 @@
 #include "CursorTool.h"
 #include "Debugger/DebugInfoWidget.h"
 #include "Debugger/Debugger.h"
+#include "Debugger/DisassemblyWidget.h"
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
@@ -540,6 +541,7 @@ int main_impl(int argc, char** argv)
     auto& find_in_files_widget = s_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
     auto& terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
     auto& debug_info_widget = s_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
+    auto& disassembly_widget = s_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
 
     auto& locator = widget.add<Locator>();
 
@@ -630,6 +632,7 @@ int main_impl(int argc, char** argv)
                         current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
                         debug_info_widget.update_state(*Debugger::the().session(), regs);
                         debug_info_widget.set_debug_actions_enabled(true);
+                        disassembly_widget.update_state(*Debugger::the().session(), regs);
                         reveal_action_tab(debug_info_widget);
                     }));
             Core::EventLoop::wake();
@@ -648,6 +651,7 @@ int main_impl(int argc, char** argv)
         [&]() {
             Core::EventLoop::main().post_event(*g_window, make<Core::DeferredInvocationEvent>([&](auto&) {
                 debug_info_widget.program_stopped();
+                disassembly_widget.program_stopped();
                 hide_action_tabs();
                 GUI::MessageBox::show(g_window, "Program Exited", "Debugger", GUI::MessageBox::Type::Information);
             }));
