@@ -52,6 +52,7 @@ class InputStream;
 class InputMemoryStream;
 class DuplexMemoryStream;
 class OutputStream;
+class InputBitStream;
 
 template<size_t Capacity>
 class CircularDuplexStream;
@@ -138,6 +139,7 @@ using AK::Function;
 using AK::HashMap;
 using AK::HashTable;
 using AK::InlineLinkedList;
+using AK::InputBitStream;
 using AK::InputMemoryStream;
 using AK::InputStream;
 using AK::IPv4Address;
