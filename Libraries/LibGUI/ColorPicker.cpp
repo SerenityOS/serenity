@@ -61,29 +61,73 @@ private:
     bool m_selected { false };
 };
 
-class CustomColorWidget final : public GUI::Frame {
-    C_OBJECT(CustomColorWidget);
+class ColorField final : public GUI::Frame {
+    C_OBJECT(ColorField);
 
 public:
     Function<void(Color)> on_pick;
-    void set_color_and_recalculate_position(Color);
+    void set_color(Color);
+    void set_hue(double);
 
 private:
-    CustomColorWidget(Color color);
+    ColorField(Color color);
 
     Color m_color;
 
-    RefPtr<Gfx::Bitmap> m_custom_colors;
+    RefPtr<Gfx::Bitmap> m_color_bitmap;
     bool m_being_pressed { false };
     Gfx::IntPoint m_last_position;
 
+    void create_color_bitmap();
     void pick_color_at_position(GUI::MouseEvent& event);
+    void recalculate_position();
 
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
+};
+
+class ColorSlider final : public GUI::Frame {
+    C_OBJECT(ColorSlider);
+
+public:
+    Function<void(double)> on_pick;
+    void set_value(double);
+
+private:
+    ColorSlider(double value);
+
+    double m_value;
+
+    RefPtr<Gfx::Bitmap> m_color_bitmap;
+    bool m_being_pressed { false };
+    int m_last_position;
+
+    void pick_value_at_position(GUI::MouseEvent& event);
+    void recalculate_position();
+
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
+};
+
+class CustomColorWidget final : public GUI::Widget {
+    C_OBJECT(CustomColorWidget);
+
+public:
+    Function<void(Color)> on_pick;
+    void set_color(Color);
+
+private:
+    CustomColorWidget(Color);
+
+
+    RefPtr<ColorField> m_color_field;
+    RefPtr<ColorSlider> m_color_slider;
 };
 
 ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
@@ -93,7 +137,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"));
     set_title(title);
     set_resizable(false);
-    resize(530, 325);
+    resize(500, 322);
 
     build_ui();
 }
@@ -184,8 +228,9 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     horizontal_container.set_layout<HorizontalBoxLayout>();
 
     // Left Side
-    m_custom_color = horizontal_container.add<GUI::CustomColorWidget>(m_color);
-    m_custom_color->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+    m_custom_color = horizontal_container.add<CustomColorWidget>(m_color);
+    m_custom_color->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    m_custom_color->set_preferred_size(291, 256);
     m_custom_color->on_pick = [this](Color color) {
         if (m_color == color)
             return;
@@ -237,7 +282,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
                 return;
 
             m_color = optional_color.value();
-            m_custom_color->set_color_and_recalculate_position(color);
+            m_custom_color->set_color(color);
             update_color_widgets();
         }
     };
@@ -274,7 +319,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
                 return;
 
             m_color = color;
-            m_custom_color->set_color_and_recalculate_position(color);
+            m_custom_color->set_color(color);
             update_color_widgets();
         };
 
@@ -322,7 +367,7 @@ void ColorPicker::create_color_button(Widget& container, unsigned rgb)
         }
 
         m_color = color;
-        m_custom_color->set_color_and_recalculate_position(color);
+        m_custom_color->set_color(color);
         update_color_widgets();
     };
 
@@ -380,54 +425,87 @@ void ColorButton::click(unsigned)
 }
 
 CustomColorWidget::CustomColorWidget(Color color)
+{
+    set_layout<HorizontalBoxLayout>();
+
+    m_color_field = add<ColorField>(color);
+    m_color_field->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_color_field->set_preferred_size(256, 0);
+    m_color_field->on_pick = [this](Color color) {
+        if (on_pick)
+            on_pick(color);
+    };
+
+    m_color_slider = add<ColorSlider>(color.to_hsv().hue);
+    m_color_slider->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_color_slider->set_preferred_size(32, 0);
+    m_color_slider->on_pick = [this](double value) {
+        m_color_field->set_hue(value);
+    };
+}
+
+void CustomColorWidget::set_color(Color color)
+{
+    m_color_field->set_color(color);
+}
+
+ColorField::ColorField(Color color)
     : m_color(color)
 {
-    m_custom_colors = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 360, 512 });
-    auto painter = Gfx::Painter(*m_custom_colors);
+    create_color_bitmap();
+}
 
-    for (int h = 0; h < 360; h++) {
-        Gfx::HSV hsv;
-        hsv.hue = h / 2;
+void ColorField::create_color_bitmap()
+{
+    m_color_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 256, 256 });
+    auto painter = Gfx::Painter(*m_color_bitmap);
 
-        hsv.saturation = 255;
-        for (int v = 0; v < 256; v++) {
-            hsv.value = v;
+    auto hsv = m_color.to_hsv();
 
+    for (int x = 0; x < 256; x++) {
+        hsv.saturation = x / 255.0;
+        for (int y = 0; y < 256; y++) {
+            hsv.value = (255 - y) / 255.0;
             Color color = Color::from_hsv(hsv);
-            painter.set_pixel({ h, v }, color);
-        }
-
-        hsv.value = 255;
-        for (int s = 0; s < 256; s++) {
-            hsv.saturation = 255 - s;
-
-            Color color = Color::from_hsv(hsv);
-            painter.set_pixel({ h, 256 + s }, color);
+            painter.set_pixel({ x, y }, color);
         }
     }
 }
 
-void CustomColorWidget::set_color_and_recalculate_position(Color color)
+void ColorField::set_color(Color color)
 {
+    if (m_color == color)
+        return;
+
     m_color = color;
+    create_color_bitmap();
+    recalculate_position();
+}
 
+void ColorField::recalculate_position()
+{
     Gfx::HSV hsv = m_color.to_hsv();
-    auto x = hsv.hue * width();
-    // FIXME: the current color representation tries to represent a 3D color vector as a 2D gradient,
-    // as a result not all colors can be represented on it (if saturation and value are both < 1),
-    // let's try our best for now
-    auto y = height() / 2;
-    if (hsv.saturation < 1) {
-        y += (1 - hsv.saturation) * (height() / 2);
-    } else if (hsv.value < 1) {
-        y -= (1 - hsv.value) * (height() / 2);
-    }
-
+    auto x = hsv.saturation * width();
+    auto y = (1 - hsv.value) * height();
     m_last_position = Gfx::IntPoint(x, y);
     update();
 }
 
-void CustomColorWidget::pick_color_at_position(GUI::MouseEvent& event)
+void ColorField::set_hue(double value)
+{
+    auto hsv = m_color.to_hsv();
+    if (hsv.hue == value)
+        return;
+
+    hsv.hue = value;
+    auto color = Color::from_hsv(hsv);
+    set_color(color);
+
+    if (on_pick)
+        on_pick(color);
+}
+
+void ColorField::pick_color_at_position(GUI::MouseEvent& event)
 {
     if (!m_being_pressed)
         return;
@@ -437,9 +515,9 @@ void CustomColorWidget::pick_color_at_position(GUI::MouseEvent& event)
         return;
 
     // Map actual event position onto scaled bitmap to get the right pixel
-    auto pixel_x = min(position.x() * m_custom_colors->width() / frame_inner_rect().width(), m_custom_colors->width() - 1);
-    auto pixel_y = min(position.y() * m_custom_colors->height() / frame_inner_rect().height(), m_custom_colors->height() - 1);
-    auto color = m_custom_colors->get_pixel({ pixel_x, pixel_y });
+    auto pixel_x = min(position.x() * m_color_bitmap->width() / frame_inner_rect().width(), m_color_bitmap->width() - 1);
+    auto pixel_y = min(position.y() * m_color_bitmap->height() / frame_inner_rect().height(), m_color_bitmap->height() - 1);
+    auto color = m_color_bitmap->get_pixel({ pixel_x, pixel_y });
     m_last_position = position;
     m_color = color;
 
@@ -449,7 +527,7 @@ void CustomColorWidget::pick_color_at_position(GUI::MouseEvent& event)
     update();
 }
 
-void CustomColorWidget::mousedown_event(GUI::MouseEvent& event)
+void ColorField::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
         m_being_pressed = true;
@@ -457,7 +535,7 @@ void CustomColorWidget::mousedown_event(GUI::MouseEvent& event)
     }
 }
 
-void CustomColorWidget::mouseup_event(GUI::MouseEvent& event)
+void ColorField::mouseup_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
         m_being_pressed = false;
@@ -465,13 +543,13 @@ void CustomColorWidget::mouseup_event(GUI::MouseEvent& event)
     }
 }
 
-void CustomColorWidget::mousemove_event(GUI::MouseEvent& event)
+void ColorField::mousemove_event(GUI::MouseEvent& event)
 {
     if (event.buttons() & GUI::MouseButton::Left)
         pick_color_at_position(event);
 }
 
-void CustomColorWidget::paint_event(GUI::PaintEvent& event)
+void ColorField::paint_event(GUI::PaintEvent& event)
 {
     Frame::paint_event(event);
 
@@ -479,7 +557,7 @@ void CustomColorWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(frame_inner_rect());
 
-    painter.draw_scaled_bitmap(frame_inner_rect(), *m_custom_colors, m_custom_colors->rect());
+    painter.draw_scaled_bitmap(frame_inner_rect(), *m_color_bitmap, m_color_bitmap->rect());
 
     painter.translate(frame_thickness(), frame_thickness());
     painter.draw_line({ m_last_position.x() - 1, 0 }, { m_last_position.x() - 1, height() }, Color::White);
@@ -490,9 +568,104 @@ void CustomColorWidget::paint_event(GUI::PaintEvent& event)
     painter.draw_line({ 0, m_last_position.y() }, { width(), m_last_position.y() }, Color::Black);
 }
 
-void CustomColorWidget::resize_event(ResizeEvent&)
+void ColorField::resize_event(ResizeEvent&)
 {
-    set_color_and_recalculate_position(m_color);
+    recalculate_position();
+}
+
+ColorSlider::ColorSlider(double value)
+    : m_value(value)
+{
+    m_color_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 32, 360 });
+    auto painter = Gfx::Painter(*m_color_bitmap);
+
+    for (int h = 0; h < 360; h++) {
+        Gfx::HSV hsv;
+        hsv.hue = h;
+        hsv.saturation = 1.0;
+        hsv.value = 1.0;
+        Color color = Color::from_hsv(hsv);
+        painter.draw_line({ 0, h }, { 32, h }, color);
+    }
+}
+
+void ColorSlider::set_value(double value)
+{
+    if (m_value == value)
+        return;
+
+    m_value = value;
+    recalculate_position();
+}
+
+void ColorSlider::recalculate_position()
+{
+    m_last_position = (m_value / 360.0) * height();
+    update();
+}
+
+void ColorSlider::pick_value_at_position(GUI::MouseEvent& event)
+{
+    if (!m_being_pressed)
+        return;
+
+    auto position = event.position().translated(-frame_thickness(), -frame_thickness());
+    if (!frame_inner_rect().contains(position))
+        return;
+
+    // Map actual event position onto scaled bitmap to get the right pixel
+    auto pixel_y = min(position.y() * m_color_bitmap->height() / frame_inner_rect().height(), m_color_bitmap->height() - 1);
+    auto color = m_color_bitmap->get_pixel({ 0, pixel_y });
+    m_last_position = position.y();
+    m_value = color.to_hsv().hue;
+
+    if (on_pick)
+        on_pick(m_value);
+
+    update();
+}
+
+void ColorSlider::mousedown_event(GUI::MouseEvent& event)
+{
+    if (event.button() == GUI::MouseButton::Left) {
+        m_being_pressed = true;
+        pick_value_at_position(event);
+    }
+}
+
+void ColorSlider::mouseup_event(GUI::MouseEvent& event)
+{
+    if (event.button() == GUI::MouseButton::Left) {
+        m_being_pressed = false;
+        pick_value_at_position(event);
+    }
+}
+
+void ColorSlider::mousemove_event(GUI::MouseEvent& event)
+{
+    if (event.buttons() & GUI::MouseButton::Left)
+        pick_value_at_position(event);
+}
+
+void ColorSlider::paint_event(GUI::PaintEvent& event)
+{
+    Frame::paint_event(event);
+
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(frame_inner_rect());
+
+    painter.draw_scaled_bitmap(frame_inner_rect(), *m_color_bitmap, m_color_bitmap->rect());
+
+    painter.translate(frame_thickness(), frame_thickness());
+    painter.draw_line({ 0, m_last_position - 1 }, { width(), m_last_position - 1 }, Color::White);
+    painter.draw_line({ 0, m_last_position + 1 }, { width(), m_last_position + 1 }, Color::White);
+    painter.draw_line({ 0, m_last_position }, { width(), m_last_position }, Color::Black);
+}
+
+void ColorSlider::resize_event(ResizeEvent&)
+{
+    recalculate_position();
 }
 
 }
