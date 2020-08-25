@@ -443,7 +443,7 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
         df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
         fs_table_view.set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields))));
 
-        fs_table_view.set_cell_painting_delegate(3, make<ProgressBarPaintingDelegate>());
+        fs_table_view.set_column_painting_delegate(3, make<ProgressBarPaintingDelegate>());
 
         fs_table_view.model()->update();
     };
