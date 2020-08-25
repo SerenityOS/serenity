@@ -116,11 +116,7 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
         tm->tm_mon += 12;
     }
 
-    int days = 0;
-    for (int year = 70; year < tm->tm_year; ++year)
-        days += 365 + is_leap_year(1900 + year);
-    for (int year = tm->tm_year; year < 70; ++year)
-        days -= 365 + is_leap_year(1900 + year);
+    int days = years_to_days_since_epoch(1900 + tm->tm_year);
 
     tm->tm_yday = tm->tm_mday - 1;
     for (int month = 0; month < tm->tm_mon; ++month)
