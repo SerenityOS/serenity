@@ -47,11 +47,11 @@ static in_addr_t* __gethostbyname_address_list_buffer[2];
 static hostent __gethostbyaddr_buffer;
 static in_addr_t* __gethostbyaddr_address_list_buffer[2];
 
-//Get service entry buffers and file information for the getservent() family of functions
+// Get service entry buffers and file information for the getservent() family of functions.
 static FILE* services_file = nullptr;
 static const char* services_path = "/etc/services";
 
-static bool fill_getserv_buffers(char* line, ssize_t read);
+static bool fill_getserv_buffers(const char* line, ssize_t read);
 static servent __getserv_buffer;
 static String __getserv_name_buffer;
 static String __getserv_protocol_buffer;
@@ -61,11 +61,11 @@ static Vector<char*> __getserv_alias_list;
 static bool keep_service_file_open = false;
 static ssize_t service_file_offset = 0;
 
-//Get protocol entry buffers and file information for the getprotent() family of functions
+// Get protocol entry buffers and file information for the getprotent() family of functions.
 static FILE* protocols_file = nullptr;
 static const char* protocols_path = "/etc/protocols";
 
-static bool fill_getproto_buffers(char* line, ssize_t read);
+static bool fill_getproto_buffers(const char* line, ssize_t read);
 static protoent __getproto_buffer;
 static String __getproto_name_buffer;
 static Vector<ByteBuffer> __getproto_alias_list_buffer;
@@ -254,7 +254,7 @@ struct servent* getservent()
         }
     });
 
-    //Read lines from services file until an actual service name is found.
+    // Read lines from services file until an actual service name is found.
     do {
         read = getline(&line, &len, services_file);
         service_file_offset += read;
@@ -277,10 +277,11 @@ struct servent* getservent()
     __getserv_buffer.s_port = __getserv_port_buffer;
     __getserv_buffer.s_proto = const_cast<char*>(__getserv_protocol_buffer.characters());
 
-    __getserv_alias_list.clear();
-    for (auto& alias : __getserv_alias_list_buffer) {
-        __getserv_alias_list.append((char*)alias.data());
-    }
+    __getserv_alias_list.clear_with_capacity();
+    __getserv_alias_list.ensure_capacity(__getserv_alias_list_buffer.size() + 1);
+    for (auto& alias : __getserv_alias_list_buffer)
+        __getserv_alias_list.unchecked_append(reinterpret_cast<char*>(alias.data()));
+    __getserv_alias_list.unchecked_append(nullptr);
 
     __getserv_buffer.s_aliases = __getserv_alias_list.data();
     service_entry = &__getserv_buffer;
@@ -290,6 +291,7 @@ struct servent* getservent()
     }
     return service_entry;
 }
+
 struct servent* getservbyname(const char* name, const char* protocol)
 {
     bool previous_file_open_setting = keep_service_file_open;
@@ -313,6 +315,7 @@ struct servent* getservbyname(const char* name, const char* protocol)
 
     return current_service;
 }
+
 struct servent* getservbyport(int port, const char* protocol)
 {
     bool previous_file_open_setting = keep_service_file_open;
@@ -335,6 +338,7 @@ struct servent* getservbyport(int port, const char* protocol)
 
     return current_service;
 }
+
 void setservent(int stay_open)
 {
     if (!services_file) {
@@ -349,6 +353,7 @@ void setservent(int stay_open)
     keep_service_file_open = stay_open;
     service_file_offset = 0;
 }
+
 void endservent()
 {
     if (!services_file) {
@@ -358,24 +363,28 @@ void endservent()
     services_file = nullptr;
 }
 
-//Fill the service entry buffer with the information contained in the currently read line, returns true if successfull, false if failure occurs.
-static bool fill_getserv_buffers(char* line, ssize_t read)
+// Fill the service entry buffer with the information contained
+// in the currently read line, returns true if successfull,
+// false if failure occurs.
+static bool fill_getserv_buffers(const char* line, ssize_t read)
 {
     //Splitting the line by tab delimiter and filling the servent buffers name, port, and protocol members.
     String string_line = String(line, read);
     string_line.replace(" ", "\t", true);
     auto split_line = string_line.split('\t');
 
-    //This indicates an incorrect file format. Services file entries should always at least contain name and port/protocol, seperated by tabs.
+    // This indicates an incorrect file format.
+    // Services file entries should always at least contain
+    // name and port/protocol, seperated by tabs.
     if (split_line.size() < 2) {
-        perror("malformed services file: entry");
+        fprintf(stderr, "getservent(): malformed services file\n");
         return false;
     }
     __getserv_name_buffer = split_line[0];
 
     auto port_protocol_split = String(split_line[1]).split('/');
     if (port_protocol_split.size() < 2) {
-        perror("malformed services file: port/protocol");
+        fprintf(stderr, "getservent(): malformed services file\n");
         return false;
     }
     auto number = port_protocol_split[0].to_int();
@@ -384,7 +393,7 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
 
     __getserv_port_buffer = number.value();
 
-    //Removing any annoying whitespace at the end of the protocol.
+    // Remove any annoying whitespace at the end of the protocol.
     port_protocol_split[1].replace(" ", "", true);
     port_protocol_split[1].replace("\t", "", true);
     port_protocol_split[1].replace("\n", "", true);
@@ -392,7 +401,7 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
     __getserv_protocol_buffer = port_protocol_split[1];
     __getserv_alias_list_buffer.clear();
 
-    //If there are aliases for the service, we will fill the alias list buffer.
+    // If there are aliases for the service, we will fill the alias list buffer.
     if (split_line.size() > 2 && !split_line[2].starts_with('#')) {
 
         for (size_t i = 2; i < split_line.size(); i++) {
@@ -410,7 +419,7 @@ static bool fill_getserv_buffers(char* line, ssize_t read)
 
 struct protoent* getprotoent()
 {
-    //If protocols file isn't open, attempt to open and return null on failure.
+    // If protocols file isn't open, attempt to open and return null on failure.
     if (!protocols_file) {
         protocols_file = fopen(protocols_path, "r");
 
@@ -458,11 +467,11 @@ struct protoent* getprotoent()
     __getproto_buffer.p_name = const_cast<char*>(__getproto_name_buffer.characters());
     __getproto_buffer.p_proto = __getproto_protocol_buffer;
 
-    __getproto_alias_list.clear();
-
-    for (auto& alias : __getproto_alias_list_buffer) {
-        __getproto_alias_list.append((char*)alias.data());
-    }
+    __getproto_alias_list.clear_with_capacity();
+    __getproto_alias_list.ensure_capacity(__getproto_alias_list_buffer.size() + 1);
+    for (auto& alias : __getproto_alias_list_buffer)
+        __getproto_alias_list.unchecked_append(reinterpret_cast<char*>(alias.data()));
+    __getserv_alias_list.unchecked_append(nullptr);
 
     __getproto_buffer.p_aliases = __getproto_alias_list.data();
     protocol_entry = &__getproto_buffer;
@@ -523,7 +532,7 @@ void setprotoent(int stay_open)
         protocols_file = fopen(protocols_path, "r");
 
         if (!protocols_file) {
-            perror("error opening protocols file");
+            perror("setprotoent(): error opening protocols file");
             return;
         }
     }
@@ -541,15 +550,16 @@ void endprotoent()
     protocols_file = nullptr;
 }
 
-static bool fill_getproto_buffers(char* line, ssize_t read)
+static bool fill_getproto_buffers(const char* line, ssize_t read)
 {
     String string_line = String(line, read);
     string_line.replace(" ", "\t", true);
     auto split_line = string_line.split('\t');
 
-    //This indicates an incorrect file format. Protocols file entries should always have at least a name and a protocol.
+    // This indicates an incorrect file format. Protocols file entries should
+    // always have at least a name and a protocol.
     if (split_line.size() < 2) {
-        perror("malformed protocols file: entry");
+        fprintf(stderr, "getprotoent(): malformed protocols file\n");
         return false;
     }
     __getproto_name_buffer = split_line[0];
@@ -562,13 +572,12 @@ static bool fill_getproto_buffers(char* line, ssize_t read)
 
     __getproto_alias_list_buffer.clear();
 
-    //If there are aliases for the protocol, we will fill the alias list buffer.
+    // If there are aliases for the protocol, we will fill the alias list buffer.
     if (split_line.size() > 2 && !split_line[2].starts_with('#')) {
 
         for (size_t i = 2; i < split_line.size(); i++) {
-            if (split_line[i].starts_with('#')) {
+            if (split_line[i].starts_with('#'))
                 break;
-            }
             auto alias = split_line[i].to_byte_buffer();
             alias.append("\0", sizeof(char));
             __getproto_alias_list_buffer.append(alias);
