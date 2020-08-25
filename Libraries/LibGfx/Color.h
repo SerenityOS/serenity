@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
@@ -196,14 +197,17 @@ public:
         if (hsv.hue >= 360.0)
             hsv.hue -= 360.0;
 
-        hsv.hue /= 360.0;
-
         if (!max)
             hsv.saturation = 0;
         else
             hsv.saturation = chroma / max;
 
         hsv.value = max;
+
+        ASSERT(hsv.hue >= 0.0 && hsv.hue < 360.0);
+        ASSERT(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
+        ASSERT(hsv.value >= 0.0 && hsv.value <= 1.0);
+
         return hsv;
     }
 
@@ -214,9 +218,13 @@ public:
 
     static Color from_hsv(const HSV& hsv)
     {
-        double hue = hsv.hue * 2.0;
-        double saturation = hsv.saturation / 255.0;
-        double value = hsv.value / 255.0;
+        ASSERT(hsv.hue >= 0.0 && hsv.hue < 360.0);
+        ASSERT(hsv.saturation >= 0.0 && hsv.saturation <= 1.0);
+        ASSERT(hsv.value >= 0.0 && hsv.value <= 1.0);
+
+        double hue = hsv.hue;
+        double saturation = hsv.saturation;
+        double value = hsv.value;
 
         int high = static_cast<int>(hue / 60.0) % 6;
         double f = (hue / 60.0) - high;
