@@ -64,7 +64,7 @@ public:
 
 private:
     NonnullRefPtr<ELF::Loader> m_elf;
-    OwnPtr<DebugInfo> m_debug_info;
+    OwnPtr<Debug::DebugInfo> m_debug_info;
 
     SoftMMU m_mmu;
     SoftCPU m_cpu;

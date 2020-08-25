@@ -33,7 +33,7 @@
 #include <AK/Optional.h>
 #include <AK/Types.h>
 
-namespace Dwarf {
+namespace Debug::Dwarf {
 
 class CompilationUnit;
 

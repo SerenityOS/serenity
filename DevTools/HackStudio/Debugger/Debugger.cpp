@@ -69,7 +69,7 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     if (change_type == BreakpointChange::Added) {
         Debugger::the().m_breakpoints.append(position);
     } else {
-        Debugger::the().m_breakpoints.remove_all_matching([&](DebugInfo::SourcePosition val) { return val == position; });
+        Debugger::the().m_breakpoints.remove_all_matching([&](Debug::DebugInfo::SourcePosition val) { return val == position; });
     }
 
     auto session = Debugger::the().session();
@@ -94,7 +94,7 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     }
 }
 
-DebugInfo::SourcePosition Debugger::create_source_position(const String& file, size_t line)
+Debug::DebugInfo::SourcePosition Debugger::create_source_position(const String& file, size_t line)
 {
     if (!file.starts_with('/') && !file.starts_with("./"))
         return { String::format("./%s", file.characters()), line + 1 };
@@ -109,7 +109,7 @@ int Debugger::start_static()
 
 void Debugger::start()
 {
-    m_debug_session = DebugSession::exec_and_attach(m_executable_path);
+    m_debug_session = Debug::DebugSession::exec_and_attach(m_executable_path);
     ASSERT(!!m_debug_session);
 
     for (const auto& breakpoint : m_breakpoints) {
@@ -130,11 +130,11 @@ int Debugger::debugger_loop()
 {
     ASSERT(m_debug_session);
 
-    m_debug_session->run([&](DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
-        if (reason == DebugSession::DebugBreakReason::Exited) {
+    m_debug_session->run([&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
+        if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             dbg() << "Program exited";
             m_on_exit_callback();
-            return DebugSession::DebugDecision::Detach;
+            return Debug::DebugSession::DebugDecision::Detach;
         }
         remove_temporary_breakpoints();
         ASSERT(optional_regs.has_value());
@@ -146,7 +146,7 @@ int Debugger::debugger_loop()
             if (m_state.should_stop_single_stepping(source_position.value())) {
                 m_state.set_normal();
             } else {
-                return DebugSession::DebugDecision::SingleStep;
+                return Debug::DebugSession::DebugDecision::SingleStep;
             }
         }
 
@@ -165,18 +165,18 @@ int Debugger::debugger_loop()
         switch (m_continue_type) {
         case ContinueType::Continue:
             m_state.set_normal();
-            return DebugSession::DebugDecision::Continue;
+            return Debug::DebugSession::DebugDecision::Continue;
         case ContinueType::SourceSingleStep:
             m_state.set_single_stepping(source_position.value());
-            return DebugSession::DebugDecision::SingleStep;
+            return Debug::DebugSession::DebugDecision::SingleStep;
         case ContinueType::SourceStepOut:
             m_state.set_stepping_out();
             do_step_out(regs);
-            return DebugSession::DebugDecision::Continue;
+            return Debug::DebugSession::DebugDecision::Continue;
         case ContinueType::SourceStepOver:
             m_state.set_stepping_over();
             do_step_over(regs);
-            return DebugSession::DebugDecision::Continue;
+            return Debug::DebugSession::DebugDecision::Continue;
         }
         ASSERT_NOT_REACHED();
     });
@@ -190,13 +190,13 @@ void Debugger::DebuggingState::set_normal()
     m_original_source_position.clear();
 }
 
-void Debugger::DebuggingState::set_single_stepping(DebugInfo::SourcePosition original_source_position)
+void Debugger::DebuggingState::set_single_stepping(Debug::DebugInfo::SourcePosition original_source_position)
 {
     m_state = State::SingleStepping;
     m_original_source_position = original_source_position;
 }
 
-bool Debugger::DebuggingState::should_stop_single_stepping(const DebugInfo::SourcePosition& current_source_position) const
+bool Debugger::DebuggingState::should_stop_single_stepping(const Debug::DebugInfo::SourcePosition& current_source_position) const
 {
     ASSERT(m_state == State::SingleStepping);
     return m_original_source_position.value() != current_source_position;
@@ -244,7 +244,7 @@ void Debugger::do_step_over(const PtraceRegisters& regs)
 
 void Debugger::insert_temporary_breakpoint_at_return_address(const PtraceRegisters& regs)
 {
-    auto frame_info = StackFrameUtils::get_info(*m_debug_session, regs.ebp);
+    auto frame_info = Debug::StackFrameUtils::get_info(*m_debug_session, regs.ebp);
     ASSERT(frame_info.has_value());
     u32 return_address = frame_info.value().return_address;
     insert_temporary_breakpoint(return_address);

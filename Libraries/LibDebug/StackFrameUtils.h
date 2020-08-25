@@ -31,7 +31,8 @@
 
 #include "LibDebug/DebugSession.h"
 
-namespace StackFrameUtils {
+namespace Debug::StackFrameUtils {
+
 struct StackFrameInfo {
     FlatPtr return_address;
     FlatPtr next_ebp;

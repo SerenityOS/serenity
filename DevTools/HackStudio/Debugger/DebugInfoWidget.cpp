@@ -115,8 +115,8 @@ DebugInfoWidget::DebugInfoWidget()
     auto is_valid_index = [](auto& index) {
         if (!index.is_valid())
             return false;
-        auto* variable = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
-        if (variable->location_type != DebugInfo::VariableInfo::LocationType::Address)
+        auto* variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
+        if (variable->location_type != Debug::DebugInfo::VariableInfo::LocationType::Address)
             return false;
         return variable->is_enum_type() || variable->type_name.is_one_of("int", "bool");
     };
@@ -139,7 +139,7 @@ DebugInfoWidget::DebugInfoWidget()
     };
 }
 
-void DebugInfoWidget::update_state(const DebugSession& debug_session, const PtraceRegisters& regs)
+void DebugInfoWidget::update_state(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
 {
     m_variables_view->set_model(VariablesModel::create(regs));
     m_backtrace_view->set_model(BacktraceModel::create(debug_session, regs));

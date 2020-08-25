@@ -30,7 +30,7 @@
 
 namespace HackStudio {
 
-NonnullRefPtr<BacktraceModel> BacktraceModel::create(const DebugSession& debug_session, const PtraceRegisters& regs)
+NonnullRefPtr<BacktraceModel> BacktraceModel::create(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
 {
     return adopt(*new BacktraceModel(create_backtrace(debug_session, regs)));
 }
@@ -51,7 +51,7 @@ GUI::ModelIndex BacktraceModel::index(int row, int column, const GUI::ModelIndex
     return create_index(row, column, &m_frames.at(row));
 }
 
-Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const DebugSession& debug_session, const PtraceRegisters& regs)
+Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
 {
     u32 current_ebp = regs.ebp;
     u32 current_instruction = regs.eip;
@@ -64,7 +64,7 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const DebugSe
         }
 
         frames.append({ name, current_instruction, current_ebp });
-        auto frame_info = StackFrameUtils::get_info(*Debugger::the().session(), current_ebp);
+        auto frame_info = Debug::StackFrameUtils::get_info(*Debugger::the().session(), current_ebp);
         ASSERT(frame_info.has_value());
         current_instruction = frame_info.value().return_address;
         current_ebp = frame_info.value().next_ebp;

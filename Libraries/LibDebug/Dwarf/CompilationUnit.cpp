@@ -26,7 +26,7 @@
 #include "CompilationUnit.h"
 #include "DIE.h"
 
-namespace Dwarf {
+namespace Debug::Dwarf {
 
 CompilationUnit::CompilationUnit(const DwarfInfo& dwarf_info, u32 offset, const CompilationUnitHeader& header)
     : m_dwarf_info(dwarf_info)

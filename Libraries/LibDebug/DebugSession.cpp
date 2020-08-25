@@ -28,6 +28,8 @@
 #include <AK/Optional.h>
 #include <stdlib.h>
 
+namespace Debug {
+
 DebugSession::DebugSession(int pid)
     : m_debugee_pid(pid)
     , m_executable(initialize_executable_mapped_file(pid))
@@ -262,4 +264,6 @@ void* DebugSession::single_step()
     regs.eflags &= ~(TRAP_FLAG);
     set_registers(regs);
     return (void*)regs.eip;
+}
+
 }

@@ -34,7 +34,7 @@ GUI::ModelIndex VariablesModel::index(int row, int column, const GUI::ModelIndex
 {
     if (!parent_index.is_valid())
         return create_index(row, column, &m_variables[row]);
-    auto* parent = static_cast<const DebugInfo::VariableInfo*>(parent_index.internal_data());
+    auto* parent = static_cast<const Debug::DebugInfo::VariableInfo*>(parent_index.internal_data());
     auto* child = &parent->members[row];
     return create_index(row, column, child);
 }
@@ -43,7 +43,7 @@ GUI::ModelIndex VariablesModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* child = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
+    auto* child = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
     auto* parent = child->parent;
     if (parent == nullptr)
         return {};
@@ -55,7 +55,7 @@ GUI::ModelIndex VariablesModel::parent_index(const GUI::ModelIndex& index) const
         ASSERT_NOT_REACHED();
     }
     for (size_t row = 0; row < parent->parent->members.size(); row++) {
-        DebugInfo::VariableInfo* child_at_row = parent->parent->members.ptr_at(row).ptr();
+        Debug::DebugInfo::VariableInfo* child_at_row = parent->parent->members.ptr_at(row).ptr();
         if (child_at_row == parent)
             return create_index(row, 0, parent);
     }
@@ -66,13 +66,13 @@ int VariablesModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return m_variables.size();
-    auto* node = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
+    auto* node = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
     return node->members.size();
 }
 
-static String variable_value_as_string(const DebugInfo::VariableInfo& variable)
+static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& variable)
 {
-    if (variable.location_type != DebugInfo::VariableInfo::LocationType::Address)
+    if (variable.location_type != Debug::DebugInfo::VariableInfo::LocationType::Address)
         return "N/A";
 
     auto variable_address = variable.location_data.address;
@@ -108,7 +108,7 @@ static String variable_value_as_string(const DebugInfo::VariableInfo& variable)
     return String::format("type: %s @ %08x, ", variable.type_name.characters(), variable_address);
 }
 
-static Optional<u32> string_to_variable_value(const StringView& string_value, const DebugInfo::VariableInfo& variable)
+static Optional<u32> string_to_variable_value(const StringView& string_value, const Debug::DebugInfo::VariableInfo& variable)
 {
     if (variable.is_enum_type()) {
         auto prefix_string = String::format("%s::", variable.type_name.characters());
@@ -145,7 +145,7 @@ static Optional<u32> string_to_variable_value(const StringView& string_value, co
 
 void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const StringView& string_value, GUI::Window* parent_window)
 {
-    auto variable = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
+    auto variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
 
     auto value = string_to_variable_value(string_value, *variable);
 
@@ -163,7 +163,7 @@ void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const Stri
 
 GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto* variable = static_cast<const DebugInfo::VariableInfo*>(index.internal_data());
+    auto* variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
     switch (role) {
     case GUI::ModelRole::Display: {
         auto value_as_string = variable_value_as_string(*variable);

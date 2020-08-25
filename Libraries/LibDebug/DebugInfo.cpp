@@ -33,6 +33,8 @@
 
 //#define DEBUG_SPAM
 
+namespace Debug {
+
 DebugInfo::DebugInfo(NonnullRefPtr<const ELF::Loader> elf)
     : m_elf(elf)
     , m_dwarf_info(Dwarf::DwarfInfo::create(m_elf))
@@ -107,9 +109,9 @@ void DebugInfo::prepare_lines()
     auto buffer = section.wrapping_byte_buffer();
     InputMemoryStream stream { buffer };
 
-    Vector<LineProgram::LineInfo> all_lines;
+    Vector<Dwarf::LineProgram::LineInfo> all_lines;
     while (!stream.eof()) {
-        LineProgram program(stream);
+        Dwarf::LineProgram program(stream);
         all_lines.append(program.lines());
     }
 
@@ -331,7 +333,9 @@ Vector<DebugInfo::SourcePosition> DebugInfo::source_lines_in_scope(const Variabl
     return source_lines;
 }
 
-DebugInfo::SourcePosition DebugInfo::SourcePosition::from_line_info(const LineProgram::LineInfo& line)
+DebugInfo::SourcePosition DebugInfo::SourcePosition::from_line_info(const Dwarf::LineProgram::LineInfo& line)
 {
     return { line.file, line.line, line.address };
+}
+
 }

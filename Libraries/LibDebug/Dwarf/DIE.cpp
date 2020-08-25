@@ -30,7 +30,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Stream.h>
 
-namespace Dwarf {
+namespace Debug::Dwarf {
 
 DIE::DIE(const CompilationUnit& unit, u32 offset)
     : m_compilation_unit(unit)

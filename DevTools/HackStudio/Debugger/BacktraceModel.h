@@ -31,13 +31,17 @@
 #include <LibGUI/Model.h>
 #include <sys/arch/i386/regs.h>
 
+namespace Debug {
+
 class DebugSession;
+
+}
 
 namespace HackStudio {
 
 class BacktraceModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<BacktraceModel> create(const DebugSession&, const PtraceRegisters& regs);
+    static NonnullRefPtr<BacktraceModel> create(const Debug::DebugSession&, const PtraceRegisters& regs);
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_frames.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
@@ -66,7 +70,7 @@ private:
     {
     }
 
-    static Vector<FrameInfo> create_backtrace(const DebugSession&, const PtraceRegisters&);
+    static Vector<FrameInfo> create_backtrace(const Debug::DebugSession&, const PtraceRegisters&);
 
     Vector<FrameInfo> m_frames;
 };

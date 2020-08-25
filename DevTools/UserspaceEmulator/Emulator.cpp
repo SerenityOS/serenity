@@ -154,7 +154,7 @@ bool Emulator::load_elf()
     m_free_symbol_start = free_symbol.value().value();
     m_free_symbol_end = m_free_symbol_start + free_symbol.value().size();
 
-    m_debug_info = make<DebugInfo>(m_elf);
+    m_debug_info = make<Debug::DebugInfo>(m_elf);
     return true;
 }
 

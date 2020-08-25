@@ -31,7 +31,7 @@
 
 class PtraceRegisters;
 
-namespace Dwarf::Expression {
+namespace Debug::Dwarf::Expression {
 
 enum class Type {
     None,

@@ -42,6 +42,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+namespace Debug {
+
 class DebugSession {
 public:
     static OwnPtr<DebugSession> exec_and_attach(const String& command);
@@ -242,4 +244,6 @@ void DebugSession::run(Callback callback)
             single_step();
         }
     }
+}
+
 }

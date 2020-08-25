@@ -36,6 +36,8 @@
 #include <LibELF/Loader.h>
 #include <sys/arch/i386/regs.h>
 
+namespace Debug {
+
 class DebugInfo {
 public:
     explicit DebugInfo(NonnullRefPtr<const ELF::Loader> elf);
@@ -48,7 +50,7 @@ public:
         bool operator==(const SourcePosition& other) const { return file_path == other.file_path && line_number == other.line_number; }
         bool operator!=(const SourcePosition& other) const { return !(*this == other); }
 
-        static SourcePosition from_line_info(const LineProgram::LineInfo&);
+        static SourcePosition from_line_info(const Dwarf::LineProgram::LineInfo&);
     };
 
     struct VariableInfo {
@@ -119,5 +121,7 @@ private:
     NonnullRefPtr<Dwarf::DwarfInfo> m_dwarf_info;
 
     Vector<VariablesScope> m_scopes;
-    Vector<LineProgram::LineInfo> m_sorted_lines;
+    Vector<Dwarf::LineProgram::LineInfo> m_sorted_lines;
 };
+
+}
