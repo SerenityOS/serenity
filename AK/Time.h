@@ -33,6 +33,16 @@ inline bool is_leap_year(int year)
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 }
 
+inline int years_to_days_since_epoch(int year)
+{
+    int days = 0;
+    for (int current_year = 1970; current_year < year; ++current_year)
+        days += 365 + is_leap_year(current_year);
+    for (int current_year = year; current_year < 1970; ++current_year)
+        days -= 365 + is_leap_year(current_year);
+    return days;
+}
+
 template<typename TimevalType>
 inline void timeval_sub(const TimevalType& a, const TimevalType& b, TimevalType& result)
 {
@@ -160,6 +170,7 @@ using AK::timespec_to_timeval;
 using AK::timeval_add;
 using AK::timeval_sub;
 using AK::timeval_to_timespec;
+using AK::years_to_days_since_epoch;
 using AK::operator<=;
 using AK::operator<;
 using AK::operator>;

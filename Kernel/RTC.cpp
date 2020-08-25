@@ -93,18 +93,6 @@ static unsigned days_in_months_since_start_of_year(unsigned month, unsigned year
     return days;
 }
 
-static unsigned days_in_years_since_epoch(unsigned year)
-{
-    unsigned days = 0;
-    while (year > 1969) {
-        days += 365;
-        if (is_leap_year(year))
-            ++days;
-        --year;
-    }
-    return days;
-}
-
 static u8 bcd_to_binary(u8 bcd)
 {
     return (bcd & 0x0F) + ((bcd >> 4) * 10);
@@ -160,7 +148,7 @@ time_t now()
 
     ASSERT(year >= 2018);
 
-    return days_in_years_since_epoch(year - 1) * 86400
+    return years_to_days_since_epoch(year) * 86400
         + days_in_months_since_start_of_year(month - 1, year) * 86400
         + (day - 1) * 86400
         + hour * 3600
