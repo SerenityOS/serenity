@@ -33,6 +33,8 @@ set(KERNEL_SOURCES
     Devices/RandomDevice.cpp
     Devices/SB16.cpp
     Devices/SerialDevice.cpp
+    Devices/VirtIO.cpp
+    Devices/VirtIOConsole.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     DoubleBuffer.cpp
