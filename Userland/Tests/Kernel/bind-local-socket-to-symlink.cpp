@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Assertions.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -47,7 +48,7 @@ int main(int, char**)
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strlcpy(addr.sun_path, path, sizeof(addr.sun_path));
+    ASSERT(strlcpy(addr.sun_path, path, sizeof(addr.sun_path)) < sizeof(addr.sun_path));
 
     rc = bind(fd, (struct sockaddr*)(&addr), sizeof(addr));
     if (rc < 0 && errno == EADDRINUSE) {
