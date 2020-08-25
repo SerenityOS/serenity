@@ -58,6 +58,8 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view = add<GUI::TableView>();
     m_table_view->set_model(SheetModel::create(*m_sheet));
 
+    set_focus_proxy(m_table_view);
+
     // FIXME: This is dumb.
     for (size_t i = 0; i < m_sheet->column_count(); ++i) {
         m_table_view->set_cell_painting_delegate(i + 1, make<TableCellPainter>(*m_table_view));
