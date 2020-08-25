@@ -3,6 +3,8 @@ set(SOURCES
     Debugger/BacktraceModel.cpp
     Debugger/Debugger.cpp
     Debugger/DebugInfoWidget.cpp
+    Debugger/DisassemblyModel.cpp
+    Debugger/DisassemblyWidget.cpp
     Debugger/VariablesModel.cpp
     Editor.cpp
     EditorWrapper.cpp
@@ -22,4 +24,4 @@ set(SOURCES
 )
 
 serenity_bin(HackStudio)
-target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibGfx LibCore LibVT LibDebug)
+target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibGfx LibCore LibVT LibDebug LibX86)
