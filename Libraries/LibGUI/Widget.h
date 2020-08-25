@@ -150,6 +150,10 @@ public:
     bool is_focused() const;
     void set_focus(bool, FocusSource = FocusSource::Programmatic);
 
+    Widget* focus_proxy() { return m_focus_proxy; }
+    const Widget* focus_proxy() const { return m_focus_proxy; }
+    void set_focus_proxy(Widget*);
+
     enum class ShouldRespectGreediness { No = 0,
         Yes };
     struct HitTestResult {
@@ -340,6 +344,8 @@ private:
     bool m_accepts_emoji_input { false };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
+
+    WeakPtr<Widget> m_focus_proxy;
 };
 
 inline Widget* Widget::parent_widget()
