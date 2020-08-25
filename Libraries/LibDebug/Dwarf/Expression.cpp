@@ -29,7 +29,7 @@
 
 #include <sys/arch/i386/regs.h>
 
-namespace Dwarf::Expression {
+namespace Debug::Dwarf::Expression {
 
 Value evaluate(ReadonlyBytes bytes, const PtraceRegisters& regs)
 {

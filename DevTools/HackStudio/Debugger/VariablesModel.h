@@ -48,13 +48,13 @@ public:
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override;
 
 private:
-    explicit VariablesModel(NonnullOwnPtrVector<DebugInfo::VariableInfo>&& variables, const PtraceRegisters& regs)
+    explicit VariablesModel(NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo>&& variables, const PtraceRegisters& regs)
         : m_variables(move(variables))
         , m_regs(regs)
     {
         m_variable_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
     }
-    NonnullOwnPtrVector<DebugInfo::VariableInfo> m_variables;
+    NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo> m_variables;
     PtraceRegisters m_regs;
 
     GUI::Icon m_variable_icon;

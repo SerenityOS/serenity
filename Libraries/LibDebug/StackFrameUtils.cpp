@@ -26,7 +26,8 @@
 
 #include "StackFrameUtils.h"
 
-namespace StackFrameUtils {
+namespace Debug::StackFrameUtils {
+
 Optional<StackFrameInfo> get_info(const DebugSession& session, FlatPtr current_ebp)
 {
     auto return_address = session.peek(reinterpret_cast<u32*>(current_ebp + sizeof(FlatPtr)));
@@ -37,4 +38,5 @@ Optional<StackFrameInfo> get_info(const DebugSession& session, FlatPtr current_e
     StackFrameInfo info = { return_address.value(), next_ebp.value() };
     return info;
 }
+
 }

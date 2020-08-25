@@ -34,7 +34,7 @@
 #include <AK/String.h>
 #include <LibELF/Loader.h>
 
-namespace Dwarf {
+namespace Debug::Dwarf {
 
 class DwarfInfo : public RefCounted<DwarfInfo> {
 public:

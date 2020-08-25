@@ -29,7 +29,7 @@
 
 #include <AK/Stream.h>
 
-namespace Dwarf {
+namespace Debug::Dwarf {
 
 AbbreviationsMap::AbbreviationsMap(const DwarfInfo& dwarf_info, u32 offset)
     : m_dwarf_info(dwarf_info)

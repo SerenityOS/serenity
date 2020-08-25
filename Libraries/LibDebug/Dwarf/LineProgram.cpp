@@ -30,6 +30,8 @@
 
 //#define DWARF_DEBUG
 
+namespace Debug::Dwarf {
+
 LineProgram::LineProgram(InputMemoryStream& stream)
     : m_stream(stream)
 {
@@ -251,4 +253,6 @@ void LineProgram::run_program()
             handle_sepcial_opcode(opcode);
         }
     }
+}
+
 }

@@ -55,7 +55,7 @@ public:
 
     void set_executable_path(const String& path) { m_executable_path = path; }
 
-    DebugSession* session() { return m_debug_session.ptr(); }
+    Debug::DebugSession* session() { return m_debug_session.ptr(); }
 
     // Thread entry point
     static int start_static();
@@ -85,18 +85,18 @@ private:
         State get() const { return m_state; }
 
         void set_normal();
-        void set_single_stepping(DebugInfo::SourcePosition original_source_position);
+        void set_single_stepping(Debug::DebugInfo::SourcePosition original_source_position);
         void set_stepping_out() { m_state = State::SteppingOut; }
         void set_stepping_over() { m_state = State::SteppingOver; }
 
-        bool should_stop_single_stepping(const DebugInfo::SourcePosition& current_source_position) const;
+        bool should_stop_single_stepping(const Debug::DebugInfo::SourcePosition& current_source_position) const;
         void clear_temporary_breakpoints();
         void add_temporary_breakpoint(u32 address);
         const Vector<u32>& temporary_breakpoints() const { return m_addresses_of_temporary_breakpoints; }
 
     private:
         State m_state { Normal };
-        Optional<DebugInfo::SourcePosition> m_original_source_position; // The source position at which we started the current single step
+        Optional<Debug::DebugInfo::SourcePosition> m_original_source_position; // The source position at which we started the current single step
         Vector<u32> m_addresses_of_temporary_breakpoints;
     };
 
@@ -105,7 +105,7 @@ private:
         Function<void()> on_continue_callback,
         Function<void()> on_exit_callback);
 
-    static DebugInfo::SourcePosition create_source_position(const String& file, size_t line);
+    static Debug::DebugInfo::SourcePosition create_source_position(const String& file, size_t line);
 
     void start();
     int debugger_loop();
@@ -116,13 +116,13 @@ private:
     void insert_temporary_breakpoint(FlatPtr address);
     void insert_temporary_breakpoint_at_return_address(const PtraceRegisters&);
 
-    OwnPtr<DebugSession> m_debug_session;
+    OwnPtr<Debug::DebugSession> m_debug_session;
     DebuggingState m_state;
 
     pthread_mutex_t m_continue_mutex {};
     pthread_cond_t m_continue_cond {};
 
-    Vector<DebugInfo::SourcePosition> m_breakpoints;
+    Vector<Debug::DebugInfo::SourcePosition> m_breakpoints;
 
     String m_executable_path;
 
