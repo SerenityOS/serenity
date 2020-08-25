@@ -26,16 +26,16 @@
 
 #pragma once
 
+#include <AK/Endian.h>
 #include <AK/MACAddress.h>
-#include <AK/NetworkOrdered.h>
 
 #pragma GCC diagnostic ignored "-Warray-bounds"
 
 class [[gnu::packed]] EthernetFrameHeader
 {
 public:
-    EthernetFrameHeader() {}
-    ~EthernetFrameHeader() {}
+    EthernetFrameHeader() { }
+    ~EthernetFrameHeader() { }
 
     MACAddress destination() const { return m_destination; }
     void set_destination(const MACAddress& address) { m_destination = address; }

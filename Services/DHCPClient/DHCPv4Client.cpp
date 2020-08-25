@@ -26,6 +26,7 @@
 
 #include "DHCPv4Client.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Endian.h>
 #include <AK/Function.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/Timer.h>
@@ -163,7 +164,7 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     transaction->has_ip = true;
     auto& interface = transaction->interface;
     auto new_ip = packet.yiaddr();
-    auto lease_time = convert_between_host_and_network(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
+    auto lease_time = AK::convert_between_host_and_network_endian(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
     // set a timer for the duration of the lease, we shall renew if needed
     Core::Timer::create_single_shot(
         lease_time * 1000,
