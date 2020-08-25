@@ -279,14 +279,12 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         return;
 
     if (decrement_button_rect().contains(event.position())) {
-        m_automatic_scrolling_kind = AutomaticScrollingKind::DecrementButton;
-        set_automatic_scrolling_active(true);
+        set_automatic_scrolling_active(true, AutomaticScrollingKind::DecrementButton);
         update();
         return;
     }
     if (increment_button_rect().contains(event.position())) {
-        m_automatic_scrolling_kind = AutomaticScrollingKind::IncrementButton;
-        set_automatic_scrolling_active(true);
+        set_automatic_scrolling_active(true, AutomaticScrollingKind::IncrementButton);
         update();
         return;
     }
@@ -312,8 +310,7 @@ void ScrollBar::mouseup_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return;
     m_scrubber_in_use = false;
-    m_automatic_scrolling_kind = AutomaticScrollingKind::None;
-    set_automatic_scrolling_active(false);
+    set_automatic_scrolling_active(false, AutomaticScrollingKind::None);
     m_scrubbing = false;
     update();
 }
@@ -326,8 +323,10 @@ void ScrollBar::mousewheel_event(MouseEvent& event)
     Widget::mousewheel_event(event);
 }
 
-void ScrollBar::set_automatic_scrolling_active(bool active)
+void ScrollBar::set_automatic_scrolling_active(bool active, AutomaticScrollingKind kind)
 {
+    m_automatic_scrolling_kind = kind;
+
     if (active) {
         on_automatic_scrolling_timer_fired();
         m_automatic_scrolling_timer->start();
@@ -376,9 +375,9 @@ void ScrollBar::mousemove_event(MouseEvent& event)
         update();
 
         if (m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton)
-            set_automatic_scrolling_active(m_hovered_component == Component::DecrementButton);
+            set_automatic_scrolling_active(m_hovered_component == Component::DecrementButton, m_automatic_scrolling_kind);
         else if (m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton)
-            set_automatic_scrolling_active(m_hovered_component == Component::IncrementButton);
+            set_automatic_scrolling_active(m_hovered_component == Component::IncrementButton, m_automatic_scrolling_kind);
     }
     if (!m_scrubbing)
         return;
