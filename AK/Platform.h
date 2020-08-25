@@ -37,17 +37,17 @@
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 
 #ifdef ALWAYS_INLINE
-#undef ALWAYS_INLINE
+#    undef ALWAYS_INLINE
 #endif
 #define ALWAYS_INLINE [[gnu::always_inline]] inline
 
 #ifdef NEVER_INLINE
-#undef NEVER_INLINE
+#    undef NEVER_INLINE
 #endif
 #define NEVER_INLINE [[gnu::noinline]]
 
 #ifdef FLATTEN
-#undef FLATTEN
+#    undef FLATTEN
 #endif
 #define FLATTEN [[gnu::flatten]]
 
@@ -71,33 +71,16 @@ inline int open_with_path_length(const char* path, size_t path_length, int optio
 }
 #endif
 
-template<typename T>
-ALWAYS_INLINE T convert_between_host_and_network(T value)
-{
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    if constexpr (sizeof(T) == 8)
-        return __builtin_bswap64(value);
-    if constexpr (sizeof(T) == 4)
-        return __builtin_bswap32(value);
-    if constexpr (sizeof(T) == 2)
-        return __builtin_bswap16(value);
-    if constexpr (sizeof(T) == 1)
-        return value;
-#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    return value;
-#endif
-}
-
 ALWAYS_INLINE int count_trailing_zeroes_32(unsigned int val)
 {
 #if defined(__GNUC__) || defined(__clang__)
-        return __builtin_ctz(val);
+    return __builtin_ctz(val);
 #else
-        for (u8 i = 0; i < 32; ++i) {
-            if ((val >> i) & 1) {
-                return i;
-            }
+    for (u8 i = 0; i < 32; ++i) {
+        if ((val >> i) & 1) {
+            return i;
         }
-        return 0;
+    }
+    return 0;
 #endif
 }

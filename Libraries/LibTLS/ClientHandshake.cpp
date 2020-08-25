@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Endian.h>
 #include <AK/Random.h>
+
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -70,7 +72,7 @@ ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, WritePacketStage& write_p
         dbg() << "not enough data for version";
         return (i8)Error::NeedMoreData;
     }
-    auto version = (Version)convert_between_host_and_network(*(const u16*)buffer.offset_pointer(res));
+    auto version = (Version)AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res));
 
     res += 2;
     if (!supports_version(version))
@@ -101,7 +103,7 @@ ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, WritePacketStage& write_p
         dbg() << "not enough data for cipher suite listing";
         return (i8)Error::NeedMoreData;
     }
-    auto cipher = (CipherSuite)convert_between_host_and_network(*(const u16*)buffer.offset_pointer(res));
+    auto cipher = (CipherSuite)AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res));
     res += 2;
     if (!supports_cipher(cipher)) {
         m_context.cipher = CipherSuite::Invalid;
@@ -140,9 +142,9 @@ ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, WritePacketStage& write_p
     }
 
     while ((ssize_t)buffer.size() - res >= 4) {
-        auto extension_type = (HandshakeExtension)convert_between_host_and_network(*(const u16*)buffer.offset_pointer(res));
+        auto extension_type = (HandshakeExtension)AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res));
         res += 2;
-        u16 extension_length = convert_between_host_and_network(*(const u16*)buffer.offset_pointer(res));
+        u16 extension_length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res));
         res += 2;
 
 #ifdef TLS_DEBUG
@@ -156,7 +158,7 @@ ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, WritePacketStage& write_p
 
             // SNI
             if (extension_type == HandshakeExtension::ServerName) {
-                u16 sni_host_length = convert_between_host_and_network(*(const u16*)buffer.offset_pointer(res + 3));
+                u16 sni_host_length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res + 3));
                 if (buffer.size() - res - 5 < sni_host_length) {
                     dbg() << "Not enough data for sni " << (buffer.size() - res - 5) << " < " << sni_host_length;
                     return (i8)Error::NeedMoreData;
@@ -168,7 +170,7 @@ ssize_t TLSv12::handle_hello(const ByteBuffer& buffer, WritePacketStage& write_p
                 }
             } else if (extension_type == HandshakeExtension::ApplicationLayerProtocolNegotiation && m_context.alpn.size()) {
                 if (buffer.size() - res > 2) {
-                    auto alpn_length = convert_between_host_and_network(*(const u16*)buffer.offset_pointer(res));
+                    auto alpn_length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(res));
                     if (alpn_length && alpn_length <= extension_length - 2) {
                         const u8* alpn = buffer.offset_pointer(res + 2);
                         size_t alpn_position = 0;
@@ -267,7 +269,7 @@ void TLSv12::build_random(PacketBuilder& builder)
         dbg() << "Server mode not supported";
         return;
     } else {
-        *(u16*)random_bytes = convert_between_host_and_network((u16)Version::V12);
+        *(u16*)random_bytes = AK::convert_between_host_and_network_endian((u16)Version::V12);
     }
 
     m_context.premaster_key = ByteBuffer::copy(random_bytes, bytes);

@@ -28,10 +28,10 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Endian.h>
 #include <AK/HashMap.h>
 #include <AK/IPv4Address.h>
 #include <AK/MACAddress.h>
-#include <AK/NetworkOrdered.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
@@ -126,14 +126,14 @@ enum class DHCPMessageType : u8 {
     DHCPRelease,
 };
 
-template <>
+template<>
 struct AK::Traits<DHCPOption> : public AK::GenericTraits<DHCPOption> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(DHCPOption u) { return int_hash((u8)u); }
 };
 
 struct ParsedDHCPv4Options {
-    template <typename T>
+    template<typename T>
     Optional<const T> get(DHCPOption option_name) const
     {
         auto option = options.get(option_name);
@@ -146,7 +146,7 @@ struct ParsedDHCPv4Options {
         return *(const T*)value.value;
     }
 
-    template <typename T>
+    template<typename T>
     Vector<T> get_many(DHCPOption option_name, size_t max_number) const
     {
         Vector<T> values;

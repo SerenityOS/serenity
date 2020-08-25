@@ -25,9 +25,9 @@
  */
 
 #include "PGMLoader.h"
+#include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
-#include <AK/NetworkOrdered.h>
 #include <AK/StringBuilder.h>
 #include <string.h>
 

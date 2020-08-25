@@ -25,9 +25,9 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
-#include <AK/NetworkOrdered.h>
 #include <LibCore/puff.h>
 #include <LibGfx/PNGLoader.h>
 #include <fcntl.h>

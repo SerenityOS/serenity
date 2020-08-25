@@ -27,8 +27,8 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Endian.h>
 #include <AK/IPv4Address.h>
-#include <AK/NetworkOrdered.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 
@@ -131,7 +131,7 @@ inline NetworkOrdered<u16> internet_checksum(const void* ptr, size_t count)
     u32 checksum = 0;
     auto* w = (const u16*)ptr;
     while (count > 1) {
-        checksum += convert_between_host_and_network(*w++);
+        checksum += AK::convert_between_host_and_network_endian(*w++);
         if (checksum & 0x80000000)
             checksum = (checksum & 0xffff) | (checksum >> 16);
         count -= 2;

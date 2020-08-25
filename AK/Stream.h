@@ -28,6 +28,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Concepts.h>
+#include <AK/Endian.h>
 #include <AK/Forward.h>
 #include <AK/MemMem.h>
 #include <AK/Span.h>
@@ -73,6 +74,35 @@ class DuplexStream
     : public InputStream
     , public OutputStream {
 };
+
+template<typename T>
+InputStream& operator>>(InputStream& stream, LittleEndian<T>& value)
+{
+    T temporary;
+    stream >> temporary;
+    value = temporary;
+    return stream;
+}
+template<typename T>
+InputStream& operator<<(InputStream& stream, LittleEndian<T> value)
+{
+    stream << static_cast<T>(value);
+    return stream;
+}
+template<typename T>
+InputStream& operator>>(InputStream& stream, BigEndian<T>& value)
+{
+    T temporary;
+    stream >> temporary;
+    value = temporary;
+    return stream;
+}
+template<typename T>
+InputStream& operator<<(InputStream& stream, BigEndian<T> value)
+{
+    stream << static_cast<T>(value);
+    return stream;
+}
 
 #if defined(__cpp_concepts) && !defined(__COVERITY__)
 template<Concepts::Integral Integral>
