@@ -499,8 +499,22 @@ void Widget::set_window(Window* window)
     m_window = window;
 }
 
+void Widget::set_focus_proxy(Widget* proxy)
+{
+    if (m_focus_proxy == proxy)
+        return;
+
+    if (proxy)
+        m_focus_proxy = proxy->make_weak_ptr();
+    else
+        m_focus_proxy = nullptr;
+}
+
 bool Widget::is_focused() const
 {
+    if (m_focus_proxy)
+        return m_focus_proxy->is_focused();
+
     auto* win = window();
     if (!win)
         return false;
@@ -514,6 +528,9 @@ bool Widget::is_focused() const
 
 void Widget::set_focus(bool focus, FocusSource source)
 {
+    if (m_focus_proxy)
+        return m_focus_proxy->set_focus(focus, source);
+
     auto* win = window();
     if (!win)
         return;
