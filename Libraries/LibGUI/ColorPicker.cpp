@@ -66,10 +66,12 @@ class CustomColorWidget final : public GUI::Frame {
 
 public:
     Function<void(Color)> on_pick;
-    void clear_last_position();
+    void set_color_and_recalculate_position(Color);
 
 private:
-    CustomColorWidget();
+    CustomColorWidget(Color color);
+
+    Color m_color;
 
     RefPtr<Gfx::Bitmap> m_custom_colors;
     bool m_being_pressed { false };
@@ -182,7 +184,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     horizontal_container.set_layout<HorizontalBoxLayout>();
 
     // Left Side
-    m_custom_color = horizontal_container.add<GUI::CustomColorWidget>();
+    m_custom_color = horizontal_container.add<GUI::CustomColorWidget>(m_color);
     m_custom_color->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     m_custom_color->on_pick = [this](Color color) {
         if (m_color == color)
@@ -227,7 +229,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     m_html_text->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_string() : m_color.to_string_without_alpha());
     m_html_text->on_change = [this]() {
-        auto color_name = this->m_html_text->text();
+        auto color_name = m_html_text->text();
         auto optional_color = Color::from_string(color_name);
         if (optional_color.has_value()) {
             auto color = optional_color.value();
@@ -235,7 +237,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
                 return;
 
             m_color = optional_color.value();
-            this->m_custom_color->clear_last_position();
+            m_custom_color->set_color_and_recalculate_position(color);
             update_color_widgets();
         }
     };
@@ -272,8 +274,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
                 return;
 
             m_color = color;
-
-            this->m_custom_color->clear_last_position();
+            m_custom_color->set_color_and_recalculate_position(color);
             update_color_widgets();
         };
 
@@ -320,7 +321,9 @@ void ColorPicker::create_color_button(Widget& container, unsigned rgb)
             value->update();
         }
 
-        this->m_color = color;
+        m_color = color;
+        m_custom_color->set_color_and_recalculate_position(color);
+        update_color_widgets();
     };
 
     if (color == m_color) {
@@ -376,7 +379,8 @@ void ColorButton::click(unsigned)
     m_selected = true;
 }
 
-CustomColorWidget::CustomColorWidget()
+CustomColorWidget::CustomColorWidget(Color color)
+    : m_color(color)
 {
     m_custom_colors = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, { 360, 512 });
     auto painter = Gfx::Painter(*m_custom_colors);
@@ -403,9 +407,23 @@ CustomColorWidget::CustomColorWidget()
     }
 }
 
-void CustomColorWidget::clear_last_position()
+void CustomColorWidget::set_color_and_recalculate_position(Color color)
 {
-    m_last_position = { -1, -1 };
+    m_color = color;
+
+    Gfx::HSV hsv = m_color.to_hsv();
+    auto x = hsv.hue * width();
+    // FIXME: the current color representation tries to represent a 3D color vector as a 2D gradient,
+    // as a result not all colors can be represented on it (if saturation and value are both < 1),
+    // let's try our best for now
+    auto y = height() / 2;
+    if (hsv.saturation < 1) {
+        y += (1 - hsv.saturation) * (height() / 2);
+    } else if (hsv.value < 1) {
+        y -= (1 - hsv.value) * (height() / 2);
+    }
+
+    m_last_position = Gfx::IntPoint(x, y);
     update();
 }
 
@@ -423,6 +441,7 @@ void CustomColorWidget::pick_color_at_position(GUI::MouseEvent& event)
     auto pixel_y = min(position.y() * m_custom_colors->height() / frame_inner_rect().height(), m_custom_colors->height() - 1);
     auto color = m_custom_colors->get_pixel({ pixel_x, pixel_y });
     m_last_position = position;
+    m_color = color;
 
     if (on_pick)
         on_pick(color);
@@ -463,13 +482,17 @@ void CustomColorWidget::paint_event(GUI::PaintEvent& event)
     painter.draw_scaled_bitmap(frame_inner_rect(), *m_custom_colors, m_custom_colors->rect());
 
     painter.translate(frame_thickness(), frame_thickness());
+    painter.draw_line({ m_last_position.x() - 1, 0 }, { m_last_position.x() - 1, height() }, Color::White);
+    painter.draw_line({ m_last_position.x() + 1, 0 }, { m_last_position.x() + 1, height() }, Color::White);
+    painter.draw_line({ 0, m_last_position.y() - 1 }, { width(), m_last_position.y() - 1 }, Color::White);
+    painter.draw_line({ 0, m_last_position.y() + 1 }, { width(), m_last_position.y() + 1 }, Color::White);
     painter.draw_line({ m_last_position.x(), 0 }, { m_last_position.x(), height() }, Color::Black);
     painter.draw_line({ 0, m_last_position.y() }, { width(), m_last_position.y() }, Color::Black);
 }
 
 void CustomColorWidget::resize_event(ResizeEvent&)
 {
-    clear_last_position();
+    set_color_and_recalculate_position(m_color);
 }
 
 }
