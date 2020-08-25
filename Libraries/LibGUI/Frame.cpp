@@ -59,4 +59,10 @@ void Frame::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
     Gfx::StylePainter::paint_frame(painter, rect(), palette(), m_shape, m_shadow, m_thickness, spans_entire_window_horizontally());
 }
+
+Gfx::IntRect Frame::children_clip_rect() const
+{
+    return frame_inner_rect();
+}
+
 }

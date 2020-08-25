@@ -48,6 +48,8 @@ public:
     Gfx::IntRect frame_inner_rect_for_size(const Gfx::IntSize& size) const { return { m_thickness, m_thickness, size.width() - m_thickness * 2, size.height() - m_thickness * 2 }; }
     Gfx::IntRect frame_inner_rect() const { return frame_inner_rect_for_size(size()); }
 
+    virtual Gfx::IntRect children_clip_rect() const override;
+
 protected:
     Frame();
     void paint_event(PaintEvent&) override;
