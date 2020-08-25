@@ -221,7 +221,7 @@ String DateTime::to_string(const String& format) const
                     if (tm.tm_yday >= 7 - wday_of_year_beginning)
                         --week_number;
                     else {
-                        const bool last_year_is_leap = ((tm.tm_year + 1900 - 1) % 4 == 0 && (tm.tm_year + 1900 - 1) % 100 != 0) || (tm.tm_year + 1900 - 1) % 400 == 0;
+                        const bool last_year_is_leap = ::is_leap_year(tm.tm_year + 1900 - 1);
                         const int days_of_last_year = 365 + last_year_is_leap;
                         const int wday_of_last_year_beginning = (wday_of_year_beginning + 6 * days_of_last_year) % 7;
                         week_number = (days_of_last_year + wday_of_last_year_beginning) / 7 + 1;
