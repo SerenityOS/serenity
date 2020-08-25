@@ -27,13 +27,15 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
-#include <AK/Types.h>
 
 namespace AK {
 
 template<typename T, size_t Capacity>
 class CircularQueue {
+    friend CircularDuplexStream<Capacity>;
+
 public:
     CircularQueue()
     {
