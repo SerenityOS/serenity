@@ -102,6 +102,8 @@ private:
     void scroll_to_position(const Gfx::IntPoint&);
     void scroll_by_page(const Gfx::IntPoint&);
 
+    Component component_at_position(const Gfx::IntPoint&);
+
     int m_min { 0 };
     int m_max { 0 };
     int m_page { 0 };
