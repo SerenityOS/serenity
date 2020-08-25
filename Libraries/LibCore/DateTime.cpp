@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Time.h>
 #include <LibCore/DateTime.h>
 #include <sys/time.h>
 #include <time.h>
@@ -91,7 +92,7 @@ unsigned DateTime::day_of_year() const
 
 bool DateTime::is_leap_year() const
 {
-    return ((m_year % 400 == 0) || (m_year % 4 == 0 && m_year % 100 != 0));
+    return ::is_leap_year(m_year);
 }
 
 void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second)

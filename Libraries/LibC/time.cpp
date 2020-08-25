@@ -26,6 +26,7 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Time.h>
 #include <Kernel/API/Syscall.h>
 #include <assert.h>
 #include <errno.h>
@@ -59,11 +60,6 @@ char* ctime(const time_t* t)
     return asctime(localtime(t));
 }
 
-static inline bool __is_leap_year(int year)
-{
-    return ((year % 4 == 0) && ((year % 100 != 0) || (year % 400) == 0));
-}
-
 static const int __days_per_month[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 static const int __seconds_per_day = 60 * 60 * 24;
 
@@ -75,10 +71,10 @@ static void time_to_tm(struct tm* tm, time_t t)
     tm->tm_wday /= __seconds_per_day;
 
     int year = 1970;
-    for (; t >= (365 + __is_leap_year(year)) * __seconds_per_day; ++year)
-        t -= (365 + __is_leap_year(year)) * __seconds_per_day;
+    for (; t >= (365 + is_leap_year(year)) * __seconds_per_day; ++year)
+        t -= (365 + is_leap_year(year)) * __seconds_per_day;
     for (; t < 0; --year)
-        t += (365 + __is_leap_year(year - 1)) * __seconds_per_day;
+        t += (365 + is_leap_year(year - 1)) * __seconds_per_day;
     ASSERT(t >= 0);
 
     int days = t / __seconds_per_day;
@@ -90,9 +86,9 @@ static void time_to_tm(struct tm* tm, time_t t)
     tm->tm_year = year - 1900;
     tm->tm_yday = days;
     tm->tm_mday = 1;
-    if (__is_leap_year(year) && days == 59)
+    if (is_leap_year(year) && days == 59)
         ++tm->tm_mday;
-    if (__is_leap_year(year) && days >= 59)
+    if (is_leap_year(year) && days >= 59)
         --days;
     int month;
     for (month = 0; month < 11 && days >= __days_per_month[month]; ++month)
@@ -122,14 +118,14 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 
     int days = 0;
     for (int year = 70; year < tm->tm_year; ++year)
-        days += 365 + __is_leap_year(1900 + year);
+        days += 365 + is_leap_year(1900 + year);
     for (int year = tm->tm_year; year < 70; ++year)
-        days -= 365 + __is_leap_year(1900 + year);
+        days -= 365 + is_leap_year(1900 + year);
 
     tm->tm_yday = tm->tm_mday - 1;
     for (int month = 0; month < tm->tm_mon; ++month)
         tm->tm_yday += __days_per_month[month];
-    if (tm->tm_mon > 1 && __is_leap_year(1900 + tm->tm_year))
+    if (tm->tm_mon > 1 && is_leap_year(1900 + tm->tm_year))
         ++tm->tm_yday;
 
     days += tm->tm_yday;
@@ -293,7 +289,7 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                     if (tm->tm_yday >= 7 - wday_of_year_beginning)
                         --week_number;
                     else {
-                        const int days_of_last_year = 365 + __is_leap_year(tm->tm_year + 1900 - 1);
+                        const int days_of_last_year = 365 + is_leap_year(tm->tm_year + 1900 - 1);
                         const int wday_of_last_year_beginning = (wday_of_year_beginning + 6 * days_of_last_year) % 7;
                         week_number = (days_of_last_year + wday_of_last_year_beginning) / 7 + 1;
                         if (wday_of_last_year_beginning > 3)

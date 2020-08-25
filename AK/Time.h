@@ -28,6 +28,11 @@
 
 namespace AK {
 
+inline bool is_leap_year(int year)
+{
+    return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+}
+
 template<typename TimevalType>
 inline void timeval_sub(const TimevalType& a, const TimevalType& b, TimevalType& result)
 {
@@ -146,6 +151,7 @@ inline bool operator!=(const TimespecType& a, const TimespecType& b)
 
 }
 
+using AK::is_leap_year;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;
