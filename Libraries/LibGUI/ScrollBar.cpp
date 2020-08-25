@@ -269,6 +269,10 @@ void ScrollBar::on_automatic_scrolling_timer_fired()
         set_value(value() + m_step);
         return;
     }
+    if (m_automatic_scrolling_kind == AutomaticScrollingKind::Gutter && component_at_position(m_last_mouse_position) == Component::Gutter) {
+        scroll_by_page(m_last_mouse_position);
+        return;
+    }
 }
 
 void ScrollBar::mousedown_event(MouseEvent& event)
@@ -308,8 +312,8 @@ void ScrollBar::mousedown_event(MouseEvent& event)
     ASSERT(!event.shift());
 
     ASSERT(clicked_component == Component::Gutter);
-    // FIXME: If scrolling by page, scroll every second or so while mouse is down.
-    scroll_by_page(event.position());
+    set_automatic_scrolling_active(true, AutomaticScrollingKind::Gutter);
+    update();
 }
 
 void ScrollBar::mouseup_event(MouseEvent& event)
@@ -333,6 +337,10 @@ void ScrollBar::mousewheel_event(MouseEvent& event)
 void ScrollBar::set_automatic_scrolling_active(bool active, AutomaticScrollingKind kind)
 {
     m_automatic_scrolling_kind = kind;
+    if (m_automatic_scrolling_kind == AutomaticScrollingKind::Gutter)
+        m_automatic_scrolling_timer->set_interval(200);
+    else
+        m_automatic_scrolling_timer->set_interval(100);
 
     if (active) {
         on_automatic_scrolling_timer_fired();
