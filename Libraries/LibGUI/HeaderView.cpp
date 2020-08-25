@@ -60,8 +60,12 @@ HeaderView::~HeaderView()
 void HeaderView::set_section_size(int section, int size)
 {
     auto& data = section_data(section);
+    if (data.size == size)
+        return;
     data.size = size;
     data.has_initialized_size = true;
+    data.size = size;
+    m_table_view.header_did_change_section_size({}, m_orientation, section, size);
 }
 
 int HeaderView::section_size(int section) const
@@ -146,12 +150,7 @@ void HeaderView::mousemove_event(MouseEvent& event)
         if (new_size <= minimum_column_size)
             new_size = minimum_column_size;
         ASSERT(m_resizing_section >= 0 && m_resizing_section < model()->column_count());
-        auto& data = this->section_data(m_resizing_section);
-        if (data.size != new_size) {
-            data.size = new_size;
-            m_table_view.header_did_change_section_size({}, m_orientation, m_resizing_section, new_size);
-            update();
-        }
+        set_section_size(m_resizing_section, new_size);
         return;
     }
 
