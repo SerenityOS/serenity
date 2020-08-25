@@ -26,8 +26,8 @@
 
 #pragma once
 
+#include <AK/Endian.h>
 #include <AK/MACAddress.h>
-#include <AK/NetworkOrdered.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/IPv4.h>
 

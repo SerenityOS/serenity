@@ -26,8 +26,8 @@
 
 #pragma once
 
+#include <AK/Endian.h>
 #include <AK/LogStream.h>
-#include <AK/NetworkOrdered.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -105,7 +105,6 @@ public:
         } else {
             return {};
         }
-
 
         if (a > 255 || b > 255 || c > 255 || d > 255)
             return {};

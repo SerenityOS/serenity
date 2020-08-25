@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Endian.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
@@ -539,7 +540,7 @@ void TLSv12::consume(const ByteBuffer& record)
     dbg() << "message buffer length " << buffer_length;
 #endif
     while (buffer_length >= 5) {
-        auto length = convert_between_host_and_network(*(u16*)m_context.message_buffer.offset_pointer(index + size_offset)) + header_size;
+        auto length = AK::convert_between_host_and_network_endian(*(u16*)m_context.message_buffer.offset_pointer(index + size_offset)) + header_size;
         if (length > buffer_length) {
 #ifdef TLS_DEBUG
             dbg() << "Need more data: " << length << " | " << buffer_length;

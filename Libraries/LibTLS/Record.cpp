@@ -24,6 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Endian.h>
+
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -56,7 +58,7 @@ void TLSv12::write_packet(ByteBuffer& packet)
 void TLSv12::update_packet(ByteBuffer& packet)
 {
     u32 header_size = 5;
-    *(u16*)packet.offset_pointer(3) = convert_between_host_and_network((u16)(packet.size() - header_size));
+    *(u16*)packet.offset_pointer(3) = AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size));
 
     if (packet[0] != (u8)MessageType::ChangeCipher) {
         if (packet[0] == (u8)MessageType::Handshake && packet.size() > header_size) {
@@ -120,7 +122,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 // store the correct ciphertext length into the packet
                 u16 ct_length = (u16)ct.size() - header_size;
 
-                *(u16*)ct.offset_pointer(header_size - 2) = convert_between_host_and_network(ct_length);
+                *(u16*)ct.offset_pointer(header_size - 2) = AK::convert_between_host_and_network_endian(ct_length);
 
                 // replace the packet with the ciphertext
                 packet = ct;
@@ -137,7 +139,7 @@ void TLSv12::update_hash(const ByteBuffer& message)
 
 ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local)
 {
-    u64 sequence_number = convert_between_host_and_network(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
+    u64 sequence_number = AK::convert_between_host_and_network_endian(local ? m_context.local_sequence_number : m_context.remote_sequence_number);
     ensure_hmac(mac_length, local);
     auto& hmac = local ? *m_hmac_local : *m_hmac_remote;
 #ifdef TLS_DEBUG
@@ -185,7 +187,7 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
 #endif
     buffer_position += 2;
 
-    auto length = convert_between_host_and_network(*(const u16*)buffer.offset_pointer(buffer_position));
+    auto length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(buffer_position));
 #ifdef TLS_DEBUG
     dbg() << "record length: " << length << " at offset: " << buffer_position;
 #endif
@@ -238,7 +240,7 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
         const u8* message_hmac = decrypted_span.offset(length);
         u8 temp_buf[5];
         memcpy(temp_buf, buffer.offset_pointer(0), 3);
-        *(u16*)(temp_buf + 3) = convert_between_host_and_network(length);
+        *(u16*)(temp_buf + 3) = AK::convert_between_host_and_network_endian(length);
         auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span.slice(0, length), mac_size);
         auto message_mac = ByteBuffer::wrap(const_cast<u8*>(message_hmac), mac_size);
         if (hmac != message_mac) {
