@@ -237,8 +237,8 @@ void ScrollBar::paint_event(PaintEvent& event)
 
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
 
-    bool decrement_pressed = m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement;
-    bool increment_pressed = m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment;
+    bool decrement_pressed = m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton;
+    bool increment_pressed = m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton;
 
     Gfx::StylePainter::paint_button(painter, decrement_button_rect(), palette(), Gfx::ButtonStyle::Normal, decrement_pressed, m_hovered_component == Component::DecrementButton);
     Gfx::StylePainter::paint_button(painter, increment_button_rect(), palette(), Gfx::ButtonStyle::Normal, increment_pressed, m_hovered_component == Component::IncrementButton);
@@ -261,11 +261,11 @@ void ScrollBar::paint_event(PaintEvent& event)
 
 void ScrollBar::on_automatic_scrolling_timer_fired()
 {
-    if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement) {
+    if (m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton) {
         set_value(value() - m_step);
         return;
     }
-    if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment) {
+    if (m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton) {
         set_value(value() + m_step);
         return;
     }
@@ -279,13 +279,13 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         return;
 
     if (decrement_button_rect().contains(event.position())) {
-        m_automatic_scrolling_direction = AutomaticScrollingDirection::Decrement;
+        m_automatic_scrolling_kind = AutomaticScrollingKind::DecrementButton;
         set_automatic_scrolling_active(true);
         update();
         return;
     }
     if (increment_button_rect().contains(event.position())) {
-        m_automatic_scrolling_direction = AutomaticScrollingDirection::Increment;
+        m_automatic_scrolling_kind = AutomaticScrollingKind::IncrementButton;
         set_automatic_scrolling_active(true);
         update();
         return;
@@ -312,7 +312,7 @@ void ScrollBar::mouseup_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return;
     m_scrubber_in_use = false;
-    m_automatic_scrolling_direction = AutomaticScrollingDirection::None;
+    m_automatic_scrolling_kind = AutomaticScrollingKind::None;
     set_automatic_scrolling_active(false);
     m_scrubbing = false;
     update();
@@ -375,9 +375,9 @@ void ScrollBar::mousemove_event(MouseEvent& event)
     if (old_hovered_component != m_hovered_component) {
         update();
 
-        if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement)
+        if (m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton)
             set_automatic_scrolling_active(m_hovered_component == Component::DecrementButton);
-        else if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment)
+        else if (m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton)
             set_automatic_scrolling_active(m_hovered_component == Component::IncrementButton);
     }
     if (!m_scrubbing)
