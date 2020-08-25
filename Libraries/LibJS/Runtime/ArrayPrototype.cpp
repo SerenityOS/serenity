@@ -204,8 +204,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
         return {};
     auto argument_count = interpreter.argument_count();
     auto new_length = length + argument_count;
-    if (new_length > MAX_ARRAY_LIKE_INDEX)
-        return interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
+    if (new_length > MAX_ARRAY_LIKE_INDEX) {
+        interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
+        return {};
+    }
     for (size_t i = 0; i < argument_count; ++i) {
         this_object->put(length + i, interpreter.argument(i));
         if (interpreter.exception())
@@ -744,8 +746,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
 
     size_t new_length = initial_length + insert_count - actual_delete_count;
 
-    if (new_length > MAX_ARRAY_LIKE_INDEX)
-        return interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
+    if (new_length > MAX_ARRAY_LIKE_INDEX) {
+        interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
+        return {};
+    }
 
     auto removed_elements = Array::create(global_object);
 

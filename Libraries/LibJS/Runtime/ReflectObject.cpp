@@ -143,8 +143,10 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
     auto* target = get_target_object_from(interpreter, "defineProperty");
     if (!target)
         return {};
-    if (!interpreter.argument(2).is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::ReflectBadDescriptorArgument);
+    if (!interpreter.argument(2).is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::ReflectBadDescriptorArgument);
+        return {};
+    }
     auto property_key = StringOrSymbol::from_value(interpreter, interpreter.argument(1));
     if (interpreter.exception())
         return {};

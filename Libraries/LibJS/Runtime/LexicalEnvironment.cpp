@@ -112,9 +112,10 @@ bool LexicalEnvironment::has_this_binding() const
 Value LexicalEnvironment::get_this_binding() const
 {
     ASSERT(has_this_binding());
-    if (this_binding_status() == ThisBindingStatus::Uninitialized)
-        return interpreter().throw_exception<ReferenceError>(ErrorType::ThisHasNotBeenInitialized);
-
+    if (this_binding_status() == ThisBindingStatus::Uninitialized) {
+        interpreter().throw_exception<ReferenceError>(ErrorType::ThisHasNotBeenInitialized);
+        return {};
+    }
     return m_this_value;
 }
 

@@ -375,8 +375,10 @@ Value ProxyObject::get(const PropertyName& name, Value) const
         return {};
     if (trap.is_empty() || trap.is_undefined() || trap.is_null())
         return m_target.get(name);
-    if (!trap.is_function())
-        return interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "get");
+    if (!trap.is_function()) {
+        interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "get");
+        return {};
+    }
     MarkedValueList arguments(interpreter().heap());
     arguments.append(Value(&m_target));
     arguments.append(js_string(interpreter(), name.to_string()));
@@ -388,10 +390,14 @@ Value ProxyObject::get(const PropertyName& name, Value) const
     if (target_desc.has_value()) {
         if (interpreter().exception())
             return {};
-        if (target_desc.value().is_data_descriptor() && !target_desc.value().attributes.is_writable() && !same_value(interpreter(), trap_result, target_desc.value().value))
-            return interpreter().throw_exception<TypeError>(ErrorType::ProxyGetImmutableDataProperty);
-        if (target_desc.value().is_accessor_descriptor() && target_desc.value().getter == nullptr && !trap_result.is_undefined())
-            return interpreter().throw_exception<TypeError>(ErrorType::ProxyGetNonConfigurableAccessor);
+        if (target_desc.value().is_data_descriptor() && !target_desc.value().attributes.is_writable() && !same_value(interpreter(), trap_result, target_desc.value().value)) {
+            interpreter().throw_exception<TypeError>(ErrorType::ProxyGetImmutableDataProperty);
+            return {};
+        }
+        if (target_desc.value().is_accessor_descriptor() && target_desc.value().getter == nullptr && !trap_result.is_undefined()) {
+            interpreter().throw_exception<TypeError>(ErrorType::ProxyGetNonConfigurableAccessor);
+            return {};
+        }
     }
     return trap_result;
 }
@@ -445,8 +451,10 @@ Value ProxyObject::delete_property(const PropertyName& name)
         return {};
     if (trap.is_empty() || trap.is_undefined() || trap.is_null())
         return m_target.delete_property(name);
-    if (!trap.is_function())
-        return interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "deleteProperty");
+    if (!trap.is_function()) {
+        interpreter().throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "deleteProperty");
+        return {};
+    }
     MarkedValueList arguments(interpreter().heap());
     arguments.append(Value(&m_target));
     arguments.append(js_string(interpreter(), name.to_string()));
@@ -460,8 +468,10 @@ Value ProxyObject::delete_property(const PropertyName& name)
         return {};
     if (!target_desc.has_value())
         return Value(true);
-    if (!target_desc.value().attributes.is_configurable())
-        return interpreter().throw_exception<TypeError>(ErrorType::ProxyDeleteNonConfigurable);
+    if (!target_desc.value().attributes.is_configurable()) {
+        interpreter().throw_exception<TypeError>(ErrorType::ProxyDeleteNonConfigurable);
+        return {};
+    }
     return Value(true);
 }
 
@@ -472,10 +482,12 @@ void ProxyObject::visit_children(Cell::Visitor& visitor)
     visitor.visit(&m_handler);
 }
 
-Value ProxyObject::call(Interpreter& interpreter) {
-    if (!is_function())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, Value(this).to_string_without_side_effects().characters());
-
+Value ProxyObject::call(Interpreter& interpreter)
+{
+    if (!is_function()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, Value(this).to_string_without_side_effects().characters());
+        return {};
+    }
     if (m_is_revoked) {
         interpreter.throw_exception<TypeError>(ErrorType::ProxyRevoked);
         return {};
@@ -485,9 +497,10 @@ Value ProxyObject::call(Interpreter& interpreter) {
         return {};
     if (trap.is_empty() || trap.is_undefined() || trap.is_null())
         return static_cast<Function&>(m_target).call(interpreter);
-    if (!trap.is_function())
-        return interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "apply");
-
+    if (!trap.is_function()) {
+        interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "apply");
+        return {};
+    }
     MarkedValueList arguments(interpreter.heap());
     arguments.append(Value(&m_target));
     arguments.append(Value(&m_handler));
@@ -501,10 +514,12 @@ Value ProxyObject::call(Interpreter& interpreter) {
     return interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
 }
 
-Value ProxyObject::construct(Interpreter& interpreter, Function& new_target) {
-    if (!is_function())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, Value(this).to_string_without_side_effects().characters());
-
+Value ProxyObject::construct(Interpreter& interpreter, Function& new_target)
+{
+    if (!is_function()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, Value(this).to_string_without_side_effects().characters());
+        return {};
+    }
     if (m_is_revoked) {
         interpreter.throw_exception<TypeError>(ErrorType::ProxyRevoked);
         return {};
@@ -514,8 +529,10 @@ Value ProxyObject::construct(Interpreter& interpreter, Function& new_target) {
         return {};
     if (trap.is_empty() || trap.is_undefined() || trap.is_null())
         return static_cast<Function&>(m_target).construct(interpreter, new_target);
-    if (!trap.is_function())
-        return interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "construct");
+    if (!trap.is_function()) {
+        interpreter.throw_exception<TypeError>(ErrorType::ProxyInvalidTrap, "construct");
+        return {};
+    }
 
     MarkedValueList arguments(interpreter.heap());
     arguments.append(Value(&m_target));
@@ -526,8 +543,10 @@ Value ProxyObject::construct(Interpreter& interpreter, Function& new_target) {
     arguments.append(arguments_array);
     arguments.append(Value(&new_target));
     auto result = interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
-    if (!result.is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::ProxyConstructBadReturnType);
+    if (!result.is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::ProxyConstructBadReturnType);
+        return {};
+    }
     return result;
 }
 
