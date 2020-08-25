@@ -104,11 +104,8 @@ time_t now()
 
     ASSERT(year >= 2018);
 
-    return years_to_days_since_epoch(year) * 86400
-        + day_of_year(year, month, day) * 86400
-        + hour * 3600
-        + minute * 60
-        + second;
+    time_t days_since_epoch = years_to_days_since_epoch(year) + day_of_year(year, month, day);
+    return ((days_since_epoch * 24 + hour) * 60 + minute) * 60 + second;
 }
 
 }
