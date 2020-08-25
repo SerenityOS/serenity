@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <LibGfx/WindowTheme.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/WindowTheme.h>
 
 namespace Gfx {
 
@@ -44,6 +44,8 @@ public:
     virtual IntRect title_bar_text_rect(WindowType, const IntRect& window_rect, const Palette&) const override;
 
     virtual IntRect frame_rect_for_window(WindowType, const IntRect& window_rect, const Palette&) const override;
+
+    virtual Vector<IntRect> layout_buttons(WindowType, const IntRect& window_rect, const Palette&, size_t buttons) const override;
 
 private:
     struct FrameColors {

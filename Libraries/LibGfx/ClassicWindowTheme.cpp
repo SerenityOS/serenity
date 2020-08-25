@@ -177,4 +177,32 @@ IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const 
     }
 }
 
+Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, const IntRect& window_rect, const Palette& palette, size_t buttons) const
+{
+    int window_button_width = palette.window_title_button_width();
+    int window_button_height = palette.window_title_button_height();
+    int pos;
+    Vector<IntRect> button_rects;
+    if (window_type == WindowType::Notification)
+        pos = title_bar_rect(window_type, window_rect, palette).top() + 2;
+    else
+        pos = title_bar_text_rect(window_type, window_rect, palette).right() + 1;
+
+    for (size_t i = 0; i < buttons; i++) {
+        if (window_type == WindowType::Notification) {
+            // The button height & width have to be equal or it leaks out of its area
+            Gfx::IntRect rect { 0, pos, window_button_height, window_button_height };
+            rect.center_horizontally_within(title_bar_rect(window_type, window_rect, palette));
+            button_rects.append(rect);
+            pos += window_button_height;
+        } else {
+            pos -= window_button_width;
+            Gfx::IntRect rect { pos, 0, window_button_width, window_button_height };
+            rect.center_vertically_within(title_bar_text_rect(window_type, window_rect, palette));
+            button_rects.append(rect);
+        }
+    }
+    return button_rects;
+}
+
 }

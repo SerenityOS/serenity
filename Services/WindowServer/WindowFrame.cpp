@@ -261,29 +261,9 @@ void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const
 
 void WindowFrame::layout_buttons()
 {
-    auto palette = WindowManager::the().palette();
-    int window_button_width = palette.window_title_button_width();
-    int window_button_height = palette.window_title_button_height();
-    int pos;
-    if (m_window.type() == WindowType::Notification)
-        pos = title_bar_rect().top() + 2;
-    else
-        pos = title_bar_text_rect().right() + 1;
-
-    for (auto& button : m_buttons) {
-        if (m_window.type() == WindowType::Notification) {
-            // The button height & width have to be equal or it leaks out of its area
-            Gfx::IntRect rect { 0, pos, window_button_height, window_button_height };
-            rect.center_horizontally_within(title_bar_rect());
-            button.set_relative_rect(rect);
-            pos += window_button_height;
-        } else {
-            pos -= window_button_width;
-            Gfx::IntRect rect { pos, 0, window_button_width, window_button_height };
-            rect.center_vertically_within(title_bar_text_rect());
-            button.set_relative_rect(rect);
-        }
-    }
+    auto button_rects = Gfx::WindowTheme::current().layout_buttons(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette(), m_buttons.size());
+    for (size_t i = 0; i < m_buttons.size(); i++)
+        m_buttons[i].set_relative_rect(button_rects[i]);
 }
 
 void WindowFrame::on_mouse_event(const MouseEvent& event)
