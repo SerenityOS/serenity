@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -37,11 +38,10 @@
 
 namespace Kernel {
 
+static AK::Singleton<Lockable<InlineLinkedList<LocalSocket>>> s_list;
+
 Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
 {
-    static Lockable<InlineLinkedList<LocalSocket>>* s_list;
-    if (!s_list)
-        s_list = new Lockable<InlineLinkedList<LocalSocket>>();
     return *s_list;
 }
 

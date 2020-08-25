@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/Devices/PATADiskDevice.h>
@@ -106,13 +107,12 @@ namespace Kernel {
 
 #define PCI_Mass_Storage_Class 0x1
 #define PCI_IDE_Controller_Subclass 0x1
+
+static AK::Singleton<Lock> s_pata_lock;
+
 static Lock& s_lock()
 {
-    static Lock* lock;
-    if (!lock)
-        lock = new Lock;
-
-    return *lock;
+    return *s_pata_lock;
 };
 
 OwnPtr<PATAChannel> PATAChannel::create(ChannelType type, bool force_pio)

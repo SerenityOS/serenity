@@ -27,18 +27,17 @@
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
+#include <AK/Singleton.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
 namespace Kernel {
 
-static TimerQueue* s_the;
+static AK::Singleton<TimerQueue> s_the;
 
 TimerQueue& TimerQueue::the()
 {
-    if (!s_the)
-        s_the = new TimerQueue;
     return *s_the;
 }
 

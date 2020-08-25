@@ -25,6 +25,7 @@
  */
 
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -38,15 +39,13 @@
 namespace Kernel {
 
 static SpinLock s_all_inodes_lock;
+static AK::Singleton<InlineLinkedList<Inode>> s_list;
 
 InlineLinkedList<Inode>& Inode::all_with_lock()
 {
     ASSERT(s_all_inodes_lock.is_locked());
 
-    static InlineLinkedList<Inode>* list;
-    if (!list)
-        list = new InlineLinkedList<Inode>;
-    return *list;
+    return *s_list;
 }
 
 void Inode::sync()

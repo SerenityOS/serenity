@@ -25,6 +25,7 @@
  */
 
 #include <AK/Checked.h>
+#include <AK/Singleton.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
@@ -56,7 +57,12 @@ namespace Kernel {
 #define VBE_DISPI_ENABLED 0x01
 #define VBE_DISPI_LFB_ENABLED 0x40
 
-static BXVGADevice* s_the;
+static AK::Singleton<BXVGADevice> s_the;
+
+void BXVGADevice::initialize()
+{
+    s_the.ensure_instance();
+}
 
 BXVGADevice& BXVGADevice::the()
 {
@@ -67,7 +73,6 @@ BXVGADevice::BXVGADevice()
     : BlockDevice(29, 0)
 
 {
-    s_the = this;
     m_framebuffer_address = PhysicalAddress(find_framebuffer_address());
     set_safe_resolution();
 }

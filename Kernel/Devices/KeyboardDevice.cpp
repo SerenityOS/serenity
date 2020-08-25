@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
@@ -335,11 +336,15 @@ void KeyboardDevice::handle_irq(const RegisterState&)
     }
 }
 
-static KeyboardDevice* s_the;
+static AK::Singleton<KeyboardDevice> s_the;
+
+void KeyboardDevice::initialize()
+{
+    s_the.ensure_instance();
+}
 
 KeyboardDevice& KeyboardDevice::the()
 {
-    ASSERT(s_the);
     return *s_the;
 }
 
@@ -347,8 +352,6 @@ KeyboardDevice::KeyboardDevice()
     : IRQHandler(IRQ_KEYBOARD)
     , CharacterDevice(85, 1)
 {
-    s_the = this;
-
     // Empty the buffer of any pending data.
     // I don't care what you've been pressing until now!
     while (IO::in8(I8042_STATUS) & I8042_BUFFER_FULL)
