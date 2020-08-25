@@ -28,12 +28,11 @@
 #include <LibGUI/MessageBox.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
-#include <LibWeb/Page/Frame.h>
 #include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Page/Frame.h>
 
 namespace Web::DOM {
 
@@ -122,10 +121,8 @@ i32 Window::request_animation_frame(JS::Function& callback)
     i32 link_id = GUI::DisplayLink::register_callback([handle = make_handle(&callback)](i32 link_id) {
         auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
         auto& interpreter = function.interpreter();
-        JS::MarkedValueList arguments(interpreter.heap());
-        arguments.append(JS::Value(fake_timestamp));
         fake_timestamp += 10;
-        (void)interpreter.call(function, {}, move(arguments));
+        (void)interpreter.call(function, {}, JS::Value(fake_timestamp));
         if (interpreter.exception())
             interpreter.clear_exception();
         GUI::DisplayLink::unregister_callback(link_id);

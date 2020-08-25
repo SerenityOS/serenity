@@ -28,7 +28,6 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
@@ -38,8 +37,8 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutInline.h>
@@ -132,10 +131,8 @@ void Node::dispatch_event(NonnullRefPtr<Event> event)
             dbg() << "calling event listener with this=" << this_value;
 #endif
             auto* event_wrapper = wrap(global_object, *event);
-            JS::MarkedValueList arguments(global_object.heap());
-            arguments.append(event_wrapper);
             auto& interpreter = document().interpreter();
-            (void)interpreter.call(function, this_value, move(arguments));
+            (void)interpreter.call(function, this_value, event_wrapper);
             if (interpreter.exception())
                 interpreter.clear_exception();
         }

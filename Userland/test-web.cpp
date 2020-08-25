@@ -41,10 +41,9 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/JSONObject.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
-#include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <signal.h>
 #include <sys/time.h>
 

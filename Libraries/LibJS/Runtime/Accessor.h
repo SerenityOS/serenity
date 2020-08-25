@@ -29,7 +29,6 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 
 namespace JS {
 
@@ -63,10 +62,8 @@ public:
     {
         if (!m_setter)
             return;
-        MarkedValueList arguments(interpreter().heap());
-        arguments.append(setter_value);
         // FIXME: It might be nice if we had a way to communicate to our caller if an exception happened after this.
-        (void)interpreter().call(*m_setter, this_value, move(arguments));
+        (void)interpreter().call(*m_setter, this_value, setter_value);
     }
 
     void visit_children(Cell::Visitor& visitor) override

@@ -83,6 +83,21 @@ public:
         return interpreter;
     }
 
+    template<typename... Args>
+    [[nodiscard]] ALWAYS_INLINE Value call(Function& function, Value this_value, Args... args)
+    {
+        // Are there any values in this argpack?
+        // args = [] -> if constexpr (false)
+        // args = [x, y, z] -> if constexpr ((void)x, true || ...)
+        if constexpr ((((void)args, true) || ...)) {
+            MarkedValueList arglist { heap() };
+            (..., arglist.append(move(args)));
+            return call(function, this_value, move(arglist));
+        }
+
+        return call(function, this_value);
+    }
+
     ~Interpreter();
 
     Value run(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
@@ -118,7 +133,6 @@ public:
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
 
-    [[nodiscard]] Value call(Function&, Value this_value, Optional<MarkedValueList> arguments = {});
     Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject&);
 
     CallFrame& push_call_frame()
@@ -215,6 +229,8 @@ public:
 private:
     Interpreter();
 
+    [[nodiscard]] Value call_internal(Function&, Value this_value, Optional<MarkedValueList>);
+
     Heap m_heap;
 
     Value m_last_value;
@@ -240,5 +256,14 @@ private:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 };
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value Interpreter::call(Function& function, Value this_value, MarkedValueList arguments) { return call_internal(function, this_value, move(arguments)); }
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value Interpreter::call(Function& function, Value this_value, Optional<MarkedValueList> arguments) { return call_internal(function, this_value, move(arguments)); }
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value Interpreter::call(Function& function, Value this_value) { return call(function, this_value, Optional<MarkedValueList> {}); }
 
 }

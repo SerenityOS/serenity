@@ -708,9 +708,8 @@ Value instance_of(Interpreter& interpreter, Value lhs, Value rhs)
             interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
             return {};
         }
-        MarkedValueList arguments(interpreter.heap());
-        arguments.append(lhs);
-        return Value(interpreter.call(has_instance_method.as_function(), rhs, move(arguments)).to_boolean());
+
+        return Value(interpreter.call(has_instance_method.as_function(), rhs, lhs).to_boolean());
     }
 
     if (!rhs.is_function()) {

@@ -31,7 +31,6 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Object.h>
 #include <setjmp.h>
 #include <stdio.h>
