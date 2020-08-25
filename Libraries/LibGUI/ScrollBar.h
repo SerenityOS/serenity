@@ -118,6 +118,7 @@ private:
 
     Gfx::Orientation m_orientation { Gfx::Orientation::Vertical };
     Component m_hovered_component { Component::Invalid };
+    Gfx::IntPoint m_last_mouse_position;
     bool m_scrubber_in_use { false };
 
     AutomaticScrollingKind m_automatic_scrolling_kind { AutomaticScrollingKind::None };
