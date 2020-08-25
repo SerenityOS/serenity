@@ -139,7 +139,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"));
     set_title(title);
     set_resizable(false);
-    resize(500, 326);
+    resize(458, 326);
 
     build_ui();
 }
@@ -246,7 +246,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     auto& vertical_container = horizontal_container.add<Widget>();
     vertical_container.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     vertical_container.set_layout<VerticalBoxLayout>();
-    vertical_container.layout()->set_margins({ 12, 0, 0, 0 });
+    vertical_container.layout()->set_margins({ 8, 0, 0, 0 });
     vertical_container.set_preferred_size(128, 0);
 
     auto& preview_container = vertical_container.add<Frame>();
