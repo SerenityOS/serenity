@@ -245,18 +245,31 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     auto& vertical_container = horizontal_container.add<Widget>();
     vertical_container.set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     vertical_container.set_layout<VerticalBoxLayout>();
-    vertical_container.layout()->set_margins({ 4, 0, 0, 0 });
-    vertical_container.set_preferred_size(150, 0);
+    vertical_container.layout()->set_margins({ 12, 0, 0, 0 });
+    vertical_container.set_preferred_size(128, 0);
 
-    // Preview
-    m_preview_widget = vertical_container.add<Frame>();
-    m_preview_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_preview_widget->set_preferred_size(0, 150);
+    auto& preview_container = vertical_container.add<Frame>();
+    preview_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    preview_container.set_layout<VerticalBoxLayout>();
+    preview_container.layout()->set_margins({ 2, 2, 2, 2 });
+    preview_container.layout()->set_spacing(0);
+    preview_container.set_preferred_size(0, 128);
+
+    // Current color
+    auto& current_color_widget = preview_container.add<Widget>();
+    current_color_widget.set_fill_with_background_color(true);
+
+    auto pal1 = current_color_widget.palette();
+    pal1.set_color(ColorRole::Background, m_color);
+    current_color_widget.set_palette(pal1);
+
+    // Preview selected color
+    m_preview_widget = preview_container.add<Widget>();
     m_preview_widget->set_fill_with_background_color(true);
 
-    auto pal = m_preview_widget->palette();
-    pal.set_color(ColorRole::Background, m_color);
-    m_preview_widget->set_palette(pal);
+    auto pal2 = m_preview_widget->palette();
+    pal2.set_color(ColorRole::Background, m_color);
+    m_preview_widget->set_palette(pal2);
 
     vertical_container.layout()->add_spacer();
 

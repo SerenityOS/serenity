@@ -58,7 +58,7 @@ private:
 
     Vector<ColorButton*> m_color_widgets;
     RefPtr<CustomColorWidget> m_custom_color;
-    RefPtr<Frame> m_preview_widget;
+    RefPtr<Widget> m_preview_widget;
     RefPtr<TextBox> m_html_text;
     RefPtr<SpinBox> m_red_spinbox;
     RefPtr<SpinBox> m_green_spinbox;
