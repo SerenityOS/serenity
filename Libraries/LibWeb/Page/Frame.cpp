@@ -26,12 +26,12 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
+#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/LayoutBreak.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/InProcessWebView.h>
 
 namespace Web {
 
@@ -221,7 +221,7 @@ String Frame::selected_text() const
     if (selection.start().layout_node == selection.end().layout_node) {
         if (!is<LayoutText>(*selection.start().layout_node))
             return "";
-        return downcast<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node + 1);
+        return downcast<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node);
     }
 
     // Start node
@@ -246,7 +246,7 @@ String Frame::selected_text() const
     ASSERT(layout_node == selection.end().layout_node);
     if (is<LayoutText>(*layout_node)) {
         auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
-        builder.append(text.substring(0, selection.end().index_in_node + 1));
+        builder.append(text.substring(0, selection.end().index_in_node));
     }
 
     return builder.to_string();

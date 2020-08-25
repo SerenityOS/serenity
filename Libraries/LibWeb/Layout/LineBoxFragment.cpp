@@ -91,11 +91,11 @@ int LineBoxFragment::text_index_at(float x) const
     float width_so_far = 0;
     for (auto it = view.begin(); it != view.end(); ++it) {
         float glyph_width = font.glyph_or_emoji_width(*it);
-        if ((width_so_far + glyph_width + glyph_spacing) > relative_x)
+        if ((width_so_far + (glyph_width + glyph_spacing) / 2) > relative_x)
             return m_start + view.byte_offset_of(it);
         width_so_far += glyph_width + glyph_spacing;
     }
-    return m_start + m_length - 1;
+    return m_start + m_length;
 }
 
 Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
@@ -116,6 +116,9 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
     const auto end_index = m_start + m_length;
     auto text = this->text();
 
+    if (selection.start().index_in_node == selection.end().index_in_node)
+        return {};
+
     if (layout_node().selection_state() == LayoutNode::SelectionState::StartAndEnd) {
         // we are in the start/end node (both the same)
         if (start_index > selection.end().index_in_node)
@@ -124,7 +127,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
             return {};
 
         auto selection_start_in_this_fragment = max(0, selection.start().index_in_node - m_start);
-        auto selection_end_in_this_fragment = min(m_length, selection.end().index_in_node - m_start + 1);
+        auto selection_end_in_this_fragment = min(m_length, selection.end().index_in_node - m_start);
         auto pixel_distance_to_first_selected_character = font.width(text.substring_view(0, selection_start_in_this_fragment));
         auto pixel_width_of_selection = font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment)) + 1;
 
@@ -156,7 +159,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
             return {};
 
         auto selection_start_in_this_fragment = 0;
-        auto selection_end_in_this_fragment = min(selection.end().index_in_node + 1, m_length);
+        auto selection_end_in_this_fragment = min(selection.end().index_in_node, m_length);
         auto pixel_distance_to_first_selected_character = font.width(text.substring_view(0, selection_start_in_this_fragment));
         auto pixel_width_of_selection = font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment)) + 1;
 
