@@ -261,11 +261,11 @@ void ScrollBar::paint_event(PaintEvent& event)
 
 void ScrollBar::on_automatic_scrolling_timer_fired()
 {
-    if (m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton) {
+    if (m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton && component_at_position(m_last_mouse_position) == Component::DecrementButton) {
         set_value(value() - m_step);
         return;
     }
-    if (m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton) {
+    if (m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton && component_at_position(m_last_mouse_position) == Component::IncrementButton) {
         set_value(value() + m_step);
         return;
     }
@@ -278,7 +278,8 @@ void ScrollBar::mousedown_event(MouseEvent& event)
     if (!has_scrubber())
         return;
 
-    Component clicked_component = component_at_position(event.position());
+    m_last_mouse_position = event.position();
+    Component clicked_component = component_at_position(m_last_mouse_position);
 
     if (clicked_component == Component::DecrementButton) {
         set_automatic_scrolling_active(true, AutomaticScrollingKind::DecrementButton);
@@ -377,23 +378,15 @@ ScrollBar::Component ScrollBar::component_at_position(const Gfx::IntPoint& posit
     return Component::Invalid;
 }
 
-void ScrollBar::update_hovered_component(const Gfx::IntPoint& position)
-{
-    auto old_hovered_component = m_hovered_component;
-    m_hovered_component = component_at_position(event.position());
-    if (old_hovered_component != m_hovered_component) {
-        update();
-
-        if (m_automatic_scrolling_kind == AutomaticScrollingKind::DecrementButton)
-            set_automatic_scrolling_active(m_hovered_component == Component::DecrementButton, m_automatic_scrolling_kind);
-        else if (m_automatic_scrolling_kind == AutomaticScrollingKind::IncrementButton)
-            set_automatic_scrolling_active(m_hovered_component == Component::IncrementButton, m_automatic_scrolling_kind);
-    }
-}
-
 void ScrollBar::mousemove_event(MouseEvent& event)
 {
-    update_hovered_component(event.position());
+    m_last_mouse_position = event.position();
+
+    auto old_hovered_component = m_hovered_component;
+    m_hovered_component = component_at_position(m_last_mouse_position);
+    if (old_hovered_component != m_hovered_component) {
+        update();
+    }
     if (!m_scrubbing)
         return;
     float delta = orientation() == Orientation::Vertical ? (event.y() - m_scrub_origin.y()) : (event.x() - m_scrub_origin.x());
