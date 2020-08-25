@@ -54,7 +54,7 @@ void Splitter::paint_event(PaintEvent& event)
 
 void Splitter::resize_event(ResizeEvent& event)
 {
-    Frame::resize_event(event);
+    Widget::resize_event(event);
     m_grabbable_rect = {};
 }
 
