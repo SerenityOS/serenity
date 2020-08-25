@@ -290,6 +290,9 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         update();
         return;
     }
+
+    if (event.shift())
+        scroll_to_position(event.position());
     if (scrubber_rect().contains(event.position())) {
         m_scrubber_in_use = true;
         m_scrubbing = true;
@@ -298,16 +301,10 @@ void ScrollBar::mousedown_event(MouseEvent& event)
         update();
         return;
     }
+    ASSERT(!event.shift());
 
     // FIXME: If scrolling by page, scroll every second or so while mouse is down.
-    if (event.shift())
-        scroll_to_position(event.position());
-    else
-        scroll_by_page(event.position());
-
-    m_scrubbing = true;
-    m_scrub_start_value = value();
-    m_scrub_origin = event.position();
+    scroll_by_page(event.position());
 }
 
 void ScrollBar::mouseup_event(MouseEvent& event)
