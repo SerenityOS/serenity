@@ -67,7 +67,8 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     } else if (this_value.is_object() && this_value.as_object().is_number_object()) {
         number_value = static_cast<NumberObject&>(this_value.as_object()).value_of();
     } else {
-        return interpreter.throw_exception<TypeError>(ErrorType::NumberIncompatibleThis, "toString");
+        interpreter.throw_exception<TypeError>(ErrorType::NumberIncompatibleThis, "toString");
+        return {};
     }
 
     int radix;
@@ -78,8 +79,10 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
         radix = argument.to_i32(interpreter);
     }
 
-    if (interpreter.exception() || radix < 2 || radix > 36)
-        return interpreter.throw_exception<RangeError>(ErrorType::InvalidRadix);
+    if (interpreter.exception() || radix < 2 || radix > 36) {
+        interpreter.throw_exception<RangeError>(ErrorType::InvalidRadix);
+        return {};
+    }
 
     if (number_value.is_positive_infinity())
         return js_string(interpreter, "Infinity");

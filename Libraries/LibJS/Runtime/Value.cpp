@@ -686,8 +686,10 @@ Value exp(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value in(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    if (!rhs.is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::InOperatorWithObject);
+    if (!rhs.is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::InOperatorWithObject);
+        return {};
+    }
     auto lhs_string = lhs.to_string(interpreter);
     if (interpreter.exception())
         return {};
@@ -696,22 +698,25 @@ Value in(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value instance_of(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    if (!rhs.is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
-
+    if (!rhs.is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
+        return {};
+    }
     auto has_instance_method = rhs.as_object().get(interpreter.well_known_symbol_has_instance());
     if (!has_instance_method.is_empty()) {
-        if (!has_instance_method.is_function())
-            return interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
-
+        if (!has_instance_method.is_function()) {
+            interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
+            return {};
+        }
         MarkedValueList arguments(interpreter.heap());
         arguments.append(lhs);
         return Value(interpreter.call(has_instance_method.as_function(), rhs, move(arguments)).to_boolean());
     }
 
-    if (!rhs.is_function())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, rhs.to_string_without_side_effects().characters());
-
+    if (!rhs.is_function()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, rhs.to_string_without_side_effects().characters());
+        return {};
+    }
     return ordinary_has_instance(interpreter, lhs, rhs);
 }
 
@@ -734,9 +739,10 @@ Value ordinary_has_instance(Interpreter& interpreter, Value lhs, Value rhs)
     if (interpreter.exception())
         return {};
 
-    if (!rhs_prototype.is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects().characters());
-
+    if (!rhs_prototype.is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects().characters());
+        return {};
+    }
     while (true) {
         lhs_object = lhs_object->prototype();
         if (interpreter.exception())

@@ -147,10 +147,11 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             } else {
                 expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
             }
-            return interpreter.throw_exception<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects().characters(), call_type, expression_string.characters());
+            interpreter.throw_exception<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects().characters(), call_type, expression_string.characters());
         } else {
-            return interpreter.throw_exception<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects().characters(), call_type);
+            interpreter.throw_exception<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects().characters(), call_type);
         }
+        return {};
     }
 
     auto& function = callee.as_function();
@@ -184,9 +185,10 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     } else if (m_callee->is_super_expression()) {
         auto* super_constructor = interpreter.current_environment()->current_function()->prototype();
         // FIXME: Functions should track their constructor kind.
-        if (!super_constructor || !super_constructor->is_function())
-            return interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "Super constructor");
-
+        if (!super_constructor || !super_constructor->is_function()) {
+            interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "Super constructor");
+            return {};
+        }
         result = interpreter.construct(static_cast<Function&>(*super_constructor), function, move(arguments), global_object);
         if (interpreter.exception())
             return {};
@@ -668,9 +670,10 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         super_constructor = m_super_class->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        if (!super_constructor.is_function() && !super_constructor.is_null())
-            return interpreter.throw_exception<TypeError>(ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects().characters());
-
+        if (!super_constructor.is_function() && !super_constructor.is_null()) {
+            interpreter.throw_exception<TypeError>(ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects().characters());
+            return {};
+        }
         class_constructor->set_constructor_kind(Function::ConstructorKind::Derived);
         Object* prototype = Object::create_empty(global_object);
 
@@ -695,9 +698,10 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     if (interpreter.exception())
         return {};
 
-    if (!class_prototype.is_object())
-        return interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Class prototype");
-
+    if (!class_prototype.is_object()) {
+        interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Class prototype");
+        return {};
+    }
     for (const auto& method : m_methods) {
         auto method_value = method.execute(interpreter, global_object);
         if (interpreter.exception())
@@ -1137,8 +1141,10 @@ void ForOfStatement::dump(int indent) const
 Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     auto value = interpreter.get_variable(string(), global_object);
-    if (value.is_empty())
-        return interpreter.throw_exception<ReferenceError>(ErrorType::UnknownIdentifier, string().characters());
+    if (value.is_empty()) {
+        interpreter.throw_exception<ReferenceError>(ErrorType::UnknownIdentifier, string().characters());
+        return {};
+    }
     return value;
 }
 
@@ -1259,9 +1265,10 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
     if (interpreter.exception())
         return {};
 
-    if (reference.is_unresolvable())
-        return interpreter.throw_exception<ReferenceError>(ErrorType::InvalidLeftHandAssignment);
-
+    if (reference.is_unresolvable()) {
+        interpreter.throw_exception<ReferenceError>(ErrorType::InvalidLeftHandAssignment);
+        return {};
+    }
     update_function_name(rhs_result, get_function_name(interpreter, reference.name().to_value(interpreter)));
     reference.put(interpreter, global_object, rhs_result);
 
@@ -1797,7 +1804,8 @@ Value ThrowStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto value = m_argument->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    return interpreter.throw_exception(value);
+    interpreter.throw_exception(value);
+    return {};
 }
 
 Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const

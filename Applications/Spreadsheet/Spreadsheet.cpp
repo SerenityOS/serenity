@@ -88,13 +88,15 @@ public:
 
     static JS_DEFINE_NATIVE_FUNCTION(parse_cell_name)
     {
-        if (interpreter.argument_count() != 1)
-            return interpreter.throw_exception<JS::TypeError>("Expected exactly one argument to parse_cell_name()");
-
+        if (interpreter.argument_count() != 1) {
+            interpreter.throw_exception<JS::TypeError>("Expected exactly one argument to parse_cell_name()");
+            return {};
+        }
         auto name_value = interpreter.argument(0);
-        if (!name_value.is_string())
-            return interpreter.throw_exception<JS::TypeError>("Expected a String argument to parse_cell_name()");
-
+        if (!name_value.is_string()) {
+            interpreter.throw_exception<JS::TypeError>("Expected a String argument to parse_cell_name()");
+            return {};
+        }
         auto position = Sheet::parse_cell_name(name_value.as_string().string());
         if (!position.has_value())
             return JS::js_undefined();
