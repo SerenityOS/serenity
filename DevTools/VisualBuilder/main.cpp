@@ -168,7 +168,7 @@ RefPtr<GUI::Window> make_toolbox_window()
     auto& radiobutton_button = widget.add<GUI::Button>();
     radiobutton_button.set_button_style(Gfx::ButtonStyle::CoolBar);
     radiobutton_button.set_tooltip("GRadioButton");
-    radiobutton_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/filled-radio-circle.png"));
+    radiobutton_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/serenity/filled-radio-circle.png"));
     radiobutton_button.on_click = [](auto) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GRadioButton);
