@@ -42,6 +42,9 @@ AbstractTableView::AbstractTableView()
 {
     m_column_header = add<HeaderView>(*this, Gfx::Orientation::Horizontal);
     m_column_header->move_to_back();
+    m_row_header = add<HeaderView>(*this, Gfx::Orientation::Vertical);
+    m_row_header->move_to_back();
+    m_row_header->set_visible(false);
     set_should_hide_unnecessary_scrollbars(true);
 }
 
@@ -90,6 +93,21 @@ void AbstractTableView::update_column_sizes()
     }
 }
 
+void AbstractTableView::update_row_sizes()
+{
+    if (!model())
+        return;
+
+    auto& model = *this->model();
+    int row_count = model.row_count();
+
+    for (int row = 0; row < row_count; ++row) {
+        if (!column_header().is_section_visible(row))
+            continue;
+        row_header().set_section_size(row, item_height());
+    }
+}
+
 void AbstractTableView::update_content_size()
 {
     if (!model())
@@ -105,8 +123,8 @@ void AbstractTableView::update_content_size()
     int content_height = item_count() * item_height();
 
     set_content_size({ content_width, content_height });
-    column_header().set_width(content_width);
-    set_size_occupied_by_fixed_elements({ 0, m_column_header->height() });
+    set_size_occupied_by_fixed_elements({ row_header().width(), column_header().height() });
+    layout_headers();
 }
 
 TableCellPaintingDelegate* AbstractTableView::column_painting_delegate(int column) const
@@ -278,7 +296,7 @@ Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
 
 Gfx::IntRect AbstractTableView::row_rect(int item_index) const
 {
-    return { 0, m_column_header->height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
+    return { row_header().is_visible() ? row_header().width() : 0 , column_header().height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }
 
 Gfx::IntPoint AbstractTableView::adjusted_position(const Gfx::IntPoint& position) const
@@ -289,6 +307,7 @@ Gfx::IntPoint AbstractTableView::adjusted_position(const Gfx::IntPoint& position
 void AbstractTableView::did_update_model(unsigned flags)
 {
     AbstractView::did_update_model(flags);
+    update_row_sizes();
     update_column_sizes();
     update_content_size();
     update();
@@ -297,9 +316,7 @@ void AbstractTableView::did_update_model(unsigned flags)
 void AbstractTableView::resize_event(ResizeEvent& event)
 {
     AbstractView::resize_event(event);
-
-    if (column_header().is_visible())
-        column_header().set_relative_rect(frame_thickness(), frame_thickness(), content_width(), column_header().preferred_size().height());
+    layout_headers();
 }
 
 void AbstractTableView::header_did_change_section_size(Badge<HeaderView>, Gfx::Orientation, int, int)
@@ -327,7 +344,22 @@ void AbstractTableView::set_column_headers_visible(bool visible)
 void AbstractTableView::did_scroll()
 {
     AbstractView::did_scroll();
-    column_header().set_x(frame_thickness() + -horizontal_scrollbar().value());
+    layout_headers();
+}
+
+void AbstractTableView::layout_headers()
+{
+    if (column_header().is_visible()) {
+        int x = frame_thickness() + (row_header().is_visible() ? row_header().width() : 0) + -horizontal_scrollbar().value();
+        int y = frame_thickness();
+        column_header().set_relative_rect(x, y, content_width(), column_header().preferred_size().height());
+    }
+
+    if (row_header().is_visible()) {
+        int x = frame_thickness();
+        int y = (frame_thickness() + (column_header().is_visible() ? column_header().height() : 0)) + -vertical_scrollbar().value();
+        row_header().set_relative_rect(x, y, row_header().preferred_size().width(), content_height());
+    }
 }
 
 }

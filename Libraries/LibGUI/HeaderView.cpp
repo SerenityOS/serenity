@@ -221,11 +221,8 @@ void HeaderView::mouseup_event(MouseEvent& event)
     }
 }
 
-void HeaderView::paint_event(PaintEvent& event)
+void HeaderView::paint_horizontal(Painter& painter)
 {
-    Painter painter(*this);
-    painter.add_clip_rect(event.rect());
-    painter.fill_rect(rect(), palette().button());
     painter.draw_line({ 0, 0 }, { rect().right(), 0 }, palette().threed_highlight());
     painter.draw_line({ 0, rect().bottom() }, { rect().right(), rect().bottom() }, palette().threed_shadow1());
     int x_offset = 0;
@@ -257,6 +254,40 @@ void HeaderView::paint_event(PaintEvent& event)
         painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
         x_offset += section_width + horizontal_padding() * 2;
     }
+}
+
+void HeaderView::paint_vertical(Painter& painter)
+{
+    painter.draw_line(rect().top_left(), rect().bottom_left(), palette().threed_highlight());
+    painter.draw_line(rect().top_right(), rect().bottom_right(), palette().threed_shadow1());
+    int y_offset = 0;
+    int section_count = this->section_count();
+    for (int section = 0; section < section_count; ++section) {
+        if (!is_section_visible(section))
+            continue;
+        int section_size = this->section_size(section);
+        Gfx::IntRect cell_rect(0, y_offset, width(), section_size);
+        bool pressed = section == m_pressed_section && m_pressed_section_is_pressed;
+        bool hovered = false;
+        Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
+        String text = String::format("%d", section);
+        auto text_rect = cell_rect.shrunken(horizontal_padding() * 2, 0);
+        if (pressed)
+            text_rect.move_by(1, 1);
+        painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
+        y_offset += section_size;
+    }
+}
+
+void HeaderView::paint_event(PaintEvent& event)
+{
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+    painter.fill_rect(rect(), palette().button());
+    if (orientation() == Gfx::Orientation::Horizontal)
+        paint_horizontal(painter);
+    else
+        paint_vertical(painter);
 }
 
 void HeaderView::set_section_visible(int section, bool visible)

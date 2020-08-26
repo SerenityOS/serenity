@@ -68,6 +68,9 @@ private:
 
     Gfx::IntRect section_resize_grabbable_rect(int) const;
 
+    void paint_horizontal(Painter&);
+    void paint_vertical(Painter&);
+
     Menu& ensure_context_menu();
     RefPtr<Menu> m_context_menu;
 
