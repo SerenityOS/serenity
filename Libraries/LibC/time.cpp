@@ -60,7 +60,6 @@ char* ctime(const time_t* t)
     return asctime(localtime(t));
 }
 
-static const int __days_per_month[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 static const int __seconds_per_day = 60 * 60 * 24;
 
 static void time_to_tm(struct tm* tm, time_t t)
@@ -85,16 +84,13 @@ static void time_to_tm(struct tm* tm, time_t t)
     tm->tm_hour = remaining / 60;
     tm->tm_year = year - 1900;
     tm->tm_yday = days;
-    tm->tm_mday = 1;
-    if (is_leap_year(year) && days == 59)
-        ++tm->tm_mday;
-    if (is_leap_year(year) && days >= 59)
-        --days;
+
     int month;
-    for (month = 0; month < 11 && days >= __days_per_month[month]; ++month)
-        days -= __days_per_month[month];
-    tm->tm_mon = month;
-    tm->tm_mday += days;
+    for (month = 1; month < 12 && days >= days_in_month(year, month); ++month)
+        days -= days_in_month(year, month);
+
+    tm->tm_mon = month - 1;
+    tm->tm_mday = days + 1;
 }
 
 static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)

@@ -42,4 +42,13 @@ int day_of_year(int year, unsigned month, int day)
     return day_of_year;
 }
 
+int days_in_month(int year, unsigned month)
+{
+    ASSERT(month >= 1 && month <= 12);
+    if (month == 2)
+        return is_leap_year(year) ? 29 : 28;
+
+    bool is_long_month = (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12);
+    return is_long_month ? 31 : 30;
+}
 }
