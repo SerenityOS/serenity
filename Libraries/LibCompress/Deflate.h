@@ -26,160 +26,90 @@
 
 #pragma once
 
-#include <AK/CircularQueue.h>
-#include <AK/Span.h>
-#include <AK/Stream.h>
-#include <AK/Types.h>
+#include <AK/BitStream.h>
+#include <AK/ByteBuffer.h>
+#include <AK/CircularDuplexStream.h>
+#include <AK/Endian.h>
 #include <AK/Vector.h>
-#include <cstring>
 
 namespace Compress {
 
-// Reads one bit at a time starting with the rightmost bit
-class BitStreamReader {
-public:
-    BitStreamReader(ReadonlyBytes data)
-        : m_data(data)
-    {
-    }
+class DeflateDecompressor final : public InputStream {
+private:
+    class CanonicalCode {
+    public:
+        CanonicalCode() = default;
+        CanonicalCode(ReadonlyBytes);
+        u32 read_symbol(InputBitStream&) const;
 
-    i8 read();
-    i8 read_byte();
-    u32 read_bits(u8);
-    u8 get_bit_byte_offset();
+        static const CanonicalCode& fixed_literal_codes();
+        static const CanonicalCode& fixed_distance_codes();
+
+    private:
+        Vector<u32> m_symbol_codes;
+        Vector<u32> m_symbol_values;
+    };
+
+    class CompressedBlock {
+    public:
+        CompressedBlock(DeflateDecompressor&, CanonicalCode literal_codes, Optional<CanonicalCode> distance_codes);
+
+        bool try_read_more();
+
+    private:
+        bool m_eof { false };
+
+        DeflateDecompressor& m_decompressor;
+        CanonicalCode m_literal_codes;
+        Optional<CanonicalCode> m_distance_codes;
+    };
+
+    class UncompressedBlock {
+    public:
+        UncompressedBlock(DeflateDecompressor&, size_t);
+
+        bool try_read_more();
+
+    private:
+        DeflateDecompressor& m_decompressor;
+        size_t m_bytes_remaining;
+    };
+
+    enum class State {
+        Idle,
+        ReadingCompressedBlock,
+        ReadingUncompressedBlock
+    };
+
+public:
+    friend CompressedBlock;
+    friend UncompressedBlock;
+
+    DeflateDecompressor(InputStream&);
+    ~DeflateDecompressor();
+
+    size_t read(Bytes) override;
+    bool read_or_error(Bytes) override;
+    bool discard_or_error(size_t) override;
+    bool eof() const override;
+
+    static ByteBuffer decompress_all(ReadonlyBytes);
 
 private:
-    ReadonlyBytes m_data;
-    size_t m_data_index { 0 };
+    u32 decode_run_length(u32);
+    u32 decode_distance(u32);
+    void decode_codes(CanonicalCode&, CanonicalCode&);
 
-    i8 m_current_byte { 0 };
-    u8 m_remaining_bits { 0 };
-};
+    bool m_read_final_bock { false };
 
-class CanonicalCode {
-public:
-    CanonicalCode(Vector<u8>);
-    u32 next_symbol(BitStreamReader&);
+    State m_state { State::Idle };
+    union {
+        CompressedBlock m_compressed_block;
+        UncompressedBlock m_uncompressed_block;
+    };
 
-private:
-    Vector<u32> m_symbol_codes;
-    Vector<u32> m_symbol_values;
-};
-
-// Implements a DEFLATE decompressor according to RFC 1951.
-class DeflateStream final : public InputStream {
-public:
-    // FIXME: This should really return a ByteBuffer.
-    static Vector<u8> decompress_all(ReadonlyBytes bytes)
-    {
-        DeflateStream stream { bytes };
-        while (stream.read_next_block()) {
-        }
-
-        Vector<u8> vector;
-        vector.resize(stream.m_intermediate_stream.remaining());
-        stream >> vector;
-
-        return vector;
-    }
-
-    DeflateStream(ReadonlyBytes data)
-        : m_reader(data)
-        , m_literal_length_codes(generate_literal_length_codes())
-        , m_fixed_distance_codes(generate_fixed_distance_codes())
-    {
-    }
-
-    // FIXME: Accept an InputStream.
-
-    size_t read(Bytes bytes) override
-    {
-        if (m_intermediate_stream.remaining() >= bytes.size())
-            return m_intermediate_stream.read_or_error(bytes);
-
-        while (read_next_block()) {
-            if (m_intermediate_stream.remaining() >= bytes.size())
-                return m_intermediate_stream.read_or_error(bytes);
-        }
-
-        return m_intermediate_stream.read(bytes);
-    }
-
-    bool read_or_error(Bytes bytes) override
-    {
-        if (m_intermediate_stream.remaining() >= bytes.size()) {
-            m_intermediate_stream.read_or_error(bytes);
-            return true;
-        }
-
-        while (read_next_block()) {
-            if (m_intermediate_stream.remaining() >= bytes.size()) {
-                m_intermediate_stream.read_or_error(bytes);
-                return true;
-            }
-        }
-
-        m_error = true;
-        return false;
-    }
-
-    bool eof() const override
-    {
-        if (!m_intermediate_stream.eof())
-            return false;
-
-        while (read_next_block()) {
-            if (!m_intermediate_stream.eof())
-                return false;
-        }
-
-        return true;
-    }
-
-    bool discard_or_error(size_t count) override
-    {
-        if (m_intermediate_stream.remaining() >= count) {
-            m_intermediate_stream.discard_or_error(count);
-            return true;
-        }
-
-        while (read_next_block()) {
-            if (m_intermediate_stream.remaining() >= count) {
-                m_intermediate_stream.discard_or_error(count);
-                return true;
-            }
-        }
-
-        m_error = true;
-        return false;
-    }
-
-private:
-    void decompress_uncompressed_block() const;
-    void decompress_static_block() const;
-    void decompress_dynamic_block() const;
-    void decompress_huffman_block(CanonicalCode&, CanonicalCode*) const;
-
-    Vector<CanonicalCode> decode_huffman_codes() const;
-    u32 decode_run_length(u32) const;
-    u32 decode_distance(u32) const;
-
-    void copy_from_history(u32, u32) const;
-
-    Vector<u8> generate_literal_length_codes() const;
-    Vector<u8> generate_fixed_distance_codes() const;
-
-    mutable BitStreamReader m_reader;
-
-    mutable CanonicalCode m_literal_length_codes;
-    mutable CanonicalCode m_fixed_distance_codes;
-
-    // FIXME: Theoretically, blocks can be extremly large, reading a single block could
-    //        exhaust memory. Maybe wait for C++20 coroutines?
-    bool read_next_block() const;
-
-    mutable bool m_read_last_block { false };
-    mutable DuplexMemoryStream m_intermediate_stream;
+    InputBitStream m_input_stream;
+    CircularDuplexStream<32 * 1024> m_output_stream;
 };
 
 }
