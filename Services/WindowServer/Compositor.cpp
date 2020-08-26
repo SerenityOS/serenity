@@ -354,8 +354,10 @@ void Compositor::compose()
                 painter.blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
             }
 
-            for (auto background_rect : window.rect().shatter(backing_rect))
-                painter.fill_rect(background_rect, wm.palette().window());
+            if (window.is_opaque()) {
+                for (auto background_rect : window.rect().shatter(backing_rect))
+                    painter.fill_rect(background_rect, wm.palette().window());
+            }
         };
 
         auto& dirty_rects = window.dirty_rects();
