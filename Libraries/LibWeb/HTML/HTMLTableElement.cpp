@@ -46,6 +46,11 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
                 style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
             return;
         }
+        if (name == HTML::AttributeNames::height) {
+            if (auto parsed_value = parse_html_length(document(), value))
+                style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
+            return;
+        }
         if (name == HTML::AttributeNames::bgcolor) {
             auto color = Color::from_string(value);
             if (color.has_value())
