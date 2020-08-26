@@ -25,11 +25,23 @@
  */
 
 #include "SpreadsheetModel.h"
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace Spreadsheet {
 
 SheetModel::~SheetModel()
 {
+}
+
+static inline JS::Object* as_error(JS::Value value)
+{
+    if (value.is_object()) {
+        auto& object = value.as_object();
+        return object.is_error() ? &object : nullptr;
+    }
+
+    return nullptr;
 }
 
 GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
@@ -42,14 +54,35 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         if (!value)
             return String::empty();
 
-        if (value->kind == Spreadsheet::Cell::Formula)
+        if (value->kind == Spreadsheet::Cell::Formula) {
+            if (auto object = as_error(value->evaluated_data)) {
+                StringBuilder builder;
+                auto error = object->get("message").to_string_without_side_effects();
+                builder.append("Error: ");
+                builder.append(error);
+                return builder.to_string();
+            }
             return value->evaluated_data.is_empty() ? "" : value->evaluated_data.to_string_without_side_effects();
+        }
 
         return value->data;
     }
 
     if (role == GUI::ModelRole::TextAlignment)
         return {};
+
+    if (role == GUI::ModelRole::ForegroundColor) {
+        const auto* value = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        if (!value)
+            return {};
+
+        if (value->kind == Spreadsheet::Cell::Formula) {
+            if (as_error(value->evaluated_data))
+                return Color(Color::Red);
+        }
+
+        return {};
+    }
 
     return {};
 }
