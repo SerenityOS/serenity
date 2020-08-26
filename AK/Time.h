@@ -35,6 +35,9 @@ namespace AK {
 // can be negative.
 int day_of_year(int year, unsigned month, int day);
 
+// Month starts at 1. Month must be >= 1 and <= 12.
+int days_in_month(int year, unsigned month);
+
 inline bool is_leap_year(int year)
 {
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
@@ -169,6 +172,7 @@ inline bool operator!=(const TimespecType& a, const TimespecType& b)
 }
 
 using AK::day_of_year;
+using AK::days_in_month;
 using AK::is_leap_year;
 using AK::timespec_add;
 using AK::timespec_add_timeval;

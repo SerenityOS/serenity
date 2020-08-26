@@ -71,12 +71,7 @@ unsigned DateTime::weekday() const
 
 unsigned DateTime::days_in_month() const
 {
-    bool is_long_month = (m_month == 1 || m_month == 3 || m_month == 5 || m_month == 7 || m_month == 8 || m_month == 10 || m_month == 12);
-
-    if (m_month == 2)
-        return is_leap_year() ? 29 : 28;
-
-    return is_long_month ? 31 : 30;
+    return ::days_in_month(m_year, m_month);
 }
 
 unsigned DateTime::day_of_year() const
