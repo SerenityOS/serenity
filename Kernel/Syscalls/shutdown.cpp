@@ -63,7 +63,13 @@ int Process::sys$halt()
     dbg() << "syncing mounted filesystems...";
     FS::sync();
     dbg() << "attempting system shutdown...";
+    // QEMU Shutdown
     IO::out16(0x604, 0x2000);
+    // If we're here, the shutdown failed. Try VirtualBox shutdown.
+    IO::out16(0x4004, 0x3400);
+    // VirtualBox shutdown failed. Try Bochs/Old QEMU shutdown.
+    IO::out16(0xb004, 0x2000);
+    dbg() << "shutdown attempts failed, applications will stop responding.";
 
     return 0;
 }
