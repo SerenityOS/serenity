@@ -102,9 +102,10 @@ void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::
     if (m_table_view.selection().contains(index))
         painter.draw_rect(rect.inflated(m_table_view.horizontal_padding() * 2 + 1, 1), palette.ruler_border());
 
+    auto text_color = index.data(GUI::ModelRole::ForegroundColor).to_color(palette.color(m_table_view.foreground_role()));
     auto data = index.data();
     auto text_alignment = index.data(GUI::ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
-    painter.draw_text(rect, data.to_string(), m_table_view.font_for_index(index), text_alignment, palette.color(m_table_view.foreground_role()), Gfx::TextElision::Right);
+    painter.draw_text(rect, data.to_string(), m_table_view.font_for_index(index), text_alignment, text_color, Gfx::TextElision::Right);
 }
 
 }
