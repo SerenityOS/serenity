@@ -26,6 +26,10 @@ test("basic functionality", () => {
     expect(Date.UTC(20000, 0)).toBe(568971820800000);
 });
 
+test("leap year", () => {
+    expect(Date.UTC(2020, 2, 1)).toBe(1583020800000);
+});
+
 test("out of range", () => {
     expect(Date.UTC(2020, -20)).toBe(1525132800000);
     expect(Date.UTC(2020, 20)).toBe(1630454400000);
