@@ -50,9 +50,9 @@ TEST_CASE(array_doubles)
 {
     double doubles[] = { 1.1, 9.9, 33.33 };
 
-    auto test1 = *binary_search({ doubles, 3 }, 1.1, AK::integral_compare<double>);
-    auto test2 = *binary_search({ doubles, 3 }, 9.9, AK::integral_compare<double>);
-    auto test3 = *binary_search({ doubles, 3 }, 33.33, AK::integral_compare<double>);
+    auto test1 = *binary_search(Span<double> { doubles, 3 }, 1.1, AK::integral_compare<double>);
+    auto test2 = *binary_search(Span<double> { doubles, 3 }, 9.9, AK::integral_compare<double>);
+    auto test3 = *binary_search(Span<double> { doubles, 3 }, 33.33, AK::integral_compare<double>);
     EXPECT_EQ(test1, 1.1);
     EXPECT_EQ(test2, 9.9);
     EXPECT_EQ(test3, 33.33);
@@ -110,7 +110,7 @@ TEST_CASE(no_elements)
 
 TEST_CASE(huge_char_array)
 {
-    const size_t N = 2147483680;    
+    const size_t N = 2147483680;
     Bytes span { new (std::nothrow) u8[N], N };
     EXPECT(span.data() != nullptr);
 
