@@ -60,8 +60,9 @@ constexpr auto call_one_ref_left_if_present(...) -> FalseType
 }
 
 class RefCountedBase {
-    AK_MAKE_NONCOPYABLE(RefCountedBase)
-    AK_MAKE_NONMOVABLE(RefCountedBase)
+    AK_MAKE_NONCOPYABLE(RefCountedBase);
+    AK_MAKE_NONMOVABLE(RefCountedBase);
+
 public:
     typedef unsigned int RefCountType;
 

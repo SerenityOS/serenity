@@ -62,8 +62,9 @@ class Object
     , public Weakable<Object> {
     // NOTE: No C_OBJECT macro for Core::Object itself.
 
-    AK_MAKE_NONCOPYABLE(Object)
-    AK_MAKE_NONMOVABLE(Object)
+    AK_MAKE_NONCOPYABLE(Object);
+    AK_MAKE_NONMOVABLE(Object);
+
 public:
     IntrusiveListNode m_all_objects_list_node;
 
