@@ -1,6 +1,7 @@
 set(SOURCES
     CellSyntaxHighlighter.cpp
     HelpWindow.cpp
+    JSIntegration.cpp
     Spreadsheet.cpp
     SpreadsheetModel.cpp
     SpreadsheetView.cpp

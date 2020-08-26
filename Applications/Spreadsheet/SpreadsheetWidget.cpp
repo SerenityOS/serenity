@@ -81,13 +81,13 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     if (!m_workbook->has_sheets() && should_add_sheet_if_empty)
         m_workbook->add_sheet("Sheet 1");
 
-    setup_tabs();
+    setup_tabs(m_workbook->sheets());
 }
 
-void SpreadsheetWidget::setup_tabs()
+void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 {
     RefPtr<GUI::Widget> first_tab_widget;
-    for (auto& sheet : m_workbook->sheets()) {
+    for (auto& sheet : new_sheets) {
         auto& tab = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
         if (!first_tab_widget)
             first_tab_widget = &tab;
@@ -148,7 +148,20 @@ void SpreadsheetWidget::load(const StringView& filename)
         m_tab_widget->remove_tab(*widget);
     }
 
-    setup_tabs();
+    setup_tabs(m_workbook->sheets());
+}
+
+void SpreadsheetWidget::add_sheet()
+{
+    StringBuilder name;
+    name.append("Sheet");
+    name.appendf(" %d", m_workbook->sheets().size() + 1);
+
+    auto& sheet = m_workbook->add_sheet(name.string_view());
+
+    NonnullRefPtrVector<Sheet> new_sheets;
+    new_sheets.append(sheet);
+    setup_tabs(new_sheets);
 }
 
 void SpreadsheetWidget::set_filename(const String& filename)

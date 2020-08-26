@@ -95,6 +95,9 @@ int main(int argc, char* argv[])
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Spreadsheet");
 
+    app_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
+        spreadsheet_widget.add_sheet();
+    }));
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit(0);
     }));

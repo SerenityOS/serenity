@@ -41,6 +41,7 @@ public:
 
     void save(const StringView& filename);
     void load(const StringView& filename);
+    void add_sheet();
 
     const String& current_filename() const { return m_workbook->current_filename(); }
     void set_filename(const String& filename);
@@ -48,7 +49,7 @@ public:
 private:
     explicit SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
 
-    void setup_tabs();
+    void setup_tabs(NonnullRefPtrVector<Sheet> new_sheets);
 
     SpreadsheetView* m_selected_view { nullptr };
     RefPtr<GUI::Label> m_current_cell_label;

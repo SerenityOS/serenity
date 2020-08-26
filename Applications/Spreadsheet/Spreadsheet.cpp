@@ -25,96 +25,20 @@
  */
 
 #include "Spreadsheet.h"
+#include "JSIntegration.h"
+#include "Workbook.h"
 #include <AK/GenericLexer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <LibCore/File.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
-#include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/Value.h>
 
 namespace Spreadsheet {
 
-class SheetGlobalObject : public JS::GlobalObject {
-    JS_OBJECT(SheetGlobalObject, JS::GlobalObject);
-
-public:
-    SheetGlobalObject(Sheet& sheet)
-        : m_sheet(sheet)
-    {
-    }
-
-    virtual ~SheetGlobalObject() override
-    {
-    }
-
-    virtual JS::Value get(const JS::PropertyName& name, JS::Value receiver = {}) const override
-    {
-        if (name.is_string()) {
-            if (auto pos = Sheet::parse_cell_name(name.as_string()); pos.has_value()) {
-                auto& cell = m_sheet.ensure(pos.value());
-                cell.reference_from(m_sheet.current_evaluated_cell());
-                return cell.js_data();
-            }
-        }
-
-        return GlobalObject::get(name, receiver);
-    }
-
-    virtual bool put(const JS::PropertyName& name, JS::Value value, JS::Value receiver = {}) override
-    {
-        if (name.is_string()) {
-            if (auto pos = Sheet::parse_cell_name(name.as_string()); pos.has_value()) {
-                auto& cell = m_sheet.ensure(pos.value());
-                if (auto current = m_sheet.current_evaluated_cell())
-                    current->reference_from(&cell);
-
-                cell.set_data(value); // FIXME: This produces un-savable state!
-                return true;
-            }
-        }
-
-        return GlobalObject::put(name, value, receiver);
-    }
-
-    virtual void initialize() override
-    {
-        GlobalObject::initialize();
-        define_native_function("parse_cell_name", parse_cell_name, 1);
-    }
-
-    static JS_DEFINE_NATIVE_FUNCTION(parse_cell_name)
-    {
-        if (interpreter.argument_count() != 1) {
-            interpreter.throw_exception<JS::TypeError>("Expected exactly one argument to parse_cell_name()");
-            return {};
-        }
-        auto name_value = interpreter.argument(0);
-        if (!name_value.is_string()) {
-            interpreter.throw_exception<JS::TypeError>("Expected a String argument to parse_cell_name()");
-            return {};
-        }
-        auto position = Sheet::parse_cell_name(name_value.as_string().string());
-        if (!position.has_value())
-            return JS::js_undefined();
-
-        auto object = JS::Object::create_empty(interpreter.global_object());
-        object->put("column", JS::js_string(interpreter, position.value().column));
-        object->put("row", JS::Value((unsigned)position.value().row));
-
-        return object;
-    }
-
-private:
-    Sheet& m_sheet;
-};
-
-Sheet::Sheet(const StringView& name)
-    : Sheet(EmptyConstruct::EmptyConstructTag)
+Sheet::Sheet(const StringView& name, Workbook& workbook)
+    : Sheet(workbook)
 {
     m_name = name;
 
@@ -125,14 +49,40 @@ Sheet::Sheet(const StringView& name)
         add_column();
 }
 
-Sheet::Sheet(EmptyConstruct)
-    : m_interpreter(JS::Interpreter::create<SheetGlobalObject>(*this))
+Sheet::Sheet(Workbook& workbook)
+    : m_workbook(workbook)
 {
+    m_global_object = m_workbook.interpreter().heap().allocate_without_global_object<SheetGlobalObject>(*this);
+    m_global_object->set_prototype(&m_workbook.global_object());
+    m_global_object->initialize();
+    m_global_object->put("thisSheet", m_global_object); // Self-reference is unfortunate, but required.
+
+    // Sadly, these have to be evaluated once per sheet.
     auto file_or_error = Core::File::open("/res/js/Spreadsheet/runtime.js", Core::IODevice::OpenMode::ReadOnly);
     if (!file_or_error.is_error()) {
         auto buffer = file_or_error.value()->read_all();
-        evaluate(buffer);
+        JS::Parser parser { JS::Lexer(buffer) };
+        if (parser.has_errors()) {
+            dbg() << "Spreadsheet: Failed to parse runtime code";
+            for (auto& error : parser.errors())
+                dbg() << "Error: " << error.to_string() << "\n"
+                      << error.source_location_hint(buffer);
+        } else {
+            interpreter().run(global_object(), parser.parse_program());
+            if (auto exc = interpreter().exception()) {
+                dbg() << "Spreadsheet: Failed to run runtime code: ";
+                for (auto& t : exc->trace())
+                    dbg() << t;
+                interpreter().clear_exception();
+            }
+        }
     }
+
+}
+
+JS::Interpreter& Sheet::interpreter() const
+{
+    return m_workbook.interpreter();
 }
 
 Sheet::~Sheet()
@@ -208,14 +158,14 @@ JS::Value Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
         return JS::js_undefined();
 
     auto program = parser.parse_program();
-    m_interpreter->run(m_interpreter->global_object(), program);
-    if (m_interpreter->exception()) {
-        auto exc = m_interpreter->exception()->value();
-        m_interpreter->clear_exception();
+    interpreter().run(global_object(), program);
+    if (interpreter().exception()) {
+        auto exc = interpreter().exception()->value();
+        interpreter().clear_exception();
         return exc;
     }
 
-    auto value = m_interpreter->last_value();
+    auto value = interpreter().last_value();
     if (value.is_empty())
         return JS::js_undefined();
     return value;
@@ -309,9 +259,9 @@ void Cell::reference_from(Cell* other)
     referencing_cells.append(other->make_weak_ptr());
 }
 
-RefPtr<Sheet> Sheet::from_json(const JsonObject& object)
+RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
 {
-    auto sheet = adopt(*new Sheet(EmptyConstruct::EmptyConstructTag));
+    auto sheet = adopt(*new Sheet(workbook));
     auto rows = object.get("rows").to_u32(20);
     auto columns = object.get("columns");
     if (!columns.is_array())
@@ -385,8 +335,8 @@ JsonObject Sheet::to_json() const
         data.set("kind", it.value->kind == Cell::Kind::Formula ? "Formula" : "LiteralString");
         if (it.value->kind == Cell::Formula) {
             data.set("source", it.value->data);
-            auto json = m_interpreter->global_object().get("JSON");
-            auto stringified = m_interpreter->call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data);
+            auto json = interpreter().global_object().get("JSON");
+            auto stringified = interpreter().call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data);
             data.set("value", stringified.to_string_without_side_effects());
         } else {
             data.set("value", it.value->data);
@@ -404,19 +354,19 @@ JsonObject Sheet::gather_documentation() const
     JsonObject object;
     const JS::PropertyName doc_name { "__documentation" };
 
-    auto& global_object = m_interpreter->global_object();
-    for (auto& it : global_object.shape().property_table()) {
+    auto add_docs_from = [&](auto& it, auto& global_object) {
         auto value = global_object.get(it.key);
-        if (!value.is_function())
-            continue;
+        if (!value.is_function() && !value.is_object())
+            return;
 
-        auto& fn = value.as_function();
-        if (!fn.has_own_property(doc_name))
-            continue;
+        auto& value_object = value.is_object() ? value.as_object() : value.as_function();
+        if (!value_object.has_own_property(doc_name))
+            return;
 
-        auto doc = fn.get(doc_name);
+        dbg() << "Found '" << it.key.to_display_string() << "'";
+        auto doc = value_object.get(doc_name);
         if (!doc.is_string())
-            continue;
+            return;
 
         JsonParser parser(doc.to_string_without_side_effects());
         auto doc_object = parser.parse();
@@ -425,7 +375,13 @@ JsonObject Sheet::gather_documentation() const
             object.set(it.key.to_display_string(), doc_object.value());
         else
             dbg() << "Sheet::gather_documentation(): Failed to parse the documentation for '" << it.key.to_display_string() << "'!";
-    }
+    };
+
+    for (auto& it : interpreter().global_object().shape().property_table())
+        add_docs_from(it, interpreter().global_object());
+
+    for (auto& it : global_object().shape().property_table())
+        add_docs_from(it, global_object());
 
     return object;
 }

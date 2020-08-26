@@ -26,50 +26,46 @@
 
 #pragma once
 
-#include "Spreadsheet.h"
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Result.h>
+#include <LibJS/Forward.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace Spreadsheet {
 
-class WorkbookObject;
+class Sheet;
+class Workbook;
 
-class Workbook {
+class SheetGlobalObject : public JS::GlobalObject {
+    JS_OBJECT(SheetGlobalObject, JS::GlobalObject);
+
 public:
-    Workbook(NonnullRefPtrVector<Sheet>&& sheets);
+    SheetGlobalObject(Sheet& sheet);
 
-    Result<bool, String> save(const StringView& filename);
-    Result<bool, String> load(const StringView& filename);
+    virtual ~SheetGlobalObject() override;
 
-    const String& current_filename() const { return m_current_filename; }
-    bool set_filename(const String& filename);
+    virtual JS::Value get(const JS::PropertyName& name, JS::Value receiver = {}) const override;
+    virtual bool put(const JS::PropertyName& name, JS::Value value, JS::Value receiver = {}) override;
+    virtual void initialize() override;
 
-    bool has_sheets() const { return !m_sheets.is_empty(); }
-
-    const NonnullRefPtrVector<Sheet>& sheets() const { return m_sheets; }
-    NonnullRefPtrVector<Sheet> sheets() { return m_sheets; }
-
-    Sheet& add_sheet(const StringView& name)
-    {
-        auto sheet = Sheet::construct(name, *this);
-        m_sheets.append(sheet);
-        return *sheet;
-    }
-
-    JS::Interpreter& interpreter() { return *m_interpreter; }
-    const JS::Interpreter& interpreter() const { return *m_interpreter; }
-
-    JS::GlobalObject& global_object() { return m_interpreter->global_object(); }
-    const JS::GlobalObject& global_object() const { return m_interpreter->global_object(); }
-
-    WorkbookObject* workbook_object() { return m_workbook_object; }
+    JS_DECLARE_NATIVE_FUNCTION(parse_cell_name);
 
 private:
-    NonnullRefPtrVector<Sheet> m_sheets;
-    NonnullOwnPtr<JS::Interpreter> m_interpreter;
-    WorkbookObject* m_workbook_object { nullptr };
+    Sheet& m_sheet;
+};
 
-    String m_current_filename;
+class WorkbookObject : public JS::Object {
+    JS_OBJECT(WorkbookObject, JS::Object);
+
+public:
+    WorkbookObject(Workbook& workbook);
+
+    virtual ~WorkbookObject() override;
+
+    virtual void initialize(JS::GlobalObject&) override;
+
+    JS_DECLARE_NATIVE_FUNCTION(sheet);
+
+private:
+    Workbook& m_workbook;
 };
 
 }

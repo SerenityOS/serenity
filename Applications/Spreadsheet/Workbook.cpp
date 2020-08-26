@@ -25,14 +25,25 @@
  */
 
 #include "Workbook.h"
+#include "JSIntegration.h"
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonParser.h>
 #include <LibCore/File.h>
+#include <LibJS/Parser.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <string.h>
 
 namespace Spreadsheet {
+
+Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets)
+    : m_sheets(move(sheets))
+    , m_interpreter(JS::Interpreter::create<JS::GlobalObject>())
+{
+    m_workbook_object = interpreter().heap().allocate<WorkbookObject>(global_object(), *this);
+    global_object().put("workbook", workbook_object());
+}
 
 bool Workbook::set_filename(const String& filename)
 {
@@ -81,7 +92,7 @@ Result<bool, String> Workbook::load(const StringView& filename)
         if (!sheet_json.is_object())
             return IterationDecision::Continue;
 
-        auto sheet = Sheet::from_json(sheet_json.as_object());
+        auto sheet = Sheet::from_json(sheet_json.as_object(), *this);
         if (!sheet)
             return IterationDecision::Continue;
 

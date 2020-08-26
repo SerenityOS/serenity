@@ -1,10 +1,8 @@
-const sheet = this;
-
 function range(start, end, columnStep, rowStep) {
     columnStep = integer(columnStep ?? 1);
     rowStep = integer(rowStep ?? 1);
-    start = sheet.parse_cell_name(start) ?? { column: "A", row: 0 };
-    end = sheet.parse_cell_name(end) ?? start;
+    start = parse_cell_name(start) ?? { column: "A", row: 0 };
+    end = parse_cell_name(end) ?? start;
 
     if (end.column.length > 1 || start.column.length > 1)
         throw new TypeError("Only single-letter column names are allowed (TODO)");
@@ -58,7 +56,7 @@ function select(criteria, t, f) {
 function sumIf(condition, cells) {
     let sum = null;
     for (let name of cells) {
-        let cell = sheet[name];
+        let cell = thisSheet[name];
         if (condition(cell)) sum = sum === null ? cell : sum + cell;
     }
     return sum;
@@ -67,7 +65,7 @@ function sumIf(condition, cells) {
 function countIf(condition, cells) {
     let count = 0;
     for (let name of cells) {
-        let cell = sheet[name];
+        let cell = thisSheet[name];
         if (condition(cell)) count++;
     }
     return count;
@@ -87,6 +85,10 @@ function randRange(min, max) {
 
 function integer(value) {
     return value | 0;
+}
+
+function sheet(name) {
+    return workbook.sheet(name);
 }
 
 // Cheat the system and add documentation
@@ -170,5 +172,16 @@ integer.__documentation = JSON.stringify({
     doc: "Returns the integer value of `value`",
     examples: {
         "A1 = integer(A0)": "Sets the value of the cell A1 to the integer value of the cell A0",
+    },
+});
+
+sheet.__documentation = JSON.stringify({
+    name: "sheet",
+    argc: 1,
+    argnames: ["name or index"],
+    doc: "Returns a reference to another sheet, identified by _name_ or _index_",
+    examples: {
+        "sheet('Sheet 1').A4": "Read the value of the cell A4 in a sheet named 'Sheet 1'",
+        "sheet(0).A0 = 123": "Set the value of the cell A0 in the first sheet to 123",
     },
 });
