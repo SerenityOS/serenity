@@ -43,13 +43,18 @@ inline bool is_leap_year(int year)
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 }
 
+inline unsigned days_in_year(int year)
+{
+    return 365 + is_leap_year(year);
+}
+
 inline int years_to_days_since_epoch(int year)
 {
     int days = 0;
     for (int current_year = 1970; current_year < year; ++current_year)
-        days += 365 + is_leap_year(current_year);
+        days += days_in_year(current_year);
     for (int current_year = year; current_year < 1970; ++current_year)
-        days -= 365 + is_leap_year(current_year);
+        days -= days_in_year(current_year);
     return days;
 }
 
@@ -173,6 +178,7 @@ inline bool operator!=(const TimespecType& a, const TimespecType& b)
 
 using AK::day_of_year;
 using AK::days_in_month;
+using AK::days_in_year;
 using AK::is_leap_year;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
