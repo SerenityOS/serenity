@@ -47,6 +47,9 @@ public:
     Function<void()> on_selection_dropped;
 
 private:
+    virtual void hide_event(GUI::HideEvent&) override;
+    virtual void show_event(GUI::ShowEvent&) override;
+
     SpreadsheetView(Sheet&);
 
     class EditingDelegate : public GUI::StringModelEditingDelegate {

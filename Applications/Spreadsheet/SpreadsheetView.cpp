@@ -79,6 +79,12 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     };
 
     m_table_view->on_selection_change = [&] {
+        m_sheet->selected_cells().clear();
+        for (auto& index : m_table_view->selection().indexes()) {
+            Position position {m_sheet->column(index.column()), (size_t)index.row()};
+            m_sheet->selected_cells().set(position);
+        }
+
         if (m_table_view->selection().is_empty() && on_selection_dropped)
             return on_selection_dropped();
 
@@ -92,6 +98,22 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         m_table_view->model()->update();
         m_table_view->update();
     };
+}
+
+void SpreadsheetView::hide_event(GUI::HideEvent&)
+{
+    if (on_selection_dropped)
+        on_selection_dropped();
+}
+
+void SpreadsheetView::show_event(GUI::ShowEvent&)
+{
+    if (on_selection_changed && !m_table_view->selection().is_empty()) {
+        auto selection = m_table_view->selection().first();
+        Position position { m_sheet->column(selection.column()), (size_t)selection.row() };
+        auto& cell = m_sheet->ensure(position);
+        on_selection_changed(position, cell);
+    }
 }
 
 void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::Palette& palette, const GUI::ModelIndex& index)

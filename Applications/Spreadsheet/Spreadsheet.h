@@ -150,7 +150,8 @@ public:
 
     JsonObject gather_documentation() const;
 
-    Optional<Position> selected_cell() const { return m_selected_cell; }
+    const HashTable<Position>& selected_cells() const { return m_selected_cells; }
+    HashTable<Position>& selected_cells() { return m_selected_cells; }
     const HashMap<Position, NonnullOwnPtr<Cell>>& cells() const { return m_cells; }
     HashMap<Position, NonnullOwnPtr<Cell>>& cells() { return m_cells; }
 
@@ -200,7 +201,7 @@ private:
     Vector<String> m_columns;
     size_t m_rows { 0 };
     HashMap<Position, NonnullOwnPtr<Cell>> m_cells;
-    Optional<Position> m_selected_cell; // FIXME: Make this a collection.
+    HashTable<Position> m_selected_cells;
 
     Workbook& m_workbook;
     mutable SheetGlobalObject* m_global_object;
