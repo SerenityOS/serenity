@@ -52,11 +52,59 @@ TEST_CASE(deflate_decompress_compressed_block)
 
     const u8 uncompressed[] = "This is a simple text file :)";
 
-    const auto decompressed = Compress::DeflateStream::decompress_all({ compressed, sizeof(compressed) });
-    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.span()));
+    const auto decompressed = Compress::DeflateDecompressor::decompress_all({ compressed, sizeof(compressed) });
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
 }
 
-TEST_CASE(zlib_simple_decompress)
+TEST_CASE(deflate_decompress_uncompressed_block)
+{
+    const u8 compressed[] = {
+        0x01, 0x0d, 0x00, 0xf2, 0xff, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20,
+        0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21
+    };
+
+    const u8 uncompressed[] = "Hello, World!";
+
+    const auto decompressed = Compress::DeflateDecompressor::decompress_all({ compressed, sizeof(compressed) });
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
+}
+
+TEST_CASE(deflate_decompress_multiple_blocks)
+{
+    const u8 compressed[] = {
+        0x00, 0x1f, 0x00, 0xe0, 0xff, 0x54, 0x68, 0x65, 0x20, 0x66, 0x69, 0x72,
+        0x73, 0x74, 0x20, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x20, 0x69, 0x73, 0x20,
+        0x75, 0x6e, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64,
+        0x53, 0x48, 0xcc, 0x4b, 0x51, 0x28, 0xc9, 0x48, 0x55, 0x28, 0x4e, 0x4d,
+        0xce, 0x07, 0x32, 0x93, 0x72, 0xf2, 0x93, 0xb3, 0x15, 0x32, 0x8b, 0x15,
+        0x92, 0xf3, 0x73, 0x0b, 0x8a, 0x52, 0x8b, 0x8b, 0x53, 0x53, 0xf4, 0x00
+    };
+
+    const u8 uncompressed[] = "The first block is uncompressed and the second block is compressed.";
+
+    const auto decompressed = Compress::DeflateDecompressor::decompress_all({ compressed, sizeof(compressed) });
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
+}
+
+// FIXME: The following test uses a dynamic encoding which isn't supported by DeflateDecompressor yet.
+
+/*
+TEST_CASE(deflate_decompress_zeroes)
+{
+    const u8 compressed[] = {
+        0xed, 0xc1, 0x01, 0x0d, 0x00, 0x00, 0x00, 0xc2, 0xa0, 0xf7, 0x4f, 0x6d,
+        0x0f, 0x07, 0x14, 0x00, 0x00, 0x00, 0xf0, 0x6e
+    };
+
+    u8 uncompressed[4096];
+    Bytes { uncompressed, sizeof(uncompressed) }.fill(0);
+
+    const auto decompressed = Compress::DeflateDecompressor::decompress_all({ compressed, sizeof(compressed) });
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) }, decompressed.bytes()));
+}
+*/
+
+TEST_CASE(zlib_decompress_simple)
 {
     const u8 compressed[] = {
         0x78, 0x01, 0x01, 0x1D, 0x00, 0xE2, 0xFF, 0x54, 0x68, 0x69, 0x73, 0x20,
@@ -67,8 +115,8 @@ TEST_CASE(zlib_simple_decompress)
 
     const u8 uncompressed[] = "This is a simple text file :)";
 
-    const auto decompressed = Compress::Zlib { { compressed, sizeof(compressed) } }.decompress();
-    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.span()));
+    const auto decompressed = Compress::Zlib::decompress_all({ compressed, sizeof(compressed) });
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
 }
 
 TEST_MAIN(Compress)

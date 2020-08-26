@@ -55,9 +55,9 @@ Zlib::Zlib(ReadonlyBytes data)
     m_data_bytes = data.slice(2, data.size() - 2 - 4);
 }
 
-Vector<u8> Zlib::decompress()
+ByteBuffer Zlib::decompress()
 {
-    return DeflateStream::decompress_all(m_data_bytes);
+    return DeflateDecompressor::decompress_all(m_data_bytes);
 }
 
 u32 Zlib::checksum()
