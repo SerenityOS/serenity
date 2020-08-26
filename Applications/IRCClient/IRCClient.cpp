@@ -39,7 +39,9 @@
 #include <stdio.h>
 #include <strings.h>
 
-#define IRC_DEBUG
+#ifndef IRC_DEBUG
+#    define IRC_DEBUG
+#endif
 
 enum IRCNumeric {
     RPL_WELCOME = 1,
