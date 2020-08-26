@@ -380,7 +380,7 @@ void AbstractTableView::set_row_height(int height)
         return;
 
     m_row_height = height;
-    update_content_size();
+    update_row_sizes();
 }
 
 }
