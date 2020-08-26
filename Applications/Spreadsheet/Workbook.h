@@ -26,36 +26,41 @@
 
 #pragma once
 
-#include "SpreadsheetView.h"
-#include "Workbook.h"
-#include <AK/NonnullRefPtrVector.h>
-#include <LibGUI/Widget.h>
+#include "Spreadsheet.h"
+#include <AK/NonnullOwnPtrVector.h>
+#include <AK/Result.h>
 
 namespace Spreadsheet {
 
-class SpreadsheetWidget final : public GUI::Widget {
-    C_OBJECT(SpreadsheetWidget);
-
+class Workbook {
 public:
-    ~SpreadsheetWidget();
+    Workbook(NonnullRefPtrVector<Sheet>&& sheets)
+        : m_sheets(move(sheets))
+    {
+    }
 
-    void save(const StringView& filename);
-    void load(const StringView& filename);
+    Result<bool, String> save(const StringView& filename);
+    Result<bool, String> load(const StringView& filename);
 
-    const String& current_filename() const { return m_workbook->current_filename(); }
-    void set_filename(const String& filename);
+    const String& current_filename() const { return m_current_filename; }
+    bool set_filename(const String& filename);
+
+    bool has_sheets() const { return !m_sheets.is_empty(); }
+
+    const NonnullRefPtrVector<Sheet>& sheets() const { return m_sheets; }
+    NonnullRefPtrVector<Sheet> sheets() { return m_sheets; }
+
+    Sheet& add_sheet(const StringView& name)
+    {
+        auto sheet = Sheet::construct(name);
+        m_sheets.append(sheet);
+        return *sheet;
+    }
 
 private:
-    explicit SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
+    NonnullRefPtrVector<Sheet> m_sheets;
 
-    void setup_tabs();
-
-    SpreadsheetView* m_selected_view { nullptr };
-    RefPtr<GUI::Label> m_current_cell_label;
-    RefPtr<GUI::TextEditor> m_cell_value_editor;
-    RefPtr<GUI::TabWidget> m_tab_widget;
-
-    OwnPtr<Workbook> m_workbook;
+    String m_current_filename;
 };
 
 }
