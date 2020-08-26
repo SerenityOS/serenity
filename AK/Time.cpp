@@ -51,4 +51,14 @@ int days_in_month(int year, unsigned month)
     bool is_long_month = (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12);
     return is_long_month ? 31 : 30;
 }
+
+unsigned day_of_week(int year, unsigned month, int day)
+{
+    ASSERT(month >= 1 && month <= 12);
+    static const int seek_table[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
+    if (month < 3)
+        --year;
+
+    return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
+}
 }

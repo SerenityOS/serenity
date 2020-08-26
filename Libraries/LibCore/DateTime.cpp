@@ -61,12 +61,7 @@ DateTime DateTime::from_timestamp(time_t timestamp)
 
 unsigned DateTime::weekday() const
 {
-    int target_year = m_year;
-    static const int seek_table[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
-    if (m_month < 3)
-        --target_year;
-
-    return (target_year + target_year / 4 - target_year / 100 + target_year / 400 + seek_table[m_month - 1] + m_day) % 7;
+    return ::day_of_week(m_year, m_month, m_day);
 }
 
 unsigned DateTime::days_in_month() const
