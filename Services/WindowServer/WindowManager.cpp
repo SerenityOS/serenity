@@ -856,7 +856,7 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
         metadata.clock.start();
     } else {
 #if defined(DOUBLECLICK_DEBUG)
-        dbg() << "Transforming MouseUp to MouseDoubleClick (" << elapsed_since_last_click << " < " << m_double_click_speed << ")!";
+        dbg() << "Transforming MouseUp to MouseDoubleClick (" << metadata.clock.elapsed() << " < " << m_double_click_speed << ")!";
 #endif
         event = MouseEvent(Event::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
         // invalidate this now we've delivered a doubleclick, otherwise
