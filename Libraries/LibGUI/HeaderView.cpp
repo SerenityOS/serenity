@@ -91,7 +91,9 @@ Gfx::IntRect HeaderView::section_rect(int section) const
     for (int i = 0; i < section; ++i) {
         if (!is_section_visible(i))
             continue;
-        offset += section_data(i).size + horizontal_padding() * 2;
+        offset += section_data(i).size;
+        if (orientation() == Gfx::Orientation::Horizontal)
+            offset += horizontal_padding() * 2;
     }
     if (orientation() == Gfx::Orientation::Horizontal)
         return { offset, 0, section_size(section) + horizontal_padding() * 2, height() };
