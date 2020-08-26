@@ -35,7 +35,8 @@ class SquareButton;
 class SquareLabel;
 
 class Square {
-    AK_MAKE_NONCOPYABLE(Square)
+    AK_MAKE_NONCOPYABLE(Square);
+
 public:
     Square();
     ~Square();
@@ -59,6 +60,7 @@ class Field final : public GUI::Frame {
     C_OBJECT(Field)
     friend class Square;
     friend class SquareLabel;
+
 public:
     Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
     virtual ~Field() override;

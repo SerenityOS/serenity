@@ -33,8 +33,9 @@ namespace AK {
 
 template<typename T>
 class NeverDestroyed {
-    AK_MAKE_NONCOPYABLE(NeverDestroyed)
-    AK_MAKE_NONMOVABLE(NeverDestroyed)
+    AK_MAKE_NONCOPYABLE(NeverDestroyed);
+    AK_MAKE_NONMOVABLE(NeverDestroyed);
+
 public:
     template<typename... Args>
     NeverDestroyed(Args... args)

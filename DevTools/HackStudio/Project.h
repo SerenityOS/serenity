@@ -42,8 +42,9 @@ enum class ProjectType {
 };
 
 class Project {
-    AK_MAKE_NONCOPYABLE(Project)
-    AK_MAKE_NONMOVABLE(Project)
+    AK_MAKE_NONCOPYABLE(Project);
+    AK_MAKE_NONMOVABLE(Project);
+
 public:
     ~Project();
 

@@ -36,8 +36,9 @@
 namespace Gfx {
 
 class PaletteImpl : public RefCounted<PaletteImpl> {
-    AK_MAKE_NONCOPYABLE(PaletteImpl)
-    AK_MAKE_NONMOVABLE(PaletteImpl)
+    AK_MAKE_NONCOPYABLE(PaletteImpl);
+    AK_MAKE_NONMOVABLE(PaletteImpl);
+
 public:
     ~PaletteImpl();
     static NonnullRefPtr<PaletteImpl> create_with_shared_buffer(SharedBuffer&);

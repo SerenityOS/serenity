@@ -36,8 +36,9 @@
 typedef AK::SinglyLinkedListIterator<SinglyLinkedList<RollNote>, RollNote> RollIter;
 
 class Track {
-    AK_MAKE_NONCOPYABLE(Track)
-    AK_MAKE_NONMOVABLE(Track)
+    AK_MAKE_NONCOPYABLE(Track);
+    AK_MAKE_NONMOVABLE(Track);
+
 public:
     explicit Track(const u32& time);
     ~Track();

@@ -209,13 +209,15 @@ public:
     [[nodiscard]] bool set_nonvolatile();
 
 private:
-    enum class Purgeable { No,
-        Yes };
+    enum class Purgeable {
+        No,
+        Yes
+    };
     Bitmap(BitmapFormat, const IntSize&, Purgeable);
     Bitmap(BitmapFormat, const IntSize&, size_t pitch, RGBA32*);
     Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
 
-    void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette );
+    void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette);
 
     IntSize m_size;
     RGBA32* m_data { nullptr };

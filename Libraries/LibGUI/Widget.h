@@ -68,8 +68,9 @@ enum class VerticalDirection {
 };
 
 class WidgetClassRegistration {
-    AK_MAKE_NONCOPYABLE(WidgetClassRegistration)
-    AK_MAKE_NONMOVABLE(WidgetClassRegistration)
+    AK_MAKE_NONCOPYABLE(WidgetClassRegistration);
+    AK_MAKE_NONMOVABLE(WidgetClassRegistration);
+
 public:
     WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>()> factory);
     ~WidgetClassRegistration();

@@ -34,8 +34,9 @@ namespace HackStudio {
 class FormEditorWidget;
 
 class Tool {
-    AK_MAKE_NONCOPYABLE(Tool)
-    AK_MAKE_NONMOVABLE(Tool)
+    AK_MAKE_NONCOPYABLE(Tool);
+    AK_MAKE_NONMOVABLE(Tool);
+
 public:
     virtual ~Tool() { }
 
