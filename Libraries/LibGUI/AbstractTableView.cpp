@@ -28,6 +28,7 @@
 #include <AK/Vector.h>
 #include <LibGUI/AbstractTableView.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
@@ -40,6 +41,10 @@ namespace GUI {
 
 AbstractTableView::AbstractTableView()
 {
+    m_corner_button = add<Button>();
+    m_corner_button->move_to_back();
+    m_corner_button->set_background_role(Gfx::ColorRole::ThreedShadow1);
+    m_corner_button->set_fill_with_background_color(true);
     m_column_header = add<HeaderView>(*this, Gfx::Orientation::Horizontal);
     m_column_header->move_to_back();
     m_row_header = add<HeaderView>(*this, Gfx::Orientation::Vertical);
@@ -296,7 +301,7 @@ Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
 
 Gfx::IntRect AbstractTableView::row_rect(int item_index) const
 {
-    return { row_header().is_visible() ? row_header().width() : 0 , column_header().height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
+    return { row_header().is_visible() ? row_header().width() : 0, column_header().height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }
 
 Gfx::IntPoint AbstractTableView::adjusted_position(const Gfx::IntPoint& position) const
@@ -359,6 +364,13 @@ void AbstractTableView::layout_headers()
         int x = frame_thickness();
         int y = (frame_thickness() + (column_header().is_visible() ? column_header().height() : 0)) + -vertical_scrollbar().value();
         row_header().set_relative_rect(x, y, row_header().preferred_size().width(), content_height());
+    }
+
+    if (row_header().is_visible() && column_header().is_visible()) {
+        m_corner_button->set_relative_rect(frame_thickness(), frame_thickness(), row_header().width(), column_header().height());
+        m_corner_button->set_visible(true);
+    } else {
+        m_corner_button->set_visible(false);
     }
 }
 
