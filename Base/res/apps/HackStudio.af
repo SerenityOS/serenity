@@ -6,3 +6,6 @@ Category=Development
 [Icons]
 16x16=/res/icons/16x16/app-hack-studio.png
 32x32=/res/icons/32x32/app-hack-studio.png
+
+[Launcher]
+FileTypes=hsp
