@@ -38,10 +38,7 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return {};
 
     if (role == GUI::ModelRole::Display) {
-        if (index.column() == 0)
-            return String::number(index.row());
-
-        const auto* value = m_sheet->at({ m_sheet->column(index.column() - 1), (size_t)index.row() });
+        const auto* value = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
         if (!value)
             return String::empty();
 
@@ -51,12 +48,8 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return value->data;
     }
 
-    if (role == GUI::ModelRole::TextAlignment) {
-        if (index.column() == 0)
-            return {};
-
+    if (role == GUI::ModelRole::TextAlignment)
         return {};
-    }
 
     return {};
 }
@@ -66,18 +59,12 @@ String SheetModel::column_name(int index) const
     if (index < 0)
         return {};
 
-    if (index == 0)
-        return "";
-
-    return m_sheet->column(index - 1);
+    return m_sheet->column(index);
 }
 
 bool SheetModel::is_editable(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
-        return false;
-
-    if (index.column() == 0)
         return false;
 
     return true;
@@ -88,10 +75,7 @@ void SheetModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& valu
     if (!index.is_valid())
         return;
 
-    if (index.column() == 0)
-        return;
-
-    auto& cell = m_sheet->ensure({ m_sheet->column(index.column() - 1), (size_t)index.row() });
+    auto& cell = m_sheet->ensure({ m_sheet->column(index.column()), (size_t)index.row() });
     cell.set_data(value.to_string());
     update();
 }

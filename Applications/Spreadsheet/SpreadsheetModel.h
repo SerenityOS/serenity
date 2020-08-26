@@ -37,7 +37,7 @@ public:
     virtual ~SheetModel() override;
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->row_count(); }
-    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->column_count() + 1; }
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->column_count(); }
     virtual String column_name(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
     virtual bool is_editable(const GUI::ModelIndex&) const override;
