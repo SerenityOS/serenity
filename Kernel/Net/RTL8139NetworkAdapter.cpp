@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/IO.h>
+#include <Kernel/Net/RTL8139NetworkAdapter.h>
 
 //#define RTL8139_DEBUG
 
@@ -293,7 +293,7 @@ void RTL8139NetworkAdapter::read_mac_address()
 void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
 #ifdef RTL8139_DEBUG
-    klog() << "RTL8139NetworkAdapter::send_raw length=" << length;
+    klog() << "RTL8139NetworkAdapter::send_raw length=" << payload.size();
 #endif
 
     if (payload.size() > PACKET_SIZE_MAX) {
@@ -317,7 +317,7 @@ void RTL8139NetworkAdapter::send_raw(ReadonlyBytes payload)
         return;
     } else {
 #ifdef RTL8139_DEBUG
-        klog() << "RTL8139NetworkAdapter: chose buffer " << hw_buffer << " @ " << PhysicalAddress(m_tx_buffer_addr[hw_buffer]);
+        klog() << "RTL8139NetworkAdapter: chose buffer " << hw_buffer << " @ " << PhysicalAddress(m_tx_buffers[hw_buffer]);
 #endif
         m_tx_next_buffer = (hw_buffer + 1) % 4;
     }
