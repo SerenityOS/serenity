@@ -115,8 +115,14 @@ public:
                 return m_project.m_directory_icon;
             if (node->name.ends_with(".cpp"))
                 return m_project.m_cplusplus_icon;
+            if (node->name.ends_with(".frm"))
+                return m_project.m_form_icon;
             if (node->name.ends_with(".h"))
                 return m_project.m_header_icon;
+            if (node->name.ends_with(".hsp"))
+                return m_project.m_hackstudio_icon;
+            if (node->name.ends_with(".js"))
+                return m_project.m_javascript_icon;
             return m_project.m_file_icon;
         }
         if (role == GUI::ModelRole::Font) {
@@ -177,7 +183,10 @@ Project::Project(const String& path, Vector<String>&& filenames)
     m_cplusplus_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"));
     m_header_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-header.png"));
     m_directory_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
-    m_project_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
+    m_project_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/hackstudio-project.png"));
+    m_javascript_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-javascript.png"));
+    m_hackstudio_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-hackstudio.png"));
+    m_form_icon = GUI::Icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-form.png"));
 
     for (auto& filename : filenames) {
         m_files.append(ProjectFile::construct_with_name(filename));

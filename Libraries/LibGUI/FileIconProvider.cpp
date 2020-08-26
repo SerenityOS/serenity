@@ -34,6 +34,8 @@ namespace GUI {
 
 #define ENUMERATE_FILETYPES(F) \
     F(cplusplus, ".cpp")       \
+    F(form, ".frm")            \
+    F(hackstudio, ".hsp")      \
     F(header, ".h")            \
     F(html, ".html")           \
     F(image, ".png")           \
