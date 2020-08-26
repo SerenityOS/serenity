@@ -104,6 +104,9 @@ Gfx::IntRect HeaderView::section_resize_grabbable_rect(int section) const
 {
     if (!model())
         return {};
+    // FIXME: Support resizable rows.
+    if (m_orientation == Gfx::Orientation::Vertical)
+        return {};
     auto rect = section_rect(section);
     return { rect.right() - 1, rect.top(), 4, rect.height() };
 }
