@@ -116,14 +116,14 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
     const auto end_index = m_start + m_length;
     auto text = this->text();
 
-    if (selection.start().index_in_node == selection.end().index_in_node)
-        return {};
-
     if (layout_node().selection_state() == LayoutNode::SelectionState::StartAndEnd) {
         // we are in the start/end node (both the same)
         if (start_index > selection.end().index_in_node)
             return {};
         if (end_index < selection.start().index_in_node)
+            return {};
+
+        if (selection.start().index_in_node == selection.end().index_in_node)
             return {};
 
         auto selection_start_in_this_fragment = max(0, selection.start().index_in_node - m_start);
