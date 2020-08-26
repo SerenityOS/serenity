@@ -27,6 +27,7 @@
 #include "SpreadsheetView.h"
 #include "SpreadsheetModel.h"
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/HeaderView.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TableView.h>
@@ -56,6 +57,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 {
     set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
     m_table_view = add<GUI::TableView>();
+    m_table_view->row_header().set_visible(true);
     m_table_view->set_model(SheetModel::create(*m_sheet));
 
     set_focus_proxy(m_table_view);
