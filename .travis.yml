@@ -47,11 +47,11 @@ script:
 - cd "$SERENITY_ROOT"
 - mkdir -p Build
 - cd Build
-- cmake .. -DBUILD_LAGOM=1
+- cmake .. -DBUILD_LAGOM=1 -DALL_THE_DEBUG_MACROS=1
 - make -j2
 - CTEST_OUTPUT_ON_FAILURE=1 make test
 - cd Meta/Lagom
-- ./test-js
+- DISABLE_DBG_OUTPUT=1 ./test-js
 # These feel like they should go into a script. However, that would be a Travis-specific script, and this is *the* right place for travis-specific stuff.
 - cd "$SERENITY_ROOT"/Toolchain/Cache
 - du -ch * || true
