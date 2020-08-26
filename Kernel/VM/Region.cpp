@@ -387,7 +387,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     }
 
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> ZERO " << physical_page->paddr();
+    dbg() << "      >> ZERO " << page->paddr();
 #endif
     page_slot = move(page);
     remap_page(page_index_in_region);
@@ -423,7 +423,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     u8* dest_ptr = MM.quickmap_page(*page);
     const u8* src_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> COW " << physical_page->paddr() << " <- " << physical_page_to_copy->paddr();
+    dbg() << "      >> COW " << page->paddr() << " <- " << physical_page_to_copy->paddr();
 #endif
     copy_from_user(dest_ptr, src_ptr, PAGE_SIZE);
     page_slot = move(page);

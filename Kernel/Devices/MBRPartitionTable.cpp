@@ -27,7 +27,9 @@
 #include <AK/ByteBuffer.h>
 #include <Kernel/Devices/MBRPartitionTable.h>
 
-#define MBR_DEBUG
+#ifndef MBR_DEBUG
+#    define MBR_DEBUG
+#endif
 
 namespace Kernel {
 

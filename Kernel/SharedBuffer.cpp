@@ -28,6 +28,8 @@
 #include <Kernel/Process.h>
 #include <Kernel/SharedBuffer.h>
 
+//#define SHARED_BUFFER_DEBUG
+
 namespace Kernel {
 
 static AK::Singleton<Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>> s_map;
@@ -129,11 +131,11 @@ void SharedBuffer::deref_for_process(Process& process)
             m_total_refs--;
             if (ref.count == 0) {
 #ifdef SHARED_BUFFER_DEBUG
-                dbg() << "Releasing shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid();
+                dbg() << "Releasing shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid().value();
 #endif
                 process.deallocate_region(*ref.region);
 #ifdef SHARED_BUFFER_DEBUG
-                dbg() << "Released shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid();
+                dbg() << "Released shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid().value();
 #endif
                 sanity_check("deref_for_process");
                 destroy_if_unused();
@@ -153,12 +155,12 @@ void SharedBuffer::disown(ProcessID pid)
         auto& ref = m_refs[i];
         if (ref.pid == pid) {
 #ifdef SHARED_BUFFER_DEBUG
-            dbg() << "Disowning shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid;
+            dbg() << "Disowning shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid.value();
 #endif
             m_total_refs -= ref.count;
             m_refs.unstable_take(i);
 #ifdef SHARED_BUFFER_DEBUG
-            dbg() << "Disowned shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid;
+            dbg() << "Disowned shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid.value();
 #endif
             destroy_if_unused();
             return;

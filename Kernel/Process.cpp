@@ -79,9 +79,10 @@
 #include <LibELF/Validation.h>
 #include <LibKeyboard/CharacterMapData.h>
 
-//#define PROCESS_DEBUG
-//#define DEBUG_POLL_SELECT
 //#define DEBUG_IO
+//#define DEBUG_POLL_SELECT
+//#define MM_DEBUG
+//#define PROCESS_DEBUG
 //#define SIGNAL_DEBUG
 
 namespace Kernel {
@@ -367,12 +368,12 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
     , m_ppid(ppid)
 {
 #ifdef PROCESS_DEBUG
-    dbg() << "Created new process " << m_name << "(" << m_pid << ")";
+    dbg() << "Created new process " << m_name << "(" << m_pid.value() << ")";
 #endif
 
     m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
 #ifdef MM_DEBUG
-    dbg() << "Process " << pid() << " ctor: PD=" << m_page_directory.ptr() << " created";
+    dbg() << "Process " << pid().value() << " ctor: PD=" << m_page_directory.ptr() << " created";
 #endif
 
     if (fork_parent) {
