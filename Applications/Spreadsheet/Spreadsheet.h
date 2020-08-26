@@ -39,6 +39,9 @@
 
 namespace Spreadsheet {
 
+class Workbook;
+class SheetGlobalObject;
+
 struct Position {
     String column;
     size_t row { 0 };
@@ -140,7 +143,7 @@ public:
     static Optional<Position> parse_cell_name(const StringView&);
 
     JsonObject to_json() const;
-    static RefPtr<Sheet> from_json(const JsonObject&);
+    static RefPtr<Sheet> from_json(const JsonObject&, Workbook&);
 
     const String& name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }
@@ -183,16 +186,15 @@ public:
     void update(Cell&);
 
     JS::Value evaluate(const StringView&, Cell* = nullptr);
-    JS::Interpreter& interpreter() { return *m_interpreter; }
+    JS::Interpreter& interpreter() const;
+    SheetGlobalObject& global_object() const { return *m_global_object; }
 
     Cell*& current_evaluated_cell() { return m_current_cell_being_evaluated; }
     bool has_been_visited(Cell* cell) const { return m_visited_cells_in_update.contains(cell); }
 
 private:
-    enum class EmptyConstruct { EmptyConstructTag };
-
-    explicit Sheet(EmptyConstruct);
-    explicit Sheet(const StringView& name);
+    explicit Sheet(Workbook&);
+    explicit Sheet(const StringView& name, Workbook&);
 
     String m_name;
     Vector<String> m_columns;
@@ -200,11 +202,13 @@ private:
     HashMap<Position, NonnullOwnPtr<Cell>> m_cells;
     Optional<Position> m_selected_cell; // FIXME: Make this a collection.
 
+    Workbook& m_workbook;
+    mutable SheetGlobalObject* m_global_object;
+
     Cell* m_current_cell_being_evaluated { nullptr };
 
     size_t m_current_column_name_length { 0 };
 
-    mutable NonnullOwnPtr<JS::Interpreter> m_interpreter;
     HashTable<Cell*> m_visited_cells_in_update;
 };
 
