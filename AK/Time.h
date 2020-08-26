@@ -29,6 +29,12 @@
 namespace AK {
 
 // Month and day start at 1. Month must be >= 1 and <= 12.
+// The return value is 0-indexed, that is 0 is Sunday, 1 is Monday, etc.
+// Day may be negative or larger than the number of days
+// in the given month.
+unsigned day_of_week(int year, unsigned month, int day);
+
+// Month and day start at 1. Month must be >= 1 and <= 12.
 // The return value is 0-indexed, that is Jan 1 is day 0.
 // Day may be negative or larger than the number of days
 // in the given month. If day is negative enough, the result
@@ -176,6 +182,7 @@ inline bool operator!=(const TimespecType& a, const TimespecType& b)
 
 }
 
+using AK::day_of_week;
 using AK::day_of_year;
 using AK::days_in_month;
 using AK::days_in_year;
