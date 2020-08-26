@@ -58,7 +58,7 @@ protected:
 private:
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&, bool& is_toggle) const override;
 
-    int item_height() const { return 16; }
+    int row_height() const { return 16; }
     int max_item_width() const { return frame_inner_rect().width(); }
     int indent_width_in_pixels() const { return 16; }
     int icon_size() const { return 16; }

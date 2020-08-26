@@ -39,7 +39,8 @@ public:
 
 class AbstractTableView : public AbstractView {
 public:
-    int item_height() const { return 16; }
+    int row_height() const { return m_row_height; }
+    void set_row_height(int);
 
     bool alternating_row_colors() const { return m_alternating_row_colors; }
     void set_alternating_row_colors(bool b) { m_alternating_row_colors = b; }
@@ -119,6 +120,7 @@ private:
     bool m_alternating_row_colors { true };
     bool m_highlight_selected_rows { true };
     int m_horizontal_padding { 5 };
+    int m_row_height { 16 };
 };
 
 }

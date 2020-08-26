@@ -82,7 +82,7 @@ void TableView::paint_event(PaintEvent& event)
 
     for (int row_index = first_visible_row; row_index <= last_visible_row; ++row_index) {
         bool is_selected_row = selection().contains_row(row_index);
-        int y = y_offset + painted_item_index * item_height();
+        int y = y_offset + painted_item_index * row_height();
 
         Color background_color;
         Color key_column_background_color;
@@ -106,7 +106,7 @@ void TableView::paint_event(PaintEvent& event)
                 continue;
             int column_width = this->column_width(column_index);
             bool is_key_column = m_key_column == column_index;
-            Gfx::IntRect cell_rect(horizontal_padding() + x, y, column_width, item_height());
+            Gfx::IntRect cell_rect(horizontal_padding() + x, y, column_width, row_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
             if (is_key_column)
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
@@ -145,7 +145,7 @@ void TableView::paint_event(PaintEvent& event)
         ++painted_item_index;
     };
 
-    Gfx::IntRect unpainted_rect(0, column_header().height() + painted_item_index * item_height(), exposed_width, height());
+    Gfx::IntRect unpainted_rect(0, column_header().height() + painted_item_index * row_height(), exposed_width, height());
     if (fill_with_background_color())
         painter.fill_rect(unpainted_rect, widget_background_color);
 }
@@ -176,7 +176,7 @@ void TableView::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_PageUp) {
-        int items_per_page = visible_content_rect().height() / item_height();
+        int items_per_page = visible_content_rect().height() / row_height();
         auto old_index = selection().first();
         auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
         if (model.is_valid(new_index)) {
@@ -187,7 +187,7 @@ void TableView::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_PageDown) {
-        int items_per_page = visible_content_rect().height() / item_height();
+        int items_per_page = visible_content_rect().height() / row_height();
         auto old_index = selection().first();
         auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
         if (model.is_valid(new_index)) {

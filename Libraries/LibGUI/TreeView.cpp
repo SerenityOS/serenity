@@ -175,7 +175,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
             auto node_text = index.data().to_string();
             Gfx::IntRect rect = {
                 x_offset, y_offset,
-                icon_size() + icon_spacing() + text_padding() + font_for_index(index)->width(node_text) + text_padding(), item_height()
+                icon_size() + icon_spacing() + text_padding() + font_for_index(index)->width(node_text) + text_padding(), row_height()
             };
             Gfx::IntRect toggle_rect;
             if (row_count_at_index > 0) {
@@ -185,7 +185,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
             }
             if (callback(index, rect, toggle_rect, indent_level) == IterationDecision::Break)
                 return IterationDecision::Break;
-            y_offset += item_height();
+            y_offset += row_height();
             // NOTE: Skip traversing children if this index is closed!
             if (!metadata.open)
                 return IterationDecision::Continue;
@@ -288,7 +288,7 @@ void TreeView::paint_event(PaintEvent& event)
             painter.draw_rect(toggle_rect, text_color);
 
             if (column_index != tree_column) {
-                Gfx::IntRect cell_rect(horizontal_padding() + x_offset, rect.y(), column_width, item_height());
+                Gfx::IntRect cell_rect(horizontal_padding() + x_offset, rect.y(), column_width, row_height());
                 auto cell_index = model.index(index.row(), column_index, index.parent());
 
                 if (auto* delegate = column_painting_delegate(column_index)) {
@@ -331,7 +331,7 @@ void TreeView::paint_event(PaintEvent& event)
                     auto parent_of_index_at_indent = index_at_indent.parent();
                     bool index_at_indent_is_last_in_parent = index_at_indent.row() == model.row_count(parent_of_index_at_indent) - 1;
                     Gfx::IntPoint a { tree_column_x_offset + horizontal_padding() + indent_width_in_pixels() * i - icon_size() / 2, rect.y() - 2 };
-                    Gfx::IntPoint b { a.x(), a.y() + item_height() - 1 };
+                    Gfx::IntPoint b { a.x(), a.y() + row_height() - 1 };
                     if (index_at_indent_is_last_in_parent)
                         b.set_y(rect.center().y());
                     if (!(i != indent_level && index_at_indent_is_last_in_parent))

@@ -86,7 +86,7 @@ void AbstractTableView::update_column_sizes()
             auto cell_data = model.index(row, column).data();
             int cell_width = 0;
             if (cell_data.is_icon()) {
-                cell_width = item_height();
+                cell_width = row_height();
             } else if (cell_data.is_bitmap()) {
                 cell_width = cell_data.as_bitmap().width();
             } else if (cell_data.is_valid()) {
@@ -109,7 +109,7 @@ void AbstractTableView::update_row_sizes()
     for (int row = 0; row < row_count; ++row) {
         if (!column_header().is_section_visible(row))
             continue;
-        row_header().set_section_size(row, item_height());
+        row_header().set_section_size(row, row_height());
     }
 }
 
@@ -125,7 +125,7 @@ void AbstractTableView::update_content_size()
         if (column_header().is_section_visible(i))
             content_width += column_width(i) + horizontal_padding() * 2;
     }
-    int content_height = item_count() * item_height();
+    int content_height = item_count() * row_height();
 
     set_content_size({ content_width, content_height });
     set_size_occupied_by_fixed_elements({ row_header().width(), column_header().height() });
@@ -291,7 +291,7 @@ Gfx::IntRect AbstractTableView::content_rect(int row, int column) const
     for (int i = 0; i < column; ++i)
         x += column_width(i) + horizontal_padding() * 2;
 
-    return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, item_height() };
+    return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, row_height() };
 }
 
 Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
@@ -301,7 +301,7 @@ Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
 
 Gfx::IntRect AbstractTableView::row_rect(int item_index) const
 {
-    return { row_header().is_visible() ? row_header().width() : 0, column_header().height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
+    return { row_header().is_visible() ? row_header().width() : 0, column_header().height() + (item_index * row_height()), max(content_size().width(), width()), row_height() };
 }
 
 Gfx::IntPoint AbstractTableView::adjusted_position(const Gfx::IntPoint& position) const
@@ -372,6 +372,15 @@ void AbstractTableView::layout_headers()
     } else {
         m_corner_button->set_visible(false);
     }
+}
+
+void AbstractTableView::set_row_height(int height)
+{
+    if (m_row_height == height)
+        return;
+
+    m_row_height = height;
+    update_content_size();
 }
 
 }
