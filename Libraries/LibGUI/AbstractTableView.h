@@ -82,6 +82,12 @@ public:
 
     virtual void did_scroll() override;
 
+    HeaderView& column_header() { return *m_column_header; }
+    const HeaderView& column_header() const { return *m_column_header; }
+
+    HeaderView& row_header() { return *m_row_header; }
+    const HeaderView& row_header() const { return *m_row_header; }
+
 protected:
     virtual ~AbstractTableView() override;
     AbstractTableView();
@@ -96,15 +102,16 @@ protected:
 
     void update_content_size();
     virtual void update_column_sizes();
+    virtual void update_row_sizes();
     virtual int item_count() const;
 
     TableCellPaintingDelegate* column_painting_delegate(int column) const;
 
-    HeaderView& column_header() { return *m_column_header; }
-    const HeaderView& column_header() const { return *m_column_header; }
-
 private:
+    void layout_headers();
+
     RefPtr<HeaderView> m_column_header;
+    RefPtr<HeaderView> m_row_header;
 
     HashMap<int, OwnPtr<TableCellPaintingDelegate>> m_column_painting_delegate;
 

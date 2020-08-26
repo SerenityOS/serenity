@@ -66,7 +66,8 @@ void TableView::paint_event(PaintEvent& event)
         return;
 
     int exposed_width = max(content_size().width(), width());
-    int y_offset = column_header().height();
+    int x_offset = row_header().is_visible() ? row_header().width() : 0;
+    int y_offset = column_header().is_visible() ? column_header().height() : 0;
 
     bool dummy;
     int first_visible_row = index_at_event_position(frame_inner_rect().top_left(), dummy).row();
@@ -99,13 +100,13 @@ void TableView::paint_event(PaintEvent& event)
         }
         painter.fill_rect(row_rect(painted_item_index), background_color);
 
-        int x_offset = 0;
+        int x = x_offset;
         for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
             if (!column_header().is_section_visible(column_index))
                 continue;
             int column_width = this->column_width(column_index);
             bool is_key_column = m_key_column == column_index;
-            Gfx::IntRect cell_rect(horizontal_padding() + x_offset, y, column_width, item_height());
+            Gfx::IntRect cell_rect(horizontal_padding() + x, y, column_width, item_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
             if (is_key_column)
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
@@ -139,7 +140,7 @@ void TableView::paint_event(PaintEvent& event)
                     painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                 }
             }
-            x_offset += column_width + horizontal_padding() * 2;
+            x += column_width + horizontal_padding() * 2;
         }
         ++painted_item_index;
     };
