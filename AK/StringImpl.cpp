@@ -41,7 +41,7 @@ void dump_all_stringimpls()
 {
     unsigned i = 0;
     for (auto& it : *g_all_live_stringimpls) {
-        dbgprsize_tf("%u: \"%s\"\n", i, (*it).characters());
+        dbgprintf("%u: \"%s\"\n", i, (*it).characters());
         ++i;
     }
 }

@@ -30,7 +30,9 @@
 #include "RefCounted.h"
 #include "RefPtr.h"
 
-#define WEAKABLE_DEBUG
+#ifndef WEAKABLE_DEBUG
+#    define WEAKABLE_DEBUG
+#endif
 
 namespace AK {
 
@@ -64,7 +66,7 @@ public:
     WeakPtr<T> make_weak_ptr();
 
 protected:
-    Weakable() {}
+    Weakable() { }
 
     ~Weakable()
     {
