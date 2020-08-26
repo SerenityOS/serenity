@@ -124,7 +124,7 @@ bool BlockBasedFS::write_block(unsigned index, const u8* data, size_t count, siz
     ASSERT(m_logical_block_size);
     ASSERT(offset + count <= block_size());
 #ifdef BBFS_DEBUG
-    klog() << "BlockBasedFileSystem::write_block " << index << ", size=" << data.size();
+    klog() << "BlockBasedFileSystem::write_block " << index << ", size=" << count;
 #endif
 
     if (!allow_cache) {
