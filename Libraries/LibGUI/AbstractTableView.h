@@ -112,6 +112,7 @@ private:
 
     RefPtr<HeaderView> m_column_header;
     RefPtr<HeaderView> m_row_header;
+    RefPtr<Button> m_corner_button;
 
     HashMap<int, OwnPtr<TableCellPaintingDelegate>> m_column_painting_delegate;
 
