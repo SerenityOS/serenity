@@ -48,12 +48,12 @@ public:
         Custom,
     };
 
-    Event() {}
+    Event() { }
     explicit Event(unsigned type)
         : m_type(type)
     {
     }
-    virtual ~Event() {}
+    virtual ~Event() { }
 
     unsigned type() const { return m_type; }
 
@@ -87,7 +87,7 @@ public:
         , m_timer_id(timer_id)
     {
     }
-    ~TimerEvent() {}
+    ~TimerEvent() { }
 
     int timer_id() const { return m_timer_id; }
 
@@ -102,7 +102,7 @@ public:
         , m_fd(fd)
     {
     }
-    ~NotifierReadEvent() {}
+    ~NotifierReadEvent() { }
 
     int fd() const { return m_fd; }
 
@@ -117,7 +117,7 @@ public:
         , m_fd(fd)
     {
     }
-    ~NotifierWriteEvent() {}
+    ~NotifierWriteEvent() { }
 
     int fd() const { return m_fd; }
 
@@ -143,21 +143,17 @@ private:
 
 class CustomEvent : public Event {
 public:
-    CustomEvent(int custom_type, void* data = nullptr)
+    CustomEvent(int custom_type)
         : Event(Event::Type::Custom)
         , m_custom_type(custom_type)
-        , m_data(data)
     {
     }
-    ~CustomEvent() {}
+    ~CustomEvent() { }
 
     int custom_type() const { return m_custom_type; }
-    void* data() { return m_data; }
-    const void* data() const { return m_data; }
 
 private:
     int m_custom_type { 0 };
-    void* m_data { nullptr };
 };
 
 }
