@@ -393,7 +393,7 @@ int main(int argc, char** argv)
         out() << "        }";
         out() << "        if (stream.handle_read_failure()) {";
 #ifdef GENERATE_DEBUG_CODE
-        out() << "            sout() << \"Failed to read the message\";";
+        out() << "            dbg() << \"Failed to read the message\";";
 #endif
         out() << "            return nullptr;";
         out() << "        }";
