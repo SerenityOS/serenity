@@ -37,7 +37,8 @@
 namespace AK {
 
 class Bitmap {
-    AK_MAKE_NONCOPYABLE(Bitmap)
+    AK_MAKE_NONCOPYABLE(Bitmap);
+
 public:
     // NOTE: A wrapping Bitmap won't try to free the wrapped data.
     static Bitmap wrap(u8* data, size_t size)

@@ -34,8 +34,9 @@
 #include <AK/Vector.h>
 
 class TrackManager {
-    AK_MAKE_NONCOPYABLE(TrackManager)
-    AK_MAKE_NONMOVABLE(TrackManager)
+    AK_MAKE_NONCOPYABLE(TrackManager);
+    AK_MAKE_NONMOVABLE(TrackManager);
+
 public:
     TrackManager();
     ~TrackManager();

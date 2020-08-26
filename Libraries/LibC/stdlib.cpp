@@ -85,7 +85,7 @@ enum DigitConsumeDecision {
 
 template<typename T, T min_value, T max_value>
 class NumParser {
-    AK_MAKE_NONMOVABLE(NumParser)
+    AK_MAKE_NONMOVABLE(NumParser);
 
 public:
     NumParser(Sign sign, int base)
