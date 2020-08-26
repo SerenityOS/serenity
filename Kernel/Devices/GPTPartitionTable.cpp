@@ -27,7 +27,9 @@
 #include <AK/ByteBuffer.h>
 #include <Kernel/Devices/GPTPartitionTable.h>
 
-#define GPT_DEBUG
+#ifndef GPT_DEBUG
+#    define GPT_DEBUG
+#endif
 
 namespace Kernel {
 

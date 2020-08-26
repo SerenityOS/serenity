@@ -27,6 +27,8 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 
+//#define DEBUG_IO
+
 namespace Kernel {
 
 ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
@@ -39,7 +41,7 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
     if (!validate_write(buffer, size))
         return -EFAULT;
 #ifdef DEBUG_IO
-    dbg() << "sys$read(" << fd << ", " << (const void*)buffer << ", " << size << ")";
+    dbg() << "sys$read(" << fd << ", " << (const void*)buffer.ptr() << ", " << size << ")";
 #endif
     auto description = file_description(fd);
     if (!description)
