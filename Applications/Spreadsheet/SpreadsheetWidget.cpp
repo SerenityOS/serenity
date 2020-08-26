@@ -27,10 +27,6 @@
 #include "SpreadsheetWidget.h"
 #include "CellSyntaxHighlighter.h"
 #include "HelpWindow.h"
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonObjectSerializer.h>
-#include <AK/JsonParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -44,7 +40,7 @@
 namespace Spreadsheet {
 
 SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool should_add_sheet_if_empty)
-    : m_sheets(move(sheets))
+    : m_workbook(make<Workbook>(move(sheets)))
 {
     set_fill_with_background_color(true);
     set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
@@ -82,8 +78,8 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     m_cell_value_editor = cell_value_editor;
     m_current_cell_label = current_cell_label;
 
-    if (m_sheets.is_empty() && should_add_sheet_if_empty)
-        m_sheets.append(Sheet::construct("Sheet 1"));
+    if (!m_workbook->has_sheets() && should_add_sheet_if_empty)
+        m_workbook->add_sheet("Sheet 1");
 
     setup_tabs();
 }
@@ -91,7 +87,7 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
 void SpreadsheetWidget::setup_tabs()
 {
     RefPtr<GUI::Widget> first_tab_widget;
-    for (auto& sheet : m_sheets) {
+    for (auto& sheet : m_workbook->sheets()) {
         auto& tab = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
         if (!first_tab_widget)
             first_tab_widget = &tab;
@@ -134,121 +130,40 @@ void SpreadsheetWidget::setup_tabs()
     };
 }
 
-SpreadsheetWidget::~SpreadsheetWidget()
+void SpreadsheetWidget::save(const StringView& filename)
 {
-}
-
-void SpreadsheetWidget::set_filename(const String& filename)
-{
-    if (m_current_filename == filename)
-        return;
-
-    m_current_filename = filename;
-    StringBuilder builder;
-    builder.append("Spreadsheet - ");
-    builder.append(m_current_filename);
-
-    window()->set_title(builder.string_view());
-    window()->update();
+    auto result = m_workbook->save(filename);
+    if (result.is_error())
+        GUI::MessageBox::show_error(window(), result.error());
 }
 
 void SpreadsheetWidget::load(const StringView& filename)
 {
-    auto file_or_error = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        StringBuilder sb;
-        sb.append("Failed to open ");
-        sb.append(filename);
-        sb.append(" for reading. Error: ");
-        sb.append(file_or_error.error());
-
-        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
+    auto result = m_workbook->load(filename);
+    if (result.is_error()) {
+        GUI::MessageBox::show_error(window(), result.error());
         return;
     }
-
-    auto json_value_option = JsonParser(file_or_error.value()->read_all()).parse();
-    if (!json_value_option.has_value()) {
-        StringBuilder sb;
-        sb.append("Failed to parse ");
-        sb.append(filename);
-
-        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
-        return;
-    }
-
-    auto& json_value = json_value_option.value();
-    if (!json_value.is_array()) {
-        StringBuilder sb;
-        sb.append("Did not find a spreadsheet in ");
-        sb.append(filename);
-
-        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
-        return;
-    }
-
-    NonnullRefPtrVector<Sheet> sheets;
-
-    auto& json_array = json_value.as_array();
-    json_array.for_each([&](auto& sheet_json) {
-        if (!sheet_json.is_object())
-            return IterationDecision::Continue;
-
-        auto sheet = Sheet::from_json(sheet_json.as_object());
-        if (!sheet)
-            return IterationDecision::Continue;
-
-        sheets.append(sheet.release_nonnull());
-
-        return IterationDecision::Continue;
-    });
-
-    m_sheets.clear();
-    m_sheets = move(sheets);
-
     while (auto* widget = m_tab_widget->active_widget()) {
         m_tab_widget->remove_tab(*widget);
     }
 
     setup_tabs();
-
-    set_filename(filename);
 }
 
-void SpreadsheetWidget::save(const StringView& filename)
+void SpreadsheetWidget::set_filename(const String& filename)
 {
-    JsonArray array;
-    m_tab_widget->for_each_child_of_type<SpreadsheetView>([&](auto& view) {
-        array.append(view.sheet().to_json());
-        return IterationDecision::Continue;
-    });
+    if (m_workbook->set_filename(filename)) {
+        StringBuilder builder;
+        builder.append("Spreadsheet - ");
+        builder.append(current_filename());
 
-    auto file_content = array.to_string();
-
-    auto file = Core::File::construct(filename);
-    file->open(Core::IODevice::WriteOnly);
-    if (!file->is_open()) {
-        StringBuilder sb;
-        sb.append("Failed to open ");
-        sb.append(filename);
-        sb.append(" for write. Error: ");
-        sb.append(file->error_string());
-
-        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
-        return;
+        window()->set_title(builder.string_view());
+        window()->update();
     }
-
-    bool result = file->write(file_content);
-    if (!result) {
-        int error_number = errno;
-        StringBuilder sb;
-        sb.append("Unable to save file. Error: ");
-        sb.append(strerror(error_number));
-
-        GUI::MessageBox::show(window(), sb.to_string(), "Error", GUI::MessageBox::Type::Error);
-        return;
-    }
-
-    set_filename(filename);
 }
 
+SpreadsheetWidget::~SpreadsheetWidget()
+{
+}
 }
