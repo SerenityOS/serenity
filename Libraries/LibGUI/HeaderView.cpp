@@ -302,6 +302,7 @@ void HeaderView::context_menu_event(ContextMenuEvent& event)
 void HeaderView::leave_event(Core::Event& event)
 {
     Widget::leave_event(event);
+    set_hovered_section(-1);
     window()->set_override_cursor(StandardCursor::None);
 }
 
