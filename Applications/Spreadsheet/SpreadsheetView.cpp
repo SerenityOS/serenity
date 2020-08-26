@@ -44,7 +44,7 @@ void SpreadsheetView::EditingDelegate::set_value(const GUI::Variant& value)
         return StringModelEditingDelegate::set_value(value);
 
     m_has_set_initial_value = true;
-    const auto option = m_sheet.at({ m_sheet.column(index().column() - 1), (size_t)index().row() });
+    const auto option = m_sheet.at({ m_sheet.column(index().column()), (size_t)index().row() });
     if (option)
         return StringModelEditingDelegate::set_value(option->source());
 
@@ -62,9 +62,9 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
     // FIXME: This is dumb.
     for (size_t i = 0; i < m_sheet->column_count(); ++i) {
-        m_table_view->set_column_painting_delegate(i + 1, make<TableCellPainter>(*m_table_view));
-        m_table_view->set_column_width(i + 1, 50);
-        m_table_view->set_column_header_alignment(i + 1, Gfx::TextAlignment::Center);
+        m_table_view->set_column_painting_delegate(i, make<TableCellPainter>(*m_table_view));
+        m_table_view->set_column_width(i, 50);
+        m_table_view->set_column_header_alignment(i, Gfx::TextAlignment::Center);
     }
 
     m_table_view->set_alternating_row_colors(false);
@@ -83,7 +83,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         if (selection.column() == 0)
             return;
 
-        Position position { m_sheet->column(selection.column() - 1), (size_t)selection.row() };
+        Position position { m_sheet->column(selection.column()), (size_t)selection.row() };
         auto& cell = m_sheet->ensure(position);
         if (on_selection_changed)
             on_selection_changed(position, cell);
