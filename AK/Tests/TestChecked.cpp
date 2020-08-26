@@ -28,6 +28,9 @@
 
 #include <AK/Checked.h>
 
+// These tests only check whether the usual operator semantics work.
+// TODO: Add tests about the actual `Check`ing itself!
+
 TEST_CASE(address_identity)
 {
     Checked<int> a = 4;
