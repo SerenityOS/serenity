@@ -64,11 +64,6 @@ static const int __seconds_per_day = 60 * 60 * 24;
 
 static void time_to_tm(struct tm* tm, time_t t)
 {
-    tm->tm_wday = (4 * __seconds_per_day + t) % (7 * __seconds_per_day); // 1970-01-01 was a Thursday.
-    if (tm->tm_wday < 0)
-        tm->tm_wday += 7 * __seconds_per_day;
-    tm->tm_wday /= __seconds_per_day;
-
     int year = 1970;
     for (; t >= days_in_year(year) * __seconds_per_day; ++year)
         t -= days_in_year(year) * __seconds_per_day;
@@ -89,8 +84,9 @@ static void time_to_tm(struct tm* tm, time_t t)
     for (month = 1; month < 12 && days >= days_in_month(year, month); ++month)
         days -= days_in_month(year, month);
 
-    tm->tm_mon = month - 1;
     tm->tm_mday = days + 1;
+    tm->tm_wday = day_of_week(year, month, tm->tm_mday);
+    tm->tm_mon = month - 1;
 }
 
 static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
