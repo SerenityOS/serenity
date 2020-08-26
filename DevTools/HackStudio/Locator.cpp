@@ -37,6 +37,8 @@ namespace HackStudio {
 static RefPtr<Gfx::Bitmap> s_file_icon;
 static RefPtr<Gfx::Bitmap> s_cplusplus_icon;
 static RefPtr<Gfx::Bitmap> s_header_icon;
+static RefPtr<Gfx::Bitmap> s_form_icon;
+static RefPtr<Gfx::Bitmap> s_hackstudio_icon;
 
 class LocatorSuggestionModel final : public GUI::Model {
 public:
@@ -61,8 +63,12 @@ public:
             if (index.column() == Column::Icon) {
                 if (suggestion.ends_with(".cpp"))
                     return *s_cplusplus_icon;
+                if (suggestion.ends_with(".frm"))
+                    return *s_form_icon;
                 if (suggestion.ends_with(".h"))
                     return *s_header_icon;
+                if (suggestion.ends_with(".hsp"))
+                    return *s_hackstudio_icon;
                 return *s_file_icon;
             }
         }
@@ -80,6 +86,8 @@ Locator::Locator()
         s_file_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png");
         s_cplusplus_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png");
         s_header_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-header.png");
+        s_form_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-form.png");
+        s_hackstudio_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-hackstudio.png");
     }
 
     set_layout<GUI::VerticalBoxLayout>();

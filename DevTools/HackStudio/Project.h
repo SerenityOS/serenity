@@ -89,6 +89,9 @@ private:
     GUI::Icon m_cplusplus_icon;
     GUI::Icon m_header_icon;
     GUI::Icon m_project_icon;
+    GUI::Icon m_javascript_icon;
+    GUI::Icon m_hackstudio_icon;
+    GUI::Icon m_form_icon;
 };
 
 }
