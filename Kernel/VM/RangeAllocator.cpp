@@ -77,7 +77,7 @@ Vector<Range, 2> Range::carve(const Range& taken)
         parts.append({ taken.end(), end().get() - taken.end().get() });
 #ifdef VRA_DEBUG
     dbg() << "VRA: carve: take " << String::format("%x", taken.base().get()) << "-" << String::format("%x", taken.end().get() - 1) << " from " << String::format("%x", base().get()) << "-" << String::format("%x", end().get() - 1);
-    for (int i = 0; i < parts.size(); ++i)
+    for (size_t i = 0; i < parts.size(); ++i)
         dbg() << "        " << String::format("%x", parts[i].base().get()) << "-" << String::format("%x", parts[i].end().get() - 1);
 #endif
     return parts;

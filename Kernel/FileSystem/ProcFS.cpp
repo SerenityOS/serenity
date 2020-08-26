@@ -60,6 +60,8 @@
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>
 
+//#define PROCFS_DEBUG
+
 namespace Kernel {
 
 enum ProcParentDirectory {
@@ -1104,7 +1106,7 @@ InodeMetadata ProcFSInode::metadata() const
     auto proc_file_type = to_proc_file_type(identifier());
 
 #ifdef PROCFS_DEBUG
-    dbg() << "  -> pid: " << pid << ", fi: " << proc_file_type << ", pdi: " << proc_parent_directory;
+    dbg() << "  -> pid: " << to_pid(identifier()).value() << ", fi: " << proc_file_type << ", pdi: " << proc_parent_directory;
 #endif
 
     if (is_process_related_file(identifier())) {

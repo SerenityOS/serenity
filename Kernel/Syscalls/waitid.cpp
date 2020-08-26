@@ -26,6 +26,8 @@
 
 #include <Kernel/Process.h>
 
+//#define PROCESS_DEBUG
+
 namespace Kernel {
 
 KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
@@ -109,7 +111,7 @@ pid_t Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_param
         return -EFAULT;
 
 #ifdef PROCESS_DEBUG
-    dbg() << "sys$waitid(" << params.idtype << ", " << params.id << ", " << params.infop << ", " << params.options << ")";
+    dbg() << "sys$waitid(" << params.idtype << ", " << params.id << ", " << params.infop.ptr() << ", " << params.options << ")";
 #endif
 
     auto siginfo_or_error = do_waitid(static_cast<idtype_t>(params.idtype), params.id, params.options);

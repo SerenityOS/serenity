@@ -40,6 +40,7 @@
 #include <LibELF/Validation.h>
 
 //#define EXEC_DEBUG
+//#define MM_DEBUG
 
 namespace Kernel {
 
@@ -97,7 +98,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     }
 
 #ifdef MM_DEBUG
-    dbg() << "Process " << pid() << " exec: PD=" << m_page_directory.ptr() << " created";
+    dbg() << "Process " << pid().value() << " exec: PD=" << m_page_directory.ptr() << " created";
 #endif
 
     InodeMetadata loader_metadata;
