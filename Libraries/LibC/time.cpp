@@ -74,16 +74,16 @@ static void time_to_tm(struct tm* tm, time_t t)
         t -= days_in_year(year) * __seconds_per_day;
     for (; t < 0; --year)
         t += days_in_year(year - 1) * __seconds_per_day;
-    ASSERT(t >= 0);
+    tm->tm_year = year - 1900;
 
+    ASSERT(t >= 0);
     int days = t / __seconds_per_day;
+    tm->tm_yday = days;
     int remaining = t % __seconds_per_day;
     tm->tm_sec = remaining % 60;
     remaining /= 60;
     tm->tm_min = remaining % 60;
     tm->tm_hour = remaining / 60;
-    tm->tm_year = year - 1900;
-    tm->tm_yday = days;
 
     int month;
     for (month = 1; month < 12 && days >= days_in_month(year, month); ++month)
@@ -112,12 +112,9 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
         tm->tm_mon += 12;
     }
 
-    int days = years_to_days_since_epoch(1900 + tm->tm_year);
     tm->tm_yday = day_of_year(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday);
-    days += tm->tm_yday;
-
-    int seconds = tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
-    auto timestamp = static_cast<time_t>(days) * __seconds_per_day + seconds + timezone_adjust_seconds;
+    time_t days_since_epoch = years_to_days_since_epoch(1900 + tm->tm_year) + tm->tm_yday;
+    auto timestamp = ((days_since_epoch * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec + timezone_adjust_seconds;
     time_to_tm(tm, timestamp);
     return timestamp;
 }
