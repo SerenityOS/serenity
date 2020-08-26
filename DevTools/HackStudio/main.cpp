@@ -172,7 +172,7 @@ NonnullRefPtr<EditorWrapper> get_editor_of_file(const String& file)
 
 static String get_project_executable_path()
 {
-    // e.g /my/project.hackstudio => /my/project
+    // e.g /my/project.hsp => /my/project
     // TODO: Perhaps a Makefile rule for getting the value of $(PROGRAM) would be better?
     return g_project->path().substring(0, g_project->path().index_of(".").value());
 }
@@ -219,10 +219,10 @@ int main_impl(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     auto argument_absolute_path = Core::File::real_path_for(path_argument);
-    if (argument_absolute_path.ends_with(".hackstudio"))
+    if (argument_absolute_path.ends_with(".hsp"))
         open_project(argument_absolute_path);
     else
-        open_project("/home/anon/Source/little/little.hackstudio");
+        open_project("/home/anon/Source/little/little.hsp");
 
     auto& toolbar_container = widget.add<GUI::ToolBarContainer>();
     auto& toolbar = toolbar_container.add<GUI::ToolBar>();
@@ -704,7 +704,7 @@ int main_impl(int argc, char** argv)
 
     g_open_file = open_file;
 
-    if (!argument_absolute_path.is_empty() && !argument_absolute_path.ends_with(".hackstudio"))
+    if (!argument_absolute_path.is_empty() && !argument_absolute_path.ends_with(".hsp"))
         open_file(argument_absolute_path);
     else
         open_file(g_project->default_file());
