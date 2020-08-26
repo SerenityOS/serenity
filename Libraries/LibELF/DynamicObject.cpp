@@ -263,7 +263,7 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char
         auto symbol = m_dynamic.symbol(i);
         if (strcmp(name, symbol.name()) == 0) {
 #ifdef DYNAMIC_LOAD_DEBUG
-            dbgprintf("Returning dynamic symbol with index %d for %s: %p\n", i, symbol.name(), symbol.address());
+            dbgprintf("Returning dynamic symbol with index %u for %s: %p\n", i, symbol.name(), symbol.address().as_ptr());
 #endif
             return symbol;
         }

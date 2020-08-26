@@ -1349,7 +1349,7 @@ void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const I
 
 void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
-    if (can_approximate_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta))  {
+    if (can_approximate_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta)) {
         callback(p1, p2);
     } else {
         split_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, callback);
@@ -1568,8 +1568,9 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
 
 #ifdef FILL_PATH_DEBUG
     size_t i { 0 };
-    for (auto& segment : segments)
-        draw_line(segment.from, segment.to, Color::from_hsv(++i / segments.size() * 360.0, 1.0, 1.0), 1);
+    for (auto& segment : segments) {
+        draw_line(Point<int>(segment.from), Point<int>(segment.to), Color::from_hsv(++i / segments.size() * 360.0, 1.0, 1.0), 1);
+    }
 #endif
 }
 

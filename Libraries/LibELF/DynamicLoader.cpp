@@ -35,7 +35,9 @@
 #include <string.h>
 #include <sys/mman.h>
 
-#define DYNAMIC_LOAD_DEBUG
+#ifndef DYNAMIC_LOAD_DEBUG
+#    define DYNAMIC_LOAD_DEBUG
+#endif
 //#define DYNAMIC_LOAD_VERBOSE
 
 #ifdef DYNAMIC_LOAD_VERBOSE
@@ -82,8 +84,7 @@ DynamicLoader::DynamicLoader(const char* filename, int fd, size_t size)
 
     auto* elf_header = (Elf32_Ehdr*)m_file_mapping;
 
-    if (!validate_elf_header(*elf_header, m_file_size) ||
-        !validate_program_headers(*elf_header, m_file_size, (u8*)m_file_mapping, m_file_size, m_program_interpreter)) {
+    if (!validate_elf_header(*elf_header, m_file_size) || !validate_program_headers(*elf_header, m_file_size, (u8*)m_file_mapping, m_file_size, m_program_interpreter)) {
         m_valid = false;
     }
 }

@@ -706,8 +706,12 @@ void Terminal::execute_escape_sequence(u8 final)
     dbgprintf("\n");
     for (auto& line : m_lines) {
         dbgprintf("Terminal: Line: ");
-        for (int i = 0; i < line.m_length; i++) {
-            dbgprintf("%c", line.characters[i]);
+        for (int i = 0; i < line.length(); i++) {
+            u32 codepoint = line.code_point(i);
+            if (codepoint < 128)
+                dbgprintf("%c", (char)codepoint);
+            else
+                dbgprintf("<U+%04x>", codepoint);
         }
         dbgprintf("\n");
     }
