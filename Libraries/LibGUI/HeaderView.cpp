@@ -202,7 +202,7 @@ void HeaderView::mouseup_event(MouseEvent& event)
             return;
         }
         if (m_pressed_section != -1) {
-            if (section_rect(m_pressed_section).contains(event.position())) {
+            if (m_orientation == Gfx::Orientation::Horizontal && section_rect(m_pressed_section).contains(event.position())) {
                 auto new_sort_order = SortOrder::Ascending;
                 if (m_table_view.key_column() == m_pressed_section)
                     new_sort_order = m_table_view.sort_order() == SortOrder::Ascending
