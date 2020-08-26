@@ -309,7 +309,6 @@ private:
     u8 m_modifiers { 0 };
     u32 m_code_point { 0 };
     u32 m_scancode { 0 };
-    String m_text2;
 };
 
 class MouseEvent final : public Event {
