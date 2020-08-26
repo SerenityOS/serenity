@@ -192,17 +192,15 @@ void HeaderView::mousemove_event(MouseEvent& event)
 
 void HeaderView::mouseup_event(MouseEvent& event)
 {
-    Gfx::IntPoint horizontally_adjusted_position(event.x(), event.y());
     if (event.button() == MouseButton::Left) {
         if (m_in_section_resize) {
-            if (!section_resize_grabbable_rect(m_resizing_section).contains(horizontally_adjusted_position))
+            if (!section_resize_grabbable_rect(m_resizing_section).contains(event.position()))
                 window()->set_override_cursor(StandardCursor::None);
             m_in_section_resize = false;
             return;
         }
         if (m_pressed_section != -1) {
-            auto header_rect = this->section_rect(m_pressed_section);
-            if (header_rect.contains(horizontally_adjusted_position)) {
+            if (section_rect(m_pressed_section).contains(event.position())) {
                 auto new_sort_order = SortOrder::Ascending;
                 if (m_table_view.key_column() == m_pressed_section)
                     new_sort_order = m_table_view.sort_order() == SortOrder::Ascending
