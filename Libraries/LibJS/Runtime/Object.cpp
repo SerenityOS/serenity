@@ -387,7 +387,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         }
 
 #ifdef OBJECT_DEBUG
-        dbg() << "Defining new property " << property_name << " with accessor descriptor { attributes=" << attributes << ", "
+        dbg() << "Defining new property " << property_name.to_display_string() << " with accessor descriptor { attributes=" << attributes << ", "
               << "getter=" << getter.to_string_without_side_effects() << ", "
               << "setter=" << setter.to_string_without_side_effects() << "}";
 #endif
@@ -409,7 +409,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         return {};
 
 #ifdef OBJECT_DEBUG
-    dbg() << "Defining new property " << property_name << " with data descriptor { attributes=" << attributes
+    dbg() << "Defining new property " << property_name.to_display_string() << " with data descriptor { attributes=" << attributes
           << ", value=" << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects()) << " }";
 #endif
 
@@ -512,7 +512,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         metadata = shape().lookup(property_name);
 
 #ifdef OBJECT_DEBUG
-        dbg() << "Reconfigured property " << property_name << ", new shape says offset is " << metadata.value().offset << " and my storage capacity is " << m_storage.size();
+        dbg() << "Reconfigured property " << property_name.to_display_string() << ", new shape says offset is " << metadata.value().offset << " and my storage capacity is " << m_storage.size();
 #endif
     }
 

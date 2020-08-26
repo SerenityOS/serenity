@@ -271,7 +271,7 @@ const Image::RelocationSection Image::Section::relocations() const
         return static_cast<const RelocationSection>(m_image.section(0));
 
 #ifdef Image_DEBUG
-    dbgprintf("Found relocations for %s in %s\n", name(), relocation_section.name());
+    dbgprintf("Found relocations for %s in %s\n", name().to_string().characters(), relocation_section.name().to_string().characters());
 #endif
     return static_cast<const RelocationSection>(relocation_section);
 }
