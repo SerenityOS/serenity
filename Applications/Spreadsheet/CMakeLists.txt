@@ -5,6 +5,7 @@ set(SOURCES
     SpreadsheetModel.cpp
     SpreadsheetView.cpp
     SpreadsheetWidget.cpp
+    Workbook.cpp
     main.cpp
 )
 
