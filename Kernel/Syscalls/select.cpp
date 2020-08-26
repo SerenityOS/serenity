@@ -29,6 +29,9 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 
+//#define DEBUG_IO
+//#define DEBUG_POLL_SELECT
+
 namespace Kernel {
 
 int Process::sys$select(const Syscall::SC_select_params* params)
@@ -189,7 +192,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
         current_thread->m_signal_mask = sigmask;
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbg() << "polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout;
+    dbg() << "polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout.tv_sec << "s" << timeout.tv_nsec << "ns";
 #endif
 
     if (!params.timeout || has_timeout) {

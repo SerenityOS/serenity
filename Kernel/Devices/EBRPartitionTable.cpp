@@ -27,7 +27,9 @@
 #include <AK/ByteBuffer.h>
 #include <Kernel/Devices/EBRPartitionTable.h>
 
-#define EBR_DEBUG
+#ifndef EBR_DEBUG
+#    define EBR_DEBUG
+#endif
 
 namespace Kernel {
 

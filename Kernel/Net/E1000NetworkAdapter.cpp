@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/IO.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Thread.h>
-#include <Kernel/IO.h>
 
 //#define E1000_DEBUG
 
@@ -394,7 +394,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
     disable_irq();
     size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
 #ifdef E1000_DEBUG
-    klog() << "E1000: Sending packet (" << length << " bytes)";
+    klog() << "E1000: Sending packet (" << payload.size() << " bytes)";
 #endif
     auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     auto& descriptor = tx_descriptors[tx_current];

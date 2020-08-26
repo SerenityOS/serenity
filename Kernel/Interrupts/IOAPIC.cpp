@@ -34,6 +34,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 
+//#define IOAPIC_DEBUG
+
 #define IOAPIC_REDIRECTION_ENTRY_OFFSET 0x10
 namespace Kernel {
 enum DeliveryMode {
@@ -319,7 +321,7 @@ void IOAPIC::write_register(u32 index, u32 value) const
     regs->select = index;
     regs->window = value;
 #ifdef IOAPIC_DEBUG
-    dbg() << "IOAPIC Writing, Value 0x" << String::format("%x", regs.window) << " @ offset 0x" << String::format("%x", regs.select);
+    dbg() << "IOAPIC Writing, Value 0x" << String::format("%x", regs->window) << " @ offset 0x" << String::format("%x", regs->select);
 #endif
 }
 u32 IOAPIC::read_register(u32 index) const
@@ -328,7 +330,7 @@ u32 IOAPIC::read_register(u32 index) const
     auto regs = map_typed_writable<ioapic_mmio_regs>(m_address);
     regs->select = index;
 #ifdef IOAPIC_DEBUG
-    dbg() << "IOAPIC Reading, Value 0x" << String::format("%x", regs.window) << " @ offset 0x" << String::format("%x", regs.select);
+    dbg() << "IOAPIC Reading, Value 0x" << String::format("%x", regs->window) << " @ offset 0x" << String::format("%x", regs->select);
 #endif
     return regs->window;
 }

@@ -106,7 +106,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
     auto path = String(address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)));
 
 #ifdef DEBUG_LOCAL_SOCKET
-    dbg() << "LocalSocket{" << this << "} bind(" << safe_address << ")";
+    dbg() << "LocalSocket{" << this << "} bind(" << path << ")";
 #endif
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 04777);
@@ -348,7 +348,6 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
 {
     if (level != SOL_SOCKET)
         return Socket::getsockopt(description, level, option, value, value_size);
-
 
     socklen_t size;
     if (!Process::current()->validate_read_and_copy_typed(&size, value_size))
