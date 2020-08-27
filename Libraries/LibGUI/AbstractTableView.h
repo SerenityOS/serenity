@@ -96,6 +96,7 @@ protected:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void doubleclick_event(MouseEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
+    virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 
     virtual void did_update_model(unsigned flags) override;

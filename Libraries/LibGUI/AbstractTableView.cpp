@@ -383,4 +383,39 @@ void AbstractTableView::set_row_height(int height)
     update_row_sizes();
 }
 
+void AbstractTableView::keydown_event(KeyEvent& event)
+{
+    if (event.key() == KeyCode::Key_Left) {
+        move_cursor(CursorMovement::Left);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Right) {
+        move_cursor(CursorMovement::Right);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Up) {
+        move_cursor(CursorMovement::Up);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        move_cursor(CursorMovement::Down);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Home) {
+        move_cursor(CursorMovement::Home);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_End) {
+        move_cursor(CursorMovement::End);
+        event.accept();
+        return;
+    }
+    return AbstractView::keydown_event(event);
+}
+
 }

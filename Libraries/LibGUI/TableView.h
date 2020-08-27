@@ -38,6 +38,8 @@ public:
 protected:
     TableView();
 
+    virtual void move_cursor(CursorMovement) override;
+
     virtual void keydown_event(KeyEvent&) override;
     virtual void paint_event(PaintEvent&) override;
 };
