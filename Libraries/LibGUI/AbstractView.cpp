@@ -214,7 +214,7 @@ void AbstractView::mousedown_event(MouseEvent& event)
     if (!index.is_valid()) {
         clear_selection();
     } else if (event.modifiers() & Mod_Ctrl) {
-        toggle_selection(index);
+        set_cursor(index, SelectionUpdate::Ctrl);
     } else if (event.button() == MouseButton::Left && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
@@ -438,7 +438,7 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
         if (selection_update == SelectionUpdate::Set)
             selection().set(index);
         else if (selection_update == SelectionUpdate::Ctrl)
-            selection().toggle(index);
+            toggle_selection(index);
 
         // FIXME: Support the other SelectionUpdate types
 
