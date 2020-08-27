@@ -117,7 +117,7 @@ protected:
     ModelIndex m_hovered_index;
     ModelIndex m_last_valid_hovered_index;
 
-    int m_key_column { 0 };
+    int m_key_column { -1 };
     SortOrder m_sort_order;
 
 private:
