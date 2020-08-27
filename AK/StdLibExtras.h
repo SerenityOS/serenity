@@ -329,109 +329,97 @@ inline constexpr T&& forward(typename RemoveReference<T>::Type&& param) noexcept
 template<typename T>
 struct MakeUnsigned {
 };
-
 template<>
 struct MakeUnsigned<signed char> {
     typedef unsigned char Type;
 };
-
 template<>
 struct MakeUnsigned<short> {
     typedef unsigned short Type;
 };
-
 template<>
 struct MakeUnsigned<int> {
     typedef unsigned Type;
 };
-
 template<>
 struct MakeUnsigned<long> {
     typedef unsigned long Type;
 };
-
 template<>
 struct MakeUnsigned<long long> {
     typedef unsigned long long Type;
 };
-
 template<>
 struct MakeUnsigned<unsigned char> {
     typedef unsigned char Type;
 };
-
 template<>
 struct MakeUnsigned<unsigned short> {
     typedef unsigned short Type;
 };
-
 template<>
 struct MakeUnsigned<unsigned int> {
     typedef unsigned Type;
 };
-
 template<>
 struct MakeUnsigned<unsigned long> {
     typedef unsigned long Type;
 };
-
 template<>
 struct MakeUnsigned<unsigned long long> {
     typedef unsigned long long Type;
+};
+template<>
+struct MakeUnsigned<char> {
+    typedef unsigned char Type;
 };
 
 template<typename T>
 struct MakeSigned {
 };
-
 template<>
 struct MakeSigned<signed char> {
     typedef signed char Type;
 };
-
 template<>
 struct MakeSigned<short> {
     typedef short Type;
 };
-
 template<>
 struct MakeSigned<int> {
     typedef int Type;
 };
-
 template<>
 struct MakeSigned<long> {
     typedef long Type;
 };
-
 template<>
 struct MakeSigned<long long> {
     typedef long long Type;
 };
-
 template<>
 struct MakeSigned<unsigned char> {
     typedef char Type;
 };
-
 template<>
 struct MakeSigned<unsigned short> {
     typedef short Type;
 };
-
 template<>
 struct MakeSigned<unsigned int> {
     typedef int Type;
 };
-
 template<>
 struct MakeSigned<unsigned long> {
     typedef long Type;
 };
-
 template<>
 struct MakeSigned<unsigned long long> {
     typedef long long Type;
+};
+template<>
+struct MakeSigned<char> {
+    typedef signed char Type;
 };
 
 template<class T>
