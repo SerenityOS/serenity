@@ -58,7 +58,6 @@ static bool in_ci = false;
 static struct timeval start_time {
     0, 0
 };
-static struct timezone tz;
 static bool g_some_test_failed = false;
 static bool encrypting = true;
 
@@ -476,18 +475,18 @@ auto main(int argc, char** argv) -> int
     return 1;
 }
 
-#define I_TEST(thing)                     \
-    {                                     \
-        printf("Testing " #thing "... "); \
-        fflush(stdout);                   \
-        gettimeofday(&start_time, &tz);   \
+#define I_TEST(thing)                       \
+    {                                       \
+        printf("Testing " #thing "... ");   \
+        fflush(stdout);                     \
+        gettimeofday(&start_time, nullptr); \
     }
 #define PASS                                                                          \
     {                                                                                 \
         struct timeval end_time {                                                     \
             0, 0                                                                      \
         };                                                                            \
-        gettimeofday(&end_time, &tz);                                                 \
+        gettimeofday(&end_time, nullptr);                                             \
         time_t interval_s = end_time.tv_sec - start_time.tv_sec;                      \
         suseconds_t interval_us = end_time.tv_usec;                                   \
         if (interval_us < start_time.tv_usec) {                                       \
