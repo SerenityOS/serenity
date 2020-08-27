@@ -123,9 +123,16 @@ void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::
 {
     // Draw a border.
     // Undo the horizontal padding done by the table view...
-    painter.draw_rect(rect.inflated(m_table_view.horizontal_padding() * 2, 0), palette.ruler());
-    if (m_table_view.selection().contains(index))
-        painter.draw_rect(rect.inflated(m_table_view.horizontal_padding() * 2 + 1, 1), palette.ruler_border());
+    auto cell_rect = rect.inflated(m_table_view.horizontal_padding() * 2, 0);
+
+    painter.draw_rect(cell_rect, palette.ruler());
+    if (m_table_view.selection().contains(index)) {
+        Color fill_color = palette.selection();
+        fill_color.set_alpha(80);
+        painter.fill_rect(cell_rect, fill_color);
+    }
+    if (m_table_view.cursor_index() == index)
+        painter.draw_rect(cell_rect, palette.text_cursor());
 
     auto text_color = index.data(GUI::ModelRole::ForegroundColor).to_color(palette.color(m_table_view.foreground_role()));
     auto data = index.data();
