@@ -476,7 +476,7 @@ void TreeView::keydown_event(KeyEvent& event)
     AbstractTableView::keydown_event(event);
 }
 
-void TreeView::move_cursor(CursorMovement movement)
+void TreeView::move_cursor(CursorMovement movement, SelectionUpdate)
 {
     auto cursor_index = selection().first();
 

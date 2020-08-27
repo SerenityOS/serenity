@@ -68,15 +68,16 @@ public:
     Gfx::IntRect content_rect(int row, int column) const;
     Gfx::IntRect row_rect(int item_index) const;
 
-    void scroll_into_view(const ModelIndex&, Orientation);
-    void scroll_into_view(const ModelIndex&, bool scroll_horizontally, bool scroll_vertically);
+    virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
+    void scroll_into_view(const ModelIndex& index, Orientation orientation)
+    {
+        scroll_into_view(index, orientation == Gfx::Orientation::Horizontal, orientation == Gfx::Orientation::Vertical);
+    }
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&, bool& is_toggle) const;
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
 
     virtual void select_all() override;
-
-    void move_selection(int vertical_steps, int horizontal_steps);
 
     void header_did_change_section_visibility(Badge<HeaderView>, Gfx::Orientation, int section, bool visible);
     void header_did_change_section_size(Badge<HeaderView>, Gfx::Orientation, int section, int size);
@@ -108,6 +109,8 @@ protected:
     virtual int item_count() const;
 
     TableCellPaintingDelegate* column_painting_delegate(int column) const;
+
+    void move_cursor_relative(int vertical_steps, int horizontal_steps, SelectionUpdate);
 
 private:
     void layout_headers();

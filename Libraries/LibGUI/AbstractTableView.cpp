@@ -223,29 +223,18 @@ int AbstractTableView::item_count() const
     return model()->row_count();
 }
 
-void AbstractTableView::move_selection(int vertical_steps, int horizontal_steps)
+void AbstractTableView::move_cursor_relative(int vertical_steps, int horizontal_steps, SelectionUpdate selection_update)
 {
     if (!model())
         return;
     auto& model = *this->model();
     ModelIndex new_index;
-    if (!selection().is_empty()) {
-        auto old_index = selection().first();
-        new_index = model.index(old_index.row() + vertical_steps, old_index.column() + horizontal_steps);
+    if (cursor_index().is_valid()) {
+        new_index = model.index(cursor_index().row() + vertical_steps, cursor_index().column() + horizontal_steps);
     } else {
         new_index = model.index(0, 0);
     }
-    if (model.is_valid(new_index)) {
-        selection().set(new_index);
-        scroll_into_view(new_index, Orientation::Vertical);
-        update();
-    }
-}
-
-void AbstractTableView::scroll_into_view(const ModelIndex& index, Orientation orientation)
-{
-    auto rect = row_rect(index.row()).translated(0, -m_column_header->height());
-    ScrollableWidget::scroll_into_view(rect, orientation);
+    set_cursor(new_index, selection_update);
 }
 
 void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
@@ -382,33 +371,38 @@ void AbstractTableView::set_row_height(int height)
 
 void AbstractTableView::keydown_event(KeyEvent& event)
 {
+    SelectionUpdate selection_update = SelectionUpdate::Set;
+    if (event.modifiers() == KeyModifier::Mod_Shift) {
+        selection_update = SelectionUpdate::Shift;
+    }
+
     if (event.key() == KeyCode::Key_Left) {
-        move_cursor(CursorMovement::Left);
+        move_cursor(CursorMovement::Left, selection_update);
         event.accept();
         return;
     }
     if (event.key() == KeyCode::Key_Right) {
-        move_cursor(CursorMovement::Right);
+        move_cursor(CursorMovement::Right, selection_update);
         event.accept();
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
-        move_cursor(CursorMovement::Up);
+        move_cursor(CursorMovement::Up, selection_update);
         event.accept();
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        move_cursor(CursorMovement::Down);
+        move_cursor(CursorMovement::Down, selection_update);
         event.accept();
         return;
     }
     if (event.key() == KeyCode::Key_Home) {
-        move_cursor(CursorMovement::Home);
+        move_cursor(CursorMovement::Home, selection_update);
         event.accept();
         return;
     }
     if (event.key() == KeyCode::Key_End) {
-        move_cursor(CursorMovement::End);
+        move_cursor(CursorMovement::End, selection_update);
         event.accept();
         return;
     }
