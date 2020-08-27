@@ -55,7 +55,7 @@ protected:
 
     virtual void did_update_selection() override;
     virtual void did_update_model(unsigned flags) override;
-    virtual void move_cursor(CursorMovement) override;
+    virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
 private:
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&, bool& is_toggle) const override;

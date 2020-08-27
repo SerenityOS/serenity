@@ -47,7 +47,14 @@ public:
         PageDown,
     };
 
-    virtual void move_cursor(CursorMovement) { }
+    enum class SelectionUpdate {
+        None,
+        Set,
+        Shift,
+        Ctrl,
+    };
+
+    virtual void move_cursor(CursorMovement, SelectionUpdate) { }
 
     void set_model(RefPtr<Model>);
     Model* model() { return m_model.ptr(); }
@@ -94,6 +101,11 @@ public:
     int key_column() const { return m_key_column; }
     SortOrder sort_order() const { return m_sort_order; }
 
+    virtual void scroll_into_view(const ModelIndex&, [[maybe_unused]] bool scroll_horizontally = true, [[maybe_unused]] bool scroll_vertically = true) { }
+
+    const ModelIndex& cursor_index() const { return m_cursor_index; }
+    void set_cursor(ModelIndex, SelectionUpdate);
+
 protected:
     AbstractView();
     virtual ~AbstractView() override;
@@ -137,6 +149,7 @@ private:
     RefPtr<Model> m_model;
     OwnPtr<ModelEditingDelegate> m_editing_delegate;
     ModelSelection m_selection;
+    ModelIndex m_cursor_index;
     bool m_activates_on_selection { false };
     bool m_multi_select { true };
 };

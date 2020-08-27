@@ -136,6 +136,7 @@ void TableView::paint_event(PaintEvent& event)
                         if (cell_background_color.is_valid())
                             painter.fill_rect(cell_rect_for_fill, cell_background_color.to_color(background_color));
                     }
+
                     auto text_alignment = cell_index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
                     painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                 }
@@ -161,56 +162,50 @@ void TableView::keydown_event(KeyEvent& event)
     return AbstractTableView::keydown_event(event);
 }
 
-void TableView::move_cursor(CursorMovement movement)
+void TableView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
 {
     if (!model())
         return;
     auto& model = *this->model();
     switch (movement) {
     case CursorMovement::Left:
-        move_selection(0, -1);
+        move_cursor_relative(0, -1, selection_update);
         break;
     case CursorMovement::Right:
-        move_selection(0, 1);
+        move_cursor_relative(0, 1, selection_update);
         break;
     case CursorMovement::Up:
-        move_selection(-1, 0);
+        move_cursor_relative(-1, 0, selection_update);
         break;
     case CursorMovement::Down:
-        move_selection(1, 0);
+        move_cursor_relative(1, 0, selection_update);
         break;
     case CursorMovement::Home: {
         auto index = model.index(0, 0);
-        set_selection(index);
-        scroll_into_view(index, Gfx::Orientation::Vertical);
+        set_cursor(index, selection_update);
+        scroll_into_view(index, false, true);
         break;
     }
     case CursorMovement::End: {
         auto index = model.index(model.row_count() - 1, 0);
-        set_selection(index);
-        scroll_into_view(index, Gfx::Orientation::Vertical);
+        set_cursor(index, selection_update);
+        scroll_into_view(index, false, true);
         break;
     }
     case CursorMovement::PageUp: {
         int items_per_page = visible_content_rect().height() / row_height();
         auto old_index = selection().first();
         auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        if (model.is_valid(new_index))
+            set_cursor(new_index, selection_update);
         break;
     }
     case CursorMovement::PageDown: {
         int items_per_page = visible_content_rect().height() / row_height();
         auto old_index = selection().first();
         auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        if (model.is_valid(new_index))
+            set_cursor(new_index, selection_update);
         break;
     }
     }

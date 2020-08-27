@@ -219,7 +219,7 @@ void AbstractView::mousedown_event(MouseEvent& event)
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
     } else {
-        set_selection(index);
+        set_cursor(index, SelectionUpdate::Set);
     }
 
     update();
@@ -422,6 +422,31 @@ void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_orde
         model()->sort(column, sort_order);
 
     update();
+}
+
+void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update)
+{
+    if (m_cursor_index == index)
+        return;
+
+    if (!model()) {
+        m_cursor_index = {};
+        return;
+    }
+
+    if (model()->is_valid(index)) {
+        if (selection_update == SelectionUpdate::Set)
+            selection().set(index);
+        else if (selection_update == SelectionUpdate::Ctrl)
+            selection().toggle(index);
+
+        // FIXME: Support the other SelectionUpdate types
+
+        m_cursor_index = index;
+        // FIXME: We should scroll into view both vertically *and* horizontally.
+        scroll_into_view(index, false, true);
+        update();
+    }
 }
 
 }
