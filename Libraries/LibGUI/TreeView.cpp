@@ -418,43 +418,6 @@ void TreeView::keydown_event(KeyEvent& event)
         return;
     }
 
-    if (event.key() == KeyCode::Key_Up) {
-        ModelIndex previous_index;
-        ModelIndex found_index;
-        traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int) {
-            if (index == cursor_index) {
-                found_index = previous_index;
-                return IterationDecision::Break;
-            }
-            previous_index = index;
-            return IterationDecision::Continue;
-        });
-        if (found_index.is_valid()) {
-            selection().set(found_index);
-            scroll_into_view(selection().first(), Orientation::Vertical);
-            update();
-        }
-        return;
-    }
-    if (event.key() == KeyCode::Key_Down) {
-        ModelIndex previous_index;
-        ModelIndex found_index;
-        traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int) {
-            if (previous_index == cursor_index) {
-                found_index = index;
-                return IterationDecision::Break;
-            }
-            previous_index = index;
-            return IterationDecision::Continue;
-        });
-        if (found_index.is_valid()) {
-            selection().set(found_index);
-            scroll_into_view(selection().first(), Orientation::Vertical);
-            update();
-        }
-        return;
-    }
-
     auto open_tree_node = [&](bool open, MetadataForIndex& metadata) {
         if (on_toggle)
             on_toggle(cursor_index, open);
@@ -508,6 +471,73 @@ void TreeView::keydown_event(KeyEvent& event)
             toggle_index(cursor_index);
             return;
         }
+    }
+
+    AbstractTableView::keydown_event(event);
+}
+
+void TreeView::move_cursor(CursorMovement movement)
+{
+    auto cursor_index = selection().first();
+
+    switch (movement) {
+    case CursorMovement::Up: {
+        ModelIndex previous_index;
+        ModelIndex found_index;
+        traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int) {
+            if (index == cursor_index) {
+                found_index = previous_index;
+                return IterationDecision::Break;
+            }
+            previous_index = index;
+            return IterationDecision::Continue;
+        });
+        if (found_index.is_valid()) {
+            selection().set(found_index);
+            scroll_into_view(selection().first(), Orientation::Vertical);
+            update();
+        }
+        break;
+    }
+    case CursorMovement::Down: {
+        ModelIndex previous_index;
+        ModelIndex found_index;
+        traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int) {
+            if (previous_index == cursor_index) {
+                found_index = index;
+                return IterationDecision::Break;
+            }
+            previous_index = index;
+            return IterationDecision::Continue;
+        });
+        if (found_index.is_valid()) {
+            selection().set(found_index);
+            scroll_into_view(selection().first(), Orientation::Vertical);
+            update();
+        }
+        return;
+    }
+
+    case CursorMovement::Home:
+        // FIXME: Implement.
+        break;
+
+    case CursorMovement::End:
+        // FIXME: Implement.
+        break;
+
+    case CursorMovement::PageUp:
+        // FIXME: Implement.
+        break;
+
+    case CursorMovement::PageDown:
+        // FIXME: Implement.
+        break;
+
+    case CursorMovement::Left:
+    case CursorMovement::Right:
+        // There is no left/right in a treeview, those keys expand/collapse items instead.
+        break;
     }
 }
 

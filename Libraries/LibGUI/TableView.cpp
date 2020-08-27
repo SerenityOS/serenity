@@ -154,28 +154,44 @@ void TableView::keydown_event(KeyEvent& event)
 {
     if (!model())
         return;
-    auto& model = *this->model();
     if (event.key() == KeyCode::Key_Return) {
         activate_or_edit_selected();
         return;
     }
-    if (event.key() == KeyCode::Key_Left) {
+    return AbstractTableView::keydown_event(event);
+}
+
+void TableView::move_cursor(CursorMovement movement)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+    switch (movement) {
+    case CursorMovement::Left:
         move_selection(0, -1);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Right) {
+        break;
+    case CursorMovement::Right:
         move_selection(0, 1);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Up) {
+        break;
+    case CursorMovement::Up:
         move_selection(-1, 0);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Down) {
+        break;
+    case CursorMovement::Down:
         move_selection(1, 0);
-        return;
+        break;
+    case CursorMovement::Home: {
+        auto index = model.index(0, 0);
+        set_selection(index);
+        scroll_into_view(index, Gfx::Orientation::Vertical);
+        break;
     }
-    if (event.key() == KeyCode::Key_PageUp) {
+    case CursorMovement::End: {
+        auto index = model.index(model.row_count() - 1, 0);
+        set_selection(index);
+        scroll_into_view(index, Gfx::Orientation::Vertical);
+        break;
+    }
+    case CursorMovement::PageUp: {
         int items_per_page = visible_content_rect().height() / row_height();
         auto old_index = selection().first();
         auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
@@ -184,9 +200,9 @@ void TableView::keydown_event(KeyEvent& event)
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
-        return;
+        break;
     }
-    if (event.key() == KeyCode::Key_PageDown) {
+    case CursorMovement::PageDown: {
         int items_per_page = visible_content_rect().height() / row_height();
         auto old_index = selection().first();
         auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
@@ -195,9 +211,9 @@ void TableView::keydown_event(KeyEvent& event)
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
-        return;
+        break;
     }
-    return Widget::keydown_event(event);
+    }
 }
 
 }

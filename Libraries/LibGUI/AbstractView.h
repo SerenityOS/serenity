@@ -33,9 +33,22 @@
 namespace GUI {
 
 class AbstractView : public ScrollableWidget {
-    C_OBJECT_ABSTRACT(AbstractView)
+    C_OBJECT_ABSTRACT(AbstractView);
 
 public:
+    enum class CursorMovement {
+        Up,
+        Down,
+        Left,
+        Right,
+        Home,
+        End,
+        PageUp,
+        PageDown,
+    };
+
+    virtual void move_cursor(CursorMovement) { }
+
     void set_model(RefPtr<Model>);
     Model* model() { return m_model.ptr(); }
     const Model* model() const { return m_model.ptr(); }
