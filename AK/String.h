@@ -29,6 +29,7 @@
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
 #include <AK/Stream.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringImpl.h>
 #include <AK/StringUtils.h>
 #include <AK/Traits.h>
@@ -277,26 +278,29 @@ bool operator<=(const char*, const String&);
 
 String escape_html_entities(const StringView& html);
 
-inline InputMemoryStream& operator>>(InputMemoryStream& stream, String& string)
+inline InputStream& operator>>(InputStream& stream, String& string)
 {
-    // FIXME: There was some talking about a generic lexer class?
+    StringBuilder builder;
 
-    const auto start = stream.offset();
+    for (;;) {
+        if (stream.eof()) {
+            string = nullptr;
 
-    while (!stream.eof() && stream.m_bytes[stream.m_offset]) {
-        ++stream.m_offset;
+            // FIXME: We need an InputStream::set_error_flag method.
+            stream.discard_or_error(1);
+            return stream;
+        }
+
+        char next_char;
+        stream >> next_char;
+
+        if (next_char) {
+            builder.append(next_char);
+        } else {
+            string = builder.to_string();
+            return stream;
+        }
     }
-
-    if (stream.eof()) {
-        stream.m_error = true;
-        stream.m_offset = start;
-        string = nullptr;
-    } else {
-        string = String { stream.bytes().slice(start, stream.offset() - start) };
-        ++stream.m_offset;
-    }
-
-    return stream;
 }
 
 }
