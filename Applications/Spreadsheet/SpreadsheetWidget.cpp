@@ -99,17 +99,41 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_selected_view->on_selection_dropped = nullptr;
         };
         m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
-        m_selected_view->on_selection_changed = [&](const Position& position, Cell& cell) {
+        m_selected_view->on_selection_changed = [&](Vector<Position>&& selection) {
+            if (selection.size() == 1) {
+                auto& position = selection.first();
+                StringBuilder builder;
+                builder.append(position.column);
+                builder.appendf("%zu", position.row);
+                m_current_cell_label->set_enabled(true);
+                m_current_cell_label->set_text(builder.string_view());
+
+                auto& cell = m_selected_view->sheet().ensure(position);
+                m_cell_value_editor->on_change = nullptr;
+                m_cell_value_editor->set_text(cell.source());
+                m_cell_value_editor->on_change = [&] {
+                    cell.set_data(m_cell_value_editor->text());
+                    m_selected_view->sheet().update();
+                };
+                m_cell_value_editor->set_enabled(true);
+                return;
+            }
+
+            // There are many cells selected, change all of them.
             StringBuilder builder;
-            builder.append(position.column);
-            builder.appendf("%zu", position.row);
+            builder.appendf("<%zu>", selection.size());
             m_current_cell_label->set_enabled(true);
             m_current_cell_label->set_text(builder.string_view());
 
+            Vector<Cell*> cells;
+            for (auto& position : selection)
+                cells.append(&m_selected_view->sheet().ensure(position));
+
             m_cell_value_editor->on_change = nullptr;
-            m_cell_value_editor->set_text(cell.source());
-            m_cell_value_editor->on_change = [&] {
-                cell.set_data(m_cell_value_editor->text());
+            m_cell_value_editor->set_text("");
+            m_cell_value_editor->on_change = [cells = move(cells), this] {
+                for (auto* cell : cells)
+                    cell->set_data(m_cell_value_editor->text());
                 m_selected_view->sheet().update();
             };
             m_cell_value_editor->set_enabled(true);
