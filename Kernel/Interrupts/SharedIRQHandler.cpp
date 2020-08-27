@@ -98,11 +98,8 @@ void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
         dbg() << "Going for Interrupt Handling @ " << i << ", Shared Interrupt " << interrupt_number();
 #endif
         ASSERT(handler != nullptr);
-        if (handler->is_enabled()) {
-            handler->increment_invoking_counter();
-            handler->handle_interrupt(regs);
-        }
-
+        handler->increment_invoking_counter();
+        handler->handle_interrupt(regs);
 #ifdef INTERRUPT_DEBUG
         dbg() << "Going for Interrupt Handling @ " << i << ", Shared Interrupt " << interrupt_number() << " - End";
 #endif
