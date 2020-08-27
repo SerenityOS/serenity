@@ -1,0 +1,11 @@
+[App]
+Name=Spreadsheet
+Executable=/bin/Spreadsheet
+Category=Utilities
+
+[Icons]
+16x16=/res/icons/16x16/app-spreadsheet.png
+32x32=/res/icons/32x32/app-spreadsheet.png
+
+[Launcher]
+FileTypes=sheets
