@@ -48,8 +48,6 @@ public:
 
     u8 interrupt_number() const { return m_interrupt_number; }
 
-    bool is_enabled() const { return m_enabled; }
-
     size_t get_invoking_count() const { return m_invoking_count; }
 
     virtual size_t sharing_devices_count() const = 0;
@@ -69,7 +67,6 @@ protected:
 
 private:
     size_t m_invoking_count { 0 };
-    bool m_enabled { false };
     u8 m_interrupt_number { 0 };
     bool m_disable_remap { false };
 };
