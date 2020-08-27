@@ -86,6 +86,7 @@ int main(int argc, char* argv[])
     auto window = GUI::Window::construct();
     window->set_title("Spreadsheet");
     window->resize(640, 480);
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-spreadsheet.png"));
 
     auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr);
 
@@ -113,8 +114,8 @@ int main(int argc, char* argv[])
 
     file_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
         if (spreadsheet_widget.current_filename().is_empty()) {
-            String name = "sheet";
-            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "json");
+            String name = "workbook";
+            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "sheets");
             if (!save_path.has_value())
                 return;
 
@@ -126,8 +127,8 @@ int main(int argc, char* argv[])
 
     file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         auto current_filename = spreadsheet_widget.current_filename();
-        String name = "sheet";
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "json");
+        String name = "workbook";
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, name, "sheets");
         if (!save_path.has_value())
             return;
 

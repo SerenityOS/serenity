@@ -48,7 +48,8 @@ namespace GUI {
     F(python, ".py")           \
     F(sound, ".wav")           \
     F(ini, ".ini")             \
-    F(text, ".txt")
+    F(text, ".txt")            \
+    F(spreadsheet, ".sheets")
 
 #define __ENUMERATE_FILETYPE(filetype_name, ...) \
     static Icon s_filetype_##filetype_name##_icon;
