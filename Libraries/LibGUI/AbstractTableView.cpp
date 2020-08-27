@@ -406,6 +406,16 @@ void AbstractTableView::keydown_event(KeyEvent& event)
         event.accept();
         return;
     }
+    if (event.key() == KeyCode::Key_PageUp) {
+        move_cursor(CursorMovement::PageUp, selection_update);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageDown) {
+        move_cursor(CursorMovement::PageDown, selection_update);
+        event.accept();
+        return;
+    }
     return AbstractView::keydown_event(event);
 }
 
