@@ -181,8 +181,6 @@ inline OutputStream& operator<<(OutputStream& stream, bool value)
 }
 
 class InputMemoryStream final : public InputStream {
-    friend InputMemoryStream& operator>>(InputMemoryStream& stream, String& string);
-
 public:
     InputMemoryStream(ReadonlyBytes bytes)
         : m_bytes(bytes)
