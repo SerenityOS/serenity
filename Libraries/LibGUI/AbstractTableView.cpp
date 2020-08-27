@@ -178,9 +178,6 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return AbstractView::mousedown_event(event);
 
-    auto adjusted_position = this->adjusted_position(event.position());
-    Gfx::IntPoint horizontally_adjusted_position(adjusted_position.x(), event.position().y());
-
     bool is_toggle;
     auto index = index_at_event_position(event.position(), is_toggle);
 
