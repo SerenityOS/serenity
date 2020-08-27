@@ -411,7 +411,10 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
 
             case 'X':
             case 'x':
-                ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'X', alternate_form, left_pad, zero_pad, field_width);
+                if (long_qualifiers >= 2)
+                    ret += print_hex(putch, bufptr, va_arg(ap, u64), *p == 'X', alternate_form, left_pad, zero_pad, field_width);
+                else
+                    ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'X', alternate_form, left_pad, zero_pad, field_width);
                 break;
 
             case 'w':
