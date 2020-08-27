@@ -163,8 +163,7 @@ static void handle_sigabrt(int)
 static double get_time_in_ms()
 {
     struct timeval tv1;
-    struct timezone tz1;
-    auto return_code = gettimeofday(&tv1, &tz1);
+    auto return_code = gettimeofday(&tv1, nullptr);
     ASSERT(return_code >= 0);
     return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
 }
