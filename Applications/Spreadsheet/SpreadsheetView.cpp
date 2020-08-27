@@ -81,22 +81,23 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view->on_selection_change = [&] {
         m_sheet->selected_cells().clear();
         for (auto& index : m_table_view->selection().indexes()) {
-            Position position {m_sheet->column(index.column()), (size_t)index.row()};
+            Position position { m_sheet->column(index.column()), (size_t)index.row() };
             m_sheet->selected_cells().set(position);
         }
 
         if (m_table_view->selection().is_empty() && on_selection_dropped)
             return on_selection_dropped();
 
-        auto selection = m_table_view->selection().first();
+        Vector<Position> selected_positions;
+        selected_positions.ensure_capacity(m_table_view->selection().size());
+        for (auto& selection : m_table_view->selection().indexes())
+            selected_positions.empend(m_sheet->column(selection.column()), (size_t)selection.row());
 
-        Position position { m_sheet->column(selection.column()), (size_t)selection.row() };
-        auto& cell = m_sheet->ensure(position);
-        if (on_selection_changed)
-            on_selection_changed(position, cell);
-
-        m_table_view->model()->update();
-        m_table_view->update();
+        if (on_selection_changed) {
+            on_selection_changed(move(selected_positions));
+            m_table_view->model()->update();
+            m_table_view->update();
+        };
     };
 }
 
@@ -109,10 +110,12 @@ void SpreadsheetView::hide_event(GUI::HideEvent&)
 void SpreadsheetView::show_event(GUI::ShowEvent&)
 {
     if (on_selection_changed && !m_table_view->selection().is_empty()) {
-        auto selection = m_table_view->selection().first();
-        Position position { m_sheet->column(selection.column()), (size_t)selection.row() };
-        auto& cell = m_sheet->ensure(position);
-        on_selection_changed(position, cell);
+        Vector<Position> selected_positions;
+        selected_positions.ensure_capacity(m_table_view->selection().size());
+        for (auto& selection : m_table_view->selection().indexes())
+            selected_positions.empend(m_sheet->column(selection.column()), (size_t)selection.row());
+
+        on_selection_changed(move(selected_positions));
     }
 }
 
