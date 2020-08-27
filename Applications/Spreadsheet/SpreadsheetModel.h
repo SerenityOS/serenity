@@ -43,6 +43,7 @@ public:
     virtual bool is_editable(const GUI::ModelIndex&) const override;
     virtual void set_data(const GUI::ModelIndex&, const GUI::Variant&) override;
     virtual void update() override;
+    virtual bool is_column_sortable(int) const override { return false; }
 
 private:
     explicit SheetModel(Sheet& sheet)
