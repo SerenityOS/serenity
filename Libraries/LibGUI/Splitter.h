@@ -44,7 +44,6 @@ protected:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
-    virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
     virtual void did_layout() override;
@@ -52,9 +51,11 @@ protected:
 private:
     void recompute_grabbable_rect(const Widget&, const Widget&);
     bool get_resize_candidates_at(const Gfx::IntPoint&, Widget*&, Widget*&);
+    void override_cursor(bool do_override);
 
     Gfx::Orientation m_orientation;
     bool m_resizing { false };
+    bool m_overriding_cursor { false };
     Gfx::IntPoint m_resize_origin;
     WeakPtr<Widget> m_first_resizee;
     WeakPtr<Widget> m_second_resizee;

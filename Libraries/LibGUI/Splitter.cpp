@@ -58,15 +58,25 @@ void Splitter::resize_event(ResizeEvent& event)
     m_grabbable_rect = {};
 }
 
-void Splitter::enter_event(Core::Event&)
+void Splitter::override_cursor(bool do_override)
 {
-    window()->set_override_cursor(m_orientation == Orientation::Horizontal ? StandardCursor::ResizeColumn : StandardCursor::ResizeRow);
+    if (do_override) {
+        if (!m_overriding_cursor) {
+            window()->set_override_cursor(m_orientation == Orientation::Horizontal ? StandardCursor::ResizeColumn : StandardCursor::ResizeRow);
+            m_overriding_cursor = true;
+        }
+    } else {
+        if (m_overriding_cursor) {
+            window()->set_override_cursor(StandardCursor::None);
+            m_overriding_cursor = false;
+        }
+    }
 }
 
 void Splitter::leave_event(Core::Event&)
 {
     if (!m_resizing)
-        window()->set_override_cursor(StandardCursor::None);
+        override_cursor(false);
     if (!m_grabbable_rect.is_empty()) {
         m_grabbable_rect = {};
         update();
@@ -134,9 +144,12 @@ void Splitter::mousemove_event(MouseEvent& event)
     if (!m_resizing) {
         Widget* first { nullptr };
         Widget* second { nullptr };
-        if (!get_resize_candidates_at(event.position(), first, second))
+        if (!get_resize_candidates_at(event.position(), first, second)) {
+            override_cursor(false);
             return;
+        }
         recompute_grabbable_rect(*first, *second);
+        override_cursor(m_grabbable_rect.contains(event.position()));
         return;
     }
     auto delta = event.position() - m_resize_origin;
