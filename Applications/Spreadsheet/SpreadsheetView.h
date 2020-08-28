@@ -34,6 +34,49 @@
 
 namespace Spreadsheet {
 
+class CellEditor final : public GUI::TextEditor {
+    C_OBJECT(CellEditor);
+
+public:
+    virtual ~CellEditor() { }
+
+    Function<void(GUI::KeyEvent&)> on_cursor_key_pressed;
+
+private:
+    CellEditor()
+        : TextEditor(TextEditor::Type::SingleLine)
+    {
+    }
+
+    static bool is_navigation(const GUI::KeyEvent& event)
+    {
+        if (event.modifiers() == KeyModifier::Mod_Shift && event.key() == KeyCode::Key_Tab)
+            return true;
+
+        if (event.modifiers())
+            return false;
+
+        switch (event.key()) {
+        case KeyCode::Key_Tab:
+        case KeyCode::Key_Left:
+        case KeyCode::Key_Right:
+        case KeyCode::Key_Up:
+        case KeyCode::Key_Down:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    virtual void keydown_event(GUI::KeyEvent& event) override
+    {
+        if (is_navigation(event))
+            on_cursor_key_pressed(event);
+        else
+            TextEditor::keydown_event(event);
+    }
+};
+
 class SpreadsheetView final : public GUI::Widget {
     C_OBJECT(SpreadsheetView);
 
@@ -52,13 +95,31 @@ private:
 
     SpreadsheetView(Sheet&);
 
-    class EditingDelegate : public GUI::StringModelEditingDelegate {
+    class EditingDelegate final : public GUI::StringModelEditingDelegate {
     public:
         EditingDelegate(const Sheet& sheet)
             : m_sheet(sheet)
         {
         }
         virtual void set_value(const GUI::Variant& value) override;
+
+        virtual RefPtr<Widget> create_widget() override
+        {
+            auto textbox = CellEditor::construct();
+            textbox->on_return_pressed = [this] {
+                commit();
+            };
+            textbox->on_escape_pressed = [this] {
+                rollback();
+            };
+            textbox->on_cursor_key_pressed = [this](auto& event) {
+                commit();
+                on_cursor_key_pressed(event);
+            };
+            return textbox;
+        }
+
+        Function<void(GUI::KeyEvent&)> on_cursor_key_pressed;
 
     private:
         bool m_has_set_initial_value { false };
