@@ -35,6 +35,11 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+// An NtpTimestamp is a 64-bit integer that's a 32.32 binary-fixed point number.
+// The integral part in the upper 32 bits represents seconds since 1900-01-01.
+// The fractional part in the lower 32 bits stores fractional bits times 2 ** 32.
+typedef uint64_t NtpTimestamp;
+
 struct [[gnu::packed]] NtpPacket {
     uint8_t li_vn_mode;
     uint8_t stratum;
@@ -45,13 +50,53 @@ struct [[gnu::packed]] NtpPacket {
     uint32_t root_dispersion;
     uint32_t reference_id;
 
-    uint64_t reference_timestamp;
-    uint64_t origin_timestamp;
-    uint64_t receive_timestamp;
-    uint64_t transmit_timestamp;
+    NtpTimestamp reference_timestamp;
+    NtpTimestamp origin_timestamp;
+    NtpTimestamp receive_timestamp;
+    NtpTimestamp transmit_timestamp;
 };
-
 static_assert(sizeof(NtpPacket) == 48);
+
+// NTP measures time in seconds since 1900-01-01, POSIX in seconds since 1970-01-01.
+// 1900 wasn't a leap year, so there are 70/4 leap years between 1900 and 1970.
+// Overflows a 32-bit signed int, but not a 32-bit unsigned int.
+const unsigned SecondsFrom1900To1970 = (70u * 365u + 70u / 4u) * 24u * 60u * 60u;
+
+static NtpTimestamp ntp_timestamp_from_timeval(const timeval& t)
+{
+    ASSERT(t.tv_usec >= 0 && t.tv_usec < 1'000'000); // Fits in 20 bits when normalized.
+
+    // Seconds just need translation to the different origin.
+    uint32_t seconds = t.tv_sec + SecondsFrom1900To1970;
+
+    // Fractional bits are decimal fixed point (*1'000'000) in timeval, but binary fixed-point (* 2**32) in NTP timestamps.
+    uint32_t fractional_bits = static_cast<uint32_t>((static_cast<uint64_t>(t.tv_usec) << 32) / 1'000'000);
+
+    return (static_cast<NtpTimestamp>(seconds) << 32) | fractional_bits;
+}
+
+static timeval timeval_from_ntp_timestamp(const NtpTimestamp& ntp_timestamp)
+{
+    timeval t;
+    t.tv_sec = static_cast<time_t>(ntp_timestamp >> 32) - SecondsFrom1900To1970;
+    t.tv_usec = static_cast<suseconds_t>((static_cast<uint64_t>(ntp_timestamp & 0xFFFFFFFFu) * 1'000'000) >> 32);
+    return t;
+}
+
+static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
+{
+    char buffer[28]; // YYYY-MM-DDTHH:MM:SS.UUUUUUZ is 27 characters long.
+    timeval t = timeval_from_ntp_timestamp(ntp_timestamp);
+    struct tm tm;
+    gmtime_r(&t.tv_sec, &tm);
+    size_t written = strftime(buffer, sizeof(buffer), "%Y-%m-%dT%T.", &tm);
+    ASSERT(written == 20);
+    written += snprintf(buffer + written, sizeof(buffer) - written, "%06d", t.tv_usec);
+    ASSERT(written == 26);
+    buffer[written++] = 'Z';
+    buffer[written] = '\0';
+    return buffer;
+}
 
 int main(int argc, char** argv)
 {
@@ -142,8 +187,8 @@ int main(int argc, char** argv)
     printf("Root delay: %#x\n", ntohl(packet.root_delay));
     printf("Root dispersion: %#x\n", ntohl(packet.root_dispersion));
     printf("Reference ID: %#x\n", ntohl(packet.reference_id));
-    printf("Reference timestamp: %#016llx\n", be64toh(packet.reference_timestamp));
-    printf("Origin timestamp:    %#016llx\n", be64toh(packet.origin_timestamp));
-    printf("Receive timestamp:   %#016llx\n", be64toh(packet.receive_timestamp));
-    printf("Transmit timestamp:  %#016llx\n", be64toh(packet.transmit_timestamp));
+    printf("Reference timestamp: %#016llx (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
+    printf("Origin timestamp:    %#016llx (%s)\n", be64toh(packet.origin_timestamp), format_ntp_timestamp(be64toh(packet.origin_timestamp)).characters());
+    printf("Receive timestamp:   %#016llx (%s)\n", be64toh(packet.receive_timestamp), format_ntp_timestamp(be64toh(packet.receive_timestamp)).characters());
+    printf("Transmit timestamp:  %#016llx (%s)\n", be64toh(packet.transmit_timestamp), format_ntp_timestamp(be64toh(packet.transmit_timestamp)).characters());
 }
