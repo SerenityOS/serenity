@@ -165,7 +165,10 @@ void TableView::keydown_event(KeyEvent& event)
     if (!model())
         return;
     if (event.key() == KeyCode::Key_Return) {
-        activate_or_edit_selected();
+        if (is_editable() && edit_triggers() & EditTrigger::EditKeyPressed)
+            begin_editing(cursor_index());
+        else
+            activate(cursor_index());
         return;
     }
     return AbstractTableView::keydown_event(event);

@@ -67,6 +67,16 @@ public:
     bool is_editable() const { return m_editable; }
     void set_editable(bool editable) { m_editable = editable; }
 
+    enum EditTrigger {
+        None = 0,
+        DoubleClicked = 1 << 0,
+        EditKeyPressed = 1 << 1,
+        AnyKeyPressed = 1 << 2,
+    };
+
+    unsigned edit_triggers() const { return m_edit_triggers; }
+    void set_edit_triggers(unsigned);
+
     bool is_multi_select() const { return m_multi_select; }
     void set_multi_select(bool);
 
@@ -128,7 +138,6 @@ protected:
     void set_hovered_index(const ModelIndex&);
     void activate(const ModelIndex&);
     void activate_selected();
-    void activate_or_edit_selected();
     void update_edit_widget_position();
 
     bool m_editable { false };
@@ -150,6 +159,7 @@ private:
     OwnPtr<ModelEditingDelegate> m_editing_delegate;
     ModelSelection m_selection;
     ModelIndex m_cursor_index;
+    unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };
     bool m_activates_on_selection { false };
     bool m_multi_select { true };
 };
