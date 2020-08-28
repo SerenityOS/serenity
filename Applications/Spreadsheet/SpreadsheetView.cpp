@@ -102,6 +102,10 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             m_table_view->update();
         };
     };
+
+    m_table_view->on_activation = [this](auto&) {
+        m_table_view->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set);
+    };
 }
 
 void SpreadsheetView::hide_event(GUI::HideEvent&)
