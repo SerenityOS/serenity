@@ -163,12 +163,24 @@ KernelLogStream::~KernelLogStream()
 
 DebugLogStream::~DebugLogStream()
 {
-    if (!empty()) {
+    if (!empty() && s_enabled) {
         char newline = '\n';
         write(&newline, 1);
         dbgputstr(reinterpret_cast<char*>(data()), size());
     }
 }
+
+void DebugLogStream::set_enabled(bool enabled)
+{
+    s_enabled = enabled;
+}
+
+bool DebugLogStream::is_enabled()
+{
+    return s_enabled;
+}
+
+bool DebugLogStream::s_enabled = true;
 
 #ifndef KERNEL
 StdLogStream::~StdLogStream()
