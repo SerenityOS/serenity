@@ -188,7 +188,7 @@ void MemoryManager::parse_memory_map()
     ASSERT(m_user_physical_pages > 0);
 }
 
-const PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
+PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(s_mm_lock.own_lock());
@@ -227,11 +227,51 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         pde.set_present(true);
         pde.set_writable(true);
         pde.set_global(&page_directory == m_kernel_page_directory.ptr());
-        auto result = page_directory.m_physical_pages.set(move(page_table));
+        // Use page_directory_table_index and page_directory_index as key
+        // This allows us to release the page table entry when no longer needed
+        auto result = page_directory.m_page_tables.set(vaddr.get() & ~0x1fffff, move(page_table));
         ASSERT(result == AK::HashSetResult::InsertedNewEntry);
     }
 
     return quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
+}
+
+void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, bool is_last_release)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(s_mm_lock.own_lock());
+    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
+    u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
+    u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
+
+    auto* pd = quickmap_pd(page_directory, page_directory_table_index);
+    PageDirectoryEntry& pde = pd[page_directory_index];
+    if (pde.is_present()) {
+        auto* page_table = quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()));
+        auto& pte = page_table[page_table_index];
+        pte.clear();
+
+        if (is_last_release || page_table_index == 0x1ff) {
+            // If this is the last PTE in a region or the last PTE in a page table then
+            // check if we can also release the page table
+            bool all_clear = true;
+            for (u32 i = 0; i <= 0x1ff; i++) {
+                if (!page_table[i].is_null()) {
+                    all_clear = false;
+                    break;
+                }
+            }
+            if (all_clear) {
+                pde.clear();
+
+                auto result = page_directory.m_page_tables.remove(vaddr.get() & ~0x1fffff);
+                ASSERT(result);
+#ifdef MM_DEBUG
+                dbg() << "MM: Released page table for " << VirtualAddress(vaddr.get() & ~0x1fffff);
+#endif
+            }
+        }
+    }
 }
 
 void MemoryManager::initialize(u32 cpu)

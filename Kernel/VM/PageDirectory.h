@@ -66,7 +66,7 @@ private:
     RangeAllocator m_identity_range_allocator;
     RefPtr<PhysicalPage> m_directory_table;
     RefPtr<PhysicalPage> m_directory_pages[4];
-    HashTable<RefPtr<PhysicalPage>> m_physical_pages;
+    HashMap<u32, RefPtr<PhysicalPage>> m_page_tables;
 };
 
 }
