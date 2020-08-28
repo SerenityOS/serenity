@@ -428,7 +428,7 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
     if (m_cursor_index == index)
         return;
 
-    if (!model()) {
+    if (!model() || !index.is_valid()) {
         m_cursor_index = {};
         return;
     }
