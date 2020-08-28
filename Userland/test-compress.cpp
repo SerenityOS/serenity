@@ -29,7 +29,7 @@
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Zlib.h>
 
-bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
+static bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
 {
     if (lhs.size() != rhs.size())
         return false;
