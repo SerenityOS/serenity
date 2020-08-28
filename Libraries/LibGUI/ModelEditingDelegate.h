@@ -49,6 +49,7 @@ public:
     const Widget* widget() const { return m_widget; }
 
     Function<void()> on_commit;
+    Function<void()> on_rollback;
 
     virtual Variant value() const = 0;
     virtual void set_value(const Variant&) = 0;
@@ -63,6 +64,11 @@ protected:
     {
         if (on_commit)
             on_commit();
+    }
+    void rollback()
+    {
+        if (on_rollback)
+            on_rollback();
     }
 
     const ModelIndex& index() const { return m_index; }
@@ -83,6 +89,9 @@ public:
         auto textbox = TextBox::construct();
         textbox->on_return_pressed = [this] {
             commit();
+        };
+        textbox->on_escape_pressed = [this] {
+            rollback();
         };
         return textbox;
     }

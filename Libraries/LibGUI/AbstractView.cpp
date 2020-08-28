@@ -147,6 +147,10 @@ void AbstractView::begin_editing(const ModelIndex& index)
         model()->set_data(m_edit_index, m_editing_delegate->value());
         stop_editing();
     };
+    m_editing_delegate->on_rollback = [this] {
+        ASSERT(model());
+        stop_editing();
+    };
 }
 
 void AbstractView::stop_editing()
