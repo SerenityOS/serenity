@@ -67,7 +67,7 @@ void AESCipherKey::expand_encrypt_key(const ByteBuffer& user_key, size_t bits)
 
     ASSERT(!user_key.is_null());
     ASSERT(is_valid_key_size(bits));
-    ASSERT(user_key.size() >= bits / 8);
+    ASSERT(user_key.size() == bits / 8);
 
     round_key = round_keys();
 
