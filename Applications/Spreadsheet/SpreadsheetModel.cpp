@@ -50,34 +50,33 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return {};
 
     if (role == GUI::ModelRole::Display) {
-        const auto* value = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
-        if (!value)
+        const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        if (!cell)
             return String::empty();
 
-        if (value->kind == Spreadsheet::Cell::Formula) {
-            if (auto object = as_error(value->evaluated_data)) {
+        if (cell->kind == Spreadsheet::Cell::Formula) {
+            if (auto object = as_error(cell->evaluated_data)) {
                 StringBuilder builder;
                 auto error = object->get("message").to_string_without_side_effects();
                 builder.append("Error: ");
                 builder.append(error);
                 return builder.to_string();
             }
-            return value->evaluated_data.is_empty() ? "" : value->evaluated_data.to_string_without_side_effects();
         }
 
-        return value->data;
+        return cell->typed_display();
     }
 
     if (role == GUI::ModelRole::TextAlignment)
         return {};
 
     if (role == GUI::ModelRole::ForegroundColor) {
-        const auto* value = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
-        if (!value)
+        const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        if (!cell)
             return {};
 
-        if (value->kind == Spreadsheet::Cell::Formula) {
-            if (as_error(value->evaluated_data))
+        if (cell->kind == Spreadsheet::Cell::Formula) {
+            if (as_error(cell->evaluated_data))
                 return Color(Color::Red);
         }
 

@@ -49,7 +49,7 @@ JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receive
         if (auto pos = Sheet::parse_cell_name(name.as_string()); pos.has_value()) {
             auto& cell = m_sheet.ensure(pos.value());
             cell.reference_from(m_sheet.current_evaluated_cell());
-            return cell.js_data();
+            return cell.typed_js_data();
         }
     }
 
