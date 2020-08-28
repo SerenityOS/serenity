@@ -59,6 +59,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view = add<GUI::TableView>();
     m_table_view->set_grid_style(GUI::TableView::GridStyle::Both);
     m_table_view->set_cursor_style(GUI::TableView::CursorStyle::Item);
+    m_table_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed | GUI::AbstractView::AnyKeyPressed | GUI::AbstractView::DoubleClicked);
     m_table_view->row_header().set_visible(true);
     m_table_view->set_model(SheetModel::create(*m_sheet));
 
