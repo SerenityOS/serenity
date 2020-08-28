@@ -141,6 +141,15 @@ void TableView::paint_event(PaintEvent& event)
                     painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
                 }
             }
+
+            if (m_grid_style == GridStyle::Horizontal || m_grid_style == GridStyle::Both)
+                painter.draw_line(cell_rect_for_fill.bottom_left(), cell_rect_for_fill.bottom_right(), palette().ruler());
+            if (m_grid_style == GridStyle::Vertical || m_grid_style == GridStyle::Both)
+                painter.draw_line(cell_rect_for_fill.top_right(), cell_rect_for_fill.bottom_right(), palette().ruler());
+
+            if (m_cursor_style == CursorStyle::Item && cell_index == cursor_index())
+                painter.draw_rect(cell_rect_for_fill, palette().text_cursor());
+
             x += column_width + horizontal_padding() * 2;
         }
         ++painted_item_index;
@@ -209,6 +218,22 @@ void TableView::move_cursor(CursorMovement movement, SelectionUpdate selection_u
         break;
     }
     }
+}
+
+void TableView::set_grid_style(GridStyle style)
+{
+    if (m_grid_style == style)
+        return;
+    m_grid_style = style;
+    update();
+}
+
+void TableView::set_cursor_style(CursorStyle style)
+{
+    if (m_cursor_style == style)
+        return;
+    m_cursor_style = style;
+    update();
 }
 
 }
