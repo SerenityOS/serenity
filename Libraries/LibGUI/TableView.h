@@ -53,10 +53,10 @@ public:
     CursorStyle cursor_style() const { return m_cursor_style; }
     void set_cursor_style(CursorStyle);
 
+    virtual void move_cursor(CursorMovement, SelectionUpdate) override;
+
 protected:
     TableView();
-
-    virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
     virtual void keydown_event(KeyEvent&) override;
     virtual void paint_event(PaintEvent&) override;
