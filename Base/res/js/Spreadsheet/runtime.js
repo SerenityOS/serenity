@@ -34,11 +34,12 @@ function split(str, sep) {
         splitIndex = str.indexOf(sep);
         if (splitIndex == -1) {
             if (str.length) parts.push(str);
-            return parts;
+            break;
         }
         parts.push(str.substring(0, splitIndex));
         str = str.slice(splitIndex + sep.length);
     }
+    return parts;
 }
 
 function R(fmt, ...args) {
@@ -104,6 +105,19 @@ range.__documentation = JSON.stringify({
         'range("A1", "C4")': "Generate a range A1:C4",
         'range("A1", "C4", 2)': "Generate a range A1:C4, skipping every other column",
     },
+});
+
+R.__documentation = JSON.stringify({
+    name: "R",
+    argc: 1,
+    argnames: ["range specifier"],
+    doc:
+        "Generates a list of cell names in a rectangle defined by " +
+        "_range specifier_, which must be two cell names " +
+        "delimited by a comma ':'. Operates the same as `range`", // TODO: Add support for hyperlinks.
+    examples: {
+        "R`A1:C4`": "Generate the range A1:C4",
+  },
 });
 
 select.__documentation = JSON.stringify({
