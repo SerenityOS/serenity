@@ -51,6 +51,7 @@ void SortingProxyModel::invalidate(unsigned int flags)
 
         // FIXME: This is really harsh, but without precise invalidation, not much we can do.
         for_each_view([&](auto& view) {
+            view.set_cursor({}, AbstractView::SelectionUpdate::None);
             view.selection().clear();
         });
     }
@@ -201,6 +202,19 @@ void SortingProxyModel::sort_mapping(Mapping& mapping, int column, SortOrder sor
 
     // FIXME: I really feel like this should be done at the view layer somehow.
     for_each_view([&](AbstractView& view) {
+        // Update the view's cursor.
+        auto cursor = view.cursor_index();
+        if (cursor.is_valid() && cursor.parent() == mapping.source_parent) {
+            for (size_t i = 0; i < mapping.source_rows.size(); ++i) {
+                if (mapping.source_rows[i] == view.cursor_index().row()) {
+                    auto new_source_index = this->index(i, view.cursor_index().column(), mapping.source_parent);
+                    view.set_cursor(new_source_index, AbstractView::SelectionUpdate::None, false);
+                    break;
+                }
+            }
+        }
+
+        // Update the view's selection.
         view.selection().change_from_model({}, [&](ModelSelection& selection) {
             Vector<ModelIndex> selected_indexes_in_source;
             Vector<ModelIndex> stale_indexes_in_selection;
