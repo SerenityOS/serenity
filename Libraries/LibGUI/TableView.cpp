@@ -29,6 +29,7 @@
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/TableView.h>
@@ -171,7 +172,17 @@ void TableView::keydown_event(KeyEvent& event)
             activate(cursor_index());
         return;
     }
-    return AbstractTableView::keydown_event(event);
+
+    AbstractTableView::keydown_event(event);
+
+    if (event.is_accepted())
+        return;
+
+    if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && !event.text().is_empty()) {
+        begin_editing(cursor_index());
+        if (m_editing_delegate)
+            m_editing_delegate->set_value(event.text());
+    }
 }
 
 void TableView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
