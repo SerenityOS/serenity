@@ -362,15 +362,10 @@ void AbstractView::doubleclick_event(MouseEvent& event)
     else if (!m_selection.contains(index))
         set_selection(index);
 
-    activate_or_edit_selected();
-}
-
-void AbstractView::activate_or_edit_selected()
-{
-    if (is_editable())
-        begin_editing(selection().first());
+    if (is_editable() && edit_triggers() & EditTrigger::DoubleClicked)
+        begin_editing(cursor_index());
     else
-        activate_selected();
+        activate(cursor_index());
 }
 
 void AbstractView::context_menu_event(ContextMenuEvent& event)
@@ -447,6 +442,11 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
         scroll_into_view(index, false, true);
         update();
     }
+}
+
+void AbstractView::set_edit_triggers(unsigned triggers)
+{
+    m_edit_triggers = triggers;
 }
 
 }

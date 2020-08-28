@@ -248,8 +248,10 @@ void AbstractTableView::doubleclick_event(MouseEvent& event)
     if (!model())
         return;
     if (event.button() == MouseButton::Left) {
-        if (!selection().is_empty())
-            activate_or_edit_selected();
+        if (is_editable() && edit_triggers() & EditTrigger::DoubleClicked)
+            begin_editing(cursor_index());
+        else
+            activate(cursor_index());
     }
 }
 
