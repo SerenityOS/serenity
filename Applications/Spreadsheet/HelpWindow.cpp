@@ -92,6 +92,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     left_frame.set_preferred_size(100, 0);
     left_frame.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_listview = left_frame.add<GUI::ListView>();
+    m_listview->set_activates_on_selection(true);
     m_listview->set_model(HelpListModel::create());
 
     m_webview = splitter.add<Web::OutOfProcessWebView>();
