@@ -26,13 +26,11 @@
 
 #pragma once
 
+#include "Forward.h"
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace Spreadsheet {
-
-class Sheet;
-class Workbook;
 
 class SheetGlobalObject : public JS::GlobalObject {
     JS_OBJECT(SheetGlobalObject, JS::GlobalObject);

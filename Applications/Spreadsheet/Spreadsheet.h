@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include "Cell.h"
+#include "Forward.h"
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/String.h>
@@ -38,9 +40,6 @@
 #include <LibJS/Interpreter.h>
 
 namespace Spreadsheet {
-
-class Workbook;
-class SheetGlobalObject;
 
 struct Position {
     String column;
@@ -55,83 +54,6 @@ struct Position {
     {
         return !(other == *this);
     }
-};
-
-class Sheet;
-
-struct Cell : public Weakable<Cell> {
-    Cell(String data, WeakPtr<Sheet> sheet)
-        : dirty(false)
-        , data(move(data))
-        , kind(LiteralString)
-        , sheet(sheet)
-    {
-    }
-
-    Cell(String source, JS::Value&& cell_value, WeakPtr<Sheet> sheet)
-        : dirty(false)
-        , data(move(source))
-        , evaluated_data(move(cell_value))
-        , kind(Formula)
-        , sheet(sheet)
-    {
-    }
-
-    bool dirty { false };
-    bool evaluated_externally { false };
-    String data;
-    JS::Value evaluated_data;
-
-    enum Kind {
-        LiteralString,
-        Formula,
-    } kind { LiteralString };
-
-    WeakPtr<Sheet> sheet;
-    Vector<WeakPtr<Cell>> referencing_cells;
-
-    void reference_from(Cell*);
-
-    void set_data(String new_data)
-    {
-        if (data == new_data)
-            return;
-
-        if (new_data.starts_with("=")) {
-            new_data = new_data.substring(1, new_data.length() - 1);
-            kind = Formula;
-        } else {
-            kind = LiteralString;
-        }
-
-        data = move(new_data);
-        dirty = true;
-        evaluated_externally = false;
-    }
-
-    void set_data(JS::Value new_data)
-    {
-        dirty = true;
-        evaluated_externally = true;
-
-        StringBuilder builder;
-
-        builder.append("=");
-        builder.append(new_data.to_string_without_side_effects());
-        data = builder.build();
-
-        evaluated_data = move(new_data);
-    }
-
-    String source() const;
-
-    JS::Value js_data();
-
-    void update(Badge<Sheet>) { update_data(); }
-    void update();
-
-private:
-    void update_data();
 };
 
 class Sheet : public Core::Object {

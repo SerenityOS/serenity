@@ -77,16 +77,15 @@ Sheet::Sheet(Workbook& workbook)
             }
         }
     }
+}
 
+Sheet::~Sheet()
+{
 }
 
 JS::Interpreter& Sheet::interpreter() const
 {
     return m_workbook.interpreter();
-}
-
-Sheet::~Sheet()
-{
 }
 
 size_t Sheet::add_row()
@@ -171,42 +170,6 @@ JS::Value Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
     return value;
 }
 
-void Cell::update_data()
-{
-    TemporaryChange cell_change { sheet->current_evaluated_cell(), this };
-    if (!dirty)
-        return;
-
-    dirty = false;
-    if (kind == Formula) {
-        if (!evaluated_externally)
-            evaluated_data = sheet->evaluate(data, this);
-    }
-
-    for (auto& ref : referencing_cells) {
-        if (ref) {
-            ref->dirty = true;
-            ref->update();
-        }
-    }
-}
-
-void Cell::update()
-{
-    sheet->update(*this);
-}
-
-JS::Value Cell::js_data()
-{
-    if (dirty)
-        update();
-
-    if (kind == Formula)
-        return evaluated_data;
-
-    return JS::js_string(sheet->interpreter(), data);
-}
-
 Cell* Sheet::at(const StringView& name)
 {
     auto pos = parse_cell_name(name);
@@ -236,27 +199,6 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name)
         return {};
 
     return Position { col, row.to_uint().value() };
-}
-
-String Cell::source() const
-{
-    StringBuilder builder;
-    if (kind == Formula)
-        builder.append('=');
-    builder.append(data);
-    return builder.to_string();
-}
-
-// FIXME: Find a better way to figure out dependencies
-void Cell::reference_from(Cell* other)
-{
-    if (!other || other == this)
-        return;
-
-    if (!referencing_cells.find([other](auto& ptr) { return ptr.ptr() == other; }).is_end())
-        return;
-
-    referencing_cells.append(other->make_weak_ptr());
 }
 
 RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
