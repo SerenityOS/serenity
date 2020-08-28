@@ -114,7 +114,7 @@ public:
     virtual void scroll_into_view(const ModelIndex&, [[maybe_unused]] bool scroll_horizontally = true, [[maybe_unused]] bool scroll_vertically = true) { }
 
     const ModelIndex& cursor_index() const { return m_cursor_index; }
-    void set_cursor(ModelIndex, SelectionUpdate);
+    void set_cursor(ModelIndex, SelectionUpdate, bool scroll_cursor_into_view = true);
 
     bool is_tab_key_navigation_enabled() const { return m_tab_key_navigation_enabled; }
     void set_tab_key_navigation_enabled(bool enabled) { m_tab_key_navigation_enabled = enabled; }

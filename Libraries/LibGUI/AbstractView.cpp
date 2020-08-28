@@ -423,7 +423,7 @@ void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_orde
     update();
 }
 
-void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update)
+void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update, bool scroll_cursor_into_view)
 {
     if (m_cursor_index == index)
         return;
@@ -442,8 +442,11 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
         // FIXME: Support the other SelectionUpdate types
 
         m_cursor_index = index;
-        // FIXME: We should scroll into view both vertically *and* horizontally.
-        scroll_into_view(index, false, true);
+
+        if (scroll_cursor_into_view) {
+            // FIXME: We should scroll into view both vertically *and* horizontally.
+            scroll_into_view(index, false, true);
+        }
         update();
     }
 }
