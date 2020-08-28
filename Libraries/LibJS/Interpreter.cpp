@@ -87,7 +87,7 @@ Value Interpreter::run(GlobalObject& global_object, const Statement& statement, 
     for (auto& node : block.children()) {
         m_last_value = node.execute(*this, global_object);
         if (should_unwind()) {
-            if (should_unwind_until(ScopeType::Breakable, block.label()))
+            if (!block.label().is_null() && should_unwind_until(ScopeType::Breakable, block.label()))
                 stop_unwind();
             break;
         }
