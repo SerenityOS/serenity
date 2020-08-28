@@ -181,4 +181,17 @@ TEST_CASE(duplex_wild_seeking)
     EXPECT(stream.eof());
 }
 
+TEST_CASE(read_endian_values)
+{
+    const u8 input[] { 0, 1, 2, 3, 4, 5, 6, 7 };
+    InputMemoryStream stream { { input, sizeof(input) } };
+
+    LittleEndian<u32> value1;
+    BigEndian<u32> value2;
+    stream >> value1 >> value2;
+
+    EXPECT_EQ(value1, 0x03020100u);
+    EXPECT_EQ(value2, 0x04050607u);
+}
+
 TEST_MAIN(Stream)

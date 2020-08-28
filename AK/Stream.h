@@ -76,33 +76,36 @@ class DuplexStream
     , public OutputStream {
 };
 
+inline InputStream& operator>>(InputStream& stream, Bytes bytes)
+{
+    stream.read_or_error(bytes);
+    return stream;
+}
+inline OutputStream& operator<<(OutputStream& stream, ReadonlyBytes bytes)
+{
+    stream.write_or_error(bytes);
+    return stream;
+}
+
 template<typename T>
 InputStream& operator>>(InputStream& stream, LittleEndian<T>& value)
 {
-    T temporary;
-    stream >> temporary;
-    value = temporary;
-    return stream;
+    return stream >> Bytes { &value.m_value, sizeof(value.m_value) };
 }
 template<typename T>
-InputStream& operator<<(InputStream& stream, LittleEndian<T> value)
+OutputStream& operator<<(OutputStream& stream, LittleEndian<T> value)
 {
-    stream << static_cast<T>(value);
-    return stream;
+    return stream << ReadonlyBytes { &value.m_value, sizeof(value.m_value) };
 }
 template<typename T>
 InputStream& operator>>(InputStream& stream, BigEndian<T>& value)
 {
-    T temporary;
-    stream >> temporary;
-    value = temporary;
-    return stream;
+    return stream >> Bytes { &value.m_value, sizeof(value.m_value) };
 }
 template<typename T>
-InputStream& operator<<(InputStream& stream, BigEndian<T> value)
+OutputStream& operator<<(OutputStream& stream, BigEndian<T> value)
 {
-    stream << static_cast<T>(value);
-    return stream;
+    return stream << ReadonlyBytes { &value.m_value, sizeof(value.m_value) };
 }
 
 template<typename T>
@@ -174,18 +177,6 @@ inline InputStream& operator>>(InputStream& stream, bool& value)
 inline OutputStream& operator<<(OutputStream& stream, bool value)
 {
     stream.write_or_error({ &value, sizeof(value) });
-    return stream;
-}
-
-inline InputStream& operator>>(InputStream& stream, Bytes bytes)
-{
-    stream.read_or_error(bytes);
-    return stream;
-}
-
-inline OutputStream& operator<<(OutputStream& stream, ReadonlyBytes bytes)
-{
-    stream.write_or_error(bytes);
     return stream;
 }
 
