@@ -27,48 +27,58 @@
 #pragma once
 
 #include "Forward.h"
-#include "Spreadsheet.h"
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Result.h>
+#include "JSIntegration.h"
+#include <AK/String.h>
+#include <AK/Types.h>
+#include <AK/WeakPtr.h>
 
 namespace Spreadsheet {
 
-class Workbook {
-public:
-    Workbook(NonnullRefPtrVector<Sheet>&& sheets);
-
-    Result<bool, String> save(const StringView& filename);
-    Result<bool, String> load(const StringView& filename);
-
-    const String& current_filename() const { return m_current_filename; }
-    bool set_filename(const String& filename);
-
-    bool has_sheets() const { return !m_sheets.is_empty(); }
-
-    const NonnullRefPtrVector<Sheet>& sheets() const { return m_sheets; }
-    NonnullRefPtrVector<Sheet> sheets() { return m_sheets; }
-
-    Sheet& add_sheet(const StringView& name)
+struct Cell : public Weakable<Cell> {
+    Cell(String data, WeakPtr<Sheet> sheet)
+        : dirty(false)
+        , data(move(data))
+        , kind(LiteralString)
+        , sheet(sheet)
     {
-        auto sheet = Sheet::construct(name, *this);
-        m_sheets.append(sheet);
-        return *sheet;
     }
 
-    JS::Interpreter& interpreter() { return *m_interpreter; }
-    const JS::Interpreter& interpreter() const { return *m_interpreter; }
+    Cell(String source, JS::Value&& cell_value, WeakPtr<Sheet> sheet)
+        : dirty(false)
+        , data(move(source))
+        , evaluated_data(move(cell_value))
+        , kind(Formula)
+        , sheet(sheet)
+    {
+    }
 
-    JS::GlobalObject& global_object() { return m_interpreter->global_object(); }
-    const JS::GlobalObject& global_object() const { return m_interpreter->global_object(); }
+    void reference_from(Cell*);
 
-    WorkbookObject* workbook_object() { return m_workbook_object; }
+    void set_data(String new_data);
+    void set_data(JS::Value new_data);
+
+    String source() const;
+
+    JS::Value js_data();
+
+    void update(Badge<Sheet>) { update_data(); }
+    void update();
+
+    enum Kind {
+        LiteralString,
+        Formula,
+    };
+
+    bool dirty { false };
+    bool evaluated_externally { false };
+    String data;
+    JS::Value evaluated_data;
+    Kind kind { LiteralString };
+    WeakPtr<Sheet> sheet;
+    Vector<WeakPtr<Cell>> referencing_cells;
 
 private:
-    NonnullRefPtrVector<Sheet> m_sheets;
-    NonnullOwnPtr<JS::Interpreter> m_interpreter;
-    WorkbookObject* m_workbook_object { nullptr };
-
-    String m_current_filename;
+    void update_data();
 };
 
 }
