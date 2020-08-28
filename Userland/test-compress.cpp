@@ -27,6 +27,7 @@
 #include <AK/TestSuite.h>
 
 #include <LibCompress/Deflate.h>
+#include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
 
 static bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
@@ -116,6 +117,39 @@ TEST_CASE(zlib_decompress_simple)
     const u8 uncompressed[] = "This is a simple text file :)";
 
     const auto decompressed = Compress::Zlib::decompress_all({ compressed, sizeof(compressed) });
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
+}
+
+TEST_CASE(gzip_decompress_simple)
+{
+    const u8 compressed[] = {
+        0x1f, 0x8b, 0x08, 0x00, 0x77, 0xff, 0x47, 0x5f, 0x02, 0xff, 0x2b, 0xcf,
+        0x2f, 0x4a, 0x31, 0x54, 0x48, 0x4c, 0x4a, 0x56, 0x28, 0x07, 0xb2, 0x8c,
+        0x00, 0xc2, 0x1d, 0x22, 0x15, 0x0f, 0x00, 0x00, 0x00
+    };
+
+    const u8 uncompressed[] = "word1 abc word2";
+
+    const auto decompressed = Compress::GzipDecompressor::decompress_all({ compressed, sizeof(compressed) });
+
+    EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
+}
+
+TEST_CASE(gzip_multiple_members)
+{
+
+    const u8 compressed[] = {
+        0x1f, 0x8b, 0x08, 0x00, 0xe0, 0x03, 0x48, 0x5f, 0x02, 0xff, 0x4b, 0x4c,
+        0x4a, 0x4e, 0x4c, 0x4a, 0x06, 0x00, 0x4c, 0x99, 0x6e, 0x72, 0x06, 0x00,
+        0x00, 0x00, 0x1f, 0x8b, 0x08, 0x00, 0xe0, 0x03, 0x48, 0x5f, 0x02, 0xff,
+        0x4b, 0x4c, 0x4a, 0x4e, 0x4c, 0x4a, 0x06, 0x00, 0x4c, 0x99, 0x6e, 0x72,
+        0x06, 0x00, 0x00, 0x00
+    };
+
+    const u8 uncompressed[] = "abcabcabcabc";
+
+    const auto decompressed = Compress::GzipDecompressor::decompress_all({ compressed, sizeof(compressed) });
+
     EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
 }
 
