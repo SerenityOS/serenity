@@ -144,6 +144,7 @@ protected:
     ModelIndex m_edit_index;
     RefPtr<Widget> m_edit_widget;
     Gfx::IntRect m_edit_widget_content_rect;
+    OwnPtr<ModelEditingDelegate> m_editing_delegate;
 
     Gfx::IntPoint m_left_mousedown_position;
     bool m_might_drag { false };
@@ -156,7 +157,6 @@ protected:
 
 private:
     RefPtr<Model> m_model;
-    OwnPtr<ModelEditingDelegate> m_editing_delegate;
     ModelSelection m_selection;
     ModelIndex m_cursor_index;
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };
