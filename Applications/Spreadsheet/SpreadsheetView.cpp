@@ -78,8 +78,13 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view->set_alternating_row_colors(false);
     m_table_view->set_highlight_selected_rows(false);
     m_table_view->set_editable(true);
-    m_table_view->aid_create_editing_delegate = [&](auto&) {
-        return make<EditingDelegate>(*m_sheet);
+    m_table_view->aid_create_editing_delegate = [this](auto&) {
+        auto delegate = make<EditingDelegate>(*m_sheet);
+        delegate->on_cursor_key_pressed = [this](auto& event) {
+            m_table_view->stop_editing();
+            m_table_view->event(event);
+        };
+        return delegate;
     };
 
     m_table_view->on_selection_change = [&] {
