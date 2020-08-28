@@ -186,8 +186,12 @@ void TableView::keydown_event(KeyEvent& event)
 
     if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && !event.text().is_empty()) {
         begin_editing(cursor_index());
-        if (m_editing_delegate)
-            m_editing_delegate->set_value(event.text());
+        if (m_editing_delegate) {
+            if (event.key() == KeyCode::Key_Delete || event.key() == KeyCode::Key_Backspace)
+                m_editing_delegate->set_value(String::empty());
+            else
+                m_editing_delegate->set_value(event.text());
+        }
     }
 }
 
