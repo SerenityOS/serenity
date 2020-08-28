@@ -26,6 +26,7 @@
 
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
+#include <stdint.h>
 
 namespace Kernel {
 
@@ -35,8 +36,12 @@ int Process::sys$usleep(useconds_t usec)
     if (!usec)
         return 0;
     u64 wakeup_time = Thread::current()->sleep(usec * TimeManagement::the().ticks_per_second() / 1000000);
-    if (wakeup_time > g_uptime)
-        return -EINTR;
+    if (wakeup_time > g_uptime) {
+        u64 ticks_left_until_original_wakeup_time = wakeup_time - g_uptime;
+        u64 dt = ticks_left_until_original_wakeup_time / (TimeManagement::the().ticks_per_second() * 1000000);
+        // TODO - can we make this syscall return 64 bits instead of 32 bits?
+        return (dt < UINTMAX_MAX) ? dt : -1;
+    }
     return 0;
 }
 
