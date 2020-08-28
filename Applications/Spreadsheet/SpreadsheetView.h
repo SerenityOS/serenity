@@ -62,6 +62,7 @@ private:
         case KeyCode::Key_Right:
         case KeyCode::Key_Up:
         case KeyCode::Key_Down:
+        case KeyCode::Key_Return:
             return true;
         default:
             return false;
@@ -106,9 +107,6 @@ private:
         virtual RefPtr<Widget> create_widget() override
         {
             auto textbox = CellEditor::construct();
-            textbox->on_return_pressed = [this] {
-                commit();
-            };
             textbox->on_escape_pressed = [this] {
                 rollback();
             };
