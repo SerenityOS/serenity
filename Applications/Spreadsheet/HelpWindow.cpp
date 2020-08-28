@@ -91,13 +91,12 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     left_frame.set_layout<GUI::VerticalBoxLayout>().set_margins({ 0, 0, 0, 0 });
     left_frame.set_preferred_size(100, 0);
     left_frame.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    auto& list_view = left_frame.add<GUI::ListView>();
-    m_listview = &list_view;
-    list_view.set_model(HelpListModel::create());
+    m_listview = left_frame.add<GUI::ListView>();
+    m_listview->set_model(HelpListModel::create());
 
-    m_webview = &splitter.add<Web::OutOfProcessWebView>();
+    m_webview = splitter.add<Web::OutOfProcessWebView>();
 
-    list_view.on_activation = [this](auto& index) {
+    m_listview->on_activation = [this](auto& index) {
         if (!m_webview)
             return;
 
