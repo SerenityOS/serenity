@@ -131,10 +131,15 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             m_cell_value_editor->on_change = nullptr;
             m_cell_value_editor->set_text("");
+            m_should_change_selected_cells = false;
+            m_cell_value_editor->on_focusin = [this] { m_should_change_selected_cells = true; };
+            m_cell_value_editor->on_focusout = [this] { m_should_change_selected_cells = false; };
             m_cell_value_editor->on_change = [cells = move(cells), this] {
-                for (auto* cell : cells)
-                    cell->set_data(m_cell_value_editor->text());
-                m_selected_view->sheet().update();
+                if (m_should_change_selected_cells) {
+                    for (auto* cell : cells)
+                        cell->set_data(m_cell_value_editor->text());
+                    m_selected_view->sheet().update();
+                }
             };
             m_cell_value_editor->set_enabled(true);
         };
