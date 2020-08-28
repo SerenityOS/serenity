@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/Platform.h>
 
 namespace AK {
@@ -71,9 +72,21 @@ ALWAYS_INLINE T convert_between_host_and_network_endian(T value)
 }
 
 template<typename T>
+class LittleEndian;
+
+template<typename T>
+InputStream& operator>>(InputStream&, LittleEndian<T>&);
+
+template<typename T>
+OutputStream& operator<<(OutputStream&, LittleEndian<T>);
+
+template<typename T>
 class [[gnu::packed]] LittleEndian
 {
 public:
+    friend InputStream& operator>><T>(InputStream&, LittleEndian<T>&);
+    friend OutputStream& operator<<<T>(OutputStream&, LittleEndian<T>);
+
     LittleEndian() { }
 
     LittleEndian(T value)
@@ -88,9 +101,21 @@ private:
 };
 
 template<typename T>
+class BigEndian;
+
+template<typename T>
+InputStream& operator>>(InputStream&, BigEndian<T>&);
+
+template<typename T>
+OutputStream& operator<<(OutputStream&, BigEndian<T>);
+
+template<typename T>
 class [[gnu::packed]] BigEndian
 {
 public:
+    friend InputStream& operator>><T>(InputStream&, BigEndian<T>&);
+    friend OutputStream& operator<<<T>(OutputStream&, BigEndian<T>);
+
     BigEndian() { }
 
     BigEndian(T value)
