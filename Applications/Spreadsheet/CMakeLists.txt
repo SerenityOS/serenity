@@ -1,4 +1,5 @@
 set(SOURCES
+    Cell.cpp
     CellSyntaxHighlighter.cpp
     HelpWindow.cpp
     JSIntegration.cpp
