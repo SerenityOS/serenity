@@ -569,6 +569,10 @@ int main(int argc, char** argv)
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
     args_parser.parse(argc, argv);
 
+    if (getenv("DISABLE_DBG_OUTPUT")) {
+        DebugLogStream::set_enabled(false);
+    }
+
 #ifdef __serenity__
     TestRunner("/home/anon/js-tests", print_times).run();
 #else
