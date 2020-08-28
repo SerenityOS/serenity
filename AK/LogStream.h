@@ -115,6 +115,13 @@ class DebugLogStream final : public BufferedLogStream {
 public:
     DebugLogStream() { }
     virtual ~DebugLogStream() override;
+
+    // DebugLogStream only checks `enabled` and possibly generates output while the destructor runs.
+    static void set_enabled(bool);
+    static bool is_enabled();
+
+private:
+    static bool s_enabled;
 };
 
 #if !defined(KERNEL)
