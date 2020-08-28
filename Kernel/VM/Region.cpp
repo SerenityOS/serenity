@@ -266,10 +266,10 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 {
     ScopedSpinLock lock(s_mm_lock);
     ASSERT(m_page_directory);
-    for (size_t i = 0; i < page_count(); ++i) {
+    size_t count = page_count();
+    for (size_t i = 0; i < count; ++i) {
         auto vaddr = vaddr_from_page_index(i);
-        auto& pte = MM.ensure_pte(*m_page_directory, vaddr);
-        pte.clear();
+        MM.release_pte(*m_page_directory, vaddr, i == count - 1);
 #ifdef MM_DEBUG
         auto* page = physical_page(i);
         dbg() << "MM: >> Unmapped " << vaddr << " => P" << String::format("%p", page ? page->paddr().get() : 0) << " <<";
