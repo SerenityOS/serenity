@@ -60,6 +60,45 @@ void Cell::set_data(JS::Value new_data)
     evaluated_data = move(new_data);
 }
 
+void Cell::set_type(const StringView& name)
+{
+    auto* cell_type = CellType::get_by_name(name);
+    if (cell_type) {
+        m_type = cell_type;
+        return;
+    }
+
+    ASSERT_NOT_REACHED();
+}
+
+void Cell::set_type_metadata(CellTypeMetadata&& metadata)
+{
+    m_type_metadata = move(metadata);
+}
+
+const CellType& Cell::type() const
+{
+    if (m_type)
+        return *m_type;
+
+    if (kind == LiteralString) {
+        if (data.to_int().has_value())
+            return *CellType::get_by_name("Numeric");
+    }
+
+    return *CellType::get_by_name("Identity");
+}
+
+String Cell::typed_display() const
+{
+    return type().display(const_cast<Cell&>(*this), m_type_metadata);
+}
+
+JS::Value Cell::typed_js_data() const
+{
+    return type().js_value(const_cast<Cell&>(*this), m_type_metadata);
+}
+
 void Cell::update_data()
 {
     TemporaryChange cell_change { sheet->current_evaluated_cell(), this };

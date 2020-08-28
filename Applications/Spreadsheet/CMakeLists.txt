@@ -1,6 +1,10 @@
 set(SOURCES
     Cell.cpp
     CellSyntaxHighlighter.cpp
+    CellType/Identity.cpp
+    CellType/Numeric.cpp
+    CellType/String.cpp
+    CellType/Type.cpp
     HelpWindow.cpp
     JSIntegration.cpp
     Spreadsheet.cpp

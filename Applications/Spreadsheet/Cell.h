@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "CellType/Type.h"
 #include "Forward.h"
 #include "JSIntegration.h"
 #include <AK/String.h>
@@ -57,6 +58,16 @@ struct Cell : public Weakable<Cell> {
     void set_data(String new_data);
     void set_data(JS::Value new_data);
 
+    void set_type(const StringView& name);
+    void set_type_metadata(CellTypeMetadata&&);
+
+    String typed_display() const;
+    JS::Value typed_js_data() const;
+
+    const CellType& type() const;
+    const CellTypeMetadata& type_metadata() const { return m_type_metadata; }
+    CellTypeMetadata& type_metadata() { return m_type_metadata; }
+
     String source() const;
 
     JS::Value js_data();
@@ -76,6 +87,8 @@ struct Cell : public Weakable<Cell> {
     Kind kind { LiteralString };
     WeakPtr<Sheet> sheet;
     Vector<WeakPtr<Cell>> referencing_cells;
+    const CellType* m_type { nullptr };
+    CellTypeMetadata m_type_metadata;
 
 private:
     void update_data();
