@@ -253,6 +253,13 @@ static int main_impl(int argc, char** argv)
         open_file(filename);
     });
 
+    auto open_selected_action = GUI::Action::create("Open", [&](const GUI::Action&) {
+        auto files = selected_file_names();
+        for (auto& file : files)
+            open_file(file);
+    });
+    open_selected_action->set_enabled(true);
+
     auto add_existing_file_action = GUI::Action::create("Add existing file to project...", Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
         auto result = GUI::FilePicker::get_open_filepath(g_window, "Add existing file to project");
         if (!result.has_value())
@@ -266,9 +273,7 @@ static int main_impl(int argc, char** argv)
         open_file(filename);
     });
 
-    auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action& action) {
-        (void)action;
-
+    auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action&) {
         auto files = selected_file_names();
         if (files.is_empty())
             return;
@@ -301,6 +306,9 @@ static int main_impl(int argc, char** argv)
     delete_action->set_enabled(false);
 
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
+    project_tree_view_context_menu->add_action(open_selected_action);
+    // TODO: Rename, cut, copy, duplicate with new name, show containing folder ...
+    project_tree_view_context_menu->add_separator();
     project_tree_view_context_menu->add_action(new_action);
     project_tree_view_context_menu->add_action(add_existing_file_action);
     project_tree_view_context_menu->add_action(delete_action);
@@ -314,11 +322,12 @@ static int main_impl(int argc, char** argv)
 
     g_project_tree_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (index.is_valid()) {
-            project_tree_view_context_menu->popup(event.screen_position());
+            project_tree_view_context_menu->popup(event.screen_position(), open_selected_action);
         }
     };
 
     g_project_tree_view->on_selection_change = [&] {
+        open_selected_action->set_enabled(!g_project_tree_view->selection().is_empty());
         delete_action->set_enabled(!g_project_tree_view->selection().is_empty());
     };
 
