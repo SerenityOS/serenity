@@ -81,6 +81,8 @@ private:
     void populate_lookup_cache() const;
     KResult resize(u64);
 
+    static u8 file_type_for_directory_entry(const ext2_dir_entry_2&);
+
     Ext2FS& fs();
     const Ext2FS& fs() const;
     Ext2FSInode(Ext2FS&, unsigned index);
