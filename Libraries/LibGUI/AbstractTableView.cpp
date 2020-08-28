@@ -378,6 +378,19 @@ void AbstractTableView::keydown_event(KeyEvent& event)
         selection_update = SelectionUpdate::Shift;
     }
 
+    if (is_tab_key_navigation_enabled()) {
+        if (event.modifiers() == KeyModifier::Mod_Shift && event.key() == KeyCode::Key_Tab) {
+            move_cursor(CursorMovement::Left, SelectionUpdate::Set);
+            event.accept();
+            return;
+        }
+        if (!event.modifiers() && event.key() == KeyCode::Key_Tab) {
+            move_cursor(CursorMovement::Right, SelectionUpdate::Set);
+            event.accept();
+            return;
+        }
+    }
+
     if (event.key() == KeyCode::Key_Left) {
         move_cursor(CursorMovement::Left, selection_update);
         event.accept();

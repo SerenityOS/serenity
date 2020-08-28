@@ -116,6 +116,9 @@ public:
     const ModelIndex& cursor_index() const { return m_cursor_index; }
     void set_cursor(ModelIndex, SelectionUpdate);
 
+    bool is_tab_key_navigation_enabled() const { return m_tab_key_navigation_enabled; }
+    void set_tab_key_navigation_enabled(bool enabled) { m_tab_key_navigation_enabled = enabled; }
+
 protected:
     AbstractView();
     virtual ~AbstractView() override;
@@ -162,6 +165,7 @@ private:
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };
     bool m_activates_on_selection { false };
     bool m_multi_select { true };
+    bool m_tab_key_navigation_enabled { false };
 };
 
 }
