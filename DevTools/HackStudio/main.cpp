@@ -133,7 +133,7 @@ void open_project(String);
 void open_file(const String&);
 bool make_is_available();
 
-EditorWrapper& current_editor_wrapper()
+static EditorWrapper& current_editor_wrapper()
 {
     ASSERT(g_current_editor_wrapper);
     return *g_current_editor_wrapper;
@@ -156,7 +156,7 @@ static String get_full_path_of_serenity_source(const String& file)
     return String::format("%s/%s", serenity_sources_base.string().characters(), relative_path_builder.to_string().characters());
 }
 
-NonnullRefPtr<EditorWrapper> get_editor_of_file(const String& file)
+static NonnullRefPtr<EditorWrapper> get_editor_of_file(const String& file)
 {
     String file_path = file;
 
@@ -177,7 +177,7 @@ static String get_project_executable_path()
     return g_project->path().substring(0, g_project->path().index_of(".").value());
 }
 
-int main_impl(int argc, char** argv)
+static int main_impl(int argc, char** argv)
 {
     if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec unix fattr thread", nullptr) < 0) {
         perror("pledge");
