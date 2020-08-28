@@ -55,6 +55,7 @@ private:
     RefPtr<GUI::Label> m_current_cell_label;
     RefPtr<GUI::TextEditor> m_cell_value_editor;
     RefPtr<GUI::TabWidget> m_tab_widget;
+    bool m_should_change_selected_cells { false };
 
     OwnPtr<Workbook> m_workbook;
 };
