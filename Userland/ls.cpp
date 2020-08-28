@@ -421,7 +421,7 @@ int do_file_system_object_short(const char* path)
         // The offset must be at least 2 because:
         // - With each file an additional char is printed e.g. '@','*'.
         // - Each filename must be separated by a space.
-        size_t column_width = longest_name + (offset > 0 ? offset : 2);
+        size_t column_width = longest_name + max(offset, 2);
         printed_on_row += column_width;
 
         for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
