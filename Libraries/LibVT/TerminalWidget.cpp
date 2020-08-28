@@ -806,6 +806,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         }
 
         m_context_menu_for_hyperlink = GUI::Menu::construct();
+        RefPtr<GUI::Action> context_menu_default_action;
 
         // Go through the list of handlers and see if we can find a nice display name + icon for them.
         // Then add them to the context menu.
@@ -817,10 +818,15 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             auto handler_icon = af->read_entry("Icons", "16x16", {});
 
             auto icon = Gfx::Bitmap::load_from_file(handler_icon);
-
-            m_context_menu_for_hyperlink->add_action(GUI::Action::create(String::format("Open in %s", handler_name.characters()), move(icon), [this, handler](auto&) {
+            auto action = GUI::Action::create(String::format("Open in %s", handler_name.characters()), move(icon), [this, handler](auto&) {
                 Desktop::Launcher::open(m_context_menu_href, handler);
-            }));
+            });
+
+            if (context_menu_default_action.is_null()) {
+                context_menu_default_action = action;
+            }
+
+            m_context_menu_for_hyperlink->add_action(action);
         }
         m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
             GUI::Clipboard::the().set_data(m_context_menu_href);
@@ -829,7 +835,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         m_context_menu_for_hyperlink->add_action(copy_action());
         m_context_menu_for_hyperlink->add_action(paste_action());
 
-        m_context_menu_for_hyperlink->popup(event.screen_position());
+        m_context_menu_for_hyperlink->popup(event.screen_position(), context_menu_default_action);
     }
 }
 
