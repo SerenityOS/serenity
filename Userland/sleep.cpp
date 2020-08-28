@@ -36,10 +36,10 @@ static void handle_sigint(int)
 
 int main(int argc, char** argv)
 {
-    int secs;
+    double fractional_seconds;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(secs, "Number of seconds to sleep for", "num-seconds");
+    args_parser.add_positional_argument(fractional_seconds, "Number of seconds to sleep for (accepts fractions)", "num-seconds");
     args_parser.parse(argc, argv);
 
     struct sigaction sa;
@@ -52,9 +52,21 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    unsigned remaining = sleep(secs);
-    if (remaining) {
-        printf("Sleep interrupted with %u seconds remaining.\n", remaining);
+    useconds_t usecs = 0;
+
+    // We overflow microseconds... lets split the wait.
+    static const auto OVERFLOW_VALUE = UINTMAX_MAX / (1000 * 1000);
+    if (fractional_seconds > OVERFLOW_VALUE) {
+        perror("Number of seconds too large for sleep");
+        usecs = 0;
     }
-    return 0;
+
+    usecs = fractional_seconds * (1000 * 1000);
+
+    int remaining = usleep(usecs);
+    if (remaining) {
+        printf("Sleep interrupted with %d seconds remaining.\n", remaining / (1000 * 1000));
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }
