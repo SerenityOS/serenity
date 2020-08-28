@@ -855,6 +855,28 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     return nwritten;
 }
 
+u8 Ext2FSInode::file_type_for_directory_entry(const ext2_dir_entry_2& entry)
+{
+    switch (entry.file_type) {
+    case EXT2_FT_REG_FILE:
+        return DT_REG;
+    case EXT2_FT_DIR:
+        return DT_DIR;
+    case EXT2_FT_CHRDEV:
+        return DT_CHR;
+    case EXT2_FT_BLKDEV:
+        return DT_BLK;
+    case EXT2_FT_FIFO:
+        return DT_FIFO;
+    case EXT2_FT_SOCK:
+        return EXT2_FT_SOCK;
+    case EXT2_FT_SYMLINK:
+        return DT_LNK;
+    default:
+        return DT_UNKNOWN;
+    }
+}
+
 KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
     LOCKER(m_lock);
@@ -877,7 +899,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
 #ifdef EXT2_DEBUG
             dbg() << "Ext2Inode::traverse_as_directory: " << entry->inode << ", name_len: " << entry->name_len << ", rec_len: " << entry->rec_len << ", file_type: " << entry->file_type << ", name: " << String(entry->name, entry->name_len);
 #endif
-            if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }))
+            if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, file_type_for_directory_entry(*entry) }))
                 break;
         }
         entry = (ext2_dir_entry_2*)((char*)entry + entry->rec_len);
