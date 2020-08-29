@@ -42,12 +42,17 @@ struct RGB {
     u8 b;
 };
 
+// Row strides and offsets for each interlace pass.
+static const int INTERLACE_ROW_STRIDES[] = { 8, 8, 4, 2 };
+static const int INTERLACE_ROW_OFFSETS[] = { 0, 4, 2, 1 };
+
 struct ImageDescriptor {
     u16 x { 0 };
     u16 y { 0 };
     u16 width { 0 };
     u16 height { 0 };
     bool use_global_color_map { true };
+    bool interlaced { false };
     RGB color_map[256];
     u8 lzw_min_code_size { 0 };
     Vector<u8> lzw_encoded_bytes;
@@ -309,6 +314,8 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
         }
 
         int pixel_index = 0;
+        int row = 0;
+        int interlace_pass = 0;
         while (true) {
             Optional<u16> code = decoder.next_code();
             if (!code.has_value()) {
@@ -329,7 +336,7 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
                 auto rgb = color_map[color];
 
                 int x = pixel_index % image.width + image.x;
-                int y = pixel_index / image.width + image.y;
+                int y = row + image.y;
 
                 Color c = Color(rgb.r, rgb.g, rgb.b);
 
@@ -342,6 +349,18 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
                 }
 
                 ++pixel_index;
+                if (pixel_index % image.width == 0) {
+                    if (image.interlaced) {
+                        if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image.height) {
+                            ++interlace_pass;
+                            row = INTERLACE_ROW_OFFSETS[interlace_pass];
+                        } else {
+                            row += INTERLACE_ROW_STRIDES[interlace_pass];
+                        }
+                    } else {
+                        ++row;
+                    }
+                }
             }
         }
 
@@ -506,6 +525,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 return false;
 
             image.use_global_color_map = !(packed_fields & 0x80);
+            image.interlaced = (packed_fields & 0x40) != 0;
 
             if (!image.use_global_color_map) {
                 size_t local_color_table_size = pow(2, (packed_fields & 7) + 1);
