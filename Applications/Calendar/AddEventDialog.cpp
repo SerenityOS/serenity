@@ -63,15 +63,11 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     top_container.set_preferred_size(0, 45);
     top_container.layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto make_label = [&](const StringView& text, GUI::Widget& widget, bool bold = false) {
-        auto& label = widget.add<GUI::Label>(text);
-        label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        label.set_preferred_size(0, 14);
-        if (bold)
-            label.set_font(Gfx::Font::default_bold_font());
-    };
-    make_label("Add title & date:", top_container, true);
+    auto& add_label = top_container.add<GUI::Label>("Add title & date:");
+    add_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    add_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    add_label.set_preferred_size(0, 14);
+    add_label.set_font(Gfx::Font::default_bold_font());
 
     auto& event_title_textbox = top_container.add<GUI::TextBox>();
     event_title_textbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
