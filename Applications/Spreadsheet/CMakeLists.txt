@@ -5,6 +5,7 @@ set(SOURCES
     CellType/Numeric.cpp
     CellType/String.cpp
     CellType/Type.cpp
+    CellTypeDialog.cpp
     HelpWindow.cpp
     JSIntegration.cpp
     Spreadsheet.cpp
