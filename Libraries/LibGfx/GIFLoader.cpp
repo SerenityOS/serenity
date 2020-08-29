@@ -56,7 +56,6 @@ struct ImageDescriptor {
     RGB color_map[256];
     u8 lzw_min_code_size { 0 };
     Vector<u8> lzw_encoded_bytes;
-    RefPtr<Gfx::Bitmap> bitmap;
 
     // Fields from optional graphic control extension block
     enum DisposalMethod : u8 {
@@ -83,15 +82,17 @@ struct GIFLoadingContext {
         NotDecoded = 0,
         Error,
         FrameDescriptorsLoaded,
+        FrameComplete,
     };
     State state { NotDecoded };
-    size_t frames_decoded { 0 };
     const u8* data { nullptr };
     size_t data_size { 0 };
     LogicalScreen logical_screen {};
     u8 background_color_index { 0 };
     NonnullOwnPtrVector<ImageDescriptor> images {};
     size_t loops { 1 };
+    RefPtr<Gfx::Bitmap> frame_buffer;
+    size_t current_frame { 0 };
 };
 
 RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
@@ -265,26 +266,27 @@ private:
     Vector<u8> m_output {};
 };
 
-static void copy_frame(Bitmap& destination, Bitmap& source)
-{
-    for (int y = 0; y < source.height(); ++y) {
-        for (int x = 0; x < source.width(); ++x) {
-            destination.set_pixel(x, y, source.get_pixel(x, y));
-        }
-    }
-}
-
-static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_index)
+static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
 {
     if (frame_index >= context.images.size()) {
         return false;
     }
 
-    for (size_t i = context.frames_decoded; i <= frame_index; ++i) {
+    if (context.state >= GIFLoadingContext::State::FrameComplete && frame_index == context.current_frame) {
+        return true;
+    }
+
+    size_t start_frame = context.current_frame + 1;
+    if (context.state < GIFLoadingContext::State::FrameComplete) {
+        start_frame = 0;
+        context.frame_buffer = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
+    } else if (frame_index < context.current_frame) {
+        start_frame = 0;
+    }
+
+    for (size_t i = start_frame; i <= frame_index; ++i) {
         auto& image = context.images.at(i);
         printf("Image %zu: %d,%d %dx%d  %zu bytes LZW-encoded\n", i, image.x, image.y, image.width, image.height, image.lzw_encoded_bytes.size());
-
-        dbg() << "Decoding frame: " << i + 1 << " of " << context.images.size();
 
         LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
 
@@ -297,20 +299,17 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
         auto background_rgb = color_map[context.background_color_index];
         Color background_color = Color(background_rgb.r, background_rgb.g, background_rgb.b);
 
-        image.bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
-
         if (i == 0) {
-            image.bitmap->fill(background_color);
+            context.frame_buffer->fill(background_color);
         }
 
         const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : ImageDescriptor::DisposalMethod::None;
 
-        if (i > 0 && (previous_image_disposal_method == ImageDescriptor::DisposalMethod::None || previous_image_disposal_method == ImageDescriptor::DisposalMethod::InPlace)) {
-            copy_frame(*image.bitmap, *context.images.at(i - 1).bitmap);
-        } else if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestoreBackground) {
-            image.bitmap->fill(Color(Color::NamedColor::Transparent));
+        if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestoreBackground) {
+            context.frame_buffer->fill(Color(Color::NamedColor::Transparent));
         } else if (i > 1 && previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
-            copy_frame(*image.bitmap, *context.images.at(i - 2).bitmap);
+            // TODO: tricky as it potentially requires remembering _all_ previous frames.
+            // Luckily it seems GIFs with this mode are rare in the wild.
         }
 
         int pixel_index = 0;
@@ -345,7 +344,7 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
                 }
 
                 if (!image.transparent || previous_image_disposal_method == ImageDescriptor::DisposalMethod::None || color != image.transparency_index) {
-                    image.bitmap->set_pixel(x, y, c);
+                    context.frame_buffer->set_pixel(x, y, c);
                 }
 
                 ++pixel_index;
@@ -363,9 +362,10 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
                 }
             }
         }
-
-        ++context.frames_decoded;
     }
+
+    context.current_frame = frame_index;
+    context.state = GIFLoadingContext::State::FrameComplete;
 
     return true;
 }
@@ -610,27 +610,25 @@ IntSize GIFImageDecoderPlugin::size()
 
 RefPtr<Gfx::Bitmap> GIFImageDecoderPlugin::bitmap()
 {
-    return frame(0).image;
+    if (m_context->state < GIFLoadingContext::State::FrameComplete) {
+        return frame(0).image;
+    }
+    return m_context->frame_buffer;
 }
 
 void GIFImageDecoderPlugin::set_volatile()
 {
-    for (size_t i = 0; i < m_context->frames_decoded; ++i) {
-        m_context->images.at(i).bitmap->set_volatile();
+    if (m_context->frame_buffer) {
+        m_context->frame_buffer->set_volatile();
     }
 }
 
 bool GIFImageDecoderPlugin::set_nonvolatile()
 {
-    if (m_context->images.is_empty()) {
-        return false;
+    if (!m_context->frame_buffer) {
+        return true;
     }
-
-    bool success = true;
-    for (size_t i = 0; i < m_context->frames_decoded; ++i) {
-        success &= m_context->images.at(i).bitmap->set_nonvolatile();
-    }
-    return success;
+    return m_context->frame_buffer->set_nonvolatile();
 }
 
 bool GIFImageDecoderPlugin::sniff()
@@ -689,13 +687,13 @@ ImageFrameDescriptor GIFImageDecoderPlugin::frame(size_t i)
         }
     }
 
-    if (!decode_frames_up_to_index(*m_context, i)) {
+    if (!decode_frame(*m_context, i)) {
         m_context->state = GIFLoadingContext::State::Error;
         return {};
     }
 
     ImageFrameDescriptor frame {};
-    frame.image = m_context->images.at(i).bitmap;
+    frame.image = m_context->frame_buffer;
     frame.duration = m_context->images.at(i).duration * 10;
 
     if (frame.duration <= 10) {
