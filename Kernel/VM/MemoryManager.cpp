@@ -65,6 +65,11 @@ MemoryManager& MM
     return *s_the;
 }
 
+bool MemoryManager::is_initialized()
+{
+    return s_the != nullptr;
+}
+
 MemoryManager::MemoryManager()
 {
     ScopedSpinLock lock(s_mm_lock);
@@ -282,8 +287,10 @@ void MemoryManager::initialize(u32 cpu)
 #endif
     Processor::current().set_mm_data(*mm_data);
 
-    if (cpu == 0)
+    if (cpu == 0) {
         s_the = new MemoryManager;
+        kmalloc_enable_expand();
+    }
 }
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)

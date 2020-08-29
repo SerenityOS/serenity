@@ -86,6 +86,7 @@ class MemoryManager {
 
 public:
     static MemoryManager& the();
+    static bool is_initialized();
 
     static void initialize(u32 cpu);
     

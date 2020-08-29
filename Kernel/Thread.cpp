@@ -60,7 +60,7 @@ Thread::Thread(NonnullRefPtr<Process> process)
     dbg() << "Created new thread " << m_process->name() << "(" << m_process->pid().value() << ":" << m_tid.value() << ")";
 #endif
     set_default_signal_dispositions();
-    m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
+    m_fpu_state = (FPUState*)kmalloc_aligned<16>(sizeof(FPUState));
     reset_fpu_state();
     memset(&m_tss, 0, sizeof(m_tss));
     m_tss.iomapbase = sizeof(TSS32);

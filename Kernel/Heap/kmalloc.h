@@ -36,17 +36,19 @@
 void kmalloc_init();
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_impl(size_t);
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_eternal(size_t);
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_page_aligned(size_t);
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_aligned(size_t, size_t alignment);
+
 void* krealloc(void*, size_t);
 void kfree(void*);
-void kfree_aligned(void*);
 
-extern size_t g_kmalloc_bytes_allocated;
-extern size_t g_kmalloc_bytes_free;
-extern size_t g_kmalloc_bytes_eternal;
-extern size_t g_kmalloc_call_count;
-extern size_t g_kfree_call_count;
+struct kmalloc_stats {
+    size_t bytes_allocated;
+    size_t bytes_free;
+    size_t bytes_eternal;
+    size_t kmalloc_call_count;
+    size_t kfree_call_count;
+};
+void get_kmalloc_stats(kmalloc_stats&);
+
 extern bool g_dump_kmalloc_stacks;
 
 inline void* operator new(size_t, void* p) { return p; }
@@ -61,6 +63,25 @@ inline void* operator new[](size_t, void* p) { return p; }
 #endif
     return kmalloc_impl(size);
 }
+
+template<size_t ALIGNMENT>
+[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] inline void* kmalloc_aligned(size_t size)
+{
+    static_assert(ALIGNMENT > 1);
+    static_assert(ALIGNMENT < 255);
+    void* ptr = kmalloc(size + ALIGNMENT + sizeof(u8));
+    size_t max_addr = (size_t)ptr + ALIGNMENT;
+    void* aligned_ptr = (void*)(max_addr - (max_addr % ALIGNMENT));
+    ((u8*)aligned_ptr)[-1] = (u8)((u8*)aligned_ptr - (u8*)ptr);
+    return aligned_ptr;
+}
+
+inline void kfree_aligned(void* ptr)
+{
+    kfree((u8*)ptr - ((u8*)ptr)[-1]);
+}
+
+void kmalloc_enable_expand();
 
 extern u8* const kmalloc_start;
 extern u8* const kmalloc_end;
