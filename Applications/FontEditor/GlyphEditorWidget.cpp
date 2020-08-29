@@ -99,9 +99,9 @@ void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
     int x = (event.x() - 1) / m_scale;
     int y = (event.y() - 1) / m_scale;
     auto bitmap = font().glyph_bitmap(m_glyph);
-    if (x >= bitmap.width())
+    if (x < 0 || x >= bitmap.width())
         return;
-    if (y >= bitmap.height())
+    if (y < 0 || y >= bitmap.height())
         return;
     if (bitmap.bit_at(x, y) == set)
         return;
