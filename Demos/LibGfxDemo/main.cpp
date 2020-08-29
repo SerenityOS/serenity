@@ -203,6 +203,7 @@ int main(int argc, char** argv)
     window->set_title("LibGfx Demo");
     window->set_resizable(false);
     window->resize(WIDTH, HEIGHT);
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-libgfx-demo.png"));
     window->set_main_widget<Canvas>();
     window->show();
 
