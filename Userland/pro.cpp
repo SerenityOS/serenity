@@ -24,20 +24,116 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/GenericLexer.h>
+#include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/SharedBuffer.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
 #include <stdio.h>
 
+// FIXME: Move this somewhere else when it's needed (e.g. in the Browser)
+class ContentDispositionParser {
+public:
+    ContentDispositionParser(const StringView& value)
+    {
+        GenericLexer lexer(value);
+
+        lexer.consume_while([](auto c) { return is_whitespace(c); });
+
+        if (lexer.consume_specific("inline")) {
+            m_kind = Kind::Inline;
+            if (!lexer.is_eof())
+                m_might_be_wrong = true;
+            return;
+        }
+
+        if (lexer.consume_specific("attachment")) {
+            m_kind = Kind::Attachment;
+            if (lexer.consume_specific(";")) {
+                lexer.consume_while([](auto c) { return is_whitespace(c); });
+                if (lexer.consume_specific("filename=")) {
+                    m_filename = lexer.consume_quoted_string();
+                } else {
+                    m_might_be_wrong = true;
+                }
+            }
+            return;
+        }
+
+        if (lexer.consume_specific("form-data")) {
+            m_kind = Kind::FormData;
+            while (lexer.consume_specific(";")) {
+                lexer.consume_while([](auto c) { return is_whitespace(c); });
+                if (lexer.consume_specific("name=")) {
+                    m_name = lexer.consume_quoted_string();
+                } else if (lexer.consume_specific("filename=")) {
+                    m_filename = lexer.consume_quoted_string();
+                } else {
+                    m_might_be_wrong = true;
+                }
+            }
+
+            return;
+        }
+
+        // FIXME: Support 'filename*'
+        m_might_be_wrong = true;
+    }
+
+    enum class Kind {
+        Inline,
+        Attachment,
+        FormData,
+    };
+
+    const StringView& filename() const { return m_filename; }
+    const StringView& name() const { return m_name; }
+    Kind kind() const { return m_kind; }
+    bool might_be_wrong() const { return m_might_be_wrong; }
+
+private:
+    StringView m_filename;
+    StringView m_name;
+    Kind m_kind { Kind::Inline };
+    bool m_might_be_wrong { false };
+};
+
+static void do_write(const ByteBuffer& payload)
+{
+    size_t length_remaining = payload.size();
+    size_t length_written = 0;
+    while (length_remaining > 0) {
+        auto nwritten = fwrite(payload.offset_pointer(length_written), sizeof(char), length_remaining, stdout);
+        if (nwritten > 0) {
+            length_remaining -= nwritten;
+            length_written += nwritten;
+            continue;
+        }
+
+        if (feof(stdout)) {
+            fprintf(stderr, "pro: unexpected eof while writing\n");
+            return;
+        }
+
+        if (ferror(stdout)) {
+            fprintf(stderr, "pro: error while writing\n");
+            return;
+        }
+    }
+}
+
 int main(int argc, char** argv)
 {
     const char* url_str = nullptr;
+    bool save_at_provided_name = false;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O');
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
     args_parser.parse(argc, argv);
 
@@ -55,6 +151,7 @@ int main(int argc, char** argv)
         fprintf(stderr, "Failed to start download for '%s'\n", url_str);
         return 1;
     }
+
     u32 previous_downloaded_size { 0 };
     timeval prev_time, current_time, time_diff;
     gettimeofday(&prev_time, nullptr);
@@ -79,11 +176,42 @@ int main(int argc, char** argv)
         previous_downloaded_size = downloaded_size;
         prev_time = current_time;
     };
-    download->on_finish = [&](bool success, auto& payload, auto, auto&, auto) {
+    download->on_finish = [&](bool success, auto& payload, auto, auto& response_headers, auto) {
         fprintf(stderr, "\033]9;-1;\033\\");
         fprintf(stderr, "\n");
+        if (success && save_at_provided_name) {
+            String output_name;
+            if (auto content_disposition = response_headers.get("Content-Disposition"); content_disposition.has_value()) {
+                auto& value = content_disposition.value();
+                ContentDispositionParser parser(value);
+                output_name = parser.filename();
+            }
+
+            if (output_name.is_empty())
+                output_name = url.path();
+
+            LexicalPath path { output_name };
+            output_name = path.basename();
+
+            // The URL didn't have a name component, e.g. 'serenityos.org'
+            if (output_name.is_empty() || output_name == "/") {
+                int i = -1;
+                do {
+                    output_name = url.host();
+                    if (i > -1)
+                        output_name = String::format("%s.%d", output_name.characters(), i);
+                    ++i;
+                } while (Core::File::exists(output_name));
+            }
+
+            if (freopen(output_name.characters(), "w", stdout) == nullptr) {
+                perror("freopen");
+                success = false; // oops!
+                loop.quit(1);
+            }
+        }
         if (success)
-            write(STDOUT_FILENO, payload.data(), payload.size());
+            do_write(payload);
         else
             fprintf(stderr, "Download failed :(\n");
         loop.quit(0);
