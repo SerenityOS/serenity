@@ -151,9 +151,11 @@ Tab::Tab(Type type)
     };
 
     m_link_context_menu = GUI::Menu::construct();
-    m_link_context_menu->add_action(GUI::Action::create("Open", [this](auto&) {
+    auto default_action = GUI::Action::create("Open", [this](auto&) {
         hooks().on_link_click(m_link_context_menu_url, "", 0);
-    }));
+    });
+    m_link_context_menu->add_action(default_action);
+    m_link_context_menu_default_action = default_action;
     m_link_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
         hooks().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
@@ -174,7 +176,7 @@ Tab::Tab(Type type)
 
     hooks().on_link_context_menu_request = [this](auto& url, auto& screen_position) {
         m_link_context_menu_url = url;
-        m_link_context_menu->popup(screen_position);
+        m_link_context_menu->popup(screen_position, m_link_context_menu_default_action);
     };
 
     hooks().on_link_middle_click = [this](auto& href, auto&, auto) {
