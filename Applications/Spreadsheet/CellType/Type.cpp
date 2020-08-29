@@ -43,6 +43,14 @@ const CellType* CellType::get_by_name(const StringView& name)
     return s_cell_types.get(name).value_or(nullptr);
 }
 
+Vector<StringView> CellType::names()
+{
+    Vector<StringView> names;
+    for (auto& it : s_cell_types)
+        names.append(it.key);
+    return names;
+}
+
 CellType::CellType(const StringView& name)
 {
     ASSERT(!s_cell_types.contains(name));

@@ -67,8 +67,13 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return cell->typed_display();
     }
 
-    if (role == GUI::ModelRole::TextAlignment)
-        return {};
+    if (role == GUI::ModelRole::TextAlignment) {
+        const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        if (!cell)
+            return {};
+
+        return cell->type_metadata().alignment;
+    }
 
     if (role == GUI::ModelRole::ForegroundColor) {
         const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });

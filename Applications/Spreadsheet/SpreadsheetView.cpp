@@ -25,9 +25,11 @@
  */
 
 #include "SpreadsheetView.h"
+#include "CellTypeDialog.h"
 #include "SpreadsheetModel.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TableView.h>
@@ -112,6 +114,37 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view->on_activation = [this](auto&) {
         m_table_view->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set);
     };
+
+    m_table_view->on_context_menu_request = [&](const GUI::ModelIndex&, const GUI::ContextMenuEvent& event) {
+        // NOTE: We ignore the specific cell for now.
+        m_cell_range_context_menu->popup(event.screen_position());
+    };
+
+    m_cell_range_context_menu = GUI::Menu::construct();
+    m_cell_range_context_menu->add_action(GUI::Action::create("Type and Formatting...", [this](auto&) {
+        Vector<Position> positions;
+        for (auto& index : m_table_view->selection().indexes()) {
+            Position position { m_sheet->column(index.column()), (size_t)index.row() };
+            positions.append(move(position));
+        }
+
+        if (positions.is_empty()) {
+            auto& index = m_table_view->cursor_index();
+            Position position { m_sheet->column(index.column()), (size_t)index.row() };
+            positions.append(move(position));
+        }
+
+        auto dialog = CellTypeDialog::construct(positions, *m_sheet, window());
+        if (dialog->exec() == GUI::Dialog::ExecOK) {
+            for (auto& position : positions) {
+                auto& cell = m_sheet->ensure(position);
+                cell.set_type(dialog->type());
+                cell.set_type_metadata(dialog->metadata());
+            }
+
+            m_table_view->update();
+        }
+    }));
 }
 
 void SpreadsheetView::hide_event(GUI::HideEvent&)

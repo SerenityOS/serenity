@@ -138,6 +138,7 @@ private:
 
     NonnullRefPtr<Sheet> m_sheet;
     RefPtr<GUI::TableView> m_table_view;
+    RefPtr<GUI::Menu> m_cell_range_context_menu;
 };
 
 }
