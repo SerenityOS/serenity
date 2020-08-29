@@ -2,3 +2,7 @@
 Name=LibGfx Demo
 Executable=/bin/LibGfxDemo
 Category=Demos
+
+[Icons]
+16x16=/res/icons/16x16/app-libgfx-demo.png
+32x32=
