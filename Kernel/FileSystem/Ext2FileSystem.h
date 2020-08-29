@@ -110,6 +110,8 @@ public:
 
     virtual bool supports_watchers() const override { return true; }
 
+    virtual u8 internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const override;
+
 private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
