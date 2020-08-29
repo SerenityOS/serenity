@@ -43,6 +43,7 @@ namespace GUI {
     F(javascript, ".js")       \
     F(library, ".so", ".a")    \
     F(markdown, ".md")         \
+    F(music, ".midi")          \
     F(object, ".o", ".obj")    \
     F(pdf, ".pdf")             \
     F(python, ".py")           \
