@@ -4,5 +4,5 @@ Executable=/bin/ThemeEditor
 Category=Development
 
 [Icons]
-16x16=/res/icons/16x16/themes.png
+16x16=/res/icons/16x16/app-theme-editor.png
 32x32=
