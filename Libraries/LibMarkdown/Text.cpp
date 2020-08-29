@@ -29,6 +29,8 @@
 #include <LibMarkdown/Text.h>
 #include <string.h>
 
+//#define DEBUG_MARKDOWN
+
 namespace Markdown {
 
 static String unescape(const StringView& text)
@@ -238,13 +240,17 @@ Optional<Text> Text::parse(const StringView& str)
             current_link_is_actually_img = true;
             break;
         case '[':
+#ifdef DEBUG_MARKDOWN
             if (first_span_in_the_current_link != -1)
                 dbg() << "Dropping the outer link";
+#endif
             first_span_in_the_current_link = spans.size();
             break;
         case ']': {
             if (first_span_in_the_current_link == -1) {
+#ifdef DEBUG_MARKDOWN
                 dbg() << "Unmatched ]";
+#endif
                 continue;
             }
             ScopeGuard guard = [&] {
