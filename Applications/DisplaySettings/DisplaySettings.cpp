@@ -25,7 +25,7 @@
  */
 
 #include "DisplaySettings.h"
-#include "ItemListModel.h"
+#include <LibGUI/ItemListModel.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
@@ -122,7 +122,7 @@ void DisplaySettingsWidget::create_frame()
     m_wallpaper_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_wallpaper_combo->set_preferred_size(0, 22);
     m_wallpaper_combo->set_only_allow_values_from_model(true);
-    m_wallpaper_combo->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
+    m_wallpaper_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_wallpapers));
     m_wallpaper_combo->on_change = [this](auto& text, const GUI::ModelIndex& index) {
         String path = text;
         if (m_monitor_widget->set_wallpaper(path)) {
@@ -180,7 +180,7 @@ void DisplaySettingsWidget::create_frame()
     m_mode_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_mode_combo->set_preferred_size(0, 22);
     m_mode_combo->set_only_allow_values_from_model(true);
-    m_mode_combo->set_model(*ItemListModel<AK::String>::create(m_modes));
+    m_mode_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_modes));
     m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         this->m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
         this->m_monitor_widget->update();
@@ -203,7 +203,7 @@ void DisplaySettingsWidget::create_frame()
     m_resolution_combo->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_resolution_combo->set_preferred_size(0, 22);
     m_resolution_combo->set_only_allow_values_from_model(true);
-    m_resolution_combo->set_model(*ItemListModel<Gfx::IntSize>::create(m_resolutions));
+    m_resolution_combo->set_model(*GUI::ItemListModel<Gfx::IntSize>::create(m_resolutions));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         this->m_monitor_widget->set_desktop_resolution(m_resolutions.at(index.row()));
         this->m_monitor_widget->update();
