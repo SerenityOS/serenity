@@ -71,12 +71,18 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
     m_separator = GUI::Widget::construct();
 
     m_context_menu = GUI::Menu::construct();
-    m_context_menu->add_action(GUI::Action::create("Delete", [this](auto&) {
-        remove_bookmark(m_context_menu_url);
-    }));
+    auto default_action = GUI::Action::create("Open", [this](auto&) {
+        if (on_bookmark_click)
+            on_bookmark_click(m_context_menu_url, Mod_None);
+    });
+    m_context_menu_default_action = default_action;
+    m_context_menu->add_action(default_action);
     m_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
         if (on_bookmark_click)
             on_bookmark_click(m_context_menu_url, Mod_Ctrl);
+    }));
+    m_context_menu->add_action(GUI::Action::create("Delete", [this](auto&) {
+        remove_bookmark(m_context_menu_url);
     }));
 
     Vector<GUI::JsonArrayModel::FieldSpec> fields;
@@ -141,7 +147,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
 
         button.on_context_menu_request = [this, url](auto& context_menu_event) {
             m_context_menu_url = url;
-            m_context_menu->popup(context_menu_event.screen_position());
+            m_context_menu->popup(context_menu_event.screen_position(), m_context_menu_default_action);
         };
 
         width += rect.width();
