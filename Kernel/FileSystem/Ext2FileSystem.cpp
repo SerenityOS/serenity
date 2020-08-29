@@ -454,6 +454,8 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
     if (!blocks_remaining)
         return list;
 
+    // Don't need to make copy of add_block, since this capture will only
+    // be called before block_list_for_inode_impl finishes.
     auto process_block_array = [&](unsigned array_block_index, auto&& callback) {
         if (include_block_list_blocks)
             add_block(array_block_index);
