@@ -86,15 +86,9 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    auto update_statusbar_cursor_position = [this] {
-        StringBuilder builder;
-        builder.appendf("Line: %d, Column: %d", m_editor->cursor().line() + 1, m_editor->cursor().column());
-        m_statusbar->set_text(builder.to_string());
-    };
-
     m_page_view = splitter.add<Web::InProcessWebView>();
     m_page_view->set_visible(false);
-    m_page_view->on_link_hover = [this, update_statusbar_cursor_position = move(update_statusbar_cursor_position)](auto& url) {
+    m_page_view->on_link_hover = [this](auto& url) {
         if (url.is_valid())
             m_statusbar->set_text(url.to_string());
         else
@@ -300,9 +294,7 @@ TextEditorWidget::TextEditorWidget()
 
     m_statusbar = add<GUI::StatusBar>();
 
-    m_editor->on_cursor_change = [update_statusbar_cursor_position = move(update_statusbar_cursor_position)] {
-        update_statusbar_cursor_position();
-    };
+    m_editor->on_cursor_change = [this] { update_statusbar_cursor_position(); };
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
@@ -642,4 +634,11 @@ void TextEditorWidget::update_html_preview()
     auto current_scroll_pos = m_page_view->visible_content_rect();
     m_page_view->load_html(m_editor->text(), URL::create_with_file_protocol(m_path));
     m_page_view->scroll_into_view(current_scroll_pos, true, true);
+}
+
+void TextEditorWidget::update_statusbar_cursor_position()
+{
+    StringBuilder builder;
+    builder.appendf("Line: %d, Column: %d", m_editor->cursor().line() + 1, m_editor->cursor().column());
+    m_statusbar->set_text(builder.to_string());
 }
