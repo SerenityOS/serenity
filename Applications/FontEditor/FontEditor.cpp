@@ -263,7 +263,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
         info_label.set_text(builder.to_string());
     };
 
-    fixed_width_checkbox.on_checked = [&](bool checked) {
+    fixed_width_checkbox.on_checked = [&, update_demo](bool checked) {
         m_edited_font->set_fixed_width(checked);
         glyph_width_spinbox.set_enabled(!m_edited_font->is_fixed_width());
         glyph_width_spinbox.set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
