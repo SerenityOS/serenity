@@ -30,19 +30,21 @@
 #include <AK/Vector.h>
 #include <LibGUI/Model.h>
 
+namespace GUI {
+
 template<typename T>
-class ItemListModel final : public GUI::Model {
+class ItemListModel final : public Model {
 public:
-    static NonnullRefPtr<ItemListModel> create(Vector<T>& data) { return adopt(*new ItemListModel<T>(data)); }
+    static NonnullRefPtr<ItemListModel> create(const Vector<T>& data) { return adopt(*new ItemListModel<T>(data)); }
 
     virtual ~ItemListModel() override { }
 
-    virtual int row_count(const GUI::ModelIndex&) const override
+    virtual int row_count(const ModelIndex&) const override
     {
         return m_data.size();
     }
 
-    virtual int column_count(const GUI::ModelIndex&) const override
+    virtual int column_count(const ModelIndex&) const override
     {
         return 1;
     }
@@ -52,11 +54,11 @@ public:
         return "Data";
     }
 
-    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
+    virtual Variant data(const ModelIndex& index, ModelRole role) const override
     {
-        if (role == GUI::ModelRole::TextAlignment)
+        if (role == ModelRole::TextAlignment)
             return Gfx::TextAlignment::CenterLeft;
-        if (role == GUI::ModelRole::Display)
+        if (role == ModelRole::Display)
             return m_data.at(index.row());
 
         return {};
@@ -68,10 +70,12 @@ public:
     }
 
 private:
-    explicit ItemListModel(Vector<T>& data)
+    explicit ItemListModel(const Vector<T>& data)
         : m_data(data)
     {
     }
 
-    Vector<T>& m_data;
+    const Vector<T>& m_data;
 };
+
+}
