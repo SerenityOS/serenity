@@ -260,6 +260,15 @@ private:
     Vector<u8> m_output {};
 };
 
+static void copy_frame(Bitmap& destination, Bitmap& source)
+{
+    for (int y = 0; y < source.height(); ++y) {
+        for (int x = 0; x < source.width(); ++x) {
+            destination.set_pixel(x, y, source.get_pixel(x, y));
+        }
+    }
+}
+
 static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_index)
 {
     if (frame_index >= context.images.size()) {
@@ -285,18 +294,18 @@ static bool decode_frames_up_to_index(GIFLoadingContext& context, size_t frame_i
 
         image.bitmap = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
 
+        if (i == 0) {
+            image.bitmap->fill(background_color);
+        }
+
         const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : ImageDescriptor::DisposalMethod::None;
 
-        if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::InPlace) {
-            for (int y = 0; y < image.bitmap->height(); ++y) {
-                for (int x = 0; x < image.bitmap->width(); ++x) {
-                    image.bitmap->set_pixel(x, y, context.images.at(i - 1).bitmap->get_pixel(x, y));
-                }
-            }
+        if (i > 0 && (previous_image_disposal_method == ImageDescriptor::DisposalMethod::None || previous_image_disposal_method == ImageDescriptor::DisposalMethod::InPlace)) {
+            copy_frame(*image.bitmap, *context.images.at(i - 1).bitmap);
         } else if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestoreBackground) {
-            image.bitmap->fill(background_color);
-        } else if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
             image.bitmap->fill(Color(Color::NamedColor::Transparent));
+        } else if (i > 1 && previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
+            copy_frame(*image.bitmap, *context.images.at(i - 2).bitmap);
         }
 
         int pixel_index = 0;
