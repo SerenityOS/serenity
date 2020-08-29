@@ -263,10 +263,9 @@ NonnullRefPtr<Program> Parser::parse_program()
 
 NonnullRefPtr<Statement> Parser::parse_statement()
 {
-    auto statement = [this]() -> NonnullRefPtr<Statement> {
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::Class:
-      return parse_class_declaration();
+        return parse_class_declaration();
     case TokenType::Function: {
         auto declaration = parse_function_node<FunctionDeclaration>();
         m_parser_state.m_function_scopes.last().append(declaration);
@@ -291,7 +290,7 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::Break:
         return parse_break_statement();
     case TokenType::Continue:
-         return parse_continue_statement();
+        return parse_continue_statement();
     case TokenType::Switch:
         return parse_switch_statement();
     case TokenType::Do:
@@ -299,7 +298,7 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::While:
         return parse_while_statement();
     case TokenType::Debugger:
-         return parse_debugger_statement();
+        return parse_debugger_statement();
     case TokenType::Semicolon:
         consume();
         return create_ast_node<EmptyStatement>();
@@ -317,9 +316,7 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         expected("statement (missing switch case)");
         consume();
         return create_ast_node<ErrorStatement>();
-    } }();
-
-    return statement;
+    }
 }
 
 RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens)
