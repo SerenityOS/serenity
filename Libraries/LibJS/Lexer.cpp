@@ -248,17 +248,17 @@ bool Lexer::slash_means_division() const
 {
     auto type = m_current_token.type();
     return type == TokenType::BigIntLiteral
-           || type == TokenType::BoolLiteral
-           || type == TokenType::BracketClose
-           || type == TokenType::CurlyClose
-           || type == TokenType::Identifier
-           || type == TokenType::NullLiteral
-           || type == TokenType::NumericLiteral
-           || type == TokenType::ParenClose
-           || type == TokenType::RegexLiteral
-           || type == TokenType::StringLiteral
-           || type == TokenType::TemplateLiteralEnd
-           || type == TokenType::This;
+        || type == TokenType::BoolLiteral
+        || type == TokenType::BracketClose
+        || type == TokenType::CurlyClose
+        || type == TokenType::Identifier
+        || type == TokenType::NullLiteral
+        || type == TokenType::NumericLiteral
+        || type == TokenType::ParenClose
+        || type == TokenType::RegexLiteral
+        || type == TokenType::StringLiteral
+        || type == TokenType::TemplateLiteralEnd
+        || type == TokenType::This;
 }
 
 Token Lexer::next()
@@ -292,6 +292,8 @@ Token Lexer::next()
     }
 
     size_t value_start = m_position;
+    size_t value_start_line_number = m_line_number;
+    size_t value_start_column_number = m_line_column;
     auto token_type = TokenType::Invalid;
 
     if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && isalpha(m_current_char)) {
@@ -511,8 +513,8 @@ Token Lexer::next()
         token_type,
         m_source.substring_view(trivia_start - 1, value_start - trivia_start),
         m_source.substring_view(value_start - 1, m_position - value_start),
-        m_line_number,
-        m_line_column - m_position + value_start);
+        value_start_line_number,
+        value_start_column_number);
 
     return m_current_token;
 }
