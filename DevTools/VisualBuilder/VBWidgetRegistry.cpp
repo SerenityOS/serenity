@@ -154,11 +154,8 @@ static RefPtr<GUI::Widget> build_gwidget(VBWidgetType type, GUI::Widget* parent)
 RefPtr<GUI::Widget> VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GUI::Widget* parent, NonnullOwnPtrVector<VBProperty>& properties)
 {
     auto gwidget = ::build_gwidget(type, parent);
-    auto add_readonly_property = [&](const String& name, const GUI::Variant& value) {
-        auto property = make<VBProperty>(widget, name, value);
-        property->set_readonly(true);
-        properties.append(move(property));
-    };
-    add_readonly_property("class", to_class_name(type));
+    auto property = make<VBProperty>(widget, "class", to_class_name(type));
+    property->set_readonly(true);
+    properties.append(move(property));
     return gwidget;
 }
