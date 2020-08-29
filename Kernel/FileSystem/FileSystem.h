@@ -77,11 +77,14 @@ public:
         u8 file_type { 0 };
     };
 
-    virtual void flush_writes() { }
+    virtual void flush_writes() {}
 
     size_t block_size() const { return m_block_size; }
 
     virtual bool is_file_backed() const { return false; }
+
+    // Converts file types that are used internally by the filesystem to DT_* types
+    virtual u8 internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const { return entry.file_type; }
 
 protected:
     FS();
