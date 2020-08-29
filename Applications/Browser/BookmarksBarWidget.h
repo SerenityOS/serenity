@@ -70,6 +70,7 @@ private:
     RefPtr<GUI::Menu> m_additional_menu;
 
     RefPtr<GUI::Menu> m_context_menu;
+    RefPtr<GUI::Action> m_context_menu_default_action;
     String m_context_menu_url;
 
     NonnullRefPtrVector<GUI::Button> m_bookmarks;
