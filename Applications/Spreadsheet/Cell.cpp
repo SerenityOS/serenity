@@ -60,12 +60,16 @@ void Cell::set_data(JS::Value new_data)
     evaluated_data = move(new_data);
 }
 
+void Cell::set_type(const CellType* type)
+{
+    m_type = type;
+}
+
 void Cell::set_type(const StringView& name)
 {
     auto* cell_type = CellType::get_by_name(name);
     if (cell_type) {
-        m_type = cell_type;
-        return;
+        return set_type(cell_type);
     }
 
     ASSERT_NOT_REACHED();

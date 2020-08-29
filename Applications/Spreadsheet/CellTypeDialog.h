@@ -28,71 +28,38 @@
 
 #include "CellType/Type.h"
 #include "Forward.h"
-#include "JSIntegration.h"
-#include <AK/String.h>
-#include <AK/Types.h>
-#include <AK/WeakPtr.h>
+#include <LibGUI/Dialog.h>
 
 namespace Spreadsheet {
 
-struct Cell : public Weakable<Cell> {
-    Cell(String data, WeakPtr<Sheet> sheet)
-        : dirty(false)
-        , data(move(data))
-        , kind(LiteralString)
-        , sheet(sheet)
-    {
-    }
+class CellTypeDialog : public GUI::Dialog {
+    C_OBJECT(CellTypeDialog);
 
-    Cell(String source, JS::Value&& cell_value, WeakPtr<Sheet> sheet)
-        : dirty(false)
-        , data(move(source))
-        , evaluated_data(move(cell_value))
-        , kind(Formula)
-        , sheet(sheet)
-    {
-    }
+public:
+    CellTypeMetadata metadata() const;
+    const CellType* type() const { return m_type; }
 
-    void reference_from(Cell*);
-
-    void set_data(String new_data);
-    void set_data(JS::Value new_data);
-
-    void set_type(const StringView& name);
-    void set_type(const CellType*);
-    void set_type_metadata(CellTypeMetadata&&);
-
-    String typed_display() const;
-    JS::Value typed_js_data() const;
-
-    const CellType& type() const;
-    const CellTypeMetadata& type_metadata() const { return m_type_metadata; }
-    CellTypeMetadata& type_metadata() { return m_type_metadata; }
-
-    String source() const;
-
-    JS::Value js_data();
-
-    void update(Badge<Sheet>) { update_data(); }
-    void update();
-
-    enum Kind {
-        LiteralString,
-        Formula,
+    enum class HorizontalAlignment : int {
+        Left = 0,
+        Center,
+        Right,
+    };
+    enum class VerticalAlignment : int {
+        Top = 0,
+        Center,
+        Bottom,
     };
 
-    bool dirty { false };
-    bool evaluated_externally { false };
-    String data;
-    JS::Value evaluated_data;
-    Kind kind { LiteralString };
-    WeakPtr<Sheet> sheet;
-    Vector<WeakPtr<Cell>> referencing_cells;
-    const CellType* m_type { nullptr };
-    CellTypeMetadata m_type_metadata;
-
 private:
-    void update_data();
+    CellTypeDialog(const Vector<Position>&, Sheet&, GUI::Window* parent = nullptr);
+    void setup_tabs(GUI::TabWidget&, const Vector<Position>&, Sheet&);
+
+    const CellType* m_type { nullptr };
+
+    int m_length { -1 };
+    String m_format;
+    HorizontalAlignment m_horizontal_alignment { HorizontalAlignment::Right };
+    VerticalAlignment m_vertical_alignment { VerticalAlignment::Center };
 };
 
 }
