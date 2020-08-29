@@ -77,7 +77,7 @@ public:
             }
         }
 
-        return discard_or_error(count);
+        return m_stream.discard_or_error(count);
     }
 
     u32 read_bits(size_t count)
