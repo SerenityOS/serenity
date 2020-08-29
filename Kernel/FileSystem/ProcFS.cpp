@@ -795,17 +795,21 @@ static Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
 Optional<KBuffer> procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
+    
+    kmalloc_stats stats;
+    get_kmalloc_stats(stats);
+    
     KBufferBuilder builder;
     JsonObjectSerializer<KBufferBuilder> json { builder };
-    json.add("kmalloc_allocated", g_kmalloc_bytes_allocated);
-    json.add("kmalloc_available", g_kmalloc_bytes_free);
-    json.add("kmalloc_eternal_allocated", g_kmalloc_bytes_eternal);
+    json.add("kmalloc_allocated", stats.bytes_allocated);
+    json.add("kmalloc_available", stats.bytes_free);
+    json.add("kmalloc_eternal_allocated", stats.bytes_eternal);
     json.add("user_physical_allocated", MM.user_physical_pages_used());
     json.add("user_physical_available", MM.user_physical_pages() - MM.user_physical_pages_used());
     json.add("super_physical_allocated", MM.super_physical_pages_used());
     json.add("super_physical_available", MM.super_physical_pages() - MM.super_physical_pages_used());
-    json.add("kmalloc_call_count", g_kmalloc_call_count);
-    json.add("kfree_call_count", g_kfree_call_count);
+    json.add("kmalloc_call_count", stats.kmalloc_call_count);
+    json.add("kfree_call_count", stats.kfree_call_count);
     slab_alloc_stats([&json](size_t slab_size, size_t num_allocated, size_t num_free) {
         auto prefix = String::format("slab_%zu", slab_size);
         json.add(String::format("%s_num_allocated", prefix.characters()), num_allocated);
