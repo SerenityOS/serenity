@@ -1412,7 +1412,12 @@ void SoftCPU::FCHS(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FABS(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FTST(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FXAM(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FLDCW(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FLDCW(const X86::Instruction& insn)
+{
+    m_fpu_cw = insn.modrm().read16<ValueWithShadow<u16>>(*this, insn);
+}
+
 void SoftCPU::FLD1(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FLDL2T(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FLDL2E(const X86::Instruction&) { TODO_INSN(); }
@@ -1429,7 +1434,12 @@ void SoftCPU::FXTRACT(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FPREM1(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FDECSTP(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FINCSTP(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FNSTCW(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FNSTCW(const X86::Instruction& insn)
+{
+    insn.modrm().write16(*this, insn, m_fpu_cw);
+}
+
 void SoftCPU::FPREM(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FYL2XP1(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FSQRT(const X86::Instruction&) { TODO_INSN(); }
