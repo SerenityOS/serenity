@@ -272,8 +272,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$ioctl(arg1, arg2, arg3);
     case SC_get_dir_entries:
         return virt$get_dir_entries(arg1, arg2, arg3);
-    case SC_usleep:
-        return virt$usleep(arg1);
     case SC_shbuf_create:
         return virt$shbuf_create(arg1, arg2);
     case SC_shbuf_allow_pid:
@@ -382,11 +380,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         dump_backtrace();
         TODO();
     }
-}
-
-int Emulator::virt$usleep(useconds_t us)
-{
-    return syscall(SC_usleep, us);
 }
 
 int Emulator::virt$shbuf_create(int size, FlatPtr buffer)

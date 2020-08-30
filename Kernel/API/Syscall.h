@@ -117,7 +117,6 @@ namespace Kernel {
     S(poll)                   \
     S(rmdir)                  \
     S(chmod)                  \
-    S(usleep)                 \
     S(socket)                 \
     S(bind)                   \
     S(accept)                 \
@@ -241,7 +240,7 @@ struct ImmutableBufferArgument {
 };
 
 struct StringListArgument {
-    Userspace<StringArgument*> strings { };
+    Userspace<StringArgument*> strings {};
     size_t length { 0 };
 };
 
