@@ -35,6 +35,7 @@ namespace HackStudio {
 struct RegisterData {
     String name;
     u32 value;
+    bool changed { false };
 };
 
 class RegistersModel final : public GUI::Model {
@@ -42,6 +43,11 @@ public:
     static RefPtr<RegistersModel> create(const PtraceRegisters& regs)
     {
         return adopt(*new RegistersModel(regs));
+    }
+
+    static RefPtr<RegistersModel> create(const PtraceRegisters& current_regs, const PtraceRegisters& previous_regs)
+    {
+        return adopt(*new RegistersModel(current_regs, previous_regs));
     }
 
     enum Column {
@@ -58,9 +64,13 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
     virtual void update() override;
 
+    const PtraceRegisters& raw_registers() const { return m_raw_registers; }
+
 private:
     explicit RegistersModel(const PtraceRegisters& regs);
+    RegistersModel(const PtraceRegisters& current_regs, const PtraceRegisters& previous_regs);
 
+    PtraceRegisters m_raw_registers;
     Vector<RegisterData> m_registers;
 };
 
