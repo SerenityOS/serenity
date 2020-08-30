@@ -44,11 +44,16 @@
 
 namespace Gfx {
 
-static bool size_would_overflow(BitmapFormat format, const IntSize& size)
+static bool size_would_overflow(BitmapFormat, const IntSize& size)
 {
     if (size.width() < 0 || size.height() < 0)
         return true;
-    return Checked<size_t>::multiplication_would_overflow(size.width(), size.height(), Bitmap::bpp_for_format(format));
+    // This check is a bit arbitrary, but should protect us from most shenanigans:
+    if (size.width() >= 32768 || size.height() >= 32768)
+        return true;
+    // This check is absolutely necessary. Note that Bitmap::Bitmap always stores
+    // data as RGBA32 internally, so currently we ignore the indicated format.
+    return Checked<size_t>::multiplication_would_overflow(size.width(), size.height(), sizeof(RGBA32));
 }
 
 RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const IntSize& size)
