@@ -1,3 +1,12 @@
+add_executable(FuzzBMP FuzzBMP.cpp)
+target_compile_options(FuzzBMP
+    PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
+    )
+target_link_libraries(FuzzBMP
+    PUBLIC Lagom
+    PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>
+    )
+
 add_executable(FuzzELF FuzzELF.cpp)
 target_compile_options(FuzzELF
     PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
