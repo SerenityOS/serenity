@@ -256,8 +256,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$setpgid(arg1, arg2);
     case SC_execve:
         return virt$execve(arg1);
-    case SC_sleep:
-        return virt$sleep(arg1);
     case SC_sigaction:
         return virt$sigaction(arg1, arg2, arg3);
     case SC_sigreturn:
@@ -1053,11 +1051,6 @@ int Emulator::virt$sigaction(int signum, FlatPtr act, FlatPtr oldact)
         mmu().copy_to_vm(oldact, &host_oldact, sizeof(host_oldact));
     }
     return 0;
-}
-
-int Emulator::virt$sleep(unsigned seconds)
-{
-    return syscall(SC_sleep, seconds);
 }
 
 int Emulator::virt$sigreturn()

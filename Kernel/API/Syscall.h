@@ -48,7 +48,6 @@ typedef u32 socklen_t;
 namespace Kernel {
 
 #define ENUMERATE_SYSCALLS(S) \
-    S(sleep)                  \
     S(yield)                  \
     S(open)                   \
     S(close)                  \
