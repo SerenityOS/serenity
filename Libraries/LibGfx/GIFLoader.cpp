@@ -30,6 +30,7 @@
 #include <AK/MappedFile.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
+#include <LibGfx/Painter.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -63,6 +64,11 @@ struct ImageDescriptor {
     u16 duration { 0 };
     bool transparent { false };
     bool user_input { false };
+
+    const IntRect rect() const
+    {
+        return { this->x, this->y, this->width, this->height };
+    }
 };
 
 struct LogicalScreen {
@@ -299,7 +305,8 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
         const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : ImageDescriptor::DisposalMethod::None;
 
         if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestoreBackground) {
-            context.frame_buffer->fill(Color(Color::NamedColor::Transparent));
+            Painter painter(*context.frame_buffer);
+            painter.clear_rect(context.images.at(i - 1).rect(), Color::Transparent);
         } else if (i > 1 && previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
             // TODO: tricky as it potentially requires remembering _all_ previous frames.
             // Luckily it seems GIFs with this mode are rare in the wild.
