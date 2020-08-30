@@ -37,6 +37,7 @@
 unsigned g_stringimpl_count;
 static HashTable<StringImpl*>* g_all_live_stringimpls;
 
+void dump_all_stringimpls();
 void dump_all_stringimpls()
 {
     unsigned i = 0;
