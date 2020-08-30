@@ -2030,11 +2030,15 @@ void HTMLDocumentParser::handle_in_table_text(HTMLToken& token)
     for (auto& pending_token : m_pending_table_character_tokens) {
         ASSERT(pending_token.is_character());
         if (!pending_token.is_parser_whitespace()) {
-            // FIXME: If any of the tokens in the pending table character tokens list
+            // If any of the tokens in the pending table character tokens list
             // are character tokens that are not ASCII whitespace, then this is a parse error:
             // reprocess the character tokens in the pending table character tokens list using
             // the rules given in the "anything else" entry in the "in table" insertion mode.
-            TODO();
+            PARSE_ERROR();
+            m_foster_parenting = true;
+            process_using_the_rules_for(InsertionMode::InBody, token);
+            m_foster_parenting = false;
+            return;
         }
     }
 
