@@ -42,6 +42,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <termios.h>
+#include <time.h>
 #include <unistd.h>
 
 extern "C" {
@@ -336,7 +337,8 @@ int sleep(unsigned seconds)
 
 int usleep(useconds_t usec)
 {
-    return syscall(SC_usleep, usec);
+    struct timespec ts = { (long)(usec / 1000000), (long)(usec % 1000000) * 1000 };
+    return clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, nullptr);
 }
 
 int gethostname(char* buffer, size_t size)
