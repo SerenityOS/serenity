@@ -86,7 +86,11 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
     int map_flags = (MAP_ANONYMOUS | MAP_PRIVATE);
     m_data = (RGBA32*)mmap(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif
-    ASSERT(m_data && m_data != (void*)-1);
+    if (m_data == MAP_FAILED) {
+        perror("mmap");
+        ASSERT_NOT_REACHED();
+    }
+    ASSERT(m_data);
     m_needs_munmap = true;
 }
 
