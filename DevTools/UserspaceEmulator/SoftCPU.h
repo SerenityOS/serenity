@@ -1112,6 +1112,8 @@ private:
     u32 m_eip { 0 };
     u32 m_base_eip { 0 };
 
+    ValueWithShadow<u16> m_fpu_cw { 0, 0 };
+
     const u8* m_cached_code_ptr { nullptr };
     const u8* m_cached_code_end { nullptr };
 
