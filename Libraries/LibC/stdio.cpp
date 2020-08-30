@@ -77,6 +77,8 @@ public:
     pid_t popen_child() { return m_popen_child; }
     void set_popen_child(pid_t child_pid) { m_popen_child = child_pid; }
 
+    void reopen(int fd, int mode);
+
 private:
     struct Buffer {
         // A ringbuffer that also transparently implements ungetc().
@@ -413,6 +415,23 @@ long FILE::tell()
         return -1;
 
     return lseek(m_fd, 0, SEEK_CUR);
+}
+
+void FILE::reopen(int fd, int mode)
+{
+    // Dr. POSIX says: "Failure to flush or close the file descriptor
+    //                  successfully shall be ignored"
+    // and so we ignore any failures these two might have.
+    flush();
+    close();
+
+    // Just in case flush() and close() didn't drop the buffer.
+    m_buffer.drop();
+
+    m_fd = fd;
+    m_mode = mode;
+    m_error = 0;
+    m_eof = false;
 }
 
 FILE::Buffer::~Buffer()
@@ -967,10 +986,19 @@ FILE* fopen(const char* pathname, const char* mode)
 
 FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 {
-    (void)pathname;
-    (void)mode;
-    (void)stream;
-    ASSERT_NOT_REACHED();
+    ASSERT(stream);
+    if (!pathname) {
+        // FIXME: Someone should probably implement this path.
+        TODO();
+    }
+
+    int flags = parse_mode(mode);
+    int fd = open(pathname, flags, 0666);
+    if (fd < 0)
+        return nullptr;
+
+    stream->reopen(fd, flags);
+    return stream;
 }
 
 FILE* fdopen(int fd, const char* mode)
