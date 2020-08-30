@@ -88,6 +88,7 @@ void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned ho
     tm.tm_mday = (int)day;
     tm.tm_mon = (int)month - 1;
     tm.tm_year = (int)year - 1900;
+    tm.tm_isdst = -1;
     // mktime() doesn't read tm.tm_wday and tm.tm_yday, no need to fill them in.
 
     m_timestamp = mktime(&tm);
