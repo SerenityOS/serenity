@@ -102,7 +102,6 @@ Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t cou
             m_bitmap.set(page_index, true);
         }
         m_used += count;
-        m_last = page + count;
         return page;
     }
     return {};
@@ -131,9 +130,6 @@ void PhysicalRegion::return_page_at(PhysicalAddress addr)
     ASSERT((FlatPtr)local_offset < (FlatPtr)(m_pages * PAGE_SIZE));
 
     auto page = (FlatPtr)local_offset / PAGE_SIZE;
-    if (page < m_last)
-        m_last = page;
-
     m_bitmap.set(page, false);
     m_used--;
 }
