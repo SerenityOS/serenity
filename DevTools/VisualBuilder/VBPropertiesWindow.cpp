@@ -80,6 +80,7 @@ VBPropertiesWindow::VBPropertiesWindow()
 {
     set_title("Properties");
     set_rect(780, 200, 240, 280);
+    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-visual-builder.png"));
 
     auto& widget = set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
