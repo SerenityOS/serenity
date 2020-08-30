@@ -66,7 +66,6 @@ private:
     PhysicalAddress m_upper;
     unsigned m_pages { 0 };
     unsigned m_used { 0 };
-    unsigned m_last { 0 };
     Bitmap m_bitmap;
 };
 
