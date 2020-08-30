@@ -148,7 +148,7 @@ struct BMPLoadingContext {
     Vector<u32> color_table;
     RefPtr<Gfx::Bitmap> bitmap;
 
-    u8 dib_size() const
+    u32 dib_size() const
     {
         switch (dib_type) {
         case DIBType::Core:
@@ -473,11 +473,16 @@ static bool decode_bmp_header(BMPLoadingContext& context)
     // Ingore reserved bytes
     streamer.drop_bytes(4);
     context.data_offset = streamer.read_u32();
-    context.state = BMPLoadingContext::State::HeaderDecoded;
 
     IF_BMP_DEBUG(dbg() << "BMP data size: " << context.data_size);
     IF_BMP_DEBUG(dbg() << "BMP data offset: " << context.data_offset);
 
+    if (context.data_offset >= context.data_size) {
+        IF_BMP_DEBUG(dbg() << "BMP data offset is beyond file end?!");
+        return false;
+    }
+
+    context.state = BMPLoadingContext::State::HeaderDecoded;
     return true;
 }
 
@@ -735,6 +740,10 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
 
     if (context.data_size < bmp_header_size + dib_size)
         return false;
+    if (context.data_offset < bmp_header_size + dib_size) {
+        IF_BMP_DEBUG(dbg() << "Shenanigans! BMP pixel data and header usually don't overlap.");
+        return false;
+    }
 
     streamer.set_remaining(dib_size - 4);
 
@@ -811,6 +820,7 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
 
     auto bytes_per_color = context.dib_type == DIBType::Core ? 3 : 4;
     u32 max_colors = 1 << context.dib.core.bpp;
+    ASSERT(context.data_offset >= bmp_header_size + context.dib_size());
     auto size_of_color_table = context.data_offset - bmp_header_size - context.dib_size();
 
     if (context.dib_type <= DIBType::OSV2) {
