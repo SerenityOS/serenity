@@ -371,7 +371,7 @@ OwnPtr<Messages::WindowServer::IsMaximizedResponse> ClientConnection::handle(con
         did_misbehave("IsMaximized: Bad window ID");
         return nullptr;
     }
-    return make<Messages::WindowServer::IsMaximizedResponse>(it->value->is_minimized());
+    return make<Messages::WindowServer::IsMaximizedResponse>(it->value->is_maximized());
 }
 
 OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowIconBitmap& message)
