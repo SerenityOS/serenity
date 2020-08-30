@@ -38,9 +38,11 @@ public:
     explicit FixedArray(size_t size)
         : m_size(size)
     {
-        m_elements = (T*)kmalloc(sizeof(T) * m_size);
-        for (size_t i = 0; i < m_size; ++i)
-            new (&m_elements[i]) T();
+        if (m_size != 0) {
+            m_elements = (T*)kmalloc(sizeof(T) * m_size);
+            for (size_t i = 0; i < m_size; ++i)
+                new (&m_elements[i]) T();
+        }
     }
     ~FixedArray()
     {
@@ -50,9 +52,11 @@ public:
     FixedArray(const FixedArray& other)
         : m_size(other.m_size)
     {
-        m_elements = (T*)kmalloc(sizeof(T) * m_size);
-        for (size_t i = 0; i < m_size; ++i)
-            new (&m_elements[i]) T(other[i]);
+        if (m_size != 0) {
+            m_elements = (T*)kmalloc(sizeof(T) * m_size);
+            for (size_t i = 0; i < m_size; ++i)
+                new (&m_elements[i]) T(other[i]);
+        }
     }
 
     FixedArray& operator=(const FixedArray& other)
@@ -106,6 +110,10 @@ public:
     {
         if (new_size == m_size)
             return;
+        if (new_size == 0) {
+            clear();
+            return;
+        }
         auto* new_elements = (T*)kmalloc(new_size * sizeof(T));
         for (size_t i = 0; i < min(new_size, m_size); ++i)
             new (&new_elements[i]) T(move(m_elements[i]));
