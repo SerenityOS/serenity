@@ -135,7 +135,6 @@ private:
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
     void virt$exit(int);
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
-    int virt$sleep(unsigned);
     int virt$chdir(FlatPtr, size_t);
     int virt$dup2(int, int);
     int virt$getpgrp();

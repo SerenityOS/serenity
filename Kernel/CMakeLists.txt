@@ -144,7 +144,6 @@ set(KERNEL_SOURCES
     Syscalls/shbuf.cpp
     Syscalls/shutdown.cpp
     Syscalls/sigaction.cpp
-    Syscalls/sleep.cpp
     Syscalls/socket.cpp
     Syscalls/stat.cpp
     Syscalls/sync.cpp

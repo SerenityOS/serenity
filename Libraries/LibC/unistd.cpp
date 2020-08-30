@@ -332,7 +332,10 @@ char* getwd(char* buf)
 
 int sleep(unsigned seconds)
 {
-    return syscall(SC_sleep, seconds);
+    struct timespec ts = { seconds, 0 };
+    if (clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, &ts) < 0)
+        return ts.tv_sec;
+    return 0;
 }
 
 int usleep(useconds_t usec)
