@@ -109,6 +109,6 @@ int main(int argc, char** argv)
     window->resize(480, 500);
     window->show();
     window->set_title("Theme Editor");
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/themes.png"));
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-theme-editor.png"));
     return app->exec();
 }

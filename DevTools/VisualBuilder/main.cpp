@@ -75,6 +75,7 @@ int main(int argc, char** argv)
     window->set_title(form1->name());
     window->set_rect(120, 200, 640, 400);
     window->set_main_widget(form1);
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-visual-builder.png"));
 
     window->show();
 
@@ -102,6 +103,7 @@ RefPtr<GUI::Window> make_toolbox_window()
     auto window = GUI::Window::construct();
     window->set_title("Widgets");
     window->set_rect(20, 200, 80, 300);
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-visual-builder.png"));
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
