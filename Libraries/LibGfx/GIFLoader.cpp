@@ -36,12 +36,6 @@
 
 namespace Gfx {
 
-struct RGB {
-    u8 r;
-    u8 g;
-    u8 b;
-};
-
 // Row strides and offsets for each interlace pass.
 static const int INTERLACE_ROW_STRIDES[] = { 8, 8, 4, 2 };
 static const int INTERLACE_ROW_OFFSETS[] = { 0, 4, 2, 1 };
@@ -53,7 +47,7 @@ struct ImageDescriptor {
     u16 height { 0 };
     bool use_global_color_map { true };
     bool interlaced { false };
-    RGB color_map[256];
+    Color color_map[256];
     u8 lzw_min_code_size { 0 };
     Vector<u8> lzw_encoded_bytes;
 
@@ -74,7 +68,7 @@ struct ImageDescriptor {
 struct LogicalScreen {
     u16 width;
     u16 height;
-    RGB color_map[256];
+    Color color_map[256];
 };
 
 struct GIFLoadingContext {
@@ -296,8 +290,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
 
         auto& color_map = image.use_global_color_map ? context.logical_screen.color_map : image.color_map;
 
-        auto background_rgb = color_map[context.background_color_index];
-        Color background_color = Color(background_rgb.r, background_rgb.g, background_rgb.b);
+        auto background_color = color_map[context.background_color_index];
 
         if (i == 0) {
             context.frame_buffer->fill(background_color);
@@ -332,12 +325,10 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
             auto colors = decoder.get_output();
 
             for (const auto& color : colors) {
-                auto rgb = color_map[color];
+                auto c = color_map[color];
 
                 int x = pixel_index % image.width + image.x;
                 int y = row + image.y;
-
-                Color c = Color(rgb.r, rgb.g, rgb.b);
 
                 if (image.transparent && color == image.transparency_index) {
                     c.set_alpha(0);
@@ -423,17 +414,17 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     printf("color_map_entry_count: %d\n", color_map_entry_count);
 
     for (int i = 0; i < color_map_entry_count; ++i) {
-        stream >> context.logical_screen.color_map[i].r;
-        stream >> context.logical_screen.color_map[i].g;
-        stream >> context.logical_screen.color_map[i].b;
+        u8 r, g, b;
+        stream >> r >> g >> b;
+        context.logical_screen.color_map[i] = { r, g, b };
     }
 
     if (stream.handle_read_failure())
         return false;
 
     for (int i = 0; i < color_map_entry_count; ++i) {
-        auto& rgb = context.logical_screen.color_map[i];
-        printf("[%02x]: %s\n", i, Color(rgb.r, rgb.g, rgb.b).to_string().characters());
+        auto& color = context.logical_screen.color_map[i];
+        printf("[%02x]: %s\n", i, color.to_string().characters());
     }
 
     NonnullOwnPtr<ImageDescriptor> current_image = make<ImageDescriptor>();
@@ -531,9 +522,9 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 size_t local_color_table_size = pow(2, (packed_fields & 7) + 1);
 
                 for (size_t i = 0; i < local_color_table_size; ++i) {
-                    stream >> image.color_map[i].r;
-                    stream >> image.color_map[i].g;
-                    stream >> image.color_map[i].b;
+                    u8 r, g, b;
+                    stream >> r >> g >> b;
+                    image.color_map[i] = { r, g, b };
                 }
             }
 
