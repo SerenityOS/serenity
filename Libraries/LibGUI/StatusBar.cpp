@@ -29,6 +29,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ResizeCorner.h>
 #include <LibGUI/StatusBar.h>
+#include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
@@ -90,6 +91,14 @@ void StatusBar::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.fill_rect(rect(), palette().button());
+}
+
+void StatusBar::resize_event(ResizeEvent& event)
+{
+    if (window())
+        m_corner->set_visible(window()->is_maximized() ? false : true);
+
+    Widget::resize_event(event);
 }
 
 }

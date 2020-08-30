@@ -43,6 +43,7 @@ public:
 protected:
     explicit StatusBar(int label_count = 1);
     virtual void paint_event(PaintEvent&) override;
+    virtual void resize_event(ResizeEvent&) override;
 
 private:
     NonnullRefPtr<Label> create_label();
