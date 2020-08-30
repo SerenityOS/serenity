@@ -52,21 +52,21 @@ void DebugInfoWidget::init_toolbar()
         pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
 
-    m_singlestep_action = GUI::Action::create("Step Over", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-over.png"), [&](auto&) {
+    m_singlestep_action = GUI::Action::create("Step Over", { Mod_None, Key_F10 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-over.png"), [&](auto&) {
         pthread_mutex_lock(Debugger::the().continue_mutex());
         Debugger::the().set_continue_type(Debugger::ContinueType::SourceStepOver);
         pthread_cond_signal(Debugger::the().continue_cond());
         pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
 
-    m_step_in_action = GUI::Action::create("Step In", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-in.png"), [&](auto&) {
+    m_step_in_action = GUI::Action::create("Step In", { Mod_None, Key_F11 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-in.png"), [&](auto&) {
         pthread_mutex_lock(Debugger::the().continue_mutex());
         Debugger::the().set_continue_type(Debugger::ContinueType::SourceSingleStep);
         pthread_cond_signal(Debugger::the().continue_cond());
         pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
 
-    m_step_out_action = GUI::Action::create("Step Out", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"), [&](auto&) {
+    m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, Key_F11 },Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"), [&](auto&) {
         pthread_mutex_lock(Debugger::the().continue_mutex());
         Debugger::the().set_continue_type(Debugger::ContinueType::SourceStepOut);
         pthread_cond_signal(Debugger::the().continue_cond());
@@ -168,7 +168,12 @@ void DebugInfoWidget::update_state(const Debug::DebugSession& debug_session, con
 {
     m_variables_view->set_model(VariablesModel::create(regs));
     m_backtrace_view->set_model(BacktraceModel::create(debug_session, regs));
-    m_registers_view->set_model(RegistersModel::create(regs));
+    if (m_registers_view->model()) {
+        auto& previous_registers = static_cast<RegistersModel*>(m_registers_view->model())->raw_registers();
+        m_registers_view->set_model(RegistersModel::create(regs, previous_registers));
+    } else {
+        m_registers_view->set_model(RegistersModel::create(regs));
+    }
     auto selected_index = m_backtrace_view->model()->index(0);
     if (!selected_index.is_valid()) {
         dbg() << "Warning: DebugInfoWidget: backtrace selected index is invalid";

@@ -81,6 +81,7 @@ void DisassemblyWidget::program_stopped()
 {
     m_disassembly_view->set_model({});
     m_function_name_label->set_text("");
+    hide_disassembly("Program isn't running");
 }
 
 void DisassemblyWidget::show_disassembly()
