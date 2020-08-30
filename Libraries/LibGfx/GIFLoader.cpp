@@ -414,7 +414,9 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     printf("color_map_entry_count: %d\n", color_map_entry_count);
 
     for (int i = 0; i < color_map_entry_count; ++i) {
-        u8 r, g, b;
+        u8 r = 0;
+        u8 g = 0;
+        u8 b = 0;
         stream >> r >> g >> b;
         context.logical_screen.color_map[i] = { r, g, b };
     }
@@ -522,7 +524,9 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 size_t local_color_table_size = pow(2, (packed_fields & 7) + 1);
 
                 for (size_t i = 0; i < local_color_table_size; ++i) {
-                    u8 r, g, b;
+                    u8 r = 0;
+                    u8 g = 0;
+                    u8 b = 0;
                     stream >> r >> g >> b;
                     image.color_map[i] = { r, g, b };
                 }
