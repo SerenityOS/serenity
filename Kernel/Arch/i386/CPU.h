@@ -591,6 +591,7 @@ private:
     SplitQword m_start;
 };
 
+// FIXME: This can't hold every CPU feature as-is.
 enum class CPUFeature : u32 {
     NX = (1 << 0),
     PAE = (1 << 1),
@@ -603,7 +604,13 @@ enum class CPUFeature : u32 {
     TSC = (1 << 8),
     UMIP = (1 << 9),
     SEP = (1 << 10),
-    SYSCALL = (1 << 11)
+    SYSCALL = (1 << 11),
+    MMX = (1 << 12),
+    SSE2 = (1 << 13),
+    SSE3 = (1 << 14),
+    SSSE3 = (1 << 15),
+    SSE4_1 = (1 << 16),
+    SSE4_2 = (1 << 17)
 };
 
 class Thread;
