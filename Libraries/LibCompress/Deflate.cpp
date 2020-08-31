@@ -33,47 +33,13 @@
 
 namespace Compress {
 
-// FIXME: This logic needs to go into the deflate decoder somehow, we don't want
-//        to assert that the input is valid. Instead we need to set m_error on the
-//        stream.
-DeflateDecompressor::CanonicalCode::CanonicalCode(ReadonlyBytes codes)
-{
-    // FIXME: I can't quite follow the algorithm here, but it seems to work.
-
-    auto next_code = 0;
-
-    for (size_t code_length = 1; code_length <= 15; ++code_length) {
-        next_code <<= 1;
-        auto start_bit = 1 << code_length;
-
-        for (size_t symbol = 0; symbol < codes.size(); ++symbol) {
-            if (codes[symbol] != code_length)
-                continue;
-
-            if (next_code > start_bit) {
-                dbg() << "Canonical code overflows the huffman tree";
-                ASSERT_NOT_REACHED();
-            }
-
-            m_symbol_codes.append(start_bit | next_code);
-            m_symbol_values.append(symbol);
-
-            next_code++;
-        }
-    }
-
-    if (next_code != (1 << 15)) {
-        dbg() << "Canonical code underflows the huffman tree " << next_code;
-        ASSERT_NOT_REACHED();
-    }
-}
-
 const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fixed_literal_codes()
 {
-    static CanonicalCode* code = nullptr;
+    static CanonicalCode code;
+    static bool initialized = false;
 
-    if (code)
-        return *code;
+    if (initialized)
+        return code;
 
     FixedArray<u8> data { 288 };
     data.bytes().slice(0, 144 - 0).fill(8);
@@ -81,22 +47,59 @@ const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fi
     data.bytes().slice(256, 280 - 256).fill(7);
     data.bytes().slice(280, 288 - 280).fill(8);
 
-    code = new CanonicalCode(data);
-    return *code;
+    code = CanonicalCode::from_bytes(data).value();
+    initialized = true;
+
+    return code;
 }
 
 const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fixed_distance_codes()
 {
-    static CanonicalCode* code = nullptr;
+    static CanonicalCode code;
+    static bool initialized = false;
 
-    if (code)
-        return *code;
+    if (initialized)
+        return code;
 
     FixedArray<u8> data { 32 };
     data.bytes().fill(5);
 
-    code = new CanonicalCode(data);
-    return *code;
+    code = CanonicalCode::from_bytes(data).value();
+    initialized = true;
+
+    return code;
+}
+
+Optional<DeflateDecompressor::CanonicalCode> DeflateDecompressor::CanonicalCode::from_bytes(ReadonlyBytes bytes)
+{
+    // FIXME: I can't quite follow the algorithm here, but it seems to work.
+
+    CanonicalCode code;
+
+    auto next_code = 0;
+    for (size_t code_length = 1; code_length <= 15; ++code_length) {
+        next_code <<= 1;
+        auto start_bit = 1 << code_length;
+
+        for (size_t symbol = 0; symbol < bytes.size(); ++symbol) {
+            if (bytes[symbol] != code_length)
+                continue;
+
+            if (next_code > start_bit)
+                return {};
+
+            code.m_symbol_codes.append(start_bit | next_code);
+            code.m_symbol_values.append(symbol);
+
+            next_code++;
+        }
+    }
+
+    if (next_code != (1 << 15)) {
+        return {};
+    }
+
+    return code;
 }
 
 u32 DeflateDecompressor::CanonicalCode::read_symbol(InputBitStream& stream) const

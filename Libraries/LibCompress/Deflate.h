@@ -39,11 +39,12 @@ private:
     class CanonicalCode {
     public:
         CanonicalCode() = default;
-        CanonicalCode(ReadonlyBytes);
         u32 read_symbol(InputBitStream&) const;
 
         static const CanonicalCode& fixed_literal_codes();
         static const CanonicalCode& fixed_distance_codes();
+
+        static Optional<CanonicalCode> from_bytes(ReadonlyBytes);
 
     private:
         Vector<u32> m_symbol_codes;
