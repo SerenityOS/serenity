@@ -6,6 +6,7 @@ set(LIBC_SOURCES
     cxxabi.cpp
     dirent.cpp
     dlfcn.cpp
+    err.cpp
     fcntl.cpp
     getopt.cpp
     grp.cpp
