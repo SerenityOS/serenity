@@ -136,13 +136,18 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
         m_eof = true;
         return false;
     } else {
+        // FIXME: This assertion depends on user input.
         ASSERT(m_distance_codes.has_value());
 
         const auto run_length = m_decompressor.decode_run_length(symbol);
         const auto distance = m_decompressor.decode_distance(m_distance_codes.value().read_symbol(m_decompressor.m_input_stream));
 
-        auto bytes = m_decompressor.m_output_stream.reserve_contigous_space(run_length);
-        m_decompressor.m_output_stream.read(bytes, distance + bytes.size());
+        size_t nread = 0;
+        while (nread < run_length) {
+            const auto nreserved = min(run_length - nread, m_decompressor.m_output_stream.remaining_contigous_space());
+            auto bytes = m_decompressor.m_output_stream.reserve_contigous_space(nreserved);
+            nread += m_decompressor.m_output_stream.read(bytes, distance + nread + nreserved);
+        }
 
         return true;
     }
