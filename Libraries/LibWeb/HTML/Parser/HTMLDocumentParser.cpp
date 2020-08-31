@@ -156,6 +156,8 @@ void HTMLDocumentParser::run(const URL& url)
 
     // "The end"
 
+    m_document->set_ready_state("interactive");
+
     auto scripts_to_execute_when_parsing_has_finished = m_document->take_scripts_to_execute_when_parsing_has_finished({});
     for (auto& script : scripts_to_execute_when_parsing_has_finished) {
         script.execute_script();
@@ -167,6 +169,8 @@ void HTMLDocumentParser::run(const URL& url)
     for (auto& script : scripts_to_execute_as_soon_as_possible) {
         script.execute_script();
     }
+
+    m_document->set_ready_state("complete");
 }
 
 void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)

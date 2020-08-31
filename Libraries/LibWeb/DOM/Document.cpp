@@ -41,6 +41,7 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/AttributeNames.h>
@@ -520,6 +521,12 @@ void Document::set_focused_element(Element* element)
 
     if (m_layout_root)
         m_layout_root->set_needs_display();
+}
+
+void Document::set_ready_state(const String& ready_state)
+{
+    m_ready_state = ready_state;
+    dispatch_event(Event::create("readystatechange"));
 }
 
 }

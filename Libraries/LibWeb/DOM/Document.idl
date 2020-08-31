@@ -17,4 +17,6 @@ interface Document : Node {
     attribute HTMLElement? body;
     readonly attribute HTMLHeadElement? head;
 
+    readonly attribute DOMString readyState;
+
 }
