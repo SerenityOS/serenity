@@ -183,6 +183,8 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     u32 flags = in32(REG_CTRL);
     out32(REG_CTRL, flags | ECTRL_SLU);
 
+    // FIXME: For some reason, this causes an MMIO fault on VirtualBox.
+    //        Removing it allows the system to boot to desktop, but will be hit by an interrupt storm soon after.
     out16(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
 
     initialize_rx_descriptors();
@@ -323,7 +325,7 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
 void E1000NetworkAdapter::out8(u16 address, u8 data)
 {
 #ifdef E1000_DEBUG
-    dbg() << "E1000: OUT @ 0x" << address;
+    dbg() << "E1000: OUT8 0x" << String::format("%02x", data) << " @ 0x" << String::format("%04x", address);
 #endif
     if (m_use_mmio) {
         auto* ptr = (volatile u8*)(m_mmio_base.get() + address);
@@ -336,7 +338,7 @@ void E1000NetworkAdapter::out8(u16 address, u8 data)
 void E1000NetworkAdapter::out16(u16 address, u16 data)
 {
 #ifdef E1000_DEBUG
-    dbg() << "E1000: OUT @ 0x" << address;
+    dbg() << "E1000: OUT16 0x" << String::format("%04x", data) << " @ 0x" << String::format("%04x", address);
 #endif
     if (m_use_mmio) {
         auto* ptr = (volatile u16*)(m_mmio_base.get() + address);
@@ -349,7 +351,7 @@ void E1000NetworkAdapter::out16(u16 address, u16 data)
 void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
 #ifdef E1000_DEBUG
-    dbg() << "E1000: OUT @ 0x" << address;
+    dbg() << "E1000: OUT32 0x" << String::format("%08x", data) << " @ 0x" << String::format("%04x", address);
 #endif
     if (m_use_mmio) {
         auto* ptr = (volatile u32*)(m_mmio_base.get() + address);
@@ -362,7 +364,7 @@ void E1000NetworkAdapter::out32(u16 address, u32 data)
 u8 E1000NetworkAdapter::in8(u16 address)
 {
 #ifdef E1000_DEBUG
-    dbg() << "E1000: IN @ 0x" << address;
+    dbg() << "E1000: IN8 @ 0x" << String::format("%04x", address);
 #endif
     if (m_use_mmio)
         return *(volatile u8*)(m_mmio_base.get() + address);
@@ -372,7 +374,7 @@ u8 E1000NetworkAdapter::in8(u16 address)
 u16 E1000NetworkAdapter::in16(u16 address)
 {
 #ifdef E1000_DEBUG
-    dbg() << "E1000: IN @ 0x " << address;
+    dbg() << "E1000: IN16 @ 0x" << String::format("%04x", address);
 #endif
     if (m_use_mmio)
         return *(volatile u16*)(m_mmio_base.get() + address);
@@ -382,7 +384,7 @@ u16 E1000NetworkAdapter::in16(u16 address)
 u32 E1000NetworkAdapter::in32(u16 address)
 {
 #ifdef E1000_DEBUG
-    dbg() << "E1000: IN @ 0x" << address;
+    dbg() << "E1000: IN32 @ 0x" << String::format("%04x", address);
 #endif
     if (m_use_mmio)
         return *(volatile u32*)(m_mmio_base.get() + address);
