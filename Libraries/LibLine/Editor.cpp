@@ -27,6 +27,7 @@
 #include "Editor.h"
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
@@ -653,14 +654,18 @@ void Editor::handle_read_event()
                         // There's nothing interesting to do here.
                     }
                 }
+                cleanup_suggestions();
                 continue;
             }
             }
         case InputState::GotEscapeFollowedByLeftBracket:
-            switch (code_point) {
-            case 'O': // mod_ctrl
+            if (code_point == 'O') {
+                // mod_ctrl
                 ctrl_held = true;
                 continue;
+            }
+            cleanup_suggestions();
+            switch (code_point) {
             case 'A': // ^[[A: arrow up
                 search_backwards();
                 m_state = InputState::Free;
@@ -721,10 +726,14 @@ void Editor::handle_read_event()
         case InputState::Free:
             if (code_point == 27) {
                 m_state = InputState::GotEscape;
+                cleanup_suggestions();
                 continue;
             }
             break;
         }
+
+        // There are no sequences past this point, so short of 'tab', we will want to cleanup the suggestions.
+        ArmedScopeGuard suggestion_cleanup { [this] { cleanup_suggestions(); } };
 
         // Normally ^D. `stty eof \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
         // Process this here since the keybinds might override its behaviour.
@@ -742,6 +751,8 @@ void Editor::handle_read_event()
         m_search_offset = 0; // reset search offset on any key
 
         if (code_point == '\t' || reverse_tab) {
+            suggestion_cleanup.disarm();
+
             if (!on_tab_complete)
                 continue;
 
@@ -840,22 +851,6 @@ void Editor::handle_read_event()
             continue;
         }
 
-        if (m_times_tab_pressed) {
-            // Apply the style of the last suggestion.
-            readjust_anchored_styles(m_suggestion_manager.current_suggestion().start_index, ModificationKind::ForcedOverlapRemoval);
-            stylize({ m_suggestion_manager.current_suggestion().start_index, m_cursor, Span::Mode::CodepointOriented }, m_suggestion_manager.current_suggestion().style);
-            // We probably have some suggestions drawn,
-            // let's clean them up.
-            if (m_suggestion_display->cleanup()) {
-                reposition_cursor();
-                m_refresh_needed = true;
-            }
-            m_suggestion_manager.reset();
-            suggest(0, 0, Span::CodepointOriented);
-            m_suggestion_display->finish();
-        }
-        m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
-
         insert(code_point);
     }
 
@@ -865,6 +860,25 @@ void Editor::handle_read_event()
         for (size_t i = 0; i < consumed_code_points; ++i)
             m_incomplete_data.take_first();
     }
+}
+
+void Editor::cleanup_suggestions()
+{
+    if (m_times_tab_pressed) {
+        // Apply the style of the last suggestion.
+        readjust_anchored_styles(m_suggestion_manager.current_suggestion().start_index, ModificationKind::ForcedOverlapRemoval);
+        stylize({ m_suggestion_manager.current_suggestion().start_index, m_cursor, Span::Mode::CodepointOriented }, m_suggestion_manager.current_suggestion().style);
+        // We probably have some suggestions drawn,
+        // let's clean them up.
+        if (m_suggestion_display->cleanup()) {
+            reposition_cursor();
+            m_refresh_needed = true;
+        }
+        m_suggestion_manager.reset();
+        suggest(0, 0, Span::CodepointOriented);
+        m_suggestion_display->finish();
+    }
+    m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 }
 
 bool Editor::search(const StringView& phrase, bool allow_empty)
