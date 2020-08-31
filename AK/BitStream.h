@@ -57,7 +57,7 @@ public:
     bool read_or_error(Bytes bytes) override
     {
         if (read(bytes) != bytes.size()) {
-            m_error = true;
+            set_fatal_error();
             return false;
         }
 
@@ -92,7 +92,7 @@ public:
                 if (m_bit_offset++ == 7)
                     m_next_byte.clear();
             } else if (m_stream.eof()) {
-                m_error = true;
+                set_fatal_error();
                 return 0;
             } else {
                 m_stream >> m_next_byte;

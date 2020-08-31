@@ -77,12 +77,12 @@ size_t GzipDecompressor::read(Bytes bytes)
             m_input_stream >> crc32 >> input_size;
 
             if (crc32 != current_member().m_checksum.digest()) {
-                m_error = true;
+                set_fatal_error();
                 return 0;
             }
 
             if (input_size != current_member().m_nread) {
-                m_error = true;
+                set_fatal_error();
                 return 0;
             }
 
@@ -101,7 +101,7 @@ size_t GzipDecompressor::read(Bytes bytes)
         m_input_stream >> Bytes { &header, sizeof(header) };
 
         if (!header.valid_magic_number() || !header.supported_by_implementation()) {
-            m_error = true;
+            set_fatal_error();
             return 0;
         }
 
@@ -129,7 +129,7 @@ size_t GzipDecompressor::read(Bytes bytes)
 bool GzipDecompressor::read_or_error(Bytes bytes)
 {
     if (read(bytes) < bytes.size()) {
-        m_error = true;
+        set_fatal_error();
         return false;
     }
 
@@ -143,7 +143,7 @@ bool GzipDecompressor::discard_or_error(size_t count)
     size_t ndiscarded = 0;
     while (ndiscarded < count) {
         if (eof()) {
-            m_error = true;
+            set_fatal_error();
             return false;
         }
 
