@@ -217,7 +217,8 @@ size_t DeflateDecompressor::read(Bytes bytes)
         }
 
         if (block_type == 0b10) {
-            CanonicalCode literal_codes, distance_codes;
+            CanonicalCode literal_codes;
+            Optional<CanonicalCode> distance_codes;
             decode_codes(literal_codes, distance_codes);
 
             m_state = State::ReadingCompressedBlock;
@@ -345,12 +346,97 @@ u32 DeflateDecompressor::decode_distance(u32 symbol)
     ASSERT_NOT_REACHED();
 }
 
-void DeflateDecompressor::decode_codes(CanonicalCode&, CanonicalCode&)
+void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<CanonicalCode>& distance_code)
 {
-    // FIXME: This was already implemented but I removed it because it was quite chaotic and untested.
-    //        I am planning to come back to this. @asynts
-    //        https://github.com/SerenityOS/serenity/blob/208cb995babb13e0af07bb9d3219f0a9fe7bca7d/Libraries/LibCompress/Deflate.cpp#L144-L242
-    TODO();
+    auto literal_code_count = m_input_stream.read_bits(5) + 257;
+    auto distance_code_count = m_input_stream.read_bits(5) + 1;
+    auto code_length_count = m_input_stream.read_bits(4) + 4;
+
+    // First we have to extract the code lengths of the code that was used to encode the code lengths of
+    // the code that was used to encode the block.
+
+    u8 code_lengths_code_lengths[19] = { 0 };
+    for (size_t i = 0; i < code_length_count; ++i) {
+        static const size_t indices[] { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+        code_lengths_code_lengths[indices[i]] = m_input_stream.read_bits(3);
+    }
+
+    // Now we can extract the code that was used to encode the code lengths of the code that was used to
+    // encode the block.
+
+    auto code_length_code_result = CanonicalCode::from_bytes({ code_lengths_code_lengths, sizeof(code_lengths_code_lengths) });
+    if (!code_length_code_result.has_value()) {
+        m_error = true;
+        return;
+    }
+    const auto code_length_code = code_length_code_result.value();
+
+    // Next we extract the code lengths of the code that was used to encode the block.
+
+    Vector<u8> code_lengths;
+    while (code_lengths.size() < literal_code_count + distance_code_count) {
+        auto symbol = code_length_code.read_symbol(m_input_stream);
+
+        if (symbol <= 15) {
+            code_lengths.append(static_cast<u8>(symbol));
+            continue;
+        } else if (symbol == 17) {
+            auto nrepeat = 3 + m_input_stream.read_bits(3);
+            for (size_t j = 0; j < nrepeat; ++j)
+                code_lengths.append(0);
+            continue;
+        } else if (symbol == 18) {
+            auto nrepeat = 11 + m_input_stream.read_bits(7);
+            for (size_t j = 0; j < nrepeat; ++j)
+                code_lengths.append(0);
+            continue;
+        } else {
+            ASSERT(symbol == 16);
+
+            if (code_lengths.is_empty()) {
+                m_error = true;
+                return;
+            }
+
+            auto nrepeat = 3 + m_input_stream.read_bits(3);
+            for (size_t j = 0; j < nrepeat; ++j)
+                code_lengths.append(code_lengths.last());
+        }
+    }
+
+    if (code_lengths.size() != literal_code_count + distance_code_count) {
+        m_error = true;
+        return;
+    }
+
+    // Now we extract the code that was used to encode literals and lengths in the block.
+
+    auto literal_code_result = CanonicalCode::from_bytes(code_lengths.span().trim(literal_code_count));
+    if (!literal_code_result.has_value()) {
+        m_error = true;
+        return;
+    }
+    literal_code = literal_code_result.value();
+
+    // Now we extract the code that was used to encode distances in the block.
+
+    if (distance_code_count == 1) {
+        auto length = code_lengths[literal_code_count];
+
+        if (length == 0) {
+            return;
+        } else if (length != 1) {
+            m_error = true;
+            return;
+        }
+    }
+
+    auto distance_code_result = CanonicalCode::from_bytes(code_lengths.span().slice(literal_code_count));
+    if (!distance_code_result.has_value()) {
+        m_error = true;
+        return;
+    }
+    distance_code = distance_code_result.value();
 }
 
 }
