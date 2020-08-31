@@ -40,17 +40,36 @@ namespace AK::Detail {
 
 class Stream {
 public:
-    virtual ~Stream()
+    virtual ~Stream() { ASSERT(!has_any_error()); }
+
+    bool has_recoverable_error() const { return m_recoverable_error; }
+    bool has_fatal_error() const { return m_fatal_error; }
+    bool has_any_error() const { return has_recoverable_error() || has_fatal_error(); }
+
+    bool handle_recoverable_error()
     {
-        ASSERT(!has_error());
+        ASSERT(!has_fatal_error());
+        return exchange(m_recoverable_error, false);
+    }
+    bool handle_fatal_error() { return exchange(m_fatal_error, false); }
+    bool handle_any_error()
+    {
+        if (has_any_error()) {
+            m_recoverable_error = false;
+            m_fatal_error = false;
+
+            return true;
+        }
+
+        return false;
     }
 
-    bool has_error() const { return m_error; }
+    void set_recoverable_error() const { m_recoverable_error = true; }
+    void set_fatal_error() const { m_fatal_error = true; }
 
-    bool handle_error() { return exchange(m_error, false); }
-
-protected:
-    mutable bool m_error { false };
+private:
+    mutable bool m_recoverable_error { false };
+    mutable bool m_fatal_error { false };
 };
 
 }
@@ -200,7 +219,7 @@ public:
     bool read_or_error(Bytes bytes) override
     {
         if (remaining() < bytes.size()) {
-            m_error = true;
+            set_recoverable_error();
             return false;
         }
 
@@ -212,7 +231,7 @@ public:
     bool discard_or_error(size_t count) override
     {
         if (remaining() < count) {
-            m_error = true;
+            set_recoverable_error();
             return false;
         }
 
@@ -229,7 +248,7 @@ public:
     u8 peek_or_error() const
     {
         if (remaining() == 0) {
-            m_error = true;
+            set_recoverable_error();
             return 0;
         }
 
@@ -248,7 +267,7 @@ public:
             //       past the end, this is fixed here.
             if (eof()) {
                 m_offset = backup;
-                m_error = true;
+                set_recoverable_error();
                 return false;
             }
 
@@ -277,7 +296,7 @@ public:
             //       past the end, this is fixed here.
             if (eof()) {
                 m_offset = backup;
-                m_error = true;
+                set_recoverable_error();
                 return false;
             }
 
@@ -320,7 +339,7 @@ public:
     bool discard_or_error(size_t count) override
     {
         if (m_write_offset - m_read_offset < count) {
-            m_error = true;
+            set_recoverable_error();
             return false;
         }
 
@@ -411,7 +430,7 @@ public:
     bool read_or_error(Bytes bytes) override
     {
         if (m_write_offset - m_read_offset < bytes.size()) {
-            m_error = true;
+            set_recoverable_error();
             return false;
         }
 

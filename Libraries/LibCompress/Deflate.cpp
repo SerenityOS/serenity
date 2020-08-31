@@ -204,7 +204,7 @@ size_t DeflateDecompressor::read(Bytes bytes)
             m_input_stream >> length >> negated_length;
 
             if ((length ^ 0xffff) != negated_length) {
-                m_error = true;
+                set_fatal_error();
                 return 0;
             }
 
@@ -273,7 +273,7 @@ size_t DeflateDecompressor::read(Bytes bytes)
 bool DeflateDecompressor::read_or_error(Bytes bytes)
 {
     if (read(bytes) < bytes.size()) {
-        m_error = true;
+        set_fatal_error();
         return false;
     }
 
@@ -287,7 +287,7 @@ bool DeflateDecompressor::discard_or_error(size_t count)
     size_t ndiscarded = 0;
     while (ndiscarded < count) {
         if (eof()) {
-            m_error = true;
+            set_fatal_error();
             return false;
         }
 
@@ -371,7 +371,7 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
 
     auto code_length_code_result = CanonicalCode::from_bytes({ code_lengths_code_lengths, sizeof(code_lengths_code_lengths) });
     if (!code_length_code_result.has_value()) {
-        m_error = true;
+        set_fatal_error();
         return;
     }
     const auto code_length_code = code_length_code_result.value();
@@ -399,7 +399,7 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
             ASSERT(symbol == 16);
 
             if (code_lengths.is_empty()) {
-                m_error = true;
+                set_fatal_error();
                 return;
             }
 
@@ -410,7 +410,7 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
     }
 
     if (code_lengths.size() != literal_code_count + distance_code_count) {
-        m_error = true;
+        set_fatal_error();
         return;
     }
 
@@ -418,7 +418,7 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
 
     auto literal_code_result = CanonicalCode::from_bytes(code_lengths.span().trim(literal_code_count));
     if (!literal_code_result.has_value()) {
-        m_error = true;
+        set_fatal_error();
         return;
     }
     literal_code = literal_code_result.value();
@@ -431,14 +431,14 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
         if (length == 0) {
             return;
         } else if (length != 1) {
-            m_error = true;
+            set_fatal_error();
             return;
         }
     }
 
     auto distance_code_result = CanonicalCode::from_bytes(code_lengths.span().slice(literal_code_count));
     if (!distance_code_result.has_value()) {
-        m_error = true;
+        set_fatal_error();
         return;
     }
     distance_code = distance_code_result.value();

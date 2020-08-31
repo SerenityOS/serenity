@@ -50,7 +50,7 @@ public:
     bool write_or_error(ReadonlyBytes bytes) override
     {
         if (Capacity - m_queue.size() < bytes.size()) {
-            m_error = true;
+            set_recoverable_error();
             return false;
         }
 
@@ -70,10 +70,8 @@ public:
 
     size_t read(Bytes bytes, size_t seekback)
     {
-        ASSERT(seekback <= Capacity);
-
-        if (seekback > m_total_written) {
-            m_error = true;
+        if (seekback > Capacity || seekback > m_total_written) {
+            set_recoverable_error();
             return 0;
         }
 
@@ -90,7 +88,7 @@ public:
     bool read_or_error(Bytes bytes) override
     {
         if (m_queue.size() < bytes.size()) {
-            m_error = true;
+            set_recoverable_error();
             return false;
         }
 
@@ -101,7 +99,7 @@ public:
     bool discard_or_error(size_t count) override
     {
         if (m_queue.size() < count) {
-            m_error = true;
+            set_recoverable_error();
             return false;
         }
 

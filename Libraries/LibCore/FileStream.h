@@ -63,7 +63,7 @@ public:
 
         while (nread < bytes.size() && !eof()) {
             if (m_file->has_error()) {
-                m_error = true;
+                set_fatal_error();
                 return 0;
             }
 
@@ -77,7 +77,7 @@ public:
     bool read_or_error(Bytes bytes) override
     {
         if (read(bytes) < bytes.size()) {
-            m_error = true;
+            set_fatal_error();
             return false;
         }
 
@@ -93,7 +93,7 @@ public:
             ndiscarded += read({ buffer, min<size_t>(count - ndiscarded, sizeof(buffer)) });
 
         if (eof()) {
-            m_error = true;
+            set_fatal_error();
             return false;
         }
 
@@ -116,7 +116,7 @@ public:
     void close()
     {
         if (!m_file->close())
-            m_error = true;
+            set_fatal_error();
     }
 
 private:
@@ -153,7 +153,7 @@ public:
     size_t write(ReadonlyBytes bytes) override
     {
         if (!m_file->write(bytes.data(), bytes.size())) {
-            m_error = true;
+            set_fatal_error();
             return 0;
         }
 
@@ -163,7 +163,7 @@ public:
     bool write_or_error(ReadonlyBytes bytes) override
     {
         if (write(bytes) < bytes.size()) {
-            m_error = true;
+            set_fatal_error();
             return false;
         }
 
@@ -173,7 +173,7 @@ public:
     void close()
     {
         if (!m_file->close())
-            m_error = true;
+            set_fatal_error();
     }
 
 private:
