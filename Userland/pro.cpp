@@ -57,7 +57,16 @@ public:
             if (lexer.consume_specific(";")) {
                 lexer.ignore_while(is_whitespace);
                 if (lexer.consume_specific("filename=")) {
-                    m_filename = lexer.consume_quoted_string();
+                    // RFC 2183: "A short (length <= 78 characters)
+                    //            parameter value containing only non-`tspecials' characters SHOULD be
+                    //            represented as a single `token'."
+                    // Some people seem to take this as generic advice of "if it doesn't have special characters,
+                    // it's safe to specify as a single token"
+                    // So let's just be as lenient as possible.
+                    if (lexer.next_is('"'))
+                        m_filename = lexer.consume_quoted_string();
+                    else
+                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "));
                 } else {
                     m_might_be_wrong = true;
                 }
@@ -72,7 +81,10 @@ public:
                 if (lexer.consume_specific("name=")) {
                     m_name = lexer.consume_quoted_string();
                 } else if (lexer.consume_specific("filename=")) {
-                    m_filename = lexer.consume_quoted_string();
+                    if (lexer.next_is('"'))
+                        m_filename = lexer.consume_quoted_string();
+                    else
+                        m_filename = lexer.consume_until(is_any_of("()<>@,;:\\\"/[]?= "));
                 } else {
                     m_might_be_wrong = true;
                 }
