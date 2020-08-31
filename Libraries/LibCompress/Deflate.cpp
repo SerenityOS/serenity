@@ -40,10 +40,6 @@ DeflateDecompressor::CanonicalCode::CanonicalCode(ReadonlyBytes codes)
 {
     // FIXME: I can't quite follow the algorithm here, but it seems to work.
 
-    m_symbol_codes.resize(codes.size());
-    m_symbol_values.resize(codes.size());
-
-    auto allocated_symbols_count = 0;
     auto next_code = 0;
 
     for (size_t code_length = 1; code_length <= 15; ++code_length) {
@@ -59,10 +55,9 @@ DeflateDecompressor::CanonicalCode::CanonicalCode(ReadonlyBytes codes)
                 ASSERT_NOT_REACHED();
             }
 
-            m_symbol_codes[allocated_symbols_count] = start_bit | next_code;
-            m_symbol_values[allocated_symbols_count] = symbol;
+            m_symbol_codes.append(start_bit | next_code);
+            m_symbol_values.append(symbol);
 
-            allocated_symbols_count++;
             next_code++;
         }
     }
