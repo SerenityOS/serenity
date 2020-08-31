@@ -93,6 +93,7 @@ struct GIFLoadingContext {
     size_t loops { 1 };
     RefPtr<Gfx::Bitmap> frame_buffer;
     size_t current_frame { 0 };
+    RefPtr<Gfx::Bitmap> prev_frame_buffer;
 };
 
 RefPtr<Gfx::Bitmap> load_gif(const StringView& path)
@@ -266,6 +267,12 @@ private:
     Vector<u8> m_output {};
 };
 
+static void copy_frame_buffer(Bitmap& dest, const Bitmap& src)
+{
+    ASSERT(dest.size_in_bytes() == src.size_in_bytes());
+    memcpy(dest.scanline(0), src.scanline(0), dest.size_in_bytes());
+}
+
 static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
 {
     if (frame_index >= context.images.size()) {
@@ -280,6 +287,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
     if (context.state < GIFLoadingContext::State::FrameComplete) {
         start_frame = 0;
         context.frame_buffer = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
+        context.prev_frame_buffer = Bitmap::create_purgeable(BitmapFormat::RGBA32, { context.logical_screen.width, context.logical_screen.height });
     } else if (frame_index < context.current_frame) {
         start_frame = 0;
     }
@@ -288,29 +296,39 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
         auto& image = context.images.at(i);
         printf("Image %zu: %d,%d %dx%d  %zu bytes LZW-encoded\n", i, image.x, image.y, image.width, image.height, image.lzw_encoded_bytes.size());
 
+        const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : ImageDescriptor::DisposalMethod::None;
+
+        if (i == 0) {
+            context.frame_buffer->fill(Color::Transparent);
+        } else if (i > 0 && image.disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious
+            && previous_image_disposal_method != ImageDescriptor::DisposalMethod::RestorePrevious) {
+            // This marks the start of a run of frames that once disposed should be restored to the
+            // previous underlying image contents. Therefore we make a copy of the current frame
+            // buffer so that it can be restored later.
+            copy_frame_buffer(*context.prev_frame_buffer, *context.frame_buffer);
+        }
+
+        if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestoreBackground) {
+            // Note: RestoreBackground could be interpreted either as restoring the underlying
+            // background of the entire image (e.g. container element's background-color), or the
+            // background color of the GIF itself. It appears that all major browsers and most other
+            // GIF decoders adhere to the former interpretation, therefore we will do the same by
+            // clearing the entire frame buffer to transparent.
+            Painter painter(*context.frame_buffer);
+            painter.clear_rect(context.images.at(i - 1).rect(), Color::Transparent);
+        } else if (i > 0 && previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
+            // Previous frame indicated that once disposed, it should be restored to *its* previous
+            // underlying image contents, therefore we restore the saved previous frame buffer.
+            copy_frame_buffer(*context.frame_buffer, *context.prev_frame_buffer);
+        }
+
         LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
 
         // Add GIF-specific control codes
         const int clear_code = decoder.add_control_code();
         const int end_of_information_code = decoder.add_control_code();
 
-        auto& color_map = image.use_global_color_map ? context.logical_screen.color_map : image.color_map;
-
-        auto background_color = color_map[context.background_color_index];
-
-        if (i == 0) {
-            context.frame_buffer->fill(background_color);
-        }
-
-        const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : ImageDescriptor::DisposalMethod::None;
-
-        if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestoreBackground) {
-            Painter painter(*context.frame_buffer);
-            painter.clear_rect(context.images.at(i - 1).rect(), Color::Transparent);
-        } else if (i > 1 && previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
-            // TODO: tricky as it potentially requires remembering _all_ previous frames.
-            // Luckily it seems GIFs with this mode are rare in the wild.
-        }
+        const auto& color_map = image.use_global_color_map ? context.logical_screen.color_map : image.color_map;
 
         int pixel_index = 0;
         int row = 0;
@@ -337,11 +355,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                 int x = pixel_index % image.width + image.x;
                 int y = row + image.y;
 
-                if (image.transparent && color == image.transparency_index) {
-                    c.set_alpha(0);
-                }
-
-                if (!image.transparent || previous_image_disposal_method == ImageDescriptor::DisposalMethod::None || color != image.transparency_index) {
+                if (!image.transparent || color != image.transparency_index) {
                     context.frame_buffer->set_pixel(x, y, c);
                 }
 
