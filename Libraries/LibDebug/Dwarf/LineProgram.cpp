@@ -66,9 +66,9 @@ void LineProgram::parse_source_directories()
 #endif
         m_source_directories.append(move(directory));
     }
-    m_stream.handle_error();
+    m_stream.handle_recoverable_error();
     m_stream.discard_or_error(1);
-    ASSERT(!m_stream.handle_error());
+    ASSERT(!m_stream.has_any_error());
 }
 
 void LineProgram::parse_source_files()
@@ -88,7 +88,7 @@ void LineProgram::parse_source_files()
         m_source_files.append({ file_name, directory_index });
     }
     m_stream.discard_or_error(1);
-    ASSERT(!m_stream.handle_error());
+    ASSERT(!m_stream.has_any_error());
 }
 
 void LineProgram::append_to_line_info()

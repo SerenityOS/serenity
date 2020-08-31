@@ -288,8 +288,7 @@ inline InputStream& operator>>(InputStream& stream, String& string)
         if (stream.eof()) {
             string = nullptr;
 
-            // FIXME: We need an InputStream::set_error_flag method.
-            stream.discard_or_error(1);
+            stream.set_fatal_error();
             return stream;
         }
 
