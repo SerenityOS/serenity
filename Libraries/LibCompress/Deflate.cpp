@@ -216,6 +216,8 @@ size_t DeflateDecompressor::read(Bytes bytes)
         if (block_type == 0b10) {
             CanonicalCode literal_codes, distance_codes;
             decode_codes(literal_codes, distance_codes);
+
+            m_state = State::ReadingCompressedBlock;
             new (&m_compressed_block) CompressedBlock(*this, literal_codes, distance_codes);
 
             return read(bytes);
