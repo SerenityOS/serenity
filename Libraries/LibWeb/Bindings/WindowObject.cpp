@@ -59,6 +59,8 @@ void WindowObject::initialize()
     GlobalObject::initialize();
 
     define_property("window", this, JS::Attribute::Enumerable);
+    define_property("frames", this, JS::Attribute::Enumerable);
+    define_property("self", this, JS::Attribute::Enumerable);
     define_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
     define_native_function("alert", alert);
     define_native_function("confirm", confirm);
