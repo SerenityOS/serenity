@@ -54,6 +54,15 @@ int _start(int argc, char** argv, char** env)
     for (size_t i = 0; i < size; i++)
         (*__init_array_start[i])(argc, argv, env);
 
+    if (argc > 0 && argv[0] != nullptr) {
+        __progname = argv[0];
+        for (const char *s = __progname; *s != '\0'; s++) {
+            if (*s == '/') {
+                __progname = s + 1;
+            }
+        }
+    }
+
     int status = main(argc, argv, environ);
 
     exit(status);

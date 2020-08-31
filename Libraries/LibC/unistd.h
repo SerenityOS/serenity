@@ -53,6 +53,7 @@ __BEGIN_DECLS
 #endif
 
 extern char** environ;
+extern const char* __progname;
 
 int get_process_name(char* buffer, int buffer_size);
 int set_process_name(const char* name, size_t name_length);

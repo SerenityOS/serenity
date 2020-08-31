@@ -33,6 +33,7 @@ extern "C" {
 
 __thread int errno;
 char** environ;
+const char* __progname;
 bool __environ_is_malloced;
 
 void __libc_init()

@@ -350,6 +350,24 @@ int putenv(char* new_var)
     return 0;
 }
 
+const char *getprogname(void)
+{
+    return __progname;
+}
+
+void setprogname(const char *name)
+{
+    char *tmp;
+
+    tmp = strrchr(name, '/');
+    if (tmp == nullptr) {
+        __progname = name;
+    } else {
+        __progname = tmp + 1;
+    }
+
+}
+
 double strtod(const char* str, char** endptr)
 {
     // Parse spaces, sign, and base
