@@ -232,9 +232,11 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         pde.set_present(true);
         pde.set_writable(true);
         pde.set_global(&page_directory == m_kernel_page_directory.ptr());
+        
+        auto& owning_page_directory = page_directory_table_index < 3 ? page_directory : *m_kernel_page_directory;
         // Use page_directory_table_index and page_directory_index as key
         // This allows us to release the page table entry when no longer needed
-        auto result = page_directory.m_page_tables.set(vaddr.get() & ~0x1fffff, move(page_table));
+        auto result = owning_page_directory.m_page_tables.set(vaddr.get() & ~0x1fffff, move(page_table));
         ASSERT(result == AK::HashSetResult::InsertedNewEntry);
     }
 
@@ -269,7 +271,8 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
             if (all_clear) {
                 pde.clear();
 
-                auto result = page_directory.m_page_tables.remove(vaddr.get() & ~0x1fffff);
+                auto& owning_page_directory = page_directory_table_index < 3 ? page_directory : *m_kernel_page_directory;
+                auto result = owning_page_directory.m_page_tables.remove(vaddr.get() & ~0x1fffff);
                 ASSERT(result);
 #ifdef MM_DEBUG
                 dbg() << "MM: Released page table for " << VirtualAddress(vaddr.get() & ~0x1fffff);
