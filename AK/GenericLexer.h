@@ -75,6 +75,11 @@ protected:
     size_t m_index { 0 };
 };
 
+constexpr auto is_any_of(const StringView& values)
+{
+    return [values](auto c) { return values.contains(c); };
+}
+
 // ctype adaptors
 // FIXME: maybe put them in an another file?
 bool is_alpha(char);
@@ -97,6 +102,7 @@ using AK::GenericLexer;
 
 using AK::is_alpha;
 using AK::is_alphanum;
+using AK::is_any_of;
 using AK::is_control;
 using AK::is_digit;
 using AK::is_graphic;
