@@ -335,6 +335,7 @@ private:
 
     void refresh_display();
     void cleanup();
+    void cleanup_suggestions();
     void really_quit_event_loop();
 
     void restore()
