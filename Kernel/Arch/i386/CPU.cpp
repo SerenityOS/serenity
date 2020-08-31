@@ -785,14 +785,26 @@ void Processor::cpu_detect()
     m_features = static_cast<CPUFeature>(0);
 
     CPUID processor_info(0x1);
+    if (processor_info.edx() & (1 << 4))
+        set_feature(CPUFeature::TSC);
     if (processor_info.edx() & (1 << 6))
         set_feature(CPUFeature::PAE);
     if (processor_info.edx() & (1 << 13))
         set_feature(CPUFeature::PGE);
+    if (processor_info.edx() & (1 << 23))
+        set_feature(CPUFeature::MMX);
     if (processor_info.edx() & (1 << 25))
         set_feature(CPUFeature::SSE);
-    if (processor_info.edx() & (1 << 4))
-        set_feature(CPUFeature::TSC);
+    if (processor_info.edx() & (1 << 26))
+        set_feature(CPUFeature::SSE2);
+    if (processor_info.ecx() & (1 << 0))
+        set_feature(CPUFeature::SSE3);
+    if (processor_info.ecx() & (1 << 9))
+        set_feature(CPUFeature::SSSE3);
+    if (processor_info.ecx() & (1 << 19))
+        set_feature(CPUFeature::SSE4_1);
+    if (processor_info.ecx() & (1 << 20))
+        set_feature(CPUFeature::SSE4_2);
     if (processor_info.ecx() & (1 << 30))
         set_feature(CPUFeature::RDRAND);
     if (processor_info.edx() & (1 << 11)) {
@@ -916,6 +928,18 @@ String Processor::features_string() const
                     return "sep";
                 case CPUFeature::SYSCALL:
                     return "syscall";
+                case CPUFeature::MMX:
+                    return "mmx";
+                case CPUFeature::SSE2:
+                    return "sse2";
+                case CPUFeature::SSE3:
+                    return "sse3";
+                case CPUFeature::SSSE3:
+                    return "ssse3";
+                case CPUFeature::SSE4_1:
+                    return "sse4.1";
+                case CPUFeature::SSE4_2:
+                    return "sse4.2";
                 // no default statement here intentionally so that we get
                 // a warning if a new feature is forgotten to be added here
             }
@@ -923,7 +947,7 @@ String Processor::features_string() const
             return "???";
         };
     bool first = true;
-    for (u32 flag = 1; flag < sizeof(m_features) * 8; flag <<= 1) {
+    for (u32 flag = 1; flag != 0; flag <<= 1) {
         if ((static_cast<u32>(m_features) & flag) != 0) {
             if (first)
                 first = false;
