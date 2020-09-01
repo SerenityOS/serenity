@@ -57,6 +57,8 @@ TextEditor::TextEditor(Type type)
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     set_document(TextDocument::create());
+    if (is_single_line())
+        set_visualize_trailing_whitespace(false);
     set_scrollbars_enabled(is_multi_line());
     if (is_multi_line())
         set_font(Gfx::Font::default_fixed_width_font());
