@@ -53,6 +53,7 @@ class InputMemoryStream;
 class DuplexMemoryStream;
 class OutputStream;
 class InputBitStream;
+class OutputMemoryStream;
 
 template<size_t Capacity>
 class CircularDuplexStream;
@@ -150,6 +151,7 @@ using AK::LogStream;
 using AK::NonnullOwnPtr;
 using AK::NonnullRefPtr;
 using AK::Optional;
+using AK::OutputMemoryStream;
 using AK::OutputStream;
 using AK::OwnPtr;
 using AK::ReadonlyBytes;
