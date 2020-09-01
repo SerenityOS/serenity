@@ -326,13 +326,9 @@ private:
 // All data written to this stream can be read from it. Reading and writing is done
 // using different offsets, meaning that it is not necessary to seek to the start
 // before reading; this behaviour differs from BufferStream.
-//
-// The stream keeps a history of 64KiB which means that seeking backwards is well
-// defined. Data past that point will be discarded.
 class DuplexMemoryStream final : public DuplexStream {
 public:
     static constexpr size_t chunk_size = 4 * 1024;
-    static constexpr size_t history_size = 64 * 1024;
 
     bool eof() const override { return m_write_offset == m_read_offset; }
 
@@ -411,22 +407,6 @@ public:
         return nread;
     }
 
-    size_t read(Bytes bytes, size_t offset)
-    {
-        const auto backup = this->roffset();
-
-        bool do_discard_chunks = false;
-        exchange(m_do_discard_chunks, do_discard_chunks);
-
-        rseek(offset);
-        const auto count = read(bytes);
-        rseek(backup);
-
-        exchange(m_do_discard_chunks, do_discard_chunks);
-
-        return count;
-    }
-
     bool read_or_error(Bytes bytes) override
     {
         if (m_write_offset - m_read_offset < bytes.size()) {
@@ -461,22 +441,12 @@ public:
     size_t roffset() const { return m_read_offset; }
     size_t woffset() const { return m_write_offset; }
 
-    void rseek(size_t offset)
-    {
-        ASSERT(offset >= m_base_offset);
-        ASSERT(offset <= m_write_offset);
-        m_read_offset = offset;
-    }
-
     size_t remaining() const { return m_write_offset - m_read_offset; }
 
 private:
     void try_discard_chunks()
     {
-        if (!m_do_discard_chunks)
-            return;
-
-        while (m_read_offset - m_base_offset >= history_size + chunk_size) {
+        while (m_read_offset - m_base_offset >= chunk_size) {
             m_chunks.take_first();
             m_base_offset += chunk_size;
         }
@@ -486,7 +456,6 @@ private:
     size_t m_write_offset { 0 };
     size_t m_read_offset { 0 };
     size_t m_base_offset { 0 };
-    bool m_do_discard_chunks { false };
 };
 
 }
