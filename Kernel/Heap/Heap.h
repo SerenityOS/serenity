@@ -28,6 +28,7 @@
 
 #include <AK/Bitmap.h>
 #include <AK/ScopeGuard.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <AK/kmalloc.h>
 
@@ -242,6 +243,18 @@ public:
         return sizeof(SubHeap) + HeapType::calculate_memory_for_bytes(bytes);
     }
 
+    bool expand_memory(size_t size)
+    {
+        if (m_expanding)
+            return false;
+
+        // Allocating more memory itself may trigger allocations and deallocations
+        // on this heap. We need to prevent recursive expansion. We also disable
+        // removing memory while trying to expand the heap.
+        TemporaryChange change(m_expanding, true);
+        return ExpandableHeapTraits<ExpandHeap>::add_memory(m_expand, size);
+    }
+
     void* allocate(size_t size)
     {
         do {
@@ -256,7 +269,7 @@ public:
             // This is especially true for the kmalloc heap, where adding memory
             // requires several other objects to be allocated just to be able to
             // expand the heap.
-        } while (ExpandableHeapTraits<ExpandHeap>::add_memory(m_expand, size));
+        } while (expand_memory(size));
         return nullptr;
     }
 
@@ -267,7 +280,7 @@ public:
         for (auto* subheap = &m_heaps; subheap; subheap = subheap->next) {
             if (subheap->heap.contains(ptr)) {
                 subheap->heap.deallocate(ptr);
-                if (subheap->heap.allocated_chunks() == 0 && subheap != &m_heaps) {
+                if (subheap->heap.allocated_chunks() == 0 && subheap != &m_heaps && !m_expanding) {
                     // Since remove_memory may free subheap, we need to save the
                     // next pointer before calling it
                     auto* next_subheap = subheap->next;
@@ -358,6 +371,7 @@ public:
 private:
     SubHeap m_heaps;
     ExpandHeap m_expand;
+    bool m_expanding { false };
 };
 
 }
