@@ -1474,7 +1474,6 @@ void SoftCPU::FLDCW(const X86::Instruction& insn)
 
 void SoftCPU::FLD1(const X86::Instruction&)
 {
-dbg() << "fld1";
     fpu_push(1.0);
 }
 
@@ -1483,7 +1482,12 @@ void SoftCPU::FLDL2E(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FLDPI(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FLDLG2(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FLDLN2(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FLDZ(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FLDZ(const X86::Instruction&)
+{
+    fpu_push(0.0);
+}
+
 void SoftCPU::FNSTENV(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::F2XM1(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FYL2X(const X86::Instruction&) { TODO_INSN(); }
@@ -1555,11 +1559,27 @@ void SoftCPU::FSUB_RM64(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FSUBR_RM64(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FDIV_RM64(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FDIVR_RM64(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FLD_RM64(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FLD_RM64(const X86::Instruction& insn)
+{
+dbg() << "fld";
+    auto new_f64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+    // FIXME: Respect shadow values
+    fpu_push(bit_cast<double>(new_f64.value()));
+}
+
 void SoftCPU::FFREE(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FISTTP_RM64(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FST_RM64(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FSTP_RM64(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FSTP_RM64(const X86::Instruction& insn)
+{
+dbg() << "fstp";
+    double f64 = (double)fpu_pop();
+    // FIXME: Respect shadow values
+    insn.modrm().write64(*this, insn, shadow_wrap_as_initialized(bit_cast<u64>(f64)));
+}
+
 void SoftCPU::FRSTOR(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FUCOM(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FUCOMP(const X86::Instruction&) { TODO_INSN(); }
@@ -1587,7 +1607,14 @@ void SoftCPU::FIST_RM16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FISTP_RM16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FBLD_M80(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNSTSW_AX(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FILD_RM64(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FILD_RM64(const X86::Instruction& insn)
+{
+    auto new_s64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+    // FIXME: Respect shadow values
+    fpu_push((long double)(int64_t)new_s64.value());
+}
+
 void SoftCPU::FUCOMIP(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FBSTP_M80(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FCOMIP(const X86::Instruction&) { TODO_INSN(); }
