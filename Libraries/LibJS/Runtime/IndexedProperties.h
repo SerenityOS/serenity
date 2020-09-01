@@ -162,7 +162,7 @@ public:
     size_t size() const { return m_storage->size(); }
     bool is_empty() const { return size() == 0; }
     size_t array_like_size() const { return m_storage->array_like_size(); }
-    void set_array_like_size(size_t new_size) { m_storage->set_array_like_size(new_size); };
+    void set_array_like_size(size_t);
 
     Vector<ValueAndAttributes> values_unordered() const;
 
