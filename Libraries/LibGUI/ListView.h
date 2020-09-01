@@ -45,7 +45,7 @@ public:
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    void scroll_into_view(const ModelIndex&, Orientation);
+    virtual void scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically) override;
 
     Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
