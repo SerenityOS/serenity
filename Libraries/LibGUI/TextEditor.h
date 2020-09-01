@@ -60,6 +60,9 @@ public:
 
     virtual void set_document(TextDocument&);
 
+    void set_visualize_trailing_whitespace(bool);
+    bool visualize_trailing_whitespace() const { return m_visualize_trailing_whitespace; }
+
     bool has_visible_list() const { return m_has_visible_list; }
     void set_has_visible_list(bool);
     bool has_open_button() const { return m_has_open_button; }
@@ -274,6 +277,7 @@ private:
     bool m_line_wrapping_enabled { false };
     bool m_has_visible_list { false };
     bool m_has_open_button { false };
+    bool m_visualize_trailing_whitespace { true };
     int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };

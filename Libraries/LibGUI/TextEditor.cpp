@@ -495,6 +495,26 @@ void TextEditor::paint_event(PaintEvent& event)
                 }
             }
 
+            if (m_visualize_trailing_whitespace && line.ends_in_whitespace()) {
+                size_t physical_column;
+                auto last_non_whitespace_column = line.last_non_whitespace_column();
+                if (last_non_whitespace_column.has_value())
+                    physical_column = last_non_whitespace_column.value() + 1;
+                else
+                    physical_column = 0;
+                size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
+                if (physical_column < end_of_visual_line) {
+                    size_t visual_column = physical_column > start_of_visual_line ? (physical_column - start_of_visual_line) : 0;
+                    Gfx::IntRect whitespace_rect {
+                        content_x_for_position({ line_index, visual_column }),
+                        visual_line_rect.y(),
+                        font().width(visual_line_text.substring_view(visual_column, visual_line_text.length() - visual_column)),
+                        visual_line_rect.height()
+                    };
+                    painter.fill_rect_with_dither_pattern(whitespace_rect, Color(), Color(255, 192, 192));
+                }
+            }
+
             if (physical_line_has_selection) {
                 size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
                 size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
@@ -536,6 +556,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     }
                 }
             }
+
             ++visual_line_index;
             return IterationDecision::Continue;
         });
@@ -1715,6 +1736,14 @@ void TextEditor::set_icon(const Gfx::Bitmap* icon)
     if (m_icon == icon)
         return;
     m_icon = icon;
+    update();
+}
+
+void TextEditor::set_visualize_trailing_whitespace(bool enabled)
+{
+    if (m_visualize_trailing_whitespace == enabled)
+        return;
+    m_visualize_trailing_whitespace = enabled;
     update();
 }
 

@@ -94,6 +94,23 @@ size_t TextDocumentLine::first_non_whitespace_column() const
     return length();
 }
 
+Optional<size_t> TextDocumentLine::last_non_whitespace_column() const
+{
+    for (ssize_t i = length() - 1; i >= 0; --i) {
+        auto code_point = code_points()[i];
+        if (!isspace(code_point))
+            return i;
+    }
+    return {};
+}
+
+bool TextDocumentLine::ends_in_whitespace() const
+{
+    if (!length())
+        return false;
+    return isspace(code_points()[length() - 1]);
+}
+
 String TextDocumentLine::to_utf8() const
 {
     StringBuilder builder;
