@@ -1122,7 +1122,11 @@ private:
 
     long double m_fpu[8];
     // FIXME: Shadow for m_fpu.
-    u8 m_fpu_top { 0 };
+    u8 m_fpu_top { 255 };
+    void fpu_push(long double n) { m_fpu[++m_fpu_top] = n; }
+    long double fpu_pop() { return m_fpu[m_fpu_top--]; }
+    long double fpu_get(int i) { return m_fpu[m_fpu_top + i]; }
+    void fpu_set(int i, long double n) { m_fpu[m_fpu_top + i] = n; }
 
     ValueWithShadow<u16> m_fpu_cw { 0, 0 };
 

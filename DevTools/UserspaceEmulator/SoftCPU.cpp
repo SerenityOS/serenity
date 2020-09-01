@@ -1427,12 +1427,10 @@ void SoftCPU::FADD_RM32(const X86::Instruction& insn)
 dbg() << "fadd";
     // XXX look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem32 ops
     // XXX in the meantime, assert this has a mem arg
-    //auto new_f32 = read_memory32({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() });
     auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
     // FIXME: Respect shadow values
-    float f32 = m_fpu[(m_fpu_top++) % 8] = bit_cast<float>(new_f32.value());
-    m_fpu[m_fpu_top % 8] = m_fpu[(m_fpu_top - 1) % 8] + bit_cast<float>(f32);
-    m_fpu_top++;
+    float f32 = bit_cast<float>(new_f32.value());
+    fpu_set(0, fpu_get(0) + f32);
 }
 
 void SoftCPU::FMUL_RM32(const X86::Instruction&) { TODO_INSN(); }
@@ -1446,10 +1444,9 @@ void SoftCPU::FDIVR_RM32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FLD_RM32(const X86::Instruction& insn)
 {
 dbg() << "fld";
-    //auto new_f32 = read_memory32({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() });
     auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
     // FIXME: Respect shadow values
-    m_fpu[(m_fpu_top++) % 8] = bit_cast<float>(new_f32.value());
+    fpu_push(bit_cast<float>(new_f32.value()));
 }
 
 void SoftCPU::FXCH(const X86::Instruction&) { TODO_INSN(); }
@@ -1459,9 +1456,8 @@ void SoftCPU::FNOP(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FSTP_RM32(const X86::Instruction& insn)
 {
 dbg() << "fstp";
-    float f32 = m_fpu[(m_fpu_top--) % 8];
+    float f32 = (float)fpu_pop();
     // FIXME: Respect shadow values
-    //write_memory32({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }, shadow_wrap_as_initialized(bit_cast<u32>(f32)));
     insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(bit_cast<u32>(f32)));
 }
 
@@ -1479,7 +1475,7 @@ void SoftCPU::FLDCW(const X86::Instruction& insn)
 void SoftCPU::FLD1(const X86::Instruction&)
 {
 dbg() << "fld1";
-    m_fpu[(m_fpu_top++) % 8] = 1.0;
+    fpu_push(1.0);
 }
 
 void SoftCPU::FLDL2T(const X86::Instruction&) { TODO_INSN(); }
@@ -1534,11 +1530,10 @@ void SoftCPU::FCMOVNBE(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FISTP_RM32(const X86::Instruction& insn)
 {
 dbg() << "fistp";
-    float f32 = m_fpu[(m_fpu_top--) % 8];
+    float f32 = fpu_pop();
     // FIXME: Respect rounding mode in m_fpu_cw.
     int32_t i32 = static_cast<int32_t>(f32);
     // FIXME: Respect shadow values
-    //write_memory32({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), insn.imm_address() }, shadow_wrap_as_initialized(bit_cast<u32>(i32)));
     insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(bit_cast<u32>(i32)));
 }
 
