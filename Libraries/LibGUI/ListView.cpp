@@ -288,18 +288,4 @@ void ListView::scroll_into_view(const ModelIndex& index, Orientation orientation
     ScrollableWidget::scroll_into_view(rect, orientation);
 }
 
-void ListView::doubleclick_event(MouseEvent& event)
-{
-    if (!model())
-        return;
-    if (event.button() == MouseButton::Left) {
-        if (!selection().is_empty()) {
-            if (is_editable())
-                begin_editing(selection().first());
-            else
-                activate_selected();
-        }
-    }
-}
-
 }
