@@ -164,7 +164,7 @@ void ColumnsView::paint_event(PaintEvent& event)
     }
 }
 
-void ColumnsView::push_column(ModelIndex& parent_index)
+void ColumnsView::push_column(const ModelIndex& parent_index)
 {
     ASSERT(model());
 
@@ -272,11 +272,55 @@ void ColumnsView::did_update_model(unsigned flags)
     update();
 }
 
-void ColumnsView::keydown_event(KeyEvent& event)
+void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
 {
     if (!model())
         return;
     auto& model = *this->model();
+    if (!cursor_index().is_valid()) {
+        set_cursor(model.index(0, m_model_column, {}), SelectionUpdate::Set);
+        return;
+    }
+
+    ModelIndex new_index;
+    auto cursor_parent = model.parent_index(cursor_index());
+
+    switch (movement) {
+    case CursorMovement::Up: {
+        int row = cursor_index().row() > 0 ? cursor_index().row() - 1 : 0;
+        new_index = model.index(row, cursor_index().column(), cursor_parent);
+        break;
+    }
+    case CursorMovement::Down: {
+        int row = cursor_index().row() + 1;
+        new_index = model.index(row, cursor_index().column(), cursor_parent);
+        break;
+    }
+    case CursorMovement::Left:
+        new_index = cursor_parent;
+        break;
+    case CursorMovement::Right:
+        new_index = model.index(0, m_model_column, cursor_index());
+        if (model.is_valid(new_index)) {
+            if (model.is_valid(cursor_index()))
+                push_column(cursor_index());
+            update();
+        break;
+    }
+    default:
+        break;
+    }
+
+    if (new_index.is_valid())
+        set_cursor(new_index, selection_update);
+}
+
+void ColumnsView::keydown_event(KeyEvent& event)
+{
+    if (!model())
+        return;
+
+    SelectionUpdate selection_update = SelectionUpdate::Set;
 
     if (event.key() == KeyCode::Key_Return) {
         activate_selected();
@@ -284,68 +328,22 @@ void ColumnsView::keydown_event(KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Up) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            auto parent_index = model.parent_index(old_index);
-            int row = old_index.row() > 0 ? old_index.row() - 1 : 0;
-            new_index = model.index(row, old_index.column(), parent_index);
-        } else {
-            new_index = model.index(0, m_model_column, {});
-        }
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            update();
-        }
+        move_cursor(CursorMovement::Up, selection_update);
         return;
     }
 
     if (event.key() == KeyCode::Key_Down) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            auto parent_index = model.parent_index(old_index);
-            int row = old_index.row() + 1;
-            new_index = model.index(row, old_index.column(), parent_index);
-        } else {
-            new_index = model.index(0, m_model_column, {});
-        }
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            update();
-        }
+        move_cursor(CursorMovement::Down, selection_update);
         return;
     }
 
     if (event.key() == KeyCode::Key_Left) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            new_index = model.parent_index(old_index);
-        } else {
-            new_index = model.index(0, m_model_column, {});
-        }
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            update();
-        }
+        move_cursor(CursorMovement::Left, selection_update);
         return;
     }
 
     if (event.key() == KeyCode::Key_Right) {
-        ModelIndex old_index, new_index;
-        if (!selection().is_empty()) {
-            old_index = selection().first();
-            new_index = model.index(0, m_model_column, old_index);
-        } else {
-            new_index = model.index(0, m_model_column, {});
-        }
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            if (model.is_valid(old_index))
-                push_column(old_index);
-            update();
-        }
+        move_cursor(CursorMovement::Right, selection_update);
         return;
     }
 }
