@@ -66,7 +66,6 @@ private:
 
     virtual void did_update_model(unsigned flags) override;
     virtual void paint_event(PaintEvent&) override;
-    virtual void doubleclick_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 
