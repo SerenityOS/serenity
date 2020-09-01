@@ -37,6 +37,7 @@
 #include <limits.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <getopt.h>
 
 __BEGIN_DECLS
 
