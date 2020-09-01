@@ -27,7 +27,7 @@
 #include <AK/TestSuite.h>
 
 #include <AK/FixedArray.h>
-#include <AK/Stream.h>
+#include <AK/MemoryStream.h>
 
 static bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
 {
@@ -160,4 +160,4 @@ TEST_CASE(read_endian_values)
     EXPECT_EQ(value2, 0x04050607u);
 }
 
-TEST_MAIN(Stream)
+TEST_MAIN(MemoryStream)
