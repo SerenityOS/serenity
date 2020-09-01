@@ -208,7 +208,7 @@ void ListView::move_selection(int steps)
     if (model.is_valid(new_index)) {
         set_last_valid_hovered_index({});
         selection().set(new_index);
-        scroll_into_view(new_index, Orientation::Vertical);
+        scroll_into_view(new_index, false, true);
         update();
     } else {
         if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
@@ -252,7 +252,7 @@ void ListView::keydown_event(KeyEvent& event)
         }
         if (model.is_valid(new_index)) {
             selection().set(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
+            scroll_into_view(new_index, false, true);
             update();
         }
         return;
@@ -269,7 +269,7 @@ void ListView::keydown_event(KeyEvent& event)
         }
         if (model.is_valid(new_index)) {
             selection().set(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
+            scroll_into_view(new_index, false, true);
             update();
         }
         return;
@@ -282,10 +282,11 @@ void ListView::keydown_event(KeyEvent& event)
     return Widget::keydown_event(event);
 }
 
-void ListView::scroll_into_view(const ModelIndex& index, Orientation orientation)
+void ListView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
 {
-    auto rect = content_rect(index.row());
-    ScrollableWidget::scroll_into_view(rect, orientation);
+    if (!model())
+        return;
+    ScrollableWidget::scroll_into_view(content_rect(index.row()), scroll_horizontally, scroll_vertically);
 }
 
 }
