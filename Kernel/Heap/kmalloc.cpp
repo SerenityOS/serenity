@@ -114,6 +114,10 @@ struct KmallocGlobalHeap {
                 if (m_global_heap.m_subheap_memory[i].vaddr().as_ptr() == memory) {
                     auto region = m_global_heap.m_subheap_memory.take(i);
                     klog() << "kmalloc(): Removing memory from heap at " << region->vaddr() << ", bytes: " << region->size();
+                    if (!m_global_heap.m_backup_memory) {
+                        klog() << "kmalloc(): Using removed memory as backup: " << region->vaddr() << ", bytes: " << region->size();
+                        m_global_heap.m_backup_memory = move(region);
+                    }
                     return true;
                 }
             }
