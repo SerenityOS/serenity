@@ -160,4 +160,15 @@ TEST_CASE(read_endian_values)
     EXPECT_EQ(value2, 0x04050607u);
 }
 
+TEST_CASE(write_endian_values)
+{
+    const u8 expected[] { 4, 3, 2, 1, 1, 2, 3, 4 };
+
+    OutputMemoryStream stream;
+    stream << LittleEndian<u32> { 0x01020304 } << BigEndian<u32> { 0x01020304 };
+
+    EXPECT_EQ(stream.size(), 8u);
+    EXPECT(compare({ expected, sizeof(expected) }, stream.copy_into_contiguous_buffer()));
+}
+
 TEST_MAIN(MemoryStream)
