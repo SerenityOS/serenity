@@ -63,7 +63,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Terminal emulation (LibVT)
 * Out-of-process network protocol I/O (LibProtocol)
 * Mathematical functions (LibM)
-* ELF file handing (LibELF)
+* ELF file handling (LibELF)
 * POSIX threading (LibPthread)
 * Higher-level threading (LibThread)
 * Transport Layer Security (LibTLS)
