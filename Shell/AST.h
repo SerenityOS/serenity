@@ -28,6 +28,7 @@
 
 #include "Forward.h"
 #include "Job.h"
+#include <AK/InlineLinkedList.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -174,13 +175,30 @@ public:
     pid_t pgid { -1 };
 };
 
+struct NodeWithAction {
+    mutable NonnullRefPtr<Node> node;
+    enum Action {
+        And,
+        Or,
+        Sequence,
+    } action;
+
+    NodeWithAction(Node& node, Action action)
+        : node(node)
+        , action(action)
+    {
+    }
+};
+
 struct Command {
     Vector<String> argv;
     NonnullRefPtrVector<Redirection> redirections;
-    mutable RefPtr<Pipeline> pipeline;
     bool should_wait { true };
     bool is_pipe_source { false };
     bool should_notify_if_in_background { true };
+
+    mutable RefPtr<Pipeline> pipeline;
+    Vector<NodeWithAction> next_chain;
 };
 
 struct HitTestResult {
@@ -215,7 +233,7 @@ public:
     }
 
     CommandValue(Vector<String> argv)
-        : m_command({ move(argv), {}, {}, true, false, true })
+        : m_command({ move(argv), {}, true, false, true, nullptr, {} })
     {
     }
 
@@ -424,7 +442,6 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "And"; }
-    virtual bool would_execute() const override { return true; }
 
     RefPtr<Node> m_left;
     RefPtr<Node> m_right;
@@ -458,7 +475,6 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Background"; }
-    virtual bool would_execute() const override { return m_command->would_execute(); }
 
     RefPtr<Node> m_command;
 };
@@ -725,7 +741,6 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Or"; }
-    virtual bool would_execute() const override { return true; }
 
     RefPtr<Node> m_left;
     RefPtr<Node> m_right;
