@@ -223,7 +223,16 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 #ifdef MM_DEBUG
         dbg() << "MM: PDE " << page_directory_index << " not present (requested for " << vaddr << "), allocating";
 #endif
-        auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes);
+        bool did_purge = false;
+        auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
+        if (did_purge) {
+            // If any memory had to be purged, ensure_pte may have been called as part
+            // of the purging process. So we need to re-map the pd in this case to ensure
+            // we're writing to the correct underlying physical page
+            pd = quickmap_pd(page_directory, page_directory_table_index);
+            ASSERT(&pde == &pd[page_directory_index]); // Sanity check
+            ASSERT(!pde.is_present()); // Should have not changed
+        }
 #ifdef MM_DEBUG
         dbg() << "MM: PD K" << &page_directory << " (" << (&page_directory == m_kernel_page_directory ? "Kernel" : "User") << ") at " << PhysicalAddress(page_directory.cr3()) << " allocated page table #" << page_directory_index << " (for " << vaddr << ") at " << page_table->paddr();
 #endif
@@ -482,10 +491,11 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page()
     return page;
 }
 
-RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
+RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
 {
     ScopedSpinLock lock(s_mm_lock);
     auto page = find_free_user_physical_page();
+    bool purged_pages = false;
 
     if (!page) {
         // We didn't have a single free physical page. Let's try to free something up!
@@ -495,6 +505,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
             if (purged_page_count) {
                 klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from PurgeableVMObject{" << &vmobject << "}";
                 page = find_free_user_physical_page();
+                purged_pages = true;
                 ASSERT(page);
                 return IterationDecision::Break;
             }
@@ -516,6 +527,9 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         memset(ptr, 0, PAGE_SIZE);
         unquickmap_page();
     }
+
+    if (did_purge)
+        *did_purge = purged_pages;
 
     ++m_user_physical_pages_used;
     return page;
