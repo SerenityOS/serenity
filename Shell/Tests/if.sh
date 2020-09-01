@@ -1,13 +1,17 @@
 #!/bin/sh
 
+setopt --verbose
+
 if test 1 -eq 1 {
     # Are comments ok?
     # Basic 'if' structure, empty block.
     if true {
     } else {
+        echo "if true runs false branch"
         exit 2
     }
     if false {
+        echo "if false runs true branch"
         exit 2
     } else {
     }

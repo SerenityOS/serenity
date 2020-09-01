@@ -421,15 +421,7 @@ int Shell::run_command(const StringView& cmd)
 
     tcgetattr(0, &termios);
 
-    auto result = command->run(*this);
-    if (result->is_job()) {
-        auto job_result = static_cast<AST::JobValue*>(result.ptr());
-        auto job = job_result->job();
-        if (!job)
-            last_return_code = 0;
-        else if (job->exited())
-            last_return_code = job->exit_code();
-    }
+    command->run(*this);
 
     return last_return_code;
 }
@@ -500,8 +492,11 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     }
 
     int retval = 0;
-    if (run_builtin(command, rewirings, retval))
+    if (run_builtin(command, rewirings, retval)) {
+        for (auto& next_in_chain : command.next_chain)
+            run_tail(next_in_chain, retval);
         return nullptr;
+    }
 
     Vector<const char*> argv;
     Vector<String> copy_argv = command.argv;
@@ -619,15 +614,19 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     StringBuilder cmd;
     cmd.join(" ", command.argv);
 
-    auto job = Job::create(child, pgid, cmd.build(), find_last_job_id() + 1, command.pipeline);
+    auto job = Job::create(child, pgid, cmd.build(), find_last_job_id() + 1, AST::Command(command));
     jobs.set((u64)child, job);
 
-    job->on_exit = [](auto job) {
+    job->on_exit = [this](auto job) {
         if (!job->exited())
             return;
         if (job->is_running_in_background() && job->should_announce_exit())
             fprintf(stderr, "Shell: Job %" PRIu64 "(%s) exited\n", job->job_id(), job->cmd().characters());
+
+        last_return_code = job->exit_code();
         job->disown();
+
+        run_tail(job);
     };
 
     fds.collect();
@@ -635,9 +634,42 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     return *job;
 }
 
+void Shell::run_tail(const AST::NodeWithAction& next_in_chain, int head_exit_code)
+{
+    switch (next_in_chain.action) {
+    case AST::NodeWithAction::And:
+        if (head_exit_code == 0) {
+            auto commands = next_in_chain.node->run(*this)->resolve_as_commands(*this);
+            run_commands(commands);
+        }
+        break;
+    case AST::NodeWithAction::Or:
+        if (head_exit_code != 0) {
+            auto commands = next_in_chain.node->run(*this)->resolve_as_commands(*this);
+            run_commands(commands);
+        }
+        break;
+    case AST::NodeWithAction::Sequence:
+        auto commands = next_in_chain.node->run(*this)->resolve_as_commands(*this);
+        run_commands(commands);
+        break;
+    }
+}
+
+void Shell::run_tail(RefPtr<Job> job)
+{
+    if (auto cmd = job->command_ptr()) {
+        deferred_invoke([=, this](auto&) {
+            for (auto& next_in_chain : cmd->next_chain) {
+                run_tail(next_in_chain, job->exit_code());
+            }
+        });
+    }
+}
+
 NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
 {
-    NonnullRefPtrVector<Job> jobs_to_wait_for;
+    NonnullRefPtrVector<Job> spawned_jobs;
 
     for (auto& command : commands) {
 #ifdef SH_DEBUG
@@ -663,21 +695,19 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
         if (!job)
             continue;
 
+        spawned_jobs.append(*job);
         if (command.should_wait) {
             block_on_job(job);
-            if (!job->is_suspended())
-                jobs_to_wait_for.append(*job);
         } else {
             if (command.is_pipe_source) {
                 job->set_running_in_background(true);
-                jobs_to_wait_for.append(*job);
             } else if (command.should_notify_if_in_background) {
                 job->set_should_announce_exit(true);
             }
         }
     }
 
-    return jobs_to_wait_for;
+    return spawned_jobs;
 }
 
 bool Shell::run_file(const String& filename, bool explicitly_invoked)
@@ -708,6 +738,9 @@ void Shell::block_on_job(RefPtr<Job> job)
 
     if (!job)
         return;
+
+    if (job->is_suspended())
+        return; // We cannot wait for a suspended job.
 
     ScopeGuard io_restorer { [&]() {
         if (job->exited() && !job->is_running_in_background()) {

@@ -26,6 +26,7 @@
 
 #include "Job.h"
 #include "AST.h"
+#include "Shell.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <sys/wait.h>
@@ -69,4 +70,43 @@ bool Job::print_status(PrintStatusMode mode)
     }
 
     return true;
+}
+
+Job::Job(pid_t pid, unsigned pgid, String cmd, u64 job_id, AST::Command&& command)
+    : m_pgid(pgid)
+    , m_pid(pid)
+    , m_job_id(job_id)
+    , m_cmd(move(cmd))
+{
+    m_command = make<AST::Command>(move(command));
+
+    set_running_in_background(false);
+    m_command_timer.start();
+}
+
+void Job::set_has_exit(int exit_code)
+{
+    if (m_exited)
+        return;
+    m_exit_code = exit_code;
+    m_exited = true;
+    if (on_exit)
+        on_exit(*this);
+}
+
+void Job::set_signalled(int sig)
+{
+    if (m_exited)
+        return;
+    m_exited = true;
+    m_exit_code = 126;
+    m_term_sig = sig;
+    if (on_exit)
+        on_exit(*this);
+}
+
+void Job::unblock() const
+{
+    if (!m_exited && on_exit)
+        on_exit(*this);
 }

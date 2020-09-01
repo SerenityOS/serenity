@@ -41,9 +41,11 @@
 #    undef JOB_TIME_INFO
 #endif
 
+struct LocalFrame;
+
 class Job : public RefCounted<Job> {
 public:
-    static NonnullRefPtr<Job> create(pid_t pid, pid_t pgid, String command, u64 job_id, AST::Pipeline* pipeline = nullptr) { return adopt(*new Job(pid, pgid, move(command), job_id, pipeline)); }
+    static NonnullRefPtr<Job> create(pid_t pid, pid_t pgid, String cmd, u64 job_id, AST::Command&& command) { return adopt(*new Job(pid, pgid, move(cmd), job_id, move(command))); }
 
     ~Job()
     {
@@ -53,13 +55,15 @@ public:
             dbg() << "Command \"" << m_cmd << "\" finished in " << elapsed << " ms";
         }
 #endif
-        if (m_pipeline)
-            m_pipeline = nullptr;
     }
+
+    Function<void(RefPtr<Job>)> on_exit;
 
     pid_t pgid() const { return m_pgid; }
     pid_t pid() const { return m_pid; }
     const String& cmd() const { return m_cmd; }
+    const AST::Command& command() const { return *m_command; }
+    AST::Command* command_ptr() { return m_command; }
     u64 job_id() const { return m_job_id; }
     bool exited() const { return m_exited; }
     bool signaled() const { return m_term_sig != -1; }
@@ -78,34 +82,12 @@ public:
     bool is_running_in_background() const { return m_running_in_background; }
     bool should_announce_exit() const { return m_should_announce_exit; }
     bool is_suspended() const { return m_is_suspended; }
-    void unblock() const
-    {
-        if (!m_exited && on_exit)
-            on_exit(*this);
-    }
-    Function<void(RefPtr<Job>)> on_exit;
+    void unblock() const;
 
     Core::ElapsedTimer& timer() { return m_command_timer; }
 
-    void set_has_exit(int exit_code)
-    {
-        if (m_exited)
-            return;
-        m_exit_code = exit_code;
-        m_exited = true;
-        if (on_exit)
-            on_exit(*this);
-    }
-    void set_signalled(int sig)
-    {
-        if (m_exited)
-            return;
-        m_exited = true;
-        m_exit_code = 126;
-        m_term_sig = sig;
-        if (on_exit)
-            on_exit(*this);
-    }
+    void set_has_exit(int exit_code);
+    void set_signalled(int sig);
 
     void set_is_suspended(bool value) const { m_is_suspended = value; }
 
@@ -127,18 +109,7 @@ public:
     bool print_status(PrintStatusMode);
 
 private:
-    Job(pid_t pid, unsigned pgid, String cmd, u64 job_id, AST::Pipeline* pipeline)
-        : m_pgid(pgid)
-        , m_pid(pid)
-        , m_job_id(job_id)
-        , m_cmd(move(cmd))
-    {
-        if (pipeline)
-            m_pipeline = *pipeline;
-
-        set_running_in_background(false);
-        m_command_timer.start();
-    }
+    Job(pid_t pid, unsigned pgid, String cmd, u64 job_id, AST::Command&& command);
 
     pid_t m_pgid { 0 };
     pid_t m_pid { 0 };
@@ -153,5 +124,5 @@ private:
     mutable bool m_active { true };
     mutable bool m_is_suspended { false };
     bool m_should_be_disowned { false };
-    RefPtr<AST::Pipeline> m_pipeline;
+    OwnPtr<AST::Command> m_command;
 };

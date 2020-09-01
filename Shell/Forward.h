@@ -29,10 +29,11 @@
 class Shell;
 namespace AST {
 
+struct Command;
 class Node;
 class Value;
 class SyntaxError;
 class Pipeline;
-class Rewiring;
+struct Rewiring;
 
 }

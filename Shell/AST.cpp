@@ -184,22 +184,9 @@ void And::dump(int level) const
 
 RefPtr<Value> And::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->run(shell);
-    ASSERT(left->is_job());
-
-    auto* job_value = static_cast<JobValue*>(left.ptr());
-    const auto job = job_value->job();
-    if (!job) {
-        // Something has gone wrong, let's just pretend that the job failed.
-        return job_value;
-    }
-
-    shell->block_on_job(job);
-
-    if (job->exit_code() == 0)
-        return m_right->run(shell);
-
-    return job_value;
+    auto commands = m_left->run(shell)->resolve_as_commands(shell);
+    commands.last().next_chain.append(NodeWithAction { *m_right, NodeWithAction::And });
+    return create<CommandSequenceValue>(move(commands));
 }
 
 void And::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -354,16 +341,11 @@ RefPtr<Value> Background::run(RefPtr<Shell> shell)
     //        all but their last subnode before yielding to this, causing a command
     //        like `foo && bar&` to effectively be `foo && (bar&)`.
     auto value = m_command->run(shell)->resolve_without_cast(shell);
-    if (value->is_job()) {
-        auto job = static_cast<JobValue*>(value.ptr())->job();
-        job->set_running_in_background(true);
-        job->set_should_announce_exit(true);
-        return value;
-    }
+    ASSERT(!value->is_job());
 
     auto commands = value->resolve_as_commands(shell);
-    auto& last = commands.last();
-    last.should_wait = false;
+    for (auto& command : commands)
+        command.should_wait = false;
 
     return create<CommandSequenceValue>(move(commands));
 }
@@ -925,7 +907,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Ref
         }
         auto& last_in_commands = commands.last();
 
-        last_in_commands.redirections.append(FdRedirection::create(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
+        last_in_commands.redirections.prepend(FdRedirection::create(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
         last_in_commands.should_wait = false;
         last_in_commands.should_notify_if_in_background = false;
         last_in_commands.is_pipe_source = false;
@@ -1042,16 +1024,10 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Ref
         return;
     }
 
-    RefPtr<Job> last_job;
+    auto jobs = shell->run_commands(commands);
 
-    for (auto& job : shell->run_commands(commands)) {
-        shell->block_on_job(job);
-        last_job = move(job);
-    }
-
-    callback(create<JobValue>(move(last_job)));
-
-    return;
+    if (!jobs.is_empty())
+        callback(create<JobValue>(&jobs.last()));
 }
 
 RefPtr<Value> Execute::run(RefPtr<Shell> shell)
@@ -1150,7 +1126,7 @@ RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
     if (cond_job->signaled())
         return create<ListValue>({}); // Exit early.
 
-    if (cond_job->exit_code() == 0) {
+    if (shell->last_return_code == 0) {
         if (m_true_branch)
             return m_true_branch->run(shell);
     } else {
@@ -1287,23 +1263,9 @@ void Or::dump(int level) const
 
 RefPtr<Value> Or::run(RefPtr<Shell> shell)
 {
-
-    auto left = m_left->run(shell);
-    ASSERT(left->is_job());
-
-    auto* job_value = static_cast<JobValue*>(left.ptr());
-    const auto job = job_value->job();
-    if (!job) {
-        // Something has gone wrong, let's just pretend that the job failed.
-        return m_right->run(shell);
-    }
-
-    shell->block_on_job(job);
-
-    if (job->exit_code() == 0)
-        return job_value;
-
-    return m_right->run(shell);
+    auto commands = m_left->run(shell)->resolve_as_commands(shell);
+    commands.last().next_chain.empend(*m_right, NodeWithAction::Or);
+    return create<CommandSequenceValue>(move(commands));
 }
 
 void Or::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1549,6 +1511,7 @@ RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
         execute_node = create<AST::Execute>(m_right->position(), m_right);
         return execute_node->run(shell);
     }
+
     auto left = m_left->run(shell)->resolve_as_commands(shell);
     // This could happen if a comment is next to a command.
     if (left.size() == 1) {
@@ -1557,13 +1520,12 @@ RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
             return m_right->run(shell);
     }
 
-    auto right = m_right->run(shell)->resolve_as_commands(shell);
+    if (left.last().should_wait)
+        left.last().next_chain.append(NodeWithAction { *m_right, NodeWithAction::Sequence });
+    else
+        left.append(m_right->run(shell)->resolve_as_commands(shell));
 
-    Vector<Command> commands;
-    commands.append(left);
-    commands.append(right);
-
-    return create<CommandSequenceValue>(move(commands));
+    return create<CommandSequenceValue>(move(left));
 }
 
 void Sequence::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)

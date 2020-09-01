@@ -283,7 +283,7 @@ RefPtr<AST::Node> Parser::parse_or_logical_sequence()
     if (!right_and_sequence)
         right_and_sequence = create<AST::SyntaxError>("Expected an expression after '||'");
 
-    return create<AST::Or>(create<AST::Execute>(move(and_sequence)), create<AST::Execute>(move(right_and_sequence)));
+    return create<AST::Or>(move(and_sequence), move(right_and_sequence));
 }
 
 RefPtr<AST::Node> Parser::parse_and_logical_sequence()
@@ -305,7 +305,7 @@ RefPtr<AST::Node> Parser::parse_and_logical_sequence()
     if (!right_and_sequence)
         right_and_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
 
-    return create<AST::And>(create<AST::Execute>(move(pipe_sequence)), create<AST::Execute>(move(right_and_sequence)));
+    return create<AST::And>(move(pipe_sequence), move(right_and_sequence));
 }
 
 RefPtr<AST::Node> Parser::parse_pipe_sequence()
