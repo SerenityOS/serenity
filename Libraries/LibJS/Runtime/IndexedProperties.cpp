@@ -346,6 +346,13 @@ void IndexedProperties::append_all(Object* this_object, const IndexedProperties&
     }
 }
 
+void IndexedProperties::set_array_like_size(size_t new_size)
+{
+    if (m_storage->is_simple_storage() && new_size > SPARSE_ARRAY_THRESHOLD)
+        switch_to_generic_storage();
+    m_storage->set_array_like_size(new_size);
+}
+
 Vector<ValueAndAttributes> IndexedProperties::values_unordered() const
 {
     if (m_storage->is_simple_storage()) {
