@@ -168,6 +168,7 @@ int main(int argc, char** argv)
 
     socklen_t peer_address_size = sizeof(peer_address);
     rc = recvfrom(fd, &packet, sizeof(packet), 0, (struct sockaddr*)&peer_address, &peer_address_size);
+    gettimeofday(&t, nullptr);
     if (rc < 0) {
         perror("recvfrom");
         return 1;
@@ -176,6 +177,11 @@ int main(int argc, char** argv)
         fprintf(stderr, "incomplete packet recv\n");
         return 1;
     }
+
+    NtpTimestamp origin_timestamp = be64toh(packet.origin_timestamp);
+    NtpTimestamp receive_timestamp = be64toh(packet.receive_timestamp);
+    NtpTimestamp transmit_timestamp = be64toh(packet.transmit_timestamp);
+    NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(t);
 
     printf("NTP response from %s:\n", inet_ntoa(peer_address.sin_addr));
     printf("Leap Information: %d\n", packet.li_vn_mode >> 6);
@@ -187,8 +193,9 @@ int main(int argc, char** argv)
     printf("Root delay: %#x\n", ntohl(packet.root_delay));
     printf("Root dispersion: %#x\n", ntohl(packet.root_dispersion));
     printf("Reference ID: %#x\n", ntohl(packet.reference_id));
-    printf("Reference timestamp: %#016llx (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
-    printf("Origin timestamp:    %#016llx (%s)\n", be64toh(packet.origin_timestamp), format_ntp_timestamp(be64toh(packet.origin_timestamp)).characters());
-    printf("Receive timestamp:   %#016llx (%s)\n", be64toh(packet.receive_timestamp), format_ntp_timestamp(be64toh(packet.receive_timestamp)).characters());
-    printf("Transmit timestamp:  %#016llx (%s)\n", be64toh(packet.transmit_timestamp), format_ntp_timestamp(be64toh(packet.transmit_timestamp)).characters());
+    printf("Reference timestamp:   %#016llx (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
+    printf("Origin timestamp:      %#016llx (%s)\n", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
+    printf("Receive timestamp:     %#016llx (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
+    printf("Transmit timestamp:    %#016llx (%s)\n", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
+    printf("Destination timestamp: %#016llx (%s)\n", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
 }
