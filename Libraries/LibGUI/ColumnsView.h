@@ -42,7 +42,7 @@ public:
 private:
     ColumnsView();
     virtual ~ColumnsView() override;
-    void push_column(ModelIndex& parent_index);
+    void push_column(const ModelIndex& parent_index);
     void update_column_sizes();
 
     int item_height() const { return 16; }
@@ -54,6 +54,8 @@ private:
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent& event) override;
     virtual void keydown_event(KeyEvent& event) override;
+
+    void move_cursor(CursorMovement, SelectionUpdate) override;
 
     virtual void select_all() override;
     struct Column {
