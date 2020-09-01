@@ -41,7 +41,8 @@ public:
     int content_width() const;
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    void scroll_into_view(const ModelIndex&, Orientation);
+    virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
+
     Gfx::IntSize effective_item_size() const { return m_effective_item_size; }
 
     int model_column() const { return m_model_column; }

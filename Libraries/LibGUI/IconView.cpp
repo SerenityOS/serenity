@@ -62,9 +62,11 @@ void IconView::select_all()
     }
 }
 
-void IconView::scroll_into_view(const ModelIndex& index, Orientation orientation)
+void IconView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
 {
-    ScrollableWidget::scroll_into_view(item_rect(index.row()), orientation);
+    if (!index.is_valid())
+        return;
+    ScrollableWidget::scroll_into_view(item_rect(index.row()), scroll_horizontally, scroll_vertically);
 }
 
 void IconView::resize_event(ResizeEvent& event)
