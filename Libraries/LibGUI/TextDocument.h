@@ -177,6 +177,8 @@ public:
     void remove_range(TextDocument&, size_t start, size_t length);
 
     size_t first_non_whitespace_column() const;
+    Optional<size_t> last_non_whitespace_column() const;
+    bool ends_in_whitespace() const;
 
 private:
     // NOTE: This vector is null terminated.
