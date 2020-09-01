@@ -171,7 +171,7 @@ public:
     void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
     void set_page_directory(PageDirectory&);
-    void map(PageDirectory&);
+    bool map(PageDirectory&);
     enum class ShouldDeallocateVirtualMemoryRange {
         No,
         Yes,
@@ -201,13 +201,13 @@ private:
     }
 
     bool commit(size_t page_index);
-    void remap_page(size_t index, bool with_flush = true);
+    bool remap_page(size_t index, bool with_flush = true);
 
     PageFaultResponse handle_cow_fault(size_t page_index);
     PageFaultResponse handle_inode_fault(size_t page_index);
     PageFaultResponse handle_zero_fault(size_t page_index);
 
-    void map_individual_page_impl(size_t page_index);
+    bool map_individual_page_impl(size_t page_index);
 
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;
