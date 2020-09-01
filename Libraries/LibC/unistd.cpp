@@ -555,16 +555,17 @@ int set_process_icon(int icon_id)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+static String getlogin_buffer;
+
 char* getlogin()
 {
-    static String buffer;
-    if (buffer.is_null()) {
+    if (getlogin_buffer.is_null()) {
         if (auto* passwd = getpwuid(getuid())) {
-            buffer = String(passwd->pw_name);
+            getlogin_buffer = String(passwd->pw_name);
         }
         endpwent();
     }
-    return const_cast<char*>(buffer.characters());
+    return const_cast<char*>(getlogin_buffer.characters());
 }
 
 int ftruncate(int fd, off_t length)
