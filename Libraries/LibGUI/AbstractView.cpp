@@ -425,9 +425,6 @@ void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_orde
 
 void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update, bool scroll_cursor_into_view)
 {
-    if (m_cursor_index == index)
-        return;
-
     if (!model() || !index.is_valid()) {
         m_cursor_index = {};
         return;
