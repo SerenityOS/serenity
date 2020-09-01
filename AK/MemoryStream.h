@@ -308,8 +308,24 @@ private:
     size_t m_base_offset { 0 };
 };
 
+class OutputMemoryStream final : public OutputStream {
+public:
+    size_t write(ReadonlyBytes bytes) override { return m_stream.write(bytes); }
+    bool write_or_error(ReadonlyBytes bytes) override { return m_stream.write_or_error(bytes); }
+
+    ByteBuffer copy_into_contiguous_buffer() const { return m_stream.copy_into_contiguous_buffer(); }
+
+    Optional<size_t> offset_of(ReadonlyBytes value) const { return m_stream.offset_of(value); }
+
+    size_t size() const { return m_stream.woffset(); }
+
+private:
+    DuplexMemoryStream m_stream;
+};
+
 }
 
 using AK::DuplexMemoryStream;
 using AK::InputMemoryStream;
 using AK::InputStream;
+using AK::OutputMemoryStream;
