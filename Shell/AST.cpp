@@ -73,7 +73,7 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
 
     command.should_wait = first_in_right.should_wait && last_in_left.should_wait;
     command.is_pipe_source = first_in_right.is_pipe_source;
-    command.should_notify_if_in_background = first_in_right.should_wait && last_in_left.should_notify_if_in_background;
+    command.should_notify_if_in_background = first_in_right.should_notify_if_in_background || last_in_left.should_notify_if_in_background;
 
     Vector<Command> commands;
     commands.append(left);
