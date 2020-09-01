@@ -26,7 +26,7 @@
 
 #include "DwarfInfo.h"
 
-#include <AK/Stream.h>
+#include <AK/MemoryStream.h>
 
 namespace Debug::Dwarf {
 
@@ -53,7 +53,7 @@ void DwarfInfo::populate_compilation_units()
     if (m_debug_info_data.is_null())
         return;
 
-    InputMemoryStream stream{ m_debug_info_data };
+    InputMemoryStream stream { m_debug_info_data };
     while (!stream.eof()) {
         auto unit_offset = stream.offset();
         CompilationUnitHeader compilation_unit_header {};

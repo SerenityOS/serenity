@@ -25,8 +25,8 @@
  */
 
 #include "DebugInfo.h"
+#include <AK/MemoryStream.h>
 #include <AK/QuickSort.h>
-#include <AK/Stream.h>
 #include <LibDebug/Dwarf/CompilationUnit.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
 #include <LibDebug/Dwarf/Expression.h>

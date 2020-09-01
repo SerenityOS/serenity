@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/Stream.h>
+#include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 
@@ -57,7 +57,8 @@ private:
     void handle_standard_opcode(u8 opcode);
     void handle_sepcial_opcode(u8 opcode);
 
-    struct [[gnu::packed]] UnitHeader32 {
+    struct [[gnu::packed]] UnitHeader32
+    {
         u32 length;
         u16 version;
         u32 header_length;

@@ -28,7 +28,7 @@
 #include "CompilationUnit.h"
 #include "DwarfInfo.h"
 #include <AK/ByteBuffer.h>
-#include <AK/Stream.h>
+#include <AK/MemoryStream.h>
 
 namespace Debug::Dwarf {
 

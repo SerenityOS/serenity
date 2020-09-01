@@ -26,6 +26,7 @@
 
 #include <LibCompress/Gzip.h>
 
+#include <AK/MemoryStream.h>
 #include <AK/String.h>
 
 namespace Compress {

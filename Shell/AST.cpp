@@ -26,6 +26,7 @@
 
 #include "AST.h"
 #include "Shell.h"
+#include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
