@@ -64,6 +64,8 @@ private:
     virtual void keydown_event(KeyEvent&) override;
     virtual void drag_move_event(DragEvent&) override;
 
+    virtual void move_cursor(CursorMovement, SelectionUpdate) override;
+
     struct ItemData {
         Gfx::IntRect text_rect;
         Gfx::IntRect icon_rect;

@@ -600,112 +600,94 @@ void IconView::keydown_event(KeyEvent& event)
     if (!m_visual_row_count || !m_visual_column_count)
         return;
 
-    auto& model = *this->model();
+    SelectionUpdate selection_update = SelectionUpdate::Set;
+
     if (event.key() == KeyCode::Key_Return) {
         activate_selected();
         return;
     }
     if (event.key() == KeyCode::Key_Home) {
-        auto new_index = model.index(0, 0);
-        if (model.is_valid(new_index)) {
-            set_selection(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_cursor(CursorMovement::Home, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_End) {
-        auto new_index = model.index(model.row_count() - 1, 0);
-        if (model.is_valid(new_index)) {
-            set_selection(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_cursor(CursorMovement::End, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            new_index = model.index(old_index.row() - m_visual_column_count, old_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-        if (model.is_valid(new_index)) {
-            set_selection(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_cursor(CursorMovement::Up, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            new_index = model.index(old_index.row() + m_visual_column_count, old_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-        if (model.is_valid(new_index)) {
-            set_selection(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_cursor(CursorMovement::Down, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            new_index = model.index(old_index.row() - 1, old_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-        if (model.is_valid(new_index)) {
-            set_selection(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_cursor(CursorMovement::Left, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_Right) {
-        ModelIndex new_index;
-        if (!selection().is_empty()) {
-            auto old_index = selection().first();
-            new_index = model.index(old_index.row() + 1, old_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-        if (model.is_valid(new_index)) {
-            set_selection(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_cursor(CursorMovement::Right, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_PageUp) {
-        int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
-        auto old_index = selection().first();
-        auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
-        if (model.is_valid(new_index)) {
-            set_selection(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_cursor(CursorMovement::PageUp, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_PageDown) {
-        int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
-        auto old_index = selection().first();
-        auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
-        if (model.is_valid(new_index)) {
-            set_selection(new_index);
-            scroll_into_view(new_index, Orientation::Vertical);
-            update();
-        }
+        move_cursor(CursorMovement::PageDown, selection_update);
         return;
     }
     return Widget::keydown_event(event);
+}
+
+void IconView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+
+    if (!cursor_index().is_valid()) {
+        set_cursor(model.index(0, 0), SelectionUpdate::Set);
+        return;
+    }
+
+    ModelIndex new_index;
+
+    switch (movement) {
+    case CursorMovement::Right:
+        new_index = model.index(cursor_index().row() + 1, cursor_index().column());
+        break;
+    case CursorMovement::Left:
+        new_index = model.index(cursor_index().row() - 1, cursor_index().column());
+        break;
+    case CursorMovement::Up:
+        new_index = model.index(cursor_index().row() - m_visual_column_count, cursor_index().column());
+        break;
+    case CursorMovement::Down:
+        new_index = model.index(cursor_index().row() + m_visual_column_count, cursor_index().column());
+        break;
+    case CursorMovement::PageUp: {
+        int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
+        new_index = model.index(max(0, cursor_index().row() - items_per_page), cursor_index().column());
+        break;
+    }
+    case CursorMovement::PageDown: {
+        int items_per_page = (visible_content_rect().height() / effective_item_size().height()) * m_visual_column_count;
+        new_index = model.index(min(model.row_count() - 1, cursor_index().row() + items_per_page), cursor_index().column());
+        break;
+    }
+    case CursorMovement::Home:
+        new_index = model.index(0, 0);
+        break;
+    case CursorMovement::End:
+        new_index = model.index(model.row_count() - 1, 0);
+        break;
+    default:
+        break;
+    }
+    if (new_index.is_valid())
+        set_cursor(new_index, selection_update);
 }
 
 }
