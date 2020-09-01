@@ -89,18 +89,18 @@ void MemoryManager::protect_kernel_image()
 {
     // Disable writing to the kernel text and rodata segments.
     for (size_t i = (FlatPtr)&start_of_kernel_text; i < (FlatPtr)&start_of_kernel_data; i += PAGE_SIZE) {
-        auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
+        auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
 
     if (Processor::current().has_feature(CPUFeature::NX)) {
         // Disable execution of the kernel data and bss segments, as well as the kernel heap.
         for (size_t i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_bss; i += PAGE_SIZE) {
-            auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
+            auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
         for (size_t i = FlatPtr(kmalloc_start); i < FlatPtr(kmalloc_end); i += PAGE_SIZE) {
-            auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
+            auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
     }
@@ -209,7 +209,7 @@ PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualA
     return &quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
 }
 
-PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
+PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(s_mm_lock.own_lock());
@@ -225,6 +225,10 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 #endif
         bool did_purge = false;
         auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes, &did_purge);
+        if (!page_table) {
+            dbg() << "MM: Unable to allocate page table to map " << vaddr;
+            return nullptr;
+        }
         if (did_purge) {
             // If any memory had to be purged, ensure_pte may have been called as part
             // of the purging process. So we need to re-map the pd in this case to ensure
@@ -247,7 +251,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         ASSERT(result == AK::HashSetResult::InsertedNewEntry);
     }
 
-    return quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
+    return &quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
 }
 
 void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress vaddr, bool is_last_release)

@@ -227,38 +227,46 @@ Bitmap& Region::ensure_cow_map() const
     return *m_cow_map;
 }
 
-void Region::map_individual_page_impl(size_t page_index)
+bool Region::map_individual_page_impl(size_t page_index)
 {
     auto page_vaddr = vaddr_from_page_index(page_index);
-    auto& pte = MM.ensure_pte(*m_page_directory, page_vaddr);
+    auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
+    if (!pte) {
+#ifdef MM_DEBUG
+        dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << " " << name() << " cannot create PTE for " << page_vaddr;
+#endif
+        return false;
+    }
     auto* page = physical_page(page_index);
     if (!page || (!is_readable() && !is_writable())) {
-        pte.clear();
+        pte->clear();
     } else {
-        pte.set_cache_disabled(!m_cacheable);
-        pte.set_physical_page_base(page->paddr().get());
-        pte.set_present(true);
+        pte->set_cache_disabled(!m_cacheable);
+        pte->set_physical_page_base(page->paddr().get());
+        pte->set_present(true);
         if (should_cow(page_index))
-            pte.set_writable(false);
+            pte->set_writable(false);
         else
-            pte.set_writable(is_writable());
+            pte->set_writable(is_writable());
         if (Processor::current().has_feature(CPUFeature::NX))
-            pte.set_execute_disabled(!is_executable());
-        pte.set_user_allowed(is_user_accessible());
+            pte->set_execute_disabled(!is_executable());
+        pte->set_user_allowed(is_user_accessible());
 #ifdef MM_DEBUG
-        dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << page->paddr() << " (@" << page << ")";
+        dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte->raw() << "{" << pte << "}) " << name() << " " << page_vaddr << " => " << page->paddr() << " (@" << page << ")";
 #endif
     }
+    return true;
 }
 
-void Region::remap_page(size_t page_index, bool with_flush)
+bool Region::remap_page(size_t page_index, bool with_flush)
 {
     ASSERT(m_page_directory);
     ScopedSpinLock lock(s_mm_lock);
     ASSERT(physical_page(page_index));
-    map_individual_page_impl(page_index);
+    bool success = map_individual_page_impl(page_index);
     if (with_flush)
         MM.flush_tlb(vaddr_from_page_index(page_index));
+    return success;
 }
 
 void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
@@ -291,16 +299,24 @@ void Region::set_page_directory(PageDirectory& page_directory)
     m_page_directory = page_directory;
 }
 
-void Region::map(PageDirectory& page_directory)
+bool Region::map(PageDirectory& page_directory)
 {
     ScopedSpinLock lock(s_mm_lock);
     set_page_directory(page_directory);
 #ifdef MM_DEBUG
     dbg() << "MM: Region::map() will map VMO pages " << first_page_index() << " - " << last_page_index() << " (VMO page count: " << vmobject().page_count() << ")";
 #endif
-    for (size_t page_index = 0; page_index < page_count(); ++page_index)
-        map_individual_page_impl(page_index);
-    MM.flush_tlb(vaddr(), page_count());
+    size_t page_index = 0;
+    while (page_index < page_count()) {
+        if (!map_individual_page_impl(page_index))
+            break;
+        ++page_index;
+    }
+    if (page_index > 0) {
+        MM.flush_tlb(vaddr(), page_index);
+        return page_index == page_count();
+    }
+    return false;
 }
 
 void Region::remap()
@@ -371,7 +387,8 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "MM: zero_page() but page already present. Fine with me!";
 #endif
-        remap_page(page_index_in_region);
+        if (!remap_page(page_index_in_region))
+            return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
     }
 
@@ -389,7 +406,10 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     dbg() << "      >> ZERO " << page->paddr();
 #endif
     page_slot = move(page);
-    remap_page(page_index_in_region);
+    if (!remap_page(page_index_in_region)) {
+        klog() << "MM: handle_zero_fault was unable to allocate a page table to map " << page_slot;
+        return PageFaultResponse::OutOfMemory;
+    }
     return PageFaultResponse::Continue;
 }
 
@@ -402,7 +422,8 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
         dbg() << "    >> It's a COW page but nobody is sharing it anymore. Remap r/w";
 #endif
         set_should_cow(page_index_in_region, false);
-        remap_page(page_index_in_region);
+        if (!remap_page(page_index_in_region))
+            return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
     }
 
@@ -428,7 +449,8 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     page_slot = move(page);
     MM.unquickmap_page();
     set_should_cow(page_index_in_region, false);
-    remap_page(page_index_in_region);
+    if (!remap_page(page_index_in_region))
+        return PageFaultResponse::OutOfMemory;
     return PageFaultResponse::Continue;
 }
 
@@ -452,7 +474,8 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
         dbg() << ("MM: page_in_from_inode() but page already present. Fine with me!");
 #endif
-        remap_page(page_index_in_region);
+        if (!remap_page(page_index_in_region))
+            return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
     }
 

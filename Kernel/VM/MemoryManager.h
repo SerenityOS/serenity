@@ -195,7 +195,7 @@ private:
     PageTableEntry* quickmap_pt(PhysicalAddress);
 
     PageTableEntry* pte(const PageDirectory&, VirtualAddress);
-    PageTableEntry& ensure_pte(PageDirectory&, VirtualAddress);
+    PageTableEntry* ensure_pte(PageDirectory&, VirtualAddress);
     void release_pte(PageDirectory&, VirtualAddress, bool);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
