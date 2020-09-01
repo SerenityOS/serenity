@@ -208,6 +208,7 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_last()
 
 void GenericIndexedPropertyStorage::set_array_like_size(size_t new_size)
 {
+    m_array_size = new_size;
     if (new_size < SPARSE_ARRAY_THRESHOLD) {
         m_packed_elements.resize(new_size);
         m_sparse_elements.clear();
