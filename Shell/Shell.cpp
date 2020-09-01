@@ -699,11 +699,9 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
         if (command.should_wait) {
             block_on_job(job);
         } else {
-            if (command.is_pipe_source) {
-                job->set_running_in_background(true);
-            } else if (command.should_notify_if_in_background) {
+            job->set_running_in_background(true);
+            if (!command.is_pipe_source && command.should_notify_if_in_background)
                 job->set_should_announce_exit(true);
-            }
         }
     }
 
@@ -759,9 +757,6 @@ void Shell::block_on_job(RefPtr<Job> job)
         return;
 
     loop.exec();
-
-    if (job->is_suspended())
-        job->print_status(Job::PrintStatusMode::Basic);
 }
 
 String Shell::get_history_path()
