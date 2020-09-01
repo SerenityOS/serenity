@@ -42,6 +42,8 @@ PurgeableVMObject::PurgeableVMObject(size_t size)
 
 PurgeableVMObject::PurgeableVMObject(const PurgeableVMObject& other)
     : AnonymousVMObject(other)
+    , m_was_purged(other.m_was_purged)
+    , m_volatile(other.m_volatile)
 {
 }
 
