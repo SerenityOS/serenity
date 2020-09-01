@@ -123,7 +123,7 @@ TEST_CASE(duplex_simple)
     EXPECT(stream.eof());
 }
 
-TEST_CASE(duplex_seek_into_history)
+TEST_CASE(duplex_large_buffer)
 {
     DuplexMemoryStream stream;
 
@@ -131,53 +131,19 @@ TEST_CASE(duplex_seek_into_history)
 
     EXPECT_EQ(stream.remaining(), 0ul);
 
-    for (size_t idx = 0; idx < 256; ++idx) {
+    for (size_t idx = 0; idx < 256; ++idx)
         stream << one_kibibyte;
-    }
 
     EXPECT_EQ(stream.remaining(), 256 * 1024ul);
 
-    for (size_t idx = 0; idx < 128; ++idx) {
+    for (size_t idx = 0; idx < 128; ++idx)
         stream >> one_kibibyte;
-    }
 
     EXPECT_EQ(stream.remaining(), 128 * 1024ul);
 
-    // We now have 128KiB on the stream. Because the stream has a
-    // history size of 64KiB, we should be able to seek to 64KiB.
-    static_assert(DuplexMemoryStream::history_size == 64 * 1024);
-    stream.rseek(64 * 1024);
-
-    EXPECT_EQ(stream.remaining(), 192 * 1024ul);
-
-    for (size_t idx = 0; idx < 192; ++idx) {
+    for (size_t idx = 0; idx < 128; ++idx)
         stream >> one_kibibyte;
-    }
 
-    EXPECT(stream.eof());
-}
-
-TEST_CASE(duplex_wild_seeking)
-{
-    DuplexMemoryStream stream;
-
-    int input0 = 42, input1 = 13, input2 = -12;
-    int output0, output1, output2;
-
-    stream << input2;
-    stream << input0 << input1;
-    stream.rseek(0);
-    stream << input2 << input0;
-
-    stream.rseek(4);
-    stream >> output0 >> output1 >> output2;
-
-    EXPECT(!stream.eof());
-    EXPECT_EQ(input0, output0);
-    EXPECT_EQ(input1, output1);
-    EXPECT_EQ(input2, output2);
-
-    stream.discard_or_error(4);
     EXPECT(stream.eof());
 }
 
