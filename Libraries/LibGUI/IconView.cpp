@@ -602,45 +602,11 @@ void IconView::keydown_event(KeyEvent& event)
     if (!m_visual_row_count || !m_visual_column_count)
         return;
 
-    SelectionUpdate selection_update = SelectionUpdate::Set;
-
     if (event.key() == KeyCode::Key_Return) {
         activate_selected();
         return;
     }
-    if (event.key() == KeyCode::Key_Home) {
-        move_cursor(CursorMovement::Home, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_End) {
-        move_cursor(CursorMovement::End, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Up) {
-        move_cursor(CursorMovement::Up, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Down) {
-        move_cursor(CursorMovement::Down, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Left) {
-        move_cursor(CursorMovement::Left, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Right) {
-        move_cursor(CursorMovement::Right, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_PageUp) {
-        move_cursor(CursorMovement::PageUp, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_PageDown) {
-        move_cursor(CursorMovement::PageDown, selection_update);
-        return;
-    }
-    return Widget::keydown_event(event);
+    AbstractView::keydown_event(event);
 }
 
 void IconView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
