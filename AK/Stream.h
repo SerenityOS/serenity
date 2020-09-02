@@ -39,17 +39,17 @@ class Stream {
 public:
     virtual ~Stream() { ASSERT(!has_any_error()); }
 
-    bool has_recoverable_error() const { return m_recoverable_error; }
-    bool has_fatal_error() const { return m_fatal_error; }
-    bool has_any_error() const { return has_recoverable_error() || has_fatal_error(); }
+    virtual bool has_recoverable_error() const { return m_recoverable_error; }
+    virtual bool has_fatal_error() const { return m_fatal_error; }
+    virtual bool has_any_error() const { return has_recoverable_error() || has_fatal_error(); }
 
-    bool handle_recoverable_error()
+    virtual bool handle_recoverable_error()
     {
         ASSERT(!has_fatal_error());
         return exchange(m_recoverable_error, false);
     }
-    bool handle_fatal_error() { return exchange(m_fatal_error, false); }
-    bool handle_any_error()
+    virtual bool handle_fatal_error() { return exchange(m_fatal_error, false); }
+    virtual bool handle_any_error()
     {
         if (has_any_error()) {
             m_recoverable_error = false;
@@ -61,8 +61,8 @@ public:
         return false;
     }
 
-    void set_recoverable_error() const { m_recoverable_error = true; }
-    void set_fatal_error() const { m_fatal_error = true; }
+    virtual void set_recoverable_error() const { m_recoverable_error = true; }
+    virtual void set_fatal_error() const { m_fatal_error = true; }
 
 private:
     mutable bool m_recoverable_error { false };
