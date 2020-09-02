@@ -69,6 +69,7 @@ private:
     virtual void paint_event(PaintEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
+    virtual void mousemove_event(MouseEvent&) override;
 
     Gfx::IntRect content_rect(int row) const;
     int item_count() const;

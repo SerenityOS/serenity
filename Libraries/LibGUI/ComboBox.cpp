@@ -196,9 +196,6 @@ void ComboBox::open()
     Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
     list_window_rect.intersect(Desktop::the().rect().shrunken(0, taskbar_height + menubar_height + offset));
 
-    if (m_list_view->hover_highlighting())
-        m_list_view->set_last_valid_hovered_index({});
-
     m_editor->set_has_visible_list(true);
     m_editor->set_focus(true);
     m_list_window->set_rect(list_window_rect);

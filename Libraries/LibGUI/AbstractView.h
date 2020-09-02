@@ -104,8 +104,6 @@ public:
 
     NonnullRefPtr<Gfx::Font> font_for_index(const ModelIndex&) const;
 
-    void set_last_valid_hovered_index(const ModelIndex&);
-
     void set_key_column_and_sort_order(int column, SortOrder);
 
     int key_column() const { return m_key_column; }
@@ -153,7 +151,6 @@ protected:
     bool m_might_drag { false };
 
     ModelIndex m_hovered_index;
-    ModelIndex m_last_valid_hovered_index;
 
     int m_key_column { -1 };
     SortOrder m_sort_order;
