@@ -57,9 +57,10 @@ public:
 
     virtual void select_all() override;
 
-    void move_selection(int steps);
-
     Function<void()> on_escape_pressed;
+
+    virtual void move_cursor(CursorMovement, SelectionUpdate) override;
+    void move_cursor_relative(int steps, SelectionUpdate);
 
 private:
     ListView();

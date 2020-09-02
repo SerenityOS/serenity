@@ -62,27 +62,26 @@ ComboBox::ComboBox()
     m_editor->set_has_open_button(true);
     m_editor->on_change = [this] {
         if (on_change)
-            on_change(m_editor->text(), m_list_view->selection().first());
+            on_change(m_editor->text(), m_list_view->cursor_index());
     };
     m_editor->on_return_pressed = [this] {
         if (on_return_pressed)
             on_return_pressed();
     };
     m_editor->on_up_pressed = [this] {
-        m_list_view->move_selection(-1);
+        m_list_view->move_cursor(AbstractView::CursorMovement::Up, AbstractView::SelectionUpdate::Set);
     };
     m_editor->on_down_pressed = [this] {
-        m_list_view->move_selection(1);
+        m_list_view->move_cursor(AbstractView::CursorMovement::Down, AbstractView::SelectionUpdate::Set);
     };
     m_editor->on_pageup_pressed = [this] {
-        m_list_view->move_selection(-m_list_view->selection().first().row());
+        m_list_view->move_cursor(AbstractView::CursorMovement::PageUp, AbstractView::SelectionUpdate::Set);
     };
     m_editor->on_pagedown_pressed = [this] {
-        if (model())
-            m_list_view->move_selection((model()->row_count() - 1) - m_list_view->selection().first().row());
+        m_list_view->move_cursor(AbstractView::CursorMovement::PageDown, AbstractView::SelectionUpdate::Set);
     };
     m_editor->on_mousewheel = [this](int delta) {
-        m_list_view->move_selection(delta);
+        m_list_view->move_cursor_relative(delta, AbstractView::SelectionUpdate::Set);
     };
     m_editor->on_mousedown = [this] {
         if (only_allow_values_from_model())
@@ -156,16 +155,14 @@ void ComboBox::set_model(NonnullRefPtr<Model> model)
 
 void ComboBox::set_selected_index(size_t index)
 {
-    auto model = this->m_list_view->model();
-
-    auto model_index = model->index(index, 0);
-    if (model->is_valid(model_index))
-        this->m_list_view->selection().set(model_index);
+    if (!m_list_view->model())
+        return;
+    m_list_view->set_cursor(m_list_view->model()->index(index, 0), AbstractView::SelectionUpdate::Set);
 }
 
 size_t ComboBox::selected_index() const
 {
-    return m_list_view->selection().first().row();
+    return m_list_view->cursor_index().row();
 }
 
 void ComboBox::select_all()
