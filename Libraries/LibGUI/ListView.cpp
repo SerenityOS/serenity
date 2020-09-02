@@ -185,44 +185,14 @@ int ListView::item_count() const
     return model()->row_count();
 }
 
-void ListView::move_selection(int steps)
-{
-    if (!model())
-        return;
-    auto& model = *this->model();
-    ModelIndex new_index;
-    if (!selection().is_empty()) {
-        if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
-            new_index = model.index(m_last_valid_hovered_index.row() + steps, m_last_valid_hovered_index.column());
-        } else {
-            auto old_index = selection().first();
-            new_index = model.index(old_index.row() + steps, old_index.column());
-        }
-    } else {
-        if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
-            new_index = model.index(m_last_valid_hovered_index.row() + steps, m_last_valid_hovered_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-    }
-    if (model.is_valid(new_index)) {
-        set_last_valid_hovered_index({});
-        selection().set(new_index);
-        scroll_into_view(new_index, false, true);
-        update();
-    } else {
-        if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
-            new_index = model.index(m_last_valid_hovered_index.row(), m_last_valid_hovered_index.column());
-            selection().set(new_index);
-        }
-    }
-}
-
 void ListView::keydown_event(KeyEvent& event)
 {
     if (!model())
         return;
     auto& model = *this->model();
+
+    SelectionUpdate selection_update = SelectionUpdate::Set;
+
     ModelIndex new_index;
     if (event.key() == KeyCode::Key_Return) {
         if (hover_highlighting() && m_last_valid_hovered_index.is_valid()) {
@@ -233,45 +203,19 @@ void ListView::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
-        move_selection(-1);
+        move_cursor(CursorMovement::Up, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_Down) {
-        move_selection(1);
+        move_cursor(CursorMovement::Down, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_PageUp) {
-        if (hover_highlighting())
-            set_last_valid_hovered_index({});
-        if (!selection().is_empty()) {
-            int items_per_page = visible_content_rect().height() / item_height();
-            auto old_index = selection().first();
-            new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            scroll_into_view(new_index, false, true);
-            update();
-        }
+        move_cursor(CursorMovement::PageUp, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_PageDown) {
-        if (hover_highlighting())
-            set_last_valid_hovered_index({});
-        if (!selection().is_empty()) {
-            int items_per_page = visible_content_rect().height() / item_height();
-            auto old_index = selection().first();
-            new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
-        } else {
-            new_index = model.index(0, 0);
-        }
-        if (model.is_valid(new_index)) {
-            selection().set(new_index);
-            scroll_into_view(new_index, false, true);
-            update();
-        }
+        move_cursor(CursorMovement::PageDown, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_Escape) {
@@ -279,7 +223,69 @@ void ListView::keydown_event(KeyEvent& event)
             on_escape_pressed();
         return;
     }
-    return Widget::keydown_event(event);
+    return AbstractView::keydown_event(event);
+}
+
+void ListView::move_cursor_relative(int steps, SelectionUpdate selection_update)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+    ModelIndex new_index;
+    if (cursor_index().is_valid()) {
+        new_index = model.index(cursor_index().row() + steps, cursor_index().column());
+    } else {
+        new_index = model.index(0, 0);
+    }
+    set_cursor(new_index, selection_update);
+}
+
+void ListView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+
+    if (!cursor_index().is_valid()) {
+        set_cursor(model.index(0, 0), SelectionUpdate::Set);
+        return;
+    }
+
+    ModelIndex new_index;
+
+    switch (movement) {
+    case CursorMovement::Up:
+        new_index = model.index(cursor_index().row() - 1, cursor_index().column());
+        break;
+    case CursorMovement::Down:
+        new_index = model.index(cursor_index().row() + 1, cursor_index().column());
+        break;
+    case CursorMovement::Home:
+        new_index = model.index(0, 0);
+        break;
+    case CursorMovement::End:
+        new_index = model.index(model.row_count() - 1, 0);
+        break;
+    case CursorMovement::PageUp: {
+        if (hover_highlighting())
+            set_last_valid_hovered_index({});
+        int items_per_page = visible_content_rect().height() / item_height();
+        new_index = model.index(max(0, cursor_index().row() - items_per_page), cursor_index().column());
+        break;
+    }
+    case CursorMovement::PageDown: {
+        if (hover_highlighting())
+            set_last_valid_hovered_index({});
+        int items_per_page = visible_content_rect().height() / item_height();
+        new_index = model.index(min(model.row_count() - 1, cursor_index().row() + items_per_page), cursor_index().column());
+        break;
+    }
+    default:
+        break;
+    }
+
+    if (new_index.is_valid())
+        set_cursor(new_index, selection_update);
 }
 
 void ListView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
