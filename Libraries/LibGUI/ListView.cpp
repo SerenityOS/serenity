@@ -194,27 +194,9 @@ void ListView::keydown_event(KeyEvent& event)
     if (!model())
         return;
 
-    SelectionUpdate selection_update = SelectionUpdate::Set;
-
     ModelIndex new_index;
     if (event.key() == KeyCode::Key_Return) {
         activate_selected();
-        return;
-    }
-    if (event.key() == KeyCode::Key_Up) {
-        move_cursor(CursorMovement::Up, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Down) {
-        move_cursor(CursorMovement::Down, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_PageUp) {
-        move_cursor(CursorMovement::PageUp, selection_update);
-        return;
-    }
-    if (event.key() == KeyCode::Key_PageDown) {
-        move_cursor(CursorMovement::PageDown, selection_update);
         return;
     }
     if (event.key() == KeyCode::Key_Escape) {
@@ -222,7 +204,7 @@ void ListView::keydown_event(KeyEvent& event)
             on_escape_pressed();
         return;
     }
-    return AbstractView::keydown_event(event);
+    AbstractView::keydown_event(event);
 }
 
 void ListView::move_cursor_relative(int steps, SelectionUpdate selection_update)

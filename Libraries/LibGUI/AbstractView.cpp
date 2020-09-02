@@ -443,4 +443,53 @@ void AbstractView::set_edit_triggers(unsigned triggers)
     m_edit_triggers = triggers;
 }
 
+void AbstractView::keydown_event(KeyEvent& event)
+{
+    SelectionUpdate selection_update = SelectionUpdate::Set;
+    if (event.modifiers() == KeyModifier::Mod_Shift) {
+        selection_update = SelectionUpdate::Shift;
+    }
+
+    if (event.key() == KeyCode::Key_Left) {
+        move_cursor(CursorMovement::Left, selection_update);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Right) {
+        move_cursor(CursorMovement::Right, selection_update);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Up) {
+        move_cursor(CursorMovement::Up, selection_update);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Down) {
+        move_cursor(CursorMovement::Down, selection_update);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_Home) {
+        move_cursor(CursorMovement::Home, selection_update);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_End) {
+        move_cursor(CursorMovement::End, selection_update);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageUp) {
+        move_cursor(CursorMovement::PageUp, selection_update);
+        event.accept();
+        return;
+    }
+    if (event.key() == KeyCode::Key_PageDown) {
+        move_cursor(CursorMovement::PageDown, selection_update);
+        event.accept();
+        return;
+    }
+}
+
 }

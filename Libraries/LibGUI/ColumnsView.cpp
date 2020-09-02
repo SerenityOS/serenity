@@ -320,32 +320,12 @@ void ColumnsView::keydown_event(KeyEvent& event)
     if (!model())
         return;
 
-    SelectionUpdate selection_update = SelectionUpdate::Set;
-
     if (event.key() == KeyCode::Key_Return) {
         activate_selected();
         return;
     }
 
-    if (event.key() == KeyCode::Key_Up) {
-        move_cursor(CursorMovement::Up, selection_update);
-        return;
-    }
-
-    if (event.key() == KeyCode::Key_Down) {
-        move_cursor(CursorMovement::Down, selection_update);
-        return;
-    }
-
-    if (event.key() == KeyCode::Key_Left) {
-        move_cursor(CursorMovement::Left, selection_update);
-        return;
-    }
-
-    if (event.key() == KeyCode::Key_Right) {
-        move_cursor(CursorMovement::Right, selection_update);
-        return;
-    }
+    AbstractView::keydown_event(event);
 }
 
 }
