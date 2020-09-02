@@ -28,7 +28,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
 
-static void decompress_file(Core::InputFileStream input_stream, Core::OutputFileStream output_stream)
+static void decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffered<Core::OutputFileStream>& output_stream)
 {
     auto gzip_stream = Compress::GzipDecompressor { input_stream };
 
@@ -38,9 +38,6 @@ static void decompress_file(Core::InputFileStream input_stream, Core::OutputFile
         const auto nread = gzip_stream.read({ buffer, sizeof(buffer) });
         output_stream.write_or_error({ buffer, nread });
     }
-
-    input_stream.close();
-    output_stream.close();
 }
 
 int main(int argc, char** argv)
@@ -64,12 +61,13 @@ int main(int argc, char** argv)
         const auto input_filename = filename;
         const auto output_filename = filename.substring_view(0, filename.length() - 3);
 
-        auto input_stream_result = Core::InputFileStream::open(input_filename);
+        auto input_stream_result = Core::InputFileStream::open_buffered(input_filename);
 
         if (write_to_stdout) {
-            decompress_file(input_stream_result.value(), Core::OutputFileStream::stdout());
+            auto stdout = Core::OutputFileStream::stdout_buffered();
+            decompress_file(input_stream_result.value(), stdout);
         } else {
-            auto output_stream_result = Core::OutputFileStream::open(output_filename);
+            auto output_stream_result = Core::OutputFileStream::open_buffered(output_filename);
             decompress_file(input_stream_result.value(), output_stream_result.value());
         }
 
