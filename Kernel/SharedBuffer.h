@@ -75,6 +75,13 @@ public:
     size_t size() const { return m_vmobject->size(); }
     void destroy_if_unused();
     void seal();
+    enum class SetVolatileError {
+        Success = 0,
+        NotPurgeable,
+        OutOfMemory,
+        NotMapped
+    };
+    SetVolatileError set_volatile_all(bool is_volatile, bool& was_purged);
     PurgeableVMObject& vmobject() { return m_vmobject; }
     const PurgeableVMObject& vmobject() const { return m_vmobject; }
     int id() const { return m_shbuf_id; }
