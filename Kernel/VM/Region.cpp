@@ -187,11 +187,16 @@ auto Region::set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, b
             // Attempt to remap the page range. We want to make sure we have
             // enough memory, if not we need to inform the caller of that
             // fact
-            if (!remap_page_range(first_page_index, last_page_index - first_page_index))
+            if (!remap_page_range(first_page_index, last_page_index - first_page_index, true))
                 return SetVolatileError::OutOfMemory;
         }
     }
     return SetVolatileError::Success;
+}
+
+bool Region::can_commit() const
+{
+    return vmobject().is_anonymous() || vmobject().is_purgeable();
 }
 
 bool Region::commit()
@@ -339,7 +344,7 @@ bool Region::map_individual_page_impl(size_t page_index)
     return true;
 }
 
-bool Region::remap_page_range(size_t page_index, size_t page_count)
+bool Region::remap_page_range(size_t page_index, size_t page_count, bool do_commit)
 {
     bool success = true;
     ScopedSpinLock lock(s_mm_lock);
@@ -347,6 +352,10 @@ bool Region::remap_page_range(size_t page_index, size_t page_count)
     ScopedSpinLock page_lock(m_page_directory->get_lock());
     size_t index = page_index;
     while (index < page_index + page_count) {
+        if (do_commit && !commit(index)) {
+            success = false;
+            break;
+        }
         if (!map_individual_page_impl(index)) {
             success = false;
             break;
