@@ -861,8 +861,12 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
     Streamer streamer(context.data + bmp_header_size + context.dib_size(), size_of_color_table);
     for (u32 i = 0; !streamer.at_end() && i < max_colors; ++i) {
         if (bytes_per_color == 4) {
+            if (!streamer.has_u32())
+                return false;
             context.color_table.append(streamer.read_u32());
         } else {
+            if (!streamer.has_u24())
+                return false;
             context.color_table.append(streamer.read_u24());
         }
     }
