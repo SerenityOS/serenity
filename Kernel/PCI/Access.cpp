@@ -193,6 +193,11 @@ u8 get_class(Address address)
     return read8(address, PCI_CLASS);
 }
 
+u8 get_programming_interface(Address address)
+{
+    return read8(address, PCI_PROG_IF);
+}
+
 u16 get_subsystem_id(Address address)
 {
     return read16(address, PCI_SUBSYSTEM_ID);
