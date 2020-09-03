@@ -65,16 +65,15 @@ public:
 
     size_t read(Bytes bytes) override
     {
-        size_t nread = 0;
+        auto nread = m_buffered.bytes().copy_trimmed_to(bytes);
 
-        if (!m_buffered.is_empty()) {
-            nread += m_buffered.bytes().copy_trimmed_to(bytes);
+        m_buffered.bytes().slice(nread, m_buffered.size() - nread).copy_to(m_buffered);
+        m_buffered.trim(m_buffered.size() - nread);
 
-            m_buffered.bytes().slice(nread).copy_to(m_buffered);
-            m_buffered.trim(m_buffered.size() - nread);
-        }
+        while (nread < bytes.size()) {
+            if (m_file->eof())
+                return nread;
 
-        while (nread < bytes.size() && !eof()) {
             if (m_file->has_error()) {
                 set_fatal_error();
                 return 0;
