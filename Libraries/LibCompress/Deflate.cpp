@@ -233,7 +233,8 @@ size_t DeflateDecompressor::read(Bytes bytes)
             return read(bytes);
         }
 
-        ASSERT_NOT_REACHED();
+        set_fatal_error();
+        return 0;
     }
 
     if (m_state == State::ReadingCompressedBlock) {
