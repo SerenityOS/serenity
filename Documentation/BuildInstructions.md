@@ -69,6 +69,11 @@ pkg_add bash gmp gcc git flock gmake sudo
 $ pkg add coreutils gmake bash sudo git
 ```
 
+#### Windows
+For Windows, you will require Windows Subsystem for Linux 2 (WSL2). [Follow the WSL2 instructions here.](https://github.com/SerenityOS/serenity/blob/master/Documentation/NotesOnWSL.md)
+Do note the ```Hardware acceleration``` and ```Note on filesystems``` sections, otherwise performance will be terrible.
+Once you have installed a distro for WSL2, follow the Linux prerequisites above for the distro you installed, then continue as normal.
+
 ### Build
 > Before starting, make sure that you have configured your global identity for git, or the first script will fail after running for a bit.
 
