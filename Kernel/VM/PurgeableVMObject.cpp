@@ -293,7 +293,7 @@ int PurgeableVMObject::purge_impl()
                     } else {
                         klog() << "Purged " << purged_in_range << " pages from region " << region.name() << " (no ownership) at " << region.vaddr_from_page_index(range.base) << " - " << region.vaddr_from_page_index(range.base + range.count);
                     }
-                    region.remap_page_range(range.base, range.count);
+                    region.remap_page_range(range.base, range.count, false);
                 }
             });
         }

@@ -145,8 +145,9 @@ Region* Process::allocate_region(const Range& range, const String& name, int pro
     ASSERT(range.is_valid());
     auto vmobject = AnonymousVMObject::create_with_size(range.size());
     auto region = Region::create_user_accessible(this, range, vmobject, 0, name, prot_to_region_access_flags(prot));
-    region->map(page_directory());
-    if (should_commit && !region->commit())
+    if (!region->map(page_directory()))
+        return nullptr;
+    if (should_commit && region->can_commit() && !region->commit())
         return nullptr;
     return &add_region(move(region));
 }
@@ -159,7 +160,7 @@ Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String
     return allocate_region(range, name, prot, should_commit);
 }
 
-Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot)
+Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool should_commit)
 {
     ASSERT(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
@@ -177,16 +178,19 @@ Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr
     }
     offset_in_vmobject &= PAGE_MASK;
     auto& region = add_region(Region::create_user_accessible(this, range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
-    region.map(page_directory());
+    if (!region.map(page_directory()))
+        return nullptr;
+    if (should_commit && region.can_commit() && !region.commit())
+        return nullptr;
     return &region;
 }
 
-Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot)
+Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool should_commit)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    return allocate_region_with_vmobject(range, move(vmobject), offset_in_vmobject, name, prot);
+    return allocate_region_with_vmobject(range, move(vmobject), offset_in_vmobject, name, prot, should_commit);
 }
 
 bool Process::deallocate_region(Region& region)

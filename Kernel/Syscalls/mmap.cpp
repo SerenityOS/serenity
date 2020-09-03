@@ -118,6 +118,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     bool map_private = flags & MAP_PRIVATE;
     bool map_stack = flags & MAP_STACK;
     bool map_fixed = flags & MAP_FIXED;
+    bool map_noreserve = flags & MAP_NORESERVE;
 
     if (map_shared && map_private)
         return (void*)-EINVAL;
@@ -143,9 +144,9 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region_with_vmobject({}, size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
     } else if (map_anonymous) {
-        region = allocate_region(range, !name.is_null() ? name : "mmap", prot, false);
+        region = allocate_region(range, !name.is_null() ? name : "mmap", prot, !map_noreserve);
         if (!region && (!map_fixed && addr != 0))
-            region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, false);
+            region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, !map_noreserve);
     } else {
         if (offset < 0)
             return (void*)-EINVAL;
