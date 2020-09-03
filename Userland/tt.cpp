@@ -41,7 +41,7 @@ static int set_stack_test();
 
 int main(int argc, char** argv)
 {
-    const char* test_name = nullptr;
+    const char* test_name = "n";
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, t = simple thread test, x = set stack, nothing = join race)", "test-name", Core::ArgsParser::Required::No);
@@ -59,6 +59,10 @@ int main(int argc, char** argv)
         return staying_alive_test();
     if (*test_name == 'x')
         return set_stack_test();
+    if (*test_name != 'n') {
+        args_parser.print_usage(stdout, argv[0]);
+        return 1;
+    }
 
     printf("Hello from the first thread!\n");
     pthread_t thread_id;
