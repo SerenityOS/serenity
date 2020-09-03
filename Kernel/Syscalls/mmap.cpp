@@ -282,31 +282,30 @@ int Process::sys$madvise(void* address, size_t size, int advice)
         return -EINVAL;
     if (!region->is_mmap())
         return -EPERM;
-    if ((advice & MADV_SET_VOLATILE) && (advice & MADV_SET_NONVOLATILE))
+    bool set_volatile = advice & MADV_SET_VOLATILE;
+    bool set_nonvolatile = advice & MADV_SET_NONVOLATILE;
+    if (set_volatile && set_nonvolatile)
         return -EINVAL;
-    if (advice & MADV_SET_VOLATILE) {
+    if (set_volatile || set_nonvolatile) {
         if (!region->vmobject().is_purgeable())
             return -EPERM;
-        auto& vmobject = static_cast<PurgeableVMObject&>(region->vmobject());
-        vmobject.set_volatile(true);
+        bool was_purged = false;
+        switch (region->set_volatile(VirtualAddress(address), size, set_volatile, was_purged)) {
+        case Region::SetVolatileError::Success:
+            break;
+        case Region::SetVolatileError::NotPurgeable:
+            return -EPERM;
+        case Region::SetVolatileError::OutOfMemory:
+            return -ENOMEM;
+        }
+        if (set_nonvolatile)
+            return was_purged ? 1 : 0;
         return 0;
-    }
-    if (advice & MADV_SET_NONVOLATILE) {
-        if (!region->vmobject().is_purgeable())
-            return -EPERM;
-        auto& vmobject = static_cast<PurgeableVMObject&>(region->vmobject());
-        if (!vmobject.is_volatile())
-            return 0;
-        vmobject.set_volatile(false);
-        bool was_purged = vmobject.was_purged();
-        vmobject.set_was_purged(false);
-        return was_purged ? 1 : 0;
     }
     if (advice & MADV_GET_VOLATILE) {
         if (!region->vmobject().is_purgeable())
             return -EPERM;
-        auto& vmobject = static_cast<PurgeableVMObject&>(region->vmobject());
-        return vmobject.is_volatile() ? 0 : 1;
+        return region->is_volatile(VirtualAddress(address), size) ? 0 : 1;
     }
     return -EINVAL;
 }

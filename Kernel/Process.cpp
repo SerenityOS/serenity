@@ -130,7 +130,7 @@ Range Process::allocate_range(VirtualAddress vaddr, size_t size, size_t alignmen
 
 Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
 {
-    auto& region = add_region(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
+    auto& region = add_region(Region::create_user_accessible(this, range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
     region.set_mmap(source_region.is_mmap());
     region.set_stack(source_region.is_stack());
     size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
@@ -145,7 +145,7 @@ Region* Process::allocate_region(const Range& range, const String& name, int pro
 {
     ASSERT(range.is_valid());
     auto vmobject = AnonymousVMObject::create_with_size(range.size());
-    auto region = Region::create_user_accessible(range, vmobject, 0, name, prot_to_region_access_flags(prot));
+    auto region = Region::create_user_accessible(this, range, vmobject, 0, name, prot_to_region_access_flags(prot));
     region->map(page_directory());
     if (should_commit && !region->commit())
         return nullptr;
@@ -177,7 +177,7 @@ Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr
         return nullptr;
     }
     offset_in_vmobject &= PAGE_MASK;
-    auto& region = add_region(Region::create_user_accessible(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
+    auto& region = add_region(Region::create_user_accessible(this, range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
     region.map(page_directory());
     return &region;
 }
@@ -762,7 +762,7 @@ size_t Process::amount_purgeable_volatile() const
     size_t amount = 0;
     ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
-        if (region.vmobject().is_purgeable() && static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile())
+        if (region.vmobject().is_purgeable() && static_cast<const PurgeableVMObject&>(region.vmobject()).is_any_volatile())
             amount += region.amount_resident();
     }
     return amount;
@@ -773,7 +773,7 @@ size_t Process::amount_purgeable_nonvolatile() const
     size_t amount = 0;
     ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
-        if (region.vmobject().is_purgeable() && !static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile())
+        if (region.vmobject().is_purgeable() && !static_cast<const PurgeableVMObject&>(region.vmobject()).is_any_volatile())
             amount += region.amount_resident();
     }
     return amount;
