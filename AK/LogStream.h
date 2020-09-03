@@ -177,6 +177,12 @@ const LogStream& operator<<(const LogStream&, double);
 const LogStream& operator<<(const LogStream&, float);
 #endif
 
+template<typename T>
+const LogStream& operator<<(const LogStream& stream, Span<T> span)
+{
+    return stream << "{ " << span.data() << ", " << span.size() << " }";
+}
+
 const LogStream& operator<<(const LogStream&, const void*);
 
 inline const LogStream& operator<<(const LogStream& stream, char value)
