@@ -125,7 +125,7 @@ void DisplaySettingsWidget::create_frame()
     m_wallpaper_combo->set_model(*GUI::ItemListModel<AK::String>::create(m_wallpapers));
     m_wallpaper_combo->on_change = [this](auto& text, const GUI::ModelIndex& index) {
         String path = text;
-        if (m_monitor_widget->set_wallpaper(path)) {
+        if (path.starts_with("/") && m_monitor_widget->set_wallpaper(path)) {
             m_monitor_widget->update();
             return;
         }
