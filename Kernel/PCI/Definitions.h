@@ -208,6 +208,7 @@ u32 get_BAR3(Address);
 u32 get_BAR4(Address);
 u32 get_BAR5(Address);
 u8 get_revision_id(Address);
+u8 get_programming_interface(Address);
 u8 get_subclass(Address);
 u8 get_class(Address);
 u16 get_subsystem_id(Address);
