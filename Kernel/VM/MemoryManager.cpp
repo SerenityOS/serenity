@@ -447,7 +447,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& 
     ScopedSpinLock lock(s_mm_lock);
     OwnPtr<Region> region;
     if (user_accessible)
-        region = Region::create_user_accessible(range, vmobject, 0, name, access, cacheable);
+        region = Region::create_user_accessible(nullptr, range, vmobject, 0, name, access, cacheable);
     else
         region = Region::create_kernel_only(range, vmobject, 0, name, access, cacheable);
     if (region)

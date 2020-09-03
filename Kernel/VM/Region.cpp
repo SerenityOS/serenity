@@ -32,6 +32,7 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
+#include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
@@ -41,7 +42,8 @@
 namespace Kernel {
 
 Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable, bool kernel)
-    : m_range(range)
+    : PurgeablePageRanges(vmobject)
+    , m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(name)
@@ -49,11 +51,14 @@ Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offs
     , m_cacheable(cacheable)
     , m_kernel(kernel)
 {
+    register_purgeable_page_ranges();
     MM.register_region(*this);
 }
 
 Region::~Region()
 {
+    unregister_purgeable_page_ranges();
+
     // Make sure we disable interrupts so we don't get interrupted between unmapping and unregistering.
     // Unmapping the region will give the VM back to the RangeAllocator, so an interrupt handler would
     // find the address<->region mappings in an invalid state there.
@@ -62,7 +67,24 @@ Region::~Region()
         unmap(ShouldDeallocateVirtualMemoryRange::Yes);
         ASSERT(!m_page_directory);
     }
+
     MM.unregister_region(*this);
+}
+
+void Region::register_purgeable_page_ranges()
+{
+    if (m_vmobject->is_purgeable()) {
+        auto& vmobject = static_cast<PurgeableVMObject&>(*m_vmobject);
+        vmobject.register_purgeable_page_ranges(*this);
+    }
+}
+
+void Region::unregister_purgeable_page_ranges()
+{
+    if (m_vmobject->is_purgeable()) {
+        auto& vmobject = static_cast<PurgeableVMObject&>(*m_vmobject);
+        vmobject.unregister_purgeable_page_ranges(*this);
+    }
 }
 
 NonnullOwnPtr<Region> Region::clone()
@@ -74,7 +96,8 @@ NonnullOwnPtr<Region> Region::clone()
         ASSERT(m_mmap);
         ASSERT(!m_shared);
         ASSERT(vmobject().is_anonymous());
-        auto zeroed_region = Region::create_user_accessible(m_range, AnonymousVMObject::create_with_size(size()), 0, m_name, m_access);
+        auto zeroed_region = Region::create_user_accessible(get_owner().ptr(), m_range, AnonymousVMObject::create_with_size(size()), 0, m_name, m_access);
+        zeroed_region->set_purgeable_page_ranges(*this);
         zeroed_region->set_mmap(m_mmap);
         zeroed_region->set_inherit_mode(m_inherit_mode);
         return zeroed_region;
@@ -89,7 +112,8 @@ NonnullOwnPtr<Region> Region::clone()
             ASSERT(vmobject().is_shared_inode());
 
         // Create a new region backed by the same VMObject.
-        auto region = Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
+        auto region = Region::create_user_accessible(get_owner().ptr(), m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
+        region->set_purgeable_page_ranges(*this);
         region->set_mmap(m_mmap);
         region->set_shared(m_shared);
         return region;
@@ -104,7 +128,8 @@ NonnullOwnPtr<Region> Region::clone()
     // Set up a COW region. The parent (this) region becomes COW as well!
     ensure_cow_map().fill(true);
     remap();
-    auto clone_region = Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmobject, m_name, m_access);
+    auto clone_region = Region::create_user_accessible(get_owner().ptr(), m_range, m_vmobject->clone(), m_offset_in_vmobject, m_name, m_access);
+    clone_region->set_purgeable_page_ranges(*this);
     clone_region->ensure_cow_map();
     if (m_stack) {
         ASSERT(is_readable());
@@ -114,6 +139,59 @@ NonnullOwnPtr<Region> Region::clone()
     }
     clone_region->set_mmap(m_mmap);
     return clone_region;
+}
+
+void Region::set_vmobject(NonnullRefPtr<VMObject>&& obj)
+{
+    if (m_vmobject.ptr() == obj.ptr())
+        return;
+    unregister_purgeable_page_ranges();
+    m_vmobject = move(obj);
+    register_purgeable_page_ranges();
+}
+
+bool Region::is_volatile(VirtualAddress vaddr, size_t size) const
+{
+    if (!m_vmobject->is_purgeable())
+        return false;
+
+    auto offset_in_vmobject = vaddr.get() - (this->vaddr().get() - m_offset_in_vmobject);
+    size_t first_page_index = PAGE_ROUND_DOWN(offset_in_vmobject) / PAGE_SIZE;
+    size_t last_page_index = PAGE_ROUND_UP(offset_in_vmobject + size) / PAGE_SIZE;
+    return is_volatile_range({first_page_index, last_page_index - first_page_index});
+}
+
+auto Region::set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, bool& was_purged) -> SetVolatileError
+{
+    was_purged = false;
+    if (!m_vmobject->is_purgeable())
+        return SetVolatileError::NotPurgeable;
+
+    auto offset_in_vmobject = vaddr.get() - (this->vaddr().get() - m_offset_in_vmobject);
+    if (is_volatile) {
+        // If marking pages as volatile, be prudent by not marking
+        // partial pages volatile to prevent potentially non-volatile
+        // data to be discarded. So rund up the first page and round
+        // down the last page.
+        size_t first_page_index = PAGE_ROUND_UP(offset_in_vmobject) / PAGE_SIZE;
+        size_t last_page_index = PAGE_ROUND_DOWN(offset_in_vmobject + size) / PAGE_SIZE;
+        if (first_page_index != last_page_index)
+            add_volatile_range({first_page_index, last_page_index - first_page_index});
+    } else {
+        // If marking pages as non-volatile, round down the first page
+        // and round up the last page to make sure the beginning and
+        // end of the range doesn't inadvertedly get discarded.
+        size_t first_page_index = PAGE_ROUND_DOWN(offset_in_vmobject) / PAGE_SIZE;
+        size_t last_page_index = PAGE_ROUND_UP(offset_in_vmobject + size) / PAGE_SIZE;
+        if (remove_volatile_range({first_page_index, last_page_index - first_page_index}, was_purged)) {
+            // Attempt to remap the page range. We want to make sure we have
+            // enough memory, if not we need to inform the caller of that
+            // fact
+            if (!remap_page_range(first_page_index, last_page_index - first_page_index))
+                return SetVolatileError::OutOfMemory;
+        }
+    }
+    return SetVolatileError::Success;
 }
 
 bool Region::commit()
@@ -190,9 +268,11 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
+NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
 {
     auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable, false);
+    if (owner)
+        region->m_owner = owner->make_weak_ptr();
     region->m_user_accessible = true;
     return region;
 }
@@ -256,6 +336,24 @@ bool Region::map_individual_page_impl(size_t page_index)
 #endif
     }
     return true;
+}
+
+bool Region::remap_page_range(size_t page_index, size_t page_count)
+{
+    bool success = true;
+    ASSERT(m_page_directory);
+    ScopedSpinLock lock(s_mm_lock);
+    size_t index = page_index;
+    while (index < page_index + page_count) {
+        if (!map_individual_page_impl(index)) {
+            success = false;
+            break;
+        }
+        index++;
+    }
+    if (index > page_index)
+        MM.flush_tlb(vaddr_from_page_index(page_index), index - page_index);
+    return success;
 }
 
 bool Region::remap_page(size_t page_index, bool with_flush)
@@ -531,6 +629,11 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 
     remap_page(page_index_in_region);
     return PageFaultResponse::Continue;
+}
+
+RefPtr<Process> Region::get_owner()
+{
+    return *m_owner;
 }
 
 }

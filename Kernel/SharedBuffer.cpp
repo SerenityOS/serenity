@@ -194,4 +194,29 @@ void SharedBuffer::seal()
     }
 }
 
+auto SharedBuffer::set_volatile_all(bool is_volatile, bool& was_purged) -> SetVolatileError
+{
+    was_purged = false;
+    auto pid = Process::current()->pid();
+    LOCKER(shared_buffers().lock());
+    for (size_t i = 0; i < m_refs.size(); ++i) {
+        auto& ref = m_refs[i];
+        if (ref.pid == pid) {
+            if (Region* region = ref.region) {
+                switch (region->set_volatile(region->vaddr(), region->size(), is_volatile, was_purged)) {
+                    case Region::SetVolatileError::Success:
+                        if (!was_purged && was_purged)
+                            klog() << "Region @ " << region->vaddr() << " - " << region->vaddr().offset(region->size()) << " was purged!";
+                        return SetVolatileError::Success;
+                    case Region::SetVolatileError::NotPurgeable:
+                        return SetVolatileError::NotPurgeable;
+                    case Region::SetVolatileError::OutOfMemory:
+                        return SetVolatileError::OutOfMemory;
+                }
+            }
+        }
+    }
+    return SetVolatileError::NotMapped;
+}
+
 }

@@ -170,14 +170,28 @@ int Process::sys$shbuf_set_volatile(int shbuf_id, bool state)
 #ifdef SHARED_BUFFER_DEBUG
     klog() << "Set shared buffer " << shbuf_id << " volatile: " << state;
 #endif
+
+    bool was_purged = false;
+    auto set_volatile = [&]() -> int{
+        switch (shared_buffer.set_volatile_all(state, was_purged)) {
+            case SharedBuffer::SetVolatileError::Success:
+                break;
+            case SharedBuffer::SetVolatileError::NotPurgeable:
+                return -EPERM;
+            case SharedBuffer::SetVolatileError::OutOfMemory:
+                return -ENOMEM;
+            case SharedBuffer::SetVolatileError::NotMapped:
+                return -EINVAL;
+        }
+        return 0;
+    };
+
     if (!state) {
-        bool was_purged = shared_buffer.vmobject().was_purged();
-        shared_buffer.vmobject().set_volatile(state);
-        shared_buffer.vmobject().set_was_purged(false);
+        if (int err = set_volatile())
+            return err;
         return was_purged ? 1 : 0;
     }
-    shared_buffer.vmobject().set_volatile(true);
-    return 0;
+    return set_volatile();
 }
 
 }

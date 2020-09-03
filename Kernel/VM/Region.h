@@ -29,8 +29,10 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/String.h>
 #include <AK/Weakable.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Heap/SlabAllocator.h>
+#include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/VM/VMObject.h>
 
@@ -47,7 +49,8 @@ enum class PageFaultResponse {
 
 class Region final
     : public InlineLinkedListNode<Region>
-    , public Weakable<Region> {
+    , public Weakable<Region>
+    , public PurgeablePageRanges {
     friend class MemoryManager;
 
     MAKE_SLAB_ALLOCATED(Region)
@@ -63,7 +66,7 @@ public:
         ZeroedOnFork,
     };
 
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
+    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
     static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
 
     ~Region();
@@ -83,7 +86,7 @@ public:
 
     const VMObject& vmobject() const { return *m_vmobject; }
     VMObject& vmobject() { return *m_vmobject; }
-    void set_vmobject(NonnullRefPtr<VMObject>&& obj) { m_vmobject = obj; }
+    void set_vmobject(NonnullRefPtr<VMObject>&&);
 
     bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }
@@ -190,6 +193,18 @@ public:
 
     void set_inherit_mode(InheritMode inherit_mode) { m_inherit_mode = inherit_mode; }
 
+    bool remap_page_range(size_t page_index, size_t page_count);
+
+    bool is_volatile(VirtualAddress vaddr, size_t size) const;
+    enum class SetVolatileError {
+        Success = 0,
+        NotPurgeable,
+        OutOfMemory
+    };
+    SetVolatileError set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, bool& was_purged);
+
+    RefPtr<Process> get_owner();
+
 private:
     Bitmap& ensure_cow_map() const;
 
@@ -210,6 +225,9 @@ private:
 
     bool map_individual_page_impl(size_t page_index);
 
+    void register_purgeable_page_ranges();
+    void unregister_purgeable_page_ranges();
+
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;
     size_t m_offset_in_vmobject { 0 };
@@ -224,6 +242,7 @@ private:
     bool m_mmap : 1 { false };
     bool m_kernel : 1 { false };
     mutable OwnPtr<Bitmap> m_cow_map;
+    WeakPtr<Process> m_owner;
 };
 
 inline unsigned prot_to_region_access_flags(int prot)
