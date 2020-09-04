@@ -28,7 +28,21 @@
 
 namespace Kernel {
 
-static constexpr u16 UHCI_HOST_CONTROLLER_RESET = 0x0002;
+static constexpr u16 UHCI_USBCMD_RUN = 0x0001;
+static constexpr u16 UHCI_USBCMD_HOST_CONTROLLER_RESET = 0x0002;
+static constexpr u16 UHCI_USBCMD_GLOBAL_RESET = 0x0004;
+static constexpr u16 UHCI_USBCMD_ENTER_GLOBAL_SUSPEND_MODE = 0x0008;
+static constexpr u16 UHCI_USBCMD_FORCE_GLOBAL_RESUME = 0x0010;
+static constexpr u16 UHCI_USBCMD_SOFTWARE_DEBUG = 0x0020;
+static constexpr u16 UHCI_USBCMD_CONFIGURE_FLAG = 0x0040;
+static constexpr u16 UHCI_USBCMD_MAX_PACKET = 0x0080;
+
+static constexpr u16 UHCI_USBSTS_HOST_CONTROLLER_HALTED = 0x0020;
+static constexpr u16 UHCI_USBSTS_HOST_CONTROLLER_PROCESS_ERROR = 0x0010;
+static constexpr u16 UHCI_USBSTS_PCI_BUS_ERROR = 0x0008;
+static constexpr u16 UHCI_USBSTS_RESUME_RECEIVED = 0x0004;
+static constexpr u16 UHCI_USBSTS_USB_ERROR_INTERRUPT = 0x0002;
+static constexpr u16 UHCI_USBSTS_USB_INTERRUPT = 0x0001;
 
 void UHCIController::detect()
 {
@@ -59,10 +73,11 @@ UHCIController::~UHCIController()
 
 void UHCIController::reset()
 {
-    write_usbcmd(UHCI_HOST_CONTROLLER_RESET);
+    write_usbcmd(UHCI_USBCMD_HOST_CONTROLLER_RESET);
 
+    // FIXME: Timeout
     for (;;) {
-        if (read_usbcmd() & UHCI_HOST_CONTROLLER_RESET)
+        if (read_usbcmd() & UHCI_USBCMD_HOST_CONTROLLER_RESET)
             continue;
         break;
     }
