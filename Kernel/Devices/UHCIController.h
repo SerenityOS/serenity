@@ -38,6 +38,7 @@ public:
 
     void reset();
     void stop();
+    void start();
 
 private:
     UHCIController(PCI::Address, PCI::ID);

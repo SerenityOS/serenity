@@ -65,6 +65,7 @@ UHCIController::UHCIController(PCI::Address address, PCI::ID id)
     klog() << "UHCI: Interrupt line: " << PCI::get_interrupt_line(pci_address());
 
     reset();
+    start();
 }
 
 UHCIController::~UHCIController()
@@ -95,6 +96,17 @@ void UHCIController::stop()
         if (read_usbsts() & UHCI_USBSTS_HOST_CONTROLLER_HALTED)
             break;
     }
+}
+
+void UHCIController::start()
+{
+    write_usbcmd(read_usbcmd() | UHCI_USBCMD_RUN);
+    // FIXME: Timeout
+    for (;;) {
+        if (!(read_usbsts() & UHCI_USBSTS_HOST_CONTROLLER_HALTED))
+            break;
+    }
+    klog() << "UHCI: Started!";
 }
 
 void UHCIController::handle_irq(const RegisterState&)
