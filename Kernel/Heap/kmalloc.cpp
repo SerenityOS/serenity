@@ -59,22 +59,30 @@ struct KmallocGlobalHeap {
         {
         }
 
+        bool m_adding { false };
         bool add_memory(size_t allocation_request)
         {
             if (!MemoryManager::is_initialized()) {
                 klog() << "kmalloc(): Cannot expand heap before MM is initialized!";
                 return false;
             }
+            ASSERT(!m_adding);
+            TemporaryChange change(m_adding, true);
             // At this point we have very little memory left. Any attempt to
             // kmalloc() could fail, so use our backup memory first, so we
             // can't really reliably allocate even a new region of memory.
             // This is why we keep a backup region, which we can
             auto region = move(m_global_heap.m_backup_memory);
             if (!region) {
+                // Be careful to not log too much here. We don't want to trigger
+                // any further calls to kmalloc(). We're already out of memory
+                // and don't have any backup memory, either!
                 klog() << "kmalloc(): Cannot expand heap: no backup memory";
                 return false;
             }
 
+            // At this point we should have at least enough memory from the
+            // backup region to be able to log properly
             klog() << "kmalloc(): Adding memory to heap at " << region->vaddr() << ", bytes: " << region->size();
 
             auto& subheap = m_global_heap.m_heap.add_subheap(region->vaddr().as_ptr(), region->size());
@@ -91,7 +99,11 @@ struct KmallocGlobalHeap {
             // was big enough to likely satisfy the request
             if (subheap.free_bytes() < allocation_request) {
                 // Looks like we probably need more
-                size_t memory_size = max(decltype(m_global_heap.m_heap)::calculate_memory_for_bytes(allocation_request), (size_t)(1 * MiB));
+                size_t memory_size = PAGE_ROUND_UP(decltype(m_global_heap.m_heap)::calculate_memory_for_bytes(allocation_request));
+                // Add some more to the new heap. We're already using it for other 
+                // allocations not including the original allocation_request
+                // that triggered heap expansion. If we don't allocate
+                memory_size += 1 * MiB;
                 region = MM.allocate_kernel_region(memory_size, "kmalloc subheap", Region::Access::Read | Region::Access::Write);
                 if (region) {
                     klog() << "kmalloc(): Adding even more memory to heap at " << region->vaddr() << ", bytes: " << region->size();

@@ -257,6 +257,7 @@ public:
 
     void* allocate(size_t size)
     {
+        int attempt = 0;
         do {
             for (auto* subheap = &m_heaps; subheap; subheap = subheap->next) {
                 if (void* ptr = subheap->heap.allocate(size))
@@ -269,6 +270,10 @@ public:
             // This is especially true for the kmalloc heap, where adding memory
             // requires several other objects to be allocated just to be able to
             // expand the heap.
+
+            // To avoid an infinite expansion loop, limit to two attempts
+            if (attempt++ >= 2)
+                break;
         } while (expand_memory(size));
         return nullptr;
     }
