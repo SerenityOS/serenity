@@ -72,7 +72,7 @@ void ImageWidget::animate()
     m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
 
     const auto& current_frame = m_image_decoder->frame(m_current_frame_index);
-    set_bitmap(current_frame.image);
+    update();
 
     if (current_frame.duration != m_timer->interval()) {
         m_timer->restart(current_frame.duration);
