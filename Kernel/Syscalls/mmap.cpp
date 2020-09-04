@@ -116,7 +116,6 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 
     bool map_shared = flags & MAP_SHARED;
     bool map_anonymous = flags & MAP_ANONYMOUS;
-    bool map_purgeable = flags & MAP_PURGEABLE;
     bool map_private = flags & MAP_PRIVATE;
     bool map_stack = flags & MAP_STACK;
     bool map_fixed = flags & MAP_FIXED;
@@ -136,19 +135,13 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 
     Region* region = nullptr;
     Optional<Range> range;
-    if (map_purgeable || map_anonymous) {
+    if (map_noreserve || map_anonymous) {
         range = allocate_range(VirtualAddress(addr), size, alignment);
         if (!range.value().is_valid())
             return (void*)-ENOMEM;
     }
 
-    if (map_purgeable) {
-
-        auto vmobject = PurgeableVMObject::create_with_size(size);
-        region = allocate_region_with_vmobject(range.value(), vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
-        if (!region && (!map_fixed && addr != 0))
-            region = allocate_region_with_vmobject({}, size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
-    } else if (map_anonymous) {
+    if (map_anonymous) {
         region = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, !map_noreserve);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, !map_noreserve);
@@ -437,7 +430,7 @@ void* Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_param
     if (!old_region->is_mmap())
         return (void*)-EPERM;
 
-    if (old_region->vmobject().is_shared_inode() && params.flags & MAP_PRIVATE && !(params.flags & MAP_ANONYMOUS) && !(params.flags & MAP_PURGEABLE)) {
+    if (old_region->vmobject().is_shared_inode() && params.flags & MAP_PRIVATE && !(params.flags & (MAP_ANONYMOUS | MAP_NORESERVE))) {
         auto range = old_region->range();
         auto old_name = old_region->name();
         auto old_prot = region_access_flags_to_prot(old_region->access());
