@@ -73,6 +73,8 @@ UHCIController::~UHCIController()
 
 void UHCIController::reset()
 {
+    stop();
+
     write_usbcmd(UHCI_USBCMD_HOST_CONTROLLER_RESET);
 
     // FIXME: Timeout
@@ -83,6 +85,16 @@ void UHCIController::reset()
     }
 
     klog() << "UHCI: Reset completed!";
+}
+
+void UHCIController::stop()
+{
+    write_usbcmd(read_usbcmd() & ~UHCI_USBCMD_RUN);
+    // FIXME: Timeout
+    for (;;) {
+        if (read_usbsts() & UHCI_USBSTS_HOST_CONTROLLER_HALTED)
+            break;
+    }
 }
 
 void UHCIController::handle_irq(const RegisterState&)
