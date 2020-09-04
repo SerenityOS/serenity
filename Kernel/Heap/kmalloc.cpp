@@ -46,9 +46,15 @@
 
 #define SANITIZE_KMALLOC
 
+#define USE_BUDDY_HEAP
+
 #define CHUNK_SIZE 32
 #define POOL_SIZE (2 * MiB)
 #define ETERNAL_RANGE_SIZE (2 * MiB)
+
+#ifdef USE_BUDDY_HEAP
+#define MAX_BUDDIES_PER_CHUNK 4 // With a CHUNK_SIZE of 32 this means 8 byte buddies
+#endif
 
 struct KmallocGlobalHeap {
     struct ExpandGlobalHeap {
@@ -126,7 +132,11 @@ struct KmallocGlobalHeap {
             return false;
         }
     };
-    typedef ExpandableHeap<CHUNK_SIZE, KMALLOC_SCRUB_BYTE, KFREE_SCRUB_BYTE, ExpandGlobalHeap> HeapType;
+#ifdef USE_BUDDY_HEAP
+    typedef ExpandableHeap<HeapWithBuddies<CHUNK_SIZE, MAX_BUDDIES_PER_CHUNK, KMALLOC_SCRUB_BYTE, KFREE_SCRUB_BYTE>, ExpandGlobalHeap> HeapType;
+#else
+    typedef ExpandableHeap<Heap<CHUNK_SIZE, KMALLOC_SCRUB_BYTE, KFREE_SCRUB_BYTE>, ExpandGlobalHeap> HeapType;
+#endif
 
     HeapType m_heap;
     NonnullOwnPtrVector<Region> m_subheap_memory;
@@ -244,10 +254,28 @@ void* operator new[](size_t size)
 
 void get_kmalloc_stats(kmalloc_stats& stats)
 {
+    typedef decltype(g_kmalloc_global->m_heap) HeapType;
     ScopedSpinLock lock(s_lock);
-    stats.bytes_allocated = g_kmalloc_global->m_heap.allocated_bytes();
-    stats.bytes_free = g_kmalloc_global->m_heap.free_bytes() + g_kmalloc_global->backup_memory_bytes();
+    auto& heap = g_kmalloc_global->m_heap;
+    stats.bytes_allocated = heap.allocated_bytes();
+    stats.bytes_free = heap.free_bytes() + g_kmalloc_global->backup_memory_bytes();
+    if constexpr(HeapType::is_buddy_heap) {
+        // If this is a buddy heap, adjust by buddy allocation details
+        auto buddy_free_bytes = heap.buddy_total_bytes() - heap.buddy_allocated_bytes();
+        klog() << "Buddy free bytes: " << buddy_free_bytes << " allocations: " << heap.buddy_allocated();
+        stats.bytes_allocated -= buddy_free_bytes;
+        stats.bytes_free += buddy_free_bytes;
+    }
     stats.bytes_eternal = g_kmalloc_bytes_eternal;
     stats.kmalloc_call_count = g_kmalloc_call_count;
     stats.kfree_call_count = g_kfree_call_count;
+    if constexpr(HeapType::is_buddy_heap) {
+        auto buddy_allocated_bytes = heap.buddy_allocated_bytes();
+        auto buddy_total_bytes = heap.buddy_total_bytes();
+        auto buddy_chunks = heap.buddy_chunks();
+        auto buddy_allocated = heap.buddy_allocated();
+        auto bytes_saved = buddy_allocated * HeapType::SubHeapType::chunk_size() - buddy_allocated_bytes;
+        auto percent_utilized = buddy_total_bytes > 0 ? (buddy_allocated_bytes * 100) / buddy_total_bytes : 0;
+        klog() << "Buddy stats: " << buddy_allocated_bytes << " bytes of " << buddy_total_bytes << " bytes (" << (buddy_total_bytes - buddy_allocated_bytes) << " bytes free, " << percent_utilized << "% utilization) in " << buddy_chunks << " buddy chunks, saving " << bytes_saved << " bytes";
+    }
 }

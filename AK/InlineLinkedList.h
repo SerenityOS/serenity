@@ -70,6 +70,20 @@ public:
     T* next() const;
 };
 
+template<>
+class InlineLinkedListNode<void> {
+public:
+    InlineLinkedListNode() {}
+    void set_prev(InlineLinkedListNode* prev) { m_prev = prev; }
+    void set_next(InlineLinkedListNode* next) { m_next = next; }
+
+    InlineLinkedListNode* prev() const { return m_prev; }
+    InlineLinkedListNode* next() const { return m_next; }
+private:
+    InlineLinkedListNode* m_prev { nullptr };
+    InlineLinkedListNode* m_next { nullptr };
+};
+
 template<typename T>
 inline InlineLinkedListNode<T>::InlineLinkedListNode()
 {
