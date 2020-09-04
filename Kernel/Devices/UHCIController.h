@@ -35,6 +35,7 @@ public:
     virtual ~UHCIController() override;
 
     void reset();
+    void stop();
 
 private:
     UHCIController(PCI::Address, PCI::ID);
