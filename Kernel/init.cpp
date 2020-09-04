@@ -46,6 +46,7 @@
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
+#include <Kernel/Devices/UHCIController.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
@@ -245,6 +246,8 @@ void init_stage2()
             }
         }
     }
+
+    UHCIController::detect();
 
     E1000NetworkAdapter::detect();
     RTL8139NetworkAdapter::detect();

@@ -33,6 +33,7 @@ set(KERNEL_SOURCES
     Devices/RandomDevice.cpp
     Devices/SB16.cpp
     Devices/SerialDevice.cpp
+    Devices/UHCIController.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     DoubleBuffer.cpp
