@@ -344,14 +344,13 @@ Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const
     const auto pitch = minimum_pitch(size.width(), format);
     const auto data_size_in_bytes = size_in_bytes(pitch, size.height());
 
-    void* data = nullptr;
+    int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
+    if (purgeable == Purgeable::Yes)
+        map_flags |= MAP_NORESERVE;
 #ifdef __serenity__
-    int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
-    data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", size.width(), size.height()).characters());
+    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", size.width(), size.height()).characters());
 #else
-    UNUSED_PARAM(purgeable);
-    int map_flags = (MAP_ANONYMOUS | MAP_PRIVATE);
-    data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
+    void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif
     if (data == MAP_FAILED) {
         perror("mmap");

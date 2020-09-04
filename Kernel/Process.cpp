@@ -143,7 +143,7 @@ Region& Process::allocate_split_region(const Region& source_region, const Range&
 Region* Process::allocate_region(const Range& range, const String& name, int prot, bool should_commit)
 {
     ASSERT(range.is_valid());
-    auto vmobject = AnonymousVMObject::create_with_size(range.size());
+    auto vmobject = PurgeableVMObject::create_with_size(range.size());
     auto region = Region::create_user_accessible(this, range, vmobject, 0, name, prot_to_region_access_flags(prot));
     if (!region->map(page_directory()))
         return nullptr;
