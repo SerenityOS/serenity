@@ -39,6 +39,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device VGA,vgamem_mb=64
 -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
 -device ich9-ahci
+-usb
 -debugcon stdio
 -soundhw pcspk
 -soundhw sb16
@@ -55,6 +56,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
 -device ide-hd,bus=ide.6,drive=disk,unit=0
+-usb
 -debugcon stdio
 -soundhw pcspk
 -soundhw sb16
