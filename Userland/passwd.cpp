@@ -24,52 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/Base64.h>
-#include <AK/StringBuilder.h>
 #include <AK/Types.h>
+#include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/GetPassword.h>
-#include <pwd.h>
 #include <string.h>
 #include <unistd.h>
-
-static String get_salt()
-{
-    char random_data[12];
-    arc4random_buf(random_data, sizeof(random_data));
-
-    StringBuilder builder;
-    builder.append("$5$");
-    builder.append(encode_base64(ReadonlyBytes(random_data, sizeof(random_data))));
-
-    return builder.build();
-}
-
-static void write_passwd_file(struct passwd* pwd)
-{
-    StringBuilder new_passwd_file;
-
-    setpwent();
-
-    struct passwd* p;
-    while ((p = getpwent())) {
-        if (p->pw_uid == pwd->pw_uid) {
-            p = pwd;
-        }
-
-        new_passwd_file.appendf("%s:%s:%u:%u:%s:%s:%s\n",
-            p->pw_name, p->pw_passwd, p->pw_uid, p->pw_gid, p->pw_gecos, p->pw_dir, p->pw_shell);
-    }
-    endpwent();
-
-    auto file = Core::File::open("/etc/passwd", Core::IODevice::OpenMode::WriteOnly);
-    if (file.is_error()) {
-        fprintf(stderr, "Core::File::open: %s\n", file.error().characters());
-        exit(1);
-    }
-    file.value()->write(new_passwd_file.build());
-}
 
 int main(int argc, char** argv)
 {
@@ -84,6 +45,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/etc/passwd", "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/group", "rwc") < 0) {
         perror("unveil");
         return 1;
     }
@@ -103,32 +69,29 @@ int main(int argc, char** argv)
 
     args_parser.parse(argc, argv);
 
-    uid_t current_user = getuid();
+    uid_t current_uid = getuid();
 
-    struct passwd pwd;
-    if (username) {
-        pwd = *getpwnam(username);
-        if (current_user != 0 && current_user != pwd.pw_uid) {
-            fprintf(stderr, "You can't modify passwd for %s.\n", username);
-            return 1;
-        }
-    } else {
-        pwd = *getpwuid(current_user);
+    auto account_or_error = (username) ? Core::Account::from_name(username) : Core::Account::from_uid(current_uid);
+
+    if (account_or_error.is_error()) {
+        fprintf(stderr, "Core::Account::%s: %s\n", (username) ? "from_name" : "from_uid", account_or_error.error().characters());
+        return 1;
     }
 
-    String pw_string;
+    // target_account is the account we are changing the password of.
+    auto target_account = account_or_error.value();
+
+    if (current_uid != 0 && current_uid != target_account.uid()) {
+        fprintf(stderr, "You can't modify passwd for %s\n", username);
+        return 1;
+    }
+
     if (del) {
-        pwd.pw_passwd = const_cast<char*>("");
+        target_account.delete_password();
     } else if (lock) {
-        StringBuilder builder;
-        builder.append('!');
-        builder.append(pwd.pw_passwd);
-        pw_string = builder.build();
-        pwd.pw_passwd = const_cast<char*>(pw_string.characters());
+        target_account.set_password_enabled(false);
     } else if (unlock) {
-        if (pwd.pw_passwd[0] == '!') {
-            pwd.pw_passwd += 1;
-        }
+        target_account.set_password_enabled(true);
     } else {
         auto new_password = Core::get_password("New password: ");
         if (new_password.is_error()) {
@@ -136,10 +99,12 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        pwd.pw_passwd = crypt(new_password.value().characters(), get_salt().characters());
+        target_account.set_password(new_password.value().characters());
     }
 
-    write_passwd_file(&pwd);
+    if (!target_account.sync()) {
+        perror("Core::Account::Sync");
+    }
 
     return 0;
 }
