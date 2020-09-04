@@ -154,7 +154,7 @@ extern "C" {
 
 static void* os_alloc(size_t size, const char* name)
 {
-    auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE, 0, 0, ChunkedBlock::block_size, name);
+    auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, ChunkedBlock::block_size, name);
     ASSERT(ptr != MAP_FAILED);
     return ptr;
 }
