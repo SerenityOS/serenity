@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+ * Copyright (c) 2020, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
