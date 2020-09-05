@@ -56,8 +56,8 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>
 
 //#define PROCFS_DEBUG
@@ -329,9 +329,9 @@ static OwnPtr<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
             region_object.add("stack", region.is_stack());
             region_object.add("shared", region.is_shared());
             region_object.add("user_accessible", region.is_user_accessible());
-            region_object.add("purgeable", region.vmobject().is_purgeable());
-            if (region.vmobject().is_purgeable()) {
-                region_object.add("volatile", static_cast<const PurgeableVMObject&>(region.vmobject()).is_any_volatile());
+            region_object.add("purgeable", region.vmobject().is_anonymous());
+            if (region.vmobject().is_anonymous()) {
+                region_object.add("volatile", static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile());
             }
             region_object.add("cacheable", region.is_cacheable());
             region_object.add("kernel", region.is_kernel());
@@ -1254,6 +1254,10 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
 
     if (!data)
         return 0;
+    if (data->is_null()) {
+        dbg() << "ProcFS: Not enough memory!";
+        return 0;
+    }
 
     if ((size_t)offset >= data->size())
         return 0;

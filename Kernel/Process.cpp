@@ -49,6 +49,8 @@
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/PageDirectory.h>
+#include <Kernel/VM/PrivateInodeVMObject.h>
+#include <Kernel/VM/ProcessPagingScope.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>
@@ -141,29 +143,27 @@ Region& Process::allocate_split_region(const Region& source_region, const Range&
     return region;
 }
 
-Region* Process::allocate_region(const Range& range, const String& name, int prot, bool should_commit)
+Region* Process::allocate_region(const Range& range, const String& name, int prot, AllocationStrategy strategy)
 {
     ASSERT(range.is_valid());
-    auto vmobject = PurgeableVMObject::create_with_size(range.size());
+    auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy);
     if (!vmobject)
         return nullptr;
     auto region = Region::create_user_accessible(this, range, vmobject.release_nonnull(), 0, name, prot_to_region_access_flags(prot));
     if (!region->map(page_directory()))
         return nullptr;
-    if (should_commit && region->can_commit() && !region->commit())
-        return nullptr;
     return &add_region(move(region));
 }
 
-Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, bool should_commit)
+Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, AllocationStrategy strategy)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    return allocate_region(range, name, prot, should_commit);
+    return allocate_region(range, name, prot, strategy);
 }
 
-Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool should_commit)
+Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot)
 {
     ASSERT(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
@@ -183,17 +183,15 @@ Region* Process::allocate_region_with_vmobject(const Range& range, NonnullRefPtr
     auto& region = add_region(Region::create_user_accessible(this, range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
     if (!region.map(page_directory()))
         return nullptr;
-    if (should_commit && region.can_commit() && !region.commit())
-        return nullptr;
     return &region;
 }
 
-Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool should_commit)
+Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    return allocate_region_with_vmobject(range, move(vmobject), offset_in_vmobject, name, prot, should_commit);
+    return allocate_region_with_vmobject(range, move(vmobject), offset_in_vmobject, name, prot);
 }
 
 bool Process::deallocate_region(Region& region)
@@ -295,6 +293,8 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
         root = VFS::the().root_custody();
 
     auto process = adopt(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
+    if (!first_thread)
+        return {};
     process->m_fds.resize(m_max_open_file_descriptors);
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
     auto description = device_to_use_as_tty.open(O_RDWR).value();
@@ -318,9 +318,11 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     return process;
 }
 
-NonnullRefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity)
+RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity)
 {
     auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
+    if (!first_thread)
+        return {};
     first_thread->tss().eip = (FlatPtr)entry;
     first_thread->tss().esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
 
@@ -369,6 +371,11 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
         first_thread = adopt(*new Thread(*this));
         first_thread->detach();
     }
+
+    if (first_thread && !first_thread->was_created()) {
+        // We couldn't entirely create or clone this thread, abort
+        first_thread = nullptr;
+    }
 }
 
 Process::~Process()
@@ -400,7 +407,7 @@ void Process::dump_regions()
 
     for (auto& sorted_region : sorted_regions) {
         auto& region = *sorted_region;
-        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_purgeable() ? 'P' : ' ') << "    " << region.name().characters();
+        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_anonymous() ? 'A' : ' ') << "    " << region.name().characters();
     }
     MM.dump_kernel_regions();
 }
@@ -768,7 +775,7 @@ size_t Process::amount_purgeable_volatile() const
     size_t amount = 0;
     ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
-        if (region.vmobject().is_purgeable() && static_cast<const PurgeableVMObject&>(region.vmobject()).is_any_volatile())
+        if (region.vmobject().is_anonymous() && static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile())
             amount += region.amount_resident();
     }
     return amount;
@@ -779,7 +786,7 @@ size_t Process::amount_purgeable_nonvolatile() const
     size_t amount = 0;
     ScopedSpinLock lock(m_lock);
     for (auto& region : m_regions) {
-        if (region.vmobject().is_purgeable() && !static_cast<const PurgeableVMObject&>(region.vmobject()).is_any_volatile())
+        if (region.vmobject().is_anonymous() && !static_cast<const AnonymousVMObject&>(region.vmobject()).is_any_volatile())
             amount += region.amount_resident();
     }
     return amount;
@@ -823,6 +830,10 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
     // FIXME: Do something with guard pages?
 
     auto thread = adopt(*new Thread(*this));
+    if (!thread->was_created()) {
+        // Could not fully create this thread
+        return {};
+    }
 
     thread->set_name(name);
     thread->set_affinity(affinity);

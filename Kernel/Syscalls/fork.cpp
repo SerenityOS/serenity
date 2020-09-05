@@ -104,13 +104,17 @@ pid_t Process::sys$fork(RegisterState& regs)
 
         ScopedSpinLock processes_lock(g_processes_lock);
         g_processes->prepend(child);
-        child->ref(); // This reference will be dropped by Process::reap
     }
 
     ScopedSpinLock lock(g_scheduler_lock);
     child_first_thread->set_affinity(Thread::current()->affinity());
     child_first_thread->set_state(Thread::State::Runnable);
-    return child->pid().value();
+
+    auto child_pid = child->pid().value();
+    // We need to leak one reference so we don't destroy the Process,
+    // which will be dropped by Process::reap
+    (void)child.leak_ref();
+    return child_pid;
 }
 
 }

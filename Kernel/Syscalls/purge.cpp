@@ -26,9 +26,9 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <Kernel/Process.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/PurgeableVMObject.h>
 
 namespace Kernel {
 
@@ -39,12 +39,11 @@ int Process::sys$purge(int mode)
         return -EPERM;
     int purged_page_count = 0;
     if (mode & PURGE_ALL_VOLATILE) {
-        NonnullRefPtrVector<PurgeableVMObject> vmobjects;
+        NonnullRefPtrVector<AnonymousVMObject> vmobjects;
         {
             InterruptDisabler disabler;
             MM.for_each_vmobject([&](auto& vmobject) {
-                if (vmobject.is_purgeable())
-                    vmobjects.append(static_cast<PurgeableVMObject&>(vmobject));
+                vmobjects.append(vmobject);
                 return IterationDecision::Continue;
             });
         }

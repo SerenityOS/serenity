@@ -33,6 +33,7 @@
 #include <Kernel/Profiling.h>
 #include <Kernel/Random.h>
 #include <Kernel/Time/TimeManagement.h>
+#include <Kernel/VM/AllocationStrategy.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/Region.h>
@@ -172,7 +173,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
                 return IterationDecision::Break;
             }
 
-            master_tls_region = allocate_region({}, program_header.size_in_memory(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE);
+            master_tls_region = allocate_region({}, program_header.size_in_memory(), String::formatted("{} (master-tls)", elf_name), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
             if (!master_tls_region) {
                 ph_load_result = KResult(-ENOMEM);
                 return IterationDecision::Break;
@@ -206,7 +207,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             if (program_header.is_writable())
                 prot |= PROT_WRITE;
             auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
-            auto* region = allocate_region(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), move(region_name), prot);
+            auto* region = allocate_region(program_header.vaddr().offset(load_offset), program_header.size_in_memory(), move(region_name), prot, AllocationStrategy::Reserve);
             if (!region) {
                 ph_load_result = KResult(-ENOMEM);
                 return IterationDecision::Break;
@@ -259,7 +260,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
         return KResult(-ENOEXEC);
     }
 
-    auto* stack_region = allocate_region(VirtualAddress(), Thread::default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
+    auto* stack_region = allocate_region(VirtualAddress(), Thread::default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve);
     if (!stack_region)
         return KResult(-ENOMEM);
     stack_region->set_stack(true);
