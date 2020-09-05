@@ -128,8 +128,7 @@ int main(int argc, char** argv)
     }));
 
     auto& edit_menu = menubar->add_menu("Edit");
-    edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
-
+    auto paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
         ASSERT(image_editor.image());
         auto bitmap = GUI::Clipboard::the().bitmap();
         if (!bitmap)
@@ -137,7 +136,13 @@ int main(int argc, char** argv)
 
         auto layer = PixelPaint::Layer::create_with_bitmap(*image_editor.image(), *bitmap, "Pasted layer");
         image_editor.image()->add_layer(layer.release_nonnull());
-    }));
+    });
+    GUI::Clipboard::the().on_change = [&](auto& mime_type) {
+        paste_action->set_enabled(mime_type == "image/x-serenityos");
+    };
+    paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "image/x-serenityos");
+
+    edit_menu.add_action(paste_action);
 
     auto& tool_menu = menubar->add_menu("Tool");
     toolbox.for_each_tool([&](auto& tool) {
