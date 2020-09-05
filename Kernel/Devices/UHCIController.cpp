@@ -26,6 +26,8 @@
 
 #include <Kernel/Devices/UHCIController.h>
 
+#define UHCI_ENABLED 0
+
 namespace Kernel {
 
 static constexpr u16 UHCI_USBCMD_RUN = 0x0001;
@@ -46,6 +48,9 @@ static constexpr u16 UHCI_USBSTS_USB_INTERRUPT = 0x0001;
 
 void UHCIController::detect()
 {
+#if !UHCI_ENABLED
+    return;
+#endif
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
