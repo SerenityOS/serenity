@@ -65,6 +65,9 @@ public:
 
     size_t read(Bytes bytes) override
     {
+        if (has_any_error())
+            return 0;
+
         auto nread = m_buffered.bytes().copy_trimmed_to(bytes);
 
         m_buffered.bytes().slice(nread, m_buffered.size() - nread).copy_to(m_buffered);

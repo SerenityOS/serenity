@@ -44,6 +44,9 @@ public:
 
     size_t read(Bytes bytes) override
     {
+        if (has_any_error())
+            return 0;
+
         const auto count = min(bytes.size(), remaining());
         __builtin_memcpy(bytes.data(), m_bytes.data() + m_offset, count);
         m_offset += count;
@@ -239,6 +242,9 @@ public:
 
     size_t read(Bytes bytes) override
     {
+        if (has_any_error())
+            return 0;
+
         const auto nread = read_without_consuming(bytes);
 
         m_read_offset += nread;
