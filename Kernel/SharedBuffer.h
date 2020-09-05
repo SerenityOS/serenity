@@ -48,12 +48,12 @@ private:
     };
 
 public:
-    SharedBuffer(int id, int size)
+    SharedBuffer(int id, NonnullRefPtr<PurgeableVMObject>&& vmobject)
         : m_shbuf_id(id)
-        , m_vmobject(PurgeableVMObject::create_with_size(size))
+        , m_vmobject(move(vmobject))
     {
 #ifdef SHARED_BUFFER_DEBUG
-        dbg() << "Created shared buffer " << m_shbuf_id << " of size " << size;
+        dbg() << "Created shared buffer " << m_shbuf_id << " of size " << m_vmobject->size();
 #endif
     }
 
