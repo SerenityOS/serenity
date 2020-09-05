@@ -27,8 +27,10 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibGUI/Forward.h>
+#include <LibGfx/Forward.h>
 
 namespace GUI {
 
@@ -38,16 +40,19 @@ public:
 
     ByteBuffer data() const { return data_and_type().data; }
     String mime_type() const { return data_and_type().mime_type; }
-    void set_data(ReadonlyBytes, const String& mime_type = "text/plain");
+    void set_data(ReadonlyBytes, const String& mime_type = "text/plain", const HashMap<String, String>& metadata = {});
 
     void set_plain_text(const String& text)
     {
         set_data(text.bytes());
     }
 
+    void set_bitmap(const Gfx::Bitmap&);
+
     struct DataAndType {
         ByteBuffer data;
         String mime_type;
+        HashMap<String, String> metadata;
     };
 
     DataAndType data_and_type() const;
