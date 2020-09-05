@@ -32,7 +32,6 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
-#include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
@@ -73,16 +72,16 @@ Region::~Region()
 
 void Region::register_purgeable_page_ranges()
 {
-    if (m_vmobject->is_purgeable()) {
-        auto& vmobject = static_cast<PurgeableVMObject&>(*m_vmobject);
+    if (m_vmobject->is_anonymous()) {
+        auto& vmobject = static_cast<AnonymousVMObject&>(*m_vmobject);
         vmobject.register_purgeable_page_ranges(*this);
     }
 }
 
 void Region::unregister_purgeable_page_ranges()
 {
-    if (m_vmobject->is_purgeable()) {
-        auto& vmobject = static_cast<PurgeableVMObject&>(*m_vmobject);
+    if (m_vmobject->is_anonymous()) {
+        auto& vmobject = static_cast<AnonymousVMObject&>(*m_vmobject);
         vmobject.unregister_purgeable_page_ranges(*this);
     }
 }
@@ -96,8 +95,11 @@ OwnPtr<Region> Region::clone()
         ASSERT(m_mmap);
         ASSERT(!m_shared);
         ASSERT(vmobject().is_anonymous());
-        auto zeroed_region = Region::create_user_accessible(get_owner().ptr(), m_range, AnonymousVMObject::create_with_size(size()), 0, m_name, m_access);
-        zeroed_region->set_purgeable_page_ranges(*this);
+        auto new_vmobject = AnonymousVMObject::create_with_size(size(), AllocationStrategy::Reserve); // TODO: inherit committed non-volatile areas?
+        if (!new_vmobject)
+            return {};
+        auto zeroed_region = Region::create_user_accessible(get_owner().ptr(), m_range, new_vmobject.release_nonnull(), 0, m_name, m_access);
+        zeroed_region->copy_purgeable_page_ranges(*this);
         zeroed_region->set_mmap(m_mmap);
         zeroed_region->set_inherit_mode(m_inherit_mode);
         return zeroed_region;
@@ -113,7 +115,8 @@ OwnPtr<Region> Region::clone()
 
         // Create a new region backed by the same VMObject.
         auto region = Region::create_user_accessible(get_owner().ptr(), m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
-        region->set_purgeable_page_ranges(*this);
+        if (m_vmobject->is_anonymous())
+            region->copy_purgeable_page_ranges(*this);
         region->set_mmap(m_mmap);
         region->set_shared(m_shared);
         return region;
@@ -122,7 +125,7 @@ OwnPtr<Region> Region::clone()
     if (vmobject().is_inode())
         ASSERT(vmobject().is_private_inode());
 
-    auto vmobject_clone = m_vmobject->clone();
+    auto vmobject_clone = vmobject().clone();
     if (!vmobject_clone)
         return {};
 
@@ -130,11 +133,10 @@ OwnPtr<Region> Region::clone()
     dbg() << "Region::clone(): CoWing " << name() << " (" << vaddr() << ")";
 #endif
     // Set up a COW region. The parent (this) region becomes COW as well!
-    ensure_cow_map().fill(true);
     remap();
     auto clone_region = Region::create_user_accessible(get_owner().ptr(), m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, m_access);
-    clone_region->set_purgeable_page_ranges(*this);
-    clone_region->ensure_cow_map();
+    if (m_vmobject->is_anonymous())
+        clone_region->copy_purgeable_page_ranges(*this);
     if (m_stack) {
         ASSERT(is_readable());
         ASSERT(is_writable());
@@ -156,7 +158,7 @@ void Region::set_vmobject(NonnullRefPtr<VMObject>&& obj)
 
 bool Region::is_volatile(VirtualAddress vaddr, size_t size) const
 {
-    if (!m_vmobject->is_purgeable())
+    if (!m_vmobject->is_anonymous())
         return false;
 
     auto offset_in_vmobject = vaddr.get() - (this->vaddr().get() - m_offset_in_vmobject);
@@ -168,7 +170,7 @@ bool Region::is_volatile(VirtualAddress vaddr, size_t size) const
 auto Region::set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, bool& was_purged) -> SetVolatileError
 {
     was_purged = false;
-    if (!m_vmobject->is_purgeable())
+    if (!m_vmobject->is_anonymous())
         return SetVolatileError::NotPurgeable;
 
     auto offset_in_vmobject = vaddr.get() - (this->vaddr().get() - m_offset_in_vmobject);
@@ -187,70 +189,22 @@ auto Region::set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, b
         // end of the range doesn't inadvertedly get discarded.
         size_t first_page_index = PAGE_ROUND_DOWN(offset_in_vmobject) / PAGE_SIZE;
         size_t last_page_index = PAGE_ROUND_UP(offset_in_vmobject + size) / PAGE_SIZE;
-        if (remove_volatile_range({ first_page_index, last_page_index - first_page_index }, was_purged)) {
-            // Attempt to remap the page range. We want to make sure we have
-            // enough memory, if not we need to inform the caller of that
-            // fact
-            if (!remap_page_range(first_page_index, last_page_index - first_page_index))
-                return SetVolatileError::OutOfMemory;
+        switch (remove_volatile_range({ first_page_index, last_page_index - first_page_index }, was_purged)) {
+        case PurgeablePageRanges::RemoveVolatileError::Success:
+        case PurgeablePageRanges::RemoveVolatileError::SuccessNoChange:
+            break;
+        case PurgeablePageRanges::RemoveVolatileError::OutOfMemory:
+            return SetVolatileError::OutOfMemory;
         }
     }
     return SetVolatileError::Success;
 }
 
-bool Region::can_commit() const
+size_t Region::cow_pages() const
 {
-    return vmobject().is_anonymous() || vmobject().is_purgeable();
-}
-
-bool Region::commit()
-{
-    ScopedSpinLock lock(s_mm_lock);
-#ifdef MM_DEBUG
-    dbg() << "MM: Commit " << page_count() << " pages in Region " << this << " (VMO=" << &vmobject() << ") at " << vaddr();
-#endif
-    for (size_t i = 0; i < page_count(); ++i) {
-        if (!commit(i)) {
-            // Flush what we did commit
-            if (i > 0)
-                MM.flush_tlb(vaddr(), i + 1);
-            return false;
-        }
-    }
-    MM.flush_tlb(vaddr(), page_count());
-    return true;
-}
-
-bool Region::commit(size_t page_index)
-{
-    ASSERT(vmobject().is_anonymous() || vmobject().is_purgeable());
-    ASSERT(s_mm_lock.own_lock());
-    auto& vmobject_physical_page_entry = physical_page_slot(page_index);
-    if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
-        return true;
-    RefPtr<PhysicalPage> physical_page;
-    if (vmobject_physical_page_entry->is_lazy_committed_page()) {
-        physical_page = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index);
-    } else {
-        physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
-        if (!physical_page) {
-            klog() << "MM: commit was unable to allocate a physical page";
-            return false;
-        }
-    }
-    vmobject_physical_page_entry = move(physical_page);
-    remap_page(page_index, false); // caller is in charge of flushing tlb
-    return true;
-}
-
-u32 Region::cow_pages() const
-{
-    if (!m_cow_map)
+    if (!vmobject().is_anonymous())
         return 0;
-    u32 count = 0;
-    for (size_t i = 0; i < m_cow_map->size(); ++i)
-        count += m_cow_map->get(i);
-    return count;
+    return static_cast<const AnonymousVMObject&>(vmobject()).cow_pages();
 }
 
 size_t Region::amount_dirty() const
@@ -300,25 +254,16 @@ NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefP
 
 bool Region::should_cow(size_t page_index) const
 {
-    auto* page = physical_page(page_index);
-    if (page && (page->is_shared_zero_page() || page->is_lazy_committed_page()))
-        return true;
-    if (m_shared)
+    if (!vmobject().is_anonymous())
         return false;
-    return m_cow_map && m_cow_map->get(page_index);
+    return static_cast<const AnonymousVMObject&>(vmobject()).should_cow(first_page_index() + page_index, m_shared);
 }
 
 void Region::set_should_cow(size_t page_index, bool cow)
 {
     ASSERT(!m_shared);
-    ensure_cow_map().set(page_index, cow);
-}
-
-Bitmap& Region::ensure_cow_map() const
-{
-    if (!m_cow_map)
-        m_cow_map = make<Bitmap>(page_count(), true);
-    return *m_cow_map;
+    if (vmobject().is_anonymous())
+        static_cast<AnonymousVMObject&>(vmobject()).set_should_cow(first_page_index() + page_index, cow);
 }
 
 bool Region::map_individual_page_impl(size_t page_index)
@@ -339,7 +284,7 @@ bool Region::map_individual_page_impl(size_t page_index)
         pte->set_cache_disabled(!m_cacheable);
         pte->set_physical_page_base(page->paddr().get());
         pte->set_present(true);
-        if (should_cow(page_index))
+        if (page->is_shared_zero_page() || page->is_lazy_committed_page() || should_cow(page_index))
             pte->set_writable(false);
         else
             pte->set_writable(is_writable());
@@ -387,7 +332,8 @@ bool Region::remap_page(size_t page_index, bool with_flush)
 void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 {
     ScopedSpinLock lock(s_mm_lock);
-    ASSERT(m_page_directory);
+    if (!m_page_directory)
+        return;
     ScopedSpinLock page_lock(m_page_directory->get_lock());
     size_t count = page_count();
     for (size_t i = 0; i < count; ++i) {
@@ -444,6 +390,7 @@ void Region::remap()
 
 PageFaultResponse Region::handle_fault(const PageFault& fault)
 {
+    ScopedSpinLock lock(s_mm_lock);
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
         if (fault.is_read() && !is_readable()) {
@@ -482,12 +429,12 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
 #ifdef PAGE_FAULT_DEBUG
-        dbg() << "PV(cow) fault in Region{" << this << "}[" << page_index_in_region << "]";
+        dbg() << "PV(cow) fault in Region{" << this << "}[" << page_index_in_region << "] at " << fault.vaddr();
 #endif
         auto* phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
 #ifdef PAGE_FAULT_DEBUG
-            dbg() << "NP(zero) fault in Region{" << this << "}[" << page_index_in_region << "]";
+            dbg() << "NP(zero) fault in Region{" << this << "}[" << page_index_in_region << "] at " << fault.vaddr();
 #endif
             return handle_zero_fault(page_index_in_region);
         }
@@ -521,17 +468,20 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     if (page_slot->is_lazy_committed_page()) {
         page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_region);
+#ifdef PAGE_FAULT_DEBUG
+        dbg() << "      >> ALLOCATED COMMITTED " << page_slot->paddr();
+#endif
     } else {
         page_slot = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (page_slot.is_null()) {
             klog() << "MM: handle_zero_fault was unable to allocate a physical page";
             return PageFaultResponse::OutOfMemory;
         }
+#ifdef PAGE_FAULT_DEBUG
+        dbg() << "      >> ALLOCATED " << page_slot->paddr();
+#endif
     }
 
-#ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> ZERO " << page_slot->paddr();
-#endif
     if (!remap_page(page_index_in_region)) {
         klog() << "MM: handle_zero_fault was unable to allocate a page table to map " << page_slot;
         return PageFaultResponse::OutOfMemory;
@@ -542,53 +492,17 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto& page_slot = physical_page_slot(page_index_in_region);
-    if (page_slot->ref_count() == 1) {
-#ifdef PAGE_FAULT_DEBUG
-        dbg() << "    >> It's a COW page but nobody is sharing it anymore. Remap r/w";
-#endif
-        set_should_cow(page_index_in_region, false);
-        if (!remap_page(page_index_in_region))
-            return PageFaultResponse::OutOfMemory;
-        return PageFaultResponse::Continue;
-    }
-
     auto current_thread = Thread::current();
     if (current_thread)
         current_thread->did_cow_fault();
 
-#ifdef PAGE_FAULT_DEBUG
-    dbg() << "    >> It's a COW page and it's time to COW!";
-#endif
-    auto page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
-    if (page.is_null()) {
-        klog() << "MM: handle_cow_fault was unable to allocate a physical page";
-        return PageFaultResponse::OutOfMemory;
-    }
+    if (!vmobject().is_anonymous())
+        return PageFaultResponse::ShouldCrash;
 
-    u8* dest_ptr = MM.quickmap_page(*page);
-    const u8* src_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
-#ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> COW " << page->paddr() << " <- " << page_slot->paddr();
-#endif
-    {
-        SmapDisabler disabler;
-        void* fault_at;
-        if (!safe_memcpy(dest_ptr, src_ptr, PAGE_SIZE, fault_at)) {
-            if ((u8*)fault_at >= dest_ptr && (u8*)fault_at <= dest_ptr + PAGE_SIZE)
-                dbg() << "      >> COW: error copying page " << page_slot->paddr() << "/" << VirtualAddress(src_ptr) << " to " << page->paddr() << "/" << VirtualAddress(dest_ptr) << ": failed to write to page at " << VirtualAddress(fault_at);
-            else if ((u8*)fault_at >= src_ptr && (u8*)fault_at <= src_ptr + PAGE_SIZE)
-                dbg() << "      >> COW: error copying page " << page_slot->paddr() << "/" << VirtualAddress(src_ptr) << " to " << page->paddr() << "/" << VirtualAddress(dest_ptr) << ": failed to read from page at " << VirtualAddress(fault_at);
-            else
-                ASSERT_NOT_REACHED();
-        }
-    }
-    page_slot = move(page);
-    MM.unquickmap_page();
-    set_should_cow(page_index_in_region, false);
+    auto response = reinterpret_cast<AnonymousVMObject&>(vmobject()).handle_cow_fault(first_page_index() + page_index_in_region, vaddr().offset(page_index_in_region * PAGE_SIZE));
     if (!remap_page(page_index_in_region))
         return PageFaultResponse::OutOfMemory;
-    return PageFaultResponse::Continue;
+    return response;
 }
 
 PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)

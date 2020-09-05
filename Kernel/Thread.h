@@ -1074,6 +1074,11 @@ public:
     }
 #endif
 
+    bool was_created() const
+    {
+        return m_kernel_stack_region;
+    }
+
 private:
     IntrusiveListNode m_runnable_list_node;
 

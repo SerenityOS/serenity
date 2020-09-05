@@ -28,8 +28,8 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/PurgeableVMObject.h>
 
 namespace Kernel {
 
@@ -48,7 +48,7 @@ private:
     };
 
 public:
-    SharedBuffer(int id, NonnullRefPtr<PurgeableVMObject>&& vmobject)
+    SharedBuffer(int id, NonnullRefPtr<AnonymousVMObject>&& vmobject)
         : m_shbuf_id(id)
         , m_vmobject(move(vmobject))
     {
@@ -82,15 +82,15 @@ public:
         NotMapped
     };
     SetVolatileError set_volatile_all(bool is_volatile, bool& was_purged);
-    PurgeableVMObject& vmobject() { return m_vmobject; }
-    const PurgeableVMObject& vmobject() const { return m_vmobject; }
+    AnonymousVMObject& vmobject() { return m_vmobject; }
+    const AnonymousVMObject& vmobject() const { return m_vmobject; }
     int id() const { return m_shbuf_id; }
 
 private:
     int m_shbuf_id { -1 };
     bool m_writable { true };
     bool m_global { false };
-    NonnullRefPtr<PurgeableVMObject> m_vmobject;
+    NonnullRefPtr<AnonymousVMObject> m_vmobject;
     Vector<Reference, 2> m_refs;
     unsigned m_total_refs { 0 };
 };

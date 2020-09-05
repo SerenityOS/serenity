@@ -51,6 +51,8 @@ DoubleBuffer::DoubleBuffer(size_t capacity)
 
 void DoubleBuffer::flip()
 {
+    if (m_storage.is_null())
+        return;
     ASSERT(m_read_buffer_index == m_read_buffer->size);
     swap(m_read_buffer, m_write_buffer);
     m_write_buffer->size = 0;
@@ -60,7 +62,7 @@ void DoubleBuffer::flip()
 
 ssize_t DoubleBuffer::write(const UserOrKernelBuffer& data, size_t size)
 {
-    if (!size)
+    if (!size || m_storage.is_null())
         return 0;
     ASSERT(size > 0);
     LOCKER(m_lock);
@@ -77,7 +79,7 @@ ssize_t DoubleBuffer::write(const UserOrKernelBuffer& data, size_t size)
 
 ssize_t DoubleBuffer::read(UserOrKernelBuffer& data, size_t size)
 {
-    if (!size)
+    if (!size || m_storage.is_null())
         return 0;
     ASSERT(size > 0);
     LOCKER(m_lock);

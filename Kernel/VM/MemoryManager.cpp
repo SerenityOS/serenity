@@ -39,7 +39,6 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PhysicalRegion.h>
-#include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
 //#define MM_DEBUG
@@ -381,7 +380,6 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(Thread::current() != nullptr);
     ScopedSpinLock lock(s_mm_lock);
     if (Processor::current().in_irq()) {
         dbg() << "CPU[" << Processor::current().id() << "] BUG! Page fault while handling IRQ! code=" << fault.code() << ", vaddr=" << fault.vaddr() << ", irq level: " << Processor::current().in_irq();
@@ -408,26 +406,20 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, con
     if (!range.is_valid())
         return nullptr;
     auto vmobject = ContiguousVMObject::create_with_size(size);
-    auto region = allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
-    if (!region)
-        return nullptr;
-    return region;
+    return allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool should_commit, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, AllocationStrategy strategy, bool cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.is_valid())
         return nullptr;
-    auto vmobject = AnonymousVMObject::create_with_size(size);
-    auto region = allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
-    if (!region)
+    auto vmobject = AnonymousVMObject::create_with_size(size, strategy);
+    if (!vmobject)
         return nullptr;
-    if (should_commit && !region->commit())
-        return nullptr;
-    return region;
+    return allocate_kernel_region_with_vmobject(range, vmobject.release_nonnull(), name, access, user_accessible, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
@@ -458,7 +450,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress pa
 
 OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name, u8 access, bool cacheable)
 {
-    return allocate_kernel_region(size, name, access, true, true, cacheable);
+    return allocate_kernel_region(size, name, access, true, AllocationStrategy::Reserve, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& range, VMObject& vmobject, const StringView& name, u8 access, bool user_accessible, bool cacheable)
@@ -576,11 +568,11 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         // We didn't have a single free physical page. Let's try to free something up!
         // First, we look for a purgeable VMObject in the volatile state.
         for_each_vmobject([&](auto& vmobject) {
-            if (!vmobject.is_purgeable())
+            if (!vmobject.is_anonymous())
                 return IterationDecision::Continue;
-            int purged_page_count = static_cast<PurgeableVMObject&>(vmobject).purge_with_interrupts_disabled({});
+            int purged_page_count = static_cast<AnonymousVMObject&>(vmobject).purge_with_interrupts_disabled({});
             if (purged_page_count) {
-                klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from PurgeableVMObject{" << &vmobject << "}";
+                klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from AnonymousVMObject{" << &vmobject << "}";
                 page = find_free_user_physical_page(false);
                 purged_pages = true;
                 ASSERT(page);
@@ -890,7 +882,7 @@ void MemoryManager::dump_kernel_regions()
     klog() << "BEGIN       END         SIZE        ACCESS  NAME";
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : MM.m_kernel_regions) {
-        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_purgeable() ? 'P' : ' ') << "    " << region.name().characters();
+        klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_anonymous() ? 'A' : ' ') << "    " << region.name().characters();
     }
 }
 

@@ -26,8 +26,9 @@
 
 #pragma once
 
+#include <AK/Bitmap.h>
+#include <AK/RefCounted.h>
 #include <Kernel/SpinLock.h>
-#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
 
@@ -118,7 +119,7 @@ public:
     }
 
     bool is_empty() const { return m_ranges.is_empty(); }
-    void clear() { m_ranges.clear(); }
+    void clear() { m_ranges.clear_with_capacity(); }
 
     bool is_all() const
     {
@@ -142,7 +143,59 @@ public:
     }
 
     bool add(const VolatilePageRange&);
+    void add_unchecked(const VolatilePageRange&);
     bool remove(const VolatilePageRange&, bool&);
+
+    template<typename F>
+    IterationDecision for_each_intersecting_range(const VolatilePageRange& range, F f)
+    {
+        auto r = m_total_range.intersected(range);
+        if (r.is_empty())
+            return IterationDecision::Continue;
+
+        size_t nearby_index = 0;
+        auto* existing_range = binary_search(
+            m_ranges.span(), r, &nearby_index, [](auto& a, auto& b) {
+                if (a.intersects(b))
+                    return 0;
+                return (signed)(a.base - (b.base + b.count - 1));
+            });
+        if (!existing_range)
+            return IterationDecision::Continue;
+
+        if (existing_range->range_equals(r))
+            return f(r);
+        ASSERT(existing_range == &m_ranges[nearby_index]); // sanity check
+        while (nearby_index < m_ranges.size()) {
+            existing_range = &m_ranges[nearby_index];
+            if (!existing_range->intersects(range))
+                break;
+
+            IterationDecision decision = f(existing_range->intersected(r));
+            if (decision != IterationDecision::Continue)
+                return decision;
+
+            nearby_index++;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename F>
+    IterationDecision for_each_nonvolatile_range(F f) const
+    {
+        size_t base = m_total_range.base;
+        for (const auto& volatile_range : m_ranges) {
+            if (volatile_range.base == base)
+                continue;
+            IterationDecision decision = f({ base, volatile_range.base - base });
+            if (decision != IterationDecision::Continue)
+                return decision;
+            base = volatile_range.base + volatile_range.count;
+        }
+        if (base < m_total_range.base + m_total_range.count)
+            return f({ base, (m_total_range.base + m_total_range.count) - base });
+        return IterationDecision::Continue;
+    }
 
     Vector<VolatilePageRange>& ranges() { return m_ranges; }
     const Vector<VolatilePageRange>& ranges() const { return m_ranges; }
@@ -152,15 +205,15 @@ private:
     VolatilePageRange m_total_range;
 };
 
-class PurgeableVMObject;
+class AnonymousVMObject;
 
 class PurgeablePageRanges {
-    friend class PurgeableVMObject;
+    friend class AnonymousVMObject;
 
 public:
     PurgeablePageRanges(const VMObject&);
 
-    void set_purgeable_page_ranges(const PurgeablePageRanges& other)
+    void copy_purgeable_page_ranges(const PurgeablePageRanges& other)
     {
         if (this == &other)
             return;
@@ -171,7 +224,12 @@ public:
     }
 
     bool add_volatile_range(const VolatilePageRange& range);
-    bool remove_volatile_range(const VolatilePageRange& range, bool& was_purged);
+    enum class RemoveVolatileError {
+        Success = 0,
+        SuccessNoChange,
+        OutOfMemory
+    };
+    RemoveVolatileError remove_volatile_range(const VolatilePageRange& range, bool& was_purged);
     bool is_volatile_range(const VolatilePageRange& range) const;
     bool is_volatile(size_t) const;
 
@@ -182,92 +240,27 @@ public:
     const VolatilePageRanges& volatile_ranges() const { return m_volatile_ranges; }
 
 protected:
-    void set_vmobject(PurgeableVMObject*);
+    void set_vmobject(AnonymousVMObject*);
 
     VolatilePageRanges m_volatile_ranges;
     mutable RecursiveSpinLock m_volatile_ranges_lock;
-    PurgeableVMObject* m_vmobject { nullptr };
+    AnonymousVMObject* m_vmobject { nullptr };
 };
 
-class PurgeableVMObject final : public AnonymousVMObject {
-    friend class PurgeablePageRanges;
+class CommittedCowPages : public RefCounted<CommittedCowPages> {
+    AK_MAKE_NONCOPYABLE(CommittedCowPages);
 
 public:
-    virtual ~PurgeableVMObject() override;
+    CommittedCowPages() = delete;
 
-    static RefPtr<PurgeableVMObject> create_with_size(size_t);
-    virtual RefPtr<VMObject> clone() override;
+    CommittedCowPages(size_t);
+    ~CommittedCowPages();
 
-    virtual RefPtr<PhysicalPage> allocate_committed_page(size_t) override;
-
-    void register_purgeable_page_ranges(PurgeablePageRanges&);
-    void unregister_purgeable_page_ranges(PurgeablePageRanges&);
-
-    int purge();
-    int purge_with_interrupts_disabled(Badge<MemoryManager>);
-
-    bool is_any_volatile() const;
-
-    template<typename F>
-    IterationDecision for_each_volatile_range(F f)
-    {
-        ASSERT(m_lock.is_locked());
-        // This is a little ugly. Basically, we're trying to find the
-        // volatile ranges that all share, because those are the only
-        // pages we can actually purge
-        for (auto* purgeable_range : m_purgeable_ranges) {
-            ScopedSpinLock purgeable_lock(purgeable_range->m_volatile_ranges_lock);
-            for (auto& r1 : purgeable_range->volatile_ranges().ranges()) {
-                VolatilePageRange range(r1);
-                for (auto* purgeable_range2 : m_purgeable_ranges) {
-                    if (purgeable_range2 == purgeable_range)
-                        continue;
-                    ScopedSpinLock purgeable2_lock(purgeable_range2->m_volatile_ranges_lock);
-                    if (purgeable_range2->is_empty()) {
-                        // If just one doesn't allow any purging, we can
-                        // immediately bail
-                        return IterationDecision::Continue;
-                    }
-                    for (const auto& r2 : purgeable_range2->volatile_ranges().ranges()) {
-                        range = range.intersected(r2);
-                        if (range.is_empty())
-                            break;
-                    }
-                    if (range.is_empty())
-                        break;
-                }
-                if (range.is_empty())
-                    continue;
-                IterationDecision decision = f(range);
-                if (decision != IterationDecision::Continue)
-                    return decision;
-            }
-        }
-        return IterationDecision::Continue;
-    }
-
-    size_t get_lazy_committed_page_count() const;
+    NonnullRefPtr<PhysicalPage> allocate_one();
+    bool return_one();
 
 private:
-    explicit PurgeableVMObject(size_t);
-    explicit PurgeableVMObject(const PurgeableVMObject&);
-
-    virtual const char* class_name() const override { return "PurgeableVMObject"; }
-
-    int purge_impl();
-    void set_was_purged(const VolatilePageRange&);
-    size_t remove_lazy_commit_pages(const VolatilePageRange&);
-    void range_made_volatile(const VolatilePageRange&);
-
-    PurgeableVMObject& operator=(const PurgeableVMObject&) = delete;
-    PurgeableVMObject& operator=(PurgeableVMObject&&) = delete;
-    PurgeableVMObject(PurgeableVMObject&&) = delete;
-
-    virtual bool is_purgeable() const override { return true; }
-
-    Vector<PurgeablePageRanges*> m_purgeable_ranges;
-    mutable SpinLock<u8> m_lock;
-    size_t m_unused_committed_pages { 0 };
+    size_t m_committed_pages;
 };
 
 }

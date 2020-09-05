@@ -32,6 +32,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Forward.h>
 #include <Kernel/SpinLock.h>
+#include <Kernel/VM/AllocationStrategy.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
@@ -83,6 +84,7 @@ class MemoryManager {
     friend class PageDirectory;
     friend class PhysicalPage;
     friend class PhysicalRegion;
+    friend class AnonymousVMObject;
     friend class Region;
     friend class VMObject;
     friend OwnPtr<KBuffer> procfs$mm(InodeIdentifier);
@@ -120,7 +122,7 @@ public:
     void deallocate_supervisor_physical_page(const PhysicalPage&);
 
     OwnPtr<Region> allocate_contiguous_kernel_region(size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
-    OwnPtr<Region> allocate_kernel_region(size_t, const StringView& name, u8 access, bool user_accessible = false, bool should_commit = true, bool cacheable = true);
+    OwnPtr<Region> allocate_kernel_region(size_t, const StringView& name, u8 access, bool user_accessible = false, AllocationStrategy strategy = AllocationStrategy::Reserve, bool cacheable = true);
     OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
     OwnPtr<Region> allocate_kernel_region_identity(PhysicalAddress, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
     OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
