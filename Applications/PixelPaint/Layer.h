@@ -45,6 +45,7 @@ class Layer
 
 public:
     static RefPtr<Layer> create_with_size(Image&, const Gfx::IntSize&, const String& name);
+    static RefPtr<Layer> create_with_bitmap(Image&, const Gfx::Bitmap&, const String& name);
 
     ~Layer() { }
 
@@ -75,7 +76,8 @@ public:
     void set_opacity_percent(int);
 
 private:
-    explicit Layer(Image&, const Gfx::IntSize&, const String& name);
+    Layer(Image&, const Gfx::IntSize&, const String& name);
+    Layer(Image&, const Gfx::Bitmap&, const String& name);
 
     Image& m_image;
 
