@@ -68,7 +68,7 @@ OwnPtr<Messages::ClipboardServer::SetClipboardDataResponse> ClientConnection::ha
         did_misbehave("SetClipboardData: Bad shared buffer ID");
         return nullptr;
     }
-    Storage::the().set_data(*shared_buffer, message.data_size(), message.mime_type());
+    Storage::the().set_data(*shared_buffer, message.data_size(), message.mime_type(), message.metadata().entries());
     return make<Messages::ClipboardServer::SetClipboardDataResponse>();
 }
 
@@ -92,7 +92,7 @@ OwnPtr<Messages::ClipboardServer::GetClipboardDataResponse> ClientConnection::ha
         //        After we respond to GetClipboardData, we have to wait for the client to ref the buffer on his side.
         m_last_sent_buffer = move(shared_buffer);
     }
-    return make<Messages::ClipboardServer::GetClipboardDataResponse>(shbuf_id, storage.data_size(), storage.mime_type());
+    return make<Messages::ClipboardServer::GetClipboardDataResponse>(shbuf_id, storage.data_size(), storage.mime_type(), storage.metadata());
 }
 
 void ClientConnection::notify_about_clipboard_change()

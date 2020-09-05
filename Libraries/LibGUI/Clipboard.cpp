@@ -92,10 +92,11 @@ Clipboard::DataAndType Clipboard::data_and_type() const
     }
     auto data = ByteBuffer::copy(shared_buffer->data(), response->data_size());
     auto type = response->mime_type();
-    return { data, type };
+    auto metadata = response->metadata().entries();
+    return { data, type, metadata };
 }
 
-void Clipboard::set_data(ReadonlyBytes data, const String& type)
+void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<String, String>& metadata)
 {
     auto shared_buffer = SharedBuffer::create_with_size(data.size() + 1);
     if (!shared_buffer) {
@@ -109,7 +110,7 @@ void Clipboard::set_data(ReadonlyBytes data, const String& type)
     shared_buffer->seal();
     shared_buffer->share_with(connection().server_pid());
 
-    connection().send_sync<Messages::ClipboardServer::SetClipboardData>(shared_buffer->shbuf_id(), data.size(), type);
+    connection().send_sync<Messages::ClipboardServer::SetClipboardData>(shared_buffer->shbuf_id(), data.size(), type, metadata);
 }
 
 void ClipboardServerConnection::handle(const Messages::ClipboardClient::ClipboardDataChanged& message)
@@ -117,6 +118,11 @@ void ClipboardServerConnection::handle(const Messages::ClipboardClient::Clipboar
     auto& clipboard = Clipboard::the();
     if (clipboard.on_change)
         clipboard.on_change(message.mime_type());
+}
+
+void Clipboard::set_bitmap(const Gfx::Bitmap& bitmap)
+{
+    (void) bitmap;
 }
 
 }

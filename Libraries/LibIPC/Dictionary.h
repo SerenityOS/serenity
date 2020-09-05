@@ -33,7 +33,12 @@ namespace IPC {
 
 class Dictionary {
 public:
-    Dictionary() {}
+    Dictionary() { }
+
+    Dictionary(const HashMap<String, String>& initial_entries)
+        : m_entries(initial_entries)
+    {
+    }
 
     bool is_empty() const { return m_entries.is_empty(); }
     size_t size() const { return m_entries.size(); }
