@@ -29,7 +29,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
-#include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibC/limits.h>
@@ -142,9 +141,10 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     }
 
     if (map_anonymous) {
-        region = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, !map_noreserve);
+        auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
+        region = allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
         if (!region && (!map_fixed && addr != 0))
-            region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, !map_noreserve);
+            region = allocate_region(allocate_range({}, size), !name.is_null() ? name : "mmap", prot, strategy);
     } else {
         if (offset < 0)
             return (void*)-EINVAL;
@@ -280,7 +280,7 @@ int Process::sys$madvise(void* address, size_t size, int advice)
     if (set_volatile && set_nonvolatile)
         return -EINVAL;
     if (set_volatile || set_nonvolatile) {
-        if (!region->vmobject().is_purgeable())
+        if (!region->vmobject().is_anonymous())
             return -EPERM;
         bool was_purged = false;
         switch (region->set_volatile(VirtualAddress(address), size, set_volatile, was_purged)) {
@@ -296,7 +296,7 @@ int Process::sys$madvise(void* address, size_t size, int advice)
         return 0;
     }
     if (advice & MADV_GET_VOLATILE) {
-        if (!region->vmobject().is_purgeable())
+        if (!region->vmobject().is_anonymous())
             return -EPERM;
         return region->is_volatile(VirtualAddress(address), size) ? 0 : 1;
     }

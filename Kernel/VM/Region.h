@@ -32,7 +32,8 @@
 #include <AK/Weakable.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Heap/SlabAllocator.h>
-#include <Kernel/VM/PurgeableVMObject.h>
+#include <Kernel/VM/PageFaultResponse.h>
+#include <Kernel/VM/PurgeablePageRanges.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/VM/VMObject.h>
 
@@ -40,12 +41,6 @@ namespace Kernel {
 
 class Inode;
 class VMObject;
-
-enum class PageFaultResponse {
-    ShouldCrash,
-    OutOfMemory,
-    Continue,
-};
 
 class Region final
     : public InlineLinkedListNode<Region>
@@ -159,9 +154,6 @@ public:
         return m_offset_in_vmobject;
     }
 
-    bool can_commit() const;
-    bool commit();
-
     size_t amount_resident() const;
     size_t amount_shared() const;
     size_t amount_dirty() const;
@@ -169,7 +161,7 @@ public:
     bool should_cow(size_t page_index) const;
     void set_should_cow(size_t page_index, bool);
 
-    u32 cow_pages() const;
+    size_t cow_pages() const;
 
     void set_readable(bool b) { set_access_bit(Access::Read, b); }
     void set_writable(bool b) { set_access_bit(Access::Write, b); }
@@ -207,8 +199,6 @@ public:
     RefPtr<Process> get_owner();
 
 private:
-    Bitmap& ensure_cow_map() const;
-
     void set_access_bit(Access access, bool b)
     {
         if (b)
@@ -217,7 +207,6 @@ private:
             m_access &= ~access;
     }
 
-    bool commit(size_t page_index);
     bool remap_page(size_t index, bool with_flush = true);
 
     PageFaultResponse handle_cow_fault(size_t page_index);
@@ -242,7 +231,6 @@ private:
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
     bool m_kernel : 1 { false };
-    mutable OwnPtr<Bitmap> m_cow_map;
     WeakPtr<Process> m_owner;
 };
 
