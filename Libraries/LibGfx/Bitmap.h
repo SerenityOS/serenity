@@ -93,9 +93,6 @@ public:
     RGBA32* scanline(int y);
     const RGBA32* scanline(int y) const;
 
-    u8* bits(int y);
-    const u8* bits(int y) const;
-
     IntRect rect() const { return { {}, m_size }; }
     IntSize size() const { return m_size; }
     int width() const { return m_size.width(); }
@@ -250,16 +247,6 @@ inline const RGBA32* Bitmap::scanline(int y) const
     return reinterpret_cast<const RGBA32*>(scanline_u8(y));
 }
 
-inline const u8* Bitmap::bits(int y) const
-{
-    return reinterpret_cast<const u8*>(scanline(y));
-}
-
-inline u8* Bitmap::bits(int y)
-{
-    return reinterpret_cast<u8*>(scanline(y));
-}
-
 template<>
 inline Color Bitmap::get_pixel<BitmapFormat::RGB32>(int x, int y) const
 {
@@ -275,25 +262,25 @@ inline Color Bitmap::get_pixel<BitmapFormat::RGBA32>(int x, int y) const
 template<>
 inline Color Bitmap::get_pixel<BitmapFormat::Indexed1>(int x, int y) const
 {
-    return Color::from_rgb(m_palette[bits(y)[x]]);
+    return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<BitmapFormat::Indexed2>(int x, int y) const
 {
-    return Color::from_rgb(m_palette[bits(y)[x]]);
+    return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<BitmapFormat::Indexed4>(int x, int y) const
 {
-    return Color::from_rgb(m_palette[bits(y)[x]]);
+    return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<BitmapFormat::Indexed8>(int x, int y) const
 {
-    return Color::from_rgb(m_palette[bits(y)[x]]);
+    return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
 inline Color Bitmap::get_pixel(int x, int y) const
