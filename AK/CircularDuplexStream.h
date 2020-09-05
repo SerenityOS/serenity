@@ -60,6 +60,9 @@ public:
 
     size_t read(Bytes bytes) override
     {
+        if (has_any_error())
+            return 0;
+
         const auto nread = min(bytes.size(), m_queue.size());
 
         for (size_t idx = 0; idx < nread; ++idx)
