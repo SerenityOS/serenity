@@ -39,7 +39,7 @@ public:
     virtual ~PrivateInodeVMObject() override;
 
     static NonnullRefPtr<PrivateInodeVMObject> create_with_inode(Inode&);
-    virtual NonnullRefPtr<VMObject> clone() override;
+    virtual RefPtr<VMObject> clone() override;
 
 private:
     virtual bool is_private_inode() const override { return true; }

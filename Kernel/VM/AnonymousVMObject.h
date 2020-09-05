@@ -38,10 +38,12 @@ public:
     static NonnullRefPtr<AnonymousVMObject> create_with_size(size_t);
     static RefPtr<AnonymousVMObject> create_for_physical_range(PhysicalAddress, size_t);
     static NonnullRefPtr<AnonymousVMObject> create_with_physical_page(PhysicalPage&);
-    virtual NonnullRefPtr<VMObject> clone() override;
+    virtual RefPtr<VMObject> clone() override;
+
+    virtual RefPtr<PhysicalPage> allocate_committed_page(size_t);
 
 protected:
-    explicit AnonymousVMObject(size_t);
+    explicit AnonymousVMObject(size_t, bool initialize_pages = true);
     explicit AnonymousVMObject(const AnonymousVMObject&);
 
     virtual const char* class_name() const override { return "AnonymousVMObject"; }

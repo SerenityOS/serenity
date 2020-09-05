@@ -34,7 +34,7 @@ NonnullRefPtr<PrivateInodeVMObject> PrivateInodeVMObject::create_with_inode(Inod
     return adopt(*new PrivateInodeVMObject(inode, inode.size()));
 }
 
-NonnullRefPtr<VMObject> PrivateInodeVMObject::clone()
+RefPtr<VMObject> PrivateInodeVMObject::clone()
 {
     return adopt(*new PrivateInodeVMObject(*this));
 }

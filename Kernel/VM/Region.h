@@ -105,7 +105,7 @@ public:
 
     PageFaultResponse handle_fault(const PageFault&);
 
-    NonnullOwnPtr<Region> clone();
+    OwnPtr<Region> clone();
 
     bool contains(VirtualAddress vaddr) const
     {
@@ -194,7 +194,7 @@ public:
 
     void set_inherit_mode(InheritMode inherit_mode) { m_inherit_mode = inherit_mode; }
 
-    bool remap_page_range(size_t page_index, size_t page_count, bool do_commit);
+    bool remap_page_range(size_t page_index, size_t page_count);
 
     bool is_volatile(VirtualAddress vaddr, size_t size) const;
     enum class SetVolatileError {
