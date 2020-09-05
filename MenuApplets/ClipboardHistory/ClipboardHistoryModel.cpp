@@ -71,6 +71,8 @@ void ClipboardHistoryModel::update()
 
 void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 {
+    if (m_history_items.size() == m_history_limit)
+        m_history_items.take_last();
     m_history_items.prepend(item);
     update();
 }
