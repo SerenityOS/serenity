@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 
     table_view.on_activation = [&](const GUI::ModelIndex& index) {
         auto& data_and_type = model->item_at(index.row());
-        GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.type);
+        GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type);
     };
 
     auto applet_window = GUI::Window::construct();

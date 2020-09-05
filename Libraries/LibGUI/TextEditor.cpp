@@ -1300,7 +1300,7 @@ void TextEditor::cut()
         return;
     auto selected_text = this->selected_text();
     printf("Cut: \"%s\"\n", selected_text.characters());
-    Clipboard::the().set_data(selected_text);
+    Clipboard::the().set_plain_text(selected_text);
     delete_selection();
 }
 
@@ -1308,7 +1308,7 @@ void TextEditor::copy()
 {
     auto selected_text = this->selected_text();
     printf("Copy: \"%s\"\n", selected_text.characters());
-    Clipboard::the().set_data(selected_text);
+    Clipboard::the().set_plain_text(selected_text);
 }
 
 void TextEditor::paste()
@@ -1317,7 +1317,7 @@ void TextEditor::paste()
         return;
 
     auto paste_text = Clipboard::the().data();
-    printf("Paste: \"%s\"\n", paste_text.characters());
+    printf("Paste: \"%s\"\n", String::copy(paste_text).characters());
 
     TemporaryChange change(m_automatic_indentation_enabled, false);
     insert_at_cursor_or_replace_selection(paste_text);

@@ -160,7 +160,7 @@ Tab::Tab(Type type)
         hooks().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
     m_link_context_menu->add_action(GUI::Action::create("Copy link", [this](auto&) {
-        GUI::Clipboard::the().set_data(m_link_context_menu_url.to_string());
+        GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_string());
     }));
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("Download", [this](auto&) {

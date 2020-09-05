@@ -54,11 +54,11 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     auto& data_and_type = m_history_items[index.row()];
     switch (index.column()) {
     case Column::Data:
-        if (data_and_type.type.starts_with("text/"))
-            return data_and_type.data;
+        if (data_and_type.mime_type.starts_with("text/"))
+            return String::copy(data_and_type.data);
         return "<...>";
     case Column::Type:
-        return data_and_type.type;
+        return data_and_type.mime_type;
     default:
         ASSERT_NOT_REACHED();
     }

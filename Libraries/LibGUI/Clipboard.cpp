@@ -90,26 +90,26 @@ Clipboard::DataAndType Clipboard::data_and_type() const
         dbgprintf("GUI::Clipboard::data() clipping contents size is greater than shared buffer size\n");
         return {};
     }
-    auto data = String((const char*)shared_buffer->data(), response->data_size());
+    auto data = ByteBuffer::copy(shared_buffer->data(), response->data_size());
     auto type = response->mime_type();
     return { data, type };
 }
 
-void Clipboard::set_data(const StringView& data, const String& type)
+void Clipboard::set_data(ReadonlyBytes data, const String& type)
 {
-    auto shared_buffer = SharedBuffer::create_with_size(data.length() + 1);
+    auto shared_buffer = SharedBuffer::create_with_size(data.size() + 1);
     if (!shared_buffer) {
         dbgprintf("GUI::Clipboard::set_data() failed to create a shared buffer\n");
         return;
     }
     if (!data.is_empty())
-        memcpy(shared_buffer->data(), data.characters_without_null_termination(), data.length() + 1);
+        memcpy(shared_buffer->data(), data.data(), data.size() + 1);
     else
         ((u8*)shared_buffer->data())[0] = '\0';
     shared_buffer->seal();
     shared_buffer->share_with(connection().server_pid());
 
-    connection().send_sync<Messages::ClipboardServer::SetClipboardData>(shared_buffer->shbuf_id(), data.length(), type);
+    connection().send_sync<Messages::ClipboardServer::SetClipboardData>(shared_buffer->shbuf_id(), data.size(), type);
 }
 
 void ClipboardServerConnection::handle(const Messages::ClipboardClient::ClipboardDataChanged& message)

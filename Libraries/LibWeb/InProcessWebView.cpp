@@ -66,7 +66,7 @@ InProcessWebView::InProcessWebView()
     set_background_role(ColorRole::Base);
 
     m_copy_action = GUI::CommonActions::make_copy_action([this](auto&) {
-        GUI::Clipboard::the().set_data(selected_text(), "text/plain");
+        GUI::Clipboard::the().set_plain_text(selected_text());
     });
 
     m_select_all_action = GUI::CommonActions::make_select_all_action([this](auto&) {
