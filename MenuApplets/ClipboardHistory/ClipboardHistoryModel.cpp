@@ -26,6 +26,7 @@
 
 #include "ClipboardHistoryModel.h"
 #include <AK/NumberFormat.h>
+#include <AK/StringBuilder.h>
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 {
@@ -59,6 +60,18 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     case Column::Data:
         if (data_and_type.mime_type.starts_with("text/"))
             return String::copy(data_and_type.data);
+        if (data_and_type.mime_type == "image/x-serenityos") {
+            StringBuilder builder;
+            builder.append("[");
+            builder.append(data_and_type.metadata.get("width").value_or("?"));
+            builder.append('x');
+            builder.append(data_and_type.metadata.get("height").value_or("?"));
+            builder.append('x');
+            builder.append(data_and_type.metadata.get("bpp").value_or("?"));
+            builder.append(" bitmap");
+            builder.append("]");
+            return builder.to_string();
+        }
         return "<...>";
     case Column::Type:
         return data_and_type.mime_type;
