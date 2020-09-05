@@ -73,7 +73,8 @@ public:
     {
         if (!m_elements)
             return;
-        for (size_t i = 0; i < m_size; ++i)
+        size_t i = m_size;
+        while (i-- > 0)
             m_elements[i].~T();
         kfree(m_elements);
         m_elements = nullptr;
