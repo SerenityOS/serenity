@@ -57,6 +57,9 @@ public:
 
     size_t read(Bytes bytes) override
     {
+        if (has_any_error())
+            return 0;
+
         auto nread = buffer().trim(m_buffer_remaining).copy_trimmed_to(bytes);
 
         m_buffer_remaining -= nread;

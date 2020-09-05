@@ -40,8 +40,10 @@ public:
 
     size_t read(Bytes bytes) override
     {
-        size_t nread = 0;
+        if (has_any_error())
+            return 0;
 
+        size_t nread = 0;
         if (bytes.size() >= 1) {
             if (m_next_byte.has_value()) {
                 bytes[0] = m_next_byte.value();

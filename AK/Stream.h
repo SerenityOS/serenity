@@ -75,6 +75,7 @@ namespace AK {
 
 class InputStream : public virtual AK::Detail::Stream {
 public:
+    // Does nothing and returns zero if there is already an error.
     virtual size_t read(Bytes) = 0;
     virtual bool read_or_error(Bytes) = 0;
     virtual bool eof() const = 0;

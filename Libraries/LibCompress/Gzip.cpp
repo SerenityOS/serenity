@@ -68,6 +68,9 @@ GzipDecompressor::~GzipDecompressor()
 // FIXME: Again, there are surely a ton of bugs because the code doesn't check for read errors.
 size_t GzipDecompressor::read(Bytes bytes)
 {
+    if (has_any_error())
+        return 0;
+
     if (m_current_member.has_value()) {
         size_t nread = current_member().m_stream.read(bytes);
         current_member().m_checksum.update(bytes.trim(nread));

@@ -189,8 +189,8 @@ DeflateDecompressor::~DeflateDecompressor()
 
 size_t DeflateDecompressor::read(Bytes bytes)
 {
-    // FIXME: There are surely a ton of bugs because we don't check for read errors
-    //        very often.
+    if (has_any_error())
+        return 0;
 
     if (m_state == State::Idle) {
         if (m_read_final_bock)
