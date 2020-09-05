@@ -36,18 +36,23 @@ class Clipboard {
 public:
     static Clipboard& the();
 
-    String data() const { return data_and_type().data; }
-    String type() const { return data_and_type().type; }
-    void set_data(const StringView&, const String& data_type = "text/plain");
+    ByteBuffer data() const { return data_and_type().data; }
+    String mime_type() const { return data_and_type().mime_type; }
+    void set_data(ReadonlyBytes, const String& mime_type = "text/plain");
+
+    void set_plain_text(const String& text)
+    {
+        set_data(text.bytes());
+    }
 
     struct DataAndType {
-        String data;
-        String type;
+        ByteBuffer data;
+        String mime_type;
     };
 
     DataAndType data_and_type() const;
 
-    Function<void(const String& data_type)> on_change;
+    Function<void(const String& mime_type)> on_change;
 
     static void initialize(Badge<Application>);
 

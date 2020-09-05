@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     Options options = parse_options(argc, argv);
 
     auto& clipboard = GUI::Clipboard::the();
-    clipboard.set_data(options.data, options.type);
+    clipboard.set_data(options.data.bytes(), options.type);
 
     return 0;
 }

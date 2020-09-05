@@ -550,7 +550,7 @@ void TerminalWidget::paste()
     auto text = GUI::Clipboard::the().data();
     if (text.is_empty())
         return;
-    int nwritten = write(m_ptm_fd, text.characters(), text.length());
+    int nwritten = write(m_ptm_fd, text.data(), text.size());
     if (nwritten < 0) {
         perror("write");
         ASSERT_NOT_REACHED();
@@ -560,7 +560,7 @@ void TerminalWidget::paste()
 void TerminalWidget::copy()
 {
     if (has_selection())
-        GUI::Clipboard::the().set_data(selected_text());
+        GUI::Clipboard::the().set_plain_text(selected_text());
 }
 
 void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
@@ -829,7 +829,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             m_context_menu_for_hyperlink->add_action(action);
         }
         m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
-            GUI::Clipboard::the().set_data(m_context_menu_href);
+            GUI::Clipboard::the().set_plain_text(m_context_menu_href);
         }));
         m_context_menu_for_hyperlink->add_separator();
         m_context_menu_for_hyperlink->add_action(copy_action());

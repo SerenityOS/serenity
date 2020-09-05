@@ -139,7 +139,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
         output_string_builder.appendf("%02X ", m_buffer.data()[i]);
     }
 
-    GUI::Clipboard::the().set_data(output_string_builder.to_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
     return true;
 }
 
@@ -153,7 +153,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
         output_string_builder.appendf("%c", isprint(m_buffer.data()[i]) ? m_buffer[i] : '.');
     }
 
-    GUI::Clipboard::the().set_data(output_string_builder.to_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
     return true;
 }
 
@@ -176,7 +176,7 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     }
     output_string_builder.append("\n};\n");
 
-    GUI::Clipboard::the().set_data(output_string_builder.to_string());
+    GUI::Clipboard::the().set_plain_text(output_string_builder.to_string());
     return true;
 }
 

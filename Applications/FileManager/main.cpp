@@ -368,7 +368,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 auto url = URL::create_with_file_protocol(path);
                 copy_text.appendf("%s\n", url.to_string().characters());
             }
-            GUI::Clipboard::the().set_data(copy_text.build(), "text/uri-list");
+            GUI::Clipboard::the().set_data(copy_text.build().bytes(), "text/uri-list");
         },
         window);
     copy_action->set_enabled(false);
@@ -407,11 +407,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto do_paste = [&](const GUI::Action& action) {
         auto data_and_type = GUI::Clipboard::the().data_and_type();
-        if (data_and_type.type != "text/uri-list") {
-            dbg() << "Cannot paste clipboard type " << data_and_type.type;
+        if (data_and_type.mime_type != "text/uri-list") {
+            dbg() << "Cannot paste clipboard type " << data_and_type.mime_type;
             return;
         }
-        auto copied_lines = data_and_type.data.split('\n');
+        auto copied_lines = String::copy(data_and_type.data).split('\n');
         if (copied_lines.is_empty()) {
             dbg() << "No files to paste";
             return;
@@ -638,7 +638,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             return;
         }
 
-        paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().type() == "text/uri-list");
+        paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().mime_type() == "text/uri-list");
         go_forward_action->set_enabled(directory_view.path_history_position() < directory_view.path_history_size() - 1);
         go_back_action->set_enabled(directory_view.path_history_position() > 0);
         open_parent_directory_action->set_enabled(new_path != "/");
@@ -705,7 +705,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             auto& node = directory_view.node(index);
 
             if (node.is_directory()) {
-                auto should_get_enabled = access(node.full_path().characters(), W_OK) == 0 && GUI::Clipboard::the().type() == "text/uri-list";
+                auto should_get_enabled = access(node.full_path().characters(), W_OK) == 0 && GUI::Clipboard::the().mime_type() == "text/uri-list";
                 folder_specific_paste_action->set_enabled(should_get_enabled);
                 directory_context_menu->popup(event.screen_position());
             } else {
@@ -822,7 +822,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_view.open(initial_location);
     directory_view.set_focus(true);
 
-    paste_action->set_enabled(GUI::Clipboard::the().type() == "text/uri-list" && access(initial_location.characters(), W_OK) == 0);
+    paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "text/uri-list" && access(initial_location.characters(), W_OK) == 0);
 
     window->show();
 
