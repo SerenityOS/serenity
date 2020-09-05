@@ -136,6 +136,10 @@ public:
     }
 
     bool intersects(const VolatilePageRange&) const;
+    bool contains(size_t index) const
+    {
+        return intersects({ index, 1 });
+    }
 
     bool add(const VolatilePageRange&);
     bool remove(const VolatilePageRange&, bool&);
@@ -152,6 +156,7 @@ class PurgeableVMObject;
 
 class PurgeablePageRanges {
     friend class PurgeableVMObject;
+
 public:
     PurgeablePageRanges(const VMObject&);
 
@@ -168,23 +173,32 @@ public:
     bool add_volatile_range(const VolatilePageRange& range);
     bool remove_volatile_range(const VolatilePageRange& range, bool& was_purged);
     bool is_volatile_range(const VolatilePageRange& range) const;
+    bool is_volatile(size_t) const;
 
     bool is_empty() const { return m_volatile_ranges.is_empty(); }
 
     void set_was_purged(const VolatilePageRange&);
 
     const VolatilePageRanges& volatile_ranges() const { return m_volatile_ranges; }
+
 protected:
+    void set_vmobject(PurgeableVMObject*);
+
     VolatilePageRanges m_volatile_ranges;
-    mutable SpinLock<u8> m_volatile_ranges_lock;
+    mutable RecursiveSpinLock m_volatile_ranges_lock;
+    PurgeableVMObject* m_vmobject { nullptr };
 };
 
 class PurgeableVMObject final : public AnonymousVMObject {
+    friend class PurgeablePageRanges;
+
 public:
     virtual ~PurgeableVMObject() override;
 
-    static NonnullRefPtr<PurgeableVMObject> create_with_size(size_t);
-    virtual NonnullRefPtr<VMObject> clone() override;
+    static RefPtr<PurgeableVMObject> create_with_size(size_t);
+    virtual RefPtr<VMObject> clone() override;
+
+    virtual RefPtr<PhysicalPage> allocate_committed_page(size_t) override;
 
     void register_purgeable_page_ranges(PurgeablePageRanges&);
     void unregister_purgeable_page_ranges(PurgeablePageRanges&);
@@ -202,11 +216,13 @@ public:
         // volatile ranges that all share, because those are the only
         // pages we can actually purge
         for (auto* purgeable_range : m_purgeable_ranges) {
+            ScopedSpinLock purgeable_lock(purgeable_range->m_volatile_ranges_lock);
             for (auto& r1 : purgeable_range->volatile_ranges().ranges()) {
                 VolatilePageRange range(r1);
                 for (auto* purgeable_range2 : m_purgeable_ranges) {
                     if (purgeable_range2 == purgeable_range)
                         continue;
+                    ScopedSpinLock purgeable2_lock(purgeable_range2->m_volatile_ranges_lock);
                     if (purgeable_range2->is_empty()) {
                         // If just one doesn't allow any purging, we can
                         // immediately bail
@@ -230,6 +246,8 @@ public:
         return IterationDecision::Continue;
     }
 
+    size_t get_lazy_committed_page_count() const;
+
 private:
     explicit PurgeableVMObject(size_t);
     explicit PurgeableVMObject(const PurgeableVMObject&);
@@ -238,6 +256,8 @@ private:
 
     int purge_impl();
     void set_was_purged(const VolatilePageRange&);
+    size_t remove_lazy_commit_pages(const VolatilePageRange&);
+    void range_made_volatile(const VolatilePageRange&);
 
     PurgeableVMObject& operator=(const PurgeableVMObject&) = delete;
     PurgeableVMObject& operator=(PurgeableVMObject&&) = delete;
@@ -247,6 +267,7 @@ private:
 
     Vector<PurgeablePageRanges*> m_purgeable_ranges;
     mutable SpinLock<u8> m_lock;
+    size_t m_unused_committed_pages { 0 };
 };
 
 }

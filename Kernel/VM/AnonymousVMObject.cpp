@@ -51,13 +51,15 @@ NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(Ph
     return vmobject;
 }
 
-AnonymousVMObject::AnonymousVMObject(size_t size)
+AnonymousVMObject::AnonymousVMObject(size_t size, bool initialize_pages)
     : VMObject(size)
 {
+    if (initialize_pages) {
 #ifndef MAP_SHARED_ZERO_PAGE_LAZILY
-    for (size_t i = 0; i < page_count(); ++i)
-        physical_pages()[i] = MM.shared_zero_page();
+        for (size_t i = 0; i < page_count(); ++i)
+            physical_pages()[i] = MM.shared_zero_page();
 #endif
+    }
 }
 
 AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
@@ -77,9 +79,14 @@ AnonymousVMObject::~AnonymousVMObject()
 {
 }
 
-NonnullRefPtr<VMObject> AnonymousVMObject::clone()
+RefPtr<VMObject> AnonymousVMObject::clone()
 {
     return adopt(*new AnonymousVMObject(*this));
+}
+
+RefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(size_t)
+{
+    return {};
 }
 
 }
