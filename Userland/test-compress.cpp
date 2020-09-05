@@ -26,6 +26,7 @@
 
 #include <AK/TestSuite.h>
 
+#include <AK/FixedArray.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
@@ -127,7 +128,6 @@ TEST_CASE(gzip_decompress_simple)
     const u8 uncompressed[] = "word1 abc word2";
 
     const auto decompressed = Compress::GzipDecompressor::decompress_all({ compressed, sizeof(compressed) });
-
     EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
 }
 
@@ -145,7 +145,6 @@ TEST_CASE(gzip_decompress_multiple_members)
     const u8 uncompressed[] = "abcabcabcabc";
 
     const auto decompressed = Compress::GzipDecompressor::decompress_all({ compressed, sizeof(compressed) });
-
     EXPECT(compare({ uncompressed, sizeof(uncompressed) - 1 }, decompressed.bytes()));
 }
 
@@ -171,8 +170,27 @@ TEST_CASE(gzip_decompress_zeroes)
     const u8 uncompressed[128 * 1024] = { 0 };
 
     const auto decompressed = Compress::GzipDecompressor::decompress_all({ compressed, sizeof(compressed) });
-
     EXPECT(compare({ uncompressed, sizeof(uncompressed) }, decompressed.bytes()));
+}
+
+TEST_CASE(gzip_decompress_repeat_around_buffer)
+{
+    const u8 compressed[] = {
+        0x1f, 0x8b, 0x08, 0x00, 0xc6, 0x74, 0x53, 0x5f, 0x02, 0xff, 0xed, 0xc1,
+        0x01, 0x0d, 0x00, 0x00, 0x0c, 0x02, 0xa0, 0xdb, 0xbf, 0xf4, 0x37, 0x6b,
+        0x08, 0x24, 0xdb, 0x0e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xca,
+        0xb8, 0x07, 0xcd, 0xe5, 0x38, 0xfa, 0x00, 0x80, 0x00, 0x00
+    };
+
+    FixedArray<u8> uncompressed { 0x8000 };
+    uncompressed.bytes().slice(0x0, 0x100).fill(1);
+    uncompressed.bytes().slice(0x100, 0x7e00).fill(0);
+    uncompressed.bytes().slice(0x7f00, 0x100).fill(1);
+
+    const auto decompressed = Compress::GzipDecompressor::decompress_all({ compressed, sizeof(compressed) });
+    EXPECT(compare(uncompressed, decompressed.bytes()));
 }
 
 TEST_MAIN(Compress)
