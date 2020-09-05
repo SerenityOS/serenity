@@ -39,7 +39,6 @@ while IFS= read -r f; do
 done < <(git ls-files -- \
     '*.cpp' \
     '*.h' \
-    ':!:Tests' \
     ':!:Base' \
     ':!:Kernel/FileSystem/ext2_fs.h' \
     ':!:Libraries/LibC/getopt.cpp' \
