@@ -71,6 +71,8 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
 
     for (auto* client : m_clients)
         client->image_did_add_layer(m_layers.size() - 1);
+
+    did_modify_layer_stack();
 }
 
 size_t Image::index_of(const Layer& layer) const

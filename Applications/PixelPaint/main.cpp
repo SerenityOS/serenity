@@ -42,6 +42,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -126,7 +127,17 @@ int main(int argc, char** argv)
         return;
     }));
 
-    menubar->add_menu("Edit");
+    auto& edit_menu = menubar->add_menu("Edit");
+    edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
+
+        ASSERT(image_editor.image());
+        auto bitmap = GUI::Clipboard::the().bitmap();
+        if (!bitmap)
+            return;
+
+        auto layer = PixelPaint::Layer::create_with_bitmap(*image_editor.image(), *bitmap, "Pasted layer");
+        image_editor.image()->add_layer(layer.release_nonnull());
+    }));
 
     auto& tool_menu = menubar->add_menu("Tool");
     toolbox.for_each_tool([&](auto& tool) {

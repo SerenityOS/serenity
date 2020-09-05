@@ -41,11 +41,29 @@ RefPtr<Layer> Layer::create_with_size(Image& image, const Gfx::IntSize& size, co
     return adopt(*new Layer(image, size, name));
 }
 
+RefPtr<Layer> Layer::create_with_bitmap(Image& image, const Gfx::Bitmap& bitmap, const String& name)
+{
+    if (bitmap.size().is_empty())
+        return nullptr;
+
+    if (bitmap.size().width() > 16384 || bitmap.size().height() > 16384)
+        return nullptr;
+
+    return adopt(*new Layer(image, bitmap, name));
+}
+
 Layer::Layer(Image& image, const Gfx::IntSize& size, const String& name)
     : m_image(image)
     , m_name(name)
 {
     m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, size);
+}
+
+Layer::Layer(Image& image, const Gfx::Bitmap& bitmap, const String& name)
+    : m_image(image)
+    , m_name(name)
+    , m_bitmap(bitmap)
+{
 }
 
 void Layer::did_modify_bitmap(Image& image)
