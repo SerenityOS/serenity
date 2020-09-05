@@ -25,6 +25,7 @@
  */
 
 #include "ClipboardHistoryModel.h"
+#include <AK/NumberFormat.h>
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 {
@@ -42,6 +43,8 @@ String ClipboardHistoryModel::column_name(int column) const
         return "Data";
     case Column::Type:
         return "Type";
+    case Column::Size:
+        return "Size";
     default:
         ASSERT_NOT_REACHED();
     }
@@ -59,6 +62,8 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
         return "<...>";
     case Column::Type:
         return data_and_type.mime_type;
+    case Column::Size:
+        return AK::human_readable_size(data_and_type.data.size());
     default:
         ASSERT_NOT_REACHED();
     }
