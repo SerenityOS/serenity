@@ -37,7 +37,6 @@
 #include <limits.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <getopt.h>
 
 __BEGIN_DECLS
 
@@ -190,5 +189,21 @@ struct crypt_data {
 
 char* crypt(const char* key, const char* salt);
 char* crypt_r(const char* key, const char* salt, struct crypt_data* data);
+
+// If opterr is set (the default), print error messages to stderr.
+extern int opterr;
+// On errors, optopt is set to the erroneous *character*.
+extern int optopt;
+// Index of the next argument to process upon a getopt*() call.
+extern int optind;
+// If set, reset the internal state kept by getopt*(). You may also want to set
+// optind to 1 in that case. Alternatively, setting optind to 0 is treated like
+// doing both of the above.
+extern int optreset;
+// After parsing an option that accept an argument, set to point to the argument
+// value.
+extern char* optarg;
+
+int getopt(int argc, char** argv, const char* short_options);
 
 __END_DECLS

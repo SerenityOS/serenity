@@ -29,6 +29,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 int opterr = 1;
 int optopt = 0;
@@ -40,7 +41,6 @@ char* optarg = nullptr;
 // it is unspecified how getopt() determines which options have already been
 // processed". Well, this is how we do it.
 static size_t s_index_into_multioption_argument = 0;
-
 
 static inline void report_error(const char* format, ...)
 {
@@ -101,7 +101,6 @@ OptionParser::OptionParser(int argc, char** argv, const StringView& short_option
     // extension that we support.
     m_stop_on_first_non_option = short_options.starts_with('+');
 
-
     // See if we should reset the internal state.
     if (optreset || optind == 0) {
         optreset = 0;
@@ -148,7 +147,6 @@ int OptionParser::getopt()
 
     return res;
 }
-
 
 bool OptionParser::lookup_short_option(char option, int& needs_value) const
 {
@@ -325,7 +323,7 @@ void OptionParser::shift_argv()
 
     char* buffer[m_consumed_args];
     memcpy(buffer, &m_argv[m_arg_index], sizeof(char*) * m_consumed_args);
-    memmove(&m_argv[optind + m_consumed_args], &m_argv[optind], sizeof(char *) * (m_arg_index - optind));
+    memmove(&m_argv[optind + m_consumed_args], &m_argv[optind], sizeof(char*) * (m_arg_index - optind));
     memcpy(&m_argv[optind], buffer, sizeof(char*) * m_consumed_args);
 }
 
