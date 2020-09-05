@@ -119,7 +119,7 @@ Fire::Fire()
 
     /* Draw fire "source" on bottom row of pixels */
     for (int i = 0; i < FIRE_WIDTH; i++)
-        bitmap->bits(bitmap->height() - 1)[i] = FIRE_MAX;
+        bitmap->scanline_u8(bitmap->height() - 1)[i] = FIRE_MAX;
 
     /* Set off initital paint event */
     //update();
@@ -157,7 +157,7 @@ void Fire::timer_event(Core::TimerEvent&)
             int rnd = rand() % 3;
 
             /* Calculate new pixel value, don't go below 0 */
-            u8 nv = bitmap->bits(py)[px];
+            u8 nv = bitmap->scanline_u8(py)[px];
             if (nv > 0)
                 nv -= (rnd & 1);
 
@@ -168,7 +168,7 @@ void Fire::timer_event(Core::TimerEvent&)
             else if (epx > FIRE_WIDTH)
                 epx = FIRE_WIDTH;
 
-            bitmap->bits(py - 1)[epx] = nv;
+            bitmap->scanline_u8(py - 1)[epx] = nv;
         }
     }
 
@@ -199,10 +199,10 @@ void Fire::mousemove_event(GUI::MouseEvent& event)
         if (event.y() >= 2 && event.y() < 398 && event.x() <= 638) {
             int ypos = event.y() / 2;
             int xpos = event.x() / 2;
-            bitmap->bits(ypos - 1)[xpos] = FIRE_MAX + 5;
-            bitmap->bits(ypos - 1)[xpos + 1] = FIRE_MAX + 5;
-            bitmap->bits(ypos)[xpos] = FIRE_MAX + 5;
-            bitmap->bits(ypos)[xpos + 1] = FIRE_MAX + 5;
+            bitmap->scanline_u8(ypos - 1)[xpos] = FIRE_MAX + 5;
+            bitmap->scanline_u8(ypos - 1)[xpos + 1] = FIRE_MAX + 5;
+            bitmap->scanline_u8(ypos)[xpos] = FIRE_MAX + 5;
+            bitmap->scanline_u8(ypos)[xpos + 1] = FIRE_MAX + 5;
         }
     }
 

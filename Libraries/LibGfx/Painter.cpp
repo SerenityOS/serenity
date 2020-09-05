@@ -51,13 +51,13 @@ template<BitmapFormat format = BitmapFormat::Invalid>
 ALWAYS_INLINE Color get_pixel(const Gfx::Bitmap& bitmap, int x, int y)
 {
     if constexpr (format == BitmapFormat::Indexed8)
-        return bitmap.palette_color(bitmap.bits(y)[x]);
+        return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
     if constexpr (format == BitmapFormat::Indexed4)
-        return bitmap.palette_color(bitmap.bits(y)[x]);
+        return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
     if constexpr (format == BitmapFormat::Indexed2)
-        return bitmap.palette_color(bitmap.bits(y)[x]);
+        return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
     if constexpr (format == BitmapFormat::Indexed1)
-        return bitmap.palette_color(bitmap.bits(y)[x]);
+        return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
     if constexpr (format == BitmapFormat::RGB32)
         return Color::from_rgb(bitmap.scanline(y)[x]);
     if constexpr (format == BitmapFormat::RGBA32)
@@ -678,7 +678,7 @@ void Painter::blit(const IntPoint& position, const Gfx::Bitmap& source, const In
     }
 
     if (Bitmap::is_indexed(source.format())) {
-        const u8* src = source.bits(src_rect.top() + first_row) + src_rect.left() + first_column;
+        const u8* src = source.scanline_u8(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch();
         for (int row = first_row; row <= last_row; ++row) {
             for (int i = 0; i < clipped_rect.width(); ++i)
