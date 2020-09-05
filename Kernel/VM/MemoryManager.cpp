@@ -78,7 +78,19 @@ MemoryManager::MemoryManager()
     write_cr3(kernel_page_directory().cr3());
     protect_kernel_image();
 
-    m_shared_zero_page = allocate_user_physical_page();
+    // We're temporarily "committing" to two pages that we need to allocate below
+    if (!commit_user_physical_pages(2))
+        ASSERT_NOT_REACHED();
+
+    m_shared_zero_page = allocate_committed_user_physical_page();
+
+    // We're wasting a page here, we just need a special tag (physical
+    // address) so that we know when we need to lazily allocate a page
+    // that we should be drawing this page from the committed pool rather
+    // than potentially failing if no pages are available anymore.
+    // By using a tag we don't have to query the VMObject for every page
+    // whether it was committed or not
+    m_lazy_committed_page = allocate_committed_user_physical_page();
 }
 
 MemoryManager::~MemoryManager()
@@ -191,6 +203,9 @@ void MemoryManager::parse_memory_map()
 
     ASSERT(m_super_physical_pages > 0);
     ASSERT(m_user_physical_pages > 0);
+
+    // We start out with no committed pages
+    m_user_physical_pages_uncommitted = m_user_physical_pages;
 }
 
 PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
@@ -465,6 +480,28 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmo
     return allocate_kernel_region_with_vmobject(range, vmobject, name, access, user_accessible, cacheable);
 }
 
+bool MemoryManager::commit_user_physical_pages(size_t page_count)
+{
+    ASSERT(page_count > 0);
+    ScopedSpinLock lock(s_mm_lock);
+    if (m_user_physical_pages_uncommitted < page_count)
+        return false;
+    
+    m_user_physical_pages_uncommitted -= page_count;
+    m_user_physical_pages_committed += page_count;
+    return true;
+}
+
+void MemoryManager::uncommit_user_physical_pages(size_t page_count)
+{
+    ASSERT(page_count > 0);
+    ScopedSpinLock lock(s_mm_lock);
+    ASSERT(m_user_physical_pages_committed >= page_count);
+
+    m_user_physical_pages_uncommitted += page_count;
+    m_user_physical_pages_committed -= page_count;
+}
+
 void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
 {
     ScopedSpinLock lock(s_mm_lock);
@@ -477,6 +514,10 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
         region.return_page(page);
         --m_user_physical_pages_used;
 
+        // Always return pages to the uncommitted pool. Pages that were
+        // committed and allocated are only freed upon request. Once
+        // returned there is no guarantee being able to get them back.
+        ++m_user_physical_pages_uncommitted;
         return;
     }
 
@@ -484,22 +525,47 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
     ASSERT_NOT_REACHED();
 }
 
-RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page()
+RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
 {
     ASSERT(s_mm_lock.is_locked());
     RefPtr<PhysicalPage> page;
+    if (committed) {
+        // Draw from the committed pages pool. We should always have these pages available
+        ASSERT(m_user_physical_pages_committed > 0);
+        m_user_physical_pages_committed--;
+    } else {
+        // We need to make sure we don't touch pages that we have committed to
+        if (m_user_physical_pages_uncommitted == 0)
+            return {};
+        m_user_physical_pages_uncommitted--;
+    }
     for (auto& region : m_user_physical_regions) {
         page = region.take_free_page(false);
-        if (!page.is_null())
+        if (!page.is_null()) {
+            ++m_user_physical_pages_used;
             break;
+        }
     }
+    ASSERT(!committed || !page.is_null());
     return page;
+}
+
+NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_user_physical_page(ShouldZeroFill should_zero_fill)
+{
+    ScopedSpinLock lock(s_mm_lock);
+    auto page = find_free_user_physical_page(true);
+    if (should_zero_fill == ShouldZeroFill::Yes) {
+        auto* ptr = quickmap_page(*page);
+        memset(ptr, 0, PAGE_SIZE);
+        unquickmap_page();
+    }
+    return page.release_nonnull();
 }
 
 RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
 {
     ScopedSpinLock lock(s_mm_lock);
-    auto page = find_free_user_physical_page();
+    auto page = find_free_user_physical_page(false);
     bool purged_pages = false;
 
     if (!page) {
@@ -509,7 +575,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
             int purged_page_count = vmobject.purge_with_interrupts_disabled({});
             if (purged_page_count) {
                 klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from PurgeableVMObject{" << &vmobject << "}";
-                page = find_free_user_physical_page();
+                page = find_free_user_physical_page(false);
                 purged_pages = true;
                 ASSERT(page);
                 return IterationDecision::Break;
@@ -535,8 +601,6 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 
     if (did_purge)
         *did_purge = purged_pages;
-
-    ++m_user_physical_pages_used;
     return page;
 }
 

@@ -39,7 +39,7 @@ public:
     virtual ~SharedInodeVMObject() override;
 
     static NonnullRefPtr<SharedInodeVMObject> create_with_inode(Inode&);
-    virtual NonnullRefPtr<VMObject> clone() override;
+    virtual RefPtr<VMObject> clone() override;
 
 private:
     virtual bool is_shared_inode() const override { return true; }

@@ -87,7 +87,7 @@ void Region::unregister_purgeable_page_ranges()
     }
 }
 
-NonnullOwnPtr<Region> Region::clone()
+OwnPtr<Region> Region::clone()
 {
     ASSERT(Process::current());
 
@@ -122,13 +122,17 @@ NonnullOwnPtr<Region> Region::clone()
     if (vmobject().is_inode())
         ASSERT(vmobject().is_private_inode());
 
+    auto vmobject_clone = m_vmobject->clone();
+    if (!vmobject_clone)
+        return {};
+
 #ifdef MM_DEBUG
     dbg() << "Region::clone(): CoWing " << name() << " (" << vaddr() << ")";
 #endif
     // Set up a COW region. The parent (this) region becomes COW as well!
     ensure_cow_map().fill(true);
     remap();
-    auto clone_region = Region::create_user_accessible(get_owner().ptr(), m_range, m_vmobject->clone(), m_offset_in_vmobject, m_name, m_access);
+    auto clone_region = Region::create_user_accessible(get_owner().ptr(), m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name, m_access);
     clone_region->set_purgeable_page_ranges(*this);
     clone_region->ensure_cow_map();
     if (m_stack) {
@@ -187,7 +191,7 @@ auto Region::set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, b
             // Attempt to remap the page range. We want to make sure we have
             // enough memory, if not we need to inform the caller of that
             // fact
-            if (!remap_page_range(first_page_index, last_page_index - first_page_index, true))
+            if (!remap_page_range(first_page_index, last_page_index - first_page_index))
                 return SetVolatileError::OutOfMemory;
         }
     }
@@ -224,10 +228,15 @@ bool Region::commit(size_t page_index)
     auto& vmobject_physical_page_entry = physical_page_slot(page_index);
     if (!vmobject_physical_page_entry.is_null() && !vmobject_physical_page_entry->is_shared_zero_page())
         return true;
-    auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
-    if (!physical_page) {
-        klog() << "MM: commit was unable to allocate a physical page";
-        return false;
+    RefPtr<PhysicalPage> physical_page;
+    if (vmobject_physical_page_entry->is_lazy_committed_page()) {
+        physical_page = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index);
+    } else {
+        physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+        if (!physical_page) {
+            klog() << "MM: commit was unable to allocate a physical page";
+            return false;
+        }
     }
     vmobject_physical_page_entry = move(physical_page);
     remap_page(page_index, false); // caller is in charge of flushing tlb
@@ -292,7 +301,7 @@ NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefP
 bool Region::should_cow(size_t page_index) const
 {
     auto* page = physical_page(page_index);
-    if (page && page->is_shared_zero_page())
+    if (page && (page->is_shared_zero_page() || page->is_lazy_committed_page()))
         return true;
     if (m_shared)
         return false;
@@ -344,17 +353,13 @@ bool Region::map_individual_page_impl(size_t page_index)
 }
 
 
-bool Region::remap_page_range(size_t page_index, size_t page_count, bool do_commit)
+bool Region::remap_page_range(size_t page_index, size_t page_count)
 {
     bool success = true;
     ASSERT(m_page_directory);
     ScopedSpinLock lock(s_mm_lock);
     size_t index = page_index;
     while (index < page_index + page_count) {
-        if (do_commit && !commit(index)) {
-            success = false;
-            break;
-        }
         if (!map_individual_page_impl(index)) {
             success = false;
             break;
@@ -451,9 +456,16 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
 #endif
             return handle_inode_fault(page_index_in_region);
         }
+
+        auto& page_slot = physical_page_slot(page_index_in_region);
+        if (page_slot->is_lazy_committed_page()) {
+            page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_region);
+            remap_page(page_index_in_region);
+            return PageFaultResponse::Continue;
+        }
 #ifdef MAP_SHARED_ZERO_PAGE_LAZILY
         if (fault.is_read()) {
-            physical_page_slot(page_index_in_region) = MM.shared_zero_page();
+            page_slot = MM.shared_zero_page();
             remap_page(page_index_in_region);
             return PageFaultResponse::Continue;
         }
@@ -468,7 +480,8 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "PV(cow) fault in Region{" << this << "}[" << page_index_in_region << "]";
 #endif
-        if (physical_page(page_index_in_region)->is_shared_zero_page()) {
+        auto* phys_page = physical_page(page_index_in_region);
+        if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
 #ifdef PAGE_FAULT_DEBUG
             dbg() << "NP(zero) fault in Region{" << this << "}[" << page_index_in_region << "]";
 #endif
@@ -491,7 +504,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 
     auto& page_slot = physical_page_slot(page_index_in_region);
 
-    if (!page_slot.is_null() && !page_slot->is_shared_zero_page()) {
+    if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "MM: zero_page() but page already present. Fine with me!";
 #endif
@@ -504,16 +517,19 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     if (current_thread != nullptr)
         current_thread->did_zero_fault();
 
-    auto page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
-    if (page.is_null()) {
-        klog() << "MM: handle_zero_fault was unable to allocate a physical page";
-        return PageFaultResponse::OutOfMemory;
+    if (page_slot->is_lazy_committed_page()) {
+        page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_region);
+    } else {
+        page_slot = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+        if (page_slot.is_null()) {
+            klog() << "MM: handle_zero_fault was unable to allocate a physical page";
+            return PageFaultResponse::OutOfMemory;
+        }
     }
 
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> ZERO " << page->paddr();
+    dbg() << "      >> ZERO " << page_slot->paddr();
 #endif
-    page_slot = move(page);
     if (!remap_page(page_index_in_region)) {
         klog() << "MM: handle_zero_fault was unable to allocate a page table to map " << page_slot;
         return PageFaultResponse::OutOfMemory;

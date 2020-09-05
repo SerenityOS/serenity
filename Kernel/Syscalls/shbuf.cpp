@@ -48,10 +48,14 @@ int Process::sys$shbuf_create(int size, void** buffer)
         return -EINVAL;
     size = PAGE_ROUND_UP(size);
 
+    auto vmobject = PurgeableVMObject::create_with_size(size);
+    if (!vmobject)
+        return -ENOMEM;
+
     LOCKER(shared_buffers().lock());
     static int s_next_shbuf_id;
     int shbuf_id = ++s_next_shbuf_id;
-    auto shared_buffer = make<SharedBuffer>(shbuf_id, size);
+    auto shared_buffer = make<SharedBuffer>(shbuf_id, vmobject.release_nonnull());
     shared_buffer->share_with(m_pid);
 
     void* address = shared_buffer->ref_for_process_and_get_address(*this);
