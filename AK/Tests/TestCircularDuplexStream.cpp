@@ -64,9 +64,8 @@ TEST_CASE(overwritting_is_well_defined)
 
     stream >> Bytes { bytes, sizeof(bytes) };
 
-    for (size_t idx = 0; idx < half_capacity; ++idx) {
+    for (size_t idx = 0; idx < half_capacity; ++idx)
         EXPECT_EQ(bytes[idx], idx % 256);
-    }
 
     for (size_t idx = 0; idx < half_capacity; ++idx)
         stream << static_cast<u8>(idx % 256);
@@ -82,6 +81,33 @@ TEST_CASE(overwritting_is_well_defined)
     }
 
     EXPECT(stream.eof());
+}
+
+TEST_CASE(of_by_one)
+{
+    constexpr size_t half_capacity = 32;
+    constexpr size_t capacity = half_capacity * 2;
+
+    CircularDuplexStream<capacity> stream;
+
+    for (size_t idx = 0; idx < half_capacity; ++idx)
+        stream << static_cast<u8>(0);
+
+    for (size_t idx = 0; idx < half_capacity; ++idx)
+        stream << static_cast<u8>(1);
+
+    stream.discard_or_error(capacity);
+
+    for (size_t idx = 0; idx < capacity; ++idx) {
+        u8 byte;
+        stream.read({ &byte, sizeof(byte) }, capacity);
+        stream << byte;
+
+        if (idx < half_capacity)
+            EXPECT_EQ(byte, 0);
+        else
+            EXPECT_EQ(byte, 1);
+    }
 }
 
 TEST_MAIN(CircularDuplexStream)
