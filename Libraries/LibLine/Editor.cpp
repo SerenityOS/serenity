@@ -664,6 +664,13 @@ void Editor::handle_read_event()
                 ctrl_held = true;
                 continue;
             }
+            if (code_point == 'Z') {
+                // 'reverse tab'
+                reverse_tab = true;
+                m_state = InputState::Free;
+                ctrl_held = false;
+                break;
+            }
             cleanup_suggestions();
             switch (code_point) {
             case 'A': // ^[[A: arrow up
@@ -702,11 +709,6 @@ void Editor::handle_read_event()
                 m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            case 'Z': // ^[[Z: shift+tab
-                reverse_tab = true;
-                m_state = InputState::Free;
-                ctrl_held = false;
-                break;
             case '3': // ^[[3~: delete
                 erase_character_forwards();
                 m_search_offset = 0;
@@ -726,7 +728,6 @@ void Editor::handle_read_event()
         case InputState::Free:
             if (code_point == 27) {
                 m_state = InputState::GotEscape;
-                cleanup_suggestions();
                 continue;
             }
             break;
