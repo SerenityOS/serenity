@@ -620,6 +620,8 @@ public:
 
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
+    bool was_created() const { return m_kernel_stack_region; }
+
 private:
     IntrusiveListNode m_runnable_list_node;
     IntrusiveListNode m_wait_queue_node;

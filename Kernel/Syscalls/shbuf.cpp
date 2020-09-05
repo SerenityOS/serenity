@@ -48,7 +48,7 @@ int Process::sys$shbuf_create(int size, void** buffer)
         return -EINVAL;
     size = PAGE_ROUND_UP(size);
 
-    auto vmobject = PurgeableVMObject::create_with_size(size);
+    auto vmobject = AnonymousVMObject::create_with_size(size, AllocationStrategy::Reserve);
     if (!vmobject)
         return -ENOMEM;
 

@@ -88,7 +88,6 @@ pid_t Process::sys$fork(RegisterState& regs)
         auto region_clone = region.clone();
         if (!region_clone) {
             dbg() << "fork: Cannot clone region, insufficient memory";
-            // TODO: tear down new process?
             return -ENOMEM;
         }
 
@@ -102,12 +101,16 @@ pid_t Process::sys$fork(RegisterState& regs)
     {
         ScopedSpinLock lock(g_processes_lock);
         g_processes->prepend(child);
-        child->ref(); // This reference will be dropped by Process::reap
     }
 
     child_first_thread->set_affinity(Thread::current()->affinity());
     child_first_thread->set_state(Thread::State::Runnable);
-    return child->pid().value();
+
+    auto child_pid = child->pid().value();
+    // We need to leak one reference so we don't destroy the Process,
+    // which will be dropped by Process::reap
+    (void)child.leak_ref();
+    return child_pid;
 }
 
 }

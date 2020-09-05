@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,47 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/NonnullRefPtrVector.h>
-#include <Kernel/Process.h>
-#include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/InodeVMObject.h>
-#include <Kernel/VM/MemoryManager.h>
+#pragma once
 
 namespace Kernel {
 
-int Process::sys$purge(int mode)
-{
-    REQUIRE_NO_PROMISES;
-    if (!is_superuser())
-        return -EPERM;
-    int purged_page_count = 0;
-    if (mode & PURGE_ALL_VOLATILE) {
-        NonnullRefPtrVector<AnonymousVMObject> vmobjects;
-        {
-            InterruptDisabler disabler;
-            MM.for_each_vmobject_of_type<AnonymousVMObject>([&](auto& vmobject) {
-                vmobjects.append(vmobject);
-                return IterationDecision::Continue;
-            });
-        }
-        for (auto& vmobject : vmobjects) {
-            purged_page_count += vmobject.purge();
-        }
-    }
-    if (mode & PURGE_ALL_CLEAN_INODE) {
-        NonnullRefPtrVector<InodeVMObject> vmobjects;
-        {
-            InterruptDisabler disabler;
-            MM.for_each_vmobject_of_type<InodeVMObject>([&](auto& vmobject) {
-                vmobjects.append(vmobject);
-                return IterationDecision::Continue;
-            });
-        }
-        for (auto& vmobject : vmobjects) {
-            purged_page_count += vmobject.release_all_clean_pages();
-        }
-    }
-    return purged_page_count;
-}
+enum class PageFaultResponse {
+    ShouldCrash,
+    OutOfMemory,
+    Continue,
+};
 
 }

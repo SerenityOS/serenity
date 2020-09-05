@@ -27,10 +27,12 @@
 #include <AK/BinarySearch.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/Process.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
-#include <Kernel/VM/PurgeableVMObject.h>
+#include <Kernel/VM/PurgeablePageRanges.h>
 
+#define PAGE_FAULT_DEBUG
 //#define VOLATILE_PAGE_RANGES_DEBUG
 
 namespace Kernel {
@@ -50,6 +52,14 @@ static void dump_volatile_page_ranges(const Vector<VolatilePageRange>& ranges)
    }
 }
 #endif
+
+void VolatilePageRanges::add_unchecked(const VolatilePageRange& range)
+{
+    auto add_range = m_total_range.intersected(range);
+    if (add_range.is_empty())
+        return;
+    m_ranges.append(range);
+}
 
 bool VolatilePageRanges::add(const VolatilePageRange& range)
 {
@@ -187,7 +197,7 @@ bool VolatilePageRanges::intersects(const VolatilePageRange& range) const
 }
 
 PurgeablePageRanges::PurgeablePageRanges(const VMObject& vmobject)
-    : m_volatile_ranges({0, vmobject.is_purgeable() ? static_cast<const PurgeableVMObject&>(vmobject).page_count() : 0})
+    : m_volatile_ranges({0, vmobject.is_anonymous() ? vmobject.page_count() : 0})
 {
 }
 
@@ -196,11 +206,11 @@ bool PurgeablePageRanges::add_volatile_range(const VolatilePageRange& range)
     if (range.is_empty())
         return false;
 
-    // Since we may need to call into PurgeableVMObject we need to acquire
+    // Since we may need to call into AnonymousVMObject we need to acquire
     // its lock as well, and acquire it first. This is important so that
     // we don't deadlock when a page fault (e.g. on another processor)
     // happens that is meant to lazy-allocate a committed page. It would
-    // call into PurgeableVMObject::range_made_volatile, which then would
+    // call into AnonymousVMObject::range_made_volatile, which then would
     // also call into this object and need to acquire m_lock. By acquiring
     // the vmobject lock first in both cases, we avoid deadlocking.
     // We can access m_vmobject without any locks for that purpose because
@@ -214,13 +224,47 @@ bool PurgeablePageRanges::add_volatile_range(const VolatilePageRange& range)
     return added;
 }
 
-bool PurgeablePageRanges::remove_volatile_range(const VolatilePageRange& range, bool& was_purged)
+auto PurgeablePageRanges::remove_volatile_range(const VolatilePageRange& range, bool& was_purged) -> RemoveVolatileError
 {
-    if (range.is_empty())
-        return false;
+    if (range.is_empty()) {
+        was_purged = false;
+        return RemoveVolatileError::Success;
+    }
+    ScopedSpinLock vmobject_lock(m_vmobject->m_lock); // see comment in add_volatile_range
     ScopedSpinLock lock(m_volatile_ranges_lock);
     ASSERT(m_vmobject);
-    return m_volatile_ranges.remove(range, was_purged);
+
+    // Before we actually remove this range, we need to check if we need
+    // to commit any pages, which may fail. If it fails, we don't actually
+    // want to make any modifications. COW pages are already accounted for
+    // in m_shared_committed_cow_pages
+    size_t need_commit_pages = 0;
+    m_volatile_ranges.for_each_intersecting_range(range, [&](const VolatilePageRange& intersected_range) {
+        need_commit_pages += m_vmobject->count_needed_commit_pages_for_nonvolatile_range(intersected_range);
+        return IterationDecision::Continue;
+    });
+    if (need_commit_pages > 0) {
+        // See if we can grab enough pages for what we're marking non-volatile
+        if (!MM.commit_user_physical_pages(need_commit_pages))
+            return RemoveVolatileError::OutOfMemory;
+
+        // Now that we are committed to these pages, mark them for lazy-commit allocation
+        auto pages_to_mark = need_commit_pages;
+        m_volatile_ranges.for_each_intersecting_range(range, [&](const VolatilePageRange& intersected_range) {
+            auto pages_marked = m_vmobject->mark_committed_pages_for_nonvolatile_range(intersected_range, pages_to_mark);
+            pages_to_mark -= pages_marked;
+            return IterationDecision::Continue;
+        });
+    }
+
+    // Now actually remove the range
+    if (m_volatile_ranges.remove(range, was_purged)) {
+        m_vmobject->range_made_nonvolatile(range);
+        return RemoveVolatileError::Success;
+    }
+
+    ASSERT(need_commit_pages == 0); // We should have not touched anything
+    return RemoveVolatileError::SuccessNoChange;
 }
 
 bool PurgeablePageRanges::is_volatile_range(const VolatilePageRange& range) const
@@ -243,7 +287,7 @@ void PurgeablePageRanges::set_was_purged(const VolatilePageRange& range)
     m_volatile_ranges.add({range.base, range.count, true});
 }
 
-void PurgeablePageRanges::set_vmobject(PurgeableVMObject* vmobject)
+void PurgeablePageRanges::set_vmobject(AnonymousVMObject* vmobject)
 {
     // No lock needed here
     if (vmobject) {
@@ -255,207 +299,33 @@ void PurgeablePageRanges::set_vmobject(PurgeableVMObject* vmobject)
     }
 }
 
-RefPtr<PurgeableVMObject> PurgeableVMObject::create_with_size(size_t size)
+CommittedCowPages::CommittedCowPages(size_t committed_pages)
+    : m_committed_pages(committed_pages)
 {
-    // We need to attempt to commit before actually creating the object
-    if (!MM.commit_user_physical_pages(ceil_div(size, PAGE_SIZE)))
-        return {};
-    return adopt(*new PurgeableVMObject(size));
 }
 
-PurgeableVMObject::PurgeableVMObject(size_t size)
-    : AnonymousVMObject(size, false)
-    , m_unused_committed_pages(page_count())
+CommittedCowPages::~CommittedCowPages()
 {
-    for (size_t i = 0; i < page_count(); ++i)
-        physical_pages()[i] = MM.lazy_committed_page();
+    // Return unused committed pages
+    if (m_committed_pages > 0)
+        MM.uncommit_user_physical_pages(m_committed_pages);
 }
 
-PurgeableVMObject::PurgeableVMObject(const PurgeableVMObject& other)
-    : AnonymousVMObject(other)
-    , m_purgeable_ranges() // do *not* clone this
-    , m_unused_committed_pages(other.m_unused_committed_pages)
+NonnullRefPtr<PhysicalPage> CommittedCowPages::allocate_one()
 {
-    // We can't really "copy" a spinlock. But we're holding it. Clear in the clone
-    ASSERT(other.m_lock.is_locked());
-    m_lock.initialize();
-}
+    ASSERT(m_committed_pages > 0);
+    m_committed_pages--;
 
-PurgeableVMObject::~PurgeableVMObject()
-{
-    if (m_unused_committed_pages > 0)
-        MM.uncommit_user_physical_pages(m_unused_committed_pages);
-}
-
-RefPtr<VMObject> PurgeableVMObject::clone()
-{
-    // We need to acquire our lock so we copy a sane state
-    ScopedSpinLock lock(m_lock);
-    if (m_unused_committed_pages > 0) {
-        // We haven't used up all committed pages. In order to be able
-        // to clone ourselves, we need to be able to commit the same number
-        // of pages first
-        if (!MM.commit_user_physical_pages(m_unused_committed_pages))
-            return {};
-    }
-    return adopt(*new PurgeableVMObject(*this));
-}
-
-int PurgeableVMObject::purge()
-{
-    LOCKER(m_paging_lock);
-    return purge_impl();
-}
-
-int PurgeableVMObject::purge_with_interrupts_disabled(Badge<MemoryManager>)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    if (m_paging_lock.is_locked())
-        return 0;
-    return purge_impl();
-}
-
-void PurgeableVMObject::set_was_purged(const VolatilePageRange& range)
-{
-    ASSERT(m_lock.is_locked());
-    for (auto* purgeable_ranges : m_purgeable_ranges)
-        purgeable_ranges->set_was_purged(range);
-}
-
-int PurgeableVMObject::purge_impl()
-{
-    int purged_page_count = 0;
-    ScopedSpinLock lock(m_lock);
-    for_each_volatile_range([&](const auto& range) {
-        int purged_in_range = 0;
-        auto range_end = range.base + range.count;
-        for (size_t i = range.base; i < range_end; i++) {
-            auto& phys_page = m_physical_pages[i];
-            if (phys_page && !phys_page->is_shared_zero_page()) {
-                ASSERT(!phys_page->is_lazy_committed_page());
-                ++purged_in_range;
-            }
-            phys_page = MM.shared_zero_page();
-        }
-
-        if (purged_in_range > 0) {
-            purged_page_count += purged_in_range;
-            set_was_purged(range);
-            for_each_region([&](auto& region) {
-                if (&region.vmobject() == this) {
-                    if (auto owner = region.get_owner()) {
-                        // we need to hold a reference the process here (if there is one) as we may not own this region
-                        klog() << "Purged " << purged_in_range << " pages from region " << region.name() << " owned by " << *owner << " at " << region.vaddr_from_page_index(range.base) << " - " << region.vaddr_from_page_index(range.base + range.count);
-                    } else {
-                        klog() << "Purged " << purged_in_range << " pages from region " << region.name() << " (no ownership) at " << region.vaddr_from_page_index(range.base) << " - " << region.vaddr_from_page_index(range.base + range.count);
-                    }
-                    region.remap_page_range(range.base, range.count);
-                }
-            });
-        }
-        return IterationDecision::Continue;
-    });
-    return purged_page_count;
-}
-
-void PurgeableVMObject::register_purgeable_page_ranges(PurgeablePageRanges& purgeable_page_ranges)
-{
-    ScopedSpinLock lock(m_lock);
-    purgeable_page_ranges.set_vmobject(this);
-    ASSERT(!m_purgeable_ranges.contains_slow(&purgeable_page_ranges));
-    m_purgeable_ranges.append(&purgeable_page_ranges);
-}
-
-void PurgeableVMObject::unregister_purgeable_page_ranges(PurgeablePageRanges& purgeable_page_ranges)
-{
-    ScopedSpinLock lock(m_lock);
-    for (size_t i = 0; i < m_purgeable_ranges.size(); i++) {
-        if (m_purgeable_ranges[i] != &purgeable_page_ranges)
-            continue;
-        purgeable_page_ranges.set_vmobject(nullptr);
-        m_purgeable_ranges.remove(i);
-        return;
-    }
-    ASSERT_NOT_REACHED();
-}
-
-bool PurgeableVMObject::is_any_volatile() const
-{
-    ScopedSpinLock lock(m_lock);
-    for (auto& volatile_ranges : m_purgeable_ranges) {
-        ScopedSpinLock lock(volatile_ranges->m_volatile_ranges_lock);
-        if (!volatile_ranges->is_empty())
-            return true;
-    }
-    return false;
-}
-
-size_t PurgeableVMObject::remove_lazy_commit_pages(const VolatilePageRange& range)
-{
-    ASSERT(m_lock.is_locked());
-
-    size_t removed_count = 0;
-    auto range_end = range.base + range.count;
-    for (size_t i = range.base; i < range_end; i++) {
-        auto& phys_page = m_physical_pages[i];
-        if (phys_page && phys_page->is_lazy_committed_page()) {
-            phys_page = MM.shared_zero_page();
-            removed_count++;
-            ASSERT(m_unused_committed_pages > 0);
-            m_unused_committed_pages--;
-//            if (--m_unused_committed_pages == 0)
-//                break;
-        }
-    }
-    return removed_count;
-}
-
-void PurgeableVMObject::range_made_volatile(const VolatilePageRange& range)
-{
-    ASSERT(m_lock.is_locked());
-
-    if (m_unused_committed_pages == 0)
-        return;
-
-    // We need to check this range for any pages that are marked for
-    // lazy committed allocation and turn them into shared zero pages
-    // and also adjust the m_unused_committed_pages for each such page.
-    // Take into account all the other views as well.
-    size_t uncommit_page_count = 0;
-    for_each_volatile_range([&](const auto& r) {
-        auto intersected = range.intersected(r);
-        if (!intersected.is_empty()) {
-            uncommit_page_count += remove_lazy_commit_pages(intersected);
-//            if (m_unused_committed_pages == 0)
-//                return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-
-    // Return those committed pages back to the system
-    if (uncommit_page_count > 0)
-        MM.uncommit_user_physical_pages(uncommit_page_count);
-}
-
-RefPtr<PhysicalPage> PurgeableVMObject::allocate_committed_page(size_t page_index)
-{
-    {
-        ScopedSpinLock lock(m_lock);
-
-        ASSERT(m_unused_committed_pages > 0);
-
-        // We should't have any committed page tags in volatile regions
-        ASSERT([&]() {
-            for (auto* purgeable_ranges : m_purgeable_ranges) {
-                if (purgeable_ranges->is_volatile(page_index))
-                    return false;
-            }
-            return true;
-        }());
-
-        m_unused_committed_pages--;
-    }
     return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+}
+
+bool CommittedCowPages::return_one()
+{
+    ASSERT(m_committed_pages > 0);
+    m_committed_pages--;
+
+    MM.uncommit_user_physical_pages(1);
+    return m_committed_pages == 0;
 }
 
 }

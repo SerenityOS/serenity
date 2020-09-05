@@ -33,14 +33,13 @@ namespace Kernel {
 
 inline bool KBufferBuilder::can_append(size_t size) const
 {
-    bool has_space = ((m_size + size) < m_buffer.size());
-    ASSERT(has_space);
-    return has_space;
+    return ((m_size + size) < m_buffer.size());
 }
 
 KBuffer KBufferBuilder::build()
 {
-    m_buffer.set_size(m_size);
+    if (!m_buffer.is_null())
+        m_buffer.set_size(m_size);
     return m_buffer;
 }
 

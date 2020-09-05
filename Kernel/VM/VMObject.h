@@ -51,7 +51,6 @@ public:
     virtual RefPtr<VMObject> clone() = 0;
 
     virtual bool is_anonymous() const { return false; }
-    virtual bool is_purgeable() const { return false; }
     virtual bool is_inode() const { return false; }
     virtual bool is_shared_inode() const { return false; }
     virtual bool is_private_inode() const { return false; }
@@ -78,6 +77,8 @@ protected:
 
     Vector<RefPtr<PhysicalPage>> m_physical_pages;
     Lock m_paging_lock { "VMObject" };
+
+    mutable SpinLock<u8> m_lock;
 
 private:
     VMObject& operator=(const VMObject&) = delete;

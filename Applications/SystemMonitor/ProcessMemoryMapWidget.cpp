@@ -95,8 +95,6 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     });
     pid_vm_fields.empend("vmobject", "VMObject type", Gfx::TextAlignment::CenterLeft);
     pid_vm_fields.empend("Purgeable", Gfx::TextAlignment::CenterLeft, [](auto& object) {
-        if (!object.get("purgeable").to_bool())
-            return "";
         if (object.get("volatile").to_bool())
             return "Volatile";
         return "Non-volatile";

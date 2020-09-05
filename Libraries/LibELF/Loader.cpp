@@ -223,6 +223,8 @@ String Loader::symbolicate(u32 address, u32* out_offset) const
 #ifdef KERNEL
     if (!m_sorted_symbols_region) {
         m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_symbol_count * sizeof(SortedSymbol)), "Sorted symbols", Kernel::Region::Access::Read | Kernel::Region::Access::Write);
+        if (!m_sorted_symbols_region)
+            return "??";
         sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
         size_t index = 0;
         m_image.for_each_symbol([&](auto& symbol) {
