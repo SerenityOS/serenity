@@ -120,9 +120,51 @@ void ClipboardServerConnection::handle(const Messages::ClipboardClient::Clipboar
         clipboard.on_change(message.mime_type());
 }
 
+RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
+{
+    auto clipping = data_and_type();
+
+    if (clipping.mime_type != "image/x-serenityos")
+        return nullptr;
+
+    auto width = clipping.metadata.get("width").value_or("0").to_uint();
+    if (!width.has_value() || width.value() == 0)
+        return nullptr;
+
+    auto height = clipping.metadata.get("height").value_or("0").to_uint();
+    if (!height.has_value() || height.value() == 0)
+        return nullptr;
+
+    auto pitch = clipping.metadata.get("pitch").value_or("0").to_uint();
+    if (!pitch.has_value() || pitch.value() == 0)
+        return nullptr;
+
+    auto format = clipping.metadata.get("format").value_or("0").to_uint();
+    if (!format.has_value() || format.value() == 0)
+        return nullptr;
+
+    auto clipping_bitmap = Gfx::Bitmap::create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, pitch.value(), (Gfx::RGBA32*)clipping.data.data());
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGBA32, { (int)width.value(), (int)height.value() });
+
+    for (int y = 0; y < clipping_bitmap->height(); ++y) {
+        for (int x = 0; x < clipping_bitmap->width(); ++x) {
+            auto pixel = clipping_bitmap->get_pixel(x, y);
+            bitmap->set_pixel(x, y, pixel);
+        }
+    }
+
+    return bitmap;
+}
+
 void Clipboard::set_bitmap(const Gfx::Bitmap& bitmap)
 {
-    (void) bitmap;
+    HashMap<String, String> metadata;
+    metadata.set("width", String::number(bitmap.width()));
+    metadata.set("height", String::number(bitmap.height()));
+    metadata.set("format", String::number((int)bitmap.format()));
+    metadata.set("pitch", String::number(bitmap.pitch()));
+    metadata.set("bpp", String::number(bitmap.bpp()));
+    set_data({ bitmap.scanline(0), bitmap.size_in_bytes() }, "image/x-serenityos", metadata);
 }
 
 }

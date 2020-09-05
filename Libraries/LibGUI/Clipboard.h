@@ -48,6 +48,7 @@ public:
     }
 
     void set_bitmap(const Gfx::Bitmap&);
+    RefPtr<Gfx::Bitmap> bitmap() const;
 
     struct DataAndType {
         ByteBuffer data;
