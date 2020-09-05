@@ -74,7 +74,7 @@ private:
     };
 
 public:
-    DoublyLinkedList() {}
+    DoublyLinkedList() { }
     ~DoublyLinkedList() { clear(); }
 
     bool is_empty() const { return !head(); }
@@ -133,11 +133,7 @@ public:
 
     bool contains_slow(const T& value) const
     {
-        for (auto* node = m_head; node; node = node->next) {
-            if (node->value == value)
-                return true;
-        }
-        return false;
+        return find_node(value) != nullptr;
     }
 
     using Iterator = DoublyLinkedListIterator<DoublyLinkedList, T>;
@@ -152,19 +148,17 @@ public:
 
     ConstIterator find(const T& value) const
     {
-        for (auto* node = m_head; node; node = node->next) {
-            if (Traits<T>::equals(node->value, value))
-                return ConstIterator(node);
-        }
+        Node* node = find_node(value);
+        if (node)
+            return ConstIterator(node);
         return end();
     }
 
     Iterator find(const T& value)
     {
-        for (auto* node = m_head; node; node = node->next) {
-            if (Traits<T>::equals(node->value, value))
-                return Iterator(node);
-        }
+        Node* node = find_node(value);
+        if (node)
+            return Iterator(node);
         return end();
     }
 
@@ -218,6 +212,15 @@ private:
         m_head->prev = node;
         node->next = m_head;
         m_head = node;
+    }
+
+    Node* find_node(const T& value) const
+    {
+        for (auto* node = m_head; node; node = node->next) {
+            if (Traits<T>::equals(node->value, value))
+                return node;
+        }
+        return nullptr;
     }
 
     Node* head() { return m_head; }
