@@ -32,6 +32,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
@@ -248,6 +249,11 @@ int main(int argc, char** argv)
         [&](auto&) {
             GUI::AboutDialog::show("QuickShow", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-image.png"), window);
         });
+
+    auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
+        if (widget.bitmap())
+            GUI::Clipboard::the().set_bitmap(*widget.bitmap());
+    });
 
     main_toolbar.add_action(open_action);
     main_toolbar.add_action(delete_action);
