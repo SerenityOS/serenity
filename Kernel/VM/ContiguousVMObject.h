@@ -42,7 +42,7 @@ private:
     explicit ContiguousVMObject(const ContiguousVMObject&);
 
     virtual const char* class_name() const override { return "ContiguousVMObject"; }
-    virtual NonnullRefPtr<VMObject> clone() override;
+    virtual RefPtr<VMObject> clone() override;
 
     ContiguousVMObject& operator=(const ContiguousVMObject&) = delete;
     ContiguousVMObject& operator=(ContiguousVMObject&&) = delete;

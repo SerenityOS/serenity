@@ -110,6 +110,9 @@ public:
         Yes
     };
 
+    bool commit_user_physical_pages(size_t);
+    void uncommit_user_physical_pages(size_t);
+    NonnullRefPtr<PhysicalPage> allocate_committed_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes);
     RefPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
     RefPtr<PhysicalPage> allocate_supervisor_physical_page();
     NonnullRefPtrVector<PhysicalPage> allocate_contiguous_supervisor_physical_pages(size_t size);
@@ -155,6 +158,7 @@ public:
     void dump_kernel_regions();
 
     PhysicalPage& shared_zero_page() { return *m_shared_zero_page; }
+    PhysicalPage& lazy_committed_page() { return *m_lazy_committed_page; }
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
@@ -185,7 +189,7 @@ private:
 
     static Region* find_region_from_vaddr(VirtualAddress);
 
-    RefPtr<PhysicalPage> find_free_user_physical_page();
+    RefPtr<PhysicalPage> find_free_user_physical_page(bool);
     u8* quickmap_page(PhysicalPage&);
     void unquickmap_page();
 
@@ -200,9 +204,12 @@ private:
     RefPtr<PhysicalPage> m_low_page_table;
 
     RefPtr<PhysicalPage> m_shared_zero_page;
+    RefPtr<PhysicalPage> m_lazy_committed_page;
 
     unsigned m_user_physical_pages { 0 };
     unsigned m_user_physical_pages_used { 0 };
+    unsigned m_user_physical_pages_committed { 0 };
+    unsigned m_user_physical_pages_uncommitted { 0 };
     unsigned m_super_physical_pages { 0 };
     unsigned m_super_physical_pages_used { 0 };
 
@@ -248,6 +255,11 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
 inline bool PhysicalPage::is_shared_zero_page() const
 {
     return this == &MM.shared_zero_page();
+}
+
+inline bool PhysicalPage::is_lazy_committed_page() const
+{
+    return this == &MM.lazy_committed_page();
 }
 
 }

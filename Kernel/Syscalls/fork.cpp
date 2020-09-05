@@ -88,7 +88,14 @@ pid_t Process::sys$fork(RegisterState& regs)
 #ifdef FORK_DEBUG
             dbg() << "fork: cloning Region{" << &region << "} '" << region.name() << "' @ " << region.vaddr();
 #endif
-            auto& child_region = child->add_region(region.clone());
+            auto region_clone = region.clone();
+            if (!region_clone) {
+                dbg() << "fork: Cannot clone region, insufficient memory";
+                // TODO: tear down new process?
+                return -ENOMEM;
+            }
+
+            auto& child_region = child->add_region(region_clone.release_nonnull());
             child_region.map(child->page_directory());
 
             if (&region == m_master_tls_region.unsafe_ptr())

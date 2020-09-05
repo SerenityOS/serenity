@@ -41,7 +41,7 @@ NonnullRefPtr<SharedInodeVMObject> SharedInodeVMObject::create_with_inode(Inode&
     return vmobject;
 }
 
-NonnullRefPtr<VMObject> SharedInodeVMObject::clone()
+RefPtr<VMObject> SharedInodeVMObject::clone()
 {
     return adopt(*new SharedInodeVMObject(*this));
 }

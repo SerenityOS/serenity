@@ -64,6 +64,7 @@ public:
     u32 ref_count() const { return m_ref_count.load(AK::memory_order_consume); }
 
     bool is_shared_zero_page() const;
+    bool is_lazy_committed_page() const;
 
 private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
