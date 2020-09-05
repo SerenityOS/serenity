@@ -229,14 +229,12 @@ auto SharedBuffer::set_volatile_all(bool is_volatile, bool& was_purged) -> SetVo
         if (ref.pid == pid) {
             if (Region* region = ref.region.unsafe_ptr()) {
                 switch (region->set_volatile(region->vaddr(), region->size(), is_volatile, was_purged)) {
-                    case Region::SetVolatileError::Success:
-                        if (!was_purged && was_purged)
-                            klog() << "Region @ " << region->vaddr() << " - " << region->vaddr().offset(region->size()) << " was purged!";
-                        return SetVolatileError::Success;
-                    case Region::SetVolatileError::NotPurgeable:
-                        return SetVolatileError::NotPurgeable;
-                    case Region::SetVolatileError::OutOfMemory:
-                        return SetVolatileError::OutOfMemory;
+                case Region::SetVolatileError::Success:
+                    return SetVolatileError::Success;
+                case Region::SetVolatileError::NotPurgeable:
+                    return SetVolatileError::NotPurgeable;
+                case Region::SetVolatileError::OutOfMemory:
+                    return SetVolatileError::OutOfMemory;
                 }
             }
         }

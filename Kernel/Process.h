@@ -45,6 +45,7 @@
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UnveilNode.h>
+#include <Kernel/VM/AllocationStrategy.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <LibC/signal_numbers.h>
 
@@ -112,7 +113,7 @@ public:
     }
 
     template<typename EntryFunction>
-    static NonnullRefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT)
+    static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT)
     {
         auto* entry_func = new EntryFunction(move(entry));
         return create_kernel_process(
@@ -124,7 +125,7 @@ public:
             entry_func, affinity);
     }
 
-    static NonnullRefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT);
+    static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT);
     static RefPtr<Process> create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t, gid_t, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
@@ -436,10 +437,10 @@ public:
         return m_euid == 0;
     }
 
-    Region* allocate_region_with_vmobject(VirtualAddress, size_t, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot, bool should_commit = true);
-    Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool should_commit = true);
-    Region* allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot, bool should_commit = true);
-    Region* allocate_region(const Range&, const String& name, int prot = PROT_READ | PROT_WRITE, bool should_commit = true);
+    Region* allocate_region_with_vmobject(VirtualAddress, size_t, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot);
+    Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
+    Region* allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot);
+    Region* allocate_region(const Range&, const String& name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
     bool deallocate_region(Region& region);
 
     Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
