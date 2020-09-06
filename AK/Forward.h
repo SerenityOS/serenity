@@ -61,7 +61,7 @@ class CircularDuplexStream;
 template<typename T>
 class Span;
 
-template<typename T>
+template<typename T, size_t Size>
 class Array;
 
 template<typename Container, typename ValueType>
