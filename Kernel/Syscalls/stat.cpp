@@ -40,7 +40,7 @@ int Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
     if (!description)
         return -EBADF;
     stat buffer = {};
-    int rc = description->fstat(buffer);
+    int rc = description->stat(buffer);
     copy_to_user(user_statbuf, &buffer);
     return rc;
 }

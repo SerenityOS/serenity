@@ -62,7 +62,7 @@ public:
     off_t seek(off_t, int whence);
     KResultOr<size_t> read(u8*, size_t);
     KResultOr<size_t> write(const u8* data, size_t);
-    KResult fstat(stat&);
+    KResult stat(::stat&);
 
     KResult chmod(mode_t);
 
