@@ -49,7 +49,7 @@ script:
 - cd Build
 - cmake .. -DBUILD_LAGOM=1 -DALL_THE_DEBUG_MACROS=1
 - make -j2
-- Meta/check-symbols.sh
+- ../Meta/check-symbols.sh
 - CTEST_OUTPUT_ON_FAILURE=1 make test
 - cd Meta/Lagom
 - DISABLE_DBG_OUTPUT=1 ./test-js
