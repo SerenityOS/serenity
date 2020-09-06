@@ -24,62 +24,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/ByteBuffer.h>
-#include <AK/RefCounted.h>
-#include <AK/Weakable.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibJS/Runtime/Function.h>
+#include <LibWeb/Bindings/EventTargetWrapper.h>
+#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/EventDispatcher.h>
+#include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/EventTarget.h>
 
-namespace Web {
+namespace Web::DOM {
 
-class XMLHttpRequest final
-    : public RefCounted<XMLHttpRequest>
-    , public Weakable<XMLHttpRequest>
-    , public DOM::EventTarget
-    , public Bindings::Wrappable {
-public:
-    enum class ReadyState {
-        Unsent,
-        Opened,
-        HeadersReceived,
-        Loading,
-        Done,
-    };
-
-    using WrapperType = Bindings::XMLHttpRequestWrapper;
-
-    static NonnullRefPtr<XMLHttpRequest> create(DOM::Window& window) { return adopt(*new XMLHttpRequest(window)); }
-
-    virtual ~XMLHttpRequest() override;
-
-    using RefCounted::ref;
-    using RefCounted::unref;
-
-    ReadyState ready_state() const { return m_ready_state; };
-    String response_text() const;
-    void open(const String& method, const String& url);
-    void send();
-
-private:
-    virtual void ref_event_target() override { ref(); }
-    virtual void unref_event_target() override { unref(); }
-    virtual void dispatch_event(NonnullRefPtr<DOM::Event>) override;
-    virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) override;
-
-    void set_ready_state(ReadyState);
-
-    explicit XMLHttpRequest(DOM::Window&);
-
-    NonnullRefPtr<DOM::Window> m_window;
-
-    ReadyState m_ready_state { ReadyState::Unsent };
-
-    String m_method;
-    String m_url;
-
-    ByteBuffer m_response;
-};
+void EventDispatcher::dispatch(EventTarget& target, NonnullRefPtr<Event> event)
+{
+    auto listeners = target.listeners();
+    for (auto& listener : listeners) {
+        if (listener.event_name != event->type())
+            continue;
+        auto& function = listener.listener->function();
+        auto& global_object = function.global_object();
+        auto* this_value = Bindings::wrap(global_object, target);
+        auto& interpreter = function.interpreter();
+        (void)interpreter.call(function, this_value, Bindings::wrap(global_object, target));
+        if (interpreter.exception())
+            interpreter.clear_exception();
+    }
+}
 
 }

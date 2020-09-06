@@ -1,6 +1,7 @@
 set(SOURCES
     Bindings/EventListenerWrapper.cpp
     Bindings/EventWrapperFactory.cpp
+    Bindings/EventTargetWrapperFactory.cpp
     Bindings/LocationObject.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
@@ -31,6 +32,7 @@ set(SOURCES
     DOM/DocumentType.cpp
     DOM/Element.cpp
     DOM/ElementFactory.cpp
+    DOM/EventDispatcher.cpp
     DOM/EventListener.cpp
     DOM/EventTarget.cpp
     DOM/Node.cpp

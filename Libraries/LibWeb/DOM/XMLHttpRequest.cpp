@@ -31,6 +31,7 @@
 #include <LibWeb/Bindings/XMLHttpRequestWrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
@@ -91,17 +92,12 @@ void XMLHttpRequest::send()
 
 void XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
 {
-    for (auto& listener : listeners()) {
-        if (listener.event_name == event->type()) {
-            auto& function = const_cast<DOM::EventListener&>(*listener.listener).function();
-            auto& global_object = function.global_object();
-            auto* this_value = wrap(global_object, *this);
-            auto& interpreter = function.interpreter();
-            (void)interpreter.call(function, this_value, wrap(global_object, *this));
-            if (interpreter.exception())
-                interpreter.clear_exception();
-        }
-    }
+    DOM::EventDispatcher::dispatch(*this, move(event));
+}
+
+Bindings::EventTargetWrapper* XMLHttpRequest::create_wrapper(JS::GlobalObject& global_object)
+{
+    return wrap(global_object, *this);
 }
 
 }

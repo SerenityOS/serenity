@@ -36,6 +36,7 @@
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
@@ -119,25 +120,7 @@ bool Node::is_link() const
 
 void Node::dispatch_event(NonnullRefPtr<Event> event)
 {
-    for (auto& listener : listeners()) {
-        if (listener.event_name == event->type()) {
-            auto& function = const_cast<EventListener&>(*listener.listener).function();
-#ifdef EVENT_DEBUG
-            static_cast<const JS::ScriptFunction&>(function).body().dump(0);
-#endif
-            auto& global_object = function.global_object();
-            auto* this_value = wrap(global_object, *this);
-#ifdef EVENT_DEBUG
-            dbg() << "calling event listener with this=" << this_value;
-#endif
-            auto* event_wrapper = wrap(global_object, *event);
-            auto& interpreter = document().interpreter();
-            (void)interpreter.call(function, this_value, event_wrapper);
-            if (interpreter.exception())
-                interpreter.clear_exception();
-        }
-    }
-
+    EventDispatcher::dispatch(*this, event);
     // FIXME: This is a hack. We should follow the real rules of event bubbling.
     if (parent())
         parent()->dispatch_event(move(event));
@@ -216,6 +199,11 @@ void Node::set_document(Badge<Document>, Document& document)
 bool Node::is_editable() const
 {
     return parent() && parent()->is_editable();
+}
+
+Bindings::EventTargetWrapper* Node::create_wrapper(JS::GlobalObject& global_object)
+{
+    return wrap(global_object, *this);
 }
 
 }
