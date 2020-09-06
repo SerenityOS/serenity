@@ -136,4 +136,67 @@ TEST_CASE(find_longest_range_of_unset_bits_edge)
     EXPECT_EQ(result.value(), 32u);
 }
 
+TEST_CASE(count_in_range)
+{
+    Bitmap bitmap(256, false);
+    bitmap.set(14, true);
+    bitmap.set(17, true);
+    bitmap.set(19, true);
+    bitmap.set(20, true);
+    for (size_t i = 34; i < 250; i++) {
+        if (i < 130 || i > 183)
+            bitmap.set(i, true);
+    }
+
+    auto count_bits_slow = [](const Bitmap& b, size_t start, size_t len, bool value) -> size_t {
+        size_t count = 0;
+        for (size_t i = start; i < start + len; i++) {
+            if (b.get(i) == value)
+                count++;
+        }
+        return count;
+    };
+    auto test_with_value = [&](bool value) {
+        auto do_test = [&](size_t start, size_t len) {
+            EXPECT_EQ(bitmap.count_in_range(start, len, value), count_bits_slow(bitmap, start, len, value));
+        };
+        do_test(16, 2);
+        do_test(16, 3);
+        do_test(16, 4);
+
+        for (size_t start = 8; start < 24; start++) {
+            for (size_t end = 9; end < 25; end++) {
+                if (start >= end)
+                    continue;
+                do_test(start, end - start);
+            }
+        }
+
+        for (size_t start = 1; start <= 9; start++) {
+            for (size_t i = start + 1; i < bitmap.size() - start + 1; i++)
+                do_test(start, i - start);
+        }
+    };
+    test_with_value(true);
+    test_with_value(false);
+}
+
+TEST_CASE(fill_range)
+{
+    Bitmap bitmap(288, false);
+    bitmap.fill_range(48, 32, true);
+    bitmap.fill_range(94, 39, true);
+    bitmap.fill_range(190, 71, true);
+    bitmap.fill_range(190 + 71 - 7, 21, false); // slighly overlapping clear
+
+    for (size_t i = 0; i < bitmap.size(); i++) {
+        bool should_be_set = (i >= 48 && i < 48 + 32)
+            || (i >= 94 && i < 94 + 39)
+            || ((i >= 190 && i < 190 + 71) && !(i >= 190 + 71 - 7 && i < 190 + 71 - 7 + 21));
+        EXPECT_EQ(bitmap.get(i), should_be_set);
+    }
+
+    EXPECT_EQ(bitmap.count_slow(true), 32u + 39u + 71u - 7u);
+}
+
 TEST_MAIN(Bitmap)
