@@ -95,15 +95,15 @@ static int connect_to_lookup_server()
     return fd;
 }
 
+static String gethostbyname_name_buffer;
+
 hostent* gethostbyname(const char* name)
 {
-    static String s_name_buffer;
-
     auto ipv4_address = IPv4Address::from_string(name);
 
     if (ipv4_address.has_value()) {
-        s_name_buffer = ipv4_address.value().to_string();
-        __gethostbyname_buffer.h_name = const_cast<char*>(s_name_buffer.characters());
+        gethostbyname_name_buffer = ipv4_address.value().to_string();
+        __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
         __gethostbyname_buffer.h_aliases = nullptr;
         __gethostbyname_buffer.h_addrtype = AF_INET;
         new (&__gethostbyname_address) IPv4Address(ipv4_address.value());
@@ -152,8 +152,8 @@ hostent* gethostbyname(const char* name)
     if (rc <= 0)
         return nullptr;
 
-    s_name_buffer = name;
-    __gethostbyname_buffer.h_name = const_cast<char*>(s_name_buffer.characters());
+    gethostbyname_name_buffer = name;
+    __gethostbyname_buffer.h_name = const_cast<char*>(gethostbyname_name_buffer.characters());
     __gethostbyname_buffer.h_aliases = nullptr;
     __gethostbyname_buffer.h_addrtype = AF_INET;
     __gethostbyname_address_list_buffer[0] = &__gethostbyname_address;
@@ -164,9 +164,10 @@ hostent* gethostbyname(const char* name)
     return &__gethostbyname_buffer;
 }
 
+static String gethostbyaddr_name_buffer;
+
 hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 {
-    static String s_name_buffer;
 
     if (type != AF_INET) {
         errno = EAFNOSUPPORT;
@@ -215,8 +216,8 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
     if (responses.is_empty())
         return nullptr;
 
-    s_name_buffer = responses[0];
-    __gethostbyaddr_buffer.h_name = const_cast<char*>(s_name_buffer.characters());
+    gethostbyaddr_name_buffer = responses[0];
+    __gethostbyaddr_buffer.h_name = const_cast<char*>(gethostbyaddr_name_buffer.characters());
     __gethostbyaddr_buffer.h_aliases = nullptr;
     __gethostbyaddr_buffer.h_addrtype = AF_INET;
     // FIXME: Should we populate the hostent's address list here with a sockaddr_in for the provided host?
