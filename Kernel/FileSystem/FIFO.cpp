@@ -166,4 +166,11 @@ String FIFO::absolute_path(const FileDescription&) const
     return String::format("fifo:%u", m_fifo_id);
 }
 
+KResult FIFO::stat(::stat& st) const
+{
+    memset(&st, 0, sizeof(st));
+    st.st_mode = S_IFIFO;
+    return KSuccess;
+}
+
 }

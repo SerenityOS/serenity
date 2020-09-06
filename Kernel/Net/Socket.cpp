@@ -220,4 +220,11 @@ KResult Socket::shutdown(int how)
     return KSuccess;
 }
 
+KResult Socket::stat(::stat& st) const
+{
+    memset(&st, 0, sizeof(st));
+    st.st_mode = S_IFSOCK;
+    return KSuccess;
+}
+
 }
