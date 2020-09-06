@@ -1,7 +1,7 @@
 #!/bin/sh
 
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
-cd "$script_path/.."
+cd "$script_path/.." || exit 1
 
 # The __cxa_guard_* calls are generated for (non trivial) initialzation of local static objects.
 # These symbols are OK to use within serenity code, but they are problematic in LibC because their
@@ -12,8 +12,7 @@ FORBIDDEN_SYMBOLS="__cxa_guard_acquire __cxa_guard_release"
 LIBC_PATH="Build/Libraries/LibC/libc.a" 
 for forbidden_symbol in $FORBIDDEN_SYMBOLS; do
     # check if symbol is undefined
-    nm $LIBC_PATH | grep "U $forbidden_symbol"
-    if [ $? -eq 0 ]; then
+    if nm $LIBC_PATH | grep "U $forbidden_symbol" ; then
         echo "Forbidden undefined symbol in LibC: $forbidden_symbol"
         echo "See comment in Meta/check-symbols.sh for more info"
         exit 1
