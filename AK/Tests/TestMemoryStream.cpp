@@ -26,7 +26,7 @@
 
 #include <AK/TestSuite.h>
 
-#include <AK/FixedArray.h>
+#include <AK/Array.h>
 #include <AK/MemoryStream.h>
 
 static bool compare(ReadonlyBytes lhs, ReadonlyBytes rhs)
@@ -127,7 +127,7 @@ TEST_CASE(duplex_large_buffer)
 {
     DuplexMemoryStream stream;
 
-    FixedArray<u8> one_kibibyte { 1024 };
+    Array<u8, 1024> one_kibibyte;
 
     EXPECT_EQ(stream.remaining(), 0ul);
 
