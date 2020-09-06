@@ -42,9 +42,9 @@
 struct ThreadData {
     int tid;
     pid_t pid;
-    unsigned pgid;
-    unsigned pgp;
-    unsigned sid;
+    pid_t pgid;
+    pid_t pgp;
+    pid_t sid;
     uid_t uid;
     gid_t gid;
     pid_t ppid;
