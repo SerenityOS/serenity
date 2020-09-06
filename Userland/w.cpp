@@ -1,6 +1,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/File.h>
+#include <LibCore/ProcessStatisticsReader.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -28,6 +29,11 @@ int main()
         return 1;
     }
 
+    if (unveil("/proc", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
     auto file_or_error = Core::File::open("/var/run/utmp", Core::IODevice::ReadOnly);
@@ -42,10 +48,12 @@ int main()
         return 1;
     }
 
+    auto process_statistics = Core::ProcessStatisticsReader::get_all();
+
     auto now = time(nullptr);
 
-    printf("\033[1m%-10s %-12s %-16s %-6s\033[0m\n",
-        "USER", "TTY", "FROM", "IDLE");
+    printf("\033[1m%-10s %-12s %-16s %-6s %s\033[0m\n",
+        "USER", "TTY", "FROM", "IDLE", "WHAT");
     json.value().as_object().for_each_member([&](auto& tty, auto& value) {
         const JsonObject& entry = value.as_object();
         auto uid = entry.get("uid").to_u32();
@@ -71,11 +79,19 @@ int main()
             }
         }
 
-        printf("%-10s %-12s %-16s %-6s\n",
+        String what = "n/a";
+
+        for (auto& it : process_statistics) {
+            if (it.value.tty == tty && it.value.pid == it.value.pgid)
+                what = it.value.name;
+        }
+
+        printf("%-10s %-12s %-16s %-6s %s\n",
             username.characters(),
             tty.characters(),
             from.characters(),
-            idle_string.characters());
+            idle_string.characters(),
+            what.characters());
     });
     return 0;
 }
