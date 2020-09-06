@@ -209,4 +209,45 @@ const LogStream& operator<<(const LogStream& stream, float value)
 
 #endif
 
+const LogStream& operator<<(const LogStream& stream, ReadonlyBytes bytes)
+{
+    StringBuilder builder;
+
+    u8 buffered_byte = 0;
+    size_t nrepeat = 0;
+    const char* prefix = "";
+
+    auto flush = [&]() {
+        if (nrepeat > 0) {
+            if (nrepeat == 1)
+                builder.appendf("%s0x%02x", prefix, static_cast<int>(buffered_byte));
+            else
+                builder.appendf("%s%zu * 0x%02x", prefix, nrepeat, static_cast<int>(buffered_byte));
+
+            nrepeat = 0;
+            prefix = ", ";
+        }
+    };
+
+    builder.append("{ ");
+
+    for (auto byte : bytes) {
+        if (nrepeat > 0) {
+            if (byte != buffered_byte)
+                flush();
+
+            buffered_byte = byte;
+            nrepeat++;
+        } else {
+            buffered_byte = byte;
+            nrepeat = 1;
+        }
+    }
+    flush();
+
+    builder.append(" }");
+
+    return stream << builder.to_string();
+}
+
 }
