@@ -67,7 +67,7 @@ int main(int argc, char** argv)
         entry.set("pid", pid);
         entry.set("uid", getuid());
         entry.set("from", from);
-        entry.set("login_at", Core::DateTime::now().to_string());
+        entry.set("login_at", time(nullptr));
         json.set(tty_name, move(entry));
     } else {
         ASSERT(flag_delete);
