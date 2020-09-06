@@ -61,6 +61,7 @@ public:
     virtual void ref_event_target() final { ref(); }
     virtual void unref_event_target() final { unref(); }
     virtual void dispatch_event(NonnullRefPtr<Event>) final;
+    virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) override;
 
     virtual ~Node();
 
