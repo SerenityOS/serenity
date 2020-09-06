@@ -44,16 +44,34 @@
 
 namespace Gfx {
 
-static bool size_would_overflow(BitmapFormat, const IntSize& size)
+size_t Bitmap::minimum_pitch(size_t width, BitmapFormat format)
+{
+    size_t element_size;
+    switch (determine_storage_format(format)) {
+    case StorageFormat::Indexed8:
+        element_size = 1;
+        break;
+    case StorageFormat::RGB32:
+    case StorageFormat::RGBA32:
+        element_size = 4;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
+    return width * element_size;
+}
+
+static bool size_would_overflow(BitmapFormat format, const IntSize& size)
 {
     if (size.width() < 0 || size.height() < 0)
         return true;
     // This check is a bit arbitrary, but should protect us from most shenanigans:
     if (size.width() >= 32768 || size.height() >= 32768)
         return true;
-    // This check is absolutely necessary. Note that Bitmap::Bitmap always stores
-    // data as RGBA32 internally, so currently we ignore the indicated format.
-    return Checked<size_t>::multiplication_would_overflow(size.width(), size.height(), sizeof(RGBA32));
+    // In contrast, this check is absolutely necessary:
+    size_t pitch = Bitmap::minimum_pitch(size.width(), format);
+    return Checked<size_t>::multiplication_would_overflow(pitch, size.height());
 }
 
 RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const IntSize& size)
@@ -72,7 +90,7 @@ RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size
 
 Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
     : m_size(size)
-    , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
+    , m_pitch(minimum_pitch(size.width(), format))
     , m_format(format)
     , m_purgeable(purgeable == Purgeable::Yes)
 {
@@ -81,10 +99,10 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
     allocate_palette_from_format(format, {});
 #ifdef __serenity__
     int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
-    m_data = (RGBA32*)mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
+    m_data = mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
 #else
     int map_flags = (MAP_ANONYMOUS | MAP_PRIVATE);
-    m_data = (RGBA32*)mmap(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0);
+    m_data = mmap(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0);
 #endif
     if (m_data == MAP_FAILED) {
         perror("mmap");
@@ -94,7 +112,7 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
     m_needs_munmap = true;
 }
 
-RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, size_t pitch, RGBA32* data)
+RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, size_t pitch, void* data)
 {
     if (size_would_overflow(format, size))
         return nullptr;
@@ -112,13 +130,16 @@ RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
     return nullptr;
 }
 
-Bitmap::Bitmap(BitmapFormat format, const IntSize& size, size_t pitch, RGBA32* data)
+Bitmap::Bitmap(BitmapFormat format, const IntSize& size, size_t pitch, void* data)
     : m_size(size)
     , m_data(data)
     , m_pitch(pitch)
     , m_format(format)
 {
+    ASSERT(pitch >= minimum_pitch(size.width(), format));
     ASSERT(!size_would_overflow(format, size));
+    // FIXME: assert that `data` is actually long enough!
+
     allocate_palette_from_format(format, {});
 }
 
@@ -138,8 +159,8 @@ RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRef
 
 Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
     : m_size(size)
-    , m_data((RGBA32*)shared_buffer->data())
-    , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
+    , m_data(shared_buffer->data())
+    , m_pitch(minimum_pitch(size.width(), format))
     , m_format(format)
     , m_shared_buffer(move(shared_buffer))
 {
