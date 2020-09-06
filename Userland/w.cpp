@@ -1,5 +1,6 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <pwd.h>
@@ -53,13 +54,15 @@ int main()
     auto now = time(nullptr);
 
     printf("\033[1m%-10s %-12s %-16s %-6s %s\033[0m\n",
-        "USER", "TTY", "FROM", "IDLE", "WHAT");
+        "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
     json.value().as_object().for_each_member([&](auto& tty, auto& value) {
         const JsonObject& entry = value.as_object();
         auto uid = entry.get("uid").to_u32();
         auto pid = entry.get("pid").to_i32();
         (void)pid;
-        auto from = entry.get("from").to_string();
+
+        auto login_time = Core::DateTime::from_timestamp(entry.get("login_at").to_number<time_t>());
+        auto login_at = login_time.to_string("%b%d %H:%M:%S");
 
         auto* pw = getpwuid(uid);
         String username;
@@ -89,7 +92,7 @@ int main()
         printf("%-10s %-12s %-16s %-6s %s\n",
             username.characters(),
             tty.characters(),
-            from.characters(),
+            login_at.characters(),
             idle_string.characters(),
             what.characters());
     });
