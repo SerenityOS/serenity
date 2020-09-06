@@ -114,6 +114,15 @@ public:
         }
     }
 
+    bool remove(const String& key)
+    {
+        if (m_members.remove(key)) {
+            m_order.remove(m_order.find_first_index(key).value());
+            return true;
+        }
+        return false;
+    }
+
     template<typename Builder>
     typename Builder::OutputType serialized() const;
 
