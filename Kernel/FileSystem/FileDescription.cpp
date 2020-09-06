@@ -75,7 +75,7 @@ FileDescription::~FileDescription()
     m_inode = nullptr;
 }
 
-KResult FileDescription::fstat(stat& buffer)
+KResult FileDescription::stat(::stat& buffer)
 {
     if (is_fifo()) {
         memset(&buffer, 0, sizeof(buffer));
