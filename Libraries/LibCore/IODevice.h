@@ -65,6 +65,8 @@ public:
     bool write(const u8*, int size);
     bool write(const StringView&);
 
+    bool truncate(off_t);
+
     bool can_read_line() const;
 
     bool can_read() const;

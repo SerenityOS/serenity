@@ -266,6 +266,16 @@ bool IODevice::seek(i64 offset, SeekMode mode, off_t* pos)
     return true;
 }
 
+bool IODevice::truncate(off_t size)
+{
+    int rc = ftruncate(m_fd, size);
+    if (rc < 0) {
+        set_error(errno);
+        return false;
+    }
+    return true;
+}
+
 bool IODevice::write(const u8* data, int size)
 {
     int rc = ::write(m_fd, data, size);
