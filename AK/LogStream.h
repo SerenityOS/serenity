@@ -184,6 +184,7 @@ const LogStream& operator<<(const LogStream& stream, Span<T> span)
 }
 
 const LogStream& operator<<(const LogStream&, const void*);
+const LogStream& operator<<(const LogStream&, ReadonlyBytes);
 
 inline const LogStream& operator<<(const LogStream& stream, char value)
 {
