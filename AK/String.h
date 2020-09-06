@@ -58,8 +58,6 @@ namespace AK {
 
 class String {
 public:
-    using ConstIterator = const char*;
-
     ~String() { }
 
     String() { }
@@ -155,8 +153,10 @@ public:
         return (*m_impl)[i];
     }
 
-    ConstIterator begin() const { return characters(); }
-    ConstIterator end() const { return begin() + length(); }
+    using ConstIterator = SimpleIterator<const String, const char>;
+
+    constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    constexpr ConstIterator end() const { return ConstIterator::end(*this); }
 
     bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;

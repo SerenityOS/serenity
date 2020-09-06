@@ -61,6 +61,12 @@ class CircularDuplexStream;
 template<typename T>
 class Span;
 
+template<typename T>
+class Array;
+
+template<typename Container, typename ValueType>
+class SimpleIterator;
+
 using ReadonlyBytes = Span<const u8>;
 using Bytes = Span<u8>;
 
@@ -123,6 +129,7 @@ class Vector;
 
 }
 
+using AK::Array;
 using AK::Atomic;
 using AK::Badge;
 using AK::Bitmap;
