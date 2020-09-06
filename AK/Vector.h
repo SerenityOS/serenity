@@ -249,7 +249,7 @@ public:
     bool contains_slow(const T& value) const
     {
         for (size_t i = 0; i < size(); ++i) {
-            if (at(i) == value)
+            if (Traits<T>::equals(at(i), value))
                 return true;
         }
         return false;
@@ -612,18 +612,18 @@ public:
 
     ConstIterator find(const T& value) const
     {
-        return find([&](auto& other) { return value == other; });
+        return find([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
     Iterator find(const T& value)
     {
-        return find([&](auto& other) { return value == other; });
+        return find([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
     Optional<size_t> find_first_index(const T& value)
     {
         for (size_t i = 0; i < m_size; ++i) {
-            if (value == at(i))
+            if (Traits<T>::equals(value, at(i)))
                 return i;
         }
         return {};
