@@ -30,6 +30,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/Weakable.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
@@ -64,7 +65,9 @@ namespace Kernel {
 //   - Called by mmap() when userspace wants to memory-map this File somewhere.
 //   - Should create a Region in the Process and return it if successful.
 
-class File : public RefCounted<File> {
+class File
+    : public RefCounted<File>
+    , public Weakable<File> {
 public:
     virtual ~File();
 
