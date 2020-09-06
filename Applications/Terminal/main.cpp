@@ -56,13 +56,29 @@
 #include <sys/select.h>
 #include <unistd.h>
 
-static void run_command(int ptm_fd, String command)
+static void utmp_update(const char* tty, pid_t pid, bool create)
+{
+    if (!tty)
+        return;
+    int utmpupdate_pid = fork();
+    if (utmpupdate_pid < 0) {
+        perror("fork");
+        return;
+    }
+    if (utmpupdate_pid)
+        return;
+    char shell_pid_string[64];
+    snprintf(shell_pid_string, sizeof(shell_pid_string), "%d", pid);
+    execl("/bin/utmpupdate", "/bin/utmpupdate", "-f", "Terminal", "-p", shell_pid_string, (create ? "-c" : "-d"), tty, nullptr);
+}
+
+static pid_t run_command(int ptm_fd, String command)
 {
     pid_t pid = fork();
     if (pid < 0) {
         perror("fork");
         dbg() << "run_command: could not fork to run '" << command << "'";
-        return;
+        return pid;
     }
 
     if (pid == 0) {
@@ -132,6 +148,8 @@ static void run_command(int ptm_fd, String command)
         }
         ASSERT_NOT_REACHED();
     }
+
+    return pid;
 }
 
 static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
@@ -239,10 +257,15 @@ int main(int argc, char** argv)
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
 
+    pid_t shell_pid = 0;
+
     if (command_to_execute)
-        run_command(ptm_fd, command_to_execute);
+        shell_pid = run_command(ptm_fd, command_to_execute);
     else
-        run_command(ptm_fd, config->read_entry("Startup", "Command", ""));
+        shell_pid = run_command(ptm_fd, config->read_entry("Startup", "Command", ""));
+
+    auto* pts_name = ptsname(ptm_fd);
+    utmp_update(pts_name, shell_pid, true);
 
     auto window = GUI::Window::construct();
     window->set_title("Terminal");
@@ -340,6 +363,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/bin/utmpupdate", "x") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (unveil("/tmp/portal/launch", "rw") < 0) {
         perror("unveil");
         return 1;
@@ -353,5 +381,8 @@ int main(int argc, char** argv)
     unveil(nullptr, nullptr);
 
     config->sync();
-    return app->exec();
+    int result = app->exec();
+    dbg() << "Exiting terminal, updating utmp";
+    utmp_update(pts_name, 0, false);
+    return result;
 }
