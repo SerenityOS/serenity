@@ -300,7 +300,7 @@ private:
 
     Style find_applicable_style(size_t offset) const;
 
-    bool search(const StringView&, bool allow_empty = false);
+    bool search(const StringView&, bool allow_empty = false, bool from_beginning = true);
     inline void end_search()
     {
         m_is_searching = false;
