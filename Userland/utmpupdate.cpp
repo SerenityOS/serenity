@@ -9,6 +9,18 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio wpath cpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/var/run/utmp", "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     pid_t pid = 0;
     bool flag_create = false;
     bool flag_delete = false;
