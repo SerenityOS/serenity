@@ -883,7 +883,7 @@ void Editor::cleanup_suggestions()
     m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 }
 
-bool Editor::search(const StringView& phrase, bool allow_empty)
+bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginning)
 {
 
     int last_matching_offset = -1;
@@ -893,7 +893,8 @@ bool Editor::search(const StringView& phrase, bool allow_empty)
     if (allow_empty || phrase.length() > 0) {
         size_t search_offset = m_search_offset;
         for (size_t i = m_history_cursor; i > 0; --i) {
-            auto contains = m_history[i - 1].starts_with(phrase);
+            auto& entry = m_history[i - 1];
+            auto contains = from_beginning ? entry.starts_with(phrase) : entry.contains(phrase);
             if (contains) {
                 last_matching_offset = i - 1;
                 if (search_offset == 0) {

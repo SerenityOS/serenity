@@ -244,7 +244,7 @@ void Editor::enter_search()
         m_search_editor->on_display_refresh = [this](Editor& search_editor) {
             StringBuilder builder;
             builder.append(Utf32View { search_editor.buffer().data(), search_editor.buffer().size() });
-            if (!search(builder.build())) {
+            if (!search(builder.build(), false, false)) {
                 m_buffer.clear();
                 m_cursor = 0;
             }
