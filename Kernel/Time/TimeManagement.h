@@ -47,8 +47,8 @@ public:
     static void initialize();
     static TimeManagement& the();
 
-    time_t epoch_time() const;
-    void set_epoch_time(time_t);
+    timespec epoch_time() const;
+    void set_epoch_time(timespec);
     time_t seconds_since_boot() const;
     time_t ticks_per_second() const;
     time_t ticks_this_second() const;
@@ -72,7 +72,7 @@ private:
 
     u32 m_ticks_this_second { 0 };
     u32 m_seconds_since_boot { 0 };
-    time_t m_epoch_time { 0 };
+    timespec m_epoch_time { 0, 0 };
     RefPtr<HardwareTimer> m_system_timer;
     RefPtr<HardwareTimer> m_time_keeper_timer;
 };
