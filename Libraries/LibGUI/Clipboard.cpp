@@ -98,15 +98,13 @@ Clipboard::DataAndType Clipboard::data_and_type() const
 
 void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<String, String>& metadata)
 {
-    auto shared_buffer = SharedBuffer::create_with_size(data.size() + 1);
+    auto shared_buffer = SharedBuffer::create_with_size(data.size());
     if (!shared_buffer) {
         dbgprintf("GUI::Clipboard::set_data() failed to create a shared buffer\n");
         return;
     }
     if (!data.is_empty())
-        memcpy(shared_buffer->data(), data.data(), data.size() + 1);
-    else
-        ((u8*)shared_buffer->data())[0] = '\0';
+        memcpy(shared_buffer->data(), data.data(), data.size());
     shared_buffer->seal();
     shared_buffer->share_with(connection().server_pid());
 
