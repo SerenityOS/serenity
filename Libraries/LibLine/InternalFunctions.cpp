@@ -302,11 +302,19 @@ void Editor::enter_search()
         fflush(stderr);
 
         auto search_prompt = "\x1b[32msearch:\x1b[0m ";
+
+        // While the search editor is active, we do not want editing events.
+        m_is_editing = false;
+
         auto search_string_result = m_search_editor->get_line(search_prompt);
+
+        // Grab where the search origin last was, anything up to this point will be cleared.
+        auto search_end_row = m_search_editor->m_origin_row;
 
         remove_child(*m_search_editor);
         m_search_editor = nullptr;
         m_is_searching = false;
+        m_is_editing = true;
         m_search_offset = 0;
 
         // Re-enable the notifier after discarding the search editor.
@@ -325,7 +333,7 @@ void Editor::enter_search()
         reposition_cursor();
         auto search_metrics = actual_rendered_string_metrics(search_string);
         auto metrics = actual_rendered_string_metrics(search_prompt);
-        VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns));
+        VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns) + search_end_row - m_origin_row - 1);
 
         reposition_cursor();
 
