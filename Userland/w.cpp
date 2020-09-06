@@ -44,15 +44,14 @@ int main()
 
     auto now = time(nullptr);
 
-    printf("\033[1m%-10s %-12s %-16s %-20s %-6s\033[0m\n",
-        "USER", "TTY", "FROM", "LOGIN@", "IDLE");
+    printf("\033[1m%-10s %-12s %-16s %-6s\033[0m\n",
+        "USER", "TTY", "FROM", "IDLE");
     json.value().as_object().for_each_member([&](auto& tty, auto& value) {
         const JsonObject& entry = value.as_object();
         auto uid = entry.get("uid").to_u32();
         auto pid = entry.get("pid").to_i32();
         (void)pid;
         auto from = entry.get("from").to_string();
-        auto login_at = entry.get("login_at").to_string();
 
         auto* pw = getpwuid(uid);
         String username;
@@ -72,11 +71,10 @@ int main()
             }
         }
 
-        printf("%-10s %-12s %-16s %-20s %-6s\n",
+        printf("%-10s %-12s %-16s %-6s\n",
             username.characters(),
             tty.characters(),
             from.characters(),
-            login_at.characters(),
             idle_string.characters());
     });
     return 0;
