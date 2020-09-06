@@ -27,6 +27,7 @@
 
 #include "MainWidget.h"
 #include "TrackManager.h"
+#include <AK/Array.h>
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
@@ -69,7 +70,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        FixedArray<Sample> buffer(sample_count);
+        Array<Sample, sample_count> buffer;
         for (;;) {
             track_manager.fill_buffer(buffer);
             audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);

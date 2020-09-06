@@ -29,6 +29,7 @@
 
 #include "Music.h"
 #include "Track.h"
+#include <AK/Array.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
@@ -42,12 +43,12 @@ public:
     ~TrackManager();
 
     Track& current_track() { return *m_tracks[m_current_track]; }
-    const FixedArray<Sample>& buffer() const { return *m_front_buffer_ptr; }
+    Span<const Sample> buffer() const { return m_current_front_buffer; }
     int octave() const { return m_octave; }
     int octave_base() const { return (m_octave - octave_min) * 12; }
     int time() const { return m_time; }
 
-    void fill_buffer(FixedArray<Sample>& buffer);
+    void fill_buffer(Span<Sample>);
     void reset();
     void set_should_loop(bool b) { m_should_loop = b; }
     void set_note_current_octave(int note, Switch);
@@ -60,10 +61,10 @@ private:
     Vector<NonnullOwnPtr<Track>> m_tracks;
     size_t m_current_track { 0 };
 
-    FixedArray<Sample> m_front_buffer { sample_count };
-    FixedArray<Sample> m_back_buffer { sample_count };
-    FixedArray<Sample>* m_front_buffer_ptr { &m_front_buffer };
-    FixedArray<Sample>* m_back_buffer_ptr { &m_back_buffer };
+    Array<Sample, sample_count> m_front_buffer;
+    Array<Sample, sample_count> m_back_buffer;
+    Span<Sample> m_current_front_buffer { m_front_buffer.span() };
+    Span<Sample> m_current_back_buffer { m_back_buffer.span() };
 
     int m_octave { 4 };
 

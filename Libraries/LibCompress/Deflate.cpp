@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/BinarySearch.h>
-#include <AK/FixedArray.h>
 #include <AK/LogStream.h>
 #include <AK/MemoryStream.h>
 
@@ -42,11 +42,11 @@ const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fi
     if (initialized)
         return code;
 
-    FixedArray<u8> data { 288 };
-    data.bytes().slice(0, 144 - 0).fill(8);
-    data.bytes().slice(144, 256 - 144).fill(9);
-    data.bytes().slice(256, 280 - 256).fill(7);
-    data.bytes().slice(280, 288 - 280).fill(8);
+    Array<u8, 288> data;
+    data.span().slice(0, 144 - 0).fill(8);
+    data.span().slice(144, 256 - 144).fill(9);
+    data.span().slice(256, 280 - 256).fill(7);
+    data.span().slice(280, 288 - 280).fill(8);
 
     code = CanonicalCode::from_bytes(data).value();
     initialized = true;
@@ -62,8 +62,8 @@ const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fi
     if (initialized)
         return code;
 
-    FixedArray<u8> data { 32 };
-    data.bytes().fill(5);
+    Array<u8, 32> data;
+    data.span().fill(5);
 
     code = CanonicalCode::from_bytes(data).value();
     initialized = true;

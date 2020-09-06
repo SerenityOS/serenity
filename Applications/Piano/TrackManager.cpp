@@ -36,7 +36,7 @@ TrackManager::~TrackManager()
 {
 }
 
-void TrackManager::fill_buffer(FixedArray<Sample>& buffer)
+void TrackManager::fill_buffer(Span<Sample> buffer)
 {
     memset(buffer.data(), 0, buffer_size);
 
@@ -51,8 +51,8 @@ void TrackManager::fill_buffer(FixedArray<Sample>& buffer)
         }
     }
 
-    memcpy(m_back_buffer_ptr->data(), buffer.data(), buffer_size);
-    swap(m_front_buffer_ptr, m_back_buffer_ptr);
+    memcpy(m_current_back_buffer.data(), buffer.data(), buffer_size);
+    swap(m_current_front_buffer, m_current_back_buffer);
 }
 
 void TrackManager::reset()
@@ -60,8 +60,8 @@ void TrackManager::reset()
     memset(m_front_buffer.data(), 0, buffer_size);
     memset(m_back_buffer.data(), 0, buffer_size);
 
-    m_front_buffer_ptr = &m_front_buffer;
-    m_back_buffer_ptr = &m_back_buffer;
+    m_current_front_buffer = m_front_buffer.span();
+    m_current_back_buffer = m_back_buffer.span();
 
     m_time = 0;
 
