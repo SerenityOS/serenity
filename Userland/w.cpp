@@ -3,11 +3,18 @@
 #include <LibCore/File.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <time.h>
 
 int main()
 {
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/dev", "r") < 0) {
+        perror("unveil");
         return 1;
     }
 
@@ -35,8 +42,10 @@ int main()
         return 1;
     }
 
-    printf("\033[1m%-10s %-12s %-16s %-16s\033[0m\n",
-         "USER", "TTY", "FROM", "LOGIN@");
+    auto now = time(nullptr);
+
+    printf("\033[1m%-10s %-12s %-16s %-20s %-6s\033[0m\n",
+        "USER", "TTY", "FROM", "LOGIN@", "IDLE");
     json.value().as_object().for_each_member([&](auto& tty, auto& value) {
         const JsonObject& entry = value.as_object();
         auto uid = entry.get("uid").to_u32();
@@ -52,11 +61,23 @@ int main()
         else
             username = String::number(uid);
 
-        printf("%-10s %-12s %-16s %-16s\n",
+        StringBuilder builder;
+        String idle_string = "n/a";
+        struct stat st;
+        if (stat(tty.characters(), &st) == 0) {
+            auto idle_time = now - st.st_mtime;
+            if (idle_time >= 0) {
+                builder.appendf("%d sec", idle_time);
+                idle_string = builder.to_string();
+            }
+        }
+
+        printf("%-10s %-12s %-16s %-20s %-6s\n",
             username.characters(),
             tty.characters(),
             from.characters(),
-            login_at.characters());
+            login_at.characters(),
+            idle_string.characters());
     });
     return 0;
 }
