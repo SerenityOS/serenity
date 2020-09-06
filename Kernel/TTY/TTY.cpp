@@ -92,7 +92,6 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
 KResultOr<size_t> TTY::write(FileDescription&, size_t, const u8* buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
-        // FIXME: Should we propigate this error path somehow?
         (void)Process::current()->send_signal(SIGTTOU, nullptr);
         return KResult(-EINTR);
     }
