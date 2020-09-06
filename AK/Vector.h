@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Forward.h>
+#include <AK/Iterator.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
@@ -46,49 +47,6 @@
 #endif
 
 namespace AK {
-
-template<typename VectorType, typename ElementType>
-class VectorIterator {
-public:
-    bool operator!=(const VectorIterator& other) const { return m_index != other.m_index; }
-    bool operator==(const VectorIterator& other) const { return m_index == other.m_index; }
-    bool operator<(const VectorIterator& other) const { return m_index < other.m_index; }
-    bool operator>(const VectorIterator& other) const { return m_index > other.m_index; }
-    bool operator>=(const VectorIterator& other) const { return m_index >= other.m_index; }
-    ALWAYS_INLINE VectorIterator& operator++()
-    {
-        ++m_index;
-        return *this;
-    }
-    VectorIterator& operator--()
-    {
-        --m_index;
-        return *this;
-    }
-    VectorIterator operator-(size_t value) { return { m_vector, m_index - value }; }
-    VectorIterator operator+(size_t value) { return { m_vector, m_index + value }; }
-    VectorIterator& operator=(const VectorIterator& other)
-    {
-        m_index = other.m_index;
-        return *this;
-    }
-    ALWAYS_INLINE ElementType& operator*() { return m_vector[m_index]; }
-    ALWAYS_INLINE ElementType* operator->() { return &m_vector[m_index]; }
-    size_t operator-(const VectorIterator& other) { return m_index - other.m_index; }
-
-    bool is_end() const { return m_index == m_vector.size(); }
-    size_t index() const { return m_index; }
-
-private:
-    friend VectorType;
-    VectorIterator(VectorType& vector, size_t index)
-        : m_vector(vector)
-        , m_index(index)
-    {
-    }
-    VectorType& m_vector;
-    size_t m_index { 0 };
-};
 
 template<typename T>
 class TypedTransfer {
@@ -582,13 +540,14 @@ public:
         return resize(new_size, true);
     }
 
-    using Iterator = VectorIterator<Vector, T>;
-    Iterator begin() { return Iterator(*this, 0); }
-    Iterator end() { return Iterator(*this, size()); }
+    using ConstIterator = SimpleIterator<const Vector, const T>;
+    using Iterator = SimpleIterator<Vector, T>;
 
-    using ConstIterator = VectorIterator<const Vector, const T>;
-    ConstIterator begin() const { return ConstIterator(*this, 0); }
-    ConstIterator end() const { return ConstIterator(*this, size()); }
+    ConstIterator begin() const { return ConstIterator::begin(*this); }
+    Iterator begin() { return Iterator::begin(*this); }
+
+    ConstIterator end() const { return ConstIterator::end(*this); }
+    Iterator end() { return Iterator::end(*this); }
 
     template<typename Finder>
     ConstIterator find(Finder finder) const
@@ -605,7 +564,7 @@ public:
     {
         for (size_t i = 0; i < m_size; ++i) {
             if (finder(at(i)))
-                return Iterator(*this, i);
+                return Iterator { *this, i };
         }
         return end();
     }
