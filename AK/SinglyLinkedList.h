@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -35,7 +36,7 @@ namespace AK {
 template<typename ListType, typename ElementType>
 class SinglyLinkedListIterator {
 public:
-    SinglyLinkedListIterator() {}
+    SinglyLinkedListIterator() { }
     bool operator!=(const SinglyLinkedListIterator& other) const { return m_node != other.m_node; }
     SinglyLinkedListIterator& operator++()
     {
@@ -76,7 +77,7 @@ private:
     };
 
 public:
-    SinglyLinkedList() {}
+    SinglyLinkedList() { }
     ~SinglyLinkedList() { clear(); }
 
     bool is_empty() const { return !head(); }
@@ -152,11 +153,7 @@ public:
 
     bool contains_slow(const T& value) const
     {
-        for (auto* node = m_head; node; node = node->next) {
-            if (node->value == value)
-                return true;
-        }
-        return false;
+        return find(value) != end();
     }
 
     using Iterator = SinglyLinkedListIterator<SinglyLinkedList, T>;
@@ -195,12 +192,12 @@ public:
 
     ConstIterator find(const T& value) const
     {
-        return find([&](auto& other) { return value == other; });
+        return find([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
     Iterator find(const T& value)
     {
-        return find([&](auto& other) { return value == other; });
+        return find([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
     void remove(Iterator iterator)
