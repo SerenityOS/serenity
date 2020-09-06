@@ -50,7 +50,7 @@ static AK::Singleton<HashTable<unsigned>> s_ptys;
 
 bool DevPtsFS::initialize()
 {
-    m_root_inode = adopt(*new DevPtsFSInode(*this, 1));
+    m_root_inode = adopt(*new DevPtsFSInode(*this, 1, nullptr));
     m_root_inode->m_metadata.inode = { fsid(), 1 };
     m_root_inode->m_metadata.mode = 0040555;
     m_root_inode->m_metadata.uid = 0;
@@ -86,7 +86,7 @@ RefPtr<Inode> DevPtsFS::get_inode(InodeIdentifier inode_id) const
     auto* device = Device::get_device(201, pty_index);
     ASSERT(device);
 
-    auto inode = adopt(*new DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index()));
+    auto inode = adopt(*new DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device)));
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = device->uid();
@@ -109,9 +109,11 @@ void DevPtsFS::unregister_slave_pty(SlavePTY& slave_pty)
     s_ptys->remove(slave_pty.index());
 }
 
-DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, unsigned index)
+DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, unsigned index, SlavePTY* pty)
     : Inode(fs, index)
 {
+    if (pty)
+        m_pty = pty->make_weak_ptr();
 }
 
 DevPtsFSInode::~DevPtsFSInode()
@@ -130,6 +132,11 @@ ssize_t DevPtsFSInode::write_bytes(off_t, ssize_t, const u8*, FileDescription*)
 
 InodeMetadata DevPtsFSInode::metadata() const
 {
+    if (m_pty) {
+        auto metadata = m_metadata;
+        metadata.mtime = m_pty->time_of_last_write();
+        return metadata;
+    }
     return m_metadata;
 }
 
