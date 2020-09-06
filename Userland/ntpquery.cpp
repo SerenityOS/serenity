@@ -28,6 +28,7 @@
 #include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
 #include <endian.h>
+#include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -213,4 +214,25 @@ int main(int argc, char** argv)
     printf("Receive timestamp:     %#016llx (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
     printf("Transmit timestamp:    %#016llx (%s)\n", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
     printf("Destination timestamp: %#016llx (%s)\n", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
+
+    // Parts of the "Clock Filter" computations, https://tools.ietf.org/html/rfc5905#section-10
+    NtpTimestamp T1 = origin_timestamp;
+    NtpTimestamp T2 = receive_timestamp;
+    NtpTimestamp T3 = transmit_timestamp;
+    NtpTimestamp T4 = destination_timestamp;
+    auto timestamp_difference_in_seconds = [](NtpTimestamp from, NtpTimestamp to) {
+        return static_cast<int64_t>(to - from) / pow(2.0, 32);
+    };
+
+    // The network round-trip time of the request.
+    // T4-T1 is the wall clock roundtrip time, in local ticks.
+    // T3-T2 is the server side processing time, in server ticks.
+    double delay_s = timestamp_difference_in_seconds(T1, T4) - timestamp_difference_in_seconds(T2, T3);
+
+    // The offset from local time to server time, ignoring network delay.
+    // Both T2-T1 and T3-T4 estimate this; this takes the average of both.
+    // Or, equivalently, (T1+T4)/2 estimates local time, (T2+T3)/2 estimate server time, this is the difference.
+    double offset_s = 0.5 * (timestamp_difference_in_seconds(T1, T2) + timestamp_difference_in_seconds(T4, T3));
+    printf("Delay: %f\n", delay_s);
+    printf("Offset: %f\n", offset_s);
 }
