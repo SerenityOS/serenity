@@ -43,6 +43,7 @@ struct timezone {
 };
 
 int gettimeofday(struct timeval* __restrict__, void* __restrict__) __attribute__((nonnull(1)));
+int settimeofday(struct timeval* __restrict__, void* __restrict__) __attribute__((nonnull(1)));
 
 static inline void timeradd(const struct timeval* a, const struct timeval* b, struct timeval* out)
 {
