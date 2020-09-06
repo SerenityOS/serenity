@@ -78,6 +78,7 @@ public:
     virtual KResultOr<size_t> write(FileDescription&, size_t, const u8*, size_t) = 0;
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg);
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared);
+    virtual KResult stat(::stat&) const { return KResult(-EBADF); }
 
     virtual String absolute_path(const FileDescription&) const = 0;
 

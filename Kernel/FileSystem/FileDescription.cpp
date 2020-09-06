@@ -77,20 +77,11 @@ FileDescription::~FileDescription()
 
 KResult FileDescription::stat(::stat& buffer)
 {
-    if (is_fifo()) {
-        memset(&buffer, 0, sizeof(buffer));
-        buffer.st_mode = S_IFIFO;
-        return KSuccess;
-    }
-    if (is_socket()) {
-        memset(&buffer, 0, sizeof(buffer));
-        buffer.st_mode = S_IFSOCK;
-        return KSuccess;
-    }
-
-    if (!m_inode)
-        return KResult(-EBADF);
-    return metadata().stat(buffer);
+    LOCKER(m_lock);
+    // FIXME: This is a little awkward, why can't we always forward to File::stat()?
+    if (m_inode)
+        return metadata().stat(buffer);
+    return m_file->stat(buffer);
 }
 
 off_t FileDescription::seek(off_t offset, int whence)

@@ -58,9 +58,9 @@ public:
     bool is_shut_down_for_reading() const { return m_shut_down_for_reading; }
 
     enum class SetupState {
-        Unstarted, // we haven't tried to set the socket up yet
+        Unstarted,  // we haven't tried to set the socket up yet
         InProgress, // we're in the process of setting things up - for TCP maybe we've sent a SYN packet
-        Completed, // the setup process is complete, but not necessarily successful
+        Completed,  // the setup process is complete, but not necessarily successful
     };
 
     enum class Role : u8 {
@@ -126,6 +126,7 @@ public:
     // ^File
     virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) override final;
     virtual KResultOr<size_t> write(FileDescription&, size_t, const u8*, size_t) override final;
+    virtual KResult stat(::stat&) const override;
     virtual String absolute_path(const FileDescription&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout.tv_sec || m_receive_timeout.tv_usec; }
@@ -144,8 +145,8 @@ protected:
 
     virtual const char* class_name() const override { return "Socket"; }
 
-    virtual void shut_down_for_reading() {}
-    virtual void shut_down_for_writing() {}
+    virtual void shut_down_for_reading() { }
+    virtual void shut_down_for_writing() { }
 
     Role m_role { Role::None };
 
@@ -175,10 +176,10 @@ private:
     NonnullRefPtrVector<Socket> m_pending;
 };
 
-template <typename SocketType>
+template<typename SocketType>
 class SocketHandle {
 public:
-    SocketHandle() {}
+    SocketHandle() { }
 
     SocketHandle(NonnullRefPtr<SocketType>&& socket)
         : m_socket(move(socket))
