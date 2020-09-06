@@ -100,16 +100,25 @@ static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio inet dns", nullptr) < 0) {
+    if (pledge("stdio inet dns settime", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
+    bool set_time = false;
     // FIXME: Change to serenityos.pool.ntp.org once https://manage.ntppool.org/manage/vendor/zone?a=km5a8h&id=vz-14154g is approved.
     const char* host = "time.google.com";
     Core::ArgsParser args_parser;
+    args_parser.add_option(set_time, "Adjust system time (requires root)", "set", 's');
     args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    if (!set_time) {
+        if (pledge("stdio inet dns", nullptr) < 0) {
+            perror("pledge");
+            return 1;
+        }
+    }
 
     auto* hostent = gethostbyname(host);
     if (!hostent) {
@@ -117,7 +126,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio inet", nullptr) < 0) {
+    if (pledge(set_time ? "stdio inet settime" : "stdio inet", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -179,6 +188,15 @@ int main(int argc, char** argv)
     NtpTimestamp receive_timestamp = be64toh(packet.receive_timestamp);
     NtpTimestamp transmit_timestamp = be64toh(packet.transmit_timestamp);
     NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(t);
+
+    if (set_time) {
+        // FIXME: Do all the time filtering described in 5905, or at least correct for time of flight.
+        timeval t = timeval_from_ntp_timestamp(transmit_timestamp);
+        if (settimeofday(&t, nullptr) < 0) {
+            perror("settimeofday");
+            return 1;
+        }
+    }
 
     printf("NTP response from %s:\n", inet_ntoa(peer_address.sin_addr));
     printf("Leap Information: %d\n", packet.li_vn_mode >> 6);
