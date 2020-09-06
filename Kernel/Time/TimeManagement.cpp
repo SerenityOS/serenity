@@ -25,6 +25,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <AK/Time.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Scheduler.h>
@@ -52,15 +53,20 @@ bool TimeManagement::is_system_timer(const HardwareTimer& timer) const
     return &timer == m_system_timer.ptr();
 }
 
-void TimeManagement::set_epoch_time(time_t value)
+void TimeManagement::set_epoch_time(timespec ts)
 {
+    timespec ticks = { 0, (long)ticks_this_second() * (long)1'000'000 };
+    timespec_sub(ts, ticks, ts);
     InterruptDisabler disabler;
-    m_epoch_time = value;
+    m_epoch_time = ts;
 }
 
-time_t TimeManagement::epoch_time() const
+timespec TimeManagement::epoch_time() const
 {
-    return m_epoch_time;
+    timespec ts = m_epoch_time;
+    timespec ticks = { 0, (long)ticks_this_second() * (long)1'000'000 };
+    timespec_add(ts, ticks, ts);
+    return ts;
 }
 
 void TimeManagement::initialize()
@@ -94,14 +100,14 @@ TimeManagement::TimeManagement()
     if (ACPI::is_enabled()) {
         if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
             RTC::initialize();
-            m_epoch_time += boot_time();
+            m_epoch_time.tv_sec += boot_time();
         } else {
             klog() << "ACPI: RTC CMOS Not present";
         }
     } else {
         // We just assume that we can access RTC CMOS, if ACPI isn't usable.
         RTC::initialize();
-        m_epoch_time += boot_time();
+        m_epoch_time.tv_sec += boot_time();
     }
     if (probe_non_legacy_hardware_timers) {
         if (!probe_and_set_non_legacy_hardware_timers())
@@ -116,8 +122,10 @@ TimeManagement::TimeManagement()
 
 timeval TimeManagement::now_as_timeval()
 {
-    auto* time_management = s_the.ptr();
-    return { time_management->epoch_time(), (suseconds_t)time_management->ticks_this_second() * (suseconds_t)1000 };
+    timespec ts = s_the.ptr()->epoch_time();
+    timeval tv;
+    timespec_to_timeval(ts, tv);
+    return tv;
 }
 
 Vector<HardwareTimer*> TimeManagement::scan_and_initialize_periodic_timers()
@@ -230,7 +238,7 @@ void TimeManagement::increment_time_since_boot(const RegisterState&)
     if (++m_ticks_this_second >= m_time_keeper_timer->ticks_per_second()) {
         // FIXME: Synchronize with other clock somehow to prevent drifting apart.
         ++m_seconds_since_boot;
-        ++m_epoch_time;
+        ++m_epoch_time.tv_sec;
         m_ticks_this_second = 0;
     }
 }

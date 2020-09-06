@@ -43,8 +43,7 @@ int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
         ts.tv_nsec = TimeManagement::the().ticks_this_second() * 1000000;
         break;
     case CLOCK_REALTIME:
-        ts.tv_sec = TimeManagement::the().epoch_time();
-        ts.tv_nsec = TimeManagement::the().ticks_this_second() * 1000000;
+        ts = TimeManagement::the().epoch_time();
         break;
     default:
         return -EINVAL;
@@ -67,7 +66,7 @@ int Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> us
 
     switch (clock_id) {
     case CLOCK_REALTIME:
-        TimeManagement::the().set_epoch_time(ts.tv_sec);
+        TimeManagement::the().set_epoch_time(ts);
         break;
     default:
         return -EINVAL;
