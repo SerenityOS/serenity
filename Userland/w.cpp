@@ -35,8 +35,8 @@ int main()
         return 1;
     }
 
-    printf("%-10s %-12s %-16s %-16s\n",
-        "USER", "TTY", "FROM", "LOGIN@");
+    printf("\033[1m%-10s %-12s %-16s %-16s\033[0m\n",
+         "USER", "TTY", "FROM", "LOGIN@");
     json.value().as_object().for_each_member([&](auto& tty, auto& value) {
         const JsonObject& entry = value.as_object();
         auto uid = entry.get("uid").to_u32();
