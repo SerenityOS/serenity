@@ -64,7 +64,7 @@ public:
     virtual ~DevPtsFSInode() override;
 
 private:
-    DevPtsFSInode(DevPtsFS&, unsigned index);
+    DevPtsFSInode(DevPtsFS&, unsigned index, SlavePTY*);
 
     // ^Inode
     virtual ssize_t read_bytes(off_t, ssize_t, u8* buffer, FileDescription*) const override;
@@ -80,6 +80,7 @@ private:
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
 
+    WeakPtr<SlavePTY> m_pty;
     InodeMetadata m_metadata;
 };
 

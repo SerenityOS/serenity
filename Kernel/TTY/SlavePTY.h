@@ -40,6 +40,8 @@ public:
     void on_master_write(const u8*, ssize_t);
     unsigned index() const { return m_index; }
 
+    time_t time_of_last_write() const { return m_time_of_last_write; }
+
 private:
     // ^TTY
     virtual String tty_name() const override;
@@ -57,7 +59,8 @@ private:
     SlavePTY(MasterPTY&, unsigned index);
 
     RefPtr<MasterPTY> m_master;
-    unsigned m_index;
+    time_t m_time_of_last_write { 0 };
+    unsigned m_index { 0 };
     char m_tty_name[32];
 };
 
