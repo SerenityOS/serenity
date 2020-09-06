@@ -6,6 +6,7 @@ wheel_gid=1
 tty_gid=2
 phys_gid=3
 audio_gid=4
+utmp_gid=5
 window_uid=13
 window_gid=13
 
@@ -51,16 +52,24 @@ chmod 4755 mnt/bin/ping
 chmod 4750 mnt/bin/reboot
 chmod 4750 mnt/bin/shutdown
 chmod 4750 mnt/bin/keymap
+chown 0:$utmp_gid mnt/bin/utmpupdate
+chmod 2755 mnt/bin/utmpupdate
 
 echo "done"
 
 printf "creating initial filesystem structure... "
-for dir in bin etc proc mnt tmp boot mod; do
+for dir in bin etc proc mnt tmp boot mod var/run; do
     mkdir -p mnt/$dir
 done
 chmod 700 mnt/boot
 chmod 700 mnt/mod
 chmod 1777 mnt/tmp
+echo "done"
+
+printf "creating utmp file... "
+touch mnt/var/run/utmp
+chown 0:$utmp_gid mnt/var/run/utmp
+chmod 664 mnt/var/run/utmp
 echo "done"
 
 printf "setting up device nodes... "
