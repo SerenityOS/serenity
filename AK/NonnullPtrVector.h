@@ -51,13 +51,14 @@ public:
 
     using Base::size;
 
-    using Iterator = VectorIterator<NonnullPtrVector, T>;
-    Iterator begin() { return Iterator(*this, 0); }
-    Iterator end() { return Iterator(*this, size()); }
+    using ConstIterator = SimpleIterator<const NonnullPtrVector, const T>;
+    using Iterator = SimpleIterator<NonnullPtrVector, T>;
 
-    using ConstIterator = VectorIterator<const NonnullPtrVector, const T>;
-    ConstIterator begin() const { return ConstIterator(*this, 0); }
-    ConstIterator end() const { return ConstIterator(*this, size()); }
+    constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    constexpr Iterator begin() { return Iterator::begin(*this); }
+
+    constexpr ConstIterator end() const { return ConstIterator::end(*this); }
+    constexpr Iterator end() { return Iterator::end(*this); }
 
     PtrType& ptr_at(int index) { return Base::at(index); }
     const PtrType& ptr_at(int index) const { return Base::at(index); }

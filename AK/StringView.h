@@ -37,8 +37,6 @@ namespace AK {
 
 class StringView {
 public:
-    using ConstIterator = const char*;
-
     ALWAYS_INLINE constexpr StringView() { }
     ALWAYS_INLINE constexpr StringView(const char* characters, size_t length)
         : m_characters(characters)
@@ -77,8 +75,10 @@ public:
 
     const char& operator[](size_t index) const { return m_characters[index]; }
 
-    ConstIterator begin() const { return characters_without_null_termination(); }
-    ConstIterator end() const { return begin() + length(); }
+    using ConstIterator = SimpleIterator<const StringView, const char>;
+
+    constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    constexpr ConstIterator end() const { return ConstIterator::end(*this); }
 
     unsigned hash() const;
 

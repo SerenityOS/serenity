@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
+#include <AK/Iterator.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -102,9 +103,6 @@ protected:
 template<typename T>
 class Span : public Detail::Span<T> {
 public:
-    using Iterator = T*;
-    using ConstIterator = const T*;
-
     using Detail::Span<T>::Span;
 
     ALWAYS_INLINE Span(std::nullptr_t)
@@ -120,23 +118,14 @@ public:
     ALWAYS_INLINE const T* data() const { return this->m_values; }
     ALWAYS_INLINE T* data() { return this->m_values; }
 
-    ALWAYS_INLINE ConstIterator begin() const
-    {
-        return this->m_values;
-    }
-    ALWAYS_INLINE ConstIterator end() const
-    {
-        return begin() + size();
-    }
+    using ConstIterator = SimpleIterator<const Span, const T>;
+    using Iterator = SimpleIterator<Span, T>;
 
-    ALWAYS_INLINE Iterator begin()
-    {
-        return this->m_values;
-    }
-    ALWAYS_INLINE Iterator end()
-    {
-        return begin() + size();
-    }
+    constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    constexpr Iterator begin() { return Iterator::begin(*this); }
+
+    constexpr ConstIterator end() const { return ConstIterator::end(*this); }
+    constexpr Iterator end() { return Iterator::end(*this); }
 
     ALWAYS_INLINE size_t size() const { return this->m_size; }
 
@@ -220,6 +209,7 @@ public:
 
 using ReadonlyBytes = Span<const u8>;
 using Bytes = Span<u8>;
+
 }
 
 using AK::Bytes;
