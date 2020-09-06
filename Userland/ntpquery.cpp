@@ -105,13 +105,10 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // FIXME: Request serenityos.pool.ntp.org here https://manage.ntppool.org/manage/vendor
-    // and then use that as the default value.
-    // Until then, explicitly pass this as `ntpquery pool.ntp.org`.
-    const char* host = nullptr;
-
+    // FIXME: Change to serenityos.pool.ntp.org once https://manage.ntppool.org/manage/vendor/zone?a=km5a8h&id=vz-14154g is approved.
+    const char* host = "time.google.com";
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     auto* hostent = gethostbyname(host);
