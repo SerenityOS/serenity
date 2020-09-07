@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/FixedArray.h>
+#include <AK/Span.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
@@ -58,35 +58,35 @@ struct InodeMetadata {
     bool may_write(const Process&) const;
     bool may_execute(const Process&) const;
 
-    bool may_read(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
+    bool may_read(uid_t u, gid_t g, Span<const gid_t> eg) const
     {
         if (u == 0)
             return true;
         if (uid == u)
             return mode & S_IRUSR;
-        if (gid == g || eg.contains(gid))
+        if (gid == g || eg.contains_slow(gid))
             return mode & S_IRGRP;
         return mode & S_IROTH;
     }
 
-    bool may_write(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
+    bool may_write(uid_t u, gid_t g, Span<const gid_t> eg) const
     {
         if (u == 0)
             return true;
         if (uid == u)
             return mode & S_IWUSR;
-        if (gid == g || eg.contains(gid))
+        if (gid == g || eg.contains_slow(gid))
             return mode & S_IWGRP;
         return mode & S_IWOTH;
     }
 
-    bool may_execute(uid_t u, gid_t g, const FixedArray<gid_t>& eg) const
+    bool may_execute(uid_t u, gid_t g, Span<const gid_t> eg) const
     {
         if (u == 0)
             return true;
         if (uid == u)
             return mode & S_IXUSR;
-        if (gid == g || eg.contains(gid))
+        if (gid == g || eg.contains_slow(gid))
             return mode & S_IXGRP;
         return mode & S_IXOTH;
     }
