@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/JsonValue.h>
 #include <AK/GenericLexer.h>
+#include <AK/JsonValue.h>
 
 namespace AK {
 
@@ -35,9 +35,6 @@ class JsonParser : private GenericLexer {
 public:
     explicit JsonParser(const StringView& input)
         : GenericLexer(input)
-    {
-    }
-    ~JsonParser()
     {
     }
 
