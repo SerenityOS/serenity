@@ -88,28 +88,8 @@ SavedFileDescriptors::~SavedFileDescriptors()
     }
 }
 
-int main(int argc, char** argv)
+void Shell::setup_signals()
 {
-    Core::EventLoop loop;
-
-    Core::EventLoop::register_signal(SIGINT, [](int) {
-        s_shell->kill_job(s_shell->current_job(), SIGINT);
-    });
-
-    Core::EventLoop::register_signal(SIGWINCH, [](int) {
-        s_shell->kill_job(s_shell->current_job(), SIGWINCH);
-    });
-
-    Core::EventLoop::register_signal(SIGTTIN, [](int) {});
-    Core::EventLoop::register_signal(SIGTTOU, [](int) {});
-
-    Core::EventLoop::register_signal(SIGHUP, [](int) {
-        for (auto& it : s_shell->jobs)
-            s_shell->kill_job(it.value.ptr(), SIGHUP);
-
-        s_shell->save_history();
-    });
-
     Core::EventLoop::register_signal(SIGCHLD, [](int) {
         auto& jobs = s_shell->jobs;
         Vector<u64> disowned_jobs;
@@ -159,6 +139,31 @@ int main(int argc, char** argv)
             job->unblock();
         }
     });
+}
+
+int main(int argc, char** argv)
+{
+    Core::EventLoop loop;
+
+    Core::EventLoop::register_signal(SIGINT, [](int) {
+        s_shell->kill_job(s_shell->current_job(), SIGINT);
+    });
+
+    Core::EventLoop::register_signal(SIGWINCH, [](int) {
+        s_shell->kill_job(s_shell->current_job(), SIGWINCH);
+    });
+
+    Core::EventLoop::register_signal(SIGTTIN, [](int) {});
+    Core::EventLoop::register_signal(SIGTTOU, [](int) {});
+
+    Core::EventLoop::register_signal(SIGHUP, [](int) {
+        for (auto& it : s_shell->jobs)
+            s_shell->kill_job(it.value.ptr(), SIGHUP);
+
+        s_shell->save_history();
+    });
+
+    s_shell->setup_signals();
 
 #ifndef __serenity__
     sigset_t blocked;
@@ -168,7 +173,7 @@ int main(int argc, char** argv)
     pthread_sigmask(SIG_BLOCK, &blocked, NULL);
 #endif
 #ifdef __serenity__
-    if (pledge("stdio rpath wpath cpath proc exec tty accept sigaction", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath proc exec tty accept sigaction unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

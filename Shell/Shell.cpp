@@ -510,19 +510,6 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             return nullptr;
     }
 
-    if (command.should_immediately_execute_next) {
-        ASSERT(command.argv.is_empty());
-
-        SavedFileDescriptors fds { rewirings };
-        if (apply_rewirings() == IterationDecision::Break)
-            return nullptr;
-
-        for (auto& next_in_chain : command.next_chain)
-            run_tail(next_in_chain, 0);
-
-        return nullptr;
-    }
-
     int retval = 0;
     if (run_builtin(command, rewirings, retval)) {
         for (auto& next_in_chain : command.next_chain)
@@ -554,7 +541,13 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     if (child == 0) {
         close(sync_pipe[1]);
 
-        tcsetattr(0, TCSANOW, &default_termios);
+        if (!m_is_subshell)
+            tcsetattr(0, TCSANOW, &default_termios);
+
+        m_is_subshell = true;
+        m_pid = getpid();
+        Core::EventLoop::notify_forked(Core::EventLoop::ForkEvent::Child);
+        jobs.clear();
 
         if (apply_rewirings() == IterationDecision::Break)
             return nullptr;
@@ -572,6 +565,19 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         }
 
         close(sync_pipe[0]);
+
+        if (command.should_immediately_execute_next) {
+            ASSERT(command.argv.is_empty());
+
+            Core::EventLoop mainloop;
+
+            setup_signals();
+
+            for (auto& next_in_chain : command.next_chain)
+                run_tail(next_in_chain, 0);
+
+            _exit(last_return_code);
+        }
 
         int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
         if (rc < 0) {
@@ -612,10 +618,10 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     }
 
     pid_t pgid = is_first ? child : (command.pipeline ? command.pipeline->pgid : child);
-    if (setpgid(child, pgid) < 0)
-        perror("setpgid");
+    if (!m_is_subshell && command.should_wait) {
+        if (setpgid(child, pgid) < 0)
+            perror("setpgid");
 
-    if (command.should_wait) {
         tcsetpgrp(STDOUT_FILENO, pgid);
         tcsetpgrp(STDIN_FILENO, pgid);
     }
@@ -634,7 +640,12 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     StringBuilder cmd;
     cmd.join(" ", command.argv);
 
-    auto job = Job::create(child, pgid, cmd.build(), find_last_job_id() + 1, AST::Command(command));
+    auto command_copy = AST::Command(command);
+    // Clear the next chain if it's to be immediately executed
+    // as the child will run this chain.
+    if (command.should_immediately_execute_next)
+        command_copy.next_chain.clear();
+    auto job = Job::create(child, pgid, cmd.build(), find_last_job_id() + 1, move(command_copy));
     jobs.set((u64)child, job);
 
     job->on_exit = [this](auto job) {
@@ -656,22 +667,25 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
 void Shell::run_tail(const AST::NodeWithAction& next_in_chain, int head_exit_code)
 {
+    auto evaluate = [&] {
+        if (next_in_chain.node->would_execute()) {
+            next_in_chain.node->run(*this);
+            return;
+        }
+        auto commands = next_in_chain.node->to_lazy_evaluated_commands(*this);
+        run_commands(commands);
+    };
     switch (next_in_chain.action) {
     case AST::NodeWithAction::And:
-        if (head_exit_code == 0) {
-            auto commands = next_in_chain.node->run(*this)->resolve_as_commands(*this);
-            run_commands(commands);
-        }
+        if (head_exit_code == 0)
+            evaluate();
         break;
     case AST::NodeWithAction::Or:
-        if (head_exit_code != 0) {
-            auto commands = next_in_chain.node->run(*this)->resolve_as_commands(*this);
-            run_commands(commands);
-        }
+        if (head_exit_code != 0)
+            evaluate();
         break;
     case AST::NodeWithAction::Sequence:
-        auto commands = next_in_chain.node->run(*this)->resolve_as_commands(*this);
-        run_commands(commands);
+        evaluate();
         break;
     }
 }
@@ -745,6 +759,8 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
 }
 void Shell::restore_ios()
 {
+    if (m_is_subshell)
+        return;
     tcsetattr(0, TCSANOW, &termios);
     tcsetpgrp(STDOUT_FILENO, m_pid);
     tcsetpgrp(STDIN_FILENO, m_pid);
