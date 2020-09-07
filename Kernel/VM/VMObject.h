@@ -26,11 +26,11 @@
 
 #pragma once
 
-#include <AK/FixedArray.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
+#include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>
 
@@ -58,8 +58,8 @@ public:
     virtual bool is_contiguous() const { return false; }
 
     size_t page_count() const { return m_physical_pages.size(); }
-    const FixedArray<RefPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
-    FixedArray<RefPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
+    const Vector<RefPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
+    Vector<RefPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 
     size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }
 
@@ -76,7 +76,7 @@ protected:
     template<typename Callback>
     void for_each_region(Callback);
 
-    FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
+    Vector<RefPtr<PhysicalPage>> m_physical_pages;
     Lock m_paging_lock { "VMObject" };
 
 private:
