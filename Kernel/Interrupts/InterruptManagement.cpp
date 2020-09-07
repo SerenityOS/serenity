@@ -137,6 +137,7 @@ PhysicalAddress InterruptManagement::search_for_madt()
 InterruptManagement::InterruptManagement()
     : m_madt(search_for_madt())
 {
+    m_interrupt_controllers.resize(1);
 }
 
 void InterruptManagement::switch_to_pic_mode()

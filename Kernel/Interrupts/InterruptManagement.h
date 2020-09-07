@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/FixedArray.h>
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
@@ -89,7 +88,7 @@ private:
     PhysicalAddress search_for_madt();
     void locate_apic_data();
     bool m_smp_enabled { false };
-    FixedArray<RefPtr<IRQController>> m_interrupt_controllers { 1 };
+    Vector<RefPtr<IRQController>> m_interrupt_controllers;
     Vector<ISAInterruptOverrideMetadata> m_isa_interrupt_overrides;
     Vector<PCIInterruptOverrideMetadata> m_pci_interrupt_overrides;
     PhysicalAddress m_madt;

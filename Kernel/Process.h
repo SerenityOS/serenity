@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Checked.h>
-#include <AK/FixedArray.h>
 #include <AK/HashMap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
@@ -162,7 +161,7 @@ public:
     bool is_session_leader() const { return m_sid.value() == m_pid.value(); }
     ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
     bool is_group_leader() const { return pgid().value() == m_pid.value(); }
-    const FixedArray<gid_t>& extra_gids() const { return m_extra_gids; }
+    Span<const gid_t> extra_gids() const { return m_extra_gids; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
     uid_t uid() const { return m_uid; }
@@ -683,7 +682,7 @@ private:
     ProcessID m_ppid { 0 };
     mode_t m_umask { 022 };
 
-    FixedArray<gid_t> m_extra_gids;
+    Vector<gid_t> m_extra_gids;
 
     WeakPtr<Region> m_master_tls_region;
     size_t m_master_tls_size { 0 };

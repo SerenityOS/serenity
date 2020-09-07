@@ -142,7 +142,7 @@ NonnullRefPtrVector<Process> Process::all_processes()
 
 bool Process::in_group(gid_t gid) const
 {
-    return m_gid == gid || m_extra_gids.contains(gid);
+    return m_gid == gid || m_extra_gids.contains_slow(gid);
 }
 
 Range Process::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)

@@ -86,11 +86,7 @@ int Process::sys$getgroups(ssize_t count, Userspace<gid_t*> user_gids)
     if (!validate_write_typed(user_gids, m_extra_gids.size()))
         return -EFAULT;
 
-    Vector<gid_t> gids;
-    for (auto gid : m_extra_gids)
-        gids.append(gid);
-
-    copy_to_user(user_gids, gids.data(), sizeof(gid_t) * count);
+    copy_to_user(user_gids, m_extra_gids.data(), sizeof(gid_t) * count);
     return 0;
 }
 

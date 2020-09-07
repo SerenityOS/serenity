@@ -174,6 +174,15 @@ public:
         }
     }
 
+    bool contains_slow(const T& value) const
+    {
+        for (size_t i = 0; i < size(); ++i) {
+            if (at(i) == value)
+                return true;
+        }
+        return false;
+    }
+
     ALWAYS_INLINE const T& at(size_t index) const
     {
         ASSERT(index < this->m_size);
