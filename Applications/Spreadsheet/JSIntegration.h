@@ -32,16 +32,16 @@
 
 namespace Spreadsheet {
 
-class SheetGlobalObject : public JS::GlobalObject {
+class SheetGlobalObject final : public JS::GlobalObject {
     JS_OBJECT(SheetGlobalObject, JS::GlobalObject);
 
 public:
-    SheetGlobalObject(Sheet& sheet);
+    SheetGlobalObject(Sheet&);
 
     virtual ~SheetGlobalObject() override;
 
-    virtual JS::Value get(const JS::PropertyName& name, JS::Value receiver = {}) const override;
-    virtual bool put(const JS::PropertyName& name, JS::Value value, JS::Value receiver = {}) override;
+    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}) const override;
+    virtual bool put(const JS::PropertyName&, JS::Value value, JS::Value receiver = {}) override;
     virtual void initialize() override;
 
     JS_DECLARE_NATIVE_FUNCTION(parse_cell_name);
@@ -50,11 +50,11 @@ private:
     Sheet& m_sheet;
 };
 
-class WorkbookObject : public JS::Object {
+class WorkbookObject final : public JS::Object {
     JS_OBJECT(WorkbookObject, JS::Object);
 
 public:
-    WorkbookObject(Workbook& workbook);
+    WorkbookObject(Workbook&);
 
     virtual ~WorkbookObject() override;
 
