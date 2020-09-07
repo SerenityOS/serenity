@@ -292,6 +292,18 @@ static CSS::Length parse_length(const CSS::ParsingContext& context, const String
     } else if (view.ends_with("ex", CaseSensitivity::CaseInsensitive)) {
         type = CSS::Length::Type::Ex;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
+    } else if (view.ends_with("vw", CaseSensitivity::CaseInsensitive)) {
+        type = CSS::Length::Type::Vw;
+        value = try_parse_float(view.substring_view(0, view.length() - 2));
+    } else if (view.ends_with("vh", CaseSensitivity::CaseInsensitive)) {
+        type = CSS::Length::Type::Vh;
+        value = try_parse_float(view.substring_view(0, view.length() - 2));
+    } else if (view.ends_with("vmax", CaseSensitivity::CaseInsensitive)) {
+        type = CSS::Length::Type::Vmax;
+        value = try_parse_float(view.substring_view(0, view.length() - 4));
+    } else if (view.ends_with("vmin", CaseSensitivity::CaseInsensitive)) {
+        type = CSS::Length::Type::Vmin;
+        value = try_parse_float(view.substring_view(0, view.length() - 4));
     } else if (view == "0") {
         type = CSS::Length::Type::Px;
         value = 0;

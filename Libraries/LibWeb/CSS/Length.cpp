@@ -27,6 +27,7 @@
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/Page/Frame.h>
 
 namespace Web::CSS {
 
@@ -39,6 +40,28 @@ float Length::relative_length_to_px(const LayoutNode& layout_node) const
         return m_value * layout_node.font_size();
     case Type::Rem:
         return m_value * layout_node.document().document_element()->layout_node()->font_size();
+    case Type::Vw:
+        return layout_node.document().frame()->viewport_rect().width() * (m_value / 100);
+    case Type::Vh:
+        return layout_node.document().frame()->viewport_rect().height() * (m_value / 100);
+    case Type::Vmin: {
+        auto viewport = layout_node.document().frame()->viewport_rect();
+
+        if (viewport.width() > viewport.height()) {
+            return viewport.height() * (m_value / 100);
+        } else {
+            return viewport.width() * (m_value / 100);
+        }
+    }
+    case Type::Vmax: {
+        auto viewport = layout_node.document().frame()->viewport_rect();
+
+        if (viewport.width() < viewport.height()) {
+            return viewport.height() * (m_value / 100);
+        } else {
+            return viewport.width() * (m_value / 100);
+        }
+    }
     default:
         ASSERT_NOT_REACHED();
     }
@@ -63,6 +86,14 @@ const char* Length::unit_name() const
         return "%";
     case Type::Undefined:
         return "undefined";
+    case Type::Vh:
+        return "vh";
+    case Type::Vw:
+        return "vw";
+    case Type::Vmax:
+        return "vmax";
+    case Type::Vmin:
+        return "vmin";
     }
     ASSERT_NOT_REACHED();
 }
