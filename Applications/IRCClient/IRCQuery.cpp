@@ -58,6 +58,12 @@ void IRCQuery::add_message(char prefix, const String& name, const String& text, 
     window().did_add_message(name, text);
 }
 
+void IRCQuery::add_message(const String& text, Color color)
+{
+    log().add_message(text, color);
+    window().did_add_message();
+}
+
 void IRCQuery::say(const String& text)
 {
     m_client.send_privmsg(m_name, text);

@@ -510,23 +510,39 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
     String message_text = msg.arguments[1];
     auto message_color = Color::Black;
 
+    bool insert_as_raw_message = false;
+
     if (is_ctcp) {
         auto ctcp_payload = msg.arguments[1].substring_view(1, msg.arguments[1].length() - 2);
         if (type == PrivmsgOrNotice::Privmsg)
             handle_ctcp_request(sender_nick, ctcp_payload);
         else
             handle_ctcp_response(sender_nick, ctcp_payload);
-        StringBuilder builder;
-        builder.append("(CTCP) ");
-        builder.append(ctcp_payload);
-        message_text = builder.to_string();
-        message_color = Color::Blue;
+
+        if (ctcp_payload.starts_with("ACTION")) {
+            insert_as_raw_message = true;
+            StringBuilder builder;
+            builder.append("* ");
+            builder.append(sender_nick);
+            builder.append(ctcp_payload.substring_view(6, ctcp_payload.length() - 6));
+            message_text = builder.to_string();
+            message_color = Color::Magenta;
+        } else {
+            StringBuilder builder;
+            builder.append("(CTCP) ");
+            builder.append(ctcp_payload);
+            message_text = builder.to_string();
+            message_color = Color::Blue;
+        }
     }
 
     {
         auto it = m_channels.find(target);
         if (it != m_channels.end()) {
-            (*it).value->add_message(sender_prefix, sender_nick, message_text, message_color);
+            if (insert_as_raw_message)
+                (*it).value->add_message(message_text, message_color);
+            else
+                (*it).value->add_message(sender_prefix, sender_nick, message_text, message_color);
             return;
         }
     }
@@ -539,9 +555,12 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
     } else {
         query = &ensure_query(sender_nick);
     }
-    if (query)
-        query->add_message(sender_prefix, sender_nick, message_text, message_color);
-    else {
+    if (query) {
+        if (insert_as_raw_message)
+            query->add_message(message_text, message_color);
+        else
+            query->add_message(sender_prefix, sender_nick, message_text, message_color);
+    } else {
         add_server_message(String::format("<%s> %s", sender_nick.characters(), message_text.characters()), message_color);
     }
 }
@@ -918,6 +937,33 @@ void IRCClient::handle_user_command(const String& input)
             auto channel = window->channel().name();
             send_banlist(channel);
         }
+        return;
+    }
+    if (command == "/ME") {
+        if (parts.size() < 2)
+            return;
+
+        auto* window = current_window();
+        if (!window)
+            return;
+
+        auto emote = input.view().substring_view_starting_after_substring(parts[0]);
+        StringBuilder builder;
+        builder.append("ACTION");
+        builder.append(emote);
+        auto action_string = builder.to_string();
+        String peer;
+        if (window->type() == IRCWindow::Type::Channel) {
+            peer = window->channel().name();
+            window->channel().add_message(String::format("* %s%s", m_nickname.characters(), String(emote).characters()), Gfx::Color::Magenta);
+        } else if (window->type() == IRCWindow::Type::Query) {
+            peer = window->query().name();
+            window->query().add_message(String::format("* %s%s", m_nickname.characters(), String(emote).characters()), Gfx::Color::Magenta);
+        } else {
+            return;
+        }
+
+        send_ctcp_request(peer, builder.to_string());
         return;
     }
     if (command == "/TOPIC") {
