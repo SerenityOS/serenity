@@ -55,8 +55,9 @@ int main(int argc, char** argv)
     if (write_to_stdout)
         keep_input_files = true;
 
-    for (StringView filename : filenames) {
-        ASSERT(filename.ends_with(".gz"));
+    for (String filename : filenames) {
+        if (!filename.ends_with(".gz"))
+            filename = String::format("%s.gz", filename);
 
         const auto input_filename = filename;
         const auto output_filename = filename.substring_view(0, filename.length() - 3);
