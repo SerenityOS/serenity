@@ -306,12 +306,6 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
             unblock();
         return;
     }
-    case Thread::Skip1SchedulerPass:
-        set_state(Thread::Skip0SchedulerPasses);
-        return;
-    case Thread::Skip0SchedulerPasses:
-        set_state(Thread::Runnable);
-        return;
     }
 }
 

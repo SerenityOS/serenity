@@ -114,8 +114,6 @@ public:
         Invalid = 0,
         Runnable,
         Running,
-        Skip1SchedulerPass,
-        Skip0SchedulerPasses,
         Dying,
         Dead,
         Stopped,
@@ -417,7 +415,7 @@ public:
 
     ShouldUnblockThread dispatch_one_pending_signal();
     ShouldUnblockThread dispatch_signal(u8 signal);
-    bool has_unmasked_pending_signals() const { return m_pending_signals & ~m_signal_mask; }
+    bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
     void terminate_due_to_signal(u8 signal);
     bool should_ignore_signal(u8 signal) const;
     bool has_signal_handler(u8 signal) const;
@@ -587,6 +585,7 @@ private:
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
     bool m_initialized { false };
+    Atomic<bool> m_have_any_unmasked_pending_signals { false };
 
     OwnPtr<ThreadTracer> m_tracer;
 

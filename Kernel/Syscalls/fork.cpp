@@ -94,7 +94,8 @@ pid_t Process::sys$fork(RegisterState& regs)
         g_processes->prepend(child);
     }
 
-    child_first_thread->set_state(Thread::State::Skip1SchedulerPass);
+    child_first_thread->set_affinity(Thread::current()->affinity());
+    child_first_thread->set_state(Thread::State::Runnable);
     return child->pid().value();
 }
 
