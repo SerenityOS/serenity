@@ -150,6 +150,7 @@ void PathDataParser::parse_moveto()
 void PathDataParser::parse_closepath()
 {
     bool absolute = consume() == 'Z';
+    parse_whitespace();
     m_instructions.append({ PathInstructionType::ClosePath, absolute, {} });
 }
 
@@ -182,7 +183,8 @@ void PathDataParser::parse_curveto()
 
     while (true) {
         m_instructions.append({ PathInstructionType::Curve, absolute, parse_coordinate_pair_triplet() });
-        parse_whitespace();
+        if (match_comma_whitespace())
+            parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
@@ -195,7 +197,8 @@ void PathDataParser::parse_smooth_curveto()
 
     while (true) {
         m_instructions.append({ PathInstructionType::SmoothCurve, absolute, parse_coordinate_pair_double() });
-        parse_whitespace();
+        if (match_comma_whitespace())
+            parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
@@ -208,7 +211,8 @@ void PathDataParser::parse_quadratic_bezier_curveto()
 
     while (true) {
         m_instructions.append({ PathInstructionType::QuadraticBezierCurve, absolute, parse_coordinate_pair_double() });
-        parse_whitespace();
+        if (match_comma_whitespace())
+            parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
@@ -221,7 +225,8 @@ void PathDataParser::parse_smooth_quadratic_bezier_curveto()
 
     while (true) {
         m_instructions.append({ PathInstructionType::SmoothQuadraticBezierCurve, absolute, parse_coordinate_pair() });
-        parse_whitespace();
+        if (match_comma_whitespace())
+            parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
@@ -234,7 +239,8 @@ void PathDataParser::parse_elliptical_arc()
 
     while (true) {
         m_instructions.append({ PathInstructionType::EllipticalArc, absolute, parse_elliptical_arg_argument() });
-        parse_whitespace();
+        if (match_comma_whitespace())
+            parse_comma_whitespace();
         if (!match_coordinate())
             break;
     }
