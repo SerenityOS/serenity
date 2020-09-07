@@ -31,7 +31,7 @@ You can use `clang-format` to help you with the [style guide](https://github.com
 - Type "beau" in the search box, go to "Beautifier > Clang Format"
 - Select the "customized" style, click "edit"
 - Paste the entire content of the file `.clang-format` into the "value" box, and click "OK"
-- In the "Beatifier > General" tab, check "Enable auto format on file save"
+- In the "Beautifier > General" tab, check "Enable auto format on file save"
 - Select the tool "ClangFormat" if not already selected, and click "OK"
 
 Note that not the entire project is clang-format-clean (yet), so sometimes you will see large diffs.
