@@ -87,6 +87,8 @@ String guess_mime_type_based_on_filename(const URL& url)
         return "image/bmp";
     if (lowercase_url.ends_with(".jpg") || lowercase_url.ends_with(".jpeg"))
         return "image/jpeg";
+    if (lowercase_url.ends_with(".svg"))
+        return "image/svg+xml";
     if (lowercase_url.ends_with(".md"))
         return "text/markdown";
     if (lowercase_url.ends_with(".html") || lowercase_url.ends_with(".htm"))
