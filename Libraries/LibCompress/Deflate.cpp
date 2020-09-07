@@ -308,18 +308,18 @@ ByteBuffer DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
     InputMemoryStream memory_stream { bytes };
     InputBitStream bit_stream { memory_stream };
     DeflateDecompressor deflate_stream { bit_stream };
+    OutputMemoryStream output_stream;
 
-    auto buffer = ByteBuffer::create_uninitialized(4096);
-
-    size_t nread = 0;
-    while (!deflate_stream.eof()) {
-        nread += deflate_stream.read(buffer.bytes().slice(nread));
-        if (buffer.size() - nread < 4096)
-            buffer.grow(buffer.size() + 4096);
+    u8 buffer[4096];
+    while (!deflate_stream.has_any_error() && !deflate_stream.eof()) {
+        const auto nread = deflate_stream.read({ buffer, sizeof(buffer) });
+        output_stream.write_or_error({ buffer, nread });
     }
 
-    buffer.trim(nread);
-    return buffer;
+    if (deflate_stream.handle_any_error())
+        return {};
+
+    return output_stream.copy_into_contiguous_buffer();
 }
 
 u32 DeflateDecompressor::decode_run_length(u32 symbol)
