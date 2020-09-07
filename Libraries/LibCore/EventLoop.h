@@ -81,6 +81,13 @@ public:
     static int register_signal(int signo, Function<void(int)> handler);
     static void unregister_signal(int handler_id);
 
+    // Note: Boost uses Parent/Child/Prepare, but we don't really have anything
+    //       interesting to do in the parent or before forking.
+    enum class ForkEvent {
+        Child,
+    };
+    static void notify_forked(ForkEvent);
+
 private:
     bool start_rpc_server();
     void wait_for_event(WaitMode);
@@ -102,8 +109,8 @@ private:
 
     class SignalHandlers {
         AK_MAKE_NONCOPYABLE(SignalHandlers);
-    public:
 
+    public:
         SignalHandlers(SignalHandlers&& from)
             : m_signo(from.m_signo)
             , m_original_handler(from.m_original_handler)
