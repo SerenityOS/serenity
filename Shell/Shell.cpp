@@ -439,7 +439,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     }
 
     // If the command is empty, store the redirections and apply them to all later commands.
-    if (command.argv.is_empty()) {
+    if (command.argv.is_empty() && !command.should_immediately_execute_next) {
         m_global_redirections.append(command.redirections);
         return nullptr;
     }
@@ -481,6 +481,25 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         return IterationDecision::Continue;
     };
 
+    auto apply_rewirings = [&] {
+        for (auto& rewiring : rewirings) {
+#ifdef SH_DEBUG
+            dbgprintf("in %s<%d>, dup2(%d, %d)\n", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.dest_fd, rewiring.source_fd);
+#endif
+            int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
+            if (rc < 0) {
+                perror("dup2(run)");
+                return IterationDecision::Break;
+            }
+            // dest_fd is closed via the `fds` collector, but rewiring.other_pipe_end->dest_fd
+            // isn't yet in that collector when the first child spawns.
+            if (rewiring.other_pipe_end && close(rewiring.other_pipe_end->dest_fd) < 0)
+                perror("close other pipe end");
+        }
+
+        return IterationDecision::Continue;
+    };
+
     for (auto& redirection : m_global_redirections) {
         if (resolve_redirection(redirection) == IterationDecision::Break)
             return nullptr;
@@ -489,6 +508,19 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     for (auto& redirection : command.redirections) {
         if (resolve_redirection(redirection) == IterationDecision::Break)
             return nullptr;
+    }
+
+    if (command.should_immediately_execute_next) {
+        ASSERT(command.argv.is_empty());
+
+        SavedFileDescriptors fds { rewirings };
+        if (apply_rewirings() == IterationDecision::Break)
+            return nullptr;
+
+        for (auto& next_in_chain : command.next_chain)
+            run_tail(next_in_chain, 0);
+
+        return nullptr;
     }
 
     int retval = 0;
@@ -524,20 +556,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
         tcsetattr(0, TCSANOW, &default_termios);
 
-        for (auto& rewiring : rewirings) {
-#ifdef SH_DEBUG
-            dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), rewiring.dest_fd, rewiring.source_fd);
-#endif
-            int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
-            if (rc < 0) {
-                perror("dup2(run)");
-                return nullptr;
-            }
-            // dest_fd is closed via the `fds` collector, but rewiring.other_pipe_end->dest_fd
-            // isn't yet in that collector when the first child spawns.
-            if (rewiring.other_pipe_end && close(rewiring.other_pipe_end->dest_fd) < 0)
-                perror("close other pipe end");
-        }
+        if (apply_rewirings() == IterationDecision::Break)
+            return nullptr;
 
         fds.collect();
 

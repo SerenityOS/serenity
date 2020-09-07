@@ -107,7 +107,6 @@ toplevel :: sequence?
 
 sequence :: variable_decls? or_logical_sequence terminator sequence
           | variable_decls? or_logical_sequence '&' sequence
-          | variable_decls? control_structure terminator sequence
           | variable_decls? or_logical_sequence
           | variable_decls? terminator sequence
 
@@ -125,6 +124,8 @@ variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
 
 pipe_sequence :: command '|' pipe_sequence
                | command
+               | control_structure '|' pipe_sequence
+               | control_structure
 
 control_structure :: for_expr
                    | if_expr

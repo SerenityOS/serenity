@@ -196,6 +196,7 @@ struct Command {
     bool should_wait { true };
     bool is_pipe_source { false };
     bool should_notify_if_in_background { true };
+    bool should_immediately_execute_next { false };
 
     mutable RefPtr<Pipeline> pipeline;
     Vector<NodeWithAction> next_chain;
@@ -233,7 +234,7 @@ public:
     }
 
     CommandValue(Vector<String> argv)
-        : m_command({ move(argv), {}, true, false, true, nullptr, {} })
+        : m_command({ move(argv), {}, true, false, true, false, nullptr, {} })
     {
     }
 
@@ -409,6 +410,8 @@ public:
     }
 
     virtual RefPtr<Node> leftmost_trivial_literal() const { return nullptr; }
+
+    Vector<Command> to_lazy_evaluated_commands(RefPtr<Shell> shell);
 
 protected:
     Position m_position;
