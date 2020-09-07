@@ -162,19 +162,18 @@ ByteBuffer GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     InputMemoryStream memory_stream { bytes };
     GzipDecompressor gzip_stream { memory_stream };
+    OutputMemoryStream output_stream;
 
-    auto buffer = ByteBuffer::create_uninitialized(4096);
-
-    size_t nread = 0;
-    while (!gzip_stream.eof()) {
-        nread += gzip_stream.read(buffer.bytes().slice(nread));
-
-        if (buffer.size() - nread < 4096)
-            buffer.grow(buffer.size() + 4096);
+    u8 buffer[4096];
+    while (!gzip_stream.has_any_error() && !gzip_stream.eof()) {
+        const auto nread = gzip_stream.read({ buffer, sizeof(buffer) });
+        output_stream.write_or_error({ buffer, nread });
     }
 
-    buffer.trim(nread);
-    return buffer;
+    if (gzip_stream.handle_any_error())
+        return {};
+
+    return output_stream.copy_into_contiguous_buffer();
 }
 
 bool GzipDecompressor::eof() const
