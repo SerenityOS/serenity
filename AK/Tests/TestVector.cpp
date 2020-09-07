@@ -26,9 +26,9 @@
 
 #include <AK/TestSuite.h>
 
-#include <AK/String.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 
 TEST_CASE(construct)
@@ -311,6 +311,20 @@ TEST_CASE(insert_trivial)
     EXPECT_EQ(ints[3], 20);
     EXPECT_EQ(ints[4], 30);
     EXPECT_EQ(ints[5], 40);
+}
+
+TEST_CASE(resize_initializes)
+{
+    struct A {
+        A() { initialized = true; }
+        bool initialized { false };
+    };
+
+    Vector<A> ints;
+    ints.resize(32);
+
+    for (size_t idx = 0; idx < 32; ++idx)
+        EXPECT(ints[idx].initialized);
 }
 
 TEST_MAIN(Vector)
