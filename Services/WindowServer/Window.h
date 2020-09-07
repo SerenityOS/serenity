@@ -168,8 +168,8 @@ public:
     Gfx::IntSize size() const { return m_rect.size(); }
 
     void invalidate(bool with_frame = true);
-    void invalidate(const Gfx::IntRect&);
-    bool invalidate_no_notify(const Gfx::IntRect& rect);
+    void invalidate(const Gfx::IntRect&, bool with_frame = false);
+    bool invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame = false);
 
     void prepare_dirty_rects();
     void clear_dirty_rects();
