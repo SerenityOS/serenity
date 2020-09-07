@@ -448,6 +448,8 @@ void SVGPathElement::paint(Gfx::Painter& painter, const SVGPaintingContext& cont
         print_instruction(instruction);
 #endif
 
+        bool clear_last_control_point = true;
+
         switch (instruction.type) {
         case PathInstructionType::Move: {
             Gfx::FloatPoint point = { data[0], data[1] };
@@ -580,26 +582,61 @@ void SVGPathElement::paint(Gfx::Painter& painter, const SVGPaintingContext& cont
             break;
         }
         case PathInstructionType::QuadraticBezierCurve: {
+            clear_last_control_point = false;
+
             Gfx::FloatPoint through = { data[0], data[1] };
             Gfx::FloatPoint point = { data[2], data[3] };
 
             if (absolute) {
                 path.quadratic_bezier_curve_to(through, point);
+                m_previous_control_point = through;
             } else {
                 ASSERT(!path.segments().is_empty());
                 auto last_point = path.segments().last().point();
-                path.quadratic_bezier_curve_to(through + last_point, point + last_point);
+                auto control_point = through + last_point;
+                path.quadratic_bezier_curve_to(control_point, point + last_point);
+                m_previous_control_point = control_point;
             }
             break;
         }
+        case PathInstructionType::SmoothQuadraticBezierCurve: {
+            clear_last_control_point = false;
+
+            ASSERT(!path.segments().is_empty());
+            auto last_point = path.segments().last().point();
+
+            if (m_previous_control_point.is_null()) {
+                m_previous_control_point = last_point;
+            }
+
+            auto dx_end_control = last_point.dx_relative_to(m_previous_control_point);
+            auto dy_end_control = last_point.dy_relative_to(m_previous_control_point);
+            auto control_point = Gfx::FloatPoint {last_point.x() + dx_end_control, last_point.y() + dy_end_control};
+
+            Gfx::FloatPoint end_point = {data[0], data[1]};
+
+            if (absolute) {
+                path.quadratic_bezier_curve_to(control_point, end_point);
+            }
+            else {
+                path.quadratic_bezier_curve_to(control_point, end_point + last_point);
+            }
+
+            m_previous_control_point = control_point;
+            break;
+        }
+
         case PathInstructionType::Curve:
         case PathInstructionType::SmoothCurve:
-        case PathInstructionType::SmoothQuadraticBezierCurve:
             // Instead of crashing the browser every time we come across an SVG
             // with these path instructions, let's just skip them
             continue;
         case PathInstructionType::Invalid:
             ASSERT_NOT_REACHED();
+        }
+
+        if (clear_last_control_point) {
+            m_previous_control_point = Gfx::FloatPoint {};
         }
     }
 
