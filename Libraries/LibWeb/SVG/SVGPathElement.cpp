@@ -220,7 +220,7 @@ void PathDataParser::parse_smooth_quadratic_bezier_curveto()
     parse_whitespace();
 
     while (true) {
-        m_instructions.append({ PathInstructionType::SmoothQuadraticBezierCurve, absolute, parse_coordinate_pair_double() });
+        m_instructions.append({ PathInstructionType::SmoothQuadraticBezierCurve, absolute, parse_coordinate_pair() });
         parse_whitespace();
         if (!match_coordinate())
             break;
