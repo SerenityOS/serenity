@@ -242,10 +242,6 @@ const char* Thread::state_string() const
         return "Dead";
     case Thread::Stopped:
         return "Stopped";
-    case Thread::Skip1SchedulerPass:
-        return "Skip1";
-    case Thread::Skip0SchedulerPasses:
-        return "Skip0";
     case Thread::Queued:
         return "Queued";
     case Thread::Blocked:
@@ -334,6 +330,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 
     ScopedSpinLock lock(g_scheduler_lock);
     m_pending_signals |= 1 << (signal - 1);
+    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
 }
 
 // Certain exceptions, such as SIGSEGV and SIGILL, put a
@@ -352,7 +349,7 @@ void Thread::send_urgent_signal_to_self(u8 signal)
 
 ShouldUnblockThread Thread::dispatch_one_pending_signal()
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(m_lock.own_lock());
     u32 signal_candidates = m_pending_signals & ~m_signal_mask;
     ASSERT(signal_candidates);
 
@@ -459,7 +456,7 @@ void Thread::resume_from_stopped()
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(g_scheduler_lock.is_locked());
+    ASSERT(g_scheduler_lock.own_lock());
     ASSERT(signal > 0 && signal <= 32);
     ASSERT(!process().is_ring0());
 
@@ -467,12 +464,22 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     klog() << "signal: dispatch signal " << signal << " to " << *this;
 #endif
 
+
+    if (m_state == Invalid || !is_initialized()) {
+        // Thread has barely been created, we need to wait until it is
+        // at least in Runnable state and is_initialized() returns true,
+        // which indicates that it is fully set up an we actually have
+        // a register state on the stack that we can modify
+        return ShouldUnblockThread::No;
+    }
+
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
     ASSERT(!(action.flags & SA_SIGINFO));
 
     // Mark this signal as handled.
     m_pending_signals &= ~(1 << (signal - 1));
+    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
 
     if (signal == SIGSTOP) {
         if (!is_stopped()) {
@@ -544,8 +551,10 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         new_signal_mask |= 1 << (signal - 1);
 
     m_signal_mask |= new_signal_mask;
+    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
 
-    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32* stack) {
+    auto setup_stack = [&](RegisterState& state) {
+        u32* stack = &state.userspace_esp;
         u32 old_esp = *stack;
         u32 ret_eip = state.eip;
         u32 ret_eflags = state.eflags;
@@ -587,8 +596,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     // Conversely, when the thread isn't blocking the RegisterState may not be
     // valid (fork, exec etc) but the tss will, so we use that instead.
     auto& regs = get_register_dump_from_stack();
-    u32* stack = &regs.userspace_esp;
-    setup_stack(regs, stack);
+    setup_stack(regs);
     regs.eip = g_return_to_ring3_from_signal_trampoline.get();
 
 #ifdef SIGNAL_DEBUG
@@ -710,11 +718,20 @@ void Thread::set_state(State new_state)
         ASSERT(m_blocker != nullptr);
     }
 
+    auto previous_state = m_state;
+    if (previous_state == Invalid) {
+        // If we were *just* created, we may have already pending signals
+        ScopedSpinLock thread_lock(m_lock);
+        if (has_unmasked_pending_signals()) {
+            dbg() << "Dispatch pending signals to new thread " << *this;
+            dispatch_one_pending_signal();
+        }
+    }
+
     if (new_state == Stopped) {
         m_stop_state = m_state;
     }
 
-    auto previous_state = m_state;
     m_state = new_state;
 #ifdef THREAD_DEBUG
     dbg() << "Set Thread " << *this << " state to " << state_string();
