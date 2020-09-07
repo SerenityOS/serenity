@@ -73,6 +73,8 @@ public:
     constexpr static auto local_init_file_path = "~/.shellrc";
     constexpr static auto global_init_file_path = "/etc/shellrc";
 
+    void setup_signals();
+
     int run_command(const StringView&);
     bool is_runnable(const StringView&);
     RefPtr<Job> run_command(const AST::Command&);
@@ -224,6 +226,7 @@ private:
 
     HashMap<String, String> m_aliases;
     bool m_is_interactive { true };
+    bool m_is_subshell { false };
 };
 
 static constexpr bool is_word_character(char c)
