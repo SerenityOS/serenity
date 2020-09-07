@@ -519,6 +519,26 @@ void EventLoop::unregister_signal(int handler_id)
         s_signal_handlers.remove(remove_signo);
 }
 
+void EventLoop::notify_forked(ForkEvent event)
+{
+    switch (event) {
+    case ForkEvent::Child:
+        s_main_event_loop = nullptr;
+        s_event_loop_stack->clear();
+        s_timers->clear();
+        s_notifiers->clear();
+        s_signal_handlers.clear();
+        s_handling_signal = 0;
+        s_next_signal_id = 0;
+        s_pid = 0;
+        s_rpc_server = nullptr;
+        s_rpc_clients.clear();
+        return;
+    }
+
+    ASSERT_NOT_REACHED();
+}
+
 void EventLoop::wait_for_event(WaitMode mode)
 {
     fd_set rfds;
