@@ -240,7 +240,7 @@ void WindowFrame::invalidate(Gfx::IntRect relative_rect)
     auto frame_rect = rect();
     auto window_rect = m_window.rect();
     relative_rect.move_by(frame_rect.x() - window_rect.x(), frame_rect.y() - window_rect.y());
-    m_window.invalidate(relative_rect);
+    m_window.invalidate(relative_rect, true);
 }
 
 void WindowFrame::notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
