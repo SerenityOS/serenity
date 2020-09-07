@@ -152,7 +152,7 @@ constexpr const char* s_known_types[] = {
     "Deque",
     "DoublyLinkedList",
     "FileSystemPath",
-    "FixedArray",
+    "Array",
     "Function",
     "HashMap",
     "HashTable",
