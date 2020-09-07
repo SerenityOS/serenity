@@ -97,9 +97,6 @@ class HashMap;
 template<typename T>
 class Badge;
 
-template<typename T>
-class FixedArray;
-
 template<typename>
 class Function;
 
@@ -141,7 +138,6 @@ using AK::CircularQueue;
 using AK::DebugLogStream;
 using AK::DoublyLinkedList;
 using AK::DuplexMemoryStream;
-using AK::FixedArray;
 using AK::FlyString;
 using AK::Function;
 using AK::HashMap;

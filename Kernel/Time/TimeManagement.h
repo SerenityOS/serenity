@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include <AK/FixedArray.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
