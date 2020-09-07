@@ -738,7 +738,8 @@ void Editor::handle_read_event()
 
         // Normally ^D. `stty eof \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
         // Process this here since the keybinds might override its behaviour.
-        if (code_point == m_termios.c_cc[VEOF] && m_cursor == 0) {
+        // This only applies when the buffer is empty. at any other time, the behaviour should be configurable.
+        if (code_point == m_termios.c_cc[VEOF] && m_buffer.size() == 0) {
             finish_edit();
             continue;
         }
