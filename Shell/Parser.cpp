@@ -167,12 +167,7 @@ RefPtr<AST::Node> Parser::parse_sequence()
         break;
     }
 
-    RefPtr<AST::Node> first = nullptr;
-    if (auto control_structure = parse_control_structure())
-        first = control_structure;
-
-    if (!first)
-        first = parse_or_logical_sequence();
+    auto first = parse_or_logical_sequence();
 
     if (!first)
         return var_decls;
@@ -311,23 +306,27 @@ RefPtr<AST::Node> Parser::parse_and_logical_sequence()
 RefPtr<AST::Node> Parser::parse_pipe_sequence()
 {
     auto rule_start = push_start();
-    auto command = parse_command();
-    if (!command)
-        return nullptr;
+    auto left = parse_control_structure();
+    if (!left) {
+        if (auto cmd = parse_command())
+            left = cmd;
+        else
+            return nullptr;
+    }
 
     consume_while(is_whitespace);
 
     if (peek() != '|')
-        return command;
+        return left;
 
     consume();
 
     if (auto pipe_seq = parse_pipe_sequence()) {
-        return create<AST::Pipe>(move(command), move(pipe_seq)); // Pipe
+        return create<AST::Pipe>(move(left), move(pipe_seq)); // Pipe
     }
 
     putback();
-    return command;
+    return left;
 }
 
 RefPtr<AST::Node> Parser::parse_command()
