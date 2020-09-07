@@ -96,12 +96,6 @@ public:
         else
             m_data[index / 8] &= static_cast<u8>(~(1u << (index % 8)));
     }
-    void set_range(size_t start, size_t len, bool value)
-    {
-        for (size_t index = start; index < start + len; ++index) {
-            set(index, value);
-        }
-    }
 
     size_t count_slow(bool value) const
     {
@@ -159,6 +153,7 @@ public:
 
     void grow(size_t size, bool default_value)
     {
+        ASSERT(m_owned);
         ASSERT(size > m_size);
 
         auto previous_size_bytes = size_in_bytes();
@@ -179,7 +174,7 @@ public:
     }
 
     template<bool VALUE>
-    void fill_range(size_t start, size_t len)
+    void set_range(size_t start, size_t len)
     {
         ASSERT(start < m_size);
         ASSERT(start + len <= m_size);
@@ -217,12 +212,12 @@ public:
         }
     }
 
-    void fill_range(size_t start, size_t len, bool value)
+    void set_range(size_t start, size_t len, bool value)
     {
         if (value)
-            fill_range<true>(start, len);
+            set_range<true>(start, len);
         else
-            fill_range<false>(start, len);
+            set_range<false>(start, len);
     }
 
     void fill(bool value)
@@ -230,31 +225,109 @@ public:
         __builtin_memset(m_data, value ? 0xff : 0x00, size_in_bytes());
     }
 
-    Optional<size_t> find_first_set() const
+    template<bool VALUE>
+    Optional<size_t> find_one_anywhere(size_t hint = 0) const
     {
-        size_t i = 0;
-        while (i < m_size / 8 && m_data[i] == 0x00)
-            i++;
+        ASSERT(hint < m_size);
+        const u8* end = &m_data[m_size / 8];
 
-        for (size_t j = i * 8; j < m_size; j++) {
-            if (get(j))
-                return j;
+        for (;;) {
+            // We will use hint as what it is: a hint. Because we try to
+            // scan over entire 32 bit words, we may start searching before
+            // the hint!
+            const u32* ptr32 = (const u32*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
+            if ((const u8*)ptr32 < &m_data[0]) {
+                ptr32++;
+
+                // m_data isn't aligned, check first bytes
+                size_t start_ptr32 = (const u8*)ptr32 - &m_data[0];
+                size_t i = 0;
+                u8 byte = VALUE ? 0x00 : 0xff;
+                while (i < start_ptr32 && m_data[i] == byte)
+                    i++;
+                if (i < start_ptr32) {
+                    byte = m_data[i];
+                    if constexpr (!VALUE)
+                        byte = ~byte;
+                    ASSERT(byte != 0);
+                    return i * 8 + __builtin_ffs(byte) - 1;
+                }
+            }
+
+            u32 val32 = VALUE ? 0x0 : 0xffffffff;
+            const u32* end32 = (const u32*)((FlatPtr)end & ~(sizeof(u32) - 1));
+            while (ptr32 < end32 && *ptr32 == val32)
+                ptr32++;
+
+            if (ptr32 == end32) {
+                // We didn't find anything, check the remaining few bytes (if any)
+                u8 byte = VALUE ? 0x00 : 0xff;
+                size_t i = (const u8*)ptr32 - &m_data[0];
+                size_t byte_count = m_size / 8;
+                ASSERT(i <= byte_count);
+                while (i < byte_count && m_data[i] == byte)
+                    i++;
+                if (i == byte_count) {
+                    if (hint <= 8)
+                        return {}; // We already checked from the beginning
+
+                    // Try scanning before the hint
+                    end = (const u8*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(u32) - 1));
+                    hint = 0;
+                    continue;
+                }
+                byte = m_data[i];
+                if constexpr (!VALUE)
+                    byte = ~byte;
+                ASSERT(byte != 0);
+                return i * 8 + __builtin_ffs(byte) - 1;
+            }
+
+            // NOTE: We don't really care about byte ordering. We found *one*
+            // free bit, just calculate the position and return it
+            val32 = *ptr32;
+            if constexpr (!VALUE)
+                val32 = ~val32;
+            ASSERT(val32 != 0);
+            return ((const u8*)ptr32 - &m_data[0]) * 8 + __builtin_ffsl(val32) - 1;
         }
-
-        return {};
     }
 
+    Optional<size_t> find_one_anywhere_set(size_t hint = 0) const
+    {
+        return find_one_anywhere<true>(hint);
+    }
+    Optional<size_t> find_one_anywhere_unset(size_t hint = 0) const
+    {
+        return find_one_anywhere<false>(hint);
+    }
+
+    template<bool VALUE>
+    Optional<size_t> find_first() const
+    {
+        size_t byte_count = m_size / 8;
+        size_t i = 0;
+
+        u8 byte = VALUE ? 0x00 : 0xff;
+        while (i < byte_count && m_data[i] == byte)
+            i++;
+        if (i == byte_count)
+            return {};
+
+        byte = m_data[i];
+        if constexpr (!VALUE)
+            byte = ~byte;
+        ASSERT(byte != 0);
+        return i * 8 + __builtin_ffs(byte) - 1;
+    }
+
+    Optional<size_t> find_first_set() const
+    {
+        return find_first<true>();
+    }
     Optional<size_t> find_first_unset() const
     {
-        size_t i = 0;
-        while (i < m_size / 8 && m_data[i] == 0xff)
-            i++;
-
-        for (size_t j = i * 8; j < m_size; j++)
-            if (!get(j))
-                return j;
-
-        return {};
+        return find_first<false>();
     }
 
     // The function will return the next range of unset bits starting from the
