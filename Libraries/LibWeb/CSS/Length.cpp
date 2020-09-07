@@ -47,20 +47,12 @@ float Length::relative_length_to_px(const LayoutNode& layout_node) const
     case Type::Vmin: {
         auto viewport = layout_node.document().frame()->viewport_rect();
 
-        if (viewport.width() > viewport.height()) {
-            return viewport.height() * (m_value / 100);
-        } else {
-            return viewport.width() * (m_value / 100);
-        }
+        return min(viewport.width(), viewport.height()) * (m_value / 100);
     }
     case Type::Vmax: {
         auto viewport = layout_node.document().frame()->viewport_rect();
 
-        if (viewport.width() < viewport.height()) {
-            return viewport.height() * (m_value / 100);
-        } else {
-            return viewport.width() * (m_value / 100);
-        }
+        return max(viewport.width(), viewport.height()) * (m_value / 100);
     }
     default:
         ASSERT_NOT_REACHED();
