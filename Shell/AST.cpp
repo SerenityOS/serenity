@@ -107,6 +107,18 @@ void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(RefPtr
     }
 }
 
+Vector<Command> Node::to_lazy_evaluated_commands(RefPtr<Shell> shell)
+{
+    if (would_execute()) {
+        // Wrap the node in a "should immediately execute next" command.
+        return {
+            Command { {}, {}, true, false, true, true, {}, { NodeWithAction(*this, NodeWithAction::Sequence) } }
+        };
+    }
+
+    return run(shell)->resolve_as_commands(shell);
+}
+
 void Node::dump(int level) const
 {
     print_indented(String::format("%s at %d:%d", class_name().characters(), m_position.start_offset, m_position.end_offset), level);
@@ -184,7 +196,7 @@ void And::dump(int level) const
 
 RefPtr<Value> And::run(RefPtr<Shell> shell)
 {
-    auto commands = m_left->run(shell)->resolve_as_commands(shell);
+    auto commands = m_left->to_lazy_evaluated_commands(shell);
     commands.last().next_chain.append(NodeWithAction { *m_right, NodeWithAction::And });
     return create<CommandSequenceValue>(move(commands));
 }
@@ -340,10 +352,7 @@ RefPtr<Value> Background::run(RefPtr<Shell> shell)
     //        as it runs the node, which means nodes likes And and Or will evaluate
     //        all but their last subnode before yielding to this, causing a command
     //        like `foo && bar&` to effectively be `foo && (bar&)`.
-    auto value = m_command->run(shell)->resolve_without_cast(shell);
-    ASSERT(!value->is_job());
-
-    auto commands = value->resolve_as_commands(shell);
+    auto commands = m_command->to_lazy_evaluated_commands(shell);
     for (auto& command : commands)
         command.should_wait = false;
 
@@ -1207,8 +1216,8 @@ void Join::dump(int level) const
 
 RefPtr<Value> Join::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->run(shell)->resolve_as_commands(shell);
-    auto right = m_right->run(shell)->resolve_as_commands(shell);
+    auto left = m_left->to_lazy_evaluated_commands(shell);
+    auto right = m_right->to_lazy_evaluated_commands(shell);
 
     return create<CommandSequenceValue>(join_commands(move(left), move(right)));
 }
@@ -1263,7 +1272,7 @@ void Or::dump(int level) const
 
 RefPtr<Value> Or::run(RefPtr<Shell> shell)
 {
-    auto commands = m_left->run(shell)->resolve_as_commands(shell);
+    auto commands = m_left->to_lazy_evaluated_commands(shell);
     commands.last().next_chain.empend(*m_right, NodeWithAction::Or);
     return create<CommandSequenceValue>(move(commands));
 }
@@ -1315,8 +1324,8 @@ void Pipe::dump(int level) const
 
 RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->run(shell)->resolve_as_commands(shell);
-    auto right = m_right->run(shell)->resolve_as_commands(shell);
+    auto left = m_left->to_lazy_evaluated_commands(shell);
+    auto right = m_right->to_lazy_evaluated_commands(shell);
 
     auto last_in_left = left.take_last();
     auto first_in_right = right.take_first();
@@ -1512,7 +1521,7 @@ RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
         return execute_node->run(shell);
     }
 
-    auto left = m_left->run(shell)->resolve_as_commands(shell);
+    auto left = m_left->to_lazy_evaluated_commands(shell);
     // This could happen if a comment is next to a command.
     if (left.size() == 1) {
         auto& command = left.first();
@@ -1523,7 +1532,7 @@ RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
     if (left.last().should_wait)
         left.last().next_chain.append(NodeWithAction { *m_right, NodeWithAction::Sequence });
     else
-        left.append(m_right->run(shell)->resolve_as_commands(shell));
+        left.append(m_right->to_lazy_evaluated_commands(shell));
 
     return create<CommandSequenceValue>(move(left));
 }
