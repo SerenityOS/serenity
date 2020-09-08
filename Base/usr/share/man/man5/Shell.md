@@ -122,7 +122,7 @@ Evaluate expressions take the general form of a dollar sign (`$`) followed by so
 
 ## Commands
 
-A `Command` is a single simple command, containing arguments and redirections for a single program. The shell can evaluate a sequence of commands, a conditional relation between commands, or various semantic elements composed of commands and intrinsics.
+A `Command` is a single simple command, containing arguments and redirections for a single program, or a compound command containing a shell control structure. The shell can evaluate a sequence of commands, a conditional relation between commands, or various semantic elements composed of commands and intrinsics.
 
 Commands can be either calls to Shell builtins, or external programs.
 
@@ -143,15 +143,15 @@ echo foo; echo bar
 ### Logical Relations
 A sequence of commands whose execution depends somehow on the result of another
 
-##### `Command && Command && Command ...` (AND)
+#### `Command && Command && Command ...` (AND)
 Short-circuiting command evaluations, will cancel the entire chain should any command fails (have a non-zero exit code)
 
-##### `Command || Command || Command ...` (OR)
+#### `Command || Command || Command ...` (OR)
 Short-circuiting command evaluation, will continue down the chain if any command fails.
 
 It should be noted that `And` chains bind more tightly than `Or` chains, so an expression of the form `C1 && C2 || C3` is understood as "evaluate `C1`, if successful, evaluate `C2`, if not successful, evaluate `C3`".
 
-#### Examples
+##### Examples
 ```sh
 # Create file if not found
 test -f foo.txt || touch foo.txt
@@ -160,7 +160,35 @@ test -f foo.txt || touch foo.txt
 rm test && echo "deleted!" || echo "failed with $?"
 ```
 
-#### Loops
+#### Control Structures
+
+##### Conditionals
+Conditionals can either be expressed with the _Logical Relations_, or via explicit `if` expressions.
+An `if` expression contains at least a _condition_ and a _then clause_, and optionally an _else clause_.
+An _else clause_ may contain another `if` expression instead of a normal block.
+
+The _then clause_ **must** be surrounded by braces, but the _else clause_ may also be another `if` expression, or missing.
+
+An `if` expression evaluates either the _then clause_ or (if available) the _else clause_, based on the exit code of the _condition_; should the exit code be zero, the _then clause_ will be executed, and if not, the _else clause_ will.
+
+###### Examples
+```sh
+# Remove a file if it exists, create it otherwise
+if test -e the_file {
+    rm the_file
+} else {
+    touch the_file
+}
+
+# Cond chain (if-elseif-else)
+if A {
+    echo A
+} else if B {
+    echo B
+} else {
+    echo C
+}
+```
 
 ##### For Loops
 For Loops evaluate a sequence of commands once per element in a given list.
@@ -171,13 +199,23 @@ A for-loop evaluates the _sequence_ once per every element in the _expr_, seetti
 
 The Shell shall cancel the for loop if two consecutive commands are interrupted via SIGINT (\^C), and any other terminating signal aborts the loop entirely.
 
-#### Examples
+###### Examples
 ```sh
 # Iterate over every non-hidden file in the current directory, and prepend '1-' to its name.
 $ for * { mv $it 1-$it }
 
 # Iterate over a sequence and write each element to a file
 $ for i in $(seq 1 100) { echo $i >> foo }
+```
+
+##### Subshells
+Subshells evaluate a given block in a new instance (fork) of the current shell process. to create a subshell, any valid shell code can be enclosed in braces.
+
+###### Examples
+```sh
+# Run a block of code in the background, in a subshell, then detach it from the current shell
+$ { for * { te $it } }&
+$ disown
 ```
 
 ## Formal Grammar
@@ -188,7 +226,6 @@ toplevel :: sequence?
 
 sequence :: variable_decls? or_logical_sequence terminator sequence
           | variable_decls? or_logical_sequence '&' sequence
-          | variable_decls? control_structure terminator sequence
           | variable_decls? or_logical_sequence
           | variable_decls? terminator sequence
 
@@ -206,10 +243,21 @@ variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
 
 pipe_sequence :: command '|' pipe_sequence
                | command
+               | control_structure '|' pipe_sequence
+               | control_structure
 
-control_structure :: for_loop
+control_structure :: for_expr
+                   | if_expr
+                   | subshell
 
-for_loop :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
+for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
+
+if_expr :: 'if' ws+ or_logical_sequence ws+ '{' toplevel '}' else_clause?
+
+else_clause :: else '{' toplevel '}'
+             | else if_expr
+
+subshell :: '{' toplevel '}'
 
 command :: redirection command
          | list_expression command?
