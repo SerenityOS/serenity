@@ -303,7 +303,7 @@ bool DeflateDecompressor::discard_or_error(size_t count)
 
 bool DeflateDecompressor::eof() const { return m_state == State::Idle && m_read_final_bock; }
 
-ByteBuffer DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
+Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     InputMemoryStream memory_stream { bytes };
     InputBitStream bit_stream { memory_stream };

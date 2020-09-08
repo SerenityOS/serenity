@@ -94,7 +94,7 @@ public:
     bool discard_or_error(size_t) override;
     bool eof() const override;
 
-    static ByteBuffer decompress_all(ReadonlyBytes);
+    static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
     u32 decode_run_length(u32);

@@ -158,7 +158,7 @@ bool GzipDecompressor::discard_or_error(size_t count)
     return true;
 }
 
-ByteBuffer GzipDecompressor::decompress_all(ReadonlyBytes bytes)
+Optional<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     InputMemoryStream memory_stream { bytes };
     GzipDecompressor gzip_stream { memory_stream };
