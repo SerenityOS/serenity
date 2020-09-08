@@ -273,7 +273,7 @@ Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 ind
         return result;
     if (!result.has_value())
         return {};
-    auto value = result.value();
+    auto& value = result.value();
     if (value.value.is_accessor()) {
         ASSERT(this_object);
         auto& accessor = value.value.as_accessor();
@@ -315,7 +315,7 @@ void IndexedProperties::insert(u32 index, Value value, PropertyAttributes attrib
 {
     if (m_storage->is_simple_storage() && (index >= SPARSE_ARRAY_THRESHOLD || attributes != default_attributes || array_like_size() == SPARSE_ARRAY_THRESHOLD))
         switch_to_generic_storage();
-    m_storage->insert(index, value, attributes);
+    m_storage->insert(index, move(value), attributes);
 }
 
 ValueAndAttributes IndexedProperties::take_first(Object* this_object)
@@ -340,7 +340,7 @@ void IndexedProperties::append_all(Object* this_object, const IndexedProperties&
         switch_to_generic_storage();
 
     for (auto it = properties.begin(false); it != properties.end(); ++it) {
-        auto element = it.value_and_attributes(this_object, evaluate_accessors);
+        const auto& element = it.value_and_attributes(this_object, evaluate_accessors);
         if (this_object && this_object->interpreter().exception())
             return;
         m_storage->put(m_storage->array_like_size(), element.value, element.attributes);
@@ -357,14 +357,14 @@ void IndexedProperties::set_array_like_size(size_t new_size)
 Vector<ValueAndAttributes> IndexedProperties::values_unordered() const
 {
     if (m_storage->is_simple_storage()) {
-        auto elements = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage).elements();
+        const auto& elements = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage).elements();
         Vector<ValueAndAttributes> with_attributes;
         for (auto& value : elements)
             with_attributes.append({ value, default_attributes });
         return with_attributes;
     }
 
-    auto storage = static_cast<const GenericIndexedPropertyStorage&>(*m_storage);
+    auto& storage = static_cast<const GenericIndexedPropertyStorage&>(*m_storage);
     auto values = storage.packed_elements();
     values.ensure_capacity(values.size() + storage.sparse_elements().size());
     for (auto& entry : storage.sparse_elements())
@@ -374,7 +374,7 @@ Vector<ValueAndAttributes> IndexedProperties::values_unordered() const
 
 void IndexedProperties::switch_to_generic_storage()
 {
-    auto storage = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage);
+    auto& storage = static_cast<SimpleIndexedPropertyStorage&>(*m_storage);
     m_storage = make<GenericIndexedPropertyStorage>(move(storage));
 }
 
