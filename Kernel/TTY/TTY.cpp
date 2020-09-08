@@ -48,7 +48,7 @@ void TTY::set_default_termios()
 {
     memset(&m_termios, 0, sizeof(m_termios));
     m_termios.c_lflag |= ISIG | ECHO | ICANON;
-    static const char default_cc[32] = "\003\034\010\025\004\0\1\0\021\023\032\0\022\017\027\026\0";
+    static const char default_cc[32] = "\003\034\010\025\004\0\1\0\021\023\032\0\022\017\027\026\0\024";
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
@@ -141,6 +141,11 @@ bool TTY::is_werase(u8 ch) const
 void TTY::emit(u8 ch)
 {
     if (should_generate_signals()) {
+        if (ch == m_termios.c_cc[VINFO]) {
+            dbg() << tty_name() << ": VINFO pressed!";
+            generate_signal(SIGINFO);
+            return;
+        }
         if (ch == m_termios.c_cc[VINTR]) {
             dbg() << tty_name() << ": VINTR pressed!";
             generate_signal(SIGINT);
