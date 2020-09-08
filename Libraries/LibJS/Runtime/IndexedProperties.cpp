@@ -318,7 +318,7 @@ void IndexedProperties::insert(u32 index, Value value, PropertyAttributes attrib
     m_storage->insert(index, value, attributes);
 }
 
-ValueAndAttributes IndexedProperties::take_first(Object *this_object)
+ValueAndAttributes IndexedProperties::take_first(Object* this_object)
 {
     auto first = m_storage->take_first();
     if (first.value.is_accessor())
@@ -326,7 +326,7 @@ ValueAndAttributes IndexedProperties::take_first(Object *this_object)
     return first;
 }
 
-ValueAndAttributes IndexedProperties::take_last(Object *this_object)
+ValueAndAttributes IndexedProperties::take_last(Object* this_object)
 {
     auto last = m_storage->take_last();
     if (last.value.is_accessor())
