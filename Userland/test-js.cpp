@@ -43,6 +43,8 @@
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
 
+static bool collect_on_every_allocation = false;
+
 enum class TestResult {
     Pass,
     Fail,
@@ -256,6 +258,8 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
 {
     double start_time = get_time_in_ms();
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>();
+
+    interpreter->heap().set_should_collect_on_every_allocation(collect_on_every_allocation);
 
     if (!m_test_program) {
         auto result = parse_file(String::format("%s/test-common.js", m_test_root.characters()));
@@ -567,6 +571,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
+    args_parser.add_option(collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
     args_parser.parse(argc, argv);
 
     if (getenv("DISABLE_DBG_OUTPUT")) {
