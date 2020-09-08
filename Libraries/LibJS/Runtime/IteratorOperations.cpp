@@ -101,7 +101,7 @@ Value create_iterator_result_object(GlobalObject& global_object, Value value, bo
     return object;
 }
 
-void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value&)> callback)
+void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value)> callback)
 {
     auto& interpreter = global_object.interpreter();
 
