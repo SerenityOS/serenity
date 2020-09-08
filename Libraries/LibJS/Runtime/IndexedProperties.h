@@ -83,7 +83,7 @@ public:
     virtual void set_array_like_size(size_t new_size) override;
 
     virtual bool is_simple_storage() const override { return true; }
-    Vector<Value> elements() const { return m_packed_elements; }
+    const Vector<Value>& elements() const { return m_packed_elements; }
 
 private:
     friend GenericIndexedPropertyStorage;
@@ -109,8 +109,8 @@ public:
     virtual size_t array_like_size() const override { return m_array_size; }
     virtual void set_array_like_size(size_t new_size) override;
 
-    Vector<ValueAndAttributes> packed_elements() const { return m_packed_elements; }
-    HashMap<u32, ValueAndAttributes> sparse_elements() const { return m_sparse_elements; }
+    const Vector<ValueAndAttributes>& packed_elements() const { return m_packed_elements; }
+    const HashMap<u32, ValueAndAttributes>& sparse_elements() const { return m_sparse_elements; }
 
 private:
     size_t m_array_size { 0 };
