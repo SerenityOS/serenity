@@ -641,6 +641,9 @@ void Compositor::flip_buffers()
 void Compositor::run_animations(Gfx::DisjointRectSet& flush_rects)
 {
     static const int minimize_animation_steps = 10;
+    auto& painter = *m_back_painter;
+    Gfx::PainterStateSaver saver(painter);
+    painter.set_draw_op(Gfx::Painter::DrawOp::Invert);
 
     WindowManager::the().for_each_window([&](Window& window) {
         if (window.in_minimize_animation()) {
@@ -665,7 +668,7 @@ void Compositor::run_animations(Gfx::DisjointRectSet& flush_rects)
             dbg() << "Minimize animation from " << from_rect << " to " << to_rect << " frame# " << animation_index << " " << rect;
 #endif
 
-            m_back_painter->draw_rect(rect, Color::White);
+            painter.draw_rect(rect, Color::Transparent); // Color doesn't matter, we draw inverted
             flush_rects.add(rect);
             invalidate_screen(rect);
 
