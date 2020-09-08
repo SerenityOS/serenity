@@ -1569,6 +1569,51 @@ Sequence::~Sequence()
 {
 }
 
+void Subshell::dump(int level) const
+{
+    Node::dump(level);
+    if (m_block)
+        m_block->dump(level + 1);
+}
+
+RefPtr<Value> Subshell::run(RefPtr<Shell> shell)
+{
+    if (!m_block)
+        return create<ListValue>({});
+
+    return m_block->run(shell);
+}
+
+void Subshell::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    metadata.is_first_in_list = true;
+    if (m_block)
+        m_block->highlight_in_editor(editor, shell, metadata);
+}
+
+HitTestResult Subshell::hit_test_position(size_t offset)
+{
+    if (!position().contains(offset))
+        return {};
+
+    if (m_block)
+        return m_block->hit_test_position(offset);
+
+    return {};
+}
+
+Subshell::Subshell(Position position, RefPtr<Node> block)
+    : Node(move(position))
+    , m_block(block)
+{
+    if (m_block && m_block->is_syntax_error())
+        set_is_syntax_error(m_block->syntax_error_node());
+}
+
+Subshell::~Subshell()
+{
+}
+
 void SimpleVariable::dump(int level) const
 {
     Node::dump(level);

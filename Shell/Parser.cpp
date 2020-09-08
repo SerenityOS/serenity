@@ -366,6 +366,9 @@ RefPtr<AST::Node> Parser::parse_control_structure()
     if (auto if_expr = parse_if_expr())
         return if_expr;
 
+    if (auto subshell = parse_subshell())
+        return subshell;
+
     return nullptr;
 }
 
@@ -508,6 +511,29 @@ RefPtr<AST::Node> Parser::parse_if_expr()
     }
 
     return create<AST::IfCond>(else_position, move(condition), move(true_branch), nullptr); // If expr true_branch
+}
+
+RefPtr<AST::Node> Parser::parse_subshell()
+{
+    auto rule_start = push_start();
+    if (!expect('{'))
+        return nullptr;
+
+    auto body = parse_toplevel();
+
+    {
+        auto cbrace_error_start = push_start();
+        if (!expect('}')) {
+            auto error_start = push_start();
+            RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a subshell");
+            if (body)
+                body->set_is_syntax_error(*syntax_error);
+            else
+                body = syntax_error;
+        }
+    }
+
+    return create<AST::Subshell>(move(body));
 }
 
 RefPtr<AST::Node> Parser::parse_redirection()
