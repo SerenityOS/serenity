@@ -108,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         array->set_indexed_property_elements(move(elements));
     } else {
         // * iterable objects
-        get_iterator_values(global_object, value, [&](Value& element) {
+        get_iterator_values(global_object, value, [&](Value element) {
             if (interpreter.exception())
                 return IterationDecision::Break;
             array->indexed_properties().append(element);

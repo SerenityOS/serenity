@@ -163,7 +163,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (interpreter.exception())
             return {};
         if (m_arguments[i].is_spread) {
-            get_iterator_values(global_object, value, [&](Value& iterator_value) {
+            get_iterator_values(global_object, value, [&](Value iterator_value) {
                 if (interpreter.exception())
                     return IterationDecision::Break;
                 arguments.append(iterator_value);
@@ -419,7 +419,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     if (interpreter.exception())
         return {};
 
-    get_iterator_values(global_object, rhs_result, [&](Value& value) {
+    get_iterator_values(global_object, rhs_result, [&](Value value) {
         interpreter.set_variable(variable_name, value, global_object);
         last_value = interpreter.run(global_object, *m_body);
         if (interpreter.exception())
@@ -1652,7 +1652,7 @@ Value ArrayExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
                 return {};
 
             if (element->is_spread_expression()) {
-                get_iterator_values(global_object, value, [&](Value& iterator_value) {
+                get_iterator_values(global_object, value, [&](Value iterator_value) {
                     array->indexed_properties().append(iterator_value);
                     return IterationDecision::Continue;
                 });
