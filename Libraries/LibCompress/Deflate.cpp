@@ -143,10 +143,10 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
             return false;
         }
 
-        const auto run_length = m_decompressor.decode_run_length(symbol);
+        const auto length = m_decompressor.decode_length(symbol);
         const auto distance = m_decompressor.decode_distance(m_distance_codes.value().read_symbol(m_decompressor.m_input_stream));
 
-        for (size_t idx = 0; idx < run_length; ++idx) {
+        for (size_t idx = 0; idx < length; ++idx) {
             u8 byte = 0;
             m_decompressor.m_output_stream.read({ &byte, sizeof(byte) }, distance);
             m_decompressor.m_output_stream << byte;
@@ -306,8 +306,7 @@ bool DeflateDecompressor::eof() const { return m_state == State::Idle && m_read_
 Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     InputMemoryStream memory_stream { bytes };
-    InputBitStream bit_stream { memory_stream };
-    DeflateDecompressor deflate_stream { bit_stream };
+    DeflateDecompressor deflate_stream { memory_stream };
     OutputMemoryStream output_stream;
 
     u8 buffer[4096];
@@ -322,7 +321,7 @@ Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
     return output_stream.copy_into_contiguous_buffer();
 }
 
-u32 DeflateDecompressor::decode_run_length(u32 symbol)
+u32 DeflateDecompressor::decode_length(u32 symbol)
 {
     // FIXME: I can't quite follow the algorithm here, but it seems to work.
 

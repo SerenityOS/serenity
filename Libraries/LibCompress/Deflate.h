@@ -97,7 +97,7 @@ public:
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    u32 decode_run_length(u32);
+    u32 decode_length(u32);
     u32 decode_distance(u32);
     void decode_codes(CanonicalCode& literal_code, Optional<CanonicalCode>& distance_code);
 
