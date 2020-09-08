@@ -98,7 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     // Array.from() lets you create Arrays from:
     if (auto size = object->indexed_properties().array_like_size()) {
         // * array-like objects (objects with a length property and indexed elements)
-        Vector<Value> elements;
+        MarkedValueList elements(interpreter.heap());
         elements.ensure_capacity(size);
         for (size_t i = 0; i < size; ++i) {
             elements.append(object->get(i));
