@@ -558,7 +558,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     if (array->indexed_properties().is_empty())
         return array;
 
-    Vector<Value> array_reverse;
+    MarkedValueList array_reverse(interpreter.heap());
     auto size = array->indexed_properties().array_like_size();
     array_reverse.ensure_capacity(size);
 
