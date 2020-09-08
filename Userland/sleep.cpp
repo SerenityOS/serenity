@@ -30,8 +30,10 @@
 #include <string.h>
 #include <unistd.h>
 
+static bool g_interrupted;
 static void handle_sigint(int)
 {
+    g_interrupted = true;
 }
 
 int main(int argc, char** argv)
@@ -47,7 +49,7 @@ int main(int argc, char** argv)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    if (pledge("stdio", nullptr) < 0) {
+    if (pledge("stdio sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -56,5 +58,11 @@ int main(int argc, char** argv)
     if (remaining) {
         printf("Sleep interrupted with %u seconds remaining.\n", remaining);
     }
+
+    if (g_interrupted) {
+        signal(SIGINT, SIG_DFL);
+        raise(SIGINT);
+    }
+
     return 0;
 }
