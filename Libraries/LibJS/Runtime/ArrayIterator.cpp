@@ -45,4 +45,10 @@ ArrayIterator::~ArrayIterator()
 {
 }
 
+void ArrayIterator::visit_children(Cell::Visitor & visitor)
+{
+    Base::visit_children(visitor);
+    visitor.visit(m_array);
+}
+
 }

@@ -47,6 +47,7 @@ private:
     friend class ArrayIteratorPrototype;
 
     virtual bool is_array_iterator_object() const override { return true; }
+    virtual void visit_children(Cell::Visitor&) override;
 
     Value m_array;
     Object::PropertyKind m_iteration_kind;
