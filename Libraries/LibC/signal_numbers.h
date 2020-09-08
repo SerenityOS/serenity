@@ -56,6 +56,6 @@
 #define SIGPROF 27
 #define SIGWINCH 28
 #define SIGIO 29
-#define SIGPWR 30
+#define SIGINFO 30
 #define SIGSYS 31
 #define NSIG 32

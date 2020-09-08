@@ -155,6 +155,7 @@ enum {
 #define VWERASE 14
 #define VLNEXT 15
 #define VEOL2 16
+#define VINFO 17
 
 /* c_iflag bits */
 #define IGNBRK 0000001

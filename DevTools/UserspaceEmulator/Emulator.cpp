@@ -1109,11 +1109,11 @@ static DefaultSignalAction default_signal_action(int signal)
     case SIGIO:
     case SIGPROF:
     case SIGTERM:
-    case SIGPWR:
         return DefaultSignalAction::Terminate;
     case SIGCHLD:
     case SIGURG:
     case SIGWINCH:
+    case SIGINFO:
         return DefaultSignalAction::Ignore;
     case SIGQUIT:
     case SIGILL:
