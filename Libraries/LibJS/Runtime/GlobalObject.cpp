@@ -143,6 +143,11 @@ void GlobalObject::visit_children(Visitor& visitor)
     visitor.visit(m_##snake_name##_constructor);
     JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name) \
+    visitor.visit(m_##snake_name##_prototype);
+    JS_ENUMERATE_ITERATOR_PROTOTYPES
+#undef __JS_ENUMERATE
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
