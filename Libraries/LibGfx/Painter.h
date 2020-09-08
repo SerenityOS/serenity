@@ -103,7 +103,8 @@ public:
 
     enum class DrawOp {
         Copy,
-        Xor
+        Xor,
+        Invert
     };
     void set_draw_op(DrawOp op) { state().draw_op = op; }
     DrawOp draw_op() const { return state().draw_op; }
@@ -128,6 +129,7 @@ public:
 
 protected:
     void set_pixel_with_draw_op(u32& pixel, const Color&);
+    void fill_scanline_with_draw_op(int y, int x, int width, const Color& color);
     void fill_rect_with_draw_op(const IntRect&, Color);
     void blit_with_alpha(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect);
     void blit_with_opacity(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, float opacity);

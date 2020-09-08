@@ -291,13 +291,13 @@ void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
     if (rect.top() >= clipped_rect.top() && rect.top() <= clipped_rect.bottom()) {
         int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
         int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
-        fast_u32_fill(m_target->scanline(rect.top()) + start_x, color.value(), width);
+        fill_scanline_with_draw_op(rect.top(), start_x, width, color);
         ++min_y;
     }
     if (rect.bottom() >= clipped_rect.top() && rect.bottom() <= clipped_rect.bottom()) {
         int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
         int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
-        fast_u32_fill(m_target->scanline(rect.bottom()) + start_x, color.value(), width);
+        fill_scanline_with_draw_op(rect.bottom(), start_x, width, color);
         --max_y;
     }
 
@@ -308,16 +308,16 @@ void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
         // Specialized loop when drawing both sides.
         for (int y = min_y; y <= max_y; ++y) {
             auto* bits = m_target->scanline(y);
-            bits[rect.left()] = color.value();
-            bits[rect.right()] = color.value();
+            set_pixel_with_draw_op(bits[rect.left()], color);
+            set_pixel_with_draw_op(bits[rect.right()], color);
         }
     } else {
         for (int y = min_y; y <= max_y; ++y) {
             auto* bits = m_target->scanline(y);
             if (draw_left_side)
-                bits[rect.left()] = color.value();
+                set_pixel_with_draw_op(bits[rect.left()], color);
             if (draw_right_side)
-                bits[rect.right()] = color.value();
+                set_pixel_with_draw_op(bits[rect.right()], color);
         }
     }
 }
@@ -1125,10 +1125,44 @@ void Painter::set_pixel(const IntPoint& p, Color color)
 
 ALWAYS_INLINE void Painter::set_pixel_with_draw_op(u32& pixel, const Color& color)
 {
-    if (draw_op() == DrawOp::Copy)
+    switch (draw_op()) {
+    case DrawOp::Copy:
         pixel = color.value();
-    else if (draw_op() == DrawOp::Xor)
-        pixel ^= color.value();
+        break;
+    case DrawOp::Xor:
+        pixel = color.xored(Color::from_rgba(pixel)).value();
+        break;
+    case DrawOp::Invert:
+        pixel = Color::from_rgba(pixel).inverted().value();
+        break;
+    }
+}
+
+ALWAYS_INLINE void Painter::fill_scanline_with_draw_op(int y, int x, int width, const Color& color)
+{
+    switch (draw_op()) {
+    case DrawOp::Copy:
+        fast_u32_fill(m_target->scanline(y) + x, color.value(), width);
+        break;
+    case DrawOp::Xor: {
+        auto* pixel = m_target->scanline(y) + x;
+        auto* end = pixel + width;
+        while (pixel < end) {
+            *pixel = Color::from_rgba(*pixel).xored(color).value();
+            pixel++;
+        }
+        break;
+    }
+    case DrawOp::Invert: {
+        auto* pixel = m_target->scanline(y) + x;
+        auto* end = pixel + width;
+        while (pixel < end) {
+            *pixel = Color::from_rgba(*pixel).inverted().value();
+            pixel++;
+        }
+        break;
+    }
+    }
 }
 
 void Painter::draw_pixel(const IntPoint& position, Color color, int thickness)

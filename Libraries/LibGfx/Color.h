@@ -156,7 +156,12 @@ public:
 
     Color inverted() const
     {
-        return Color(~red(), ~green(), ~blue());
+        return Color(~red(), ~green(), ~blue(), alpha());
+    }
+
+    Color xored(const Color& other) const
+    {
+        return Color(((other.m_value ^ m_value) & 0x00ffffff) | (m_value & 0xff000000));
     }
 
     RGBA32 value() const { return m_value; }
