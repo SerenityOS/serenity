@@ -33,7 +33,7 @@
 
 namespace JS {
 
-class MarkedValueList {
+class MarkedValueList : public AK::Vector<Value, 32> {
     AK_MAKE_NONCOPYABLE(MarkedValueList);
 
 public:
@@ -43,16 +43,16 @@ public:
 
     MarkedValueList& operator=(MarkedValueList&&) = delete;
 
-    bool is_empty() const { return m_values.is_empty(); }
-    size_t size() const { return m_values.size(); }
-    void clear() { m_values.clear(); }
-    Vector<Value, 32>& values() { return m_values; }
+    Vector<Value, 32>& values() { return *this; }
 
-    void append(Value);
+    MarkedValueList copy() const
+    {
+        MarkedValueList copy { m_heap };
+        copy.append(*this);
+        return copy;
+    }
 
 private:
     Heap& m_heap;
-    Vector<Value, 32> m_values;
 };
-
 }
