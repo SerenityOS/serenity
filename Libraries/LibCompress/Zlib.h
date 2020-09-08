@@ -36,14 +36,10 @@ class Zlib {
 public:
     Zlib(ReadonlyBytes data);
 
-    ByteBuffer decompress();
+    Optional<ByteBuffer> decompress();
     u32 checksum();
 
-    static ByteBuffer decompress_all(ReadonlyBytes bytes)
-    {
-        Zlib zlib { bytes };
-        return zlib.decompress();
-    }
+    static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
     u8 m_compression_method;
