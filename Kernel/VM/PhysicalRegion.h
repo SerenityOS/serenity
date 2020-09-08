@@ -47,18 +47,19 @@ public:
     PhysicalAddress lower() const { return m_lower; }
     PhysicalAddress upper() const { return m_upper; }
     unsigned size() const { return m_pages; }
-    unsigned used() const { return m_used; }
-    unsigned free() const { return m_pages - m_used; }
+    unsigned used() const { return m_used - m_recently_returned.size(); }
+    unsigned free() const { return m_pages - m_used + m_recently_returned.size(); }
     bool contains(const PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
 
     RefPtr<PhysicalPage> take_free_page(bool supervisor);
     NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, bool supervisor);
-    void return_page_at(PhysicalAddress addr);
-    void return_page(const PhysicalPage& page) { return_page_at(page.paddr()); }
+    void return_page(const PhysicalPage& page);
 
 private:
     unsigned find_contiguous_free_pages(size_t count);
     Optional<unsigned> find_and_allocate_contiguous_range(size_t count);
+    Optional<unsigned> find_one_free_page();
+    void free_page_at(PhysicalAddress addr);
 
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);
 
@@ -67,6 +68,8 @@ private:
     unsigned m_pages { 0 };
     unsigned m_used { 0 };
     Bitmap m_bitmap;
+    size_t m_free_hint { 0 };
+    Vector<PhysicalAddress, 256> m_recently_returned;
 };
 
 }
