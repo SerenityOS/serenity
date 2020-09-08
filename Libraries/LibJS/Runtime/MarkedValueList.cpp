@@ -36,8 +36,8 @@ MarkedValueList::MarkedValueList(Heap& heap)
 }
 
 MarkedValueList::MarkedValueList(MarkedValueList&& other)
-    : m_heap(other.m_heap)
-    , m_values(move(other.m_values))
+    : AK::Vector<Value, 32>(move(static_cast<Vector<Value, 32>&>(other)))
+    , m_heap(other.m_heap)
 {
     m_heap.did_create_marked_value_list({}, *this);
 }
@@ -45,11 +45,6 @@ MarkedValueList::MarkedValueList(MarkedValueList&& other)
 MarkedValueList::~MarkedValueList()
 {
     m_heap.did_destroy_marked_value_list({}, *this);
-}
-
-void MarkedValueList::append(Value value)
-{
-    m_values.append(value);
 }
 
 }
