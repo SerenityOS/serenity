@@ -806,6 +806,22 @@ private:
     RefPtr<Node> m_right;
 };
 
+class Subshell final : public Node {
+public:
+    Subshell(Position, RefPtr<Node> block);
+    virtual ~Subshell();
+
+private:
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) override;
+    virtual String class_name() const override { return "Subshell"; }
+    virtual bool would_execute() const override { return true; }
+
+    RefPtr<AST::Node> m_block;
+};
+
 class SimpleVariable final : public Node {
 public:
     SimpleVariable(Position, String);

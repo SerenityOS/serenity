@@ -53,6 +53,7 @@ private:
     RefPtr<AST::Node> parse_control_structure();
     RefPtr<AST::Node> parse_for_loop();
     RefPtr<AST::Node> parse_if_expr();
+    RefPtr<AST::Node> parse_subshell();
     RefPtr<AST::Node> parse_redirection();
     RefPtr<AST::Node> parse_list_expression();
     RefPtr<AST::Node> parse_expression();
@@ -129,12 +130,16 @@ pipe_sequence :: command '|' pipe_sequence
 
 control_structure :: for_expr
                    | if_expr
+                   | subshell
+
 for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
 
 if_expr :: 'if' ws+ or_logical_sequence ws+ '{' toplevel '}' else_clause?
 
 else_clause :: else '{' toplevel '}'
              | else if_expr
+
+subshell :: '{' toplevel '}'
 
 command :: redirection command
          | list_expression command?
