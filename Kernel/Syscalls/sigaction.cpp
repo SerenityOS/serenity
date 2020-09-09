@@ -32,11 +32,7 @@ int Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<
 {
     REQUIRE_PROMISE(sigaction);
     auto current_thread = Thread::current();
-    if (old_set) {
-        if (!validate_write_typed(old_set))
-            return -EFAULT;
-        copy_to_user(old_set, &current_thread->m_signal_mask);
-    }
+    u32 previous_signal_mask;
     if (set) {
         if (!validate_read_typed(set))
             return -EFAULT;
@@ -44,17 +40,24 @@ int Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<
         copy_from_user(&set_value, set);
         switch (how) {
         case SIG_BLOCK:
-            current_thread->m_signal_mask &= ~set_value;
+            previous_signal_mask = current_thread->signal_mask_block(set_value, true);
             break;
         case SIG_UNBLOCK:
-            current_thread->m_signal_mask |= set_value;
+            previous_signal_mask = current_thread->signal_mask_block(set_value, false);
             break;
         case SIG_SETMASK:
-            current_thread->m_signal_mask = set_value;
+            previous_signal_mask = current_thread->update_signal_mask(set_value);
             break;
         default:
             return -EINVAL;
         }
+    } else {
+        previous_signal_mask = current_thread->signal_mask();
+    }
+    if (old_set) {
+        if (!validate_write_typed(old_set))
+            return -EFAULT;
+        copy_to_user(old_set, &previous_signal_mask);
     }
     return 0;
 }
@@ -64,7 +67,8 @@ int Process::sys$sigpending(Userspace<sigset_t*> set)
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(set))
         return -EFAULT;
-    copy_to_user(set, &Thread::current()->m_pending_signals);
+    auto pending_signals = Thread::current()->pending_signals();
+    copy_to_user(set, &pending_signals);
     return 0;
 }
 

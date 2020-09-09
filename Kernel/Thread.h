@@ -411,6 +411,11 @@ public:
     void send_signal(u8 signal, Process* sender);
     void consider_unblock(time_t now_sec, long now_usec);
 
+    u32 update_signal_mask(u32 signal_mask);
+    u32 signal_mask_block(sigset_t signal_set, bool block);
+    u32 signal_mask() const;
+    void clear_signals();
+
     void set_dump_backtrace_on_finalization() { m_dump_backtrace_on_finalization = true; }
 
     ShouldUnblockThread dispatch_one_pending_signal();
@@ -419,7 +424,8 @@ public:
     void terminate_due_to_signal(u8 signal);
     bool should_ignore_signal(u8 signal) const;
     bool has_signal_handler(u8 signal) const;
-    bool has_pending_signal(u8 signal) const { return m_pending_signals & (1 << (signal - 1)); }
+    bool has_pending_signal(u8 signal) const;
+    u32 pending_signals() const;
 
     FPUState& fpu_state() { return *m_fpu_state; }
 

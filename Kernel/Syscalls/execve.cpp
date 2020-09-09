@@ -235,8 +235,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     }
 
     current_thread->set_default_signal_dispositions();
-    current_thread->m_signal_mask = 0;
-    current_thread->m_pending_signals = 0;
+    current_thread->clear_signals();
 
     m_futex_queues.clear();
 
