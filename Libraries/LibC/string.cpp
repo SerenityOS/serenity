@@ -363,6 +363,7 @@ const char* const sys_errlist[] = {
     "No such thread",
     "Protocol error",
     "Not supported",
+    "Protocol family not supported",
     "The highest errno +1 :^)",
 };
 
