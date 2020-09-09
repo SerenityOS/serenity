@@ -348,10 +348,6 @@ void Background::dump(int level) const
 
 RefPtr<Value> Background::run(RefPtr<Shell> shell)
 {
-    // FIXME: Currently this does not work correctly if `m_command.would_execute()',
-    //        as it runs the node, which means nodes likes And and Or will evaluate
-    //        all but their last subnode before yielding to this, causing a command
-    //        like `foo && bar&` to effectively be `foo && (bar&)`.
     auto commands = m_command->to_lazy_evaluated_commands(shell);
     for (auto& command : commands)
         command.should_wait = false;
