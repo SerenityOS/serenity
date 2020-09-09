@@ -236,7 +236,7 @@ void ScrollBar::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     Component hovered_component_for_painting = m_hovered_component;
-    if (m_pressed_component != Component::None && m_hovered_component != m_pressed_component)
+    if (!has_scrubber() || (m_pressed_component != Component::None && m_hovered_component != m_pressed_component))
         hovered_component_for_painting = Component::None;
 
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
