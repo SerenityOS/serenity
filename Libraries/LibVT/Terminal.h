@@ -76,7 +76,7 @@ public:
     Line& line(size_t index)
     {
         if (index < m_history.size())
-            return m_history[index];
+            return m_history[(m_history_start + index) % m_history.size()];
         return m_lines[index - m_history.size()];
     }
     const Line& line(size_t index) const
@@ -154,7 +154,19 @@ private:
 
     TerminalClient& m_client;
 
+    size_t m_history_start = 0;
     NonnullOwnPtrVector<Line> m_history;
+    void add_line_to_history(NonnullOwnPtr<Line>&& line)
+    {
+        if (m_history.size() < max_history_size()) {
+            ASSERT(m_history_start == 0);
+            m_history.append(move(line));
+            return;
+        }
+        m_history.ptr_at(m_history_start) = move(line);
+        m_history_start = (m_history_start + 1) % m_history.size();
+    }
+
     NonnullOwnPtrVector<Line> m_lines;
 
     size_t m_scroll_region_top { 0 };
