@@ -37,6 +37,8 @@ long Process::sys$sysconf(int name)
         return Processor::processor_count();
     case _SC_PAGESIZE:
         return PAGE_SIZE;
+    case _SC_OPEN_MAX:
+        return max_open_file_descriptors();
     default:
         return -EINVAL;
     }
