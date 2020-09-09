@@ -796,7 +796,7 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     ASSERT_NOT_REACHED();
 }
 
-size_t mbtowc(wchar_t* wch, const char* data, size_t data_size)
+int mbtowc(wchar_t* wch, const char* data, size_t data_size)
 {
     // FIXME: This needs a real implementation.
     UNUSED_PARAM(data_size);
