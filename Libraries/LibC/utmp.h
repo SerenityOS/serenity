@@ -36,6 +36,9 @@ struct exit_status {         /* Type for ut_exit, below */
     short int e_exit;        /* Process exit status */
 };
 
+#define USER_PROCESS 7
+#define DEAD_PROCESS 8
+
 #define UT_NAMESIZE 32
 #define UT_LINESIZE 32
 #define UT_HOSTSIZE 256
@@ -63,5 +66,13 @@ struct utmp {
 
     char __unused[20]; /* Reserved for future use */
 };
+
+/* Backward compatibility hacks */
+#define ut_name ut_user
+#ifndef _NO_UT_TIME
+#    define ut_time ut_tv.tv_sec
+#endif
+#define ut_xtime ut_tv.tv_sec
+#define ut_addr ut_addr_v6[0]
 
 __END_DECLS
