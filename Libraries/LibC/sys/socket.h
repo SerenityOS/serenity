@@ -124,6 +124,7 @@ enum {
 #define SCM_TIMESTAMP SCM_TIMESTAMP
 
 struct sockaddr_storage {
+    sa_family_t ss_family;
     union {
         char data[sizeof(struct sockaddr_un)];
         void* alignment;
