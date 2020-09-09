@@ -308,10 +308,22 @@ bool Thread::tick()
     return --m_ticks_left;
 }
 
+bool Thread::has_pending_signal(u8 signal) const
+{
+    ScopedSpinLock lock(g_scheduler_lock);
+    return m_pending_signals & (1 << (signal - 1));
+}
+
+u32 Thread::pending_signals() const
+{
+    ScopedSpinLock lock(g_scheduler_lock);
+    return m_pending_signals;
+}
+
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
     ASSERT(signal < 32);
-    InterruptDisabler disabler;
+    ScopedSpinLock lock(g_scheduler_lock);
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
     if (should_ignore_signal(signal)) {
@@ -328,9 +340,43 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
         dbg() << "Signal: Kernel sent " << signal << " to " << process();
 #endif
 
-    ScopedSpinLock lock(g_scheduler_lock);
     m_pending_signals |= 1 << (signal - 1);
     m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+}
+
+u32 Thread::update_signal_mask(u32 signal_mask)
+{
+    ScopedSpinLock lock(g_scheduler_lock);
+    auto previous_signal_mask = m_signal_mask;
+    m_signal_mask = signal_mask;
+    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    return previous_signal_mask;
+}
+
+u32 Thread::signal_mask() const
+{
+    ScopedSpinLock lock(g_scheduler_lock);
+    return m_signal_mask;
+}
+
+u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
+{
+    ScopedSpinLock lock(g_scheduler_lock);
+    auto previous_signal_mask = m_signal_mask;
+    if (block)
+        m_signal_mask &= ~signal_set;
+    else
+        m_signal_mask |= signal_set;
+    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    return previous_signal_mask;
+}
+
+void Thread::clear_signals()
+{
+    ScopedSpinLock lock(g_scheduler_lock);
+    m_signal_mask = 0;
+    m_pending_signals = 0;
+    m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
 }
 
 // Certain exceptions, such as SIGSEGV and SIGILL, put a

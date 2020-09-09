@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/ScopedValueRollback.h>
+#include <AK/ScopeGuard.h>
 #include <AK/Time.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
@@ -73,9 +73,14 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     }
 
     auto current_thread = Thread::current();
-    ScopedValueRollback scoped_sigmask(current_thread->m_signal_mask);
+
+    u32 previous_signal_mask = 0;
     if (sigmask)
-        current_thread->m_signal_mask = *sigmask;
+        previous_signal_mask = current_thread->update_signal_mask(*sigmask);
+    ScopeGuard rollback_signal_mask([&]() {
+        if (sigmask)
+            current_thread->update_signal_mask(previous_signal_mask);
+    });
 
     Thread::SelectBlocker::FDVector rfds;
     Thread::SelectBlocker::FDVector wfds;
@@ -187,9 +192,14 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
     }
 
     auto current_thread = Thread::current();
-    ScopedValueRollback scoped_sigmask(current_thread->m_signal_mask);
+
+    u32 previous_signal_mask = 0;
     if (params.sigmask)
-        current_thread->m_signal_mask = sigmask;
+        previous_signal_mask = current_thread->update_signal_mask(params.sigmask);
+    ScopeGuard rollback_signal_mask([&]() {
+        if (params.sigmask)
+            current_thread->update_signal_mask(previous_signal_mask);
+    });
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
     dbg() << "polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout.tv_sec << "s" << timeout.tv_nsec << "ns";
