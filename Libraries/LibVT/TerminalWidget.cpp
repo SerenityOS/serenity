@@ -274,11 +274,11 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     invalidate_cursor();
 
     int rows_from_history = 0;
-    int first_row_from_history = m_terminal.history().size();
+    int first_row_from_history = m_terminal.history_size();
     int row_with_cursor = m_terminal.cursor_row();
     if (m_scrollbar->value() != m_scrollbar->max()) {
         rows_from_history = min((int)m_terminal.rows(), m_scrollbar->max() - m_scrollbar->value());
-        first_row_from_history = m_terminal.history().size() - (m_scrollbar->max() - m_scrollbar->value());
+        first_row_from_history = m_terminal.history_size() - (m_scrollbar->max() - m_scrollbar->value());
         row_with_cursor = m_terminal.cursor_row() + rows_from_history;
     }
 
@@ -742,7 +742,7 @@ int TerminalWidget::last_selection_column_on_row(int row) const
 void TerminalWidget::terminal_history_changed()
 {
     bool was_max = m_scrollbar->value() == m_scrollbar->max();
-    m_scrollbar->set_max(m_terminal.history().size());
+    m_scrollbar->set_max(m_terminal.history_size());
     if (was_max)
         m_scrollbar->set_value(m_scrollbar->max());
     m_scrollbar->update();
