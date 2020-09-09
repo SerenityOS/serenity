@@ -541,16 +541,13 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     if (child == 0) {
         close(sync_pipe[1]);
 
-        if (!m_is_subshell)
-            tcsetattr(0, TCSANOW, &default_termios);
-
         m_is_subshell = true;
         m_pid = getpid();
         Core::EventLoop::notify_forked(Core::EventLoop::ForkEvent::Child);
         jobs.clear();
 
         if (apply_rewirings() == IterationDecision::Break)
-            return nullptr;
+            _exit(126);
 
         fds.collect();
 
@@ -564,7 +561,14 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             dbg() << "Oof";
         }
 
+#ifdef SH_DEBUG
+        dbg() << "Synced up with parent, we're good to exec()";
+#endif
+
         close(sync_pipe[0]);
+
+        if (!m_is_subshell && command.should_wait)
+            tcsetattr(0, TCSANOW, &default_termios);
 
         if (command.should_immediately_execute_next) {
             ASSERT(command.argv.is_empty());
