@@ -33,6 +33,7 @@
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
+#include <AK/TypedTransfer.h>
 #include <AK/kmalloc.h>
 
 // NOTE: We can't include <initializer_list> during the toolchain bootstrap,
@@ -47,49 +48,6 @@
 #endif
 
 namespace AK {
-
-template<typename T>
-class TypedTransfer {
-public:
-    static void move(T* destination, T* source, size_t count)
-    {
-        if (!count)
-            return;
-        if constexpr (Traits<T>::is_trivial()) {
-            __builtin_memmove(destination, source, count * sizeof(T));
-            return;
-        }
-        for (size_t i = 0; i < count; ++i)
-            new (&destination[i]) T(AK::move(source[i]));
-    }
-
-    static void copy(T* destination, const T* source, size_t count)
-    {
-        if (!count)
-            return;
-        if constexpr (Traits<T>::is_trivial()) {
-            __builtin_memmove(destination, source, count * sizeof(T));
-            return;
-        }
-        for (size_t i = 0; i < count; ++i)
-            new (&destination[i]) T(source[i]);
-    }
-
-    static bool compare(const T* a, const T* b, size_t count)
-    {
-        if (!count)
-            return true;
-
-        if constexpr (Traits<T>::is_trivial())
-            return !__builtin_memcmp(a, b, count * sizeof(T));
-
-        for (size_t i = 0; i < count; ++i) {
-            if (a[i] != b[i])
-                return false;
-        }
-        return true;
-    }
-};
 
 template<typename T, size_t inline_capacity>
 class Vector {
