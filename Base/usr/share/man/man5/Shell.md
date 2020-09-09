@@ -58,6 +58,8 @@ Any text following a `#` in _bareword_ position, up to but not including a newli
 The following tokens:
 * `for` in command name position
 * `in` as a syntactic element of a `for` expression
+* `if` in command name position, or after the `else` keyword
+* `else` after a partial `if` expression
 
 ##### Special characters
 Any of the following:
@@ -164,10 +166,10 @@ rm test && echo "deleted!" || echo "failed with $?"
 
 ##### Conditionals
 Conditionals can either be expressed with the _Logical Relations_, or via explicit `if` expressions.
-An `if` expression contains at least a _condition_ and a _then clause_, and optionally an _else clause_.
+An `if` expression contains at least a _condition_ and a _then clause_, and optionally the `else` keyword followed by an _else clause_.
 An _else clause_ may contain another `if` expression instead of a normal block.
 
-The _then clause_ **must** be surrounded by braces, but the _else clause_ may also be another `if` expression, or missing.
+The _then clause_ **must** be surrounded by braces, but the _else clause_ may also be another `if` expression.
 
 An `if` expression evaluates either the _then clause_ or (if available) the _else clause_, based on the exit code of the _condition_; should the exit code be zero, the _then clause_ will be executed, and if not, the _else clause_ will.
 
