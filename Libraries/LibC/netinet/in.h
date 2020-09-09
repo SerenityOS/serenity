@@ -39,6 +39,8 @@ in_addr_t inet_addr(const char*);
 #define INADDR_NONE ((in_addr_t)-1)
 #define INADDR_LOOPBACK 0x7f000001
 
+#define IN_LOOPBACKNET 127
+
 #define IP_TTL 2
 
 #define IPPORT_RESERVED 1024
