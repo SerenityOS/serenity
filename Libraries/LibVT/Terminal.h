@@ -96,7 +96,7 @@ public:
     }
 
     size_t max_history_size() const { return 500; }
-    const NonnullOwnPtrVector<Line>& history() const { return m_history; }
+    size_t history_size() const { return m_history.size(); }
 
     void inject_string(const StringView&);
     void handle_key_press(KeyCode, u32, u8 flags);
