@@ -52,6 +52,8 @@ void Terminal::clear()
 void Terminal::clear_including_history()
 {
     m_history.clear();
+    m_history_start = 0;
+
     clear();
 
     m_client.terminal_history_changed();
@@ -738,9 +740,7 @@ void Terminal::scroll_up()
     invalidate_cursor();
     if (m_scroll_region_top == 0) {
         auto line = move(m_lines.ptr_at(m_scroll_region_top));
-        m_history.append(move(line));
-        while (m_history.size() > max_history_size())
-            m_history.take_first();
+        add_line_to_history(move(line));
         m_client.terminal_history_changed();
     }
     m_lines.remove(m_scroll_region_top);
