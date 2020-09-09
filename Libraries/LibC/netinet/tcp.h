@@ -25,3 +25,5 @@
  */
 
 #pragma once
+
+#define TCP_NODELAY 10
