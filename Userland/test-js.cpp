@@ -44,6 +44,7 @@
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
 
 static bool collect_on_every_allocation = false;
+static String currently_running_test;
 
 enum class TestResult {
     Pass,
@@ -105,15 +106,26 @@ private:
 
 class TestRunner {
 public:
+    static TestRunner* the()
+    {
+        return s_the;
+    }
+
     TestRunner(String test_root, bool print_times)
         : m_test_root(move(test_root))
         , m_print_times(print_times)
     {
+        ASSERT(!s_the);
+        s_the = this;
     }
 
     void run();
 
+    const JSTestRunnerCounts& counts() const { return m_counts; }
+
 private:
+    static TestRunner* s_the;
+
     JSFileResult run_file_test(const String& test_path);
     void print_file_result(const JSFileResult& file_result) const;
     void print_test_results() const;
@@ -126,6 +138,8 @@ private:
 
     RefPtr<JS::Program> m_test_program;
 };
+
+TestRunner* TestRunner::s_the = nullptr;
 
 TestRunnerGlobalObject::TestRunnerGlobalObject()
 {
@@ -256,6 +270,8 @@ static Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 
 JSFileResult TestRunner::run_file_test(const String& test_path)
 {
+    currently_running_test = test_path;
+
     double start_time = get_time_in_ms();
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>();
 
@@ -568,6 +584,15 @@ int main(int argc, char** argv)
         perror("sigaction");
         return 1;
     }
+
+#ifdef SIGINFO
+    signal(SIGINFO, [](int) {
+        static char buffer[4096];
+        auto& counts = TestRunner::the()->counts();
+        int len = snprintf(buffer, sizeof(buffer), "Pass: %d, Fail: %d, Skip: %d\nCurrent test: %s\n", counts.tests_passed, counts.tests_failed, counts.tests_skipped, currently_running_test.characters());
+        write(STDOUT_FILENO, buffer, len);
+    });
+#endif
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
