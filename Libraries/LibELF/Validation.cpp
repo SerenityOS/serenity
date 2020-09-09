@@ -202,6 +202,12 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8
                 dbgprintf("Possible shenanigans! Validating an ELF with executable stack.\n");
             }
             break;
+        case PT_GNU_RELRO:
+            if ((program_header.p_flags & PF_X) && (program_header.p_flags & PF_W)) {
+                dbgprintf("SHENANIGANS! Program header %zu segment is marked write and execute\n", header_index);
+                return false;
+            }
+            break;
         default:
             // Not handling other program header types in other code so... let's not surprise them
             dbgprintf("Found program header (%zu) of unrecognized type %x!\n", header_index, program_header.p_type);
