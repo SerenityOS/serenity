@@ -45,29 +45,61 @@ extern const char _ctype_[256];
 
 int tolower(int);
 int toupper(int);
-int isalnum(int);
-int isalpha(int);
-int iscntrl(int);
-int isdigit(int);
-int isxdigit(int);
-int isspace(int);
-int ispunct(int);
-int isprint(int);
-int isgraph(int);
-int islower(int);
-int isupper(int);
 
-#define isalnum(c) (_ctype_[(unsigned char)(c)] & (_U | _L | _N))
-#define isalpha(c) (_ctype_[(unsigned char)(c)] & (_U | _L))
-#define iscntrl(c) (_ctype_[(unsigned char)(c)] & (_C))
-#define isdigit(c) (_ctype_[(unsigned char)(c)] & (_N))
-#define isxdigit(c) (_ctype_[(unsigned char)(c)] & (_N | _X))
-#define isspace(c) (_ctype_[(unsigned char)(c)] & (_S))
-#define ispunct(c) (_ctype_[(unsigned char)(c)] & (_P))
-#define isprint(c) (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N | _B))
-#define isgraph(c) (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N))
-#define islower(c) ((_ctype_[(unsigned char)(c)] & (_U | _L)) == _L)
-#define isupper(c) ((_ctype_[(unsigned char)(c)] & (_U | _L)) == _U)
+static inline int isalnum(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_U | _L | _N));
+}
+
+static inline int isalpha(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_U | _L));
+}
+
+static inline int iscntrl(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_C));
+}
+
+static inline int isdigit(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_N));
+}
+
+static inline int isxdigit(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_N | _X));
+}
+
+static inline int isspace(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_S));
+}
+
+static inline int ispunct(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_P));
+}
+
+static inline int isprint(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N | _B));
+}
+
+static inline int isgraph(int c)
+{
+    return (_ctype_[(unsigned char)(c)] & (_P | _U | _L | _N));
+}
+
+static inline int islower(int c)
+{
+    return ((_ctype_[(unsigned char)(c)] & (_U | _L)) == _L);
+}
+
+static inline int isupper(int c)
+{
+    return ((_ctype_[(unsigned char)(c)] & (_U | _L)) == _U);
+}
 
 #define isascii(c) ((unsigned)c <= 127)
 #define toascii(c) ((c)&127)
