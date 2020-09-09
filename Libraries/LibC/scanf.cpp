@@ -132,6 +132,9 @@ int vsscanf(const char* buf, const char* s, va_list ap)
     int count = 0;
     int width = 0;
 
+    // FIXME: This doesn't work quite right. For example, it fails to match 'SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1\r\n'
+    //        with 'SSH-%d.%d-%[^\n]\n'
+
     while (*s && *buf) {
         while (isspace(*s))
             s++;
