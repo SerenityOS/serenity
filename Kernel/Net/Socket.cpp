@@ -156,7 +156,12 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     if (!copy_from_user(&size, value_size.unsafe_userspace_ptr()))
         return KResult(-EFAULT);
 
-    ASSERT(level == SOL_SOCKET);
+    // FIXME: Add TCP_NODELAY, IPPROTO_TCP and IPPROTO_IP (used in OpenSSH)
+    if (level != SOL_SOCKET) {
+        // Not sure if this is the correct error code, but it's only temporary until other levels are implemented.
+        return KResult(-ENOPROTOOPT);
+    }
+
     switch (option) {
     case SO_SNDTIMEO:
         if (size < sizeof(timeval))
