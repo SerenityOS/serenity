@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Shape.h>
@@ -145,8 +146,7 @@ void Shape::ensure_property_table() const
         return;
     m_property_table = make<HashMap<StringOrSymbol, PropertyMetadata>>();
 
-    // FIXME: We need to make sure the GC doesn't collect the transition chain as we're building it.
-    //        Maybe some kind of RAII "prevent GC for a moment" helper thingy?
+    DeferGC defer(heap());
 
     Vector<const Shape*> transition_chain;
     for (auto* shape = this; shape->m_previous; shape = shape->m_previous) {
