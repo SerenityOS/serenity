@@ -27,8 +27,8 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/Checked.h>
 #include <AK/Iterator.h>
+#include <AK/TypedTransfer.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -156,15 +156,13 @@ public:
     ALWAYS_INLINE size_t copy_to(Span<typename RemoveConst<T>::Type> other) const
     {
         ASSERT(other.size() >= size());
-        __builtin_memmove(other.data(), data(), sizeof(T) * size());
-        return size();
+        return TypedTransfer<typename RemoveConst<T>::Type>::copy(other.data(), data(), size());
     }
 
     ALWAYS_INLINE size_t copy_trimmed_to(Span<typename RemoveConst<T>::Type> other) const
     {
-        auto count = min(size(), other.size());
-        __builtin_memmove(other.data(), data(), sizeof(T) * count);
-        return count;
+        const auto count = min(size(), other.size());
+        return TypedTransfer<typename RemoveConst<T>::Type>::copy(other.data(), data(), count);
     }
 
     ALWAYS_INLINE void fill(const T& value)
@@ -208,6 +206,14 @@ public:
         this->m_size = other.m_size;
         this->m_values = other.m_values;
         return *this;
+    }
+
+    bool operator==(Span<T> other) const
+    {
+        if (size() != other.size())
+            return false;
+
+        return TypedTransfer<T>::compare(data(), other.data(), size());
     }
 
     ALWAYS_INLINE operator Span<const T>() const
