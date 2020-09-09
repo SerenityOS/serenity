@@ -536,8 +536,31 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
         stream >> table_ids;
         if (stream.handle_read_failure())
             return false;
+
         component->dc_destination_id = table_ids >> 4;
         component->ac_destination_id = table_ids & 0x0F;
+
+        if (context.dc_tables.size() != context.ac_tables.size()) {
+            dbg() << stream.offset() << ": DC & AC table count mismatch!";
+            return false;
+        }
+
+        bool dc_table_exists = false;
+        bool ac_table_exists = false;
+        for (unsigned t = 0; t < context.dc_tables.size(); t++) {
+            dc_table_exists = dc_table_exists || (context.dc_tables[t].destination_id == component->dc_destination_id);
+            ac_table_exists = ac_table_exists || (context.ac_tables[t].destination_id == component->ac_destination_id);
+        }
+
+        if (!dc_table_exists) {
+            dbg() << stream.offset() << ": Invalid DC huffman table destination id: " << component->dc_destination_id;
+            return false;
+        }
+
+        if (!ac_table_exists) {
+            dbg() << stream.offset() << ": Invalid AC huffman table destination id: " << component->ac_destination_id;
+            return false;
+        }
     }
 
     u8 spectral_selection_start;
@@ -576,6 +599,34 @@ static bool read_reset_marker(BufferStream& stream, JPGLoadingContext& context)
     return true;
 }
 
+static bool huffman_table_reset_helper(HuffmanTableSpec& src, JPGLoadingContext& context)
+{
+    auto& table = src.type == 0 ? context.dc_tables : context.ac_tables;
+    if (src.destination_id == 0) {
+        if (table.is_empty())
+            table.append(move(src));
+        else
+            table[0] = move(src);
+        return true;
+    }
+
+    if (src.destination_id == 1) {
+        if (table.size() < 1) {
+            String table_str = src.type == 0 ? "DC" : "AC";
+            dbg() << table_str << "[1] showed up before " << table_str << "[0]!";
+            return false;
+        }
+        if (table.size() == 1)
+            table.append(move(src));
+        else
+            table[1] = move(src);
+        return true;
+    }
+
+    dbg() << "Unsupported huffman table destination id: " << src.destination_id;
+    return false;
+}
+
 static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = read_be_word(stream);
@@ -594,7 +645,7 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
             dbg() << stream.offset() << String::format(": Unrecognized huffman table: %i!", table_type);
             return false;
         }
-        if (table_destination_id > 3) {
+        if (table_destination_id > 1) {
             dbg() << stream.offset()
                   << String::format(": Invalid huffman table destination id: %i!", table_destination_id);
             return false;
@@ -625,13 +676,12 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
         if (stream.handle_read_failure())
             return false;
 
-        if (table_type == 0)
-            context.dc_tables.append(move(table));
-        else
-            context.ac_tables.append(move(table));
+        if (!huffman_table_reset_helper(table, context))
+            return false;
 
         bytes_to_read -= 1 + 16 + total_codes;
     }
+
     if (bytes_to_read != 0) {
         dbg() << stream.offset() << ": Extra bytes detected in huffman header!";
         return false;
