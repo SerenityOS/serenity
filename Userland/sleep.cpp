@@ -30,7 +30,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static bool g_interrupted;
+static volatile bool g_interrupted;
 static void handle_sigint(int)
 {
     g_interrupted = true;
