@@ -70,7 +70,7 @@ private:
 
     void post_notification_if_needed(const String& name, const String& message);
 
-    IRCClient& m_client;
+    NonnullRefPtr<IRCClient> m_client;
     void* m_owner { nullptr };
     Type m_type;
     String m_name;
