@@ -1393,7 +1393,7 @@ extern "C" void post_init_finished(void)
 
 void Processor::initialize_context_switching(Thread& initial_thread)
 {
-    ASSERT(initial_thread.process().is_ring0());
+    ASSERT(initial_thread.process().is_kernel_process());
 
     auto& tss = initial_thread.tss();
     m_tss = tss;

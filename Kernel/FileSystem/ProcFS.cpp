@@ -830,7 +830,7 @@ static Optional<KBuffer> procfs$all(InodeIdentifier)
     auto build_process = [&](const Process& process) {
         auto process_object = array.add_object();
 
-        if (process.is_ring3()) {
+        if (process.is_user_process()) {
             StringBuilder pledge_builder;
 
 #define __ENUMERATE_PLEDGE_PROMISE(promise)      \
