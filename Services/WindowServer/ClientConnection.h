@@ -127,8 +127,8 @@ private:
     virtual OwnPtr<Messages::WindowServer::SetWallpaperModeResponse> handle(const Messages::WindowServer::SetWallpaperMode&) override;
     virtual OwnPtr<Messages::WindowServer::GetWallpaperResponse> handle(const Messages::WindowServer::GetWallpaper&) override;
     virtual OwnPtr<Messages::WindowServer::SetResolutionResponse> handle(const Messages::WindowServer::SetResolution&) override;
-    virtual OwnPtr<Messages::WindowServer::SetWindowOverrideCursorResponse> handle(const Messages::WindowServer::SetWindowOverrideCursor&) override;
-    virtual OwnPtr<Messages::WindowServer::SetWindowCustomOverrideCursorResponse> handle(const Messages::WindowServer::SetWindowCustomOverrideCursor&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowCursorResponse> handle(const Messages::WindowServer::SetWindowCursor&) override;
+    virtual OwnPtr<Messages::WindowServer::SetWindowCustomCursorResponse> handle(const Messages::WindowServer::SetWindowCustomCursor&) override;
     virtual OwnPtr<Messages::WindowServer::PopupMenuResponse> handle(const Messages::WindowServer::PopupMenu&) override;
     virtual OwnPtr<Messages::WindowServer::DismissMenuResponse> handle(const Messages::WindowServer::DismissMenu&) override;
     virtual OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> handle(const Messages::WindowServer::SetWindowIconBitmap&) override;

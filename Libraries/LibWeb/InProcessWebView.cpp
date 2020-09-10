@@ -153,7 +153,7 @@ void InProcessWebView::page_did_change_selection()
 void InProcessWebView::page_did_request_cursor_change(Gfx::StandardCursor cursor)
 {
     if (window())
-        window()->set_override_cursor(cursor);
+        window()->set_cursor(cursor);
 }
 
 void InProcessWebView::page_did_request_context_menu(const Gfx::IntPoint& content_position)
@@ -358,7 +358,7 @@ void InProcessWebView::load_html(const StringView& html, const URL& url)
 bool InProcessWebView::load(const URL& url)
 {
     if (window())
-        window()->set_override_cursor(Gfx::StandardCursor::None);
+        window()->set_cursor(Gfx::StandardCursor::None);
 
     return page().main_frame().loader().load(url, FrameLoader::Type::Navigation);
 }
@@ -378,7 +378,7 @@ LayoutDocument* InProcessWebView::layout_root()
 void InProcessWebView::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
 {
     scroll_into_view(rect, true, true);
-    window()->set_override_cursor(Gfx::StandardCursor::None);
+    window()->set_cursor(Gfx::StandardCursor::None);
 }
 
 void InProcessWebView::load_empty_document()

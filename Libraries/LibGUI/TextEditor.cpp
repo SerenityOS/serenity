@@ -1343,7 +1343,7 @@ void TextEditor::enter_event(Core::Event&)
 {
     ASSERT(window());
     if (!is_displayonly())
-        window()->set_override_cursor(Gfx::StandardCursor::IBeam);
+        window()->set_cursor(Gfx::StandardCursor::IBeam);
 
     m_automatic_selection_scroll_timer->stop();
 }
@@ -1351,7 +1351,7 @@ void TextEditor::enter_event(Core::Event&)
 void TextEditor::leave_event(Core::Event&)
 {
     ASSERT(window());
-    window()->set_override_cursor(Gfx::StandardCursor::None);
+    window()->set_cursor(Gfx::StandardCursor::None);
 
     if (m_in_drag_select)
         m_automatic_selection_scroll_timer->start();

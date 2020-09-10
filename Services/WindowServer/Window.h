@@ -218,8 +218,8 @@ public:
 
     void set_default_icon();
 
-    const Cursor* override_cursor() const { return m_override_cursor.ptr(); }
-    void set_override_cursor(RefPtr<Cursor>&& cursor) { m_override_cursor = move(cursor); }
+    const Cursor* cursor() const { return m_cursor.ptr(); }
+    void set_cursor(RefPtr<Cursor> cursor) { m_cursor = move(cursor); }
 
     void request_update(const Gfx::IntRect&, bool ignore_occlusion = false);
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
@@ -340,7 +340,7 @@ private:
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
     NonnullRefPtr<Gfx::Bitmap> m_icon;
-    RefPtr<Cursor> m_override_cursor;
+    RefPtr<Cursor> m_cursor;
     WindowFrame m_frame;
     unsigned m_wm_event_mask { 0 };
     Gfx::DisjointRectSet m_pending_paint_rects;

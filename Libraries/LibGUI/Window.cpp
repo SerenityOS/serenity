@@ -93,7 +93,7 @@ void Window::show()
 
     auto* parent_window = find_parent_window();
 
-    m_override_cursor = Gfx::StandardCursor::None;
+    m_cursor = Gfx::StandardCursor::None;
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
         m_rect_when_windowless,
         !m_moved_by_client,
@@ -138,7 +138,7 @@ void Window::server_did_destroy()
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
-    m_override_cursor = Gfx::StandardCursor::None;
+    m_cursor = Gfx::StandardCursor::None;
 }
 
 void Window::hide()
@@ -226,25 +226,25 @@ void Window::set_window_type(WindowType window_type)
     m_window_type = window_type;
 }
 
-void Window::set_override_cursor(Gfx::StandardCursor cursor)
+void Window::set_cursor(Gfx::StandardCursor cursor)
 {
     if (!is_visible())
         return;
-    if (!m_custom_cursor && m_override_cursor == cursor)
+    if (!m_custom_cursor && m_cursor == cursor)
         return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
-    m_override_cursor = cursor;
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCursor>(m_window_id, (u32)cursor);
+    m_cursor = cursor;
     m_custom_cursor = nullptr;
 }
 
-void Window::set_override_cursor(const Gfx::Bitmap& cursor)
+void Window::set_cursor(const Gfx::Bitmap& cursor)
 {
     if (!is_visible())
         return;
     if (&cursor == m_custom_cursor.ptr())
         return;
     m_custom_cursor = &cursor;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomOverrideCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
+    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
 }
 
 void Window::handle_drop_event(DropEvent& event)

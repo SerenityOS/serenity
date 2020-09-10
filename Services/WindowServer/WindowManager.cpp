@@ -1304,8 +1304,8 @@ const Cursor& WindowManager::active_cursor() const
         }
     }
 
-    if (m_hovered_window && m_hovered_window->override_cursor())
-        return *m_hovered_window->override_cursor();
+    if (m_hovered_window && m_hovered_window->cursor())
+        return *m_hovered_window->cursor();
 
     return *m_arrow_cursor;
 }

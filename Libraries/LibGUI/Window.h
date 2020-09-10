@@ -168,8 +168,8 @@ public:
     void set_no_resize_aspect_ratio() { set_resize_aspect_ratio({}); }
     void set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio);
 
-    void set_override_cursor(Gfx::StandardCursor);
-    void set_override_cursor(const Gfx::Bitmap&);
+    void set_cursor(Gfx::StandardCursor);
+    void set_cursor(const Gfx::Bitmap&);
 
     void set_icon(const Gfx::Bitmap*);
     void apply_icon();
@@ -241,7 +241,7 @@ private:
     Gfx::IntSize m_base_size;
     Color m_background_color { Color::WarmGray };
     WindowType m_window_type { WindowType::Normal };
-    Gfx::StandardCursor m_override_cursor { Gfx::StandardCursor::None };
+    Gfx::StandardCursor m_cursor { Gfx::StandardCursor::None };
     bool m_is_active { false };
     bool m_is_active_input { false };
     bool m_has_alpha_channel { false };
