@@ -34,8 +34,8 @@ KResult Process::do_kill(Process& process, int signal)
     // FIXME: Should setuid processes have some special treatment here?
     if (!is_superuser() && m_euid != process.m_uid && m_uid != process.m_uid)
         return KResult(-EPERM);
-    if (process.is_ring0() && signal == SIGKILL) {
-        klog() << "attempted to send SIGKILL to ring 0 process " << process.name().characters() << "(" << process.pid().value() << ")";
+    if (process.is_kernel_process() && signal == SIGKILL) {
+        klog() << "attempted to send SIGKILL to kernel process " << process.name().characters() << "(" << process.pid().value() << ")";
         return KResult(-EPERM);
     }
     if (signal != 0)
