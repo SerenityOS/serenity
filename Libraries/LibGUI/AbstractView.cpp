@@ -44,6 +44,8 @@ AbstractView::AbstractView()
 
 AbstractView::~AbstractView()
 {
+    if (m_model)
+        m_model->unregister_view({}, *this);
 }
 
 void AbstractView::set_model(RefPtr<Model> model)
