@@ -11,6 +11,11 @@ build() {
     run make strip
 }
 
+post_install() {
+    mkdir -p "$SERENITY_ROOT"/Build/Root/home/anon
+    cp "$workdir"/../default_gitconfig "$SERENITY_ROOT"/Build/Root/home/anon/.gitconfig
+}
+
 export NO_OPENSSL=1
 export ac_cv_fread_reads_directories=no
 export ac_cv_snprintf_returns_bogus=no
