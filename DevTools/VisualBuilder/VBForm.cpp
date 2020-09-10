@@ -497,22 +497,22 @@ void VBForm::set_cursor_type_from_grabber(Direction grabber)
     switch (grabber) {
     case Direction::Up:
     case Direction::Down:
-        window()->set_override_cursor(Gfx::StandardCursor::ResizeVertical);
+        window()->set_cursor(Gfx::StandardCursor::ResizeVertical);
         break;
     case Direction::Left:
     case Direction::Right:
-        window()->set_override_cursor(Gfx::StandardCursor::ResizeHorizontal);
+        window()->set_cursor(Gfx::StandardCursor::ResizeHorizontal);
         break;
     case Direction::UpLeft:
     case Direction::DownRight:
-        window()->set_override_cursor(Gfx::StandardCursor::ResizeDiagonalTLBR);
+        window()->set_cursor(Gfx::StandardCursor::ResizeDiagonalTLBR);
         break;
     case Direction::UpRight:
     case Direction::DownLeft:
-        window()->set_override_cursor(Gfx::StandardCursor::ResizeDiagonalBLTR);
+        window()->set_cursor(Gfx::StandardCursor::ResizeDiagonalBLTR);
         break;
     case Direction::None:
-        window()->set_override_cursor(Gfx::StandardCursor::None);
+        window()->set_cursor(Gfx::StandardCursor::None);
         break;
     }
 

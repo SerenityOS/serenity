@@ -112,13 +112,13 @@ void ResizeCorner::mousedown_event(MouseEvent& event)
 
 void ResizeCorner::enter_event(Core::Event& event)
 {
-    window()->set_override_cursor(Gfx::StandardCursor::ResizeDiagonalTLBR);
+    window()->set_cursor(Gfx::StandardCursor::ResizeDiagonalTLBR);
     Widget::enter_event(event);
 }
 
 void ResizeCorner::leave_event(Core::Event& event)
 {
-    window()->set_override_cursor(Gfx::StandardCursor::None);
+    window()->set_cursor(Gfx::StandardCursor::None);
     Widget::leave_event(event);
 }
 

@@ -602,36 +602,36 @@ OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> ClientConnection
     return make<Messages::WindowServer::SetGlobalCursorTrackingResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowOverrideCursorResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowOverrideCursor& message)
+OwnPtr<Messages::WindowServer::SetWindowCursorResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowCursor& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
-        did_misbehave("SetWindowOverrideCursor: Bad window ID");
+        did_misbehave("SetWindowCursor: Bad window ID");
         return nullptr;
     }
     auto& window = *(*it).value;
-    window.set_override_cursor(Cursor::create((Gfx::StandardCursor)message.cursor_type()));
+    window.set_cursor(Cursor::create((Gfx::StandardCursor)message.cursor_type()));
     Compositor::the().invalidate_cursor();
-    return make<Messages::WindowServer::SetWindowOverrideCursorResponse>();
+    return make<Messages::WindowServer::SetWindowCursorResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowCustomOverrideCursorResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowCustomOverrideCursor& message)
+OwnPtr<Messages::WindowServer::SetWindowCustomCursorResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowCustomCursor& message)
 {
     auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
-        did_misbehave("SetWindowCustomOverrideCursor: Bad window ID");
+        did_misbehave("SetWindowCustomCursor: Bad window ID");
         return nullptr;
     }
 
     auto& window = *(*it).value;
     if (!message.cursor().is_valid()) {
-        did_misbehave("SetWindowCustomOverrideCursor: Bad cursor");
+        did_misbehave("SetWindowCustomCursor: Bad cursor");
         return nullptr;
     }
 
-    window.set_override_cursor(Cursor::create(*message.cursor().bitmap()));
+    window.set_cursor(Cursor::create(*message.cursor().bitmap()));
     Compositor::the().invalidate_cursor();
-    return make<Messages::WindowServer::SetWindowCustomOverrideCursorResponse>();
+    return make<Messages::WindowServer::SetWindowCustomCursorResponse>();
 }
 
 OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowHasAlphaChannel& message)
@@ -880,7 +880,7 @@ void ClientConnection::set_unresponsive(bool unresponsive)
         auto& window = *it.value;
         window.invalidate();
         if (unresponsive)
-            window.set_override_cursor(WindowManager::the().wait_cursor());
+            window.set_cursor(WindowManager::the().wait_cursor());
     }
     Compositor::the().invalidate_cursor();
 }
