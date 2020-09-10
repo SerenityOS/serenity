@@ -26,29 +26,23 @@
 
 #pragma once
 
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/StandardCursor.h>
+namespace Gfx {
 
-namespace WindowServer {
-
-class Cursor : public RefCounted<Cursor> {
-public:
-    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::IntPoint& hotspot);
-    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&);
-    static RefPtr<Cursor> create(Gfx::StandardCursor);
-    ~Cursor();
-
-    Gfx::IntPoint hotspot() const { return m_hotspot; }
-    const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
-
-    Gfx::IntRect rect() const { return m_bitmap->rect(); }
-    Gfx::IntSize size() const { return m_bitmap->size(); }
-
-private:
-    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, const Gfx::IntPoint&);
-
-    RefPtr<Gfx::Bitmap> m_bitmap;
-    Gfx::IntPoint m_hotspot;
+enum class StandardCursor {
+    None = 0,
+    Arrow,
+    IBeam,
+    ResizeHorizontal,
+    ResizeVertical,
+    ResizeDiagonalTLBR,
+    ResizeDiagonalBLTR,
+    ResizeColumn,
+    ResizeRow,
+    Hand,
+    Help,
+    Drag,
+    Move,
+    Wait,
 };
 
 }

@@ -515,59 +515,59 @@ int main(int argc, char** argv)
     auto& radio_cursor_none = cursor_group_box.add<GUI::RadioButton>("None");
     radio_cursor_none.set_checked(true);
     radio_cursor_none.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::None);
+        window->set_override_cursor(Gfx::StandardCursor::None);
     };
     auto& radio_cursor_arrow = cursor_group_box.add<GUI::RadioButton>("Arrow");
     radio_cursor_arrow.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::Arrow);
+        window->set_override_cursor(Gfx::StandardCursor::Arrow);
     };
     auto& radio_cursor_i_beam = cursor_group_box.add<GUI::RadioButton>("IBeam");
     radio_cursor_i_beam.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::IBeam);
+        window->set_override_cursor(Gfx::StandardCursor::IBeam);
     };
     auto& radio_cursor_resize_horizontal = cursor_group_box.add<GUI::RadioButton>("ResizeHorizontal");
     radio_cursor_resize_horizontal.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::ResizeHorizontal);
+        window->set_override_cursor(Gfx::StandardCursor::ResizeHorizontal);
     };
     auto& radio_cursor_resize_vertical = cursor_group_box.add<GUI::RadioButton>("ResizeVertical");
     radio_cursor_resize_vertical.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::ResizeVertical);
+        window->set_override_cursor(Gfx::StandardCursor::ResizeVertical);
     };
     auto& radio_cursor_resize_diagonal_tlbr = cursor_group_box.add<GUI::RadioButton>("ResizeDiagonalTLBR");
     radio_cursor_resize_diagonal_tlbr.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::ResizeDiagonalTLBR);
+        window->set_override_cursor(Gfx::StandardCursor::ResizeDiagonalTLBR);
     };
     auto& radio_cursor_resize_diagonal_bltr = cursor_group_box.add<GUI::RadioButton>("ResizeDiagonalBLTR");
     radio_cursor_resize_diagonal_bltr.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::ResizeDiagonalBLTR);
+        window->set_override_cursor(Gfx::StandardCursor::ResizeDiagonalBLTR);
     };
     auto& radio_cursor_resize_column = cursor_group_box.add<GUI::RadioButton>("ResizeColumn");
     radio_cursor_resize_column.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::ResizeColumn);
+        window->set_override_cursor(Gfx::StandardCursor::ResizeColumn);
     };
     auto& radio_cursor_resize_row = cursor_group_box.add<GUI::RadioButton>("ResizeRow");
     radio_cursor_resize_row.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::ResizeRow);
+        window->set_override_cursor(Gfx::StandardCursor::ResizeRow);
     };
     auto& radio_cursor_hand = cursor_group_box.add<GUI::RadioButton>("Hand");
     radio_cursor_hand.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::Hand);
+        window->set_override_cursor(Gfx::StandardCursor::Hand);
     };
     auto& radio_cursor_help = cursor_group_box.add<GUI::RadioButton>("Help");
     radio_cursor_help.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::Help);
+        window->set_override_cursor(Gfx::StandardCursor::Help);
     };
     auto& radio_cursor_drag = cursor_group_box.add<GUI::RadioButton>("Drag");
     radio_cursor_drag.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::Drag);
+        window->set_override_cursor(Gfx::StandardCursor::Drag);
     };
     auto& radio_cursor_move = cursor_group_box.add<GUI::RadioButton>("Move");
     radio_cursor_move.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::Move);
+        window->set_override_cursor(Gfx::StandardCursor::Move);
     };
     auto& radio_cursor_wait = cursor_group_box.add<GUI::RadioButton>("Wait");
     radio_cursor_wait.on_checked = [&](bool) {
-        window->set_override_cursor(GUI::StandardCursor::Wait);
+        window->set_override_cursor(Gfx::StandardCursor::Wait);
     };
 
     app->set_menubar(move(menubar));

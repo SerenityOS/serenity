@@ -49,36 +49,36 @@ NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, const 
     return adopt(*new Cursor(move(bitmap), hotspot));
 }
 
-RefPtr<Cursor> Cursor::create(StandardCursor standard_cursor)
+RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
 {
     switch (standard_cursor) {
-    case StandardCursor::None:
+    case Gfx::StandardCursor::None:
         return nullptr;
-    case StandardCursor::Arrow:
+    case Gfx::StandardCursor::Arrow:
         return WindowManager::the().arrow_cursor();
-    case StandardCursor::IBeam:
+    case Gfx::StandardCursor::IBeam:
         return WindowManager::the().i_beam_cursor();
-    case StandardCursor::ResizeHorizontal:
+    case Gfx::StandardCursor::ResizeHorizontal:
         return WindowManager::the().resize_horizontally_cursor();
-    case StandardCursor::ResizeVertical:
+    case Gfx::StandardCursor::ResizeVertical:
         return WindowManager::the().resize_vertically_cursor();
-    case StandardCursor::ResizeDiagonalTLBR:
+    case Gfx::StandardCursor::ResizeDiagonalTLBR:
         return WindowManager::the().resize_diagonally_tlbr_cursor();
-    case StandardCursor::ResizeDiagonalBLTR:
+    case Gfx::StandardCursor::ResizeDiagonalBLTR:
         return WindowManager::the().resize_diagonally_bltr_cursor();
-    case StandardCursor::ResizeColumn:
+    case Gfx::StandardCursor::ResizeColumn:
         return WindowManager::the().resize_column_cursor();
-    case StandardCursor::ResizeRow:
+    case Gfx::StandardCursor::ResizeRow:
         return WindowManager::the().resize_row_cursor();
-    case StandardCursor::Hand:
+    case Gfx::StandardCursor::Hand:
         return WindowManager::the().hand_cursor();
-    case StandardCursor::Help:
+    case Gfx::StandardCursor::Help:
         return WindowManager::the().help_cursor();
-    case StandardCursor::Drag:
+    case Gfx::StandardCursor::Drag:
         return WindowManager::the().drag_cursor();
-    case StandardCursor::Move:
+    case Gfx::StandardCursor::Move:
         return WindowManager::the().move_cursor();
-    case StandardCursor::Wait:
+    case Gfx::StandardCursor::Wait:
         return WindowManager::the().wait_cursor();
     }
     ASSERT_NOT_REACHED();

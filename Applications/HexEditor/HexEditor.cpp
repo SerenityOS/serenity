@@ -274,12 +274,12 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
     auto text_end_x = text_start_x + (bytes_per_row() * character_width());
     auto text_end_y = text_start_y + 5 + (total_rows() * line_height());
 
-    window()->set_override_cursor(GUI::StandardCursor::None);
+    window()->set_override_cursor(Gfx::StandardCursor::None);
     if ((absolute_x >= hex_start_x && absolute_x <= hex_end_x
             && absolute_y >= hex_start_y && absolute_y <= hex_end_y)
         || (absolute_x >= text_start_x && absolute_x <= text_end_x
             && absolute_y >= text_start_y && absolute_y <= text_end_y)) {
-        window()->set_override_cursor(GUI::StandardCursor::IBeam);
+        window()->set_override_cursor(Gfx::StandardCursor::IBeam);
     }
 
     if (m_in_drag_select) {
@@ -585,5 +585,5 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 void HexEditor::leave_event(Core::Event&)
 {
     ASSERT(window());
-    window()->set_override_cursor(GUI::StandardCursor::None);
+    window()->set_override_cursor(Gfx::StandardCursor::None);
 }

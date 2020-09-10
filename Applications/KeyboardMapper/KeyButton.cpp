@@ -81,16 +81,16 @@ void KeyButton::mousemove_event(GUI::MouseEvent& event)
     Gfx::IntRect c = { rect().x() + 7, rect().y() + 4, rect().width() - 14, rect().height() - 14 };
 
     if (c.contains(event.position())) {
-        window()->set_override_cursor(GUI::StandardCursor::Hand);
+        window()->set_override_cursor(Gfx::StandardCursor::Hand);
         return;
     }
-    window()->set_override_cursor(GUI::StandardCursor::Arrow);
+    window()->set_override_cursor(Gfx::StandardCursor::Arrow);
 
     AbstractButton::mousemove_event(event);
 }
 
 void KeyButton::leave_event(Core::Event& event)
 {
-    window()->set_override_cursor(GUI::StandardCursor::Arrow);
+    window()->set_override_cursor(Gfx::StandardCursor::Arrow);
     AbstractButton::leave_event(event);
 }

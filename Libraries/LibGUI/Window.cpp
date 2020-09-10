@@ -93,7 +93,7 @@ void Window::show()
 
     auto* parent_window = find_parent_window();
 
-    m_override_cursor = StandardCursor::None;
+    m_override_cursor = Gfx::StandardCursor::None;
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
         m_rect_when_windowless,
         !m_moved_by_client,
@@ -138,7 +138,7 @@ void Window::server_did_destroy()
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
-    m_override_cursor = StandardCursor::None;
+    m_override_cursor = Gfx::StandardCursor::None;
 }
 
 void Window::hide()
@@ -226,7 +226,7 @@ void Window::set_window_type(WindowType window_type)
     m_window_type = window_type;
 }
 
-void Window::set_override_cursor(StandardCursor cursor)
+void Window::set_override_cursor(Gfx::StandardCursor cursor)
 {
     if (!is_visible())
         return;
