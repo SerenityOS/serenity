@@ -82,7 +82,7 @@ public:
     virtual void page_did_change_title(const String&) { }
     virtual void page_did_start_loading(const URL&) { }
     virtual void page_did_change_selection() { }
-    virtual void page_did_request_cursor_change(GUI::StandardCursor) { }
+    virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(const Gfx::IntPoint&) { }
     virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_click_link(const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }

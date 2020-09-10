@@ -629,9 +629,9 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
             m_hovered_href = {};
         }
         if (!m_hovered_href.is_empty())
-            window()->set_override_cursor(GUI::StandardCursor::Hand);
+            window()->set_override_cursor(Gfx::StandardCursor::Hand);
         else
-            window()->set_override_cursor(GUI::StandardCursor::None);
+            window()->set_override_cursor(Gfx::StandardCursor::None);
         update();
     }
 
@@ -667,7 +667,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
 
 void TerminalWidget::leave_event(Core::Event&)
 {
-    window()->set_override_cursor(GUI::StandardCursor::None);
+    window()->set_override_cursor(Gfx::StandardCursor::None);
     bool should_update = !m_hovered_href.is_empty();
     m_hovered_href = {};
     m_hovered_href_id = {};

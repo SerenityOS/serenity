@@ -209,9 +209,9 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     auto ruler_line_rect = ruler_content_rect(text_position.line());
     auto hovering_lines_ruler = (event.position().x() < ruler_line_rect.width());
     if (hovering_lines_ruler && !is_in_drag_select())
-        window()->set_override_cursor(GUI::StandardCursor::Arrow);
+        window()->set_override_cursor(Gfx::StandardCursor::Arrow);
     else if (m_hovering_editor)
-        window()->set_override_cursor(m_hovering_link && m_holding_ctrl ? GUI::StandardCursor::Hand : GUI::StandardCursor::IBeam);
+        window()->set_override_cursor(m_hovering_link && m_holding_ctrl ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::IBeam);
 
     for (auto& span : document().spans()) {
         if (span.range.contains(m_previous_text_position) && !span.range.contains(text_position)) {

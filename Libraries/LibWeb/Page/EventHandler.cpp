@@ -216,11 +216,11 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     }
 
     if (is_hovering_link)
-        page_client.page_did_request_cursor_change(GUI::StandardCursor::Hand);
+        page_client.page_did_request_cursor_change(Gfx::StandardCursor::Hand);
     else if (is_hovering_text)
-        page_client.page_did_request_cursor_change(GUI::StandardCursor::IBeam);
+        page_client.page_did_request_cursor_change(Gfx::StandardCursor::IBeam);
     else
-        page_client.page_did_request_cursor_change(GUI::StandardCursor::None);
+        page_client.page_did_request_cursor_change(Gfx::StandardCursor::None);
 
     if (hovered_node_changed) {
         RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element() : nullptr;

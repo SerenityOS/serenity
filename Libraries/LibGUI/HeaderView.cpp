@@ -180,7 +180,7 @@ void HeaderView::mousemove_event(MouseEvent& event)
         bool found_hovered_header = false;
         for (int i = 0; i < section_count; ++i) {
             if (section_resize_grabbable_rect(i).contains(event.position())) {
-                window()->set_override_cursor(StandardCursor::ResizeColumn);
+                window()->set_override_cursor(Gfx::StandardCursor::ResizeColumn);
                 set_hovered_section(-1);
                 return;
             }
@@ -192,7 +192,7 @@ void HeaderView::mousemove_event(MouseEvent& event)
         if (!found_hovered_header)
             set_hovered_section(-1);
     }
-    window()->set_override_cursor(StandardCursor::None);
+    window()->set_override_cursor(Gfx::StandardCursor::None);
 }
 
 void HeaderView::mouseup_event(MouseEvent& event)
@@ -200,7 +200,7 @@ void HeaderView::mouseup_event(MouseEvent& event)
     if (event.button() == MouseButton::Left) {
         if (m_in_section_resize) {
             if (!section_resize_grabbable_rect(m_resizing_section).contains(event.position()))
-                window()->set_override_cursor(StandardCursor::None);
+                window()->set_override_cursor(Gfx::StandardCursor::None);
             m_in_section_resize = false;
             return;
         }
@@ -337,7 +337,7 @@ void HeaderView::leave_event(Core::Event& event)
 {
     Widget::leave_event(event);
     set_hovered_section(-1);
-    window()->set_override_cursor(StandardCursor::None);
+    window()->set_override_cursor(Gfx::StandardCursor::None);
 }
 
 Gfx::TextAlignment HeaderView::section_alignment(int section) const

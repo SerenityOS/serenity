@@ -91,7 +91,7 @@ private:
     virtual void page_did_set_document_in_main_frame(DOM::Document*) override;
     virtual void page_did_start_loading(const URL&) override;
     virtual void page_did_change_selection() override;
-    virtual void page_did_request_cursor_change(GUI::StandardCursor) override;
+    virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_request_context_menu(const Gfx::IntPoint&) override;
     virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const URL&, const String& target, unsigned modifiers) override;
     virtual void page_did_click_link(const URL&, const String& target, unsigned modifiers) override;
