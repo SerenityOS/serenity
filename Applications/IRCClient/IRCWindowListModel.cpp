@@ -39,7 +39,7 @@ IRCWindowListModel::~IRCWindowListModel()
 
 int IRCWindowListModel::row_count(const GUI::ModelIndex&) const
 {
-    return m_client.window_count();
+    return m_client->window_count();
 }
 
 int IRCWindowListModel::column_count(const GUI::ModelIndex&) const
@@ -63,7 +63,7 @@ GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, GUI::ModelRo
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case Column::Name: {
-            auto& window = m_client.window_at(index.row());
+            auto& window = m_client->window_at(index.row());
             if (window.unread_count())
                 return String::format("%s (%d)", window.name().characters(), window.unread_count());
             return window.name();
@@ -73,7 +73,7 @@ GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, GUI::ModelRo
     if (role == GUI::ModelRole::ForegroundColor) {
         switch (index.column()) {
         case Column::Name: {
-            auto& window = m_client.window_at(index.row());
+            auto& window = m_client->window_at(index.row());
             if (window.unread_count())
                 return Color(Color::Red);
             if (!window.channel().is_open())

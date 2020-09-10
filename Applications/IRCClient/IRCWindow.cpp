@@ -68,7 +68,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
             auto nick = channel().member_model()->nick_at(member_view.selection().first());
             if (nick.is_empty())
                 return;
-            m_client.handle_open_query_action(m_client.nick_without_prefix(nick.characters()));
+            m_client->handle_open_query_action(m_client->nick_without_prefix(nick.characters()));
         };
         member_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
             if (!index.is_valid())
@@ -80,14 +80,14 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_open_query_action(m_client.nick_without_prefix(nick.characters()));
+                m_client->handle_open_query_action(m_client->nick_without_prefix(nick.characters()));
             }));
 
             m_context_menu->add_action(GUI::Action::create("Whois", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_whois_action(m_client.nick_without_prefix(nick.characters()));
+                m_client->handle_whois_action(m_client->nick_without_prefix(nick.characters()));
             }));
 
             auto& context_control_menu = m_context_menu->add_submenu("Control");
@@ -96,42 +96,42 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_voice_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
+                m_client->handle_voice_user_action(m_name.characters(), m_client->nick_without_prefix(nick.characters()));
             }));
 
             context_control_menu.add_action(GUI::Action::create("DeVoice", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_devoice_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
+                m_client->handle_devoice_user_action(m_name.characters(), m_client->nick_without_prefix(nick.characters()));
             }));
 
             context_control_menu.add_action(GUI::Action::create("Hop", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_hop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
+                m_client->handle_hop_user_action(m_name.characters(), m_client->nick_without_prefix(nick.characters()));
             }));
 
             context_control_menu.add_action(GUI::Action::create("DeHop", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_dehop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
+                m_client->handle_dehop_user_action(m_name.characters(), m_client->nick_without_prefix(nick.characters()));
             }));
 
             context_control_menu.add_action(GUI::Action::create("Op", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_op_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
+                m_client->handle_op_user_action(m_name.characters(), m_client->nick_without_prefix(nick.characters()));
             }));
 
             context_control_menu.add_action(GUI::Action::create("DeOp", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_deop_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()));
+                m_client->handle_deop_user_action(m_name.characters(), m_client->nick_without_prefix(nick.characters()));
             }));
 
             context_control_menu.add_separator();
@@ -144,7 +144,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                     nick = nick.substring(1, nick.length() - 1);
                 String value;
                 if (GUI::InputBox::show(value, window(), "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
-                    m_client.handle_kick_user_action(m_name.characters(), m_client.nick_without_prefix(nick.characters()), value);
+                    m_client->handle_kick_user_action(m_name.characters(), m_client->nick_without_prefix(nick.characters()), value);
             }));
 
             auto& context_ctcp_menu = m_context_menu->add_submenu("CTCP");
@@ -153,35 +153,35 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "USERINFO");
+                m_client->handle_ctcp_user_action(m_client->nick_without_prefix(nick.characters()), "USERINFO");
             }));
 
             context_ctcp_menu.add_action(GUI::Action::create("Finger", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "FINGER");
+                m_client->handle_ctcp_user_action(m_client->nick_without_prefix(nick.characters()), "FINGER");
             }));
 
             context_ctcp_menu.add_action(GUI::Action::create("Time", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "TIME");
+                m_client->handle_ctcp_user_action(m_client->nick_without_prefix(nick.characters()), "TIME");
             }));
 
             context_ctcp_menu.add_action(GUI::Action::create("Version", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "VERSION");
+                m_client->handle_ctcp_user_action(m_client->nick_without_prefix(nick.characters()), "VERSION");
             }));
 
             context_ctcp_menu.add_action(GUI::Action::create("Client info", [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
-                m_client.handle_ctcp_user_action(m_client.nick_without_prefix(nick.characters()), "CLIENTINFO");
+                m_client->handle_ctcp_user_action(m_client->nick_without_prefix(nick.characters()), "CLIENTINFO");
             }));
 
             m_context_menu->popup(event.screen_position());
@@ -193,22 +193,22 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     m_text_box->set_preferred_size(0, 19);
     m_text_box->on_return_pressed = [this] {
         if (m_type == Channel)
-            m_client.handle_user_input_in_channel(m_name, m_text_box->text());
+            m_client->handle_user_input_in_channel(m_name, m_text_box->text());
         else if (m_type == Query)
-            m_client.handle_user_input_in_query(m_name, m_text_box->text());
+            m_client->handle_user_input_in_query(m_name, m_text_box->text());
         else if (m_type == Server)
-            m_client.handle_user_input_in_server(m_text_box->text());
+            m_client->handle_user_input_in_server(m_text_box->text());
         m_text_box->add_current_text_to_history();
         m_text_box->clear();
     };
     m_text_box->set_history_enabled(true);
 
-    m_client.register_subwindow(*this);
+    m_client->register_subwindow(*this);
 }
 
 IRCWindow::~IRCWindow()
 {
-    m_client.unregister_subwindow(*this);
+    m_client->unregister_subwindow(*this);
 }
 
 void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
@@ -219,7 +219,7 @@ void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
 
 bool IRCWindow::is_active() const
 {
-    return m_client.current_window() == this;
+    return m_client->current_window() == this;
 }
 
 void IRCWindow::post_notification_if_needed(const String& name, const String& message)
@@ -232,9 +232,9 @@ void IRCWindow::post_notification_if_needed(const String& name, const String& me
     auto notification = GUI::Notification::construct();
 
     if (type() == Type::Channel) {
-        if (!m_client.notify_on_mention())
+        if (!m_client->notify_on_mention())
             return;
-        if (!message.contains(m_client.nickname()))
+        if (!message.contains(m_client->nickname()))
             return;
 
         StringBuilder builder;
@@ -243,7 +243,7 @@ void IRCWindow::post_notification_if_needed(const String& name, const String& me
         builder.append(m_name);
         notification->set_title(builder.to_string());
     } else {
-        if (!m_client.notify_on_message())
+        if (!m_client->notify_on_message())
             return;
         notification->set_title(name);
     }
@@ -259,7 +259,7 @@ void IRCWindow::did_add_message(const String& name, const String& message)
 
     if (!is_active()) {
         ++m_unread_count;
-        m_client.aid_update_window_list();
+        m_client->aid_update_window_list();
         return;
     }
     m_page_view->scroll_to_bottom();
@@ -270,7 +270,7 @@ void IRCWindow::clear_unread_count()
     if (!m_unread_count)
         return;
     m_unread_count = 0;
-    m_client.aid_update_window_list();
+    m_client->aid_update_window_list();
 }
 
 int IRCWindow::unread_count() const

@@ -58,7 +58,7 @@ public:
 private:
     IRCQuery(IRCClient&, const String& name);
 
-    IRCClient& m_client;
+    NonnullRefPtr<IRCClient> m_client;
     String m_name;
     RefPtr<IRCWindow> m_window;
 

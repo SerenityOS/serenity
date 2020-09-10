@@ -50,5 +50,5 @@ public:
 private:
     explicit IRCWindowListModel(IRCClient&);
 
-    IRCClient& m_client;
+    NonnullRefPtr<IRCClient> m_client;
 };
