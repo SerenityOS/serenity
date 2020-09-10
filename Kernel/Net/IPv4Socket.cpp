@@ -338,9 +338,9 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     }
 
     if (type() == SOCK_RAW) {
-        ASSERT(buffer_length >= ipv4_packet.payload_size());
-        memcpy(buffer, ipv4_packet.payload(), ipv4_packet.payload_size());
-        return ipv4_packet.payload_size();
+        size_t bytes_written = min((size_t) ipv4_packet.payload_size(), buffer_length);
+        memcpy(buffer, ipv4_packet.payload(), bytes_written);
+        return bytes_written;
     }
 
     return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
