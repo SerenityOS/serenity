@@ -122,8 +122,8 @@ static void dump(const RegisterState& regs)
 {
     u16 ss;
     u32 esp;
-    auto process = Process::current();
-    if (!process || process->is_ring0()) {
+
+    if (!(regs.cs & 3)) {
         ss = regs.ss;
         esp = regs.esp;
     } else {
@@ -149,6 +149,7 @@ static void dump(const RegisterState& regs)
         : "=a"(cr4));
     klog() << "cr0=" << String::format("%08x", cr0) << " cr2=" << String::format("%08x", cr2) << " cr3=" << String::format("%08x", cr3) << " cr4=" << String::format("%08x", cr4);
 
+    auto process = Process::current();
     if (process && process->validate_read((void*)regs.eip, 8)) {
         SmapDisabler disabler;
         u8* codeptr = (u8*)regs.eip;
@@ -168,10 +169,10 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
     // make sure we switch back to the right page tables.
     MM.enter_process_paging_scope(*process);
 
-    klog() << "CRASH: CPU #" << Processor::current().id() << " " << description << ". Ring " << (process->is_ring0() ? 0 : 3) << ".";
+    klog() << "CRASH: CPU #" << Processor::current().id() << " " << description << ". Ring " << (regs.cs & 3) << ".";
     dump(regs);
 
-    if (process->is_ring0()) {
+    if (!(regs.cs & 3)) {
         klog() << "Crash in ring 0 :(";
         dump_backtrace();
         Processor::halt();
