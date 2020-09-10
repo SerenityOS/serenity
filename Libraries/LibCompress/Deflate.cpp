@@ -34,7 +34,7 @@
 
 namespace Compress {
 
-const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fixed_literal_codes()
+const CanonicalCode& CanonicalCode::fixed_literal_codes()
 {
     static CanonicalCode code;
     static bool initialized = false;
@@ -54,7 +54,7 @@ const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fi
     return code;
 }
 
-const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fixed_distance_codes()
+const CanonicalCode& CanonicalCode::fixed_distance_codes()
 {
     static CanonicalCode code;
     static bool initialized = false;
@@ -71,7 +71,7 @@ const DeflateDecompressor::CanonicalCode& DeflateDecompressor::CanonicalCode::fi
     return code;
 }
 
-Optional<DeflateDecompressor::CanonicalCode> DeflateDecompressor::CanonicalCode::from_bytes(ReadonlyBytes bytes)
+Optional<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
 {
     // FIXME: I can't quite follow the algorithm here, but it seems to work.
 
@@ -103,7 +103,7 @@ Optional<DeflateDecompressor::CanonicalCode> DeflateDecompressor::CanonicalCode:
     return code;
 }
 
-u32 DeflateDecompressor::CanonicalCode::read_symbol(InputBitStream& stream) const
+u32 CanonicalCode::read_symbol(InputBitStream& stream) const
 {
     u32 code_bits = 1;
 

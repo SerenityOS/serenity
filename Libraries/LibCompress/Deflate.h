@@ -34,23 +34,23 @@
 
 namespace Compress {
 
+class CanonicalCode {
+public:
+    CanonicalCode() = default;
+    u32 read_symbol(InputBitStream&) const;
+
+    static const CanonicalCode& fixed_literal_codes();
+    static const CanonicalCode& fixed_distance_codes();
+
+    static Optional<CanonicalCode> from_bytes(ReadonlyBytes);
+
+private:
+    Vector<u32> m_symbol_codes;
+    Vector<u32> m_symbol_values;
+};
+
 class DeflateDecompressor final : public InputStream {
 private:
-    class CanonicalCode {
-    public:
-        CanonicalCode() = default;
-        u32 read_symbol(InputBitStream&) const;
-
-        static const CanonicalCode& fixed_literal_codes();
-        static const CanonicalCode& fixed_distance_codes();
-
-        static Optional<CanonicalCode> from_bytes(ReadonlyBytes);
-
-    private:
-        Vector<u32> m_symbol_codes;
-        Vector<u32> m_symbol_values;
-    };
-
     class CompressedBlock {
     public:
         CompressedBlock(DeflateDecompressor&, CanonicalCode literal_codes, Optional<CanonicalCode> distance_codes);
