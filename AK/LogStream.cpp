@@ -209,7 +209,7 @@ const LogStream& operator<<(const LogStream& stream, float value)
 
 #endif
 
-const LogStream& operator<<(const LogStream& stream, ReadonlyBytes bytes)
+void dump_bytes(ReadonlyBytes bytes)
 {
     StringBuilder builder;
 
@@ -247,7 +247,7 @@ const LogStream& operator<<(const LogStream& stream, ReadonlyBytes bytes)
 
     builder.append(" }");
 
-    return stream << builder.to_string();
+    dbg() << builder.to_string();
 }
 
 }
