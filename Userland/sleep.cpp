@@ -59,10 +59,9 @@ int main(int argc, char** argv)
         printf("Sleep interrupted with %u seconds remaining.\n", remaining);
     }
 
-    if (g_interrupted) {
-        signal(SIGINT, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
+    if (g_interrupted)
         raise(SIGINT);
-    }
 
     return 0;
 }
