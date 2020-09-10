@@ -137,17 +137,12 @@ public:
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }
 
-    enum RingLevel : u8 {
-        Ring0 = 0,
-        Ring3 = 3,
-    };
-
     KBuffer backtrace() const;
 
     bool is_dead() const { return m_dead; }
 
-    bool is_ring0() const { return m_ring == Ring0; }
-    bool is_ring3() const { return m_ring == Ring3; }
+    bool is_kernel_process() const { return m_is_kernel_process; }
+    bool is_user_process() const { return !m_is_kernel_process; }
 
     PageDirectory& page_directory() { return *m_page_directory; }
     const PageDirectory& page_directory() const { return *m_page_directory; }
@@ -576,7 +571,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(Thread*& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(Thread*& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     static ProcessID allocate_pid();
 
     Range allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
@@ -654,11 +649,11 @@ private:
     };
     Vector<FileDescriptionAndFlags> m_fds;
 
-    RingLevel m_ring { Ring0 };
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
     Atomic<u32> m_thread_count { 0 };
 
+    const bool m_is_kernel_process;
     bool m_dead { false };
     bool m_profiling { false };
 

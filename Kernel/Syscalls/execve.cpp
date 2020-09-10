@@ -46,7 +46,7 @@ namespace Kernel {
 
 int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags)
 {
-    ASSERT(is_ring3());
+    ASSERT(is_user_process());
     ASSERT(!Processor::current().in_critical());
     auto path = main_program_description->absolute_path();
 #ifdef EXEC_DEBUG

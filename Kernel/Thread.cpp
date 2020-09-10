@@ -68,7 +68,7 @@ Thread::Thread(NonnullRefPtr<Process> process)
     // Only IF is set when a process boots.
     m_tss.eflags = 0x0202;
 
-    if (m_process->is_ring0()) {
+    if (m_process->is_kernel_process()) {
         m_tss.cs = GDT_SELECTOR_CODE0;
         m_tss.ds = GDT_SELECTOR_DATA0;
         m_tss.es = GDT_SELECTOR_DATA0;
@@ -91,7 +91,7 @@ Thread::Thread(NonnullRefPtr<Process> process)
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
 
-    if (m_process->is_ring0()) {
+    if (m_process->is_kernel_process()) {
         m_tss.esp = m_tss.esp0 = m_kernel_stack_top;
     } else {
         // Ring 3 processes get a separate stack for ring 0.
@@ -504,7 +504,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(g_scheduler_lock.own_lock());
     ASSERT(signal > 0 && signal <= 32);
-    ASSERT(!process().is_ring0());
+    ASSERT(process().is_user_process());
 
 #ifdef SIGNAL_DEBUG
     klog() << "signal: dispatch signal " << signal << " to " << *this;

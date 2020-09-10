@@ -312,7 +312,7 @@ RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String
     if (!root)
         root = VFS::the().root_custody();
 
-    auto process = adopt(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty));
+    auto process = adopt(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
     process->m_fds.resize(m_max_open_file_descriptors);
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
     auto description = device_to_use_as_tty.open(O_RDWR).value();
@@ -338,7 +338,7 @@ RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String
 
 NonnullRefPtr<Process> Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)(), u32 affinity)
 {
-    auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), Ring0));
+    auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
     first_thread->tss().eip = (FlatPtr)e;
 
     if (process->pid() != 0) {
@@ -352,7 +352,7 @@ NonnullRefPtr<Process> Process::create_kernel_process(Thread*& first_thread, Str
     return process;
 }
 
-Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(allocate_pid())
     , m_euid(uid)
@@ -361,7 +361,7 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
     , m_gid(gid)
     , m_suid(uid)
     , m_sgid(gid)
-    , m_ring(ring)
+    , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_cwd(move(cwd))
     , m_tty(tty)
@@ -483,7 +483,7 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
     }
     m_termination_signal = signal;
     dump_regions();
-    ASSERT(is_ring3());
+    ASSERT(is_user_process());
     die();
     // We can not return from here, as there is nowhere
     // to unwind to, so die right away.
