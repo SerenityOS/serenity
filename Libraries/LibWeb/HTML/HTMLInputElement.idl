@@ -11,4 +11,5 @@ interface HTMLInputElement : HTMLElement {
     [Reflect=dirname] attribute DOMString dirName;
     [Reflect=value] attribute DOMString defaultValue;
 
+    attribute boolean checked;
 }
