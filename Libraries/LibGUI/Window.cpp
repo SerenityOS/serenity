@@ -228,23 +228,20 @@ void Window::set_window_type(WindowType window_type)
 
 void Window::set_cursor(Gfx::StandardCursor cursor)
 {
-    if (!is_visible())
+    if (m_cursor == cursor)
         return;
-    if (!m_custom_cursor && m_cursor == cursor)
-        return;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCursor>(m_window_id, (u32)cursor);
     m_cursor = cursor;
     m_custom_cursor = nullptr;
+    update_cursor();
 }
 
 void Window::set_cursor(const Gfx::Bitmap& cursor)
 {
-    if (!is_visible())
+    if (m_custom_cursor == &cursor)
         return;
-    if (&cursor == m_custom_cursor.ptr())
-        return;
+    m_cursor = Gfx::StandardCursor::None;
     m_custom_cursor = &cursor;
-    WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
+    update_cursor();
 }
 
 void Window::handle_drop_event(DropEvent& event)
@@ -871,4 +868,24 @@ void Window::set_progress(int progress)
     ASSERT(m_window_id);
     WindowServerConnection::the().post_message(Messages::WindowServer::SetWindowProgress(m_window_id, progress));
 }
+
+void Window::update_cursor()
+{
+    Gfx::StandardCursor new_cursor;
+
+    if (m_hovered_widget && m_hovered_widget->override_cursor() != Gfx::StandardCursor::None)
+        new_cursor = m_hovered_widget->override_cursor();
+    else
+        new_cursor = m_cursor;
+
+    if (m_effective_cursor == new_cursor)
+        return;
+    m_effective_cursor = new_cursor;
+
+    if (m_custom_cursor)
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
+    else
+        WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCursor>(m_window_id, (u32)m_effective_cursor);
+}
+
 }

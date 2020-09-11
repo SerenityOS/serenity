@@ -36,6 +36,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Rect.h>
+#include <LibGfx/StandardCursor.h>
 
 #define REGISTER_WIDGET(class_name)                           \
     extern WidgetClassRegistration registration_##class_name; \
@@ -277,6 +278,9 @@ public:
 
     virtual Gfx::IntRect children_clip_rect() const;
 
+    Gfx::StandardCursor override_cursor() const { return m_override_cursor; }
+    void set_override_cursor(Gfx::StandardCursor);
+
 protected:
     Widget();
 
@@ -349,6 +353,8 @@ private:
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 
     WeakPtr<Widget> m_focus_proxy;
+
+    Gfx::StandardCursor m_override_cursor { Gfx::StandardCursor::None };
 };
 
 inline Widget* Widget::parent_widget()
