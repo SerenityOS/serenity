@@ -75,9 +75,20 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 {
     if (!layout_root())
         return false;
+
+    if (m_mouse_event_tracking_layout_node) {
+        m_mouse_event_tracking_layout_node->handle_mouseup({}, position, button, modifiers);
+        return true;
+    }
+
     bool handled_event = false;
 
     auto result = layout_root()->hit_test(position, HitTestType::Exact);
+
+    if (result.layout_node && result.layout_node->wants_mouse_events()) {
+        result.layout_node->handle_mouseup({}, position, button, modifiers);
+    }
+
     if (result.layout_node && result.layout_node->node()) {
         RefPtr<DOM::Node> node = result.layout_node->node();
         if (is<HTML::HTMLIFrameElement>(*node)) {
@@ -101,12 +112,23 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 {
     if (!layout_root())
         return false;
+
+    if (m_mouse_event_tracking_layout_node) {
+        m_mouse_event_tracking_layout_node->handle_mousedown({}, position, button, modifiers);
+        return true;
+    }
+
     NonnullRefPtr document = *m_frame.document();
     auto& page_client = m_frame.page().client();
 
     auto result = layout_root()->hit_test(position, HitTestType::Exact);
     if (!result.layout_node)
         return false;
+
+    if (result.layout_node->wants_mouse_events()) {
+        result.layout_node->handle_mousedown({}, position, button, modifiers);
+        return true;
+    }
 
     RefPtr<DOM::Node> node = result.layout_node->node();
     document->set_hovered_node(node);
@@ -171,6 +193,12 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
 {
     if (!layout_root())
         return false;
+
+    if (m_mouse_event_tracking_layout_node) {
+        m_mouse_event_tracking_layout_node->handle_mousemove({}, position, buttons, modifiers);
+        return true;
+    }
+
     auto& document = *m_frame.document();
     auto& page_client = m_frame.page().client();
 
@@ -180,6 +208,14 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     auto result = layout_root()->hit_test(position, HitTestType::Exact);
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
+
+        if (result.layout_node->wants_mouse_events()) {
+            result.layout_node->handle_mousemove({}, position, buttons, modifiers);
+            // FIXME: It feels a bit aggressive to always update the cursor like this.
+            page_client.page_did_request_cursor_change(Gfx::StandardCursor::None);
+            return true;
+        }
+
         RefPtr<DOM::Node> node = result.layout_node->node();
 
         if (node && is<HTML::HTMLIFrameElement>(*node)) {
@@ -311,6 +347,14 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         }
     }
     return false;
+}
+
+void EventHandler::set_mouse_event_tracking_layout_node(LayoutNode* layout_node)
+{
+    if (layout_node)
+        m_mouse_event_tracking_layout_node = layout_node->make_weak_ptr();
+    else
+        m_mouse_event_tracking_layout_node = nullptr;
 }
 
 }
