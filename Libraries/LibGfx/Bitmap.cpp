@@ -145,15 +145,25 @@ Bitmap::Bitmap(BitmapFormat format, const IntSize& size, size_t pitch, void* dat
 
 RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size)
 {
-    if (size_would_overflow(format, size))
-        return nullptr;
-    return adopt(*new Bitmap(format, move(shared_buffer), size, {}));
+    return create_with_shared_buffer(format, move(shared_buffer), size, {});
 }
 
 RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
 {
     if (size_would_overflow(format, size))
         return nullptr;
+
+    unsigned actual_size = shared_buffer->size();
+    // FIXME: Code duplication of size_in_bytes() and m_pitch
+    unsigned expected_size_min = minimum_pitch(size.width(), format) * size.height();
+    unsigned expected_size_max = round_up_to_power_of_two(expected_size_min, PAGE_SIZE);
+    if (expected_size_min > actual_size || actual_size > expected_size_max) {
+        // Getting here is most likely an error.
+        dbg() << "Constructing a shared bitmap for format " << (int)format << " and size " << size << ", which demands " << expected_size_min << " bytes, which rounds up to at most " << expected_size_max << ".";
+        dbg() << "However, we were given " << actual_size << " bytes, which is outside this range?! Refusing cowardly.";
+        return {};
+    }
+
     return adopt(*new Bitmap(format, move(shared_buffer), size, palette));
 }
 
@@ -166,6 +176,7 @@ Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer,
 {
     ASSERT(!is_indexed() || !palette.is_empty());
     ASSERT(!size_would_overflow(format, size));
+    ASSERT(size_in_bytes() <= static_cast<size_t>(m_shared_buffer->size()));
 
     if (is_indexed(m_format))
         allocate_palette_from_format(m_format, palette);
