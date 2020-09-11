@@ -43,6 +43,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(async)           \
     __ENUMERATE_HTML_ATTRIBUTE(behaviour)       \
     __ENUMERATE_HTML_ATTRIBUTE(bgcolor)         \
+    __ENUMERATE_HTML_ATTRIBUTE(checked)         \
     __ENUMERATE_HTML_ATTRIBUTE(cite)            \
     __ENUMERATE_HTML_ATTRIBUTE(class_)          \
     __ENUMERATE_HTML_ATTRIBUTE(cols)            \
@@ -51,6 +52,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(contenteditable) \
     __ENUMERATE_HTML_ATTRIBUTE(data)            \
     __ENUMERATE_HTML_ATTRIBUTE(datetime)        \
+    __ENUMERATE_HTML_ATTRIBUTE(disabled)        \
     __ENUMERATE_HTML_ATTRIBUTE(download)        \
     __ENUMERATE_HTML_ATTRIBUTE(defer)           \
     __ENUMERATE_HTML_ATTRIBUTE(direction)       \
