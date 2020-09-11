@@ -42,6 +42,14 @@ public:
     String type() const { return attribute(HTML::AttributeNames::type); }
     String value() const { return attribute(HTML::AttributeNames::value); }
     String name() const { return attribute(HTML::AttributeNames::name); }
+
+    bool checked() const { return m_checked; }
+    void set_checked(bool);
+
+    bool enabled() const;
+
+private:
+    bool m_checked { false };
 };
 
 }

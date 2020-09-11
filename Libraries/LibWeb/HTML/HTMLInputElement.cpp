@@ -30,9 +30,10 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Layout/LayoutCheckBox.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/InProcessWebView.h>
 
 namespace Web::HTML {
 
@@ -78,6 +79,8 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperti
             const_cast<HTMLInputElement*>(this)->dispatch_event(DOM::Event::create("click"));
         };
         widget = button;
+    } else if (type() == "checkbox") {
+        return adopt(*new LayoutCheckBox(document(), *this, move(style)));
     } else {
         auto& text_box = page_view.add<GUI::TextBox>();
         text_box.set_text(value());
@@ -97,6 +100,20 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperti
     }
 
     return adopt(*new LayoutWidget(document(), *this, *widget));
+}
+
+void HTMLInputElement::set_checked(bool checked)
+{
+    if (m_checked == checked)
+        return;
+    m_checked = checked;
+    if (layout_node())
+        layout_node()->set_needs_display();
+}
+
+bool HTMLInputElement::enabled() const
+{
+    return !has_attribute(HTML::AttributeNames::disabled);
 }
 
 }
