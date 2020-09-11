@@ -54,6 +54,7 @@ TextEditor::TextEditor(Type type)
     : m_type(type)
 {
     set_accepts_emoji_input(true);
+    set_override_cursor(Gfx::StandardCursor::IBeam);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     set_document(TextDocument::create());
@@ -1341,18 +1342,11 @@ void TextEditor::undefer_reflow()
 
 void TextEditor::enter_event(Core::Event&)
 {
-    ASSERT(window());
-    if (!is_displayonly())
-        window()->set_cursor(Gfx::StandardCursor::IBeam);
-
     m_automatic_selection_scroll_timer->stop();
 }
 
 void TextEditor::leave_event(Core::Event&)
 {
-    ASSERT(window());
-    window()->set_cursor(Gfx::StandardCursor::None);
-
     if (m_in_drag_select)
         m_automatic_selection_scroll_timer->start();
 }
@@ -1398,6 +1392,11 @@ void TextEditor::set_mode(const Mode mode)
     default:
         ASSERT_NOT_REACHED();
     }
+
+    if (!is_displayonly())
+        set_override_cursor(Gfx::StandardCursor::IBeam);
+    else
+        set_override_cursor(Gfx::StandardCursor::None);
 }
 
 void TextEditor::set_has_open_button(bool has_button)
