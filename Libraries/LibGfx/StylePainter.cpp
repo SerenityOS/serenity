@@ -73,4 +73,9 @@ void StylePainter::paint_radio_button(Painter& painter, const IntRect& rect, con
     current().paint_radio_button(painter, rect, palette, is_checked, is_being_pressed);
 }
 
+void StylePainter::paint_check_box(Painter& painter, const IntRect& rect, const Palette& palette, bool is_enabled, bool is_checked, bool is_being_pressed)
+{
+    current().paint_check_box(painter, rect, palette, is_enabled, is_checked, is_being_pressed);
+}
+
 }
