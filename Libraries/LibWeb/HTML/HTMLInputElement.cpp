@@ -109,6 +109,8 @@ void HTMLInputElement::set_checked(bool checked)
     m_checked = checked;
     if (layout_node())
         layout_node()->set_needs_display();
+
+    dispatch_event(DOM::Event::create("change"));
 }
 
 bool HTMLInputElement::enabled() const
