@@ -1,0 +1,11 @@
+<html>
+    <input id=foo type=checkbox> This is a checkbox
+    <pre id=bar></pre>
+    <script>
+        var foo = document.getElementById("foo");
+        var bar = document.getElementById("bar");
+        foo.addEventListener("change", function() {
+            bar.innerHTML += foo.checked + "\n";
+        });
+    </script>
+</html>

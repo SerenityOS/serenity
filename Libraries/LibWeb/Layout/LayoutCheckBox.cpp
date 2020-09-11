@@ -80,6 +80,9 @@ void LayoutCheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& po
     if (!m_tracking_mouse || button != GUI::MouseButton::Left)
         return;
 
+    // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
+    NonnullRefPtr protect = *this;
+
     bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
     if (is_inside)
         node().set_checked(!node().checked());
