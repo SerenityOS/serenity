@@ -62,12 +62,12 @@ void Splitter::override_cursor(bool do_override)
 {
     if (do_override) {
         if (!m_overriding_cursor) {
-            window()->set_cursor(m_orientation == Orientation::Horizontal ? Gfx::StandardCursor::ResizeColumn : Gfx::StandardCursor::ResizeRow);
+            set_override_cursor(m_orientation == Orientation::Horizontal ? Gfx::StandardCursor::ResizeColumn : Gfx::StandardCursor::ResizeRow);
             m_overriding_cursor = true;
         }
     } else {
         if (m_overriding_cursor) {
-            window()->set_cursor(Gfx::StandardCursor::None);
+            set_override_cursor(Gfx::StandardCursor::None);
             m_overriding_cursor = false;
         }
     }
@@ -198,7 +198,7 @@ void Splitter::mouseup_event(MouseEvent& event)
     m_first_resizee = nullptr;
     m_second_resizee = nullptr;
     if (!rect().contains(event.position()))
-        window()->set_cursor(Gfx::StandardCursor::None);
+        set_override_cursor(Gfx::StandardCursor::None);
 }
 
 }
