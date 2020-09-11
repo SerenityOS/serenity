@@ -196,12 +196,16 @@ public:
 
     void set_progress(int);
 
+    void update_cursor(Badge<Widget>) { update_cursor(); }
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);
 
 private:
     virtual bool is_window() const override final { return true; }
+
+    void update_cursor();
 
     void handle_drop_event(DropEvent&);
     void handle_mouse_event(MouseEvent&);
@@ -242,6 +246,7 @@ private:
     Color m_background_color { Color::WarmGray };
     WindowType m_window_type { WindowType::Normal };
     Gfx::StandardCursor m_cursor { Gfx::StandardCursor::None };
+    Gfx::StandardCursor m_effective_cursor { Gfx::StandardCursor::None };
     bool m_is_active { false };
     bool m_is_active_input { false };
     bool m_has_alpha_channel { false };

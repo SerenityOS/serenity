@@ -318,12 +318,14 @@ void Widget::handle_mousedoubleclick_event(MouseEvent& event)
 
 void Widget::handle_enter_event(Core::Event& event)
 {
+    window()->update_cursor({});
     show_tooltip();
     enter_event(event);
 }
 
 void Widget::handle_leave_event(Core::Event& event)
 {
+    window()->update_cursor({});
     Application::the()->hide_tooltip();
     leave_event(event);
 }
@@ -876,6 +878,16 @@ void Widget::show_tooltip()
 Gfx::IntRect Widget::children_clip_rect() const
 {
     return rect();
+}
+
+void Widget::set_override_cursor(Gfx::StandardCursor cursor)
+{
+    if (m_override_cursor == cursor)
+        return;
+
+    m_override_cursor = cursor;
+    if (auto* window = this->window())
+        window->update_cursor({});
 }
 
 }
