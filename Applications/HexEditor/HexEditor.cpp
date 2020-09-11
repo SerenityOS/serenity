@@ -26,7 +26,6 @@
 
 #include "HexEditor.h"
 #include <AK/StringBuilder.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FontDatabase.h>
@@ -35,6 +34,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -274,12 +274,13 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
     auto text_end_x = text_start_x + (bytes_per_row() * character_width());
     auto text_end_y = text_start_y + 5 + (total_rows() * line_height());
 
-    window()->set_cursor(Gfx::StandardCursor::None);
     if ((absolute_x >= hex_start_x && absolute_x <= hex_end_x
             && absolute_y >= hex_start_y && absolute_y <= hex_end_y)
         || (absolute_x >= text_start_x && absolute_x <= text_end_x
             && absolute_y >= text_start_y && absolute_y <= text_end_y)) {
-        window()->set_cursor(Gfx::StandardCursor::IBeam);
+        set_override_cursor(Gfx::StandardCursor::IBeam);
+    } else {
+        set_override_cursor(Gfx::StandardCursor::None);
     }
 
     if (m_in_drag_select) {
@@ -580,10 +581,4 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             painter.draw_text(text_display_rect, String::format("%c", isprint(m_buffer[byte_position]) ? m_buffer[byte_position] : '.'), Gfx::TextAlignment::TopLeft, text_color);
         }
     }
-}
-
-void HexEditor::leave_event(Core::Event&)
-{
-    ASSERT(window());
-    window()->set_cursor(Gfx::StandardCursor::None);
 }
