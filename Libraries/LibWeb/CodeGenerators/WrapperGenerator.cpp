@@ -541,6 +541,8 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "    auto " << cpp_name << " = " << js_name << js_suffix << ".to_double(interpreter);";
             out() << "    if (interpreter.exception())";
             generate_return();
+        } else if (parameter.type.name == "boolean") {
+            out() << "    auto " << cpp_name << " = " << js_name << js_suffix << ".to_boolean();";
         } else {
             dbg() << "Unimplemented JS-to-C++ conversion: " << parameter.type.name;
             ASSERT_NOT_REACHED();
@@ -589,6 +591,8 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "    return JS::Value(retval);";
         } else if (return_type.name == "Uint8ClampedArray") {
             out() << "    return retval;";
+        } else  if (return_type.name == "boolean") {
+            out() << "    return JS::Value(retval);";
         } else {
             out() << "    return wrap(global_object, const_cast<" << return_type.name << "&>(*retval));";
         }
