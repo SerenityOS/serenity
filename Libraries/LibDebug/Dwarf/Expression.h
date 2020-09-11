@@ -29,7 +29,7 @@
 #include "AK/ByteBuffer.h"
 #include "AK/Types.h"
 
-class PtraceRegisters;
+struct PtraceRegisters;
 
 namespace Debug::Dwarf::Expression {
 

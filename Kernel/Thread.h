@@ -530,7 +530,7 @@ private:
     IntrusiveListNode m_wait_queue_node;
 
 private:
-    friend class SchedulerData;
+    friend struct SchedulerData;
     friend class WaitQueue;
     bool unlock_process_if_locked();
     void relock_process(bool did_unlock);
