@@ -383,7 +383,7 @@ void EventLoop::pump(WaitMode mode)
             }
         } else if (event.type() == Event::Type::DeferredInvoke) {
 #ifdef DEFERRED_INVOKE_DEBUG
-            printf("DeferredInvoke: receiver=%s{%p}\n", receiver->class_name(), receiver);
+            dbg() << "DeferredInvoke: receiver = " << receiver->class_name() << "{" << receiver << "}";
 #endif
             static_cast<DeferredInvocationEvent&>(event).m_invokee(*receiver);
         } else {
