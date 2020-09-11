@@ -62,7 +62,7 @@ template<typename T>
 class Span;
 
 template<typename T, size_t Size>
-class Array;
+struct Array;
 
 template<typename Container, typename ValueType>
 class SimpleIterator;
