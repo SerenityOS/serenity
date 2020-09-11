@@ -40,8 +40,6 @@ protected:
 
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
-    virtual void enter_event(Core::Event&) override;
-    virtual void leave_event(Core::Event&) override;
 };
 
 }
