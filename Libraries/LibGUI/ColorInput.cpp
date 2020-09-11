@@ -100,11 +100,11 @@ void ColorInput::mouseup_event(MouseEvent& event)
 void ColorInput::mousemove_event(MouseEvent& event)
 {
     if (color_rect().contains(event.position())) {
-        window()->set_cursor(Gfx::StandardCursor::Hand);
+        set_override_cursor(Gfx::StandardCursor::Hand);
         event.accept();
         return;
     } else {
-        window()->set_cursor(Gfx::StandardCursor::IBeam);
+        set_override_cursor(Gfx::StandardCursor::IBeam);
     }
 
     TextEditor::mousemove_event(event);
