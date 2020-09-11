@@ -1786,8 +1786,20 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         }
     }
 
-    if (m_finalizer)
+    if (m_finalizer) {
+        // Keep, if any, and then clear the current exception so we can
+        // execute() the finalizer without an exception in our way.
+        auto* previous_exception = interpreter.exception();
+        interpreter.clear_exception();
+        interpreter.stop_unwind();
         m_finalizer->execute(interpreter, global_object);
+        // If we previously had an exception and the finalizer didn't
+        // throw a new one, restore the old one.
+        // FIXME: This will print debug output in throw_exception() for
+        // a seconds time with INTERPRETER_DEBUG enabled.
+        if (previous_exception && !interpreter.exception())
+            interpreter.throw_exception(previous_exception);
+    }
 
     return js_undefined();
 }
