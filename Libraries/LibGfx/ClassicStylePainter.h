@@ -42,6 +42,7 @@ public:
     void paint_window_frame(Painter&, const IntRect&, const Palette&) override;
     void paint_progress_bar(Painter&, const IntRect&, const Palette&, int min, int max, int value, const StringView& text) override;
     void paint_radio_button(Painter&, const IntRect&, const Palette&, bool is_checked, bool is_being_pressed) override;
+    void paint_check_box(Painter&, const IntRect&, const Palette&, bool is_enabled, bool is_checked, bool is_being_pressed) override;
 };
 
 }

@@ -27,6 +27,7 @@
 
 #include <AK/StringView.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/ClassicStylePainter.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
@@ -345,4 +346,38 @@ void ClassicStylePainter::paint_radio_button(Painter& painter, const IntRect& re
     auto& bitmap = circle_bitmap(is_checked, is_being_pressed);
     painter.blit(rect.location(), bitmap, bitmap.rect());
 }
+
+static const char* s_checked_bitmap_data = {
+    "         "
+    "       # "
+    "      ## "
+    "     ### "
+    " ## ###  "
+    " #####   "
+    "  ###    "
+    "   #     "
+    "         "
+};
+
+static Gfx::CharacterBitmap* s_checked_bitmap;
+static const int s_checked_bitmap_width = 9;
+static const int s_checked_bitmap_height = 9;
+
+void ClassicStylePainter::paint_check_box(Painter& painter, const IntRect& rect, const Palette& palette, bool is_enabled, bool is_checked, bool is_being_pressed)
+{
+    painter.fill_rect(rect, is_enabled ? palette.base() : palette.window());
+    paint_frame(painter, rect, palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+
+    if (is_being_pressed) {
+        // FIXME: This color should not be hard-coded.
+        painter.draw_rect(rect.shrunken(4, 4), Color::MidGray);
+    }
+
+    if (is_checked) {
+        if (!s_checked_bitmap)
+            s_checked_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
+        painter.draw_bitmap(rect.shrunken(4, 4).location(), *s_checked_bitmap, palette.base_text());
+    }
+}
+
 }

@@ -33,21 +33,6 @@
 
 namespace GUI {
 
-static const char* s_checked_bitmap_data = {
-    "         "
-    "       # "
-    "      ## "
-    "     ### "
-    " ## ###  "
-    " #####   "
-    "  ###    "
-    "   #     "
-    "         "
-};
-
-static Gfx::CharacterBitmap* s_checked_bitmap;
-static const int s_checked_bitmap_width = 9;
-static const int s_checked_bitmap_height = 9;
 static const int s_box_width = 13;
 static const int s_box_height = 13;
 
@@ -81,17 +66,8 @@ void CheckBox::paint_event(PaintEvent& event)
         0, height() / 2 - s_box_height / 2 - 1,
         s_box_width, s_box_height
     };
-    painter.fill_rect(box_rect, is_enabled() ? palette().base() : palette().window());
-    Gfx::StylePainter::paint_frame(painter, box_rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
 
-    if (is_being_pressed())
-        painter.draw_rect(box_rect.shrunken(4, 4), Color::MidGray);
-
-    if (is_checked()) {
-        if (!s_checked_bitmap)
-            s_checked_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
-        painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, palette().base_text());
-    }
+    Gfx::StylePainter::paint_check_box(painter, box_rect, palette(), is_enabled(), is_checked(), is_being_pressed());
 
     paint_text(painter, text_rect, font(), Gfx::TextAlignment::TopLeft);
 }
