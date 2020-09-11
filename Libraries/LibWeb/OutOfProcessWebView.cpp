@@ -137,16 +137,14 @@ void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebCo
 
 void OutOfProcessWebView::notify_server_did_hover_link(Badge<WebContentClient>, const URL& url)
 {
-    if (window())
-        window()->set_cursor(Gfx::StandardCursor::Hand);
+    set_override_cursor(Gfx::StandardCursor::Hand);
     if (on_link_hover)
         on_link_hover(url);
 }
 
 void OutOfProcessWebView::notify_server_did_unhover_link(Badge<WebContentClient>)
 {
-    if (window())
-        window()->set_cursor(Gfx::StandardCursor::None);
+    set_override_cursor(Gfx::StandardCursor::None);
     if (on_link_hover)
         on_link_hover({});
 }
