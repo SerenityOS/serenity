@@ -100,7 +100,9 @@ public:
 
     ~Interpreter();
 
-    Value run(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
+    Value run(GlobalObject&, const Program&);
+
+    Value execute_statement(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
 
     GlobalObject& global_object();
     const GlobalObject& global_object() const;
