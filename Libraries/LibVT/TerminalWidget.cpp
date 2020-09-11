@@ -94,6 +94,8 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     , m_automatic_size_policy(automatic_size_policy)
     , m_config(move(config))
 {
+    set_override_cursor(Gfx::StandardCursor::IBeam);
+
     set_accepts_emoji_input(true);
     set_pty_master_fd(ptm_fd);
     m_cursor_blink_timer = add<Core::Timer>();
@@ -629,9 +631,9 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
             m_hovered_href = {};
         }
         if (!m_hovered_href.is_empty())
-            window()->set_cursor(Gfx::StandardCursor::Hand);
+            set_override_cursor(Gfx::StandardCursor::Hand);
         else
-            window()->set_cursor(Gfx::StandardCursor::None);
+            set_override_cursor(Gfx::StandardCursor::IBeam);
         update();
     }
 
@@ -667,7 +669,6 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
 
 void TerminalWidget::leave_event(Core::Event&)
 {
-    window()->set_cursor(Gfx::StandardCursor::None);
     bool should_update = !m_hovered_href.is_empty();
     m_hovered_href = {};
     m_hovered_href_id = {};
