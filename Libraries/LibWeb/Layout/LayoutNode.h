@@ -99,6 +99,12 @@ public:
 
     bool is_inline_block() const { return is_inline() && is_block(); }
 
+    virtual bool wants_mouse_events() const { return false; }
+
+    virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
+    virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
+    virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
+
     enum class LayoutMode {
         Default,
         AllPossibleLineBreaks,

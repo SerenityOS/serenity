@@ -254,4 +254,16 @@ void LayoutNodeWithStyle::apply_style(const CSS::StyleProperties& specified_styl
     style.border_bottom().color = specified_style.color_or_fallback(CSS::PropertyID::BorderBottomColor, document(), Color::Transparent);
 }
 
+void LayoutNode::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
+{
+}
+
+void LayoutNode::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
+{
+}
+
+void LayoutNode::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
+{
+}
+
 }

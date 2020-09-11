@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
@@ -47,6 +48,8 @@ public:
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
 
+    void set_mouse_event_tracking_layout_node(LayoutNode*);
+
 private:
     bool focus_next_element();
     bool focus_previous_element();
@@ -59,6 +62,8 @@ private:
     Frame& m_frame;
 
     bool m_in_mouse_selection { false };
+
+    WeakPtr<LayoutNode> m_mouse_event_tracking_layout_node;
 };
 
 }
