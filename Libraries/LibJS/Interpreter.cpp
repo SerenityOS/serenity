@@ -58,23 +58,26 @@ Interpreter::~Interpreter()
 {
 }
 
-Value Interpreter::run(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
+Value Interpreter::run(GlobalObject& global_object, const Program& program)
 {
     ASSERT(!exception());
 
-    if (statement.is_program()) {
-        if (m_call_stack.is_empty()) {
-            CallFrame global_call_frame;
-            global_call_frame.this_value = &global_object;
-            global_call_frame.function_name = "(global execution context)";
-            global_call_frame.environment = heap().allocate<LexicalEnvironment>(global_object, LexicalEnvironment::EnvironmentRecordType::Global);
-            global_call_frame.environment->bind_this_value(&global_object);
-            if (exception())
-                return {};
-            m_call_stack.append(move(global_call_frame));
-        }
+    if (m_call_stack.is_empty()) {
+        CallFrame global_call_frame;
+        global_call_frame.this_value = &global_object;
+        global_call_frame.function_name = "(global execution context)";
+        global_call_frame.environment = heap().allocate<LexicalEnvironment>(global_object, LexicalEnvironment::EnvironmentRecordType::Global);
+        global_call_frame.environment->bind_this_value(&global_object);
+        if (exception())
+            return {};
+        m_call_stack.append(move(global_call_frame));
     }
 
+    return program.execute(*this, global_object);
+}
+
+Value Interpreter::execute_statement(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
+{
     if (!statement.is_scope_node())
         return statement.execute(*this, global_object);
 
