@@ -31,7 +31,8 @@
 
 namespace Kernel {
 
-struct MappedROM {
+class MappedROM {
+public:
     const u8* base() const { return region->vaddr().offset(offset).as_ptr(); }
     const u8* end() const { return base() + size; }
     OwnPtr<Region> region;

@@ -43,7 +43,7 @@ namespace Kernel {
 class Custody;
 class Device;
 class FileDescription;
-class UnveiledPath;
+struct UnveiledPath;
 
 struct UidAndGid {
     uid_t uid;
