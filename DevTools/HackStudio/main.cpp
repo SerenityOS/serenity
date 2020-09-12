@@ -94,8 +94,9 @@ String g_currently_open_file;
 OwnPtr<Project> g_project;
 RefPtr<GUI::Window> g_window;
 RefPtr<GUI::TreeView> g_project_tree_view;
+RefPtr<GUI::VerticalSplitter> g_right_hand_splitter;
 RefPtr<GUI::StackWidget> g_right_hand_stack;
-RefPtr<GUI::Splitter> g_text_inner_splitter;
+RefPtr<GUI::Splitter> g_editors_splitter;
 RefPtr<GUI::Widget> g_form_inner_container;
 RefPtr<FormEditorWidget> g_form_editor_widget;
 
@@ -122,7 +123,7 @@ enum class EditMode {
 static void set_edit_mode(EditMode mode)
 {
     if (mode == EditMode::Text) {
-        g_right_hand_stack->set_active_widget(g_text_inner_splitter);
+        g_right_hand_stack->set_active_widget(g_editors_splitter);
     } else if (mode == EditMode::Form) {
         g_right_hand_stack->set_active_widget(g_form_inner_container);
     }
@@ -333,7 +334,8 @@ static int main_impl(int argc, char** argv)
         delete_action->set_enabled(!g_project_tree_view->selection().is_empty());
     };
 
-    g_right_hand_stack = outer_splitter.add<GUI::StackWidget>();
+    g_right_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
+    g_right_hand_stack = g_right_hand_splitter->add<GUI::StackWidget>();
 
     g_form_inner_container = g_right_hand_stack->add<GUI::Widget>();
     g_form_inner_container->set_layout<GUI::HorizontalBoxLayout>();
@@ -414,15 +416,15 @@ static int main_impl(int argc, char** argv)
     add_properties_pane("Form widget tree:", form_widget_tree_view);
     add_properties_pane("Widget properties:", GUI::TableView::construct());
 
-    g_text_inner_splitter = g_right_hand_stack->add<GUI::VerticalSplitter>();
-    g_text_inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
-    add_new_editor(*g_text_inner_splitter);
+    g_editors_splitter = g_right_hand_stack->add<GUI::VerticalSplitter>();
+    g_editors_splitter->layout()->set_margins({ 0, 3, 0, 0 });
+    add_new_editor(*g_editors_splitter);
 
     auto switch_to_next_editor = GUI::Action::create("Switch to next editor", { Mod_Ctrl, Key_E }, [&](auto&) {
         if (g_all_editor_wrappers.size() <= 1)
             return;
         Vector<EditorWrapper*> wrappers;
-        g_text_inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
+        g_editors_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
             wrappers.append(&child);
             return IterationDecision::Continue;
         });
@@ -440,7 +442,7 @@ static int main_impl(int argc, char** argv)
         if (g_all_editor_wrappers.size() <= 1)
             return;
         Vector<EditorWrapper*> wrappers;
-        g_text_inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
+        g_editors_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
             wrappers.append(&child);
             return IterationDecision::Continue;
         });
@@ -459,7 +461,7 @@ static int main_impl(int argc, char** argv)
             return;
         auto wrapper = g_current_editor_wrapper;
         switch_to_next_editor->activate();
-        g_text_inner_splitter->remove_child(*wrapper);
+        g_editors_splitter->remove_child(*wrapper);
         g_all_editor_wrappers.remove_first_matching([&](auto& entry) { return entry == wrapper.ptr(); });
         update_actions();
     });
@@ -498,7 +500,7 @@ static int main_impl(int argc, char** argv)
         open_file(filename);
     };
 
-    s_action_tab_widget = g_text_inner_splitter->add<GUI::TabWidget>();
+    s_action_tab_widget = g_right_hand_splitter->add<GUI::TabWidget>();
 
     s_action_tab_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     s_action_tab_widget->set_preferred_size(0, 24);
@@ -529,7 +531,7 @@ static int main_impl(int argc, char** argv)
     auto add_editor_action = GUI::Action::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-text-editor.png"),
         [&](auto&) {
-            add_new_editor(*g_text_inner_splitter);
+            add_new_editor(*g_editors_splitter);
             update_actions();
         });
 
