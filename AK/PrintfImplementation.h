@@ -358,7 +358,7 @@ struct PrintfImpl {
     {
         if (state.long_qualifiers >= 2)
             return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
-        return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
+        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width);
     }
     ALWAYS_INLINE int format_X(const ModifierState& state, ArgumentListRefT ap) const
     {
