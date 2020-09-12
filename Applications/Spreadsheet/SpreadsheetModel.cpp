@@ -85,6 +85,20 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                 return Color(Color::Red);
         }
 
+        if (auto color = cell->type_metadata().static_foreground_color; color.has_value())
+            return color.value();
+
+        return {};
+    }
+
+    if (role == GUI::ModelRole::BackgroundColor) {
+        const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+        if (!cell)
+            return {};
+
+        if (auto color = cell->type_metadata().static_background_color; color.has_value())
+            return color.value();
+
         return {};
     }
 
