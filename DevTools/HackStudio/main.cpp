@@ -33,6 +33,7 @@
 #include "FindInFilesWidget.h"
 #include "FormEditorWidget.h"
 #include "FormWidget.h"
+#include "Git/DiffViewer.h"
 #include "Git/GitWidget.h"
 #include "HackStudio.h"
 #include "Locator.h"
@@ -99,6 +100,7 @@ RefPtr<GUI::StackWidget> g_right_hand_stack;
 RefPtr<GUI::Splitter> g_editors_splitter;
 RefPtr<GUI::Widget> g_form_inner_container;
 RefPtr<FormEditorWidget> g_form_editor_widget;
+RefPtr<DiffViewer> g_diff_viewer;
 
 static RefPtr<GUI::TabWidget> s_action_tab_widget;
 
@@ -118,6 +120,7 @@ static void add_new_editor(GUI::Widget& parent)
 enum class EditMode {
     Text,
     Form,
+    Diff,
 };
 
 static void set_edit_mode(EditMode mode)
@@ -126,7 +129,12 @@ static void set_edit_mode(EditMode mode)
         g_right_hand_stack->set_active_widget(g_editors_splitter);
     } else if (mode == EditMode::Form) {
         g_right_hand_stack->set_active_widget(g_form_inner_container);
+    } else if (mode == EditMode::Diff) {
+        g_right_hand_stack->set_active_widget(g_diff_viewer);
+    } else {
+        ASSERT_NOT_REACHED();
     }
+    g_right_hand_stack->active_widget()->update();
 }
 
 static void build(TerminalWrapper&);
@@ -416,6 +424,8 @@ static int main_impl(int argc, char** argv)
     add_properties_pane("Form widget tree:", form_widget_tree_view);
     add_properties_pane("Widget properties:", GUI::TableView::construct());
 
+    g_diff_viewer = g_right_hand_stack->add<DiffViewer>();
+
     g_editors_splitter = g_right_hand_stack->add<GUI::VerticalSplitter>();
     g_editors_splitter->layout()->set_margins({ 0, 3, 0, 0 });
     add_new_editor(*g_editors_splitter);
@@ -563,7 +573,10 @@ static int main_impl(int argc, char** argv)
     auto& debug_info_widget = s_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
     auto& disassembly_widget = s_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
     auto& git_widget = s_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(g_project->root_directory()));
-    (void)git_widget;
+    git_widget.set_view_diff_callback([](const auto& original_content, const auto& diff) {
+        g_diff_viewer->set_content(original_content, diff);
+        set_edit_mode(EditMode::Diff);
+    });
 
     auto& locator = widget.add<Locator>();
 
