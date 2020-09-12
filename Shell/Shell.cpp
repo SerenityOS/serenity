@@ -622,12 +622,14 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     }
 
     pid_t pgid = is_first ? child : (command.pipeline ? command.pipeline->pgid : child);
-    if (!m_is_subshell && command.should_wait) {
+    if ((!m_is_subshell && command.should_wait) || command.pipeline) {
         if (setpgid(child, pgid) < 0)
             perror("setpgid");
 
-        tcsetpgrp(STDOUT_FILENO, pgid);
-        tcsetpgrp(STDIN_FILENO, pgid);
+        if (!m_is_subshell) {
+            tcsetpgrp(STDOUT_FILENO, pgid);
+            tcsetpgrp(STDIN_FILENO, pgid);
+        }
     }
 
     while (write(sync_pipe[1], "x", 1) < 0) {
