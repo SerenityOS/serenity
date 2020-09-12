@@ -142,4 +142,10 @@ void WebContentClient::handle(const Messages::WebContentClient::DidRequestLinkCo
     m_view.notify_server_did_request_link_context_menu({}, message.content_position(), message.url(), message.target(), message.modifiers());
 }
 
+OwnPtr<Messages::WebContentClient::DidRequestAlertResponse> WebContentClient::handle(const Messages::WebContentClient::DidRequestAlert& message)
+{
+    m_view.notify_server_did_request_alert({}, message.message());
+    return make<Messages::WebContentClient::DidRequestAlertResponse>();
+}
+
 }

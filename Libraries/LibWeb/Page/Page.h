@@ -95,6 +95,7 @@ public:
     virtual void page_did_change_favicon(const Gfx::Bitmap&) { }
     virtual void page_did_layout() { }
     virtual void page_did_request_scroll_into_view(const Gfx::IntRect&) { }
+    virtual void page_did_request_alert(const String&) { }
 };
 
 }
