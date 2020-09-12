@@ -151,6 +151,13 @@ ln -s Shell mnt/bin/sh
 ln -s test mnt/bin/[
 echo "done"
 
+printf "installing 'checksum' variants... "
+ln -s checksum mnt/bin/md5sum
+ln -s checksum mnt/bin/sha1sum
+ln -s checksum mnt/bin/sha256sum
+ln -s checksum mnt/bin/sha512sum
+echo "done"
+
 # Run local sync script, if it exists
 if [ -f sync-local.sh ]; then
     sh sync-local.sh
