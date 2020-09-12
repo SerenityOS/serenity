@@ -24,40 +24,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Numeric.h"
-#include "../Cell.h"
-#include "../Spreadsheet.h"
 #include "Format.h"
+#include <AK/PrintfImplementation.h>
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 
 namespace Spreadsheet {
 
-NumericCell::NumericCell()
-    : CellType("Numeric")
+template<typename T, typename V>
+struct SingleEntryListNext {
+    ALWAYS_INLINE T operator()(V value) const
+    {
+        return (T)value;
+    }
+};
+
+template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument>
+struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument> {
+    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
+        : PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>(putch, bufptr, nwritten)
+    {
+    }
+
+    // Disallow pointer formats.
+    ALWAYS_INLINE int format_n(const PrintfImplementation::ModifierState&, ArgumentListRefT&) const
+    {
+        return 0;
+    }
+    ALWAYS_INLINE int format_s(const PrintfImplementation::ModifierState&, ArgumentListRefT&) const
+    {
+        return 0;
+    }
+};
+
+String format_double(const char* format, double value)
 {
-}
+    StringBuilder builder;
+    auto putch = [&](auto, auto ch) { builder.append(ch); };
+    printf_internal<decltype(putch), PrintfImpl, double, SingleEntryListNext>(putch, nullptr, format, value);
 
-NumericCell::~NumericCell()
-{
-}
-
-String NumericCell::display(Cell& cell, const CellTypeMetadata& metadata) const
-{
-    auto value = js_value(cell, metadata);
-    String string;
-    if (metadata.format.is_null())
-        string = value.to_string_without_side_effects();
-    else
-        string = format_double(metadata.format.characters(), value.to_double(cell.sheet->interpreter()));
-
-    if (metadata.length >= 0)
-        return string.substring(0, metadata.length);
-
-    return string;
-}
-
-JS::Value NumericCell::js_value(Cell& cell, const CellTypeMetadata&) const
-{
-    return cell.js_data().to_number(cell.sheet->interpreter());
+    return builder.build();
 }
 
 }

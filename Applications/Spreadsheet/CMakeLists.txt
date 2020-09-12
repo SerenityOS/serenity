@@ -1,6 +1,7 @@
 set(SOURCES
     Cell.cpp
     CellSyntaxHighlighter.cpp
+    CellType/Format.cpp
     CellType/Identity.cpp
     CellType/Numeric.cpp
     CellType/String.cpp
