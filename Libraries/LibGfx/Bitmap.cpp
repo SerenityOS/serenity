@@ -26,6 +26,7 @@
 
 #include <AK/Checked.h>
 #include <AK/Memory.h>
+#include <AK/Optional.h>
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
 #include <LibGfx/BMPLoader.h>
@@ -43,6 +44,12 @@
 #include <sys/mman.h>
 
 namespace Gfx {
+
+struct BackingStore {
+    void* data { nullptr };
+    size_t pitch { 0 };
+    size_t size_in_bytes { 0 };
+};
 
 size_t Bitmap::minimum_pitch(size_t width, BitmapFormat format)
 {
@@ -76,39 +83,32 @@ static bool size_would_overflow(BitmapFormat format, const IntSize& size)
 
 RefPtr<Bitmap> Bitmap::create(BitmapFormat format, const IntSize& size)
 {
-    if (size_would_overflow(format, size))
+    auto backing_store = Bitmap::allocate_backing_store(format, size, Purgeable::No);
+    if (!backing_store.has_value())
         return nullptr;
-    return adopt(*new Bitmap(format, size, Purgeable::No));
+    return adopt(*new Bitmap(format, size, Purgeable::No, backing_store.value()));
 }
 
 RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size)
 {
-    if (size_would_overflow(format, size))
+    auto backing_store = Bitmap::allocate_backing_store(format, size, Purgeable::Yes);
+    if (!backing_store.has_value())
         return nullptr;
-    return adopt(*new Bitmap(format, size, Purgeable::Yes));
+    return adopt(*new Bitmap(format, size, Purgeable::Yes, backing_store.value()));
 }
 
-Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable)
+Bitmap::Bitmap(BitmapFormat format, const IntSize& size, Purgeable purgeable, const BackingStore& backing_store)
     : m_size(size)
-    , m_pitch(minimum_pitch(size.width(), format))
+    , m_data(backing_store.data)
+    , m_pitch(backing_store.pitch)
     , m_format(format)
     , m_purgeable(purgeable == Purgeable::Yes)
 {
     ASSERT(!m_size.is_empty());
     ASSERT(!size_would_overflow(format, size));
-    allocate_palette_from_format(format, {});
-#ifdef __serenity__
-    int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
-    m_data = mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
-#else
-    int map_flags = (MAP_ANONYMOUS | MAP_PRIVATE);
-    m_data = mmap(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0);
-#endif
-    if (m_data == MAP_FAILED) {
-        perror("mmap");
-        ASSERT_NOT_REACHED();
-    }
     ASSERT(m_data);
+    ASSERT(backing_store.size_in_bytes == size_in_bytes());
+    allocate_palette_from_format(format, {});
     m_needs_munmap = true;
 }
 
@@ -334,6 +334,30 @@ ShareableBitmap Bitmap::to_shareable_bitmap(pid_t peer_pid) const
     if (peer_pid > 0)
         bitmap->shared_buffer()->share_with(peer_pid);
     return ShareableBitmap(*bitmap);
+}
+
+Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const IntSize& size, Purgeable purgeable)
+{
+    if (size_would_overflow(format, size))
+        return {};
+
+    const auto pitch = minimum_pitch(size.width(), format);
+    const auto data_size_in_bytes = size_in_bytes(pitch, size.height());
+
+    void* data = nullptr;
+#ifdef __serenity__
+    int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
+    data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", size.width(), size.height()).characters());
+#else
+    UNUSED_PARAM(purgeable);
+    int map_flags = (MAP_ANONYMOUS | MAP_PRIVATE);
+    data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);
+#endif
+    if (data == MAP_FAILED) {
+        perror("mmap");
+        return {};
+    }
+    return { { data, pitch, data_size_in_bytes } };
 }
 
 void Bitmap::allocate_palette_from_format(BitmapFormat format, const Vector<RGBA32>& source_palette)
