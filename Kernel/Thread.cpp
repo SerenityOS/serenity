@@ -479,10 +479,10 @@ bool Thread::has_signal_handler(u8 signal) const
     return !action.handler_or_sigaction.is_null();
 }
 
-static void push_value_on_user_stack(u32* stack, u32 data)
+static bool push_value_on_user_stack(u32* stack, u32 data)
 {
     *stack -= 4;
-    copy_to_user((u32*)*stack, &data);
+    return copy_to_user((u32*)*stack, &data);
 }
 
 void Thread::resume_from_stopped()
@@ -659,11 +659,11 @@ void Thread::set_default_signal_dispositions()
     m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress(SIG_IGN);
 }
 
-void Thread::push_value_on_stack(FlatPtr value)
+bool Thread::push_value_on_stack(FlatPtr value)
 {
     m_tss.esp -= 4;
     FlatPtr* stack_ptr = (FlatPtr*)m_tss.esp;
-    copy_to_user(stack_ptr, &value);
+    return copy_to_user(stack_ptr, &value);
 }
 
 RegisterState& Thread::get_register_dump_from_stack()
@@ -682,19 +682,19 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     auto push_on_new_stack = [&new_esp](u32 value) {
         new_esp -= 4;
         Userspace<u32*> stack_ptr = new_esp;
-        copy_to_user(stack_ptr, &value);
+        return copy_to_user(stack_ptr, &value);
     };
 
     auto push_aux_value_on_new_stack = [&new_esp](auxv_t value) {
         new_esp -= sizeof(auxv_t);
         Userspace<auxv_t*> stack_ptr = new_esp;
-        copy_to_user(stack_ptr, &value);
+        return copy_to_user(stack_ptr, &value);
     };
 
     auto push_string_on_new_stack = [&new_esp](const String& string) {
         new_esp -= round_up_to_power_of_two(string.length() + 1, 4);
         Userspace<u32*> stack_ptr = new_esp;
-        copy_to_user(stack_ptr, string.characters(), string.length() + 1);
+        return copy_to_user(stack_ptr, string.characters(), string.length() + 1);
     };
 
     Vector<FlatPtr> argv_entries;
@@ -869,18 +869,21 @@ String Thread::backtrace_impl()
         if (Processor::get_context_frame_ptr(*this, stack_ptr, eip)) {
             recognized_symbols.append({ eip, symbolicate_kernel_address(eip) });
             for (;;) {
-                if (!process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2))
-                    break;
                 FlatPtr retaddr;
 
                 if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
-                    copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]);
+                    if (!copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]))
+                        break;
                     recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
-                    copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr);
+                    if (!copy_from_user(&stack_ptr, (FlatPtr*)stack_ptr))
+                        break;
                 } else {
-                    memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr));
+                    void* fault_at;
+                    if (!safe_memcpy(&retaddr, &((FlatPtr*)stack_ptr)[1], sizeof(FlatPtr), fault_at))
+                        break;
                     recognized_symbols.append({ retaddr, symbolicate_kernel_address(retaddr) });
-                    memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr));
+                    if (!safe_memcpy(&stack_ptr, (FlatPtr*)stack_ptr, sizeof(FlatPtr), fault_at))
+                        break;
                 }
             }
         }
@@ -901,11 +904,19 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
     ProcessPagingScope paging_scope(process);
     Vector<FlatPtr, Profiling::max_stack_frame_count> backtrace;
     backtrace.append(eip);
-    for (FlatPtr* stack_ptr = (FlatPtr*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2) && MM.can_read_without_faulting(process, VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2); stack_ptr = (FlatPtr*)*stack_ptr) {
-        FlatPtr retaddr = stack_ptr[1];
+    FlatPtr stack_ptr_copy;
+    FlatPtr stack_ptr = (FlatPtr)ebp;
+    for (;;) {
+        void* fault_at;
+        if (!safe_memcpy(&stack_ptr_copy, (void*)stack_ptr, sizeof(FlatPtr), fault_at))
+            break;
+        FlatPtr retaddr;
+        if (!safe_memcpy(&retaddr, (void*)(stack_ptr + sizeof(FlatPtr)), sizeof(FlatPtr), fault_at))
+            break;
         backtrace.append(retaddr);
         if (backtrace.size() == Profiling::max_stack_frame_count)
             break;
+        stack_ptr = stack_ptr_copy;
     }
     return backtrace;
 }

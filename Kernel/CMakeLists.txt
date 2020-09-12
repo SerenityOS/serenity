@@ -176,6 +176,7 @@ set(KERNEL_SOURCES
     Time/RTC.cpp
     Time/TimeManagement.cpp
     TimerQueue.cpp
+    UserOrKernelBuffer.cpp
     VM/AnonymousVMObject.cpp
     VM/ContiguousVMObject.cpp
     VM/InodeVMObject.cpp

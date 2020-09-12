@@ -116,7 +116,7 @@ off_t FileDescription::seek(off_t offset, int whence)
     return m_current_offset;
 }
 
-KResultOr<size_t> FileDescription::read(u8* buffer, size_t count)
+KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count)
 {
     LOCKER(m_lock);
     Checked<size_t> new_offset = m_current_offset;
@@ -130,7 +130,7 @@ KResultOr<size_t> FileDescription::read(u8* buffer, size_t count)
     return nread_or_error;
 }
 
-KResultOr<size_t> FileDescription::write(const u8* data, size_t size)
+KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t size)
 {
     LOCKER(m_lock);
     Checked<size_t> new_offset = m_current_offset;
@@ -162,7 +162,7 @@ KResultOr<KBuffer> FileDescription::read_entire_file()
     return m_inode->read_entire(this);
 }
 
-ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
+ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& buffer, ssize_t size)
 {
     LOCKER(m_lock, Lock::Mode::Shared);
     if (!is_directory())
@@ -195,7 +195,8 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
     if (static_cast<size_t>(size) < temp_buffer.size())
         return -EINVAL;
 
-    copy_to_user(buffer, temp_buffer.data(), temp_buffer.size());
+    if (!buffer.write(temp_buffer.data(), temp_buffer.size()))
+        return -EFAULT;
     return stream.offset();
 }
 

@@ -108,18 +108,20 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
     case SO_SNDTIMEO:
         if (user_value_size != sizeof(timeval))
             return KResult(-EINVAL);
-        copy_from_user(&m_send_timeout, static_ptr_cast<const timeval*>(user_value));
+        if (!copy_from_user(&m_send_timeout, static_ptr_cast<const timeval*>(user_value)))
+            return KResult(-EFAULT);
         return KSuccess;
     case SO_RCVTIMEO:
         if (user_value_size != sizeof(timeval))
             return KResult(-EINVAL);
-        copy_from_user(&m_receive_timeout, static_ptr_cast<const timeval*>(user_value));
+        if (!copy_from_user(&m_receive_timeout, static_ptr_cast<const timeval*>(user_value)))
+            return KResult(-EFAULT);
         return KSuccess;
     case SO_BINDTODEVICE: {
         if (user_value_size != IFNAMSIZ)
             return KResult(-EINVAL);
         auto user_string = static_ptr_cast<const char*>(user_value);
-        auto ifname = Process::current()->validate_and_copy_string_from_user(user_string, user_value_size);
+        auto ifname = copy_string_from_user(user_string, user_value_size);
         if (ifname.is_null())
             return KResult(-EFAULT);
         auto device = NetworkAdapter::lookup_by_name(ifname);
@@ -140,7 +142,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
 KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     socklen_t size;
-    if (!Process::current()->validate_read_and_copy_typed(&size, value_size))
+    if (!copy_from_user(&size, value_size.unsafe_userspace_ptr()))
         return KResult(-EFAULT);
 
     ASSERT(level == SOL_SOCKET);
@@ -148,25 +150,31 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     case SO_SNDTIMEO:
         if (size < sizeof(timeval))
             return KResult(-EINVAL);
-        copy_to_user(static_ptr_cast<timeval*>(value), &m_send_timeout);
+        if (!copy_to_user(static_ptr_cast<timeval*>(value), &m_send_timeout))
+            return KResult(-EFAULT);
         size = sizeof(timeval);
-        copy_to_user(value_size, &size);
+        if (!copy_to_user(value_size, &size))
+            return KResult(-EFAULT);
         return KSuccess;
     case SO_RCVTIMEO:
         if (size < sizeof(timeval))
             return KResult(-EINVAL);
-        copy_to_user(static_ptr_cast<timeval*>(value), &m_receive_timeout);
+        if (!copy_to_user(static_ptr_cast<timeval*>(value), &m_receive_timeout))
+            return KResult(-EFAULT);
         size = sizeof(timeval);
-        copy_to_user(value_size, &size);
+        if (!copy_to_user(value_size, &size))
+            return KResult(-EFAULT);
         return KSuccess;
     case SO_ERROR: {
         if (size < sizeof(int))
             return KResult(-EINVAL);
         dbg() << "getsockopt(SO_ERROR): FIXME!";
         int errno = 0;
-        copy_to_user(static_ptr_cast<int*>(value), &errno);
+        if (!copy_to_user(static_ptr_cast<int*>(value), &errno))
+            return KResult(-EFAULT);
         size = sizeof(int);
-        copy_to_user(value_size, &size);
+        if (!copy_to_user(value_size, &size))
+            return KResult(-EFAULT);
         return KSuccess;
     }
     case SO_BINDTODEVICE:
@@ -175,13 +183,16 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
         if (m_bound_interface) {
             const auto& name = m_bound_interface->name();
             auto length = name.length() + 1;
-            copy_to_user(static_ptr_cast<char*>(value), name.characters(), length);
+            if (!copy_to_user(static_ptr_cast<char*>(value), name.characters(), length))
+                return KResult(-EFAULT);
             size = length;
-            copy_to_user(value_size, &size);
+            if (!copy_to_user(value_size, &size))
+                return KResult(-EFAULT);
             return KSuccess;
         } else {
             size = 0;
-            copy_to_user(value_size, &size);
+            if (!copy_to_user(value_size, &size))
+                return KResult(-EFAULT);
 
             return KResult(-EFAULT);
         }
@@ -191,14 +202,14 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     }
 }
 
-KResultOr<size_t> Socket::read(FileDescription& description, size_t, u8* buffer, size_t size)
+KResultOr<size_t> Socket::read(FileDescription& description, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
     if (is_shut_down_for_reading())
         return 0;
     return recvfrom(description, buffer, size, 0, {}, 0);
 }
 
-KResultOr<size_t> Socket::write(FileDescription& description, size_t, const u8* data, size_t size)
+KResultOr<size_t> Socket::write(FileDescription& description, size_t, const UserOrKernelBuffer& data, size_t size)
 {
     if (is_shut_down_for_writing())
         return -EPIPE;

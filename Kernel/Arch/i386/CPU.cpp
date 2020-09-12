@@ -226,6 +226,7 @@ extern "C" u8* safe_memset_2_faulted;
 
 bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
 {
+    fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
     size_t src = (size_t)src_ptr;
     size_t remainder;
@@ -233,7 +234,6 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
     if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
         asm volatile(
-            "xor %[fault_at], %[fault_at] \n"
             ".global safe_memcpy_ins_1 \n"
             "safe_memcpy_ins_1: \n"
             "rep movsl \n"
@@ -256,7 +256,6 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
         }
     }
     asm volatile(
-        "xor %[fault_at], %[fault_at] \n"
         ".global safe_memcpy_ins_2 \n"
         "safe_memcpy_ins_2: \n"
         "rep movsb \n"
@@ -277,8 +276,8 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
 ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
 {
     ssize_t count = 0;
+    fault_at = nullptr;
     asm volatile(
-        "xor %[fault_at], %[fault_at] \n"
         "1: \n"
         "test %[max_n], %[max_n] \n"
         "je 2f \n"
@@ -307,6 +306,7 @@ ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
 
 bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
 {
+    fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
     size_t remainder;
     // FIXME: Support starting at an unaligned address.
@@ -316,7 +316,6 @@ bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
         expanded_c |= expanded_c << 8;
         expanded_c |= expanded_c << 16;
         asm volatile(
-            "xor %[fault_at], %[fault_at] \n"
             ".global safe_memset_ins_1 \n"
             "safe_memset_ins_1: \n"
             "rep stosl \n"
@@ -338,7 +337,6 @@ bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
         }
     }
     asm volatile(
-        "xor %[fault_at], %[fault_at] \n"
         ".global safe_memset_ins_2 \n"
         "safe_memset_ins_2: \n"
         "rep stosb \n"

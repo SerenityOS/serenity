@@ -29,6 +29,7 @@
 #include <AK/Types.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Lock.h>
+#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 
@@ -36,8 +37,17 @@ class DoubleBuffer {
 public:
     explicit DoubleBuffer(size_t capacity = 65536);
 
-    size_t write(const u8*, size_t);
-    size_t read(u8*, size_t);
+    [[nodiscard]] ssize_t write(const UserOrKernelBuffer&, size_t);
+    [[nodiscard]] ssize_t write(const u8* data, size_t size)
+    {
+        return write(UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data)), size);
+    }
+    [[nodiscard]] ssize_t read(UserOrKernelBuffer&, size_t);
+    [[nodiscard]] ssize_t read(u8* data, size_t size)
+    {
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(data);
+        return read(buffer, size);
+    }
 
     bool is_empty() const { return m_empty; }
 

@@ -65,20 +65,26 @@ bool Console::can_read(const Kernel::FileDescription&, size_t) const
     return false;
 }
 
-Kernel::KResultOr<size_t> Console::read(Kernel::FileDescription&, size_t, u8*, size_t)
+Kernel::KResultOr<size_t> Console::read(Kernel::FileDescription&, size_t, Kernel::UserOrKernelBuffer&, size_t)
 {
     // FIXME: Implement reading from the console.
     //        Maybe we could use a ring buffer for this device?
     return 0;
 }
 
-Kernel::KResultOr<size_t> Console::write(Kernel::FileDescription&, size_t, const u8* data, size_t size)
+Kernel::KResultOr<size_t> Console::write(Kernel::FileDescription&, size_t, const Kernel::UserOrKernelBuffer& data, size_t size)
 {
     if (!size)
         return 0;
-    for (size_t i = 0; i < size; ++i)
-        put_char(data[i]);
-    return size;
+
+    ssize_t nread = data.read_buffered<256>(size, [&](const u8* bytes, size_t bytes_count) {
+        for (size_t i = 0; i < bytes_count; i++)
+            put_char((char)bytes[i]);
+        return (ssize_t)bytes_count;
+    });
+    if (nread < 0)
+        return Kernel::KResult(nread);
+    return (size_t)nread;
 }
 
 void Console::put_char(char ch)

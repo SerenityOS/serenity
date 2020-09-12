@@ -34,7 +34,7 @@ namespace Kernel {
 int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
 {
     Syscall::SC_unveil_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     if (!params.path.characters && !params.permissions.characters) {
@@ -66,7 +66,7 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
     auto& custody = custody_or_error.value();
     auto new_unveiled_path = custody->absolute_path();
 
-    auto permissions = validate_and_copy_string_from_user(params.permissions);
+    auto permissions = copy_string_from_user(params.permissions);
     if (permissions.is_null())
         return -EFAULT;
 

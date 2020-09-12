@@ -38,8 +38,6 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
         return -EINVAL;
     if (size == 0)
         return 0;
-    if (!validate_write(buffer, size))
-        return -EFAULT;
 #ifdef DEBUG_IO
     dbg() << "sys$read(" << fd << ", " << (const void*)buffer.ptr() << ", " << size << ")";
 #endif
@@ -58,7 +56,10 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
                 return -EAGAIN;
         }
     }
-    auto result = description->read(buffer.unsafe_userspace_ptr(), size);
+    auto user_buffer = UserOrKernelBuffer::for_user_buffer(buffer, size);
+    if (!user_buffer.has_value())
+        return -EFAULT;
+    auto result = description->read(user_buffer.value(), size);
     if (result.is_error())
         return result.error();
     return result.value();

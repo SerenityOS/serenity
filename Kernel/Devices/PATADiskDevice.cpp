@@ -55,19 +55,19 @@ const char* PATADiskDevice::class_name() const
     return "PATADiskDevice";
 }
 
-bool PATADiskDevice::read_blocks(unsigned index, u16 count, u8* out)
+bool PATADiskDevice::read_blocks(unsigned index, u16 count, UserOrKernelBuffer& out)
 {
     if (!m_channel.m_bus_master_base.is_null() && m_channel.m_dma_enabled.resource())
         return read_sectors_with_dma(index, count, out);
     return read_sectors(index, count, out);
 }
 
-bool PATADiskDevice::write_blocks(unsigned index, u16 count, const u8* data)
+bool PATADiskDevice::write_blocks(unsigned index, u16 count, const UserOrKernelBuffer& data)
 {
     if (!m_channel.m_bus_master_base.is_null() && m_channel.m_dma_enabled.resource())
         return write_sectors_with_dma(index, count, data);
     for (unsigned i = 0; i < count; ++i) {
-        if (!write_sectors(index + i, 1, data + i * 512))
+        if (!write_sectors(index + i, 1, data.offset(i * 512)))
             return false;
     }
     return true;
@@ -80,7 +80,7 @@ void PATADiskDevice::set_drive_geometry(u16 cyls, u16 heads, u16 spt)
     m_sectors_per_track = spt;
 }
 
-KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, u8* outbuf, size_t len)
+KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -107,10 +107,12 @@ KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, u8* outb
     off_t pos = whole_blocks * block_size();
 
     if (remaining > 0) {
-        auto buf = ByteBuffer::create_uninitialized(block_size());
-        if (!read_blocks(index + whole_blocks, 1, buf.data()))
+        auto data = ByteBuffer::create_uninitialized(block_size());
+        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
+        if (!read_blocks(index + whole_blocks, 1, data_buffer))
             return pos;
-        memcpy(&outbuf[pos], buf.data(), remaining);
+        if (!outbuf.write(data.data(), pos, remaining))
+            return KResult(-EFAULT);
     }
 
     return pos + remaining;
@@ -121,7 +123,7 @@ bool PATADiskDevice::can_read(const FileDescription&, size_t offset) const
     return offset < (m_cylinders * m_heads * m_sectors_per_track * block_size());
 }
 
-KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const u8* inbuf, size_t len)
+KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
@@ -151,11 +153,13 @@ KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const u
     // partial write, we have to read the block's content first, modify it,
     // then write the whole block back to the disk.
     if (remaining > 0) {
-        auto buf = ByteBuffer::create_zeroed(block_size());
-        if (!read_blocks(index + whole_blocks, 1, buf.data()))
+        auto data = ByteBuffer::create_zeroed(block_size());
+        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
+        if (!read_blocks(index + whole_blocks, 1, data_buffer))
             return pos;
-        memcpy(buf.data(), &inbuf[pos], remaining);
-        if (!write_blocks(index + whole_blocks, 1, buf.data()))
+        if (!inbuf.read(data.data(), pos, remaining))
+            return KResult(-EFAULT);
+        if (!write_blocks(index + whole_blocks, 1, data_buffer))
             return pos;
     }
 
@@ -167,22 +171,22 @@ bool PATADiskDevice::can_write(const FileDescription&, size_t offset) const
     return offset < (m_cylinders * m_heads * m_sectors_per_track * block_size());
 }
 
-bool PATADiskDevice::read_sectors_with_dma(u32 lba, u16 count, u8* outbuf)
+bool PATADiskDevice::read_sectors_with_dma(u32 lba, u16 count, UserOrKernelBuffer& outbuf)
 {
     return m_channel.ata_read_sectors_with_dma(lba, count, outbuf, is_slave());
 }
 
-bool PATADiskDevice::read_sectors(u32 start_sector, u16 count, u8* outbuf)
+bool PATADiskDevice::read_sectors(u32 start_sector, u16 count, UserOrKernelBuffer& outbuf)
 {
     return m_channel.ata_read_sectors(start_sector, count, outbuf, is_slave());
 }
 
-bool PATADiskDevice::write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf)
+bool PATADiskDevice::write_sectors_with_dma(u32 lba, u16 count, const UserOrKernelBuffer& inbuf)
 {
     return m_channel.ata_write_sectors_with_dma(lba, count, inbuf, is_slave());
 }
 
-bool PATADiskDevice::write_sectors(u32 start_sector, u16 count, const u8* inbuf)
+bool PATADiskDevice::write_sectors(u32 start_sector, u16 count, const UserOrKernelBuffer& inbuf)
 {
     return m_channel.ata_write_sectors(start_sector, count, inbuf, is_slave());
 }

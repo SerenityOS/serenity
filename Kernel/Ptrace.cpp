@@ -105,10 +105,9 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
         if (!tracer->has_regs())
             return KResult(-EINVAL);
 
-        auto* regs = reinterpret_cast<PtraceRegisters*>(params.addr.unsafe_userspace_ptr());
-        if (!caller.validate_write_typed(regs))
+        auto* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
+        if (!copy_to_user(regs, &tracer->regs()))
             return KResult(-EFAULT);
-        copy_to_user(regs, &tracer->regs());
         break;
     }
 
@@ -117,7 +116,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
             return KResult(-EINVAL);
 
         PtraceRegisters regs;
-        if (!caller.validate_read_and_copy_typed(&regs, (const PtraceRegisters*)params.addr.unsafe_userspace_ptr()))
+        if (!copy_from_user(&regs, (const PtraceRegisters*)params.addr))
             return KResult(-EFAULT);
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
@@ -132,21 +131,20 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
 
     case PT_PEEK: {
         Kernel::Syscall::SC_ptrace_peek_params peek_params;
-        if (!caller.validate_read_and_copy_typed(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr.unsafe_userspace_ptr())))
+        if (!copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)))
             return -EFAULT;
 
         // read validation is done inside 'peek_user_data'
-        auto result = peer->process().peek_user_data(peek_params.address);
+        auto result = peer->process().peek_user_data((FlatPtr)peek_params.address);
         if (result.is_error())
             return -EFAULT;
-        if (!caller.validate_write(peek_params.out_data, sizeof(u32)))
+        if (!copy_to_user(peek_params.out_data, &result.value()))
             return -EFAULT;
-        copy_to_user(peek_params.out_data, &result.value());
         break;
     }
 
     case PT_POKE: {
-        Userspace<u32*> addr = reinterpret_cast<FlatPtr>(params.addr.ptr());
+        Userspace<u32*> addr = reinterpret_cast<FlatPtr>(params.addr);
         // write validation is done inside 'poke_user_data'
         return peer->process().poke_user_data(addr, params.data);
     }

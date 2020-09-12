@@ -68,6 +68,7 @@ class TCPSocket;
 class TTY;
 class Thread;
 class UDPSocket;
+class UserOrKernelBuffer;
 class VFS;
 class VMObject;
 class WaitQueue;

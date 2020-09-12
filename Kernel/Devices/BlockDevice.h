@@ -37,13 +37,13 @@ public:
     size_t block_size() const { return m_block_size; }
     virtual bool is_seekable() const override { return true; }
 
-    bool read_block(unsigned index, u8*) const;
-    bool write_block(unsigned index, const u8*);
-    bool read_raw(u32 offset, unsigned length, u8*) const;
-    bool write_raw(u32 offset, unsigned length, const u8*);
+    bool read_block(unsigned index, UserOrKernelBuffer&) const;
+    bool write_block(unsigned index, const UserOrKernelBuffer&);
+    bool read_raw(u32 offset, unsigned length, UserOrKernelBuffer&) const;
+    bool write_raw(u32 offset, unsigned length, const UserOrKernelBuffer&);
 
-    virtual bool read_blocks(unsigned index, u16 count, u8*) = 0;
-    virtual bool write_blocks(unsigned index, u16 count, const u8*) = 0;
+    virtual bool read_blocks(unsigned index, u16 count, UserOrKernelBuffer&) = 0;
+    virtual bool write_blocks(unsigned index, u16 count, const UserOrKernelBuffer&) = 0;
 
 protected:
     BlockDevice(unsigned major, unsigned minor, size_t block_size = PAGE_SIZE)

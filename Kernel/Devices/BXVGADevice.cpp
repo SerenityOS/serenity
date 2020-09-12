@@ -203,18 +203,16 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
         auto* out = (size_t*)arg;
-        if (!Process::current()->validate_write_typed(out))
-            return -EFAULT;
         size_t value = framebuffer_size_in_bytes();
-        copy_to_user(out, &value);
+        if (!copy_to_user(out, &value))
+            return -EFAULT;
         return 0;
     }
     case FB_IOCTL_GET_BUFFER: {
         auto* index = (int*)arg;
-        if (!Process::current()->validate_write_typed(index))
-            return -EFAULT;
         int value = m_y_offset == 0 ? 0 : 1;
-        copy_to_user(index, &value);
+        if (!copy_to_user(index, &value))
+            return -EFAULT;
         return 0;
     }
     case FB_IOCTL_SET_BUFFER: {
@@ -225,21 +223,18 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     }
     case FB_IOCTL_GET_RESOLUTION: {
         auto* user_resolution = (FBResolution*)arg;
-        if (!Process::current()->validate_write_typed(user_resolution))
-            return -EFAULT;
         FBResolution resolution;
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
-        copy_to_user(user_resolution, &resolution);
+        if (!copy_to_user(user_resolution, &resolution))
+            return -EFAULT;
         return 0;
     }
     case FB_IOCTL_SET_RESOLUTION: {
         auto* user_resolution = (FBResolution*)arg;
-        if (!Process::current()->validate_write_typed(user_resolution))
-            return -EFAULT;
         FBResolution resolution;
-        if (!Process::current()->validate_read_and_copy_typed(&resolution, user_resolution))
+        if (!copy_from_user(&resolution, user_resolution))
             return -EFAULT;
         if (resolution.width > MAX_RESOLUTION_WIDTH || resolution.height > MAX_RESOLUTION_HEIGHT)
             return -EINVAL;
@@ -250,7 +245,8 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             resolution.pitch = m_framebuffer_pitch;
             resolution.width = m_framebuffer_width;
             resolution.height = m_framebuffer_height;
-            copy_to_user(user_resolution, &resolution);
+            if (!copy_to_user(user_resolution, &resolution))
+                return -EFAULT;
             return -EINVAL;
         }
 #ifdef BXVGA_DEBUG
@@ -259,7 +255,8 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
-        copy_to_user(user_resolution, &resolution);
+        if (!copy_to_user(user_resolution, &resolution))
+            return -EFAULT;
         return 0;
     }
     default:

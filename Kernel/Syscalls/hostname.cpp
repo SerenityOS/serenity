@@ -36,12 +36,11 @@ int Process::sys$gethostname(Userspace<char*> buffer, ssize_t size)
     REQUIRE_PROMISE(stdio);
     if (size < 0)
         return -EINVAL;
-    if (!validate_write(buffer, size))
-        return -EFAULT;
     LOCKER(*g_hostname_lock, Lock::Mode::Shared);
     if ((size_t)size < (g_hostname->length() + 1))
         return -ENAMETOOLONG;
-    copy_to_user(buffer, g_hostname->characters(), g_hostname->length() + 1);
+    if (!copy_to_user(buffer, g_hostname->characters(), g_hostname->length() + 1))
+        return -EFAULT;
     return 0;
 }
 
@@ -55,7 +54,10 @@ int Process::sys$sethostname(Userspace<const char*> hostname, ssize_t length)
     LOCKER(*g_hostname_lock, Lock::Mode::Exclusive);
     if (length > 64)
         return -ENAMETOOLONG;
-    *g_hostname = validate_and_copy_string_from_user(hostname, length);
+    auto copied_hostname = copy_string_from_user(hostname, length);
+    if (copied_hostname.is_null())
+        return -EFAULT;
+    *g_hostname = move(copied_hostname);
     return 0;
 }
 

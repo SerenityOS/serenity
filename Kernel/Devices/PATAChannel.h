@@ -84,10 +84,10 @@ private:
     void detect_disks();
 
     void wait_for_irq();
-    bool ata_read_sectors_with_dma(u32, u16, u8*, bool);
-    bool ata_write_sectors_with_dma(u32, u16, const u8*, bool);
-    bool ata_read_sectors(u32, u16, u8*, bool);
-    bool ata_write_sectors(u32, u16, const u8*, bool);
+    bool ata_read_sectors_with_dma(u32, u16, UserOrKernelBuffer&, bool);
+    bool ata_write_sectors_with_dma(u32, u16, const UserOrKernelBuffer&, bool);
+    bool ata_read_sectors(u32, u16, UserOrKernelBuffer&, bool);
+    bool ata_write_sectors(u32, u16, const UserOrKernelBuffer&, bool);
 
     inline void prepare_for_irq();
 

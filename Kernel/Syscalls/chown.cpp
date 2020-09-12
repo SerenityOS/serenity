@@ -42,7 +42,7 @@ int Process::sys$chown(Userspace<const Syscall::SC_chown_params*> user_params)
 {
     REQUIRE_PROMISE(chown);
     Syscall::SC_chown_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())

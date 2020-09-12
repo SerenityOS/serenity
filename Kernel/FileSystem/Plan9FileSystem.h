@@ -124,8 +124,8 @@ public:
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual void flush_metadata() override;
-    virtual ssize_t read_bytes(off_t, ssize_t, u8* buffer, FileDescription*) const override;
-    virtual ssize_t write_bytes(off_t, ssize_t, const u8* data, FileDescription*) override;
+    virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
+    virtual ssize_t write_bytes(off_t, ssize_t, const UserOrKernelBuffer& data, FileDescription*) override;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;

@@ -976,21 +976,33 @@ static ByteBuffer read_sys_bool(InodeIdentifier inode_id)
     return buffer;
 }
 
-static ssize_t write_sys_bool(InodeIdentifier inode_id, const ByteBuffer& data)
+static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer& buffer, size_t size)
 {
     auto& variable = SysVariable::for_inode(inode_id);
     ASSERT(variable.type == SysVariable::Type::Boolean);
 
-    if (data.is_empty() || !(data[0] == '0' || data[0] == '1'))
-        return data.size();
+    char value = 0;
+    bool did_read = false;
+    ssize_t nread = buffer.read_buffered<1>(1, [&](const u8* data, size_t) {
+        if (did_read)
+            return 0;
+        value = (char)data[0];
+        did_read = true;
+        return 1;
+    });
+    if (nread < 0)
+        return nread;
+    ASSERT(nread == 0 || (nread == 1 && did_read));
+    if (nread == 0 || !(value == '0' || value == '1'))
+        return (ssize_t)size;
 
     auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(variable.address);
     {
         LOCKER(lockable_bool->lock());
-        lockable_bool->resource() = data[0] == '1';
+        lockable_bool->resource() = value == '1';
     }
     variable.notify();
-    return data.size();
+    return (ssize_t)size;
 }
 
 static ByteBuffer read_sys_string(InodeIdentifier inode_id)
@@ -1003,18 +1015,22 @@ static ByteBuffer read_sys_string(InodeIdentifier inode_id)
     return lockable_string->resource().to_byte_buffer();
 }
 
-static ssize_t write_sys_string(InodeIdentifier inode_id, const ByteBuffer& data)
+static ssize_t write_sys_string(InodeIdentifier inode_id, const UserOrKernelBuffer& buffer, size_t size)
 {
     auto& variable = SysVariable::for_inode(inode_id);
     ASSERT(variable.type == SysVariable::Type::String);
 
+    auto string_copy = buffer.copy_into_string(size);
+    if (string_copy.is_null())
+        return -EFAULT;
+
     {
         auto* lockable_string = reinterpret_cast<Lockable<String>*>(variable.address);
         LOCKER(lockable_string->lock());
-        lockable_string->resource() = String((const char*)data.data(), data.size());
+        lockable_string->resource() = move(string_copy);
     }
     variable.notify();
-    return data.size();
+    return (ssize_t)size;
 }
 
 void ProcFS::add_sys_bool(String&& name, Lockable<bool>& var, Function<void()>&& notify_callback)
@@ -1180,13 +1196,13 @@ InodeMetadata ProcFSInode::metadata() const
     return metadata;
 }
 
-ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDescription* description) const
+ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
 #ifdef PROCFS_DEBUG
     dbg() << "ProcFS: read_bytes " << index();
 #endif
     ASSERT(offset >= 0);
-    ASSERT(buffer);
+    ASSERT(buffer.user_or_kernel_ptr());
 
     auto* directory_entry = fs().get_directory_entry(identifier());
 
@@ -1240,7 +1256,8 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
         return 0;
 
     ssize_t nread = min(static_cast<off_t>(data.value().size() - offset), static_cast<off_t>(count));
-    memcpy(buffer, data.value().data() + offset, nread);
+    if (!buffer.write(data.value().data() + offset, nread))
+        return -EFAULT;
     if (nread == 0 && description && description->generator_cache().has_value())
         description->generator_cache().clear();
 
@@ -1461,7 +1478,7 @@ void ProcFSInode::flush_metadata()
 {
 }
 
-ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, FileDescription*)
+ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     auto result = prepare_to_write_data();
     if (result.is_error())
@@ -1469,8 +1486,8 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, F
 
     auto* directory_entry = fs().get_directory_entry(identifier());
 
-    Function<ssize_t(InodeIdentifier, const ByteBuffer&)> callback_tmp;
-    Function<ssize_t(InodeIdentifier, const ByteBuffer&)>* write_callback { nullptr };
+    Function<ssize_t(InodeIdentifier, const UserOrKernelBuffer&, size_t)> callback_tmp;
+    Function<ssize_t(InodeIdentifier, const UserOrKernelBuffer&, size_t)>* write_callback { nullptr };
 
     if (directory_entry == nullptr) {
         if (to_proc_parent_directory(identifier()) == PDI_Root_sys) {
@@ -1496,9 +1513,10 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, F
     ASSERT(is_persistent_inode(identifier()));
     // FIXME: Being able to write into ProcFS at a non-zero offset seems like something we should maybe support..
     ASSERT(offset == 0);
-    bool success = (*write_callback)(identifier(), ByteBuffer::wrap(const_cast<u8*>(buffer), size));
-    ASSERT(success);
-    return 0;
+    ssize_t nwritten = (*write_callback)(identifier(), buffer, (size_t)size);
+    if (nwritten < 0)
+        klog() << "ProcFS: Writing " << size << " bytes failed: " << nwritten;
+    return nwritten;
 }
 
 KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const

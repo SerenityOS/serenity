@@ -34,7 +34,7 @@ int Process::sys$rename(Userspace<const Syscall::SC_rename_params*> user_params)
 {
     REQUIRE_PROMISE(cpath);
     Syscall::SC_rename_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
     auto old_path = get_syscall_path_argument(params.old_path);
     if (old_path.is_error())

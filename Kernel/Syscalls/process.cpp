@@ -58,13 +58,11 @@ int Process::sys$set_process_icon(int icon_id)
 int Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write(buffer, buffer_size))
-        return -EFAULT;
-
     if (m_name.length() + 1 > buffer_size)
         return -ENAMETOOLONG;
 
-    copy_to_user(buffer, m_name.characters(), m_name.length() + 1);
+    if (!copy_to_user(buffer, m_name.characters(), m_name.length() + 1))
+        return -EFAULT;
     return 0;
 }
 
@@ -73,7 +71,7 @@ int Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_
     REQUIRE_PROMISE(proc);
     if (user_name_length > 256)
         return -ENAMETOOLONG;
-    auto name = validate_and_copy_string_from_user(user_name, user_name_length);
+    auto name = copy_string_from_user(user_name, user_name_length);
     if (name.is_null())
         return -EFAULT;
     m_name = move(name);
