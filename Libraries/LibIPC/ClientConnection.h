@@ -26,20 +26,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <LibCore/Event.h>
-#include <LibCore/EventLoop.h>
-#include <LibCore/LocalSocket.h>
-#include <LibCore/Object.h>
-#include <LibCore/Timer.h>
 #include <LibIPC/Connection.h>
-#include <LibIPC/Endpoint.h>
-#include <LibIPC/Message.h>
-#include <errno.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace IPC {
 
