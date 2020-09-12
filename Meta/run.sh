@@ -42,7 +42,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -usb
 -debugcon stdio
 -soundhw pcspk
--soundhw sb16
+-device sb16
 "
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
@@ -59,7 +59,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -usb
 -debugcon stdio
 -soundhw pcspk
--soundhw sb16
+-device sb16
 "
 
 export SDL_VIDEO_X11_DGAMOUSE=0
