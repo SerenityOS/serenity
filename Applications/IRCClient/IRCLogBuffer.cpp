@@ -29,8 +29,8 @@
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <time.h>
 
 NonnullRefPtr<IRCLogBuffer> IRCLogBuffer::create()
@@ -95,9 +95,4 @@ void IRCLogBuffer::add_message(const String& text, Color color)
     wrapper->set_inner_html(html);
     m_container_element->append_child(wrapper);
     m_document->force_layout();
-}
-
-void IRCLogBuffer::dump() const
-{
-    // FIXME: Remove me?
 }
