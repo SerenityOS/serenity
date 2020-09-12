@@ -1,5 +1,6 @@
 set(SOURCES
     CursorTool.cpp
+    Git/DiffViewer.cpp
     Git/GitWidget.cpp
     Git/GitFilesModel.cpp
     Git/GitRepo.cpp
@@ -29,4 +30,4 @@ set(SOURCES
 )
 
 serenity_bin(HackStudio)
-target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibGfx LibCore LibVT LibDebug LibX86)
+target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibGfx LibCore LibVT LibDebug LibX86 LibDiff)

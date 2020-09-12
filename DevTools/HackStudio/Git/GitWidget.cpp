@@ -27,6 +27,8 @@
 #include "GitWidget.h"
 #include "GitFilesModel.h"
 #include <AK/LogStream.h>
+#include <LibCore/File.h>
+#include <LibDiff/Format.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -36,6 +38,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
+#include <stdio.h>
 
 namespace HackStudio {
 
@@ -64,6 +67,10 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
     m_unstaged_files = unstaged.add<GitFilesView>(
         [this](const auto& file) { stage_file(file); },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png").release_nonnull());
+    m_unstaged_files->on_selection = [this](const GUI::ModelIndex& index) {
+        const auto& selected = index.data().as_string();
+        show_diff(LexicalPath(selected));
+    };
 
     auto& staged = add<GUI::Widget>();
     staged.set_layout<GUI::VerticalBoxLayout>();
@@ -134,5 +141,30 @@ void GitWidget::commit()
     dbg() << "commit message: " << message;
     m_git_repo->commit(message);
     refresh();
+}
+
+void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
+{
+    m_view_diff_callback = move(callback);
+}
+
+void GitWidget::show_diff(const LexicalPath& file_path)
+{
+    if (!m_git_repo->is_tracked(file_path)) {
+        auto file = Core::File::construct(file_path.string());
+        if (!file->open(Core::IODevice::ReadOnly)) {
+            perror("open");
+            ASSERT_NOT_REACHED();
+        }
+
+        auto content = file->read_all();
+        String content_string((char*)content.data(), content.size());
+        m_view_diff_callback("", Diff::generate_only_additions(content_string));
+        return;
+    }
+    const auto& original_content = m_git_repo->original_file_content(file_path);
+    const auto& diff = m_git_repo->unstaged_diff(file_path);
+    ASSERT(original_content.has_value() && diff.has_value());
+    m_view_diff_callback(original_content.value(), diff.value());
 }
 }
