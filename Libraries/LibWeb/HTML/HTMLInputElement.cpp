@@ -31,6 +31,7 @@
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Layout/LayoutButton.h>
 #include <LibWeb/Layout/LayoutCheckBox.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Page/Frame.h>
@@ -46,6 +47,19 @@ HTMLInputElement::~HTMLInputElement()
 {
 }
 
+void HTMLInputElement::did_click_button(Badge<LayoutButton>)
+{
+    dispatch_event(DOM::Event::create("click"));
+
+    if (type().equals_ignoring_case("submit")) {
+        if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
+            // FIXME: Remove this const_cast once we have a non-const first_ancestor_of_type.
+            form->submit(this);
+        }
+        return;
+    }
+}
+
 RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     ASSERT(document().frame());
@@ -59,47 +73,27 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperti
     if (style->display() == CSS::Display::None)
         return nullptr;
 
-    RefPtr<GUI::Widget> widget;
-    if (type() == "submit") {
-        auto& button = page_view.add<GUI::Button>(value());
-        int text_width = Gfx::Font::default_font().width(value());
-        button.set_relative_rect(0, 0, text_width + 20, 20);
-        button.on_click = [this](auto) {
-            if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
-                // FIXME: Remove this const_cast once we have a non-const first_ancestor_of_type.
-                const_cast<HTMLFormElement*>(form)->submit(this);
-            }
-        };
-        widget = button;
-    } else if (type() == "button") {
-        auto& button = page_view.add<GUI::Button>(value());
-        int text_width = Gfx::Font::default_font().width(value());
-        button.set_relative_rect(0, 0, text_width + 20, 20);
-        button.on_click = [this](auto) {
-            const_cast<HTMLInputElement*>(this)->dispatch_event(DOM::Event::create("click"));
-        };
-        widget = button;
-    } else if (type() == "checkbox") {
-        return adopt(*new LayoutCheckBox(document(), *this, move(style)));
-    } else {
-        auto& text_box = page_view.add<GUI::TextBox>();
-        text_box.set_text(value());
-        text_box.on_change = [this] {
-            auto& widget = downcast<LayoutWidget>(layout_node())->widget();
-            const_cast<HTMLInputElement*>(this)->set_attribute(HTML::AttributeNames::value, static_cast<const GUI::TextBox&>(widget).text());
-        };
-        int text_width = Gfx::Font::default_font().width(value());
-        auto size_value = attribute(HTML::AttributeNames::size);
-        if (!size_value.is_null()) {
-            auto size = size_value.to_uint();
-            if (size.has_value())
-                text_width = Gfx::Font::default_font().glyph_width('x') * size.value();
-        }
-        text_box.set_relative_rect(0, 0, text_width + 20, 20);
-        widget = text_box;
-    }
+    if (type().equals_ignoring_case("submit") || type().equals_ignoring_case("button"))
+        return adopt(*new LayoutButton(document(), *this, move(style)));
 
-    return adopt(*new LayoutWidget(document(), *this, *widget));
+    if (type() == "checkbox")
+        return adopt(*new LayoutCheckBox(document(), *this, move(style)));
+
+    auto& text_box = page_view.add<GUI::TextBox>();
+    text_box.set_text(value());
+    text_box.on_change = [this] {
+        auto& widget = downcast<LayoutWidget>(layout_node())->widget();
+        const_cast<HTMLInputElement*>(this)->set_attribute(HTML::AttributeNames::value, static_cast<const GUI::TextBox&>(widget).text());
+    };
+    int text_width = Gfx::Font::default_font().width(value());
+    auto size_value = attribute(HTML::AttributeNames::size);
+    if (!size_value.is_null()) {
+        auto size = size_value.to_uint();
+        if (size.has_value())
+            text_width = Gfx::Font::default_font().glyph_width('x') * size.value();
+    }
+    text_box.set_relative_rect(0, 0, text_width + 20, 20);
+    return adopt(*new LayoutWidget(document(), *this, text_box));
 }
 
 void HTMLInputElement::set_checked(bool checked)

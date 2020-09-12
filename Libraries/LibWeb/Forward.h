@@ -136,6 +136,8 @@ namespace Web {
 class EventHandler;
 class Frame;
 class LayoutBlock;
+class LayoutButton;
+class LayoutCheckBox;
 class LayoutDocument;
 class LayoutNode;
 class LayoutNodeWithStyle;
