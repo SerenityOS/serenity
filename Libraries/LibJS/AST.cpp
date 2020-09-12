@@ -122,7 +122,10 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         auto* this_value = is_super_property_lookup ? &interpreter.this_value(global_object).as_object() : lookup_target.to_object(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        auto callee = lookup_target.to_object(interpreter, global_object)->get(member_expression.computed_property_name(interpreter, global_object)).value_or(js_undefined());
+        auto property_name = member_expression.computed_property_name(interpreter, global_object);
+        if (!property_name.is_valid())
+            return {};
+        auto callee = lookup_target.to_object(interpreter, global_object)->get(property_name).value_or(js_undefined());
         return { this_value, callee };
     }
     return { &global_object, m_callee->execute(interpreter, global_object) };
@@ -1589,7 +1592,10 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto* object_result = object_value.to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    return object_result->get(computed_property_name(interpreter, global_object)).value_or(js_undefined());
+    auto property_name = computed_property_name(interpreter, global_object);
+    if (!property_name.is_valid())
+        return {};
+    return object_result->get(property_name).value_or(js_undefined());
 }
 
 Value StringLiteral::execute(Interpreter& interpreter, GlobalObject&) const

@@ -1,4 +1,4 @@
-test("Issue #1992, exception thrown in catch {} block", () => {
+test("Issue #3437, exception thrown in catch {} block", () => {
     var tryHasBeenExecuted = false;
     var catchHasBeenExecuted = false;
     var finallyHasBeenExecuted = false;
