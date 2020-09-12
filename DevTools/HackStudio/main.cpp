@@ -101,6 +101,7 @@ RefPtr<GUI::Splitter> g_editors_splitter;
 RefPtr<GUI::Widget> g_form_inner_container;
 RefPtr<FormEditorWidget> g_form_editor_widget;
 RefPtr<DiffViewer> g_diff_viewer;
+RefPtr<GitWidget> g_git_widget;
 
 static RefPtr<GUI::TabWidget> s_action_tab_widget;
 
@@ -489,6 +490,7 @@ static int main_impl(int argc, char** argv)
         if (g_currently_open_file.is_empty())
             return;
         current_editor().write_to_file(g_currently_open_file);
+        g_git_widget->refresh();
     });
 
     toolbar.add_action(new_action);
@@ -572,8 +574,8 @@ static int main_impl(int argc, char** argv)
     auto& terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
     auto& debug_info_widget = s_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
     auto& disassembly_widget = s_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
-    auto& git_widget = s_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(g_project->root_directory()));
-    git_widget.set_view_diff_callback([](const auto& original_content, const auto& diff) {
+    g_git_widget = s_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(g_project->root_directory()));
+    g_git_widget->set_view_diff_callback([](const auto& original_content, const auto& diff) {
         g_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
