@@ -48,6 +48,7 @@ namespace HackStudio {
 
 Editor::Editor()
 {
+    set_document(CodeDocument::create());
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
