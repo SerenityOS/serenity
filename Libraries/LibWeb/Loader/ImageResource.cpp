@@ -62,10 +62,10 @@ const Gfx::Bitmap* ImageResource::bitmap(size_t frame_index) const
         if (!m_decoder)
             return nullptr;
         if (m_decoder->is_animated())
-            return m_decoder->frame(frame_index).image;
-        return m_decoder->bitmap();
-    }
-    if (!m_decoded_image && !m_has_attempted_decode) {
+            m_decoded_image = m_decoder->frame(frame_index).image;
+        else
+            m_decoded_image = m_decoder->bitmap();
+    } else if (!m_decoded_image && !m_has_attempted_decode) {
         auto image_decoder_client = ImageDecoderClient::Client::construct();
         m_decoded_image = image_decoder_client->decode_image(encoded_data());
         m_has_attempted_decode = true;

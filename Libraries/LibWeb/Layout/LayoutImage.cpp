@@ -115,7 +115,7 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
             if (alt.is_empty())
                 alt = image_element.src();
             context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, specified_style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), Gfx::TextElision::Right);
-        } else if (auto* bitmap = m_image_loader.bitmap()) {
+        } else if (auto bitmap = m_image_loader.bitmap()) {
             context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *bitmap, bitmap->rect());
         }
     }
