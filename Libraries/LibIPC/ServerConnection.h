@@ -26,20 +26,7 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <LibCore/Event.h>
-#include <LibCore/LocalSocket.h>
-#include <LibCore/Notifier.h>
-#include <LibCore/SyscallUtils.h>
 #include <LibIPC/Connection.h>
-#include <LibIPC/Message.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 namespace IPC {
 
@@ -51,10 +38,6 @@ public:
     {
         // We want to rate-limit our clients
         this->socket().set_blocking(true);
-        this->notifier().on_ready_to_read = [this] {
-            this->drain_messages_from_peer();
-            this->handle_messages();
-        };
 
         if (!this->socket().connect(Core::SocketAddress::local(address))) {
             perror("connect");

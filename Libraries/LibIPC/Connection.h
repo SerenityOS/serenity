@@ -29,6 +29,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Event.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/SyscallUtils.h>
@@ -52,6 +53,10 @@ public:
         , m_notifier(Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read, this))
     {
         m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
+        m_notifier->on_ready_to_read = [this] {
+            drain_messages_from_peer();
+            handle_messages();
+        };
     }
 
     pid_t peer_pid() const { return m_peer_pid; }
@@ -118,7 +123,6 @@ public:
 
 protected:
     Core::LocalSocket& socket() { return *m_socket; }
-    Core::Notifier& notifier() { return *m_notifier; }
     void set_peer_pid(pid_t pid) { m_peer_pid = pid; }
 
     template<typename MessageType, typename Endpoint>
