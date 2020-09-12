@@ -103,6 +103,8 @@ public:
         return false;
     }
 
+    RefPtr<Gfx::Bitmap> clone() const;
+
     RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
     RefPtr<Bitmap> to_bitmap_backed_by_shared_buffer() const;
