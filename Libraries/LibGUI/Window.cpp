@@ -635,7 +635,7 @@ RefPtr<Gfx::Bitmap> Window::create_shared_bitmap(Gfx::BitmapFormat format, const
 {
     ASSERT(WindowServerConnection::the().server_pid());
     ASSERT(!size.is_empty());
-    size_t pitch = round_up_to_power_of_two(size.width() * sizeof(Gfx::RGBA32), 16);
+    size_t pitch = Gfx::Bitmap::minimum_pitch(size.width(), format);
     size_t size_in_bytes = size.height() * pitch;
     auto shared_buffer = SharedBuffer::create_with_size(size_in_bytes);
     ASSERT(shared_buffer);
