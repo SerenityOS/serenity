@@ -31,6 +31,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
@@ -137,6 +138,8 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
         m_type = &cell.type();
         m_vertical_alignment = vertical_alignment_from(cell.type_metadata().alignment);
         m_horizontal_alignment = horizontal_alignment_from(cell.type_metadata().alignment);
+        m_static_background_color = cell.type_metadata().static_background_color;
+        m_static_foreground_color = cell.type_metadata().static_foreground_color;
     }
 
     auto& type_tab = tabs.add_tab<GUI::Widget>("Type");
@@ -214,76 +217,136 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
 
     auto& alignment_tab = tabs.add_tab<GUI::Widget>("Alignment");
     alignment_tab.set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
-
-    // FIXME: Frame?
-    // Horizontal alignment
     {
-        auto& horizontal_alignment_selection_container = alignment_tab.add<GUI::Widget>();
-        horizontal_alignment_selection_container.set_layout<GUI::HorizontalBoxLayout>();
-        horizontal_alignment_selection_container.layout()->set_margins({ 0, 4, 0, 0 });
-        horizontal_alignment_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        horizontal_alignment_selection_container.set_preferred_size(0, 22);
+        // FIXME: Frame?
+        // Horizontal alignment
+        {
+            auto& horizontal_alignment_selection_container = alignment_tab.add<GUI::Widget>();
+            horizontal_alignment_selection_container.set_layout<GUI::HorizontalBoxLayout>();
+            horizontal_alignment_selection_container.layout()->set_margins({ 0, 4, 0, 0 });
+            horizontal_alignment_selection_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+            horizontal_alignment_selection_container.set_preferred_size(0, 22);
 
-        auto& horizontal_alignment_label = horizontal_alignment_selection_container.add<GUI::Label>();
-        horizontal_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        horizontal_alignment_label.set_text("Horizontal Text Alignment");
+            auto& horizontal_alignment_label = horizontal_alignment_selection_container.add<GUI::Label>();
+            horizontal_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+            horizontal_alignment_label.set_text("Horizontal Text Alignment");
 
-        auto& horizontal_combobox = alignment_tab.add<GUI::ComboBox>();
-        horizontal_combobox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        horizontal_combobox.set_preferred_size(0, 22);
-        horizontal_combobox.set_only_allow_values_from_model(true);
-        horizontal_combobox.set_model(*GUI::ItemListModel<String>::create(g_horizontal_alignments));
-        horizontal_combobox.set_selected_index((int)m_horizontal_alignment);
-        horizontal_combobox.on_change = [&](auto&, const GUI::ModelIndex& index) {
-            switch (index.row()) {
-            case 0:
-                m_horizontal_alignment = HorizontalAlignment::Left;
-                break;
-            case 1:
-                m_horizontal_alignment = HorizontalAlignment::Center;
-                break;
-            case 2:
-                m_horizontal_alignment = HorizontalAlignment::Right;
-                break;
-            default:
-                ASSERT_NOT_REACHED();
-            }
-        };
+            auto& horizontal_combobox = alignment_tab.add<GUI::ComboBox>();
+            horizontal_combobox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+            horizontal_combobox.set_preferred_size(0, 22);
+            horizontal_combobox.set_only_allow_values_from_model(true);
+            horizontal_combobox.set_model(*GUI::ItemListModel<String>::create(g_horizontal_alignments));
+            horizontal_combobox.set_selected_index((int)m_horizontal_alignment);
+            horizontal_combobox.on_change = [&](auto&, const GUI::ModelIndex& index) {
+                switch (index.row()) {
+                case 0:
+                    m_horizontal_alignment = HorizontalAlignment::Left;
+                    break;
+                case 1:
+                    m_horizontal_alignment = HorizontalAlignment::Center;
+                    break;
+                case 2:
+                    m_horizontal_alignment = HorizontalAlignment::Right;
+                    break;
+                default:
+                    ASSERT_NOT_REACHED();
+                }
+            };
+        }
+
+        // Vertical alignment
+        {
+            auto& vertical_alignment_container = alignment_tab.add<GUI::Widget>();
+            vertical_alignment_container.set_layout<GUI::HorizontalBoxLayout>();
+            vertical_alignment_container.layout()->set_margins({ 0, 4, 0, 0 });
+            vertical_alignment_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+            vertical_alignment_container.set_preferred_size(0, 22);
+
+            auto& vertical_alignment_label = vertical_alignment_container.add<GUI::Label>();
+            vertical_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+            vertical_alignment_label.set_text("Vertical Text Alignment");
+
+            auto& vertical_combobox = alignment_tab.add<GUI::ComboBox>();
+            vertical_combobox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+            vertical_combobox.set_preferred_size(0, 22);
+            vertical_combobox.set_only_allow_values_from_model(true);
+            vertical_combobox.set_model(*GUI::ItemListModel<String>::create(g_vertical_alignments));
+            vertical_combobox.set_selected_index((int)m_vertical_alignment);
+            vertical_combobox.on_change = [&](auto&, const GUI::ModelIndex& index) {
+                switch (index.row()) {
+                case 0:
+                    m_vertical_alignment = VerticalAlignment::Top;
+                    break;
+                case 1:
+                    m_vertical_alignment = VerticalAlignment::Center;
+                    break;
+                case 2:
+                    m_vertical_alignment = VerticalAlignment::Bottom;
+                    break;
+                default:
+                    ASSERT_NOT_REACHED();
+                }
+            };
+        }
     }
 
-    // Vertical alignment
+    auto& colors_tab = tabs.add_tab<GUI::Widget>("Color");
+    colors_tab.set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
     {
-        auto& vertical_alignment_container = alignment_tab.add<GUI::Widget>();
-        vertical_alignment_container.set_layout<GUI::HorizontalBoxLayout>();
-        vertical_alignment_container.layout()->set_margins({ 0, 4, 0, 0 });
-        vertical_alignment_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        vertical_alignment_container.set_preferred_size(0, 22);
+        // Static formatting
+        {
+            auto& static_formatting_container = colors_tab.add<GUI::Widget>();
+            static_formatting_container.set_layout<GUI::VerticalBoxLayout>();
+            static_formatting_container.layout()->set_margins({ 0, 0, 0, 0 });
+            static_formatting_container.set_preferred_size(0, 44);
+            static_formatting_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
 
-        auto& vertical_alignment_label = vertical_alignment_container.add<GUI::Label>();
-        vertical_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        vertical_alignment_label.set_text("Vertical Text Alignment");
+            // Foreground
+            {
+                // FIXME: Somehow allow unsetting these.
+                auto& foreground_container = static_formatting_container.add<GUI::Widget>();
+                foreground_container.set_layout<GUI::HorizontalBoxLayout>();
+                foreground_container.layout()->set_margins({ 0, 4, 0, 0 });
+                foreground_container.set_preferred_size(0, 22);
+                foreground_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
 
-        auto& vertical_combobox = alignment_tab.add<GUI::ComboBox>();
-        vertical_combobox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-        vertical_combobox.set_preferred_size(0, 22);
-        vertical_combobox.set_only_allow_values_from_model(true);
-        vertical_combobox.set_model(*GUI::ItemListModel<String>::create(g_vertical_alignments));
-        vertical_combobox.set_selected_index((int)m_vertical_alignment);
-        vertical_combobox.on_change = [&](auto&, const GUI::ModelIndex& index) {
-            switch (index.row()) {
-            case 0:
-                m_vertical_alignment = VerticalAlignment::Top;
-                break;
-            case 1:
-                m_vertical_alignment = VerticalAlignment::Center;
-                break;
-            case 2:
-                m_vertical_alignment = VerticalAlignment::Bottom;
-                break;
-            default:
-                ASSERT_NOT_REACHED();
+                auto& foreground_label = foreground_container.add<GUI::Label>();
+                foreground_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+                foreground_label.set_text("Static Foreground Color");
+
+                auto& foreground_selector = foreground_container.add<GUI::ColorInput>();
+                foreground_selector.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+                foreground_selector.set_preferred_size(0, 22);
+                if (m_static_foreground_color.has_value())
+                    foreground_selector.set_color(m_static_foreground_color.value());
+                foreground_selector.on_change = [&]() {
+                    m_static_foreground_color = foreground_selector.color();
+                };
             }
-        };
+
+            // Background
+            {
+                // FIXME: Somehow allow unsetting these.
+                auto& background_container = static_formatting_container.add<GUI::Widget>();
+                background_container.set_layout<GUI::HorizontalBoxLayout>();
+                background_container.layout()->set_margins({ 0, 4, 0, 0 });
+                background_container.set_preferred_size(0, 22);
+                background_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+
+                auto& background_label = background_container.add<GUI::Label>();
+                background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+                background_label.set_text("Static Background Color");
+
+                auto& background_selector = background_container.add<GUI::ColorInput>();
+                background_selector.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+                background_selector.set_preferred_size(0, 22);
+                if (m_static_background_color.has_value())
+                    background_selector.set_color(m_static_background_color.value());
+                background_selector.on_change = [&]() {
+                    m_static_background_color = background_selector.color();
+                };
+            }
+        }
     }
 }
 
@@ -292,6 +355,8 @@ CellTypeMetadata CellTypeDialog::metadata() const
     CellTypeMetadata metadata;
     metadata.format = m_format;
     metadata.length = m_length;
+    metadata.static_foreground_color = m_static_foreground_color;
+    metadata.static_background_color = m_static_background_color;
 
     switch (m_vertical_alignment) {
     case VerticalAlignment::Top:
