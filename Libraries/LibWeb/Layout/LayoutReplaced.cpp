@@ -77,7 +77,7 @@ float LayoutReplaced::calculate_width() const
     // 'height' has some other computed value, and the element does have an intrinsic ratio; then the used value of 'width' is:
     //
     //     (used height) * (intrinsic ratio)
-    else if ((specified_height.is_auto() && specified_width.is_auto() && !has_intrinsic_width() && has_intrinsic_height() && has_intrinsic_ratio()) || computed_width.is_auto()) {
+    else if ((specified_height.is_auto() && specified_width.is_auto() && !has_intrinsic_width() && has_intrinsic_height() && has_intrinsic_ratio()) || (computed_width.is_auto() && has_intrinsic_ratio())) {
         used_width = calculate_height() * intrinsic_ratio();
     }
 
