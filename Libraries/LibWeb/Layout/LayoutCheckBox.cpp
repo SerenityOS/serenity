@@ -65,7 +65,7 @@ void LayoutCheckBox::paint(PaintContext& context, PaintPhase phase)
 
 void LayoutCheckBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
 {
-    if (button != GUI::MouseButton::Left)
+    if (button != GUI::MouseButton::Left || !node().enabled())
         return;
 
     m_being_pressed = true;
@@ -77,7 +77,7 @@ void LayoutCheckBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&,
 
 void LayoutCheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
 {
-    if (!m_tracking_mouse || button != GUI::MouseButton::Left)
+    if (!m_tracking_mouse || button != GUI::MouseButton::Left || !node().enabled())
         return;
 
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
@@ -94,7 +94,7 @@ void LayoutCheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& po
 
 void LayoutCheckBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned, unsigned)
 {
-    if (!m_tracking_mouse)
+    if (!m_tracking_mouse || !node().enabled())
         return;
 
     bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
