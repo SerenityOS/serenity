@@ -110,6 +110,48 @@ Gfx::IntPoint ListView::adjusted_position(const Gfx::IntPoint& position) const
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
 
+void ListView::paint_list_item(Painter& painter, int row_index, int painted_item_index)
+{
+    bool is_selected_row = selection().contains_row(row_index);
+
+    int y = painted_item_index * item_height();
+
+    Color background_color;
+    if (is_selected_row) {
+        background_color = is_focused() ? palette().selection() : palette().inactive_selection();
+    } else {
+        Color row_fill_color = palette().color(background_role());
+        if (alternating_row_colors() && (painted_item_index % 2)) {
+            background_color = row_fill_color.darkened(0.8f);
+        } else {
+            background_color = row_fill_color;
+        }
+    }
+
+    Gfx::IntRect row_rect(0, y, content_width(), item_height());
+    painter.fill_rect(row_rect, background_color);
+    auto index = model()->index(row_index, m_model_column);
+    auto data = index.data();
+    auto font = font_for_index(index);
+    if (data.is_bitmap()) {
+        painter.blit(row_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
+    } else if (data.is_icon()) {
+        if (auto bitmap = data.as_icon().bitmap_for_size(16))
+            painter.blit(row_rect.location(), *bitmap, bitmap->rect());
+    } else {
+        Color text_color;
+        if (is_selected_row)
+            text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
+        else
+            text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
+        auto text_rect = row_rect;
+        text_rect.move_by(horizontal_padding(), 0);
+        text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
+        auto text_alignment = index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
+        painter.draw_text(text_rect, data.to_string(), font, text_alignment, text_color);
+    }
+}
+
 void ListView::paint_event(PaintEvent& event)
 {
     Frame::paint_event(event);
@@ -127,45 +169,7 @@ void ListView::paint_event(PaintEvent& event)
     int painted_item_index = 0;
 
     for (int row_index = 0; row_index < model()->row_count(); ++row_index) {
-        bool is_selected_row = selection().contains_row(row_index);
-
-        int y = painted_item_index * item_height();
-
-        Color background_color;
-        if (is_selected_row) {
-            background_color = is_focused() ? palette().selection() : palette().inactive_selection();
-        } else {
-            Color row_fill_color = palette().color(background_role());
-            if (alternating_row_colors() && (painted_item_index % 2)) {
-                background_color = row_fill_color.darkened(0.8f);
-            } else {
-                background_color = row_fill_color;
-            }
-        }
-
-        Gfx::IntRect row_rect(0, y, content_width(), item_height());
-        painter.fill_rect(row_rect, background_color);
-        auto index = model()->index(row_index, m_model_column);
-        auto data = index.data();
-        auto font = font_for_index(index);
-        if (data.is_bitmap()) {
-            painter.blit(row_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
-        } else if (data.is_icon()) {
-            if (auto bitmap = data.as_icon().bitmap_for_size(16))
-                painter.blit(row_rect.location(), *bitmap, bitmap->rect());
-        } else {
-            Color text_color;
-            if (is_selected_row)
-                text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
-            else
-                text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
-            auto text_rect = row_rect;
-            text_rect.move_by(horizontal_padding(), 0);
-            text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
-            auto text_alignment = index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
-            painter.draw_text(text_rect, data.to_string(), font, text_alignment, text_color);
-        }
-
+        paint_list_item(painter, row_index, painted_item_index);
         ++painted_item_index;
     };
 
