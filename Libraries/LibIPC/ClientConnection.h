@@ -30,33 +30,6 @@
 
 namespace IPC {
 
-class Event : public Core::Event {
-public:
-    enum Type {
-        Invalid = 2000,
-        Disconnected,
-    };
-    Event() { }
-    explicit Event(Type type)
-        : Core::Event(type)
-    {
-    }
-};
-
-class DisconnectedEvent : public Event {
-public:
-    explicit DisconnectedEvent(int client_id)
-        : Event(Disconnected)
-        , m_client_id(client_id)
-    {
-    }
-
-    int client_id() const { return m_client_id; }
-
-private:
-    int m_client_id { 0 };
-};
-
 template<typename T, class... Args>
 NonnullRefPtr<T> new_client_connection(Args&&... args)
 {
@@ -97,21 +70,6 @@ public:
     void set_client_pid(pid_t pid) { this->set_peer_pid(pid); }
 
     virtual void die() = 0;
-
-protected:
-    void event(Core::Event& event) override
-    {
-        if (event.type() == Event::Disconnected) {
-#ifdef IPC_DEBUG
-            int client_id = static_cast<const DisconnectedEvent&>(event).client_id();
-            dbg() << *this << ": Client disconnected: " << client_id;
-#endif
-            this->die();
-            return;
-        }
-
-        Core::Object::event(event);
-    }
 
 private:
     int m_client_id { -1 };
