@@ -79,6 +79,8 @@ static StorageFormat determine_storage_format(BitmapFormat format)
     }
 }
 
+struct BackingStore;
+
 enum RotationDirection {
     Left,
     Right
@@ -192,7 +194,8 @@ public:
 
     void set_mmap_name(const StringView&);
 
-    size_t size_in_bytes() const { return m_pitch * m_size.height(); }
+    static constexpr size_t size_in_bytes(size_t pitch, int height) { return pitch * height; }
+    size_t size_in_bytes() const { return size_in_bytes(m_pitch, height()); }
 
     Color palette_color(u8 index) const { return Color::from_rgba(m_palette[index]); }
     void set_palette_color(u8 index, Color color) { m_palette[index] = color.value(); }
@@ -223,9 +226,11 @@ private:
         No,
         Yes
     };
-    Bitmap(BitmapFormat, const IntSize&, Purgeable);
+    Bitmap(BitmapFormat, const IntSize&, Purgeable, const BackingStore&);
     Bitmap(BitmapFormat, const IntSize&, size_t pitch, void*);
     Bitmap(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
+
+    static Optional<BackingStore> allocate_backing_store(BitmapFormat, const IntSize&, Purgeable);
 
     void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette);
 
