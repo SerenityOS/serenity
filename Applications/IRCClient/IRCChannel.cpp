@@ -77,14 +77,6 @@ void IRCChannel::add_message(const String& text, Color color)
     window().did_add_message();
 }
 
-void IRCChannel::dump() const
-{
-    printf("IRCChannel{%p}: %s\n", this, m_name.characters());
-    for (auto& member : m_members)
-        printf("   (%c)%s\n", member.prefix ? member.prefix : ' ', member.name.characters());
-    log().dump();
-}
-
 void IRCChannel::say(const String& text)
 {
     m_client.send_privmsg(m_name, text);
