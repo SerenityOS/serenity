@@ -163,12 +163,8 @@ protected:
                 return false;
             }
             if (nread == 0) {
-                dbg() << "EOF on IPC fd";
                 if (bytes.is_empty()) {
-                    deferred_invoke([this](auto&) {
-                        dbg() << *this << " Disconnected";
-                        die();
-                    });
+                    deferred_invoke([this](auto&) { die(); });
                 }
                 return false;
             }
