@@ -171,6 +171,9 @@ void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::
     // Undo the horizontal padding done by the table view...
     auto cell_rect = rect.inflated(m_table_view.horizontal_padding() * 2, 0);
 
+    if (auto bg = index.data(GUI::ModelRole::BackgroundColor); bg.is_color())
+        painter.fill_rect(cell_rect, bg.as_color());
+
     if (m_table_view.selection().contains(index)) {
         Color fill_color = palette.selection();
         fill_color.set_alpha(80);
