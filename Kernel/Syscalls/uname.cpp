@@ -34,9 +34,6 @@ int Process::sys$uname(Userspace<utsname*> buf)
     extern Lock* g_hostname_lock;
 
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(buf))
-        return -EFAULT;
-
 
     LOCKER(*g_hostname_lock, Lock::Mode::Shared);
     if (g_hostname->length() + 1 > sizeof(utsname::nodename))
@@ -45,11 +42,16 @@ int Process::sys$uname(Userspace<utsname*> buf)
     // We have already validated the entire utsname struct at this
     // point, there is no need to re-validate every write to the struct.
     utsname* user_buf = buf.unsafe_userspace_ptr();
-    copy_to_user(user_buf->sysname, "SerenityOS", 11);
-    copy_to_user(user_buf->release, "1.0-dev", 8);
-    copy_to_user(user_buf->version, "FIXME", 6);
-    copy_to_user(user_buf->machine, "i686", 5);
-    copy_to_user(user_buf->nodename, g_hostname->characters(), g_hostname->length() + 1);
+    if (!copy_to_user(user_buf->sysname, "SerenityOS", 11))
+        return -EFAULT;
+    if (!copy_to_user(user_buf->release, "1.0-dev", 8))
+        return -EFAULT;
+    if (!copy_to_user(user_buf->version, "FIXME", 6))
+        return -EFAULT;
+    if (!copy_to_user(user_buf->machine, "i686", 5))
+        return -EFAULT;
+    if (!copy_to_user(user_buf->nodename, g_hostname->characters(), g_hostname->length() + 1))
+        return -EFAULT;
     return 0;
 }
 

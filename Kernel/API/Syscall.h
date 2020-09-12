@@ -222,7 +222,7 @@ inline constexpr const char* to_string(Function function)
 
 #ifdef __serenity__
 struct StringArgument {
-    Userspace<const char*> characters;
+    const char* characters;
     size_t length { 0 };
 };
 
@@ -239,7 +239,7 @@ struct ImmutableBufferArgument {
 };
 
 struct StringListArgument {
-    Userspace<StringArgument*> strings {};
+    StringArgument* strings {};
     size_t length { 0 };
 };
 
@@ -273,22 +273,22 @@ struct SC_select_params {
 struct SC_poll_params {
     struct pollfd* fds;
     unsigned nfds;
-    Userspace<const struct timespec*> timeout;
-    Userspace<const u32*> sigmask;
+    const struct timespec* timeout;
+    const u32* sigmask;
 };
 
 struct SC_clock_nanosleep_params {
     int clock_id;
     int flags;
-    Userspace<const struct timespec*> requested_sleep;
-    Userspace<struct timespec*> remaining_sleep;
+    const struct timespec* requested_sleep;
+    struct timespec* remaining_sleep;
 };
 
 struct SC_sendto_params {
     int sockfd;
     ImmutableBufferArgument<void, size_t> data;
     int flags;
-    Userspace<const sockaddr*> addr;
+    const sockaddr* addr;
     socklen_t addr_length;
 };
 
@@ -296,50 +296,50 @@ struct SC_recvfrom_params {
     int sockfd;
     MutableBufferArgument<void, size_t> buffer;
     int flags;
-    Userspace<sockaddr*> addr;
-    Userspace<socklen_t*> addr_length;
+    sockaddr* addr;
+    socklen_t* addr_length;
 };
 
 struct SC_getsockopt_params {
     int sockfd;
     int level;
     int option;
-    Userspace<void*> value;
-    Userspace<socklen_t*> value_size;
+    void* value;
+    socklen_t* value_size;
 };
 
 struct SC_setsockopt_params {
     int sockfd;
     int level;
     int option;
-    Userspace<const void*> value;
+    const void* value;
     socklen_t value_size;
 };
 
 struct SC_getsockname_params {
     int sockfd;
-    Userspace<sockaddr*> addr;
-    Userspace<socklen_t*> addrlen;
+    sockaddr* addr;
+    socklen_t* addrlen;
 };
 
 struct SC_getpeername_params {
     int sockfd;
-    Userspace<sockaddr*> addr;
-    Userspace<socklen_t*> addrlen;
+    sockaddr* addr;
+    socklen_t* addrlen;
 };
 
 struct SC_futex_params {
-    Userspace<const i32*> userspace_address;
+    const i32* userspace_address;
     int futex_op;
     i32 val;
-    Userspace<const timespec*> timeout;
+    const timespec* timeout;
 };
 
 struct SC_setkeymap_params {
-    Userspace<const u32*> map;
-    Userspace<const u32*> shift_map;
-    Userspace<const u32*> alt_map;
-    Userspace<const u32*> altgr_map;
+    const u32* map;
+    const u32* shift_map;
+    const u32* alt_map;
+    const u32* altgr_map;
     StringArgument map_name;
 };
 
@@ -354,7 +354,7 @@ struct SC_create_thread_params {
     unsigned int m_guard_page_size = 0;          // Rounded up to PAGE_SIZE
     unsigned int m_reported_guard_page_size = 0; // The lie we tell callers
     unsigned int m_stack_size = 4 * MiB;         // Default PTHREAD_STACK_MIN
-    Userspace<void*> m_stack_location;           // nullptr means any, o.w. process virtual address
+    void* m_stack_location;           // nullptr means any, o.w. process virtual address
 };
 
 struct SC_realpath_params {
@@ -426,26 +426,26 @@ struct SC_unveil_params {
 struct SC_waitid_params {
     int idtype;
     int id;
-    Userspace<struct siginfo*> infop;
+    struct siginfo* infop;
     int options;
 };
 
 struct SC_stat_params {
     StringArgument path;
-    Userspace<struct stat*> statbuf;
+    struct stat* statbuf;
     bool follow_symlinks;
 };
 
 struct SC_ptrace_params {
     int request;
     pid_t tid;
-    Userspace<u8*> addr;
+    u8* addr;
     int data;
 };
 
 struct SC_ptrace_peek_params {
-    Userspace<const u32*> address;
-    Userspace<u32*> out_data;
+    const u32* address;
+    u32* out_data;
 };
 
 void initialize();

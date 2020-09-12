@@ -47,8 +47,6 @@ int Process::sys$shbuf_create(int size, void** buffer)
     if (!size || size < 0)
         return -EINVAL;
     size = PAGE_ROUND_UP(size);
-    if (!validate_write_typed(buffer))
-        return -EFAULT;
 
     LOCKER(shared_buffers().lock());
     static int s_next_shbuf_id;
@@ -57,7 +55,8 @@ int Process::sys$shbuf_create(int size, void** buffer)
     shared_buffer->share_with(m_pid);
 
     void* address = shared_buffer->ref_for_process_and_get_address(*this);
-    copy_to_user(buffer, &address);
+    if (!copy_to_user(buffer, &address))
+        return -EFAULT;
     ASSERT((int)shared_buffer->size() >= size);
 #ifdef SHARED_BUFFER_DEBUG
     klog() << "Created shared buffer " << shbuf_id << " @ " << buffer << " (" << size << " bytes, vmobject is " << shared_buffer->size() << ")";
@@ -123,8 +122,6 @@ int Process::sys$shbuf_release(int shbuf_id)
 void* Process::sys$shbuf_get(int shbuf_id, Userspace<size_t*> user_size)
 {
     REQUIRE_PROMISE(shared_buffer);
-    if (user_size && !validate_write_typed(user_size))
-        return (void*)-EFAULT;
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shbuf_id);
     if (it == shared_buffers().resource().end())
@@ -137,7 +134,8 @@ void* Process::sys$shbuf_get(int shbuf_id, Userspace<size_t*> user_size)
 #endif
     if (user_size) {
         size_t size = shared_buffer.size();
-        copy_to_user(user_size, &size);
+        if (!copy_to_user(user_size, &size))
+            return (void*)-EFAULT;
     }
     return shared_buffer.ref_for_process_and_get_address(*this);
 }

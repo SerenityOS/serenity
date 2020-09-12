@@ -79,40 +79,36 @@ int MBVGADevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
         auto* out = (size_t*)arg;
-        if (!Process::current()->validate_write_typed(out))
-            return -EFAULT;
         size_t value = framebuffer_size_in_bytes();
-        copy_to_user(out, &value);
+        if (!copy_to_user(out, &value))
+            return -EFAULT;
         return 0;
     }
     case FB_IOCTL_GET_BUFFER: {
         auto* index = (int*)arg;
-        if (!Process::current()->validate_write_typed(index))
-            return -EFAULT;
         int value = 0;
-        copy_to_user(index, &value);
+        if (!copy_to_user(index, &value))
+            return -EFAULT;
         return 0;
     }
     case FB_IOCTL_GET_RESOLUTION: {
         auto* user_resolution = (FBResolution*)arg;
-        if (!Process::current()->validate_write_typed(user_resolution))
-            return -EFAULT;
         FBResolution resolution;
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
-        copy_to_user(user_resolution, &resolution);
+        if (!copy_to_user(user_resolution, &resolution))
+            return -EFAULT;
         return 0;
     }
     case FB_IOCTL_SET_RESOLUTION: {
         auto* user_resolution = (FBResolution*)arg;
-        if (!Process::current()->validate_read_typed(user_resolution) || !Process::current()->validate_write_typed(user_resolution))
-            return -EFAULT;
         FBResolution resolution;
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
-        copy_to_user(user_resolution, &resolution);
+        if (!copy_to_user(user_resolution, &resolution))
+            return -EFAULT;
         return 0;
     }
     default:

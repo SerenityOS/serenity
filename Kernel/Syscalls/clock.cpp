@@ -32,8 +32,6 @@ namespace Kernel {
 int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(user_ts))
-        return -EFAULT;
 
     timespec ts = {};
 
@@ -49,7 +47,8 @@ int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
         return -EINVAL;
     }
 
-    copy_to_user(user_ts, &ts);
+    if (!copy_to_user(user_ts, &ts))
+        return -EFAULT;
     return 0;
 }
 
@@ -61,7 +60,7 @@ int Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> us
         return -EPERM;
 
     timespec ts;
-    if (!validate_read_and_copy_typed(&ts, user_ts))
+    if (!copy_from_user(&ts, user_ts))
         return -EFAULT;
 
     switch (clock_id) {
@@ -79,16 +78,11 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_clock_nanosleep_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
-        return -EFAULT;
-
-    if (params.requested_sleep && !validate_read_typed(params.requested_sleep))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     timespec requested_sleep;
-    copy_from_user(&requested_sleep, params.requested_sleep);
-
-    if (params.remaining_sleep && !validate_write_typed(params.remaining_sleep))
+    if (!copy_from_user(&requested_sleep, params.requested_sleep))
         return -EFAULT;
 
     bool is_absolute = params.flags & TIMER_ABSTIME;
@@ -109,18 +103,12 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
         if (wakeup_time > g_uptime) {
             u64 ticks_left = wakeup_time - g_uptime;
             if (!is_absolute && params.remaining_sleep) {
-                if (!validate_write_typed(params.remaining_sleep)) {
-                    // This can happen because the lock is dropped while
-                    // sleeping, thus giving other threads the opportunity
-                    // to make the region unwritable.
-                    return -EFAULT;
-                }
-
                 timespec remaining_sleep = {};
                 remaining_sleep.tv_sec = ticks_left / TimeManagement::the().ticks_per_second();
                 ticks_left -= remaining_sleep.tv_sec * TimeManagement::the().ticks_per_second();
                 remaining_sleep.tv_nsec = ticks_left * 1000000000 / TimeManagement::the().ticks_per_second();
-                copy_to_user(params.remaining_sleep, &remaining_sleep);
+                if (!copy_to_user(params.remaining_sleep, &remaining_sleep))
+                    return -EFAULT;
             }
             return -EINTR;
         }
@@ -134,10 +122,9 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
 int Process::sys$gettimeofday(Userspace<timeval*> user_tv)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(user_tv))
-        return -EFAULT;
     auto tv = kgettimeofday();
-    copy_to_user(user_tv, &tv);
+    if (!copy_to_user(user_tv, &tv))
+        return -EFAULT;
     return 0;
 }
 

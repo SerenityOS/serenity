@@ -79,18 +79,19 @@ NonnullRefPtr<UDPSocket> UDPSocket::create(int protocol)
     return adopt(*new UDPSocket(protocol));
 }
 
-KResultOr<size_t> UDPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
+KResultOr<size_t> UDPSocket::protocol_receive(const KBuffer& packet_buffer, UserOrKernelBuffer& buffer, size_t buffer_size, int flags)
 {
     (void)flags;
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.data());
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
     ASSERT(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
     ASSERT(buffer_size >= (udp_packet.length() - sizeof(UDPPacket)));
-    memcpy(buffer, udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket));
+    if (!buffer.write(udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket)))
+        return KResult(-EFAULT);
     return udp_packet.length() - sizeof(UDPPacket);
 }
 
-KResultOr<size_t> UDPSocket::protocol_send(const void* data, size_t data_length)
+KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
@@ -100,9 +101,11 @@ KResultOr<size_t> UDPSocket::protocol_send(const void* data, size_t data_length)
     udp_packet.set_source_port(local_port());
     udp_packet.set_destination_port(peer_port());
     udp_packet.set_length(sizeof(UDPPacket) + data_length);
-    memcpy(udp_packet.payload(), data, data_length);
+    if (!data.read(udp_packet.payload(), data_length))
+        return KResult(-EFAULT);
     klog() << "sending as udp packet from " << routing_decision.adapter->ipv4_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << "!";
-    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, buffer, ttl());
+    auto udp_packet_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&udp_packet);
+    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, udp_packet_buffer, buffer.size(), ttl());
     return data_length;
 }
 

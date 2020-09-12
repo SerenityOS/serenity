@@ -34,7 +34,7 @@ int Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*> user_params)
 {
     REQUIRE_PROMISE(dpath);
     Syscall::SC_mknod_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
     if (!is_superuser() && !is_regular_file(params.mode) && !is_fifo(params.mode) && !is_socket(params.mode))
         return -EPERM;

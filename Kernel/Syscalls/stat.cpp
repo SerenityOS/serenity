@@ -34,14 +34,13 @@ namespace Kernel {
 int Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(user_statbuf))
-        return -EFAULT;
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
     stat buffer = {};
     int rc = description->stat(buffer);
-    copy_to_user(user_statbuf, &buffer);
+    if (!copy_to_user(user_statbuf, &buffer))
+        return -EFAULT;
     return rc;
 }
 
@@ -49,9 +48,7 @@ int Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
 {
     REQUIRE_PROMISE(rpath);
     Syscall::SC_stat_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
-        return -EFAULT;
-    if (!validate_write_typed(params.statbuf))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
@@ -63,7 +60,8 @@ int Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
     auto result = metadata_or_error.value().stat(statbuf);
     if (result.is_error())
         return result;
-    copy_to_user(params.statbuf, &statbuf);
+    if (!copy_to_user(params.statbuf, &statbuf))
+        return -EFAULT;
     return 0;
 }
 

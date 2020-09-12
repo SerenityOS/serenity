@@ -285,7 +285,8 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet)
             memcpy(response.payload(), request.payload(), icmp_payload_size);
         response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
         // FIXME: What is the right TTL value here? Is 64 ok? Should we use the same TTL as the echo request?
-        adapter->send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, buffer, 64);
+        auto response_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&response);
+        adapter->send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, response_buffer, buffer.size(), 64);
     }
 }
 
@@ -379,7 +380,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         return;
     case TCPSocket::State::TimeWait:
         klog() << "handle_tcp: unexpected flags in TimeWait state";
-        socket->send_tcp_packet(TCPFlags::RST);
+        (void)socket->send_tcp_packet(TCPFlags::RST);
         socket->set_state(TCPSocket::State::Closed);
         return;
     case TCPSocket::State::Listen:
@@ -400,46 +401,46 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
 #endif
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
+            (void)client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
             client->set_state(TCPSocket::State::SynReceived);
             return;
         }
         default:
             klog() << "handle_tcp: unexpected flags in Listen state";
-            // socket->send_tcp_packet(TCPFlags::RST);
+            // (void)socket->send_tcp_packet(TCPFlags::RST);
             return;
         }
     case TCPSocket::State::SynSent:
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            socket->send_tcp_packet(TCPFlags::ACK);
+            (void)socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::SynReceived);
             return;
         case TCPFlags::ACK | TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            socket->send_tcp_packet(TCPFlags::ACK);
+            (void)socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Established);
             socket->set_setup_state(Socket::SetupState::Completed);
             socket->set_connected(true);
             return;
         case TCPFlags::ACK | TCPFlags::FIN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            socket->send_tcp_packet(TCPFlags::ACK);
+            (void)socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::FINDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         case TCPFlags::ACK | TCPFlags::RST:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
-            socket->send_tcp_packet(TCPFlags::ACK);
+            (void)socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::RSTDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         default:
             klog() << "handle_tcp: unexpected flags in SynSent state";
-            socket->send_tcp_packet(TCPFlags::RST);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::UnexpectedFlagsDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
@@ -454,7 +455,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             case TCPSocket::Direction::Incoming:
                 if (!socket->has_originator()) {
                     klog() << "handle_tcp: connection doesn't have an originating socket; maybe it went away?";
-                    socket->send_tcp_packet(TCPFlags::RST);
+                    (void)socket->send_tcp_packet(TCPFlags::RST);
                     socket->set_state(TCPSocket::State::Closed);
                     return;
                 }
@@ -470,7 +471,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
                 return;
             default:
                 klog() << "handle_tcp: got ACK in SynReceived state but direction is invalid (" << TCPSocket::to_string(socket->direction()) << ")";
-                socket->send_tcp_packet(TCPFlags::RST);
+                (void)socket->send_tcp_packet(TCPFlags::RST);
                 socket->set_state(TCPSocket::State::Closed);
                 return;
             }
@@ -478,7 +479,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in SynReceived state";
-            socket->send_tcp_packet(TCPFlags::RST);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -486,7 +487,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         switch (tcp_packet.flags()) {
         default:
             klog() << "handle_tcp: unexpected flags in CloseWait state";
-            socket->send_tcp_packet(TCPFlags::RST);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -498,7 +499,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in LastAck state";
-            socket->send_tcp_packet(TCPFlags::RST);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -514,7 +515,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in FinWait1 state";
-            socket->send_tcp_packet(TCPFlags::RST);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -529,7 +530,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in FinWait2 state";
-            socket->send_tcp_packet(TCPFlags::RST);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -541,7 +542,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             return;
         default:
             klog() << "handle_tcp: unexpected flags in Closing state";
-            socket->send_tcp_packet(TCPFlags::RST);
+            (void)socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
         }
@@ -551,7 +552,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
                 socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            socket->send_tcp_packet(TCPFlags::ACK);
+            (void)socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::CloseWait);
             socket->set_connected(false);
             return;
@@ -565,7 +566,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
 
         if (payload_size) {
             if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size())))
-                socket->send_tcp_packet(TCPFlags::ACK);
+                (void)socket->send_tcp_packet(TCPFlags::ACK);
         }
     }
 }

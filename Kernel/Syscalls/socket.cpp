@@ -65,8 +65,6 @@ int Process::sys$socket(int domain, int type, int protocol)
 
 int Process::sys$bind(int sockfd, Userspace<const sockaddr*> address, socklen_t address_length)
 {
-    if (!validate_read(address, address_length))
-        return -EFAULT;
     auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
@@ -98,14 +96,8 @@ int Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_addre
     REQUIRE_PROMISE(accept);
 
     socklen_t address_size = 0;
-    if (user_address) {
-        if (!validate_write_typed(user_address_size))
-            return -EFAULT;
-        if (!validate_read_and_copy_typed(&address_size, user_address_size))
-            return -EFAULT;
-        if (!validate_write(user_address, address_size))
-            return -EFAULT;
-    }
+    if (user_address && !copy_from_user(&address_size, static_ptr_cast<const socklen_t*>(user_address_size)))
+        return -EFAULT;
 
     int accepted_socket_fd = alloc_fd();
     if (accepted_socket_fd < 0)
@@ -132,8 +124,10 @@ int Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_addre
         u8 address_buffer[sizeof(sockaddr_un)];
         address_size = min(sizeof(sockaddr_un), static_cast<size_t>(address_size));
         accepted_socket->get_peer_address((sockaddr*)address_buffer, &address_size);
-        copy_to_user(user_address, address_buffer, address_size);
-        copy_to_user(user_address_size, &address_size);
+        if (!copy_to_user(user_address, address_buffer, address_size))
+            return -EFAULT;
+        if (!copy_to_user(user_address_size, &address_size))
+            return -EFAULT;
     }
 
     auto accepted_socket_description = FileDescription::create(*accepted_socket);
@@ -151,8 +145,6 @@ int Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_addre
 
 int Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, socklen_t user_address_size)
 {
-    if (!validate_read(user_address, user_address_size))
-        return -EFAULT;
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
@@ -165,11 +157,7 @@ int Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, so
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
 
-    u8 address[sizeof(sockaddr_un)];
-    size_t address_size = min(sizeof(address), static_cast<size_t>(user_address_size));
-    copy_from_user(address, user_address, address_size);
-
-    return socket.connect(*description, (const sockaddr*)address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
+    return socket.connect(*description, user_address, user_address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
 }
 
 int Process::sys$shutdown(int sockfd, int how)
@@ -192,17 +180,13 @@ ssize_t Process::sys$sendto(Userspace<const Syscall::SC_sendto_params*> user_par
 {
     REQUIRE_PROMISE(stdio);
     Syscall::SC_sendto_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     int flags = params.flags;
-    Userspace<const sockaddr*> addr = params.addr;
+    Userspace<const sockaddr*> addr((FlatPtr)params.addr);
     socklen_t addr_length = params.addr_length;
 
-    if (!validate(params.data))
-        return -EFAULT;
-    if (addr && !validate_read(addr, addr_length))
-        return -EFAULT;
     auto description = file_description(params.sockfd);
     if (!description)
         return -EBADF;
@@ -212,7 +196,10 @@ ssize_t Process::sys$sendto(Userspace<const Syscall::SC_sendto_params*> user_par
     if (socket.is_shut_down_for_writing())
         return -EPIPE;
     SmapDisabler disabler;
-    auto result = socket.sendto(*description, params.data.data, params.data.size, flags, addr, addr_length);
+    auto data_buffer = UserOrKernelBuffer::for_user_buffer(const_cast<u8*>((const u8*)params.data.data), params.data.size);
+    if (!data_buffer.has_value())
+        return -EFAULT;
+    auto result = socket.sendto(*description, data_buffer.value(), params.data.size, flags, addr, addr_length);
     if (result.is_error())
         return result.error();
     return result.value();
@@ -223,27 +210,17 @@ ssize_t Process::sys$recvfrom(Userspace<const Syscall::SC_recvfrom_params*> user
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_recvfrom_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     int flags = params.flags;
-    Userspace<sockaddr*> user_addr = params.addr;
-    Userspace<socklen_t*> user_addr_length = params.addr_length;
+    Userspace<sockaddr*> user_addr((FlatPtr)params.addr);
+    Userspace<socklen_t*> user_addr_length((FlatPtr)params.addr_length);
 
     SmapDisabler disabler;
-    if (!validate(params.buffer))
-        return -EFAULT;
-    if (user_addr_length) {
-        socklen_t addr_length;
-        if (!validate_read_and_copy_typed(&addr_length, user_addr_length))
-            return -EFAULT;
-        if (!validate_write_typed(user_addr_length))
-            return -EFAULT;
-        if (!validate_write(user_addr, addr_length))
-            return -EFAULT;
-    } else if (user_addr) {
+    if (!user_addr_length && user_addr)
         return -EINVAL;
-    }
+
     auto description = file_description(params.sockfd);
     if (!description)
         return -EBADF;
@@ -258,7 +235,10 @@ ssize_t Process::sys$recvfrom(Userspace<const Syscall::SC_recvfrom_params*> user
     if (flags & MSG_DONTWAIT)
         description->set_blocking(false);
 
-    auto result = socket.recvfrom(*description, params.buffer.data, params.buffer.size, flags, user_addr, user_addr_length);
+    auto data_buffer = UserOrKernelBuffer::for_user_buffer(const_cast<u8*>((const u8*)params.buffer.data), params.buffer.size);
+    if (!data_buffer.has_value())
+        return -EFAULT;
+    auto result = socket.recvfrom(*description, data_buffer.value(), params.buffer.size, flags, user_addr, user_addr_length);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
 
@@ -271,17 +251,11 @@ template<bool sockname, typename Params>
 int Process::get_sock_or_peer_name(const Params& params)
 {
     socklen_t addrlen_value;
-    if (!validate_read_and_copy_typed(&addrlen_value, params.addrlen))
+    if (!copy_from_user(&addrlen_value, params.addrlen, sizeof(socklen_t)))
         return -EFAULT;
 
     if (addrlen_value <= 0)
         return -EINVAL;
-
-    if (!validate_write(params.addr, addrlen_value))
-        return -EFAULT;
-
-    if (!validate_write_typed(params.addrlen))
-        return -EFAULT;
 
     auto description = file_description(params.sockfd);
     if (!description)
@@ -299,15 +273,17 @@ int Process::get_sock_or_peer_name(const Params& params)
         socket.get_local_address((sockaddr*)address_buffer, &addrlen_value);
     else
         socket.get_peer_address((sockaddr*)address_buffer, &addrlen_value);
-    copy_to_user(params.addr, address_buffer, addrlen_value);
-    copy_to_user(params.addrlen, &addrlen_value);
+    if (!copy_to_user(params.addr, address_buffer, addrlen_value))
+        return -EFAULT;
+    if (!copy_to_user(params.addrlen, &addrlen_value))
+        return -EFAULT;
     return 0;
 }
 
 int Process::sys$getsockname(Userspace<const Syscall::SC_getsockname_params*> user_params)
 {
     Syscall::SC_getsockname_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
     return get_sock_or_peer_name<true>(params);
 }
@@ -315,7 +291,7 @@ int Process::sys$getsockname(Userspace<const Syscall::SC_getsockname_params*> us
 int Process::sys$getpeername(Userspace<const Syscall::SC_getpeername_params*> user_params)
 {
     Syscall::SC_getpeername_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
     return get_sock_or_peer_name<false>(params);
 }
@@ -323,22 +299,19 @@ int Process::sys$getpeername(Userspace<const Syscall::SC_getpeername_params*> us
 int Process::sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*> user_params)
 {
     Syscall::SC_getsockopt_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     int sockfd = params.sockfd;
     int level = params.level;
     int option = params.option;
-    Userspace<void*> user_value = params.value;
-    Userspace<socklen_t*> user_value_size = params.value_size;
+    Userspace<void*> user_value((FlatPtr)params.value);
+    Userspace<socklen_t*> user_value_size((FlatPtr)params.value_size);
 
-    if (!validate_write_typed(user_value_size))
-        return -EFAULT;
     socklen_t value_size;
-    if (!validate_read_and_copy_typed(&value_size, user_value_size))
+    if (!copy_from_user(&value_size, params.value_size, sizeof(socklen_t)))
         return -EFAULT;
-    if (!validate_write(user_value, value_size))
-        return -EFAULT;
+
     auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
@@ -357,10 +330,9 @@ int Process::sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*> user
 int Process::sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*> user_params)
 {
     Syscall::SC_setsockopt_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
-    if (!validate_read(params.value, params.value_size))
-        return -EFAULT;
+    Userspace<const void*> user_value((FlatPtr)params.value);
     auto description = file_description(params.sockfd);
     if (!description)
         return -EBADF;
@@ -368,7 +340,7 @@ int Process::sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*> user
         return -ENOTSOCK;
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    return socket.setsockopt(params.level, params.option, params.value, params.value_size);
+    return socket.setsockopt(params.level, params.option, user_value, params.value_size);
 }
 
 }

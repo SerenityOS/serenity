@@ -52,7 +52,7 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
+KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
         // FIXME: Should we propigate this error path somehow?
@@ -63,33 +63,40 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, u8* buffer, size_t size)
     if (m_input_buffer.size() < static_cast<size_t>(size))
         size = m_input_buffer.size();
 
+    ssize_t nwritten;
     if (in_canonical_mode()) {
-        size_t i = 0;
-        for (; i < size; i++) {
-            u8 ch = m_input_buffer.dequeue();
-            if (ch == '\0') {
-                //Here we handle a ^D line, so we don't add the
-                //character to the output.
-                m_available_lines--;
-                break;
-            } else if (ch == '\n' || is_eol(ch)) {
-                buffer[i] = ch;
-                i++;
-                m_available_lines--;
-                break;
+        nwritten = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
+            size_t i = 0;
+            for (; i < data_size; i++) {
+                u8 ch = m_input_buffer.dequeue();
+                if (ch == '\0') {
+                    //Here we handle a ^D line, so we don't add the
+                    //character to the output.
+                    m_available_lines--;
+                    break;
+                } else if (ch == '\n' || is_eol(ch)) {
+                    data[i] = ch;
+                    i++;
+                    m_available_lines--;
+                    break;
+                }
+                data[i] = ch;
             }
-            buffer[i] = ch;
-        }
-        return i;
+            return (ssize_t)i;
+        });
+    } else {
+        nwritten = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
+            for (size_t i = 0; i < data_size; i++)
+                data[i] = m_input_buffer.dequeue();
+            return (ssize_t)data_size;
+        });
     }
-
-    for (size_t i = 0; i < size; i++)
-        buffer[i] = m_input_buffer.dequeue();
-
-    return size;
+    if (nwritten < 0)
+        return KResult(nwritten);
+    return (size_t)nwritten;
 }
 
-KResultOr<size_t> TTY::write(FileDescription&, size_t, const u8* buffer, size_t size)
+KResultOr<size_t> TTY::write(FileDescription&, size_t, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
         (void)Process::current()->send_signal(SIGTTOU, nullptr);
@@ -337,19 +344,17 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     }
     case TCGETS: {
         user_termios = reinterpret_cast<termios*>(arg);
-        if (!current_process.validate_write(user_termios, sizeof(termios)))
+        if (!copy_to_user(user_termios, &m_termios))
             return -EFAULT;
-        copy_to_user(user_termios, &m_termios);
         return 0;
     }
     case TCSETS:
     case TCSETSF:
     case TCSETSW: {
         user_termios = reinterpret_cast<termios*>(arg);
-        if (!current_process.validate_read(user_termios, sizeof(termios)))
-            return -EFAULT;
         termios termios;
-        copy_from_user(&termios, user_termios);
+        if (!copy_from_user(&termios, user_termios))
+            return -EFAULT;
         set_termios(termios);
         if (request == TCSETSF)
             flush_input();
@@ -365,21 +370,19 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     case TIOCGWINSZ:
         user_winsize = reinterpret_cast<winsize*>(arg);
-        if (!current_process.validate_write(user_winsize, sizeof(winsize)))
-            return -EFAULT;
         winsize ws;
         ws.ws_row = m_rows;
         ws.ws_col = m_columns;
         ws.ws_xpixel = 0;
         ws.ws_ypixel = 0;
-        copy_to_user(user_winsize, &ws);
+        if (!copy_to_user(user_winsize, &ws))
+            return -EFAULT;
         return 0;
     case TIOCSWINSZ: {
         user_winsize = reinterpret_cast<winsize*>(arg);
-        if (!current_process.validate_read(user_winsize, sizeof(winsize)))
-            return -EFAULT;
         winsize ws;
-        copy_from_user(&ws, user_winsize);
+        if (!copy_from_user(&ws, user_winsize))
+            return -EFAULT;
         if (ws.ws_col == m_columns && ws.ws_row == m_rows)
             return 0;
         m_rows = ws.ws_row;

@@ -37,6 +37,7 @@
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
+#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 
@@ -63,8 +64,8 @@ public:
     void set_ipv4_gateway(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
-    void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, ReadonlyBytes payload, u8 ttl);
-    void send_ipv4_fragmented(const MACAddress&, const IPv4Address&, IPv4Protocol, ReadonlyBytes payload, u8 ttl);
+    int send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
+    int send_ipv4_fragmented(const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
 
     size_t dequeue_packet(u8* buffer, size_t buffer_size);
 

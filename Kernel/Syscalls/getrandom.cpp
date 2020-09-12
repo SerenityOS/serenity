@@ -26,6 +26,7 @@
 
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 
@@ -38,13 +39,15 @@ ssize_t Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[ma
     if (buffer_size <= 0)
         return -EINVAL;
 
-    if (!validate_write(buffer, buffer_size))
-        return -EFAULT;
-
     SmapDisabler disabler;
-    // FIXME: We should really push Userspace<T> down through the interface.
-    get_good_random_bytes((u8*)buffer.ptr(), buffer_size);
-    return 0;
+    auto data_buffer = UserOrKernelBuffer::for_user_buffer(buffer, buffer_size);
+    if (!data_buffer.has_value()) 
+       return -EFAULT;
+    ssize_t nwritten = data_buffer.value().write_buffered<1024>(buffer_size, [&](u8* buffer, size_t buffer_bytes) {
+        get_good_random_bytes(buffer, buffer_bytes);
+        return (ssize_t)buffer_bytes;
+    });
+    return nwritten;
 }
 
 }

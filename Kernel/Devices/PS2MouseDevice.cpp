@@ -336,7 +336,7 @@ bool PS2MouseDevice::can_read(const FileDescription&, size_t) const
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, u8* buffer, size_t size)
+KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
     ASSERT(size > 0);
     size_t nread = 0;
@@ -349,14 +349,15 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, u8* buffer, siz
         dbg() << "PS2 Mouse Read: Filter packets";
 #endif
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
-        memcpy(buffer + nread, &packet, bytes_read_from_packet);
+        if (!buffer.write(&packet, nread, bytes_read_from_packet))
+            return KResult(-EFAULT);
         nread += bytes_read_from_packet;
         remaining_space_in_buffer -= bytes_read_from_packet;
     }
     return nread;
 }
 
-KResultOr<size_t> PS2MouseDevice::write(FileDescription&, size_t, const u8*, size_t)
+KResultOr<size_t> PS2MouseDevice::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t)
 {
     return 0;
 }

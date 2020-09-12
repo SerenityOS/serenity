@@ -81,7 +81,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_mmap_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return (void*)-EFAULT;
 
     void* addr = (void*)params.addr;
@@ -102,7 +102,7 @@ void* Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
     if (params.name.characters) {
         if (params.name.length > PATH_MAX)
             return (void*)-ENAMETOOLONG;
-        name = validate_and_copy_string_from_user(params.name);
+        name = copy_string_from_user(params.name);
         if (name.is_null())
             return (void*)-EFAULT;
     }
@@ -336,13 +336,13 @@ int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_set_mmap_name_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     if (params.name.length > PATH_MAX)
         return -ENAMETOOLONG;
 
-    auto name = validate_and_copy_string_from_user(params.name);
+    auto name = copy_string_from_user(params.name);
     if (name.is_null())
         return -EFAULT;
 
@@ -351,7 +351,7 @@ int Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*
         return -EINVAL;
     if (!region->is_mmap())
         return -EPERM;
-    region->set_name(name);
+    region->set_name(move(name));
     return 0;
 }
 

@@ -423,7 +423,8 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
             return KResult(-ENOEXEC);
 
         memset(first_page, 0, sizeof(first_page));
-        auto nread_or_error = interpreter_description->read((u8*)&first_page, sizeof(first_page));
+        auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
+        auto nread_or_error = interpreter_description->read(first_page_buffer, sizeof(first_page));
         if (nread_or_error.is_error())
             return KResult(-ENOEXEC);
         nread = nread_or_error.value();
@@ -490,7 +491,8 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
 
     // Read the first page of the program into memory so we can validate the binfmt of it
     char first_page[PAGE_SIZE];
-    auto nread_or_error = description->read((u8*)&first_page, sizeof(first_page));
+    auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
+    auto nread_or_error = description->read(first_page_buffer, sizeof(first_page));
     if (nread_or_error.is_error())
         return -ENOEXEC;
 
@@ -554,7 +556,7 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     // NOTE: Be extremely careful with allocating any kernel memory in exec().
     //       On success, the kernel stack will be lost.
     Syscall::SC_execve_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
@@ -574,13 +576,16 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     auto copy_user_strings = [this](const auto& list, auto& output) {
         if (!list.length)
             return true;
-        if (!validate_read_typed(list.strings, list.length))
+        Checked size = sizeof(list.length);
+        size *= list.length;
+        if (size.has_overflow())
             return false;
         Vector<Syscall::StringArgument, 32> strings;
         strings.resize(list.length);
-        copy_from_user(strings.data(), list.strings.unsafe_userspace_ptr(), list.length * sizeof(Syscall::StringArgument));
+        if (!copy_from_user(strings.data(), list.strings, list.length * sizeof(Syscall::StringArgument)))
+            return false;
         for (size_t i = 0; i < list.length; ++i) {
-            auto string = validate_and_copy_string_from_user(strings[i]);
+            auto string = copy_string_from_user(strings[i]);
             if (string.is_null())
                 return false;
             output.append(move(string));

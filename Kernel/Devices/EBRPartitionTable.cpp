@@ -63,7 +63,8 @@ int EBRPartitionTable::index_of_ebr_container() const
 
 bool EBRPartitionTable::initialize()
 {
-    if (!m_device->read_block(0, m_cached_mbr_header)) {
+    auto mbr_header_buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_mbr_header);
+    if (!m_device->read_block(0, mbr_header_buffer)) {
         return false;
     }
     auto& header = this->header();
@@ -80,7 +81,8 @@ bool EBRPartitionTable::initialize()
     }
 
     auto& ebr_entry = header.entry[m_ebr_container_id - 1];
-    if (!m_device->read_block(ebr_entry.offset, m_cached_ebr_header)) {
+    auto ebr_header_buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_ebr_header);
+    if (!m_device->read_block(ebr_entry.offset, ebr_header_buffer)) {
         return false;
     }
     size_t index = 1;
@@ -89,7 +91,7 @@ bool EBRPartitionTable::initialize()
             break;
         }
         index++;
-        if (!m_device->read_block(ebr_extension().next_chained_ebr_extension.offset, m_cached_ebr_header)) {
+        if (!m_device->read_block(ebr_extension().next_chained_ebr_extension.offset, ebr_header_buffer)) {
             return false;
         }
     }
@@ -140,7 +142,8 @@ RefPtr<DiskPartition> EBRPartitionTable::get_extended_partition(unsigned index)
     klog() << "EBRPartitionTable::partition: Extended partition, offset 0x" << String::format("%x", ebr_entry.offset) << ", type " << String::format("%x", ebr_entry.type);
 #endif
 
-    if (!m_device->read_block(ebr_entry.offset, m_cached_ebr_header)) {
+    auto ebr_header_buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_ebr_header);
+    if (!m_device->read_block(ebr_entry.offset, ebr_header_buffer)) {
         return nullptr;
     }
     size_t i = 0;
@@ -154,7 +157,7 @@ RefPtr<DiskPartition> EBRPartitionTable::get_extended_partition(unsigned index)
         }
 
         i++;
-        if (!m_device->read_block(ebr_extension().next_chained_ebr_extension.offset, m_cached_ebr_header)) {
+        if (!m_device->read_block(ebr_extension().next_chained_ebr_extension.offset, ebr_header_buffer)) {
             return nullptr;
         }
     }

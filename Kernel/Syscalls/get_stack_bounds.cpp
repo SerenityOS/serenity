@@ -31,11 +31,6 @@ namespace Kernel {
 
 int Process::sys$get_stack_bounds(FlatPtr* user_stack_base, size_t* user_stack_size)
 {
-    if (!validate_write_typed(user_stack_base))
-        return -EFAULT;
-    if (!validate_write_typed(user_stack_size))
-        return -EFAULT;
-
     FlatPtr stack_pointer = Thread::current()->get_register_dump_from_stack().userspace_esp;
     auto* stack_region = MM.find_region_from_vaddr(*this, VirtualAddress(stack_pointer));
     if (!stack_region) {
@@ -45,8 +40,10 @@ int Process::sys$get_stack_bounds(FlatPtr* user_stack_base, size_t* user_stack_s
 
     FlatPtr stack_base = stack_region->range().base().get();
     size_t stack_size = stack_region->size();
-    copy_to_user(user_stack_base, &stack_base);
-    copy_to_user(user_stack_size, &stack_size);
+    if (!copy_to_user(user_stack_base, &stack_base))
+        return -EFAULT;
+    if (!copy_to_user(user_stack_size, &stack_size))
+        return -EFAULT;
     return 0;
 }
 

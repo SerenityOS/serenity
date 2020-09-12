@@ -36,10 +36,7 @@ int Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_par
     REQUIRE_PROMISE(rpath);
 
     Syscall::SC_realpath_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
-        return -EFAULT;
-
-    if (!validate_write(params.buffer.data, params.buffer.size))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     auto path = get_syscall_path_argument(params.path);
@@ -55,7 +52,8 @@ int Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_par
     if (absolute_path.length() + 1 > params.buffer.size)
         return -ENAMETOOLONG;
 
-    copy_to_user(params.buffer.data, absolute_path.characters(), absolute_path.length() + 1);
+    if (!copy_to_user(params.buffer.data, absolute_path.characters(), absolute_path.length() + 1))
+        return -EFAULT;
     return 0;
 };
 

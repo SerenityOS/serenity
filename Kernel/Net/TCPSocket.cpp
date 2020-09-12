@@ -161,7 +161,7 @@ NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
     return adopt(*new TCPSocket(protocol));
 }
 
-KResultOr<size_t> TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
+KResultOr<size_t> TCPSocket::protocol_receive(const KBuffer& packet_buffer, UserOrKernelBuffer& buffer, size_t buffer_size, int flags)
 {
     (void)flags;
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.data());
@@ -171,17 +171,20 @@ KResultOr<size_t> TCPSocket::protocol_receive(const KBuffer& packet_buffer, void
     klog() << "payload_size " << payload_size << ", will it fit in " << buffer_size << "?";
 #endif
     ASSERT(buffer_size >= payload_size);
-    memcpy(buffer, tcp_packet.payload(), payload_size);
+    if (!buffer.write(tcp_packet.payload(), payload_size))
+        return KResult(-EFAULT);
     return payload_size;
 }
 
-KResultOr<size_t> TCPSocket::protocol_send(const void* data, size_t data_length)
+KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
 {
-    send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, data, data_length);
+    int err = send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, &data, data_length);
+    if (err < 0)
+        return KResult(err);
     return data_length;
 }
 
-void TCPSocket::send_tcp_packet(u16 flags, const void* payload, size_t payload_size)
+int TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
 {
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.data());
@@ -196,31 +199,37 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, size_t payload_s
     if (flags & TCPFlags::ACK)
         tcp_packet.set_ack_number(m_ack_number);
 
+    if (payload && !payload->read(tcp_packet.payload(), payload_size))
+        return -EFAULT;
+
     if (flags & TCPFlags::SYN) {
         ++m_sequence_number;
     } else {
         m_sequence_number += payload_size;
     }
 
-    memcpy(tcp_packet.payload(), payload, payload_size);
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
     if (tcp_packet.has_syn() || payload_size > 0) {
         LOCKER(m_not_acked_lock);
         m_not_acked.append({ m_sequence_number, move(buffer) });
         send_outgoing_packets();
-        return;
+        return 0;
     }
 
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     ASSERT(!routing_decision.is_zero());
 
-    routing_decision.adapter->send_ipv4(
+    auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
+    int err = routing_decision.adapter->send_ipv4(
         routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-        buffer, ttl());
+        packet_buffer, buffer.size(), ttl());
+    if (err < 0)
+        return err;
 
     m_packets_out++;
     m_bytes_out += buffer.size();
+    return 0;
 }
 
 void TCPSocket::send_outgoing_packets()
@@ -243,12 +252,17 @@ void TCPSocket::send_outgoing_packets()
         auto& tcp_packet = *(TCPPacket*)(packet.buffer.data());
         klog() << "sending tcp packet from " << local_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << " with (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << ") seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", tx_counter=" << packet.tx_counter;
 #endif
-        routing_decision.adapter->send_ipv4(
+        auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(packet.buffer.data());
+        int err = routing_decision.adapter->send_ipv4(
             routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-            packet.buffer, ttl());
-
-        m_packets_out++;
-        m_bytes_out += packet.buffer.size();
+            packet_buffer, packet.buffer.size(), ttl());
+        if (err < 0) {
+            auto& tcp_packet = *(TCPPacket*)(packet.buffer.data());
+            klog() << "Error (" << err << ") sending tcp packet from " << local_address().to_string().characters() << ":" << local_port() << " to " << peer_address().to_string().characters() << ":" << peer_port() << " with (" << (tcp_packet.has_syn() ? "SYN " : "") << (tcp_packet.has_ack() ? "ACK " : "") << (tcp_packet.has_fin() ? "FIN " : "") << (tcp_packet.has_rst() ? "RST " : "") << ") seq_no=" << tcp_packet.sequence_number() << ", ack_no=" << tcp_packet.ack_number() << ", tx_counter=" << packet.tx_counter;
+        } else {
+            m_packets_out++;
+            m_bytes_out += packet.buffer.size();
+        }
     }
 }
 
@@ -366,7 +380,9 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_ack_number = 0;
 
     set_setup_state(SetupState::InProgress);
-    send_tcp_packet(TCPFlags::SYN);
+    int err = send_tcp_packet(TCPFlags::SYN);
+    if (err < 0)
+        return KResult(err);
     m_state = State::SynSent;
     m_role = Role::Connecting;
     m_direction = Direction::Outgoing;
@@ -433,7 +449,7 @@ void TCPSocket::shut_down_for_writing()
 #ifdef TCP_SOCKET_DEBUG
         dbg() << " Sending FIN/ACK from Established and moving into FinWait1";
 #endif
-        send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        (void)send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::FinWait1);
     } else {
         dbg() << " Shutting down TCPSocket for writing but not moving to FinWait1 since state is " << to_string(state());
@@ -447,7 +463,7 @@ KResult TCPSocket::close()
 #ifdef TCP_SOCKET_DEBUG
         dbg() << " Sending FIN from CloseWait and moving into LastAck";
 #endif
-        send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
+        (void)send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::LastAck);
     }
 

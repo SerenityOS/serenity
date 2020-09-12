@@ -73,7 +73,10 @@ KResultOr<KBuffer> Inode::read_entire(FileDescription* descriptor) const
     u8 buffer[4096];
     off_t offset = 0;
     for (;;) {
-        nread = read_bytes(offset, sizeof(buffer), buffer, descriptor);
+        auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
+        nread = read_bytes(offset, sizeof(buffer), buf, descriptor);
+        if (nread < 0)
+            return KResult(nread);
         ASSERT(nread <= (ssize_t)sizeof(buffer));
         if (nread <= 0)
             break;
@@ -124,7 +127,7 @@ void Inode::will_be_destroyed()
         flush_metadata();
 }
 
-void Inode::inode_contents_changed(off_t offset, ssize_t size, const u8* data)
+void Inode::inode_contents_changed(off_t offset, ssize_t size, const UserOrKernelBuffer& data)
 {
     if (m_shared_vmobject)
         m_shared_vmobject->inode_contents_changed({}, offset, size, data);

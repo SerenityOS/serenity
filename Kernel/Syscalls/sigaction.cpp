@@ -34,10 +34,9 @@ int Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<
     auto current_thread = Thread::current();
     u32 previous_signal_mask;
     if (set) {
-        if (!validate_read_typed(set))
-            return -EFAULT;
         sigset_t set_value;
-        copy_from_user(&set_value, set);
+        if (!copy_from_user(&set_value, set))
+            return -EFAULT;
         switch (how) {
         case SIG_BLOCK:
             previous_signal_mask = current_thread->signal_mask_block(set_value, true);
@@ -54,21 +53,17 @@ int Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<
     } else {
         previous_signal_mask = current_thread->signal_mask();
     }
-    if (old_set) {
-        if (!validate_write_typed(old_set))
-            return -EFAULT;
-        copy_to_user(old_set, &previous_signal_mask);
-    }
+    if (old_set && !copy_to_user(old_set, &previous_signal_mask))
+        return -EFAULT;
     return 0;
 }
 
 int Process::sys$sigpending(Userspace<sigset_t*> set)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(set))
-        return -EFAULT;
     auto pending_signals = Thread::current()->pending_signals();
-    copy_to_user(set, &pending_signals);
+    if (!copy_to_user(set, &pending_signals))
+        return -EFAULT;
     return 0;
 }
 
@@ -77,18 +72,18 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     REQUIRE_PROMISE(sigaction);
     if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
         return -EINVAL;
-    if (!validate_read_typed(act))
-        return -EFAULT;
     InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
     auto& action = Thread::current()->m_signal_action_data[signum];
     if (old_act) {
-        if (!validate_write_typed(old_act))
+        if (!copy_to_user(&old_act->sa_flags, &action.flags))
             return -EFAULT;
-        copy_to_user(&old_act->sa_flags, &action.flags);
-        copy_to_user(&old_act->sa_sigaction, &action.handler_or_sigaction, sizeof(action.handler_or_sigaction));
+        if (!copy_to_user(&old_act->sa_sigaction, &action.handler_or_sigaction, sizeof(action.handler_or_sigaction)))
+            return -EFAULT;
     }
-    copy_from_user(&action.flags, &act->sa_flags);
-    copy_from_user(&action.handler_or_sigaction, &act->sa_sigaction, sizeof(action.handler_or_sigaction));
+    if (!copy_from_user(&action.flags, &act->sa_flags))
+        return -EFAULT;
+    if (!copy_from_user(&action.handler_or_sigaction, &act->sa_sigaction, sizeof(action.handler_or_sigaction)))
+        return -EFAULT;
     return 0;
 }
 

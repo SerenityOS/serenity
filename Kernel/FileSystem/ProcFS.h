@@ -59,7 +59,7 @@ private:
 
     struct ProcFSDirectoryEntry {
         ProcFSDirectoryEntry() { }
-        ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, bool a_supervisor_only, Function<Optional<KBuffer>(InodeIdentifier)>&& a_read_callback = nullptr, Function<ssize_t(InodeIdentifier, const ByteBuffer&)>&& a_write_callback = nullptr, RefPtr<ProcFSInode>&& a_inode = nullptr)
+        ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, bool a_supervisor_only, Function<Optional<KBuffer>(InodeIdentifier)>&& a_read_callback = nullptr, Function<ssize_t(InodeIdentifier, const UserOrKernelBuffer&, size_t)>&& a_write_callback = nullptr, RefPtr<ProcFSInode>&& a_inode = nullptr)
             : name(a_name)
             , proc_file_type(a_proc_file_type)
             , supervisor_only(a_supervisor_only)
@@ -73,7 +73,7 @@ private:
         unsigned proc_file_type { 0 };
         bool supervisor_only { false };
         Function<Optional<KBuffer>(InodeIdentifier)> read_callback;
-        Function<ssize_t(InodeIdentifier, const ByteBuffer&)> write_callback;
+        Function<ssize_t(InodeIdentifier, const UserOrKernelBuffer&, size_t)> write_callback;
         RefPtr<ProcFSInode> inode;
         InodeIdentifier identifier(unsigned fsid) const;
     };
@@ -96,12 +96,12 @@ public:
 
 private:
     // ^Inode
-    virtual ssize_t read_bytes(off_t, ssize_t, u8* buffer, FileDescription*) const override;
+    virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override;
-    virtual ssize_t write_bytes(off_t, ssize_t, const u8* buffer, FileDescription*) override;
+    virtual ssize_t write_bytes(off_t, ssize_t, const UserOrKernelBuffer& buffer, FileDescription*) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
@@ -123,12 +123,12 @@ public:
 
 private:
     // ^Inode
-    virtual ssize_t read_bytes(off_t, ssize_t, u8*, FileDescription*) const override { ASSERT_NOT_REACHED(); }
+    virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const override { ASSERT_NOT_REACHED(); }
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override { ASSERT_NOT_REACHED(); }
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override {};
-    virtual ssize_t write_bytes(off_t, ssize_t, const u8*, FileDescription*) override { ASSERT_NOT_REACHED(); }
+    virtual ssize_t write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*) override { ASSERT_NOT_REACHED(); }
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;

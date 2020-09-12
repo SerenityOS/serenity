@@ -34,11 +34,13 @@ int Process::sys$link(Userspace<const Syscall::SC_link_params*> user_params)
 {
     REQUIRE_PROMISE(cpath);
     Syscall::SC_link_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
-    auto old_path = validate_and_copy_string_from_user(params.old_path);
-    auto new_path = validate_and_copy_string_from_user(params.new_path);
-    if (old_path.is_null() || new_path.is_null())
+    auto old_path = copy_string_from_user(params.old_path);
+    if (old_path.is_null())
+        return -EFAULT;
+    auto new_path = copy_string_from_user(params.new_path);
+    if (new_path.is_null())
         return -EFAULT;
     return VFS::the().link(old_path, new_path, current_directory());
 }
@@ -47,7 +49,7 @@ int Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_param
 {
     REQUIRE_PROMISE(cpath);
     Syscall::SC_symlink_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
     auto target = get_syscall_path_argument(params.target);
     if (target.is_error())

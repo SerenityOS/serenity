@@ -69,10 +69,10 @@ public:
 
     KResultOr<KBuffer> read_entire(FileDescription* = nullptr) const;
 
-    virtual ssize_t read_bytes(off_t, ssize_t, u8* buffer, FileDescription*) const = 0;
+    virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const = 0;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const = 0;
     virtual RefPtr<Inode> lookup(StringView name) = 0;
-    virtual ssize_t write_bytes(off_t, ssize_t, const u8* data, FileDescription*) = 0;
+    virtual ssize_t write_bytes(off_t, ssize_t, const UserOrKernelBuffer& data, FileDescription*) = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) = 0;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;
     virtual KResult remove_child(const StringView& name) = 0;
@@ -122,7 +122,7 @@ public:
 protected:
     Inode(FS& fs, unsigned index);
     void set_metadata_dirty(bool);
-    void inode_contents_changed(off_t, ssize_t, const u8*);
+    void inode_contents_changed(off_t, ssize_t, const UserOrKernelBuffer&);
     void inode_size_changed(size_t old_size, size_t new_size);
     KResult prepare_to_write_data();
 

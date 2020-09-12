@@ -44,7 +44,7 @@ InodeFile::~InodeFile()
 {
 }
 
-KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, u8* buffer, size_t count)
+KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, UserOrKernelBuffer& buffer, size_t count)
 {
     ssize_t nread = m_inode->read_bytes(offset, count, buffer, &description);
     if (nread > 0)
@@ -54,7 +54,7 @@ KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, u
     return nread;
 }
 
-KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, const u8* data, size_t count)
+KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, const UserOrKernelBuffer& data, size_t count)
 {
     ssize_t nwritten = m_inode->write_bytes(offset, count, data, &description);
     if (nwritten > 0) {

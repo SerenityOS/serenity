@@ -50,7 +50,7 @@ public:
 
     virtual KResult close() override;
     virtual KResult bind(Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual KResult connect(FileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual KResult listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
@@ -58,8 +58,8 @@ public:
     virtual void detach(FileDescription&) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>) override;
+    virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
+    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>) override;
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
 
@@ -96,8 +96,8 @@ protected:
 
     virtual KResult protocol_bind() { return KSuccess; }
     virtual KResult protocol_listen() { return KSuccess; }
-    virtual KResultOr<size_t> protocol_receive(const KBuffer&, void*, size_t, int) { return -ENOTIMPL; }
-    virtual KResultOr<size_t> protocol_send(const void*, size_t) { return -ENOTIMPL; }
+    virtual KResultOr<size_t> protocol_receive(const KBuffer&, UserOrKernelBuffer&, size_t, int) { return -ENOTIMPL; }
+    virtual KResultOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) { return -ENOTIMPL; }
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) { return KSuccess; }
     virtual int protocol_allocate_local_port() { return 0; }
     virtual bool protocol_is_disconnected() const { return false; }
@@ -110,8 +110,8 @@ protected:
 private:
     virtual bool is_ipv4() const override { return true; }
 
-    KResultOr<size_t> receive_byte_buffered(FileDescription&, void* buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>);
-    KResultOr<size_t> receive_packet_buffered(FileDescription&, void* buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>);
+    KResultOr<size_t> receive_byte_buffered(FileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>);
+    KResultOr<size_t> receive_packet_buffered(FileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>);
 
     IPv4Address m_local_address;
     IPv4Address m_peer_address;

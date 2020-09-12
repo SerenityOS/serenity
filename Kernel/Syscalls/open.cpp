@@ -34,7 +34,7 @@ namespace Kernel {
 int Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
 {
     Syscall::SC_open_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     int dirfd = params.dirfd;

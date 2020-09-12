@@ -35,27 +35,68 @@
 
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {
+    bool is_user = Kernel::is_user_range(VirtualAddress(user_str), user_str_size);
+    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
+    if (!is_user)
+        return {};
     Kernel::SmapDisabler disabler;
-    size_t length = strnlen(user_str, user_str_size);
-    return String(user_str, length);
+    void* fault_at;
+    ssize_t length = Kernel::safe_strnlen(user_str, user_str_size, fault_at);
+    if (length < 0) {
+        klog() << "copy_string_from_user(" << user_str << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (strnlen)";
+        return {};
+    }
+    if (length == 0)
+        return String::empty();
+
+    char* buffer;
+    auto copied_string = StringImpl::create_uninitialized((size_t)length, buffer);
+    if (!Kernel::safe_memcpy(buffer, user_str, (size_t)length, fault_at)) {
+        klog() << "copy_string_from_user(" << user_str << ", " << user_str_size << ") failed at " << VirtualAddress(fault_at) << " (memcpy)";
+        return {};
+    }
+    return copied_string;
+}
+
+String copy_string_from_user(Userspace<const char*> user_str, size_t user_str_size)
+{
+    return copy_string_from_user(user_str.unsafe_userspace_ptr(), user_str_size);
 }
 
 extern "C" {
 
-void copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
+bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));
+    bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
+    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
+    if (!is_user)
+        return false;
     ASSERT(!Kernel::is_user_range(VirtualAddress(src_ptr), n));
     Kernel::SmapDisabler disabler;
-    memcpy(dest_ptr, src_ptr, n);
+    void* fault_at;
+    if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
+        ASSERT(VirtualAddress(fault_at) >= VirtualAddress(dest_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)dest_ptr + n));
+        klog() << "copy_to_user(" << dest_ptr << ", " << src_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        return false;
+    }
+    return true;
 }
 
-void copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
+bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    ASSERT(Kernel::is_user_range(VirtualAddress(src_ptr), n));
+    bool is_user = Kernel::is_user_range(VirtualAddress(src_ptr), n);
+    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
+    if (!is_user)
+        return false;
     ASSERT(!Kernel::is_user_range(VirtualAddress(dest_ptr), n));
     Kernel::SmapDisabler disabler;
-    memcpy(dest_ptr, src_ptr, n);
+    void* fault_at;
+    if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
+        ASSERT(VirtualAddress(fault_at) >= VirtualAddress(src_ptr) && VirtualAddress(fault_at) <= VirtualAddress((FlatPtr)src_ptr + n));
+        klog() << "copy_from_user(" << dest_ptr << ", " << src_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        return false;
+    }
+    return true;
 }
 
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
@@ -97,11 +138,19 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
     return AK::memmem(haystack, haystack_length, needle, needle_length);
 }
 
-void memset_user(void* dest_ptr, int c, size_t n)
+[[nodiscard]] bool memset_user(void* dest_ptr, int c, size_t n)
 {
-    ASSERT(Kernel::is_user_range(VirtualAddress(dest_ptr), n));
+    bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
+    ASSERT(is_user); // For now assert to catch bugs, but technically not an error
+    if (!is_user)
+        return false;
     Kernel::SmapDisabler disabler;
-    memset(dest_ptr, c, n);
+    void* fault_at;
+    if (!Kernel::safe_memset(dest_ptr, c, n, fault_at)) {
+        klog() << "memset(" << dest_ptr << ", " << n << ") failed at " << VirtualAddress(fault_at);
+        return false;
+    }
+    return true;
 }
 
 void* memset(void* dest_ptr, int c, size_t n)

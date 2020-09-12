@@ -89,7 +89,7 @@ void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new
     });
 }
 
-void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, const u8* data)
+void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, const UserOrKernelBuffer& data)
 {
     (void)size;
     (void)data;

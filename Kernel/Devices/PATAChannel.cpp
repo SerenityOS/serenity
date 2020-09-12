@@ -274,11 +274,11 @@ void PATAChannel::detect_disks()
     }
 }
 
-bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool slave_request)
+bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, UserOrKernelBuffer& outbuf, bool slave_request)
 {
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbg() << "PATAChannel::ata_read_sectors_with_dma (" << lba << " x" << count << ") -> " << outbuf;
+    dbg() << "PATAChannel::ata_read_sectors_with_dma (" << lba << " x" << count << ") -> " << outbuf.user_or_kernel_ptr();
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
@@ -335,24 +335,26 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
     if (m_device_error)
         return false;
 
-    memcpy(outbuf, m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * count);
+    if (!outbuf.write(m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * count))
+        return false; // TODO: -EFAULT
 
     // I read somewhere that this may trigger a cache flush so let's do it.
     m_bus_master_base.offset(2).out<u8>(m_bus_master_base.offset(2).in<u8>() | 0x6);
     return true;
 }
 
-bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf, bool slave_request)
+bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const UserOrKernelBuffer& inbuf, bool slave_request)
 {
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbg() << "PATAChannel::ata_write_sectors_with_dma (" << lba << " x" << count << ") <- " << inbuf;
+    dbg() << "PATAChannel::ata_write_sectors_with_dma (" << lba << " x" << count << ") <- " << inbuf.user_or_kernel_ptr();
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
     prdt().size = 512 * count;
 
-    memcpy(m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), inbuf, 512 * count);
+    if (!inbuf.read(m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * count))
+        return false; // TODO: -EFAULT
 
     ASSERT(prdt().size <= PAGE_SIZE);
 
@@ -406,12 +408,12 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
     return true;
 }
 
-bool PATAChannel::ata_read_sectors(u32 lba, u16 count, u8* outbuf, bool slave_request)
+bool PATAChannel::ata_read_sectors(u32 lba, u16 count, UserOrKernelBuffer& outbuf, bool slave_request)
 {
     ASSERT(count <= 256);
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbg() << "PATAChannel::ata_read_sectors request (" << count << " sector(s) @ " << lba << " into " << outbuf << ")";
+    dbg() << "PATAChannel::ata_read_sectors request (" << count << " sector(s) @ " << lba << " into " << outbuf.user_or_kernel_ptr() << ")";
 #endif
 
     while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
@@ -460,14 +462,21 @@ bool PATAChannel::ata_read_sectors(u32 lba, u16 count, u8* outbuf, bool slave_re
         u8 status = m_control_base.offset(ATA_CTL_ALTSTATUS).in<u8>();
         ASSERT(!(status & ATA_SR_BSY));
 
-        auto* buffer = (u16*)(outbuf + i * 512);
+        auto out = outbuf.offset(i * 512);
 #ifdef PATA_DEBUG
-        dbg() << "PATAChannel: Retrieving 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), outbuf=(" << buffer << ")...";
+        dbg() << "PATAChannel: Retrieving 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), outbuf=(" << out.user_or_kernel_ptr() << ")...";
 #endif
         prepare_for_irq();
 
-        for (int i = 0; i < 256; i++) {
-            buffer[i] = IO::in16(m_io_base.offset(ATA_REG_DATA).get());
+        ssize_t nwritten = out.write_buffered<512>(512, [&](u8* buffer, size_t buffer_bytes) {
+            for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
+                *(u16*)&buffer[i] = IO::in16(m_io_base.offset(ATA_REG_DATA).get());
+            return (ssize_t)buffer_bytes;
+        });
+        if (nwritten < 0) {
+            sti();
+            disable_irq();
+            return false; // TODO: -EFAULT
         }
     }
 
@@ -476,7 +485,7 @@ bool PATAChannel::ata_read_sectors(u32 lba, u16 count, u8* outbuf, bool slave_re
     return true;
 }
 
-bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf, bool slave_request)
+bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const UserOrKernelBuffer& inbuf, bool slave_request)
 {
     ASSERT(count <= 256);
     LOCKER(s_lock());
@@ -515,17 +524,21 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
         u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
         ASSERT(status & ATA_SR_DRQ);
 
+        auto in = inbuf.offset(i * 512);
 #ifdef PATA_DEBUG
-        dbg() << "PATAChannel: Writing 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), inbuf=(" << (inbuf + (512 * i)) << ")...";
+        dbg() << "PATAChannel: Writing 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), inbuf=(" << in.user_or_kernel_ptr() << ")...";
 #endif
         prepare_for_irq();
-        auto* buffer = (u16*)(const_cast<u8*>(inbuf) + i * 512);
-        for (int i = 0; i < 256; i++) {
-            IO::out16(m_io_base.offset(ATA_REG_DATA).get(), buffer[i]);
-        }
+        ssize_t nread = in.read_buffered<512>(512, [&](const u8* buffer, size_t buffer_bytes) {
+            for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
+                IO::out16(m_io_base.offset(ATA_REG_DATA).get(), *(const u16*)&buffer[i]);
+            return (ssize_t)buffer_bytes;
+        });
         wait_for_irq();
         status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
         ASSERT(!(status & ATA_SR_BSY));
+        if (nread < 0)
+            return false; // TODO: -EFAULT
     }
     prepare_for_irq();
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_CACHE_FLUSH);

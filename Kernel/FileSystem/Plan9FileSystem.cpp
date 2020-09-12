@@ -426,7 +426,8 @@ KResult Plan9FS::post_message(Message& message)
             if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description).was_interrupted())
                 return KResult(-EINTR);
         }
-        auto nwritten_or_error = description.write(data, size);
+        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data));
+        auto nwritten_or_error = description.write(data_buffer, size);
         if (nwritten_or_error.is_error())
             return nwritten_or_error.error();
         auto nwritten = nwritten_or_error.value();
@@ -445,7 +446,8 @@ KResult Plan9FS::do_read(u8* data, size_t size)
             if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description).was_interrupted())
                 return KResult(-EINTR);
         }
-        auto nread_or_error = description.read(data, size);
+        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data);
+        auto nread_or_error = description.read(data_buffer, size);
         if (nread_or_error.is_error())
             return nread_or_error.error();
         auto nread = nread_or_error.value();
@@ -677,7 +679,7 @@ KResult Plan9FSInode::ensure_open_for_mode(int mode)
     }
 }
 
-ssize_t Plan9FSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDescription*) const
+ssize_t Plan9FSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     auto result = const_cast<Plan9FSInode&>(*this).ensure_open_for_mode(O_RDONLY);
     if (result.is_error())
@@ -710,12 +712,13 @@ ssize_t Plan9FSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDes
 
     // Guard against the server returning more data than requested.
     size_t nread = min(data.length(), (size_t)size);
-    memcpy(buffer, data.characters_without_null_termination(), nread);
+    if (!buffer.write(data.characters_without_null_termination(), nread))
+        return -EFAULT;
 
     return nread;
 }
 
-ssize_t Plan9FSInode::write_bytes(off_t offset, ssize_t size, const u8* data, FileDescription*)
+ssize_t Plan9FSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& data, FileDescription*)
 {
     auto result = ensure_open_for_mode(O_WRONLY);
     if (result.is_error())
@@ -723,9 +726,13 @@ ssize_t Plan9FSInode::write_bytes(off_t offset, ssize_t size, const u8* data, Fi
 
     size = fs().adjust_buffer_size(size);
 
+    auto data_copy = data.copy_into_string(size); // FIXME: this seems ugly
+    if (data_copy.is_null())
+        return -EFAULT;
+
     Plan9FS::Message message { fs(), Plan9FS::Message::Type::Twrite };
     message << fid() << (u64)offset;
-    message.append_data({ data, (size_t)size });
+    message.append_data(data_copy);
     result = fs().post_message_and_wait_for_a_reply(message);
     if (result.is_error())
         return result.error();

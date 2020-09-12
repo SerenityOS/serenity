@@ -107,6 +107,7 @@ public:
 
     const String& name() const { return m_name; }
     void set_name(const StringView& s) { m_name = s; }
+    void set_name(String&& name) { m_name = move(name); }
 
     void finalize();
 
@@ -430,7 +431,7 @@ public:
     FPUState& fpu_state() { return *m_fpu_state; }
 
     void set_default_signal_dispositions();
-    void push_value_on_stack(FlatPtr);
+    bool push_value_on_stack(FlatPtr);
 
     u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue>);
 

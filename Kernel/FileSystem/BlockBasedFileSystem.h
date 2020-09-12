@@ -42,17 +42,17 @@ public:
 protected:
     explicit BlockBasedFS(FileDescription&);
 
-    bool read_block(unsigned index, u8* buffer, size_t count, size_t offset = 0, bool allow_cache = true) const;
-    bool read_blocks(unsigned index, unsigned count, u8* buffer, bool allow_cache = true) const;
+    int read_block(unsigned index, UserOrKernelBuffer* buffer, size_t count, size_t offset = 0, bool allow_cache = true) const;
+    int read_blocks(unsigned index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache = true) const;
 
-    bool raw_read(unsigned index, u8* buffer);
-    bool raw_write(unsigned index, const u8* buffer);
+    bool raw_read(unsigned index, UserOrKernelBuffer& buffer);
+    bool raw_write(unsigned index, const UserOrKernelBuffer& buffer);
 
-    bool raw_read_blocks(unsigned index, size_t count, u8* buffer);
-    bool raw_write_blocks(unsigned index, size_t count, const u8* buffer);
+    bool raw_read_blocks(unsigned index, size_t count, UserOrKernelBuffer& buffer);
+    bool raw_write_blocks(unsigned index, size_t count, const UserOrKernelBuffer& buffer);
 
-    bool write_block(unsigned index, const u8* buffer, size_t count, size_t offset = 0, bool allow_cache = true);
-    bool write_blocks(unsigned index, unsigned count, const u8*, bool allow_cache = true);
+    int write_block(unsigned index, const UserOrKernelBuffer& buffer, size_t count, size_t offset = 0, bool allow_cache = true);
+    int write_blocks(unsigned index, unsigned count, const UserOrKernelBuffer&, bool allow_cache = true);
 
     size_t m_logical_block_size { 512 };
 

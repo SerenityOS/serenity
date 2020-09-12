@@ -142,16 +142,22 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     size_t recognized_symbol_count = 0;
     if (use_ksyms) {
-        for (FlatPtr* stack_ptr = (FlatPtr*)base_pointer;
-             (current_process ? current_process->validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (FlatPtr*)*stack_ptr) {
-            FlatPtr retaddr = stack_ptr[1];
+        FlatPtr copied_stack_ptr[2];
+        for (FlatPtr* stack_ptr = (FlatPtr*)base_pointer; stack_ptr && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (FlatPtr*)copied_stack_ptr[0]) {
+            void* fault_at;
+            if (!safe_memcpy(copied_stack_ptr, stack_ptr, sizeof(copied_stack_ptr), fault_at))
+                break;
+            FlatPtr retaddr = copied_stack_ptr[1];
             recognized_symbols[recognized_symbol_count++] = { retaddr, symbolicate_kernel_address(retaddr) };
         }
     } else {
-        for (FlatPtr* stack_ptr = (FlatPtr*)base_pointer;
-             (current_process ? current_process->validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2) : 1); stack_ptr = (FlatPtr*)*stack_ptr) {
-            FlatPtr retaddr = stack_ptr[1];
-            dbg() << String::format("%x", retaddr) << " (next: " << String::format("%x", (stack_ptr ? (u32*)*stack_ptr : 0)) << ")";
+        void* fault_at;
+        FlatPtr copied_stack_ptr[2];
+        FlatPtr* stack_ptr = (FlatPtr*)base_pointer;
+        while (stack_ptr && safe_memcpy(copied_stack_ptr, stack_ptr, sizeof(copied_stack_ptr), fault_at)) {
+            FlatPtr retaddr = copied_stack_ptr[1];
+            dbg() << String::format("%x", retaddr) << " (next: " << String::format("%x", (stack_ptr ? (u32*)copied_stack_ptr[0] : 0)) << ")";
+            stack_ptr = (FlatPtr*)copied_stack_ptr[0];
         }
         return;
     }

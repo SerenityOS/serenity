@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ScopeGuard.h>
 #include <Kernel/Process.h>
 #include <Kernel/Ptrace.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -38,7 +39,7 @@ int Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
 {
     REQUIRE_PROMISE(proc);
     Syscall::SC_ptrace_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
     auto result = Ptrace::handle_syscall(params, *this);
     return result.is_error() ? result.error() : result.value();
@@ -63,28 +64,21 @@ bool Process::has_tracee_thread(ProcessID tracer_pid) const
 
 KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
 {
-    if (!MM.validate_user_read(*this, VirtualAddress(address), sizeof(u32))) {
-        dbg() << "Invalid address for peek_user_data: " << address.ptr();
-        return KResult(-EFAULT);
-    }
     uint32_t result;
 
     // This function can be called from the context of another
     // process that called PT_PEEK
     ProcessPagingScope scope(*this);
-    copy_from_user(&result, address);
+    if (!copy_from_user(&result, address)) {
+        dbg() << "Invalid address for peek_user_data: " << address.ptr();
+        return KResult(-EFAULT);
+    }
 
     return result;
 }
 
 KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
 {
-    // We validate for read (rather than write) because PT_POKE can write to readonly pages.
-    // So we effectively only care that the poke operation is trying to write to user pages.
-    if (!MM.validate_user_read(*this, VirtualAddress(address), sizeof(u32))) {
-        dbg() << "Invalid address for poke_user_data: " << address.ptr();
-        return KResult(-EFAULT);
-    }
     ProcessPagingScope scope(*this);
     Range range = { VirtualAddress(address), sizeof(u32) };
     auto* region = find_region_containing(range);
@@ -97,18 +91,23 @@ KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
         region->set_shared(false);
     }
     const bool was_writable = region->is_writable();
-    if (!was_writable) //TODO refactor into scopeguard
+    if (!was_writable)
     {
         region->set_writable(true);
         region->remap();
     }
+    ScopeGuard rollback([&]() {
+        if (!was_writable) {
+            region->set_writable(false);
+            region->remap();
+        }
+    });
 
-    copy_to_user(address, &data);
-
-    if (!was_writable) {
-        region->set_writable(false);
-        region->remap();
+    if (!copy_to_user(address, &data)) {
+        dbg() << "Invalid address for poke_user_data: " << address.ptr();
+        return KResult(-EFAULT);
     }
+
     return KResult(KSuccess);
 }
 

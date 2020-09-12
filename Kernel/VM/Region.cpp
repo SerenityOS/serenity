@@ -439,13 +439,24 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
         klog() << "MM: handle_cow_fault was unable to allocate a physical page";
         return PageFaultResponse::OutOfMemory;
     }
-    auto physical_page_to_copy = move(page_slot);
+
     u8* dest_ptr = MM.quickmap_page(*page);
     const u8* src_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << "      >> COW " << page->paddr() << " <- " << physical_page_to_copy->paddr();
+    dbg() << "      >> COW " << page->paddr() << " <- " << page_slot->paddr();
 #endif
-    copy_from_user(dest_ptr, src_ptr, PAGE_SIZE);
+    {
+        SmapDisabler disabler;
+        void* fault_at;
+        if (!safe_memcpy(dest_ptr, src_ptr, PAGE_SIZE, fault_at)) {
+            if ((u8*)fault_at >= dest_ptr && (u8*)fault_at <= dest_ptr + PAGE_SIZE)
+                dbg() << "      >> COW: error copying page " << page_slot->paddr() << "/" << VirtualAddress(src_ptr) << " to " << page->paddr() << "/" << VirtualAddress(dest_ptr) << ": failed to write to page at " << VirtualAddress(fault_at);
+            else if ((u8*)fault_at >= src_ptr && (u8*)fault_at <= src_ptr + PAGE_SIZE)
+                dbg() << "      >> COW: error copying page " << page_slot->paddr() << "/" << VirtualAddress(src_ptr) << " to " << page->paddr() << "/" << VirtualAddress(dest_ptr) << ": failed to read from page at " << VirtualAddress(fault_at);
+            else
+                ASSERT_NOT_REACHED();
+        }
+    }
     page_slot = move(page);
     MM.unquickmap_page();
     set_should_cow(page_index_in_region, false);
@@ -489,7 +500,8 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     sti();
     u8 page_buffer[PAGE_SIZE];
     auto& inode = inode_vmobject.inode();
-    auto nread = inode.read_bytes((first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, page_buffer, nullptr);
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
+    auto nread = inode.read_bytes((first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
     if (nread < 0) {
         klog() << "MM: handle_inode_fault had error (" << nread << ") while reading!";
         return PageFaultResponse::ShouldCrash;
@@ -506,7 +518,15 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     }
 
     u8* dest_ptr = MM.quickmap_page(*vmobject_physical_page_entry);
-    memcpy(dest_ptr, page_buffer, PAGE_SIZE);
+    {
+        void* fault_at;
+        if (!safe_memcpy(dest_ptr, page_buffer, PAGE_SIZE, fault_at)) {
+            if ((u8*)fault_at >= dest_ptr && (u8*)fault_at <= dest_ptr + PAGE_SIZE)
+                dbg() << "      >> inode fault: error copying data to " << vmobject_physical_page_entry->paddr() << "/" << VirtualAddress(dest_ptr) << ", failed at " << VirtualAddress(fault_at);
+            else
+                ASSERT_NOT_REACHED();
+        }
+    }
     MM.unquickmap_page();
 
     remap_page(page_index_in_region);

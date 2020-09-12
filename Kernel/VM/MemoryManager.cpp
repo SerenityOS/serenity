@@ -767,39 +767,6 @@ bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress v
     return region && region->is_user_accessible() && region->is_stack();
 }
 
-bool MemoryManager::validate_kernel_read(const Process& process, VirtualAddress vaddr, size_t size) const
-{
-    ScopedSpinLock lock(s_mm_lock);
-    return validate_range<AccessSpace::Kernel, AccessType::Read>(process, vaddr, size);
-}
-
-bool MemoryManager::can_read_without_faulting(const Process& process, VirtualAddress vaddr, size_t size) const
-{
-    // FIXME: Use the size argument!
-    UNUSED_PARAM(size);
-    ScopedSpinLock lock(s_mm_lock);
-    auto* pte = const_cast<MemoryManager*>(this)->pte(process.page_directory(), vaddr);
-    if (!pte)
-        return false;
-    return pte->is_present();
-}
-
-bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr, size_t size) const
-{
-    if (!is_user_address(vaddr))
-        return false;
-    ScopedSpinLock lock(s_mm_lock);
-    return validate_range<AccessSpace::User, AccessType::Read>(process, vaddr, size);
-}
-
-bool MemoryManager::validate_user_write(const Process& process, VirtualAddress vaddr, size_t size) const
-{
-    if (!is_user_address(vaddr))
-        return false;
-    ScopedSpinLock lock(s_mm_lock);
-    return validate_range<AccessSpace::User, AccessType::Write>(process, vaddr, size);
-}
-
 void MemoryManager::register_vmobject(VMObject& vmobject)
 {
     ScopedSpinLock lock(s_mm_lock);

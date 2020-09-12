@@ -60,14 +60,14 @@ String MasterPTY::pts_name() const
     return m_pts_name;
 }
 
-KResultOr<size_t> MasterPTY::read(FileDescription&, size_t, u8* buffer, size_t size)
+KResultOr<size_t> MasterPTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_slave && m_buffer.is_empty())
         return 0;
     return m_buffer.read(buffer, size);
 }
 
-KResultOr<size_t> MasterPTY::write(FileDescription&, size_t, const u8* buffer, size_t size)
+KResultOr<size_t> MasterPTY::write(FileDescription&, size_t, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_slave)
         return KResult(-EIO);
@@ -98,12 +98,11 @@ void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
         m_slave = nullptr;
 }
 
-ssize_t MasterPTY::on_slave_write(const u8* data, ssize_t size)
+ssize_t MasterPTY::on_slave_write(const UserOrKernelBuffer& data, ssize_t size)
 {
     if (m_closed)
         return -EIO;
-    m_buffer.write(data, size);
-    return size;
+    return m_buffer.write(data, size);
 }
 
 bool MasterPTY::can_write_from_slave() const

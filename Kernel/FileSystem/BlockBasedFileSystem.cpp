@@ -119,7 +119,7 @@ BlockBasedFS::~BlockBasedFS()
 {
 }
 
-bool BlockBasedFS::write_block(unsigned index, const u8* data, size_t count, size_t offset, bool allow_cache)
+int BlockBasedFS::write_block(unsigned index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
 {
     ASSERT(m_logical_block_size);
     ASSERT(offset + count <= block_size());
@@ -133,9 +133,9 @@ bool BlockBasedFS::write_block(unsigned index, const u8* data, size_t count, siz
         file_description().seek(base_offset, SEEK_SET);
         auto nwritten = file_description().write(data, count);
         if (nwritten.is_error())
-            return false;
+            return -EIO; // TODO: Return error code as-is, could be -EFAULT!
         ASSERT(nwritten.value() == count);
-        return true;
+        return 0;
     }
 
     auto& entry = cache().get(index);
@@ -143,15 +143,16 @@ bool BlockBasedFS::write_block(unsigned index, const u8* data, size_t count, siz
         // Fill the cache first.
         read_block(index, nullptr, block_size());
     }
-    memcpy(entry.data + offset, data, count);
+    if (!data.read(entry.data + offset, count))
+        return -EFAULT;
     entry.is_dirty = true;
     entry.has_data = true;
 
     cache().set_dirty(true);
-    return true;
+    return 0;
 }
 
-bool BlockBasedFS::raw_read(unsigned index, u8* buffer)
+bool BlockBasedFS::raw_read(unsigned index, UserOrKernelBuffer& buffer)
 {
     u32 base_offset = static_cast<u32>(index) * static_cast<u32>(m_logical_block_size);
     file_description().seek(base_offset, SEEK_SET);
@@ -160,7 +161,7 @@ bool BlockBasedFS::raw_read(unsigned index, u8* buffer)
     ASSERT(nread.value() == m_logical_block_size);
     return true;
 }
-bool BlockBasedFS::raw_write(unsigned index, const u8* buffer)
+bool BlockBasedFS::raw_write(unsigned index, const UserOrKernelBuffer& buffer)
 {
     u32 base_offset = static_cast<u32>(index) * static_cast<u32>(m_logical_block_size);
     file_description().seek(base_offset, SEEK_SET);
@@ -170,37 +171,39 @@ bool BlockBasedFS::raw_write(unsigned index, const u8* buffer)
     return true;
 }
 
-bool BlockBasedFS::raw_read_blocks(unsigned index, size_t count, u8* buffer)
+bool BlockBasedFS::raw_read_blocks(unsigned index, size_t count, UserOrKernelBuffer& buffer)
 {
+    auto current = buffer;
     for (unsigned block = index; block < (index + count); block++) {
-        if (!raw_read(block, buffer))
+        if (!raw_read(block, current))
             return false;
-        buffer += logical_block_size();
+        current = current.offset(logical_block_size());
     }
     return true;
 }
-bool BlockBasedFS::raw_write_blocks(unsigned index, size_t count, const u8* buffer)
+bool BlockBasedFS::raw_write_blocks(unsigned index, size_t count, const UserOrKernelBuffer& buffer)
 {
+    auto current = buffer;
     for (unsigned block = index; block < (index + count); block++) {
-        if (!raw_write(block, buffer))
+        if (!raw_write(block, current))
             return false;
-        buffer += logical_block_size();
+        current = current.offset(logical_block_size());
     }
     return true;
 }
 
-bool BlockBasedFS::write_blocks(unsigned index, unsigned count, const u8* data, bool allow_cache)
+int BlockBasedFS::write_blocks(unsigned index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
     ASSERT(m_logical_block_size);
 #ifdef BBFS_DEBUG
     klog() << "BlockBasedFileSystem::write_blocks " << index << " x" << count;
 #endif
     for (unsigned i = 0; i < count; ++i)
-        write_block(index + i, data + i * block_size(), block_size(), 0, allow_cache);
-    return true;
+        write_block(index + i, data.offset(i * block_size()), block_size(), 0, allow_cache);
+    return 0;
 }
 
-bool BlockBasedFS::read_block(unsigned index, u8* buffer, size_t count, size_t offset, bool allow_cache) const
+int BlockBasedFS::read_block(unsigned index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
 {
     ASSERT(m_logical_block_size);
     ASSERT(offset + count <= block_size());
@@ -212,44 +215,45 @@ bool BlockBasedFS::read_block(unsigned index, u8* buffer, size_t count, size_t o
         const_cast<BlockBasedFS*>(this)->flush_specific_block_if_needed(index);
         u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size()) + static_cast<u32>(offset);
         file_description().seek(base_offset, SEEK_SET);
-        auto nread = file_description().read(buffer, count);
+        auto nread = file_description().read(*buffer, count);
         if (nread.is_error())
-            return false;
+            return -EIO;
         ASSERT(nread.value() == count);
-        return true;
+        return 0;
     }
 
     auto& entry = cache().get(index);
     if (!entry.has_data) {
         u32 base_offset = static_cast<u32>(index) * static_cast<u32>(block_size());
         file_description().seek(base_offset, SEEK_SET);
-        auto nread = file_description().read(entry.data, block_size());
+        auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
+        auto nread = file_description().read(entry_data_buffer, block_size());
         if (nread.is_error())
-            return false;
+            return -EIO;
         ASSERT(nread.value() == block_size());
         entry.has_data = true;
     }
-    if (buffer)
-        memcpy(buffer, entry.data + offset, count);
-    return true;
+    if (buffer && !buffer->write(entry.data + offset, count))
+        return -EFAULT;
+    return 0;
 }
 
-bool BlockBasedFS::read_blocks(unsigned index, unsigned count, u8* buffer, bool allow_cache) const
+int BlockBasedFS::read_blocks(unsigned index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache) const
 {
     ASSERT(m_logical_block_size);
     if (!count)
         return false;
     if (count == 1)
-        return read_block(index, buffer, block_size(), 0, allow_cache);
-    u8* out = buffer;
-
+        return read_block(index, &buffer, block_size(), 0, allow_cache);
+    auto out = buffer;
     for (unsigned i = 0; i < count; ++i) {
-        if (!read_block(index + i, out, block_size(), 0, allow_cache))
-            return false;
-        out += block_size();
+        auto err = read_block(index + i, &out, block_size(), 0, allow_cache);
+        if (err < 0)
+            return err;
+        out = out.offset(block_size());
     }
 
-    return true;
+    return 0;
 }
 
 void BlockBasedFS::flush_specific_block_if_needed(unsigned index)
@@ -262,7 +266,8 @@ void BlockBasedFS::flush_specific_block_if_needed(unsigned index)
             u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
             file_description().seek(base_offset, SEEK_SET);
             // FIXME: Should this error path be surfaced somehow?
-            (void)file_description().write(entry.data, block_size());
+            auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
+            (void)file_description().write(entry_data_buffer, block_size());
             entry.is_dirty = false;
         }
     });
@@ -280,7 +285,8 @@ void BlockBasedFS::flush_writes_impl()
         u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
         file_description().seek(base_offset, SEEK_SET);
         // FIXME: Should this error path be surfaced somehow?
-        (void)file_description().write(entry.data, block_size());
+        auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
+        (void)file_description().write(entry_data_buffer, block_size());
         ++count;
         entry.is_dirty = false;
     });

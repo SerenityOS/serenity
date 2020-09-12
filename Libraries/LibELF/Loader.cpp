@@ -81,7 +81,10 @@ bool Loader::layout()
                 failed = true;
                 return;
             }
-            do_memcpy(tls_image, program_header.raw_data(), program_header.size_in_image());
+            if (!do_memcpy(tls_image, program_header.raw_data(), program_header.size_in_image())) {
+                failed = false;
+                return;
+            }
 #endif
             return;
         }
@@ -117,7 +120,10 @@ bool Loader::layout()
             //     Accessing it would definitely be a bug.
             auto page_offset = program_header.vaddr();
             page_offset.mask(~PAGE_MASK);
-            do_memcpy((u8*)allocated_section + page_offset.get(), program_header.raw_data(), program_header.size_in_image());
+            if (!do_memcpy((u8*)allocated_section + page_offset.get(), program_header.raw_data(), program_header.size_in_image())) {
+                failed = false;
+                return;
+            }
         } else {
             auto* mapped_section = map_section_hook(
                 program_header.vaddr(),

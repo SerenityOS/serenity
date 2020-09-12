@@ -141,7 +141,7 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry
     return KSuccess;
 }
 
-ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDescription*) const
+ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     LOCKER(m_lock, Lock::Mode::Shared);
     ASSERT(!is_directory());
@@ -157,11 +157,12 @@ ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDescr
     if (static_cast<off_t>(size) > m_metadata.size - offset)
         size = m_metadata.size - offset;
 
-    memcpy(buffer, m_content.value().data() + offset, size);
+    if (!buffer.write(m_content.value().data() + offset, size))
+        return -EFAULT;
     return size;
 }
 
-ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, FileDescription*)
+ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     LOCKER(m_lock);
     ASSERT(!is_directory());
@@ -199,7 +200,8 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, Fi
         inode_size_changed(old_size, new_size);
     }
 
-    memcpy(m_content.value().data() + offset, buffer, size);
+    if (!buffer.read(m_content.value().data() + offset, size)) // TODO: partial reads?
+        return -EFAULT;
     inode_contents_changed(offset, size, buffer);
 
     return size;
@@ -343,8 +345,10 @@ KResult TmpFSInode::truncate(u64 size)
 
     if (old_size != (size_t)size) {
         inode_size_changed(old_size, size);
-        if (m_content.has_value())
-            inode_contents_changed(0, size, m_content.value().data());
+        if (m_content.has_value()) {
+            auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_content.value().data());
+            inode_contents_changed(0, size, buffer);
+        }
     }
 
     return KSuccess;

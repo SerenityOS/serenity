@@ -930,7 +930,7 @@ int Emulator::virt$execve(FlatPtr params_addr)
     auto copy_string_list = [this](auto& output_vector, auto& string_list) {
         for (size_t i = 0; i < string_list.length; ++i) {
             Syscall::StringArgument string;
-            mmu().copy_from_vm(&string, (FlatPtr)&string_list.strings.ptr()[i], sizeof(string));
+            mmu().copy_from_vm(&string, (FlatPtr)&string_list.strings[i], sizeof(string));
             output_vector.append(String::copy(mmu().copy_buffer_from_vm((FlatPtr)string.characters, string.length)));
         }
     };
@@ -1307,7 +1307,7 @@ int Emulator::virt$waitid(FlatPtr params_addr)
     }
 
     if (params.infop)
-        mmu().copy_to_vm(params.infop, &info, sizeof(info));
+        mmu().copy_to_vm((FlatPtr)params.infop, &info, sizeof(info));
 
     return rc;
 }

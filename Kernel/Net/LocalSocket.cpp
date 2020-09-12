@@ -98,7 +98,8 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
         return KResult(-EINVAL);
 
     sockaddr_un address;
-    copy_from_user(&address, user_address, sizeof(sockaddr_un));
+    if (!copy_from_user(&address, user_address, sizeof(sockaddr_un)))
+        return KResult(-EFAULT);
 
     if (address.sun_family != AF_LOCAL)
         return KResult(-EINVAL);
@@ -131,19 +132,25 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
     return KSuccess;
 }
 
-KResult LocalSocket::connect(FileDescription& description, const sockaddr* address, socklen_t address_size, ShouldBlock)
+KResult LocalSocket::connect(FileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock)
 {
     ASSERT(!m_bound);
     if (address_size != sizeof(sockaddr_un))
         return KResult(-EINVAL);
-    if (address->sa_family != AF_LOCAL)
+    u16 sa_family_copy;
+    auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
+    if (!copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)))
+        return KResult(-EFAULT);
+    if (sa_family_copy != AF_LOCAL)
         return KResult(-EINVAL);
     if (is_connected())
         return KResult(-EISCONN);
 
-    const sockaddr_un& local_address = *reinterpret_cast<const sockaddr_un*>(address);
+    const auto& local_address = *reinterpret_cast<const sockaddr_un*>(user_address);
     char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
-    memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
+    if (!copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1))
+        return KResult(-EFAULT);
+    safe_address[sizeof(safe_address) - 1] = '\0';
 
 #ifdef DEBUG_LOCAL_SOCKET
     dbg() << "LocalSocket{" << this << "} connect(" << safe_address << ")";
@@ -159,7 +166,8 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
     if (!m_file->inode()->socket())
         return KResult(-ECONNREFUSED);
 
-    m_address = local_address;
+    m_address.sun_family = sa_family_copy;
+    memcpy(m_address.sun_path, safe_address, sizeof(m_address.sun_path));
 
     ASSERT(m_connect_side_fd == &description);
     m_connect_side_role = Role::Connecting;
@@ -260,11 +268,11 @@ bool LocalSocket::can_write(const FileDescription& description, size_t) const
     return false;
 }
 
-KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, Userspace<const sockaddr*>, socklen_t)
+KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size, int, Userspace<const sockaddr*>, socklen_t)
 {
     if (!has_attached_peer(description))
         return KResult(-EPIPE);
-    ssize_t nwritten = send_buffer_for(description).write((const u8*)data, data_size);
+    ssize_t nwritten = send_buffer_for(description).write(data, data_size);
     if (nwritten > 0)
         Thread::current()->did_unix_socket_write(nwritten);
     return nwritten;
@@ -290,7 +298,7 @@ DoubleBuffer& LocalSocket::send_buffer_for(FileDescription& description)
     ASSERT_NOT_REACHED();
 }
 
-KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>)
+KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>)
 {
     auto& buffer_for_me = receive_buffer_for(description);
     if (!description.is_blocking()) {
@@ -306,7 +314,7 @@ KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, void* buff
     if (!has_attached_peer(description) && buffer_for_me.is_empty())
         return 0;
     ASSERT(!buffer_for_me.is_empty());
-    int nread = buffer_for_me.read((u8*)buffer, buffer_size);
+    int nread = buffer_for_me.read(buffer, buffer_size);
     if (nread > 0)
         Thread::current()->did_unix_socket_read(nread);
     return nread;
@@ -350,7 +358,7 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
         return Socket::getsockopt(description, level, option, value, value_size);
 
     socklen_t size;
-    if (!Process::current()->validate_read_and_copy_typed(&size, value_size))
+    if (!copy_from_user(&size, value_size.unsafe_userspace_ptr()))
         return KResult(-EFAULT);
 
     switch (option) {
@@ -359,14 +367,18 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
             return KResult(-EINVAL);
         switch (role(description)) {
         case Role::Accepted:
-            copy_to_user(static_ptr_cast<ucred*>(value), &m_origin);
+            if (!copy_to_user(static_ptr_cast<ucred*>(value), &m_origin))
+                return KResult(-EFAULT);
             size = sizeof(ucred);
-            copy_to_user(value_size, &size);
+            if (!copy_to_user(value_size, &size))
+                return KResult(-EFAULT);
             return KSuccess;
         case Role::Connected:
-            copy_to_user(static_ptr_cast<ucred*>(value), &m_acceptor);
+            if (!copy_to_user(static_ptr_cast<ucred*>(value), &m_acceptor))
+                return KResult(-EFAULT);
             size = sizeof(ucred);
-            copy_to_user(value_size, &size);
+            if (!copy_to_user(value_size, &size))
+                return KResult(-EFAULT);
             return KSuccess;
         case Role::Connecting:
             return KResult(-ENOTCONN);

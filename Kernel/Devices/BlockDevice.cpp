@@ -32,17 +32,17 @@ BlockDevice::~BlockDevice()
 {
 }
 
-bool BlockDevice::read_block(unsigned index, u8* buffer) const
+bool BlockDevice::read_block(unsigned index, UserOrKernelBuffer& buffer) const
 {
     return const_cast<BlockDevice*>(this)->read_blocks(index, 1, buffer);
 }
 
-bool BlockDevice::write_block(unsigned index, const u8* data)
+bool BlockDevice::write_block(unsigned index, const UserOrKernelBuffer& data)
 {
     return write_blocks(index, 1, data);
 }
 
-bool BlockDevice::read_raw(u32 offset, unsigned length, u8* out) const
+bool BlockDevice::read_raw(u32 offset, unsigned length, UserOrKernelBuffer& out) const
 {
     ASSERT((offset % block_size()) == 0);
     ASSERT((length % block_size()) == 0);
@@ -51,7 +51,7 @@ bool BlockDevice::read_raw(u32 offset, unsigned length, u8* out) const
     return const_cast<BlockDevice*>(this)->read_blocks(first_block, end_block - first_block, out);
 }
 
-bool BlockDevice::write_raw(u32 offset, unsigned length, const u8* in)
+bool BlockDevice::write_raw(u32 offset, unsigned length, const UserOrKernelBuffer& in)
 {
     ASSERT((offset % block_size()) == 0);
     ASSERT((length % block_size()) == 0);

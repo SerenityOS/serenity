@@ -96,8 +96,8 @@ int execve(const char* filename, char* const argv[], char* const envp[])
     auto copy_strings = [&](auto& vec, size_t count, auto& output) {
         output.length = count;
         for (size_t i = 0; vec[i]; ++i) {
-            output.strings.ptr()[i].characters = vec[i];
-            output.strings.ptr()[i].length = strlen(vec[i]);
+            output.strings[i].characters = vec[i];
+            output.strings[i].length = strlen(vec[i]);
         }
     };
 

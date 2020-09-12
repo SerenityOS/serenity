@@ -51,11 +51,9 @@ int Process::sys$donate(pid_t tid)
 int Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> user_param)
 {
     REQUIRE_PROMISE(proc);
-    if (!validate_read_typed(user_param))
-        return -EFAULT;
-
     struct sched_param desired_param;
-    copy_from_user(&desired_param, user_param);
+    if (!copy_from_user(&desired_param, user_param))
+        return -EFAULT;
 
     InterruptDisabler disabler;
     auto* peer = Thread::current();
@@ -78,9 +76,6 @@ int Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> us
 int Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_param)
 {
     REQUIRE_PROMISE(proc);
-    if (!validate_write_typed(user_param))
-        return -EFAULT;
-
     InterruptDisabler disabler;
     auto* peer = Thread::current();
     if (pid != 0) {
@@ -98,7 +93,8 @@ int Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_p
     struct sched_param param {
         (int)peer->priority()
     };
-    copy_to_user(user_param, &param);
+    if (!copy_to_user(user_param, &param))
+        return -EFAULT;
     return 0;
 }
 

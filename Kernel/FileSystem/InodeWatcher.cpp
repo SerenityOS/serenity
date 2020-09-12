@@ -57,7 +57,7 @@ bool InodeWatcher::can_write(const FileDescription&, size_t) const
     return true;
 }
 
-KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, u8* buffer, size_t buffer_size)
+KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t buffer_size)
 {
     LOCKER(m_lock);
     ASSERT(!m_queue.is_empty() || !m_inode);
@@ -68,11 +68,17 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, u8* buffer, size_
     // FIXME: What should we do if the output buffer is too small?
     ASSERT(buffer_size >= (int)sizeof(Event));
     auto event = m_queue.dequeue();
-    memcpy(buffer, &event, sizeof(event));
+    ssize_t nwritten = buffer.write_buffered<sizeof(event)>(sizeof(event), [&](u8* data, size_t data_bytes) {
+        memcpy(data, &event, sizeof(event));
+        return (ssize_t)data_bytes;
+    });
+    if (nwritten < 0)
+        return KResult(nwritten);
+    ASSERT((size_t)nwritten == sizeof(event));
     return sizeof(event);
 }
 
-KResultOr<size_t> InodeWatcher::write(FileDescription&, size_t, const u8*, size_t)
+KResultOr<size_t> InodeWatcher::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t)
 {
     return KResult(-EIO);
 }

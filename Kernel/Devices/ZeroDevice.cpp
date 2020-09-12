@@ -44,14 +44,15 @@ bool ZeroDevice::can_read(const FileDescription&, size_t) const
     return true;
 }
 
-KResultOr<size_t> ZeroDevice::read(FileDescription&, size_t, u8* buffer, size_t size)
+KResultOr<size_t> ZeroDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
     ssize_t count = min(static_cast<size_t>(PAGE_SIZE), size);
-    memset(buffer, 0, count);
+    if (!buffer.memset(0, count))
+        return KResult(-EFAULT);
     return count;
 }
 
-KResultOr<size_t> ZeroDevice::write(FileDescription&, size_t, const u8*, size_t size)
+KResultOr<size_t> ZeroDevice::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t size)
 {
     return min(static_cast<size_t>(PAGE_SIZE), size);
 }

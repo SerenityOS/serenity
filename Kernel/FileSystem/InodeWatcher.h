@@ -55,8 +55,8 @@ public:
 
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) override;
-    virtual KResultOr<size_t> write(FileDescription&, size_t, const u8*, size_t) override;
+    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
+    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override;
     virtual String absolute_path(const FileDescription&) const override;
     virtual const char* class_name() const override { return "InodeWatcher"; };
 

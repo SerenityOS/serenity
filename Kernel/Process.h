@@ -362,111 +362,6 @@ public:
     u32 m_ticks_in_user_for_dead_children { 0 };
     u32 m_ticks_in_kernel_for_dead_children { 0 };
 
-    [[nodiscard]] bool validate_read_from_kernel(VirtualAddress, size_t) const;
-
-    [[nodiscard]] bool validate_read(const void*, size_t) const;
-    [[nodiscard]] bool validate_write(void*, size_t) const;
-
-    template<typename T>
-    [[nodiscard]] bool validate_read(Userspace<T*> ptr, size_t size) const
-    {
-        return validate_read(ptr.unsafe_userspace_ptr(), size);
-    }
-
-    template<typename T>
-    [[nodiscard]] bool validate_write(Userspace<T*> ptr, size_t size) const
-    {
-        return validate_write(ptr.unsafe_userspace_ptr(), size);
-    }
-
-    template<typename T>
-    [[nodiscard]] bool validate_read_typed(T* value, size_t count = 1)
-    {
-        Checked size = sizeof(T);
-        size *= count;
-        if (size.has_overflow())
-            return false;
-        return validate_read(value, size.value());
-    }
-
-    template<typename T>
-    [[nodiscard]] bool validate_read_typed(Userspace<T*> value, size_t count = 1)
-    {
-        Checked size = sizeof(T);
-        size *= count;
-        if (size.has_overflow())
-            return false;
-        return validate_read(value, size.value());
-    }
-
-    template<typename T>
-    [[nodiscard]] bool validate_read_and_copy_typed(T* dest, const T* src)
-    {
-        bool validated = validate_read_typed(src);
-        if (validated) {
-            copy_from_user(dest, src);
-        }
-        return validated;
-    }
-
-    template<typename T>
-    [[nodiscard]] bool validate_read_and_copy_typed(T* dest, Userspace<const T*> src)
-    {
-        bool validated = validate_read_typed(src);
-        if (validated) {
-            copy_from_user(dest, src);
-        }
-        return validated;
-    }
-
-    template<typename T>
-    [[nodiscard]] bool validate_read_and_copy_typed(T* dest, Userspace<T*> src)
-    {
-        Userspace<const T*> const_src { src.ptr() };
-        return validate_read_and_copy_typed(dest, const_src);
-    }
-
-    template<typename T>
-    [[nodiscard]] bool validate_write_typed(T* value, size_t count = 1)
-    {
-        Checked size = sizeof(T);
-        size *= count;
-        if (size.has_overflow())
-            return false;
-        return validate_write(value, size.value());
-    }
-
-    template<typename T>
-    [[nodiscard]] bool validate_write_typed(Userspace<T*> value, size_t count = 1)
-    {
-        Checked size = sizeof(T);
-        size *= count;
-        if (size.has_overflow())
-            return false;
-        return validate_write(value, size.value());
-    }
-
-    template<typename DataType, typename SizeType>
-    [[nodiscard]] bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>& buffer)
-    {
-        return validate_write(buffer.data, buffer.size);
-    }
-
-    template<typename DataType, typename SizeType>
-    [[nodiscard]] bool validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>& buffer)
-    {
-        return validate_read(buffer.data, buffer.size);
-    }
-
-    [[nodiscard]] String validate_and_copy_string_from_user(const char*, size_t) const;
-
-    [[nodiscard]] String validate_and_copy_string_from_user(Userspace<const char*> user_characters, size_t size) const
-    {
-        return validate_and_copy_string_from_user(user_characters.unsafe_userspace_ptr(), size);
-    }
-
-    [[nodiscard]] String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
-
     Custody& current_directory();
     Custody* executable()
     {
@@ -582,7 +477,7 @@ private:
     void kill_all_threads();
 
     int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags);
-    ssize_t do_write(FileDescription&, const u8*, int data_size);
+    ssize_t do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<NonnullRefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size);
     Vector<AuxiliaryValue> generate_auxiliary_vector() const;
@@ -833,4 +728,9 @@ inline u32 Thread::effective_priority() const
         }                                                            \
     } while (0)
 
+}
+
+inline static String copy_string_from_user(const Kernel::Syscall::StringArgument& string)
+{
+    return copy_string_from_user(string.characters, string.length);
 }

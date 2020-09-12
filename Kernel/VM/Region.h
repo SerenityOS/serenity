@@ -79,6 +79,7 @@ public:
     unsigned access() const { return m_access; }
 
     void set_name(const String& name) { m_name = name; }
+    void set_name(String&& name) { m_name = move(name); }
 
     const VMObject& vmobject() const { return *m_vmobject; }
     VMObject& vmobject() { return *m_vmobject; }
