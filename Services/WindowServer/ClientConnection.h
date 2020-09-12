@@ -35,6 +35,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibIPC/ClientConnection.h>
 #include <WindowServer/Event.h>
+#include <WindowServer/WindowClientEndpoint.h>
 #include <WindowServer/WindowServerEndpoint.h>
 
 namespace WindowServer {
@@ -45,7 +46,7 @@ class Menu;
 class MenuBar;
 
 class ClientConnection final
-    : public IPC::ClientConnection<WindowServerEndpoint>
+    : public IPC::ClientConnection<WindowClientEndpoint, WindowServerEndpoint>
     , public WindowServerEndpoint {
     C_OBJECT(ClientConnection)
 public:

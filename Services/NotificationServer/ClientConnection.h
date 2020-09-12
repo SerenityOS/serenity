@@ -27,11 +27,12 @@
 #pragma once
 
 #include <LibIPC/ClientConnection.h>
+#include <NotificationServer/NotificationClientEndpoint.h>
 #include <NotificationServer/NotificationServerEndpoint.h>
 
 namespace NotificationServer {
 
-class ClientConnection final : public IPC::ClientConnection<NotificationServerEndpoint>
+class ClientConnection final : public IPC::ClientConnection<NotificationClientEndpoint, NotificationServerEndpoint>
     , public NotificationServerEndpoint {
     C_OBJECT(ClientConnection)
 public:

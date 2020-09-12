@@ -78,7 +78,7 @@ ClientConnection* ClientConnection::from_client_id(int client_id)
 }
 
 ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socket, int client_id)
-    : IPC::ClientConnection<WindowServerEndpoint>(*this, move(client_socket), client_id)
+    : IPC::ClientConnection<WindowClientEndpoint, WindowServerEndpoint>(*this, move(client_socket), client_id)
 {
     if (!s_connections)
         s_connections = new HashMap<int, NonnullRefPtr<ClientConnection>>;

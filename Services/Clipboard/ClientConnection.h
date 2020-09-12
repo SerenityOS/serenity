@@ -27,13 +27,16 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
 #include <LibIPC/ClientConnection.h>
 
 namespace Clipboard {
 
-class ClientConnection final : public IPC::ClientConnection<ClipboardServerEndpoint>
+class ClientConnection final
+    : public IPC::ClientConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>
     , public ClipboardServerEndpoint {
+
     C_OBJECT(ClientConnection);
 
 public:
