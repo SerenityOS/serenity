@@ -62,9 +62,11 @@ public:
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
     void move_cursor_relative(int steps, SelectionUpdate);
 
-private:
+protected:
     ListView();
+    virtual void paint_list_item(Painter&, int row_index, int painted_item_index);
 
+private:
     virtual void did_update_model(unsigned flags) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void keydown_event(KeyEvent&) override;

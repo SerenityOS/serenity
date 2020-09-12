@@ -33,6 +33,7 @@
 #include "FindInFilesWidget.h"
 #include "FormEditorWidget.h"
 #include "FormWidget.h"
+#include "Git/GitWidget.h"
 #include "HackStudio.h"
 #include "Locator.h"
 #include "Project.h"
@@ -192,6 +193,7 @@ static int main_impl(int argc, char** argv)
     }
 
     Function<void()> update_actions;
+    Function<void()> on_action_tab_change;
 
     g_window = GUI::Window::construct();
     g_window->resize(840, 600);
@@ -501,7 +503,14 @@ static int main_impl(int argc, char** argv)
     s_action_tab_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     s_action_tab_widget->set_preferred_size(0, 24);
 
-    s_action_tab_widget->on_change = [&](auto&) { update_actions(); };
+    s_action_tab_widget->on_change = [&](auto&) {
+        on_action_tab_change();
+
+        static bool first_time = true;
+        if (!first_time)
+            s_action_tab_widget->set_preferred_size(0, 200);
+        first_time = false;
+    };
 
     auto reveal_action_tab = [&](auto& widget) {
         if (s_action_tab_widget->preferred_size().height() < 200)
@@ -551,6 +560,8 @@ static int main_impl(int argc, char** argv)
     auto& terminal_wrapper = s_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
     auto& debug_info_widget = s_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
     auto& disassembly_widget = s_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
+    auto& git_widget = s_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(g_project->root_directory()));
+    (void)git_widget;
 
     auto& locator = widget.add<Locator>();
 
@@ -700,7 +711,7 @@ static int main_impl(int argc, char** argv)
             auto widget = s_action_tab_widget->active_widget();
             if (!widget)
                 return false;
-            if (strcmp(widget->class_name(), "TerminalWrapper") != 0)
+            if (StringView { "TerminalWrapper" } != widget->class_name())
                 return false;
             if (!reinterpret_cast<TerminalWrapper*>(widget)->user_spawned())
                 return false;
@@ -709,6 +720,16 @@ static int main_impl(int argc, char** argv)
 
         remove_current_editor_action->set_enabled(g_all_editor_wrappers.size() > 1);
         remove_current_terminal_action->set_enabled(is_remove_terminal_enabled());
+    };
+
+    on_action_tab_change = [&]() {
+        update_actions();
+        auto git_widget = s_action_tab_widget->active_widget();
+        if (!git_widget)
+            return;
+        if (StringView { "GitWidget" } != git_widget->class_name())
+            return;
+        reinterpret_cast<GitWidget*>(git_widget)->refresh();
     };
 
     g_open_file = open_file;

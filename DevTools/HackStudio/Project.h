@@ -27,6 +27,7 @@
 #pragma once
 
 #include "ProjectFile.h"
+#include <AK/LexicalPath.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
@@ -61,6 +62,7 @@ public:
     String default_file() const;
     String name() const { return m_name; }
     String path() const { return m_path; }
+    String root_directory() const { return LexicalPath(m_path).dirname(); }
 
     template<typename Callback>
     void for_each_text_file(Callback callback) const

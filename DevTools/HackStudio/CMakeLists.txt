@@ -1,5 +1,9 @@
 set(SOURCES
     CursorTool.cpp
+    Git/GitWidget.cpp
+    Git/GitFilesModel.cpp
+    Git/GitRepo.cpp
+    Git/GitFilesView.cpp
     Debugger/BacktraceModel.cpp
     Debugger/Debugger.cpp
     Debugger/DebugInfoWidget.cpp
