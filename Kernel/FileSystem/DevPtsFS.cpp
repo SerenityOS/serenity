@@ -120,12 +120,12 @@ DevPtsFSInode::~DevPtsFSInode()
 {
 }
 
-ssize_t DevPtsFSInode::read_bytes(off_t, ssize_t, u8*, FileDescription*) const
+ssize_t DevPtsFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t DevPtsFSInode::write_bytes(off_t, ssize_t, const u8*, FileDescription*)
+ssize_t DevPtsFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*)
 {
     ASSERT_NOT_REACHED();
 }

@@ -31,16 +31,14 @@ namespace Kernel {
 clock_t Process::sys$times(Userspace<tms*> user_times)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_write_typed(user_times))
-        return -EFAULT;
-
     tms times = {};
     times.tms_utime = m_ticks_in_user;
     times.tms_stime = m_ticks_in_kernel;
     times.tms_cutime = m_ticks_in_user_for_dead_children;
     times.tms_cstime = m_ticks_in_kernel_for_dead_children;
 
-    copy_to_user(user_times, &times);
+    if (!copy_to_user(user_times, &times))
+        return -EFAULT;
 
     return g_uptime & 0x7fffffff;
 }

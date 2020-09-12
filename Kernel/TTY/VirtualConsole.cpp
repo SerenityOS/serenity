@@ -241,14 +241,17 @@ void VirtualConsole::on_key_pressed(KeyboardDevice::Event event)
     m_terminal.handle_key_press(event.key, event.code_point, event.flags);
 }
 
-ssize_t VirtualConsole::on_tty_write(const u8* data, ssize_t size)
+ssize_t VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, ssize_t size)
 {
     ScopedSpinLock lock(s_lock);
-    for (ssize_t i = 0; i < size; ++i)
-        m_terminal.on_input(data[i]);
+    ssize_t nread = data.read_buffered<512>((size_t)size, [&](const u8* buffer, size_t buffer_bytes) {
+        for (size_t i = 0; i < buffer_bytes; ++i)
+            m_terminal.on_input(buffer[i]);
+        return (ssize_t)buffer_bytes;
+    });
     if (m_active)
         flush_dirty_lines();
-    return size;
+    return nread;
 }
 
 void VirtualConsole::set_vga_start_row(u16 row)
@@ -336,7 +339,8 @@ void VirtualConsole::emit(const u8* data, size_t size)
 void VirtualConsole::echo(u8 ch)
 {
     if (should_echo_input()) {
-        on_tty_write(&ch, 1);
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
+        on_tty_write(buffer, 1);
     }
 }
 

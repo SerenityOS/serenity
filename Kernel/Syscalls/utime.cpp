@@ -33,14 +33,13 @@ namespace Kernel {
 int Process::sys$utime(Userspace<const char*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
 {
     REQUIRE_PROMISE(fattr);
-    if (user_buf && !validate_read_typed(user_buf))
-        return -EFAULT;
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
     utimbuf buf;
     if (user_buf) {
-        copy_from_user(&buf, user_buf);
+        if (!copy_from_user(&buf, user_buf))
+            return -EFAULT;
     } else {
         auto now = kgettimeofday();
         buf = { now.tv_sec, now.tv_sec };

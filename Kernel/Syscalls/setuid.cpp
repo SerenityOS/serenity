@@ -125,8 +125,6 @@ int Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> user_gids)
         return -EINVAL;
     if (!is_superuser())
         return -EPERM;
-    if (count && !validate_read(user_gids, count))
-        return -EFAULT;
 
     if (!count) {
         m_extra_gids.clear();
@@ -135,7 +133,8 @@ int Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> user_gids)
 
     Vector<gid_t> gids;
     gids.resize(count);
-    copy_from_user(gids.data(), user_gids, sizeof(gid_t) * count);
+    if (!copy_from_user(gids.data(), user_gids.unsafe_userspace_ptr(), sizeof(gid_t) * count))
+        return -EFAULT;
 
     HashTable<gid_t> unique_extra_gids;
     for (auto& gid : gids) {

@@ -520,24 +520,6 @@ int Process::fd_flags(int fd) const
     return -1;
 }
 
-String Process::validate_and_copy_string_from_user(const char* user_characters, size_t user_length) const
-{
-    if (user_length == 0)
-        return String::empty();
-    if (!user_characters)
-        return {};
-    if (!validate_read(user_characters, user_length))
-        return {};
-    SmapDisabler disabler;
-    size_t measured_length = strnlen(user_characters, user_length);
-    return String(user_characters, measured_length);
-}
-
-String Process::validate_and_copy_string_from_user(const Syscall::StringArgument& string) const
-{
-    return validate_and_copy_string_from_user(string.characters, string.length);
-}
-
 int Process::number_of_open_file_descriptors() const
 {
     int count = 0;
@@ -602,27 +584,6 @@ siginfo_t Process::reap(Process& process)
     return siginfo;
 }
 
-bool Process::validate_read_from_kernel(VirtualAddress vaddr, size_t size) const
-{
-    if (vaddr.is_null())
-        return false;
-    return MM.validate_kernel_read(*this, vaddr, size);
-}
-
-bool Process::validate_read(const void* address, size_t size) const
-{
-    if (!size)
-        return false;
-    return MM.validate_user_read(*this, VirtualAddress(address), size);
-}
-
-bool Process::validate_write(void* address, size_t size) const
-{
-    if (!size)
-        return false;
-    return MM.validate_user_write(*this, VirtualAddress(address), size);
-}
-
 Custody& Process::current_directory()
 {
     if (!m_cwd)
@@ -636,9 +597,10 @@ KResultOr<String> Process::get_syscall_path_argument(const char* user_path, size
         return KResult(-EINVAL);
     if (path_length > PATH_MAX)
         return KResult(-ENAMETOOLONG);
-    if (!validate_read(user_path, path_length))
+    auto copied_string = copy_string_from_user(user_path, path_length);
+    if (copied_string.is_null())
         return KResult(-EFAULT);
-    return copy_string_from_user(user_path, path_length);
+    return copied_string;
 }
 
 KResultOr<String> Process::get_syscall_path_argument(const Syscall::StringArgument& path) const
@@ -659,7 +621,8 @@ void Process::finalize()
             auto& description = description_or_error.value();
             auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
             // FIXME: Should this error path be surfaced somehow?
-            (void)description->write(json.data(), json.size());
+            auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json.data());
+            (void)description->write(json_buffer, json.size());
         }
     }
 

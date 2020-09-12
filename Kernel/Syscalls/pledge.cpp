@@ -32,7 +32,7 @@ namespace Kernel {
 int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 {
     Syscall::SC_pledge_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     if (params.promises.length > 1024 || params.execpromises.length > 1024)
@@ -40,14 +40,14 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 
     String promises;
     if (params.promises.characters) {
-        promises = validate_and_copy_string_from_user(params.promises);
+        auto promises = copy_string_from_user(params.promises);
         if (promises.is_null())
             return -EFAULT;
     }
 
     String execpromises;
     if (params.execpromises.characters) {
-        execpromises = validate_and_copy_string_from_user(params.execpromises);
+        execpromises = copy_string_from_user(params.execpromises);
         if (execpromises.is_null())
             return -EFAULT;
     }

@@ -36,16 +36,19 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     if (iov_count < 0)
         return -EINVAL;
 
-    if (!validate_read_typed(iov, iov_count))
-        return -EFAULT;
+    {
+        Checked checked_iov_count = sizeof(iovec);
+        checked_iov_count *= iov_count;
+        if (checked_iov_count.has_overflow())
+            return -EFAULT;
+    }
 
     u64 total_length = 0;
     Vector<iovec, 32> vecs;
     vecs.resize(iov_count);
-    copy_from_user(vecs.data(), iov, iov_count * sizeof(iovec));
+    if (!copy_n_from_user(vecs.data(), iov, iov_count))
+        return -EFAULT;
     for (auto& vec : vecs) {
-        if (!validate_read(vec.iov_base, vec.iov_len))
-            return -EFAULT;
         total_length += vec.iov_len;
         if (total_length > NumericLimits<i32>::max())
             return -EINVAL;
@@ -60,7 +63,10 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
 
     int nwritten = 0;
     for (auto& vec : vecs) {
-        int rc = do_write(*description, (const u8*)vec.iov_base, vec.iov_len);
+        auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
+        if (!buffer.has_value())
+            return -EFAULT;
+        int rc = do_write(*description, buffer.value(), vec.iov_len);
         if (rc < 0) {
             if (nwritten == 0)
                 return rc;
@@ -72,7 +78,7 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     return nwritten;
 }
 
-ssize_t Process::do_write(FileDescription& description, const u8* data, int data_size)
+ssize_t Process::do_write(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
 {
     ssize_t total_nwritten = 0;
     if (!description.is_blocking()) {
@@ -83,7 +89,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
     if (description.should_append())
         description.seek(0, SEEK_END);
 
-    while (total_nwritten < data_size) {
+    while ((size_t)total_nwritten < data_size) {
         if (!description.can_write()) {
             if (!description.is_blocking()) {
                 // Short write: We can no longer write to this non-blocking description.
@@ -95,7 +101,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
                     return -EINTR;
             }
         }
-        auto nwritten_or_error = description.write(data + total_nwritten, data_size - total_nwritten);
+        auto nwritten_or_error = description.write(data.offset(total_nwritten), data_size - total_nwritten);
         if (nwritten_or_error.is_error()) {
             if (total_nwritten)
                 return total_nwritten;
@@ -115,8 +121,7 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
         return -EINVAL;
     if (size == 0)
         return 0;
-    if (!validate_read(data, size))
-        return -EFAULT;
+
 #ifdef DEBUG_IO
     dbg() << "sys$write(" << fd << ", " << (const void*)(data) << ", " << size << ")";
 #endif
@@ -126,7 +131,10 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
     if (!description->is_writable())
         return -EBADF;
 
-    return do_write(*description, data, size);
+    auto buffer = UserOrKernelBuffer::for_user_buffer(const_cast<u8*>(data), (size_t)size);
+    if (!buffer.has_value())
+        return -EFAULT;
+    return do_write(*description, buffer.value(), size);
 }
 
 }

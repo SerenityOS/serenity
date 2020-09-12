@@ -37,24 +37,19 @@ int Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_p
         return -EPERM;
 
     Syscall::SC_setkeymap_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     Keyboard::CharacterMapData character_map_data;
 
-    if (!validate_read(params.map, CHAR_MAP_SIZE))
+    if (!copy_from_user(character_map_data.map, params.map, CHAR_MAP_SIZE * sizeof(u32)))
         return -EFAULT;
-    if (!validate_read(params.shift_map, CHAR_MAP_SIZE))
+    if (!copy_from_user(character_map_data.shift_map, params.shift_map, CHAR_MAP_SIZE * sizeof(u32)))
         return -EFAULT;
-    if (!validate_read(params.alt_map, CHAR_MAP_SIZE))
+    if (!copy_from_user(character_map_data.alt_map, params.alt_map, CHAR_MAP_SIZE * sizeof(u32)))
         return -EFAULT;
-    if (!validate_read(params.altgr_map, CHAR_MAP_SIZE))
+    if (!copy_from_user(character_map_data.altgr_map, params.altgr_map, CHAR_MAP_SIZE * sizeof(u32)))
         return -EFAULT;
-
-    copy_from_user(character_map_data.map, params.map, CHAR_MAP_SIZE * sizeof(u32));
-    copy_from_user(character_map_data.shift_map, params.shift_map, CHAR_MAP_SIZE * sizeof(u32));
-    copy_from_user(character_map_data.alt_map, params.alt_map, CHAR_MAP_SIZE * sizeof(u32));
-    copy_from_user(character_map_data.altgr_map, params.altgr_map, CHAR_MAP_SIZE * sizeof(u32));
 
     auto map_name = get_syscall_path_argument(params.map_name);
     if (map_name.is_error()) {

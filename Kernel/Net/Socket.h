@@ -99,7 +99,7 @@ public:
     KResult shutdown(int how);
 
     virtual KResult bind(Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock) = 0;
+    virtual KResult connect(FileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock) = 0;
     virtual KResult listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;
     virtual void get_peer_address(sockaddr*, socklen_t*) = 0;
@@ -107,8 +107,8 @@ public:
     virtual bool is_ipv4() const { return false; }
     virtual void attach(FileDescription&) = 0;
     virtual void detach(FileDescription&) = 0;
-    virtual KResultOr<size_t> sendto(FileDescription&, const void*, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual KResultOr<size_t> recvfrom(FileDescription&, void*, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>) = 0;
+    virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
+    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>) = 0;
 
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t);
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
@@ -124,8 +124,8 @@ public:
     Lock& lock() { return m_lock; }
 
     // ^File
-    virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) override final;
-    virtual KResultOr<size_t> write(FileDescription&, size_t, const u8*, size_t) override final;
+    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override final;
+    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override final;
     virtual KResult stat(::stat&) const override;
     virtual String absolute_path(const FileDescription&) const override = 0;
 

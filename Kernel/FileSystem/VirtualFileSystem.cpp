@@ -707,7 +707,8 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
     if (inode_or_error.is_error())
         return inode_or_error.error();
     auto& inode = inode_or_error.value();
-    ssize_t nwritten = inode->write_bytes(0, target.length(), (const u8*)target.characters_without_null_termination(), nullptr);
+    auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)target.characters_without_null_termination()));
+    ssize_t nwritten = inode->write_bytes(0, target.length(), target_buffer, nullptr);
     if (nwritten < 0)
         return KResult(nwritten);
     return KSuccess;

@@ -37,7 +37,7 @@ class SlavePTY final : public TTY {
 public:
     virtual ~SlavePTY() override;
 
-    void on_master_write(const u8*, ssize_t);
+    void on_master_write(const UserOrKernelBuffer&, ssize_t);
     unsigned index() const { return m_index; }
 
     time_t time_of_last_write() const { return m_time_of_last_write; }
@@ -45,12 +45,12 @@ public:
 private:
     // ^TTY
     virtual String tty_name() const override;
-    virtual ssize_t on_tty_write(const u8*, ssize_t) override;
+    virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) override;
     virtual void echo(u8) override;
 
     // ^CharacterDevice
     virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) override;
+    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual const char* class_name() const override { return "SlavePTY"; }
     virtual KResult close() override;

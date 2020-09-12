@@ -34,6 +34,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/UserOrKernelBuffer.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
@@ -77,8 +78,8 @@ public:
     virtual bool can_read(const FileDescription&, size_t) const = 0;
     virtual bool can_write(const FileDescription&, size_t) const = 0;
 
-    virtual KResultOr<size_t> read(FileDescription&, size_t, u8*, size_t) = 0;
-    virtual KResultOr<size_t> write(FileDescription&, size_t, const u8*, size_t) = 0;
+    virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) = 0;
+    virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) = 0;
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg);
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot, bool shared);
     virtual KResult stat(::stat&) const { return KResult(-EBADF); }

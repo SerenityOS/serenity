@@ -369,7 +369,7 @@ bool KeyboardDevice::can_read(const FileDescription&, size_t) const
     return !m_queue.is_empty();
 }
 
-KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, u8* buffer, size_t size)
+KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
     size_t nread = 0;
     while (nread < size) {
@@ -379,13 +379,19 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, u8* buffer, siz
         if ((size - nread) < (ssize_t)sizeof(Event))
             break;
         auto event = m_queue.dequeue();
-        memcpy(buffer, &event, sizeof(Event));
+        ssize_t n = buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](u8* data, size_t data_bytes) {
+            memcpy(data, &event, sizeof(Event));
+            return (ssize_t)data_bytes;
+        });
+        if (n < 0)
+            return KResult(n);
+        ASSERT((size_t)n == sizeof(Event));
         nread += sizeof(Event);
     }
     return nread;
 }
 
-KResultOr<size_t> KeyboardDevice::write(FileDescription&, size_t, const u8*, size_t)
+KResultOr<size_t> KeyboardDevice::write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t)
 {
     return 0;
 }

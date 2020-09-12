@@ -651,7 +651,7 @@ void Scheduler::initialize()
     ASSERT(s_colonel_process);
     ASSERT(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
-    idle_thread->set_name("idle thread #0");
+    idle_thread->set_name(StringView("idle thread #0"));
 
     set_idle_thread(idle_thread);
 }

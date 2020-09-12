@@ -169,7 +169,7 @@ int Process::sys$module_unload(Userspace<const char*> user_name, size_t name_len
 
     REQUIRE_NO_PROMISES;
 
-    auto module_name = validate_and_copy_string_from_user(user_name, name_length);
+    auto module_name = copy_string_from_user(user_name, name_length);
     if (module_name.is_null())
         return -EFAULT;
 

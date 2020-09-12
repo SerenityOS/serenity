@@ -48,7 +48,7 @@ DiskPartition::~DiskPartition()
 {
 }
 
-KResultOr<size_t> DiskPartition::read(FileDescription& fd, size_t offset, u8* outbuf, size_t len)
+KResultOr<size_t> DiskPartition::read(FileDescription& fd, size_t offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     unsigned adjust = m_block_offset * block_size();
 
@@ -70,7 +70,7 @@ bool DiskPartition::can_read(const FileDescription& fd, size_t offset) const
     return m_device->can_read(fd, offset + adjust);
 }
 
-KResultOr<size_t> DiskPartition::write(FileDescription& fd, size_t offset, const u8* inbuf, size_t len)
+KResultOr<size_t> DiskPartition::write(FileDescription& fd, size_t offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
     unsigned adjust = m_block_offset * block_size();
 
@@ -92,7 +92,7 @@ bool DiskPartition::can_write(const FileDescription& fd, size_t offset) const
     return m_device->can_write(fd, offset + adjust);
 }
 
-bool DiskPartition::read_blocks(unsigned index, u16 count, u8* out)
+bool DiskPartition::read_blocks(unsigned index, u16 count, UserOrKernelBuffer& out)
 {
 #ifdef OFFD_DEBUG
     klog() << "DiskPartition::read_blocks " << index << " (really: " << (m_block_offset + index) << ") count=" << count;
@@ -101,7 +101,7 @@ bool DiskPartition::read_blocks(unsigned index, u16 count, u8* out)
     return m_device->read_blocks(m_block_offset + index, count, out);
 }
 
-bool DiskPartition::write_blocks(unsigned index, u16 count, const u8* data)
+bool DiskPartition::write_blocks(unsigned index, u16 count, const UserOrKernelBuffer& data)
 {
 #ifdef OFFD_DEBUG
     klog() << "DiskPartition::write_blocks " << index << " (really: " << (m_block_offset + index) << ") count=" << count;

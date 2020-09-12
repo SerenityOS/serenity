@@ -36,22 +36,16 @@ namespace Kernel {
 int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::SC_create_thread_params*> user_params)
 {
     REQUIRE_PROMISE(thread);
-    if (!validate_read((const void*)entry, sizeof(void*)))
-        return -EFAULT;
 
     Syscall::SC_create_thread_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     unsigned detach_state = params.m_detach_state;
     int schedule_priority = params.m_schedule_priority;
-    Userspace<void*> stack_location = params.m_stack_location;
     unsigned stack_size = params.m_stack_size;
 
-    if (!validate_write(stack_location, stack_size))
-        return -EFAULT;
-
-    u32 user_stack_address = reinterpret_cast<u32>(stack_location.ptr()) + stack_size;
+    auto user_stack_address = (u8*)params.m_stack_location + stack_size;
 
     if (!MM.validate_user_stack(*this, VirtualAddress(user_stack_address - 4)))
         return -EFAULT;
@@ -83,7 +77,7 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     tss.eip = (FlatPtr)entry;
     tss.eflags = 0x0202;
     tss.cr3 = page_directory().cr3();
-    tss.esp = user_stack_address;
+    tss.esp = (u32)user_stack_address;
 
     thread->make_thread_specific_region({});
     thread->set_state(Thread::State::Runnable);
@@ -120,8 +114,6 @@ int Process::sys$detach_thread(pid_t tid)
 int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
 {
     REQUIRE_PROMISE(thread);
-    if (exit_value && !validate_write_typed(exit_value))
-        return -EFAULT;
 
     InterruptDisabler disabler;
     auto* thread = Thread::from_tid(tid);
@@ -164,15 +156,15 @@ int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
     // NOTE: 'thread' is very possibly deleted at this point. Clear it just to be safe.
     thread = nullptr;
 
-    if (exit_value)
-        copy_to_user(exit_value, &joinee_exit_value);
+    if (exit_value && !copy_to_user(exit_value, &joinee_exit_value))
+       return -EFAULT;
     return 0;
 }
 
 int Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
 {
     REQUIRE_PROMISE(thread);
-    auto name = validate_and_copy_string_from_user(user_name, user_name_length);
+    auto name = copy_string_from_user(user_name, user_name_length);
     if (name.is_null())
         return -EFAULT;
 
@@ -185,7 +177,7 @@ int Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, si
     if (!thread || thread->pid() != pid())
         return -ESRCH;
 
-    thread->set_name(name);
+    thread->set_name(move(name));
     return 0;
 }
 
@@ -195,9 +187,6 @@ int Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buff
     if (buffer_size == 0)
         return -EINVAL;
 
-    if (!validate_write(buffer, buffer_size))
-        return -EFAULT;
-
     InterruptDisabler disabler;
     auto* thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
@@ -206,7 +195,8 @@ int Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buff
     if (thread->name().length() + 1 > (size_t)buffer_size)
         return -ENAMETOOLONG;
 
-    copy_to_user(buffer, thread->name().characters(), thread->name().length() + 1);
+    if (!copy_to_user(buffer, thread->name().characters(), thread->name().length() + 1))
+        return -EFAULT;
     return 0;
 }
 

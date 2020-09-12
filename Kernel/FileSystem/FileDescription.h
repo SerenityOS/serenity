@@ -60,8 +60,8 @@ public:
     KResult close();
 
     off_t seek(off_t, int whence);
-    KResultOr<size_t> read(u8*, size_t);
-    KResultOr<size_t> write(const u8* data, size_t);
+    KResultOr<size_t> read(UserOrKernelBuffer&, size_t);
+    KResultOr<size_t> write(const UserOrKernelBuffer& data, size_t);
     KResult stat(::stat&);
 
     KResult chmod(mode_t);
@@ -69,7 +69,7 @@ public:
     bool can_read() const;
     bool can_write() const;
 
-    ssize_t get_dir_entries(u8* buffer, ssize_t);
+    ssize_t get_dir_entries(UserOrKernelBuffer& buffer, ssize_t);
 
     KResultOr<KBuffer> read_entire_file();
 

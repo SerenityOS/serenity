@@ -55,21 +55,19 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
     REQUIRE_PROMISE(thread);
 
     Syscall::SC_futex_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
-        return -EFAULT;
-
-    if (!validate_read_typed(params.userspace_address))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     switch (params.futex_op) {
     case FUTEX_WAIT: {
         i32 user_value;
-        copy_from_user(&user_value, params.userspace_address);
+        if (!copy_from_user(&user_value, params.userspace_address))
+            return -EFAULT;
         if (user_value != params.val)
             return -EAGAIN;
 
         timespec ts_abstimeout { 0, 0 };
-        if (params.timeout && !validate_read_and_copy_typed(&ts_abstimeout, params.timeout))
+        if (params.timeout && !copy_from_user(&ts_abstimeout, params.timeout))
             return -EFAULT;
 
         timeval* optional_timeout = nullptr;
@@ -80,7 +78,7 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         }
 
         // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
-        WaitQueue& wait_queue = futex_queue(params.userspace_address);
+        WaitQueue& wait_queue = futex_queue((FlatPtr)params.userspace_address);
         Thread::BlockResult result = Thread::current()->wait_on(wait_queue, "Futex", optional_timeout);
         if (result == Thread::BlockResult::InterruptedByTimeout) {
             return -ETIMEDOUT;
@@ -92,9 +90,9 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         if (params.val == 0)
             return 0;
         if (params.val == 1) {
-            futex_queue(params.userspace_address).wake_one();
+            futex_queue((FlatPtr)params.userspace_address).wake_one();
         } else {
-            futex_queue(params.userspace_address).wake_n(params.val);
+            futex_queue((FlatPtr)params.userspace_address).wake_n(params.val);
         }
         break;
     }

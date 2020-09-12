@@ -43,14 +43,15 @@ int Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
     REQUIRE_NO_PROMISES;
 
     Syscall::SC_mount_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
+    if (!copy_from_user(&params, user_params))
         return -EFAULT;
 
     auto source_fd = params.source_fd;
-    auto target = validate_and_copy_string_from_user(params.target);
-    auto fs_type = validate_and_copy_string_from_user(params.fs_type);
-
+    auto target = copy_string_from_user(params.target);
     if (target.is_null())
+        return -EFAULT;
+    auto fs_type = copy_string_from_user(params.fs_type);
+    if (fs_type.is_null())
         return -EFAULT;
 
     auto description = file_description(source_fd);
@@ -128,9 +129,6 @@ int Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoin
         return -EPERM;
 
     REQUIRE_NO_PROMISES;
-
-    if (!validate_read(user_mountpoint, mountpoint_length))
-        return -EFAULT;
 
     auto mountpoint = get_syscall_path_argument(user_mountpoint, mountpoint_length);
     if (mountpoint.is_error())
