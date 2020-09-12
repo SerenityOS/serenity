@@ -132,6 +132,7 @@ set(SOURCES
     Layout/LayoutBlock.cpp
     Layout/LayoutBox.cpp
     Layout/LayoutBreak.cpp
+    Layout/LayoutButton.cpp
     Layout/LayoutCanvas.cpp
     Layout/LayoutCheckBox.cpp
     Layout/LayoutDocument.cpp

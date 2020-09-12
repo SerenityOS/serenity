@@ -93,6 +93,7 @@ public:
     virtual bool is_table_row_group() const { return false; }
     virtual bool is_break() const { return false; }
     virtual bool is_check_box() const { return false; }
+    virtual bool is_button() const { return false; }
     bool has_style() const { return m_has_style; }
 
     bool is_inline() const { return m_inline; }

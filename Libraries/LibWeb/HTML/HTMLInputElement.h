@@ -48,6 +48,8 @@ public:
 
     bool enabled() const;
 
+    void did_click_button(Badge<LayoutButton>);
+
 private:
     bool m_checked { false };
 };
