@@ -46,12 +46,6 @@ NonnullRefPtr<IRCQuery> IRCQuery::create(IRCClient& client, const String& name)
     return adopt(*new IRCQuery(client, name));
 }
 
-void IRCQuery::dump() const
-{
-    printf("IRCQuery{%p}: %s\n", this, m_name.characters());
-    log().dump();
-}
-
 void IRCQuery::add_message(char prefix, const String& name, const String& text, Color color)
 {
     log().add_message(prefix, name, text, color);

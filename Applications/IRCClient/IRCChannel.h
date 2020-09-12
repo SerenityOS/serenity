@@ -52,8 +52,6 @@ public:
     void add_message(char prefix, const String& name, const String& text, Color = Color::Black);
     void add_message(const String& text, Color = Color::Black);
 
-    void dump() const;
-
     void say(const String&);
 
     const IRCLogBuffer& log() const { return *m_log; }
