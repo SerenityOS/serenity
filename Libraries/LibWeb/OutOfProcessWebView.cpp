@@ -27,6 +27,7 @@
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
 #include <AK/SharedBuffer.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
@@ -177,6 +178,11 @@ void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebC
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
+}
+
+void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, const String& message)
+{
+    GUI::MessageBox::show(window(), message, "Alert", GUI::MessageBox::Type::Information);
 }
 
 void OutOfProcessWebView::did_scroll()

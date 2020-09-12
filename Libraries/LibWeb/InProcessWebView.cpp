@@ -31,6 +31,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
@@ -43,6 +44,7 @@
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/LayoutBreak.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutNode.h>
@@ -50,7 +52,6 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 #include <stdio.h>
@@ -414,6 +415,11 @@ void InProcessWebView::drop_event(GUI::DropEvent& event)
         }
     }
     ScrollableWidget::drop_event(event);
+}
+
+void InProcessWebView::page_did_request_alert(const String& message)
+{
+    GUI::MessageBox::show(window(), message, "Alert", GUI::MessageBox::Type::Information);
 }
 
 }

@@ -169,4 +169,9 @@ void PageHost::page_did_request_link_context_menu(const Gfx::IntPoint& content_p
     m_client.post_message(Messages::WebContentClient::DidRequestLinkContextMenu(content_position, url, target, modifiers));
 }
 
+void PageHost::page_did_request_alert(const String& message)
+{
+    m_client.send_sync<Messages::WebContentClient::DidRequestAlert>(message);
+}
+
 }

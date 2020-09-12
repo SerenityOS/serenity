@@ -57,7 +57,9 @@ void Window::set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject& 
 
 void Window::alert(const String& message)
 {
-    GUI::MessageBox::show(nullptr, message, "Alert", GUI::MessageBox::Type::Information);
+    if (!m_document.frame())
+        return;
+    m_document.frame()->page().client().page_did_request_alert(message);
 }
 
 bool Window::confirm(const String& message)
