@@ -30,12 +30,13 @@
 #include <LibIPC/ClientConnection.h>
 #include <LibWeb/Forward.h>
 #include <WebContent/Forward.h>
+#include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
 namespace WebContent {
 
 class ClientConnection final
-    : public IPC::ClientConnection<WebContentServerEndpoint>
+    : public IPC::ClientConnection<WebContentClientEndpoint, WebContentServerEndpoint>
     , public WebContentServerEndpoint {
     C_OBJECT(ClientConnection);
 

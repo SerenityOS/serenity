@@ -29,12 +29,13 @@
 #include <AK/HashMap.h>
 #include <LibIPC/ClientConnection.h>
 #include <ProtocolServer/Forward.h>
+#include <ProtocolServer/ProtocolClientEndpoint.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 
 namespace ProtocolServer {
 
 class ClientConnection final
-    : public IPC::ClientConnection<ProtocolServerEndpoint>
+    : public IPC::ClientConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>
     , public ProtocolServerEndpoint {
     C_OBJECT(ClientConnection);
 

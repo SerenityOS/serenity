@@ -36,7 +36,7 @@ namespace ProtocolServer {
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
 ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ClientConnection<ProtocolServerEndpoint>(*this, move(socket), client_id)
+    : IPC::ClientConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);
 }

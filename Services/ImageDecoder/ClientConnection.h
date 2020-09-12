@@ -28,6 +28,7 @@
 
 #include <AK/HashMap.h>
 #include <ImageDecoder/Forward.h>
+#include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <ImageDecoder/ImageDecoderServerEndpoint.h>
 #include <LibIPC/ClientConnection.h>
 #include <LibWeb/Forward.h>
@@ -35,7 +36,7 @@
 namespace ImageDecoder {
 
 class ClientConnection final
-    : public IPC::ClientConnection<ImageDecoderServerEndpoint>
+    : public IPC::ClientConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>
     , public ImageDecoderServerEndpoint {
     C_OBJECT(ClientConnection);
 

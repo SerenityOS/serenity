@@ -26,12 +26,13 @@
 
 #pragma once
 
+#include <LaunchServer/LaunchClientEndpoint.h>
 #include <LaunchServer/LaunchServerEndpoint.h>
 #include <LibIPC/ClientConnection.h>
 
 namespace LaunchServer {
 
-class ClientConnection final : public IPC::ClientConnection<LaunchServerEndpoint>
+class ClientConnection final : public IPC::ClientConnection<LaunchClientEndpoint, LaunchServerEndpoint>
     , public LaunchServerEndpoint {
     C_OBJECT(ClientConnection)
 public:

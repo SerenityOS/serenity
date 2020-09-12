@@ -32,6 +32,7 @@
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/SyscallUtils.h>
+#include <LibIPC/Connection.h>
 #include <LibIPC/Message.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,159 +43,44 @@
 
 namespace IPC {
 
-template<typename LocalEndpoint, typename PeerEndpoint>
-class ServerConnection : public Core::Object {
+template<typename ClientEndpoint, typename ServerEndpoint>
+class ServerConnection : public IPC::Connection<ClientEndpoint, ServerEndpoint> {
 public:
-    ServerConnection(LocalEndpoint& local_endpoint, const StringView& address)
-        : m_local_endpoint(local_endpoint)
-        , m_connection(Core::LocalSocket::construct(this))
-        , m_notifier(Core::Notifier::construct(m_connection->fd(), Core::Notifier::Read, this))
+    ServerConnection(ClientEndpoint& local_endpoint, const StringView& address)
+        : Connection<ClientEndpoint, ServerEndpoint>(local_endpoint, Core::LocalSocket::construct())
     {
         // We want to rate-limit our clients
-        m_connection->set_blocking(true);
-        m_notifier->on_ready_to_read = [this] {
-            drain_messages_from_server();
-            handle_messages();
+        this->socket().set_blocking(true);
+        this->notifier().on_ready_to_read = [this] {
+            this->drain_messages_from_peer();
+            this->handle_messages();
         };
 
-        if (!m_connection->connect(Core::SocketAddress::local(address))) {
+        if (!this->socket().connect(Core::SocketAddress::local(address))) {
             perror("connect");
             ASSERT_NOT_REACHED();
         }
 
-        ucred creds;
-        socklen_t creds_size = sizeof(creds);
-        if (getsockopt(m_connection->fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
-            ASSERT_NOT_REACHED();
-        }
-        m_server_pid = creds.pid;
+        ASSERT(this->socket().is_connected());
 
-        ASSERT(m_connection->is_connected());
+        this->initialize_peer_info();
     }
 
     virtual void handshake() = 0;
 
-    pid_t server_pid() const { return m_server_pid; }
-    void set_server_pid(pid_t pid) { m_server_pid = pid; }
+    pid_t server_pid() const { return this->peer_pid(); }
+    void set_server_pid(pid_t pid) { this->set_peer_pid(pid); }
 
     void set_my_client_id(int id) { m_my_client_id = id; }
     int my_client_id() const { return m_my_client_id; }
 
-    template<typename MessageType>
-    OwnPtr<MessageType> wait_for_specific_message()
+    virtual void die() override
     {
-        return wait_for_specific_endpoint_message<MessageType, LocalEndpoint>();
-    }
-
-    bool post_message(const Message& message)
-    {
-        auto buffer = message.encode();
-        int nwritten = write(m_connection->fd(), buffer.data(), buffer.size());
-        if (nwritten < 0) {
-            perror("write");
-            ASSERT_NOT_REACHED();
-            return false;
-        }
-        ASSERT(static_cast<size_t>(nwritten) == buffer.size());
-        return true;
-    }
-
-    template<typename RequestType, typename... Args>
-    OwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
-    {
-        bool success = post_message(RequestType(forward<Args>(args)...));
-        ASSERT(success);
-        auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
-        ASSERT(response);
-        return response;
+        // Override this function if you don't want your app to exit if it loses the connection.
+        exit(0);
     }
 
 private:
-    template<typename MessageType, typename Endpoint>
-    OwnPtr<MessageType> wait_for_specific_endpoint_message()
-    {
-        for (;;) {
-            // Double check we don't already have the event waiting for us.
-            // Otherwise we might end up blocked for a while for no reason.
-            for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
-                auto& message = m_unprocessed_messages[i];
-                if (message.endpoint_magic() != Endpoint::static_magic())
-                    continue;
-                if (message.message_id() == MessageType::static_message_id())
-                    return m_unprocessed_messages.take(i).template release_nonnull<MessageType>();
-            }
-
-            fd_set rfds;
-            FD_ZERO(&rfds);
-            FD_SET(m_connection->fd(), &rfds);
-            int rc = Core::safe_syscall(select, m_connection->fd() + 1, &rfds, nullptr, nullptr, nullptr);
-            if (rc < 0) {
-                perror("select");
-            }
-            ASSERT(rc > 0);
-            ASSERT(FD_ISSET(m_connection->fd(), &rfds));
-            if (!drain_messages_from_server())
-                return nullptr;
-        }
-    }
-
-    bool drain_messages_from_server()
-    {
-        Vector<u8> bytes;
-        for (;;) {
-            u8 buffer[4096];
-            ssize_t nread = recv(m_connection->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
-            if (nread < 0) {
-                if (errno == EAGAIN)
-                    break;
-                perror("recv");
-                exit(1);
-                return false;
-            }
-            if (nread == 0) {
-                dbg() << "EOF on IPC fd";
-                // FIXME: Dying is definitely not always appropriate!
-                exit(1);
-                return false;
-            }
-            bytes.append(buffer, nread);
-        }
-
-        size_t decoded_bytes = 0;
-        for (size_t index = 0; index < bytes.size(); index += decoded_bytes) {
-            auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
-            if (auto message = LocalEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
-                m_unprocessed_messages.append(message.release_nonnull());
-            } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
-                m_unprocessed_messages.append(message.release_nonnull());
-            } else {
-                ASSERT_NOT_REACHED();
-            }
-            ASSERT(decoded_bytes);
-        }
-
-        if (!m_unprocessed_messages.is_empty()) {
-            deferred_invoke([this](auto&) {
-                handle_messages();
-            });
-        }
-        return true;
-    }
-
-    void handle_messages()
-    {
-        auto messages = move(m_unprocessed_messages);
-        for (auto& message : messages) {
-            if (message.endpoint_magic() == LocalEndpoint::static_magic())
-                m_local_endpoint.handle(message);
-        }
-    }
-
-    LocalEndpoint& m_local_endpoint;
-    RefPtr<Core::LocalSocket> m_connection;
-    RefPtr<Core::Notifier> m_notifier;
-    NonnullOwnPtrVector<Message> m_unprocessed_messages;
-    int m_server_pid { -1 };
     int m_my_client_id { -1 };
 };
 

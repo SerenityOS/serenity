@@ -37,7 +37,7 @@ namespace ImageDecoder {
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
 ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ClientConnection<ImageDecoderServerEndpoint>(*this, move(socket), client_id)
+    : IPC::ClientConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);
 }

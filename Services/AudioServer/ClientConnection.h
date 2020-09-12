@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AudioServer/AudioClientEndpoint.h>
 #include <AudioServer/AudioServerEndpoint.h>
 #include <LibIPC/ClientConnection.h>
 
@@ -39,7 +40,7 @@ namespace AudioServer {
 class BufferQueue;
 class Mixer;
 
-class ClientConnection final : public IPC::ClientConnection<AudioServerEndpoint>
+class ClientConnection final : public IPC::ClientConnection<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioServerEndpoint {
     C_OBJECT(ClientConnection)
 public:
