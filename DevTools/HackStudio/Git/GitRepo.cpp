@@ -129,4 +129,23 @@ bool GitRepo::commit(const String& message)
 {
     return !command({ "commit", "-m", message }).is_null();
 }
+
+Optional<String> GitRepo::original_file_content(const LexicalPath& file) const
+{
+    return command({ "show", String::format("HEAD:%s", file.string().characters()) });
+}
+
+Optional<String> GitRepo::unstaged_diff(const LexicalPath& file) const
+{
+    return command({ "diff", file.string().characters() });
+}
+
+bool GitRepo::is_tracked(const LexicalPath& file) const
+{
+    auto res = command({ "ls-files", file.string() });
+    if (res.is_null())
+        return false;
+    return !res.is_empty();
+}
+
 }
