@@ -60,6 +60,8 @@ private:
     String m_format;
     HorizontalAlignment m_horizontal_alignment { HorizontalAlignment::Right };
     VerticalAlignment m_vertical_alignment { VerticalAlignment::Center };
+    Optional<Color> m_static_foreground_color;
+    Optional<Color> m_static_background_color;
 };
 
 }
