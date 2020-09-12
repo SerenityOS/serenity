@@ -55,6 +55,9 @@ public:
     bool stage(const LexicalPath& file);
     bool unstage(const LexicalPath& file);
     bool commit(const String& message);
+    Optional<String> original_file_content(const LexicalPath& file) const;
+    Optional<String> unstaged_diff(const LexicalPath& file) const;
+    bool is_tracked(const LexicalPath& file) const;
 
 private:
     static String command_wrapper(const Vector<String>& command_parts, const LexicalPath& chdir);
