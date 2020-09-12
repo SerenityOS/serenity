@@ -182,6 +182,25 @@ Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer,
         allocate_palette_from_format(m_format, palette);
 }
 
+RefPtr<Gfx::Bitmap> Bitmap::clone() const
+{
+    RefPtr<Gfx::Bitmap> new_bitmap {};
+    if (m_purgeable) {
+        new_bitmap = Bitmap::create_purgeable(format(), size());
+    } else {
+        new_bitmap = Bitmap::create(format(), size());
+    }
+
+    if (!new_bitmap) {
+        return nullptr;
+    }
+
+    ASSERT(size_in_bytes() == new_bitmap->size_in_bytes());
+    memcpy(new_bitmap->scanline(0), scanline(0), size_in_bytes());
+
+    return new_bitmap;
+}
+
 RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
 {
     auto w = this->width();
