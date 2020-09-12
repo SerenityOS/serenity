@@ -87,6 +87,11 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 
     if (result.layout_node && result.layout_node->wants_mouse_events()) {
         result.layout_node->handle_mouseup({}, position, button, modifiers);
+
+        // Things may have changed as a consequence of LayoutNode::handle_mouseup(). Hit test again.
+        if (!layout_root())
+            return true;
+        result = layout_root()->hit_test(position, HitTestType::Exact);
     }
 
     if (result.layout_node && result.layout_node->node()) {
@@ -125,13 +130,14 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (!result.layout_node)
         return false;
 
+    RefPtr<DOM::Node> node = result.layout_node->node();
+    document->set_hovered_node(node);
+
     if (result.layout_node->wants_mouse_events()) {
         result.layout_node->handle_mousedown({}, position, button, modifiers);
         return true;
     }
 
-    RefPtr<DOM::Node> node = result.layout_node->node();
-    document->set_hovered_node(node);
     if (!node)
         return false;
 
@@ -210,6 +216,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     if (result.layout_node) {
 
         if (result.layout_node->wants_mouse_events()) {
+            document.set_hovered_node(result.layout_node->node());
             result.layout_node->handle_mousemove({}, position, buttons, modifiers);
             // FIXME: It feels a bit aggressive to always update the cursor like this.
             page_client.page_did_request_cursor_change(Gfx::StandardCursor::None);
