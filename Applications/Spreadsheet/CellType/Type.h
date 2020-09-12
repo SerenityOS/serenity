@@ -29,6 +29,7 @@
 #include "../Forward.h"
 #include <AK/Forward.h>
 #include <AK/String.h>
+#include <LibGfx/Color.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibJS/Forward.h>
 
@@ -38,6 +39,8 @@ struct CellTypeMetadata {
     int length { -1 };
     String format;
     Gfx::TextAlignment alignment { Gfx::TextAlignment::CenterRight };
+    Optional<Gfx::Color> static_foreground_color;
+    Optional<Gfx::Color> static_background_color;
 };
 
 class CellType {
