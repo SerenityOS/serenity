@@ -181,6 +181,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
     desktop_view_context_menu->add_separator();
 
     desktop_view_context_menu->add_action(file_manager_action);
+    desktop_view_context_menu->add_action(directory_view.open_terminal_action());
     desktop_view_context_menu->add_separator();
     desktop_view_context_menu->add_action(display_properties_action);
 
@@ -289,21 +290,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto open_parent_directory_action = GUI::Action::create("Open parent directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
         directory_view.open_parent_directory();
-    });
-
-    auto open_terminal_action = GUI::Action::create("Open Terminal here...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](const GUI::Action&) {
-        posix_spawn_file_actions_t spawn_actions;
-        posix_spawn_file_actions_init(&spawn_actions);
-        posix_spawn_file_actions_addchdir(&spawn_actions, directory_view.path().characters());
-        pid_t pid;
-        const char* argv[] = { "Terminal", nullptr };
-        if ((errno = posix_spawn(&pid, "/bin/Terminal", &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(pid) < 0)
-                perror("disown");
-        }
-        posix_spawn_file_actions_destroy(&spawn_actions);
     });
 
     RefPtr<GUI::Action> view_as_table_action;
@@ -560,7 +546,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     app_menu.add_action(copy_action);
     app_menu.add_action(paste_action);
     app_menu.add_action(delete_action);
-    app_menu.add_action(open_terminal_action);
+    app_menu.add_action(directory_view.open_terminal_action());
     app_menu.add_separator();
     app_menu.add_action(properties_action);
     app_menu.add_separator();
@@ -606,7 +592,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(copy_action);
     main_toolbar.add_action(paste_action);
     main_toolbar.add_action(delete_action);
-    main_toolbar.add_action(open_terminal_action);
+    main_toolbar.add_action(directory_view.open_terminal_action());
 
     main_toolbar.add_separator();
     main_toolbar.add_action(*view_as_icons_action);
@@ -683,7 +669,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_view_context_menu->add_action(directory_view.mkdir_action());
     directory_view_context_menu->add_action(directory_view.touch_action());
     directory_view_context_menu->add_action(paste_action);
-    directory_view_context_menu->add_action(open_terminal_action);
+    directory_view_context_menu->add_action(directory_view.open_terminal_action());
     directory_view_context_menu->add_separator();
     directory_view_context_menu->add_action(properties_action);
 

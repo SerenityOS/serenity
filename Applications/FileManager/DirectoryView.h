@@ -136,6 +136,7 @@ public:
 
     GUI::Action& mkdir_action() { return *m_mkdir_action; }
     GUI::Action& touch_action() { return *m_touch_action; }
+    GUI::Action& open_terminal_action() { return *m_open_terminal_action; }
 
 private:
     explicit DirectoryView(Mode);
@@ -171,4 +172,5 @@ private:
 
     RefPtr<GUI::Action> m_mkdir_action;
     RefPtr<GUI::Action> m_touch_action;
+    RefPtr<GUI::Action> m_open_terminal_action;
 };
