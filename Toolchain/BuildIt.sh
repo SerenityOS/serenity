@@ -289,18 +289,10 @@ pushd "$DIR"
         else
             mkdir -p Cache/
             # We *most definitely* don't need debug symbols in the linker/compiler.
-            # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 250 MiB.
-            pushd "Local/libexec/gcc/i686-pc-serenity/${GCC_VERSION}"
-                for binary in cc1 cc1plus lto1; do
-                    echo "Before: $(du -h "${binary}")"
-                    strip "${binary}"
-                    echo "After: $(du -h "${binary}")"
-                done
-            popd
-            binary=Local/bin/i686-pc-serenity-lto-dump
-            echo "Before: $(du -h "${binary}")"
-            strip "${binary}"
-            echo "After: $(du -h "${binary}")"
+            # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 190 MiB.
+            echo "Before: $(du -sh Local)"
+            find Local/ -type f -executable ! -name '*.la' ! -name '*.sh' ! -name 'mk*' -exec strip {} +
+            echo "After: $(du -sh Local)"
             tar czf "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" Local/
         fi
     fi
