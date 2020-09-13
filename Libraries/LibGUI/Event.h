@@ -132,8 +132,8 @@ public:
 
     int parent_client_id() const { return m_parent_client_id; }
     int parent_window_id() const { return m_parent_window_id; }
-    String title() const { return m_title; }
-    Gfx::IntRect rect() const { return m_rect; }
+    const String& title() const { return m_title; }
+    const Gfx::IntRect& rect() const { return m_rect; }
     bool is_active() const { return m_active; }
     bool is_modal() const { return m_modal; }
     WindowType window_type() const { return m_window_type; }
@@ -162,7 +162,7 @@ public:
     {
     }
 
-    Gfx::IntRect rect() const { return m_rect; }
+    const Gfx::IntRect& rect() const { return m_rect; }
 
 private:
     Gfx::IntRect m_rect;
@@ -195,7 +195,7 @@ public:
     }
 
     const Vector<Gfx::IntRect, 32>& rects() const { return m_rects; }
-    Gfx::IntSize window_size() const { return m_window_size; }
+    const Gfx::IntSize& window_size() const { return m_window_size; }
 
 private:
     Vector<Gfx::IntRect, 32> m_rects;
@@ -211,8 +211,8 @@ public:
     {
     }
 
-    Gfx::IntRect rect() const { return m_rect; }
-    Gfx::IntSize window_size() const { return m_window_size; }
+    const Gfx::IntRect& rect() const { return m_rect; }
+    const Gfx::IntSize& window_size() const { return m_window_size; }
 
 private:
     Gfx::IntRect m_rect;
@@ -323,7 +323,7 @@ public:
     {
     }
 
-    Gfx::IntPoint position() const { return m_position; }
+    const Gfx::IntPoint& position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
