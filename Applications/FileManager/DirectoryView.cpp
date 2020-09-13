@@ -484,4 +484,19 @@ void DirectoryView::setup_actions()
             ASSERT(rc >= 0);
         }
     });
+
+    m_open_terminal_action = GUI::Action::create("Open Terminal here...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+        posix_spawn_file_actions_t spawn_actions;
+        posix_spawn_file_actions_init(&spawn_actions);
+        posix_spawn_file_actions_addchdir(&spawn_actions, path().characters());
+        pid_t pid;
+        const char* argv[] = { "Terminal", nullptr };
+        if ((errno = posix_spawn(&pid, "/bin/Terminal", &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(pid) < 0)
+                perror("disown");
+        }
+        posix_spawn_file_actions_destroy(&spawn_actions);
+    });
 }
