@@ -130,7 +130,7 @@ int Debugger::debugger_loop()
 {
     ASSERT(m_debug_session);
 
-    m_debug_session->run([&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
+    m_debug_session->run([this](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             dbg() << "Program exited";
             m_on_exit_callback();
