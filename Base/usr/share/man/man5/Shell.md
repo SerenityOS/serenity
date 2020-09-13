@@ -220,6 +220,37 @@ $ { for * { te $it } }&
 $ disown
 ```
 
+##### Functions
+A function is a user-defined entity that can be used as a simple command to execute a compound command, optionally with some parameters.
+Such a function is defined via the syntax below:
+
+```sh
+function_name(explicitly_named_arguments...) { compound_command }
+```
+
+The function is named `function_name`, and has some explicitly named arguments `explicitly_named_arguments...`, which *must* be supplied by the caller, failure to do so will cause the command to exit with status 1.
+
+The compound command shall be executed whenever the simple command `function_name` is executed.
+This execution shall be performed in a new local frame.
+
+Additionally, should the simple command containing the function name be in a pipeline, or requested to be run in the background, this execution shall be moved to a subshell; naturally, in such a case any changes to the shell state (such as variables, aliases, etc) shall not be leaked to the parent shell process.
+
+The passed arguments shall be stored in the special variables `*` and `ARGV`, and the explicitly named arguments shall be set, in order, from the first passed argument onwards.
+
+
+The exit status of a function simple command shall be the exit status of the last command executed within the command, or 0 if the function has no commands.
+The declaration is *not* a command, and will not alter the exit status.
+
+###### Examples
+```sh
+fn(a b c) {
+    echo $a $b $c \( $* \)
+}
+
+$ fn 1 2 3 4
+# 1 2 3 ( 1 2 3 4 )
+```
+
 ## Formal Grammar
 
 ### Shell Grammar
@@ -229,7 +260,10 @@ toplevel :: sequence?
 sequence :: variable_decls? or_logical_sequence terminator sequence
           | variable_decls? or_logical_sequence '&' sequence
           | variable_decls? or_logical_sequence
+          | variable_decls? function_decl (terminator sequence)?
           | variable_decls? terminator sequence
+
+function_decl :: identifier '(' (ws* identifier)* ')' ws* '{' toplevel '}'
 
 or_logical_sequence :: and_logical_sequence '|' '|' and_logical_sequence
                      | and_logical_sequence
