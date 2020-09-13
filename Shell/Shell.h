@@ -92,6 +92,7 @@ public:
     String resolve_path(String) const;
     String resolve_alias(const String&) const;
 
+    RefPtr<AST::Value> get_argument(size_t);
     RefPtr<AST::Value> lookup_local_variable(const String&);
     String local_variable_or(const String&, const String&);
     void set_local_variable(const String&, RefPtr<AST::Value>);
@@ -169,6 +170,8 @@ public:
     CircularQueue<String, 8> cd_history; // FIXME: have a configurable cd history length
     HashMap<u64, NonnullRefPtr<Job>> jobs;
     Vector<String, 256> cached_path;
+
+    String current_script;
 
     enum ShellEventType {
         ReadLine,

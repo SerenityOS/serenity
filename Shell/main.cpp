@@ -209,6 +209,8 @@ int main(int argc, char** argv)
 
     parser.parse(argc, argv);
 
+    shell->current_script = argv[0];
+
     if (!skip_rc_files) {
         auto run_rc_file = [&](auto& name) {
             String file_path = name;
