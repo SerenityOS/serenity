@@ -40,7 +40,8 @@ public:
     {
     }
 
-    bool eof() const override { return m_offset >= m_bytes.size(); }
+    bool unreliable_eof() const override { return eof(); }
+    bool eof() const { return m_offset >= m_bytes.size(); }
 
     size_t read(Bytes bytes) override
     {
@@ -167,7 +168,8 @@ class DuplexMemoryStream final : public DuplexStream {
 public:
     static constexpr size_t chunk_size = 4 * 1024;
 
-    bool eof() const override { return m_write_offset == m_read_offset; }
+    bool unreliable_eof() const override { return eof(); }
+    bool eof() const { return m_write_offset == m_read_offset; }
 
     bool discard_or_error(size_t count) override
     {

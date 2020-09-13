@@ -39,7 +39,8 @@ public:
     size_t read(Bytes) override;
     bool read_or_error(Bytes) override;
     bool discard_or_error(size_t) override;
-    bool eof() const override;
+
+    bool unreliable_eof() const override;
 
     static Optional<ByteBuffer> decompress_all(ReadonlyBytes);
 
@@ -87,6 +88,8 @@ private:
 
     InputStream& m_input_stream;
     Optional<Member> m_current_member;
+
+    bool m_eof { false };
 };
 
 }

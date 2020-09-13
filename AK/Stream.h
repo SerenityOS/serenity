@@ -75,10 +75,22 @@ namespace AK {
 
 class InputStream : public virtual AK::Detail::Stream {
 public:
-    // Does nothing and returns zero if there is already an error.
+    // Reads at least one byte unless none are requested or none are avaliable. Does nothing
+    // and returns zero if there is already an error.
     virtual size_t read(Bytes) = 0;
+
+    // If this function returns true, then no more data can be read. If read(Bytes) previously
+    // returned zero even though bytes were requested, then the inverse is true as well.
+    virtual bool unreliable_eof() const = 0;
+
+    // Some streams additionally define a method with the signature:
+    //
+    //     bool eof() const;
+    //
+    // This method has the same semantics as unreliable_eof() but returns true if and only if no
+    // more data can be read. (A failed read is not necessary.)
+
     virtual bool read_or_error(Bytes) = 0;
-    virtual bool eof() const = 0;
     virtual bool discard_or_error(size_t count) = 0;
 };
 
