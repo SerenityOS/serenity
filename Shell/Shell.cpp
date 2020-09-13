@@ -333,6 +333,33 @@ RefPtr<AST::Value> Shell::lookup_local_variable(const String& name)
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
 
+    if (auto index = name.to_uint(); index.has_value())
+        return get_argument(index.value());
+
+    return nullptr;
+}
+
+RefPtr<AST::Value> Shell::get_argument(size_t index)
+{
+    if (index == 0)
+        return adopt(*new AST::StringValue(current_script));
+
+    --index;
+    if (auto argv = lookup_local_variable("ARGV")) {
+        if (argv->is_list_without_resolution()) {
+            AST::ListValue* list = static_cast<AST::ListValue*>(argv.ptr());
+            if (list->values().size() <= index)
+                return nullptr;
+
+            return list->values().at(index);
+        }
+
+        if (index != 0)
+            return nullptr;
+
+        return argv;
+    }
+
     return nullptr;
 }
 
@@ -750,6 +777,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
 
 bool Shell::run_file(const String& filename, bool explicitly_invoked)
 {
+    TemporaryChange script_change { current_script, filename };
     auto file_result = Core::File::open(filename, Core::File::ReadOnly);
     if (file_result.is_error()) {
         if (explicitly_invoked)
