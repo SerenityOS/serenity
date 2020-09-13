@@ -66,7 +66,7 @@ public:
         return true;
     }
 
-    bool eof() const override { return !m_next_byte.has_value() && m_stream.eof(); }
+    bool unreliable_eof() const override { return !m_next_byte.has_value() && m_stream.unreliable_eof(); }
 
     bool discard_or_error(size_t count) override
     {
@@ -86,6 +86,11 @@ public:
 
         size_t nread = 0;
         while (nread < count) {
+            if (m_stream.has_any_error()) {
+                set_fatal_error();
+                return 0;
+            }
+
             if (m_next_byte.has_value()) {
                 const auto bit = (m_next_byte.value() >> m_bit_offset) & 1;
                 result |= bit << nread;
@@ -93,9 +98,6 @@ public:
 
                 if (m_bit_offset++ == 7)
                     m_next_byte.clear();
-            } else if (m_stream.eof()) {
-                set_fatal_error();
-                return 0;
             } else {
                 m_stream >> m_next_byte;
                 m_bit_offset = 0;

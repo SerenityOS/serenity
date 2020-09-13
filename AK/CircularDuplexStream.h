@@ -112,7 +112,8 @@ public:
         return true;
     }
 
-    bool eof() const override { return m_queue.size() == 0; }
+    bool unreliable_eof() const override { return eof(); }
+    bool eof() const { return m_queue.size() == 0; }
 
     size_t remaining_contigous_space() const
     {

@@ -290,7 +290,7 @@ bool DeflateDecompressor::discard_or_error(size_t count)
 
     size_t ndiscarded = 0;
     while (ndiscarded < count) {
-        if (eof()) {
+        if (unreliable_eof()) {
             set_fatal_error();
             return false;
         }
@@ -301,7 +301,7 @@ bool DeflateDecompressor::discard_or_error(size_t count)
     return true;
 }
 
-bool DeflateDecompressor::eof() const { return m_state == State::Idle && m_read_final_bock; }
+bool DeflateDecompressor::unreliable_eof() const { return m_state == State::Idle && m_read_final_bock; }
 
 Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
@@ -310,7 +310,7 @@ Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
     OutputMemoryStream output_stream;
 
     u8 buffer[4096];
-    while (!deflate_stream.has_any_error() && !deflate_stream.eof()) {
+    while (!deflate_stream.has_any_error() && !deflate_stream.unreliable_eof()) {
         const auto nread = deflate_stream.read({ buffer, sizeof(buffer) });
         output_stream.write_or_error({ buffer, nread });
     }

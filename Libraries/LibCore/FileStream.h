@@ -68,25 +68,8 @@ public:
         if (has_any_error())
             return 0;
 
-        auto nread = m_buffered.bytes().copy_trimmed_to(bytes);
-
-        m_buffered.bytes().slice(nread, m_buffered.size() - nread).copy_to(m_buffered);
-        m_buffered.trim(m_buffered.size() - nread);
-
-        while (nread < bytes.size()) {
-            if (m_file->eof())
-                return nread;
-
-            if (m_file->has_error()) {
-                set_fatal_error();
-                return 0;
-            }
-
-            const auto buffer = m_file->read(bytes.size() - nread);
-            nread += buffer.bytes().copy_to(bytes.slice(nread));
-        }
-
-        return nread;
+        const auto buffer = m_file->read(bytes.size());
+        return buffer.bytes().copy_to(bytes);
     }
 
     bool read_or_error(Bytes bytes) override
@@ -99,34 +82,9 @@ public:
         return true;
     }
 
-    bool discard_or_error(size_t count) override
-    {
-        u8 buffer[4096];
+    bool discard_or_error(size_t count) override { return m_file->seek(count, IODevice::SeekMode::FromCurrentPosition); }
 
-        size_t ndiscarded = 0;
-        while (ndiscarded < count && !eof())
-            ndiscarded += read({ buffer, min<size_t>(count - ndiscarded, sizeof(buffer)) });
-
-        if (eof()) {
-            set_fatal_error();
-            return false;
-        }
-
-        return true;
-    }
-
-    bool eof() const override
-    {
-        if (m_buffered.size() > 0)
-            return false;
-
-        if (m_file->eof())
-            return true;
-
-        m_buffered = m_file->read(4096);
-
-        return m_buffered.size() == 0;
-    }
+    bool unreliable_eof() const override { return m_file->eof(); }
 
     void close()
     {
@@ -137,8 +95,7 @@ public:
 private:
     InputFileStream() = default;
 
-    mutable NonnullRefPtr<File> m_file;
-    mutable ByteBuffer m_buffered;
+    NonnullRefPtr<File> m_file;
 };
 
 class OutputFileStream : public OutputStream {

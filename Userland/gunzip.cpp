@@ -34,7 +34,7 @@ static void decompress_file(Buffered<Core::InputFileStream>& input_stream, Buffe
 
     u8 buffer[4096];
 
-    while (!gzip_stream.eof()) {
+    while (!gzip_stream.unreliable_eof()) {
         const auto nread = gzip_stream.read({ buffer, sizeof(buffer) });
         output_stream.write_or_error({ buffer, nread });
     }
