@@ -30,12 +30,64 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibGUI/MessageBox.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 namespace FileUtils {
+
+void delete_paths(const Vector<String>& paths, bool should_confirm, GUI::Window* parent_window)
+{
+    String message;
+    if (paths.size() == 1) {
+        message = String::format("Really delete %s?", LexicalPath(paths[0]).basename().characters());
+    } else {
+        message = String::format("Really delete %d files?", paths.size());
+    }
+
+    if (should_confirm) {
+        auto result = GUI::MessageBox::show(parent_window,
+            message,
+            "Confirm deletion",
+            GUI::MessageBox::Type::Warning,
+            GUI::MessageBox::InputType::OKCancel);
+        if (result == GUI::MessageBox::ExecCancel)
+            return;
+    }
+
+    for (auto& path : paths) {
+        struct stat st;
+        if (lstat(path.characters(), &st)) {
+            GUI::MessageBox::show(parent_window,
+                String::format("lstat(%s) failed: %s", path.characters(), strerror(errno)),
+                "Delete failed",
+                GUI::MessageBox::Type::Error);
+            break;
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            String error_path;
+            int error = FileUtils::delete_directory(path, error_path);
+
+            if (error) {
+                GUI::MessageBox::show(parent_window,
+                    String::format("Failed to delete directory \"%s\": %s", error_path.characters(), strerror(error)),
+                    "Delete failed",
+                    GUI::MessageBox::Type::Error);
+                break;
+            }
+        } else if (unlink(path.characters()) < 0) {
+            int saved_errno = errno;
+            GUI::MessageBox::show(parent_window,
+                String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
+                "Delete failed",
+                GUI::MessageBox::Type::Error);
+            break;
+        }
+    }
+}
 
 int delete_directory(String directory, String& file_that_caused_error)
 {

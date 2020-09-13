@@ -386,11 +386,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             },
             window);
 
-    enum class ConfirmBeforeDelete {
-        No,
-        Yes
-    };
-
     auto do_paste = [&](const GUI::Action& action) {
         auto data_and_type = GUI::Clipboard::the().data_and_type();
         if (data_and_type.mime_type != "text/uri-list") {
@@ -428,68 +423,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }
     };
 
-    auto do_delete = [&](ConfirmBeforeDelete confirm, const GUI::Action&) {
-        auto paths = directory_view.selected_file_paths();
-
-        if (!paths.size())
-            paths = tree_view_selected_file_paths();
-
-        if (paths.is_empty())
-            ASSERT_NOT_REACHED();
-
-        String message;
-        if (paths.size() == 1) {
-            message = String::format("Really delete %s?", LexicalPath(paths[0]).basename().characters());
-        } else {
-            message = String::format("Really delete %d files?", paths.size());
-        }
-
-        if (confirm == ConfirmBeforeDelete::Yes) {
-            auto result = GUI::MessageBox::show(window,
-                message,
-                "Confirm deletion",
-                GUI::MessageBox::Type::Warning,
-                GUI::MessageBox::InputType::OKCancel);
-            if (result == GUI::MessageBox::ExecCancel)
-                return;
-        }
-
-        for (auto& path : paths) {
-            struct stat st;
-            if (lstat(path.characters(), &st)) {
-                GUI::MessageBox::show(window,
-                    String::format("lstat(%s) failed: %s", path.characters(), strerror(errno)),
-                    "Delete failed",
-                    GUI::MessageBox::Type::Error);
-                break;
-            } else {
-                refresh_tree_view();
-            }
-
-            if (S_ISDIR(st.st_mode)) {
-                String error_path;
-                int error = FileUtils::delete_directory(path, error_path);
-
-                if (error) {
-                    GUI::MessageBox::show(window,
-                        String::format("Failed to delete directory \"%s\": %s", error_path.characters(), strerror(error)),
-                        "Delete failed",
-                        GUI::MessageBox::Type::Error);
-                    break;
-                } else {
-                    refresh_tree_view();
-                }
-            } else if (unlink(path.characters()) < 0) {
-                int saved_errno = errno;
-                GUI::MessageBox::show(window,
-                    String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
-                    "Delete failed",
-                    GUI::MessageBox::Type::Error);
-                break;
-            }
-        }
-    };
-
     auto paste_action = GUI::CommonActions::make_paste_action(
         [&](const GUI::Action& action) {
             do_paste(action);
@@ -501,19 +434,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             do_paste(action);
         },
         window);
-
-    auto force_delete_action = GUI::Action::create(
-        "Delete without confirmation", { Mod_Shift, Key_Delete }, [&](const GUI::Action& action) {
-            do_delete(ConfirmBeforeDelete::No, action);
-        },
-        window);
-
-    auto delete_action = GUI::CommonActions::make_delete_action(
-        [&](const GUI::Action& action) {
-            do_delete(ConfirmBeforeDelete::Yes, action);
-        },
-        window);
-    delete_action->set_enabled(false);
 
     auto go_back_action = GUI::CommonActions::make_go_back_action(
         [&](auto&) {
@@ -538,6 +458,21 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         paste_action->set_enabled(data_type == "text/uri-list" && access(current_location.characters(), W_OK) == 0);
     };
 
+    auto tree_view_delete_action = GUI::CommonActions::make_delete_action(
+        [&](auto&) {
+            FileUtils::delete_paths(tree_view_selected_file_paths(), true, window);
+        },
+        &tree_view);
+
+    // This is a little awkward. The menu action does something different depending on which view has focus.
+    // It would be nice to find a good abstraction for this instead of creating a branching action like this.
+    auto focus_dependent_delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
+        if (tree_view.is_focused())
+            tree_view_delete_action->activate();
+        else
+            directory_view.delete_action().activate();
+    });
+
     auto menubar = GUI::MenuBar::construct();
 
     auto& app_menu = menubar->add_menu("File Manager");
@@ -545,7 +480,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     app_menu.add_action(directory_view.touch_action());
     app_menu.add_action(copy_action);
     app_menu.add_action(paste_action);
-    app_menu.add_action(delete_action);
+    app_menu.add_action(focus_dependent_delete_action);
     app_menu.add_action(directory_view.open_terminal_action());
     app_menu.add_separator();
     app_menu.add_action(properties_action);
@@ -591,7 +526,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(directory_view.touch_action());
     main_toolbar.add_action(copy_action);
     main_toolbar.add_action(paste_action);
-    main_toolbar.add_action(delete_action);
+    main_toolbar.add_action(focus_dependent_delete_action);
     main_toolbar.add_action(directory_view.open_terminal_action());
 
     main_toolbar.add_separator();
@@ -655,14 +590,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_view.on_selection_change = [&](GUI::AbstractView& view) {
         // FIXME: Figure out how we can enable/disable the paste action, based on clipboard contents.
         auto& selection = view.selection();
-
-        delete_action->set_enabled(!selection.is_empty() && access(directory_view.path().characters(), W_OK) == 0);
         copy_action->set_enabled(!selection.is_empty());
     };
 
     directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(folder_specific_paste_action);
-    directory_context_menu->add_action(delete_action);
+    directory_context_menu->add_action(directory_view.delete_action());
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
@@ -675,7 +608,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     tree_view_directory_context_menu->add_action(copy_action);
     tree_view_directory_context_menu->add_action(paste_action);
-    tree_view_directory_context_menu->add_action(delete_action);
+    tree_view_directory_context_menu->add_action(directory_view.delete_action());
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(properties_action);
     tree_view_directory_context_menu->add_separator();
@@ -701,7 +634,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 file_context_menu = GUI::Menu::construct("Directory View File");
                 file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(paste_action);
-                file_context_menu->add_action(delete_action);
+                file_context_menu->add_action(directory_view.delete_action());
 
                 file_context_menu->add_separator();
                 bool added_open_menu_items = false;
@@ -796,7 +729,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             return;
         directory_view.open(path);
         copy_action->set_enabled(!tree_view.selection().is_empty());
-        delete_action->set_enabled(!tree_view.selection().is_empty());
+        directory_view.delete_action().set_enabled(!tree_view.selection().is_empty());
     };
 
     tree_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {

@@ -137,11 +137,17 @@ public:
     GUI::Action& mkdir_action() { return *m_mkdir_action; }
     GUI::Action& touch_action() { return *m_touch_action; }
     GUI::Action& open_terminal_action() { return *m_open_terminal_action; }
+    GUI::Action& delete_action() { return *m_delete_action; }
+    GUI::Action& force_delete_action() { return *m_force_delete_action; }
 
 private:
     explicit DirectoryView(Mode);
+
     const GUI::FileSystemModel& model() const { return *m_model; }
     GUI::FileSystemModel& model() { return *m_model; }
+
+    void handle_selection_change();
+    void do_delete(bool should_confirm);
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
@@ -166,6 +172,11 @@ private:
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);
 
+    enum class ConfirmBeforeDelete {
+        No,
+        Yes
+    };
+
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::IconView> m_icon_view;
     RefPtr<GUI::ColumnsView> m_columns_view;
@@ -173,4 +184,6 @@ private:
     RefPtr<GUI::Action> m_mkdir_action;
     RefPtr<GUI::Action> m_touch_action;
     RefPtr<GUI::Action> m_open_terminal_action;
+    RefPtr<GUI::Action> m_delete_action;
+    RefPtr<GUI::Action> m_force_delete_action;
 };

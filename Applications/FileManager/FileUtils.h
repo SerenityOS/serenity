@@ -28,10 +28,12 @@
 
 #include <AK/String.h>
 #include <LibCore/Forward.h>
+#include <LibGUI/Forward.h>
 #include <sys/stat.h>
 
 namespace FileUtils {
 
+void delete_paths(const Vector<String>&, bool should_confirm, GUI::Window*);
 int delete_directory(String directory, String& file_that_caused_error);
 bool copy_file_or_directory(const String& src_path, const String& dst_path);
 String get_duplicate_name(const String& path, int duplicate_count);

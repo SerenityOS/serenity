@@ -25,6 +25,7 @@
  */
 
 #include "DirectoryView.h"
+#include "FileUtils.h"
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
@@ -203,9 +204,7 @@ void DirectoryView::setup_icon_view()
         handle_activation(index);
     };
     m_icon_view->on_selection_change = [this] {
-        update_statusbar();
-        if (on_selection_change)
-            on_selection_change(*m_icon_view);
+        handle_selection_change();
     };
     m_icon_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
@@ -228,9 +227,7 @@ void DirectoryView::setup_columns_view()
     };
 
     m_columns_view->on_selection_change = [this] {
-        update_statusbar();
-        if (on_selection_change)
-            on_selection_change(*m_columns_view);
+        handle_selection_change();
     };
 
     m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
@@ -256,9 +253,7 @@ void DirectoryView::setup_table_view()
     };
 
     m_table_view->on_selection_change = [this] {
-        update_statusbar();
-        if (on_selection_change)
-            on_selection_change(*m_table_view);
+        handle_selection_change();
     };
 
     m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
@@ -439,6 +434,25 @@ Vector<String> DirectoryView::selected_file_paths() const
     return paths;
 }
 
+void DirectoryView::do_delete(bool should_confirm)
+{
+    auto paths = selected_file_paths();
+    ASSERT(!paths.is_empty());
+    FileUtils::delete_paths(paths, should_confirm, window());
+}
+
+void DirectoryView::handle_selection_change()
+{
+    update_statusbar();
+
+    bool can_delete = !current_view().selection().is_empty() && access(path().characters(), W_OK) == 0;
+    m_delete_action->set_enabled(can_delete);
+    m_force_delete_action->set_enabled(can_delete);
+
+    if (on_selection_change)
+        on_selection_change(*m_table_view);
+}
+
 void DirectoryView::setup_actions()
 {
     m_mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
@@ -499,4 +513,11 @@ void DirectoryView::setup_actions()
         }
         posix_spawn_file_actions_destroy(&spawn_actions);
     });
+
+    m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window());
+
+    m_force_delete_action = GUI::Action::create(
+        "Delete without confirmation", { Mod_Shift, Key_Delete },
+        [this](auto&) { do_delete(false); },
+        window());
 }
