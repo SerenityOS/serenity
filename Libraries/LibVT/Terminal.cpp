@@ -576,9 +576,14 @@ void Terminal::execute_xterm_command()
         m_client.set_window_title(params[1]);
         break;
     case 8:
-        m_current_attribute.href = params[2];
-        // FIXME: Respect the provided ID
-        m_current_attribute.href_id = String::format("%u", m_next_href_id++);
+        if (params[2].is_empty()) {
+            m_current_attribute.href = String();
+            m_current_attribute.href_id = String();
+        } else {
+            m_current_attribute.href = params[2];
+            // FIXME: Respect the provided ID
+            m_current_attribute.href_id = String::format("%u", m_next_href_id++);
+        }
         break;
     case 9:
         m_client.set_window_progress(numeric_params[1], numeric_params[2]);
