@@ -65,7 +65,7 @@ void KeyboardMapperWidget::create_frame()
         tmp_button.set_text(keys[i].name);
         tmp_button.set_enabled(keys[i].enabled);
 
-        tmp_button.on_click = [&]() {
+        tmp_button.on_click = [this, &tmp_button]() {
             String value;
             if (GUI::InputBox::show(value, window(), "New Character:", "Select Character") == GUI::InputBox::ExecOK) {
                 int i = m_keys.find_first_index(&tmp_button).value_or(0);
@@ -121,17 +121,17 @@ void KeyboardMapperWidget::create_frame()
     };
     auto& radio_shift = m_map_group->add<GUI::RadioButton>("Shift");
     radio_shift.set_name("shift_map");
-    radio_shift.on_checked = [&](bool) {
+    radio_shift.on_checked = [this](bool) {
         set_current_map("shift_map");
     };
     auto& radio_altgr = m_map_group->add<GUI::RadioButton>("AltGr");
     radio_altgr.set_name("altgr_map");
-    radio_altgr.on_checked = [&](bool) {
+    radio_altgr.on_checked = [this](bool) {
         set_current_map("altgr_map");
     };
     auto& radio_alt = m_map_group->add<GUI::RadioButton>("Alt");
     radio_alt.set_name("alt_map");
-    radio_alt.on_checked = [&](bool) {
+    radio_alt.on_checked = [this](bool) {
         set_current_map("alt_map");
     };
 
