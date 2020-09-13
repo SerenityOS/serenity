@@ -45,6 +45,7 @@ public:
 private:
     RefPtr<AST::Node> parse_toplevel();
     RefPtr<AST::Node> parse_sequence();
+    RefPtr<AST::Node> parse_function_decl();
     RefPtr<AST::Node> parse_and_logical_sequence();
     RefPtr<AST::Node> parse_or_logical_sequence();
     RefPtr<AST::Node> parse_variable_decls();
@@ -109,7 +110,10 @@ toplevel :: sequence?
 sequence :: variable_decls? or_logical_sequence terminator sequence
           | variable_decls? or_logical_sequence '&' sequence
           | variable_decls? or_logical_sequence
+          | variable_decls? function_decl (terminator sequence)?
           | variable_decls? terminator sequence
+
+function_decl :: identifier '(' (ws* identifier)* ')' ws* '{' toplevel '}'
 
 or_logical_sequence :: and_logical_sequence '|' '|' and_logical_sequence
                      | and_logical_sequence
