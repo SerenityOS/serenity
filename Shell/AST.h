@@ -636,6 +636,28 @@ private:
     int dest_fd { -1 };
 };
 
+class FunctionDeclaration final : public Node {
+public:
+    struct NameWithPosition {
+        String name;
+        Position position;
+    };
+    FunctionDeclaration(Position, NameWithPosition name, Vector<NameWithPosition> argument_names, RefPtr<AST::Node> body);
+    virtual ~FunctionDeclaration();
+
+private:
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) override;
+    virtual String class_name() const override { return "FunctionDeclaration"; }
+    virtual bool would_execute() const override { return true; }
+
+    NameWithPosition m_name;
+    Vector<NameWithPosition> m_arguments;
+    RefPtr<AST::Node> m_block;
+};
+
 class ForLoop final : public Node {
 public:
     ForLoop(Position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position = {});

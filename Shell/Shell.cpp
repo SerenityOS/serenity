@@ -388,6 +388,60 @@ void Shell::unset_local_variable(const String& name)
         frame->local_variables.remove(name);
 }
 
+void Shell::define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body)
+{
+    add_entry_to_cache(name);
+    m_functions.set(name, { name, move(argnames), move(body) });
+}
+
+bool Shell::has_function(const String& name)
+{
+    return m_functions.contains(name);
+}
+
+bool Shell::invoke_function(const AST::Command& command, int& retval)
+{
+    if (command.argv.is_empty())
+        return false;
+
+    StringView name = command.argv.first();
+
+    TemporaryChange<String> script_change { current_script, name };
+
+    auto function_option = m_functions.get(name);
+    if (!function_option.has_value())
+        return false;
+
+    auto& function = function_option.value();
+
+    if (!function.body) {
+        retval = 0;
+        return true;
+    }
+
+    if (command.argv.size() - 1 < function.arguments.size()) {
+        fprintf(stderr, "Shell: expected at least %zu arguments to %s, but got %zu\n", function.arguments.size(), function.name.characters(), command.argv.size() - 1);
+        retval = 1;
+        return true;
+    }
+
+    auto frame = push_frame();
+    size_t index = 0;
+    for (auto& arg : function.arguments) {
+        ++index;
+        set_local_variable(arg, adopt(*new AST::StringValue(command.argv[index])));
+    }
+
+    auto argv = command.argv;
+    argv.take_first();
+    set_local_variable("ARGV", adopt(*new AST::ListValue(move(argv))));
+
+    function.body->run(*this);
+
+    retval = last_return_code;
+    return true;
+}
+
 Shell::Frame Shell::push_frame()
 {
     m_local_frames.empend();
@@ -544,6 +598,25 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         return nullptr;
     }
 
+    auto can_be_run_in_current_process = command.should_wait && !command.pipeline;
+    if (can_be_run_in_current_process && has_function(command.argv.first())) {
+        SavedFileDescriptors fds { rewirings };
+
+        for (auto& rewiring : rewirings) {
+            int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
+            if (rc < 0) {
+                perror("dup2(run)");
+                return nullptr;
+            }
+        }
+
+        if (invoke_function(command, retval)) {
+            for (auto& next_in_chain : command.next_chain)
+                run_tail(next_in_chain, retval);
+            return nullptr;
+        }
+    }
+
     Vector<const char*> argv;
     Vector<String> copy_argv = command.argv;
     argv.ensure_capacity(command.argv.size() + 1);
@@ -597,18 +670,20 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         if (!m_is_subshell && command.should_wait)
             tcsetattr(0, TCSANOW, &default_termios);
 
+        Core::EventLoop mainloop;
+        setup_signals();
+
         if (command.should_immediately_execute_next) {
             ASSERT(command.argv.is_empty());
-
-            Core::EventLoop mainloop;
-
-            setup_signals();
 
             for (auto& next_in_chain : command.next_chain)
                 run_tail(next_in_chain, 0);
 
             _exit(last_return_code);
         }
+
+        if (invoke_function(command, last_return_code))
+            _exit(last_return_code);
 
         int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
         if (rc < 0) {

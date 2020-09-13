@@ -167,7 +167,10 @@ RefPtr<AST::Node> Parser::parse_sequence()
         break;
     }
 
-    auto first = parse_or_logical_sequence();
+    auto first = parse_function_decl();
+
+    if (!first)
+        first = parse_or_logical_sequence();
 
     if (!first)
         return var_decls;
@@ -257,6 +260,90 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
     variables.append(rest_decl->variables());
 
     return create<AST::VariableDeclarations>(move(variables));
+}
+
+RefPtr<AST::Node> Parser::parse_function_decl()
+{
+    auto rule_start = push_start();
+
+    auto restore = [&] {
+        m_offset = rule_start->offset;
+        return nullptr;
+    };
+
+    consume_while(is_whitespace);
+    auto offset_before_name = m_offset;
+    auto function_name = consume_while(is_word_character);
+    auto offset_after_name = m_offset;
+    if (function_name.is_empty())
+        return restore();
+
+    if (!expect('('))
+        return restore();
+
+    Vector<AST::FunctionDeclaration::NameWithPosition> arguments;
+    for (;;) {
+        consume_while(is_whitespace);
+
+        if (expect(')'))
+            break;
+
+        auto name_offset = m_offset;
+        auto arg_name = consume_while(is_word_character);
+        if (arg_name.is_empty()) {
+            // FIXME: Should this be a syntax error, or just return?
+            return restore();
+        }
+        arguments.append({ arg_name, { name_offset, m_offset } });
+    }
+
+    consume_while(is_whitespace);
+
+    {
+        RefPtr<AST::Node> syntax_error;
+        {
+            auto obrace_error_start = push_start();
+            syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a function body");
+        }
+        if (!expect('{')) {
+            return create<AST::FunctionDeclaration>(
+                AST::FunctionDeclaration::NameWithPosition {
+                    move(function_name),
+                    { offset_before_name, offset_after_name } },
+                move(arguments),
+                move(syntax_error));
+        }
+    }
+
+    auto body = parse_toplevel();
+
+    {
+        RefPtr<AST::SyntaxError> syntax_error;
+        {
+            auto cbrace_error_start = push_start();
+            syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a function body");
+        }
+        if (!expect('}')) {
+            if (body)
+                body->set_is_syntax_error(*syntax_error);
+            else
+                body = move(syntax_error);
+
+            return create<AST::FunctionDeclaration>(
+                AST::FunctionDeclaration::NameWithPosition {
+                    move(function_name),
+                    { offset_before_name, offset_after_name } },
+                move(arguments),
+                move(body));
+        }
+    }
+
+    return create<AST::FunctionDeclaration>(
+        AST::FunctionDeclaration::NameWithPosition {
+            move(function_name),
+            { offset_before_name, offset_after_name } },
+        move(arguments),
+        move(body));
 }
 
 RefPtr<AST::Node> Parser::parse_or_logical_sequence()

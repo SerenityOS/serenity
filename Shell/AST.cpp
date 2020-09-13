@@ -764,6 +764,66 @@ Fd2FdRedirection::~Fd2FdRedirection()
 {
 }
 
+void FunctionDeclaration::dump(int level) const
+{
+    Node::dump(level);
+    print_indented(String::format("(name: %s)\n", m_name.name.characters()), level + 1);
+    print_indented("(argument namess)", level + 1);
+    for (auto& arg : m_arguments)
+        print_indented(String::format("(name: %s)\n", arg.name.characters()), level + 2);
+
+    print_indented("(body)", level + 1);
+    if (m_block)
+        m_block->dump(level + 2);
+    else
+        print_indented("(null)", level + 2);
+}
+
+RefPtr<Value> FunctionDeclaration::run(RefPtr<Shell> shell)
+{
+    Vector<String> args;
+    for (auto& arg : m_arguments)
+        args.append(arg.name);
+
+    shell->define_function(m_name.name, move(args), m_block);
+
+    return create<ListValue>({});
+}
+
+void FunctionDeclaration::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    editor.stylize({ m_name.position.start_offset, m_name.position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Blue) });
+
+    for (auto& arg : m_arguments)
+        editor.stylize({ arg.position.start_offset, arg.position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Italic });
+
+    metadata.is_first_in_list = true;
+    if (m_block)
+        m_block->highlight_in_editor(editor, shell, metadata);
+}
+
+HitTestResult FunctionDeclaration::hit_test_position(size_t offset)
+{
+    if (!position().contains(offset))
+        return {};
+
+    return m_block->hit_test_position(offset);
+}
+
+FunctionDeclaration::FunctionDeclaration(Position position, NameWithPosition name, Vector<NameWithPosition> arguments, RefPtr<AST::Node> body)
+    : Node(move(position))
+    , m_name(move(name))
+    , m_arguments(arguments)
+    , m_block(move(body))
+{
+    if (m_block && m_block->is_syntax_error())
+        set_is_syntax_error(m_block->syntax_error_node());
+}
+
+FunctionDeclaration::~FunctionDeclaration()
+{
+}
+
 void ForLoop::dump(int level) const
 {
     Node::dump(level);

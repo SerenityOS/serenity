@@ -98,6 +98,10 @@ public:
     void set_local_variable(const String&, RefPtr<AST::Value>);
     void unset_local_variable(const String&);
 
+    void define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body);
+    bool has_function(const String&);
+    bool invoke_function(const AST::Command&, int& retval);
+
     struct LocalFrame {
         HashMap<String, RefPtr<AST::Value>> local_variables;
     };
@@ -224,6 +228,13 @@ private:
     bool m_should_ignore_jobs_on_next_exit { false };
     pid_t m_pid { 0 };
 
+    struct ShellFunction {
+        String name;
+        Vector<String> arguments;
+        RefPtr<AST::Node> body;
+    };
+
+    HashMap<String, ShellFunction> m_functions;
     Vector<LocalFrame> m_local_frames;
     NonnullRefPtrVector<AST::Redirection> m_global_redirections;
 
