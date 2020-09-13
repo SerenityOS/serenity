@@ -68,7 +68,7 @@ GzipDecompressor::~GzipDecompressor()
 // FIXME: Again, there are surely a ton of bugs because the code doesn't check for read errors.
 size_t GzipDecompressor::read(Bytes bytes)
 {
-    if (has_any_error())
+    if (has_any_error() || m_eof)
         return 0;
 
     if (m_current_member.has_value()) {
@@ -99,11 +99,13 @@ size_t GzipDecompressor::read(Bytes bytes)
 
         return nread;
     } else {
-        if (m_input_stream.eof())
-            return 0;
-
         BlockHeader header;
         m_input_stream >> Bytes { &header, sizeof(header) };
+
+        if (m_input_stream.handle_any_error()) {
+            m_eof = true;
+            return 0;
+        }
 
         if (!header.valid_magic_number() || !header.supported_by_implementation()) {
             set_fatal_error();
@@ -147,7 +149,7 @@ bool GzipDecompressor::discard_or_error(size_t count)
 
     size_t ndiscarded = 0;
     while (ndiscarded < count) {
-        if (eof()) {
+        if (unreliable_eof()) {
             set_fatal_error();
             return false;
         }
@@ -165,7 +167,7 @@ Optional<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
     OutputMemoryStream output_stream;
 
     u8 buffer[4096];
-    while (!gzip_stream.has_any_error() && !gzip_stream.eof()) {
+    while (!gzip_stream.has_any_error() && !gzip_stream.unreliable_eof()) {
         const auto nread = gzip_stream.read({ buffer, sizeof(buffer) });
         output_stream.write_or_error({ buffer, nread });
     }
@@ -176,15 +178,6 @@ Optional<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
     return output_stream.copy_into_contiguous_buffer();
 }
 
-bool GzipDecompressor::eof() const
-{
-    if (m_current_member.has_value()) {
-        // FIXME: There is an ugly edge case where we read the whole deflate block
-        //        but haven't read CRC32 and ISIZE.
-        return current_member().m_stream.eof() && m_input_stream.eof();
-    } else {
-        return m_input_stream.eof();
-    }
-}
+bool GzipDecompressor::unreliable_eof() const { return m_eof; }
 
 }

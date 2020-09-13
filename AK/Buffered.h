@@ -77,7 +77,7 @@ public:
         return nread;
     }
 
-    virtual bool read_or_error(Bytes bytes) override
+    bool read_or_error(Bytes bytes) override
     {
         if (read(bytes) < bytes.size()) {
             set_fatal_error();
@@ -87,7 +87,9 @@ public:
         return true;
     }
 
-    virtual bool eof() const
+    bool unreliable_eof() const override { return m_buffer_remaining == 0 && m_stream.unreliable_eof(); }
+
+    bool eof() const
     {
         if (m_buffer_remaining > 0)
             return false;
@@ -97,7 +99,7 @@ public:
         return m_buffer_remaining == 0;
     }
 
-    virtual bool discard_or_error(size_t count) override
+    bool discard_or_error(size_t count) override
     {
         size_t ndiscarded = 0;
         while (ndiscarded < count) {
