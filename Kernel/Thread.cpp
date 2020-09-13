@@ -868,7 +868,7 @@ String Thread::backtrace_impl()
         FlatPtr stack_ptr, eip;
         if (Processor::get_context_frame_ptr(*this, stack_ptr, eip)) {
             recognized_symbols.append({ eip, symbolicate_kernel_address(eip) });
-            for (;;) {
+            while (stack_ptr) {
                 FlatPtr retaddr;
 
                 if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
@@ -906,7 +906,7 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
     backtrace.append(eip);
     FlatPtr stack_ptr_copy;
     FlatPtr stack_ptr = (FlatPtr)ebp;
-    for (;;) {
+    while (stack_ptr) {
         void* fault_at;
         if (!safe_memcpy(&stack_ptr_copy, (void*)stack_ptr, sizeof(FlatPtr), fault_at))
             break;
