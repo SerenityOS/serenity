@@ -54,9 +54,10 @@ public:
     Vector<LexicalPath> staged_files() const;
     bool stage(const LexicalPath& file);
     bool unstage(const LexicalPath& file);
+    bool commit(const String& message);
 
 private:
-    static String command_wrapper(const String& git_command, const LexicalPath& chdir);
+    static String command_wrapper(const Vector<String>& command_parts, const LexicalPath& chdir);
     static bool git_is_installed();
     static bool git_repo_exists(const LexicalPath& repo_root);
     static Vector<LexicalPath> parse_files_list(const String&);
@@ -69,7 +70,7 @@ private:
     Vector<LexicalPath> modified_files() const;
     Vector<LexicalPath> untracked_files() const;
 
-    String command(const String& git_command) const;
+    String command(const Vector<String>& command_parts) const;
 
     LexicalPath m_repository_root;
 };
