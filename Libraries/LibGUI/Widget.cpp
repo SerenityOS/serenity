@@ -811,6 +811,39 @@ bool Widget::set_property(const StringView& name, const JsonValue& value)
         set_visible(value.to_bool());
         return true;
     }
+
+    if (name == "horizontal_size_policy") {
+        auto string = value.to_string();
+        if (string == "Fill")
+            set_size_policy(Gfx::Orientation::Horizontal, SizePolicy::Fill);
+        else if (string == "Fixed")
+            set_size_policy(Gfx::Orientation::Horizontal, SizePolicy::Fixed);
+        else
+            ASSERT_NOT_REACHED();
+        return true;
+    }
+
+    if (name == "vertical_size_policy") {
+        auto string = value.to_string();
+        if (string == "Fill")
+            set_size_policy(Gfx::Orientation::Vertical, SizePolicy::Fill);
+        else if (string == "Fixed")
+            set_size_policy(Gfx::Orientation::Vertical, SizePolicy::Fixed);
+        else
+            ASSERT_NOT_REACHED();
+        return true;
+    }
+
+    if (name == "preferred_height") {
+        set_preferred_size(preferred_size().width(), value.to_i32());
+        return true;
+    }
+
+    if (name == "preferred_width") {
+        set_preferred_size(value.to_i32(), preferred_size().height());
+        return true;
+    }
+
     return Core::Object::set_property(name, value);
 }
 
@@ -916,41 +949,9 @@ bool Widget::load_from_json(const StringView& json_string)
 
 bool Widget::load_from_json(const JsonObject& json)
 {
-    auto name = json.get("name");
-    if (name.is_string())
-        this->set_name(name.as_string());
-
-    auto horizontal_size_policy = json.get("horizontal_size_policy");
-    if (horizontal_size_policy.is_string()) {
-        if (horizontal_size_policy.as_string() == "Fill")
-            set_size_policy(Gfx::Orientation::Horizontal, SizePolicy::Fill);
-        else if (horizontal_size_policy.as_string() == "Fixed")
-            set_size_policy(Gfx::Orientation::Horizontal, SizePolicy::Fixed);
-    }
-
-    auto vertical_size_policy = json.get("vertical_size_policy");
-    if (vertical_size_policy.is_string()) {
-        if (vertical_size_policy.as_string() == "Fill")
-            set_size_policy(Gfx::Orientation::Vertical, SizePolicy::Fill);
-        else if (vertical_size_policy.as_string() == "Fixed")
-            set_size_policy(Gfx::Orientation::Vertical, SizePolicy::Fixed);
-    }
-
-    auto fill_with_background_color = json.get("fill_with_background_color");
-    if (fill_with_background_color.is_bool())
-        set_fill_with_background_color(fill_with_background_color.to_bool());
-
-    auto visible = json.get("visible");
-    if (visible.is_bool())
-        set_visible(visible.to_bool());
-
-    auto preferred_height = json.get("preferred_height");
-    if (preferred_height.is_number())
-        set_preferred_size(preferred_size().width(), preferred_height.to_i32());
-
-    auto preferred_width = json.get("preferred_width");
-    if (preferred_width.is_number())
-        set_preferred_size(preferred_width.to_i32(), preferred_size().height());
+    json.for_each_member([&](auto& key, auto& value) {
+        set_property(key, value);
+    });
 
     auto layout_value = json.get("layout");
     if (!layout_value.is_null() && !layout_value.is_object()) {
