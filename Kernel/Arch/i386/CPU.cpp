@@ -401,9 +401,23 @@ void page_fault_handler(TrapFrame* trap)
     dump(regs);
 #endif
 
-    bool faulted_in_userspace = (regs.cs & 3) == 3;
+    bool faulted_in_kernel = !(regs.cs & 3);
+
+    if (faulted_in_kernel && Processor::current().in_irq()) {
+        // If we're faulting in an IRQ handler, first check if we failed
+        // due to safe_memcpy, safe_strnlen, or safe_memset. If we did,
+        // gracefully continue immediately. Because we're in an IRQ handler
+        // we can't really try to resolve the page fault in a meaningful
+        // way, so we need to do this before calling into
+        // MemoryManager::handle_page_fault, which would just bail and
+        // request a crash
+        if (handle_safe_access_fault(regs, fault_address))
+            return;
+    }
+
+
     auto current_thread = Thread::current();
-    if (faulted_in_userspace && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
+    if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
         dbg() << "Invalid stack pointer: " << VirtualAddress(regs.userspace_esp);
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
         ASSERT_NOT_REACHED();
@@ -412,7 +426,7 @@ void page_fault_handler(TrapFrame* trap)
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
 
     if (response == PageFaultResponse::ShouldCrash || response == PageFaultResponse::OutOfMemory) {
-        if (!(regs.cs & 3) && handle_safe_access_fault(regs, fault_address)) {
+        if (faulted_in_kernel && handle_safe_access_fault(regs, fault_address)) {
             // If this would be a ring0 (kernel) fault and the fault was triggered by
             // safe_memcpy, safe_strnlen, or safe_memset then we resume execution at
             // the appropriate _fault label rather than crashing
