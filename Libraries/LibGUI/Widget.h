@@ -281,6 +281,11 @@ public:
     Gfx::StandardCursor override_cursor() const { return m_override_cursor; }
     void set_override_cursor(Gfx::StandardCursor);
 
+    bool load_from_json(const StringView&);
+    bool load_from_json(const JsonObject&);
+    Widget* find_child_by_name(const String&);
+    Widget* find_descendant_by_name(const String&);
+
 protected:
     Widget();
 
