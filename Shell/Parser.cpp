@@ -58,12 +58,16 @@ bool Parser::expect(char ch)
 
 bool Parser::expect(const StringView& expected)
 {
+    auto offset_at_start = m_offset;
+
     if (expected.length() + m_offset > m_input.length())
         return false;
 
     for (size_t i = 0; i < expected.length(); ++i) {
-        if (peek() != expected[i])
+        if (peek() != expected[i]) {
+            m_offset = offset_at_start;
             return false;
+        }
 
         consume();
     }
