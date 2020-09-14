@@ -1026,19 +1026,27 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
     bool ctrl = flags & Mod_Ctrl;
     bool alt = flags & Mod_Alt;
     bool shift = flags & Mod_Shift;
+    unsigned modifier_mask = int(shift) + (int(alt) << 1) + (int(ctrl) << 2);
+
+    auto emit_final_with_modifier = [this, modifier_mask](char final) {
+        if (modifier_mask)
+            emit_string(String::format("\e[1;%d%c", modifier_mask + 1, final));
+        else
+            emit_string(String::format("\e[%c", final));
+    };
 
     switch (key) {
     case KeyCode::Key_Up:
-        emit_string(ctrl ? "\033[OA" : "\033[A");
+        emit_final_with_modifier('A');
         return;
     case KeyCode::Key_Down:
-        emit_string(ctrl ? "\033[OB" : "\033[B");
+        emit_final_with_modifier('B');
         return;
     case KeyCode::Key_Right:
-        emit_string(ctrl ? "\033[OC" : "\033[C");
+        emit_final_with_modifier('C');
         return;
     case KeyCode::Key_Left:
-        emit_string(ctrl ? "\033[OD" : "\033[D");
+        emit_final_with_modifier('D');
         return;
     case KeyCode::Key_Insert:
         emit_string("\033[2~");
@@ -1047,10 +1055,10 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
         emit_string("\033[3~");
         return;
     case KeyCode::Key_Home:
-        emit_string("\033[H");
+        emit_final_with_modifier('H');
         return;
     case KeyCode::Key_End:
-        emit_string("\033[F");
+        emit_final_with_modifier('F');
         return;
     case KeyCode::Key_PageUp:
         emit_string("\033[5~");
