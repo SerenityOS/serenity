@@ -213,14 +213,10 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_previous_button = m_find_widget->add<GUI::Button>("Find previous");
-    m_find_previous_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_find_previous_button->set_preferred_size(150, 0);
+    m_find_previous_button = static_cast<GUI::Button&>(*find_descendant_by_name("find_previous_button"));
     m_find_previous_button->set_action(*m_find_previous_action);
 
-    m_find_next_button = m_find_widget->add<GUI::Button>("Find next");
-    m_find_next_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_find_next_button->set_preferred_size(150, 0);
+    m_find_next_button = static_cast<GUI::Button&>(*find_descendant_by_name("find_next_button"));
     m_find_next_button->set_action(*m_find_next_action);
 
     m_find_textbox->on_return_pressed = [this] {
@@ -232,19 +228,13 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
-    m_replace_previous_button = m_replace_widget->add<GUI::Button>("Replace previous");
-    m_replace_previous_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_replace_previous_button->set_preferred_size(100, 0);
+    m_replace_previous_button = static_cast<GUI::Button&>(*find_descendant_by_name("replace_previous_button"));
     m_replace_previous_button->set_action(*m_replace_previous_action);
 
-    m_replace_next_button = m_replace_widget->add<GUI::Button>("Replace next");
-    m_replace_next_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_replace_next_button->set_preferred_size(100, 0);
+    m_replace_next_button = static_cast<GUI::Button&>(*find_descendant_by_name("replace_next_button"));
     m_replace_next_button->set_action(*m_replace_next_action);
 
-    m_replace_all_button = m_replace_widget->add<GUI::Button>("Replace all");
-    m_replace_all_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_replace_all_button->set_preferred_size(100, 0);
+    m_replace_all_button = static_cast<GUI::Button&>(*find_descendant_by_name("replace_all_button"));
     m_replace_all_button->set_action(*m_replace_all_action);
 
     m_replace_textbox->on_return_pressed = [this] {
