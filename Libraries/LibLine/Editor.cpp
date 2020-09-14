@@ -631,6 +631,11 @@ void Editor::handle_read_event()
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
     size_t consumed_code_points = 0;
 
+    Vector<u8, 4> csi_parameter_bytes;
+    Vector<unsigned, 4> csi_parameters;
+    Vector<u8> csi_intermediate_bytes;
+    u8 csi_final;
+
     for (auto code_point : input_view) {
         if (m_finish)
             break;
@@ -644,7 +649,7 @@ void Editor::handle_read_event()
         case InputState::GotEscape:
             switch (code_point) {
             case '[':
-                m_state = InputState::GotEscapeFollowedByLeftBracket;
+                m_state = InputState::CSIExpectParameter;
                 continue;
             default: {
                 m_state = InputState::Free;
@@ -658,29 +663,55 @@ void Editor::handle_read_event()
                 continue;
             }
             }
-        case InputState::GotEscapeFollowedByLeftBracket:
-            if (code_point == 'O') {
+        case InputState::CSIExpectParameter:
+            if (code_point >= 0x30 && code_point <= 0x3f) { // '0123456789:;<=>?'
+                csi_parameter_bytes.append(code_point);
+                continue;
+            }
+            m_state = InputState::CSIExpectIntermediate;
+            [[fallthrough]];
+        case InputState::CSIExpectIntermediate:
+            if (code_point >= 0x20 && code_point <= 0x2f) { // ' !"#$%&\'()*+,-./'
+                csi_intermediate_bytes.append(code_point);
+                continue;
+            }
+            m_state = InputState::CSIExpectFinal;
+            [[fallthrough]];
+        case InputState::CSIExpectFinal:
+            m_state = InputState::Free;
+            if (!(code_point >= 0x40 && code_point <= 0x7f)) {
+                dbgprintf("LibLine: Invalid CSI: %02x (%c)\r\n", code_point, code_point);
+                ctrl_held = false;
+                continue;
+            }
+            csi_final = code_point;
+
+            for (auto& parameter : String::copy(csi_parameter_bytes).split(';')) {
+                if (auto value = parameter.to_uint(); value.has_value())
+                    csi_parameters.append(value.value());
+                else
+                    csi_parameters.append(0);
+            }
+
+            if (csi_final == 'O') {
                 // mod_ctrl
                 ctrl_held = true;
                 continue;
             }
-            if (code_point == 'Z') {
+            if (csi_final == 'Z') {
                 // 'reverse tab'
                 reverse_tab = true;
-                m_state = InputState::Free;
                 ctrl_held = false;
                 break;
             }
             cleanup_suggestions();
-            switch (code_point) {
+            switch (csi_final) {
             case 'A': // ^[[A: arrow up
                 search_backwards();
-                m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'B': // ^[[B: arrow down
                 search_forwards();
-                m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'D': // ^[[D: arrow left
@@ -688,7 +719,6 @@ void Editor::handle_read_event()
                     cursor_left_word();
                 else
                     cursor_left_character();
-                m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'C': // ^[[C: arrow right
@@ -696,35 +726,34 @@ void Editor::handle_read_event()
                     cursor_right_word();
                 else
                     cursor_right_character();
-                m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'H': // ^[[H: home
                 go_home();
-                m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             case 'F': // ^[[F: end
                 go_end();
-                m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
-            case '3': // ^[[3~: delete
-                erase_character_forwards();
-                m_search_offset = 0;
-                m_state = InputState::ExpectTerminator;
+            case '~':
+                if (csi_parameters.size() == 1 && csi_parameters[0] == 3) { // ^[[3~: delete
+                    erase_character_forwards();
+                    m_search_offset = 0;
+                    ctrl_held = false;
+                    continue;
+                }
+                // ^[[5~: page up
+                // ^[[6~: page down
+                dbgprintf("LibLine: Unhandled '~'\r\n");
                 ctrl_held = false;
                 continue;
             default:
                 dbgprintf("LibLine: Unhandled final: %02x (%c)\r\n", code_point, code_point);
-                m_state = InputState::Free;
                 ctrl_held = false;
                 continue;
             }
             break;
-        case InputState::ExpectTerminator:
-            m_state = InputState::Free;
-            continue;
         case InputState::Free:
             if (code_point == 27) {
                 m_state = InputState::GotEscape;

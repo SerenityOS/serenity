@@ -471,8 +471,9 @@ private:
     enum class InputState {
         Free,
         GotEscape,
-        GotEscapeFollowedByLeftBracket,
-        ExpectTerminator,
+        CSIExpectParameter,
+        CSIExpectIntermediate,
+        CSIExpectFinal,
     };
     InputState m_state { InputState::Free };
 
