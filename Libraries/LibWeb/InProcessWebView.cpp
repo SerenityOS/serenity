@@ -58,6 +58,8 @@
 
 //#define SELECTION_DEBUG
 
+REGISTER_WIDGET(Web, InProcessWebView)
+
 namespace Web {
 
 InProcessWebView::InProcessWebView()
