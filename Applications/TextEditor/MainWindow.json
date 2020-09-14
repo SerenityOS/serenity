@@ -40,7 +40,31 @@
             "layout": {
                 "class": "GUI::VerticalBoxLayout",
                 "margins": [ 2, 2, 2, 4 ]
-            }
+            },
+            "children": [
+                {
+                    "class": "GUI::Widget",
+                    "name": "find_widget",
+                    "fill_with_background_color": true,
+                    "horizontal_size_policy": "Fill",
+                    "vertical_size_policy": "Fixed",
+                    "preferred_height": 22,
+                    "layout": {
+                        "class": "GUI::HorizontalBoxLayout"
+                    }
+                },
+                {
+                    "class": "GUI::Widget",
+                    "name": "replace_widget",
+                    "fill_with_background_color": true,
+                    "horizontal_size_policy": "Fill",
+                    "vertical_size_policy": "Fixed",
+                    "preferred_height": 22,
+                    "layout": {
+                        "class": "GUI::HorizontalBoxLayout"
+                    }
+                }
+            ]
         },
         {
             "class": "GUI::StatusBar",

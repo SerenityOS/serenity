@@ -105,18 +105,10 @@ TextEditorWidget::TextEditorWidget()
     m_find_replace_widget = *find_descendant_by_name("find_replace_widget");
     m_find_replace_widget->set_visible(false);
 
-    m_find_widget = m_find_replace_widget->add<GUI::Widget>();
-    m_find_widget->set_fill_with_background_color(true);
-    m_find_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_find_widget->set_preferred_size(0, 22);
-    m_find_widget->set_layout<GUI::HorizontalBoxLayout>();
+    m_find_widget = *find_descendant_by_name("find_widget");
     m_find_widget->set_visible(false);
 
-    m_replace_widget = m_find_replace_widget->add<GUI::Widget>();
-    m_replace_widget->set_fill_with_background_color(true);
-    m_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_replace_widget->set_preferred_size(0, 22);
-    m_replace_widget->set_layout<GUI::HorizontalBoxLayout>();
+    m_replace_widget = *find_descendant_by_name("replace_widget");
     m_replace_widget->set_visible(false);
 
     m_find_textbox = m_find_widget->add<GUI::TextBox>();
