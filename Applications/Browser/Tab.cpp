@@ -32,6 +32,7 @@
 #include "InspectorWidget.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
+#include <Applications/Browser/TabUI.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -76,16 +77,17 @@ URL url_from_user_input(const String& input)
 Tab::Tab(Type type)
     : m_type(type)
 {
-    auto& widget = *this;
-    set_layout<GUI::VerticalBoxLayout>();
+    load_from_json(tab_ui_json);
 
-    m_toolbar_container = widget.add<GUI::ToolBarContainer>();
-    auto& toolbar = m_toolbar_container->add<GUI::ToolBar>();
+    m_toolbar_container = static_cast<GUI::ToolBarContainer&>(*find_descendant_by_name("toolbar_container"));
+    auto& toolbar = static_cast<GUI::ToolBar&>(*find_descendant_by_name("toolbar"));
+
+    auto& webview_container = *find_descendant_by_name("webview_container");
 
     if (m_type == Type::InProcessWebView)
-        m_page_view = widget.add<Web::InProcessWebView>();
+        m_page_view = webview_container.add<Web::InProcessWebView>();
     else
-        m_web_content_view = widget.add<Web::OutOfProcessWebView>();
+        m_web_content_view = webview_container.add<Web::OutOfProcessWebView>();
 
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { go_forward(); }, this);
@@ -217,7 +219,7 @@ Tab::Tab(Type type)
         },
         this);
 
-    m_statusbar = widget.add<GUI::StatusBar>();
+    m_statusbar = static_cast<GUI::StatusBar&>(*find_descendant_by_name("statusbar"));
 
     hooks().on_link_hover = [this](auto& url) {
         if (url.is_valid())
