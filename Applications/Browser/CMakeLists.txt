@@ -1,3 +1,5 @@
+compile_json_gui(BrowserWindow.json BrowserWindowUI.h browser_window_ui_json)
+
 set(SOURCES
     BookmarksBarWidget.cpp
     BrowserConsoleClient.cpp
@@ -8,6 +10,7 @@ set(SOURCES
     main.cpp
     Tab.cpp
     WindowActions.cpp
+    BrowserWindowUI.h
 )
 
 serenity_bin(Browser)

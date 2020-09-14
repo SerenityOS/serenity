@@ -30,6 +30,7 @@
 #include "Tab.h"
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
+#include <Applications/Browser/BrowserWindowUI.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
@@ -134,14 +135,10 @@ int main(int argc, char** argv)
     window->set_title("Browser");
 
     auto& widget = window->set_main_widget<GUI::Widget>();
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.layout()->set_spacing(2);
+    widget.load_from_json(browser_window_ui_json);
 
-    auto& tab_widget = widget.add<GUI::TabWidget>();
+    auto& tab_widget = static_cast<GUI::TabWidget&>(*widget.find_descendant_by_name("tab_widget"));
     tab_widget.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    tab_widget.set_container_padding(0);
-    tab_widget.set_uniform_tabs(true);
 
     auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
     ASSERT(default_favicon);
