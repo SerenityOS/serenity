@@ -757,6 +757,31 @@ private:
     RefPtr<Node> m_right;
 };
 
+struct MatchEntry {
+    NonnullRefPtrVector<Node> options;
+    Vector<Position> pipe_positions;
+    RefPtr<Node> body;
+};
+
+class MatchExpr final : public Node {
+public:
+    MatchExpr(Position, RefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries);
+    virtual ~MatchExpr();
+
+private:
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) override;
+    virtual String class_name() const override { return "MatchExpr"; }
+    virtual bool would_execute() const override { return true; }
+
+    RefPtr<Node> m_matched_expr;
+    String m_expr_name;
+    Optional<Position> m_as_position;
+    Vector<MatchEntry> m_entries;
+};
+
 class Or final : public Node {
 public:
     Or(Position, RefPtr<Node>, RefPtr<Node>);

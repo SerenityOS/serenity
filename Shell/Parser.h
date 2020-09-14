@@ -55,6 +55,9 @@ private:
     RefPtr<AST::Node> parse_for_loop();
     RefPtr<AST::Node> parse_if_expr();
     RefPtr<AST::Node> parse_subshell();
+    RefPtr<AST::Node> parse_match_expr();
+    AST::MatchEntry parse_match_entry();
+    RefPtr<AST::Node> parse_match_pattern();
     RefPtr<AST::Node> parse_redirection();
     RefPtr<AST::Node> parse_list_expression();
     RefPtr<AST::Node> parse_expression();
@@ -135,6 +138,7 @@ pipe_sequence :: command '|' pipe_sequence
 control_structure :: for_expr
                    | if_expr
                    | subshell
+                   | match_expr
 
 for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
 
@@ -144,6 +148,12 @@ else_clause :: else '{' toplevel '}'
              | else if_expr
 
 subshell :: '{' toplevel '}'
+
+match_expr :: 'match' ws+ expression ws* ('as' ws+ identifier)? '{' match_entry* '}'
+
+match_entry :: match_pattern ws* '{' toplevel '}'
+
+match_pattern :: expression (ws* '|' ws* expression)*
 
 command :: redirection command
          | list_expression command?

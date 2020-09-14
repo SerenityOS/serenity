@@ -460,6 +460,9 @@ RefPtr<AST::Node> Parser::parse_control_structure()
     if (auto subshell = parse_subshell())
         return subshell;
 
+    if (auto match = parse_match_expr())
+        return match;
+
     return nullptr;
 }
 
@@ -625,6 +628,142 @@ RefPtr<AST::Node> Parser::parse_subshell()
     }
 
     return create<AST::Subshell>(move(body));
+}
+
+RefPtr<AST::Node> Parser::parse_match_expr()
+{
+    auto rule_start = push_start();
+    if (!expect("match"))
+        return nullptr;
+
+    if (consume_while(is_whitespace).is_empty()) {
+        m_offset = rule_start->offset;
+        return nullptr;
+    }
+
+    auto match_expression = parse_expression();
+    if (!match_expression) {
+        return create<AST::MatchExpr>(
+            create<AST::SyntaxError>("Expected an expression after 'match'"),
+            String {}, Optional<AST::Position> {}, Vector<AST::MatchEntry> {});
+    }
+
+    consume_while(is_any_of(" \t\n"));
+
+    String match_name;
+    Optional<AST::Position> as_position;
+    auto as_start = m_offset;
+    if (expect("as")) {
+        as_position = AST::Position { as_start, m_offset };
+
+        if (consume_while(is_any_of(" \t\n")).is_empty()) {
+            auto node = create<AST::MatchExpr>(
+                move(match_expression),
+                String {}, move(as_position), Vector<AST::MatchEntry> {});
+            node->set_is_syntax_error(create<AST::SyntaxError>("Expected whitespace after 'as' in 'match'"));
+            return node;
+        }
+
+        match_name = consume_while(is_word_character);
+        if (match_name.is_empty()) {
+            auto node = create<AST::MatchExpr>(
+                move(match_expression),
+                String {}, move(as_position), Vector<AST::MatchEntry> {});
+            node->set_is_syntax_error(create<AST::SyntaxError>("Expected an identifier after 'as' in 'match'"));
+            return node;
+        }
+    }
+
+    consume_while(is_any_of(" \t\n"));
+
+    if (!expect('{')) {
+        auto node = create<AST::MatchExpr>(
+            move(match_expression),
+            move(match_name), move(as_position), Vector<AST::MatchEntry> {});
+        node->set_is_syntax_error(create<AST::SyntaxError>("Expected an open brace '{' to start a 'match' entry list"));
+        return node;
+    }
+
+    consume_while(is_any_of(" \t\n"));
+
+    Vector<AST::MatchEntry> entries;
+    for (;;) {
+        auto entry = parse_match_entry();
+        consume_while(is_any_of(" \t\n"));
+        if (entry.options.is_empty())
+            break;
+
+        entries.append(entry);
+    }
+
+    consume_while(is_any_of(" \t\n"));
+
+    if (!expect('}')) {
+        auto node = create<AST::MatchExpr>(
+            move(match_expression),
+            move(match_name), move(as_position), move(entries));
+        node->set_is_syntax_error(create<AST::SyntaxError>("Expected a close brace '}' to end a 'match' entry list"));
+        return node;
+    }
+
+    return create<AST::MatchExpr>(move(match_expression), move(match_name), move(as_position), move(entries));
+}
+
+AST::MatchEntry Parser::parse_match_entry()
+{
+    auto rule_start = push_start();
+
+    NonnullRefPtrVector<AST::Node> patterns;
+    Vector<AST::Position> pipe_positions;
+
+    auto pattern = parse_match_pattern();
+    if (!pattern)
+        return { {}, {}, create<AST::SyntaxError>("Expected a pattern in 'match' body") };
+
+    patterns.append(pattern.release_nonnull());
+
+    consume_while(is_any_of(" \t\n"));
+
+    auto previous_pipe_start_position = m_offset;
+    RefPtr<AST::SyntaxError> error;
+    while (expect('|')) {
+        pipe_positions.append({ previous_pipe_start_position, m_offset });
+        consume_while(is_any_of(" \t\n"));
+        auto pattern = parse_match_pattern();
+        if (!pattern) {
+            error = create<AST::SyntaxError>("Expected a pattern to follow '|' in 'match' body");
+            break;
+        }
+        consume_while(is_any_of(" \t\n"));
+
+        patterns.append(pattern.release_nonnull());
+    }
+
+    consume_while(is_any_of(" \t\n"));
+
+    if (!expect('{')) {
+        if (!error)
+            error = create<AST::SyntaxError>("Expected an open brace '{' to start a match entry body");
+    }
+
+    auto body = parse_toplevel();
+
+    if (!expect('}')) {
+        if (!error)
+            error = create<AST::SyntaxError>("Expected a close brace '}' to end a match entry body");
+    }
+
+    if (body && error)
+        body->set_is_syntax_error(*error);
+    else if (error)
+        body = error;
+
+    return { move(patterns), move(pipe_positions), move(body) };
+}
+
+RefPtr<AST::Node> Parser::parse_match_pattern()
+{
+    return parse_expression();
 }
 
 RefPtr<AST::Node> Parser::parse_redirection()
