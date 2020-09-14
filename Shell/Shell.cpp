@@ -591,10 +591,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             return nullptr;
     }
 
-    int retval = 0;
-    if (run_builtin(command, rewirings, retval)) {
+    if (run_builtin(command, rewirings, last_return_code)) {
         for (auto& next_in_chain : command.next_chain)
-            run_tail(next_in_chain, retval);
+            run_tail(next_in_chain, last_return_code);
         return nullptr;
     }
 
@@ -610,9 +609,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             }
         }
 
-        if (invoke_function(command, retval)) {
+        if (invoke_function(command, last_return_code)) {
             for (auto& next_in_chain : command.next_chain)
-                run_tail(next_in_chain, retval);
+                run_tail(next_in_chain, last_return_code);
             return nullptr;
         }
     }

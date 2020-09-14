@@ -1209,16 +1209,16 @@ void IfCond::dump(int level) const
 RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
 {
     auto cond = m_condition->run(shell)->resolve_without_cast(shell);
-    ASSERT(cond->is_job());
+    // The condition could be a builtin, in which case it has already run and exited.
+    if (cond && cond->is_job()) {
+        auto cond_job_value = static_cast<const JobValue*>(cond.ptr());
+        auto cond_job = cond_job_value->job();
 
-    auto cond_job_value = static_cast<const JobValue*>(cond.ptr());
-    auto cond_job = cond_job_value->job();
+        shell->block_on_job(cond_job);
 
-    shell->block_on_job(cond_job);
-
-    if (cond_job->signaled())
-        return create<ListValue>({}); // Exit early.
-
+        if (cond_job->signaled())
+            return create<ListValue>({}); // Exit early.
+    }
     if (shell->last_return_code == 0) {
         if (m_true_branch)
             return m_true_branch->run(shell);
