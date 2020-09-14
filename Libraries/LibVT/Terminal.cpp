@@ -1034,6 +1034,12 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
         else
             emit_string(String::format("\e[%c", final));
     };
+    auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {
+        if (modifier_mask)
+            emit_string(String::format("\e[%d;%d~", num, modifier_mask + 1));
+        else
+            emit_string(String::format("\e[%d~", num));
+    };
 
     switch (key) {
     case KeyCode::Key_Up:
@@ -1049,10 +1055,10 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
         emit_final_with_modifier('D');
         return;
     case KeyCode::Key_Insert:
-        emit_string("\033[2~");
+        emit_tilde_with_modifier(2);
         return;
     case KeyCode::Key_Delete:
-        emit_string("\033[3~");
+        emit_tilde_with_modifier(3);
         return;
     case KeyCode::Key_Home:
         emit_final_with_modifier('H');
@@ -1061,10 +1067,10 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
         emit_final_with_modifier('F');
         return;
     case KeyCode::Key_PageUp:
-        emit_string("\033[5~");
+        emit_tilde_with_modifier(5);
         return;
     case KeyCode::Key_PageDown:
-        emit_string("\033[6~");
+        emit_tilde_with_modifier(6);
         return;
     default:
         break;
