@@ -40,7 +40,11 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/SpinBox.h>
+#include <LibGUI/Splitter.h>
+#include <LibGUI/StatusBar.h>
 #include <LibGUI/TextBox.h>
+#include <LibGUI/ToolBar.h>
+#include <LibGUI/ToolBarContainer.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
@@ -51,16 +55,21 @@
 
 namespace GUI {
 
-REGISTER_WIDGET(Button)
-REGISTER_WIDGET(CheckBox)
-REGISTER_WIDGET(GroupBox)
-REGISTER_WIDGET(Label)
-REGISTER_WIDGET(RadioButton)
-REGISTER_WIDGET(ScrollBar)
-REGISTER_WIDGET(Slider)
-REGISTER_WIDGET(SpinBox)
-REGISTER_WIDGET(TextBox)
-REGISTER_WIDGET(Widget)
+REGISTER_WIDGET(GUI, Button)
+REGISTER_WIDGET(GUI, CheckBox)
+REGISTER_WIDGET(GUI, GroupBox)
+REGISTER_WIDGET(GUI, HorizontalSplitter)
+REGISTER_WIDGET(GUI, Label)
+REGISTER_WIDGET(GUI, RadioButton)
+REGISTER_WIDGET(GUI, ScrollBar)
+REGISTER_WIDGET(GUI, Slider)
+REGISTER_WIDGET(GUI, SpinBox)
+REGISTER_WIDGET(GUI, StatusBar)
+REGISTER_WIDGET(GUI, TextBox)
+REGISTER_WIDGET(GUI, TextEditor)
+REGISTER_WIDGET(GUI, ToolBar)
+REGISTER_WIDGET(GUI, ToolBarContainer)
+REGISTER_WIDGET(GUI, Widget)
 
 static HashMap<String, WidgetClassRegistration*>& widget_classes()
 {
