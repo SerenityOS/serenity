@@ -717,13 +717,13 @@ void Editor::handle_read_event()
                 search_forwards();
                 continue;
             case 'D': // ^[[D: arrow left
-                if (modifiers == CSIMod::Ctrl)
+                if (modifiers == CSIMod::Alt || modifiers == CSIMod::Ctrl)
                     cursor_left_word();
                 else
                     cursor_left_character();
                 continue;
             case 'C': // ^[[C: arrow right
-                if (modifiers == CSIMod::Ctrl)
+                if (modifiers == CSIMod::Alt || modifiers == CSIMod::Ctrl)
                     cursor_right_word();
                 else
                     cursor_right_character();
