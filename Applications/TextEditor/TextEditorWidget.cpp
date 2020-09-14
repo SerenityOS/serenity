@@ -25,9 +25,12 @@
  */
 
 #include "TextEditorWidget.h"
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
+#include <Applications/TextEditor/MainWindowUI.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibDesktop/Launcher.h>
@@ -57,16 +60,11 @@
 
 TextEditorWidget::TextEditorWidget()
 {
-    set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_spacing(2);
+    load_from_json(main_window_ui_json);
 
-    auto& toolbar_container = add<GUI::ToolBarContainer>();
-    auto& toolbar = toolbar_container.add<GUI::ToolBar>();
+    auto& toolbar = static_cast<GUI::ToolBar&>(*find_descendant_by_name("toolbar"));
 
-    auto& splitter = add<GUI::HorizontalSplitter>();
-
-    m_editor = splitter.add<GUI::TextEditor>();
+    m_editor = static_cast<GUI::TextEditor&>(*find_descendant_by_name("editor"));
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
     m_editor->set_line_wrapping_enabled(true);
@@ -86,7 +84,7 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    m_page_view = splitter.add<Web::InProcessWebView>();
+    m_page_view = static_cast<Web::InProcessWebView&>(*find_descendant_by_name("webview"));
     m_page_view->set_visible(false);
     m_page_view->on_link_hover = [this](auto& url) {
         if (url.is_valid())
@@ -104,12 +102,7 @@ TextEditorWidget::TextEditorWidget()
         }
     };
 
-    m_find_replace_widget = add<GUI::Widget>();
-    m_find_replace_widget->set_fill_with_background_color(true);
-    m_find_replace_widget->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    m_find_replace_widget->set_preferred_size(0, 48);
-    m_find_replace_widget->set_layout<GUI::VerticalBoxLayout>();
-    m_find_replace_widget->layout()->set_margins({ 2, 2, 2, 4 });
+    m_find_replace_widget = *find_descendant_by_name("find_replace_widget");
     m_find_replace_widget->set_visible(false);
 
     m_find_widget = m_find_replace_widget->add<GUI::Widget>();
@@ -292,7 +285,7 @@ TextEditorWidget::TextEditorWidget()
     m_editor->add_custom_context_menu_action(*m_find_next_action);
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
-    m_statusbar = add<GUI::StatusBar>();
+    m_statusbar = static_cast<GUI::StatusBar&>(*find_descendant_by_name("statusbar"));
 
     m_editor->on_cursor_change = [this] { update_statusbar_cursor_position(); };
 

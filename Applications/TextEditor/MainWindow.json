@@ -1,0 +1,50 @@
+{
+    "name": "main",
+    "fill_with_background_color": true,
+
+    "layout": {
+        "class": "GUI::VerticalBoxLayout",
+        "spacing": 2
+    },
+
+    "children": [
+        {
+            "class": "GUI::ToolBarContainer",
+            "children": [
+                {
+                    "class": "GUI::ToolBar",
+                    "name": "toolbar"
+                }
+            ]
+        },
+        {
+            "class": "GUI::HorizontalSplitter",
+            "children": [
+                {
+                    "class": "GUI::TextEditor",
+                    "name": "editor"
+                },
+                {
+                    "class": "Web::InProcessWebView",
+                    "name": "webview"
+                }
+            ]
+        },
+        {
+            "class": "GUI::Widget",
+            "name": "find_replace_widget",
+            "fill_with_background_color": true,
+            "horizontal_size_policy": "Fill",
+            "vertical_size_policy": "Fixed",
+            "preferred_height": 48,
+            "layout": {
+                "class": "GUI::VerticalBoxLayout",
+                "margins": [ 2, 2, 2, 4 ]
+            }
+        },
+        {
+            "class": "GUI::StatusBar",
+            "name": "statusbar"
+        }
+    ]
+}
