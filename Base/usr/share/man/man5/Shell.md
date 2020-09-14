@@ -60,6 +60,8 @@ The following tokens:
 * `in` as a syntactic element of a `for` expression
 * `if` in command name position, or after the `else` keyword
 * `else` after a partial `if` expression
+* `match` in command name position
+* `as` as part of a `match` expression
 
 ##### Special characters
 Any of the following:
@@ -249,6 +251,28 @@ fn(a b c) {
 
 $ fn 1 2 3 4
 # 1 2 3 ( 1 2 3 4 )
+```
+
+##### Match Expressions
+The pattern matching construct `match` shall choose from a sequence of patterns, and execute the corresponding action in a new frame.
+The choice is done by matching the result of the _matched expression_ (after expansion) against the _patterns_ (expanded down to either globs or literals).
+Multiple _patterns_ can be attributed to a single given action by delimiting them with a pipe ('|') symbol.
+
+The expanded _matched expression_ can optionally be given a name using the `as name` clause after the _matched expression_, with which it may be accessible in the action clauses.
+
+######
+```sh
+# Match the result of running 'make_some_value' (which is a list when captured by $(...))
+match "$(make_some_value)" as value {
+    (hello*) { echo "Hi!" }
+    (say\ *) { echo "No, I will not $value" }
+}
+
+# Match the result of running 'make_some_value', cast to a string.
+match "$(make_some_value)" {
+    hello* { echo "Hi!" }
+    say\ * { echo "No, I will not!" }
+}
 ```
 
 ## Formal Grammar
