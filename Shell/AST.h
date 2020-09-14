@@ -392,6 +392,7 @@ public:
     virtual bool is_glob() const { return false; }
     virtual bool is_tilde() const { return false; }
     virtual bool is_variable_decls() const { return false; }
+    virtual bool is_simple_variable() const { return false; }
     virtual bool is_syntax_error() const { return m_is_syntax_error; }
 
     virtual bool is_list() const { return false; }
@@ -650,6 +651,7 @@ private:
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
+    virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
     virtual String class_name() const override { return "FunctionDeclaration"; }
     virtual bool would_execute() const override { return true; }
 
@@ -849,6 +851,8 @@ public:
     SimpleVariable(Position, String);
     virtual ~SimpleVariable();
 
+    const String& name() const { return m_name; }
+
 private:
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
@@ -856,6 +860,7 @@ private:
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "SimpleVariable"; }
+    virtual bool is_simple_variable() const override { return true; }
 
     String m_name;
 };
