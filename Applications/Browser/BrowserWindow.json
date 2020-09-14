@@ -12,7 +12,8 @@
             "class": "GUI::TabWidget",
             "name": "tab_widget",
             "container_padding": 0,
-            "uniform_tabs": true
+            "uniform_tabs": true,
+            "text_alignment": "CenterLeft"
         }
     ]
 }

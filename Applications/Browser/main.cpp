@@ -138,7 +138,6 @@ int main(int argc, char** argv)
     widget.load_from_json(browser_window_ui_json);
 
     auto& tab_widget = static_cast<GUI::TabWidget&>(*widget.find_descendant_by_name("tab_widget"));
-    tab_widget.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
     ASSERT(default_favicon);
