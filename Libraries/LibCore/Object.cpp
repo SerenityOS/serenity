@@ -155,7 +155,10 @@ void Object::dump_tree(int indent)
     for (int i = 0; i < indent; ++i) {
         printf(" ");
     }
-    printf("%s{%p}\n", class_name(), this);
+    printf("%s{%p}", class_name(), this);
+    if (!name().is_null())
+        printf(" %s", name().characters());
+    printf("\n");
 
     for_each_child([&](auto& child) {
         child.dump_tree(indent + 2);
