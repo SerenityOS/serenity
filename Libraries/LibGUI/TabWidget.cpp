@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
@@ -404,6 +405,13 @@ bool TabWidget::set_property(const StringView& name, const JsonValue& value)
 
     if (name == "uniform_tabs") {
         set_uniform_tabs(value.to_bool());
+        return true;
+    }
+
+    if (name == "text_alignment") {
+        auto alignment = Gfx::text_alignment_from_string(value.to_string());
+        if (alignment.has_value())
+            set_text_alignment(alignment.value());
         return true;
     }
 
