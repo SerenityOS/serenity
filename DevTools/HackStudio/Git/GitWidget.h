@@ -45,6 +45,7 @@ private:
 
     void stage_file(const LexicalPath&);
     void unstage_file(const LexicalPath&);
+    void commit();
 
     LexicalPath m_repo_root;
     RefPtr<GitFilesView> m_unstaged_files;

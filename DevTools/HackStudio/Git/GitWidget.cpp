@@ -29,6 +29,8 @@
 #include <AK/LogStream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
@@ -37,22 +39,6 @@
 
 namespace HackStudio {
 
-void GitWidget::stage_file(const LexicalPath& file)
-{
-    dbg() << "staging: " << file.string();
-    bool rc = m_git_repo->stage(file);
-    ASSERT(rc);
-    refresh();
-}
-
-void GitWidget::unstage_file(const LexicalPath& file)
-{
-    dbg() << "unstaging: " << file.string();
-    bool rc = m_git_repo->unstage(file);
-    ASSERT(rc);
-    refresh();
-}
-
 GitWidget::GitWidget(const LexicalPath& repo_root)
     : m_repo_root(repo_root)
 {
@@ -60,20 +46,43 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
 
     auto& unstaged = add<GUI::Widget>();
     unstaged.set_layout<GUI::VerticalBoxLayout>();
-    auto& unstaged_label = unstaged.add<GUI::Label>();
+    auto& unstaged_header = unstaged.add<GUI::Widget>();
+    unstaged_header.set_layout<GUI::HorizontalBoxLayout>();
+
+    auto& refresh_button = unstaged_header.add<GUI::Button>();
+    refresh_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"));
+    refresh_button.set_preferred_size({ 16, 16 });
+    refresh_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    refresh_button.set_tooltip("refresh");
+    refresh_button.on_click = [this](int) { refresh(); };
+
+    auto& unstaged_label = unstaged_header.add<GUI::Label>();
     unstaged_label.set_text("Unstaged");
-    unstaged_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    unstaged_label.set_preferred_size(0, 20);
+
+    unstaged_header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    unstaged_header.set_preferred_size(0, 20);
     m_unstaged_files = unstaged.add<GitFilesView>(
         [this](const auto& file) { stage_file(file); },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png").release_nonnull());
 
     auto& staged = add<GUI::Widget>();
     staged.set_layout<GUI::VerticalBoxLayout>();
-    auto& staged_label = staged.add<GUI::Label>();
-    staged_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    staged_label.set_preferred_size(0, 20);
+
+    auto& staged_header = staged.add<GUI::Widget>();
+    staged_header.set_layout<GUI::HorizontalBoxLayout>();
+
+    auto& commit_button = staged_header.add<GUI::Button>();
+    commit_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/commit.png"));
+    commit_button.set_preferred_size({ 16, 16 });
+    commit_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+    commit_button.set_tooltip("commit");
+    commit_button.on_click = [this](int) { commit(); };
+
+    auto& staged_label = staged_header.add<GUI::Label>();
     staged_label.set_text("Staged");
+
+    staged_header.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    staged_header.set_preferred_size(0, 20);
     m_staged_files = staged.add<GitFilesView>(
         [this](const auto& file) { unstage_file(file); },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/minus.png").release_nonnull());
@@ -100,4 +109,30 @@ void GitWidget::refresh()
     m_staged_files->set_model(GitFilesModel::create(m_git_repo->staged_files()));
 }
 
-};
+void GitWidget::stage_file(const LexicalPath& file)
+{
+    dbg() << "staging: " << file.string();
+    bool rc = m_git_repo->stage(file);
+    ASSERT(rc);
+    refresh();
+}
+
+void GitWidget::unstage_file(const LexicalPath& file)
+{
+    dbg() << "unstaging: " << file.string();
+    bool rc = m_git_repo->unstage(file);
+    ASSERT(rc);
+    refresh();
+}
+
+void GitWidget::commit()
+{
+    String message;
+    auto res = GUI::InputBox::show(message, window(), "Commit message:", "Commit");
+    if (res != GUI::InputBox::ExecOK || message.is_empty())
+        return;
+    dbg() << "commit message: " << message;
+    m_git_repo->commit(message);
+    refresh();
+}
+}

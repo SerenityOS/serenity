@@ -45,7 +45,7 @@ GitRepo::CreateResult GitRepo::try_to_create(const LexicalPath& repository_root)
 
 RefPtr<GitRepo> GitRepo::initialize_repository(const LexicalPath& repository_root)
 {
-    auto res = command_wrapper("init", repository_root);
+    auto res = command_wrapper({ "init" }, repository_root);
     if (res.is_null())
         return {};
 
@@ -60,10 +60,10 @@ Vector<LexicalPath> GitRepo::unstaged_files() const
     modified.append(move(untracked));
     return modified;
 }
-
+//
 Vector<LexicalPath> GitRepo::staged_files() const
 {
-    auto raw_result = command("diff --cached --name-only");
+    auto raw_result = command({ "diff", "--cached", "--name-only" });
     if (raw_result.is_null())
         return {};
     return parse_files_list(raw_result);
@@ -71,7 +71,7 @@ Vector<LexicalPath> GitRepo::staged_files() const
 
 Vector<LexicalPath> GitRepo::modified_files() const
 {
-    auto raw_result = command("ls-files --modified --exclude-standard");
+    auto raw_result = command({ "ls-files", "--modified", "--exclude-standard" });
     if (raw_result.is_null())
         return {};
     return parse_files_list(raw_result);
@@ -79,7 +79,7 @@ Vector<LexicalPath> GitRepo::modified_files() const
 
 Vector<LexicalPath> GitRepo::untracked_files() const
 {
-    auto raw_result = command("ls-files --others --exclude-standard");
+    auto raw_result = command({ "ls-files", "--others", "--exclude-standard" });
     if (raw_result.is_null())
         return {};
     return parse_files_list(raw_result);
@@ -95,37 +95,38 @@ Vector<LexicalPath> GitRepo::parse_files_list(const String& raw_result)
     return files;
 }
 
-String GitRepo::command(const String& git_command) const
+String GitRepo::command(const Vector<String>& command_parts) const
 {
-    return command_wrapper(git_command, m_repository_root);
+    return command_wrapper(command_parts, m_repository_root);
 }
 
-String GitRepo::command_wrapper(const String& git_command, const LexicalPath& chdir)
+String GitRepo::command_wrapper(const Vector<String>& command_parts, const LexicalPath& chdir)
 {
-    return Core::command(String::format("git %s", git_command.characters()), chdir);
+    return Core::command("git", command_parts, chdir);
 }
 
 bool GitRepo::git_is_installed()
 {
-    return !command_wrapper("--help", LexicalPath("/")).is_null();
+    return !command_wrapper({ "--help" }, LexicalPath("/")).is_null();
 }
 
 bool GitRepo::git_repo_exists(const LexicalPath& repo_root)
 {
-    return !command_wrapper("status", repo_root).is_null();
+    return !command_wrapper({ "status" }, repo_root).is_null();
 }
 
 bool GitRepo::stage(const LexicalPath& file)
 {
-    auto cmd = String::format("add %s", file.string().characters());
-    auto res = command(cmd);
-    return !res.is_null();
+    return !command({ "add", file.string() }).is_null();
 }
 
 bool GitRepo::unstage(const LexicalPath& file)
 {
-    auto cmd = String::format("reset HEAD -- %s", file.string().characters());
-    return !command(cmd).is_null();
+    return !command({ "reset", "HEAD", "--", file.string() }).is_null();
 }
 
+bool GitRepo::commit(const String& message)
+{
+    return !command({ "commit", "-m", message }).is_null();
+}
 }
