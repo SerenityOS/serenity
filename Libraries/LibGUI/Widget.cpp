@@ -940,6 +940,10 @@ bool Widget::load_from_json(const JsonObject& json)
     if (fill_with_background_color.is_bool())
         set_fill_with_background_color(fill_with_background_color.to_bool());
 
+    auto visible = json.get("visible");
+    if (visible.is_bool())
+        set_visible(visible.to_bool());
+
     auto preferred_height = json.get("preferred_height");
     if (preferred_height.is_number())
         set_preferred_size(preferred_size().width(), preferred_height.to_i32());
