@@ -28,6 +28,7 @@
 #include <AK/JsonObject.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Event.h>
@@ -897,6 +898,143 @@ void Widget::set_override_cursor(Gfx::StandardCursor cursor)
     m_override_cursor = cursor;
     if (auto* window = this->window())
         window->update_cursor({});
+}
+
+bool Widget::load_from_json(const StringView& json_string)
+{
+    auto json_value = JsonValue::from_string(json_string);
+    if (!json_value.has_value()) {
+        dbg() << "load_from_json parse failed: _" << json_string << "_";
+        return false;
+    }
+    if (!json_value.value().is_object()) {
+        dbg() << "load_from_json parse non-object";
+        return false;
+    }
+    return load_from_json(json_value.value().as_object());
+}
+
+bool Widget::load_from_json(const JsonObject& json)
+{
+    auto name = json.get("name");
+    if (name.is_string())
+        this->set_name(name.as_string());
+
+    auto horizontal_size_policy = json.get("horizontal_size_policy");
+    if (horizontal_size_policy.is_string()) {
+        if (horizontal_size_policy.as_string() == "Fill")
+            set_size_policy(Gfx::Orientation::Horizontal, SizePolicy::Fill);
+        else if (horizontal_size_policy.as_string() == "Fixed")
+            set_size_policy(Gfx::Orientation::Horizontal, SizePolicy::Fixed);
+    }
+
+    auto vertical_size_policy = json.get("vertical_size_policy");
+    if (vertical_size_policy.is_string()) {
+        if (vertical_size_policy.as_string() == "Fill")
+            set_size_policy(Gfx::Orientation::Vertical, SizePolicy::Fill);
+        else if (vertical_size_policy.as_string() == "Fixed")
+            set_size_policy(Gfx::Orientation::Vertical, SizePolicy::Fixed);
+    }
+
+    auto fill_with_background_color = json.get("fill_with_background_color");
+    if (fill_with_background_color.is_bool())
+        set_fill_with_background_color(fill_with_background_color.to_bool());
+
+    auto preferred_height = json.get("preferred_height");
+    if (preferred_height.is_number())
+        set_preferred_size(preferred_size().width(), preferred_height.to_i32());
+
+    auto preferred_width = json.get("preferred_width");
+    if (preferred_width.is_number())
+        set_preferred_size(preferred_width.to_i32(), preferred_size().height());
+
+    auto layout_value = json.get("layout");
+    if (layout_value.is_object()) {
+        auto& layout = layout_value.as_object();
+        auto class_name = layout.get("class");
+        if (class_name.is_null()) {
+            dbg() << "Invalid layout class name";
+            return false;
+        }
+
+        if (class_name.to_string() == "GUI::VerticalBoxLayout") {
+            set_layout<GUI::VerticalBoxLayout>();
+        } else if (class_name.to_string() == "GUI::HorizontalBoxLayout") {
+            set_layout<GUI::HorizontalBoxLayout>();
+        } else {
+            dbg() << "Unknown layout class: '" << class_name.to_string() << "'";
+            return false;
+        }
+
+        auto spacing = layout.get("spacing");
+        if (spacing.is_number())
+            this->layout()->set_spacing(spacing.to_i32());
+
+        auto margins = layout.get("margins");
+        if (margins.is_array()) {
+            if (margins.as_array().size() != 4) {
+                dbg() << "margins array needs 4 entries";
+                return false;
+            }
+            int m[4];
+            for (size_t i = 0; i < 4; ++i)
+                m[i] = margins.as_array().at(i).to_i32();
+            dbg() << "setting margins " << m[0] << "," << m[1] << "," << m[2] << "," << m[3];
+            this->layout()->set_margins({ m[0], m[1], m[2], m[3] });
+        }
+    }
+
+    auto children = json.get("children");
+    if (children.is_array()) {
+        for (auto& child_json_value : children.as_array().values()) {
+            if (!child_json_value.is_object())
+                return false;
+            auto& child_json = child_json_value.as_object();
+            auto class_name = child_json.get("class");
+            if (!class_name.is_string()) {
+                dbg() << "No class name in entry";
+                return false;
+            }
+            auto* registration = WidgetClassRegistration::find(class_name.as_string());
+            if (!registration) {
+                dbg() << "Class '" << class_name.as_string() << "' not registered";
+                return false;
+            }
+
+            auto child_widget = registration->construct();
+            add_child(*child_widget);
+            child_widget->load_from_json(child_json);
+        }
+    }
+
+    return true;
+}
+
+Widget* Widget::find_child_by_name(const String& name)
+{
+    Widget* found_widget = nullptr;
+    for_each_child_widget([&](auto& child) {
+        if (child.name() == name) {
+            found_widget = &child;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return found_widget;
+}
+
+Widget* Widget::find_descendant_by_name(const String& name)
+{
+    Widget* found_widget = nullptr;
+    if (this->name() == name)
+        return this;
+    for_each_child_widget([&](auto& child) {
+        found_widget = child.find_descendant_by_name(name);
+        if (found_widget)
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
+    });
+    return found_widget;
 }
 
 }
