@@ -736,7 +736,10 @@ void Editor::handle_read_event()
                 continue;
             case '~':
                 if (param1 == 3) { // ^[[3~: delete
-                    erase_character_forwards();
+                    if (modifiers == CSIMod::Ctrl)
+                        erase_alnum_word_forwards();
+                    else
+                        erase_character_forwards();
                     m_search_offset = 0;
                     continue;
                 }
