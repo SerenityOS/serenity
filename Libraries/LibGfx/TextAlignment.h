@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+#include <AK/StringView.h>
+
 namespace Gfx {
 
 enum class TextAlignment {
@@ -47,6 +50,23 @@ inline bool is_right_text_alignment(TextAlignment alignment)
     default:
         return false;
     }
+}
+
+inline Optional<TextAlignment> text_alignment_from_string(const StringView& string)
+{
+    if (string == "TopLeft")
+        return TextAlignment::TopLeft;
+    if (string == "CenterLeft")
+        return TextAlignment::CenterLeft;
+    if (string == "Center")
+        return TextAlignment::Center;
+    if (string == "CenterRight")
+        return TextAlignment::CenterRight;
+    if (string == "TopRight")
+        return TextAlignment::TopRight;
+    if (string == "BottomRight")
+        return TextAlignment::BottomRight;
+    return {};
 }
 
 }
