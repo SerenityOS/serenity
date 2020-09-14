@@ -949,6 +949,10 @@ bool Widget::load_from_json(const JsonObject& json)
         set_preferred_size(preferred_width.to_i32(), preferred_size().height());
 
     auto layout_value = json.get("layout");
+    if (!layout_value.is_null() && !layout_value.is_object()) {
+        dbg() << "layout is not an object";
+        return false;
+    }
     if (layout_value.is_object()) {
         auto& layout = layout_value.as_object();
         auto class_name = layout.get("class");
