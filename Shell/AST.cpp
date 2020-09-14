@@ -807,7 +807,35 @@ HitTestResult FunctionDeclaration::hit_test_position(size_t offset)
     if (!position().contains(offset))
         return {};
 
-    return m_block->hit_test_position(offset);
+    auto result = m_block->hit_test_position(offset);
+    if (result.matching_node && result.matching_node->is_simple_variable())
+        result.closest_node_with_semantic_meaning = this;
+    return result;
+}
+
+Vector<Line::CompletionSuggestion> FunctionDeclaration::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+{
+    auto matching_node = hit_test_result.matching_node;
+    if (!matching_node)
+        return {};
+
+    if (!matching_node->is_simple_variable())
+        return matching_node->complete_for_editor(shell, offset, hit_test_result);
+
+    auto corrected_offset = offset - matching_node->position().start_offset - 1; // Skip the first '$'
+    auto* node = static_cast<SimpleVariable*>(matching_node.ptr());
+
+    auto name = node->name().substring_view(0, corrected_offset);
+
+    Vector<Line::CompletionSuggestion> results;
+    for (auto& arg : m_arguments) {
+        if (arg.name.starts_with(name))
+            results.append(arg.name);
+    }
+
+    results.append(matching_node->complete_for_editor(shell, offset, hit_test_result));
+
+    return results;
 }
 
 FunctionDeclaration::FunctionDeclaration(Position position, NameWithPosition name, Vector<NameWithPosition> arguments, RefPtr<AST::Node> body)
