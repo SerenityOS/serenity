@@ -85,7 +85,6 @@ TextEditorWidget::TextEditorWidget()
     };
 
     m_page_view = static_cast<Web::InProcessWebView&>(*find_descendant_by_name("webview"));
-    m_page_view->set_visible(false);
     m_page_view->on_link_hover = [this](auto& url) {
         if (url.is_valid())
             m_statusbar->set_text(url.to_string());
@@ -103,13 +102,10 @@ TextEditorWidget::TextEditorWidget()
     };
 
     m_find_replace_widget = *find_descendant_by_name("find_replace_widget");
-    m_find_replace_widget->set_visible(false);
 
     m_find_widget = *find_descendant_by_name("find_widget");
-    m_find_widget->set_visible(false);
 
     m_replace_widget = *find_descendant_by_name("replace_widget");
-    m_replace_widget->set_visible(false);
 
     m_find_textbox = m_find_widget->add<GUI::TextBox>();
     m_replace_textbox = m_replace_widget->add<GUI::TextBox>();

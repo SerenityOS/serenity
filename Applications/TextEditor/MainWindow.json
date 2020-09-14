@@ -26,13 +26,15 @@
                 },
                 {
                     "class": "Web::InProcessWebView",
-                    "name": "webview"
+                    "name": "webview",
+                    "visible": false
                 }
             ]
         },
         {
             "class": "GUI::Widget",
             "name": "find_replace_widget",
+            "visible": false,
             "fill_with_background_color": true,
             "horizontal_size_policy": "Fill",
             "vertical_size_policy": "Fixed",
