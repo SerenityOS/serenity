@@ -53,7 +53,25 @@
                     "preferred_height": 22,
                     "layout": {
                         "class": "GUI::HorizontalBoxLayout"
-                    }
+                    },
+                    "children": [
+                        {
+                            "class": "GUI::Button",
+                            "name": "find_previous_button",
+                            "text": "Find previous",
+                            "horizontal_size_policy": "Fixed",
+                            "vertical_size_policy": "Fill",
+                            "preferred_width": 150
+                        },
+                        {
+                            "class": "GUI::Button",
+                            "name": "find_next_button",
+                            "text": "Find next",
+                            "horizontal_size_policy": "Fixed",
+                            "vertical_size_policy": "Fill",
+                            "preferred_width": 150
+                        }
+                    ]
                 },
                 {
                     "class": "GUI::Widget",
@@ -64,7 +82,33 @@
                     "preferred_height": 22,
                     "layout": {
                         "class": "GUI::HorizontalBoxLayout"
-                    }
+                    },
+                    "children": [
+                        {
+                            "class": "GUI::Button",
+                            "name": "replace_previous_button",
+                            "text": "Replace previous",
+                            "horizontal_size_policy": "Fixed",
+                            "vertical_size_policy": "Fill",
+                            "preferred_width": 100
+                        },
+                        {
+                            "class": "GUI::Button",
+                            "name": "replace_next_button",
+                            "text": "Replace next",
+                            "horizontal_size_policy": "Fixed",
+                            "vertical_size_policy": "Fill",
+                            "preferred_width": 100
+                        },
+                        {
+                            "class": "GUI::Button",
+                            "name": "replace_all_button",
+                            "text": "Replace all",
+                            "horizontal_size_policy": "Fixed",
+                            "vertical_size_policy": "Fill",
+                            "preferred_width": 100
+                        }
+                    ]
                 }
             ]
         },
