@@ -2316,6 +2316,9 @@ GlobValue::~GlobValue()
 }
 Vector<String> GlobValue::resolve_as_list(RefPtr<Shell> shell)
 {
+    if (!shell)
+        return { m_glob };
+
     return shell->expand_globs(m_glob, shell->cwd);
 }
 
@@ -2324,6 +2327,9 @@ SimpleVariableValue::~SimpleVariableValue()
 }
 Vector<String> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
+    if (!shell)
+        return {};
+
     if (auto value = resolve_without_cast(shell); value != this)
         return value->resolve_as_list(shell);
 
@@ -2341,6 +2347,8 @@ Vector<String> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
 
 NonnullRefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
 {
+    ASSERT(shell);
+
     if (auto value = shell->lookup_local_variable(m_name))
         return value.release_nonnull();
     return *this;
@@ -2352,6 +2360,9 @@ SpecialVariableValue::~SpecialVariableValue()
 
 Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
+    if (!shell)
+        return {};
+
     switch (m_name) {
     case '?':
         return { String::number(shell->last_return_code) };
@@ -2383,6 +2394,10 @@ Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
     StringBuilder builder;
     builder.append("~");
     builder.append(m_username);
+
+    if (!shell)
+        return { builder.to_string() };
+
     return { shell->expand_tilde(builder.to_string()) };
 }
 
