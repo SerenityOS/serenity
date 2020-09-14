@@ -1347,6 +1347,149 @@ Join::~Join()
 {
 }
 
+void MatchExpr::dump(int level) const
+{
+    Node::dump(level);
+    print_indented(String::format("(expression)", m_expr_name.characters()), level + 1);
+    m_matched_expr->dump(level + 2);
+    print_indented(String::format("(named: %s)", m_expr_name.characters()), level + 1);
+    print_indented("(entries)", level + 1);
+    for (auto& entry : m_entries) {
+        print_indented("(match)", level + 2);
+        for (auto& node : entry.options)
+            node.dump(level + 3);
+        print_indented("(execute)", level + 2);
+        if (entry.body)
+            entry.body->dump(level + 3);
+        else
+            print_indented("(nothing)", level + 3);
+    }
+}
+
+RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
+{
+    auto value = m_matched_expr->run(shell)->resolve_without_cast(shell);
+    auto list = value->resolve_as_list(shell);
+
+    auto list_matches = [&](auto&& pattern) {
+        if (pattern.size() != list.size())
+            return false;
+
+        for (size_t i = 0; i < pattern.size(); ++i) {
+            if (!list[i].matches(pattern[i]))
+                return false;
+        }
+
+        return true;
+    };
+
+    auto resolve_pattern = [&](auto& option) {
+        Vector<String> pattern;
+        if (option.is_glob()) {
+            pattern.append(static_cast<const Glob*>(&option)->text());
+        } else if (option.is_bareword()) {
+            pattern.append(static_cast<const BarewordLiteral*>(&option)->text());
+        } else if (option.is_list()) {
+            auto list = option.run(shell);
+            option.for_each_entry(shell, [&](auto&& value) {
+                pattern.append(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behaviour,
+                                                                 //       asking the node for a 'raw' value.
+                return IterationDecision::Continue;
+            });
+        }
+
+        return pattern;
+    };
+
+    auto frame = shell->push_frame();
+    if (!m_expr_name.is_empty())
+        shell->set_local_variable(m_expr_name, value);
+
+    for (auto& entry : m_entries) {
+        for (auto& option : entry.options) {
+            if (list_matches(resolve_pattern(option))) {
+                if (entry.body)
+                    return entry.body->run(shell);
+                else
+                    return create<AST::ListValue>({});
+            }
+        }
+    }
+
+    // FIXME: Somehow raise an error in the shell.
+    dbg() << "Non-exhaustive match rules!";
+    return create<AST::ListValue>({});
+}
+
+void MatchExpr::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    editor.stylize({ m_position.start_offset, m_position.start_offset + 5 }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+    if (m_as_position.has_value())
+        editor.stylize({ m_as_position.value().start_offset, m_as_position.value().end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+
+    metadata.is_first_in_list = false;
+    if (m_matched_expr)
+        m_matched_expr->highlight_in_editor(editor, shell, metadata);
+
+    for (auto& entry : m_entries) {
+        metadata.is_first_in_list = false;
+        for (auto& option : entry.options)
+            option.highlight_in_editor(editor, shell, metadata);
+
+        metadata.is_first_in_list = true;
+        if (entry.body)
+            entry.body->highlight_in_editor(editor, shell, metadata);
+
+        for (auto& position : entry.pipe_positions)
+            editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+    }
+}
+
+HitTestResult MatchExpr::hit_test_position(size_t offset)
+{
+    if (!position().contains(offset))
+        return {};
+
+    auto result = m_matched_expr->hit_test_position(offset);
+    if (result.matching_node)
+        return result;
+
+    for (auto& entry : m_entries) {
+        if (!entry.body)
+            continue;
+        auto result = entry.body->hit_test_position(offset);
+        if (result.matching_node)
+            return result;
+    }
+
+    return {};
+}
+
+MatchExpr::MatchExpr(Position position, RefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries)
+    : Node(move(position))
+    , m_matched_expr(move(expr))
+    , m_expr_name(move(name))
+    , m_as_position(move(as_position))
+    , m_entries(move(entries))
+{
+    if (m_matched_expr && m_matched_expr->is_syntax_error()) {
+        set_is_syntax_error(m_matched_expr->syntax_error_node());
+    } else {
+        for (auto& entry : m_entries) {
+            if (!entry.body)
+                continue;
+            if (entry.body->is_syntax_error()) {
+                set_is_syntax_error(entry.body->syntax_error_node());
+                break;
+            }
+        }
+    }
+}
+
+MatchExpr::~MatchExpr()
+{
+}
+
 void Or::dump(int level) const
 {
     Node::dump(level);
