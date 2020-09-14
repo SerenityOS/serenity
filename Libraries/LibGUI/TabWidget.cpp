@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/JsonValue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TabWidget.h>
@@ -392,6 +393,21 @@ void TabWidget::context_menu_event(ContextMenuEvent& context_menu_event)
         });
         return;
     }
+}
+
+bool TabWidget::set_property(const StringView& name, const JsonValue& value)
+{
+    if (name == "container_padding") {
+        set_container_padding(value.to_i32());
+        return true;
+    }
+
+    if (name == "uniform_tabs") {
+        set_uniform_tabs(value.to_bool());
+        return true;
+    }
+
+    return Widget::set_property(name, value);
 }
 
 }
