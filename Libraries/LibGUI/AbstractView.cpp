@@ -424,7 +424,7 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
 
     if (model()->is_valid(index)) {
         if (selection_update == SelectionUpdate::Set)
-            selection().set(index);
+            set_selection(index);
         else if (selection_update == SelectionUpdate::Ctrl)
             toggle_selection(index);
 
