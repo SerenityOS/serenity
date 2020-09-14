@@ -86,6 +86,8 @@ public:
     Function<void(Widget&)> on_middle_click;
     Function<void(Widget&, const ContextMenuEvent&)> on_context_menu_request;
 
+    virtual bool set_property(const StringView& name, const JsonValue& value) override;
+
 protected:
     TabWidget();
 
