@@ -616,7 +616,6 @@ void Editor::handle_read_event()
     }
 
     auto reverse_tab = false;
-    auto ctrl_held = false;
 
     // Discard starting bytes until they make sense as utf-8.
     size_t valid_bytes = 0;
@@ -635,6 +634,11 @@ void Editor::handle_read_event()
     Vector<unsigned, 4> csi_parameters;
     Vector<u8> csi_intermediate_bytes;
     u8 csi_final;
+    enum CSIMod {
+        Shift = 1,
+        Alt = 2,
+        Ctrl = 4,
+    };
 
     for (auto code_point : input_view) {
         if (m_finish)
@@ -677,11 +681,10 @@ void Editor::handle_read_event()
             }
             m_state = InputState::CSIExpectFinal;
             [[fallthrough]];
-        case InputState::CSIExpectFinal:
+        case InputState::CSIExpectFinal: {
             m_state = InputState::Free;
             if (!(code_point >= 0x40 && code_point <= 0x7f)) {
                 dbgprintf("LibLine: Invalid CSI: %02x (%c)\r\n", code_point, code_point);
-                ctrl_held = false;
                 continue;
             }
             csi_final = code_point;
@@ -692,68 +695,61 @@ void Editor::handle_read_event()
                 else
                     csi_parameters.append(0);
             }
+            unsigned param1 = 0, param2 = 0;
+            if (csi_parameters.size() >= 1)
+                param1 = csi_parameters[0];
+            if (csi_parameters.size() >= 2)
+                param2 = csi_parameters[1];
+            unsigned modifiers = param2 ? param2 - 1 : 0;
 
-            if (csi_final == 'O') {
-                // mod_ctrl
-                ctrl_held = true;
-                continue;
-            }
             if (csi_final == 'Z') {
                 // 'reverse tab'
                 reverse_tab = true;
-                ctrl_held = false;
                 break;
             }
             cleanup_suggestions();
+
             switch (csi_final) {
             case 'A': // ^[[A: arrow up
                 search_backwards();
-                ctrl_held = false;
                 continue;
             case 'B': // ^[[B: arrow down
                 search_forwards();
-                ctrl_held = false;
                 continue;
             case 'D': // ^[[D: arrow left
-                if (ctrl_held)
+                if (modifiers == CSIMod::Ctrl)
                     cursor_left_word();
                 else
                     cursor_left_character();
-                ctrl_held = false;
                 continue;
             case 'C': // ^[[C: arrow right
-                if (ctrl_held)
+                if (modifiers == CSIMod::Ctrl)
                     cursor_right_word();
                 else
                     cursor_right_character();
-                ctrl_held = false;
                 continue;
             case 'H': // ^[[H: home
                 go_home();
-                ctrl_held = false;
                 continue;
             case 'F': // ^[[F: end
                 go_end();
-                ctrl_held = false;
                 continue;
             case '~':
-                if (csi_parameters.size() == 1 && csi_parameters[0] == 3) { // ^[[3~: delete
+                if (param1 == 3) { // ^[[3~: delete
                     erase_character_forwards();
                     m_search_offset = 0;
-                    ctrl_held = false;
                     continue;
                 }
                 // ^[[5~: page up
                 // ^[[6~: page down
-                dbgprintf("LibLine: Unhandled '~'\r\n");
-                ctrl_held = false;
+                dbgprintf("LibLine: Unhandled '~': %d\r\n", param1);
                 continue;
             default:
                 dbgprintf("LibLine: Unhandled final: %02x (%c)\r\n", code_point, code_point);
-                ctrl_held = false;
                 continue;
             }
             break;
+        }
         case InputState::Free:
             if (code_point == 27) {
                 m_state = InputState::GotEscape;
