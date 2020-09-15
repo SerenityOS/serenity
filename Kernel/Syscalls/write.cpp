@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
+ssize_t Process::sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
     REQUIRE_PROMISE(stdio);
     if (iov_count < 0)
