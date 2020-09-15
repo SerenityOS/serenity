@@ -60,10 +60,6 @@ ComboBox::ComboBox()
 {
     m_editor = add<ComboBoxEditor>();
     m_editor->set_has_open_button(true);
-    m_editor->on_change = [this] {
-        if (on_change)
-            on_change(m_editor->text(), m_list_view->cursor_index());
-    };
     m_editor->on_return_pressed = [this] {
         if (on_return_pressed)
             on_return_pressed();
@@ -121,15 +117,17 @@ ComboBox::ComboBox()
         m_editor->set_text(new_value);
         if (!m_only_allow_values_from_model)
             m_editor->select_all();
+    };
+
+    m_list_view->on_activation = [this](auto& index) {
         deferred_invoke([this, index](auto&) {
             if (on_change)
                 on_change(m_editor->text(), index);
         });
-    };
-    m_list_view->on_activation = [this](auto&) {
         m_list_view->set_activates_on_selection(false);
         close();
     };
+    
     m_list_view->on_escape_pressed = [this] {
         close();
     };
