@@ -35,7 +35,7 @@ namespace AK {
 
 class InputMemoryStream final : public InputStream {
 public:
-    InputMemoryStream(ReadonlyBytes bytes)
+    explicit InputMemoryStream(ReadonlyBytes bytes)
         : m_bytes(bytes)
     {
     }
@@ -161,9 +161,45 @@ private:
     size_t m_offset { 0 };
 };
 
-// All data written to this stream can be read from it. Reading and writing is done
-// using different offsets, meaning that it is not necessary to seek to the start
-// before reading; this behaviour differs from BufferStream.
+class OutputMemoryStream final : public OutputStream {
+public:
+    explicit OutputMemoryStream(Bytes bytes)
+        : m_bytes(bytes)
+    {
+    }
+
+    size_t write(ReadonlyBytes bytes) override
+    {
+        const auto nwritten = bytes.copy_trimmed_to(m_bytes.slice(m_offset));
+        m_offset += nwritten;
+        return nwritten;
+    }
+
+    bool write_or_error(ReadonlyBytes bytes) override
+    {
+        if (remaining() < bytes.size()) {
+            set_recoverable_error();
+            return false;
+        }
+
+        write(bytes);
+        return true;
+    }
+
+    ReadonlyBytes bytes() const { return { data(), size() }; }
+    Bytes bytes() { return { data(), size() }; }
+
+    const u8* data() const { return m_bytes.data(); }
+    u8* data() { return m_bytes.data(); }
+
+    size_t size() const { return m_offset; }
+    size_t remaining() const { return m_bytes.size() - m_offset; }
+
+private:
+    size_t m_offset { 0 };
+    Bytes m_bytes;
+};
+
 class DuplexMemoryStream final : public DuplexStream {
 public:
     static constexpr size_t chunk_size = 4 * 1024;
@@ -321,3 +357,4 @@ private:
 using AK::DuplexMemoryStream;
 using AK::InputMemoryStream;
 using AK::InputStream;
+using AK::OutputMemoryStream;
