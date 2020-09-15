@@ -132,6 +132,7 @@ private:
     int virt$accept(int sockfd, FlatPtr address, FlatPtr address_length);
     int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
     int virt$recvfrom(FlatPtr);
+    int virt$sendto(FlatPtr);
     int virt$connect(int sockfd, FlatPtr address, socklen_t address_size);
     void virt$exit(int);
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
