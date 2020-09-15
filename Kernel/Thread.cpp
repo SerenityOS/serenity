@@ -857,7 +857,11 @@ String Thread::backtrace_impl()
     Vector<RecognizedSymbol, 128> recognized_symbols;
 
     auto& process = const_cast<Process&>(this->process());
-    auto elf_bundle = process.elf_bundle();
+    OwnPtr<Process::ELFBundle> elf_bundle;
+    if (!Processor::current().in_irq()) {
+        // If we're handling IRQs we can't really safely symbolicate
+        elf_bundle = process.elf_bundle();
+    }
     ProcessPagingScope paging_scope(process);
 
     // To prevent a context switch involving this thread, which may happen
