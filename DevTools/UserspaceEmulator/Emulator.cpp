@@ -599,13 +599,16 @@ int Emulator::virt$recvfrom(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
     auto buffer = ByteBuffer::create_uninitialized(params.buffer.size);
 
-    sockaddr_un address;
-    if (params.addr)
-        mmu().copy_from_vm(&address, (FlatPtr)params.addr, sizeof(address));
+    if (!params.addr_length && params.addr)
+        return -EINVAL;
 
     socklen_t address_length = 0;
     if (params.addr_length)
-        mmu().copy_from_vm(&address_length, (FlatPtr)address_length, sizeof(address_length));
+        mmu().copy_from_vm(&address_length, (FlatPtr)params.addr_length, sizeof(address_length));
+
+    sockaddr_storage address;
+    if (params.addr)
+        mmu().copy_from_vm(&address, (FlatPtr)params.addr, min(sizeof(address), (size_t)address_length));
 
     int rc = recvfrom(params.sockfd, buffer.data(), buffer.size(), params.flags, params.addr ? (struct sockaddr*)&address : nullptr, params.addr_length ? &address_length : nullptr);
     if (rc < 0)
