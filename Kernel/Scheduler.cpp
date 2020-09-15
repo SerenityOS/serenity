@@ -50,6 +50,8 @@ class SchedulerPerProcessorData {
 public:
     SchedulerPerProcessorData() = default;
 
+    Thread* m_pending_beneficiary { nullptr };
+    const char* m_pending_donate_reason { nullptr };
     bool m_in_scheduler { true };
 };
 
@@ -347,7 +349,8 @@ bool Scheduler::pick_next()
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
     ScopedCritical critical;
-    Processor::current().get_scheduler_data().m_in_scheduler = true;
+    auto& scheduler_data = Processor::current().get_scheduler_data();
+    scheduler_data.m_in_scheduler = true;
     ScopeGuard guard(
         []() {
             // We may be on a different processor after we got switched
@@ -437,15 +440,41 @@ bool Scheduler::pick_next()
     });
 #endif
 
+    Thread* thread_to_schedule = nullptr;
+
     Vector<Thread*, 128> sorted_runnables;
-    for_each_runnable([&sorted_runnables](auto& thread) {
+    for_each_runnable([&](auto& thread) {
         if ((thread.affinity() & (1u << Processor::current().id())) != 0)
             sorted_runnables.append(&thread);
+        if (&thread == scheduler_data.m_pending_beneficiary) {
+            thread_to_schedule = &thread;
+            return IterationDecision::Break;
+        }
         return IterationDecision::Continue;
     });
-    quick_sort(sorted_runnables, [](auto& a, auto& b) { return a->effective_priority() >= b->effective_priority(); });
 
-    Thread* thread_to_schedule = nullptr;
+    if (thread_to_schedule) {
+        // The thread we're supposed to donate to still exists
+        const char* reason = scheduler_data.m_pending_donate_reason;
+        scheduler_data.m_pending_beneficiary = nullptr;
+        scheduler_data.m_pending_donate_reason = nullptr;
+
+        // We need to leave our first critical section before switching context,
+        // but since we're still holding the scheduler lock we're still in a critical section
+        critical.leave();
+
+#ifdef SCHEDULER_DEBUG
+        dbg() << "Processing pending donate to " << *thread_to_schedule << " reason=" << reason;
+#endif
+        return donate_to_and_switch(thread_to_schedule, reason);
+    }
+
+    // Either we're not donating or the beneficiary disappeared.
+    // Either way clear any pending information
+    scheduler_data.m_pending_beneficiary = nullptr;
+    scheduler_data.m_pending_donate_reason = nullptr;
+
+    quick_sort(sorted_runnables, [](auto& a, auto& b) { return a->effective_priority() >= b->effective_priority(); });
 
     for (auto* thread : sorted_runnables) {
         if (thread->process().exec_tid() && thread->process().exec_tid() != thread->tid())
@@ -479,6 +508,11 @@ bool Scheduler::yield()
 {
     InterruptDisabler disabler;
     auto& proc = Processor::current();
+    auto& scheduler_data = proc.get_scheduler_data();
+
+    // Clear any pending beneficiary
+    scheduler_data.m_pending_beneficiary = nullptr;
+    scheduler_data.m_pending_donate_reason = nullptr;
 
     auto current_thread = Thread::current();
 #ifdef SCHEDULER_DEBUG
@@ -501,33 +535,12 @@ bool Scheduler::yield()
     return true;
 }
 
-bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
+bool Scheduler::donate_to_and_switch(Thread* beneficiary, const char* reason)
 {
-    ASSERT(beneficiary);
+    ASSERT(g_scheduler_lock.own_lock());
 
-    // Set the m_in_scheduler flag before acquiring the spinlock. This
-    // prevents a recursive call into Scheduler::invoke_async upon
-    // leaving the scheduler lock.
-    ScopedCritical critical;
     auto& proc = Processor::current();
-    proc.get_scheduler_data().m_in_scheduler = true;
-    ScopeGuard guard(
-        []() {
-            // We may be on a different processor after we got switched
-            // back to this thread!
-            auto& scheduler_data = Processor::current().get_scheduler_data();
-            ASSERT(scheduler_data.m_in_scheduler);
-            scheduler_data.m_in_scheduler = false;
-        });
-
-    ScopedSpinLock lock(g_scheduler_lock);
-
-    ASSERT(!proc.in_irq());
-
-    if (proc.in_critical()) {
-        proc.invoke_scheduler_async();
-        return false;
-    }
+    ASSERT(proc.in_critical() == 1);
 
     (void)reason;
     unsigned ticks_left = Thread::current()->ticks_left();
@@ -539,7 +552,49 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     dbg() << "Scheduler[" << proc.id() << "]: Donating " << ticks_to_donate << " ticks to " << *beneficiary << ", reason=" << reason;
 #endif
     beneficiary->set_ticks_left(ticks_to_donate);
-    Scheduler::context_switch(beneficiary);
+
+    return Scheduler::context_switch(beneficiary);
+}
+
+bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
+{
+    ASSERT(beneficiary);
+
+    if (beneficiary == Thread::current())
+        return Scheduler::yield();
+
+    // Set the m_in_scheduler flag before acquiring the spinlock. This
+    // prevents a recursive call into Scheduler::invoke_async upon
+    // leaving the scheduler lock.
+    ScopedCritical critical;
+    auto& proc = Processor::current();
+    auto& scheduler_data = proc.get_scheduler_data();
+    scheduler_data.m_in_scheduler = true;
+    ScopeGuard guard(
+        []() {
+            // We may be on a different processor after we got switched
+            // back to this thread!
+            auto& scheduler_data = Processor::current().get_scheduler_data();
+            ASSERT(scheduler_data.m_in_scheduler);
+            scheduler_data.m_in_scheduler = false;
+        });
+
+    ASSERT(!proc.in_irq());
+
+    if (proc.in_critical() > 1) {
+        scheduler_data.m_pending_beneficiary = beneficiary; // Save the beneficiary
+        scheduler_data.m_pending_donate_reason = reason;
+        proc.invoke_scheduler_async();
+        return false;
+    }
+
+    ScopedSpinLock lock(g_scheduler_lock);
+
+    // "Leave" the critical section before switching context. Since we
+    // still hold the scheduler lock, we're not actually leaving it.
+    // Processor::switch_context expects Processor::in_critical() to be 1
+    critical.leave();
+    donate_to_and_switch(beneficiary, reason);
     return false;
 }
 
