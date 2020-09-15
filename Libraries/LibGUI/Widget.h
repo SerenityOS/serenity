@@ -109,10 +109,17 @@ public:
     SizePolicy size_policy(Orientation orientation) { return orientation == Orientation::Horizontal ? m_horizontal_size_policy : m_vertical_size_policy; }
     void set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy);
     void set_size_policy(Orientation, SizePolicy);
+    void set_horizontal_size_policy(SizePolicy policy) { set_size_policy(policy, vertical_size_policy()); }
+    void set_vertical_size_policy(SizePolicy policy) { set_size_policy(horizontal_size_policy(), policy); }
 
     Gfx::IntSize preferred_size() const { return m_preferred_size; }
     void set_preferred_size(const Gfx::IntSize&);
     void set_preferred_size(int width, int height) { set_preferred_size({ width, height }); }
+
+    int preferred_width() const { return preferred_size().width(); }
+    int preferred_height() const { return preferred_size().height(); }
+    void set_preferred_width(int w) { set_preferred_size(w, preferred_height()); }
+    void set_preferred_height(int h) { set_preferred_size(preferred_width(), h); }
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }
@@ -261,8 +268,6 @@ public:
     virtual bool is_radio_button() const { return false; }
     virtual bool is_abstract_button() const { return false; }
 
-    virtual void save_to(AK::JsonObject&) override;
-
     void do_layout();
 
     Gfx::Palette palette() const;
@@ -316,8 +321,6 @@ protected:
 
     virtual void did_begin_inspection() override;
     virtual void did_end_inspection() override;
-
-    virtual bool set_property(const StringView& name, const JsonValue& value) override;
 
 private:
     void handle_paint_event(PaintEvent&);

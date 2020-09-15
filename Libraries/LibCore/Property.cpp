@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,63 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibCore/Property.h>
 
-#include <AK/OwnPtr.h>
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
-#include <LibGUI/Forward.h>
-#include <LibGUI/Margins.h>
+namespace Core {
 
-namespace GUI {
+Property::Property(String name, Function<JsonValue()> getter, Function<bool(const JsonValue&)> setter)
+    : m_name(move(name))
+    , m_getter(move(getter))
+    , m_setter(move(setter))
+{
+}
 
-class Layout : public Core::Object {
-    C_OBJECT_ABSTRACT(Layout);
-
-public:
-    virtual ~Layout();
-
-    void add_widget(Widget&);
-    void insert_widget_before(Widget& widget, Widget& before_widget);
-    void add_layout(OwnPtr<Layout>&&);
-    void add_spacer();
-
-    void remove_widget(Widget&);
-
-    virtual void run(Widget&) = 0;
-
-    void notify_adopted(Badge<Widget>, Widget&);
-    void notify_disowned(Badge<Widget>, Widget&);
-
-    Margins margins() const { return m_margins; }
-    void set_margins(const Margins&);
-
-    int spacing() const { return m_spacing; }
-    void set_spacing(int);
-
-protected:
-    Layout();
-
-    struct Entry {
-        enum class Type {
-            Invalid = 0,
-            Widget,
-            Layout,
-            Spacer,
-        };
-
-        Type type { Type::Invalid };
-        WeakPtr<Widget> widget;
-        OwnPtr<Layout> layout;
-    };
-    void add_entry(Entry&&);
-
-    WeakPtr<Widget> m_owner;
-    Vector<Entry> m_entries;
-
-    Margins m_margins;
-    int m_spacing { 3 };
-};
+Property::~Property()
+{
+}
 
 }

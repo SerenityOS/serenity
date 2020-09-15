@@ -44,8 +44,6 @@ public:
 protected:
     explicit BoxLayout(Gfx::Orientation);
 
-    virtual void save_to(JsonObject &) override;
-
 private:
     Gfx::Orientation m_orientation;
 };

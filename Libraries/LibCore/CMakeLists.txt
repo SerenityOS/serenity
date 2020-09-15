@@ -19,6 +19,7 @@ set(SOURCES
     Notifier.cpp
     Object.cpp
     ProcessStatisticsReader.cpp
+    Property.cpp
     puff.cpp
     SocketAddress.cpp
     Socket.cpp

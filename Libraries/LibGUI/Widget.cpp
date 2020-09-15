@@ -110,6 +110,17 @@ Widget::Widget()
     , m_font(Gfx::Font::default_font())
     , m_palette(Application::the()->palette().impl())
 {
+    REGISTER_RECT_PROPERTY("relative_rect", relative_rect, set_relative_rect);
+    REGISTER_BOOL_PROPERTY("fill_with_background_color", fill_with_background_color, set_fill_with_background_color);
+    REGISTER_BOOL_PROPERTY("visible", is_visible, set_visible);
+    REGISTER_BOOL_PROPERTY("focused", is_focused, set_focus);
+    REGISTER_BOOL_PROPERTY("enabled", is_enabled, set_enabled);
+    REGISTER_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
+    REGISTER_SIZE_PROPERTY("preferred_size", preferred_size, set_preferred_size);
+    REGISTER_INT_PROPERTY("preferred_width", preferred_width, set_preferred_width);
+    REGISTER_INT_PROPERTY("preferred_height", preferred_height, set_preferred_height);
+    REGISTER_SIZE_POLICY_PROPERTY("horizontal_size_policy", horizontal_size_policy, set_horizontal_size_policy);
+    REGISTER_SIZE_POLICY_PROPERTY("vertical_size_policy", vertical_size_policy, set_vertical_size_policy);
 }
 
 Widget::~Widget()
@@ -774,79 +785,6 @@ void Widget::set_forecolor(const StringView& color_string)
     set_foreground_color(color.value());
 }
 
-void Widget::save_to(AK::JsonObject& json)
-{
-    json.set("relative_rect", relative_rect().to_string());
-    json.set("fill_with_background_color", fill_with_background_color());
-    json.set("tooltip", tooltip());
-    json.set("visible", is_visible());
-    json.set("focused", is_focused());
-    json.set("enabled", is_enabled());
-    json.set("background_color", background_color().to_string());
-    json.set("foreground_color", foreground_color().to_string());
-    json.set("preferred_size", preferred_size().to_string());
-    json.set("size_policy", String::format("[%s,%s]", to_string(horizontal_size_policy()), to_string(vertical_size_policy())));
-    Core::Object::save_to(json);
-}
-
-bool Widget::set_property(const StringView& name, const JsonValue& value)
-{
-    if (name == "fill_with_background_color") {
-        set_fill_with_background_color(value.to_bool());
-        return true;
-    }
-    if (name == "tooltip") {
-        set_tooltip(value.to_string());
-        return true;
-    }
-    if (name == "enable") {
-        set_enabled(value.to_bool());
-        return true;
-    }
-    if (name == "focused") {
-        set_focus(value.to_bool());
-        return true;
-    }
-    if (name == "visible") {
-        set_visible(value.to_bool());
-        return true;
-    }
-
-    if (name == "horizontal_size_policy") {
-        auto string = value.to_string();
-        if (string == "Fill")
-            set_size_policy(Gfx::Orientation::Horizontal, SizePolicy::Fill);
-        else if (string == "Fixed")
-            set_size_policy(Gfx::Orientation::Horizontal, SizePolicy::Fixed);
-        else
-            ASSERT_NOT_REACHED();
-        return true;
-    }
-
-    if (name == "vertical_size_policy") {
-        auto string = value.to_string();
-        if (string == "Fill")
-            set_size_policy(Gfx::Orientation::Vertical, SizePolicy::Fill);
-        else if (string == "Fixed")
-            set_size_policy(Gfx::Orientation::Vertical, SizePolicy::Fixed);
-        else
-            ASSERT_NOT_REACHED();
-        return true;
-    }
-
-    if (name == "preferred_height") {
-        set_preferred_size(preferred_size().width(), value.to_i32());
-        return true;
-    }
-
-    if (name == "preferred_width") {
-        set_preferred_size(value.to_i32(), preferred_size().height());
-        return true;
-    }
-
-    return Core::Object::set_property(name, value);
-}
-
 Vector<Widget*> Widget::child_widgets() const
 {
     Vector<Widget*> widgets;
@@ -975,22 +913,9 @@ bool Widget::load_from_json(const JsonObject& json)
             return false;
         }
 
-        auto spacing = layout.get("spacing");
-        if (spacing.is_number())
-            this->layout()->set_spacing(spacing.to_i32());
-
-        auto margins = layout.get("margins");
-        if (margins.is_array()) {
-            if (margins.as_array().size() != 4) {
-                dbg() << "margins array needs 4 entries";
-                return false;
-            }
-            int m[4];
-            for (size_t i = 0; i < 4; ++i)
-                m[i] = margins.as_array().at(i).to_i32();
-            dbg() << "setting margins " << m[0] << "," << m[1] << "," << m[2] << "," << m[3];
-            this->layout()->set_margins({ m[0], m[1], m[2], m[3] });
-        }
+        layout.for_each_member([&](auto& key, auto& value) {
+            this->layout()->set_property(key, value);
+        });
     }
 
     auto children = json.get("children");
@@ -1045,5 +970,4 @@ Widget* Widget::find_descendant_by_name(const String& name)
     });
     return found_widget;
 }
-
 }

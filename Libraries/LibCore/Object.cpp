@@ -47,6 +47,17 @@ Object::Object(Object* parent, bool is_widget)
     all_objects().append(*this);
     if (m_parent)
         m_parent->add_child(*this);
+
+    REGISTER_READONLY_STRING_PROPERTY("class_name", class_name);
+    REGISTER_STRING_PROPERTY("name", name, set_name);
+
+    register_property(
+        "address", [this] { return FlatPtr(this); },
+        [](auto&) { return false; });
+
+    register_property(
+        "parent", [this] { return FlatPtr(this->parent()); },
+        [](auto&) { return false; });
 }
 
 Object::~Object()
@@ -173,19 +184,26 @@ void Object::deferred_invoke(Function<void(Object&)> invokee)
 
 void Object::save_to(JsonObject& json)
 {
-    json.set("class_name", class_name());
-    json.set("address", (FlatPtr)this);
-    json.set("name", name());
-    json.set("parent", (FlatPtr)parent());
+    for (auto& it : m_properties) {
+        auto& property = it.value;
+        json.set(property->name(), property->get());
+    }
+}
+
+JsonValue Object::property(const StringView& name)
+{
+    auto it = m_properties.find(name);
+    if (it == m_properties.end())
+        return JsonValue();
+    return it->value->get();
 }
 
 bool Object::set_property(const StringView& name, const JsonValue& value)
 {
-    if (name == "name") {
-        set_name(value.to_string());
-        return true;
-    }
-    return false;
+    auto it = m_properties.find(name);
+    if (it == m_properties.end())
+        return false;
+    return it->value->set(value);
 }
 
 bool Object::is_ancestor_of(const Object& other) const
@@ -233,6 +251,11 @@ void Object::decrement_inspector_count(Badge<RPCClient>)
     --m_inspector_count;
     if (!m_inspector_count)
         did_end_inspection();
+}
+
+void Object::register_property(const String& name, Function<JsonValue()> getter, Function<bool(const JsonValue&)> setter)
+{
+    m_properties.set(name, make<Property>(name, move(getter), move(setter)));
 }
 
 const LogStream& operator<<(const LogStream& stream, const Object& object)

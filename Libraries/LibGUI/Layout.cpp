@@ -33,6 +33,45 @@ namespace GUI {
 
 Layout::Layout()
 {
+    REGISTER_INT_PROPERTY("spacing", spacing, set_spacing);
+
+    register_property(
+        "margins",
+        [this] {
+            JsonObject margins_object;
+            margins_object.set("left", m_margins.left());
+            margins_object.set("right", m_margins.right());
+            margins_object.set("top", m_margins.top());
+            margins_object.set("bottom", m_margins.bottom());
+            return margins_object;
+        },
+        [this](auto value) {
+            if (!value.is_array() || value.as_array().size() != 4)
+                return false;
+            int m[4];
+            for (size_t i = 0; i < 4; ++i)
+                m[i] = value.as_array().at(i).to_i32();
+            set_margins({ m[0], m[1], m[2], m[3] });
+            return true;
+        });
+
+    register_property("entries",
+        [this] {
+            JsonArray entries_array;
+            for (auto& entry : m_entries) {
+                JsonObject entry_object;
+                if (entry.type == Entry::Type::Widget) {
+                    entry_object.set("type", "Widget");
+                    entry_object.set("widget", (FlatPtr)entry.widget.ptr());
+                } else if (entry.type == Entry::Type::Spacer) {
+                    entry_object.set("type", "Spacer");
+                } else {
+                    ASSERT_NOT_REACHED();
+                }
+                entries_array.append(move(entry_object));
+            }
+            return entries_array;
+        });
 }
 
 Layout::~Layout()
@@ -119,34 +158,6 @@ void Layout::set_margins(const Margins& margins)
     m_margins = margins;
     if (m_owner)
         m_owner->notify_layout_changed({});
-}
-
-void Layout::save_to(JsonObject& json)
-{
-    Core::Object::save_to(json);
-    json.set("spacing", m_spacing);
-
-    JsonObject margins_object;
-    margins_object.set("left", m_margins.left());
-    margins_object.set("right", m_margins.right());
-    margins_object.set("top", m_margins.top());
-    margins_object.set("bottom", m_margins.bottom());
-    json.set("margins", move(margins_object));
-
-    JsonArray entries_array;
-    for (auto& entry : m_entries) {
-        JsonObject entry_object;
-        if (entry.type == Entry::Type::Widget) {
-            entry_object.set("type", "Widget");
-            entry_object.set("widget", (FlatPtr)entry.widget.ptr());
-        } else if (entry.type == Entry::Type::Spacer) {
-            entry_object.set("type", "Spacer");
-        } else {
-            ASSERT_NOT_REACHED();
-        }
-        entries_array.append(move(entry_object));
-    }
-    json.set("entries", move(entries_array));
 }
 
 }

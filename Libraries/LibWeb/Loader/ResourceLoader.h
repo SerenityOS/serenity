@@ -59,8 +59,6 @@ private:
     ResourceLoader();
     static bool is_port_blocked(int port);
 
-    virtual void save_to(JsonObject&) override;
-
     int m_pending_loads { 0 };
 
     RefPtr<Protocol::Client> m_protocol_client;
