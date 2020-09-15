@@ -307,7 +307,7 @@ Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     InputMemoryStream memory_stream { bytes };
     DeflateDecompressor deflate_stream { memory_stream };
-    OutputMemoryStream output_stream;
+    DuplexMemoryStream output_stream;
 
     u8 buffer[4096];
     while (!deflate_stream.has_any_error() && !deflate_stream.unreliable_eof()) {

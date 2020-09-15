@@ -129,17 +129,17 @@ TEST_CASE(duplex_large_buffer)
 
     Array<u8, 1024> one_kibibyte;
 
-    EXPECT_EQ(stream.remaining(), 0ul);
+    EXPECT_EQ(stream.size(), 0ul);
 
     for (size_t idx = 0; idx < 256; ++idx)
         stream << one_kibibyte;
 
-    EXPECT_EQ(stream.remaining(), 256 * 1024ul);
+    EXPECT_EQ(stream.size(), 256 * 1024ul);
 
     for (size_t idx = 0; idx < 128; ++idx)
         stream >> one_kibibyte;
 
-    EXPECT_EQ(stream.remaining(), 128 * 1024ul);
+    EXPECT_EQ(stream.size(), 128 * 1024ul);
 
     for (size_t idx = 0; idx < 128; ++idx)
         stream >> one_kibibyte;
@@ -164,7 +164,7 @@ TEST_CASE(write_endian_values)
 {
     const u8 expected[] { 4, 3, 2, 1, 1, 2, 3, 4 };
 
-    OutputMemoryStream stream;
+    DuplexMemoryStream stream;
     stream << LittleEndian<u32> { 0x01020304 } << BigEndian<u32> { 0x01020304 };
 
     EXPECT_EQ(stream.size(), 8u);
