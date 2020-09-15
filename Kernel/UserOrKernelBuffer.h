@@ -80,10 +80,19 @@ public:
     {
         return write(src, 0, len);
     }
+    [[nodiscard]] bool write(ReadonlyBytes bytes)
+    {
+        return write(bytes.data(), bytes.size());
+    }
+
     [[nodiscard]] bool read(void* dest, size_t offset, size_t len) const;
     [[nodiscard]] bool read(void* dest, size_t len) const
     {
         return read(dest, 0, len);
+    }
+    [[nodiscard]] bool read(Bytes bytes) const
+    {
+        return read(bytes.data(), bytes.size());
     }
 
     [[nodiscard]] bool memset(int value, size_t offset, size_t len);
