@@ -177,8 +177,6 @@ public:
 
     Vector<Widget*> focusable_widgets() const;
 
-    virtual void save_to(AK::JsonObject&) override;
-
     void schedule_relayout();
 
     static void for_each_window(Badge<WindowServerConnection>, Function<void(Window&)>);

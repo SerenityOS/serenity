@@ -40,6 +40,20 @@ namespace GUI {
 
 TabWidget::TabWidget()
 {
+    REGISTER_INT_PROPERTY("container_padding", container_padding, set_container_padding);
+    REGISTER_BOOL_PROPERTY("uniform_tabs", uniform_tabs, set_uniform_tabs);
+
+    register_property(
+        "text_alignment",
+        [this] { return Gfx::to_string(text_alignment()); },
+        [this](auto& value) {
+            auto alignment = Gfx::text_alignment_from_string(value.to_string());
+            if (alignment.has_value()) {
+                set_text_alignment(alignment.value());
+                return true;
+            }
+            return false;
+        });
 }
 
 TabWidget::~TabWidget()
@@ -394,28 +408,6 @@ void TabWidget::context_menu_event(ContextMenuEvent& context_menu_event)
         });
         return;
     }
-}
-
-bool TabWidget::set_property(const StringView& name, const JsonValue& value)
-{
-    if (name == "container_padding") {
-        set_container_padding(value.to_i32());
-        return true;
-    }
-
-    if (name == "uniform_tabs") {
-        set_uniform_tabs(value.to_bool());
-        return true;
-    }
-
-    if (name == "text_alignment") {
-        auto alignment = Gfx::text_alignment_from_string(value.to_string());
-        if (alignment.has_value())
-            set_text_alignment(alignment.value());
-        return true;
-    }
-
-    return Widget::set_property(name, value);
 }
 
 }

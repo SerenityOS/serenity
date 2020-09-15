@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,61 +26,33 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
-#include <LibCore/Object.h>
-#include <LibGUI/Forward.h>
-#include <LibGUI/Margins.h>
+#include <AK/Function.h>
+#include <AK/JsonValue.h>
 
-namespace GUI {
+namespace Core {
 
-class Layout : public Core::Object {
-    C_OBJECT_ABSTRACT(Layout);
+class Property {
+    AK_MAKE_NONCOPYABLE(Property);
 
 public:
-    virtual ~Layout();
+    Property(String name, Function<JsonValue()> getter, Function<bool(const JsonValue&)> setter = nullptr);
+    ~Property();
 
-    void add_widget(Widget&);
-    void insert_widget_before(Widget& widget, Widget& before_widget);
-    void add_layout(OwnPtr<Layout>&&);
-    void add_spacer();
+    bool set(const JsonValue& value)
+    {
+        if (!m_setter)
+            return false;
+        return m_setter(value);
+    }
 
-    void remove_widget(Widget&);
+    JsonValue get() const { return m_getter(); }
 
-    virtual void run(Widget&) = 0;
+    const String& name() const { return m_name; }
 
-    void notify_adopted(Badge<Widget>, Widget&);
-    void notify_disowned(Badge<Widget>, Widget&);
-
-    Margins margins() const { return m_margins; }
-    void set_margins(const Margins&);
-
-    int spacing() const { return m_spacing; }
-    void set_spacing(int);
-
-protected:
-    Layout();
-
-    struct Entry {
-        enum class Type {
-            Invalid = 0,
-            Widget,
-            Layout,
-            Spacer,
-        };
-
-        Type type { Type::Invalid };
-        WeakPtr<Widget> widget;
-        OwnPtr<Layout> layout;
-    };
-    void add_entry(Entry&&);
-
-    WeakPtr<Widget> m_owner;
-    Vector<Entry> m_entries;
-
-    Margins m_margins;
-    int m_spacing { 3 };
+private:
+    String m_name;
+    Function<JsonValue()> m_getter;
+    Function<bool(const JsonValue&)> m_setter;
 };
 
 }

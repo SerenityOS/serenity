@@ -205,11 +205,4 @@ bool ResourceLoader::is_port_blocked(int port)
     return false;
 }
 
-void ResourceLoader::save_to(JsonObject& object)
-{
-    Object::save_to(object);
-    object.set("pending_loads", m_pending_loads);
-    object.set("user_agent", m_user_agent);
-}
-
 }

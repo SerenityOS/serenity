@@ -274,8 +274,8 @@ private:
         Retry
     };
 
-    // ^Core::Object
-    virtual void save_to(JsonObject&) override;
+    // FIXME: Port to Core::Property
+    void save_to(JsonObject&);
 
     struct KeyCallback {
         KeyCallback(Function<bool(Editor&)> cb)

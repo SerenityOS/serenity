@@ -37,6 +37,8 @@ namespace GUI {
 BoxLayout::BoxLayout(Orientation orientation)
     : m_orientation(orientation)
 {
+    register_property(
+        "orientation", [this] { return m_orientation == Gfx::Orientation::Vertical ? "Vertical" : "Horizontal"; }, nullptr);
 }
 
 void BoxLayout::run(Widget& widget)
@@ -174,11 +176,4 @@ void BoxLayout::run(Widget& widget)
             current_y += rect.height() + spacing();
     }
 }
-
-void BoxLayout::save_to(JsonObject& json)
-{
-    Layout::save_to(json);
-    json.set("orientation", m_orientation == Gfx::Orientation::Vertical ? "Vertical" : "Horizontal");
-}
-
 }

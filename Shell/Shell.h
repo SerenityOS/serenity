@@ -194,8 +194,8 @@ private:
     Shell();
     virtual ~Shell() override;
 
-    // ^Core::Object
-    virtual void save_to(JsonObject&) override;
+    // FIXME: Port to Core::Property
+    void save_to(JsonObject&);
     void bring_cursor_to_beginning_of_a_line() const;
 
     void cache_path();

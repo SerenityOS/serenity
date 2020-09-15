@@ -31,13 +31,18 @@
 
 namespace Gfx {
 
+#define GFX_ENUMERATE_TEXT_ALIGNMENTS(M) \
+    M(TopLeft)                           \
+    M(CenterLeft)                        \
+    M(Center)                            \
+    M(CenterRight)                       \
+    M(TopRight)                          \
+    M(BottomRight)
+
 enum class TextAlignment {
-    TopLeft,
-    CenterLeft,
-    Center,
-    CenterRight,
-    TopRight,
-    BottomRight,
+#define __ENUMERATE(x) x,
+    GFX_ENUMERATE_TEXT_ALIGNMENTS(__ENUMERATE)
+#undef __ENUMERATE
 };
 
 inline bool is_right_text_alignment(TextAlignment alignment)
@@ -54,18 +59,21 @@ inline bool is_right_text_alignment(TextAlignment alignment)
 
 inline Optional<TextAlignment> text_alignment_from_string(const StringView& string)
 {
-    if (string == "TopLeft")
-        return TextAlignment::TopLeft;
-    if (string == "CenterLeft")
-        return TextAlignment::CenterLeft;
-    if (string == "Center")
-        return TextAlignment::Center;
-    if (string == "CenterRight")
-        return TextAlignment::CenterRight;
-    if (string == "TopRight")
-        return TextAlignment::TopRight;
-    if (string == "BottomRight")
-        return TextAlignment::BottomRight;
+#define __ENUMERATE(x) \
+    if (string == #x)  \
+        return TextAlignment::x;
+    GFX_ENUMERATE_TEXT_ALIGNMENTS(__ENUMERATE)
+#undef __ENUMERATE
+    return {};
+}
+
+inline const char* to_string(TextAlignment text_alignment)
+{
+#define __ENUMERATE(x)                      \
+    if (text_alignment == TextAlignment::x) \
+        return #x;
+    GFX_ENUMERATE_TEXT_ALIGNMENTS(__ENUMERATE)
+#undef __ENUMERATE
     return {};
 }
 
