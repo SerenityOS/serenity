@@ -723,16 +723,18 @@ OwnPtr<Messages::WindowServer::GreetResponse> ClientConnection::handle(const Mes
 
 void ClientConnection::handle(const Messages::WindowServer::WM_SetWindowTaskbarRect& message)
 {
+    // Because the Taskbar (which should be the only user of this API) does not own the
+    // window or the client id, there is a possibility that it may send this message for
+    // a window or client that may have been destroyed already. This is not an error,
+    // and we should not call did_misbehave() for either.
     auto* client = ClientConnection::from_client_id(message.client_id());
-    if (!client) {
-        did_misbehave("WM_SetWindowTaskbarRect: Bad client ID");
+    if (!client)
         return;
-    }
+
     auto it = client->m_windows.find(message.window_id());
-    if (it == client->m_windows.end()) {
-        did_misbehave("WM_SetWindowTaskbarRect: Bad window ID");
+    if (it == client->m_windows.end())
         return;
-    }
+
     auto& window = *(*it).value;
     window.set_taskbar_rect(message.rect());
 }
