@@ -25,8 +25,8 @@
  */
 
 #include <AK/Bitmap.h>
-#include <AK/BufferStream.h>
 #include <AK/HashMap.h>
+#include <AK/MemoryStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
 #include <Kernel/Devices/BlockDevice.h>
@@ -287,15 +287,18 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
         output_block_index += new_shape.indirect_blocks;
     } else {
         auto block_contents = ByteBuffer::create_uninitialized(block_size());
-        BufferStream stream(block_contents);
+        OutputMemoryStream stream { block_contents };
+
         ASSERT(new_shape.indirect_blocks <= entries_per_block);
         for (unsigned i = 0; i < new_shape.indirect_blocks; ++i) {
             stream << blocks[output_block_index++];
             --remaining_blocks;
         }
+
         stream.fill_to_end(0);
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(block_contents.data());
-        int err = write_block(e2inode.i_block[EXT2_IND_BLOCK], buffer, block_size());
+
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
+        int err = write_block(e2inode.i_block[EXT2_IND_BLOCK], buffer, stream.size());
         ASSERT(err >= 0);
     }
 
@@ -939,8 +942,8 @@ bool Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
 #endif
 
     auto directory_data = ByteBuffer::create_uninitialized(occupied_size);
+    OutputMemoryStream stream { directory_data };
 
-    BufferStream stream(directory_data);
     for (size_t i = 0; i < entries.size(); ++i) {
         auto& entry = entries[i];
 
@@ -960,7 +963,7 @@ bool Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
         stream << u16(record_length);
         stream << u8(entry.name.length());
         stream << u8(entry.file_type);
-        stream << entry.name;
+        stream << entry.name.bytes();
 
         int padding = record_length - entry.name.length() - 8;
         for (int j = 0; j < padding; ++j)
@@ -969,8 +972,8 @@ bool Ext2FSInode::write_directory(const Vector<Ext2FSDirectoryEntry>& entries)
 
     stream.fill_to_end(0);
 
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(directory_data.data());
-    ssize_t nwritten = write_bytes(0, directory_data.size(), buffer, nullptr);
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
+    ssize_t nwritten = write_bytes(0, stream.size(), buffer, nullptr);
     if (nwritten < 0)
         return false;
     set_metadata_dirty(true);
