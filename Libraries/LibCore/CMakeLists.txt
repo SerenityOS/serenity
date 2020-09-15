@@ -1,6 +1,7 @@
 set(SOURCES
     ArgsParser.cpp
     ConfigFile.cpp
+    Command.cpp
     DateTime.cpp
     DirIterator.cpp
     ElapsedTimer.cpp
