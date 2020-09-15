@@ -354,6 +354,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$listen(arg1, arg2);
     case SC_select:
         return virt$select(arg1);
+    case SC_sendto:
+        return virt$sendto(arg1);
     case SC_recvfrom:
         return virt$recvfrom(arg1);
     case SC_kill:
@@ -617,6 +619,20 @@ int Emulator::virt$recvfrom(FlatPtr params_addr)
         mmu().copy_to_vm((FlatPtr)params.addr_length, &address_length, sizeof(address_length));
 
     return rc;
+}
+
+int Emulator::virt$sendto(FlatPtr params_addr)
+{
+    Syscall::SC_sendto_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto buffer = mmu().copy_buffer_from_vm((FlatPtr)params.data.data, params.data.size);
+
+    sockaddr_storage address;
+    if (params.addr)
+        mmu().copy_from_vm(&address, (FlatPtr)params.addr, min(sizeof(address), (size_t)params.addr_length));
+
+    return sendto(params.sockfd, buffer.data(), buffer.size(), params.flags, params.addr ? (struct sockaddr*)&address : nullptr, params.addr_length);
 }
 
 int Emulator::virt$select(FlatPtr params_addr)
