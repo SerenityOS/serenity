@@ -1107,7 +1107,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Ref
             } while (action == Continue);
 
             if (!stream.eof()) {
-                auto entry = ByteBuffer::create_uninitialized(stream.remaining());
+                auto entry = ByteBuffer::create_uninitialized(stream.size());
                 auto rc = stream.read_or_error(entry);
                 ASSERT(rc);
                 callback(create<StringValue>(String::copy(entry)));
