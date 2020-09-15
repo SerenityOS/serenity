@@ -59,6 +59,7 @@ public:
     static bool pick_next();
     static timeval time_since_boot();
     static bool yield();
+    static bool donate_to_and_switch(Thread*, const char* reason);
     static bool donate_to(Thread*, const char* reason);
     static bool context_switch(Thread*);
     static void enter_current(Thread& prev_thread);
