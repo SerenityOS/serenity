@@ -171,4 +171,27 @@ TEST_CASE(write_endian_values)
     EXPECT(compare({ expected, sizeof(expected) }, stream.copy_into_contiguous_buffer()));
 }
 
+TEST_CASE(new_output_memory_stream)
+{
+    Array<u8, 16> buffer;
+    OutputMemoryStream stream { buffer };
+
+    EXPECT_EQ(stream.size(), 0u);
+    EXPECT_EQ(stream.remaining(), 16u);
+
+    stream << LittleEndian<u16>(0x12'87);
+
+    EXPECT_EQ(stream.size(), 2u);
+    EXPECT_EQ(stream.remaining(), 14u);
+
+    stream << buffer;
+
+    EXPECT(stream.handle_recoverable_error());
+    EXPECT_EQ(stream.size(), 2u);
+    EXPECT_EQ(stream.remaining(), 14u);
+
+    EXPECT_EQ(stream.bytes().data(), buffer.data());
+    EXPECT_EQ(stream.bytes().size(), 2u);
+}
+
 TEST_MAIN(MemoryStream)
