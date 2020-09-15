@@ -165,11 +165,12 @@ public:
         return TypedTransfer<typename RemoveConst<T>::Type>::copy(other.data(), data(), count);
     }
 
-    ALWAYS_INLINE void fill(const T& value)
+    ALWAYS_INLINE size_t fill(const T& value)
     {
-        for (size_t idx = 0; idx < size(); ++idx) {
+        for (size_t idx = 0; idx < size(); ++idx)
             data()[idx] = value;
-        }
+
+        return size();
     }
 
     bool contains_slow(const T& value) const
