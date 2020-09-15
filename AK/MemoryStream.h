@@ -186,6 +186,13 @@ public:
         return true;
     }
 
+    size_t fill_to_end(u8 value)
+    {
+        const auto nwritten = m_bytes.slice(m_offset).fill(value);
+        m_offset += nwritten;
+        return nwritten;
+    }
+
     ReadonlyBytes bytes() const { return { data(), size() }; }
     Bytes bytes() { return { data(), size() }; }
 
