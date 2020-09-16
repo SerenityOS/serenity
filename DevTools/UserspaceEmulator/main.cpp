@@ -30,7 +30,7 @@
 #include <AK/LogStream.h>
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <LibELF/Loader.h>
 #include <getopt.h>
 #include <pthread.h>
@@ -39,12 +39,11 @@
 int main(int argc, char** argv, char** env)
 {
     if (argc == 1) {
-        out() << "usage: UserspaceEmulator <command>";
+        out() << "Usage: UserspaceEmulator <command>";
         return 0;
     }
 
-    // FIXME: Allow specifying any command in $PATH instead of requiring a full executable path.
-    const char* executable_path = argv[1];
+    auto executable_path = Core::find_executable_in_path(argv[1]);
 
     MappedFile mapped_file(executable_path);
     if (!mapped_file.is_valid()) {
