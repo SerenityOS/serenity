@@ -28,6 +28,7 @@
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
+#include <Kernel/UnixTypes.h>
 
 namespace Kernel {
 
@@ -176,18 +177,24 @@ int Process::sys$shutdown(int sockfd, int how)
     return socket.shutdown(how);
 }
 
-ssize_t Process::sys$sendto(Userspace<const Syscall::SC_sendto_params*> user_params)
+ssize_t Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*> user_msg, int flags)
 {
     REQUIRE_PROMISE(stdio);
-    Syscall::SC_sendto_params params;
-    if (!copy_from_user(&params, user_params))
+    struct msghdr msg;
+    if (!copy_from_user(&msg, user_msg))
         return -EFAULT;
 
-    int flags = params.flags;
-    Userspace<const sockaddr*> addr((FlatPtr)params.addr);
-    socklen_t addr_length = params.addr_length;
+    if (msg.msg_iovlen != 1)
+        return -ENOTSUP; // FIXME: Support this :)
+    Vector<iovec, 1> iovs;
+    iovs.resize(msg.msg_iovlen);
+    if (!copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen))
+        return -EFAULT;
 
-    auto description = file_description(params.sockfd);
+    Userspace<const sockaddr*> user_addr((FlatPtr)msg.msg_name);
+    socklen_t addr_length = msg.msg_namelen;
+
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -196,32 +203,36 @@ ssize_t Process::sys$sendto(Userspace<const Syscall::SC_sendto_params*> user_par
     if (socket.is_shut_down_for_writing())
         return -EPIPE;
     SmapDisabler disabler;
-    auto data_buffer = UserOrKernelBuffer::for_user_buffer(const_cast<u8*>((const u8*)params.data.data), params.data.size);
+    auto data_buffer = UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len);
     if (!data_buffer.has_value())
         return -EFAULT;
-    auto result = socket.sendto(*description, data_buffer.value(), params.data.size, flags, addr, addr_length);
+    auto result = socket.sendto(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, addr_length);
     if (result.is_error())
         return result.error();
     return result.value();
 }
 
-ssize_t Process::sys$recvfrom(Userspace<const Syscall::SC_recvfrom_params*> user_params)
+ssize_t Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int flags)
 {
     REQUIRE_PROMISE(stdio);
 
-    Syscall::SC_recvfrom_params params;
-    if (!copy_from_user(&params, user_params))
+    struct msghdr msg;
+    if (!copy_from_user(&msg, user_msg))
         return -EFAULT;
 
-    int flags = params.flags;
-    Userspace<sockaddr*> user_addr((FlatPtr)params.addr);
-    Userspace<socklen_t*> user_addr_length((FlatPtr)params.addr_length);
+    if (msg.msg_iovlen != 1)
+        return -ENOTSUP; // FIXME: Support this :)
+    Vector<iovec, 1> iovs;
+    iovs.resize(msg.msg_iovlen);
+    if (!copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen))
+        return -EFAULT;
+
+    Userspace<sockaddr*> user_addr((FlatPtr)msg.msg_name);
+    Userspace<socklen_t*> user_addr_length(msg.msg_name ? (FlatPtr)&user_msg.unsafe_userspace_ptr()->msg_namelen : 0);
 
     SmapDisabler disabler;
-    if (!user_addr_length && user_addr)
-        return -EINVAL;
 
-    auto description = file_description(params.sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -235,15 +246,26 @@ ssize_t Process::sys$recvfrom(Userspace<const Syscall::SC_recvfrom_params*> user
     if (flags & MSG_DONTWAIT)
         description->set_blocking(false);
 
-    auto data_buffer = UserOrKernelBuffer::for_user_buffer(const_cast<u8*>((const u8*)params.buffer.data), params.buffer.size);
+    auto data_buffer = UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len);
     if (!data_buffer.has_value())
         return -EFAULT;
-    auto result = socket.recvfrom(*description, data_buffer.value(), params.buffer.size, flags, user_addr, user_addr_length);
+    auto result = socket.recvfrom(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, user_addr_length);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
 
     if (result.is_error())
         return result.error();
+
+    int msg_flags = 0;
+
+    if (result.value() > iovs[0].iov_len) {
+        ASSERT(socket.type() != SOCK_STREAM);
+        msg_flags |= MSG_TRUNC;
+    }
+
+    if (!copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_flags, &msg_flags))
+        return -EFAULT;
+
     return result.value();
 }
 

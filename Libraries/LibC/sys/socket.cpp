@@ -28,7 +28,9 @@
 #include <Kernel/API/Syscall.h>
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 
 extern "C" {
 
@@ -68,11 +70,17 @@ int shutdown(int sockfd, int how)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+ssize_t sendmsg(int sockfd, const struct msghdr* msg, int flags)
+{
+    int rc = syscall(SC_sendmsg, sockfd, msg, flags);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 ssize_t sendto(int sockfd, const void* data, size_t data_length, int flags, const struct sockaddr* addr, socklen_t addr_length)
 {
-    Syscall::SC_sendto_params params { sockfd, { data, data_length }, flags, addr, addr_length };
-    int rc = syscall(SC_sendto, &params);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    iovec iov = { const_cast<void*>(data), data_length };
+    msghdr msg = { const_cast<struct sockaddr*>(addr), addr_length, &iov, 1, nullptr, 0, 0 };
+    return sendmsg(sockfd, &msg, flags);
 }
 
 ssize_t send(int sockfd, const void* data, size_t data_length, int flags)
@@ -80,11 +88,28 @@ ssize_t send(int sockfd, const void* data, size_t data_length, int flags)
     return sendto(sockfd, data, data_length, flags, nullptr, 0);
 }
 
+ssize_t recvmsg(int sockfd, struct msghdr* msg, int flags)
+{
+    int rc = syscall(SC_recvmsg, sockfd, msg, flags);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 ssize_t recvfrom(int sockfd, void* buffer, size_t buffer_length, int flags, struct sockaddr* addr, socklen_t* addr_length)
 {
-    Syscall::SC_recvfrom_params params { sockfd, { buffer, buffer_length }, flags, addr, addr_length };
-    int rc = syscall(SC_recvfrom, &params);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    if (!addr_length && addr) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    sockaddr_storage internal_addr;
+    iovec iov = { buffer, buffer_length };
+    msghdr msg = { addr ? &internal_addr : nullptr, addr ? sizeof(internal_addr) : 0, &iov, 1, nullptr, 0, 0 };
+    ssize_t rc = recvmsg(sockfd, &msg, flags);
+    if (rc >= 0 && addr) {
+        memcpy(addr, &internal_addr, min(*addr_length, msg.msg_namelen));
+        *addr_length = msg.msg_namelen;
+    }
+    return rc;
 }
 
 ssize_t recv(int sockfd, void* buffer, size_t buffer_length, int flags)
