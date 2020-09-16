@@ -249,7 +249,8 @@ ssize_t Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int
     auto data_buffer = UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len);
     if (!data_buffer.has_value())
         return -EFAULT;
-    auto result = socket.recvfrom(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, user_addr_length);
+    timeval timestamp = { 0, 0 };
+    auto result = socket.recvfrom(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, user_addr_length, timestamp);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
 

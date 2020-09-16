@@ -67,7 +67,7 @@ public:
     int send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
     int send_ipv4_fragmented(const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
 
-    size_t dequeue_packet(u8* buffer, size_t buffer_size);
+    size_t dequeue_packet(u8* buffer, size_t buffer_size, timeval& packet_timestamp);
 
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 
@@ -93,7 +93,13 @@ private:
     IPv4Address m_ipv4_address;
     IPv4Address m_ipv4_netmask;
     IPv4Address m_ipv4_gateway;
-    SinglyLinkedList<KBuffer> m_packet_queue;
+
+    struct PacketWithTimestamp {
+        KBuffer packet;
+        timeval timestamp;
+    };
+
+    SinglyLinkedList<PacketWithTimestamp> m_packet_queue;
     SinglyLinkedList<KBuffer> m_unused_packet_buffers;
     size_t m_unused_packet_buffers_count { 0 };
     String m_name;

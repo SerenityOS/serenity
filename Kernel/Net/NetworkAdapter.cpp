@@ -33,6 +33,7 @@
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/StdLib.h>
 
@@ -192,18 +193,20 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
         }
     }
 
-    m_packet_queue.append(buffer.value());
+    m_packet_queue.append({ buffer.value(), kgettimeofday() });
 
     if (on_receive)
         on_receive();
 }
 
-size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size)
+size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, timeval& packet_timestamp)
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())
         return 0;
-    auto packet = m_packet_queue.take_first();
+    auto packet_with_timestamp = m_packet_queue.take_first();
+    packet_timestamp = packet_with_timestamp.timestamp;
+    auto packet = move(packet_with_timestamp.packet);
     size_t packet_size = packet.size();
     ASSERT(packet_size <= buffer_size);
     memcpy(buffer, packet.data(), packet_size);

@@ -59,13 +59,13 @@ public:
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
-    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>) override;
+    virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, timeval&) override;
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
 
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
 
-    bool did_receive(const IPv4Address& peer_address, u16 peer_port, KBuffer&&);
+    bool did_receive(const IPv4Address& peer_address, u16 peer_port, KBuffer&&, const timeval&);
 
     const IPv4Address& local_address() const { return m_local_address; }
     u16 local_port() const { return m_local_port; }
@@ -111,7 +111,7 @@ private:
     virtual bool is_ipv4() const override { return true; }
 
     KResultOr<size_t> receive_byte_buffered(FileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>);
-    KResultOr<size_t> receive_packet_buffered(FileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>);
+    KResultOr<size_t> receive_packet_buffered(FileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, timeval&);
 
     IPv4Address m_local_address;
     IPv4Address m_peer_address;
@@ -119,6 +119,7 @@ private:
     struct ReceivedPacket {
         IPv4Address peer_address;
         u16 peer_port;
+        timeval timestamp;
         Optional<KBuffer> data;
     };
 
