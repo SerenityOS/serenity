@@ -99,8 +99,7 @@ void TreeView::doubleclick_event(MouseEvent& event)
         return;
 
     if (event.button() == MouseButton::Left) {
-        if (selection().first() != index)
-            selection().set(index);
+        set_cursor(index, SelectionUpdate::Set);
 
         if (model.row_count(index))
             toggle_index(index);
