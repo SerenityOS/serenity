@@ -739,13 +739,13 @@ DynamicEvaluate::~DynamicEvaluate()
 void Fd2FdRedirection::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::format("%d -> %d", source_fd, dest_fd), level);
+    print_indented(String::format("%d -> %d", m_source_fd, m_dest_fd), level);
 }
 
 RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
 {
     Command command;
-    command.redirections.append(FdRedirection::create(source_fd, dest_fd, Rewiring::Close::None));
+    command.redirections.append(FdRedirection::create(m_source_fd, m_dest_fd, Rewiring::Close::None));
     return create<CommandValue>(move(command));
 }
 
@@ -756,8 +756,8 @@ void Fd2FdRedirection::highlight_in_editor(Line::Editor& editor, Shell&, Highlig
 
 Fd2FdRedirection::Fd2FdRedirection(Position position, int src, int dst)
     : Node(move(position))
-    , source_fd(src)
-    , dest_fd(dst)
+    , m_source_fd(src)
+    , m_dest_fd(dst)
 {
 }
 
