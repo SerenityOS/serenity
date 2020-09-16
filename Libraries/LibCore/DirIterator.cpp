@@ -25,6 +25,7 @@
  */
 
 #include <LibCore/DirIterator.h>
+#include <AK/Vector.h>
 #include <errno.h>
 
 namespace Core {
@@ -96,6 +97,25 @@ String DirIterator::next_path()
 String DirIterator::next_full_path()
 {
     return String::format("%s/%s", m_path.characters(), next_path().characters());
+}
+
+String find_executable_in_path(String filename)
+{
+    if (filename.starts_with('/')) {
+        if (access(filename.characters(), X_OK) == 0)
+            return filename;
+
+        return {};
+    }
+
+    for (auto directory : StringView { getenv("PATH") }.split_view(':')) {
+        auto fullpath = String::format("%s/%s", directory, filename);
+
+        if (access(fullpath.characters(), X_OK) == 0)
+            return fullpath;
+    }
+
+    return {};
 }
 
 }
