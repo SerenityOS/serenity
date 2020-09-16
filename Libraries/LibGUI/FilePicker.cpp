@@ -30,6 +30,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
@@ -341,11 +342,9 @@ bool FilePicker::file_exists(const StringView& path)
 
 void FilePicker::set_path(const String& path)
 {
-    if (path == Core::StandardPaths::home_directory())
-        m_location_textbox->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/home-directory.png"));
-    else
-        m_location_textbox->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
-    m_model->set_root_path(path);
+    auto new_path = LexicalPath(path).string();
+    m_location_textbox->set_icon(FileIconProvider::icon_for_path(new_path).bitmap_for_size(16));
+    m_model->set_root_path(new_path);
 }
 
 }
