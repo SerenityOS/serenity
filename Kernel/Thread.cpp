@@ -671,10 +671,11 @@ RegisterState& Thread::get_register_dump_from_stack()
     return *(RegisterState*)(kernel_stack_top() - sizeof(RegisterState));
 }
 
-u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue> auxiliary_values)
+KResultOr<u32> Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue> auxiliary_values)
 {
     auto* region = m_process->allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
-    ASSERT(region);
+    if (!region)
+        return KResult(-ENOMEM);
     region->set_stack(true);
 
     FlatPtr new_esp = region->vaddr().offset(default_userspace_stack_size).get();
@@ -925,11 +926,13 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
     return backtrace;
 }
 
-void Thread::make_thread_specific_region(Badge<Process>)
+KResult Thread::make_thread_specific_region(Badge<Process>)
 {
     size_t thread_specific_region_alignment = max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
     m_thread_specific_region_size = align_up_to(process().m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
     auto* region = process().allocate_region({}, m_thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
+    if (!region)
+        return KResult(-ENOMEM);
     SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment)).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
@@ -937,6 +940,7 @@ void Thread::make_thread_specific_region(Badge<Process>)
     thread_specific_data->self = thread_specific_data;
     if (process().m_master_tls_size)
         memcpy(thread_local_storage, process().m_master_tls_region->vaddr().as_ptr(), process().m_master_tls_size);
+    return KSuccess;
 }
 
 const LogStream& operator<<(const LogStream& stream, const Thread& value)
