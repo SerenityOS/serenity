@@ -57,6 +57,7 @@ namespace GUI {
 ENUMERATE_FILETYPES(__ENUMERATE_FILETYPE)
 #undef __ENUMERATE_FILETYPE
 
+static Icon s_hard_disk_icon;
 static Icon s_directory_icon;
 static Icon s_directory_open_icon;
 static Icon s_home_directory_icon;
@@ -71,6 +72,7 @@ static void initialize_if_needed()
     static bool s_initialized = false;
     if (s_initialized)
         return;
+    s_hard_disk_icon = Icon::default_icon("hard-disk");
     s_directory_icon = Icon::default_icon("filetype-folder");
     s_directory_open_icon = Icon::default_icon("filetype-folder-open");
     s_home_directory_icon = Icon::default_icon("home-directory");
@@ -129,6 +131,8 @@ Icon FileIconProvider::icon_for_path(const String& path)
 Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
 {
     initialize_if_needed();
+    if (path == "/")
+        return s_hard_disk_icon;
     if (S_ISDIR(mode))
         return s_directory_icon;
     if (S_ISLNK(mode))
