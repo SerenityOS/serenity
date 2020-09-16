@@ -28,6 +28,7 @@
 
 #include "Forward.h"
 #include "Job.h"
+#include "NodeVisitor.h"
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
@@ -414,6 +415,9 @@ public:
 
     Vector<Command> to_lazy_evaluated_commands(RefPtr<Shell> shell);
 
+    virtual void visit(NodeVisitor&) { ASSERT_NOT_REACHED(); }
+    virtual void visit(NodeVisitor& visitor) const { const_cast<Node*>(this)->visit(visitor); }
+
 protected:
     Position m_position;
     bool m_is_syntax_error { false };
@@ -429,6 +433,10 @@ public:
     virtual HitTestResult hit_test_position(size_t offset) override;
     virtual bool is_command() const override { return true; }
     virtual bool is_list() const override { return true; }
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& path() const { return m_path; }
+    int fd() const { return m_fd; }
 
 protected:
     int m_fd { -1 };
@@ -439,6 +447,10 @@ class And final : public Node {
 public:
     And(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~And();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& left() const { return m_left; }
+    const NonnullRefPtr<Node>& right() const { return m_right; }
 
 private:
     virtual void dump(int level) const override;
@@ -455,6 +467,8 @@ class ListConcatenate final : public Node {
 public:
     ListConcatenate(Position, Vector<NonnullRefPtr<Node>>);
     virtual ~ListConcatenate();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+    const Vector<NonnullRefPtr<Node>> list() const { return m_list; }
 
 private:
     virtual void dump(int level) const override;
@@ -472,6 +486,9 @@ class Background final : public Node {
 public:
     Background(Position, NonnullRefPtr<Node>);
     virtual ~Background();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& command() const { return m_command; }
 
 private:
     virtual void dump(int level) const override;
@@ -487,6 +504,8 @@ class BarewordLiteral final : public Node {
 public:
     BarewordLiteral(Position, String);
     virtual ~BarewordLiteral();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
     const String& text() const { return m_text; }
 
 private:
@@ -504,6 +523,9 @@ class CastToCommand final : public Node {
 public:
     CastToCommand(Position, NonnullRefPtr<Node>);
     virtual ~CastToCommand();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& inner() const { return m_inner; }
 
 private:
     virtual void dump(int level) const override;
@@ -523,6 +545,9 @@ class CastToList final : public Node {
 public:
     CastToList(Position, RefPtr<Node>);
     virtual ~CastToList();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const RefPtr<Node>& inner() const { return m_inner; }
 
 private:
     virtual void dump(int level) const override;
@@ -540,6 +565,9 @@ class CloseFdRedirection final : public Node {
 public:
     CloseFdRedirection(Position, int);
     virtual ~CloseFdRedirection();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    int fd() const { return m_fd; }
 
 private:
     virtual void dump(int level) const override;
@@ -555,6 +583,9 @@ class CommandLiteral final : public Node {
 public:
     CommandLiteral(Position, Command);
     virtual ~CommandLiteral();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const Command& command() const { return m_command; }
 
 private:
     virtual void dump(int level) const override;
@@ -571,6 +602,8 @@ class Comment : public Node {
 public:
     Comment(Position, String);
     virtual ~Comment();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
     const String& text() const { return m_text; }
 
 private:
@@ -586,6 +619,9 @@ class DynamicEvaluate final : public Node {
 public:
     DynamicEvaluate(Position, NonnullRefPtr<Node>);
     virtual ~DynamicEvaluate();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& inner() const { return m_inner; }
 
 private:
     virtual void dump(int level) const override;
@@ -610,6 +646,9 @@ class DoubleQuotedString final : public Node {
 public:
     DoubleQuotedString(Position, RefPtr<Node>);
     virtual ~DoubleQuotedString();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const RefPtr<Node>& inner() const { return m_inner; }
 
 private:
     virtual void dump(int level) const override;
@@ -625,6 +664,10 @@ class Fd2FdRedirection final : public Node {
 public:
     Fd2FdRedirection(Position, int, int);
     virtual ~Fd2FdRedirection();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    int source_fd() const { return m_source_fd; }
+    int dest_fd() const { return m_dest_fd; }
 
 private:
     virtual void dump(int level) const override;
@@ -645,6 +688,11 @@ public:
     };
     FunctionDeclaration(Position, NameWithPosition name, Vector<NameWithPosition> argument_names, RefPtr<AST::Node> body);
     virtual ~FunctionDeclaration();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NameWithPosition& name() const { return m_name; }
+    const Vector<NameWithPosition> arguments() const { return m_arguments; }
+    const RefPtr<Node>& block() const { return m_block; }
 
 private:
     virtual void dump(int level) const override;
@@ -664,6 +712,11 @@ class ForLoop final : public Node {
 public:
     ForLoop(Position, String variable_name, NonnullRefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position = {});
     virtual ~ForLoop();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const String& variable_name() const { return m_variable_name; }
+    const NonnullRefPtr<Node>& iterated_expression() const { return m_iterated_expression; }
+    const RefPtr<Node>& block() const { return m_block; }
 
 private:
     virtual void dump(int level) const override;
@@ -683,6 +736,8 @@ class Glob final : public Node {
 public:
     Glob(Position, String);
     virtual ~Glob();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
     const String& text() const { return m_text; }
 
 private:
@@ -701,8 +756,12 @@ public:
     Execute(Position, NonnullRefPtr<Node>, bool capture_stdout = false);
     virtual ~Execute();
     void capture_stdout() { m_capture_stdout = true; }
-    NonnullRefPtr<Node> command() { return m_command; }
+    NonnullRefPtr<Node>& command() { return m_command; }
     virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& command() const { return m_command; }
+    bool does_capture_stdout() const { return m_capture_stdout; }
 
 private:
     virtual void dump(int level) const override;
@@ -722,6 +781,12 @@ class IfCond final : public Node {
 public:
     IfCond(Position, Optional<Position> else_position, NonnullRefPtr<AST::Node> cond_expr, RefPtr<AST::Node> true_branch, RefPtr<AST::Node> false_branch);
     virtual ~IfCond();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& condition() const { return m_condition; }
+    const RefPtr<Node>& true_branch() const { return m_true_branch; }
+    const RefPtr<Node>& false_branch() const { return m_false_branch; }
+    const Optional<Position> else_position() const { return m_else_position; }
 
 private:
     virtual void dump(int level) const override;
@@ -742,6 +807,10 @@ class Join final : public Node {
 public:
     Join(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Join();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& left() const { return m_left; }
+    const NonnullRefPtr<Node>& right() const { return m_right; }
 
 private:
     virtual void dump(int level) const override;
@@ -767,6 +836,11 @@ class MatchExpr final : public Node {
 public:
     MatchExpr(Position, NonnullRefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries);
     virtual ~MatchExpr();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& matched_expr() const { return m_matched_expr; }
+    const String& expr_name() const { return m_expr_name; }
+    const Vector<MatchEntry>& entries() const { return m_entries; }
 
 private:
     virtual void dump(int level) const override;
@@ -786,6 +860,10 @@ class Or final : public Node {
 public:
     Or(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Or();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& left() const { return m_left; }
+    const NonnullRefPtr<Node>& right() const { return m_right; }
 
 private:
     virtual void dump(int level) const override;
@@ -802,6 +880,10 @@ class Pipe final : public Node {
 public:
     Pipe(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Pipe();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& left() const { return m_left; }
+    const NonnullRefPtr<Node>& right() const { return m_right; }
 
 private:
     virtual void dump(int level) const override;
@@ -809,7 +891,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Pipe"; }
-    virtual bool is_list() const override { return true; }
+    virtual bool is_command() const override { return true; }
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
@@ -819,6 +901,7 @@ class ReadRedirection final : public PathRedirectionNode {
 public:
     ReadRedirection(Position, int, NonnullRefPtr<Node>);
     virtual ~ReadRedirection();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
 private:
     virtual void dump(int level) const override;
@@ -830,6 +913,7 @@ class ReadWriteRedirection final : public PathRedirectionNode {
 public:
     ReadWriteRedirection(Position, int, NonnullRefPtr<Node>);
     virtual ~ReadWriteRedirection();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
 private:
     virtual void dump(int level) const override;
@@ -841,6 +925,10 @@ class Sequence final : public Node {
 public:
     Sequence(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Sequence();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& left() const { return m_left; }
+    const NonnullRefPtr<Node>& right() const { return m_right; }
 
 private:
     virtual void dump(int level) const override;
@@ -859,6 +947,9 @@ class Subshell final : public Node {
 public:
     Subshell(Position, RefPtr<Node> block);
     virtual ~Subshell();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const RefPtr<Node>& block() const { return m_block; }
 
 private:
     virtual void dump(int level) const override;
@@ -876,6 +967,7 @@ public:
     SimpleVariable(Position, String);
     virtual ~SimpleVariable();
 
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
     const String& name() const { return m_name; }
 
 private:
@@ -894,6 +986,9 @@ class SpecialVariable final : public Node {
 public:
     SpecialVariable(Position, char);
     virtual ~SpecialVariable();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    char name() const { return m_name; }
 
 private:
     virtual void dump(int level) const override;
@@ -910,6 +1005,10 @@ class Juxtaposition final : public Node {
 public:
     Juxtaposition(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Juxtaposition();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& left() const { return m_left; }
+    const NonnullRefPtr<Node>& right() const { return m_right; }
 
 private:
     virtual void dump(int level) const override;
@@ -927,6 +1026,8 @@ class StringLiteral final : public Node {
 public:
     StringLiteral(Position, String);
     virtual ~StringLiteral();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
     const String& text() const { return m_text; }
 
 private:
@@ -943,6 +1044,10 @@ class StringPartCompose final : public Node {
 public:
     StringPartCompose(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~StringPartCompose();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& left() const { return m_left; }
+    const NonnullRefPtr<Node>& right() const { return m_right; }
 
 private:
     virtual void dump(int level) const override;
@@ -959,6 +1064,7 @@ class SyntaxError final : public Node {
 public:
     SyntaxError(Position, String);
     virtual ~SyntaxError();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const String& error_text() const { return m_syntax_error_text; }
 
@@ -978,6 +1084,8 @@ class Tilde final : public Node {
 public:
     Tilde(Position, String);
     virtual ~Tilde();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
     String text() const;
 
 private:
@@ -1000,6 +1108,7 @@ public:
     };
     VariableDeclarations(Position, Vector<Variable> variables);
     virtual ~VariableDeclarations();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const Vector<Variable>& variables() const { return m_variables; }
 
@@ -1018,6 +1127,7 @@ class WriteAppendRedirection final : public PathRedirectionNode {
 public:
     WriteAppendRedirection(Position, int, NonnullRefPtr<Node>);
     virtual ~WriteAppendRedirection();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
 private:
     virtual void dump(int level) const override;
@@ -1029,6 +1139,7 @@ class WriteRedirection final : public PathRedirectionNode {
 public:
     WriteRedirection(Position, int, NonnullRefPtr<Node>);
     virtual ~WriteRedirection();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
 private:
     virtual void dump(int level) const override;

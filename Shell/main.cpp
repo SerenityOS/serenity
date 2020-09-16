@@ -200,21 +200,34 @@ int main(int argc, char** argv)
     const char* file_to_read_from = nullptr;
     Vector<const char*> script_args;
     bool skip_rc_files = false;
+    const char* format = nullptr;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
     parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc", 0);
+    parser.add_option(format, "File to format", "format", 0, "file");
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_positional_argument(script_args, "Extra argumets to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
     parser.parse(argc, argv);
+
+    if (format) {
+        auto file = Core::File::open(format, Core::IODevice::ReadOnly);
+        if (file.is_error()) {
+            fprintf(stderr, "Error: %s", file.error().characters());
+            return 1;
+        }
+
+        ssize_t cursor = -1;
+        puts(shell->format(file.value()->read_all(), cursor).characters());
+        return 0;
+    }
 
     if (getsid(getpid()) == 0) {
         if (setsid() < 0) {
             perror("setsid");
             // Let's just hope that it's ok.
         }
-    }
 
     shell->current_script = argv[0];
 

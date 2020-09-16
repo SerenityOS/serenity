@@ -1,7 +1,9 @@
 set(SOURCES
     AST.cpp
     Builtin.cpp
+    Formatter.cpp
     Job.cpp
+    NodeVisitor.cpp
     Parser.cpp
     Shell.cpp
     main.cpp
