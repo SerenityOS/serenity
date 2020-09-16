@@ -244,6 +244,10 @@ bool APIC::init_bsp()
     set_base(apic_base);
 
     m_apic_base = MM.allocate_kernel_region(apic_base.page_base(), PAGE_ROUND_UP(1), {}, Region::Access::Read | Region::Access::Write);
+    if (!m_apic_base) {
+        klog() << "APIC: Failed to allocate memory for APIC base";
+        return false;
+    }
 
     auto rsdp = ACPI::StaticParsing::find_rsdp();
     if (!rsdp.has_value()) {

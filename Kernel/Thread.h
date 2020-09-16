@@ -433,9 +433,9 @@ public:
     void set_default_signal_dispositions();
     bool push_value_on_stack(FlatPtr);
 
-    u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue>);
+    KResultOr<u32> make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment, Vector<AuxiliaryValue>);
 
-    void make_thread_specific_region(Badge<Process>);
+    KResult make_thread_specific_region(Badge<Process>);
 
     unsigned syscall_count() const { return m_syscall_count; }
     void did_syscall() { ++m_syscall_count; }

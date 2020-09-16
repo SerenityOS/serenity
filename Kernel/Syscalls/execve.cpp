@@ -267,7 +267,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
-    u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment), move(auxv));
+    auto make_stack_result = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment), move(auxv));
+    if (make_stack_result.is_error())
+        return make_stack_result.error();
+    u32 new_userspace_esp = make_stack_result.value();
 
     if (wait_for_tracer_at_next_execve())
         Thread::current()->send_urgent_signal_to_self(SIGSTOP);
@@ -287,7 +290,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     // FIXME: PID/TID ISSUE
     m_pid = new_main_thread->tid().value();
-    new_main_thread->make_thread_specific_region({});
+    auto tsr_result = new_main_thread->make_thread_specific_region({});
+    if (tsr_result.is_error())
+        return tsr_result.error();
     new_main_thread->reset_fpu_state();
 
     auto& tss = new_main_thread->m_tss;
