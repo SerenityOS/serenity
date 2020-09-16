@@ -463,6 +463,9 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
 
 Icon FileSystemModel::icon_for(const Node& node) const
 {
+    if (node.full_path() == "/")
+        return FileIconProvider::icon_for_path("/");
+
     if (Gfx::Bitmap::is_path_a_supported_image_format(node.name.to_lowercase())) {
         if (!node.thumbnail) {
             if (!const_cast<FileSystemModel*>(this)->fetch_thumbnail_for(node))
