@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
@@ -133,8 +134,11 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
     initialize_if_needed();
     if (path == "/")
         return s_hard_disk_icon;
-    if (S_ISDIR(mode))
+    if (S_ISDIR(mode)) {
+        if (path == Core::StandardPaths::home_directory())
+            return s_home_directory_icon;
         return s_directory_icon;
+    }
     if (S_ISLNK(mode))
         return s_symlink_icon;
     if (S_ISSOCK(mode))
