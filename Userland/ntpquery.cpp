@@ -35,6 +35,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/uio.h>
 
 // An NtpTimestamp is a 64-bit integer that's a 32.32 binary-fixed point number.
 // The integral part in the upper 32 bits represents seconds since 1900-01-01.
@@ -147,6 +148,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    int enable = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_TIMESTAMP, &enable, sizeof(enable)) < 0) {
+        perror("setsockopt");
+        return 1;
+    }
+
     sockaddr_in peer_address;
     memset(&peer_address, 0, sizeof(peer_address));
     peer_address.sin_family = AF_INET;
@@ -173,22 +180,33 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    socklen_t peer_address_size = sizeof(peer_address);
-    rc = recvfrom(fd, &packet, sizeof(packet), 0, (struct sockaddr*)&peer_address, &peer_address_size);
-    gettimeofday(&t, nullptr);
+    iovec iov { &packet, sizeof(packet) };
+    char control_message_buffer[CMSG_SPACE(sizeof(timeval))];
+    msghdr msg = { &peer_address, sizeof(peer_address), &iov, 1, control_message_buffer, sizeof(control_message_buffer), 0};
+    rc = recvmsg(fd, &msg, 0);
     if (rc < 0) {
-        perror("recvfrom");
+        perror("recvmsg");
         return 1;
     }
+    gettimeofday(&t, nullptr);
     if ((size_t)rc < sizeof(packet)) {
         fprintf(stderr, "incomplete packet recv\n");
         return 1;
     }
 
+    cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
+    ASSERT(cmsg->cmsg_level == SOL_SOCKET);
+    ASSERT(cmsg->cmsg_type == SCM_TIMESTAMP);
+    ASSERT(!CMSG_NXTHDR(&msg, cmsg));
+    timeval packet_t;
+    memcpy(&packet_t, CMSG_DATA(cmsg), sizeof(packet_t));
+
     NtpTimestamp origin_timestamp = be64toh(packet.origin_timestamp);
     NtpTimestamp receive_timestamp = be64toh(packet.receive_timestamp);
     NtpTimestamp transmit_timestamp = be64toh(packet.transmit_timestamp);
-    NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(t);
+    NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(packet_t);
+
+    timersub(&t, &packet_t, &t);
 
     if (set_time) {
         // FIXME: Do all the time filtering described in 5905, or at least correct for time of flight.
@@ -214,6 +232,10 @@ int main(int argc, char** argv)
     printf("Receive timestamp:     %#016llx (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
     printf("Transmit timestamp:    %#016llx (%s)\n", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
     printf("Destination timestamp: %#016llx (%s)\n", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
+
+    // When the system isn't under load, user-space t and packet_t are identical. If a shell with `yes` is running, it can be as high as 30ms in this program,
+    // which gets user-space time immediately after the recvmsg() call. In programs that have an event loop reading from multiple sockets, it could be higher.
+    printf("Receive latency: %lld.%06d s\n", t.tv_sec, t.tv_usec);
 
     // Parts of the "Clock Filter" computations, https://tools.ietf.org/html/rfc5905#section-10
     NtpTimestamp T1 = origin_timestamp;
