@@ -46,10 +46,20 @@ Notifier::~Notifier()
 
 void Notifier::set_enabled(bool enabled)
 {
+    if (m_fd < 0)
+        return;
     if (enabled)
         Core::EventLoop::register_notifier({}, *this);
     else
         Core::EventLoop::unregister_notifier({}, *this);
+}
+
+void Notifier::close()
+{
+    if (m_fd < 0)
+        return;
+    set_enabled(false);
+    m_fd = -1;
 }
 
 void Notifier::event(Core::Event& event)
