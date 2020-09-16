@@ -86,6 +86,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         case Thread::State::Runnable:
         case Thread::State::Blocked:
         case Thread::State::Dying:
+        case Thread::State::Dead:
         case Thread::State::Queued:
             siginfo.si_code = CLD_CONTINUED;
             break;
