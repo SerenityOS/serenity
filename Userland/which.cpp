@@ -24,11 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DirIterator.h>
 #include <stdio.h>
-#include <unistd.h>
 
 int main(int argc, char** argv)
 {
@@ -43,18 +41,12 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(filename, "Name of executable", "executable");
     args_parser.parse(argc, argv);
 
-    String path = getenv("PATH");
-    if (path.is_empty())
-        path = "/bin:/usr/bin";
-
-    auto parts = path.split(':');
-    for (auto& part : parts) {
-        auto candidate = String::format("%s/%s", part.characters(), filename);
-        if(access(candidate.characters(), X_OK) == 0) {
-            printf("%s\n", candidate.characters());
-            return 0;
-        }
+    auto fullpath = Core::find_executable_in_path(filename);
+    if (fullpath.is_null()) {
+        printf("no '%s' in path\n", filename);
+        return 1;
     }
 
-    return 1;
+    printf("%s\n", fullpath.characters());
+    return 0;
 }
