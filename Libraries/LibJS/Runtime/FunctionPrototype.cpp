@@ -72,7 +72,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     auto& function = static_cast<Function&>(*this_object);
     auto this_arg = interpreter.argument(0);
     auto arg_array = interpreter.argument(1);
-    if (arg_array.is_null() || arg_array.is_undefined())
+    if (arg_array.is_nullish())
         return interpreter.call(function, this_arg);
     if (!arg_array.is_object()) {
         interpreter.throw_exception<TypeError>(ErrorType::FunctionArgsNotObject);

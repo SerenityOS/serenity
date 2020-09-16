@@ -847,7 +847,7 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
     if (lhs.type() == rhs.type())
         return strict_eq(interpreter, lhs, rhs);
 
-    if ((lhs.is_undefined() || lhs.is_null()) && (rhs.is_undefined() || rhs.is_null()))
+    if (lhs.is_nullish() && rhs.is_nullish())
         return true;
 
     if (lhs.is_number() && rhs.is_string())

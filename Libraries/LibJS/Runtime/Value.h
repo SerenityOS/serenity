@@ -71,6 +71,7 @@ public:
     bool is_accessor() const { return m_type == Type::Accessor; };
     bool is_bigint() const { return m_type == Type::BigInt; };
     bool is_native_property() const { return m_type == Type::NativeProperty; }
+    bool is_nullish() const { return is_null() || is_undefined(); }
     bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol() || is_native_property(); }
     bool is_array() const;
     bool is_function() const;
