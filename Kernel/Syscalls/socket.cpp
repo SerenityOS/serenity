@@ -264,6 +264,23 @@ ssize_t Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int
         msg_flags |= MSG_TRUNC;
     }
 
+    if (socket.wants_timestamp()) {
+        struct {
+            cmsghdr cmsg;
+            timeval timestamp;
+        } cmsg_timestamp;
+        socklen_t control_length = sizeof(cmsg_timestamp);
+        if (msg.msg_controllen < control_length) {
+            msg_flags |= MSG_CTRUNC;
+        } else {
+            cmsg_timestamp = { { control_length, SOL_SOCKET, SCM_TIMESTAMP }, timestamp };
+            if (!copy_to_user(msg.msg_control, &cmsg_timestamp, control_length))
+                return -EFAULT;
+        }
+        if (!copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_controllen, &control_length))
+            return -EFAULT;
+    }
+
     if (!copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_flags, &msg_flags))
         return -EFAULT;
 

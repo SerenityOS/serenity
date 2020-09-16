@@ -490,10 +490,10 @@ int Emulator::virt$setsockopt(FlatPtr params_addr)
     Syscall::SC_setsockopt_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
-    if (params.option == SO_RCVTIMEO) {
+    if (params.option == SO_RCVTIMEO || params.option == SO_TIMESTAMP) {
         auto host_value_buffer = ByteBuffer::create_zeroed(params.value_size);
         mmu().copy_from_vm(host_value_buffer.data(), (FlatPtr)params.value, params.value_size);
-        int rc = setsockopt(params.sockfd, params.level, SO_RCVTIMEO, host_value_buffer.data(), host_value_buffer.size());
+        int rc = setsockopt(params.sockfd, params.level, params.option, host_value_buffer.data(), host_value_buffer.size());
         if (rc < 0)
             return -errno;
         return rc;

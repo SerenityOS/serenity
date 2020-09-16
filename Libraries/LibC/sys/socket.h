@@ -62,9 +62,16 @@ __BEGIN_DECLS
 #define IPPROTO_UDP 17
 
 #define MSG_TRUNC 0x1
+#define MSG_CTRUNC 0x2
 #define MSG_DONTWAIT 0x40
 
 typedef uint16_t sa_family_t;
+
+struct cmsghdr {
+    socklen_t cmsg_len;
+    int cmsg_level;
+    int cmsg_type;
+};
 
 struct msghdr {
     void* msg_name;
@@ -99,6 +106,7 @@ enum {
     SO_REUSEADDR,
     SO_BINDTODEVICE,
     SO_KEEPALIVE,
+    SO_TIMESTAMP,
 };
 #define SO_RCVTIMEO SO_RCVTIMEO
 #define SO_SNDTIMEO SO_SNDTIMEO
@@ -108,6 +116,12 @@ enum {
 #define SO_REUSEADDR SO_REUSEADDR
 #define SO_BINDTODEVICE SO_BINDTODEVICE
 #define SO_KEEPALIVE SO_KEEPALIVE
+#define SO_TIMESTAMP SO_TIMESTAMP
+
+enum {
+    SCM_TIMESTAMP,
+};
+#define SCM_TIMESTAMP SCM_TIMESTAMP
 
 struct sockaddr_storage {
     union {
@@ -134,5 +148,31 @@ int getsockname(int sockfd, struct sockaddr*, socklen_t*);
 int getpeername(int sockfd, struct sockaddr*, socklen_t*);
 int sendfd(int sockfd, int fd);
 int recvfd(int sockfd);
+
+// These three are non-POSIX, but common:
+#define CMSG_ALIGN(x) (((x) + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
+#define CMSG_SPACE(x) (CMSG_ALIGN(sizeof(struct cmsghdr)) + CMSG_ALIGN(x))
+#define CMSG_LEN(x) (CMSG_ALIGN(sizeof(struct cmsghdr)) + (x))
+
+static inline struct cmsghdr* CMSG_FIRSTHDR(struct msghdr* msg)
+{
+    if (msg->msg_controllen < sizeof(struct cmsghdr))
+        return 0;
+    return (struct cmsghdr*)msg->msg_control;
+}
+
+static inline struct cmsghdr* CMSG_NXTHDR(struct msghdr* msg, struct cmsghdr* cmsg)
+{
+    struct cmsghdr* next = (struct cmsghdr*)((char*)cmsg + CMSG_ALIGN(cmsg->cmsg_len));
+    unsigned offset = (char*)next - (char*)msg->msg_control;
+    if (msg->msg_controllen < offset + sizeof(struct cmsghdr))
+        return NULL;
+    return next;
+}
+
+static inline void* CMSG_DATA(struct cmsghdr* cmsg)
+{
+    return (void*)(cmsg + 1);
+}
 
 __END_DECLS

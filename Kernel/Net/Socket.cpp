@@ -133,6 +133,17 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
     case SO_KEEPALIVE:
         // FIXME: Obviously, this is not a real keepalive.
         return KSuccess;
+    case SO_TIMESTAMP:
+        if (user_value_size != sizeof(int))
+            return KResult(-EINVAL);
+        if (!copy_from_user(&m_timestamp, static_ptr_cast<const int*>(user_value)))
+            return KResult(-EFAULT);
+        if (m_timestamp && (domain() != AF_INET || type() == SOCK_STREAM)) {
+            // FIXME: Support SO_TIMESTAMP for more protocols?
+            m_timestamp = 0;
+            return KResult(-ENOTSUP);
+        }
+        return KSuccess;
     default:
         dbg() << "setsockopt(" << option << ") at SOL_SOCKET not implemented.";
         return KResult(-ENOPROTOOPT);
@@ -196,6 +207,15 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
 
             return KResult(-EFAULT);
         }
+    case SO_TIMESTAMP:
+        if (size < sizeof(int))
+            return KResult(-EINVAL);
+        if (!copy_to_user(static_ptr_cast<int*>(value), &m_timestamp))
+            return KResult(-EFAULT);
+        size = sizeof(int);
+        if (!copy_to_user(value_size, &size))
+            return KResult(-EFAULT);
+        return KSuccess;
     default:
         dbg() << "getsockopt(" << option << ") at SOL_SOCKET not implemented.";
         return KResult(-ENOPROTOOPT);

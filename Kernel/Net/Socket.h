@@ -135,6 +135,8 @@ public:
     bool has_send_timeout() const { return m_send_timeout.tv_sec || m_send_timeout.tv_usec; }
     const timeval& send_timeout() const { return m_send_timeout; }
 
+    bool wants_timestamp() const { return m_timestamp; }
+
 protected:
     Socket(int domain, int type, int protocol);
 
@@ -172,6 +174,7 @@ private:
 
     timeval m_receive_timeout { 0, 0 };
     timeval m_send_timeout { 0, 0 };
+    int m_timestamp { 0 };
 
     NonnullRefPtrVector<Socket> m_pending;
 };
