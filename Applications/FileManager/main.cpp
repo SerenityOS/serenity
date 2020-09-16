@@ -41,6 +41,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Desktop.h>
+#include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
@@ -68,18 +69,6 @@
 
 static int run_in_desktop_mode(RefPtr<Core::ConfigFile>);
 static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location);
-
-static Gfx::Bitmap& folder_icon()
-{
-    static RefPtr<Gfx::Bitmap> icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-folder.png");
-    return *icon;
-}
-
-static Gfx::Bitmap& home_directory_icon()
-{
-    static RefPtr<Gfx::Bitmap> icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/home-directory.png");
-    return *icon;
-}
 
 int main(int argc, char** argv)
 {
@@ -538,14 +527,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(*view_as_columns_action);
 
     directory_view.on_path_change = [&](const String& new_path, bool can_write_in_path) {
-        const Gfx::Bitmap* icon = nullptr;
-        if (new_path == Core::StandardPaths::home_directory())
-            icon = &home_directory_icon();
-        else
-            icon = &folder_icon();
-
-        window->set_icon(icon);
-        location_textbox.set_icon(icon);
+        auto icon = GUI::FileIconProvider::icon_for_path(new_path);
+        auto* bitmap = icon.bitmap_for_size(16);
+        window->set_icon(bitmap);
+        location_textbox.set_icon(bitmap);
 
         window->set_title(String::format("%s - File Manager", new_path.characters()));
         location_textbox.set_text(new_path);
