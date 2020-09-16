@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,17 +24,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibCore/DirIterator.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-    if (pledge("stdio", nullptr) < 0) {
+    if (pledge("stdio rpath exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
-    for (size_t i = 0; environ[i]; ++i)
-        printf("%s\n", environ[i]);
-    return 0;
+    const char* filename = nullptr;
+
+    for (int idx = 1; idx < argc; ++idx) {
+        if (StringView { argv[idx] }.contains('=')) {
+            putenv(argv[idx]);
+        } else {
+            filename = argv[idx];
+            argv += idx;
+            break;
+        }
+    }
+
+    if (filename == nullptr) {
+        for (auto entry = environ; *entry != nullptr; ++entry)
+            printf("%s\n", *entry);
+
+        return 0;
+    }
+
+    String filepath = Core::find_executable_in_path(filename);
+
+    if (filepath.is_null()) {
+        warn() << "no " << filename << " in path";
+        return 1;
+    }
+
+    execv(filepath.characters(), argv);
+
+    perror("execv");
+    return 1;
 }
