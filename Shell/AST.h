@@ -371,7 +371,7 @@ private:
 class Node : public RefCounted<Node> {
 public:
     virtual void dump(int level) const = 0;
-    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(RefPtr<Value>)> callback);
+    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback);
     virtual RefPtr<Value> run(RefPtr<Shell>) = 0;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) = 0;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&);
@@ -422,7 +422,7 @@ protected:
 
 class PathRedirectionNode : public Node {
 public:
-    PathRedirectionNode(Position, int, RefPtr<Node>);
+    PathRedirectionNode(Position, int, NonnullRefPtr<Node>);
     virtual ~PathRedirectionNode();
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
@@ -432,12 +432,12 @@ public:
 
 protected:
     int m_fd { -1 };
-    RefPtr<Node> m_path;
+    NonnullRefPtr<Node> m_path;
 };
 
 class And final : public Node {
 public:
-    And(Position, RefPtr<Node>, RefPtr<Node>);
+    And(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~And();
 
 private:
@@ -447,13 +447,13 @@ private:
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "And"; }
 
-    RefPtr<Node> m_left;
-    RefPtr<Node> m_right;
+    NonnullRefPtr<Node> m_left;
+    NonnullRefPtr<Node> m_right;
 };
 
 class ListConcatenate final : public Node {
 public:
-    ListConcatenate(Position, Vector<RefPtr<Node>>);
+    ListConcatenate(Position, Vector<NonnullRefPtr<Node>>);
     virtual ~ListConcatenate();
 
 private:
@@ -465,12 +465,12 @@ private:
     virtual bool is_list() const override { return true; }
     virtual RefPtr<Node> leftmost_trivial_literal() const override;
 
-    Vector<RefPtr<Node>> m_list;
+    Vector<NonnullRefPtr<Node>> m_list;
 };
 
 class Background final : public Node {
 public:
-    Background(Position, RefPtr<Node>);
+    Background(Position, NonnullRefPtr<Node>);
     virtual ~Background();
 
 private:
@@ -480,7 +480,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Background"; }
 
-    RefPtr<Node> m_command;
+    NonnullRefPtr<Node> m_command;
 };
 
 class BarewordLiteral final : public Node {
@@ -502,7 +502,7 @@ private:
 
 class CastToCommand final : public Node {
 public:
-    CastToCommand(Position, RefPtr<Node>);
+    CastToCommand(Position, NonnullRefPtr<Node>);
     virtual ~CastToCommand();
 
 private:
@@ -516,7 +516,7 @@ private:
     virtual bool is_list() const override { return true; }
     virtual RefPtr<Node> leftmost_trivial_literal() const override;
 
-    RefPtr<Node> m_inner;
+    NonnullRefPtr<Node> m_inner;
 };
 
 class CastToList final : public Node {
@@ -584,7 +584,7 @@ private:
 
 class DynamicEvaluate final : public Node {
 public:
-    DynamicEvaluate(Position, RefPtr<Node>);
+    DynamicEvaluate(Position, NonnullRefPtr<Node>);
     virtual ~DynamicEvaluate();
 
 private:
@@ -603,7 +603,7 @@ private:
         return m_inner->is_list() || m_inner->is_command() || m_inner->is_glob(); // Anything that generates a list.
     }
 
-    RefPtr<Node> m_inner;
+    NonnullRefPtr<Node> m_inner;
 };
 
 class DoubleQuotedString final : public Node {
@@ -662,7 +662,7 @@ private:
 
 class ForLoop final : public Node {
 public:
-    ForLoop(Position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position = {});
+    ForLoop(Position, String variable_name, NonnullRefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position = {});
     virtual ~ForLoop();
 
 private:
@@ -674,7 +674,7 @@ private:
     virtual bool would_execute() const override { return true; }
 
     String m_variable_name;
-    RefPtr<AST::Node> m_iterated_expression;
+    NonnullRefPtr<AST::Node> m_iterated_expression;
     RefPtr<AST::Node> m_block;
     Optional<size_t> m_in_kw_position;
 };
@@ -698,11 +698,11 @@ private:
 
 class Execute final : public Node {
 public:
-    Execute(Position, RefPtr<Node>, bool capture_stdout = false);
+    Execute(Position, NonnullRefPtr<Node>, bool capture_stdout = false);
     virtual ~Execute();
     void capture_stdout() { m_capture_stdout = true; }
-    RefPtr<Node> command() { return m_command; }
-    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(RefPtr<Value>)> callback) override;
+    NonnullRefPtr<Node> command() { return m_command; }
+    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
 
 private:
     virtual void dump(int level) const override;
@@ -714,13 +714,13 @@ private:
     virtual bool is_execute() const override { return true; }
     virtual bool would_execute() const override { return true; }
 
-    RefPtr<Node> m_command;
+    NonnullRefPtr<Node> m_command;
     bool m_capture_stdout { false };
 };
 
 class IfCond final : public Node {
 public:
-    IfCond(Position, Optional<Position> else_position, RefPtr<AST::Node> cond_expr, RefPtr<AST::Node> true_branch, RefPtr<AST::Node> false_branch);
+    IfCond(Position, Optional<Position> else_position, NonnullRefPtr<AST::Node> cond_expr, RefPtr<AST::Node> true_branch, RefPtr<AST::Node> false_branch);
     virtual ~IfCond();
 
 private:
@@ -731,7 +731,7 @@ private:
     virtual String class_name() const override { return "IfCond"; }
     virtual bool would_execute() const override { return true; }
 
-    RefPtr<AST::Node> m_condition;
+    NonnullRefPtr<AST::Node> m_condition;
     RefPtr<AST::Node> m_true_branch;
     RefPtr<AST::Node> m_false_branch;
 
@@ -740,7 +740,7 @@ private:
 
 class Join final : public Node {
 public:
-    Join(Position, RefPtr<Node>, RefPtr<Node>);
+    Join(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Join();
 
 private:
@@ -753,8 +753,8 @@ private:
     virtual bool is_list() const override { return true; }
     virtual RefPtr<Node> leftmost_trivial_literal() const override;
 
-    RefPtr<Node> m_left;
-    RefPtr<Node> m_right;
+    NonnullRefPtr<Node> m_left;
+    NonnullRefPtr<Node> m_right;
 };
 
 struct MatchEntry {
@@ -765,7 +765,7 @@ struct MatchEntry {
 
 class MatchExpr final : public Node {
 public:
-    MatchExpr(Position, RefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries);
+    MatchExpr(Position, NonnullRefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries);
     virtual ~MatchExpr();
 
 private:
@@ -776,7 +776,7 @@ private:
     virtual String class_name() const override { return "MatchExpr"; }
     virtual bool would_execute() const override { return true; }
 
-    RefPtr<Node> m_matched_expr;
+    NonnullRefPtr<Node> m_matched_expr;
     String m_expr_name;
     Optional<Position> m_as_position;
     Vector<MatchEntry> m_entries;
@@ -784,7 +784,7 @@ private:
 
 class Or final : public Node {
 public:
-    Or(Position, RefPtr<Node>, RefPtr<Node>);
+    Or(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Or();
 
 private:
@@ -794,13 +794,13 @@ private:
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "Or"; }
 
-    RefPtr<Node> m_left;
-    RefPtr<Node> m_right;
+    NonnullRefPtr<Node> m_left;
+    NonnullRefPtr<Node> m_right;
 };
 
 class Pipe final : public Node {
 public:
-    Pipe(Position, RefPtr<Node>, RefPtr<Node>);
+    Pipe(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Pipe();
 
 private:
@@ -811,13 +811,13 @@ private:
     virtual String class_name() const override { return "Pipe"; }
     virtual bool is_list() const override { return true; }
 
-    RefPtr<Node> m_left;
-    RefPtr<Node> m_right;
+    NonnullRefPtr<Node> m_left;
+    NonnullRefPtr<Node> m_right;
 };
 
 class ReadRedirection final : public PathRedirectionNode {
 public:
-    ReadRedirection(Position, int, RefPtr<Node>);
+    ReadRedirection(Position, int, NonnullRefPtr<Node>);
     virtual ~ReadRedirection();
 
 private:
@@ -828,7 +828,7 @@ private:
 
 class ReadWriteRedirection final : public PathRedirectionNode {
 public:
-    ReadWriteRedirection(Position, int, RefPtr<Node>);
+    ReadWriteRedirection(Position, int, NonnullRefPtr<Node>);
     virtual ~ReadWriteRedirection();
 
 private:
@@ -839,7 +839,7 @@ private:
 
 class Sequence final : public Node {
 public:
-    Sequence(Position, RefPtr<Node>, RefPtr<Node>);
+    Sequence(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Sequence();
 
 private:
@@ -851,8 +851,8 @@ private:
     virtual bool is_list() const override { return true; }
     virtual bool would_execute() const override { return m_left->would_execute() || m_right->would_execute(); }
 
-    RefPtr<Node> m_left;
-    RefPtr<Node> m_right;
+    NonnullRefPtr<Node> m_left;
+    NonnullRefPtr<Node> m_right;
 };
 
 class Subshell final : public Node {
@@ -908,7 +908,7 @@ private:
 
 class Juxtaposition final : public Node {
 public:
-    Juxtaposition(Position, RefPtr<Node>, RefPtr<Node>);
+    Juxtaposition(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~Juxtaposition();
 
 private:
@@ -919,8 +919,8 @@ private:
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
     virtual String class_name() const override { return "Juxtaposition"; }
 
-    RefPtr<Node> m_left;
-    RefPtr<Node> m_right;
+    NonnullRefPtr<Node> m_left;
+    NonnullRefPtr<Node> m_right;
 };
 
 class StringLiteral final : public Node {
@@ -941,7 +941,7 @@ private:
 
 class StringPartCompose final : public Node {
 public:
-    StringPartCompose(Position, RefPtr<Node>, RefPtr<Node>);
+    StringPartCompose(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
     virtual ~StringPartCompose();
 
 private:
@@ -951,8 +951,8 @@ private:
     virtual HitTestResult hit_test_position(size_t) override;
     virtual String class_name() const override { return "StringPartCompose"; }
 
-    RefPtr<Node> m_left;
-    RefPtr<Node> m_right;
+    NonnullRefPtr<Node> m_left;
+    NonnullRefPtr<Node> m_right;
 };
 
 class SyntaxError final : public Node {
@@ -1016,7 +1016,7 @@ private:
 
 class WriteAppendRedirection final : public PathRedirectionNode {
 public:
-    WriteAppendRedirection(Position, int, RefPtr<Node>);
+    WriteAppendRedirection(Position, int, NonnullRefPtr<Node>);
     virtual ~WriteAppendRedirection();
 
 private:
@@ -1027,7 +1027,7 @@ private:
 
 class WriteRedirection final : public PathRedirectionNode {
 public:
-    WriteRedirection(Position, int, RefPtr<Node>);
+    WriteRedirection(Position, int, NonnullRefPtr<Node>);
     virtual ~WriteRedirection();
 
 private:
