@@ -458,6 +458,7 @@ struct pollfd {
 #define SHUT_RDWR 3
 
 #define MSG_TRUNC 0x1
+#define MSG_CTRUNC 0x2
 #define MSG_DONTWAIT 0x40
 
 #define SOL_SOCKET 1
@@ -471,6 +472,11 @@ enum {
     SO_REUSEADDR,
     SO_BINDTODEVICE,
     SO_KEEPALIVE,
+    SO_TIMESTAMP,
+};
+
+enum {
+    SCM_TIMESTAMP,
 };
 
 #define IPPROTO_IP 0
@@ -554,6 +560,12 @@ struct utsname {
 struct iovec {
     void* iov_base;
     size_t iov_len;
+};
+
+struct cmsghdr {
+    socklen_t cmsg_len;
+    int cmsg_level;
+    int cmsg_type;
 };
 
 struct msghdr {
