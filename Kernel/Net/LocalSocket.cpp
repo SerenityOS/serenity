@@ -298,7 +298,7 @@ DoubleBuffer& LocalSocket::send_buffer_for(FileDescription& description)
     ASSERT_NOT_REACHED();
 }
 
-KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>)
+KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_size, int, Userspace<sockaddr*>, Userspace<socklen_t*>, timeval&)
 {
     auto& buffer_for_me = receive_buffer_for(description);
     if (!description.is_blocking()) {

@@ -280,7 +280,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
     return nreceived;
 }
 
-KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length)
+KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, timeval& packet_timestamp)
 {
     Locker locker(lock());
     ReceivedPacket packet;
@@ -330,6 +330,8 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     ASSERT(packet.data.has_value());
     auto& ipv4_packet = *(const IPv4Packet*)(packet.data.value().data());
 
+    packet_timestamp = packet.timestamp;
+
     if (addr) {
 #ifdef IPV4_SOCKET_DEBUG
         dbg() << "Incoming packet is from: " << packet.peer_address << ":" << packet.peer_port;
@@ -359,7 +361,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
 }
 
-KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length)
+KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, timeval& packet_timestamp)
 {
     if (user_addr_length) {
         socklen_t addr_length;
@@ -377,14 +379,14 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
     if (buffer_mode() == BufferMode::Bytes)
         nreceived = receive_byte_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length);
     else
-        nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length);
+        nreceived = receive_packet_buffered(description, buffer, buffer_length, flags, user_addr, user_addr_length, packet_timestamp);
 
     if (!nreceived.is_error())
         Thread::current()->did_ipv4_socket_read(nreceived.value());
     return nreceived;
 }
 
-bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet)
+bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet, const timeval& packet_timestamp)
 {
     LOCKER(lock());
 
@@ -413,7 +415,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
             dbg() << "IPv4Socket(" << this << "): did_receive refusing packet since queue is full.";
             return false;
         }
-        m_receive_queue.append({ source_address, source_port, move(packet) });
+        m_receive_queue.append({ source_address, source_port, packet_timestamp, move(packet) });
         m_can_read = true;
     }
     m_bytes_received += packet_size;
