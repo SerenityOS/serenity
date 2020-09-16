@@ -102,6 +102,8 @@ public:
     bool has_function(const String&);
     bool invoke_function(const AST::Command&, int& retval);
 
+    String format(const StringView&, ssize_t& cursor) const;
+
     struct LocalFrame {
         HashMap<String, RefPtr<AST::Value>> local_variables;
     };
