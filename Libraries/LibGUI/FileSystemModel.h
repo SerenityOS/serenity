@@ -109,6 +109,7 @@ public:
         RefPtr<Core::Notifier> m_notifier;
 
         int m_error { 0 };
+        bool m_parent_of_root { false };
 
         ModelIndex index(int column) const;
         void traverse_if_needed();

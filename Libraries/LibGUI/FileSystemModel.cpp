@@ -89,7 +89,18 @@ void FileSystemModel::Node::traverse_if_needed()
 {
     if (!is_directory() || has_traversed)
         return;
+
     has_traversed = true;
+
+    if (m_parent_of_root) {
+        auto root = adopt_own(*new Node(m_model));
+        root->fetch_data("/", true);
+        root->name = "/";
+        root->parent = this;
+        children.append(move(root));
+        return;
+    }
+
     total_size = 0;
 
     auto full_path = this->full_path();
@@ -149,7 +160,7 @@ void FileSystemModel::Node::reify_if_needed()
     traverse_if_needed();
     if (mode != 0)
         return;
-    fetch_data(full_path(), parent == nullptr);
+    fetch_data(full_path(), parent == nullptr || parent->m_parent_of_root);
 }
 
 String FileSystemModel::Node::full_path() const
@@ -290,7 +301,10 @@ void FileSystemModel::update_node_on_selection(const ModelIndex& index, const bo
 
 void FileSystemModel::set_root_path(const StringView& root_path)
 {
-    m_root_path = LexicalPath::canonicalized_path(root_path);
+    if (root_path.is_null())
+        m_root_path = {};
+    else
+        m_root_path = LexicalPath::canonicalized_path(root_path);
     update();
 
     if (m_root->has_error()) {
@@ -304,6 +318,10 @@ void FileSystemModel::set_root_path(const StringView& root_path)
 void FileSystemModel::update()
 {
     m_root = adopt_own(*new Node(*this));
+
+    if (m_root_path.is_null())
+        m_root->m_parent_of_root = true;
+
     m_root->reify_if_needed();
 
     did_update();
