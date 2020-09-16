@@ -140,6 +140,8 @@ protected:
                     return m_unprocessed_messages.take(i).template release_nonnull<MessageType>();
             }
 
+            if (!m_socket->is_open())
+                break;
             fd_set rfds;
             FD_ZERO(&rfds);
             FD_SET(m_socket->fd(), &rfds);
@@ -150,14 +152,15 @@ protected:
             ASSERT(rc > 0);
             ASSERT(FD_ISSET(m_socket->fd(), &rfds));
             if (!drain_messages_from_peer())
-                return nullptr;
+                break;
         }
+        return nullptr;
     }
 
     bool drain_messages_from_peer()
     {
         Vector<u8> bytes;
-        for (;;) {
+        while (m_socket->is_open()) {
             u8 buffer[4096];
             ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
             if (nread < 0) {
