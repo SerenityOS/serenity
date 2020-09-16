@@ -48,6 +48,8 @@ public:
     Function<void()> on_ready_to_read;
     Function<void()> on_ready_to_write;
 
+    void close();
+
     int fd() const { return m_fd; }
     unsigned event_mask() const { return m_event_mask; }
     void set_event_mask(unsigned event_mask) { m_event_mask = event_mask; }
