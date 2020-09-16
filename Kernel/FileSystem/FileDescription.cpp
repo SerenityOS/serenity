@@ -191,7 +191,7 @@ ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& buffer, ssize_t siz
     if (result.is_error())
         return result;
 
-    if (static_cast<size_t>(size) < stream.size())
+    if (stream.handle_recoverable_error())
         return -EINVAL;
 
     if (!buffer.write(stream.bytes()))
