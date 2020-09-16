@@ -462,13 +462,16 @@ struct pollfd {
 
 #define SOL_SOCKET 1
 
-#define SO_RCVTIMEO 1
-#define SO_SNDTIMEO 2
-#define SO_ERROR 4
-#define SO_PEERCRED 5
-#define SO_REUSEADDR 6
-#define SO_BINDTODEVICE 7
-#define SO_KEEPALIVE 9
+enum {
+    SO_RCVTIMEO,
+    SO_SNDTIMEO,
+    SO_TYPE,
+    SO_ERROR,
+    SO_PEERCRED,
+    SO_REUSEADDR,
+    SO_BINDTODEVICE,
+    SO_KEEPALIVE,
+};
 
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1

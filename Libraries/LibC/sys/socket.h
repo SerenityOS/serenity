@@ -90,14 +90,24 @@ struct ucred {
 #define SOL_SOCKET 1
 #define SOMAXCONN 128
 
-#define SO_RCVTIMEO 1
-#define SO_SNDTIMEO 2
-#define SO_TYPE 3
-#define SO_ERROR 4
-#define SO_PEERCRED 5
-#define SO_REUSEADDR 6
-#define SO_BINDTODEVICE 7
-#define SO_KEEPALIVE 9
+enum {
+    SO_RCVTIMEO,
+    SO_SNDTIMEO,
+    SO_TYPE,
+    SO_ERROR,
+    SO_PEERCRED,
+    SO_REUSEADDR,
+    SO_BINDTODEVICE,
+    SO_KEEPALIVE,
+};
+#define SO_RCVTIMEO SO_RCVTIMEO
+#define SO_SNDTIMEO SO_SNDTIMEO
+#define SO_TYPE SO_TYPE
+#define SO_ERROR SO_ERROR
+#define SO_PEERCRED SO_PEERCRED
+#define SO_REUSEADDR SO_REUSEADDR
+#define SO_BINDTODEVICE SO_BINDTODEVICE
+#define SO_KEEPALIVE SO_KEEPALIVE
 
 struct sockaddr_storage {
     union {
