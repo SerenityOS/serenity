@@ -161,7 +161,7 @@ void Slider::mousewheel_event(MouseEvent& event)
 {
     auto acceleration_modifier = m_step;
 
-    if(event.modifiers() == KeyModifier::Mod_Ctrl && knob_size_mode() == KnobSizeMode::Fixed)
+    if (event.modifiers() == KeyModifier::Mod_Ctrl && knob_size_mode() == KnobSizeMode::Fixed)
         acceleration_modifier *= 6;
 
     if (orientation() == Orientation::Horizontal)
