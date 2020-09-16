@@ -79,7 +79,9 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     tss.cr3 = page_directory().cr3();
     tss.esp = (u32)user_stack_address;
 
-    thread->make_thread_specific_region({});
+    auto tsr_result = thread->make_thread_specific_region({});
+    if (tsr_result.is_error())
+        return tsr_result.error();
     thread->set_state(Thread::State::Runnable);
     return thread->tid().value();
 }

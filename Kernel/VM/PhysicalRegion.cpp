@@ -105,7 +105,8 @@ Optional<unsigned> PhysicalRegion::find_one_free_page()
         return {};
     }
     auto free_index = m_bitmap.find_one_anywhere_unset(m_free_hint);
-    ASSERT(free_index.has_value());
+    if (!free_index.has_value())
+        return {};
   
     auto page_index = free_index.value();
     m_bitmap.set(page_index, true);
