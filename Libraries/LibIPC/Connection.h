@@ -115,6 +115,7 @@ public:
 
     void shutdown()
     {
+        m_notifier->close();
         m_socket->close();
         die();
     }
