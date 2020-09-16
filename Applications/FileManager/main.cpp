@@ -231,7 +231,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
     auto& tree_view = splitter.add<GUI::TreeView>();
-    auto directories_model = GUI::FileSystemModel::create("/", GUI::FileSystemModel::Mode::DirectoriesOnly);
+    auto directories_model = GUI::FileSystemModel::create({}, GUI::FileSystemModel::Mode::DirectoriesOnly);
     tree_view.set_model(directories_model);
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::Icon, true);
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::Size, true);
@@ -244,6 +244,9 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     tree_view.set_preferred_size(150, 0);
     auto& directory_view = splitter.add<DirectoryView>(DirectoryView::Mode::Normal);
+
+    // Open the root directory. FIXME: This is awkward.
+    tree_view.toggle_index(directories_model->index(0, 0, {}));
 
     auto& statusbar = widget.add<GUI::StatusBar>();
 
