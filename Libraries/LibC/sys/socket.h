@@ -61,9 +61,20 @@ __BEGIN_DECLS
 #define IPPROTO_TCP 6
 #define IPPROTO_UDP 17
 
+#define MSG_TRUNC 0x1
 #define MSG_DONTWAIT 0x40
 
 typedef uint16_t sa_family_t;
+
+struct msghdr {
+    void* msg_name;
+    socklen_t msg_namelen;
+    struct iovec* msg_iov;
+    int msg_iovlen;
+    void* msg_control;
+    socklen_t msg_controllen;
+    int msg_flags;
+};
 
 struct sockaddr {
     sa_family_t sa_family;
@@ -102,8 +113,10 @@ int accept(int sockfd, struct sockaddr*, socklen_t*);
 int connect(int sockfd, const struct sockaddr*, socklen_t);
 int shutdown(int sockfd, int how);
 ssize_t send(int sockfd, const void*, size_t, int flags);
+ssize_t sendmsg(int sockfd, const struct msghdr*, int flags);
 ssize_t sendto(int sockfd, const void*, size_t, int flags, const struct sockaddr*, socklen_t);
 ssize_t recv(int sockfd, void*, size_t, int flags);
+ssize_t recvmsg(int sockfd, struct msghdr*, int flags);
 ssize_t recvfrom(int sockfd, void*, size_t, int flags, struct sockaddr*, socklen_t*);
 int getsockopt(int sockfd, int level, int option, void*, socklen_t*);
 int setsockopt(int sockfd, int level, int option, const void*, socklen_t);

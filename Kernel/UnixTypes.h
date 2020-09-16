@@ -457,6 +457,7 @@ struct pollfd {
 #define SHUT_WR 2
 #define SHUT_RDWR 3
 
+#define MSG_TRUNC 0x1
 #define MSG_DONTWAIT 0x40
 
 #define SOL_SOCKET 1
@@ -550,6 +551,16 @@ struct utsname {
 struct iovec {
     void* iov_base;
     size_t iov_len;
+};
+
+struct msghdr {
+    void* msg_name;
+    socklen_t msg_namelen;
+    struct iovec* msg_iov;
+    int msg_iovlen;
+    void* msg_control;
+    socklen_t msg_controllen;
+    int msg_flags;
 };
 
 struct sched_param {

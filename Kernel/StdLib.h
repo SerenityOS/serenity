@@ -77,6 +77,12 @@ template<typename T>
 }
 
 template<typename T>
+[[nodiscard]] inline bool copy_from_user(T* dest, Userspace<T*> src)
+{
+    return copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
+}
+
+template<typename T>
 [[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, const T* src)
 {
     return copy_to_user(dest.unsafe_userspace_ptr(), src, sizeof(T));

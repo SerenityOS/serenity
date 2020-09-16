@@ -130,8 +130,8 @@ namespace Kernel {
     S(fchmod)                 \
     S(symlink)                \
     S(shbuf_seal)             \
-    S(sendto)                 \
-    S(recvfrom)               \
+    S(sendmsg)                \
+    S(recvmsg)                \
     S(getsockopt)             \
     S(setsockopt)             \
     S(create_thread)          \
@@ -282,22 +282,6 @@ struct SC_clock_nanosleep_params {
     int flags;
     const struct timespec* requested_sleep;
     struct timespec* remaining_sleep;
-};
-
-struct SC_sendto_params {
-    int sockfd;
-    ImmutableBufferArgument<void, size_t> data;
-    int flags;
-    const sockaddr* addr;
-    socklen_t addr_length;
-};
-
-struct SC_recvfrom_params {
-    int sockfd;
-    MutableBufferArgument<void, size_t> buffer;
-    int flags;
-    sockaddr* addr;
-    socklen_t* addr_length;
 };
 
 struct SC_getsockopt_params {

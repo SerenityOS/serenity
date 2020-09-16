@@ -43,6 +43,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/uio.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -354,10 +355,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$listen(arg1, arg2);
     case SC_select:
         return virt$select(arg1);
-    case SC_sendto:
-        return virt$sendto(arg1);
-    case SC_recvfrom:
-        return virt$recvfrom(arg1);
+    case SC_recvmsg:
+        return virt$recvmsg(arg1, arg2, arg3);
+    case SC_sendmsg:
+        return virt$sendmsg(arg1, arg2, arg3);
     case SC_kill:
         return virt$kill(arg1, arg2);
     case SC_set_mmap_name:
@@ -593,49 +594,66 @@ int Emulator::virt$socket(int domain, int type, int protocol)
     return syscall(SC_socket, domain, type, protocol);
 }
 
-int Emulator::virt$recvfrom(FlatPtr params_addr)
+int Emulator::virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags)
 {
-    Syscall::SC_recvfrom_params params;
-    mmu().copy_from_vm(&params, params_addr, sizeof(params));
-    auto buffer = ByteBuffer::create_uninitialized(params.buffer.size);
+    msghdr mmu_msg;
+    mmu().copy_from_vm(&mmu_msg, msg_addr, sizeof(mmu_msg));
 
-    if (!params.addr_length && params.addr)
-        return -EINVAL;
+    if (mmu_msg.msg_iovlen != 1)
+        return -ENOTSUP; // FIXME: Support this :)
+    iovec mmu_iov;
+    mmu().copy_from_vm(&mmu_iov, (FlatPtr)mmu_msg.msg_iov, sizeof(mmu_iov));
+    auto buffer = ByteBuffer::create_uninitialized(mmu_iov.iov_len);
 
-    socklen_t address_length = 0;
-    if (params.addr_length)
-        mmu().copy_from_vm(&address_length, (FlatPtr)params.addr_length, sizeof(address_length));
+    ByteBuffer control_buffer;
+    if (mmu_msg.msg_control)
+        control_buffer = ByteBuffer::create_uninitialized(mmu_msg.msg_controllen);
 
-    sockaddr_storage address;
-    if (params.addr)
-        mmu().copy_from_vm(&address, (FlatPtr)params.addr, min(sizeof(address), (size_t)address_length));
-
-    int rc = recvfrom(params.sockfd, buffer.data(), buffer.size(), params.flags, params.addr ? (struct sockaddr*)&address : nullptr, params.addr_length ? &address_length : nullptr);
+    sockaddr_storage addr;
+    iovec iov = { buffer.data(), buffer.size() };
+    msghdr msg = { &addr, sizeof(addr), &iov, 1, mmu_msg.msg_control ? control_buffer.data() : nullptr, mmu_msg.msg_controllen, mmu_msg.msg_flags };
+    int rc = recvmsg(sockfd, &msg, flags);
     if (rc < 0)
         return -errno;
 
-    mmu().copy_to_vm((FlatPtr)params.buffer.data, buffer.data(), buffer.size());
+    mmu().copy_to_vm((FlatPtr)mmu_iov.iov_base, buffer.data(), mmu_iov.iov_len);
 
-    if (params.addr)
-        mmu().copy_to_vm((FlatPtr)params.addr, &address, address_length);
-    if (params.addr_length)
-        mmu().copy_to_vm((FlatPtr)params.addr_length, &address_length, sizeof(address_length));
-
+    if (mmu_msg.msg_name)
+        mmu().copy_to_vm((FlatPtr)mmu_msg.msg_name, &addr, min(sizeof(addr), (size_t)mmu_msg.msg_namelen));
+    if (mmu_msg.msg_control)
+        mmu().copy_to_vm((FlatPtr)mmu_msg.msg_control, control_buffer.data(), min(mmu_msg.msg_controllen, msg.msg_controllen));
+    mmu_msg.msg_namelen = msg.msg_namelen;
+    mmu_msg.msg_controllen = msg.msg_controllen;
+    mmu_msg.msg_flags = msg.msg_flags;
+    mmu().copy_to_vm(msg_addr, &mmu_msg, sizeof(mmu_msg));
     return rc;
 }
 
-int Emulator::virt$sendto(FlatPtr params_addr)
+int Emulator::virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags)
 {
-    Syscall::SC_sendto_params params;
-    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    msghdr mmu_msg;
+    mmu().copy_from_vm(&mmu_msg, msg_addr, sizeof(mmu_msg));
 
-    auto buffer = mmu().copy_buffer_from_vm((FlatPtr)params.data.data, params.data.size);
+    if (mmu_msg.msg_iovlen != 1)
+        return -ENOTSUP; // FIXME: Support this :)
+    iovec mmu_iov;
+    mmu().copy_from_vm(&mmu_iov, (FlatPtr)mmu_msg.msg_iov, sizeof(mmu_iov));
+    auto buffer = mmu().copy_buffer_from_vm((FlatPtr)mmu_iov.iov_base, mmu_iov.iov_len);
+
+    ByteBuffer control_buffer;
+    if (mmu_msg.msg_control)
+        control_buffer = ByteBuffer::create_uninitialized(mmu_msg.msg_controllen);
 
     sockaddr_storage address;
-    if (params.addr)
-        mmu().copy_from_vm(&address, (FlatPtr)params.addr, min(sizeof(address), (size_t)params.addr_length));
+    socklen_t address_length = 0;
+    if (mmu_msg.msg_name) {
+        address_length = min(sizeof(address), (size_t)mmu_msg.msg_namelen);
+        mmu().copy_from_vm(&address, (FlatPtr)mmu_msg.msg_name, address_length);
+    }
 
-    return sendto(params.sockfd, buffer.data(), buffer.size(), params.flags, params.addr ? (struct sockaddr*)&address : nullptr, params.addr_length);
+    iovec iov = { buffer.data(), buffer.size() };
+    msghdr msg = { mmu_msg.msg_name ? &address : nullptr, address_length, &iov, 1, mmu_msg.msg_control ? control_buffer.data() : nullptr, mmu_msg.msg_controllen, mmu_msg.msg_flags };
+    return sendmsg(sockfd, &msg, flags);
 }
 
 int Emulator::virt$select(FlatPtr params_addr)
