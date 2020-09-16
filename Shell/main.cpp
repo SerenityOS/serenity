@@ -190,6 +190,14 @@ int main(int argc, char** argv)
 
     editor->on_display_refresh = [&](auto& editor) {
         editor.strip_styles();
+        if (shell->should_format_live()) {
+            auto line = editor.line();
+            ssize_t cursor = editor.cursor();
+            editor.clear_line();
+            editor.insert(shell->format(line, cursor));
+            if (cursor >= 0)
+                editor.set_cursor(cursor);
+        }
         shell->highlight(editor);
     };
     editor->on_tab_complete = [&](const Line::Editor& editor) {
@@ -201,15 +209,19 @@ int main(int argc, char** argv)
     Vector<const char*> script_args;
     bool skip_rc_files = false;
     const char* format = nullptr;
+    bool should_format_live = false;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
     parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc", 0);
     parser.add_option(format, "File to format", "format", 0, "file");
+    parser.add_option(should_format_live, "Enable live formatting", "live-formatting", 'f');
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_positional_argument(script_args, "Extra argumets to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
     parser.parse(argc, argv);
+
+    shell->set_live_formatting(should_format_live);
 
     if (format) {
         auto file = Core::File::open(format, Core::IODevice::ReadOnly);
@@ -228,6 +240,7 @@ int main(int argc, char** argv)
             perror("setsid");
             // Let's just hope that it's ok.
         }
+    }
 
     shell->current_script = argv[0];
 
