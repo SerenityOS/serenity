@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibCore/DirIterator.h>
 #include <AK/Vector.h>
+#include <LibCore/DirIterator.h>
 #include <errno.h>
 
 namespace Core {
@@ -108,8 +108,8 @@ String find_executable_in_path(String filename)
         return {};
     }
 
-    for (auto directory : StringView { getenv("PATH") }.split_view(':')) {
-        auto fullpath = String::format("%s/%s", directory, filename);
+    for (auto directory : String { getenv("PATH") }.split(':')) {
+        auto fullpath = String::format("%s/%s", directory.characters(), filename.characters());
 
         if (access(fullpath.characters(), X_OK) == 0)
             return fullpath;
