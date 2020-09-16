@@ -36,7 +36,7 @@ class TreeView : public AbstractTableView {
 public:
     virtual ~TreeView() override;
 
-    virtual void scroll_into_view(const ModelIndex&, Gfx::Orientation);
+    virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally, bool scroll_vertically) override;
 
     virtual int item_count() const override;
     virtual void toggle_index(const ModelIndex&) override;
