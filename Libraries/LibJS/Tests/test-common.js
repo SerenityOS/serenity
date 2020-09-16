@@ -285,22 +285,13 @@ class ExpectationError extends Error {
         toEval() {
             this.__expect(typeof this.target === "string");
 
-            if (!this.inverted) {
-                try {
-                    new Function(this.target)();
-                } catch (e) {
-                    throw new ExpectationError();
-                }
-            } else {
-                let threw;
-                try {
-                    new Function(this.target)();
-                    threw = false;
-                } catch (e) {
-                    threw = true;
-                }
-                this.__expect(threw);
+            let threw = false;
+            try {
+                new Function(this.target)();
+            } catch (e) {
+                threw = true;
             }
+            this.__expect(this.inverted ? threw : !threw);
         }
 
         // Must compile regardless of inverted-ness
