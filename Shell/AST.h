@@ -633,8 +633,8 @@ private:
     virtual String class_name() const override { return "Fd2FdRedirection"; }
     virtual bool is_command() const override { return true; }
 
-    int source_fd { -1 };
-    int dest_fd { -1 };
+    int m_source_fd { -1 };
+    int m_dest_fd { -1 };
 };
 
 class FunctionDeclaration final : public Node {
