@@ -26,6 +26,7 @@
 
 #include "Shell.h"
 #include "Execution.h"
+#include "Formatter.h"
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
@@ -447,6 +448,15 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
     retval = last_return_code;
     return true;
+}
+
+String Shell::format(const StringView& source, ssize_t& cursor) const
+{
+    Formatter formatter(source, cursor);
+    auto result = formatter.format();
+    cursor = formatter.cursor();
+
+    return result;
 }
 
 Shell::Frame Shell::push_frame()
