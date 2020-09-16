@@ -277,7 +277,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         // Reselect the existing folder in the tree.
         auto new_index = directories_model->index(current_path, GUI::FileSystemModel::Column::Name);
         tree_view.selection().set(new_index);
-        tree_view.scroll_into_view(new_index, Orientation::Vertical);
+        tree_view.scroll_into_view(new_index, false, true);
         tree_view.update();
 
         directory_view.refresh();
@@ -549,7 +549,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
         if (new_index.is_valid()) {
             tree_view.selection().set(new_index);
-            tree_view.scroll_into_view(new_index, Orientation::Vertical);
+            tree_view.scroll_into_view(new_index, false, true);
             tree_view.update();
         }
 

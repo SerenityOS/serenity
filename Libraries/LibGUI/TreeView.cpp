@@ -360,7 +360,7 @@ void TreeView::paint_event(PaintEvent& event)
     });
 }
 
-void TreeView::scroll_into_view(const ModelIndex& a_index, Orientation orientation)
+void TreeView::scroll_into_view(const ModelIndex& a_index, bool scroll_horizontally, bool scroll_vertically)
 {
     if (!a_index.is_valid())
         return;
@@ -372,7 +372,7 @@ void TreeView::scroll_into_view(const ModelIndex& a_index, Orientation orientati
         }
         return IterationDecision::Continue;
     });
-    ScrollableWidget::scroll_into_view(found_rect, orientation);
+    ScrollableWidget::scroll_into_view(found_rect, scroll_horizontally, scroll_vertically);
 }
 
 void TreeView::did_update_model(unsigned flags)
@@ -442,7 +442,7 @@ void TreeView::keydown_event(KeyEvent& event)
         }
         if (cursor_index.is_valid() && cursor_index.parent().is_valid()) {
             selection().set(cursor_index.parent());
-            scroll_into_view(selection().first(), Orientation::Vertical);
+            scroll_into_view(selection().first(), false, true);
             return;
         }
     }
@@ -461,7 +461,7 @@ void TreeView::keydown_event(KeyEvent& event)
             }
 
             selection().set(model()->index(0, model()->tree_column(), cursor_index));
-            scroll_into_view(selection().first(), Orientation::Vertical);
+            scroll_into_view(selection().first(), false, true);
             return;
         }
     }
@@ -494,7 +494,7 @@ void TreeView::move_cursor(CursorMovement movement, SelectionUpdate)
         });
         if (found_index.is_valid()) {
             selection().set(found_index);
-            scroll_into_view(selection().first(), Orientation::Vertical);
+            scroll_into_view(selection().first(), false, true);
             update();
         }
         break;
@@ -512,7 +512,7 @@ void TreeView::move_cursor(CursorMovement movement, SelectionUpdate)
         });
         if (found_index.is_valid()) {
             selection().set(found_index);
-            scroll_into_view(selection().first(), Orientation::Vertical);
+            scroll_into_view(selection().first(), false, true);
             update();
         }
         return;
