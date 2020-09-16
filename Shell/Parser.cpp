@@ -35,13 +35,21 @@ char Parser::peek()
         return 0;
 
     ASSERT(m_offset < m_input.length());
-    return m_input[m_offset];
+
+    auto ch = m_input[m_offset];
+    if (ch == '\\' && m_input.length() > m_offset + 1 && m_input[m_offset + 1] == '\n') {
+        m_offset += 2;
+        return peek();
+    }
+
+    return ch;
 }
 
 char Parser::consume()
 {
     auto ch = peek();
     ++m_offset;
+
     return ch;
 }
 
