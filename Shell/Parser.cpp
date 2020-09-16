@@ -128,9 +128,10 @@ RefPtr<AST::Node> Parser::parse()
         auto error_start = push_start();
         m_offset = m_input.length();
         auto syntax_error_node = create<AST::SyntaxError>("Unexpected tokens past the end");
-        if (toplevel)
-            return create<AST::Join>(move(toplevel), move(syntax_error_node));
-        return syntax_error_node;
+        if (!toplevel)
+            toplevel = move(syntax_error_node);
+        else
+            toplevel->set_is_syntax_error(*syntax_error_node);
     }
 
     return toplevel;
@@ -141,7 +142,7 @@ RefPtr<AST::Node> Parser::parse_toplevel()
     auto rule_start = push_start();
 
     if (auto sequence = parse_sequence())
-        return create<AST::Execute>(sequence);
+        return create<AST::Execute>(sequence.release_nonnull());
 
     return nullptr;
 }
@@ -164,7 +165,7 @@ RefPtr<AST::Node> Parser::parse_sequence()
         consume_while(is_any_of("\n;"));
         auto rest = parse_sequence();
         if (rest)
-            return create<AST::Sequence>(move(var_decls), move(rest));
+            return create<AST::Sequence>(var_decls.release_nonnull(), rest.release_nonnull());
         return var_decls;
     }
     default:
@@ -180,7 +181,7 @@ RefPtr<AST::Node> Parser::parse_sequence()
         return var_decls;
 
     if (var_decls)
-        first = create<AST::Sequence>(move(var_decls), move(first));
+        first = create<AST::Sequence>(var_decls.release_nonnull(), first.release_nonnull());
 
     consume_while(is_whitespace);
 
@@ -189,15 +190,15 @@ RefPtr<AST::Node> Parser::parse_sequence()
     case '\n':
         consume_while(is_any_of("\n;"));
         if (auto expr = parse_sequence()) {
-            return create<AST::Sequence>(move(first), move(expr)); // Sequence
+            return create<AST::Sequence>(first.release_nonnull(), expr.release_nonnull()); // Sequence
         }
         return first;
     case '&': {
-        auto execute_pipe_seq = first->would_execute() ? first : static_cast<RefPtr<AST::Node>>(create<AST::Execute>(first));
+        auto execute_pipe_seq = first->would_execute() ? first.release_nonnull() : static_cast<NonnullRefPtr<AST::Node>>(create<AST::Execute>(first.release_nonnull()));
         consume();
-        auto bg = create<AST::Background>(move(first)); // Execute Background
+        auto bg = create<AST::Background>(execute_pipe_seq); // Execute Background
         if (auto rest = parse_sequence())
-            return create<AST::Sequence>(move(bg), move(rest)); // Sequence Background Sequence
+            return create<AST::Sequence>(move(bg), rest.release_nonnull()); // Sequence Background Sequence
 
         return bg;
     }
@@ -369,7 +370,7 @@ RefPtr<AST::Node> Parser::parse_or_logical_sequence()
     if (!right_and_sequence)
         right_and_sequence = create<AST::SyntaxError>("Expected an expression after '||'");
 
-    return create<AST::Or>(move(and_sequence), move(right_and_sequence));
+    return create<AST::Or>(and_sequence.release_nonnull(), right_and_sequence.release_nonnull());
 }
 
 RefPtr<AST::Node> Parser::parse_and_logical_sequence()
@@ -391,7 +392,7 @@ RefPtr<AST::Node> Parser::parse_and_logical_sequence()
     if (!right_and_sequence)
         right_and_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
 
-    return create<AST::And>(move(pipe_sequence), move(right_and_sequence));
+    return create<AST::And>(pipe_sequence.release_nonnull(), right_and_sequence.release_nonnull());
 }
 
 RefPtr<AST::Node> Parser::parse_pipe_sequence()
@@ -413,7 +414,7 @@ RefPtr<AST::Node> Parser::parse_pipe_sequence()
     consume();
 
     if (auto pipe_seq = parse_pipe_sequence()) {
-        return create<AST::Pipe>(move(left), move(pipe_seq)); // Pipe
+        return create<AST::Pipe>(left.release_nonnull(), pipe_seq.release_nonnull()); // Pipe
     }
 
     putback();
@@ -431,20 +432,20 @@ RefPtr<AST::Node> Parser::parse_command()
         if (!list_expr)
             return nullptr;
 
-        auto cast = create<AST::CastToCommand>(move(list_expr)); // Cast List Command
+        auto cast = create<AST::CastToCommand>(list_expr.release_nonnull()); // Cast List Command
 
         auto next_command = parse_command();
         if (!next_command)
             return cast;
 
-        return create<AST::Join>(move(cast), move(next_command)); // Join List Command
+        return create<AST::Join>(move(cast), next_command.release_nonnull()); // Join List Command
     }
 
     auto command = parse_command();
     if (!command)
         return redir;
 
-    return create<AST::Join>(move(redir), command); // Join Command Command
+    return create<AST::Join>(redir.release_nonnull(), command.release_nonnull()); // Join Command Command
 }
 
 RefPtr<AST::Node> Parser::parse_control_structure()
@@ -509,7 +510,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         auto obrace_error_start = push_start();
         if (!expect('{')) {
             auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a 'for' loop body");
-            return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(syntax_error), move(in_start_position)); // ForLoop Var Iterated Block
+            return create<AST::ForLoop>(move(variable_name), iterated_expression.release_nonnull(), move(syntax_error), move(in_start_position)); // ForLoop Var Iterated Block
         }
     }
 
@@ -519,7 +520,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         auto cbrace_error_start = push_start();
         if (!expect('}')) {
             auto error_start = push_start();
-            RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a 'for' loop body");
+            auto syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a 'for' loop body");
             if (body)
                 body->set_is_syntax_error(*syntax_error);
             else
@@ -527,7 +528,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         }
     }
 
-    return create<AST::ForLoop>(move(variable_name), move(iterated_expression), move(body), move(in_start_position)); // ForLoop Var Iterated Block
+    return create<AST::ForLoop>(move(variable_name), iterated_expression.release_nonnull(), move(body), move(in_start_position)); // ForLoop Var Iterated Block
 }
 
 RefPtr<AST::Node> Parser::parse_if_expr()
@@ -547,22 +548,21 @@ RefPtr<AST::Node> Parser::parse_if_expr()
     {
         auto cond_error_start = push_start();
         condition = parse_or_logical_sequence();
-        if (!condition) {
-            auto syntax_error = create<AST::SyntaxError>("Expected a logical sequence after 'if'");
-            return create<AST::IfCond>(Optional<AST::Position> {}, move(syntax_error), nullptr, nullptr);
-        }
+        if (!condition)
+            condition = create<AST::SyntaxError>("Expected a logical sequence after 'if'");
     }
 
     auto parse_braced_toplevel = [&]() -> RefPtr<AST::Node> {
+        RefPtr<AST::Node> body;
         {
             auto obrace_error_start = push_start();
             if (!expect('{')) {
-                auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start an 'if' true branch");
-                return syntax_error;
+                body = create<AST::SyntaxError>("Expected an open brace '{' to start an 'if' true branch");
             }
         }
 
-        auto body = parse_toplevel();
+        if (!body)
+            body = parse_toplevel();
 
         {
             auto cbrace_error_start = push_start();
@@ -582,9 +582,6 @@ RefPtr<AST::Node> Parser::parse_if_expr()
     consume_while(is_whitespace);
     auto true_branch = parse_braced_toplevel();
 
-    if (true_branch && true_branch->is_syntax_error())
-        return create<AST::IfCond>(Optional<AST::Position> {}, move(condition), move(true_branch), nullptr); // If expr syntax_error
-
     consume_while(is_whitespace);
     Optional<AST::Position> else_position;
     {
@@ -597,14 +594,14 @@ RefPtr<AST::Node> Parser::parse_if_expr()
         consume_while(is_whitespace);
         if (peek() == '{') {
             auto false_branch = parse_braced_toplevel();
-            return create<AST::IfCond>(else_position, move(condition), move(true_branch), move(false_branch)); // If expr true_branch Else false_branch
+            return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(false_branch)); // If expr true_branch Else false_branch
         }
 
         auto else_if_branch = parse_if_expr();
-        return create<AST::IfCond>(else_position, move(condition), move(true_branch), move(else_if_branch)); // If expr true_branch Else If ...
+        return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), move(else_if_branch)); // If expr true_branch Else If ...
     }
 
-    return create<AST::IfCond>(else_position, move(condition), move(true_branch), nullptr); // If expr true_branch
+    return create<AST::IfCond>(else_position, condition.release_nonnull(), move(true_branch), nullptr); // If expr true_branch
 }
 
 RefPtr<AST::Node> Parser::parse_subshell()
@@ -658,7 +655,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
 
         if (consume_while(is_any_of(" \t\n")).is_empty()) {
             auto node = create<AST::MatchExpr>(
-                move(match_expression),
+                match_expression.release_nonnull(),
                 String {}, move(as_position), Vector<AST::MatchEntry> {});
             node->set_is_syntax_error(create<AST::SyntaxError>("Expected whitespace after 'as' in 'match'"));
             return node;
@@ -667,7 +664,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
         match_name = consume_while(is_word_character);
         if (match_name.is_empty()) {
             auto node = create<AST::MatchExpr>(
-                move(match_expression),
+                match_expression.release_nonnull(),
                 String {}, move(as_position), Vector<AST::MatchEntry> {});
             node->set_is_syntax_error(create<AST::SyntaxError>("Expected an identifier after 'as' in 'match'"));
             return node;
@@ -678,7 +675,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
 
     if (!expect('{')) {
         auto node = create<AST::MatchExpr>(
-            move(match_expression),
+            match_expression.release_nonnull(),
             move(match_name), move(as_position), Vector<AST::MatchEntry> {});
         node->set_is_syntax_error(create<AST::SyntaxError>("Expected an open brace '{' to start a 'match' entry list"));
         return node;
@@ -700,13 +697,13 @@ RefPtr<AST::Node> Parser::parse_match_expr()
 
     if (!expect('}')) {
         auto node = create<AST::MatchExpr>(
-            move(match_expression),
+            match_expression.release_nonnull(),
             move(match_name), move(as_position), move(entries));
         node->set_is_syntax_error(create<AST::SyntaxError>("Expected a close brace '}' to end a 'match' entry list"));
         return node;
     }
 
-    return create<AST::MatchExpr>(move(match_expression), move(match_name), move(as_position), move(entries));
+    return create<AST::MatchExpr>(match_expression.release_nonnull(), move(match_name), move(as_position), move(entries));
 }
 
 AST::MatchEntry Parser::parse_match_entry()
@@ -792,9 +789,9 @@ RefPtr<AST::Node> Parser::parse_redirection()
                     // Eat a character and hope the problem goes away
                     consume();
                 }
-                return create<AST::SyntaxError>("Expected a path");
+                path = create<AST::SyntaxError>("Expected a path after redirection");
             }
-            return create<AST::WriteAppendRedirection>(pipe_fd, move(path)); // Redirection WriteAppend
+            return create<AST::WriteAppendRedirection>(pipe_fd, path.release_nonnull()); // Redirection WriteAppend
         }
         if (peek() == '&') {
             consume();
@@ -827,9 +824,9 @@ RefPtr<AST::Node> Parser::parse_redirection()
                 // Eat a character and hope the problem goes away
                 consume();
             }
-            return create<AST::SyntaxError>("Expected a path");
+            path = create<AST::SyntaxError>("Expected a path after redirection");
         }
-        return create<AST::WriteRedirection>(pipe_fd, move(path)); // Redirection Write
+        return create<AST::WriteRedirection>(pipe_fd, path.release_nonnull()); // Redirection Write
     }
     case '<': {
         consume();
@@ -851,12 +848,12 @@ RefPtr<AST::Node> Parser::parse_redirection()
                 // Eat a character and hope the problem goes away
                 consume();
             }
-            return create<AST::SyntaxError>("Expected a path");
+            path = create<AST::SyntaxError>("Expected a path after redirection");
         }
         if (mode == Read)
-            return create<AST::ReadRedirection>(pipe_fd, move(path)); // Redirection Read
+            return create<AST::ReadRedirection>(pipe_fd, path.release_nonnull()); // Redirection Read
 
-        return create<AST::ReadWriteRedirection>(pipe_fd, move(path)); // Redirection ReadWrite
+        return create<AST::ReadWriteRedirection>(pipe_fd, path.release_nonnull()); // Redirection ReadWrite
     }
     default:
         m_offset = rule_start->offset;
@@ -869,13 +866,13 @@ RefPtr<AST::Node> Parser::parse_list_expression()
     consume_while(is_whitespace);
 
     auto rule_start = push_start();
-    Vector<RefPtr<AST::Node>> nodes;
+    Vector<NonnullRefPtr<AST::Node>> nodes;
 
     do {
         auto expr = parse_expression();
         if (!expr)
             break;
-        nodes.append(move(expr));
+        nodes.append(expr.release_nonnull());
     } while (!consume_while(is_whitespace).is_empty());
 
     if (nodes.is_empty())
@@ -889,14 +886,14 @@ RefPtr<AST::Node> Parser::parse_expression()
     auto rule_start = push_start();
     auto starting_char = peek();
 
-    auto read_concat = [&](auto expr) -> RefPtr<AST::Node> {
+    auto read_concat = [&](auto&& expr) -> NonnullRefPtr<AST::Node> {
         if (is_whitespace(peek()))
-            return expr;
+            return move(expr);
 
         if (auto next_expr = parse_expression())
-            return create<AST::Juxtaposition>(move(expr), move(next_expr));
+            return create<AST::Juxtaposition>(move(expr), next_expr.release_nonnull());
 
-        return expr;
+        return move(expr);
     };
 
     if (strchr("&|){} ;<>\n", starting_char) != nullptr)
@@ -912,10 +909,10 @@ RefPtr<AST::Node> Parser::parse_expression()
 
     if (starting_char == '$') {
         if (auto variable = parse_variable())
-            return read_concat(variable);
+            return read_concat(variable.release_nonnull());
 
         if (auto inline_exec = parse_evaluate())
-            return read_concat(inline_exec);
+            return read_concat(inline_exec.release_nonnull());
     }
 
     if (starting_char == '#')
@@ -931,7 +928,10 @@ RefPtr<AST::Node> Parser::parse_expression()
         return read_concat(create<AST::CastToList>(move(list))); // Cast To List
     }
 
-    return read_concat(parse_string_composite());
+    if (auto composite = parse_string_composite())
+        return read_concat(composite.release_nonnull());
+
+    return nullptr;
 }
 
 RefPtr<AST::Node> Parser::parse_string_composite()
@@ -939,35 +939,35 @@ RefPtr<AST::Node> Parser::parse_string_composite()
     auto rule_start = push_start();
     if (auto string = parse_string()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::Juxtaposition>(move(string), move(next_part)); // Concatenate String StringComposite
+            return create<AST::Juxtaposition>(string.release_nonnull(), next_part.release_nonnull()); // Concatenate String StringComposite
 
         return string;
     }
 
     if (auto variable = parse_variable()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::Juxtaposition>(move(variable), move(next_part)); // Concatenate Variable StringComposite
+            return create<AST::Juxtaposition>(variable.release_nonnull(), next_part.release_nonnull()); // Concatenate Variable StringComposite
 
         return variable;
     }
 
     if (auto glob = parse_glob()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::Juxtaposition>(move(glob), move(next_part)); // Concatenate Glob StringComposite
+            return create<AST::Juxtaposition>(glob.release_nonnull(), next_part.release_nonnull()); // Concatenate Glob StringComposite
 
         return glob;
     }
 
     if (auto bareword = parse_bareword()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::Juxtaposition>(move(bareword), move(next_part)); // Concatenate Bareword StringComposite
+            return create<AST::Juxtaposition>(bareword.release_nonnull(), next_part.release_nonnull()); // Concatenate Bareword StringComposite
 
         return bareword;
     }
 
     if (auto inline_command = parse_evaluate()) {
         if (auto next_part = parse_string_composite())
-            return create<AST::Juxtaposition>(move(inline_command), move(next_part)); // Concatenate Execute StringComposite
+            return create<AST::Juxtaposition>(inline_command.release_nonnull(), next_part.release_nonnull()); // Concatenate Execute StringComposite
 
         return inline_command;
     }
@@ -1067,10 +1067,10 @@ RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
             if (auto variable = parse_variable()) {
                 auto inner = create<AST::StringPartCompose>(
                     move(string_literal),
-                    move(variable)); // Compose String Variable
+                    variable.release_nonnull()); // Compose String Variable
 
                 if (auto string = parse_doublequoted_string_inner()) {
-                    return create<AST::StringPartCompose>(move(inner), move(string)); // Compose Composition Composition
+                    return create<AST::StringPartCompose>(move(inner), string.release_nonnull()); // Compose Composition Composition
                 }
 
                 return inner;
@@ -1079,10 +1079,10 @@ RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
             if (auto evaluate = parse_evaluate()) {
                 auto composition = create<AST::StringPartCompose>(
                     move(string_literal),
-                    move(evaluate)); // Compose String Sequence
+                    evaluate.release_nonnull()); // Compose String Sequence
 
                 if (auto string = parse_doublequoted_string_inner()) {
-                    return create<AST::StringPartCompose>(move(composition), move(string)); // Compose Composition Composition
+                    return create<AST::StringPartCompose>(move(composition), string.release_nonnull()); // Compose Composition Composition
                 }
 
                 return composition;
@@ -1142,7 +1142,8 @@ RefPtr<AST::Node> Parser::parse_evaluate()
             inner = create<AST::SyntaxError>("Unexpected EOF in list");
         if (!expect(')'))
             inner->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating close paren"));
-        return create<AST::Execute>(move(inner), true);
+
+        return create<AST::Execute>(inner.release_nonnull(), true);
     }
     auto inner = parse_expression();
 
@@ -1150,11 +1151,11 @@ RefPtr<AST::Node> Parser::parse_evaluate()
         inner = create<AST::SyntaxError>("Expected a command");
     } else {
         if (inner->is_list()) {
-            auto execute_inner = create<AST::Execute>(move(inner), true);
-            inner = execute_inner;
+            auto execute_inner = create<AST::Execute>(inner.release_nonnull(), true);
+            inner = move(execute_inner);
         } else {
-            auto dyn_inner = create<AST::DynamicEvaluate>(move(inner));
-            inner = dyn_inner;
+            auto dyn_inner = create<AST::DynamicEvaluate>(inner.release_nonnull());
+            inner = move(dyn_inner);
         }
     }
 
@@ -1237,7 +1238,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
             text = create<AST::BarewordLiteral>(move(string));
         }
 
-        return create<AST::Juxtaposition>(move(tilde), move(text)); // Juxtaposition Varible Bareword
+        return create<AST::Juxtaposition>(tilde.release_nonnull(), text.release_nonnull()); // Juxtaposition Varible Bareword
     }
 
     if (string.starts_with("\\~")) {

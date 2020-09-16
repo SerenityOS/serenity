@@ -83,7 +83,7 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
     return commands;
 }
 
-void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(RefPtr<Value>)> callback)
+void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
 {
     auto value = run(shell)->resolve_without_cast(shell);
     if (value->is_job()) {
@@ -219,13 +219,14 @@ HitTestResult And::hit_test_position(size_t offset)
             result.closest_command_node = m_right;
         return result;
     }
+
     result = m_right->hit_test_position(offset);
     if (!result.closest_command_node)
         result.closest_command_node = m_right;
     return result;
 }
 
-And::And(Position position, RefPtr<Node> left, RefPtr<Node> right)
+And::And(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
@@ -324,7 +325,7 @@ RefPtr<Node> ListConcatenate::leftmost_trivial_literal() const
     return m_list.first()->leftmost_trivial_literal();
 }
 
-ListConcatenate::ListConcatenate(Position position, Vector<RefPtr<Node>> list)
+ListConcatenate::ListConcatenate(Position position, Vector<NonnullRefPtr<Node>> list)
     : Node(move(position))
     , m_list(move(list))
 {
@@ -368,7 +369,7 @@ HitTestResult Background::hit_test_position(size_t offset)
     return m_command->hit_test_position(offset);
 }
 
-Background::Background(Position position, RefPtr<Node> command)
+Background::Background(Position position, NonnullRefPtr<Node> command)
     : Node(move(position))
     , m_command(move(command))
 {
@@ -491,7 +492,7 @@ RefPtr<Node> CastToCommand::leftmost_trivial_literal() const
     return m_inner->leftmost_trivial_literal();
 }
 
-CastToCommand::CastToCommand(Position position, RefPtr<Node> inner)
+CastToCommand::CastToCommand(Position position, NonnullRefPtr<Node> inner)
     : Node(move(position))
     , m_inner(move(inner))
 {
@@ -723,7 +724,7 @@ HitTestResult DynamicEvaluate::hit_test_position(size_t offset)
     return m_inner->hit_test_position(offset);
 }
 
-DynamicEvaluate::DynamicEvaluate(Position position, RefPtr<Node> inner)
+DynamicEvaluate::DynamicEvaluate(Position position, NonnullRefPtr<Node> inner)
     : Node(move(position))
     , m_inner(move(inner))
 {
@@ -805,6 +806,9 @@ void FunctionDeclaration::highlight_in_editor(Line::Editor& editor, Shell& shell
 HitTestResult FunctionDeclaration::hit_test_position(size_t offset)
 {
     if (!position().contains(offset))
+        return {};
+
+    if (!m_block)
         return {};
 
     auto result = m_block->hit_test_position(offset);
@@ -927,10 +931,13 @@ HitTestResult ForLoop::hit_test_position(size_t offset)
     if (auto result = m_iterated_expression->hit_test_position(offset); result.matching_node)
         return result;
 
+    if (!m_block)
+        return {};
+
     return m_block->hit_test_position(offset);
 }
 
-ForLoop::ForLoop(Position position, String variable_name, RefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position)
+ForLoop::ForLoop(Position position, String variable_name, NonnullRefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position)
     : Node(move(position))
     , m_variable_name(move(variable_name))
     , m_iterated_expression(move(iterated_expr))
@@ -984,7 +991,7 @@ void Execute::dump(int level) const
     m_command->dump(level + 1);
 }
 
-void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(RefPtr<Value>)> callback)
+void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
 {
     if (m_command->would_execute())
         return m_command->for_each_entry(shell, move(callback));
@@ -1176,7 +1183,7 @@ Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, si
     return shell.complete_program_name(node->text(), corrected_offset);
 }
 
-Execute::Execute(Position position, RefPtr<Node> command, bool capture_stdout)
+Execute::Execute(Position position, NonnullRefPtr<Node> command, bool capture_stdout)
     : Node(move(position))
     , m_command(move(command))
     , m_capture_stdout(capture_stdout)
@@ -1266,7 +1273,7 @@ HitTestResult IfCond::hit_test_position(size_t offset)
     return {};
 }
 
-IfCond::IfCond(Position position, Optional<Position> else_position, RefPtr<Node> condition, RefPtr<Node> true_branch, RefPtr<Node> false_branch)
+IfCond::IfCond(Position position, Optional<Position> else_position, NonnullRefPtr<Node> condition, RefPtr<Node> true_branch, RefPtr<Node> false_branch)
     : Node(move(position))
     , m_condition(move(condition))
     , m_true_branch(move(true_branch))
@@ -1281,10 +1288,16 @@ IfCond::IfCond(Position position, Optional<Position> else_position, RefPtr<Node>
         set_is_syntax_error(m_false_branch->syntax_error_node());
 
     m_condition = create<AST::Execute>(m_condition->position(), m_condition);
-    if (m_true_branch)
-        m_true_branch = create<AST::Execute>(m_true_branch->position(), m_true_branch);
-    if (m_false_branch)
-        m_false_branch = create<AST::Execute>(m_false_branch->position(), m_false_branch);
+
+    if (m_true_branch) {
+        auto true_branch = m_true_branch.release_nonnull();
+        m_true_branch = create<AST::Execute>(true_branch->position(), true_branch);
+    }
+
+    if (m_false_branch) {
+        auto false_branch = m_false_branch.release_nonnull();
+        m_false_branch = create<AST::Execute>(false_branch->position(), false_branch);
+    }
 }
 
 IfCond::~IfCond()
@@ -1322,6 +1335,7 @@ HitTestResult Join::hit_test_position(size_t offset)
     auto result = m_left->hit_test_position(offset);
     if (result.matching_node)
         return result;
+
     return m_right->hit_test_position(offset);
 }
 
@@ -1332,7 +1346,7 @@ RefPtr<Node> Join::leftmost_trivial_literal() const
     return m_right->leftmost_trivial_literal();
 }
 
-Join::Join(Position position, RefPtr<Node> left, RefPtr<Node> right)
+Join::Join(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
@@ -1428,8 +1442,7 @@ void MatchExpr::highlight_in_editor(Line::Editor& editor, Shell& shell, Highligh
         editor.stylize({ m_as_position.value().start_offset, m_as_position.value().end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
 
     metadata.is_first_in_list = false;
-    if (m_matched_expr)
-        m_matched_expr->highlight_in_editor(editor, shell, metadata);
+    m_matched_expr->highlight_in_editor(editor, shell, metadata);
 
     for (auto& entry : m_entries) {
         metadata.is_first_in_list = false;
@@ -1465,14 +1478,14 @@ HitTestResult MatchExpr::hit_test_position(size_t offset)
     return {};
 }
 
-MatchExpr::MatchExpr(Position position, RefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries)
+MatchExpr::MatchExpr(Position position, NonnullRefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries)
     : Node(move(position))
     , m_matched_expr(move(expr))
     , m_expr_name(move(name))
     , m_as_position(move(as_position))
     , m_entries(move(entries))
 {
-    if (m_matched_expr && m_matched_expr->is_syntax_error()) {
+    if (m_matched_expr->is_syntax_error()) {
         set_is_syntax_error(m_matched_expr->syntax_error_node());
     } else {
         for (auto& entry : m_entries) {
@@ -1521,13 +1534,14 @@ HitTestResult Or::hit_test_position(size_t offset)
             result.closest_command_node = m_right;
         return result;
     }
+
     result = m_right->hit_test_position(offset);
     if (!result.closest_command_node)
         result.closest_command_node = m_right;
     return result;
 }
 
-Or::Or(Position position, RefPtr<Node> left, RefPtr<Node> right)
+Or::Or(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
@@ -1595,10 +1609,11 @@ HitTestResult Pipe::hit_test_position(size_t offset)
     auto result = m_left->hit_test_position(offset);
     if (result.matching_node)
         return result;
+
     return m_right->hit_test_position(offset);
 }
 
-Pipe::Pipe(Position position, RefPtr<Node> left, RefPtr<Node> right)
+Pipe::Pipe(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
@@ -1613,7 +1628,7 @@ Pipe::~Pipe()
 {
 }
 
-PathRedirectionNode::PathRedirectionNode(Position position, int fd, RefPtr<Node> path)
+PathRedirectionNode::PathRedirectionNode(Position position, int fd, NonnullRefPtr<Node> path)
     : Node(move(position))
     , m_fd(fd)
     , m_path(move(path))
@@ -1687,7 +1702,7 @@ RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
     return create<CommandValue>(move(command));
 }
 
-ReadRedirection::ReadRedirection(Position position, int fd, RefPtr<Node> path)
+ReadRedirection::ReadRedirection(Position position, int fd, NonnullRefPtr<Node> path)
     : PathRedirectionNode(move(position), fd, move(path))
 {
 }
@@ -1714,7 +1729,7 @@ RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
     return create<CommandValue>(move(command));
 }
 
-ReadWriteRedirection::ReadWriteRedirection(Position position, int fd, RefPtr<Node> path)
+ReadWriteRedirection::ReadWriteRedirection(Position position, int fd, NonnullRefPtr<Node> path)
     : PathRedirectionNode(move(position), fd, move(path))
 {
 }
@@ -1781,7 +1796,7 @@ HitTestResult Sequence::hit_test_position(size_t offset)
     return m_right->hit_test_position(offset);
 }
 
-Sequence::Sequence(Position position, RefPtr<Node> left, RefPtr<Node> right)
+Sequence::Sequence(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
@@ -2049,7 +2064,7 @@ HitTestResult Juxtaposition::hit_test_position(size_t offset)
     return result;
 }
 
-Juxtaposition::Juxtaposition(Position position, RefPtr<Node> left, RefPtr<Node> right)
+Juxtaposition::Juxtaposition(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
@@ -2129,7 +2144,7 @@ HitTestResult StringPartCompose::hit_test_position(size_t offset)
     return m_right->hit_test_position(offset);
 }
 
-StringPartCompose::StringPartCompose(Position position, RefPtr<Node> left, RefPtr<Node> right)
+StringPartCompose::StringPartCompose(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
@@ -2252,7 +2267,7 @@ RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
     return create<CommandValue>(move(command));
 }
 
-WriteAppendRedirection::WriteAppendRedirection(Position position, int fd, RefPtr<Node> path)
+WriteAppendRedirection::WriteAppendRedirection(Position position, int fd, NonnullRefPtr<Node> path)
     : PathRedirectionNode(move(position), fd, move(path))
 {
 }
@@ -2279,7 +2294,7 @@ RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
     return create<CommandValue>(move(command));
 }
 
-WriteRedirection::WriteRedirection(Position position, int fd, RefPtr<Node> path)
+WriteRedirection::WriteRedirection(Position position, int fd, NonnullRefPtr<Node> path)
     : PathRedirectionNode(move(position), fd, move(path))
 {
 }
