@@ -653,6 +653,8 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         auto rhs_start_line = m_parser_state.m_current_token.line_number();
         auto rhs_start_column = m_parser_state.m_current_token.line_column();
         auto rhs = parse_expression(precedence, associativity);
+        // FIXME: Apparently for functions this should also not be enforced on a parser level,
+        // other engines throw ReferenceError for ++foo()
         if (!rhs->is_identifier() && !rhs->is_member_expression())
             syntax_error(String::format("Right-hand side of prefix increment operator must be identifier or member expression, got %s", rhs->class_name()), rhs_start_line, rhs_start_column);
         return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(rhs), true);
@@ -662,6 +664,8 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         auto rhs_start_line = m_parser_state.m_current_token.line_number();
         auto rhs_start_column = m_parser_state.m_current_token.line_column();
         auto rhs = parse_expression(precedence, associativity);
+        // FIXME: Apparently for functions this should also not be enforced on a parser level,
+        // other engines throw ReferenceError for --foo()
         if (!rhs->is_identifier() && !rhs->is_member_expression())
             syntax_error(String::format("Right-hand side of prefix decrement operator must be identifier or member expression, got %s", rhs->class_name()), rhs_start_line, rhs_start_column);
         return create_ast_node<UpdateExpression>(UpdateOp::Decrement, move(rhs), true);
@@ -1096,11 +1100,15 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         return expression;
     }
     case TokenType::PlusPlus:
+        // FIXME: Apparently for functions this should also not be enforced on a parser level,
+        // other engines throw ReferenceError for foo()++
         if (!lhs->is_identifier() && !lhs->is_member_expression())
             syntax_error(String::format("Left-hand side of postfix increment operator must be identifier or member expression, got %s", lhs->class_name()));
         consume();
         return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(lhs));
     case TokenType::MinusMinus:
+        // FIXME: Apparently for functions this should also not be enforced on a parser level,
+        // other engines throw ReferenceError for foo()--
         if (!lhs->is_identifier() && !lhs->is_member_expression())
             syntax_error(String::format("Left-hand side of postfix increment operator must be identifier or member expression, got %s", lhs->class_name()));
         consume();
