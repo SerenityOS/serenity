@@ -31,6 +31,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Userspace.h>
 #include <AK/WeakPtr.h>
@@ -433,11 +434,11 @@ public:
 
     bool has_promises() const
     {
-        return m_promises;
+        return m_promises.has_value();
     }
     bool has_promised(Pledge pledge) const
     {
-        return m_promises & (1u << (u32)pledge);
+        return m_promises.value_or((u32)-1) & (1u << (u32)pledge);
     }
 
     VeilState veil_state() const
@@ -587,8 +588,8 @@ private:
 
     u32 m_priority_boost { 0 };
 
-    u32 m_promises { 0 };
-    u32 m_execpromises { 0 };
+    Optional<u32> m_promises;
+    Optional<u32> m_execpromises;
 
     VeilState m_veil_state { VeilState::None };
     Vector<UnveiledPath> m_unveiled_paths;

@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <Kernel/Process.h>
 
@@ -72,14 +73,14 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
         return true;
     };
 
-    u32 new_promises;
-    u32 new_execpromises;
+    Optional<u32> new_promises;
+    Optional<u32> new_execpromises;
 
     if (!promises.is_null()) {
         new_promises = 0;
-        if (!parse_pledge(promises, new_promises))
+        if (!parse_pledge(promises, new_promises.value()))
             return -EINVAL;
-        if (m_promises && (!new_promises || new_promises & ~m_promises))
+        if (new_promises.value() & ~m_promises.value_or((u32)-1))
             return -EPERM;
     } else {
         new_promises = m_promises;
@@ -87,9 +88,9 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 
     if (!execpromises.is_null()) {
         new_execpromises = 0;
-        if (!parse_pledge(execpromises, new_execpromises))
+        if (!parse_pledge(execpromises, new_execpromises.value()))
             return -EINVAL;
-        if (m_execpromises && (!new_execpromises || new_execpromises & ~m_execpromises))
+        if (new_execpromises.value() & ~m_execpromises.value_or((u32)-1))
             return -EPERM;
     } else {
         new_execpromises = m_execpromises;
