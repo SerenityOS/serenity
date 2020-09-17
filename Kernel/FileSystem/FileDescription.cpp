@@ -40,18 +40,35 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
+//#define DESCRIPTION_DEBUG
+
 namespace Kernel {
 
-NonnullRefPtr<FileDescription> FileDescription::create(Custody& custody)
+KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custody)
 {
     auto description = adopt(*new FileDescription(InodeFile::create(custody.inode())));
     description->m_custody = custody;
+    auto result = description->attach();
+    if (result.is_error()) {
+#ifdef DESCRIPTION_DEBUG
+        dbg() << "Failed to create file description for custody: " << result;
+#endif
+        return result;
+    }
     return description;
 }
 
-NonnullRefPtr<FileDescription> FileDescription::create(File& file)
+KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(File& file)
 {
-    return adopt(*new FileDescription(file));
+    auto description = adopt(*new FileDescription(file));
+    auto result = description->attach();
+    if (result.is_error()) {
+#ifdef DESCRIPTION_DEBUG
+        dbg() << "Failed to create file description for file: " << result;
+#endif
+        return result;
+    }
+    return description;
 }
 
 FileDescription::FileDescription(File& file)
@@ -59,20 +76,29 @@ FileDescription::FileDescription(File& file)
 {
     if (file.is_inode())
         m_inode = static_cast<InodeFile&>(file).inode();
-    if (is_socket())
-        socket()->attach(*this);
+
     m_is_directory = metadata().is_directory();
 }
 
 FileDescription::~FileDescription()
 {
-    if (is_socket())
-        socket()->detach(*this);
+    m_file->detach(*this);
     if (is_fifo())
         static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
     // FIXME: Should this error path be observed somehow?
     (void)m_file->close();
-    m_inode = nullptr;
+    if (m_inode)
+        m_inode->detach(*this);
+}
+
+KResult FileDescription::attach()
+{
+    if (m_inode) {
+        auto result = m_inode->attach(*this);
+        if (result.is_error())
+            return result;
+    }
+    return m_file->attach(*this);
 }
 
 KResult FileDescription::stat(::stat& buffer)
@@ -113,6 +139,9 @@ off_t FileDescription::seek(off_t offset, int whence)
     // FIXME: Return -EINVAL if attempting to seek past the end of a seekable device.
 
     m_current_offset = new_offset;
+    m_file->did_seek(*this, new_offset);
+    if (m_inode)
+        m_inode->did_seek(*this, new_offset);
     return m_current_offset;
 }
 

@@ -96,6 +96,8 @@ public:
 
 private:
     // ^Inode
+    virtual KResult attach(FileDescription&) override;
+    virtual void did_seek(FileDescription&, off_t) override;
     virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override;
@@ -110,6 +112,8 @@ private:
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0) const override;
 
+    KResult refresh_data(FileDescription&) const;
+
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }
     ProcFSInode(ProcFS&, unsigned index);
@@ -123,6 +127,8 @@ public:
 
 private:
     // ^Inode
+    virtual KResult attach(FileDescription&) override;
+    virtual void did_seek(FileDescription&, off_t) override;
     virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const override { ASSERT_NOT_REACHED(); }
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override { ASSERT_NOT_REACHED(); }

@@ -253,6 +253,19 @@ static inline bool is_persistent_inode(const InodeIdentifier& identifier)
     return to_proc_parent_directory(identifier) == PDI_Root_sys;
 }
 
+class ProcFSInodeData: public FileDescriptionData {
+public:
+    ProcFSInodeData(KBuffer&& buffer)
+        : m_buffer(move(buffer))
+    {
+    }
+
+    const KBuffer& buffer() { return m_buffer; }
+
+private:
+    KBuffer m_buffer;
+};
+
 NonnullRefPtr<ProcFS> ProcFS::create()
 {
     return adopt(*new ProcFS);
@@ -1111,6 +1124,71 @@ ProcFSInode::~ProcFSInode()
     fs().m_inodes.remove(index());
 }
 
+KResult ProcFSInode::refresh_data(FileDescription& description) const
+{
+    auto& cached_data = description.data();
+    auto* directory_entry = fs().get_directory_entry(identifier());
+
+    // TODO: if we already have a buffer in cached_data, try to reuse
+    // it. This may be especially helpful in low memory conditions.
+    // Right now, if a seek to the beginning triggers this function
+    // to be called and we fail to allocate a new buffer, subsequent
+    // calls to read will fail with EIO.
+    Optional<KBuffer>(*read_callback)(InodeIdentifier) = nullptr;
+    if (directory_entry)
+        read_callback = directory_entry->read_callback;
+    else
+        switch (to_proc_parent_directory(identifier())) {
+        case PDI_PID_fd:
+            read_callback = procfs$pid_fd_entry;
+            break;
+        case PDI_PID_stacks:
+            read_callback = procfs$tid_stack;
+            break;
+        case PDI_Root_sys:
+            switch (SysVariable::for_inode(identifier()).type) {
+            case SysVariable::Type::Invalid:
+                ASSERT_NOT_REACHED();
+            case SysVariable::Type::Boolean:
+                read_callback = read_sys_bool;
+                break;
+            case SysVariable::Type::String:
+                read_callback = read_sys_string;
+                break;
+            }
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+
+    ASSERT(read_callback);
+
+    auto generated_data = read_callback(identifier());
+    if (!generated_data.has_value())
+        return KResult(-ENOENT);
+    if (generated_data.value().is_null())
+        return KResult(-ENOMEM);
+
+    cached_data = make<ProcFSInodeData>(generated_data.release_value());
+    return KSuccess;
+}
+
+KResult ProcFSInode::attach(FileDescription& description)
+{
+    return refresh_data(description);
+}
+
+void ProcFSInode::did_seek(FileDescription& description, off_t new_offset)
+{
+    if (new_offset != 0)
+        return;
+    auto result = refresh_data(description);
+    if (result.is_error()) {
+        // Subsequent calls to read will return EIO!
+        dbg() << "ProcFS: Could not refresh contents: " << result.error();
+    }
+}
+
 InodeMetadata ProcFSInode::metadata() const
 {
 #ifdef PROCFS_DEBUG
@@ -1197,68 +1275,27 @@ InodeMetadata ProcFSInode::metadata() const
 
 ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
+    ASSERT(description);
 #ifdef PROCFS_DEBUG
-    dbg() << "ProcFS: read_bytes " << index();
+    dbg() << "ProcFS: read_bytes offset: " << offset << " count: " << count;
 #endif
     ASSERT(offset >= 0);
     ASSERT(buffer.user_or_kernel_ptr());
 
-    auto* directory_entry = fs().get_directory_entry(identifier());
-
-    Optional<KBuffer> (*read_callback)(InodeIdentifier) = nullptr;
-    if (directory_entry)
-        read_callback = directory_entry->read_callback;
-    else
-        switch (to_proc_parent_directory(identifier())) {
-        case PDI_PID_fd:
-            read_callback = procfs$pid_fd_entry;
-            break;
-        case PDI_PID_stacks:
-            read_callback = procfs$tid_stack;
-            break;
-        case PDI_Root_sys:
-            switch (SysVariable::for_inode(identifier()).type) {
-            case SysVariable::Type::Invalid:
-                ASSERT_NOT_REACHED();
-            case SysVariable::Type::Boolean:
-                read_callback = read_sys_bool;
-                break;
-            case SysVariable::Type::String:
-                read_callback = read_sys_string;
-                break;
-            }
-            break;
-        default:
-            ASSERT_NOT_REACHED();
-        }
-
-    ASSERT(read_callback);
-
-    Optional<KBuffer> generated_data;
-    if (!description) {
-        generated_data = read_callback(identifier());
-    } else {
-        if (!description->generator_cache().has_value())
-            description->generator_cache() = (*read_callback)(identifier());
-        generated_data = description->generator_cache();
+    if (!description->data()) {
+#ifdef PROCFS_DEBUG
+        dbg() << "ProcFS: Do not have cached data!";
+#endif
+        return -EIO;
     }
 
-    auto& data = generated_data;
-    if (!data.has_value())
-        return 0;
-    if (data.value().is_null()) {
-        dbg() << "ProcFS: Not enough memory!";
-        return 0;
-    }
-
-    if ((size_t)offset >= data.value().size())
+    auto& data_buffer = static_cast<ProcFSInodeData&>(*description->data()).buffer();
+    if ((size_t)offset >= data_buffer.size())
         return 0;
 
-    ssize_t nread = min(static_cast<off_t>(data.value().size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(data.value().data() + offset, nread))
+    ssize_t nread = min(static_cast<off_t>(data_buffer.size() - offset), static_cast<off_t>(count));
+    if (!buffer.write(data_buffer.data() + offset, nread))
         return -EFAULT;
-    if (nread == 0 && description && description->generator_cache().has_value())
-        description->generator_cache().clear();
 
     return nread;
 }
@@ -1579,6 +1616,16 @@ ProcFSProxyInode::ProcFSProxyInode(ProcFS& fs, FileDescription& fd)
 
 ProcFSProxyInode::~ProcFSProxyInode()
 {
+}
+
+KResult ProcFSProxyInode::attach(FileDescription& fd)
+{
+    return m_fd->inode()->attach(fd);
+}
+
+void ProcFSProxyInode::did_seek(FileDescription& fd, off_t new_offset)
+{
+    return m_fd->inode()->did_seek(fd, new_offset);
 }
 
 InodeMetadata ProcFSProxyInode::metadata() const

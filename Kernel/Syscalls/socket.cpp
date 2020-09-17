@@ -52,15 +52,17 @@ int Process::sys$socket(int domain, int type, int protocol)
     auto result = Socket::create(domain, type, protocol);
     if (result.is_error())
         return result.error();
-    auto description = FileDescription::create(*result.value());
-    description->set_readable(true);
-    description->set_writable(true);
+    auto description_result = FileDescription::create(*result.value());
+    if (description_result.is_error())
+        return description_result.error();
+    description_result.value()->set_readable(true);
+    description_result.value()->set_writable(true);
     unsigned flags = 0;
     if (type & SOCK_CLOEXEC)
         flags |= FD_CLOEXEC;
     if (type & SOCK_NONBLOCK)
-        description->set_blocking(false);
-    m_fds[fd].set(move(description), flags);
+        description_result.value()->set_blocking(false);
+    m_fds[fd].set(description_result.release_value(), flags);
     return fd;
 }
 
@@ -131,13 +133,16 @@ int Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_addre
             return -EFAULT;
     }
 
-    auto accepted_socket_description = FileDescription::create(*accepted_socket);
-    accepted_socket_description->set_readable(true);
-    accepted_socket_description->set_writable(true);
+    auto accepted_socket_description_result = FileDescription::create(*accepted_socket);
+    if (accepted_socket_description_result.is_error())
+        return accepted_socket_description_result.error();
+
+    accepted_socket_description_result.value()->set_readable(true);
+    accepted_socket_description_result.value()->set_writable(true);
     // NOTE: The accepted socket inherits fd flags from the accepting socket.
     //       I'm not sure if this matches other systems but it makes sense to me.
-    accepted_socket_description->set_blocking(accepting_socket_description->is_blocking());
-    m_fds[accepted_socket_fd].set(move(accepted_socket_description), m_fds[accepting_socket_fd].flags());
+    accepted_socket_description_result.value()->set_blocking(accepting_socket_description->is_blocking());
+    m_fds[accepted_socket_fd].set(accepted_socket_description_result.release_value(), m_fds[accepting_socket_fd].flags());
 
     // NOTE: Moving this state to Completed is what causes connect() to unblock on the client side.
     accepted_socket->set_setup_state(Socket::SetupState::Completed);

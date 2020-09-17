@@ -49,8 +49,8 @@ public:
 
     uid_t uid() const { return m_uid; }
 
-    NonnullRefPtr<FileDescription> open_direction(Direction);
-    NonnullRefPtr<FileDescription> open_direction_blocking(Direction);
+    KResultOr<NonnullRefPtr<FileDescription>> open_direction(Direction);
+    KResultOr<NonnullRefPtr<FileDescription>> open_direction_blocking(Direction);
 
     void attach(Direction);
     void detach(Direction);

@@ -78,6 +78,9 @@ public:
     virtual bool can_read(const FileDescription&, size_t) const = 0;
     virtual bool can_write(const FileDescription&, size_t) const = 0;
 
+    virtual KResult attach(FileDescription&) { return KSuccess; }
+    virtual void detach(FileDescription&) {}
+    virtual void did_seek(FileDescription&, off_t) {}
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) = 0;
     virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) = 0;
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg);

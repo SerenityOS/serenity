@@ -38,11 +38,16 @@
 
 namespace Kernel {
 
+class FileDescriptionData {
+public:
+    virtual ~FileDescriptionData() {}
+};
+
 class FileDescription : public RefCounted<FileDescription> {
     MAKE_SLAB_ALLOCATED(FileDescription)
 public:
-    static NonnullRefPtr<FileDescription> create(Custody&);
-    static NonnullRefPtr<FileDescription> create(File&);
+    static KResultOr<NonnullRefPtr<FileDescription>> create(Custody&);
+    static KResultOr<NonnullRefPtr<FileDescription>> create(File&);
     ~FileDescription();
 
     bool is_readable() const { return m_readable; }
@@ -120,7 +125,7 @@ public:
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
     void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction) { m_fifo_direction = direction; }
 
-    Optional<KBuffer>& generator_cache() { return m_generator_cache; }
+    OwnPtr<FileDescriptionData>& data() { return m_data; }
 
     void set_original_inode(Badge<VFS>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
 
@@ -133,7 +138,8 @@ public:
 private:
     friend class VFS;
     explicit FileDescription(File&);
-    FileDescription(FIFO&, FIFO::Direction);
+
+    KResult attach();
 
     RefPtr<Custody> m_custody;
     RefPtr<Inode> m_inode;
@@ -141,7 +147,7 @@ private:
 
     off_t m_current_offset { 0 };
 
-    Optional<KBuffer> m_generator_cache;
+    OwnPtr<FileDescriptionData> m_data;
 
     u32 m_file_flags { 0 };
 

@@ -214,7 +214,7 @@ KResult LocalSocket::listen(size_t backlog)
     return KSuccess;
 }
 
-void LocalSocket::attach(FileDescription& description)
+KResult LocalSocket::attach(FileDescription& description)
 {
     ASSERT(!m_accept_side_fd_open);
     if (m_connect_side_role == Role::None) {
@@ -224,6 +224,7 @@ void LocalSocket::attach(FileDescription& description)
         ASSERT(m_connect_side_fd != &description);
         m_accept_side_fd_open = true;
     }
+    return KSuccess;
 }
 
 void LocalSocket::detach(FileDescription& description)
