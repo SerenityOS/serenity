@@ -26,7 +26,7 @@ before_install:
 # These packages are already part of the Travis image:
 #- sudo apt-get install -y g++-9 libstdc++-9-dev cmake shellcheck
 # These aren't:
-- sudo apt-get install -y libmpfr-dev libmpc-dev libgmp-dev
+- sudo apt-get install -y libmpfr-dev libmpc-dev libgmp-dev clang-format-10
 # If we ever do any qemu-emulation on Travis, we should re-enable this:
 #- e2fsprogs qemu-system-i386 qemu-utils
 - g++ --version
@@ -35,10 +35,11 @@ before_install:
 
 script:
 - export SERENITY_ROOT="$(pwd)"
-- Meta/lint-shell-scripts.sh
+- Meta/check-style.sh
+- Meta/lint-clang-format.sh --overwrite-inplace && git diff --exit-code
 - Meta/lint-executable-resources.sh
 - Meta/lint-ipc-ids.sh
-- Meta/check-style.sh
+- Meta/lint-shell-scripts.sh
 - cd Toolchain
 - TRY_USE_LOCAL_TOOLCHAIN=y ./BuildIt.sh
 - cd "$SERENITY_ROOT"
