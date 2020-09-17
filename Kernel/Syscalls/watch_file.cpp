@@ -52,7 +52,11 @@ int Process::sys$watch_file(Userspace<const char*> user_path, size_t path_length
     if (fd < 0)
         return fd;
 
-    m_fds[fd].set(FileDescription::create(*InodeWatcher::create(inode)));
+    auto description = FileDescription::create(*InodeWatcher::create(inode));
+    if (description.is_error())
+        return description.error();
+
+    m_fds[fd].set(description.release_value());
     m_fds[fd].description()->set_readable(true);
     return fd;
 }

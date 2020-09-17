@@ -299,13 +299,19 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
     if (metadata.is_fifo()) {
         auto fifo = inode.fifo();
         if (options & O_WRONLY) {
-            auto description = fifo->open_direction_blocking(FIFO::Direction::Writer);
+            auto open_result = fifo->open_direction_blocking(FIFO::Direction::Writer);
+            if (open_result.is_error())
+                return open_result.error();
+            auto& description = open_result.value();
             description->set_rw_mode(options);
             description->set_file_flags(options);
             description->set_original_inode({}, inode);
             return description;
         } else if (options & O_RDONLY) {
-            auto description = fifo->open_direction_blocking(FIFO::Direction::Reader);
+            auto open_result = fifo->open_direction_blocking(FIFO::Direction::Reader);
+            if (open_result.is_error())
+                return open_result.error();
+            auto& description = open_result.value();
             description->set_rw_mode(options);
             description->set_file_flags(options);
             description->set_original_inode({}, inode);
@@ -340,8 +346,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         inode.set_mtime(kgettimeofday().tv_sec);
     }
     auto description = FileDescription::create(custody);
-    description->set_rw_mode(options);
-    description->set_file_flags(options);
+    if (!description.is_error()) {
+        description.value()->set_rw_mode(options);
+        description.value()->set_file_flags(options);
+    }
     return description;
 }
 
@@ -400,8 +408,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
 
     auto new_custody = Custody::create(&parent_custody, p.basename(), inode_or_error.value(), parent_custody.mount_flags());
     auto description = FileDescription::create(*new_custody);
-    description->set_rw_mode(options);
-    description->set_file_flags(options);
+    if (!description.is_error()) {
+        description.value()->set_rw_mode(options);
+        description.value()->set_file_flags(options);
+    }
     return description;
 }
 

@@ -48,21 +48,21 @@ namespace Kernel {
 
 class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
-    static RefPtr<KBufferImpl> try_create_with_size(size_t size, u8 access, const char* name, AllocationStrategy strategy = AllocationStrategy::Reserve)
+    static RefPtr<KBufferImpl> try_create_with_size(size_t size, u8 access, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), name, access, false, strategy);
         if (!region)
             return nullptr;
-        return adopt(*new KBufferImpl(region.release_nonnull(), size));
+        return adopt(*new KBufferImpl(region.release_nonnull(), size, strategy));
     }
 
-    static RefPtr<KBufferImpl> try_create_with_bytes(ReadonlyBytes bytes, u8 access, const char* name, AllocationStrategy strategy = AllocationStrategy::Reserve)
+    static RefPtr<KBufferImpl> try_create_with_bytes(ReadonlyBytes bytes, u8 access, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(bytes.size()), name, access, false, strategy);
         if (!region)
             return nullptr;
         memcpy(region->vaddr().as_ptr(), bytes.data(), bytes.size());
-        return adopt(*new KBufferImpl(region.release_nonnull(), bytes.size()));
+        return adopt(*new KBufferImpl(region.release_nonnull(), bytes.size(), strategy));
     }
 
     static RefPtr<KBufferImpl> create_with_size(size_t size, u8 access, const char* name, AllocationStrategy strategy = AllocationStrategy::Reserve)
@@ -77,6 +77,17 @@ public:
             return {};
         memcpy(buffer->data(), data, size);
         return buffer;
+    }
+
+    bool expand(size_t new_capacity)
+    {
+        auto new_region = MM.allocate_kernel_region(PAGE_ROUND_UP(new_capacity), m_region->name(), m_region->access(), false, m_allocation_strategy);
+        if (!new_region)
+            return false;
+        if (m_region && m_size > 0)
+            memcpy(new_region->vaddr().as_ptr(), data(), min(m_region->size(), m_size));
+        m_region = new_region.release_nonnull();
+        return true;
     }
 
     u8* data() { return m_region->vaddr().as_ptr(); }
@@ -94,18 +105,25 @@ public:
     Region& region() { return *m_region; }
 
 private:
-    explicit KBufferImpl(NonnullOwnPtr<Region>&& region, size_t size)
+    explicit KBufferImpl(NonnullOwnPtr<Region>&& region, size_t size, AllocationStrategy strategy)
         : m_size(size)
+        , m_allocation_strategy(strategy)
         , m_region(move(region))
     {
     }
 
     size_t m_size { 0 };
+    AllocationStrategy m_allocation_strategy { AllocationStrategy::Reserve };
     NonnullOwnPtr<Region> m_region;
 };
 
 class KBuffer {
 public:
+    explicit KBuffer(RefPtr<KBufferImpl>&& impl)
+        : m_impl(move(impl))
+    {
+    }
+
     static OwnPtr<KBuffer> try_create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto impl = KBufferImpl::try_create_with_size(size, access, name, strategy);
@@ -145,6 +163,7 @@ public:
     void set_size(size_t size) { m_impl->set_size(size); }
 
     const KBufferImpl& impl() const { return *m_impl; }
+    RefPtr<KBufferImpl> take_impl() { return move(m_impl); }
 
     KBuffer(const ByteBuffer& buffer, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
         : m_impl(KBufferImpl::copy(buffer.data(), buffer.size(), access, name))
@@ -152,11 +171,6 @@ public:
     }
 
 private:
-    explicit KBuffer(RefPtr<KBufferImpl>&& impl)
-        : m_impl(move(impl))
-    {
-    }
-
     RefPtr<KBufferImpl> m_impl;
 };
 

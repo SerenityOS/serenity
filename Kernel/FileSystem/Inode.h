@@ -69,6 +69,9 @@ public:
 
     KResultOr<NonnullOwnPtr<KBuffer>> read_entire(FileDescription* = nullptr) const;
 
+    virtual KResult attach(FileDescription&) { return KSuccess; }
+    virtual void detach(FileDescription&) { }
+    virtual void did_seek(FileDescription&, off_t) { }
     virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const = 0;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const = 0;
     virtual RefPtr<Inode> lookup(StringView name) = 0;

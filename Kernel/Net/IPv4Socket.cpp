@@ -170,14 +170,6 @@ KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockad
     return protocol_connect(description, should_block);
 }
 
-void IPv4Socket::attach(FileDescription&)
-{
-}
-
-void IPv4Socket::detach(FileDescription&)
-{
-}
-
 bool IPv4Socket::can_read(const FileDescription&, size_t) const
 {
     if (m_role == Role::Listener)

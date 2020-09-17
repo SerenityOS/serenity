@@ -253,6 +253,10 @@ static inline bool is_persistent_inode(const InodeIdentifier& identifier)
     return to_proc_parent_directory(identifier) == PDI_Root_sys;
 }
 
+struct ProcFSInodeData : public FileDescriptionData {
+    RefPtr<KBufferImpl> buffer;
+};
+
 NonnullRefPtr<ProcFS> ProcFS::create()
 {
     return adopt(*new ProcFS);
@@ -262,19 +266,18 @@ ProcFS::~ProcFS()
 {
 }
 
-static OwnPtr<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
+static bool procfs$pid_fds(InodeIdentifier identifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
 
     auto process = Process::from_pid(to_pid(identifier));
     if (!process) {
         array.finish();
-        return builder.build();
+        return true;
     }
     if (process->number_of_open_file_descriptors() == 0) {
         array.finish();
-        return builder.build();
+        return true;
     }
 
     for (int i = 0; i < process->max_open_file_descriptors(); ++i) {
@@ -295,27 +298,27 @@ static OwnPtr<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
         description_object.add("can_write", description->can_write());
     }
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
+static bool procfs$pid_fd_entry(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
-        return {};
+        return false;
     int fd = to_fd(identifier);
     auto description = process->file_description(fd);
     if (!description)
-        return {};
-    return KBuffer::try_create_with_bytes(description->absolute_path().bytes());
+        return false;
+    builder.append_bytes(description->absolute_path().bytes());
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
+static bool procfs$pid_vm(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
-        return {};
-    KBufferBuilder builder;
+        return false;
     JsonArraySerializer array { builder };
     {
         ScopedSpinLock lock(process->get_lock());
@@ -357,12 +360,11 @@ static OwnPtr<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         }
     }
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$pci(InodeIdentifier)
+static bool procfs$pci(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     PCI::enumerate([&array](PCI::Address address, PCI::ID id) {
         auto obj = array.add_object();
@@ -379,12 +381,11 @@ static OwnPtr<KBuffer> procfs$pci(InodeIdentifier)
         obj.add("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
     });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$interrupts(InodeIdentifier)
+static bool procfs$interrupts(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     InterruptManagement::the().enumerate_interrupt_handlers([&array](GenericInterruptHandler& handler) {
         auto obj = array.add_object();
@@ -396,21 +397,19 @@ static OwnPtr<KBuffer> procfs$interrupts(InodeIdentifier)
         obj.add("call_count", (unsigned)handler.get_invoking_count());
     });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$keymap(InodeIdentifier)
+static bool procfs$keymap(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonObjectSerializer<KBufferBuilder> json { builder };
     json.add("keymap", KeyboardDevice::the().keymap_name());
     json.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$devices(InodeIdentifier)
+static bool procfs$devices(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     Device::for_each([&array](auto& device) {
         auto obj = array.add_object();
@@ -426,28 +425,25 @@ static OwnPtr<KBuffer> procfs$devices(InodeIdentifier)
             ASSERT_NOT_REACHED();
     });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$uptime(InodeIdentifier)
+static bool procfs$uptime(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     builder.appendf("%llu\n", TimeManagement::the().uptime_ms() / 1000);
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$cmdline(InodeIdentifier)
+static bool procfs$cmdline(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     builder.append(kernel_command_line().string());
     builder.append('\n');
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$modules(InodeIdentifier)
+static bool procfs$modules(InodeIdentifier, KBufferBuilder& builder)
 {
     extern HashMap<String, OwnPtr<Module>>* g_modules;
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     for (auto& it : *g_modules) {
         auto obj = array.add_object();
@@ -461,13 +457,12 @@ static OwnPtr<KBuffer> procfs$modules(InodeIdentifier)
         obj.add("size", size);
     }
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$profile(InodeIdentifier)
+static bool procfs$profile(InodeIdentifier, KBufferBuilder& builder)
 {
     InterruptDisabler disabler;
-    KBufferBuilder builder;
 
     JsonObjectSerializer object(builder);
     object.add("pid", Profiling::pid().value());
@@ -493,12 +488,11 @@ static OwnPtr<KBuffer> procfs$profile(InodeIdentifier)
     });
     array.finish();
     object.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$net_adapters(InodeIdentifier)
+static bool procfs$net_adapters(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     NetworkAdapter::for_each([&array](auto& adapter) {
         auto obj = array.add_object();
@@ -519,12 +513,11 @@ static OwnPtr<KBuffer> procfs$net_adapters(InodeIdentifier)
         obj.add("mtu", adapter.mtu());
     });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$net_arp(InodeIdentifier)
+static bool procfs$net_arp(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     LOCKER(arp_table().lock(), Lock::Mode::Shared);
     for (auto& it : arp_table().resource()) {
@@ -533,12 +526,11 @@ static OwnPtr<KBuffer> procfs$net_arp(InodeIdentifier)
         obj.add("ip_address", it.key.to_string());
     }
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$net_tcp(InodeIdentifier)
+static bool procfs$net_tcp(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     TCPSocket::for_each([&array](auto& socket) {
         auto obj = array.add_object();
@@ -555,12 +547,11 @@ static OwnPtr<KBuffer> procfs$net_tcp(InodeIdentifier)
         obj.add("bytes_out", socket.bytes_out());
     });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$net_udp(InodeIdentifier)
+static bool procfs$net_udp(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     UDPSocket::for_each([&array](auto& socket) {
         auto obj = array.add_object();
@@ -570,12 +561,11 @@ static OwnPtr<KBuffer> procfs$net_udp(InodeIdentifier)
         obj.add("peer_port", socket.peer_port());
     });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$net_local(InodeIdentifier)
+static bool procfs$net_local(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     LocalSocket::for_each([&array](auto& socket) {
         auto obj = array.add_object();
@@ -588,15 +578,14 @@ static OwnPtr<KBuffer> procfs$net_local(InodeIdentifier)
         obj.add("acceptor_gid", socket.acceptor_gid());
     });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
+static bool procfs$pid_vmobjects(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
-        return {};
-    KBufferBuilder builder;
+        return false;
     builder.appendf("BEGIN       END         SIZE        NAME\n");
     {
         ScopedSpinLock lock(process->get_lock());
@@ -623,15 +612,14 @@ static OwnPtr<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
             builder.appendf("\n");
         }
     }
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
+static bool procfs$pid_unveil(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
-        return {};
-    KBufferBuilder builder;
+        return false;
     JsonArraySerializer array { builder };
     for (auto& unveiled_path : process->unveiled_paths()) {
         if (!unveiled_path.was_explicitly_unveiled())
@@ -652,57 +640,57 @@ static OwnPtr<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
         obj.add("permissions", permissions_builder.to_string());
     }
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$tid_stack(InodeIdentifier identifier)
+static bool procfs$tid_stack(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto thread = Thread::from_tid(to_tid(identifier));
     if (!thread)
-        return {};
-    KBufferBuilder builder;
+        return false;
     builder.appendf("Thread %d (%s):\n", thread->tid().value(), thread->name().characters());
     builder.append(thread->backtrace());
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
+static bool procfs$pid_exe(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
-        return {};
+        return false;
     auto* custody = process->executable();
     ASSERT(custody);
-    return KBuffer::try_create_with_bytes(custody->absolute_path().bytes());
+    builder.append(custody->absolute_path().bytes());
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$pid_cwd(InodeIdentifier identifier)
+static bool procfs$pid_cwd(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
-        return {};
-    return KBuffer::try_create_with_bytes(process->current_directory().absolute_path().bytes());
+        return false;
+    builder.append_bytes(process->current_directory().absolute_path().bytes());
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$pid_root(InodeIdentifier identifier)
+static bool procfs$pid_root(InodeIdentifier identifier, KBufferBuilder& builder)
 {
     auto process = Process::from_pid(to_pid(identifier));
     if (!process)
-        return {};
-    return KBuffer::try_create_with_bytes(process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer());
+        return false;
+    builder.append_bytes(process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer());
+    return false;
 }
 
-static OwnPtr<KBuffer> procfs$self(InodeIdentifier)
+static bool procfs$self(InodeIdentifier, KBufferBuilder& builder)
 {
-    char buffer[16];
-    int written = snprintf(buffer, sizeof(buffer), "%d", Process::current()->pid().value());
-    return KBuffer::try_create_with_bytes(ReadonlyBytes { buffer, static_cast<size_t>(written) });
+    builder.appendf("%d", Process::current()->pid().value());
+    return true;
 }
 
-OwnPtr<KBuffer> procfs$mm(InodeIdentifier)
+static bool procfs$mm(InodeIdentifier, KBufferBuilder& builder)
 {
     InterruptDisabler disabler;
-    KBufferBuilder builder;
     u32 vmobject_count = 0;
     MemoryManager::for_each_vmobject([&](auto& vmobject) {
         ++vmobject_count;
@@ -716,22 +704,20 @@ OwnPtr<KBuffer> procfs$mm(InodeIdentifier)
     builder.appendf("VMO count: %u\n", vmobject_count);
     builder.appendf("Free physical pages: %u\n", MM.user_physical_pages() - MM.user_physical_pages_used());
     builder.appendf("Free supervisor physical pages: %u\n", MM.super_physical_pages() - MM.super_physical_pages_used());
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$dmesg(InodeIdentifier)
+static bool procfs$dmesg(InodeIdentifier, KBufferBuilder& builder)
 {
     InterruptDisabler disabler;
-    KBufferBuilder builder;
     for (char ch : Console::the().logbuffer())
         builder.append(ch);
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$mounts(InodeIdentifier)
+static bool procfs$mounts(InodeIdentifier, KBufferBuilder& builder)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
-    KBufferBuilder builder;
     VFS::the().for_each_mount([&builder](auto& mount) {
         auto& fs = mount.guest_fs();
         builder.appendf("%s @ ", fs.class_name());
@@ -744,13 +730,12 @@ static OwnPtr<KBuffer> procfs$mounts(InodeIdentifier)
         }
         builder.append('\n');
     });
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$df(InodeIdentifier)
+static bool procfs$df(InodeIdentifier, KBufferBuilder& builder)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     VFS::the().for_each_mount([&array](auto& mount) {
         auto& fs = mount.guest_fs();
@@ -771,12 +756,11 @@ static OwnPtr<KBuffer> procfs$df(InodeIdentifier)
             fs_object.add("source", "none");
     });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$cpuinfo(InodeIdentifier)
+static bool procfs$cpuinfo(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
     Processor::for_each(
         [&](Processor& proc) -> IterationDecision {
@@ -796,17 +780,16 @@ static OwnPtr<KBuffer> procfs$cpuinfo(InodeIdentifier)
             return IterationDecision::Continue;
         });
     array.finish();
-    return builder.build();
+    return true;
 }
 
-OwnPtr<KBuffer> procfs$memstat(InodeIdentifier)
+static bool procfs$memstat(InodeIdentifier, KBufferBuilder& builder)
 {
     InterruptDisabler disabler;
 
     kmalloc_stats stats;
     get_kmalloc_stats(stats);
 
-    KBufferBuilder builder;
     JsonObjectSerializer<KBufferBuilder> json { builder };
     json.add("kmalloc_allocated", stats.bytes_allocated);
     json.add("kmalloc_available", stats.bytes_free);
@@ -823,12 +806,11 @@ OwnPtr<KBuffer> procfs$memstat(InodeIdentifier)
         json.add(String::format("%s_num_free", prefix.characters()), num_free);
     });
     json.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$all(InodeIdentifier)
+static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     JsonArraySerializer array { builder };
 
     // Keep this in sync with CProcessStatistics.
@@ -914,18 +896,17 @@ static OwnPtr<KBuffer> procfs$all(InodeIdentifier)
     for (auto& process : processes)
         build_process(process);
     array.finish();
-    return builder.build();
+    return true;
 }
 
-static OwnPtr<KBuffer> procfs$inodes(InodeIdentifier)
+static bool procfs$inodes(InodeIdentifier, KBufferBuilder& builder)
 {
-    KBufferBuilder builder;
     InterruptDisabler disabler;
     ScopedSpinLock all_inodes_lock(Inode::all_inodes_lock());
     for (auto& inode : Inode::all_with_lock()) {
         builder.appendf("Inode{K%x} %02u:%08u (%u)\n", &inode, inode.fsid(), inode.index(), inode.ref_count());
     }
-    return builder.build();
+    return true;
 }
 
 struct SysVariable {
@@ -969,7 +950,7 @@ SysVariable& SysVariable::for_inode(InodeIdentifier id)
     return variable;
 }
 
-static OwnPtr<KBuffer> read_sys_bool(InodeIdentifier inode_id)
+static bool read_sys_bool(InodeIdentifier inode_id, KBufferBuilder& builder)
 {
     auto& variable = SysVariable::for_inode(inode_id);
     ASSERT(variable.type == SysVariable::Type::Boolean);
@@ -981,7 +962,8 @@ static OwnPtr<KBuffer> read_sys_bool(InodeIdentifier inode_id)
         buffer[0] = lockable_bool->resource() ? '1' : '0';
     }
     buffer[1] = '\n';
-    return KBuffer::try_create_with_bytes(ReadonlyBytes { buffer, sizeof(buffer) });
+    builder.append_bytes(ReadonlyBytes { buffer, sizeof(buffer) });
+    return true;
 }
 
 static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer& buffer, size_t size)
@@ -1013,14 +995,15 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer
     return (ssize_t)size;
 }
 
-static OwnPtr<KBuffer> read_sys_string(InodeIdentifier inode_id)
+static bool read_sys_string(InodeIdentifier inode_id, KBufferBuilder& builder)
 {
     auto& variable = SysVariable::for_inode(inode_id);
     ASSERT(variable.type == SysVariable::Type::String);
 
     auto* lockable_string = reinterpret_cast<Lockable<String>*>(variable.address);
     LOCKER(lockable_string->lock(), Lock::Mode::Shared);
-    return KBuffer::try_create_with_bytes(lockable_string->resource().bytes());
+    builder.append_bytes(lockable_string->resource().bytes());
+    return true;
 }
 
 static ssize_t write_sys_string(InodeIdentifier inode_id, const UserOrKernelBuffer& buffer, size_t size)
@@ -1130,6 +1113,83 @@ ProcFSInode::~ProcFSInode()
         fs().m_inodes.remove(it);
 }
 
+KResult ProcFSInode::refresh_data(FileDescription& description) const
+{
+    auto& cached_data = description.data();
+    auto* directory_entry = fs().get_directory_entry(identifier());
+
+    bool (*read_callback)(InodeIdentifier, KBufferBuilder&) = nullptr;
+    if (directory_entry) {
+        if (directory_entry->proc_file_type > (unsigned)FI_Root) {
+            read_callback = directory_entry->read_callback;
+            ASSERT(read_callback);
+        } else {
+            return KSuccess;
+        }
+    } else {
+        switch (to_proc_parent_directory(identifier())) {
+        case PDI_PID_fd:
+            read_callback = procfs$pid_fd_entry;
+            break;
+        case PDI_PID_stacks:
+            read_callback = procfs$tid_stack;
+            break;
+        case PDI_Root_sys:
+            switch (SysVariable::for_inode(identifier()).type) {
+            case SysVariable::Type::Invalid:
+                ASSERT_NOT_REACHED();
+            case SysVariable::Type::Boolean:
+                read_callback = read_sys_bool;
+                break;
+            case SysVariable::Type::String:
+                read_callback = read_sys_string;
+                break;
+            }
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+
+        ASSERT(read_callback);
+    }
+
+    if (!cached_data)
+        cached_data = new ProcFSInodeData;
+    auto& buffer = static_cast<ProcFSInodeData&>(*cached_data).buffer;
+    if (buffer) {
+        // If we're reusing the buffer, reset the size to 0 first. This
+        // ensures we don't accidentally leak previously written data.
+        buffer->set_size(0);
+    }
+    KBufferBuilder builder(buffer, true);
+    if (!read_callback(identifier(), builder))
+        return KResult(-ENOENT);
+    // We don't use builder.build() here, which would steal our buffer
+    // and turn it into an OwnPtr. Instead, just flush to the buffer so
+    // that we can read all the data that was written.
+    if (!builder.flush())
+        return KResult(-ENOMEM);
+    if (!buffer)
+        return KResult(-ENOMEM);
+    return KSuccess;
+}
+
+KResult ProcFSInode::attach(FileDescription& description)
+{
+    return refresh_data(description);
+}
+
+void ProcFSInode::did_seek(FileDescription& description, off_t new_offset)
+{
+    if (new_offset != 0)
+        return;
+    auto result = refresh_data(description);
+    if (result.is_error()) {
+        // Subsequent calls to read will return EIO!
+        dbg() << "ProcFS: Could not refresh contents: " << result.error();
+    }
+}
+
 InodeMetadata ProcFSInode::metadata() const
 {
 #ifdef PROCFS_DEBUG
@@ -1215,68 +1275,29 @@ InodeMetadata ProcFSInode::metadata() const
 ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
 #ifdef PROCFS_DEBUG
-    dbg() << "ProcFS: read_bytes " << index();
+    dbg() << "ProcFS: read_bytes offset: " << offset << " count: " << count;
 #endif
     ASSERT(offset >= 0);
     ASSERT(buffer.user_or_kernel_ptr());
 
-    auto* directory_entry = fs().get_directory_entry(identifier());
-
-    OwnPtr<KBuffer> (*read_callback)(InodeIdentifier) = nullptr;
-    if (directory_entry)
-        read_callback = directory_entry->read_callback;
-    else
-        switch (to_proc_parent_directory(identifier())) {
-        case PDI_PID_fd:
-            read_callback = procfs$pid_fd_entry;
-            break;
-        case PDI_PID_stacks:
-            read_callback = procfs$tid_stack;
-            break;
-        case PDI_Root_sys:
-            switch (SysVariable::for_inode(identifier()).type) {
-            case SysVariable::Type::Invalid:
-                ASSERT_NOT_REACHED();
-            case SysVariable::Type::Boolean:
-                read_callback = read_sys_bool;
-                break;
-            case SysVariable::Type::String:
-                read_callback = read_sys_string;
-                break;
-            }
-            break;
-        default:
-            ASSERT_NOT_REACHED();
-        }
-
-    ASSERT(read_callback);
-
-    OwnPtr<KBuffer> descriptionless_generated_data;
-    KBuffer* data = nullptr;
-    if (!description) {
-        descriptionless_generated_data = read_callback(identifier());
-        data = descriptionless_generated_data.ptr();
-    } else {
-        if (!description->generator_cache())
-            description->generator_cache() = (*read_callback)(identifier());
-        data = description->generator_cache().ptr();
+    if (!description)
+        return -EIO;
+    if (!description->data()) {
+#ifdef PROCFS_DEBUG
+        dbg() << "ProcFS: Do not have cached data!";
+#endif
+        return -EIO;
     }
 
-    if (!data)
-        return 0;
-    if (data->is_null()) {
-        dbg() << "ProcFS: Not enough memory!";
-        return 0;
-    }
+    // Be sure to keep a reference to data_buffer while we use it!
+    RefPtr<KBufferImpl> data_buffer = static_cast<ProcFSInodeData&>(*description->data()).buffer;
 
-    if ((size_t)offset >= data->size())
+    if (!data_buffer || (size_t)offset >= data_buffer->size())
         return 0;
 
-    ssize_t nread = min(static_cast<off_t>(data->size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(data->data() + offset, nread))
+    ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
+    if (!buffer.write(data_buffer->data() + offset, nread))
         return -EFAULT;
-    if (nread == 0 && description && description->generator_cache())
-        description->generator_cache().clear();
 
     return nread;
 }
@@ -1597,6 +1618,16 @@ ProcFSProxyInode::ProcFSProxyInode(ProcFS& fs, FileDescription& fd)
 
 ProcFSProxyInode::~ProcFSProxyInode()
 {
+}
+
+KResult ProcFSProxyInode::attach(FileDescription& fd)
+{
+    return m_fd->inode()->attach(fd);
+}
+
+void ProcFSProxyInode::did_seek(FileDescription& fd, off_t new_offset)
+{
+    return m_fd->inode()->did_seek(fd, new_offset);
 }
 
 InodeMetadata ProcFSProxyInode::metadata() const

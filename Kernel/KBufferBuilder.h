@@ -36,7 +36,8 @@ class KBufferBuilder {
 public:
     using OutputType = KBuffer;
 
-    explicit KBufferBuilder();
+    explicit KBufferBuilder(bool can_expand = false);
+    explicit KBufferBuilder(RefPtr<KBufferImpl>&, bool can_expand = false);
     KBufferBuilder(KBufferBuilder&&) = default;
     ~KBufferBuilder() { }
 
@@ -47,6 +48,7 @@ public:
     void appendvf(const char*, va_list);
 
     void append_escaped_for_json(const StringView&);
+    void append_bytes(ReadonlyBytes);
 
     template<typename... Parameters>
     void appendff(StringView fmtstr, const Parameters&... parameters)
@@ -56,10 +58,11 @@ public:
         append(String::formatted(fmtstr, parameters...));
     }
 
+    bool flush();
     OwnPtr<KBuffer> build();
 
 private:
-    bool can_append(size_t) const;
+    bool check_expand(size_t);
     u8* insertion_ptr()
     {
         if (!m_buffer)
@@ -67,8 +70,9 @@ private:
         return m_buffer->data() + m_size;
     }
 
-    OwnPtr<KBuffer> m_buffer;
+    RefPtr<KBufferImpl> m_buffer;
     size_t m_size { 0 };
+    bool m_can_expand { false };
 };
 
 }
