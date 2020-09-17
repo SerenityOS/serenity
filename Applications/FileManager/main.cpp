@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "DesktopWidget.h"
 #include "DirectoryView.h"
 #include "FileUtils.h"
 #include "PropertiesDialog.h"
@@ -120,22 +121,6 @@ int main(int argc, char** argv)
     return run_in_windowed_mode(move(config), initial_location);
 }
 
-class DesktopWidget final : public GUI::Widget {
-    C_OBJECT(DesktopWidget);
-
-private:
-    virtual void paint_event(GUI::PaintEvent& event) override
-    {
-        GUI::Painter painter(*this);
-        painter.add_clip_rect(event.rect());
-        painter.clear_rect(event.rect(), Color(0, 0, 0, 0));
-    }
-
-    DesktopWidget()
-    {
-    }
-};
-
 int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
 {
     static constexpr const char* process_name = "FileManager (Desktop)";
@@ -148,7 +133,7 @@ int run_in_desktop_mode(RefPtr<Core::ConfigFile> config)
     window->set_window_type(GUI::WindowType::Desktop);
     window->set_has_alpha_channel(true);
 
-    auto& desktop_widget = window->set_main_widget<DesktopWidget>();
+    auto& desktop_widget = window->set_main_widget<FileManager::DesktopWidget>();
     desktop_widget.set_layout<GUI::VerticalBoxLayout>();
 
     auto& directory_view = desktop_widget.add<DirectoryView>(DirectoryView::Mode::Desktop);
