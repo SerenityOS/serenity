@@ -68,6 +68,7 @@ public:
     Function<void(Color)> on_pick;
     void set_color(Color);
     void set_hue(double);
+    void set_hue_from_pick(double);
 
 private:
     ColorField(Color color);
@@ -469,7 +470,7 @@ CustomColorWidget::CustomColorWidget(Color color)
     auto slider_width = 24 + (m_color_slider->frame_thickness() * 2);
     m_color_slider->set_preferred_size(slider_width, size);
     m_color_slider->on_pick = [this](double value) {
-        m_color_field->set_hue(value);
+        m_color_field->set_hue_from_pick(value);
     };
 }
 
@@ -538,9 +539,13 @@ void ColorField::set_hue(double hue)
     auto color = Color::from_hsv(hsv);
     color.set_alpha(m_color.alpha());
     set_color(color);
+}
 
+void ColorField::set_hue_from_pick(double hue)
+{
+    set_hue(hue);
     if (on_pick)
-        on_pick(color);
+        on_pick(m_color);
 }
 
 void ColorField::pick_color_at_position(GUI::MouseEvent& event)
