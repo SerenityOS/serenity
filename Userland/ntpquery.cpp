@@ -41,7 +41,8 @@
 // The fractional part in the lower 32 bits stores fractional bits times 2 ** 32.
 typedef uint64_t NtpTimestamp;
 
-struct [[gnu::packed]] NtpPacket {
+struct [[gnu::packed]] NtpPacket
+{
     uint8_t li_vn_mode;
     uint8_t stratum;
     int8_t poll;
@@ -115,7 +116,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (!set_time) {
-        if (pledge("stdio inet dns", nullptr) < 0) {
+        if (pledge("all -settime", nullptr) < 0) {
             perror("pledge");
             return 1;
         }
@@ -127,7 +128,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge(set_time ? "stdio inet settime" : "stdio inet", nullptr) < 0) {
+    if (pledge("all -dns", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
