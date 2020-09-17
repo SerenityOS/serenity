@@ -85,7 +85,7 @@ int main(int argc, char** argv)
     Web::ResourceLoader::the();
 
     // FIXME: Once there is a standalone Download Manager, we can drop the "unix" pledge.
-    if (pledge("stdio shared_buffer accept unix cpath rpath wpath", nullptr) < 0) {
+    if (pledge("all -fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
