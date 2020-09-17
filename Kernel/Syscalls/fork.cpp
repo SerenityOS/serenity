@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ScopeGuard.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
@@ -37,14 +38,31 @@ pid_t Process::sys$fork(RegisterState& regs)
 {
     REQUIRE_PROMISE(proc);
     Thread* child_first_thread = nullptr;
-    auto* child = new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_is_kernel_process, m_cwd, m_executable, m_tty, this);
+    auto child = adopt(*new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_is_kernel_process, m_cwd, m_executable, m_tty, this));
+    if (!child_first_thread)
+        return -ENOMEM;
+
+    ArmedScopeGuard cleanup_guard([&]() {
+        // We need to get rid of the thread if we exit due to a failure.
+        // The bare minimum of the thread was created, but we weren't able
+        // to make available all resources that it may need
+        delete child_first_thread;
+    });
+
     child->m_root_directory = m_root_directory;
     child->m_root_directory_relative_to_global_root = m_root_directory_relative_to_global_root;
     child->m_promises = m_promises;
     child->m_execpromises = m_execpromises;
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths;
-    child->m_fds = m_fds;
+
+    // Clone file descriptors
+    child->m_fds.resize(m_fds.size());
+    for (size_t i = 0; i < m_fds.size(); i++) {
+        if (!m_fds[i].clone_to(child->m_fds[i]))
+            return -ENOMEM;
+    }
+
     child->m_sid = m_sid;
     child->m_pg = m_pg;
     child->m_umask = m_umask;
@@ -96,7 +114,12 @@ pid_t Process::sys$fork(RegisterState& regs)
 
     child_first_thread->set_affinity(Thread::current()->affinity());
     child_first_thread->set_state(Thread::State::Runnable);
-    return child->pid().value();
+
+    cleanup_guard.disarm();
+
+    auto child_pid = child->pid().value();
+    (void)child.leak_ref(); // We need to leak this reference so we don't destroy the Process
+    return child_pid;
 }
 
 }

@@ -169,7 +169,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
     m_address.sun_family = sa_family_copy;
     memcpy(m_address.sun_path, safe_address, sizeof(m_address.sun_path));
 
-    ASSERT(m_connect_side_fd == &description);
+    ASSERT(m_connect_side_fds.contains(&description));
     m_connect_side_role = Role::Connecting;
 
     auto peer = m_file->inode()->socket();
@@ -214,26 +214,26 @@ KResult LocalSocket::listen(size_t backlog)
     return KSuccess;
 }
 
-void LocalSocket::attach(FileDescription& description)
+KResult LocalSocket::attach(FileDescription& description, FileDescription*)
 {
-    ASSERT(!m_accept_side_fd_open);
     if (m_connect_side_role == Role::None) {
-        ASSERT(m_connect_side_fd == nullptr);
-        m_connect_side_fd = &description;
+        ASSERT(!m_accept_side_fds.contains(&description));
+        auto result = m_connect_side_fds.set(&description);
+        ASSERT(result == AK::HashSetResult::InsertedNewEntry);
     } else {
-        ASSERT(m_connect_side_fd != &description);
-        m_accept_side_fd_open = true;
+        ASSERT(!m_connect_side_fds.contains(&description));
+        auto result = m_accept_side_fds.set(&description);
+        ASSERT(result == AK::HashSetResult::InsertedNewEntry);
     }
+    return KSuccess;
 }
 
 void LocalSocket::detach(FileDescription& description)
 {
-    if (m_connect_side_fd == &description) {
-        m_connect_side_fd = nullptr;
-    } else {
-        ASSERT(m_accept_side_fd_open);
-        m_accept_side_fd_open = false;
-    }
+    auto removed = m_connect_side_fds.remove(&description);
+    if (!removed)
+        removed = m_accept_side_fds.remove(&description);
+    ASSERT(removed);
 }
 
 bool LocalSocket::can_read(const FileDescription& description, size_t) const
@@ -252,9 +252,9 @@ bool LocalSocket::has_attached_peer(const FileDescription& description) const
 {
     auto role = this->role(description);
     if (role == Role::Accepted)
-        return m_connect_side_fd != nullptr;
+        return !m_connect_side_fds.is_empty();
     if (role == Role::Connected)
-        return m_accept_side_fd_open;
+        return !m_accept_side_fds.is_empty();
     ASSERT_NOT_REACHED();
 }
 

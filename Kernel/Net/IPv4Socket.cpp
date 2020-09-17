@@ -168,8 +168,9 @@ KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockad
     return protocol_connect(description, should_block);
 }
 
-void IPv4Socket::attach(FileDescription&)
+KResult IPv4Socket::attach(FileDescription&, FileDescription*)
 {
+    return KSuccess;
 }
 
 void IPv4Socket::detach(FileDescription&)

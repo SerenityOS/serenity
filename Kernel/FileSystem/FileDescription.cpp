@@ -54,25 +54,46 @@ NonnullRefPtr<FileDescription> FileDescription::create(File& file)
     return adopt(*new FileDescription(file));
 }
 
+FileDescription::FileDescription(FileDescription& other)
+    : m_custody(other.m_custody)
+    , m_inode(other.m_inode)
+    , m_file(other.m_file)
+    , m_current_offset(other.m_current_offset)
+    , m_file_flags(other.m_file_flags)
+    , m_readable(other.m_readable)
+    , m_writable(other.m_writable)
+    , m_is_blocking(other.m_is_blocking)
+    , m_is_directory(other.m_is_directory)
+    , m_should_append(other.m_should_append)
+    , m_direct(other.m_direct)
+    , m_fifo_direction(other.m_fifo_direction)
+{
+    m_attach_error = m_file->attach(*this, &other).is_error();
+}
+
 FileDescription::FileDescription(File& file)
     : m_file(file)
 {
     if (file.is_inode())
         m_inode = static_cast<InodeFile&>(file).inode();
-    if (is_socket())
-        socket()->attach(*this);
+    m_attach_error = m_file->attach(*this, nullptr);
     m_is_directory = metadata().is_directory();
 }
 
 FileDescription::~FileDescription()
 {
-    if (is_socket())
-        socket()->detach(*this);
-    if (is_fifo())
-        static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
+    m_file->detach(*this);
     // FIXME: Should this error path be observed somehow?
     (void)m_file->close();
     m_inode = nullptr;
+}
+
+RefPtr<FileDescription> FileDescription::clone()
+{
+    auto cloned = adopt(*new FileDescription(*this));
+    if (cloned->m_attach_error)
+        return {};
+    return cloned;
 }
 
 KResult FileDescription::stat(::stat& buffer)

@@ -45,6 +45,8 @@ public:
     static NonnullRefPtr<FileDescription> create(File&);
     ~FileDescription();
 
+    RefPtr<FileDescription> clone();
+
     bool is_readable() const { return m_readable; }
     bool is_writable() const { return m_writable; }
 
@@ -132,6 +134,7 @@ public:
 
 private:
     friend class VFS;
+    explicit FileDescription(FileDescription&);
     explicit FileDescription(File&);
     FileDescription(FIFO&, FIFO::Direction);
 
@@ -151,6 +154,7 @@ private:
     bool m_is_directory : 1 { false };
     bool m_should_append : 1 { false };
     bool m_direct : 1 { false };
+    bool m_attach_error : 1 { false };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 
     Lock m_lock { "FileDescription" };

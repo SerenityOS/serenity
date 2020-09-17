@@ -877,4 +877,16 @@ OwnPtr<Process::ELFBundle> Process::elf_bundle() const
     return bundle;
 }
 
+bool Process::FileDescriptionAndFlags::clone_to(FileDescriptionAndFlags& copy)
+{
+    if (m_description) {
+        auto cloned_fd = m_description->clone();
+        if (!cloned_fd)
+            return false;
+        copy.m_description = cloned_fd.release_nonnull();
+    }
+    copy.m_flags = m_flags;
+    return true;
+}
+
 }

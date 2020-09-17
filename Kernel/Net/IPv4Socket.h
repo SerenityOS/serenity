@@ -54,7 +54,7 @@ public:
     virtual KResult listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
-    virtual void attach(FileDescription&) override;
+    virtual KResult attach(FileDescription&, FileDescription*) override;
     virtual void detach(FileDescription&) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;

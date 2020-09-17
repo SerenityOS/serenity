@@ -538,6 +538,8 @@ private:
         void clear();
         void set(NonnullRefPtr<FileDescription>&&, u32 flags = 0);
 
+        bool clone_to(FileDescriptionAndFlags&);
+
     private:
         RefPtr<FileDescription> m_description;
         u32 m_flags { 0 };

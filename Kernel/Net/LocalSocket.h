@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/Net/Socket.h>
@@ -56,7 +57,7 @@ public:
     virtual KResult listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
-    virtual void attach(FileDescription&) override;
+    virtual KResult attach(FileDescription&, FileDescription*) override;
     virtual void detach(FileDescription&) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
@@ -89,17 +90,17 @@ private:
     // an additional role for the connect side and differentiate
     // between them.
     Role m_connect_side_role { Role::None };
-    FileDescription* m_connect_side_fd { nullptr };
+    HashTable<const FileDescription*> m_connect_side_fds;
+    HashTable<const FileDescription*> m_accept_side_fds;
 
     virtual Role role(const FileDescription& description) const override
     {
-        if (m_connect_side_fd == &description)
+        if (m_connect_side_fds.contains(&description))
             return m_connect_side_role;
         return m_role;
     }
 
     bool m_bound { false };
-    bool m_accept_side_fd_open { false };
     sockaddr_un m_address { 0, { 0 } };
 
     DoubleBuffer m_for_client;

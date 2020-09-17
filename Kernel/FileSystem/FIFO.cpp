@@ -103,6 +103,25 @@ FIFO::~FIFO()
     all_fifos().resource().remove(this);
 }
 
+KResult FIFO::attach(FileDescription& fd, FileDescription* cloned_from)
+{
+    if (cloned_from) {
+        auto direction = cloned_from->fifo_direction();
+        fd.set_fifo_direction({}, direction);
+        attach(direction);
+        return KSuccess;
+    }
+
+    // We don't know the direction of a newly create descriptor,
+    // FIFO::open_direction will set it shortly after
+    return KSuccess;
+}
+
+void FIFO::detach(FileDescription& fd)
+{
+    detach(fd.fifo_direction());
+}
+
 void FIFO::attach(Direction direction)
 {
     if (direction == Direction::Reader) {
