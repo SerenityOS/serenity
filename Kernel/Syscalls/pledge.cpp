@@ -40,7 +40,7 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 
     String promises;
     if (params.promises.characters) {
-        auto promises = copy_string_from_user(params.promises);
+        promises = copy_string_from_user(params.promises);
         if (promises.is_null())
             return -EFAULT;
     }
