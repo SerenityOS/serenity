@@ -573,6 +573,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
 NonnullRefPtr<Expression> Parser::parse_primary_expression()
 {
+    m_parser_state.m_lhs_expression_has_parens = false;
     if (match_unary_prefixed_expression())
         return parse_unary_prefixed_expression();
 
@@ -587,6 +588,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         }
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
+        m_parser_state.m_lhs_expression_has_parens = true;
         return expression;
     }
     case TokenType::This:
@@ -934,6 +936,7 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
 
 NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associativity associativity, Vector<TokenType> forbidden)
 {
+    auto expression_has_optional_chaining = false;
     auto expression = parse_primary_expression();
     while (match(TokenType::TemplateLiteralStart)) {
         auto template_literal = parse_template_literal(true);
@@ -948,7 +951,12 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
 
         Associativity new_associativity = operator_associativity(m_parser_state.m_current_token.type());
         expression = parse_secondary_expression(move(expression), new_precedence, new_associativity);
+        if (expression->is_optional_expression())
+            expression_has_optional_chaining = true;
+        m_parser_state.m_lhs_expression_has_parens = false;
         while (match(TokenType::TemplateLiteralStart)) {
+            if (expression_has_optional_chaining)
+                syntax_error("Tagged template must not be used with optional chaining");
             auto template_literal = parse_template_literal(true);
             expression = create_ast_node<TaggedTemplateLiteral>(move(expression), move(template_literal));
         }
@@ -1071,7 +1079,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         consume();
         return create_ast_node<AssignmentExpression>(AssignmentOp::UnsignedRightShiftAssignment, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ParenOpen:
-        return parse_call_expression(move(lhs));
+        return parse_call_expression(move(lhs), false);
     case TokenType::Equals:
         consume();
         if (!lhs->is_identifier() && !lhs->is_member_expression() && !lhs->is_call_expression()) {
@@ -1088,16 +1096,41 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
             }
         }
         return create_ast_node<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
-    case TokenType::Period:
+    case TokenType::Period: {
         consume();
         if (!match_identifier_name())
             expected("IdentifierName");
-        return create_ast_node<MemberExpression>(move(lhs), create_ast_node<Identifier>(consume().value()));
+        auto rhs = create_ast_node<Identifier>(consume().value());
+        if (lhs->is_optional_expression() && !m_parser_state.m_lhs_expression_has_parens)
+            return create_ast_node<OptionalMemberExpression>(move(lhs), move(rhs), false, false);
+        else
+            return create_ast_node<MemberExpression>(move(lhs), move(rhs));
+    }
     case TokenType::BracketOpen: {
         consume(TokenType::BracketOpen);
-        auto expression = create_ast_node<MemberExpression>(move(lhs), parse_expression(0), true);
+        RefPtr<Expression> expression;
+        if (lhs->is_optional_expression() && !m_parser_state.m_lhs_expression_has_parens)
+            expression = create_ast_node<OptionalMemberExpression>(move(lhs), parse_expression(0), true, false);
+        else
+            expression = create_ast_node<MemberExpression>(move(lhs), parse_expression(0), true);
         consume(TokenType::BracketClose);
-        return expression;
+        return expression.release_nonnull();
+    }
+    case TokenType::QuestionMarkPeriod: {
+        consume();
+        RefPtr<Expression> rhs;
+        if (match_identifier_name())
+            return create_ast_node<OptionalMemberExpression>(move(lhs), create_ast_node<Identifier>(consume().value()), false, true);
+        if (match(TokenType::BracketOpen)) {
+            consume(TokenType::BracketOpen);
+            auto expression = create_ast_node<OptionalMemberExpression>(move(lhs), parse_expression(0), true, true);
+            consume(TokenType::BracketClose);
+            return expression;
+        }
+        if (match(TokenType::ParenOpen))
+            return parse_call_expression(move(lhs), true);
+        expected("IdentifierName, BracketOpen or ParenOpen");
+        return create_ast_node<ErrorExpression>();
     }
     case TokenType::PlusPlus:
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
@@ -1131,7 +1164,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     }
 }
 
-NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
+NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs, bool optional)
 {
     if (!m_parser_state.m_allow_super_constructor_call && lhs->is_super_expression())
         syntax_error("'super' keyword unexpected here");
@@ -1154,14 +1187,26 @@ NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expres
 
     consume(TokenType::ParenClose);
 
-    return create_ast_node<CallExpression>(move(lhs), move(arguments));
+    if ((lhs->is_optional_expression() && !m_parser_state.m_lhs_expression_has_parens) || optional)
+        return create_ast_node<OptionalCallExpression>(move(lhs), move(arguments), optional);
+    else
+        return create_ast_node<CallExpression>(move(lhs), move(arguments));
 }
 
 NonnullRefPtr<NewExpression> Parser::parse_new_expression()
 {
     consume(TokenType::New);
 
+    // Save line and column number at start of callee expression so we get a correct syntax error
+    auto callee_expression_start_line = m_parser_state.m_current_token.line_number();
+    auto callee_expression_start_column = m_parser_state.m_current_token.line_column();
     auto callee = parse_expression(g_operator_precedence.get(TokenType::New), Associativity::Right, { TokenType::ParenOpen });
+    if (callee->is_optional_member_expression()) {
+        syntax_error(
+            "new must not be used with optional chaining",
+            callee_expression_start_line,
+            callee_expression_start_column);
+    }
 
     Vector<CallExpression::Argument> arguments;
 
@@ -1681,6 +1726,7 @@ bool Parser::match_secondary_expression(Vector<TokenType> forbidden) const
         || type == TokenType::In
         || type == TokenType::Instanceof
         || type == TokenType::QuestionMark
+        || type == TokenType::QuestionMarkPeriod
         || type == TokenType::Ampersand
         || type == TokenType::AmpersandEquals
         || type == TokenType::Pipe

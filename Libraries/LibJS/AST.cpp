@@ -108,7 +108,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         return { js_undefined(), new_target };
     }
 
-    if (m_callee->is_member_expression()) {
+    if (m_callee->is_member_expression() || m_callee->is_optional_member_expression()) {
         auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
         bool is_super_property_lookup = member_expression.object().is_super_expression();
         auto lookup_target = is_super_property_lookup ? interpreter.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
@@ -118,7 +118,8 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
             interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects().characters());
             return {};
         }
-
+        if (lookup_target.is_nullish() && (m_callee->is_optional_expression() || is_optional_call_expression()))
+            return { {}, js_undefined() };
         auto* this_value = is_super_property_lookup ? &interpreter.this_value(global_object).as_object() : lookup_target.to_object(interpreter, global_object);
         if (interpreter.exception())
             return {};
@@ -138,6 +139,9 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         return {};
 
     ASSERT(!callee.is_empty());
+
+    if (callee.is_nullish() && is_optional_call_expression())
+        return js_undefined();
 
     if (!callee.is_function()
         || (is_new_expression() && (callee.as_object().is_native_function() && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
@@ -922,7 +926,10 @@ void UnaryExpression::dump(int indent) const
 void CallExpression::dump(int indent) const
 {
     print_indent(indent);
-    printf("CallExpression %s\n", is_new_expression() ? "[new]" : "");
+    if (is_optional_call_expression())
+        printf("OptionalCallExpression (optional=%s)\n", static_cast<const OptionalCallExpression&>(*this).is_optional() ? "true" : "false");
+    else
+        printf("%s\n", class_name());
     m_callee->dump(indent + 1);
     for (auto& argument : m_arguments)
         argument.value->dump(indent + 1);
@@ -1544,7 +1551,10 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 void MemberExpression::dump(int indent) const
 {
     print_indent(indent);
-    printf("%s (computed=%s)\n", class_name(), is_computed() ? "true" : "false");
+    if (is_optional_member_expression())
+        printf("OptionalMemberExpression (computed=%s, optional=%s)\n", is_computed() ? "true" : "false", static_cast<const OptionalMemberExpression&>(*this).is_optional() ? "true" : "false");
+    else
+        printf("MemberExpression (computed=%s)\n", is_computed() ? "true" : "false");
     m_object->dump(indent + 1);
     m_property->dump(indent + 1);
 }
@@ -1576,12 +1586,13 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, 
 String MemberExpression::to_string_approximation() const
 {
     String object_string = "<object>";
+    String separator = is_optional_member_expression() ? "?." : (is_computed() ? "" : ".");
     if (m_object->is_identifier())
         object_string = static_cast<const Identifier&>(*m_object).string();
     if (is_computed())
-        return String::format("%s[<computed>]", object_string.characters());
+        return String::format("%s%s[<computed>]", separator.characters(), object_string.characters());
     ASSERT(m_property->is_identifier());
-    return String::format("%s.%s", object_string.characters(), static_cast<const Identifier&>(*m_property).string().characters());
+    return String::format("%s%s%s", object_string.characters(), separator.characters(), static_cast<const Identifier&>(*m_property).string().characters());
 }
 
 Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1589,6 +1600,8 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto object_value = m_object->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
+    if (object_value.is_nullish() && is_optional_member_expression())
+        return js_undefined();
     auto* object_result = object_value.to_object(interpreter, global_object);
     if (interpreter.exception())
         return {};
@@ -1626,7 +1639,7 @@ Value NullLiteral::execute(Interpreter&, GlobalObject&) const
 void RegExpLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("%s (/%s/%s)\n", class_name(), content().characters(), flags().characters());
+    printf("RegExpLiteral (/%s/%s)\n", content().characters(), flags().characters());
 }
 
 Value RegExpLiteral::execute(Interpreter&, GlobalObject& global_object) const

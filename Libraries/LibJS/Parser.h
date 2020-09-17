@@ -76,7 +76,7 @@ public:
     NonnullRefPtr<StringLiteral> parse_string_literal(Token token);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
-    NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
+    NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>, bool optional = false);
     NonnullRefPtr<NewExpression> parse_new_expression();
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
     RefPtr<Statement> try_parse_labelled_statement();
@@ -154,6 +154,7 @@ private:
         Vector<NonnullRefPtrVector<FunctionDeclaration>> m_function_scopes;
         UseStrictDirectiveState m_use_strict_directive { UseStrictDirectiveState::None };
         bool m_strict_mode { false };
+        bool m_lhs_expression_has_parens { false };
         bool m_allow_super_property_lookup { false };
         bool m_allow_super_constructor_call { false };
 

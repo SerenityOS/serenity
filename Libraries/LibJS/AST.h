@@ -64,6 +64,9 @@ public:
     virtual bool is_call_expression() const { return false; }
     virtual bool is_new_expression() const { return false; }
     virtual bool is_super_expression() const { return false; }
+    virtual bool is_optional_member_expression() const { return false; }
+    virtual bool is_optional_call_expression() const { return false; }
+    virtual bool is_optional_expression() const { return is_optional_member_expression() || is_optional_call_expression(); }
 
 protected:
     ASTNode() { }
@@ -782,6 +785,24 @@ private:
     const Vector<Argument> m_arguments;
 };
 
+class OptionalCallExpression final : public CallExpression {
+public:
+    OptionalCallExpression(NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {}, bool optional = false)
+        : CallExpression(move(callee), move(arguments))
+        , m_optional(optional)
+    {
+    }
+
+    bool is_optional() const { return m_optional; }
+
+private:
+    virtual const char* class_name() const override { return "OptionalCallExpression"; }
+    virtual bool is_call_expression() const override { return false; }
+    virtual bool is_optional_call_expression() const override { return true; }
+
+    bool m_optional;
+};
+
 class NewExpression final : public CallExpression {
 public:
     NewExpression(NonnullRefPtr<Expression> callee, Vector<Argument> arguments = {})
@@ -1028,7 +1049,7 @@ private:
     const NonnullRefPtr<TemplateLiteral> m_template_literal;
 };
 
-class MemberExpression final : public Expression {
+class MemberExpression : public Expression {
 public:
     MemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property, bool computed = false)
         : m_object(move(object))
@@ -1056,6 +1077,24 @@ private:
     NonnullRefPtr<Expression> m_object;
     NonnullRefPtr<Expression> m_property;
     bool m_computed { false };
+};
+
+class OptionalMemberExpression final : public MemberExpression {
+public:
+    OptionalMemberExpression(NonnullRefPtr<Expression> object, NonnullRefPtr<Expression> property, bool computed = false, bool optional = false)
+        : MemberExpression(move(object), move(property), computed)
+        , m_optional(optional)
+    {
+    }
+
+    bool is_optional() const { return m_optional; }
+
+private:
+    virtual const char* class_name() const override { return "OptionalMemberExpression"; }
+    virtual bool is_member_expression() const override { return false; }
+    virtual bool is_optional_member_expression() const override { return true; }
+
+    bool m_optional;
 };
 
 class ConditionalExpression final : public Expression {
