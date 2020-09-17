@@ -53,23 +53,47 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
             return -EFAULT;
     }
 
-    auto parse_pledge = [&](auto& pledge_spec, u32& mask) {
+    auto parse_pledge = [&](auto& pledge_spec, u32& mask, u32 current_mask) {
+        // We keep track of both separately because we want "-stdio stdio" to drop stdio.
+        u32 drop_mask = 0, keep_mask = 0;
+
         auto parts = pledge_spec.split_view(' ');
         for (auto& part : parts) {
-#define __ENUMERATE_PLEDGE_PROMISE(x)   \
-    if (part == #x) {                   \
-        mask |= (1u << (u32)Pledge::x); \
-        continue;                       \
+#define __ENUMERATE_PLEDGE_PROMISE(x)        \
+    if (part == #x) {                        \
+        keep_mask |= (1u << (u32)Pledge::x); \
+        continue;                            \
+    }                                        \
+    if (part == "-" #x) {                    \
+        drop_mask |= (1u << (u32)Pledge::x); \
+        continue;                            \
     }
             ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
-            if (part == "dns") {
-                // "dns" is an alias for "unix" since DNS queries go via LookupServer
-                mask |= (1u << (u32)Pledge::unix);
+            if (part == "all") {
+                // We don't assign here because "stdio all" should fail if stdio was already dropped.
+                keep_mask |= current_mask;
                 continue;
             }
+            if (part == "-all") {
+                drop_mask = (u32)-1;
+                continue;
+            }
+            if (part == "dns") {
+                // "dns" is an alias for "unix" since DNS queries go via LookupServer
+                keep_mask |= (1u << (u32)Pledge::unix);
+                continue;
+            }
+            if (part == "-dns") {
+                drop_mask |= (1u << (u32)Pledge::unix);
+                continue;
+            }
+
+            mask = keep_mask & ~drop_mask;
             return false;
         }
+
+        mask = keep_mask & ~drop_mask;
         return true;
     };
 
@@ -78,7 +102,7 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 
     if (!promises.is_null()) {
         new_promises = 0;
-        if (!parse_pledge(promises, new_promises.value()))
+        if (!parse_pledge(promises, new_promises.value(), m_promises.value_or((u32)-1)))
             return -EINVAL;
         if (new_promises.value() & ~m_promises.value_or((u32)-1))
             return -EPERM;
@@ -88,7 +112,7 @@ int Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 
     if (!execpromises.is_null()) {
         new_execpromises = 0;
-        if (!parse_pledge(execpromises, new_execpromises.value()))
+        if (!parse_pledge(execpromises, new_execpromises.value(), m_execpromises.value_or((u32)-1)))
             return -EINVAL;
         if (new_execpromises.value() & ~m_execpromises.value_or((u32)-1))
             return -EPERM;
