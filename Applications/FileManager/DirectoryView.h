@@ -82,7 +82,6 @@ public:
     Function<void(const StringView& path, bool can_write_in_path)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
     Function<void(const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;
-    Function<void(const GUI::ModelIndex&, const GUI::DropEvent&)> on_drop;
     Function<void(const StringView&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void(int error, const char* error_string, bool quit)> on_error;
@@ -147,6 +146,7 @@ private:
     GUI::FileSystemModel& model() { return *m_model; }
 
     void handle_selection_change();
+    void handle_drop(const GUI::ModelIndex&, const GUI::DropEvent&);
     void do_delete(bool should_confirm);
 
     // ^GUI::ModelClient

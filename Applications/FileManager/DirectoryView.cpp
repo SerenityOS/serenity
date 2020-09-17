@@ -29,6 +29,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
@@ -211,8 +212,7 @@ void DirectoryView::setup_icon_view()
             on_context_menu_request(index, event);
     };
     m_icon_view->on_drop = [this](auto& index, auto& event) {
-        if (on_drop)
-            on_drop(index, event);
+        handle_drop(index, event);
     };
 }
 
@@ -236,8 +236,7 @@ void DirectoryView::setup_columns_view()
     };
 
     m_columns_view->on_drop = [this](auto& index, auto& event) {
-        if (on_drop)
-            on_drop(index, event);
+        handle_drop(index, event);
     };
 }
 
@@ -262,8 +261,7 @@ void DirectoryView::setup_table_view()
     };
 
     m_table_view->on_drop = [this](auto& index, auto& event) {
-        if (on_drop)
-            on_drop(index, event);
+        handle_drop(index, event);
     };
 }
 
@@ -521,3 +519,36 @@ void DirectoryView::setup_actions()
         [this](auto&) { do_delete(false); },
         window());
 }
+
+void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEvent& event)
+{
+    if (!event.mime_data().has_urls())
+        return;
+    auto urls = event.mime_data().urls();
+    if (urls.is_empty()) {
+        dbg() << "No files to drop";
+        return;
+    }
+
+    auto& target_node = node(index);
+    if (!target_node.is_directory())
+        return;
+
+    for (auto& url_to_copy : urls) {
+        if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
+            continue;
+        auto new_path = String::format("%s/%s",
+            target_node.full_path().characters(),
+            LexicalPath(url_to_copy.path()).basename().characters());
+
+        if (url_to_copy.path() == new_path)
+            continue;
+
+        if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
+            auto error_message = String::format("Could not copy %s into %s.",
+                url_to_copy.to_string().characters(),
+                new_path.characters());
+            GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
+        }
+    }
+};
