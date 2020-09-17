@@ -10,6 +10,7 @@ test("Toplevel break inside loop", () => {
 test("break inside sub-blocks", () => {
     var j = 0;
     for (var i = 0; i < 9; ++i) {
+        // prettier-ignore
         if (j == 4)
             break;
         ++j;
