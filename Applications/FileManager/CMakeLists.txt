@@ -1,4 +1,5 @@
 set(SOURCES
+    DesktopWidget.cpp
     DirectoryView.cpp
     FileUtils.cpp
     main.cpp
