@@ -39,6 +39,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+namespace FileManager {
+
 NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(const LauncherHandler&)> launch_handler)
 {
     RefPtr<Gfx::Bitmap> icon;
@@ -552,3 +554,5 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
         }
     }
 };
+
+}
