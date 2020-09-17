@@ -37,6 +37,8 @@
 #include <LibGUI/TableView.h>
 #include <sys/stat.h>
 
+namespace FileManager {
+
 class LauncherHandler : public RefCounted<LauncherHandler> {
 public:
     LauncherHandler(const NonnullRefPtr<Desktop::Launcher::Details>& details)
@@ -187,3 +189,5 @@ private:
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_force_delete_action;
 };
+
+}

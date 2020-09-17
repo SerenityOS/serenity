@@ -68,6 +68,8 @@
 #include <string.h>
 #include <unistd.h>
 
+using namespace FileManager;
+
 static int run_in_desktop_mode(RefPtr<Core::ConfigFile>);
 static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location);
 
