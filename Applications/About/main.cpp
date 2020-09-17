@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("all -unix -cpath -fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
