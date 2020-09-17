@@ -30,7 +30,7 @@
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/KBufferBuilder.h>
 #include <Kernel/Lock.h>
 
 namespace Kernel {
@@ -59,7 +59,7 @@ private:
 
     struct ProcFSDirectoryEntry {
         ProcFSDirectoryEntry() { }
-        ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, bool a_supervisor_only, OwnPtr<KBuffer> (*read_callback)(InodeIdentifier) = nullptr, ssize_t (*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t) = nullptr, RefPtr<ProcFSInode>&& a_inode = nullptr)
+        ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, bool a_supervisor_only, bool (*read_callback)(InodeIdentifier, KBufferBuilder&) = nullptr, ssize_t (*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t) = nullptr, RefPtr<ProcFSInode>&& a_inode = nullptr)
             : name(a_name)
             , proc_file_type(a_proc_file_type)
             , supervisor_only(a_supervisor_only)
@@ -72,7 +72,7 @@ private:
         const char* name { nullptr };
         unsigned proc_file_type { 0 };
         bool supervisor_only { false };
-        OwnPtr<KBuffer> (*read_callback)(InodeIdentifier);
+        bool (*read_callback)(InodeIdentifier, KBufferBuilder&);
         ssize_t (*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t);
         RefPtr<ProcFSInode> inode;
         InodeIdentifier identifier(unsigned fsid) const;
@@ -96,6 +96,8 @@ public:
 
 private:
     // ^Inode
+    virtual KResult attach(FileDescription&) override;
+    virtual void did_seek(FileDescription&, off_t) override;
     virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override;
@@ -110,6 +112,8 @@ private:
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0) const override;
 
+    KResult refresh_data(FileDescription&) const;
+
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }
     ProcFSInode(ProcFS&, unsigned index);
@@ -123,6 +127,8 @@ public:
 
 private:
     // ^Inode
+    virtual KResult attach(FileDescription&) override;
+    virtual void did_seek(FileDescription&, off_t) override;
     virtual ssize_t read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const override { ASSERT_NOT_REACHED(); }
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override { ASSERT_NOT_REACHED(); }

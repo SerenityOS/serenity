@@ -66,8 +66,10 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
     dbg() << "PTYMultiplexer::open: Vending master " << master->index();
 #endif
     auto description = FileDescription::create(move(master));
-    description->set_rw_mode(options);
-    description->set_file_flags(options);
+    if (!description.is_error()) {
+        description.value()->set_rw_mode(options);
+        description.value()->set_file_flags(options);
+    }
     return description;
 }
 
