@@ -196,11 +196,12 @@ RefPtr<BlockDevice> StorageManagement::boot_block_device() const
 
 NonnullRefPtr<FS> StorageManagement::root_filesystem() const
 {
-    if (!boot_block_device()) {
+    auto boot_device_description = boot_block_device();
+    if (!boot_device_description) {
         klog() << "init_stage2: couldn't find a suitable device to boot from";
         Processor::halt();
     }
-    auto e2fs = Ext2FS::create(*FileDescription::create(boot_block_device().release_nonnull()));
+    auto e2fs = Ext2FS::create(FileDescription::create(boot_device_description.release_nonnull()).value());
     if (!e2fs->initialize()) {
         klog() << "init_stage2: couldn't open root filesystem";
         Processor::halt();

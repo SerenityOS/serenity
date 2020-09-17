@@ -52,19 +52,23 @@ NonnullRefPtr<FIFO> FIFO::create(uid_t uid)
     return adopt(*new FIFO(uid));
 }
 
-NonnullRefPtr<FileDescription> FIFO::open_direction(FIFO::Direction direction)
+KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction(FIFO::Direction direction)
 {
     auto description = FileDescription::create(*this);
-    attach(direction);
-    description->set_fifo_direction({}, direction);
+    if (!description.is_error()) {
+        attach(direction);
+        description.value()->set_fifo_direction({}, direction);
+    }
     return description;
 }
 
-NonnullRefPtr<FileDescription> FIFO::open_direction_blocking(FIFO::Direction direction)
+KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
 {
     Locker locker(m_open_lock);
 
     auto description = open_direction(direction);
+    if (description.is_error())
+        return description;
 
     if (direction == Direction::Reader) {
         m_read_open_queue.wake_all();
