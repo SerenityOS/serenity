@@ -31,32 +31,65 @@
 
 namespace Kernel {
 
-inline bool KBufferBuilder::can_append(size_t size) const
+inline bool KBufferBuilder::check_expand(size_t size)
 {
     if (!m_buffer)
         return false;
-    return ((m_size + size) < m_buffer->size());
+    if ((m_size + size) < m_buffer->capacity())
+        return true;
+    if (!m_can_expand)
+        return false;
+    if (Checked<size_t>::addition_would_overflow(m_size, size))
+        return false;
+    size_t new_buffer_size = m_size + size;
+    if (Checked<size_t>::addition_would_overflow(new_buffer_size, 1 * MiB))
+        return false;
+    new_buffer_size = PAGE_ROUND_UP(new_buffer_size + 1 * MiB);
+    return m_buffer->expand(new_buffer_size);
+}
+
+bool KBufferBuilder::flush()
+{
+    if (!m_buffer)
+        return false;
+    m_buffer->set_size(m_size);
+    return true;
 }
 
 OwnPtr<KBuffer> KBufferBuilder::build()
 {
-    if (!m_buffer)
+    if (!flush())
         return {};
-    if (!m_buffer->is_null())
-        m_buffer->set_size(m_size);
-    return m_buffer.release_nonnull();
+    return make<KBuffer>(move(m_buffer));
 }
 
-KBufferBuilder::KBufferBuilder()
-    : m_buffer(KBuffer::try_create_with_size(4 * MiB, Region::Access::Read | Region::Access::Write))
+KBufferBuilder::KBufferBuilder(bool can_expand)
+    : m_buffer(KBufferImpl::try_create_with_size(4 * MiB, Region::Access::Read | Region::Access::Write))
+    , m_can_expand(can_expand)
 {
+}
+
+KBufferBuilder::KBufferBuilder(RefPtr<KBufferImpl>& buffer, bool can_expand)
+    : m_buffer(buffer)
+    , m_can_expand(can_expand)
+{
+    if (!m_buffer)
+        m_buffer = buffer = KBufferImpl::try_create_with_size(4 * MiB, Region::Access::Read | Region::Access::Write);
+}
+
+void KBufferBuilder::append_bytes(ReadonlyBytes bytes)
+{
+    if (!check_expand(bytes.size()))
+        return;
+    memcpy(insertion_ptr(), bytes.data(), bytes.size());
+    m_size += bytes.size();
 }
 
 void KBufferBuilder::append(const StringView& str)
 {
     if (str.is_empty())
         return;
-    if (!can_append(str.length()))
+    if (!check_expand(str.length()))
         return;
     memcpy(insertion_ptr(), str.characters_without_null_termination(), str.length());
     m_size += str.length();
@@ -66,7 +99,7 @@ void KBufferBuilder::append(const char* characters, int length)
 {
     if (!length)
         return;
-    if (!can_append(length))
+    if (!check_expand(length))
         return;
     memcpy(insertion_ptr(), characters, length);
     m_size += length;
@@ -74,7 +107,7 @@ void KBufferBuilder::append(const char* characters, int length)
 
 void KBufferBuilder::append(char ch)
 {
-    if (!can_append(1))
+    if (!check_expand(1))
         return;
     insertion_ptr()[0] = ch;
     m_size += 1;
