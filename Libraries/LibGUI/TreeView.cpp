@@ -125,6 +125,23 @@ void TreeView::set_open_state_of_all_in_subtree(const ModelIndex& root, bool ope
     }
 }
 
+void TreeView::expand_all_parents_of(const ModelIndex& index)
+{
+    if (!model())
+        return;
+
+    auto current = index;
+    while (current.is_valid()) {
+        ensure_metadata_for_index(current).open = true;
+        if (on_toggle)
+            on_toggle(current, true);
+        current = current.parent();
+    }
+    update_column_sizes();
+    update_content_size();
+    update();
+}
+
 void TreeView::expand_tree(const ModelIndex& root)
 {
     if (!model())
