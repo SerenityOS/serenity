@@ -32,6 +32,7 @@
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <serenity.h>
@@ -135,6 +136,9 @@ DirectoryView::DirectoryView(Mode mode)
 
     setup_actions();
 
+    m_error_label = add<GUI::Label>();
+    m_error_label->set_font(m_error_label->font().bold_family_font());
+
     setup_model();
 
     setup_icon_view();
@@ -155,15 +159,20 @@ void DirectoryView::setup_model()
 {
     m_model->set_root_path(Core::StandardPaths::desktop_directory());
 
-    m_model->on_error = [this](int error, const char* error_string) {
+    m_model->on_error = [this](int, const char* error_string) {
+        auto failed_path = m_model->root_path();
         bool quit = false;
         if (m_path_history.size())
             open(m_path_history.at(m_path_history_position));
         else
             quit = true;
 
-        if (on_error)
-            on_error(error, error_string, quit);
+        if (quit)
+            exit(1);
+
+        auto error_message = String::format("Could not read %s:\n%s", failed_path.characters(), error_string);
+        m_error_label->set_text(error_message);
+        set_active_widget(m_error_label);
     };
 
     m_model->on_complete = [this] {
@@ -321,6 +330,8 @@ void DirectoryView::open(const StringView& path)
         model().update();
         return;
     }
+
+    set_active_widget(&current_view());
     model().set_root_path(path);
 }
 

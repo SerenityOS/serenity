@@ -540,14 +540,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         open_parent_directory_action->set_enabled(new_path != "/");
     };
 
-    directory_view.on_error = [&](int, const char* error_string, bool quit) {
-        auto error_message = String::format("Could not read directory: %s", error_string);
-        GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
-
-        if (quit)
-            exit(1);
-    };
-
     directory_view.on_status_message = [&](const StringView& message) {
         statusbar.set_text(message);
     };

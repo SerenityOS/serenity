@@ -86,7 +86,6 @@ public:
     Function<void(const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;
     Function<void(const StringView&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
-    Function<void(int error, const char* error_string, bool quit)> on_error;
 
     enum ViewMode {
         Invalid,
@@ -173,6 +172,8 @@ private:
     size_t m_path_history_position { 0 };
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);
+
+    RefPtr<GUI::Label> m_error_label;
 
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::IconView> m_icon_view;
