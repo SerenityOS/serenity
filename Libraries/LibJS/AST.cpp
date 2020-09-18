@@ -26,6 +26,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
@@ -49,10 +50,13 @@
 
 namespace JS {
 
-static void update_function_name(Value& value, const FlyString& name)
+static void update_function_name(Value& value, const FlyString& name, HashTable<const JS::Cell*>& visited)
 {
     if (!value.is_object())
         return;
+    if (visited.contains(value.as_cell()))
+        return;
+    visited.set(value.as_cell());
     auto& object = value.as_object();
     if (object.is_function()) {
         auto& function = static_cast<Function&>(object);
@@ -61,8 +65,14 @@ static void update_function_name(Value& value, const FlyString& name)
     } else if (object.is_array()) {
         auto& array = static_cast<Array&>(object);
         for (auto& entry : array.indexed_properties().values_unordered())
-            update_function_name(entry.value, name);
+            update_function_name(entry.value, name, visited);
     }
+}
+
+static void update_function_name(Value& value, const FlyString& name)
+{
+    HashTable<const JS::Cell*> visited;
+    update_function_name(value, name, visited);
 }
 
 static String get_function_name(Interpreter& interpreter, Value value)

@@ -48,3 +48,10 @@ test("names of native functions", () => {
     expect((console.debug.name = "warn")).toBe("warn");
     expect(console.debug.name).toBe("debug");
 });
+
+test("cyclic members should not cause infinite recursion (#3471)", () => {
+    let a = [() => 4];
+    a[1] = a;
+    a = a;
+    expect(a[0].name).toBe("a");
+});
