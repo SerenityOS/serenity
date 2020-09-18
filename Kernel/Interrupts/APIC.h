@@ -56,7 +56,7 @@ private:
     class ICRReg {
         u32 m_low { 0 };
         u32 m_high { 0 };
-    
+
     public:
         enum DeliveryMode {
             Fixed = 0x0,
@@ -84,13 +84,13 @@ private:
             AllIncludingSelf = 0x2,
             AllExcludingSelf = 0x3,
         };
-    
+
         ICRReg(u8 vector, DeliveryMode delivery_mode, DestinationMode destination_mode, Level level, TriggerMode trigger_mode, DestinationShorthand destinationShort, u8 destination = 0)
-            : m_low(vector | (delivery_mode << 8) | (destination_mode << 11) | (level << 14) | (static_cast<u32>(trigger_mode) << 15) | (destinationShort << 18)),
-              m_high((u32)destination << 24)
+            : m_low(vector | (delivery_mode << 8) | (destination_mode << 11) | (level << 14) | (static_cast<u32>(trigger_mode) << 15) | (destinationShort << 18))
+            , m_high((u32)destination << 24)
         {
         }
-    
+
         u32 low() const { return m_low; }
         u32 high() const { return m_high; }
     };
@@ -98,11 +98,11 @@ private:
     OwnPtr<Region> m_apic_base;
     Vector<OwnPtr<Processor>> m_ap_processor_info;
     Vector<Thread*> m_ap_idle_threads;
-    AK::Atomic<u8> m_apic_ap_count{0};
-    AK::Atomic<u8> m_apic_ap_continue{0};
-    u32 m_processor_cnt{0};
-    u32 m_processor_enabled_cnt{0};
-    
+    AK::Atomic<u8> m_apic_ap_count { 0 };
+    AK::Atomic<u8> m_apic_ap_continue { 0 };
+    u32 m_processor_cnt { 0 };
+    u32 m_processor_enabled_cnt { 0 };
+
     static PhysicalAddress get_base();
     static void set_base(const PhysicalAddress& base);
     void write_register(u32 offset, u32 value);

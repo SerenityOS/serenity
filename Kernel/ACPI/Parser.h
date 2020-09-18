@@ -30,8 +30,8 @@
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/VM/Region.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/Region.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel {

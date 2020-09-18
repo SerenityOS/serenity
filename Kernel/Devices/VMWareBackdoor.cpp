@@ -28,10 +28,10 @@
 #include <AK/OwnPtr.h>
 #include <AK/Singleton.h>
 #include <AK/String.h>
+#include <Kernel/API/MousePacket.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
-#include <Kernel/API/MousePacket.h>
 #include <Kernel/IO.h>
 
 namespace Kernel {
@@ -82,8 +82,7 @@ inline void vmware_high_bandwidth_get(VMWareCommand& command)
                  : "+a"(command.ax), "+b"(command.bx), "+c"(command.cx), "+d"(command.dx), "+S"(command.si), "+D"(command.di));
 }
 
-class VMWareBackdoorDetector
-{
+class VMWareBackdoorDetector {
 public:
     VMWareBackdoorDetector()
     {

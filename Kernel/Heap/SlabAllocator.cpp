@@ -38,7 +38,7 @@ namespace Kernel {
 template<size_t templated_slab_size>
 class SlabAllocator {
 public:
-    SlabAllocator() {}
+    SlabAllocator() { }
 
     void init(size_t size)
     {

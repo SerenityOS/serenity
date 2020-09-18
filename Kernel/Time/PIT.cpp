@@ -25,12 +25,12 @@
  */
 
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/IO.h>
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/Time/PIT.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/IO.h>
 
 #define IRQ_TIMER 0
 namespace Kernel {

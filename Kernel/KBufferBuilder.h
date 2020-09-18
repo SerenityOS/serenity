@@ -37,7 +37,7 @@ public:
     using OutputType = KBuffer;
 
     explicit KBufferBuilder();
-    ~KBufferBuilder() {}
+    ~KBufferBuilder() { }
 
     void append(const StringView&);
     void append(char);

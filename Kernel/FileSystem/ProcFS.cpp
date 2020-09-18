@@ -797,10 +797,10 @@ static Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
 Optional<KBuffer> procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
-    
+
     kmalloc_stats stats;
     get_kmalloc_stats(stats);
-    
+
     KBufferBuilder builder;
     JsonObjectSerializer<KBufferBuilder> json { builder };
     json.add("kmalloc_allocated", stats.bytes_allocated);
@@ -1206,7 +1206,7 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
 
     auto* directory_entry = fs().get_directory_entry(identifier());
 
-    Optional<KBuffer>(*read_callback)(InodeIdentifier) = nullptr;
+    Optional<KBuffer> (*read_callback)(InodeIdentifier) = nullptr;
     if (directory_entry)
         read_callback = directory_entry->read_callback;
     else
@@ -1482,7 +1482,7 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelB
 
     auto* directory_entry = fs().get_directory_entry(identifier());
 
-    ssize_t(*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t) = nullptr;
+    ssize_t (*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t) = nullptr;
 
     if (directory_entry == nullptr) {
         if (to_proc_parent_directory(identifier()) == PDI_Root_sys) {

@@ -32,8 +32,7 @@ namespace Kernel {
 
 class Processor;
 
-class ProcessorInfo
-{
+class ProcessorInfo {
     Processor& m_processor;
     String m_cpuid;
     String m_brandstr;
@@ -46,7 +45,7 @@ class ProcessorInfo
 
 public:
     ProcessorInfo(Processor& processor);
-    
+
     const String& cpuid() const { return m_cpuid; }
     const String& brandstr() const { return m_brandstr; }
     const String& features() const { return m_features; }

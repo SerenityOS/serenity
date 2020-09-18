@@ -31,7 +31,6 @@
 
 namespace Kernel {
 
-
 WaitQueue::WaitQueue()
 {
 }

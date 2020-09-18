@@ -91,8 +91,7 @@ KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
         region->set_shared(false);
     }
     const bool was_writable = region->is_writable();
-    if (!was_writable)
-    {
+    if (!was_writable) {
         region->set_writable(true);
         region->remap();
     }

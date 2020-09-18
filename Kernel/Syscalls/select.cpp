@@ -166,7 +166,7 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
         if (!copy_from_user(&fds_copy[0], &params.fds[0], params.nfds * sizeof(pollfd)))
             return -EFAULT;
     }
-    
+
     Thread::SelectBlocker::FDVector rfds;
     Thread::SelectBlocker::FDVector wfds;
 

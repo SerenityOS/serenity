@@ -28,9 +28,9 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 
