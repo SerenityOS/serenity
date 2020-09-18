@@ -39,8 +39,8 @@ struct ICMPType {
 class [[gnu::packed]] ICMPHeader
 {
 public:
-    ICMPHeader() {}
-    ~ICMPHeader() {}
+    ICMPHeader() { }
+    ~ICMPHeader() { }
 
     u8 type() const { return m_type; }
     void set_type(u8 b) { m_type = b; }

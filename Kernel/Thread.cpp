@@ -510,7 +510,6 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     klog() << "signal: dispatch signal " << signal << " to " << *this;
 #endif
 
-
     if (m_state == Invalid || !is_initialized()) {
         // Thread has barely been created, we need to wait until it is
         // at least in Runnable state and is_initialized() returns true,

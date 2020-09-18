@@ -28,10 +28,10 @@
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/Devices/SB16.h>
+#include <Kernel/IO.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/IO.h>
 
 //#define SB16_DEBUG
 

@@ -26,12 +26,12 @@
 
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/IO.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/IOAccess.h>
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/PCI/MMIOAccess.h>
-#include <Kernel/IO.h>
 
 namespace Kernel {
 namespace PCI {

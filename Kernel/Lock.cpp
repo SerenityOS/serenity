@@ -67,7 +67,7 @@ void Lock::lock(Mode mode)
                     m_lock.store(false, AK::memory_order_release);
                     return;
                 }
-             } while (current_thread->wait_on(m_queue, m_name, nullptr, &m_lock, m_holder) == Thread::BlockResult::NotBlocked);
+            } while (current_thread->wait_on(m_queue, m_name, nullptr, &m_lock, m_holder) == Thread::BlockResult::NotBlocked);
         } else if (Processor::current().in_critical()) {
             // If we're in a critical section and trying to lock, no context
             // switch will happen, so yield.

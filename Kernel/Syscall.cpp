@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/API/Syscall.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/VM/MemoryManager.h>
 
@@ -36,6 +36,7 @@ namespace Kernel {
 extern "C" void syscall_handler(TrapFrame*);
 extern "C" void syscall_asm_entry();
 
+// clang-format off
 asm(
     ".globl syscall_asm_entry\n"
     "syscall_asm_entry:\n"
@@ -63,6 +64,7 @@ asm(
     "    call syscall_handler \n"
     "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
     "    jmp common_trap_exit \n");
+// clang-format on
 
 namespace Syscall {
 

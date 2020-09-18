@@ -125,7 +125,7 @@ int NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addre
     ipv4.set_checksum(ipv4.compute_checksum());
     m_packets_out++;
     m_bytes_out += ethernet_frame_size;
-    
+
     if (!payload.read(ipv4.payload(), payload_size))
         return -EFAULT;
     send_raw({ (const u8*)&eth, ethernet_frame_size });

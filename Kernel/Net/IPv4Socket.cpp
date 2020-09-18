@@ -352,7 +352,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
     }
 
     if (type() == SOCK_RAW) {
-        size_t bytes_written = min((size_t) ipv4_packet.payload_size(), buffer_length);
+        size_t bytes_written = min((size_t)ipv4_packet.payload_size(), buffer_length);
         if (!buffer.write(ipv4_packet.payload(), bytes_written))
             return KResult(-EFAULT);
         return bytes_written;

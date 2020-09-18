@@ -37,7 +37,7 @@ struct InodeMetadata;
 
 class InodeIdentifier {
 public:
-    InodeIdentifier() {}
+    InodeIdentifier() { }
     InodeIdentifier(u32 fsid, u32 inode)
         : m_fsid(fsid)
         , m_index(inode)

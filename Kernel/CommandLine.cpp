@@ -38,7 +38,7 @@ void CommandLine::early_initialize(const char* cmd_line)
         return;
     size_t length = strlen(cmd_line);
     if (length >= sizeof(s_cmd_line))
-        length = sizeof(s_cmd_line) -1;
+        length = sizeof(s_cmd_line) - 1;
     memcpy(s_cmd_line, cmd_line, length);
     s_cmd_line[length] = '\0';
 }

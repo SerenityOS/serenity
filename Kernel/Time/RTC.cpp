@@ -26,9 +26,9 @@
 
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/CMOS.h>
+#include <Kernel/IO.h>
 #include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/IO.h>
 
 namespace Kernel {
 #define IRQ_TIMER 8

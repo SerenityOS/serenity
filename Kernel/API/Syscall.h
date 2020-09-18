@@ -338,7 +338,7 @@ struct SC_create_thread_params {
     unsigned int m_guard_page_size = 0;          // Rounded up to PAGE_SIZE
     unsigned int m_reported_guard_page_size = 0; // The lie we tell callers
     unsigned int m_stack_size = 4 * MiB;         // Default PTHREAD_STACK_MIN
-    void* m_stack_location;           // nullptr means any, o.w. process virtual address
+    void* m_stack_location;                      // nullptr means any, o.w. process virtual address
 };
 
 struct SC_realpath_params {

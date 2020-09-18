@@ -73,7 +73,6 @@ void TimeManagement::initialize()
 {
     ASSERT(!s_the.is_initialized());
     s_the.ensure_instance();
-
 }
 time_t TimeManagement::seconds_since_boot() const
 {

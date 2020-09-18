@@ -56,7 +56,7 @@ int main(int argc, char** argv, char** env)
     auto elf = ELF::Loader::create((const u8*)mapped_file.data(), mapped_file.size());
 
     Vector<String> arguments;
-    for (auto arg: command) {
+    for (auto arg : command) {
         arguments.append(arg);
     }
 

@@ -85,7 +85,7 @@ int PurgeableVMObject::purge_impl()
     if (purged_page_count > 0) {
         for_each_region([&](auto& region) {
             if (&region.vmobject() == this)
-               region.remap();
+                region.remap();
         });
     }
 

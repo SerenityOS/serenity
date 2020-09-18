@@ -118,7 +118,7 @@ public:
     {
         return (vaddr - m_range.base()).get() / PAGE_SIZE;
     }
-    
+
     VirtualAddress vaddr_from_page_index(size_t page_index) const
     {
         return vaddr().offset(page_index * PAGE_SIZE);
@@ -237,6 +237,5 @@ inline unsigned prot_to_region_access_flags(int prot)
         access |= Region::Access::Execute;
     return access;
 }
-
 
 }

@@ -415,7 +415,6 @@ void page_fault_handler(TrapFrame* trap)
             return;
     }
 
-
     auto current_thread = Thread::current();
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process(), VirtualAddress(regs.userspace_esp))) {
         dbg() << "Invalid stack pointer: " << VirtualAddress(regs.userspace_esp);
@@ -1278,7 +1277,7 @@ bool Processor::get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip)
             // an IPI to that processor, have it walk the stack and wait
             // until it returns the data back to us
             dbg() << "CPU[" << proc.id() << "] getting stack for "
-                << thread << " on other CPU# " << thread.cpu() << " not yet implemented!";
+                  << thread << " on other CPU# " << thread.cpu() << " not yet implemented!";
             frame_ptr = eip = 0; // TODO
             return false;
         } else {
@@ -1730,12 +1729,12 @@ void Processor::smp_enable()
 void Processor::smp_cleanup_message(ProcessorMessage& msg)
 {
     switch (msg.type) {
-        case ProcessorMessage::CallbackWithData:
-            if (msg.callback_with_data.free)
-                msg.callback_with_data.free(msg.callback_with_data.data);
-            break;
-        default:
-            break;
+    case ProcessorMessage::CallbackWithData:
+        if (msg.callback_with_data.free)
+            msg.callback_with_data.free(msg.callback_with_data.data);
+        break;
+    default:
+        break;
     }
 }
 
@@ -1745,8 +1744,7 @@ bool Processor::smp_process_pending_messages()
     u32 prev_flags;
     enter_critical(prev_flags);
 
-    if (auto pending_msgs = atomic_exchange(&m_message_queue, nullptr, AK::MemoryOrder::memory_order_acq_rel))
-    {
+    if (auto pending_msgs = atomic_exchange(&m_message_queue, nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
         // We pulled the stack of pending messages in LIFO order, so we need to reverse the list first
         auto reverse_list =
             [](ProcessorMessageEntry* list) -> ProcessorMessageEntry*
@@ -1768,21 +1766,21 @@ bool Processor::smp_process_pending_messages()
         for (auto cur_msg = pending_msgs; cur_msg; cur_msg = next_msg) {
             next_msg = cur_msg->next;
             auto msg = cur_msg->msg;
-            
+
 #ifdef SMP_DEBUG
             dbg() << "SMP[" << id() << "]: Processing message " << VirtualAddress(msg);
 #endif
 
             switch (msg->type) {
-                case ProcessorMessage::Callback:
-                    msg->callback.handler();
-                    break;
-                case ProcessorMessage::CallbackWithData:
-                    msg->callback_with_data.handler(msg->callback_with_data.data);
-                    break;
-                case ProcessorMessage::FlushTlb:
-                    flush_tlb_local(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count);
-                    break;
+            case ProcessorMessage::Callback:
+                msg->callback.handler();
+                break;
+            case ProcessorMessage::CallbackWithData:
+                msg->callback_with_data.handler(msg->callback_with_data.data);
+                break;
+            case ProcessorMessage::FlushTlb:
+                flush_tlb_local(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count);
+                break;
             }
 
             bool is_async = msg->async; // Need to cache this value *before* dropping the ref count!
@@ -1833,8 +1831,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg, bool async)
     atomic_store(&msg.refs, count() - 1, AK::MemoryOrder::memory_order_release);
     ASSERT(msg.refs > 0);
     for_each(
-        [&](Processor& proc) -> IterationDecision
-        {
+        [&](Processor& proc) -> IterationDecision {
             if (&proc != &cur_proc) {
                 if (proc.smp_queue_message(msg)) {
                     // TODO: only send IPI to that CPU if we queued the first
@@ -1890,8 +1887,7 @@ void Processor::smp_broadcast_halt()
     // We don't want to use a message, because this could have been triggered
     // by being out of memory and we might not be able to get a message
     for_each(
-        [&](Processor& proc) -> IterationDecision
-        {
+        [&](Processor& proc) -> IterationDecision {
             proc.m_halt_requested = true;
             return IterationDecision::Continue;
         });

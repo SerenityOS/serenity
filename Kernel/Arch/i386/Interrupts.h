@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/Types.h>
 #include <AK/Assertions.h>
+#include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 
 extern "C" void interrupt_common_asm_entry();
@@ -40,6 +40,7 @@ extern "C" void interrupt_common_asm_entry();
         "    pushw $0\n"                                         \
         "    jmp interrupt_common_asm_entry\n");
 
+// clang-format off
 asm(
     ".globl interrupt_common_asm_entry\n"
     "interrupt_common_asm_entry: \n"
@@ -81,3 +82,4 @@ asm(
     "    addl $0x4, %esp\n" // skip exception_code, isr_number
     "    iret\n"
 );
+// clang-format on

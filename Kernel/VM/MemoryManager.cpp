@@ -33,6 +33,7 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Process.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/ContiguousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -40,7 +41,6 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
-#include <Kernel/StdLib.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
@@ -235,6 +235,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             // we're writing to the correct underlying physical page
             pd = quickmap_pd(page_directory, page_directory_table_index);
             ASSERT(&pde == &pd[page_directory_index]); // Sanity check
+
             ASSERT(!pde.is_present()); // Should have not changed
         }
 #ifdef MM_DEBUG
