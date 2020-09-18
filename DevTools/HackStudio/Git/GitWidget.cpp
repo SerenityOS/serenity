@@ -95,19 +95,41 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
         Gfx::Bitmap::load_from_file("/res/icons/16x16/minus.png").release_nonnull());
 }
 
-void GitWidget::refresh()
+bool GitWidget::initialize()
 {
     auto result = GitRepo::try_to_create(m_repo_root);
-    if (result.type == GitRepo::CreateResult::Type::Success) {
+    switch (result.type) {
+    case GitRepo::CreateResult::Type::Success:
         m_git_repo = result.repo;
-    } else if (result.type == GitRepo::CreateResult::Type::GitProgramNotFound) {
+        return true;
+    case GitRepo::CreateResult::Type::GitProgramNotFound:
         GUI::MessageBox::show(window(), "Please install the Git port", "Error", GUI::MessageBox::Type::Error);
-        return;
-    } else if (result.type == GitRepo::CreateResult::Type::NoGitRepo) {
+        return false;
+    case GitRepo::CreateResult::Type::NoGitRepo: {
         auto decision = GUI::MessageBox::show(window(), "Create git repository?", "Git", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
         if (decision != GUI::Dialog::ExecResult::ExecYes)
-            return;
+            return false;
         m_git_repo = GitRepo::initialize_repository(m_repo_root);
+        return true;
+    }
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+bool GitWidget::initialize_if_needed()
+{
+    if (initialized())
+        return true;
+
+    return initialize();
+}
+
+void GitWidget::refresh()
+{
+    if (!initialize_if_needed()) {
+        dbg() << "GitWidget initialization failed";
+        return;
     }
 
     ASSERT(!m_git_repo.is_null());
