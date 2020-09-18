@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     app_menu.add_separator();
 
     auto chord_toggler_action = GUI::Action::create_checkable("Single-click chording", [&](auto& action) {
-        field.set_single_chording(!action.is_checked());
+        field.set_single_chording(action.is_checked());
     });
     chord_toggler_action->set_checked(field.is_single_chording());
 
