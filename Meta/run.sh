@@ -67,7 +67,9 @@ export SDL_VIDEO_X11_DGAMOUSE=0
 : "${SERENITY_BUILD:=.}"
 cd -P -- "$SERENITY_BUILD" || die "Could not cd to \"$SERENITY_BUILD\""
 
-if [ "$1" = "b" ]; then
+SERENITY_RUN="${SERENITY_RUN:-$1}"
+
+if [ "$SERENITY_RUN" = "b" ]; then
     # Meta/run.sh b: bochs
     [ -z "$SERENITY_BOCHSRC" ] && {
         # Make sure that SERENITY_ROOT is set and not empty
@@ -75,14 +77,14 @@ if [ "$1" = "b" ]; then
         SERENITY_BOCHSRC="$SERENITY_ROOT/Meta/bochsrc"
     }
     "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_BOCHSRC"
-elif [ "$1" = "qn" ]; then
+elif [ "$SERENITY_RUN" = "qn" ]; then
     # Meta/run.sh qn: qemu without network
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         -device e1000 \
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
-elif [ "$1" = "qtap" ]; then
+elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
     sudo "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
@@ -92,7 +94,7 @@ elif [ "$1" = "qtap" ]; then
         -device e1000,netdev=br0 \
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
-elif [ "$1" = "qgrub" ]; then
+elif [ "$SERENITY_RUN" = "qgrub" ]; then
     # Meta/run.sh qgrub: qemu with grub
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
@@ -100,7 +102,7 @@ elif [ "$1" = "qgrub" ]; then
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh
-elif [ "$1" = "q35_cmd" ]; then
+elif [ "$SERENITY_RUN" = "q35_cmd" ]; then
     # Meta/run.sh q35_cmd: qemu (q35 chipset) with SerenityOS with custom commandline
     shift
     SERENITY_KERNEL_CMDLINE="$*"
@@ -112,7 +114,7 @@ elif [ "$1" = "q35_cmd" ]; then
         -device e1000,netdev=breh \
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
-elif [ "$1" = "qcmd" ]; then
+elif [ "$SERENITY_RUN" = "qcmd" ]; then
     # Meta/run.sh qcmd: qemu with SerenityOS with custom commandline
     shift
     SERENITY_KERNEL_CMDLINE="$*"
