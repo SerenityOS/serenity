@@ -161,18 +161,17 @@ void DirectoryView::setup_model()
 
     m_model->on_error = [this](int, const char* error_string) {
         auto failed_path = m_model->root_path();
-        bool quit = false;
-        if (m_path_history.size())
-            open(m_path_history.at(m_path_history_position));
-        else
-            quit = true;
-
-        if (quit)
-            exit(1);
-
         auto error_message = String::format("Could not read %s:\n%s", failed_path.characters(), error_string);
         m_error_label->set_text(error_message);
         set_active_widget(m_error_label);
+
+        m_mkdir_action->set_enabled(false);
+        m_touch_action->set_enabled(false);
+
+        add_path_to_history(model().root_path());
+
+        if (on_path_change)
+            on_path_change(failed_path, false);
     };
 
     m_model->on_complete = [this] {
