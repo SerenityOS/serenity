@@ -961,7 +961,7 @@ SysVariable& SysVariable::for_inode(InodeIdentifier id)
     return variable;
 }
 
-static ByteBuffer read_sys_bool(InodeIdentifier inode_id)
+static Optional<KBuffer> read_sys_bool(InodeIdentifier inode_id)
 {
     auto& variable = SysVariable::for_inode(inode_id);
     ASSERT(variable.type == SysVariable::Type::Boolean);
@@ -1005,7 +1005,7 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer
     return (ssize_t)size;
 }
 
-static ByteBuffer read_sys_string(InodeIdentifier inode_id)
+static Optional<KBuffer> read_sys_string(InodeIdentifier inode_id)
 {
     auto& variable = SysVariable::for_inode(inode_id);
     ASSERT(variable.type == SysVariable::Type::String);
@@ -1206,32 +1206,28 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
 
     auto* directory_entry = fs().get_directory_entry(identifier());
 
-    Function<Optional<KBuffer>(InodeIdentifier)> callback_tmp;
-    Function<Optional<KBuffer>(InodeIdentifier)>* read_callback { nullptr };
+    Optional<KBuffer>(*read_callback)(InodeIdentifier) = nullptr;
     if (directory_entry)
-        read_callback = &directory_entry->read_callback;
+        read_callback = directory_entry->read_callback;
     else
         switch (to_proc_parent_directory(identifier())) {
         case PDI_PID_fd:
-            callback_tmp = procfs$pid_fd_entry;
-            read_callback = &callback_tmp;
+            read_callback = procfs$pid_fd_entry;
             break;
         case PDI_PID_stacks:
-            callback_tmp = procfs$tid_stack;
-            read_callback = &callback_tmp;
+            read_callback = procfs$tid_stack;
             break;
         case PDI_Root_sys:
             switch (SysVariable::for_inode(identifier()).type) {
             case SysVariable::Type::Invalid:
                 ASSERT_NOT_REACHED();
             case SysVariable::Type::Boolean:
-                callback_tmp = read_sys_bool;
+                read_callback = read_sys_bool;
                 break;
             case SysVariable::Type::String:
-                callback_tmp = read_sys_string;
+                read_callback = read_sys_string;
                 break;
             }
-            read_callback = &callback_tmp;
             break;
         default:
             ASSERT_NOT_REACHED();
@@ -1241,7 +1237,7 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
 
     Optional<KBuffer> generated_data;
     if (!description) {
-        generated_data = (*read_callback)(identifier());
+        generated_data = read_callback(identifier());
     } else {
         if (!description->generator_cache().has_value())
             description->generator_cache() = (*read_callback)(identifier());
@@ -1486,8 +1482,7 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelB
 
     auto* directory_entry = fs().get_directory_entry(identifier());
 
-    Function<ssize_t(InodeIdentifier, const UserOrKernelBuffer&, size_t)> callback_tmp;
-    Function<ssize_t(InodeIdentifier, const UserOrKernelBuffer&, size_t)>* write_callback { nullptr };
+    ssize_t(*write_callback)(InodeIdentifier, const UserOrKernelBuffer&, size_t) = nullptr;
 
     if (directory_entry == nullptr) {
         if (to_proc_parent_directory(identifier()) == PDI_Root_sys) {
@@ -1495,25 +1490,24 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelB
             case SysVariable::Type::Invalid:
                 ASSERT_NOT_REACHED();
             case SysVariable::Type::Boolean:
-                callback_tmp = write_sys_bool;
+                write_callback = write_sys_bool;
                 break;
             case SysVariable::Type::String:
-                callback_tmp = write_sys_string;
+                write_callback = write_sys_string;
                 break;
             }
-            write_callback = &callback_tmp;
         } else
             return -EPERM;
     } else {
         if (!directory_entry->write_callback)
             return -EPERM;
-        write_callback = &directory_entry->write_callback;
+        write_callback = directory_entry->write_callback;
     }
 
     ASSERT(is_persistent_inode(identifier()));
     // FIXME: Being able to write into ProcFS at a non-zero offset seems like something we should maybe support..
     ASSERT(offset == 0);
-    ssize_t nwritten = (*write_callback)(identifier(), buffer, (size_t)size);
+    ssize_t nwritten = write_callback(identifier(), buffer, (size_t)size);
     if (nwritten < 0)
         klog() << "ProcFS: Writing " << size << " bytes failed: " << nwritten;
     return nwritten;
