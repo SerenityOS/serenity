@@ -489,8 +489,11 @@ static int main_impl(int argc, char** argv)
     auto save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
         if (g_currently_open_file.is_empty())
             return;
+
         current_editor().write_to_file(g_currently_open_file);
-        g_git_widget->refresh();
+
+        if (g_git_widget->initialized())
+            g_git_widget->refresh();
     });
 
     toolbar.add_action(new_action);
