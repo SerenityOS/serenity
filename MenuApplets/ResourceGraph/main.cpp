@@ -104,7 +104,7 @@ private:
         for (auto value : m_history) {
             painter.draw_line(
                 { rect.x() + i, rect.bottom() },
-                { rect.x() + i, (int)(rect.height() - (value * (float)rect.height())) },
+                { rect.x() + i, rect.top() + (int)(round(rect.height() - (value * rect.height()))) },
                 m_graph_color);
             ++i;
         }
