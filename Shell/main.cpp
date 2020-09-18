@@ -209,6 +209,13 @@ int main(int argc, char** argv)
 
     parser.parse(argc, argv);
 
+    if (getsid(getpid()) == 0) {
+        if (setsid() < 0) {
+            perror("setsid");
+            // Let's just hope that it's ok.
+        }
+    }
+
     shell->current_script = argv[0];
 
     if (!skip_rc_files) {
