@@ -27,9 +27,9 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
-#include <LibWeb/DOM/Element.h>
 
 namespace Web::DOM {
 

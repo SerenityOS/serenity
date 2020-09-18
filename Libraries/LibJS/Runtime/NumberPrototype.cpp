@@ -33,10 +33,12 @@
 namespace JS {
 
 static const u8 max_precision_for_radix[37] = {
+    // clang-format off
     0,  0,  52, 32, 26, 22, 20, 18, 17, 16,
     15, 15, 14, 14, 13, 13, 13, 12, 12, 12,
     12, 11, 11, 11, 11, 11, 11, 10, 10, 10,
     10, 10, 10, 10, 10, 10, 10,
+    // clang-format on
 };
 
 static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";

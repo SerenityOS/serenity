@@ -87,24 +87,24 @@ namespace Web::HTML {
     } while (0)
 
 #define EMIT_CHARACTER_AND_RECONSUME_IN(code_point, new_state)          \
-    do {                                                               \
+    do {                                                                \
         m_queued_tokens.enqueue(HTMLToken::make_character(code_point)); \
-        will_reconsume_in(State::new_state);                           \
-        m_state = State::new_state;                                    \
-        goto new_state;                                                \
+        will_reconsume_in(State::new_state);                            \
+        m_state = State::new_state;                                     \
+        goto new_state;                                                 \
     } while (0)
 
-#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                                         \
-    do {                                                                                           \
-        for (auto code_point : m_temporary_buffer) {                                                \
-            if (consumed_as_part_of_an_attribute()) {                                              \
+#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                                           \
+    do {                                                                                             \
+        for (auto code_point : m_temporary_buffer) {                                                 \
+            if (consumed_as_part_of_an_attribute()) {                                                \
                 m_current_token.m_tag.attributes.last().value_builder.append_code_point(code_point); \
-            } else {                                                                               \
-                create_new_token(HTMLToken::Type::Character);                                      \
+            } else {                                                                                 \
+                create_new_token(HTMLToken::Type::Character);                                        \
                 m_current_token.m_comment_or_character.data.append_code_point(code_point);           \
-                m_queued_tokens.enqueue(m_current_token);                                          \
-            }                                                                                      \
-        }                                                                                          \
+                m_queued_tokens.enqueue(m_current_token);                                            \
+            }                                                                                        \
+        }                                                                                            \
     } while (0)
 
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER       \
@@ -159,21 +159,21 @@ namespace Web::HTML {
         return m_queued_tokens.dequeue();         \
     } while (0)
 
-#define EMIT_CHARACTER(code_point)                                                \
-    do {                                                                         \
-        create_new_token(HTMLToken::Type::Character);                            \
+#define EMIT_CHARACTER(code_point)                                                 \
+    do {                                                                           \
+        create_new_token(HTMLToken::Type::Character);                              \
         m_current_token.m_comment_or_character.data.append_code_point(code_point); \
-        m_queued_tokens.enqueue(m_current_token);                                \
-        return m_queued_tokens.dequeue();                                        \
+        m_queued_tokens.enqueue(m_current_token);                                  \
+        return m_queued_tokens.dequeue();                                          \
     } while (0)
 
 #define EMIT_CURRENT_CHARACTER \
     EMIT_CHARACTER(current_input_character.value());
 
 #define SWITCH_TO_AND_EMIT_CHARACTER(code_point, new_state) \
-    do {                                                   \
-        will_switch_to(State::new_state);                  \
-        m_state = State::new_state;                        \
+    do {                                                    \
+        will_switch_to(State::new_state);                   \
+        m_state = State::new_state;                         \
         EMIT_CHARACTER(code_point);                         \
     } while (0)
 

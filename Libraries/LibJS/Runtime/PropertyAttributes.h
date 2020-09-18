@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <AK/Types.h>
 #include <AK/LogStream.h>
+#include <AK/Types.h>
 
 namespace JS {
 

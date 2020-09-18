@@ -32,8 +32,8 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
-#include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringIterator.h>
+#include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>
 #include <string.h>

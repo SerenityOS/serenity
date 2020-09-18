@@ -25,9 +25,9 @@
  */
 
 #include <AK/Utf8View.h>
+#include <LibWeb/Layout/LayoutBox.h>
 #include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutText.h>
-#include <LibWeb/Layout/LayoutBox.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <ctype.h>
 

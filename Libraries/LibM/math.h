@@ -29,9 +29,9 @@
 #include <sys/cdefs.h>
 
 #if __cplusplus >= 201103L
-#define NOEXCEPT noexcept
+#    define NOEXCEPT noexcept
 #else
-#define NOEXCEPT
+#    define NOEXCEPT
 #endif
 
 __BEGIN_DECLS

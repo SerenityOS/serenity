@@ -593,7 +593,7 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "    return JS::Value(retval);";
         } else if (return_type.name == "Uint8ClampedArray") {
             out() << "    return retval;";
-        } else  if (return_type.name == "boolean") {
+        } else if (return_type.name == "boolean") {
             out() << "    return JS::Value(retval);";
         } else {
             out() << "    return wrap(global_object, const_cast<" << return_type.name << "&>(*retval));";

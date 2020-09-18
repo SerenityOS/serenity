@@ -34,7 +34,6 @@
 
 namespace JS {
 
-
 SymbolObject* SymbolObject::create(GlobalObject& global_object, Symbol& primitive_symbol)
 {
     return global_object.heap().allocate<SymbolObject>(global_object, primitive_symbol, *global_object.symbol_prototype());

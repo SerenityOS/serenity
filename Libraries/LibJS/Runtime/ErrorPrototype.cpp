@@ -132,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
         : Object(*global_object.error_prototype())                            \
     {                                                                         \
     }                                                                         \
-    PrototypeName::~PrototypeName() {}
+    PrototypeName::~PrototypeName() { }
 
 JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE

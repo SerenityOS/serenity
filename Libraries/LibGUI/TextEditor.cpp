@@ -72,7 +72,6 @@ TextEditor::TextEditor(Type type)
     });
     m_automatic_selection_scroll_timer->stop();
     create_actions();
-
 }
 
 TextEditor::~TextEditor()

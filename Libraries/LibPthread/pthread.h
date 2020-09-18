@@ -35,7 +35,7 @@
 __BEGIN_DECLS
 
 int pthread_create(pthread_t*, pthread_attr_t*, void* (*)(void*), void*);
-void pthread_exit(void*) __attribute__ ((noreturn));
+void pthread_exit(void*) __attribute__((noreturn));
 int pthread_kill(pthread_t, int);
 void pthread_cleanup_push(void (*)(void*), void*);
 void pthread_cleanup_pop(int);
@@ -78,8 +78,14 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
 #define PTHREAD_MUTEX_NORMAL 0
 #define PTHREAD_MUTEX_RECURSIVE 1
 #define PTHREAD_MUTEX_DEFAULT PTHREAD_MUTEX_NORMAL
-#define PTHREAD_MUTEX_INITIALIZER { 0, 0, 0, PTHREAD_MUTEX_DEFAULT }
-#define PTHREAD_COND_INITIALIZER { 0, 0, CLOCK_MONOTONIC }
+#define PTHREAD_MUTEX_INITIALIZER      \
+    {                                  \
+        0, 0, 0, PTHREAD_MUTEX_DEFAULT \
+    }
+#define PTHREAD_COND_INITIALIZER \
+    {                            \
+        0, 0, CLOCK_MONOTONIC    \
+    }
 
 int pthread_key_create(pthread_key_t* key, void (*destructor)(void*));
 int pthread_key_delete(pthread_key_t key);

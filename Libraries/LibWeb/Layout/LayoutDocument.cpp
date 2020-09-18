@@ -146,7 +146,7 @@ void LayoutDocument::recompute_selection_states()
     });
 }
 
-void LayoutDocument::set_selection(const LayoutRange & selection)
+void LayoutDocument::set_selection(const LayoutRange& selection)
 {
     m_selection = selection;
     recompute_selection_states();

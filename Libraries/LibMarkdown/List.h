@@ -40,7 +40,7 @@ public:
         , m_is_ordered(is_ordered)
     {
     }
-    virtual ~List() override {}
+    virtual ~List() override { }
 
     virtual String render_to_html() const override;
     virtual String render_for_terminal() const override;

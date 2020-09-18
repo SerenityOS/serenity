@@ -29,10 +29,13 @@
 namespace Web::SVG::TagNames {
 
 #define __ENUMERATE_SVG_TAG(name) FlyString name;
-    ENUMERATE_SVG_TAGS
+ENUMERATE_SVG_TAGS
 #undef __ENUMERATE_SVG_TAG
 
+    // clang-format off
+// FIXME: clang-format gets confused here. Why?
 [[gnu::constructor]] static void initialize()
+// clang-format off
 {
     static bool s_initialized = false;
     if (s_initialized)

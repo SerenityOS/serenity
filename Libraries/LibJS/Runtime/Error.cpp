@@ -56,7 +56,7 @@ Error::~Error()
         : Error(#ClassName, message, prototype)                                                                           \
     {                                                                                                                     \
     }                                                                                                                     \
-    ClassName::~ClassName() { }                                                                                           \
+    ClassName::~ClassName() { }
 
 JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE

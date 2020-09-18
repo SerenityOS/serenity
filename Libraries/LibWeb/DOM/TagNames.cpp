@@ -34,7 +34,10 @@ namespace TagNames {
 ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
 
+    // clang-format off
+// FIXME: clang-format gets confused here. Why?
 [[gnu::constructor]] static void initialize()
+// clang-format off
 {
     static bool s_initialized = false;
     if (s_initialized)

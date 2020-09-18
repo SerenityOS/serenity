@@ -30,7 +30,7 @@ namespace VT {
 
 class Position {
 public:
-    Position() {}
+    Position() { }
     Position(int row, int column)
         : m_row(row)
         , m_column(column)

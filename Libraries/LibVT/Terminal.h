@@ -38,7 +38,7 @@ namespace VT {
 
 class TerminalClient {
 public:
-    virtual ~TerminalClient() {}
+    virtual ~TerminalClient() { }
 
     virtual void beep() = 0;
     virtual void set_window_title(const StringView&) = 0;

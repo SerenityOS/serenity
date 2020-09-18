@@ -53,7 +53,7 @@ private:
                                                                                                 \
     public:                                                                                     \
         explicit PrototypeName(GlobalObject&);                                                  \
-        virtual void initialize(GlobalObject&) override { }                       \
+        virtual void initialize(GlobalObject&) override { }                                     \
         virtual ~PrototypeName() override;                                                      \
     };
 

@@ -32,7 +32,6 @@
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Value.h>
 
-
 namespace JS {
 
 RegExpObject* RegExpObject::create(GlobalObject& global_object, String content, String flags)

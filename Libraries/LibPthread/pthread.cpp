@@ -83,8 +83,7 @@ static int create_thread(void* (*entry)(void*), void* argument, PthreadAttrImpl*
     return syscall(SC_create_thread, pthread_create_helper, thread_params);
 }
 
-[[noreturn]] 	
-static void exit_thread(void* code)
+[[noreturn]] static void exit_thread(void* code)
 {
     syscall(SC_exit_thread, code);
     ASSERT_NOT_REACHED();
