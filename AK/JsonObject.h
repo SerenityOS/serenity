@@ -37,8 +37,8 @@ namespace AK {
 
 class JsonObject {
 public:
-    JsonObject() {}
-    ~JsonObject() {}
+    JsonObject() { }
+    ~JsonObject() { }
 
     JsonObject(const JsonObject& other)
         : m_order(other.m_order)

@@ -92,10 +92,10 @@ void LexicalPath::canonicalize()
 
     Optional<size_t> last_dot = StringView(m_basename).find_last_of('.');
     if (last_dot.has_value()) {
-      m_title = m_basename.substring(0, last_dot.value());
-      m_extension = m_basename.substring(last_dot.value() + 1, m_basename.length() - last_dot.value() - 1);
+        m_title = m_basename.substring(0, last_dot.value());
+        m_extension = m_basename.substring(last_dot.value() + 1, m_basename.length() - last_dot.value() - 1);
     } else {
-      m_title = m_basename;
+        m_title = m_basename;
     }
 
     StringBuilder builder(approximate_canonical_length);

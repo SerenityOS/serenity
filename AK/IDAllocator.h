@@ -26,16 +26,16 @@
 
 #pragma once
 
-#include <stdlib.h>
 #include <AK/HashTable.h>
+#include <stdlib.h>
 
 namespace AK {
 
 class IDAllocator {
 
 public:
-    IDAllocator() {}
-    ~IDAllocator() {}
+    IDAllocator() { }
+    ~IDAllocator() { }
 
     int allocate()
     {

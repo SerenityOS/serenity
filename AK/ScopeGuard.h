@@ -70,5 +70,5 @@ private:
 
 }
 
-using AK::ScopeGuard;
 using AK::ArmedScopeGuard;
+using AK::ScopeGuard;

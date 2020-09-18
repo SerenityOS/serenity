@@ -39,8 +39,8 @@ class WeakPtr {
     friend class Weakable<T>;
 
 public:
-    WeakPtr() {}
-    WeakPtr(std::nullptr_t) {}
+    WeakPtr() { }
+    WeakPtr(std::nullptr_t) { }
 
     template<typename U>
     WeakPtr(WeakPtr<U>&& other)

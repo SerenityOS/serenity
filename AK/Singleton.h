@@ -30,7 +30,7 @@
 #include <AK/Atomic.h>
 #include <AK/kmalloc.h>
 #ifdef KERNEL
-#include <Kernel/Arch/i386/CPU.h>
+#    include <Kernel/Arch/i386/CPU.h>
 #endif
 
 #ifndef __serenity__
@@ -51,6 +51,7 @@ template<typename T, T* (*InitFunction)() = SingletonInstanceCreator<T>::create>
 class Singleton {
     AK_MAKE_NONCOPYABLE(Singleton);
     AK_MAKE_NONMOVABLE(Singleton);
+
 public:
     Singleton() = default;
 

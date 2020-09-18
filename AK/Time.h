@@ -133,8 +133,8 @@ inline void timespec_add_timeval(const TimespecType& a, const TimevalType& b, Ti
 template<typename TimevalType, typename TimespecType>
 inline void timeval_to_timespec(const TimevalType& tv, TimespecType& ts)
 {
-   ts.tv_sec = tv.tv_sec;
-   ts.tv_nsec = tv.tv_usec * 1000;
+    ts.tv_sec = tv.tv_sec;
+    ts.tv_nsec = tv.tv_usec * 1000;
 }
 
 template<typename TimespecType, typename TimevalType>
