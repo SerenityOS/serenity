@@ -26,8 +26,8 @@
 
 #include <AK/HashMap.h>
 #include <AK/String.h>
-#include <LibGfx/Emoji.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Emoji.h>
 
 namespace Gfx {
 

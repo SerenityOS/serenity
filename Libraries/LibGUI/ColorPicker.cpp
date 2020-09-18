@@ -128,7 +128,6 @@ public:
 private:
     CustomColorWidget(Color);
 
-
     RefPtr<ColorField> m_color_field;
     RefPtr<ColorSlider> m_color_slider;
 };

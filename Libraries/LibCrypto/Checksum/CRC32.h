@@ -54,7 +54,8 @@ struct Table {
         }
     }
 
-    constexpr u32 operator[](int index) const {
+    constexpr u32 operator[](int index) const
+    {
         return data[index];
     }
 };
@@ -63,7 +64,7 @@ constexpr static auto table = Table();
 
 class CRC32 : public ChecksumFunction<u32> {
 public:
-    CRC32() {}
+    CRC32() { }
     CRC32(ReadonlyBytes data)
     {
         update(data);

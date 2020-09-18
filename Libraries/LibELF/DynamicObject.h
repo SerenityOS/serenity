@@ -52,7 +52,7 @@ public:
         {
         }
 
-        ~DynamicEntry() {}
+        ~DynamicEntry() { }
 
         Elf32_Sword tag() const { return m_dyn.d_tag; }
         Elf32_Addr ptr() const { return m_dyn.d_un.d_ptr; }
@@ -71,7 +71,7 @@ public:
         {
         }
 
-        ~Symbol() {}
+        ~Symbol() { }
 
         const char* name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
@@ -99,7 +99,7 @@ public:
             , m_name(name)
         {
         }
-        ~Section() {}
+        ~Section() { }
 
         const char* name() const { return m_name; }
         unsigned offset() const { return m_section_offset; }
@@ -140,7 +140,7 @@ public:
         {
         }
 
-        ~Relocation() {}
+        ~Relocation() { }
 
         unsigned offset_in_section() const { return m_offset_in_section; }
         unsigned offset() const { return m_rel.r_offset; }

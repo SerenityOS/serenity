@@ -29,8 +29,8 @@
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/ImageWidget.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font.h>
 

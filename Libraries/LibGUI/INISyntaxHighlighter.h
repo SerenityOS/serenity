@@ -32,7 +32,7 @@ namespace GUI {
 
 class IniSyntaxHighlighter final : public SyntaxHighlighter {
 public:
-    IniSyntaxHighlighter() {}
+    IniSyntaxHighlighter() { }
     virtual ~IniSyntaxHighlighter() override;
 
     virtual bool is_identifier(void*) const override;

@@ -37,7 +37,7 @@ class MimeData : public Object {
     C_OBJECT(MimeData);
 
 public:
-    virtual ~MimeData() {}
+    virtual ~MimeData() { }
 
     ByteBuffer data(const String& mime_type) const { return m_data.get(mime_type).value_or({}); }
     void set_data(const String& mime_type, const ByteBuffer& data) { m_data.set(mime_type, data); }
@@ -56,7 +56,7 @@ public:
     void set_urls(const Vector<URL>&);
 
 private:
-    MimeData() {}
+    MimeData() { }
 
     HashMap<String, ByteBuffer> m_data;
 };

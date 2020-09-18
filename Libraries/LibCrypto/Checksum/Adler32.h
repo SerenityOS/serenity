@@ -34,7 +34,7 @@ namespace Crypto::Checksum {
 
 class Adler32 : public ChecksumFunction<u32> {
 public:
-    Adler32() {}
+    Adler32() { }
     Adler32(ReadonlyBytes data)
     {
         update(data);

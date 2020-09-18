@@ -69,7 +69,7 @@ bool UDPServer::bind(const IPv4Address& address, u16 port)
     rc = ::bind(m_fd, (const sockaddr*)&in, sizeof(in));
     ASSERT(rc == 0);
     m_bound = true;
-    
+
     m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
     m_notifier->on_ready_to_read = [this] {
         if (on_ready_to_receive)

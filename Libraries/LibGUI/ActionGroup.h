@@ -34,8 +34,8 @@ namespace GUI {
 
 class ActionGroup : public Weakable<ActionGroup> {
 public:
-    ActionGroup() {}
-    ~ActionGroup() {}
+    ActionGroup() { }
+    ~ActionGroup() { }
 
     void add_action(Action&);
     void remove_action(Action&);

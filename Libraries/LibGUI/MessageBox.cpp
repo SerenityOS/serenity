@@ -26,8 +26,8 @@
 
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/ImageWidget.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Font.h>
 #include <stdio.h>

@@ -28,9 +28,9 @@
 
 #define _STDIO_H // Make GMP believe we exist.
 
+#include <bits/FILE.h>
 #include <limits.h>
 #include <stdarg.h>
-#include <bits/FILE.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 

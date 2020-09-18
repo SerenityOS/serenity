@@ -82,7 +82,7 @@ protected:
     virtual void custom_layout() override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;
-    virtual void did_scroll() {}
+    virtual void did_scroll() { }
     void set_content_size(const Gfx::IntSize&);
     void set_size_occupied_by_fixed_elements(const Gfx::IntSize&);
 

@@ -34,14 +34,14 @@
 
 #include <spawn.h>
 
+#include <AK/Function.h>
+#include <AK/Vector.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <AK/Function.h>
-#include <AK/Vector.h>
+#include <unistd.h>
 
 struct posix_spawn_file_actions_state {
     Vector<Function<int()>, 4> actions;
@@ -286,5 +286,4 @@ int posix_spawnattr_setsigmask(posix_spawnattr_t* attr, const sigset_t* sigmask)
     attr->sigmask = *sigmask;
     return 0;
 }
-
 }

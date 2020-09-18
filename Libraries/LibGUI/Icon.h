@@ -36,13 +36,13 @@ namespace GUI {
 class IconImpl : public RefCounted<IconImpl> {
 public:
     static NonnullRefPtr<IconImpl> create() { return adopt(*new IconImpl); }
-    ~IconImpl() {}
+    ~IconImpl() { }
 
     const Gfx::Bitmap* bitmap_for_size(int) const;
     void set_bitmap_for_size(int, RefPtr<Gfx::Bitmap>&&);
 
 private:
-    IconImpl() {}
+    IconImpl() { }
     HashMap<int, RefPtr<Gfx::Bitmap>> m_bitmaps;
 };
 
@@ -53,7 +53,7 @@ public:
     explicit Icon(RefPtr<Gfx::Bitmap>&&, RefPtr<Gfx::Bitmap>&&);
     explicit Icon(const IconImpl&);
     Icon(const Icon&);
-    ~Icon() {}
+    ~Icon() { }
 
     static Icon default_icon(const StringView&);
 

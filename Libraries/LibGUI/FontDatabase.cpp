@@ -26,8 +26,8 @@
 
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
-#include <LibGfx/Font.h>
 #include <LibGUI/FontDatabase.h>
+#include <LibGfx/Font.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
