@@ -187,9 +187,9 @@ String FileSystemModel::Node::full_path() const
 ModelIndex FileSystemModel::index(const StringView& path, int column) const
 {
     LexicalPath lexical_path(path);
-    const Node* node = m_root;
+    const Node* node = m_root->m_parent_of_root ? &m_root->children.first() : m_root;
     if (lexical_path.string() == "/")
-        return m_root->index(column);
+        return node->index(column);
     for (size_t i = 0; i < lexical_path.parts().size(); ++i) {
         auto& part = lexical_path.parts()[i];
         bool found = false;
