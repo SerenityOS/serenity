@@ -130,9 +130,9 @@ void VBWidget::add_property(const String& name, Function<GUI::Variant(const GUI:
     prop.m_setter = move(setter);
 }
 
-#define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type)                \
-    add_property(                                                                  \
-        name,                                                                      \
+#define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type)                    \
+    add_property(                                                                      \
+        name,                                                                          \
         [](auto& widget) -> GUI::Variant { return ((const gclass&)widget).getter(); }, \
         [](auto& widget, auto& value) { ((gclass&)widget).setter(value.to_##variant_type()); })
 

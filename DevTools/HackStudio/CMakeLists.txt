@@ -26,7 +26,6 @@ set(SOURCES
     Project.cpp
     ProjectFile.cpp
     TerminalWrapper.cpp
-    Tool.cpp
     WidgetTool.cpp
     WidgetTreeModel.cpp
     main.cpp

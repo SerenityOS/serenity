@@ -29,8 +29,8 @@
 #include "Debugger.h"
 #include <AK/NonnullOwnPtr.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/TableView.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>
 #include <sys/arch/i386/regs.h>
 

@@ -66,7 +66,7 @@ void DebugInfoWidget::init_toolbar()
         pthread_mutex_unlock(Debugger::the().continue_mutex());
     });
 
-    m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, Key_F11 },Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"), [](auto&) {
+    m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, Key_F11 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"), [](auto&) {
         pthread_mutex_lock(Debugger::the().continue_mutex());
         Debugger::the().set_continue_type(Debugger::ContinueType::SourceStepOut);
         pthread_cond_signal(Debugger::the().continue_cond());

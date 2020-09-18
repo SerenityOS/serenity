@@ -95,7 +95,7 @@ public:
         return {};
     }
 
-    virtual void update() override {}
+    virtual void update() override { }
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override { return create_index(row, column, &m_matches.at(row)); }
 
 private:
