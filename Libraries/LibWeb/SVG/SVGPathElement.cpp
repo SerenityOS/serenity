@@ -112,7 +112,8 @@ Vector<PathInstruction> PathDataParser::parse()
     return m_instructions;
 }
 
-void PathDataParser::parse_drawto() {
+void PathDataParser::parse_drawto()
+{
     if (match('M') || match('m')) {
         parse_moveto();
     } else if (match('Z') || match('z')) {
@@ -611,14 +612,13 @@ void SVGPathElement::paint(Gfx::Painter& painter, const SVGPaintingContext& cont
 
             auto dx_end_control = last_point.dx_relative_to(m_previous_control_point);
             auto dy_end_control = last_point.dy_relative_to(m_previous_control_point);
-            auto control_point = Gfx::FloatPoint {last_point.x() + dx_end_control, last_point.y() + dy_end_control};
+            auto control_point = Gfx::FloatPoint { last_point.x() + dx_end_control, last_point.y() + dy_end_control };
 
-            Gfx::FloatPoint end_point = {data[0], data[1]};
+            Gfx::FloatPoint end_point = { data[0], data[1] };
 
             if (absolute) {
                 path.quadratic_bezier_curve_to(control_point, end_point);
-            }
-            else {
+            } else {
                 path.quadratic_bezier_curve_to(control_point, end_point + last_point);
             }
 

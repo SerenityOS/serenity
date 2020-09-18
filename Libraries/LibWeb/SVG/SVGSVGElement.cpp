@@ -28,9 +28,9 @@
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/Layout/LayoutSVG.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
-#include <LibWeb/Layout/LayoutSVG.h>
 #include <ctype.h>
 
 namespace Web::SVG {

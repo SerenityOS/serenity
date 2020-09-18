@@ -41,7 +41,7 @@ public:
     virtual ~Thread();
 
     void start();
-    void quit(void *code = 0);
+    void quit(void* code = 0);
 
 private:
     Function<int()> m_action;

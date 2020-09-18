@@ -113,7 +113,6 @@ public:
 private:
     Vector<PathInstruction> m_instructions;
     Gfx::FloatPoint m_previous_control_point = {};
-
 };
 
 }

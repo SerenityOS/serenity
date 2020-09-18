@@ -68,16 +68,16 @@ Value ErrorConstructor::construct(Interpreter& interpreter, Function&)
         : NativeFunction(*global_object.function_prototype())                                                          \
     {                                                                                                                  \
     }                                                                                                                  \
-    void ConstructorName::initialize(GlobalObject& global_object)                            \
+    void ConstructorName::initialize(GlobalObject& global_object)                                                      \
     {                                                                                                                  \
-        NativeFunction::initialize(global_object);                                                        \
+        NativeFunction::initialize(global_object);                                                                     \
         define_property("prototype", global_object.snake_name##_prototype(), 0);                                       \
         define_property("length", Value(1), Attribute::Configurable);                                                  \
     }                                                                                                                  \
     ConstructorName::~ConstructorName() { }                                                                            \
     Value ConstructorName::call(Interpreter& interpreter)                                                              \
     {                                                                                                                  \
-        return construct(interpreter, *this);                                                                                 \
+        return construct(interpreter, *this);                                                                          \
     }                                                                                                                  \
     Value ConstructorName::construct(Interpreter& interpreter, Function&)                                              \
     {                                                                                                                  \

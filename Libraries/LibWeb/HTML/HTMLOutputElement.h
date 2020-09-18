@@ -37,7 +37,8 @@ public:
     HTMLOutputElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLOutputElement() override;
 
-    const String& type() const {
+    const String& type() const
+    {
         static String output = "output";
         return output;
     }

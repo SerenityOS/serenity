@@ -37,7 +37,8 @@ public:
     HTMLTextAreaElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLTextAreaElement() override;
 
-    const String& type() const {
+    const String& type() const
+    {
         static String textarea = "textarea";
         return textarea;
     }

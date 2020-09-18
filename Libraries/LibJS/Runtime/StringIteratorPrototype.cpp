@@ -25,11 +25,11 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibJS/Runtime/StringIterator.h>
-#include <LibJS/Runtime/StringIteratorPrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/StringIterator.h>
+#include <LibJS/Runtime/StringIteratorPrototype.h>
 
 namespace JS {
 

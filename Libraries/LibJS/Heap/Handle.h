@@ -55,7 +55,7 @@ private:
 template<class T>
 class Handle {
 public:
-    Handle() {}
+    Handle() { }
 
     static Handle create(T* cell)
     {

@@ -32,8 +32,10 @@ namespace Web::DOM {
 
 class ParentNode : public Node {
 public:
-    template<typename F> void for_each_child(F) const;
-    template<typename F> void for_each_child(F);
+    template<typename F>
+    void for_each_child(F) const;
+    template<typename F>
+    void for_each_child(F);
 
     RefPtr<Element> query_selector(const StringView&);
     NonnullRefPtrVector<Element> query_selector_all(const StringView&);

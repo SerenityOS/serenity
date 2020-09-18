@@ -51,7 +51,7 @@ void LibThread::Thread::start()
         [](void* arg) -> void* {
             Thread* self = static_cast<Thread*>(arg);
             size_t exit_code = self->m_action();
-            self->m_tid = 0;            
+            self->m_tid = 0;
             return (void*)exit_code;
         },
         static_cast<void*>(this));
@@ -64,7 +64,7 @@ void LibThread::Thread::start()
     dbg() << "Started a thread, tid = " << m_tid;
 }
 
-void LibThread::Thread::quit(void *code)
+void LibThread::Thread::quit(void* code)
 {
     ASSERT(m_tid == pthread_self());
 
