@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/String.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <stdio.h>

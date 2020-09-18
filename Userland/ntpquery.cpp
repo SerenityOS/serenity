@@ -42,7 +42,8 @@
 // The fractional part in the lower 32 bits stores fractional bits times 2 ** 32.
 typedef uint64_t NtpTimestamp;
 
-struct [[gnu::packed]] NtpPacket {
+struct [[gnu::packed]] NtpPacket
+{
     uint8_t li_vn_mode;
     uint8_t stratum;
     int8_t poll;
@@ -182,7 +183,7 @@ int main(int argc, char** argv)
 
     iovec iov { &packet, sizeof(packet) };
     char control_message_buffer[CMSG_SPACE(sizeof(timeval))];
-    msghdr msg = { &peer_address, sizeof(peer_address), &iov, 1, control_message_buffer, sizeof(control_message_buffer), 0};
+    msghdr msg = { &peer_address, sizeof(peer_address), &iov, 1, control_message_buffer, sizeof(control_message_buffer), 0 };
     rc = recvmsg(fd, &msg, 0);
     if (rc < 0) {
         perror("recvmsg");
