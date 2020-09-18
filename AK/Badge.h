@@ -31,7 +31,7 @@ namespace AK {
 template<typename T>
 class Badge {
     friend T;
-    Badge() {}
+    Badge() { }
 
     Badge(const Badge&) = delete;
     Badge& operator=(const Badge&) = delete;
@@ -43,4 +43,3 @@ class Badge {
 }
 
 using AK::Badge;
-

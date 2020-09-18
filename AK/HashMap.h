@@ -47,7 +47,7 @@ private:
     };
 
 public:
-    HashMap() {}
+    HashMap() { }
 
     bool is_empty() const { return m_table.is_empty(); }
     size_t size() const { return m_table.size(); }

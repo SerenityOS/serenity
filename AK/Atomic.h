@@ -85,7 +85,6 @@ template<typename T, typename V = typename RemoveVolatile<T>::Type>
         return __atomic_compare_exchange_n(const_cast<V**>(var), &expected, nullptr, false, order, order);
 }
 
-
 template<typename T>
 static inline T atomic_fetch_add(volatile T* var, T val, MemoryOrder order = memory_order_seq_cst) noexcept
 {

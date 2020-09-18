@@ -53,7 +53,7 @@ inline unsigned u64_hash(u64 key)
 
 inline unsigned ptr_hash(FlatPtr ptr)
 {
-    if constexpr(sizeof(ptr) == 8)
+    if constexpr (sizeof(ptr) == 8)
         return u64_hash((u64)ptr);
     else
         return int_hash((u32)ptr);
