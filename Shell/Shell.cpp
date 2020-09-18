@@ -195,8 +195,11 @@ Vector<StringView> Shell::split_path(const StringView& path)
 
 Vector<String> Shell::expand_globs(const StringView& path, StringView base)
 {
-    if (path.starts_with('/'))
+    auto explicitly_set_base = false;
+    if (path.starts_with('/')) {
         base = "/";
+        explicitly_set_base = true;
+    }
     auto parts = split_path(path);
     String base_string = base;
     struct stat statbuf;
@@ -214,6 +217,8 @@ Vector<String> Shell::expand_globs(const StringView& path, StringView base)
 
     auto results = expand_globs(move(parts), resolved_base);
 
+    if (explicitly_set_base && base == "/")
+        resolved_base = resolved_base.substring_view(1, resolved_base.length() - 1);
     for (auto& entry : results) {
         entry = entry.substring(resolved_base.length(), entry.length() - resolved_base.length());
         if (entry.is_empty())
