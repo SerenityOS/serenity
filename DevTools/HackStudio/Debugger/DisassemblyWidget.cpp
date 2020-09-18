@@ -26,9 +26,9 @@
 
 #include "DisassemblyWidget.h"
 #include "DisassemblyModel.h"
-#include <LibGfx/Palette.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Palette.h>
 
 namespace HackStudio {
 

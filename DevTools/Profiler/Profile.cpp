@@ -117,8 +117,7 @@ void Profile::rebuild_tree()
 
         ProfileNode* node = nullptr;
 
-        auto for_each_frame = [&]<typename Callback>(Callback callback)
-        {
+        auto for_each_frame = [&]<typename Callback>(Callback callback) {
             if (!m_inverted) {
                 for (size_t i = 0; i < event.frames.size(); ++i) {
                     if (callback(event.frames.at(i), i == event.frames.size() - 1) == IterationDecision::Break)

@@ -72,7 +72,7 @@ private:
     Vector<String> m_suggestions;
 };
 
-AutoCompleteBox::~AutoCompleteBox() {}
+AutoCompleteBox::~AutoCompleteBox() { }
 
 AutoCompleteBox::AutoCompleteBox(WeakPtr<Editor> editor)
     : m_editor(move(editor))

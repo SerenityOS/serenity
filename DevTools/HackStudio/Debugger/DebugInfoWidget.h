@@ -44,7 +44,7 @@ namespace HackStudio {
 class DebugInfoWidget final : public GUI::Widget {
     C_OBJECT(DebugInfoWidget)
 public:
-    virtual ~DebugInfoWidget() override {}
+    virtual ~DebugInfoWidget() override { }
 
     void update_state(const Debug::DebugSession&, const PtraceRegisters&);
     void program_stopped();
