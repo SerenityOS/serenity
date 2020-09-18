@@ -78,7 +78,6 @@ private:
     Object* m_##snake_name##_prototype { nullptr };
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
-
 };
 
 template<typename ConstructorType>

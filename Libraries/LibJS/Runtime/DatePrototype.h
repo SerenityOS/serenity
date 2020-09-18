@@ -32,6 +32,7 @@ namespace JS {
 
 class DatePrototype final : public Object {
     JS_OBJECT(DatePrototype, Object);
+
 public:
     explicit DatePrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;

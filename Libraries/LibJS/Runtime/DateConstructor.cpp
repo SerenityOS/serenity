@@ -37,7 +37,8 @@
 
 namespace JS {
 
-static Value parse_simplified_iso8601(const String& iso_8601) {
+static Value parse_simplified_iso8601(const String& iso_8601)
+{
     // Date.parse() is allowed to accept many formats. We strictly only accept things matching
     // http://www.ecma-international.org/ecma-262/#sec-date-time-string-format
     GenericLexer lexer(iso_8601);

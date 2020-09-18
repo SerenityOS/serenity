@@ -27,9 +27,9 @@
 
 #include <LibWeb/Bindings/CharacterDataWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
-#include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
+#include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/HTMLAnchorElementWrapper.h>
 #include <LibWeb/Bindings/HTMLAreaElementWrapper.h>
 #include <LibWeb/Bindings/HTMLAudioElementWrapper.h>

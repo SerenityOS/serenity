@@ -34,6 +34,7 @@ namespace Markdown {
 
 class Text final {
     AK_MAKE_NONCOPYABLE(Text);
+
 public:
     struct Style {
         bool emph { false };

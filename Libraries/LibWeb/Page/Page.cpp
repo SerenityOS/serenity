@@ -24,9 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
-#include <LibWeb/InProcessWebView.h>
 
 namespace Web {
 

@@ -37,7 +37,8 @@ public:
     HTMLFieldSetElement(DOM::Document&, const FlyString& local_name);
     virtual ~HTMLFieldSetElement() override;
 
-    const String& type() const {
+    const String& type() const
+    {
         static String fieldset = "fieldset";
         return fieldset;
     }

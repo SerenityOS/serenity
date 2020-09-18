@@ -46,7 +46,7 @@ class BackgroundActionBase {
     friend class BackgroundAction;
 
 private:
-    BackgroundActionBase() {}
+    BackgroundActionBase() { }
 
     static Lockable<Queue<Function<void()>>>& all_actions();
     static Thread& background_thread();
@@ -65,7 +65,7 @@ public:
         return adopt(*new BackgroundAction(move(action), move(on_complete)));
     }
 
-    virtual ~BackgroundAction() {}
+    virtual ~BackgroundAction() { }
 
 private:
     BackgroundAction(Function<Result()> action, Function<void(Result)> on_complete)

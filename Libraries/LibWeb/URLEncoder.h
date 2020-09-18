@@ -39,4 +39,3 @@ struct URLQueryParam {
 String urlencode(const Vector<URLQueryParam>&);
 
 }
-

@@ -25,8 +25,8 @@
  */
 
 #include <AK/Utf8View.h>
-#include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/StringIterator.h>
 
 namespace JS {
 
