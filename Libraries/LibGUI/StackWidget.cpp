@@ -42,12 +42,15 @@ void StackWidget::set_active_widget(Widget* widget)
     if (widget == m_active_widget)
         return;
 
+    bool had_focus = is_focused() || (m_active_widget && m_active_widget->is_focused());
+
     if (m_active_widget)
         m_active_widget->set_visible(false);
     m_active_widget = widget;
     if (m_active_widget) {
         m_active_widget->set_relative_rect(rect());
-        m_active_widget->set_focus(true);
+        if (had_focus)
+            m_active_widget->set_focus(true);
         m_active_widget->set_visible(true);
     }
     if (on_active_widget_change)
