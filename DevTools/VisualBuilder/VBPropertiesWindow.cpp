@@ -37,7 +37,7 @@ class BoolValuesModel final : public GUI::Model {
 public:
     virtual int row_count(const GUI::ModelIndex&) const override { return 2; }
     virtual int column_count(const GUI::ModelIndex&) const override { return 1; }
-    virtual void update() override {}
+    virtual void update() override { }
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
         if (role != GUI::ModelRole::Display)
@@ -54,8 +54,8 @@ public:
 
 class BoolModelEditingDelegate : public GUI::ModelEditingDelegate {
 public:
-    BoolModelEditingDelegate() {}
-    virtual ~BoolModelEditingDelegate() override {}
+    BoolModelEditingDelegate() { }
+    virtual ~BoolModelEditingDelegate() override { }
 
     virtual RefPtr<GUI::Widget> create_widget() override
     {

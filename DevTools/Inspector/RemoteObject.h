@@ -26,9 +26,9 @@
 
 #pragma once
 
-#include <AK/String.h>
 #include <AK/JsonObject.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 
 class RemoteObjectPropertyModel;

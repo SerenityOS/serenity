@@ -39,7 +39,7 @@ typedef Function<void(const String& original_content, const String& diff)> ViewD
 class GitWidget final : public GUI::Widget {
     C_OBJECT(GitWidget)
 public:
-    virtual ~GitWidget() override {}
+    virtual ~GitWidget() override { }
 
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);

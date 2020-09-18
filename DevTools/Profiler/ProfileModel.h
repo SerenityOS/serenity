@@ -28,7 +28,6 @@
 
 #include <LibGUI/Model.h>
 
-
 class Profile;
 
 class ProfileModel final : public GUI::Model {
