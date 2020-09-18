@@ -32,7 +32,7 @@ class ManualSectionNode;
 
 class ManualPageNode : public ManualNode {
 public:
-    virtual ~ManualPageNode() override {}
+    virtual ~ManualPageNode() override { }
 
     ManualPageNode(const ManualSectionNode& section, const StringView& page)
         : m_section(section)

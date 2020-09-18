@@ -29,8 +29,8 @@
 #include "Layer.h"
 #include "Tool.h"
 #include <LibGUI/Painter.h>
-#include <LibGfx/Rect.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/Rect.h>
 
 namespace PixelPaint {
 

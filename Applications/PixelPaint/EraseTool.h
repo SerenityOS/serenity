@@ -28,8 +28,8 @@
 
 #include "Tool.h"
 #include <LibGUI/ActionGroup.h>
-#include <LibGfx/Point.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Point.h>
 
 namespace PixelPaint {
 

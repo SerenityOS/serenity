@@ -25,7 +25,6 @@
  */
 
 #include "DisplaySettings.h"
-#include <LibGUI/ItemListModel.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
@@ -35,6 +34,7 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/WindowServerConnection.h>

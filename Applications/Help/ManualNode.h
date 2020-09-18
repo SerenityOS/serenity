@@ -31,7 +31,7 @@
 
 class ManualNode {
 public:
-    virtual ~ManualNode() {}
+    virtual ~ManualNode() { }
 
     virtual NonnullOwnPtrVector<ManualNode>& children() const = 0;
     virtual const ManualNode* parent() const = 0;
