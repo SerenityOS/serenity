@@ -28,10 +28,10 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <LibGUI/AbstractButton.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/TextAlignment.h>
-#include <LibGUI/AbstractButton.h>
 
 namespace GUI {
 

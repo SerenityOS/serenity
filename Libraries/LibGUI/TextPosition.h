@@ -33,7 +33,7 @@ namespace GUI {
 
 class TextPosition {
 public:
-    TextPosition() {}
+    TextPosition() { }
     TextPosition(size_t line, size_t column)
         : m_line(line)
         , m_column(column)

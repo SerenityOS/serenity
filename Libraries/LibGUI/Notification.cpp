@@ -45,9 +45,8 @@ private:
     NotificationServerConnection()
         : IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>(*this, "/tmp/portal/notify")
     {
-
     }
-    virtual void handle(const Messages::NotificationClient::Dummy&) override {}
+    virtual void handle(const Messages::NotificationClient::Dummy&) override { }
 };
 
 Notification::Notification()

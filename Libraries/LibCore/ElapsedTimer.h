@@ -32,7 +32,7 @@ namespace Core {
 
 class ElapsedTimer {
 public:
-    ElapsedTimer() {}
+    ElapsedTimer() { }
 
     bool is_valid() const { return m_valid; }
     void start();

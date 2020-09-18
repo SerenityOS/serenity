@@ -24,11 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/CharacterBitmap.h>
-#include <LibGfx/Palette.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ResizeCorner.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 

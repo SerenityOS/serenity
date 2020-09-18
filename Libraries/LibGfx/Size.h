@@ -35,7 +35,7 @@ namespace Gfx {
 template<typename T>
 class Size {
 public:
-    Size() {}
+    Size() { }
 
     Size(T w, T h)
         : m_width(w)

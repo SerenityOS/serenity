@@ -45,7 +45,7 @@ namespace ELF {
 
 class Loader : public RefCounted<Loader> {
 public:
-    static NonnullRefPtr<Loader> create(const u8* data, size_t size, bool verbose_logging=true) { return adopt(*new Loader(data, size, verbose_logging)); }
+    static NonnullRefPtr<Loader> create(const u8* data, size_t size, bool verbose_logging = true) { return adopt(*new Loader(data, size, verbose_logging)); }
     ~Loader();
 
     bool load();

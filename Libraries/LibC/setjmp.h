@@ -26,9 +26,9 @@
 
 #pragma once
 
+#include <bits/stdint.h>
 #include <signal.h>
 #include <stdbool.h>
-#include <bits/stdint.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 

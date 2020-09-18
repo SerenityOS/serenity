@@ -64,7 +64,7 @@ public:
     void cursor_did_change();
 
 protected:
-    SyntaxHighlighter() {}
+    SyntaxHighlighter() { }
 
     WeakPtr<TextEditor> m_editor;
 

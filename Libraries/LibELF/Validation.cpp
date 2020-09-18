@@ -26,8 +26,8 @@
 
 #include <AK/Assertions.h>
 #include <AK/String.h>
-#include <LibELF/exec_elf.h>
 #include <LibELF/Validation.h>
+#include <LibELF/exec_elf.h>
 
 namespace ELF {
 

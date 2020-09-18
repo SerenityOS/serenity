@@ -33,7 +33,7 @@ namespace GUI {
 
 class TextRange {
 public:
-    TextRange() {}
+    TextRange() { }
     TextRange(const TextPosition& start, const TextPosition& end)
         : m_start(start)
         , m_end(end)

@@ -127,7 +127,7 @@ ComboBox::ComboBox()
         m_list_view->set_activates_on_selection(false);
         close();
     };
-    
+
     m_list_view->on_escape_pressed = [this] {
         close();
     };

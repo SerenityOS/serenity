@@ -37,7 +37,7 @@ __BEGIN_DECLS
 const char* inet_ntop(int af, const void* src, char* dst, socklen_t);
 int inet_pton(int af, const char* src, void* dst);
 
-static inline int inet_aton(const char *cp, struct in_addr *inp)
+static inline int inet_aton(const char* cp, struct in_addr* inp)
 {
     return inet_pton(AF_INET, cp, inp);
 }

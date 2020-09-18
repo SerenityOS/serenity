@@ -32,7 +32,7 @@ namespace GUI {
 
 class CppSyntaxHighlighter final : public SyntaxHighlighter {
 public:
-    CppSyntaxHighlighter() {}
+    CppSyntaxHighlighter() { }
     virtual ~CppSyntaxHighlighter() override;
 
     virtual bool is_identifier(void*) const override;

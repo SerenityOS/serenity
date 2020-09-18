@@ -28,10 +28,10 @@
 
 #include <AK/Badge.h>
 #include <AK/HashTable.h>
+#include <AK/Noncopyable.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <LibGUI/ModelIndex.h>
-#include <AK/Noncopyable.h>
 
 namespace GUI {
 

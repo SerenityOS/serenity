@@ -334,7 +334,7 @@ void ArgsParser::add_positional_argument(double& value, const char* help_string,
         required == Required::Yes ? 1 : 0,
         1,
         [&value](const char* s) {
-            char *p;
+            char* p;
             double v = strtod(s, &p);
             bool valid_value = !isnan(v) && p != s;
             if (valid_value) {

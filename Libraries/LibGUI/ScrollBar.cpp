@@ -193,7 +193,7 @@ int ScrollBar::unclamped_scrubber_size() const
 {
     int pixel_range = length(orientation()) - button_size() * 2;
     int value_range = m_max - m_min;
-    
+
     int scrubber_size = 0;
     if (value_range > 0) {
         // Scrubber size should be proportional to the visible portion

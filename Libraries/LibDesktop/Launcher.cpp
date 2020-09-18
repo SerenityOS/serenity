@@ -74,7 +74,7 @@ private:
         : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, "/tmp/portal/launch")
     {
     }
-    virtual void handle(const Messages::LaunchClient::Dummy&) override {}
+    virtual void handle(const Messages::LaunchClient::Dummy&) override { }
 };
 
 bool Launcher::open(const URL& url, const String& handler_name)

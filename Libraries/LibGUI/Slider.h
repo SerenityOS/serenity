@@ -102,7 +102,7 @@ private:
 class VerticalSlider final : public Slider {
     C_OBJECT(VerticalSlider)
 public:
-    virtual ~VerticalSlider() override {}
+    virtual ~VerticalSlider() override { }
 
 private:
     VerticalSlider()
@@ -114,7 +114,7 @@ private:
 class HorizontalSlider final : public Slider {
     C_OBJECT(HorizontalSlider)
 public:
-    virtual ~HorizontalSlider() override {}
+    virtual ~HorizontalSlider() override { }
 
 private:
     HorizontalSlider()
