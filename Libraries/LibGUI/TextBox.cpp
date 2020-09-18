@@ -74,7 +74,7 @@ void TextBox::add_current_text_to_history()
 {
     if (!m_history_enabled)
         return;
-    
+
     auto input = text();
     if (m_history.is_empty() || m_history.last() != input)
         add_input_to_history(input);

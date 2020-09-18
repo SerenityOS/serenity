@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/Palette.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ToolBar.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
@@ -86,7 +86,7 @@ public:
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         set_preferred_size(8, 18);
     }
-    virtual ~SeparatorWidget() override {}
+    virtual ~SeparatorWidget() override { }
 
     virtual void paint_event(PaintEvent& event) override
     {
@@ -111,10 +111,7 @@ void ToolBar::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    //if (m_has_frame)
-//        Gfx::StylePainter::paint_surface(painter, rect(), palette(), x() != 0, y() != 0);
-//    else
-        painter.fill_rect(event.rect(), palette().button());
+    painter.fill_rect(event.rect(), palette().button());
 }
 
 }

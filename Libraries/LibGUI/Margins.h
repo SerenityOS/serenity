@@ -30,7 +30,7 @@ namespace GUI {
 
 class Margins {
 public:
-    Margins() {}
+    Margins() { }
     Margins(int left, int top, int right, int bottom)
         : m_left(left)
         , m_top(top)
@@ -38,7 +38,7 @@ public:
         , m_bottom(bottom)
     {
     }
-    ~Margins() {}
+    ~Margins() { }
 
     bool is_null() const { return !m_left && !m_top && !m_right && !m_bottom; }
 

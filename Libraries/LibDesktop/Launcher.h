@@ -43,7 +43,7 @@ public:
         UserDefault
     };
 
-    struct Details: public RefCounted<Details> {
+    struct Details : public RefCounted<Details> {
 
         String name;
         String executable;

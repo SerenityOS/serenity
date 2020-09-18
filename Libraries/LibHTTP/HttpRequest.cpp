@@ -188,7 +188,7 @@ Optional<HttpRequest> HttpRequest::from_raw_request(const ByteBuffer& raw_reques
     return request;
 }
 
-void HttpRequest::set_headers(const HashMap<String,String>& headers)
+void HttpRequest::set_headers(const HashMap<String, String>& headers)
 {
     for (auto& it : headers)
         m_headers.append({ it.key, it.value });

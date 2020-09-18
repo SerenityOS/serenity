@@ -27,9 +27,9 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGUI/Icon.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Font.h>
 
 namespace GUI {
 

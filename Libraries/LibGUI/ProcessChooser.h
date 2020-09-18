@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <LibGUI/Dialog.h>
 #include <LibCore/Timer.h>
+#include <LibGUI/Dialog.h>
 
 namespace GUI {
 

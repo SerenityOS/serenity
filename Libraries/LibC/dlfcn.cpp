@@ -32,8 +32,8 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include <AK/LexicalPath.h>
 #include <AK/HashMap.h>
+#include <AK/LexicalPath.h>
 #include <AK/RefPtr.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
@@ -85,7 +85,8 @@ void* dlopen(const char* filename, int flags)
 
     ScopeGuard close_fd_guard([fd]() { close(fd); });
 
-    struct stat file_stats{};
+    struct stat file_stats {
+    };
 
     int ret = fstat(fd, &file_stats);
     if (ret < 0) {
