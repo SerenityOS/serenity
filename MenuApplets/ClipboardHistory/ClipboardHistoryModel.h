@@ -56,4 +56,3 @@ private:
     Vector<GUI::Clipboard::DataAndType> m_history_items;
     size_t m_history_limit { 20 };
 };
-

@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     auto& icon = applet_window->set_main_widget<GUI::ImageWidget>();
     icon.load_from_file("/res/icons/16x16/clipboard.png");
     icon.set_fill_with_background_color(true);
-    icon.on_click = [& main_window = *main_window] {
+    icon.on_click = [&main_window = *main_window] {
         main_window.show();
     };
     applet_window->resize(16, 16);
