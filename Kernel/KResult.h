@@ -72,12 +72,14 @@ public:
     ALWAYS_INLINE KResultOr(T&& value)
     {
         new (&m_storage) T(move(value));
+        m_have_storage = true;
     }
 
     template<typename U>
     ALWAYS_INLINE KResultOr(U&& value)
     {
         new (&m_storage) T(move(value));
+        m_have_storage = true;
     }
 
     KResultOr(KResultOr&& other)
@@ -86,8 +88,12 @@ public:
         if (m_is_error)
             m_error = other.m_error;
         else {
-            new (&m_storage) T(move(other.value()));
-            other.value().~T();
+            if (other.m_have_storage) {
+                new (&m_storage) T(move(other.value()));
+                m_have_storage = true;
+                other.value().~T();
+                other.m_have_storage = false;
+            }
         }
         other.m_is_error = true;
         other.m_error = KSuccess;
@@ -95,14 +101,20 @@ public:
 
     KResultOr& operator=(KResultOr&& other)
     {
-        if (!m_is_error)
+        if (!m_is_error && m_have_storage) {
             value().~T();
+            m_have_storage = false;
+        }
         m_is_error = other.m_is_error;
         if (m_is_error)
             m_error = other.m_error;
         else {
-            new (&m_storage) T(move(other.value()));
-            other.value().~T();
+            if (other.m_have_storage) {
+                new (&m_storage) T(move(other.value()));
+                m_have_storage = true;
+                other.value().~T();
+                other.m_have_storage = false;
+            }
         }
         other.m_is_error = true;
         other.m_error = KSuccess;
@@ -111,7 +123,7 @@ public:
 
     ~KResultOr()
     {
-        if (!m_is_error)
+        if (!m_is_error && m_have_storage)
             value().~T();
     }
 
@@ -140,8 +152,10 @@ public:
     ALWAYS_INLINE T release_value()
     {
         ASSERT(!m_is_error);
+        ASSERT(m_have_storage);
         T released_value = *reinterpret_cast<T*>(&m_storage);
         value().~T();
+        m_have_storage = false;
         return released_value;
     }
 
@@ -149,6 +163,7 @@ private:
     alignas(T) char m_storage[sizeof(T)];
     KResult m_error;
     bool m_is_error { false };
+    bool m_have_storage { false };
 };
 
 }
