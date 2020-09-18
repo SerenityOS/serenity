@@ -59,7 +59,7 @@ TEST_CASE(enqueue_begin_being_moved_from)
 {
     CircularDeque<String, 2> strings;
 
-    String str{"test"};
+    String str { "test" };
     strings.enqueue_begin(move(str));
     EXPECT(str.is_null());
 }

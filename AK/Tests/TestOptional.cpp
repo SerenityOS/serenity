@@ -26,8 +26,8 @@
 
 #include <AK/TestSuite.h>
 
-#include <AK/String.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 
 TEST_CASE(basic_optional)
 {

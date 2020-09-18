@@ -88,4 +88,3 @@ private:
 }
 
 using AK::Queue;
-

@@ -44,7 +44,7 @@ public:
         Adopt
     };
 
-    RefPtr() {}
+    RefPtr() { }
     RefPtr(const T* ptr)
         : m_ptr(const_cast<T*>(ptr))
     {
@@ -108,7 +108,7 @@ public:
             m_ptr = (T*)(0xe0e0e0e0);
 #endif
     }
-    RefPtr(std::nullptr_t) {}
+    RefPtr(std::nullptr_t) { }
 
     template<typename U>
     RefPtr(const OwnPtr<U>&) = delete;

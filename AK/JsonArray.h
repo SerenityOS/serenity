@@ -34,8 +34,8 @@ namespace AK {
 
 class JsonArray {
 public:
-    JsonArray() {}
-    ~JsonArray() {}
+    JsonArray() { }
+    ~JsonArray() { }
 
     JsonArray(const JsonArray& other)
         : m_values(other.m_values)
