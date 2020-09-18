@@ -523,9 +523,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         location_textbox.set_text(new_path);
         auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
         if (new_index.is_valid()) {
-            tree_view.selection().set(new_index);
-            tree_view.scroll_into_view(new_index, false, true);
-            tree_view.update();
+            tree_view.expand_all_parents_of(new_index);
+            tree_view.set_cursor(new_index, GUI::AbstractView::SelectionUpdate::Set);
         }
 
         struct stat st;
