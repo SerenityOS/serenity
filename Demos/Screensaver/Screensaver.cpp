@@ -25,15 +25,15 @@
  */
 
 #include <LibCore/ElapsedTimer.h>
-#include <LibGfx/Bitmap.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <time.h>
+#include <LibGfx/Bitmap.h>
 #include <stdio.h>
+#include <time.h>
 
 #define WIDTH 64
 #define HEIGHT 48
@@ -126,8 +126,7 @@ void Screensaver::draw()
         orientations[rand() % (sizeof(orientations) / sizeof(orientations[0]))],
         m_bitmap->rect(),
         colors[start_color_index],
-        colors[end_color_index]
-    );
+        colors[end_color_index]);
 
     update();
 }
