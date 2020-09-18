@@ -61,6 +61,7 @@ ENUMERATE_FILETYPES(__ENUMERATE_FILETYPE)
 static Icon s_hard_disk_icon;
 static Icon s_directory_icon;
 static Icon s_directory_open_icon;
+static Icon s_inaccessible_directory_icon;
 static Icon s_home_directory_icon;
 static Icon s_home_directory_open_icon;
 static Icon s_file_icon;
@@ -76,6 +77,7 @@ static void initialize_if_needed()
     s_hard_disk_icon = Icon::default_icon("hard-disk");
     s_directory_icon = Icon::default_icon("filetype-folder");
     s_directory_open_icon = Icon::default_icon("filetype-folder-open");
+    s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible");
     s_home_directory_icon = Icon::default_icon("home-directory");
     s_home_directory_open_icon = Icon::default_icon("home-directory-open");
     s_file_icon = Icon::default_icon("filetype-unknown");
@@ -137,6 +139,8 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
     if (S_ISDIR(mode)) {
         if (path == Core::StandardPaths::home_directory())
             return s_home_directory_icon;
+        if (access(path.characters(), R_OK | X_OK) < 0)
+            return s_inaccessible_directory_icon;
         return s_directory_icon;
     }
     if (S_ISLNK(mode))

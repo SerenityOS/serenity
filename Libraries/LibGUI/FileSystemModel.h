@@ -73,6 +73,7 @@ public:
         gid_t gid { 0 };
         ino_t inode { 0 };
         time_t mtime { 0 };
+        bool is_accessible_directory { false };
 
         size_t total_size { 0 };
 

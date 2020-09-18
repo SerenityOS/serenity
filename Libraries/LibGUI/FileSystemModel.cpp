@@ -82,6 +82,10 @@ bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
             perror("readlink");
     }
 
+    if (S_ISDIR(mode)) {
+        is_accessible_directory = access(full_path.characters(), R_OK | X_OK) == 0;
+    }
+
     return true;
 }
 
@@ -480,7 +484,7 @@ Icon FileSystemModel::icon_for(const Node& node) const
                 return FileIconProvider::home_directory_open_icon();
             return FileIconProvider::home_directory_icon();
         }
-        if (node.is_selected())
+        if (node.is_selected() && node.is_accessible_directory)
             return FileIconProvider::directory_open_icon();
     }
 
