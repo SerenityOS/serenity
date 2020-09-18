@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ImageDecoder/ClientConnection.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
-#include <ImageDecoder/ClientConnection.h>
 
 int main(int, char**)
 {

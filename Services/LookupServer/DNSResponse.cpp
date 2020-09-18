@@ -35,7 +35,7 @@ static String parse_dns_name(const u8* data, size_t& offset, size_t max_offset, 
 class [[gnu::packed]] DNSRecordWithoutName
 {
 public:
-    DNSRecordWithoutName() {}
+    DNSRecordWithoutName() { }
 
     u16 type() const { return m_type; }
     u16 record_class() const { return m_class; }

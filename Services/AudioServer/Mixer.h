@@ -45,7 +45,7 @@ class ClientConnection;
 class BufferQueue : public RefCounted<BufferQueue> {
 public:
     explicit BufferQueue(ClientConnection&);
-    ~BufferQueue() {}
+    ~BufferQueue() { }
 
     bool is_full() const { return m_queue.size() >= 3; }
     void enqueue(NonnullRefPtr<Audio::Buffer>&&);
@@ -102,10 +102,10 @@ public:
 private:
     RefPtr<Audio::Buffer> m_current;
     Queue<NonnullRefPtr<Audio::Buffer>> m_queue;
-    int m_position{ 0 };
-    int m_remaining_samples{ 0 };
-    int m_played_samples{ 0 };
-    bool m_paused{ false };
+    int m_position { 0 };
+    int m_remaining_samples { 0 };
+    int m_played_samples { 0 };
+    bool m_paused { false };
     WeakPtr<ClientConnection> m_client;
 };
 
@@ -132,10 +132,10 @@ private:
 
     LibThread::Thread m_sound_thread;
 
-    bool m_muted{ false };
-    int m_main_volume{ 100 };
+    bool m_muted { false };
+    int m_main_volume { 100 };
 
-    u8* m_zero_filled_buffer{ nullptr };
+    u8* m_zero_filled_buffer { nullptr };
 
     void mix();
 };

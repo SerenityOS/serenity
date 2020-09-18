@@ -58,7 +58,7 @@ private:
         painter.fill_rect(rect(), palette().button());
         painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
     }
-    
+
     virtual void did_layout() override
     {
         WindowList::the().for_each_window([&](auto& window) {
