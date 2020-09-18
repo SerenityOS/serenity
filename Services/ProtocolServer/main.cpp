@@ -27,10 +27,10 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
+#include <ProtocolServer/ClientConnection.h>
 #include <ProtocolServer/GeminiProtocol.h>
 #include <ProtocolServer/HttpProtocol.h>
 #include <ProtocolServer/HttpsProtocol.h>
-#include <ProtocolServer/ClientConnection.h>
 
 int main(int, char**)
 {

@@ -213,9 +213,12 @@ void Compositor::compose()
     };
 
     auto prepare_transparency_rect = [&](const Gfx::IntRect& rect) {
+    // clang-format off
+        // FIXME: clang-format gets confused here. Why?
         // This function may be called multiple times with the same
         // rect as we walk the window stack from back to front. However,
         // there should be no overlaps with flush_rects
+    // clang-format on
 #ifdef COMPOSE_DEBUG
         dbg() << "   -> flush transparent: " << rect;
 #endif
@@ -227,7 +230,7 @@ void Compositor::compose()
                 break;
             }
         }
-        
+
         if (!have_rect) {
             flush_transparent_rects.add(rect);
             check_restore_cursor_back(rect);
@@ -293,7 +296,7 @@ void Compositor::compose()
                     painter.add_clip_rect(intersected_rect);
 #ifdef COMPOSE_DEBUG
                     dbg() << "    render frame: " << intersected_rect;
-#endif                    
+#endif
                     window.frame().paint(painter);
                     return IterationDecision::Continue;
                 });
@@ -468,7 +471,7 @@ void Compositor::compose()
                 back_painter.blit(dnd_rect.top_left(), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());
             }
         };
-        
+
         dirty_screen_rects.for_each_intersected(dnd_rect, [&](const Gfx::IntRect& render_rect) {
             Gfx::PainterStateSaver saver(back_painter);
             back_painter.add_clip_rect(render_rect);
@@ -557,7 +560,7 @@ void Compositor::invalidate_screen()
 void Compositor::invalidate_screen(const Gfx::IntRect& screen_rect)
 {
     m_dirty_screen_rects.add(screen_rect.intersected(Screen::the().rect()));
-    
+
     if (m_invalidated_any)
         return;
 
@@ -741,13 +744,13 @@ bool Compositor::draw_geometry_label(Gfx::IntRect& geometry_label_rect)
 void Compositor::draw_cursor(const Gfx::IntRect& cursor_rect)
 {
     auto& wm = WindowManager::the();
-    
+
     if (!m_cursor_back_bitmap || m_cursor_back_bitmap->size() != cursor_rect.size()) {
         m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, cursor_rect.size());
         m_cursor_back_painter = make<Gfx::Painter>(*m_cursor_back_bitmap);
     }
 
-    m_cursor_back_painter->blit({0, 0}, *m_back_bitmap, wm.active_cursor().rect().translated(cursor_rect.location()).intersected(Screen::the().rect()));
+    m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, wm.active_cursor().rect().translated(cursor_rect.location()).intersected(Screen::the().rect()));
     auto& back_painter = *m_back_painter;
     back_painter.blit(cursor_rect.location(), wm.active_cursor().bitmap(), wm.active_cursor().rect());
 
@@ -951,7 +954,7 @@ void Compositor::recompute_occlusions()
                     transparency_wallpaper_rects.clear();
                     return IterationDecision::Continue;
                 }
-                    
+
                 transparency_wallpaper_rects = visible_rects.intersected(transparency_rects);
 
                 auto remaining_visible = visible_rects.shatter(transparency_wallpaper_rects);
@@ -965,7 +968,7 @@ void Compositor::recompute_occlusions()
 
 #ifdef OCCLUSIONS_DEBUG
     for (auto& r : m_opaque_wallpaper_rects.rects())
-       dbg() << "  wallpaper opaque: " << r;
+        dbg() << "  wallpaper opaque: " << r;
 #endif
 
     wm.for_each_visible_window_from_back_to_front([&](Window& w) {
