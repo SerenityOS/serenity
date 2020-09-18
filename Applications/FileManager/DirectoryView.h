@@ -174,11 +174,6 @@ private:
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);
 
-    enum class ConfirmBeforeDelete {
-        No,
-        Yes
-    };
-
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::IconView> m_icon_view;
     RefPtr<GUI::ColumnsView> m_columns_view;
