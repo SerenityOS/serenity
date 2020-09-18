@@ -599,24 +599,28 @@ int Emulator::virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags)
     msghdr mmu_msg;
     mmu().copy_from_vm(&mmu_msg, msg_addr, sizeof(mmu_msg));
 
-    if (mmu_msg.msg_iovlen != 1)
-        return -ENOTSUP; // FIXME: Support this :)
-    iovec mmu_iov;
-    mmu().copy_from_vm(&mmu_iov, (FlatPtr)mmu_msg.msg_iov, sizeof(mmu_iov));
-    auto buffer = ByteBuffer::create_uninitialized(mmu_iov.iov_len);
+    Vector<iovec, 1> mmu_iovs;
+    mmu_iovs.resize(mmu_msg.msg_iovlen);
+    mmu().copy_from_vm(mmu_iovs.data(), (FlatPtr)mmu_msg.msg_iov, mmu_msg.msg_iovlen * sizeof(iovec));
+    Vector<ByteBuffer, 1> buffers;
+    Vector<iovec, 1> iovs;
+    for (const auto& iov : mmu_iovs) {
+        buffers.append(ByteBuffer::create_uninitialized(iov.iov_len));
+        iovs.append({ buffers.last().data(), buffers.last().size() });
+    }
 
     ByteBuffer control_buffer;
     if (mmu_msg.msg_control)
         control_buffer = ByteBuffer::create_uninitialized(mmu_msg.msg_controllen);
 
     sockaddr_storage addr;
-    iovec iov = { buffer.data(), buffer.size() };
-    msghdr msg = { &addr, sizeof(addr), &iov, 1, mmu_msg.msg_control ? control_buffer.data() : nullptr, mmu_msg.msg_controllen, mmu_msg.msg_flags };
+    msghdr msg = { &addr, sizeof(addr), iovs.data(), (int)iovs.size(), mmu_msg.msg_control ? control_buffer.data() : nullptr, mmu_msg.msg_controllen, mmu_msg.msg_flags };
     int rc = recvmsg(sockfd, &msg, flags);
     if (rc < 0)
         return -errno;
 
-    mmu().copy_to_vm((FlatPtr)mmu_iov.iov_base, buffer.data(), mmu_iov.iov_len);
+    for (size_t i = 0; i < buffers.size(); ++i)
+        mmu().copy_to_vm((FlatPtr)mmu_iovs[i].iov_base, buffers[i].data(), mmu_iovs[i].iov_len);
 
     if (mmu_msg.msg_name)
         mmu().copy_to_vm((FlatPtr)mmu_msg.msg_name, &addr, min(sizeof(addr), (size_t)mmu_msg.msg_namelen));
@@ -634,11 +638,14 @@ int Emulator::virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags)
     msghdr mmu_msg;
     mmu().copy_from_vm(&mmu_msg, msg_addr, sizeof(mmu_msg));
 
-    if (mmu_msg.msg_iovlen != 1)
-        return -ENOTSUP; // FIXME: Support this :)
-    iovec mmu_iov;
-    mmu().copy_from_vm(&mmu_iov, (FlatPtr)mmu_msg.msg_iov, sizeof(mmu_iov));
-    auto buffer = mmu().copy_buffer_from_vm((FlatPtr)mmu_iov.iov_base, mmu_iov.iov_len);
+    Vector<iovec, 1> iovs;
+    iovs.resize(mmu_msg.msg_iovlen);
+    mmu().copy_from_vm(iovs.data(), (FlatPtr)mmu_msg.msg_iov, mmu_msg.msg_iovlen * sizeof(iovec));
+    Vector<ByteBuffer, 1> buffers;
+    for (auto& iov : iovs) {
+        buffers.append(mmu().copy_buffer_from_vm((FlatPtr)iov.iov_base, iov.iov_len));
+        iov = { buffers.last().data(), buffers.last().size() };
+    }
 
     ByteBuffer control_buffer;
     if (mmu_msg.msg_control)
@@ -651,8 +658,7 @@ int Emulator::virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags)
         mmu().copy_from_vm(&address, (FlatPtr)mmu_msg.msg_name, address_length);
     }
 
-    iovec iov = { buffer.data(), buffer.size() };
-    msghdr msg = { mmu_msg.msg_name ? &address : nullptr, address_length, &iov, 1, mmu_msg.msg_control ? control_buffer.data() : nullptr, mmu_msg.msg_controllen, mmu_msg.msg_flags };
+    msghdr msg = { mmu_msg.msg_name ? &address : nullptr, address_length, iovs.data(), (int)iovs.size(), mmu_msg.msg_control ? control_buffer.data() : nullptr, mmu_msg.msg_controllen, mmu_msg.msg_flags };
     return sendmsg(sockfd, &msg, flags);
 }
 
