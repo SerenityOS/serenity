@@ -36,7 +36,7 @@ public:
         return adopt(*new CharacterMapFileListModel(file_names));
     }
 
-    virtual ~CharacterMapFileListModel() override {}
+    virtual ~CharacterMapFileListModel() override { }
 
     virtual int row_count(const GUI::ModelIndex&) const override
     {

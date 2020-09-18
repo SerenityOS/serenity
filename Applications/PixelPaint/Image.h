@@ -45,7 +45,7 @@ public:
     virtual void image_did_add_layer(size_t) { }
     virtual void image_did_remove_layer(size_t) { }
     virtual void image_did_modify_layer(size_t) { }
-    virtual void image_did_modify_layer_stack() {}
+    virtual void image_did_modify_layer_stack() { }
     virtual void image_did_change() { }
 };
 

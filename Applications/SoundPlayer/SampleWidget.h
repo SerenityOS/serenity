@@ -38,6 +38,7 @@ public:
     virtual ~SampleWidget() override;
 
     void set_buffer(Audio::Buffer*);
+
 private:
     SampleWidget();
     virtual void paint_event(GUI::PaintEvent&) override;

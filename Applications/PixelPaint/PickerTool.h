@@ -39,7 +39,6 @@ public:
 
 private:
     virtual const char* class_name() const override { return "PickerTool"; }
-
 };
 
 }

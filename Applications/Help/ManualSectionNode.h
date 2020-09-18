@@ -30,7 +30,7 @@
 
 class ManualSectionNode : public ManualNode {
 public:
-    virtual ~ManualSectionNode() override {}
+    virtual ~ManualSectionNode() override { }
 
     ManualSectionNode(String section, String name)
         : m_section(section)
