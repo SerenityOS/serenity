@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    SquareButton() {}
+    SquareButton() { }
 };
 
 class SquareLabel final : public GUI::Label {
