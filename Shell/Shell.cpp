@@ -1042,7 +1042,7 @@ void Shell::add_entry_to_cache(const String& entry)
     if (match)
         return;
 
-    while (strcmp(cached_path[index].characters(), entry.characters()) < 0) {
+    while (index < cached_path.size() && strcmp(cached_path[index].characters(), entry.characters()) < 0) {
         index++;
     }
     cached_path.insert(index, entry);
