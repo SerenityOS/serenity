@@ -43,10 +43,13 @@ public:
 
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
+    bool initialized() const { return !m_git_repo.is_null(); };
 
 private:
     explicit GitWidget(const LexicalPath& repo_root);
 
+    bool initialize();
+    bool initialize_if_needed();
     void stage_file(const LexicalPath&);
     void unstage_file(const LexicalPath&);
     void commit();
