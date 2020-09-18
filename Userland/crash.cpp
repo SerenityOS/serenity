@@ -115,7 +115,7 @@ int main(int argc, char** argv)
     bool do_read_from_uninitialized_malloc_memory = false;
     bool do_read_from_freed_memory = false;
     bool do_invalid_stack_pointer_on_syscall = false;
-    bool do_invalid_stack_pointer_on_page_fault  = false;
+    bool do_invalid_stack_pointer_on_page_fault = false;
     bool do_syscall_from_writeable_memory = false;
     bool do_write_to_freed_memory_still_cached_by_malloc = false;
     bool do_read_from_freed_memory_still_cached_by_malloc = false;
@@ -173,7 +173,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-    if (do_illegal_instruction|| do_all_crash_types) {
+    if (do_illegal_instruction || do_all_crash_types) {
         Crash("Illegal instruction", []() {
             asm volatile("ud2");
             return Crash::Failure::DidNotCrash;
