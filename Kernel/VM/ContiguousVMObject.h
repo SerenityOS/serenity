@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include <Kernel/VM/VMObject.h>
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
 

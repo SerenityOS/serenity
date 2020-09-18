@@ -78,7 +78,7 @@ public:
         u8 file_type { 0 };
     };
 
-    virtual void flush_writes() {}
+    virtual void flush_writes() { }
 
     size_t block_size() const { return m_block_size; }
 

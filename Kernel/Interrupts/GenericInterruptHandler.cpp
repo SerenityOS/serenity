@@ -37,8 +37,8 @@ GenericInterruptHandler& GenericInterruptHandler::from(u8 interrupt_number)
 }
 
 GenericInterruptHandler::GenericInterruptHandler(u8 interrupt_number, bool disable_remap)
-    : m_interrupt_number(interrupt_number),
-      m_disable_remap(disable_remap)
+    : m_interrupt_number(interrupt_number)
+    , m_disable_remap(disable_remap)
 {
     if (m_disable_remap)
         register_generic_interrupt_handler(m_interrupt_number, *this);

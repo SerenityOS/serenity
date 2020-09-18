@@ -89,7 +89,7 @@ public:
     static bool is_initialized();
 
     static void initialize(u32 cpu);
-    
+
     static inline MemoryManagerData& get_data()
     {
         return Processor::current().get_mm_data();

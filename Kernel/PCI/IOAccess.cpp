@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/PCI/IOAccess.h>
 #include <Kernel/IO.h>
+#include <Kernel/PCI/IOAccess.h>
 
 namespace Kernel {
 namespace PCI {

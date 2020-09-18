@@ -41,8 +41,8 @@ ssize_t Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[ma
 
     SmapDisabler disabler;
     auto data_buffer = UserOrKernelBuffer::for_user_buffer(buffer, buffer_size);
-    if (!data_buffer.has_value()) 
-       return -EFAULT;
+    if (!data_buffer.has_value())
+        return -EFAULT;
     ssize_t nwritten = data_buffer.value().write_buffered<1024>(buffer_size, [&](u8* buffer, size_t buffer_bytes) {
         get_good_random_bytes(buffer, buffer_bytes);
         return (ssize_t)buffer_bytes;

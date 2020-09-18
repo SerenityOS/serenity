@@ -29,9 +29,9 @@
 #include <AK/CircularQueue.h>
 #include <AK/DoublyLinkedList.h>
 #include <AK/Types.h>
+#include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/API/KeyCode.h>
 #include <Kernel/Random.h>
 #include <LibKeyboard/CharacterMap.h>
 

@@ -72,7 +72,7 @@ PS2MouseDevice::~PS2MouseDevice()
 
 void PS2MouseDevice::create()
 {
-   s_the.ensure_instance();
+    s_the.ensure_instance();
 }
 
 PS2MouseDevice& PS2MouseDevice::the()
