@@ -27,8 +27,8 @@
 #pragma once
 
 #include "Tool.h"
-#include <LibGfx/Point.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGfx/Point.h>
 
 namespace PixelPaint {
 

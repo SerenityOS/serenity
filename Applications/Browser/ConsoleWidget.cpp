@@ -36,9 +36,9 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMTreeModel.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
 
 namespace Browser {
 
@@ -94,7 +94,7 @@ ConsoleWidget::ConsoleWidget()
                 output_html.append(String::format("<pre>%s</pre>", escape_html_entities(hint).characters()));
             m_interpreter->throw_exception<JS::SyntaxError>(error.to_string());
         } else {
-            m_interpreter->run(m_interpreter->global_object(),*program);
+            m_interpreter->run(m_interpreter->global_object(), *program);
         }
 
         if (m_interpreter->exception()) {

@@ -35,7 +35,7 @@
 
 class PagemapPaintingDelegate final : public GUI::TableCellPaintingDelegate {
 public:
-    virtual ~PagemapPaintingDelegate() override {}
+    virtual ~PagemapPaintingDelegate() override { }
 
     virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Gfx::Palette&, const GUI::ModelIndex& index) override
     {

@@ -78,7 +78,6 @@ DownloadWidget::DownloadWidget(const URL& url)
     browser_image.load_from_file("/res/graphics/download-animation.gif");
     animation_layout.add_spacer();
 
-
     auto& source_label = add<GUI::Label>(String::format("From: %s", url.to_string().characters()));
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     source_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);

@@ -42,6 +42,7 @@ struct KeyPosition {
 #define KEY_COUNT 63
 
 struct KeyPosition keys[KEY_COUNT] = {
+    // clang-format off
     [ 0] = {     0,   0,  0,   0,   0, false,  0, ""},
 
     [ 1] = {  0x29,   0,  0,  50,  50,  true, 41, "`"},
@@ -59,7 +60,6 @@ struct KeyPosition keys[KEY_COUNT] = {
     [13] = {  0x0D, 612,  0,  50,  50,  true, 13, "="},
     [14] = {  0x0E, 663,  0, 100,  50, false,  0, "back space"},
 
-
     [15] = {  0x0F,   0,  52,  76,  50, false,  0, "tab"},
     [16] = {  0x10,  77,  52,  50,  50,  true, 16, "q"},
     [17] = {  0x11, 128,  52,  50,  50,  true, 17, "w"},
@@ -75,7 +75,6 @@ struct KeyPosition keys[KEY_COUNT] = {
     [27] = {  0x1B, 638,  52,  50,  50,  true, 27, "]"},
     [28] = {  0x1C, 689,  52,  74,  50, false,  0, "enter"},
 
-
     [29] = {  0x3A,   0, 104, 101,  50, false,  0, "caps lock"},
     [30] = {  0x1E, 103, 104,  50,  50,  true, 30, "a"},
     [31] = {  0x1F, 154, 104,  50,  50,  true, 31, "s"},
@@ -89,8 +88,6 @@ struct KeyPosition keys[KEY_COUNT] = {
     [39] = {  0x27, 562, 104,  50,  50,  true, 39, ";"},
     [40] = {  0x28, 614, 104,  50,  50,  true, 40, "\""},
     [41] = {  0x2B, 665, 104,  50,  50,  true, 43, "\\"},
-
-
 
     [42] = {  0x2A,   0, 156,  76,  50, false,  0, "left shift"},
     [43] = {  0x56,  77, 156,  50,  50,  true, 86, "\\"},
@@ -114,4 +111,5 @@ struct KeyPosition keys[KEY_COUNT] = {
     [60] = {0xE05C, 587, 208,  50,  50, false,  0, "right\nsuper"},
     [61] = {0xE05D, 638, 208,  50,  50, false,  0, "menu"},
     [62] = {0xE01D, 689, 208,  74,  50, false,  0, "right ctrl"}
+    // clang-format on
 };

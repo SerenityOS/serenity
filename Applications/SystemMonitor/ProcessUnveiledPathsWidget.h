@@ -30,6 +30,7 @@
 
 class ProcessUnveiledPathsWidget final : public GUI::Widget {
     C_OBJECT(ProcessUnveiledPathsWidget);
+
 public:
     virtual ~ProcessUnveiledPathsWidget() override;
 

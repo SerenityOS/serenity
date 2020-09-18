@@ -94,8 +94,8 @@ PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
     m_inactive_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
 
     m_close_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png");
-    m_maximize_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-maximize.png");;
-    m_minimize_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-minimize.png");;
+    m_maximize_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-maximize.png");
+    m_minimize_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-minimize.png");
 
     m_gallery = add<MiniWidgetGallery>();
     set_greedy_for_hits(true);

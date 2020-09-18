@@ -30,6 +30,7 @@
 
 class ProcessFileDescriptorMapWidget final : public GUI::Widget {
     C_OBJECT(ProcessFileDescriptorMapWidget);
+
 public:
     virtual ~ProcessFileDescriptorMapWidget() override;
 

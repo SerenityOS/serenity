@@ -25,8 +25,8 @@
  */
 
 #include "CharacterMapFileListModel.h"
-#include <AK/QuickSort.h>
 #include <AK/JsonObject.h>
+#include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -59,12 +59,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/res", "r") < 0 ) {
+    if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
     }
 
-    if (unveil("/bin/keymap", "x") < 0 ) {
+    if (unveil("/bin/keymap", "x") < 0) {
         perror("unveil");
         return 1;
     }
