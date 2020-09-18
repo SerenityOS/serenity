@@ -484,7 +484,7 @@ Icon FileSystemModel::icon_for(const Node& node) const
             return FileIconProvider::directory_open_icon();
     }
 
-    return FileIconProvider::icon_for_path(node.name, node.mode);
+    return FileIconProvider::icon_for_path(node.full_path(), node.mode);
 }
 
 static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
