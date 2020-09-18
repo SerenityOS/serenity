@@ -41,7 +41,7 @@ public:
         m_username_width = Gfx::Font::default_bold_font().width(m_username);
     }
 
-    virtual ~UserNameWidget() override {}
+    virtual ~UserNameWidget() override { }
 
     int get_width()
     {
