@@ -175,7 +175,7 @@ void Locator::update_suggestions()
 {
     auto typed_text = m_textbox->text();
     Vector<String> suggestions;
-    g_project->for_each_text_file([&](auto& file) {
+    project().for_each_text_file([&](auto& file) {
         if (file.name().contains(typed_text))
             suggestions.append(file.name());
     });
