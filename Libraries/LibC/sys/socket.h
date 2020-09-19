@@ -120,8 +120,10 @@ enum {
 
 enum {
     SCM_TIMESTAMP,
+    SCM_RIGHTS,
 };
 #define SCM_TIMESTAMP SCM_TIMESTAMP
+#define SCM_RIGHTS SCM_RIGHTS
 
 struct sockaddr_storage {
     sa_family_t ss_family;
