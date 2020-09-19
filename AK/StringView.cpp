@@ -193,6 +193,11 @@ StringView StringView::substring_view(size_t start, size_t length) const
     ASSERT(start + length <= m_length);
     return { m_characters + start, length };
 }
+StringView StringView::substring_view(size_t start) const
+{
+    ASSERT(start <= m_length);
+    return { m_characters + start, length() - start };
+}
 
 StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
 {
