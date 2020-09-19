@@ -121,7 +121,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     font_metadata_group_box.set_layout<GUI::VerticalBoxLayout>();
     font_metadata_group_box.layout()->set_margins({ 5, 15, 5, 5 });
     font_metadata_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    font_metadata_group_box.set_preferred_size(0, 145);
+    font_metadata_group_box.set_preferred_size(0, 165);
     font_metadata_group_box.set_title("Font metadata");
 
     //// Name Row
@@ -199,6 +199,25 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     glyph_header_width_spinbox.set_value(m_edited_font->glyph_fixed_width());
     glyph_header_width_spinbox.set_enabled(false);
 
+    //// Baseline Row
+    auto& baseline_container = font_metadata_group_box.add<GUI::Widget>();
+    baseline_container.set_layout<GUI::HorizontalBoxLayout>();
+    baseline_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    baseline_container.set_preferred_size(0, 22);
+
+    auto& baseline_label = baseline_container.add<GUI::Label>();
+    baseline_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    baseline_label.set_preferred_size(100, 0);
+    baseline_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    baseline_label.set_text("Baseline:");
+
+    auto& baseline_spinbox = baseline_container.add<GUI::SpinBox>();
+    baseline_spinbox.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    baseline_spinbox.set_preferred_size(100, 0);
+    baseline_spinbox.set_min(0);
+    baseline_spinbox.set_max(m_edited_font->glyph_height() - 1);
+    baseline_spinbox.set_value(m_edited_font->baseline());
+
     //// Fixed checkbox Row
     auto& fixed_width_checkbox = font_metadata_group_box.add<GUI::CheckBox>();
     fixed_width_checkbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
@@ -240,7 +259,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
         right_site_width = max(right_site_width, m_glyph_map_widget->preferred_width());
 
         m_preferred_width = m_glyph_editor_widget->width() + right_site_width + 20;
-        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 250;
+        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 270;
     };
 
     m_glyph_editor_widget->on_glyph_altered = [this, update_demo](u8 glyph) {
@@ -280,6 +299,11 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
 
     spacing_spinbox.on_change = [this, update_demo](int value) {
         m_edited_font->set_glyph_spacing(value);
+        update_demo();
+    };
+
+    baseline_spinbox.on_change = [this, update_demo](int value) {
+        m_edited_font->set_baseline(value);
         update_demo();
     };
 

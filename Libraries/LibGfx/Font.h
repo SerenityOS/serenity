@@ -100,6 +100,9 @@ public:
     u8 max_glyph_width() const { return m_max_glyph_width; }
     u8 glyph_fixed_width() const { return m_glyph_width; }
 
+    u8 baseline() const { return m_baseline; }
+    void set_baseline(u8 baseline) { m_baseline = baseline; }
+
     int width(const StringView&) const;
     int width(const Utf8View&) const;
     int width(const Utf32View&) const;
@@ -129,7 +132,7 @@ public:
     void set_type(FontTypes type);
 
 private:
-    Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type);
+    Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline);
 
     static RefPtr<Font> load_from_memory(const u8*);
     static size_t glyph_count_by_type(FontTypes type);
@@ -151,6 +154,7 @@ private:
     u8 m_min_glyph_width { 0 };
     u8 m_max_glyph_width { 0 };
     u8 m_glyph_spacing { 0 };
+    u8 m_baseline { 0 };
 
     bool m_fixed_width { false };
     bool m_boldface { false };
