@@ -34,6 +34,7 @@ Toolchain/Local
 .DS_Store
 compile_commands.json
 .clang_complete
+.clangd
 *Endpoint.h
 Ports/packages.db
 .idea/
