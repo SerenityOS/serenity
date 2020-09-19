@@ -108,7 +108,7 @@ private:
 // A buffer of audio samples, normalized to 44100hz.
 class Buffer : public RefCounted<Buffer> {
 public:
-    static RefPtr<Buffer> from_pcm_data(ByteBuffer& data, ResampleHelper& resampler, int num_channels, int bits_per_sample);
+    static RefPtr<Buffer> from_pcm_data(ReadonlyBytes, ResampleHelper& resampler, int num_channels, int bits_per_sample);
     static NonnullRefPtr<Buffer> create_with_samples(Vector<Sample>&& samples)
     {
         return adopt(*new Buffer(move(samples)));

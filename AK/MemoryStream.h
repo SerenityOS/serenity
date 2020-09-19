@@ -93,7 +93,6 @@ public:
         return m_bytes[m_offset];
     }
 
-    // LEB128 is a variable-length encoding for integers
     bool read_LEB128_unsigned(size_t& result)
     {
         const auto backup = m_offset;
@@ -101,8 +100,6 @@ public:
         result = 0;
         size_t num_bytes = 0;
         while (true) {
-            // Note. The implementation in AK::BufferStream::read_LEB128_unsigned read one
-            //       past the end, this is fixed here.
             if (eof()) {
                 m_offset = backup;
                 set_recoverable_error();
@@ -120,7 +117,6 @@ public:
         return true;
     }
 
-    // LEB128 is a variable-length encoding for integers
     bool read_LEB128_signed(ssize_t& result)
     {
         const auto backup = m_offset;
@@ -130,8 +126,6 @@ public:
         u8 byte = 0;
 
         do {
-            // Note. The implementation in AK::BufferStream::read_LEB128_unsigned read one
-            //       past the end, this is fixed here.
             if (eof()) {
                 m_offset = backup;
                 set_recoverable_error();
