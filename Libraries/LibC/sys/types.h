@@ -48,6 +48,8 @@ typedef uint32_t gid_t;
 typedef int __pid_t;
 #define pid_t __pid_t
 
+typedef char* caddr_t;
+
 typedef int id_t;
 
 typedef __WINT_TYPE__ wint_t;
