@@ -204,6 +204,7 @@ ALWAYS_INLINE int print_double(PutChFunc putch, char*& bufptr, double number, bo
 template<typename PutChFunc>
 ALWAYS_INLINE int print_i64(PutChFunc putch, char*& bufptr, i64 number, bool left_pad, bool zero_pad, u32 field_width)
 {
+    // FIXME: This won't work if there is padding. '  -17' becomes '-  17'.
     if (number < 0) {
         putch(bufptr, '-');
         return print_u64(putch, bufptr, 0 - number, left_pad, zero_pad, field_width) + 1;
