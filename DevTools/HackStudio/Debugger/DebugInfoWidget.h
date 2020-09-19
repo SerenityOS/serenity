@@ -30,10 +30,12 @@
 #include <AK/NonnullOwnPtr.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
+#include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <sys/arch/i386/regs.h>
 

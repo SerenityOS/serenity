@@ -1,13 +1,9 @@
 set(SOURCES
+    CodeDocument.cpp
     CursorTool.cpp
-    Git/DiffViewer.cpp
-    Git/GitWidget.cpp
-    Git/GitFilesModel.cpp
-    Git/GitRepo.cpp
-    Git/GitFilesView.cpp
     Debugger/BacktraceModel.cpp
-    Debugger/Debugger.cpp
     Debugger/DebugInfoWidget.cpp
+    Debugger/Debugger.cpp
     Debugger/DisassemblyModel.cpp
     Debugger/DisassemblyWidget.cpp
     Debugger/RegistersModel.cpp
@@ -17,8 +13,13 @@ set(SOURCES
     FindInFilesWidget.cpp
     FormEditorWidget.cpp
     FormWidget.cpp
+    Git/DiffViewer.cpp
+    Git/GitFilesModel.cpp
+    Git/GitFilesView.cpp
+    Git/GitRepo.cpp
+    Git/GitWidget.cpp
+    HackStudioWidget.cpp
     Locator.cpp
-    main.cpp
     ProcessStateWidget.cpp
     Project.cpp
     ProjectFile.cpp
@@ -26,7 +27,7 @@ set(SOURCES
     Tool.cpp
     WidgetTool.cpp
     WidgetTreeModel.cpp
-    CodeDocument.cpp
+    main.cpp
 )
 
 serenity_bin(HackStudio)

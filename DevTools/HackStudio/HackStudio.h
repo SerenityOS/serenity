@@ -35,10 +35,10 @@ namespace HackStudio {
 
 GUI::TextEditor& current_editor();
 void open_file(const String&);
-
-extern RefPtr<EditorWrapper> g_current_editor_wrapper;
-extern Function<void(String)> g_open_file;
-extern OwnPtr<Project> g_project;
-extern String g_currently_open_file;
+RefPtr<EditorWrapper> current_editor_wrapper();
+void open_file(const String&);
+Project& project();
+String currently_open_file();
+void set_current_editor_wrapper(RefPtr<EditorWrapper>);
 
 }
