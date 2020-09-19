@@ -150,6 +150,8 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 String JSONObject::serialize_json_property(Interpreter& interpreter, StringifyState& state, const PropertyName& key, Object* holder)
 {
     auto value = holder->get(key);
+    if (interpreter.exception())
+        return {};
     if (value.is_object()) {
         auto to_json = value.as_object().get("toJSON");
         if (interpreter.exception())
