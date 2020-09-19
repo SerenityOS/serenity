@@ -78,6 +78,9 @@ struct Array {
     T __data[Size];
 };
 
+template<typename T, typename... Types>
+Array(T, Types...) -> Array<T, sizeof...(Types) + 1>;
+
 }
 
 using AK::Array;
