@@ -50,11 +50,12 @@ class GraphWidget final : public GUI::Frame {
 public:
     static constexpr size_t history_size = 30;
 
-    GraphWidget(GraphType graph_type, Optional<Gfx::Color> graph_color)
+    GraphWidget(GraphType graph_type, Optional<Gfx::Color> graph_color, Optional<Gfx::Color> graph_error_color)
         : m_graph_type(graph_type)
     {
         set_frame_thickness(1);
         m_graph_color = graph_color.value_or(palette().menu_selection());
+        m_graph_error_color = graph_error_color.value_or(Color::Red);
         start_timer(1000);
     }
 
@@ -65,24 +66,32 @@ private:
         case GraphType::CPU: {
             unsigned busy;
             unsigned idle;
-            get_cpu_usage(busy, idle);
-            unsigned busy_diff = busy - m_last_cpu_busy;
-            unsigned idle_diff = idle - m_last_cpu_idle;
-            m_last_cpu_busy = busy;
-            m_last_cpu_idle = idle;
-            float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
-            m_history.enqueue(cpu);
-            m_tooltip = String::format("CPU usage: %.1f%%", 100 * cpu);
+            if (get_cpu_usage(busy, idle)) {
+                unsigned busy_diff = busy - m_last_cpu_busy;
+                unsigned idle_diff = idle - m_last_cpu_idle;
+                m_last_cpu_busy = busy;
+                m_last_cpu_idle = idle;
+                float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
+                m_history.enqueue(cpu);
+                m_tooltip = String::format("CPU usage: %.1f%%", 100 * cpu);
+            } else {
+                m_history.enqueue(-1);
+                m_tooltip = StringView("Unable to determine CPU usage");
+            }
             break;
         }
         case GraphType::Memory: {
             unsigned allocated;
             unsigned available;
-            get_memory_usage(allocated, available);
-            float total_memory = allocated + available;
-            float memory = (float)allocated / total_memory;
-            m_history.enqueue(memory);
-            m_tooltip = String::format("Memory: %.1f MiB of %.1f MiB in use", (float)allocated / MiB, total_memory / MiB);
+            if (get_memory_usage(allocated, available)) {
+                float total_memory = allocated + available;
+                float memory = (float)allocated / total_memory;
+                m_history.enqueue(memory);
+                m_tooltip = String::format("Memory: %.1f MiB of %.1f MiB in use", (float)allocated / MiB, total_memory / MiB);
+            } else {
+                m_history.enqueue(-1);
+                m_tooltip = StringView("Unable to determine memory usage");
+            }
             break;
         }
         default:
@@ -102,10 +111,17 @@ private:
         int i = m_history.capacity() - m_history.size();
         auto rect = frame_inner_rect();
         for (auto value : m_history) {
-            painter.draw_line(
-                { rect.x() + i, rect.bottom() },
-                { rect.x() + i, rect.top() + (int)(round(rect.height() - (value * rect.height()))) },
-                m_graph_color);
+            if (value >= 0) {
+                painter.draw_line(
+                    { rect.x() + i, rect.bottom() },
+                    { rect.x() + i, rect.top() + (int)(round(rect.height() - (value * rect.height()))) },
+                    m_graph_color);
+            } else {
+                painter.draw_line(
+                    { rect.x() + i, rect.top() },
+                    { rect.x() + i, rect.bottom() },
+                    m_graph_error_color);
+            }
             ++i;
         }
     }
@@ -124,12 +140,14 @@ private:
         }
     }
 
-    static void get_cpu_usage(unsigned& busy, unsigned& idle)
+    static bool get_cpu_usage(unsigned& busy, unsigned& idle)
     {
         busy = 0;
         idle = 0;
 
         auto all_processes = Core::ProcessStatisticsReader::get_all();
+        if (all_processes.is_empty())
+            return false;
 
         for (auto& it : all_processes) {
             for (auto& jt : it.value.threads) {
@@ -139,13 +157,14 @@ private:
                     busy += jt.times_scheduled;
             }
         }
+        return true;
     }
 
-    static void get_memory_usage(unsigned& allocated, unsigned& available)
+    static bool get_memory_usage(unsigned& allocated, unsigned& available)
     {
         auto proc_memstat = Core::File::construct("/proc/memstat");
         if (!proc_memstat->open(Core::IODevice::OpenMode::ReadOnly))
-            ASSERT_NOT_REACHED();
+            return false;
 
         auto file_contents = proc_memstat->read_all();
         auto json = JsonValue::from_string(file_contents);
@@ -154,10 +173,12 @@ private:
         unsigned user_physical_available = json.value().as_object().get("user_physical_available").to_u32();
         allocated = (user_physical_allocated * PAGE_SIZE);
         available = (user_physical_available * PAGE_SIZE);
+        return true;
     }
 
     GraphType m_graph_type;
     Gfx::Color m_graph_color;
+    Gfx::Color m_graph_error_color;
     CircularQueue<float, history_size> m_history;
     unsigned m_last_cpu_busy { 0 };
     unsigned m_last_cpu_idle { 0 };
@@ -182,11 +203,13 @@ int main(int argc, char** argv)
     bool memory = false;
     const char* name = nullptr;
     const char* color = nullptr;
+    const char* error_color = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_option(cpu, "Show CPU usage", "cpu", 'C');
     args_parser.add_option(memory, "Show memory usage", "memory", 'M');
     args_parser.add_option(name, "Applet name used by WindowServer.ini to set the applet order", "name", 'n', "name");
     args_parser.add_option(color, "Graph color", "color", 'c', "color");
+    args_parser.add_option(error_color, "Graph color (error)", "error-color", 'e', "error-color");
     args_parser.parse(argc, argv);
 
     if (!cpu && !memory) {
@@ -206,16 +229,18 @@ int main(int argc, char** argv)
     if (name == nullptr)
         name = "ResourceGraph";
 
-    Optional<Gfx::Color> graph_color;
+    Optional<Gfx::Color> graph_color, graph_error_color;
     if (color != nullptr)
         graph_color = Gfx::Color::from_string(color);
+    if (error_color != nullptr)
+        graph_error_color = Gfx::Color::from_string(error_color);
 
     auto window = GUI::Window::construct();
     window->set_title(name);
     window->set_window_type(GUI::WindowType::MenuApplet);
     window->resize(GraphWidget::history_size + 2, 16);
 
-    window->set_main_widget<GraphWidget>(graph_type, graph_color);
+    window->set_main_widget<GraphWidget>(graph_type, graph_color, graph_error_color);
     window->show();
 
     if (unveil("/res", "r") < 0) {
