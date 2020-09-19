@@ -219,6 +219,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view.set_column_hidden(GUI::FileSystemModel::Column::SymlinkTarget, true);
     tree_view.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     tree_view.set_preferred_size(150, 0);
+    bool is_reacting_to_tree_view_selection_change = false;
+
     auto& directory_view = splitter.add<DirectoryView>(DirectoryView::Mode::Normal);
 
     // Open the root directory. FIXME: This is awkward.
@@ -521,10 +523,13 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
         window->set_title(String::format("%s - File Manager", new_path.characters()));
         location_textbox.set_text(new_path);
-        auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
-        if (new_index.is_valid()) {
-            tree_view.expand_all_parents_of(new_index);
-            tree_view.set_cursor(new_index, GUI::AbstractView::SelectionUpdate::Set);
+
+        if (!is_reacting_to_tree_view_selection_change) {
+            auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
+            if (new_index.is_valid()) {
+                tree_view.expand_all_parents_of(new_index);
+                tree_view.set_cursor(new_index, GUI::AbstractView::SelectionUpdate::Set);
+            }
         }
 
         struct stat st;
@@ -659,6 +664,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         auto path = directories_model->full_path(tree_view.selection().first());
         if (directory_view.path() == path)
             return;
+        TemporaryChange change(is_reacting_to_tree_view_selection_change, true);
         directory_view.open(path);
         copy_action->set_enabled(!tree_view.selection().is_empty());
         directory_view.delete_action().set_enabled(!tree_view.selection().is_empty());
