@@ -57,6 +57,18 @@ inline bool is_right_text_alignment(TextAlignment alignment)
     }
 }
 
+inline bool is_vertically_centered_text_alignment(TextAlignment alignment)
+{
+    switch (alignment) {
+    case TextAlignment::CenterLeft:
+    case TextAlignment::CenterRight:
+    case TextAlignment::Center:
+        return true;
+    default:
+        return false;
+    }
+}
+
 inline Optional<TextAlignment> text_alignment_from_string(const StringView& string)
 {
 #define __ENUMERATE(x) \
