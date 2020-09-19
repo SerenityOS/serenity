@@ -24,10 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/BufferStream.h>
+#include <AK/Array.h>
 #include <AK/ByteBuffer.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/Painter.h>
@@ -122,21 +123,20 @@ enum class GIFFormat {
     GIF89a,
 };
 
-static Optional<GIFFormat> decode_gif_header(BufferStream& stream)
+static Optional<GIFFormat> decode_gif_header(InputMemoryStream& stream)
 {
     static const char valid_header_87[] = "GIF87a";
     static const char valid_header_89[] = "GIF89a";
 
-    char header[6];
-    for (int i = 0; i < 6; ++i)
-        stream >> header[i];
+    Array<u8, 6> header;
+    stream >> header;
 
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return {};
 
-    if (!memcmp(header, valid_header_87, sizeof(header)))
+    if (header.span() == ReadonlyBytes { valid_header_87, 6 })
         return GIFFormat::GIF87a;
-    else if (!memcmp(header, valid_header_89, sizeof(header)))
+    if (header.span() == ReadonlyBytes { valid_header_89, 6 })
         return GIFFormat::GIF89a;
 
     return {};
@@ -387,8 +387,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     if (context.data_size < 32)
         return false;
 
-    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.data), context.data_size);
-    BufferStream stream(buffer);
+    InputMemoryStream stream { { context.data, context.data_size } };
 
     Optional<GIFFormat> format = decode_gif_header(stream);
     if (!format.has_value()) {
@@ -397,15 +396,21 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
     printf("Format is %s\n", format.value() == GIFFormat::GIF89a ? "GIF89a" : "GIF87a");
 
-    stream >> context.logical_screen.width;
-    stream >> context.logical_screen.height;
-    if (stream.handle_read_failure())
+    LittleEndian<u16> value;
+
+    stream >> value;
+    context.logical_screen.width = value;
+
+    stream >> value;
+    context.logical_screen.height = value;
+
+    if (stream.handle_any_error())
         return false;
 
     u8 gcm_info = 0;
     stream >> gcm_info;
 
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
 
     bool global_color_map_follows_descriptor = gcm_info & 0x80;
@@ -418,14 +423,14 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     printf("bits_of_color_resolution: %u\n", bits_of_color_resolution);
 
     stream >> context.background_color_index;
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
 
     printf("background_color: %u\n", context.background_color_index);
 
     u8 pixel_aspect_ratio = 0;
     stream >> pixel_aspect_ratio;
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
 
     int color_map_entry_count = 1;
@@ -442,7 +447,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
         context.logical_screen.color_map[i] = { r, g, b };
     }
 
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
 
     for (int i = 0; i < color_map_entry_count; ++i) {
@@ -459,7 +464,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
         if (sentinel == 0x21) {
             u8 extension_type = 0;
             stream >> extension_type;
-            if (stream.handle_read_failure())
+            if (stream.handle_any_error())
                 return false;
 
             printf("Extension block of type %02x\n", extension_type);
@@ -470,7 +475,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             for (;;) {
                 stream >> sub_block_length;
 
-                if (stream.handle_read_failure())
+                if (stream.handle_any_error())
                     return false;
 
                 if (sub_block_length == 0)
@@ -482,7 +487,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                     sub_block.append(dummy);
                 }
 
-                if (stream.handle_read_failure())
+                if (stream.handle_any_error())
                     return false;
             }
 
@@ -529,13 +534,24 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             context.images.append(move(current_image));
             auto& image = context.images.last();
 
+            LittleEndian<u16> tmp;
+
             u8 packed_fields { 0 };
-            stream >> image.x;
-            stream >> image.y;
-            stream >> image.width;
-            stream >> image.height;
+
+            stream >> tmp;
+            image.x = tmp;
+
+            stream >> tmp;
+            image.y = tmp;
+
+            stream >> tmp;
+            image.width = tmp;
+
+            stream >> tmp;
+            image.height = tmp;
+
             stream >> packed_fields;
-            if (stream.handle_read_failure())
+            if (stream.handle_any_error())
                 return false;
 
             image.use_global_color_map = !(packed_fields & 0x80);
@@ -564,18 +580,16 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             for (;;) {
                 stream >> lzw_encoded_bytes_expected;
 
-                if (stream.handle_read_failure())
+                if (stream.handle_any_error())
                     return false;
 
                 if (lzw_encoded_bytes_expected == 0)
                     break;
 
-                u8 buffer[256];
-                for (int i = 0; i < lzw_encoded_bytes_expected; ++i) {
-                    stream >> buffer[i];
-                }
+                Array<u8, 256> buffer;
+                stream >> buffer.span().trim(lzw_encoded_bytes_expected);
 
-                if (stream.handle_read_failure())
+                if (stream.handle_any_error())
                     return false;
 
                 for (int i = 0; i < lzw_encoded_bytes_expected; ++i) {
@@ -649,8 +663,7 @@ bool GIFImageDecoderPlugin::set_nonvolatile()
 
 bool GIFImageDecoderPlugin::sniff()
 {
-    auto buffer = ByteBuffer::wrap(const_cast<u8*>(m_context->data), m_context->data_size);
-    BufferStream stream(buffer);
+    InputMemoryStream stream { { m_context->data, m_context->data_size } };
     return decode_gif_header(stream).has_value();
 }
 
