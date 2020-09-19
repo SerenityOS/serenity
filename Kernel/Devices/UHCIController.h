@@ -63,7 +63,6 @@ private:
 
     virtual void handle_irq(const RegisterState&) override;
 
-    PCI::Address m_address;
     IOAddress m_io_base;
 };
 
