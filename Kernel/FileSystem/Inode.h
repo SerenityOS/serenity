@@ -126,8 +126,8 @@ protected:
     void inode_size_changed(size_t old_size, size_t new_size);
     KResult prepare_to_write_data();
 
-    void did_add_child(const String& name);
-    void did_remove_child(const String& name);
+    void did_add_child(const InodeIdentifier&);
+    void did_remove_child(const InodeIdentifier&);
 
     mutable Lock m_lock { "Inode" };
 

@@ -1027,7 +1027,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
     if (success)
         m_lookup_cache.set(name, child.index());
 
-    did_add_child(name);
+    did_add_child(child.identifier());
     return KSuccess;
 }
 
@@ -1072,7 +1072,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     if (result.is_error())
         return result;
 
-    did_remove_child(name);
+    did_remove_child(child_id);
     return KSuccess;
 }
 

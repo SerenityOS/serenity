@@ -50,7 +50,7 @@ public:
         };
 
         Type type { Type::Invalid };
-        String string;
+        unsigned inode_index { 0 };
     };
 
     virtual bool can_read(const FileDescription&, size_t) const override;
@@ -61,8 +61,8 @@ public:
     virtual const char* class_name() const override { return "InodeWatcher"; };
 
     void notify_inode_event(Badge<Inode>, Event::Type);
-    void notify_child_added(Badge<Inode>, const String& child_name);
-    void notify_child_removed(Badge<Inode>, const String& child_name);
+    void notify_child_added(Badge<Inode>, const InodeIdentifier& child_id);
+    void notify_child_removed(Badge<Inode>, const InodeIdentifier& child_id);
 
 private:
     explicit InodeWatcher(Inode&);
