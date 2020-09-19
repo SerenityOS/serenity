@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/BufferStream.h>
+#include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AK/OwnPtr.h>
 #include <LibAudio/WavLoader.h>
@@ -219,7 +219,7 @@ bool ResampleHelper::read_sample(double& next_l, double& next_r)
 }
 
 template<typename SampleReader>
-static void read_samples_from_stream(BufferStream& stream, SampleReader read_sample, Vector<Sample>& samples, ResampleHelper& resampler, int num_channels)
+static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Sample>& samples, ResampleHelper& resampler, int num_channels)
 {
     double norm_l = 0;
     double norm_r = 0;
@@ -232,7 +232,7 @@ static void read_samples_from_stream(BufferStream& stream, SampleReader read_sam
             }
             norm_l = read_sample(stream);
 
-            if (stream.handle_read_failure()) {
+            if (stream.handle_any_error()) {
                 break;
             }
             resampler.process_sample(norm_l, norm_r);
@@ -246,7 +246,7 @@ static void read_samples_from_stream(BufferStream& stream, SampleReader read_sam
             norm_l = read_sample(stream);
             norm_r = read_sample(stream);
 
-            if (stream.handle_read_failure()) {
+            if (stream.handle_any_error()) {
                 break;
             }
             resampler.process_sample(norm_l, norm_r);
@@ -257,7 +257,7 @@ static void read_samples_from_stream(BufferStream& stream, SampleReader read_sam
     }
 }
 
-static double read_norm_sample_24(BufferStream& stream)
+static double read_norm_sample_24(InputMemoryStream& stream)
 {
     u8 byte = 0;
     stream >> byte;
@@ -274,26 +274,23 @@ static double read_norm_sample_24(BufferStream& stream)
     return double(value) / NumericLimits<i32>::max();
 }
 
-static double read_norm_sample_16(BufferStream& stream)
+static double read_norm_sample_16(InputMemoryStream& stream)
 {
-    i16 sample = 0;
+    LittleEndian<i16> sample;
     stream >> sample;
     return double(sample) / NumericLimits<i16>::max();
 }
 
-static double read_norm_sample_8(BufferStream& stream)
+static double read_norm_sample_8(InputMemoryStream& stream)
 {
     u8 sample = 0;
     stream >> sample;
     return double(sample) / NumericLimits<u8>::max();
 }
 
-// ### can't const this because BufferStream is non-const
-// perhaps we need a reading class separate from the writing one, that can be
-// entirely consted.
-RefPtr<Buffer> Buffer::from_pcm_data(ByteBuffer& data, ResampleHelper& resampler, int num_channels, int bits_per_sample)
+RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, int bits_per_sample)
 {
-    BufferStream stream(data);
+    InputMemoryStream stream { data };
     Vector<Sample> fdata;
     fdata.ensure_capacity(data.size() / (bits_per_sample / 8));
 #ifdef AWAVLOADER_DEBUG
@@ -317,7 +314,7 @@ RefPtr<Buffer> Buffer::from_pcm_data(ByteBuffer& data, ResampleHelper& resampler
     // We should handle this in a better way above, but for now --
     // just make sure we're good. Worst case we just write some 0s where they
     // don't belong.
-    ASSERT(!stream.handle_read_failure());
+    ASSERT(!stream.handle_any_error());
 
     return Buffer::create_with_samples(move(fdata));
 }
