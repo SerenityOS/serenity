@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Types.h>
 
 namespace AK {
 
@@ -56,6 +57,9 @@ public:
     T* last() const;
 
     T* take_first();
+    T* take_last();
+    
+    size_t size_slow() const;
 
     class Iterator {
     public:
@@ -231,6 +235,25 @@ inline T* IntrusiveList<T, member>::take_first()
         return ptr;
     }
     return nullptr;
+}
+
+template<class T, IntrusiveListNode T::*member>
+inline T* IntrusiveList<T, member>::take_last()
+{
+    if (auto* ptr = last()) {
+        remove(*ptr);
+        return ptr;
+    }
+    return nullptr;
+}
+
+template<class T, IntrusiveListNode T::*member>
+inline size_t IntrusiveList<T, member>::size_slow() const
+{
+    size_t count = 0;
+    for (auto* ptr = first(); ptr; ptr = next(ptr))
+        count++;
+    return count;
 }
 
 template<class T, IntrusiveListNode T::*member>

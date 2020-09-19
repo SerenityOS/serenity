@@ -143,7 +143,7 @@ public:
         return vmobject().physical_pages()[first_page_index() + index];
     }
 
-    RefPtr<PhysicalPage>& physical_page_slot(size_t index)
+    VMObject::PhysicalPageSlotType& physical_page_slot(size_t index)
     {
         ASSERT(index < page_count());
         return vmobject().physical_pages()[first_page_index() + index];
@@ -186,6 +186,7 @@ public:
 
     void set_inherit_mode(InheritMode inherit_mode) { m_inherit_mode = inherit_mode; }
 
+    bool remap_page(size_t index, bool with_flush = true);
     bool remap_page_range(size_t page_index, size_t page_count);
 
     bool is_volatile(VirtualAddress vaddr, size_t size) const;
@@ -206,8 +207,6 @@ private:
         else
             m_access &= ~access;
     }
-
-    bool remap_page(size_t index, bool with_flush = true);
 
     PageFaultResponse handle_cow_fault(size_t page_index);
     PageFaultResponse handle_inode_fault(size_t page_index, ScopedSpinLock<RecursiveSpinLock>&);

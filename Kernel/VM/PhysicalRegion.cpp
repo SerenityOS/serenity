@@ -65,7 +65,7 @@ unsigned PhysicalRegion::finalize_capacity()
     return size();
 }
 
-NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor)
+NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count)
 {
     ASSERT(m_pages);
     ASSERT(m_used != m_pages);
@@ -75,8 +75,9 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
 
     auto first_contiguous_page = find_contiguous_free_pages(count);
 
-    for (size_t index = 0; index < count; index++)
-        physical_pages.append(PhysicalPage::create(m_lower.offset(PAGE_SIZE * (index + first_contiguous_page)), supervisor));
+    for (size_t index = 0; index < count; index++) {
+        physical_pages.append(PhysicalPage::create(m_lower.offset(PAGE_SIZE * (index + first_contiguous_page)), !m_is_user));
+    }
     return physical_pages;
 }
 
@@ -137,7 +138,7 @@ Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t cou
     return {};
 }
 
-RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
+RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
 {
     ASSERT(m_pages);
 
@@ -145,7 +146,7 @@ RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
     if (!free_index.has_value())
         return nullptr;
 
-    return PhysicalPage::create(m_lower.offset(free_index.value() * PAGE_SIZE), supervisor);
+    return PhysicalPage::create(m_lower.offset(free_index.value() * PAGE_SIZE), !m_is_user);
 }
 
 void PhysicalRegion::free_page_at(PhysicalAddress addr)
@@ -166,7 +167,7 @@ void PhysicalRegion::free_page_at(PhysicalAddress addr)
     m_used--;
 }
 
-void PhysicalRegion::return_page(const PhysicalPage& page)
+void PhysicalRegion::return_page(PhysicalPage& page)
 {
     auto returned_count = m_recently_returned.size();
     if (returned_count >= m_recently_returned.capacity()) {
@@ -179,6 +180,93 @@ void PhysicalRegion::return_page(const PhysicalPage& page)
         // Still filling the return queue, just append it
         m_recently_returned.append(page.paddr());
     }
+}
+
+NonnullRefPtr<UserPhysicalRegion> UserPhysicalRegion::create(PhysicalAddress lower, PhysicalAddress upper)
+{
+    return adopt(*new UserPhysicalRegion(lower, upper));
+}
+
+UserPhysicalRegion::UserPhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
+    : PhysicalRegion(lower, upper)
+{
+    m_is_user = true;
+}
+
+RefPtr<PhysicalPage> UserPhysicalRegion::take_free_page()
+{
+    auto page = PhysicalRegion::take_free_page();
+    if (page)
+        add_page_to_inactive_list(*page);
+    return page;
+}
+
+NonnullRefPtrVector<PhysicalPage> UserPhysicalRegion::take_contiguous_free_pages(size_t count)
+{
+    auto pages = PhysicalRegion::take_contiguous_free_pages(count);
+    if (!pages.is_empty()) {
+        ScopedSpinLock lock(m_page_list_lock);
+        for (auto& page : pages)
+            m_inactive_pages.append(page);
+    }
+    return pages;
+}
+
+void UserPhysicalRegion::return_page(PhysicalPage& page)
+{
+    ASSERT(!page.is_eternal());
+    PhysicalRegion::return_page(page);
+    remove_page_from_list(page);
+}
+
+void UserPhysicalRegion::add_page_to_active_list(PhysicalPage& page)
+{
+    if (page.is_eternal())
+        return;
+    ASSERT(contains(page));
+    ScopedSpinLock lock(m_page_list_lock);
+    m_active_pages.prepend(page);
+    page.set_in_active_inactive_list(true, {});
+}
+
+void UserPhysicalRegion::add_page_to_inactive_list(PhysicalPage& page)
+{
+    if (page.is_eternal())
+        return;
+    ASSERT(contains(page));
+    ScopedSpinLock lock(m_page_list_lock);
+    m_inactive_pages.append(page);
+    page.set_in_active_inactive_list(true, {});
+}
+
+void UserPhysicalRegion::remove_page_from_list(PhysicalPage& page)
+{
+    if (page.is_eternal())
+        return;
+    ASSERT(contains(page));
+    ScopedSpinLock lock(m_page_list_lock);
+    if (page.in_active_inactive_list({})) {
+        page.m_list.remove();
+        page.set_in_active_inactive_list(false, {});
+    }
+}
+
+size_t UserPhysicalRegion::pull_pages_from_list(bool active_list, size_t count, Vector<PhysicalPage*>& pages)
+{
+    ASSERT(count > 0);
+    ScopedSpinLock lock(m_page_list_lock);
+    auto& list = active_list ? m_active_pages : m_inactive_pages;
+    size_t pulled_count = 0;
+    while (pulled_count < count) {
+        auto* page = list.take_last();
+        if (!page)
+            break;
+        ASSERT(!page->is_eternal());
+        page->set_in_active_inactive_list(false, {});
+        pages.append(page);
+        pulled_count++;
+    }
+    return pulled_count;    
 }
 
 }

@@ -35,6 +35,7 @@
 #include <Kernel/VM/AllocationStrategy.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
+#include <Kernel/VM/SwapArea.h>
 #include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
@@ -115,8 +116,10 @@ public:
     RefPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
     RefPtr<PhysicalPage> allocate_supervisor_physical_page();
     NonnullRefPtrVector<PhysicalPage> allocate_contiguous_supervisor_physical_pages(size_t size);
-    void deallocate_user_physical_page(const PhysicalPage&);
-    void deallocate_supervisor_physical_page(const PhysicalPage&);
+    void deallocate_user_physical_page(PhysicalPage&);
+    void deallocate_supervisor_physical_page(PhysicalPage&);
+
+    UserPhysicalRegion& find_user_physical_region_for_physical_page(const PhysicalPage&);
 
     OwnPtr<Region> allocate_contiguous_kernel_region(size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = true);
     OwnPtr<Region> allocate_kernel_region(size_t, const StringView& name, u8 access, bool user_accessible = false, AllocationStrategy strategy = AllocationStrategy::Reserve, bool cacheable = true);
@@ -161,6 +164,9 @@ public:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
+    bool try_swap_out_pages(bool);
+    void write_out_pending_swap_pages(u32, bool);
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -171,6 +177,10 @@ private:
         Write };
     template<AccessSpace, AccessType>
     bool validate_range(const Process&, VirtualAddress, size_t) const;
+
+    void initialize_swap();
+    void unref_swapped_page(VMObject::PhysicalPageSlotType&);
+    bool queue_swap_out_page(VMObject::PhysicalPageSlotType&);
 
     void register_vmobject(VMObject&);
     void unregister_vmobject(VMObject&);
@@ -188,7 +198,7 @@ private:
 
     static Region* find_region_from_vaddr(VirtualAddress);
 
-    RefPtr<PhysicalPage> find_free_user_physical_page(bool);
+    RefPtr<PhysicalPage> find_free_user_physical_page(bool, bool* did_purge_or_swap = nullptr);
     u8* quickmap_page(PhysicalPage&);
     void unquickmap_page();
 
@@ -199,26 +209,33 @@ private:
     PageTableEntry* ensure_pte(PageDirectory&, VirtualAddress);
     void release_pte(PageDirectory&, VirtualAddress, bool);
 
+    PageTableEntry allocate_swap_entry();
+    u32 add_swap_entry_ref(const PageTableEntry& swap_entry);
+
     RefPtr<PageDirectory> m_kernel_page_directory;
     RefPtr<PhysicalPage> m_low_page_table;
 
     RefPtr<PhysicalPage> m_shared_zero_page;
     RefPtr<PhysicalPage> m_lazy_committed_page;
 
+    unsigned m_user_pages_committed { 0 };
+    unsigned m_user_pages_used { 0 };
+    unsigned m_user_pages_total { 0 };
     unsigned m_user_physical_pages { 0 };
     unsigned m_user_physical_pages_used { 0 };
-    unsigned m_user_physical_pages_committed { 0 };
-    unsigned m_user_physical_pages_uncommitted { 0 };
     unsigned m_super_physical_pages { 0 };
     unsigned m_super_physical_pages_used { 0 };
+    unsigned m_swap_out_threshold { 0 };
 
-    NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
+    NonnullRefPtrVector<UserPhysicalRegion> m_user_physical_regions;
     NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;
 
     InlineLinkedList<Region> m_user_regions;
     InlineLinkedList<Region> m_kernel_regions;
 
     InlineLinkedList<VMObject> m_vmobjects;
+
+    Vector<OwnPtr<SwapArea>, 32> m_swap_areas;
 
     RefPtr<PhysicalPage> m_low_pseudo_identity_mapping_pages[4];
 };

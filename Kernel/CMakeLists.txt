@@ -166,6 +166,7 @@ set(KERNEL_SOURCES
     TTY/TTY.cpp
     TTY/VirtualConsole.cpp
     Tasks/FinalizerTask.cpp
+    Tasks/SwapTask.cpp
     Tasks/SyncTask.cpp
     Thread.cpp
     ThreadTracer.cpp
@@ -190,6 +191,7 @@ set(KERNEL_SOURCES
     VM/RangeAllocator.cpp
     VM/Region.cpp
     VM/SharedInodeVMObject.cpp
+    VM/SwapArea.cpp
     VM/VMObject.cpp
     WaitQueue.cpp
     init.cpp

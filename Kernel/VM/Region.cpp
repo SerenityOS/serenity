@@ -95,7 +95,7 @@ OwnPtr<Region> Region::clone()
         ASSERT(m_mmap);
         ASSERT(!m_shared);
         ASSERT(vmobject().is_anonymous());
-        auto new_vmobject = AnonymousVMObject::create_with_size(size(), AllocationStrategy::Reserve); // TODO: inherit committed non-volatile areas?
+        auto new_vmobject = AnonymousVMObject::create_with_size(size(), AllocationStrategy::Reserve, vmobject().is_swappable()); // TODO: inherit committed non-volatile areas?
         if (!new_vmobject)
             return {};
         auto zeroed_region = Region::create_user_accessible(get_owner().ptr(), m_range, new_vmobject.release_nonnull(), 0, m_name, m_access);
@@ -282,17 +282,28 @@ bool Region::map_individual_page_impl(size_t page_index)
 #endif
         return false;
     }
-    auto* page = physical_page(page_index);
-    if (!page || (!is_readable() && !is_writable())) {
-        pte->clear();
+    auto& page = physical_page_slot(page_index);
+    if (!page) {
+        auto swap_info = page.null_value();
+        if (swap_info.is_swap_entry())
+            *pte = swap_info;
+        else
+            pte->clear();
     } else {
         pte->set_cache_disabled(!m_cacheable);
         pte->set_physical_page_base(page->paddr().get());
-        pte->set_present(true);
-        if (page->is_shared_zero_page() || page->is_lazy_committed_page() || should_cow(page_index))
-            pte->set_writable(false);
-        else
-            pte->set_writable(is_writable());
+        if (!is_readable() && !is_writable()) {
+            // PROT_NONE
+            pte->set_present(false);
+            pte->set_pat(true);
+        } else {
+            pte->set_pat(false);
+            pte->set_present(true);
+            if (page->is_shared_zero_page() || page->is_lazy_committed_page() || should_cow(page_index))
+                pte->set_writable(false);
+            else
+                pte->set_writable(is_writable());
+        }
         if (Processor::current().has_feature(CPUFeature::NX))
             pte->set_execute_disabled(!is_executable());
         pte->set_user_allowed(is_user_accessible());
@@ -326,7 +337,6 @@ bool Region::remap_page(size_t page_index, bool with_flush)
 {
     ASSERT(m_page_directory);
     ScopedSpinLock lock(s_mm_lock);
-    ASSERT(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
         MM.flush_tlb(vaddr_from_page_index(page_index));
@@ -410,22 +420,23 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
         }
 
         auto& page_slot = physical_page_slot(page_index_in_region);
-        if (page_slot->is_lazy_committed_page()) {
+        if (!page_slot) {
+            auto swap_info = page_slot.null_value();
+            if (swap_info.is_swap_entry()) {
+                // TODO: swap in
+                dbg() << "NP(swapped-out) fault in Region{" << this << "}[" << page_index_in_region << "] at " << fault.vaddr()
+                    << " swapped out to " << swap_info.get_swap_area() << ":" << swap_info.get_swap_index();
+                MM.dump_kernel_regions();
+            }
+        } else if (page_slot->is_lazy_committed_page()) {
             page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_region);
+            page_slot->was_accessed(fault.is_write());
             remap_page(page_index_in_region);
             return PageFaultResponse::Continue;
         }
-#ifdef MAP_SHARED_ZERO_PAGE_LAZILY
-        if (fault.is_read()) {
-            page_slot = MM.shared_zero_page();
-            remap_page(page_index_in_region);
-            return PageFaultResponse::Continue;
-        }
-        return handle_zero_fault(page_index_in_region, lock);
-#else
+
         dbg() << "BUG! Unexpected NP fault at " << fault.vaddr();
         return PageFaultResponse::ShouldCrash;
-#endif
     }
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
@@ -462,6 +473,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, ScopedS
 #ifdef PAGE_FAULT_DEBUG
         dbg() << "MM: zero_page() but page already present. Fine with me!";
 #endif
+        page_slot->was_accessed(true);
         if (!remap_page(page_index_in_region))
             return PageFaultResponse::OutOfMemory;
         return PageFaultResponse::Continue;
@@ -487,6 +499,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, ScopedS
 #endif
     }
 
+    page_slot->was_accessed(true);
     if (!remap_page(page_index_in_region)) {
         klog() << "MM: handle_zero_fault was unable to allocate a page table to map " << page_slot;
         return PageFaultResponse::OutOfMemory;

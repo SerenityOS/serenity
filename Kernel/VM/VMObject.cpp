@@ -45,6 +45,14 @@ VMObject::VMObject(size_t size)
 
 VMObject::~VMObject()
 {
+    for (size_t i = 0; i < m_physical_pages.size(); i++) {
+        auto& page_slot = m_physical_pages[i];
+        if (page_slot.is_null()) {
+            auto swap_info = page_slot.null_value();
+            if (swap_info.is_swap_entry())
+                MM.unref_swapped_page(page_slot);
+        }
+    }
     MM.unregister_vmobject(*this);
 }
 

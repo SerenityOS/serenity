@@ -145,7 +145,7 @@ Region& Process::allocate_split_region(const Region& source_region, const Range&
 Region* Process::allocate_region(const Range& range, const String& name, int prot, AllocationStrategy strategy)
 {
     ASSERT(range.is_valid());
-    auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy);
+    auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy, true);
     if (!vmobject)
         return nullptr;
     auto region = Region::create_user_accessible(this, range, vmobject.release_nonnull(), 0, name, prot_to_region_access_flags(prot));

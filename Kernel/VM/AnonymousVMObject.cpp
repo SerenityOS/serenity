@@ -72,14 +72,14 @@ RefPtr<VMObject> AnonymousVMObject::clone()
     return adopt(*new AnonymousVMObject(*this));
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, AllocationStrategy commit)
+RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, AllocationStrategy commit, bool is_swappable)
 {
     if (commit == AllocationStrategy::Reserve || commit == AllocationStrategy::AllocateNow) {
         // We need to attempt to commit before actually creating the object
         if (!MM.commit_user_physical_pages(ceil_div(size, PAGE_SIZE)))
             return {};
     }
-    return adopt(*new AnonymousVMObject(size, commit));
+    return adopt(*new AnonymousVMObject(size, commit, is_swappable));
 }
 
 NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(PhysicalPage& page)
@@ -96,9 +96,10 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalA
     return adopt(*new AnonymousVMObject(paddr, size));
 }
 
-AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy)
+AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy, bool is_swappable)
     : VMObject(size)
     , m_volatile_ranges_cache({0, page_count()})
+    , m_is_swappable(is_swappable)
     , m_unused_committed_pages(strategy == AllocationStrategy::Reserve ? page_count() : 0)
 {
     if (strategy == AllocationStrategy::AllocateNow) {
@@ -132,6 +133,7 @@ AnonymousVMObject::AnonymousVMObject(const AnonymousVMObject& other)
     : VMObject(other)
     , m_volatile_ranges_cache({0, page_count()}) // do *not* clone this
     , m_volatile_ranges_cache_dirty(true) // do *not* clone this
+    , m_is_swappable(other.m_is_swappable)
     , m_purgeable_ranges() // do *not* clone this
     , m_unused_committed_pages(other.m_unused_committed_pages)
     , m_cow_map() // do *not* clone this
@@ -494,6 +496,39 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     MM.unquickmap_page();
     set_should_cow(page_index, false);
     return PageFaultResponse::Continue;
+}
+
+bool AnonymousVMObject::try_swap_out_page(PhysicalPage& page)
+{
+    ScopedSpinLock lock(m_lock);
+    size_t page_index = 0;
+    while (page_index < page_count()) {
+        if (physical_pages()[page_index] == &page)
+            break;
+        page_index++;
+    }
+
+    if (page_index >= page_count())
+        return false; // We don't have this page
+    
+    // NOTE: queue_swap_out_page will swap the page slot and replace it
+    // with the swap information. We cannot safely access the PhysicalPage
+    // after that point because it may be swapped out at any point
+    auto& page_slot = physical_pages()[page_index];
+    MM.queue_swap_out_page(page_slot);
+    ASSERT(page_slot.null_value().is_swap_entry());
+
+    // TODO: This wouldn't be necessary if we didn't have m_physical_pages.
+    // Without it, we would just look at the PTE directly and merely replace
+    // non-swap entries with swap entries and drop a reference to the page.
+    // Then, wen dropping the last reference we would know it's safe to actually
+    // move the page to swap storage. We also wouldn't have to remap those
+    // pages in all the regions, which is very expensive.
+    for_each_region([&](auto& region) {
+        if (&region.vmobject() == this)
+            region.remap_page(page_index);
+    });
+    return true;
 }
 
 }

@@ -130,7 +130,7 @@ Range RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 #endif
         return allocated_range;
     }
-    klog() << "VRA: Failed to allocate anywhere: " << size << ", " << alignment;
+    klog() << "VRA: Failed to allocate anywhere: " << size << ", " << alignment << " in range " << m_total_range;
     return {};
 }
 

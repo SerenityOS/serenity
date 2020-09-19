@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <AK/IntrusiveList.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
@@ -39,7 +40,7 @@ class PhysicalRegion : public RefCounted<PhysicalRegion> {
 
 public:
     static NonnullRefPtr<PhysicalRegion> create(PhysicalAddress lower, PhysicalAddress upper);
-    ~PhysicalRegion() { }
+    virtual ~PhysicalRegion() { }
 
     void expand(PhysicalAddress lower, PhysicalAddress upper);
     unsigned finalize_capacity();
@@ -51,11 +52,11 @@ public:
     unsigned free() const { return m_pages - m_used + m_recently_returned.size(); }
     bool contains(const PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
 
-    RefPtr<PhysicalPage> take_free_page(bool supervisor);
-    NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, bool supervisor);
-    void return_page(const PhysicalPage& page);
+    virtual RefPtr<PhysicalPage> take_free_page();
+    virtual NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count);
+    virtual void return_page(PhysicalPage& page);
 
-private:
+protected:
     unsigned find_contiguous_free_pages(size_t count);
     Optional<unsigned> find_and_allocate_contiguous_range(size_t count);
     Optional<unsigned> find_one_free_page();
@@ -70,6 +71,31 @@ private:
     Bitmap m_bitmap;
     size_t m_free_hint { 0 };
     Vector<PhysicalAddress, 256> m_recently_returned;
+    bool m_is_user { false };
+};
+
+class UserPhysicalRegion: public PhysicalRegion {
+    AK_MAKE_ETERNAL
+
+public:
+    static NonnullRefPtr<UserPhysicalRegion> create(PhysicalAddress lower, PhysicalAddress upper);
+    virtual ~UserPhysicalRegion() {}
+
+    virtual RefPtr<PhysicalPage> take_free_page() override;
+    virtual NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count) override;
+    virtual void return_page(PhysicalPage& page) override;
+
+    void add_page_to_active_list(PhysicalPage&);
+    void add_page_to_inactive_list(PhysicalPage&);
+    void remove_page_from_list(PhysicalPage&);
+    size_t pull_pages_from_list(bool, size_t, Vector<PhysicalPage*>&);
+private:
+    UserPhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);
+
+    typedef IntrusiveList<PhysicalPage, &PhysicalPage::m_list> PhysicalPageList;
+    PhysicalPageList m_active_pages;
+    PhysicalPageList m_inactive_pages;
+    SpinLock<u8> m_page_list_lock;
 };
 
 }

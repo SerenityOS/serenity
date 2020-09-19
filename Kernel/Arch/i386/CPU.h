@@ -195,6 +195,12 @@ private:
 
 class PageTableEntry {
 public:
+    PageTableEntry() = default;
+    PageTableEntry(std::nullptr_t)
+        : m_raw(0)
+    {
+    }
+
     void* physical_page_base() { return reinterpret_cast<void*>(m_raw & 0xfffff000u); }
     void set_physical_page_base(u32 value)
     {
@@ -202,6 +208,7 @@ public:
         m_raw |= value & 0xfffff000;
     }
 
+    void set_raw(u64 raw) { m_raw = raw; }
     u64 raw() const { return (u32)m_raw; }
 
     enum Flags {
@@ -210,6 +217,8 @@ public:
         UserSupervisor = 1 << 2,
         WriteThrough = 1 << 3,
         CacheDisabled = 1 << 4,
+        Accessed = 1 << 5,
+        PAT = 1 << 7,
         Global = 1 << 8,
         NoExecute = 0x8000000000000000ULL,
     };
@@ -235,6 +244,12 @@ public:
     bool is_execute_disabled() const { return raw() & NoExecute; }
     void set_execute_disabled(bool b) { set_bit(NoExecute, b); }
 
+    bool is_accessed() const { return raw() & Accessed; }
+    void set_accessed(bool b) { set_bit(Accessed, b); }
+
+    bool is_pat() const { return raw() & PAT; }
+    void set_pat(bool b) { set_bit(PAT, b); }
+
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }
 
@@ -244,6 +259,27 @@ public:
             m_raw |= bit;
         else
             m_raw &= ~bit;
+    }
+
+    bool is_swap_entry() const
+    {
+        // !Present && PAT basically means PROT_NONE. So if either bit
+        // is set, it is not a swap entry
+        return !(raw() & (u64)(Present | PAT));
+    }
+    u32 get_swap_area() const
+    {
+        return (u32)(raw() >> 1) & 0x1f; // bits 1:5
+    }
+    u64 get_swap_index() const
+    {
+        return raw() >> 9;
+    }
+    void make_swap_entry(u32 swap_area, u64 swap_index)
+    {
+        ASSERT(!(swap_area & ~0x1f));
+        ASSERT(!(swap_index & 0xff80000000000000ull));
+        m_raw = (swap_index << 9) | (u64)((swap_area & 0x1f) << 1);
     }
 
 private:

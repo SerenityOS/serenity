@@ -27,6 +27,7 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/VM/PhysicalRegion.h>
 
 namespace Kernel {
 
@@ -40,10 +41,13 @@ PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_retu
     , m_supervisor(supervisor)
     , m_paddr(paddr)
 {
+    m_swap_entry.clear();
 }
 
-void PhysicalPage::return_to_freelist() const
+void PhysicalPage::return_to_freelist()
 {
+    ASSERT(m_may_return_to_freelist);
+
     ASSERT((paddr().get() & ~PAGE_MASK) == 0);
 
     if (m_supervisor)
@@ -54,6 +58,27 @@ void PhysicalPage::return_to_freelist() const
 #ifdef MM_DEBUG
     dbg() << "MM: P" << String::format("%x", m_paddr.get()) << " released to freelist";
 #endif
+}
+
+void PhysicalPage::make_eternal()
+{
+    // Pages are automatically added to the inactive list upon allocation.
+    // But the shared zero/lazy allocation page should not be in any list,
+    // so we need to remove those from these lists.
+    ASSERT(!m_is_eternal);
+    auto& region = MM.find_user_physical_region_for_physical_page(*this);
+    region.remove_page_from_list(*this);
+    m_is_eternal = true; // set *after* removing it from the list!
+}
+
+void PhysicalPage::was_accessed(bool mark_dirty)
+{
+    ASSERT(!m_supervisor);
+    if (m_is_eternal)
+        return;
+    auto& region = MM.find_user_physical_region_for_physical_page(*this);
+    region.add_page_to_active_list(*this);
+    m_dirty |= mark_dirty;
 }
 
 }

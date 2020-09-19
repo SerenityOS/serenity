@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,55 +26,22 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
+#include <Kernel/Lock.h>
+#include <Kernel/WaitQueue.h>
+
 namespace Kernel {
+class SwapTask {
+public:
+    static void spawn();
+    static void notify_pending_swap_out(u32 area_index);
+    static void notify_swap_out_threshold_met();
+private:
+    void run();
 
-class BlockDevice;
-class CharacterDevice;
-class Custody;
-class Device;
-class DiskCache;
-class DoubleBuffer;
-class File;
-class FileDescription;
-class IPv4Socket;
-class Inode;
-class InodeIdentifier;
-class SharedInodeVMObject;
-class InodeWatcher;
-class KBuffer;
-class KResult;
-class LocalSocket;
-class MappedROM;
-class MasterPTY;
-class PageDirectory;
-class PerformanceEventBuffer;
-class PhysicalPage;
-class PhysicalRegion;
-class Process;
-class ThreadTracer;
-class Range;
-class RangeAllocator;
-class Region;
-class Scheduler;
-class SchedulerPerProcessorData;
-class SharedBuffer;
-class Socket;
-template<typename BaseType>
-class SpinLock;
-class RecursiveSpinLock;
-template<typename LockType>
-class ScopedSpinLock;
-class TCPSocket;
-class TTY;
-class Thread;
-class UDPSocket;
-class UserPhysicalRegion;
-class UserOrKernelBuffer;
-class VFS;
-class VMObject;
-class WaitQueue;
-
-template<typename T>
-class KResultOr;
-
+    WaitQueue m_wait_queue;
+    Lock m_lock;
+    Atomic<u32> m_have_work_in_areas;
+    Atomic<bool> m_swap_out_threshold_met;
+};
 }

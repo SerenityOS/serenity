@@ -71,6 +71,7 @@
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/SwapTask.h>
 #include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -354,6 +355,8 @@ void init_stage2()
     }
 
     Process::current()->set_root_directory(VFS::the().root_custody());
+
+    SwapTask::spawn();
 
     load_kernel_symbol_table();
 

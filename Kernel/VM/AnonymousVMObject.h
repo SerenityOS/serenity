@@ -40,10 +40,13 @@ class AnonymousVMObject : public VMObject {
 public:
     virtual ~AnonymousVMObject() override;
 
-    static RefPtr<AnonymousVMObject> create_with_size(size_t, AllocationStrategy);
+    static RefPtr<AnonymousVMObject> create_with_size(size_t, AllocationStrategy, bool);
     static RefPtr<AnonymousVMObject> create_for_physical_range(PhysicalAddress paddr, size_t size);
     static NonnullRefPtr<AnonymousVMObject> create_with_physical_page(PhysicalPage& page);
     virtual RefPtr<VMObject> clone() override;
+
+    virtual bool is_swappable() const { return m_is_swappable; };
+    virtual bool try_swap_out_page(PhysicalPage&) override;
 
     RefPtr<PhysicalPage> allocate_committed_page(size_t);
     PageFaultResponse handle_cow_fault(size_t, VirtualAddress);
@@ -118,7 +121,7 @@ public:
     size_t get_lazy_committed_page_count() const;
 
 private:
-    explicit AnonymousVMObject(size_t, AllocationStrategy);
+    explicit AnonymousVMObject(size_t, AllocationStrategy, bool);
     explicit AnonymousVMObject(PhysicalAddress, size_t);
     explicit AnonymousVMObject(PhysicalPage&);
     explicit AnonymousVMObject(const AnonymousVMObject&);
@@ -146,6 +149,7 @@ private:
 
     VolatilePageRanges m_volatile_ranges_cache;
     bool m_volatile_ranges_cache_dirty { true };
+    bool m_is_swappable { false };
     Vector<PurgeablePageRanges*> m_purgeable_ranges;
     size_t m_unused_committed_pages { 0 };
 

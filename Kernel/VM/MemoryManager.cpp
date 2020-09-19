@@ -34,6 +34,7 @@
 #include <Kernel/Multiboot.h>
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/Tasks/SwapTask.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/ContiguousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -77,11 +78,15 @@ MemoryManager::MemoryManager()
     write_cr3(kernel_page_directory().cr3());
     protect_kernel_image();
 
+    ASSERT(!s_the);
+    s_the = this;
+
     // We're temporarily "committing" to two pages that we need to allocate below
     if (!commit_user_physical_pages(2))
         ASSERT_NOT_REACHED();
 
     m_shared_zero_page = allocate_committed_user_physical_page();
+    m_shared_zero_page->make_eternal();
 
     // We're wasting a page here, we just need a special tag (physical
     // address) so that we know when we need to lazily allocate a page
@@ -90,6 +95,7 @@ MemoryManager::MemoryManager()
     // By using a tag we don't have to query the VMObject for every page
     // whether it was committed or not
     m_lazy_committed_page = allocate_committed_user_physical_page();
+    m_lazy_committed_page->make_eternal();
 }
 
 MemoryManager::~MemoryManager()
@@ -180,7 +186,7 @@ void MemoryManager::parse_memory_map()
                 }
             } else {
                 if (region.is_null() || region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
-                    m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
+                    m_user_physical_regions.append(UserPhysicalRegion::create(addr, addr));
                     region = m_user_physical_regions.last();
                     region_is_super = false;
                 } else {
@@ -203,8 +209,22 @@ void MemoryManager::parse_memory_map()
     ASSERT(m_super_physical_pages > 0);
     ASSERT(m_user_physical_pages > 0);
 
-    // We start out with no committed pages
-    m_user_physical_pages_uncommitted = m_user_physical_pages;
+    // Figure out a threshold when we want to start triggering SwapTask.
+    // We don't want to wait until we're completely out of available
+    // physical pages (though this is a possible scenario).
+    m_swap_out_threshold = min((m_user_physical_pages * 90) / 100, (unsigned)((128ull * MiB) / PAGE_SIZE)); // 90%, capped by 128 MiB
+    
+
+    m_user_pages_total = m_user_physical_pages;
+}
+
+void MemoryManager::initialize_swap()
+{
+    m_swap_areas.append(SwapArea::create(m_user_physical_pages, 0)); // TODO: fstab
+
+    ScopedSpinLock lock(s_mm_lock);
+    for (size_t i = 0; i < m_swap_areas.size(); i++)
+        m_user_pages_total += m_swap_areas[i]->page_count();
 }
 
 PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
@@ -316,8 +336,9 @@ void MemoryManager::initialize(u32 cpu)
     Processor::current().set_mm_data(*mm_data);
 
     if (cpu == 0) {
-        s_the = new MemoryManager;
+        new MemoryManager;
         kmalloc_enable_expand();
+        s_the->initialize_swap();
     }
 }
 
@@ -412,7 +433,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.is_valid())
         return nullptr;
-    auto vmobject = AnonymousVMObject::create_with_size(size, strategy);
+    auto vmobject = AnonymousVMObject::create_with_size(size, strategy, false);
     if (!vmobject)
         return nullptr;
     return allocate_kernel_region_with_vmobject(range, vmobject.release_nonnull(), name, access, user_accessible, cacheable);
@@ -476,11 +497,10 @@ bool MemoryManager::commit_user_physical_pages(size_t page_count)
 {
     ASSERT(page_count > 0);
     ScopedSpinLock lock(s_mm_lock);
-    if (m_user_physical_pages_uncommitted < page_count)
+    if (m_user_pages_total - m_user_pages_committed - m_user_pages_used < page_count)
         return false;
     
-    m_user_physical_pages_uncommitted -= page_count;
-    m_user_physical_pages_committed += page_count;
+    m_user_pages_committed += page_count;
     return true;
 }
 
@@ -488,13 +508,12 @@ void MemoryManager::uncommit_user_physical_pages(size_t page_count)
 {
     ASSERT(page_count > 0);
     ScopedSpinLock lock(s_mm_lock);
-    ASSERT(m_user_physical_pages_committed >= page_count);
+    ASSERT(m_user_pages_committed >= page_count);
 
-    m_user_physical_pages_uncommitted += page_count;
-    m_user_physical_pages_committed -= page_count;
+    m_user_pages_committed -= page_count;
 }
 
-void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
+void MemoryManager::deallocate_user_physical_page(PhysicalPage& page)
 {
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_user_physical_regions) {
@@ -505,11 +524,7 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
 
         region.return_page(page);
         --m_user_physical_pages_used;
-
-        // Always return pages to the uncommitted pool. Pages that were
-        // committed and allocated are only freed upon request. Once
-        // returned there is no guarantee being able to get them back.
-        ++m_user_physical_pages_uncommitted;
+        --m_user_pages_used;
         return;
     }
 
@@ -517,68 +532,89 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
     ASSERT_NOT_REACHED();
 }
 
-RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
+RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed, bool* did_purge_or_swap)
 {
     ASSERT(s_mm_lock.is_locked());
     RefPtr<PhysicalPage> page;
+    bool purged = false;
+    bool swapped_out = false;
     if (committed) {
         // Draw from the committed pages pool. We should always have these pages available
-        ASSERT(m_user_physical_pages_committed > 0);
-        m_user_physical_pages_committed--;
-    } else {
-        // We need to make sure we don't touch pages that we have committed to
-        if (m_user_physical_pages_uncommitted == 0)
-            return {};
-        m_user_physical_pages_uncommitted--;
+        ASSERT(m_user_pages_committed > 0);
+        m_user_pages_committed--;
     }
-    for (auto& region : m_user_physical_regions) {
-        page = region.take_free_page(false);
-        if (!page.is_null()) {
-            ++m_user_physical_pages_used;
-            break;
+
+    size_t available_pages = m_user_pages_total - m_user_pages_committed - m_user_pages_used;
+    // TODO: if available_pages dropps below a certain threshold, activate the swap task
+
+try_again:
+    if (committed || available_pages > 0) {
+        for (auto& region : m_user_physical_regions) {
+            page = region.take_free_page();
+            if (!page.is_null()) {
+                ++m_user_pages_used;
+                if (++m_user_physical_pages_used >= m_swap_out_threshold)
+                    SwapTask::notify_swap_out_threshold_met();
+                break;
+            }
         }
     }
+
+    if (page.is_null()) {
+        bool retry = false;
+        if (!purged) {
+            // We didn't have a single free physical page. Let's try to free something up!
+            // First, we look for a purgeable VMObject in the volatile state.
+            for_each_vmobject_of_type<AnonymousVMObject>([&](auto& vmobject) {
+                int purged_page_count = vmobject.purge_with_interrupts_disabled({});
+                if (purged_page_count) {
+                    klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from AnonymousVMObject{" << &vmobject << "}";
+                    purged = true;
+                    retry = true;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+        }
+        if (!retry && !swapped_out) {
+            // If we couldn't purge anything, try swapping out pages
+            dbg() << "MM: Try swapping out pages";
+            if (try_swap_out_pages(true)) {
+                swapped_out = true;
+                retry = true;
+            }
+        }
+
+        if (retry)
+            goto try_again;
+    }
+
     ASSERT(!committed || !page.is_null());
+    if (did_purge_or_swap)
+        *did_purge_or_swap = purged || swapped_out;
     return page;
 }
 
 NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_user_physical_page(ShouldZeroFill should_zero_fill)
 {
     ScopedSpinLock lock(s_mm_lock);
-    auto page = find_free_user_physical_page(true);
+    auto page = find_free_user_physical_page(true).release_nonnull();
     if (should_zero_fill == ShouldZeroFill::Yes) {
         auto* ptr = quickmap_page(*page);
         memset(ptr, 0, PAGE_SIZE);
         unquickmap_page();
     }
-    return page.release_nonnull();
+    return page;
 }
 
 RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
 {
     ScopedSpinLock lock(s_mm_lock);
-    auto page = find_free_user_physical_page(false);
-    bool purged_pages = false;
+    auto page = find_free_user_physical_page(false, did_purge);
 
     if (!page) {
-        // We didn't have a single free physical page. Let's try to free something up!
-        // First, we look for a purgeable VMObject in the volatile state.
-        for_each_vmobject_of_type<AnonymousVMObject>([&](auto& vmobject) {
-            int purged_page_count = vmobject.purge_with_interrupts_disabled({});
-            if (purged_page_count) {
-                klog() << "MM: Purge saved the day! Purged " << purged_page_count << " pages from AnonymousVMObject{" << &vmobject << "}";
-                page = find_free_user_physical_page(false);
-                purged_pages = true;
-                ASSERT(page);
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
-
-        if (!page) {
-            klog() << "MM: no user physical pages available";
-            return {};
-        }
+        klog() << "MM: no user physical pages available";
+        return {};
     }
 
 #ifdef MM_DEBUG
@@ -591,12 +627,21 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         unquickmap_page();
     }
 
-    if (did_purge)
-        *did_purge = purged_pages;
     return page;
 }
 
-void MemoryManager::deallocate_supervisor_physical_page(const PhysicalPage& page)
+UserPhysicalRegion& MemoryManager::find_user_physical_region_for_physical_page(const PhysicalPage& page)
+{
+    ScopedSpinLock lock(s_mm_lock);
+    for (auto& region : m_user_physical_regions) {
+        if (region.contains(page))
+            return region;
+    }
+    dbg() << "MM: find_user_physical_region_for_physical_page could not find physical region for page @ " << page.paddr();
+    ASSERT_NOT_REACHED();
+}
+
+void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage& page)
 {
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_super_physical_regions) {
@@ -622,7 +667,7 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
     NonnullRefPtrVector<PhysicalPage> physical_pages;
 
     for (auto& region : m_super_physical_regions) {
-        physical_pages = region.take_contiguous_free_pages((count), true);
+        physical_pages = region.take_contiguous_free_pages((count));
         if (physical_pages.is_empty())
             continue;
     }
@@ -649,7 +694,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
     RefPtr<PhysicalPage> page;
 
     for (auto& region : m_super_physical_regions) {
-        page = region.take_free_page(true);
+        page = region.take_free_page();
         if (page.is_null())
             continue;
     }
@@ -862,6 +907,184 @@ void MemoryManager::dump_kernel_regions()
     for (auto& region : MM.m_kernel_regions) {
         klog() << String::format("%08x", region.vaddr().get()) << " -- " << String::format("%08x", region.vaddr().offset(region.size() - 1).get()) << "    " << String::format("%08x", region.size()) << "    " << (region.is_readable() ? 'R' : ' ') << (region.is_writable() ? 'W' : ' ') << (region.is_executable() ? 'X' : ' ') << (region.is_shared() ? 'S' : ' ') << (region.is_stack() ? 'T' : ' ') << (region.vmobject().is_anonymous() ? 'A' : ' ') << "    " << region.name().characters();
     }
+}
+
+PageTableEntry MemoryManager::allocate_swap_entry()
+{
+    for (size_t i = 0; i < m_swap_areas.size(); i++) {
+        auto index = m_swap_areas[i]->allocate_entry();
+        if (!index.has_value())
+            continue;
+        PageTableEntry entry;
+        entry.make_swap_entry(i, index.value());
+        return entry;
+    }
+    
+    return PageTableEntry(nullptr);
+}
+
+u32 MemoryManager::add_swap_entry_ref(const PageTableEntry& swap_entry)
+{
+    ASSERT(swap_entry.is_swap_entry());
+    ASSERT(swap_entry.get_swap_area() < m_swap_areas.size());
+    auto& swap_area = *m_swap_areas[swap_entry.get_swap_area()];
+    ASSERT(swap_entry.get_swap_index() < swap_area.page_count());
+    return swap_area.ref_entry(swap_entry.get_swap_index());
+}
+
+void MemoryManager::unref_swapped_page(VMObject::PhysicalPageSlotType& page_slot)
+{
+    ASSERT(s_mm_lock.own_lock());
+    ASSERT(page_slot.is_null());
+    auto swap_info = page_slot.null_value();
+    auto& swap_area = *m_swap_areas[swap_info.get_swap_area()];
+    if (swap_area.unref_entry(swap_info.get_swap_index())) {
+        --m_user_pages_used;
+
+        dbg() << "Swap: Deleted swap entry " << swap_info.get_swap_area() << ":" << swap_info.get_swap_index();
+    }
+}
+
+bool MemoryManager::queue_swap_out_page(VMObject::PhysicalPageSlotType& page_slot)
+{
+    ASSERT(s_mm_lock.own_lock());
+    ASSERT(!page_slot.is_null());
+    ASSERT(!page_slot->m_list.is_in_list());
+    if (!page_slot->has_swap_entry()) {
+        page_slot->swap_entry() = allocate_swap_entry();
+        dbg() << "Swap: Allocated swap entry " << page_slot->swap_entry().get_swap_area() << ":" << page_slot->swap_entry().get_swap_index() << " for " << page_slot->paddr();
+    } else {
+        add_swap_entry_ref(page_slot->swap_entry());
+        dbg() << "Swap: Added reference for swap entry " << page_slot->swap_entry().get_swap_area() << ":" << page_slot->swap_entry().get_swap_index()  << " for " << page_slot->paddr();
+    }
+
+    // Move the page out of the slot. We're going to drop this reference
+    // unless it is the last reference
+    RefPtr<PhysicalPage> swapped_page = move(page_slot);
+
+    // Store the swap information in the slot
+    page_slot.set_null_value(swapped_page->swap_entry());
+    
+    if (swapped_page->ref_count() == 1) {
+        dbg() << "Swap: Queueing page " << swapped_page->paddr() << " to be swapped out";
+
+        auto& swap_area = *m_swap_areas[swapped_page->swap_entry().get_swap_area()];
+        swap_area.queue_page_swap_out(move(swapped_page));
+
+        // We don't adjust m_user_physical_pages_used here because the PhysicalPage
+        // still exists and the page can't be re-used quite yet. Once it is actually
+        // swapped out, PhysicalPage will be returned and m_user_physical_pages_used
+        // will be adjusted at that point
+        return true;
+    }
+    return false;
+}
+
+bool MemoryManager::try_swap_out_pages(bool in_allocation)
+{
+    ScopedSpinLock lock(s_mm_lock);
+    size_t pages_to_swap_out;
+
+    if (in_allocation) {
+        // We're trying to allocate a physical page and we are completely
+        // out of memory. Try to swap out a relatively small number of
+        // pages right now. The SwapTask should already be notified to
+        // run but probably hasn't had a chance yet
+        pages_to_swap_out = 512; // TODO: Figure out some better default
+    } else {
+        // This is the SwapTask calling, seize the opportunity and swap out
+        // a larger number pages rather than calling this function more often
+        pages_to_swap_out = max(512u, m_user_physical_pages_used - m_swap_out_threshold);
+    }
+
+    auto swap_out_pages = [&](bool active_pages) {
+        Vector<PhysicalPage*> pulled_pages;
+        pulled_pages.ensure_capacity(32);
+        size_t swapped_out = 0;
+        auto pull_physical_pages = [&]() {
+            size_t pulled_count = 0;
+            for (auto& region : m_user_physical_regions) {
+                size_t pages_to_pull = pulled_pages.capacity() - pulled_pages.size();
+                if (pages_to_pull == 0)
+                    break;
+                size_t pages_pulled = region.pull_pages_from_list(active_pages, pages_to_pull, pulled_pages);
+                pulled_count += pages_pulled;
+                if (pulled_pages.size() >= pulled_pages.capacity())
+                    break;
+            }
+            return pulled_count;
+        };
+
+        while (pages_to_swap_out > 0) {
+            pulled_pages.clear_with_capacity();
+            size_t pulled_count = pull_physical_pages();
+            if (pulled_count == 0)
+                break;
+            pages_to_swap_out -= pulled_count;
+
+            // TODO: This is horribly slow/inefficient!
+            // If we didn't have VMObject::m_physical_pages we could just
+            // draw from PhysicalRegion::m_inactive_pages and PhysicalRegion::m_active_pages
+            // without having to figure out in what VMObject they might be used...
+            for (size_t i = 0; i < pulled_pages.size(); i++) {
+                auto& page = *pulled_pages[i];
+                size_t refs = page.ref_count();
+                bool found_in_vmobject = false;
+                for_each_vmobject([&](VMObject& vmobject) {
+                    if (!vmobject.is_swappable())
+                        return IterationDecision::Continue;
+                    // NOTE: calling try_swap_out_page may make page inaccessible!
+                    if (vmobject.try_swap_out_page(page)) {
+                        found_in_vmobject = true;
+                        if (--refs == 0) {
+                            swapped_out++;
+                            return IterationDecision::Break;
+                        }
+                    }
+                    return IterationDecision::Continue;
+                });
+                // It's possible that we pulled a page from a list and
+                // it may not be in a vmobject, and therefore we don't
+                // know which PTE might be referencing it. For now, just
+                // ignore these. Also we're not going to be adding those
+                // back into the list.
+                ASSERT(!found_in_vmobject || refs == 0);
+            }
+        }
+        return swapped_out;
+    };
+    
+    size_t swapped_out = swap_out_pages(false);
+    if (pages_to_swap_out > 0) {
+        // Try to force some more actively used pages out
+        swapped_out += swap_out_pages(true);
+    }
+    dbg() << "Swapped out " << swapped_out << " pages, wanted to swap out " << pages_to_swap_out << " more";
+    return swapped_out > 0;
+}
+
+void MemoryManager::write_out_pending_swap_pages(u32 swap_area_index, bool is_swap_task)
+{
+    ScopedSpinLock lock(s_mm_lock);
+    if (swap_area_index >= m_swap_areas.size())
+        return;
+    auto& swap_area = *m_swap_areas[swap_area_index];
+    do {
+        // NOTE: We temporarily gain ownership of these PhysicalPage instances
+        // When done writing out a page, rather than returning that PhysicalPage
+        // object directly by dropping the last reference, we'll hand it back to the
+        // swap area to hold on to. It will destruct the PhysicalPage without
+        // freeing it, and instead queue it so that it can reuse it when it's time
+        // to read back in a swapped out page. This guarantees that we always
+        // can provide a PhysicalPage instance.
+        auto pending_pages = swap_area.dequeue_pending_swap_out_pages<32>();
+        if (pending_pages.is_empty())
+            break;
+        for (auto* page : pending_pages) {
+            dbg() << "Swap: Writing out page " << page->paddr();
+            swap_area.page_was_swapped_out(page);
+        }
+    } while (is_swap_task);
 }
 
 }
