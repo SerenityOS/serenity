@@ -298,7 +298,7 @@ KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
     ASSERT(child.fsid() == fsid());
 
     m_children.set(name, { name, static_cast<TmpFSInode&>(child) });
-    did_add_child(name);
+    did_add_child(child.identifier());
     return KSuccess;
 }
 
@@ -313,8 +313,9 @@ KResult TmpFSInode::remove_child(const StringView& name)
     auto it = m_children.find(name);
     if (it == m_children.end())
         return KResult(-ENOENT);
+    auto child_id = it->value.inode->identifier();
     m_children.remove(it);
-    did_remove_child(name);
+    did_remove_child(child_id);
     return KSuccess;
 }
 

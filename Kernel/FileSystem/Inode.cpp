@@ -229,19 +229,19 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
     }
 }
 
-void Inode::did_add_child(const String& name)
+void Inode::did_add_child(const InodeIdentifier& child_id)
 {
     LOCKER(m_lock);
     for (auto& watcher : m_watchers) {
-        watcher->notify_child_added({}, name);
+        watcher->notify_child_added({}, child_id);
     }
 }
 
-void Inode::did_remove_child(const String& name)
+void Inode::did_remove_child(const InodeIdentifier& child_id)
 {
     LOCKER(m_lock);
     for (auto& watcher : m_watchers) {
-        watcher->notify_child_removed({}, name);
+        watcher->notify_child_removed({}, child_id);
     }
 }
 
