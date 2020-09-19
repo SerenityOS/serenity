@@ -311,7 +311,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         Profiling::did_exec(path);
 
     new_main_thread->set_state(Thread::State::Runnable);
-    big_lock().force_unlock_if_locked();
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_critical());
     return 0;

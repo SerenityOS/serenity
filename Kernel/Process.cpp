@@ -278,8 +278,6 @@ void Process::kill_threads_except_self()
         thread.set_should_die();
         return IterationDecision::Continue;
     });
-
-    big_lock().clear_waiters();
 }
 
 void Process::kill_all_threads()

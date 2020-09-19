@@ -93,7 +93,6 @@ void Process::sys$exit_thread(Userspace<void*> exit_value)
     auto current_thread = Thread::current();
     current_thread->m_exit_value = reinterpret_cast<void*>(exit_value.ptr());
     current_thread->set_should_die();
-    big_lock().force_unlock_if_locked();
     current_thread->die_if_needed();
     ASSERT_NOT_REACHED();
 }

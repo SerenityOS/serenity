@@ -31,7 +31,7 @@ namespace Kernel {
 int Process::sys$yield()
 {
     REQUIRE_PROMISE(stdio);
-    Thread::current()->yield_without_holding_big_lock();
+    Scheduler::yield();
     return 0;
 }
 

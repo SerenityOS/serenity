@@ -361,7 +361,7 @@ public:
         }
 
         // Yield to the scheduler, and wait for us to resume unblocked.
-        yield_without_holding_big_lock();
+        Scheduler::yield();
 
         ScopedSpinLock lock(m_lock);
         // We should no longer be blocked once we woke up
@@ -533,8 +533,6 @@ private:
 private:
     friend struct SchedulerData;
     friend class WaitQueue;
-    bool unlock_process_if_locked();
-    void relock_process(bool did_unlock);
     String backtrace_impl();
     void reset_fpu_state();
 
@@ -596,7 +594,6 @@ private:
 
     OwnPtr<ThreadTracer> m_tracer;
 
-    void yield_without_holding_big_lock();
     void update_state_for_thread(Thread::State previous_state);
 };
 

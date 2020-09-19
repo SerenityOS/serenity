@@ -406,11 +406,6 @@ public:
         return m_thread_count.load(AK::MemoryOrder::memory_order_consume);
     }
 
-    Lock& big_lock()
-    {
-        return m_big_lock;
-    }
-
     struct ELFBundle {
         OwnPtr<Region> region;
         RefPtr<ELF::Loader> elf_loader;
@@ -578,7 +573,6 @@ private:
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 
-    Lock m_big_lock { "Process" };
     mutable SpinLock<u32> m_lock;
 
     u64 m_alarm_deadline { 0 };

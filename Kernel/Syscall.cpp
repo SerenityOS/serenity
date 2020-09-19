@@ -169,7 +169,6 @@ void syscall_handler(TrapFrame* trap)
         ASSERT_NOT_REACHED();
     }
 
-    process.big_lock().lock();
     u32 function = regs.eax;
     u32 arg1 = regs.edx;
     u32 arg2 = regs.ecx;
@@ -180,8 +179,6 @@ void syscall_handler(TrapFrame* trap)
         current_thread->tracer()->set_trace_syscalls(false);
         current_thread->tracer_trap(regs);
     }
-
-    process.big_lock().unlock();
 
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();

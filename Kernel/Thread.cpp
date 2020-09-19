@@ -168,8 +168,6 @@ void Thread::die_if_needed()
     if (!m_should_die)
         return;
 
-    unlock_process_if_locked();
-
     ScopedCritical critical;
     set_should_die();
 
@@ -187,24 +185,6 @@ void Thread::die_if_needed()
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
     ASSERT_NOT_REACHED();
-}
-
-void Thread::yield_without_holding_big_lock()
-{
-    bool did_unlock = unlock_process_if_locked();
-    Scheduler::yield();
-    relock_process(did_unlock);
-}
-
-bool Thread::unlock_process_if_locked()
-{
-    return process().big_lock().force_unlock_if_locked();
-}
-
-void Thread::relock_process(bool did_unlock)
-{
-    if (did_unlock)
-        process().big_lock().lock();
 }
 
 u64 Thread::sleep(u64 ticks)
@@ -952,7 +932,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
 {
     auto* current_thread = Thread::current();
     TimerId timer_id {};
-    bool did_unlock;
 
     {
         ScopedCritical critical;
@@ -974,7 +953,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
                 return BlockResult::NotBlocked;
             }
 
-            did_unlock = unlock_process_if_locked();
             if (lock)
                 *lock = false;
             set_state(State::Queued);
@@ -999,9 +977,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // leave the critical section here to be able to switch contexts.
         u32 prev_flags;
         u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
-
-        // We've unblocked, relock the process if needed and carry on.
-        relock_process(did_unlock);
 
         // NOTE: We may be on a differenct CPU now!
         Processor::current().restore_critical(prev_crit, prev_flags);
