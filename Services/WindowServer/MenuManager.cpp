@@ -109,6 +109,7 @@ void MenuManager::draw()
             menu.title_font(),
             Gfx::TextAlignment::CenterLeft,
             text_color);
+        //painter.draw_rect(menu.text_rect_in_menubar(), Color::Magenta);
         return IterationDecision::Continue;
     });
 
@@ -466,7 +467,10 @@ void MenuManager::set_current_menubar(MenuBar* menubar)
     for_each_active_menubar_menu([&](Menu& menu) {
         int text_width = menu.title_font().width(menu.name());
         menu.set_rect_in_menubar({ next_menu_location.x() - MenuManager::menubar_menu_margin() / 2, 0, text_width + MenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
-        menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
+
+        Gfx::IntRect text_rect { next_menu_location.translated(0, 1), { text_width, menubar_rect().height() - 3 } };
+
+        menu.set_text_rect_in_menubar(text_rect);
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
         return IterationDecision::Continue;
     });
