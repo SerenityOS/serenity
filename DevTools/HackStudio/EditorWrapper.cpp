@@ -66,11 +66,11 @@ EditorWrapper::EditorWrapper(BreakpointChangeCallback breakpoint_change_callback
     };
 
     m_editor->on_focus = [this] {
-        g_current_editor_wrapper = this;
+        set_current_editor_wrapper(this);
     };
 
     m_editor->on_open = [](String path) {
-        g_open_file(path);
+        open_file(path);
     };
 
     m_editor->on_breakpoint_change = move(breakpoint_change_callback);

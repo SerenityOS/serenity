@@ -126,7 +126,7 @@ public:
             return m_project.m_file_icon;
         }
         if (role == GUI::ModelRole::Font) {
-            if (node->name == g_currently_open_file)
+            if (node->name == currently_open_file())
                 return Gfx::Font::default_bold_font();
             return {};
         }
