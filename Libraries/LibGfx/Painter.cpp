@@ -907,6 +907,11 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf8View& text, const 
         ASSERT_NOT_REACHED();
     }
 
+    if (is_vertically_centered_text_alignment(alignment)) {
+        int distance_from_baseline_to_bottom = (font.glyph_height() - 1) - font.baseline();
+        rect.move_by(0, distance_from_baseline_to_bottom / 2);
+    }
+
     auto point = rect.location();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
 
