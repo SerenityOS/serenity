@@ -56,7 +56,7 @@ GenericInterruptHandler::~GenericInterruptHandler()
 
 void GenericInterruptHandler::change_interrupt_number(u8 number)
 {
-    ASSERT_INTERRUPTS_ENABLED();
+    ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!m_disable_remap);
     unregister_generic_interrupt_handler(InterruptManagement::acquire_mapped_interrupt_number(interrupt_number()), *this);
     m_interrupt_number = number;
