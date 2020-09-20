@@ -25,7 +25,6 @@
  */
 
 #include "Client.h"
-#include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/IPv4Address.h>
