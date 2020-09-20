@@ -47,6 +47,11 @@ static String unescape(const StringView& text)
     return builder.build();
 }
 
+Text::Text(String&& text)
+{
+    m_spans.append({ move(text), Style {} });
+}
+
 String Text::render_to_html() const
 {
     StringBuilder builder;
