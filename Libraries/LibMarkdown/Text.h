@@ -49,6 +49,7 @@ public:
         Style style;
     };
 
+    explicit Text(String&& text);
     Text(Text&& text) = default;
     Text() = default;
 
