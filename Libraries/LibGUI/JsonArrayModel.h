@@ -64,7 +64,7 @@ public:
         return adopt(*new JsonArrayModel(json_path, move(fields)));
     }
 
-    virtual ~JsonArrayModel() override {}
+    virtual ~JsonArrayModel() override { }
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const override { return m_array.size(); }
     virtual int column_count(const ModelIndex& = ModelIndex()) const override { return m_fields.size(); }
