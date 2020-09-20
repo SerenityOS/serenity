@@ -675,6 +675,11 @@ void TextDocument::remove(const TextRange& unnormalized_range)
     notify_did_change();
 }
 
+bool TextDocument::is_empty() const
+{
+    return line_count() == 1 && line(0).is_empty();
+}
+
 TextRange TextDocument::range_for_entire_line(size_t line_index) const
 {
     if (line_index >= line_count())
