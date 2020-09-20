@@ -5,6 +5,7 @@ set(SOURCES
     Bindings/LocationObject.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
+    Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
     Bindings/XMLHttpRequestConstructor.cpp

@@ -24,31 +24,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/Bindings/ScriptExecutionContext.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/EventTarget.h>
+#pragma once
 
-namespace Web::DOM {
+#include <AK/Weakable.h>
+#include <LibJS/Forward.h>
+#include <LibWeb/Forward.h>
 
-EventTarget::EventTarget(Bindings::ScriptExecutionContext& script_execution_context)
-    : m_script_execution_context(&script_execution_context)
-{
-}
+namespace Web::Bindings {
 
-EventTarget::~EventTarget()
-{
-}
+class ScriptExecutionContext {
+public:
+    virtual ~ScriptExecutionContext();
 
-void EventTarget::add_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
-{
-    m_listeners.append({ event_name, move(listener) });
-}
-
-void EventTarget::remove_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
-{
-    m_listeners.remove_first_matching([&](auto& entry) {
-        return entry.event_name == event_name && &entry.listener->function() == &listener->function();
-    });
-}
+    // FIXME: This should not work this way long-term, interpreters should be on the stack.
+    virtual JS::Interpreter& interpreter() = 0;
+};
 
 }

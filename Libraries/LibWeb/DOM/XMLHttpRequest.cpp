@@ -40,7 +40,8 @@
 namespace Web {
 
 XMLHttpRequest::XMLHttpRequest(DOM::Window& window)
-    : m_window(window)
+    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(window.document()))
+    , m_window(window)
 {
 }
 

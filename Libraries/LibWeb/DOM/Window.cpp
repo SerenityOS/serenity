@@ -94,7 +94,7 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
         m_timers.remove(timer.id());
     }
 
-    auto& interpreter = wrapper()->interpreter();
+    auto& interpreter = document().interpreter();
     (void)interpreter.call(timer.callback(), wrapper());
     if (interpreter.exception())
         interpreter.clear_exception();

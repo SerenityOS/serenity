@@ -49,6 +49,7 @@ public:
 
     virtual void dispatch_event(NonnullRefPtr<Event>) = 0;
     virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) = 0;
+    Bindings::ScriptExecutionContext* script_execution_context() { return m_script_execution_context; }
 
     struct EventListenerRegistration {
         FlyString event_name;
@@ -58,12 +59,15 @@ public:
     const Vector<EventListenerRegistration>& listeners() const { return m_listeners; }
 
 protected:
-    EventTarget();
+    explicit EventTarget(Bindings::ScriptExecutionContext&);
 
     virtual void ref_event_target() = 0;
     virtual void unref_event_target() = 0;
 
 private:
+    // FIXME: This should not be a raw pointer.
+    Bindings::ScriptExecutionContext* m_script_execution_context { nullptr };
+
     Vector<EventListenerRegistration> m_listeners;
 };
 
