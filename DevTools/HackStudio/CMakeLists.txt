@@ -1,5 +1,6 @@
 set(SOURCES
     CodeDocument.cpp
+    CppAutoComplete.cpp
     CursorTool.cpp
     Debugger/BacktraceModel.cpp
     Debugger/DebugInfoWidget.cpp
