@@ -282,7 +282,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
     auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return js_string(vm, string.trim_whitespace(String::TrimMode::Both));
+    return js_string(vm, string.trim_whitespace(TrimMode::Both));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
@@ -290,7 +290,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
     auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return js_string(vm, string.trim_whitespace(String::TrimMode::Left));
+    return js_string(vm, string.trim_whitespace(TrimMode::Left));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
@@ -298,7 +298,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
     auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return js_string(vm, string.trim_whitespace(String::TrimMode::Right));
+    return js_string(vm, string.trim_whitespace(TrimMode::Right));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
