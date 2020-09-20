@@ -750,7 +750,7 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
     } else {
         function_name = String::format("[%s]", property_name.as_symbol()->description().characters());
     }
-    auto* function = NativeFunction::create(interpreter(), global_object(), function_name, move(native_function));
+    auto* function = NativeFunction::create(global_object(), function_name, move(native_function));
     function->define_property("length", Value(length), Attribute::Configurable);
     if (interpreter().exception())
         return {};
