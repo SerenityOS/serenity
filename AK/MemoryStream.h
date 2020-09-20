@@ -193,6 +193,8 @@ public:
         return nwritten;
     }
 
+    bool is_end() const { return remaining() == 0; }
+
     ReadonlyBytes bytes() const { return { data(), size() }; }
     Bytes bytes() { return { data(), size() }; }
 
