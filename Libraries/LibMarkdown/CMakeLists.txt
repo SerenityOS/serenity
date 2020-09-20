@@ -4,6 +4,7 @@ set(SOURCES
     Heading.cpp
     List.cpp
     Paragraph.cpp
+    Table.cpp
     Text.cpp
 )
 

@@ -30,6 +30,7 @@
 #include <LibMarkdown/Heading.h>
 #include <LibMarkdown/List.h>
 #include <LibMarkdown/Paragraph.h>
+#include <LibMarkdown/Table.h>
 
 namespace Markdown {
 
@@ -90,7 +91,8 @@ OwnPtr<Document> Document::parse(const StringView& str)
             continue;
         }
 
-        bool any = helper<List>(lines, blocks) || helper<Paragraph>(lines, blocks) || helper<CodeBlock>(lines, blocks) || helper<Heading>(lines, blocks);
+        bool any = helper<Table>(lines, blocks) || helper<List>(lines, blocks) || helper<Paragraph>(lines, blocks)
+            || helper<CodeBlock>(lines, blocks) || helper<Heading>(lines, blocks);
 
         if (!any)
             return nullptr;
