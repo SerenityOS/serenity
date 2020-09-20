@@ -346,15 +346,25 @@ void AbstractTableView::did_scroll()
 void AbstractTableView::layout_headers()
 {
     if (column_header().is_visible()) {
-        int x = frame_thickness() + (row_header().is_visible() ? row_header().width() : 0) + -horizontal_scrollbar().value();
+        int row_header_width = row_header().is_visible() ? row_header().width() : 0;
+        int vertical_scrollbar_width = vertical_scrollbar().is_visible() ? vertical_scrollbar().width() : 0;
+
+        int x = frame_thickness() + row_header_width - horizontal_scrollbar().value();
         int y = frame_thickness();
-        column_header().set_relative_rect(x, y, content_width(), column_header().preferred_size().height());
+        int width = AK::max(content_width(), rect().width() - frame_thickness() * 2 - row_header_width - vertical_scrollbar_width);
+
+        column_header().set_relative_rect(x, y, width, column_header().preferred_size().height());
     }
 
     if (row_header().is_visible()) {
+        int column_header_height = column_header().is_visible() ? column_header().height() : 0;
+        int horizontal_scrollbar_height = horizontal_scrollbar().is_visible() ? horizontal_scrollbar().height() : 0;
+
         int x = frame_thickness();
-        int y = (frame_thickness() + (column_header().is_visible() ? column_header().height() : 0)) + -vertical_scrollbar().value();
-        row_header().set_relative_rect(x, y, row_header().preferred_size().width(), content_height());
+        int y = frame_thickness() + column_header_height - vertical_scrollbar().value();
+        int height = AK::max(content_height(), rect().height() - frame_thickness() * 2 - column_header_height - horizontal_scrollbar_height);
+
+        row_header().set_relative_rect(x, y, row_header().preferred_size().width(), height);
     }
 
     if (row_header().is_visible() && column_header().is_visible()) {
