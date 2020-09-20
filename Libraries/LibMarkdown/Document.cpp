@@ -52,12 +52,12 @@ String Document::render_to_html() const
     return builder.build();
 }
 
-String Document::render_for_terminal() const
+String Document::render_for_terminal(size_t view_width) const
 {
     StringBuilder builder;
 
     for (auto& block : m_blocks) {
-        auto s = block.render_for_terminal();
+        auto s = block.render_for_terminal(view_width);
         builder.append(s);
     }
 

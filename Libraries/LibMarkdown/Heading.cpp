@@ -38,7 +38,7 @@ String Heading::render_to_html() const
     return builder.build();
 }
 
-String Heading::render_for_terminal() const
+String Heading::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 
