@@ -24,7 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/BufferStream.h>
+#include <AK/Array.h>
+#include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AudioServer/ClientConnection.h>
 #include <AudioServer/Mixer.h>
@@ -101,34 +102,30 @@ void Mixer::mix()
             }
         }
 
-        bool muted = m_muted;
+        if (m_muted) {
+            m_device->write(m_zero_filled_buffer, 4096);
+        } else {
+            Array<u8, 4096> buffer;
+            OutputMemoryStream stream { buffer };
 
-        // output the mixed stuff to the device
-        u8 raw_buffer[4096];
-        auto buffer = ByteBuffer::wrap(muted ? m_zero_filled_buffer : raw_buffer, sizeof(raw_buffer));
-
-        BufferStream stream(buffer);
-        if (!muted) {
             for (int i = 0; i < mixed_buffer_length; ++i) {
                 auto& mixed_sample = mixed_buffer[i];
 
                 mixed_sample.scale(m_main_volume);
                 mixed_sample.clip();
 
-                i16 out_sample;
+                LittleEndian<i16> out_sample;
                 out_sample = mixed_sample.left * NumericLimits<i16>::max();
                 stream << out_sample;
 
-                ASSERT(!stream.at_end()); // we should have enough space for both channels in one buffer!
                 out_sample = mixed_sample.right * NumericLimits<i16>::max();
                 stream << out_sample;
             }
-        }
 
-        if (stream.offset() != 0) {
-            buffer.trim(stream.offset());
+            ASSERT(stream.is_end());
+            ASSERT(!stream.has_any_error());
+            m_device->write(stream.data(), stream.size());
         }
-        m_device->write(buffer);
     }
 }
 
