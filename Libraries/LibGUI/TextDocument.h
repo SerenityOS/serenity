@@ -139,6 +139,8 @@ public:
 
     virtual bool is_code_document() const { return false; }
 
+    bool is_empty() const;
+
 protected:
     explicit TextDocument(Client* client);
 
@@ -179,6 +181,7 @@ public:
     size_t first_non_whitespace_column() const;
     Optional<size_t> last_non_whitespace_column() const;
     bool ends_in_whitespace() const;
+    bool is_empty() const { return length() == 0; }
 
 private:
     // NOTE: This vector is null terminated.
