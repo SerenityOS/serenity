@@ -227,6 +227,43 @@ bool starts_with(const StringView& str, const StringView& start, CaseSensitivity
     return true;
 }
 
+StringView trim_whitespace(const StringView& str, TrimMode mode)
+{
+    auto is_whitespace_character = [](char ch) -> bool {
+        return ch == '\t'
+            || ch == '\n'
+            || ch == '\v'
+            || ch == '\f'
+            || ch == '\r'
+            || ch == ' ';
+    };
+
+    size_t substring_start = 0;
+    size_t substring_length = str.length();
+
+    if (mode == TrimMode::Left || mode == TrimMode::Both) {
+        for (size_t i = 0; i < str.length(); ++i) {
+            if (substring_length == 0)
+                return "";
+            if (!is_whitespace_character(str[i]))
+                break;
+            ++substring_start;
+            --substring_length;
+        }
+    }
+
+    if (mode == TrimMode::Right || mode == TrimMode::Both) {
+        for (size_t i = str.length() - 1; i > 0; --i) {
+            if (substring_length == 0)
+                return "";
+            if (!is_whitespace_character(str[i]))
+                break;
+            --substring_length;
+        }
+    }
+
+    return str.substring_view(substring_start, substring_length);
+}
 }
 
 }

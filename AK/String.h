@@ -119,12 +119,12 @@ public:
     String to_lowercase() const;
     String to_uppercase() const;
 
-    enum class TrimMode {
-        Left,
-        Right,
-        Both
-    };
-    String trim_whitespace(TrimMode mode = TrimMode::Both) const;
+#ifndef KERNEL
+    String trim_whitespace(TrimMode mode = TrimMode::Both) const
+    {
+        return StringUtils::trim_whitespace(StringView { characters(), length() }, mode);
+    }
+#endif
 
     bool equals_ignoring_case(const StringView&) const;
 
