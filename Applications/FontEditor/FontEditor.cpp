@@ -304,6 +304,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
 
     baseline_spinbox.on_change = [this, update_demo](int value) {
         m_edited_font->set_baseline(value);
+        m_glyph_editor_widget->update();
         update_demo();
     };
 
