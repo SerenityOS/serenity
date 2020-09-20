@@ -25,10 +25,10 @@
  */
 
 #include <AK/Bitmap.h>
-#include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
@@ -464,17 +464,17 @@ static inline bool is_valid_marker(const Marker marker)
     return false;
 }
 
-static inline u16 read_be_word(BufferStream& stream)
+static inline u16 read_be_word(InputMemoryStream& stream)
 {
-    u8 tmp1 = 0, tmp2 = 0;
-    stream >> tmp1 >> tmp2;
-    return ((u16)tmp1 << 8) | ((u16)tmp2);
+    BigEndian<u16> tmp;
+    stream >> tmp;
+    return tmp;
 }
 
-static inline Marker read_marker_at_cursor(BufferStream& stream)
+static inline Marker read_marker_at_cursor(InputMemoryStream& stream)
 {
     u16 marker = read_be_word(stream);
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return JPG_INVALID;
     if (is_valid_marker(marker))
         return marker;
@@ -483,14 +483,14 @@ static inline Marker read_marker_at_cursor(BufferStream& stream)
     u8 next;
     do {
         stream >> next;
-        if (stream.handle_read_failure() || next == 0x00)
+        if (stream.handle_any_error() || next == 0x00)
             return JPG_INVALID;
     } while (next == 0xFF);
     marker = 0xFF00 | (u16)next;
     return is_valid_marker(marker) ? marker : JPG_INVALID;
 }
 
-static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
+static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     if (context.state < JPGLoadingContext::State::FrameDecoded) {
         dbg() << stream.offset() << ": SOS found before reading a SOF!";
@@ -498,14 +498,14 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
     }
 
     u16 bytes_to_read = read_be_word(stream);
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
     bytes_to_read -= 2;
     if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
         return false;
-    u8 component_count;
+    u8 component_count = 0;
     stream >> component_count;
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
     if (component_count != context.component_count) {
         dbg() << stream.offset()
@@ -515,9 +515,9 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
 
     for (int i = 0; i < component_count; i++) {
         ComponentSpec* component = nullptr;
-        u8 component_id;
+        u8 component_id = 0;
         stream >> component_id;
-        if (stream.handle_read_failure())
+        if (stream.handle_any_error())
             return false;
         component_id += context.has_zero_based_ids ? 1 : 0;
 
@@ -532,9 +532,9 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
             return false;
         }
 
-        u8 table_ids;
+        u8 table_ids = 0;
         stream >> table_ids;
-        if (stream.handle_read_failure())
+        if (stream.handle_any_error())
             return false;
 
         component->dc_destination_id = table_ids >> 4;
@@ -563,17 +563,17 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
         }
     }
 
-    u8 spectral_selection_start;
+    u8 spectral_selection_start = 0;
     stream >> spectral_selection_start;
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
-    u8 spectral_selection_end;
+    u8 spectral_selection_end = 0;
     stream >> spectral_selection_end;
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
-    u8 successive_approximation;
+    u8 successive_approximation = 0;
     stream >> successive_approximation;
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
     if (spectral_selection_start != 0 || spectral_selection_end != 63 || successive_approximation != 0) {
@@ -585,10 +585,10 @@ static bool read_start_of_scan(BufferStream& stream, JPGLoadingContext& context)
     return true;
 }
 
-static bool read_reset_marker(BufferStream& stream, JPGLoadingContext& context)
+static bool read_reset_marker(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     u16 bytes_to_read = read_be_word(stream);
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
     bytes_to_read -= 2;
     if (bytes_to_read != 2) {
@@ -627,7 +627,7 @@ static bool huffman_table_reset_helper(HuffmanTableSpec& src, JPGLoadingContext&
     return false;
 }
 
-static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
+static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = read_be_word(stream);
     if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
@@ -635,9 +635,9 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
     bytes_to_read -= 2;
     while (bytes_to_read > 0) {
         HuffmanTableSpec table;
-        u8 table_info;
+        u8 table_info = 0;
         stream >> table_info;
-        if (stream.handle_read_failure())
+        if (stream.handle_any_error())
             return false;
         u8 table_type = table_info >> 4;
         u8 table_destination_id = table_info & 0x0F;
@@ -656,9 +656,9 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
 
         // Read code counts. At each index K, the value represents the number of K+1 bit codes in this header.
         for (int i = 0; i < 16; i++) {
-            u8 count;
+            u8 count = 0;
             stream >> count;
-            if (stream.handle_read_failure())
+            if (stream.handle_any_error())
                 return false;
             total_codes += count;
             table.code_counts[i] = count;
@@ -673,7 +673,7 @@ static bool read_huffman_table(BufferStream& stream, JPGLoadingContext& context)
             table.symbols.append(symbol);
         }
 
-        if (stream.handle_read_failure())
+        if (stream.handle_any_error())
             return false;
 
         if (!huffman_table_reset_helper(table, context))
@@ -714,7 +714,7 @@ static inline void set_macroblock_metadata(JPGLoadingContext& context)
     context.mblock_meta.total = context.mblock_meta.hcount * context.mblock_meta.vcount;
 }
 
-static bool read_start_of_frame(BufferStream& stream, JPGLoadingContext& context)
+static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     if (context.state == JPGLoadingContext::FrameDecoded) {
         dbg() << stream.offset() << ": SOF repeated!";
@@ -722,7 +722,7 @@ static bool read_start_of_frame(BufferStream& stream, JPGLoadingContext& context
     }
 
     i32 bytes_to_read = read_be_word(stream);
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
 
     bytes_to_read -= 2;
@@ -761,7 +761,7 @@ static bool read_start_of_frame(BufferStream& stream, JPGLoadingContext& context
 
         u8 subsample_factors = 0;
         stream >> subsample_factors;
-        if (stream.handle_read_failure())
+        if (stream.handle_any_error())
             return false;
         component.hsample_factor = subsample_factors >> 4;
         component.vsample_factor = subsample_factors & 0x0F;
@@ -792,18 +792,18 @@ static bool read_start_of_frame(BufferStream& stream, JPGLoadingContext& context
     return true;
 }
 
-static bool read_quantization_table(BufferStream& stream, JPGLoadingContext& context)
+static bool read_quantization_table(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = read_be_word(stream);
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
     bytes_to_read -= 2;
     if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
         return false;
     while (bytes_to_read > 0) {
-        u8 info_byte;
+        u8 info_byte = 0;
         stream >> info_byte;
-        if (stream.handle_read_failure())
+        if (stream.handle_any_error())
             return false;
         u8 element_unit_hint = info_byte >> 4;
         if (element_unit_hint > 1) {
@@ -825,7 +825,7 @@ static bool read_quantization_table(BufferStream& stream, JPGLoadingContext& con
             } else
                 table[zigzag_map[i]] = read_be_word(stream);
         }
-        if (stream.handle_read_failure())
+        if (stream.handle_any_error())
             return false;
 
         bytes_to_read -= 1 + (element_unit_hint == 0 ? 64 : 128);
@@ -838,14 +838,14 @@ static bool read_quantization_table(BufferStream& stream, JPGLoadingContext& con
     return true;
 }
 
-static bool skip_marker_with_length(BufferStream& stream)
+static bool skip_marker_with_length(InputMemoryStream& stream)
 {
     u16 bytes_to_skip = read_be_word(stream);
     bytes_to_skip -= 2;
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
-    stream.advance(bytes_to_skip);
-    return !stream.handle_read_failure();
+    stream.discard_or_error(bytes_to_skip);
+    return !stream.handle_any_error();
 }
 
 static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
@@ -1087,10 +1087,10 @@ static void compose_bitmap(JPGLoadingContext& context, const Vector<Macroblock>&
     }
 }
 
-static bool parse_header(BufferStream& stream, JPGLoadingContext& context)
+static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     auto marker = read_marker_at_cursor(stream);
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
     if (marker != JPG_SOI) {
         dbg() << stream.offset() << String::format(": SOI not found: %x!", marker);
@@ -1152,18 +1152,18 @@ static bool parse_header(BufferStream& stream, JPGLoadingContext& context)
     ASSERT_NOT_REACHED();
 }
 
-static bool scan_huffman_stream(BufferStream& stream, JPGLoadingContext& context)
+static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     u8 last_byte;
-    u8 current_byte;
+    u8 current_byte = 0;
     stream >> current_byte;
-    if (stream.handle_read_failure())
+    if (stream.handle_any_error())
         return false;
 
     for (;;) {
         last_byte = current_byte;
         stream >> current_byte;
-        if (stream.handle_read_failure()) {
+        if (stream.handle_any_error()) {
             dbg() << stream.offset() << ": EOI not found!";
             return false;
         }
@@ -1196,8 +1196,8 @@ static bool scan_huffman_stream(BufferStream& stream, JPGLoadingContext& context
 
 static bool decode_jpg(JPGLoadingContext& context)
 {
-    ByteBuffer buffer = ByteBuffer::wrap(const_cast<u8*>(context.data), context.data_size);
-    BufferStream stream(buffer);
+    InputMemoryStream stream { { context.data, context.data_size } };
+
     if (!parse_header(stream, context))
         return false;
     if (!scan_huffman_stream(stream, context))
