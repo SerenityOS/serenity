@@ -60,6 +60,9 @@ public:
 
     virtual void set_document(TextDocument&);
 
+    const String& placeholder() const { return m_placeholder; }
+    void set_placeholder(const StringView& placeholder) { m_placeholder = placeholder; }
+
     void set_visualize_trailing_whitespace(bool);
     bool visualize_trailing_whitespace() const { return m_visualize_trailing_whitespace; }
 
@@ -300,6 +303,8 @@ private:
     bool is_visual_data_up_to_date() const { return !m_reflow_requested; }
 
     RefPtr<TextDocument> m_document;
+
+    String m_placeholder { "" };
 
     template<typename Callback>
     void for_each_visual_line(size_t line_index, Callback) const;

@@ -461,7 +461,12 @@ void TextEditor::paint_event(PaintEvent& event)
 #ifdef DEBUG_TEXTEDITOR
             painter.draw_rect(visual_line_rect, Color::Cyan);
 #endif
-            if (!document().has_spans()) {
+
+            if (!placeholder().is_empty() && document().is_empty() && !is_focused() && line_index == 0) {
+                auto line_rect = visual_line_rect;
+                line_rect.set_width(font().width(placeholder()));
+                painter.draw_text(line_rect, placeholder(), m_text_alignment, palette().color(Gfx::ColorRole::DisabledText));
+            } else if (!document().has_spans()) {
                 // Fast-path for plain text
                 auto color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
                 if (is_displayonly() && (is_focused() || has_visible_list()))
