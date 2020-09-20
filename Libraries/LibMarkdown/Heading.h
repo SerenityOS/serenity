@@ -44,7 +44,7 @@ public:
     virtual ~Heading() override { }
 
     virtual String render_to_html() const override;
-    virtual String render_for_terminal() const override;
+    virtual String render_for_terminal(size_t view_width = 0) const override;
     static OwnPtr<Heading> parse(Vector<StringView>::ConstIterator& lines);
 
 private:
