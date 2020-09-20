@@ -41,7 +41,7 @@ public:
     virtual ~Paragraph() override { }
 
     virtual String render_to_html() const override;
-    virtual String render_for_terminal() const override;
+    virtual String render_for_terminal(size_t view_width = 0) const override;
     static OwnPtr<Paragraph> parse(Vector<StringView>::ConstIterator& lines);
 
 private:

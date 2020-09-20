@@ -35,7 +35,7 @@ namespace Markdown {
 class Document final {
 public:
     String render_to_html() const;
-    String render_for_terminal() const;
+    String render_for_terminal(size_t view_width = 0) const;
 
     static OwnPtr<Document> parse(const StringView&);
 

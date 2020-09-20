@@ -38,7 +38,7 @@ String Paragraph::render_to_html() const
     return builder.build();
 }
 
-String Paragraph::render_for_terminal() const
+String Paragraph::render_for_terminal(size_t) const
 {
     StringBuilder builder;
     builder.append(m_text.render_for_terminal());

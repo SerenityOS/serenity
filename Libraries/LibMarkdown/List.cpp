@@ -47,7 +47,7 @@ String List::render_to_html() const
     return builder.build();
 }
 
-String List::render_for_terminal() const
+String List::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 

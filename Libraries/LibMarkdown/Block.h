@@ -36,7 +36,7 @@ public:
     virtual ~Block() { }
 
     virtual String render_to_html() const = 0;
-    virtual String render_for_terminal() const = 0;
+    virtual String render_for_terminal(size_t view_width = 0) const = 0;
 };
 
 }

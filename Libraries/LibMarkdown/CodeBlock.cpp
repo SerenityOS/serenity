@@ -74,7 +74,7 @@ String CodeBlock::render_to_html() const
     return builder.build();
 }
 
-String CodeBlock::render_for_terminal() const
+String CodeBlock::render_for_terminal(size_t) const
 {
     StringBuilder builder;
 
