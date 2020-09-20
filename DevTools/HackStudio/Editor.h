@@ -26,9 +26,11 @@
 
 #pragma once
 
+#include "AutoCompleteBox.h"
 #include "CodeDocument.h"
 #include "Debugger/BreakpointCallback.h"
 #include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <LibGUI/TextEditor.h>
 #include <LibWeb/Forward.h>
 
@@ -78,15 +80,28 @@ private:
     static const Gfx::Bitmap& breakpoint_icon_bitmap();
     static const Gfx::Bitmap& current_position_icon_bitmap();
 
+    struct AutoCompleteRequestData {
+        GUI::TextPosition position;
+        String partial_input;
+    };
+
+    Optional<AutoCompleteRequestData> get_autocomplete_request_data();
+
+    void update_autocomplete(const AutoCompleteRequestData&);
+    void show_autocomplete(const AutoCompleteRequestData&);
+    void close_autocomplete();
+
     explicit Editor();
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
+    OwnPtr<AutoCompleteBox> m_autocomplete_box;
     RefPtr<Web::InProcessWebView> m_documentation_page_view;
     String m_last_parsed_token;
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };
     bool m_hovering_link { false };
     bool m_holding_ctrl { false };
+    bool m_autocomplete_in_focus { false };
 };
 
 }
