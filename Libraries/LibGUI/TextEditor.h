@@ -186,6 +186,8 @@ protected:
 
     TextPosition text_position_at(const Gfx::IntPoint&) const;
     bool ruler_visible() const { return m_ruler_visible; }
+    Gfx::IntRect content_rect_for_position(const TextPosition&) const;
+    int ruler_width() const;
 
 private:
     friend class TextDocumentLine;
@@ -231,7 +233,6 @@ private:
     Gfx::IntRect line_content_rect(size_t item_index) const;
     Gfx::IntRect line_widget_rect(size_t line_index) const;
     Gfx::IntRect cursor_content_rect() const;
-    Gfx::IntRect content_rect_for_position(const TextPosition&) const;
     void update_cursor();
     const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return document().lines(); }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
@@ -239,7 +240,6 @@ private:
     const TextDocumentLine& line(size_t index) const { return document().line(index); }
     TextDocumentLine& current_line() { return line(m_cursor.line()); }
     const TextDocumentLine& current_line() const { return line(m_cursor.line()); }
-    int ruler_width() const;
     void toggle_selection_if_needed_for_event(const KeyEvent&);
     void delete_selection();
     void did_update_selection();

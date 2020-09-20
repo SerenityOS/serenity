@@ -25,6 +25,7 @@
  */
 
 #include "Editor.h"
+#include "CppAutoComplete.h"
 #include "EditorWrapper.h"
 #include <AK/ByteBuffer.h>
 #include <AK/LexicalPath.h>
@@ -53,6 +54,8 @@ Editor::Editor()
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::InProcessWebView>();
+
+    m_autocomplete_box = make<AutoCompleteBox>(make_weak_ptr());
 }
 
 Editor::~Editor()
@@ -307,9 +310,49 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
 
 void Editor::keydown_event(GUI::KeyEvent& event)
 {
+    if (m_autocomplete_in_focus) {
+        if (event.key() == Key_Escape) {
+            m_autocomplete_in_focus = false;
+            m_autocomplete_box->close();
+            return;
+        }
+        if (event.key() == Key_Down) {
+            m_autocomplete_box->next_suggestion();
+            return;
+        }
+        if (event.key() == Key_Up) {
+            m_autocomplete_box->previous_suggestion();
+            return;
+        }
+        if (event.key() == Key_Return || event.key() == Key_Tab) {
+            m_autocomplete_box->apply_suggestion();
+            close_autocomplete();
+            return;
+        }
+    }
+
+    auto autocomplete_action = [this]() {
+        auto data = get_autocomplete_request_data();
+        if (data.has_value()) {
+            update_autocomplete(data.value());
+            if (m_autocomplete_in_focus)
+                show_autocomplete(data.value());
+        } else {
+            close_autocomplete();
+        }
+    };
+
     if (event.key() == Key_Control)
         m_holding_ctrl = true;
+
+    if (m_holding_ctrl && event.key() == Key_Space) {
+        autocomplete_action();
+    }
     GUI::TextEditor::keydown_event(event);
+
+    if (m_autocomplete_in_focus) {
+        autocomplete_action();
+    }
 }
 
 void Editor::keyup_event(GUI::KeyEvent& event)
@@ -419,6 +462,57 @@ void Editor::set_document(GUI::TextDocument& doc)
 {
     ASSERT(doc.is_code_document());
     GUI::TextEditor::set_document(doc);
+}
+
+Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data()
+{
+    auto highlighter = wrapper().editor().syntax_highlighter();
+    if (!highlighter)
+        return {};
+    auto& spans = document().spans();
+    for (size_t span_index = 2; span_index < spans.size(); ++span_index) {
+        auto& span = spans[span_index];
+        if (!span.range.contains(cursor())) {
+            continue;
+        }
+
+        if (highlighter->is_identifier(spans[span_index - 1].data)) {
+            auto completion_span = spans[span_index - 1];
+
+            auto adjusted_range = completion_span.range;
+            auto end_line_length = document().line(completion_span.range.end().line()).length();
+            adjusted_range.end().set_column(min(end_line_length, adjusted_range.end().column() + 1));
+            auto text_in_span = document().text_in_range(adjusted_range);
+
+            return AutoCompleteRequestData { completion_span.range.end(), text_in_span };
+        }
+    }
+    return {};
+}
+
+void Editor::update_autocomplete(const AutoCompleteRequestData& data)
+{
+    // TODO: Move this part to a language server component :)
+    auto suggestions = CppAutoComplete::get_suggestions(text(), data.position);
+    if (suggestions.is_empty()) {
+        close_autocomplete();
+        return;
+    }
+
+    m_autocomplete_box->update_suggestions(data.partial_input, move(suggestions));
+    m_autocomplete_in_focus = true;
+}
+
+void Editor::show_autocomplete(const AutoCompleteRequestData& data)
+{
+    auto suggestion_box_location = content_rect_for_position(data.position).bottom_right().translated(screen_relative_rect().top_left().translated(ruler_width(), 0).translated(10, 5));
+    m_autocomplete_box->show(suggestion_box_location);
+}
+
+void Editor::close_autocomplete()
+{
+    m_autocomplete_box->close();
+    m_autocomplete_in_focus = false;
 }
 
 }
