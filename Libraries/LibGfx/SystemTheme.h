@@ -70,6 +70,7 @@ namespace Gfx {
     C(MovingWindowTitle)           \
     C(MovingWindowTitleShadow)     \
     C(MovingWindowTitleStripes)    \
+    C(PlaceholderText)             \
     C(RubberBandBorder)            \
     C(RubberBandFill)              \
     C(Ruler)                       \
