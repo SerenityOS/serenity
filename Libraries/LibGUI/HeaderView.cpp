@@ -254,6 +254,11 @@ void HeaderView::paint_horizontal(Painter& painter)
         painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
         x_offset += section_width + horizontal_padding() * 2;
     }
+
+    if (x_offset < rect().right()) {
+        Gfx::IntRect cell_rect(x_offset, 0, width() - x_offset, height());
+        Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, false, false);
+    }
 }
 
 void HeaderView::paint_vertical(Painter& painter)
@@ -276,6 +281,11 @@ void HeaderView::paint_vertical(Painter& painter)
             text_rect.move_by(1, 1);
         painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
         y_offset += section_size;
+    }
+
+    if (y_offset < rect().bottom()) {
+        Gfx::IntRect cell_rect(0, y_offset, width(), height() - y_offset);
+        Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, false, false);
     }
 }
 
