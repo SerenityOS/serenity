@@ -25,30 +25,11 @@
  */
 
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
-#include <LibWeb/DOM/EventListener.h>
-#include <LibWeb/DOM/EventTarget.h>
 
-namespace Web::DOM {
+namespace Web::Bindings {
 
-EventTarget::EventTarget(Bindings::ScriptExecutionContext& script_execution_context)
-    : m_script_execution_context(&script_execution_context)
+ScriptExecutionContext::~ScriptExecutionContext()
 {
-}
-
-EventTarget::~EventTarget()
-{
-}
-
-void EventTarget::add_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
-{
-    m_listeners.append({ event_name, move(listener) });
-}
-
-void EventTarget::remove_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
-{
-    m_listeners.remove_first_matching([&](auto& entry) {
-        return entry.event_name == event_name && &entry.listener->function() == &listener->function();
-    });
 }
 
 }

@@ -241,6 +241,7 @@ class ImageDataWrapper;
 class LocationObject;
 class MouseEventWrapper;
 class NodeWrapper;
+class ScriptExecutionContext;
 class TextWrapper;
 class UIEventWrapper;
 class WindowObject;

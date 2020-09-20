@@ -35,6 +35,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibWeb/Bindings/ScriptExecutionContext.h>
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/CSS/StyleSheetList.h>
@@ -51,7 +52,8 @@ enum class QuirksMode {
 
 class Document
     : public ParentNode
-    , public NonElementParentNode<Document> {
+    , public NonElementParentNode<Document>
+    , public Bindings::ScriptExecutionContext {
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
@@ -131,7 +133,7 @@ public:
     const String& source() const { return m_source; }
     void set_source(const String& source) { m_source = source; }
 
-    JS::Interpreter& interpreter();
+    virtual JS::Interpreter& interpreter() override;
 
     JS::Value run_javascript(const StringView&);
 

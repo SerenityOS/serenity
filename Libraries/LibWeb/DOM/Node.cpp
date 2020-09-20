@@ -51,7 +51,8 @@
 namespace Web::DOM {
 
 Node::Node(Document& document, NodeType type)
-    : m_document(&document)
+    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
+    , m_document(&document)
     , m_type(type)
 {
 }
