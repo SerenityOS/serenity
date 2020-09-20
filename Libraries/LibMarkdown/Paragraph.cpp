@@ -33,7 +33,13 @@ String Paragraph::render_to_html() const
 {
     StringBuilder builder;
     builder.appendf("<p>");
-    builder.append(m_text.render_to_html());
+    bool first = true;
+    for (auto& line : m_lines) {
+        if (!first)
+            builder.append(' ');
+        first = false;
+        builder.append(line.text().render_to_html());
+    }
     builder.appendf("</p>\n");
     return builder.build();
 }
@@ -41,58 +47,26 @@ String Paragraph::render_to_html() const
 String Paragraph::render_for_terminal(size_t) const
 {
     StringBuilder builder;
-    builder.append(m_text.render_for_terminal());
+    bool first = true;
+    for (auto& line : m_lines) {
+        if (!first)
+            builder.append(' ');
+        first = false;
+        builder.append(line.text().render_for_terminal());
+    }
     builder.appendf("\n\n");
     return builder.build();
 }
 
-OwnPtr<Paragraph> Paragraph::parse(Vector<StringView>::ConstIterator& lines)
+OwnPtr<Paragraph::Line> Paragraph::Line::parse(Vector<StringView>::ConstIterator& lines)
 {
     if (lines.is_end())
         return nullptr;
 
-    bool first = true;
-    StringBuilder builder;
-
-    while (true) {
-        if (lines.is_end())
-            break;
-        StringView line = *lines;
-        if (line.is_empty())
-            break;
-        char ch = line[0];
-        // See if it looks like a blockquote
-        // or like an indented block.
-        if (ch == '>' || ch == ' ')
-            break;
-        if (line.length() > 1) {
-            // See if it looks like a heading.
-            if (ch == '#' && (line[1] == '#' || line[1] == ' '))
-                break;
-            // See if it looks like a code block.
-            if (ch == '`' && line[1] == '`')
-                break;
-            // See if it looks like a list.
-            if (ch == '*' || ch == '-')
-                if (line[1] == ' ')
-                    break;
-        }
-
-        if (!first)
-            builder.append(' ');
-        builder.append(line);
-        first = false;
-        ++lines;
-    }
-
-    if (first)
-        return nullptr;
-
-    auto text = Text::parse(builder.build());
+    auto text = Text::parse(*lines++);
     if (!text.has_value())
         return nullptr;
 
-    return make<Paragraph>(move(text.value()));
+    return make<Paragraph::Line>(text.release_value());
 }
-
 }
