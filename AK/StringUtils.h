@@ -36,6 +36,12 @@ enum class CaseSensitivity {
     CaseSensitive,
 };
 
+enum class TrimMode {
+    Left,
+    Right,
+    Both
+};
+
 namespace StringUtils {
 
 bool matches(const StringView& str, const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive);
@@ -45,8 +51,10 @@ Optional<unsigned> convert_to_uint_from_hex(const StringView&);
 bool equals_ignoring_case(const StringView&, const StringView&);
 bool ends_with(const StringView& a, const StringView& b, CaseSensitivity);
 bool starts_with(const StringView&, const StringView&, CaseSensitivity);
+StringView trim_whitespace(const StringView&, TrimMode mode);
 }
 
 }
 
 using AK::CaseSensitivity;
+using AK::TrimMode;

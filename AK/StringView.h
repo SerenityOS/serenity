@@ -91,6 +91,8 @@ public:
     bool contains(const StringView&) const;
     bool equals_ignoring_case(const StringView& other) const;
 
+    StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
+
     Optional<size_t> find_first_of(char) const;
     Optional<size_t> find_first_of(const StringView&) const;
 
