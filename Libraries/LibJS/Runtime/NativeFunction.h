@@ -35,7 +35,7 @@ class NativeFunction : public Function {
     JS_OBJECT(NativeFunction, Function);
 
 public:
-    static NativeFunction* create(Interpreter&, GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>);
+    static NativeFunction* create(GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>);
 
     explicit NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>, Object& prototype);
     virtual void initialize(GlobalObject&) override { }
