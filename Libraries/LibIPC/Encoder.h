@@ -32,10 +32,9 @@
 namespace IPC {
 
 template<typename T>
-bool encode(BufferStream&, T&)
+bool encode(Encoder&, T&)
 {
     ASSERT_NOT_REACHED();
-    return false;
 }
 
 class Encoder {

@@ -200,7 +200,7 @@ int main(int argc, char** argv)
         parse_endpoint();
 
     out() << "#pragma once";
-    out() << "#include <AK/BufferStream.h>";
+    out() << "#include <AK/MemoryStream.h>";
     out() << "#include <AK/OwnPtr.h>";
     out() << "#include <AK/URL.h>";
     out() << "#include <AK/Utf8View.h>";
@@ -278,7 +278,7 @@ int main(int argc, char** argv)
             out() << "    virtual i32 message_id() const override { return (int)MessageID::" << name << "; }";
             out() << "    static i32 static_message_id() { return (int)MessageID::" << name << "; }";
             out() << "    virtual const char* message_name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
-            out() << "    static OwnPtr<" << name << "> decode(BufferStream& stream, size_t& size_in_bytes)";
+            out() << "    static OwnPtr<" << name << "> decode(InputMemoryStream& stream, size_t& size_in_bytes)";
             out() << "    {";
 
             out() << "        IPC::Decoder decoder(stream);";
@@ -349,10 +349,10 @@ int main(int argc, char** argv)
         out() << "    virtual String name() const override { return \"" << endpoint.name << "\"; };";
         out() << "    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer, size_t& size_in_bytes)";
         out() << "    {";
-        out() << "        BufferStream stream(const_cast<ByteBuffer&>(buffer));";
+        out() << "        InputMemoryStream stream { buffer };";
         out() << "        i32 message_endpoint_magic = 0;";
         out() << "        stream >> message_endpoint_magic;";
-        out() << "        if (stream.handle_read_failure()) {";
+        out() << "        if (stream.handle_any_error()) {";
 #ifdef GENERATE_DEBUG_CODE
         out() << "            dbg() << \"Failed to read message endpoint magic\";";
 #endif
@@ -366,7 +366,7 @@ int main(int argc, char** argv)
         out() << "        }";
         out() << "        i32 message_id = 0;";
         out() << "        stream >> message_id;";
-        out() << "        if (stream.handle_read_failure()) {";
+        out() << "        if (stream.handle_any_error()) {";
 #ifdef GENERATE_DEBUG_CODE
         out() << "            dbg() << \"Failed to read message ID\";";
 #endif
@@ -391,7 +391,7 @@ int main(int argc, char** argv)
         out() << "            return nullptr;";
 
         out() << "        }";
-        out() << "        if (stream.handle_read_failure()) {";
+        out() << "        if (stream.handle_any_error()) {";
 #ifdef GENERATE_DEBUG_CODE
         out() << "            dbg() << \"Failed to read the message\";";
 #endif
