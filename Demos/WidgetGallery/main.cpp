@@ -221,7 +221,7 @@ int main(int argc, char** argv)
     textbox_vert2_container.layout()->set_margins({ 1, 12, 1, 4 });
 
     auto& textbox1 = textbox_vert1_container.add<GUI::TextBox>();
-    textbox1.set_text("Editable");
+    textbox1.set_placeholder("Editable");
     auto& textbox2 = textbox_vert1_container.add<GUI::TextBox>();
     textbox2.set_text("Disabled");
     textbox2.set_enabled(false);

@@ -122,25 +122,12 @@ int main(int argc, char* argv[])
     auto& search_list_view = search_view.add<GUI::ListView>();
     search_box.set_preferred_size(0, 20);
     search_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    search_box.set_text("Search...");
-    search_box.on_focusin = [&] {
-        if (search_box.text() == "Search...")
-            search_box.set_text("");
-    };
+    search_box.set_placeholder("Search...");
     search_box.on_change = [&] {
         if (auto model = search_list_view.model()) {
             auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
             search_model.set_filter_term(search_box.text());
             search_model.update();
-        }
-    };
-    search_box.on_focusout = [&] {
-        if (search_box.text().is_empty()) {
-            if (auto model = search_list_view.model()) {
-                auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-                search_model.set_filter_term("");
-            }
-            search_box.set_text("Search...");
         }
     };
     search_list_view.set_model(GUI::FilteringProxyModel::construct(model));
