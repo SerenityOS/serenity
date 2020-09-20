@@ -66,6 +66,7 @@ public:
 private:
     NonnullRefPtrVector<Sheet> m_sheets;
     NonnullOwnPtr<JS::Interpreter> m_interpreter;
+    JS::VM::InterpreterScope m_interpreter_scope;
     WorkbookObject* m_workbook_object { nullptr };
 
     String m_current_filename;
