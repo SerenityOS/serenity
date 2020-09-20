@@ -10,6 +10,14 @@ utmp_gid=5
 window_uid=13
 window_gid=13
 
+CP="cp"
+
+# cp on macOS does not support the -d option.
+# gcp comes with coreutils, which is already a dependency.
+if [ "$(uname -s)" = "Darwin" ]; then
+	CP=gcp
+fi
+
 die() {
     echo "die: $*"
     exit 1
@@ -25,8 +33,8 @@ fi
 umask 0022
 
 printf "installing base system... "
-cp -PdR "$SERENITY_ROOT"/Base/* mnt/
-cp -PdR Root/* mnt/
+$CP -PdR "$SERENITY_ROOT"/Base/* mnt/
+$CP -PdR Root/* mnt/
 # If umask was 027 or similar when the repo was cloned,
 # file permissions in Base/ are too restrictive. Restore
 # the permissions needed in the image.
