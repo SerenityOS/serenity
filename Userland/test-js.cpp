@@ -43,6 +43,8 @@
 
 #define TOP_LEVEL_TEST_NAME "__$$TOP_LEVEL$$__"
 
+RefPtr<JS::VM> vm;
+
 static bool collect_on_every_allocation = false;
 static String currently_running_test;
 
@@ -273,7 +275,10 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     currently_running_test = test_path;
 
     double start_time = get_time_in_ms();
-    auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>();
+    auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*vm);
+
+    // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
+    JS::VM::InterpreterScope scope(*interpreter);
 
     interpreter->heap().set_should_collect_on_every_allocation(collect_on_every_allocation);
 
@@ -603,6 +608,8 @@ int main(int argc, char** argv)
         DebugLogStream::set_enabled(false);
     }
 
+    vm = JS::VM::create();
+
 #ifdef __serenity__
     TestRunner("/home/anon/js-tests", print_times).run();
 #else
@@ -613,6 +620,8 @@ int main(int argc, char** argv)
     }
     TestRunner(String::format("%s/Libraries/LibJS/Tests", serenity_root), print_times).run();
 #endif
+
+    vm = nullptr;
 
     return 0;
 }

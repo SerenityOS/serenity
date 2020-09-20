@@ -37,9 +37,17 @@
 
 namespace Spreadsheet {
 
+static JS::VM& global_vm()
+{
+    static RefPtr<JS::VM> vm;
+    if (!vm)
+        vm = JS::VM::create();
+    return *vm;
+}
+
 Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets)
     : m_sheets(move(sheets))
-    , m_interpreter(JS::Interpreter::create<JS::GlobalObject>())
+    , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(global_vm()))
 {
     m_workbook_object = interpreter().heap().allocate<WorkbookObject>(global_object(), *this);
     global_object().put("workbook", workbook_object());

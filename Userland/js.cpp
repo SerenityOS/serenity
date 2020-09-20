@@ -552,6 +552,7 @@ int main(int argc, char** argv)
 
     bool syntax_highlight = !disable_syntax_highlight;
 
+    auto vm = JS::VM::create();
     OwnPtr<JS::Interpreter> interpreter;
 
     interrupt_interpreter = [&] {
@@ -561,7 +562,7 @@ int main(int argc, char** argv)
 
     if (script_path == nullptr) {
         s_print_last_result = true;
-        interpreter = JS::Interpreter::create<ReplObject>();
+        interpreter = JS::Interpreter::create<ReplObject>(*vm);
         ReplConsoleClient console_client(interpreter->console());
         interpreter->console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
@@ -842,7 +843,7 @@ int main(int argc, char** argv)
         s_editor->on_tab_complete = move(complete);
         repl(*interpreter);
     } else {
-        interpreter = JS::Interpreter::create<JS::GlobalObject>();
+        interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
         ReplConsoleClient console_client(interpreter->console());
         interpreter->console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);

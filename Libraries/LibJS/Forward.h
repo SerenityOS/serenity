@@ -119,6 +119,7 @@ class Statement;
 class Symbol;
 class Token;
 class Uint8ClampedArray;
+class VM;
 class Value;
 enum class DeclarationKind;
 
