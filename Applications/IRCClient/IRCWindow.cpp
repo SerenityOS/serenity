@@ -202,6 +202,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
         m_text_box->clear();
     };
     m_text_box->set_history_enabled(true);
+    m_text_box->set_placeholder("Message");
 
     m_client->register_subwindow(*this);
 }
