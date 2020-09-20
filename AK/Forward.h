@@ -31,7 +31,6 @@
 namespace AK {
 
 class Bitmap;
-class BufferStream;
 class ByteBuffer;
 class DebugLogStream;
 class IPv4Address;
@@ -130,7 +129,6 @@ using AK::Array;
 using AK::Atomic;
 using AK::Badge;
 using AK::Bitmap;
-using AK::BufferStream;
 using AK::ByteBuffer;
 using AK::Bytes;
 using AK::CircularDuplexStream;
