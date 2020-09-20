@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <LibGfx/ICOLoader.h>
@@ -42,9 +42,9 @@ namespace Gfx {
 
 // FIXME: This is in little-endian order. Maybe need a NetworkOrdered<T> equivalent eventually.
 struct ICONDIR {
-    u16 must_be_0;
-    u16 must_be_1;
-    u16 image_count;
+    u16 must_be_0 = 0;
+    u16 must_be_1 = 0;
+    u16 image_count = 0;
 };
 static_assert(sizeof(ICONDIR) == 6);
 
@@ -137,11 +137,11 @@ RefPtr<Gfx::Bitmap> load_ico_from_memory(const u8* data, size_t length)
     return bitmap;
 }
 
-static Optional<size_t> decode_ico_header(BufferStream& stream)
+static Optional<size_t> decode_ico_header(InputMemoryStream& stream)
 {
     ICONDIR header;
-    stream.read_raw((uint8_t*)&header, sizeof(header));
-    if (stream.handle_read_failure())
+    stream >> Bytes { &header, sizeof(header) };
+    if (stream.handle_any_error())
         return {};
 
     if (header.must_be_0 != 0 || header.must_be_1 != 1)
@@ -149,11 +149,11 @@ static Optional<size_t> decode_ico_header(BufferStream& stream)
     return { header.image_count };
 }
 
-static Optional<ImageDescriptor> decode_ico_direntry(BufferStream& stream)
+static Optional<ImageDescriptor> decode_ico_direntry(InputMemoryStream& stream)
 {
     ICONDIRENTRY entry;
-    stream.read_raw((uint8_t*)&entry, sizeof(entry));
-    if (stream.handle_read_failure())
+    stream >> Bytes { &entry, sizeof(entry) };
+    if (stream.handle_any_error())
         return {};
 
     ImageDescriptor desc = { entry.width, entry.height, entry.offset, entry.size, nullptr };
@@ -182,8 +182,8 @@ static size_t find_largest_image(const ICOLoadingContext& context)
 
 static bool load_ico_directory(ICOLoadingContext& context)
 {
-    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.data), context.data_size);
-    auto stream = BufferStream(buffer);
+    InputMemoryStream stream { { context.data, context.data_size } };
+
     auto image_count = decode_ico_header(stream);
     if (!image_count.has_value() || image_count.value() == 0) {
         return false;
@@ -408,8 +408,7 @@ bool ICOImageDecoderPlugin::set_nonvolatile()
 
 bool ICOImageDecoderPlugin::sniff()
 {
-    auto buffer = ByteBuffer::wrap(const_cast<u8*>(m_context->data), m_context->data_size);
-    BufferStream stream(buffer);
+    InputMemoryStream stream { { m_context->data, m_context->data_size } };
     return decode_ico_header(stream).has_value();
 }
 
