@@ -1,4 +1,5 @@
 set(SOURCES
+    AutoCompleteBox.cpp
     CodeDocument.cpp
     CppAutoComplete.cpp
     CursorTool.cpp
