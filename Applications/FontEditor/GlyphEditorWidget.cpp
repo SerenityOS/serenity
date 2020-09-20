@@ -58,8 +58,10 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
     painter.translate(frame_thickness(), frame_thickness());
 
     painter.translate(-1, -1);
-    for (int y = 1; y < font().glyph_height(); ++y)
-        painter.draw_line({ 0, y * m_scale }, { font().max_glyph_width() * m_scale, y * m_scale }, palette().threed_shadow2());
+    for (int y = 1; y < font().glyph_height(); ++y) {
+        bool bold_line = (y - 1) == font().baseline();
+        painter.draw_line({ 0, y * m_scale }, { font().max_glyph_width() * m_scale, y * m_scale }, palette().threed_shadow2(), bold_line ? 2 : 1);
+    }
 
     for (int x = 1; x < font().max_glyph_width(); ++x)
         painter.draw_line({ x * m_scale, 0 }, { x * m_scale, font().glyph_height() * m_scale }, palette().threed_shadow2());
