@@ -43,7 +43,7 @@ inline bool decode(Decoder&, T&)
 
 class Decoder {
 public:
-    explicit Decoder(BufferStream& stream)
+    explicit Decoder(InputMemoryStream& stream)
         : m_stream(stream)
     {
     }
@@ -101,7 +101,7 @@ public:
     }
 
 private:
-    BufferStream& m_stream;
+    InputMemoryStream& m_stream;
 };
 
 }
