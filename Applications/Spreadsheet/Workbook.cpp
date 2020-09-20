@@ -48,6 +48,7 @@ static JS::VM& global_vm()
 Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets)
     : m_sheets(move(sheets))
     , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(global_vm()))
+    , m_interpreter_scope(JS::VM::InterpreterScope(interpreter()))
 {
     m_workbook_object = interpreter().heap().allocate<WorkbookObject>(global_object(), *this);
     global_object().put("workbook", workbook_object());
