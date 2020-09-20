@@ -50,6 +50,9 @@ public:
     };
 
     Text(Text&& text) = default;
+    Text() = default;
+
+    Text& operator=(Text&&) = default;
 
     const Vector<Span>& spans() const { return m_spans; }
 
