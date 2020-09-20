@@ -107,7 +107,7 @@ Variant JsonArrayModel::data(const ModelIndex& index, ModelRole role) const
         if (field_spec.massage_for_display)
             return field_spec.massage_for_display(object);
         if (data.is_number())
-            return data.to_i32();
+            return data;
         return object.get(json_field_name).to_string();
     }
 
