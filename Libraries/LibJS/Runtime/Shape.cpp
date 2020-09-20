@@ -104,9 +104,10 @@ void Shape::visit_children(Cell::Visitor& visitor)
     for (auto& it : m_forward_transitions)
         visitor.visit(it.value);
 
-    ensure_property_table();
-    for (auto& it : *m_property_table)
-        it.key.visit_children(visitor);
+    if (m_property_table) {
+        for (auto& it : *m_property_table)
+            it.key.visit_children(visitor);
+    }
 }
 
 Optional<PropertyMetadata> Shape::lookup(const StringOrSymbol& property_name) const
