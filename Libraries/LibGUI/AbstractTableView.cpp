@@ -289,7 +289,10 @@ Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
 
 Gfx::IntRect AbstractTableView::row_rect(int item_index) const
 {
-    return { row_header().is_visible() ? row_header().width() : 0, column_header().height() + (item_index * row_height()), max(content_size().width(), width()), row_height() };
+    return { row_header().is_visible() ? row_header().width() : 0,
+        (column_header().is_visible() ? column_header().height() : 0) + (item_index * row_height()),
+        max(content_size().width(), width()),
+        row_height() };
 }
 
 Gfx::IntPoint AbstractTableView::adjusted_position(const Gfx::IntPoint& position) const
