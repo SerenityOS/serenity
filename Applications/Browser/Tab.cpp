@@ -103,6 +103,7 @@ Tab::Tab(Type type)
     m_location_box = toolbar.add<GUI::TextBox>();
     m_location_box->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_location_box->set_preferred_size(0, 22);
+    m_location_box->set_placeholder("Address");
 
     m_location_box->on_return_pressed = [this] {
         auto url = url_from_user_input(m_location_box->text());
