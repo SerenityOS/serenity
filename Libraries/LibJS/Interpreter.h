@@ -152,7 +152,12 @@ public:
     const LexicalEnvironment* current_environment() const { return m_call_stack.last().environment; }
     LexicalEnvironment* current_environment() { return m_call_stack.last().environment; }
 
-    bool in_strict_mode() const { return m_scope_stack.last().scope_node->in_strict_mode(); }
+    bool in_strict_mode() const
+    {
+        if (m_scope_stack.is_empty())
+            return true;
+        return m_scope_stack.last().scope_node->in_strict_mode();
+    }
 
     template<typename Callback>
     void for_each_argument(Callback callback)
