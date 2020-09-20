@@ -26,6 +26,7 @@
  */
 
 #include <AK/LogStream.h>
+#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayIteratorPrototype.h>
@@ -87,12 +88,11 @@ void GlobalObject::initialize()
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
-#define __JS_ENUMERATE(ClassName, snake_name)                                    \
-    if (!m_##snake_name##_prototype)                                             \
+#define __JS_ENUMERATE(ClassName, snake_name) \
+    if (!m_##snake_name##_prototype)          \
         m_##snake_name##_prototype = heap().allocate<ClassName##Prototype>(*this, *this);
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
-
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function("gc", gc, 0, attr);

@@ -408,10 +408,18 @@ Color Document::visited_link_color() const
     return frame()->page().palette().visited_link();
 }
 
+static JS::VM& main_thread_vm()
+{
+    static RefPtr<JS::VM> vm;
+    if (!vm)
+        vm = JS::VM::create();
+    return *vm;
+}
+
 JS::Interpreter& Document::interpreter()
 {
     if (!m_interpreter)
-        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(*m_window);
+        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(main_thread_vm(), *m_window);
     return *m_interpreter;
 }
 

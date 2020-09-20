@@ -34,11 +34,13 @@
 #include <LibJS/AST.h>
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/MarkedValueList.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -75,11 +77,13 @@ typedef Vector<Argument, 8> ArgumentVector;
 class Interpreter : public Weakable<Interpreter> {
 public:
     template<typename GlobalObjectType, typename... Args>
-    static NonnullOwnPtr<Interpreter> create(Args&&... args)
+    static NonnullOwnPtr<Interpreter> create(VM& vm, Args&&... args)
     {
-        auto interpreter = adopt_own(*new Interpreter);
-        interpreter->m_global_object = interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...);
-        static_cast<GlobalObjectType*>(interpreter->m_global_object)->initialize();
+        DeferGC defer_gc(vm.heap());
+        auto interpreter = adopt_own(*new Interpreter(vm));
+        VM::InterpreterScope scope(*interpreter);
+        interpreter->m_global_object = make_handle(static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...)));
+        static_cast<GlobalObjectType*>(interpreter->m_global_object.cell())->initialize();
         return interpreter;
     }
 
@@ -107,7 +111,8 @@ public:
     GlobalObject& global_object();
     const GlobalObject& global_object() const;
 
-    Heap& heap() { return m_heap; }
+    VM& vm() { return *m_vm; }
+    Heap& heap() { return vm().heap(); }
 
     void unwind(ScopeType type, FlyString label = {})
     {
@@ -234,18 +239,18 @@ public:
 #undef __JS_ENUMERATE
 
 private:
-    Interpreter();
+    explicit Interpreter(VM&);
 
     [[nodiscard]] Value call_internal(Function&, Value this_value, Optional<MarkedValueList>);
 
-    Heap m_heap;
+    NonnullRefPtr<VM> m_vm;
 
     Value m_last_value;
 
     Vector<ScopeFrame> m_scope_stack;
     Vector<CallFrame> m_call_stack;
 
-    Object* m_global_object { nullptr };
+    Handle<Object> m_global_object;
 
     Exception* m_exception { nullptr };
 

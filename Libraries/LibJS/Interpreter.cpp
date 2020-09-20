@@ -44,8 +44,8 @@
 
 namespace JS {
 
-Interpreter::Interpreter()
-    : m_heap(*this)
+Interpreter::Interpreter(VM& vm)
+    : m_vm(vm)
     , m_console(*this)
 {
 #define __JS_ENUMERATE(SymbolName, snake_name) \
@@ -60,6 +60,8 @@ Interpreter::~Interpreter()
 
 Value Interpreter::run(GlobalObject& global_object, const Program& program)
 {
+    VM::InterpreterScope scope(*this);
+
     ASSERT(!exception());
 
     if (m_call_stack.is_empty()) {
@@ -223,7 +225,6 @@ Symbol* Interpreter::get_global_symbol(const String& description)
 
 void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 {
-    roots.set(m_global_object);
     roots.set(m_exception);
 
     if (m_last_value.is_cell())
@@ -251,6 +252,8 @@ void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
 Value Interpreter::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     ASSERT(!exception());
+
+    VM::InterpreterScope scope(*this);
 
     auto& call_frame = push_call_frame();
     call_frame.function_name = function.name();
@@ -348,12 +351,12 @@ void Interpreter::throw_exception(Exception* exception)
 
 GlobalObject& Interpreter::global_object()
 {
-    return static_cast<GlobalObject&>(*m_global_object);
+    return static_cast<GlobalObject&>(*m_global_object.cell());
 }
 
 const GlobalObject& Interpreter::global_object() const
 {
-    return static_cast<const GlobalObject&>(*m_global_object);
+    return static_cast<const GlobalObject&>(*m_global_object.cell());
 }
 
 String Interpreter::join_arguments() const

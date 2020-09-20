@@ -47,14 +47,19 @@
 
 namespace JS {
 
-Heap::Heap(Interpreter& interpreter)
-    : m_interpreter(interpreter)
+Heap::Heap(VM& vm)
+    : m_vm(vm)
 {
 }
 
 Heap::~Heap()
 {
     collect_garbage(CollectionType::CollectEverything);
+}
+
+Interpreter& Heap::interpreter()
+{
+    return vm().interpreter();
 }
 
 Cell* Heap::allocate_cell(size_t size)
@@ -100,7 +105,8 @@ void Heap::collect_garbage(CollectionType collection_type, bool print_report)
 
 void Heap::gather_roots(HashTable<Cell*>& roots)
 {
-    m_interpreter.gather_roots({}, roots);
+    if (auto* interpreter = vm().interpreter_if_exists())
+        interpreter->gather_roots({}, roots);
 
     gather_conservative_roots(roots);
 

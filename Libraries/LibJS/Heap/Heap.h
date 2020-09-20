@@ -43,7 +43,7 @@ class Heap {
     AK_MAKE_NONMOVABLE(Heap);
 
 public:
-    explicit Heap(Interpreter&);
+    explicit Heap(VM&);
     ~Heap();
 
     template<typename T, typename... Args>
@@ -71,7 +71,8 @@ public:
 
     void collect_garbage(CollectionType = CollectionType::CollectGarbage, bool print_report = false);
 
-    Interpreter& interpreter() { return m_interpreter; }
+    Interpreter& interpreter();
+    VM& vm() { return m_vm; }
 
     bool should_collect_on_every_allocation() const { return m_should_collect_on_every_allocation; }
     void set_should_collect_on_every_allocation(bool b) { m_should_collect_on_every_allocation = b; }
@@ -100,7 +101,7 @@ private:
 
     bool m_should_collect_on_every_allocation { false };
 
-    Interpreter& m_interpreter;
+    VM& m_vm;
     Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
     HashTable<HandleImpl*> m_handles;
 
