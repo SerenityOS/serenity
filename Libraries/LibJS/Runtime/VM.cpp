@@ -45,10 +45,7 @@ VM::~VM()
 
 Interpreter& VM::interpreter()
 {
-    if (m_interpreters.is_empty()) {
-        asm volatile("ud2");
-    }
-//    ASSERT(!m_interpreters.is_empty());
+    ASSERT(!m_interpreters.is_empty());
     return *m_interpreters.last();
 }
 
