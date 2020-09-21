@@ -1108,6 +1108,7 @@ private:
 
 private:
     Emulator& m_emulator;
+    void bt() const;
 
     PartAddressableRegister m_gpr[8];
     PartAddressableRegister m_gpr_shadow[8];
@@ -1124,12 +1125,17 @@ private:
     // FIXME: Shadow for m_fpu.
 
     // FIXME: Use bits 11 to 13 in the FPU status word for this.
-    unsigned m_fpu_top { ~0u };
+    int m_fpu_top { -1 };
 
     void fpu_push(long double n) { ++m_fpu_top; fpu_set(0, n); }
     long double fpu_pop() { auto n = fpu_get(0); m_fpu_top--; return n; }
-    long double fpu_get(int i) { return m_fpu[m_fpu_top + i]; }
-    void fpu_set(int i, long double n) { m_fpu[m_fpu_top + i] = n; }
+    long double fpu_get(int i) { ASSERT(i >= 0 && i <= m_fpu_top); return m_fpu[m_fpu_top - i]; }
+    void fpu_set(int i, long double n) {
+        //if (i < 0 || i > m_fpu_top)
+            //bt();
+        ASSERT(i >= 0 && i <= m_fpu_top);
+        m_fpu[m_fpu_top - i] = n;
+    }
 
     // FIXME: Or just something like m_flags_tainted?
     ValueWithShadow<u16> m_fpu_cw { 0, 0 };
