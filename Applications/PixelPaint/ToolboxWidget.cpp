@@ -25,6 +25,7 @@
  */
 
 #include "ToolboxWidget.h"
+#include "BrushTool.h"
 #include "BucketTool.h"
 #include "EllipseTool.h"
 #include "EraseTool.h"
@@ -127,6 +128,7 @@ void ToolboxWidget::setup_tools()
 
     add_tool("Move", "move", { 0, Key_M }, make<MoveTool>());
     add_tool("Pen", "pen", { 0, Key_N }, make<PenTool>());
+    add_tool("Brush", "brush", { 0, Key_P }, make<BrushTool>());
     add_tool("Bucket Fill", "bucket", { Mod_Shift, Key_B }, make<BucketTool>());
     add_tool("Spray", "spray", { Mod_Shift, Key_S }, make<SprayTool>());
     add_tool("Color Picker", "picker", { 0, Key_O }, make<PickerTool>());
