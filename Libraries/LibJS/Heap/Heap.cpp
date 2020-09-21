@@ -89,6 +89,9 @@ Cell* Heap::allocate_cell(size_t size)
 
 void Heap::collect_garbage(CollectionType collection_type, bool print_report)
 {
+    ASSERT(!m_collecting_garbage);
+    TemporaryChange change(m_collecting_garbage, true);
+
     Core::ElapsedTimer collection_measurement_timer;
     collection_measurement_timer.start();
     if (collection_type == CollectionType::CollectGarbage) {

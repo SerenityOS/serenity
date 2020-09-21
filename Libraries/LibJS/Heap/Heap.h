@@ -109,6 +109,8 @@ private:
 
     size_t m_gc_deferrals { 0 };
     bool m_should_gc_when_deferral_ends { false };
+
+    bool m_collecting_garbage { false };
 };
 
 }
