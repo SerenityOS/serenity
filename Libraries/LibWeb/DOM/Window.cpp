@@ -97,7 +97,7 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
     auto& interpreter = document().interpreter();
     (void)interpreter.call(timer.callback(), wrapper());
     if (interpreter.exception())
-        interpreter.clear_exception();
+        interpreter.vm().clear_exception();
 }
 
 i32 Window::allocate_timer_id(Badge<Timer>)
@@ -126,7 +126,7 @@ i32 Window::request_animation_frame(JS::Function& callback)
         fake_timestamp += 10;
         (void)interpreter.call(function, {}, JS::Value(fake_timestamp));
         if (interpreter.exception())
-            interpreter.clear_exception();
+            interpreter.vm().clear_exception();
         GUI::DisplayLink::unregister_callback(link_id);
     });
 

@@ -48,7 +48,7 @@ void EventDispatcher::dispatch(EventTarget& target, NonnullRefPtr<Event> event)
         auto& interpreter = target.script_execution_context()->interpreter();
         (void)interpreter.call(function, this_value, Bindings::wrap(global_object, target));
         if (interpreter.exception())
-            interpreter.clear_exception();
+            interpreter.vm().clear_exception();
     }
 }
 

@@ -45,10 +45,18 @@ public:
     void push_interpreter(Interpreter&);
     void pop_interpreter(Interpreter&);
 
+    Exception* exception()
+    {
+        return m_exception;
+    }
+    void set_exception(Badge<Interpreter>, Exception* exception) { m_exception = exception; }
+    void clear_exception() { m_exception = nullptr; }
+
     class InterpreterExecutionScope {
     public:
         InterpreterExecutionScope(Interpreter&);
         ~InterpreterExecutionScope();
+
     private:
         Interpreter& m_interpreter;
     };
@@ -57,6 +65,8 @@ public:
 
 private:
     VM();
+
+    Exception* m_exception { nullptr };
 
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;

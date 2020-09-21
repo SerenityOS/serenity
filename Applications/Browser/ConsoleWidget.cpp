@@ -102,7 +102,7 @@ ConsoleWidget::ConsoleWidget()
             output_html.append(JS::MarkupGenerator::html_from_value(m_interpreter->exception()->value()));
             print_html(output_html.string_view());
 
-            m_interpreter->clear_exception();
+            m_interpreter->vm().clear_exception();
             return;
         }
 
