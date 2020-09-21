@@ -45,10 +45,10 @@ public:
     void push_interpreter(Interpreter&);
     void pop_interpreter(Interpreter&);
 
-    class InterpreterScope {
+    class InterpreterExecutionScope {
     public:
-        InterpreterScope(Interpreter&);
-        ~InterpreterScope();
+        InterpreterExecutionScope(Interpreter&);
+        ~InterpreterExecutionScope();
     private:
         Interpreter& m_interpreter;
     };

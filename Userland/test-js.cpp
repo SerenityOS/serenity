@@ -278,7 +278,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*vm);
 
     // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
-    JS::VM::InterpreterScope scope(*interpreter);
+    JS::VM::InterpreterExecutionScope scope(*interpreter);
 
     interpreter->heap().set_should_collect_on_every_allocation(collect_on_every_allocation);
 

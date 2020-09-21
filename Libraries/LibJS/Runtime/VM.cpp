@@ -71,13 +71,13 @@ void VM::pop_interpreter(Interpreter& interpreter)
     ASSERT(popped_interpreter == &interpreter);
 }
 
-VM::InterpreterScope::InterpreterScope(Interpreter& interpreter)
+VM::InterpreterExecutionScope::InterpreterExecutionScope(Interpreter& interpreter)
     : m_interpreter(interpreter)
 {
     m_interpreter.vm().push_interpreter(m_interpreter);
 }
 
-VM::InterpreterScope::~InterpreterScope()
+VM::InterpreterExecutionScope::~InterpreterExecutionScope()
 {
     m_interpreter.vm().pop_interpreter(m_interpreter);
 }
