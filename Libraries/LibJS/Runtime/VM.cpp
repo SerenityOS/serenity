@@ -81,6 +81,8 @@ VM::InterpreterExecutionScope::~InterpreterExecutionScope()
 
 void VM::gather_roots(HashTable<Cell*>& roots)
 {
+    if (m_exception)
+        roots.set(m_exception);
     for (auto* interpreter : m_interpreters)
         interpreter->gather_roots(roots);
 }

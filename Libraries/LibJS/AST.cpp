@@ -1796,7 +1796,7 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
     interpreter.execute_statement(global_object, m_block, {}, ScopeType::Try);
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
-            interpreter.clear_exception();
+            interpreter.vm().clear_exception();
             ArgumentVector arguments { { m_handler->parameter(), exception->value() } };
             interpreter.execute_statement(global_object, m_handler->body(), move(arguments));
         }
@@ -1806,7 +1806,7 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         // Keep, if any, and then clear the current exception so we can
         // execute() the finalizer without an exception in our way.
         auto* previous_exception = interpreter.exception();
-        interpreter.clear_exception();
+        interpreter.vm().clear_exception();
         interpreter.stop_unwind();
         m_finalizer->execute(interpreter, global_object);
         // If we previously had an exception and the finalizer didn't

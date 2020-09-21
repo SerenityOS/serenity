@@ -434,7 +434,7 @@ JS::Value Document::run_javascript(const StringView& source)
     auto& interpreter = document().interpreter();
     auto result = interpreter.run(interpreter.global_object(), *program);
     if (interpreter.exception())
-        interpreter.clear_exception();
+        interpreter.vm().clear_exception();
     return result;
 }
 

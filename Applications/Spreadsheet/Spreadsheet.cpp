@@ -73,7 +73,7 @@ Sheet::Sheet(Workbook& workbook)
                 dbg() << "Spreadsheet: Failed to run runtime code: ";
                 for (auto& t : exc->trace())
                     dbg() << t;
-                interpreter().clear_exception();
+                interpreter().vm().clear_exception();
             }
         }
     }
@@ -160,7 +160,7 @@ JS::Value Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
     interpreter().run(global_object(), program);
     if (interpreter().exception()) {
         auto exc = interpreter().exception()->value();
-        interpreter().clear_exception();
+        interpreter().vm().clear_exception();
         return exc;
     }
 

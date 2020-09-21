@@ -361,7 +361,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
             for (auto& function_name : trace)
                 printf(" -> %s\n", function_name.characters());
         }
-        interpreter.clear_exception();
+        interpreter.vm().clear_exception();
         return false;
     }
     if (s_print_last_result)

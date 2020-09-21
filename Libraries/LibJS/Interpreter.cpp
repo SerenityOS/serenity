@@ -225,8 +225,6 @@ Symbol* Interpreter::get_global_symbol(const String& description)
 
 void Interpreter::gather_roots(HashTable<Cell*>& roots)
 {
-    roots.set(m_exception);
-
     if (m_last_value.is_cell())
         roots.set(m_last_value.as_cell());
 
@@ -345,7 +343,7 @@ void Interpreter::throw_exception(Exception* exception)
         }
     }
 #endif
-    m_exception = exception;
+    vm().set_exception({}, exception);
     unwind(ScopeType::Try);
 }
 

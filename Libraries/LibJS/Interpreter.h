@@ -113,6 +113,7 @@ public:
 
     VM& vm() { return *m_vm; }
     Heap& heap() { return vm().heap(); }
+    Exception* exception() { return vm().exception(); }
 
     void unwind(ScopeType type, FlyString label = {})
     {
@@ -195,12 +196,6 @@ public:
         return m_call_stack.last().this_value;
     }
 
-    Exception* exception()
-    {
-        return m_exception;
-    }
-    void clear_exception() { m_exception = nullptr; }
-
     template<typename T, typename... Args>
     void throw_exception(Args&&... args)
     {
@@ -251,8 +246,6 @@ private:
     Vector<CallFrame> m_call_stack;
 
     Handle<Object> m_global_object;
-
-    Exception* m_exception { nullptr };
 
     ScopeType m_unwind_until { ScopeType::None };
     FlyString m_unwind_until_label;

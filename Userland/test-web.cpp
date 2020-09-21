@@ -363,7 +363,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             auto& before_initial_page_load = new_interpreter.get_variable("__BeforeInitialPageLoad__", new_interpreter.global_object()).as_function();
             (void)new_interpreter.call(before_initial_page_load, JS::js_undefined());
             if (new_interpreter.exception())
-                new_interpreter.clear_exception();
+                new_interpreter.vm().clear_exception();
 
             // Now parse the HTML page.
             parser.run(page_to_load);
@@ -373,7 +373,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             auto& after_initial_page_load = new_interpreter.get_variable("__AfterInitialPageLoad__", new_interpreter.global_object()).as_function();
             (void)new_interpreter.call(after_initial_page_load, JS::js_undefined());
             if (new_interpreter.exception())
-                new_interpreter.clear_exception();
+                new_interpreter.vm().clear_exception();
 
             auto test_json = get_test_results(new_interpreter);
             if (!test_json.has_value()) {
