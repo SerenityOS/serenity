@@ -27,6 +27,7 @@
 #include "ProcessFileDescriptorMapWidget.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/JsonArrayModel.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 
 ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget()
@@ -56,7 +57,8 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget()
         return object.get("can_write").to_bool() ? "Yes" : "No";
     });
 
-    m_table_view->set_model(GUI::JsonArrayModel::create({}, move(pid_fds_fields)));
+    m_model = GUI::JsonArrayModel::create({}, move(pid_fds_fields));
+    m_table_view->set_model(GUI::SortingProxyModel::create(*m_model));
 }
 
 ProcessFileDescriptorMapWidget::~ProcessFileDescriptorMapWidget()
@@ -68,5 +70,5 @@ void ProcessFileDescriptorMapWidget::set_pid(pid_t pid)
     if (m_pid == pid)
         return;
     m_pid = pid;
-    static_cast<GUI::JsonArrayModel*>(m_table_view->model())->set_json_path(String::format("/proc/%d/fds", m_pid));
+    m_model->set_json_path(String::format("/proc/%d/fds", m_pid));
 }
