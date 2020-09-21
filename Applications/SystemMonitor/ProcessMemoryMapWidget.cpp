@@ -107,7 +107,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
             return GUI::Variant();
         },
         [](auto&) {
-            return GUI::Variant();
+            return GUI::Variant(0);
         },
         [](const JsonObject& object) {
             auto pagemap = object.get("pagemap").as_string_or({});
