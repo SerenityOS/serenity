@@ -70,7 +70,7 @@ bool Uint8ClampedArray::put_by_index(u32 property_index, Value value)
     // FIXME: Use attributes
     ASSERT(property_index < m_length);
     auto number = value.to_i32(interpreter());
-    if (interpreter().exception())
+    if (vm().exception())
         return {};
     m_data[property_index] = clamp(number, 0, 255);
     return true;

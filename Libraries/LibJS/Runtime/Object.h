@@ -51,7 +51,7 @@ struct PropertyDescriptor {
     Function* getter { nullptr };
     Function* setter { nullptr };
 
-    static PropertyDescriptor from_dictionary(Interpreter&, const Object&);
+    static PropertyDescriptor from_dictionary(VM&, const Object&);
 
     bool is_accessor_descriptor() const { return getter || setter; }
     bool is_data_descriptor() const { return !(value.is_empty() && !attributes.has_writable()); }
