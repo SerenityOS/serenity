@@ -60,6 +60,7 @@ public:
     virtual void visit_children(Visitor&) { }
 
     Heap& heap() const;
+    VM& vm() const;
     Interpreter& interpreter();
     Interpreter& interpreter() const;
 
