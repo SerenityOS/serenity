@@ -42,40 +42,40 @@
 
 namespace JS {
 
-PropertyDescriptor PropertyDescriptor::from_dictionary(Interpreter& interpreter, const Object& object)
+PropertyDescriptor PropertyDescriptor::from_dictionary(VM& vm, const Object& object)
 {
     PropertyAttributes attributes;
     if (object.has_property("configurable")) {
         attributes.set_has_configurable();
         if (object.get("configurable").value_or(Value(false)).to_boolean())
             attributes.set_configurable();
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
     }
     if (object.has_property("enumerable")) {
         attributes.set_has_enumerable();
         if (object.get("enumerable").value_or(Value(false)).to_boolean())
             attributes.set_enumerable();
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
     }
     if (object.has_property("writable")) {
         attributes.set_has_writable();
         if (object.get("writable").value_or(Value(false)).to_boolean())
             attributes.set_writable();
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
     }
     PropertyDescriptor descriptor { attributes, object.get("value"), nullptr, nullptr };
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     auto getter = object.get("get");
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     if (getter.is_function())
         descriptor.getter = &getter.as_function();
     auto setter = object.get("set");
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     if (setter.is_function())
         descriptor.setter = &setter.as_function();
@@ -140,7 +140,7 @@ bool Object::set_prototype(Object* new_prototype)
 bool Object::has_prototype(const Object* prototype) const
 {
     for (auto* object = this->prototype(); object; object = object->prototype()) {
-        if (interpreter().exception())
+        if (vm().exception())
             return false;
         if (object == prototype)
             return true;
@@ -198,7 +198,7 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
                 entry_array->define_property(1, js_string(interpreter(), String::format("%c", str[i])));
                 properties_array->define_property(i, entry_array);
             }
-            if (interpreter().exception())
+            if (vm().exception())
                 return {};
         }
 
@@ -221,7 +221,7 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
             entry_array->define_property(1, value_and_attributes.value);
             properties_array->define_property(property_index, entry_array);
         }
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
 
         ++property_index;
@@ -246,7 +246,7 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
             entry_array->define_property(1, this_object.get(it.key));
             properties_array->define_property(property_index, entry_array);
         }
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
 
         ++property_index;
@@ -272,7 +272,7 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
         if (!metadata.has_value())
             return {};
         value = m_storage[metadata.value().offset];
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
         attributes = metadata.value().attributes;
     }
@@ -303,27 +303,27 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
 
     auto* descriptor_object = Object::create_empty(global_object());
     descriptor_object->define_property("enumerable", Value(descriptor.attributes.is_enumerable()));
-    if (interpreter().exception())
+    if (vm().exception())
         return {};
     descriptor_object->define_property("configurable", Value(descriptor.attributes.is_configurable()));
-    if (interpreter().exception())
+    if (vm().exception())
         return {};
     if (descriptor.is_data_descriptor()) {
         descriptor_object->define_property("value", descriptor.value.value_or(js_undefined()));
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
         descriptor_object->define_property("writable", Value(descriptor.attributes.is_writable()));
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
     } else if (descriptor.is_accessor_descriptor()) {
         if (descriptor.getter) {
             descriptor_object->define_property("get", Value(descriptor.getter));
-            if (interpreter().exception())
+            if (vm().exception())
                 return {};
         }
         if (descriptor.setter) {
             descriptor_object->define_property("set", Value(descriptor.setter));
-            if (interpreter().exception())
+            if (vm().exception())
                 return {};
         }
     }
@@ -344,14 +344,14 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         attributes.set_has_configurable();
         if (descriptor.get("configurable").value_or(Value(false)).to_boolean())
             attributes.set_configurable();
-        if (interpreter().exception())
+        if (vm().exception())
             return false;
     }
     if (descriptor.has_property("enumerable")) {
         attributes.set_has_enumerable();
         if (descriptor.get("enumerable").value_or(Value(false)).to_boolean())
             attributes.set_enumerable();
-        if (interpreter().exception())
+        if (vm().exception())
             return false;
     }
 
@@ -363,10 +363,10 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         }
 
         auto getter = descriptor.get("get").value_or(js_undefined());
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
         auto setter = descriptor.get("set").value_or(js_undefined());
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
 
         Function* getter_function { nullptr };
@@ -396,16 +396,16 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
     }
 
     auto value = descriptor.get("value");
-    if (interpreter().exception())
+    if (vm().exception())
         return {};
     if (descriptor.has_property("writable")) {
         attributes.set_has_writable();
         if (descriptor.get("writable").value_or(Value(false)).to_boolean())
             attributes.set_writable();
-        if (interpreter().exception())
+        if (vm().exception())
             return false;
     }
-    if (interpreter().exception())
+    if (vm().exception())
         return {};
 
 #ifdef OBJECT_DEBUG
@@ -440,7 +440,7 @@ bool Object::define_accessor(const PropertyName& property_name, Function& getter
     if (!accessor) {
         accessor = Accessor::create(interpreter(), nullptr, nullptr);
         bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
         if (!definition_success)
             return false;
@@ -633,14 +633,14 @@ Value Object::get_by_index(u32 property_index) const
         }
         if (static_cast<size_t>(property_index) < object->m_indexed_properties.array_like_size()) {
             auto result = object->m_indexed_properties.get(const_cast<Object*>(this), property_index);
-            if (interpreter().exception())
+            if (vm().exception())
                 return {};
             if (result.has_value() && !result.value().value.is_empty())
                 return result.value().value;
             return {};
         }
         object = object->prototype();
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
     }
     return {};
@@ -663,12 +663,12 @@ Value Object::get(const PropertyName& property_name, Value receiver) const
         if (receiver.is_empty())
             receiver = Value(const_cast<Object*>(this));
         auto value = object->get_own_property(*this, property_name, receiver);
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
         if (!value.is_empty())
             return value;
         object = object->prototype();
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
     }
     return {};
@@ -695,7 +695,7 @@ bool Object::put_by_index(u32 property_index, Value value)
             }
         }
         object = object->prototype();
-        if (interpreter().exception())
+        if (vm().exception())
             return {};
     }
     return put_own_property_by_index(*this, property_index, value, default_attributes, PutOwnPropertyMode::Put);
@@ -736,7 +736,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
             }
         }
         object = object->prototype();
-        if (interpreter().exception())
+        if (vm().exception())
             return false;
     }
     return put_own_property(*this, string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put);
@@ -752,10 +752,10 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
     }
     auto* function = NativeFunction::create(global_object(), function_name, move(native_function));
     function->define_property("length", Value(length), Attribute::Configurable);
-    if (interpreter().exception())
+    if (vm().exception())
         return {};
     function->define_property("name", js_string(heap(), function_name), Attribute::Configurable);
-    if (interpreter().exception())
+    if (vm().exception())
         return {};
     return define_property(property_name, function, attribute);
 }
@@ -784,7 +784,7 @@ bool Object::has_property(const PropertyName& property_name) const
         if (object->has_own_property(property_name))
             return true;
         object = object->prototype();
-        if (interpreter().exception())
+        if (vm().exception())
             return false;
     }
     return false;
