@@ -93,6 +93,24 @@ GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         return {};
     }
 
+    if (role == GUI::ModelRole::Sort) {
+        const DeviceInfo& device = m_devices[index.row()];
+        switch (index.column()) {
+        case Column::Device:
+            return device.path;
+        case Column::Major:
+            return device.major;
+        case Column::Minor:
+            return device.minor;
+        case Column::ClassName:
+            return device.class_name;
+        case Column::Type:
+            return device.type;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
     if (role == GUI::ModelRole::Display) {
         const DeviceInfo& device = m_devices[index.row()];
         switch (index.column()) {
