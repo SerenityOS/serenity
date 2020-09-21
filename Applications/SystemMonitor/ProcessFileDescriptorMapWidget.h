@@ -39,5 +39,6 @@ private:
     ProcessFileDescriptorMapWidget();
 
     RefPtr<GUI::TableView> m_table_view;
+    RefPtr<GUI::JsonArrayModel> m_model;
     pid_t m_pid { -1 };
 };
