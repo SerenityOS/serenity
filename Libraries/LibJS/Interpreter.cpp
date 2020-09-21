@@ -223,7 +223,7 @@ Symbol* Interpreter::get_global_symbol(const String& description)
     return new_global_symbol;
 }
 
-void Interpreter::gather_roots(Badge<Heap>, HashTable<Cell*>& roots)
+void Interpreter::gather_roots(HashTable<Cell*>& roots)
 {
     roots.set(m_exception);
 

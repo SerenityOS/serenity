@@ -53,6 +53,8 @@ public:
         Interpreter& m_interpreter;
     };
 
+    void gather_roots(HashTable<Cell*>&);
+
 private:
     VM();
 

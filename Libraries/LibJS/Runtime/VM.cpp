@@ -82,4 +82,10 @@ VM::InterpreterScope::~InterpreterScope()
     m_interpreter.vm().pop_interpreter(m_interpreter);
 }
 
+void VM::gather_roots(HashTable<Cell*>& roots)
+{
+    for (auto* interpreter : m_interpreters)
+        interpreter->gather_roots(roots);
+}
+
 }
