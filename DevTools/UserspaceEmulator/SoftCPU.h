@@ -1122,12 +1122,16 @@ private:
 
     long double m_fpu[8];
     // FIXME: Shadow for m_fpu.
+
+    // FIXME: Use bits 11 to 13 in the FPU status word for this.
     unsigned m_fpu_top { ~0u };
+
     void fpu_push(long double n) { ++m_fpu_top; fpu_set(0, n); }
     long double fpu_pop() { auto n = fpu_get(0); m_fpu_top--; return n; }
     long double fpu_get(int i) { return m_fpu[m_fpu_top + i]; }
     void fpu_set(int i, long double n) { m_fpu[m_fpu_top + i] = n; }
 
+    // FIXME: Or just something like m_flags_tainted?
     ValueWithShadow<u16> m_fpu_cw { 0, 0 };
 
     const u8* m_cached_code_ptr { nullptr };
