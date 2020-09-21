@@ -60,7 +60,7 @@ Interpreter::~Interpreter()
 
 Value Interpreter::run(GlobalObject& global_object, const Program& program)
 {
-    VM::InterpreterScope scope(*this);
+    VM::InterpreterExecutionScope scope(*this);
 
     ASSERT(!exception());
 
@@ -253,7 +253,7 @@ Value Interpreter::call_internal(Function& function, Value this_value, Optional<
 {
     ASSERT(!exception());
 
-    VM::InterpreterScope scope(*this);
+    VM::InterpreterExecutionScope scope(*this);
 
     auto& call_frame = push_call_frame();
     call_frame.function_name = function.name();

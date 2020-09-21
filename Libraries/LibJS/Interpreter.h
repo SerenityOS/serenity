@@ -81,7 +81,7 @@ public:
     {
         DeferGC defer_gc(vm.heap());
         auto interpreter = adopt_own(*new Interpreter(vm));
-        VM::InterpreterScope scope(*interpreter);
+        VM::InterpreterExecutionScope scope(*interpreter);
         interpreter->m_global_object = make_handle(static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...)));
         static_cast<GlobalObjectType*>(interpreter->m_global_object.cell())->initialize();
         return interpreter;
