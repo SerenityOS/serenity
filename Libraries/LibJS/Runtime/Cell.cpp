@@ -51,6 +51,11 @@ Heap& Cell::heap() const
     return HeapBlock::from_cell(this)->heap();
 }
 
+VM& Cell::vm() const
+{
+    return heap().vm();
+}
+
 Interpreter& Cell::interpreter()
 {
     return heap().interpreter();
