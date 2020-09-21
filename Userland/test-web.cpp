@@ -304,6 +304,9 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     ASSERT(m_page_view->document());
     auto& old_interpreter = m_page_view->document()->interpreter();
 
+    // FIXME: This is a hack while we're refactoring Interpreter/VM stuff.
+    JS::VM::InterpreterExecutionScope scope(old_interpreter);
+
     if (!m_js_test_common) {
         auto result = parse_file(String::format("%s/test-common.js", m_js_test_root.characters()));
         if (result.is_error()) {
