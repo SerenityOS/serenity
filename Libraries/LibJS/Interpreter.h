@@ -135,7 +135,7 @@ public:
 
     Symbol* get_global_symbol(const String& description);
 
-    void gather_roots(Badge<Heap>, HashTable<Cell*>&);
+    void gather_roots(HashTable<Cell*>&);
 
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);

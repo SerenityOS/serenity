@@ -105,9 +105,7 @@ void Heap::collect_garbage(CollectionType collection_type, bool print_report)
 
 void Heap::gather_roots(HashTable<Cell*>& roots)
 {
-    if (auto* interpreter = vm().interpreter_if_exists())
-        interpreter->gather_roots({}, roots);
-
+    vm().gather_roots(roots);
     gather_conservative_roots(roots);
 
     for (auto* handle : m_handles)
