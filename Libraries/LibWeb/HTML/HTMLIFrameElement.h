@@ -44,6 +44,8 @@ public:
 
     const DOM::Document* content_document() const;
 
+    void content_frame_did_load(Badge<FrameLoader>);
+
 private:
     virtual void document_did_attach_to_frame(Frame&) override;
     virtual void document_will_detach_from_frame(Frame&) override;

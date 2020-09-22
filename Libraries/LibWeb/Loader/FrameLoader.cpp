@@ -31,6 +31,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -230,6 +231,12 @@ void FrameLoader::resource_did_load()
 
     if (!url.fragment().is_empty())
         frame().scroll_to_anchor(url.fragment());
+
+    if (auto* host_element = frame().host_element()) {
+        // FIXME: Perhaps in the future we'll have a better common base class for <frame> and <iframe>
+        ASSERT(is<HTML::HTMLIFrameElement>(*host_element));
+        downcast<HTML::HTMLIFrameElement>(*host_element).content_frame_did_load({});
+    }
 }
 
 void FrameLoader::resource_did_fail()

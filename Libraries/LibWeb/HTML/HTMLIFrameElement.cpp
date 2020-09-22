@@ -86,4 +86,9 @@ const DOM::Document* HTMLIFrameElement::content_document() const
     return m_content_frame ? m_content_frame->document() : nullptr;
 }
 
+void HTMLIFrameElement::content_frame_did_load(Badge<FrameLoader>)
+{
+    dispatch_event(DOM::Event::create("load"));
+}
+
 }
