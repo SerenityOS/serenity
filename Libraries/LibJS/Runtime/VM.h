@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <LibJS/Heap/Heap.h>
 
@@ -63,6 +64,13 @@ public:
 
     void gather_roots(HashTable<Cell*>&);
 
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    Symbol* well_known_symbol_##snake_name() const { return m_well_known_symbol_##snake_name; }
+    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
+
+    Symbol* get_global_symbol(const String& description);
+
 private:
     VM();
 
@@ -70,6 +78,13 @@ private:
 
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;
+
+    HashMap<String, Symbol*> m_global_symbol_map;
+
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    Symbol* m_well_known_symbol_##snake_name { nullptr };
+    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
 };
 
 }

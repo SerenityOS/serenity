@@ -702,7 +702,7 @@ Value instance_of(Interpreter& interpreter, Value lhs, Value rhs)
         interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
         return {};
     }
-    auto has_instance_method = rhs.as_object().get(interpreter.well_known_symbol_has_instance());
+    auto has_instance_method = rhs.as_object().get(interpreter.vm().well_known_symbol_has_instance());
     if (!has_instance_method.is_empty()) {
         if (!has_instance_method.is_function()) {
             interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());

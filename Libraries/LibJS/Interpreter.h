@@ -134,8 +134,6 @@ public:
 
     Reference get_reference(const FlyString& name);
 
-    Symbol* get_global_symbol(const String& description);
-
     void gather_roots(HashTable<Cell*>&);
 
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
@@ -228,11 +226,6 @@ public:
     const LexicalEnvironment* get_this_environment() const;
     Value get_new_target() const;
 
-#define __JS_ENUMERATE(SymbolName, snake_name) \
-    Symbol* well_known_symbol_##snake_name() const { return m_well_known_symbol_##snake_name; }
-    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
-#undef __JS_ENUMERATE
-
 private:
     explicit Interpreter(VM&);
 
@@ -253,13 +246,6 @@ private:
     bool m_underscore_is_last_value { false };
 
     Console m_console;
-
-    HashMap<String, Symbol*> m_global_symbol_map;
-
-#define __JS_ENUMERATE(SymbolName, snake_name) \
-    Symbol* m_well_known_symbol_##snake_name { nullptr };
-    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
-#undef __JS_ENUMERATE
 };
 
 template<>

@@ -25,6 +25,7 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
@@ -37,6 +38,10 @@ NonnullRefPtr<VM> VM::create()
 VM::VM()
     : m_heap(*this)
 {
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
+    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
 }
 
 VM::~VM()
@@ -85,6 +90,25 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(m_exception);
     for (auto* interpreter : m_interpreters)
         interpreter->gather_roots(roots);
+
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    roots.set(well_known_symbol_##snake_name());
+    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
+
+    for (auto& symbol : m_global_symbol_map)
+        roots.set(symbol.value);
+}
+
+Symbol* VM::get_global_symbol(const String& description)
+{
+    auto result = m_global_symbol_map.get(description);
+    if (result.has_value())
+        return result.value();
+
+    auto new_global_symbol = js_symbol(*this, description, true);
+    m_global_symbol_map.set(description, new_global_symbol);
+    return new_global_symbol;
 }
 
 }

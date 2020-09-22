@@ -75,7 +75,7 @@ void MathObject::initialize(GlobalObject& global_object)
     define_property("SQRT1_2", Value(M_SQRT1_2), 0);
     define_property("SQRT2", Value(M_SQRT2), 0);
 
-    define_property(global_object.interpreter().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Math"), Attribute::Configurable);
+    define_property(global_object.vm().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Math"), Attribute::Configurable);
 }
 
 MathObject::~MathObject()

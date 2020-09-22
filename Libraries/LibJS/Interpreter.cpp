@@ -48,10 +48,6 @@ Interpreter::Interpreter(VM& vm)
     : m_vm(vm)
     , m_console(*this)
 {
-#define __JS_ENUMERATE(SymbolName, snake_name) \
-    m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
-    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
-#undef __JS_ENUMERATE
 }
 
 Interpreter::~Interpreter()
@@ -212,17 +208,6 @@ Reference Interpreter::get_reference(const FlyString& name)
     return { Reference::GlobalVariable, name };
 }
 
-Symbol* Interpreter::get_global_symbol(const String& description)
-{
-    auto result = m_global_symbol_map.get(description);
-    if (result.has_value())
-        return result.value();
-
-    auto new_global_symbol = js_symbol(*this, description, true);
-    m_global_symbol_map.set(description, new_global_symbol);
-    return new_global_symbol;
-}
-
 void Interpreter::gather_roots(HashTable<Cell*>& roots)
 {
     if (m_last_value.is_cell())
@@ -237,14 +222,6 @@ void Interpreter::gather_roots(HashTable<Cell*>& roots)
         }
         roots.set(call_frame.environment);
     }
-
-#define __JS_ENUMERATE(SymbolName, snake_name) \
-    roots.set(well_known_symbol_##snake_name());
-    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
-#undef __JS_ENUMERATE
-
-    for (auto& symbol : m_global_symbol_map)
-        roots.set(symbol.value);
 }
 
 Value Interpreter::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)

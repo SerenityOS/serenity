@@ -47,7 +47,7 @@ void SymbolConstructor::initialize(GlobalObject& global_object)
     define_native_function("keyFor", key_for, 1, Attribute::Writable | Attribute::Configurable);
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    define_property(#SymbolName, global_object.interpreter().well_known_symbol_##snake_name(), 0);
+    define_property(#SymbolName, global_object.vm().well_known_symbol_##snake_name(), 0);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 }
@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
         description = interpreter.argument(0).to_string(interpreter);
     }
 
-    return interpreter.get_global_symbol(description);
+    return global_object.vm().get_global_symbol(description);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
