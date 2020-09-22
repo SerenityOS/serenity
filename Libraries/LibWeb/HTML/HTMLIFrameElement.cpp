@@ -57,8 +57,8 @@ RefPtr<LayoutNode> HTMLIFrameElement::create_layout_node(const CSS::StylePropert
 
 void HTMLIFrameElement::document_did_attach_to_frame(Frame& frame)
 {
-    ASSERT(!m_hosted_frame);
-    m_hosted_frame = Frame::create_subframe(*this, frame.main_frame());
+    ASSERT(!m_content_frame);
+    m_content_frame = Frame::create_subframe(*this, frame.main_frame());
     auto src = attribute(HTML::AttributeNames::src);
     if (src.is_null())
         return;
@@ -78,12 +78,12 @@ void HTMLIFrameElement::load_src(const String& value)
         return;
     }
 
-    m_hosted_frame->loader().load(url, FrameLoader::Type::IFrame);
+    m_content_frame->loader().load(url, FrameLoader::Type::IFrame);
 }
 
 const DOM::Document* HTMLIFrameElement::content_document() const
 {
-    return m_hosted_frame ? m_hosted_frame->document() : nullptr;
+    return m_content_frame ? m_content_frame->document() : nullptr;
 }
 
 }

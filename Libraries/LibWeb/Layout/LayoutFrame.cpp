@@ -50,7 +50,7 @@ LayoutFrame::~LayoutFrame()
 
 void LayoutFrame::layout(LayoutMode layout_mode)
 {
-    ASSERT(node().hosted_frame());
+    ASSERT(node().content_frame());
 
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
@@ -79,14 +79,14 @@ void LayoutFrame::paint(PaintContext& context, PaintPhase phase)
         context.painter().add_clip_rect(enclosing_int_rect(absolute_rect()));
         context.painter().translate(absolute_x(), absolute_y());
 
-        context.set_viewport_rect({ {}, node().hosted_frame()->size() });
+        context.set_viewport_rect({ {}, node().content_frame()->size() });
         const_cast<LayoutDocument*>(hosted_layout_tree)->paint_all_phases(context);
 
         context.set_viewport_rect(old_viewport_rect);
         context.painter().restore();
 
 #ifdef DEBUG_HIGHLIGHT_FOCUSED_FRAME
-        if (node().hosted_frame()->is_focused_frame()) {
+        if (node().content_frame()->is_focused_frame()) {
             context.painter().draw_rect(absolute_rect().to<int>(), Color::Cyan);
         }
 #endif
@@ -97,8 +97,8 @@ void LayoutFrame::did_set_rect()
 {
     LayoutReplaced::did_set_rect();
 
-    ASSERT(node().hosted_frame());
-    node().hosted_frame()->set_size(size().to_type<int>());
+    ASSERT(node().content_frame());
+    node().content_frame()->set_size(size().to_type<int>());
 }
 
 }
