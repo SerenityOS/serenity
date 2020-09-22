@@ -238,12 +238,9 @@ public:
     }
 
     static String format(const char*, ...);
-    static String number(unsigned);
-    static String number(unsigned long);
-    static String number(unsigned long long);
-    static String number(int);
-    static String number(long);
-    static String number(long long);
+
+    template<typename T>
+    static String number(T);
 
     StringView view() const;
 
