@@ -99,6 +99,12 @@ String format(StringView fmtstr, const Parameters&... parameters)
     Array formatters { Detail::Format::make_type_erased_formatter(parameters)... };
     return Detail::Format::format(fmtstr, formatters);
 }
+template<typename... Parameters>
+void format(StringBuilder& builder, StringView fmtstr, const Parameters&... parameters)
+{
+    Array formatters { Detail::Format::make_type_erased_formatter(parameters)... };
+    Detail::Format::format(builder, fmtstr, formatters);
+}
 
 template<typename... Parameters>
 void StringBuilder::appendff(StringView fmtstr, const Parameters&... parameters) { AK::format(*this, fmtstr, parameters...); }

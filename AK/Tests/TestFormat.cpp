@@ -65,4 +65,13 @@ TEST_CASE(everything)
     EXPECT_EQ(AK::format("{{{:04}/{}/{0:8}/{1}", 42u, "foo"), "{0042/foo/      42/foo");
 }
 
+TEST_CASE(string_builder)
+{
+    StringBuilder builder;
+    builder.appendff(" {}  ", 42);
+    builder.appendff("{1}{0} ", 1, 2);
+
+    EXPECT_EQ(builder.to_string(), " 42  21 ");
+}
+
 TEST_MAIN(Format)
