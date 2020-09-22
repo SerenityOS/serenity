@@ -28,6 +28,7 @@
 
 #include <AK/Array.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 
 namespace AK {
 

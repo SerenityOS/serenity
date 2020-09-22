@@ -71,12 +71,19 @@ static void write_escaped_literal(StringBuilder& builder, StringView literal)
             ++idx;
     }
 }
+
 static size_t parse_number(StringView input)
 {
-    String null_terminated { input };
-    char* endptr;
-    return strtoull(null_terminated.characters(), &endptr, 10);
+    size_t value = 0;
+
+    for (char ch : input) {
+        value *= 10;
+        value += ch - '0';
+    }
+
+    return value;
 }
+
 static bool parse_format_specifier(StringView input, FormatSpecifier& specifier)
 {
     specifier.index = NumericLimits<size_t>::max();
