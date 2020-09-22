@@ -445,8 +445,9 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/Bindings/NodeWrapperFactory.h>";
     out() << "#include <LibWeb/Bindings/" << wrapper_class << ".h>";
     out() << "#include <LibWeb/DOM/Element.h>";
-    out() << "#include <LibWeb/HTML/HTMLElement.h>";
     out() << "#include <LibWeb/DOM/EventListener.h>";
+    out() << "#include <LibWeb/HTML/HTMLElement.h>";
+    out() << "#include <LibWeb/Origin.h>";
     out() << "#include <LibWeb/Bindings/CommentWrapper.h>";
     out() << "#include <LibWeb/Bindings/DocumentWrapper.h>";
     out() << "#include <LibWeb/Bindings/DocumentFragmentWrapper.h>";
@@ -457,6 +458,7 @@ void generate_implementation(const IDL::Interface& interface)
     out() << "#include <LibWeb/Bindings/ImageDataWrapper.h>";
     out() << "#include <LibWeb/Bindings/TextWrapper.h>";
     out() << "#include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>";
+    out() << "#include <LibWeb/Bindings/WindowObject.h>";
 
     // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
     out() << "using namespace Web::DOM;";
@@ -605,6 +607,11 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "    auto* impl = impl_from(interpreter, global_object);";
         out() << "    if (!impl)";
         out() << "        return {};";
+
+        if (attribute.extended_attributes.contains("ReturnNullIfCrossOrigin")) {
+            out() << "    if (!impl->may_access_from_origin(static_cast<WindowObject&>(global_object).origin()))";
+            out() << "        return JS::js_null();";
+        }
 
         if (attribute.extended_attributes.contains("Reflect")) {
             auto attribute_name = attribute.extended_attributes.get("Reflect").value();

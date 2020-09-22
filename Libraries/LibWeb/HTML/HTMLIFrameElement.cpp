@@ -26,17 +26,20 @@
 
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
+#include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/LayoutFrame.h>
 #include <LibWeb/Layout/LayoutWidget.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Origin.h>
 #include <LibWeb/Page/Frame.h>
-#include <LibWeb/InProcessWebView.h>
 
 namespace Web::HTML {
 
@@ -79,6 +82,18 @@ void HTMLIFrameElement::load_src(const String& value)
     }
 
     m_content_frame->loader().load(url, FrameLoader::Type::IFrame);
+}
+
+Origin HTMLIFrameElement::content_origin() const
+{
+    if (!m_content_frame || !m_content_frame->document())
+        return {};
+    return m_content_frame->document()->origin();
+}
+
+bool HTMLIFrameElement::may_access_from_origin(const Origin& origin) const
+{
+    return origin.is_same(content_origin());
 }
 
 const DOM::Document* HTMLIFrameElement::content_document() const
