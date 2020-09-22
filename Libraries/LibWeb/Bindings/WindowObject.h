@@ -44,6 +44,8 @@ public:
     DOM::Window& impl() { return *m_impl; }
     const DOM::Window& impl() const { return *m_impl; }
 
+    Origin origin() const;
+
     XMLHttpRequestPrototype* xhr_prototype() { return m_xhr_prototype; }
     XMLHttpRequestConstructor* xhr_constructor() { return m_xhr_constructor; }
 
