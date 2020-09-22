@@ -39,8 +39,8 @@ public:
 
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
-    Frame* hosted_frame() { return m_hosted_frame; }
-    const Frame* hosted_frame() const { return m_hosted_frame; }
+    Frame* content_frame() { return m_content_frame; }
+    const Frame* content_frame() const { return m_content_frame; }
 
     const DOM::Document* content_document() const;
 
@@ -50,7 +50,7 @@ private:
 
     void load_src(const String&);
 
-    RefPtr<Frame> m_hosted_frame;
+    RefPtr<Frame> m_content_frame;
 };
 
 }
