@@ -135,6 +135,7 @@ class ImageData;
 namespace Web {
 class EventHandler;
 class Frame;
+class FrameLoader;
 class LayoutBlock;
 class LayoutButton;
 class LayoutCheckBox;
