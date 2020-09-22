@@ -89,7 +89,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function("includes", includes, 1, attr);
     define_native_function("slice", slice, 2, attr);
     define_native_function("lastIndexOf", last_index_of, 1, attr);
-    define_native_function(global_object.interpreter().well_known_symbol_iterator(), symbol_iterator, 0, attr);
+    define_native_function(global_object.vm().well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
 StringPrototype::~StringPrototype()

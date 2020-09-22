@@ -51,7 +51,7 @@ void FunctionPrototype::initialize(GlobalObject& global_object)
     define_native_function("bind", bind, 1, attr);
     define_native_function("call", call, 1, attr);
     define_native_function("toString", to_string, 0, attr);
-    define_native_function(global_object.interpreter().well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
+    define_native_function(global_object.vm().well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
     define_property("length", Value(0), Attribute::Configurable);
     define_property("name", js_string(heap(), ""), Attribute::Configurable);
 }

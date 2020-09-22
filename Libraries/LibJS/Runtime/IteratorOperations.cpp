@@ -41,7 +41,7 @@ Object* get_iterator(GlobalObject& global_object, Value value, String hint, Valu
         auto object = value.to_object(interpreter, global_object);
         if (!object)
             return {};
-        method = object->get(interpreter.well_known_symbol_iterator());
+        method = object->get(global_object.vm().well_known_symbol_iterator());
         if (interpreter.exception())
             return {};
     }
