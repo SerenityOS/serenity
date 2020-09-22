@@ -209,6 +209,7 @@ set(AK_SOURCES
     ../AK/StringUtils.cpp
     ../AK/StringView.cpp
     ../AK/Time.cpp
+    ../AK/Format.cpp
 )
 
 set(ELF_SOURCES
