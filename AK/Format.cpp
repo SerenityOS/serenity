@@ -182,13 +182,18 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
 
 template struct Formatter<StringView>;
 template struct Formatter<String>;
-template struct Formatter<u8, void>;
-template struct Formatter<u16, void>;
-template struct Formatter<u32, void>;
-template struct Formatter<u64, void>;
-template struct Formatter<i8, void>;
-template struct Formatter<i16, void>;
-template struct Formatter<i32, void>;
-template struct Formatter<i64, void>;
+template struct Formatter<unsigned char, void>;
+template struct Formatter<unsigned short, void>;
+template struct Formatter<unsigned int, void>;
+template struct Formatter<unsigned long, void>;
+template struct Formatter<unsigned long long, void>;
+template struct Formatter<char, void>;
+template struct Formatter<short, void>;
+template struct Formatter<int, void>;
+template struct Formatter<long, void>;
+template struct Formatter<long long, void>;
+
+// C++ is weird.
+template struct Formatter<signed char, void>;
 
 } // namespace AK
