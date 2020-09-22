@@ -26,11 +26,6 @@
 
 #pragma once
 
-typedef __UINT64_TYPE__ u64;
-typedef __UINT32_TYPE__ u32;
-typedef __UINT16_TYPE__ u16;
-typedef __UINT8_TYPE__ u8;
-
 #define UNUSED_PARAM(x) (void)x
 
 inline constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned power_of_two)
@@ -461,16 +456,19 @@ template<typename T>
 struct __IsIntegral : FalseType {
 };
 template<>
-struct __IsIntegral<u8> : TrueType {
+struct __IsIntegral<unsigned char> : TrueType {
 };
 template<>
-struct __IsIntegral<u16> : TrueType {
+struct __IsIntegral<unsigned short> : TrueType {
 };
 template<>
-struct __IsIntegral<u32> : TrueType {
+struct __IsIntegral<unsigned int> : TrueType {
 };
 template<>
-struct __IsIntegral<u64> : TrueType {
+struct __IsIntegral<unsigned long> : TrueType {
+};
+template<>
+struct __IsIntegral<unsigned long long> : TrueType {
 };
 template<typename T>
 using IsIntegral = __IsIntegral<typename MakeUnsigned<typename RemoveCV<T>::Type>::Type>;
