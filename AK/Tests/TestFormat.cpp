@@ -43,7 +43,7 @@ TEST_CASE(format_integers)
     EXPECT_EQ(AK::format("{}", -17), "-17");
     EXPECT_EQ(AK::format("{:04}", 13), "0013");
     EXPECT_EQ(AK::format("{:08x}", 4096), "00001000");
-    // EXPECT_EQ(AK::format("{}", 0x1111222233334444ull), "1111222233334444");
+    EXPECT_EQ(AK::format("{:x}", 0x1111222233334444ull), "1111222233334444");
 }
 
 TEST_CASE(reorder_format_arguments)
