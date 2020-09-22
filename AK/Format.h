@@ -100,4 +100,7 @@ String format(StringView fmtstr, const Parameters&... parameters)
     return Detail::Format::format(fmtstr, formatters);
 }
 
-}
+template<typename... Parameters>
+void StringBuilder::appendff(StringView fmtstr, const Parameters&... parameters) { AK::format(*this, fmtstr, parameters...); }
+
+} // namespace AK
