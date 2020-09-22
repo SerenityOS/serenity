@@ -44,6 +44,7 @@
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/Origin.h>
 
 namespace Web {
 namespace Bindings {
@@ -91,6 +92,11 @@ void WindowObject::visit_children(Visitor& visitor)
     GlobalObject::visit_children(visitor);
     visitor.visit(m_xhr_constructor);
     visitor.visit(m_xhr_prototype);
+}
+
+Origin WindowObject::origin() const
+{
+    return impl().document().origin();
 }
 
 static DOM::Window* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
