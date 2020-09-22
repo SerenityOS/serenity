@@ -46,7 +46,7 @@ String UserOrKernelBuffer::copy_into_string(size_t size) const
         return data_copy;
     }
 
-    return String({ m_buffer, size });
+    return String(ReadonlyBytes { m_buffer, size });
 }
 
 bool UserOrKernelBuffer::write(const void* src, size_t offset, size_t len)
@@ -80,7 +80,7 @@ bool UserOrKernelBuffer::memset(int value, size_t offset, size_t len)
 
     if (is_user_address(VirtualAddress(m_buffer)))
         return memset_user(m_buffer + offset, value, len);
-    
+
     ::memset(m_buffer + offset, value, len);
     return true;
 }
