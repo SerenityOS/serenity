@@ -71,6 +71,8 @@ public:
 
     Symbol* get_global_symbol(const String& description);
 
+    PrimitiveString& empty_string() { return *m_empty_string; }
+
 private:
     VM();
 
@@ -80,6 +82,8 @@ private:
     Vector<Interpreter*> m_interpreters;
 
     HashMap<String, Symbol*> m_global_symbol_map;
+
+    PrimitiveString* m_empty_string { nullptr };
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     Symbol* m_well_known_symbol_##snake_name { nullptr };

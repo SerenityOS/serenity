@@ -41,6 +41,8 @@ PrimitiveString::~PrimitiveString()
 
 PrimitiveString* js_string(Heap& heap, String string)
 {
+    if (string.is_empty())
+        return &heap.vm().empty_string();
     return heap.allocate_without_global_object<PrimitiveString>(move(string));
 }
 
