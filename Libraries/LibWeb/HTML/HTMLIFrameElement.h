@@ -44,6 +44,9 @@ public:
 
     const DOM::Document* content_document() const;
 
+    Origin content_origin() const;
+    bool may_access_from_origin(const Origin&) const;
+
     void content_frame_did_load(Badge<FrameLoader>);
 
 private:
