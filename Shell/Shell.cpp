@@ -48,14 +48,66 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
 
 static bool s_disable_hyperlinks = false;
-extern RefPtr<Line::Editor> editor;
 extern char** environ;
 
 //#define SH_DEBUG
+
+void Shell::setup_signals()
+{
+    Core::EventLoop::register_signal(SIGCHLD, [this](int) {
+        Vector<u64> disowned_jobs;
+        for (auto& it : jobs) {
+            auto job_id = it.key;
+            auto& job = *it.value;
+            int wstatus = 0;
+            auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
+            if (child_pid < 0) {
+                if (errno == ECHILD) {
+                    // The child process went away before we could process its death, just assume it exited all ok.
+                    // FIXME: This should never happen, the child should stay around until we do the waitpid above.
+                    dbg() << "Child process gone, cannot get exit code for " << job_id;
+                    child_pid = job.pid();
+                } else {
+                    ASSERT_NOT_REACHED();
+                }
+            }
+#ifndef __serenity__
+            if (child_pid == 0) {
+                // Linux: if child didn't "change state", but existed.
+                continue;
+            }
+#endif
+            if (child_pid == job.pid()) {
+                if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
+                    job.set_signalled(WTERMSIG(wstatus));
+                } else if (WIFEXITED(wstatus)) {
+                    job.set_has_exit(WEXITSTATUS(wstatus));
+                } else if (WIFSTOPPED(wstatus)) {
+                    job.unblock();
+                    job.set_is_suspended(true);
+                }
+            }
+            if (job.should_be_disowned())
+                disowned_jobs.append(job_id);
+        }
+        for (auto job_id : disowned_jobs)
+            jobs.remove(job_id);
+    });
+
+    Core::EventLoop::register_signal(SIGTSTP, [this](auto) {
+        auto job = current_job();
+        kill_job(job, SIGTSTP);
+        if (job) {
+            job->set_is_suspended(true);
+            job->unblock();
+        }
+    });
+}
 
 void Shell::print_path(const String& path)
 {
@@ -942,7 +994,7 @@ void Shell::load_history()
     while (history_file->can_read_line()) {
         auto b = history_file->read_line(1024);
         // skip the newline and terminating bytes
-        editor->add_to_history(String(reinterpret_cast<const char*>(b.data()), b.size() - 2));
+        m_editor->add_to_history(String(reinterpret_cast<const char*>(b.data()), b.size() - 2));
     }
 }
 
@@ -952,7 +1004,7 @@ void Shell::save_history()
     if (file_or_error.is_error())
         return;
     auto& file = *file_or_error.value();
-    for (const auto& line : editor->history()) {
+    for (const auto& line : m_editor->history()) {
         file.write(line);
         file.write("\n");
     }
@@ -1079,9 +1131,9 @@ void Shell::highlight(Line::Editor& editor) const
     ast->highlight_in_editor(editor, const_cast<Shell&>(*this));
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete(const Line::Editor& editor)
+Vector<Line::CompletionSuggestion> Shell::complete()
 {
-    auto line = editor.line(editor.cursor());
+    auto line = m_editor->line(m_editor->cursor());
 
     Parser parser(line);
 
@@ -1133,7 +1185,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
     auto token_length = escape_token(token).length();
-    editor->suggest(token_length, original_token.length() - token_length);
+    m_editor->suggest(token_length, original_token.length() - token_length);
 
     // only suggest dot-files if path starts with a dot
     Core::DirIterator files(path,
@@ -1170,7 +1222,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
         return complete_path("", name, offset);
 
     String completion = *match;
-    editor->suggest(escape_token(name).length(), 0);
+    m_editor->suggest(escape_token(name).length(), 0);
 
     // Now that we have a program name starting with our token, we look at
     // other program names starting with our token and cut off any mismatching
@@ -1195,7 +1247,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, 
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
 
-    editor->suggest(offset);
+    m_editor->suggest(offset);
 
     // Look at local variables.
     for (auto& frame : m_local_frames) {
@@ -1227,7 +1279,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
 
-    editor->suggest(offset);
+    m_editor->suggest(offset);
 
     Core::DirIterator di("/home", Core::DirIterator::SkipParentAndBaseDir);
 
@@ -1249,7 +1301,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
     while (start < option.length() && option[start] == '-' && start < 2)
         ++start;
     auto option_pattern = offset > start ? option.substring_view(start, offset - start) : "";
-    editor->suggest(offset);
+    m_editor->suggest(offset);
 
     Vector<Line::CompletionSuggestion> suggestions;
 
@@ -1288,8 +1340,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
 void Shell::bring_cursor_to_beginning_of_a_line() const
 {
     struct winsize ws;
-    if (editor) {
-        ws = editor->terminal_size();
+    if (m_editor) {
+        ws = m_editor->terminal_size();
     } else {
         if (ioctl(STDERR_FILENO, TIOCGWINSZ, &ws) < 0) {
             // Very annoying assumptions.
@@ -1321,7 +1373,7 @@ bool Shell::read_single_line()
 {
     restore_ios();
     bring_cursor_to_beginning_of_a_line();
-    auto line_result = editor->get_line(prompt());
+    auto line_result = m_editor->get_line(prompt());
 
     if (line_result.is_error()) {
         if (line_result.error() == Line::Editor::Error::Eof || line_result.error() == Line::Editor::Error::Empty) {
@@ -1347,7 +1399,7 @@ bool Shell::read_single_line()
 
     run_command(m_complete_line_builder.string_view());
 
-    editor->add_to_history(m_complete_line_builder.build());
+    m_editor->add_to_history(m_complete_line_builder.build());
     m_complete_line_builder.clear();
     return true;
 }
@@ -1361,7 +1413,8 @@ void Shell::custom_event(Core::CustomEvent& event)
     }
 }
 
-Shell::Shell()
+Shell::Shell(Line::Editor& editor)
+    : m_editor(editor)
 {
     uid = getuid();
     tcsetpgrp(0, getpgrp());
@@ -1492,4 +1545,53 @@ void Shell::save_to(JsonObject& object)
         job_objects.append(move(job_object));
     }
     object.set("jobs", move(job_objects));
+}
+
+void FileDescriptionCollector::collect()
+{
+    for (auto fd : m_fds)
+        close(fd);
+    m_fds.clear();
+}
+
+FileDescriptionCollector::~FileDescriptionCollector()
+{
+    collect();
+}
+
+void FileDescriptionCollector::add(int fd)
+{
+    m_fds.append(fd);
+}
+
+SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>& intended_rewirings)
+{
+    for (auto& rewiring : intended_rewirings) {
+        int new_fd = dup(rewiring.source_fd);
+        if (new_fd < 0) {
+            if (errno != EBADF)
+                perror("dup");
+            // The fd that will be overwritten isn't open right now,
+            // it will be cleaned up by the exec()-side collector
+            // and we have nothing to do here, so just ignore this error.
+            continue;
+        }
+
+        auto flags = fcntl(new_fd, F_GETFL);
+        auto rc = fcntl(new_fd, F_SETFL, flags | FD_CLOEXEC);
+        ASSERT(rc == 0);
+
+        m_saves.append({ rewiring.source_fd, new_fd });
+        m_collector.add(new_fd);
+    }
+}
+
+SavedFileDescriptors::~SavedFileDescriptors()
+{
+    for (auto& save : m_saves) {
+        if (dup2(save.saved, save.original) < 0) {
+            perror("dup2(~SavedFileDescriptors)");
+            continue;
+        }
+    }
 }
