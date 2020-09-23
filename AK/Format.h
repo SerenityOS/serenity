@@ -96,13 +96,13 @@ struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> {
 template<typename... Parameters>
 String format(StringView fmtstr, const Parameters&... parameters)
 {
-    Array formatters { Detail::Format::make_type_erased_formatter(parameters)... };
+    Array<Detail::Format::TypeErasedFormatter, sizeof...(parameters)> formatters { Detail::Format::make_type_erased_formatter(parameters)... };
     return Detail::Format::format(fmtstr, formatters);
 }
 template<typename... Parameters>
 void format(StringBuilder& builder, StringView fmtstr, const Parameters&... parameters)
 {
-    Array formatters { Detail::Format::make_type_erased_formatter(parameters)... };
+    Array<Detail::Format::TypeErasedFormatter, sizeof...(parameters)> formatters { Detail::Format::make_type_erased_formatter(parameters)... };
     Detail::Format::format(builder, fmtstr, formatters);
 }
 

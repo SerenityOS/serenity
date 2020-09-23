@@ -74,4 +74,9 @@ TEST_CASE(string_builder)
     EXPECT_EQ(builder.to_string(), " 42  21 ");
 }
 
+TEST_CASE(format_without_arguments)
+{
+    EXPECT_EQ(AK::format("foo"), "foo");
+}
+
 TEST_MAIN(Format)
