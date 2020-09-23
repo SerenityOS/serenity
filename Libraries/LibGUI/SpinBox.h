@@ -51,7 +51,6 @@ public:
 protected:
     SpinBox();
 
-    virtual void keydown_event(KeyEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 

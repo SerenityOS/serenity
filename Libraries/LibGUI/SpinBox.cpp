@@ -41,6 +41,12 @@ SpinBox::SpinBox()
         else
             m_editor->set_text(String::number(m_value));
     };
+    m_editor->on_up_pressed = [this] {
+        set_value(m_value + 1);
+    };
+    m_editor->on_down_pressed = [this] {
+        set_value(m_value - 1);
+    };
 
     m_increment_button = add<ControlBoxButton>(ControlBoxButton::UpArrow);
     m_increment_button->set_focusable(false);
@@ -86,20 +92,6 @@ void SpinBox::set_range(int min, int max)
     }
 
     update();
-}
-
-void SpinBox::keydown_event(KeyEvent& event)
-{
-    if (event.key() == KeyCode::Key_Up) {
-        set_value(m_value + 1);
-        return;
-    }
-    if (event.key() == KeyCode::Key_Down) {
-        set_value(m_value - 1);
-        return;
-    }
-
-    event.ignore();
 }
 
 void SpinBox::mousewheel_event(MouseEvent& event)
