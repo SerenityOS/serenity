@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>

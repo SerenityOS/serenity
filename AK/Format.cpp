@@ -27,9 +27,10 @@
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
 #include <AK/PrintfImplementation.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
-namespace AK::Detail::Format {
+namespace {
 
 struct FormatSpecifier {
     StringView flags;
@@ -102,14 +103,11 @@ static bool parse_format_specifier(StringView input, FormatSpecifier& specifier)
     return true;
 }
 
-String format(StringView fmtstr, AK::Span<TypeErasedFormatter> formatters, size_t argument_index)
-{
-    StringBuilder builder;
-    format(builder, fmtstr, formatters, argument_index);
-    return builder.to_string();
-}
+} // namespace
 
-void format(StringBuilder& builder, StringView fmtstr, AK::Span<TypeErasedFormatter> formatters, size_t argument_index)
+namespace AK {
+
+void vformat(StringBuilder& builder, StringView fmtstr, AK::Span<const TypeErasedParameter> parameters, size_t argument_index)
 {
     size_t opening;
     if (!find_next_unescaped(opening, fmtstr, '{')) {
@@ -135,19 +133,24 @@ void format(StringBuilder& builder, StringView fmtstr, AK::Span<TypeErasedFormat
     if (specifier.index == NumericLimits<size_t>::max())
         specifier.index = argument_index++;
 
-    if (specifier.index >= formatters.size())
+    if (specifier.index >= parameters.size())
         ASSERT_NOT_REACHED();
 
-    auto& formatter = formatters[specifier.index];
-    if (!formatter.format(builder, formatter.parameter, specifier.flags))
+    auto& parameter = parameters[specifier.index];
+    if (!parameter.formatter(builder, parameter.value, specifier.flags))
         ASSERT_NOT_REACHED();
 
-    format(builder, fmtstr.substring_view(closing + 1), formatters, argument_index);
+    vformat(builder, fmtstr.substring_view(closing + 1), parameters, argument_index);
 }
 
-} // namespace AK::Detail::Format
-
-namespace AK {
+bool Formatter<StringView>::parse(StringView flags)
+{
+    return flags.is_empty();
+}
+void Formatter<StringView>::format(StringBuilder& builder, StringView value)
+{
+    builder.append(value);
+}
 
 template<typename T>
 bool Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::parse(StringView flags)
@@ -159,14 +162,13 @@ bool Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::parse(StringVi
 
     auto field_width = lexer.consume_while([](char ch) { return StringView { "0123456789" }.contains(ch); });
     if (field_width.length() > 0)
-        this->field_width = Detail::Format::parse_number(field_width);
+        this->field_width = parse_number(field_width);
 
     if (lexer.consume_specific('x'))
         hexadecimal = true;
 
     return lexer.is_eof();
 }
-
 template<typename T>
 void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringBuilder& builder, T value)
 {
@@ -180,8 +182,6 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
         PrintfImplementation::print_i64([&](auto, char ch) { builder.append(ch); }, bufptr, value, false, zero_pad, field_width);
 }
 
-template struct Formatter<StringView>;
-template struct Formatter<String>;
 template struct Formatter<unsigned char, void>;
 template struct Formatter<unsigned short, void>;
 template struct Formatter<unsigned int, void>;
@@ -192,8 +192,6 @@ template struct Formatter<short, void>;
 template struct Formatter<int, void>;
 template struct Formatter<long, void>;
 template struct Formatter<long long, void>;
-
-// C++ is weird.
 template struct Formatter<signed char, void>;
 
 } // namespace AK
