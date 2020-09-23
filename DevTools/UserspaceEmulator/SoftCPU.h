@@ -1137,7 +1137,7 @@ ALWAYS_INLINE u8 SoftCPU::read8()
 
 ALWAYS_INLINE u16 SoftCPU::read16()
 {
-    if (!m_cached_code_ptr || (m_cached_code_ptr + 2) >= m_cached_code_end)
+    if (!m_cached_code_ptr || (m_cached_code_ptr + 1) >= m_cached_code_end)
         update_code_cache();
 
     u16 value = *reinterpret_cast<const u16*>(m_cached_code_ptr);
@@ -1148,7 +1148,7 @@ ALWAYS_INLINE u16 SoftCPU::read16()
 
 ALWAYS_INLINE u32 SoftCPU::read32()
 {
-    if (!m_cached_code_ptr || (m_cached_code_ptr + 4) >= m_cached_code_end)
+    if (!m_cached_code_ptr || (m_cached_code_ptr + 3) >= m_cached_code_end)
         update_code_cache();
 
     u32 value = *reinterpret_cast<const u32*>(m_cached_code_ptr);
@@ -1159,7 +1159,7 @@ ALWAYS_INLINE u32 SoftCPU::read32()
 
 ALWAYS_INLINE u64 SoftCPU::read64()
 {
-    if (!m_cached_code_ptr || (m_cached_code_ptr + 8) >= m_cached_code_end)
+    if (!m_cached_code_ptr || (m_cached_code_ptr + 7) >= m_cached_code_end)
         update_code_cache();
 
     u64 value = *reinterpret_cast<const u64*>(m_cached_code_ptr);
