@@ -1,4 +1,5 @@
 set(SOURCES
+    AnalogClockWidget.cpp
     main.cpp
 )
 

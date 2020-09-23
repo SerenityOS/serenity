@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "AnalogClockWidget.h"
 #include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
@@ -57,6 +58,32 @@ public:
                 last_update_time = now;
             }
         });
+
+        m_clock_window = add<GUI::Window>(window());
+        m_clock_window->set_frameless(true);
+        m_clock_window->set_resizable(false);
+        m_clock_window->set_minimizable(false);
+        m_clock_window->on_active_input_change = [this](bool is_active_input) {
+            if (!is_active_input)
+                m_clock_window->hide();
+        };
+
+        auto& analog_clock_container = m_clock_window->set_main_widget<GUI::Label>();
+        analog_clock_container.set_fill_with_background_color(true);
+        analog_clock_container.set_preferred_size(170, 170);
+        analog_clock_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+        analog_clock_container.set_layout<GUI::VerticalBoxLayout>();
+        analog_clock_container.layout()->set_margins({ 2, 4, 2, 2 });
+        analog_clock_container.layout()->set_spacing(0);
+        analog_clock_container.set_frame_thickness(2);
+        analog_clock_container.set_frame_shape(Gfx::FrameShape::Container);
+        analog_clock_container.set_frame_shadow(Gfx::FrameShadow::Raised);
+
+        auto& clock_widget = analog_clock_container.add<GUI::Widget>();
+        clock_widget.set_preferred_size(160, 160);
+        clock_widget.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+        clock_widget.set_layout<GUI::HorizontalBoxLayout>();
+        m_analog_clock_widget = clock_widget.add<AnalogClockWidget>();
 
         m_calendar_window = add<GUI::Window>(window());
         m_calendar_window->set_frameless(true);
@@ -227,21 +254,29 @@ private:
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
-        auto time_text = Core::DateTime::now().to_string();
+        auto current_time = Core::DateTime::now();
+        auto time_text = current_time.to_string();
         GUI::Painter painter(*this);
         painter.fill_rect(event.rect(), palette().window());
         painter.draw_text(event.rect(), time_text, Gfx::Font::default_font(), Gfx::TextAlignment::Center, palette().window_text());
+
+        m_analog_clock_widget->tick_clock(current_time);
     }
 
     virtual void mousedown_event(GUI::MouseEvent& event) override
     {
-        if (event.button() != GUI::MouseButton::Left) {
-            return;
-        } else {
+        if (event.button() == GUI::MouseButton::Left) {
             if (!m_calendar_window->is_visible())
                 open();
             else
                 close();
+        } else if (event.button() == GUI::MouseButton::Right) {
+            if (!m_clock_window->is_visible()) {
+                position_clock_window();
+                m_clock_window->show();
+            } else {
+                m_clock_window->hide();
+            }
         }
     }
 
@@ -271,6 +306,15 @@ private:
             180);
     }
 
+    void position_clock_window()
+    {
+        m_clock_window->set_rect(
+            window()->rect_in_menubar().x() - ((m_clock_window->rect().width() - window()->rect().width()) / 2),
+            19,
+            170,
+            170);
+    }
+
     void jump_to_current_date()
     {
         if (m_calendar->mode() == GUI::Calendar::Year)
@@ -281,6 +325,7 @@ private:
     }
 
     RefPtr<GUI::Window> m_calendar_window;
+    RefPtr<GUI::Window> m_clock_window;
     RefPtr<GUI::Calendar> m_calendar;
     RefPtr<GUI::Button> m_next_date;
     RefPtr<GUI::Button> m_prev_date;
@@ -288,6 +333,7 @@ private:
     RefPtr<GUI::Button> m_jump_to_button;
     RefPtr<GUI::Button> m_calendar_launcher;
     RefPtr<Core::Timer> m_timer;
+    RefPtr<AnalogClockWidget> m_analog_clock_widget;
     int m_time_width;
 };
 
