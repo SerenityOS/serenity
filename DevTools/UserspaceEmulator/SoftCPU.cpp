@@ -1434,7 +1434,7 @@ void SoftCPU::FADD_RM32(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(0, fpu_get(insn.modrm().register_index()) + fpu_get(0));
     } else {
-        auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+        auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         auto f32 = bit_cast<float>(new_f32.value());
         fpu_set(0, fpu_get(0) + f32);
@@ -1447,7 +1447,7 @@ void SoftCPU::FMUL_RM32(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(0, fpu_get(0) * fpu_get(insn.modrm().register_index()));
     } else {
-        auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+        auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         auto f32 = bit_cast<float>(new_f32.value());
         fpu_set(0, fpu_get(0) * f32);
@@ -1462,7 +1462,7 @@ void SoftCPU::FSUB_RM32(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(0, fpu_get(0) - fpu_get(insn.modrm().register_index()));
     } else {
-        auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+        auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         auto f32 = bit_cast<float>(new_f32.value());
         fpu_set(0, fpu_get(0) - f32);
@@ -1474,7 +1474,7 @@ void SoftCPU::FSUBR_RM32(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(0, fpu_get(insn.modrm().register_index()) - fpu_get(0));
     } else {
-        auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+        auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         auto f32 = bit_cast<float>(new_f32.value());
         fpu_set(0, f32 - fpu_get(0));
@@ -1486,7 +1486,7 @@ void SoftCPU::FDIV_RM32(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(0, fpu_get(0) / fpu_get(insn.modrm().register_index()));
     } else {
-        auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+        auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         auto f32 = bit_cast<float>(new_f32.value());
         // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
@@ -1499,7 +1499,7 @@ void SoftCPU::FDIVR_RM32(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(0, fpu_get(insn.modrm().register_index()) / fpu_get(0));
     } else {
-        auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+        auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         auto f32 = bit_cast<float>(new_f32.value());
         // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
@@ -1512,7 +1512,7 @@ void SoftCPU::FLD_RM32(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_push(fpu_get(insn.modrm().register_index()));
     } else {
-        auto new_f32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+        auto new_f32 = insn.modrm().read32(*this, insn);
         // FIXME: Respect shadow values
         fpu_push(bit_cast<float>(new_f32.value()));
     }
@@ -1613,7 +1613,7 @@ void SoftCPU::FCMOVB(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FIMUL_RM32(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register());
-    auto new_s32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+    auto new_s32 = insn.modrm().read32(*this, insn);
     // FIXME: Respect shadow values
     fpu_set(0, fpu_get(0) * (long double)(int32_t)new_s32.value());
 }
@@ -1631,7 +1631,7 @@ void SoftCPU::FIDIV_RM32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FIDIVR_RM32(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register());
-    auto new_s32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+    auto new_s32 = insn.modrm().read32(*this, insn);
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
     fpu_set(0, (long double)(int32_t)new_s32.value() / fpu_get(0));
@@ -1640,7 +1640,7 @@ void SoftCPU::FIDIVR_RM32(const X86::Instruction& insn)
 void SoftCPU::FILD_RM32(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register());
-    auto new_s32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+    auto new_s32 = insn.modrm().read32(*this, insn);
     // FIXME: Respect shadow values
     fpu_push((long double)(int32_t)new_s32.value());
 }
@@ -1704,7 +1704,7 @@ void SoftCPU::FADD_RM64(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) + fpu_get(0));
     } else {
-        auto new_f64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+        auto new_f64 = insn.modrm().read64(*this, insn);
         // FIXME: Respect shadow values
         auto f64 = bit_cast<double>(new_f64.value());
         fpu_set(0, fpu_get(0) + f64);
@@ -1717,7 +1717,7 @@ void SoftCPU::FMUL_RM64(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) * fpu_get(0));
     } else {
-        auto new_f64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+        auto new_f64 = insn.modrm().read64(*this, insn);
         // FIXME: Respect shadow values
         auto f64 = bit_cast<double>(new_f64.value());
         fpu_set(0, fpu_get(0) * f64);
@@ -1731,7 +1731,7 @@ void SoftCPU::FSUB_RM64(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FSUBR_RM64(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register()); // FIXME
-    auto new_f64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+    auto new_f64 = insn.modrm().read64(*this, insn);
     // FIXME: Respect shadow values
     auto f64 = bit_cast<double>(new_f64.value());
     fpu_set(0, f64 - fpu_get(0));
@@ -1741,7 +1741,7 @@ dbg() << "fsub.64: " << (double)fpu_get(0);
 void SoftCPU::FDIV_RM64(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register()); // FIXME
-    auto new_f64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+    auto new_f64 = insn.modrm().read64(*this, insn);
     // FIXME: Respect shadow values
     auto f64 = bit_cast<double>(new_f64.value());
     // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
@@ -1755,7 +1755,7 @@ void SoftCPU::FDIVR_RM64(const X86::Instruction& insn)
         //fpu_set(insn.modrm().register_index(), fpu_get(0) / fpu_get(insn.modrm().register_index()));
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) / fpu_get(0));
     } else {
-        auto new_f64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+        auto new_f64 = insn.modrm().read64(*this, insn);
         // FIXME: Respect shadow values
         auto f64 = bit_cast<double>(new_f64.value());
         // FIXME: Raise IA on + infinity / +-infinitiy, +-0 / +-0, raise Z on finite / +-0
@@ -1766,7 +1766,7 @@ void SoftCPU::FDIVR_RM64(const X86::Instruction& insn)
 void SoftCPU::FLD_RM64(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register());
-    auto new_f64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+    auto new_f64 = insn.modrm().read64(*this, insn);
     // FIXME: Respect shadow values
     fpu_push(bit_cast<double>(new_f64.value()));
 }
@@ -1808,7 +1808,7 @@ void SoftCPU::FADDP(const X86::Instruction& insn)
 void SoftCPU::FIMUL_RM16(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register());
-    auto new_s16 = insn.modrm().read16<ValueWithShadow<u16>>(*this, insn);
+    auto new_s16 = insn.modrm().read16(*this, insn);
     // FIXME: Respect shadow values
     fpu_set(0, fpu_get(0) * (long double)(int16_t)new_s16.value());
 }
@@ -1864,7 +1864,7 @@ void SoftCPU::FDIVP(const X86::Instruction& insn)
 void SoftCPU::FILD_RM16(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register());
-    auto new_s16 = insn.modrm().read16<ValueWithShadow<u16>>(*this, insn);
+    auto new_s16 = insn.modrm().read16(*this, insn);
     // FIXME: Respect shadow values
     fpu_push((long double)(int16_t)new_s16.value());
 }
@@ -1889,7 +1889,7 @@ void SoftCPU::FNSTSW_AX(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FILD_RM64(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register());
-    auto new_s64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
+    auto new_s64 = insn.modrm().read64(*this, insn);
     // FIXME: Respect shadow values
     fpu_push((long double)(int64_t)new_s64.value());
 }
