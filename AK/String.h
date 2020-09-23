@@ -26,10 +26,10 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
 #include <AK/Stream.h>
-#include <AK/StringBuilder.h>
 #include <AK/StringImpl.h>
 #include <AK/StringUtils.h>
 #include <AK/Traits.h>
@@ -239,6 +239,15 @@ public:
 
     static String format(const char*, ...);
 
+    static String vformatted(StringView fmtstr, Span<const TypeErasedParameter>);
+
+    template<typename... Parameters>
+    static String formatted(StringView fmtstr, const Parameters&... parameters)
+    {
+        const auto type_erased_parameters = make_type_erased_parameters(parameters...);
+        return vformatted(fmtstr, type_erased_parameters);
+    }
+
     template<typename T>
     static String number(T);
 
@@ -277,28 +286,7 @@ bool operator<=(const char*, const String&);
 
 String escape_html_entities(const StringView& html);
 
-inline InputStream& operator>>(InputStream& stream, String& string)
-{
-    StringBuilder builder;
-
-    for (;;) {
-        char next_char;
-        stream >> next_char;
-
-        if (stream.has_any_error()) {
-            stream.set_fatal_error();
-            string = nullptr;
-            return stream;
-        }
-
-        if (next_char) {
-            builder.append(next_char);
-        } else {
-            string = builder.to_string();
-            return stream;
-        }
-    }
-}
+InputStream& operator>>(InputStream& stream, String& string);
 
 }
 

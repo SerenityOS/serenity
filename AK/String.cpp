@@ -216,7 +216,7 @@ Optional<unsigned> String::to_uint() const
 }
 
 template<typename T>
-String String::number(T value) { return AK::format("{}", value); }
+String String::number(T value) { return formatted("{}", value); }
 
 template String String::number(unsigned char);
 template String String::number(unsigned short);
@@ -228,8 +228,6 @@ template String String::number(short);
 template String String::number(int);
 template String String::number(long);
 template String String::number(long long);
-
-// C++ is weird.
 template String String::number(signed char);
 
 String String::format(const char* fmt, ...)
@@ -456,6 +454,36 @@ bool String::operator==(const char* cstring) const
 StringView String::view() const
 {
     return { characters(), length() };
+}
+
+InputStream& operator>>(InputStream& stream, String& string)
+{
+    StringBuilder builder;
+
+    for (;;) {
+        char next_char;
+        stream >> next_char;
+
+        if (stream.has_any_error()) {
+            stream.set_fatal_error();
+            string = nullptr;
+            return stream;
+        }
+
+        if (next_char) {
+            builder.append(next_char);
+        } else {
+            string = builder.to_string();
+            return stream;
+        }
+    }
+}
+
+String String::vformatted(StringView fmtstr, Span<const TypeErasedParameter> parameters)
+{
+    StringBuilder builder;
+    vformat(builder, fmtstr, parameters);
+    return builder.to_string();
 }
 
 }

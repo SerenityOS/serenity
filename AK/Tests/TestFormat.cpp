@@ -26,43 +26,44 @@
 
 #include <AK/TestSuite.h>
 
-#include <AK/Format.h>
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
 
 TEST_CASE(format_string_literals)
 {
-    EXPECT_EQ(AK::format("prefix-{}-suffix", "abc"), "prefix-abc-suffix");
-    EXPECT_EQ(AK::format("{}{}{}", "a", "b", "c"), "abc");
+    EXPECT_EQ(String::formatted("prefix-{}-suffix", "abc"), "prefix-abc-suffix");
+    EXPECT_EQ(String::formatted("{}{}{}", "a", "b", "c"), "abc");
 }
 
 TEST_CASE(format_integers)
 {
-    EXPECT_EQ(AK::format("{}", 42u), "42");
-    EXPECT_EQ(AK::format("{:4}", 42u), "  42");
-    EXPECT_EQ(AK::format("{:08}", 42u), "00000042");
-    // EXPECT_EQ(AK::format("{:7}", -17), "    -17");
-    EXPECT_EQ(AK::format("{}", -17), "-17");
-    EXPECT_EQ(AK::format("{:04}", 13), "0013");
-    EXPECT_EQ(AK::format("{:08x}", 4096), "00001000");
-    EXPECT_EQ(AK::format("{:x}", 0x1111222233334444ull), "1111222233334444");
+    EXPECT_EQ(String::formatted("{}", 42u), "42");
+    EXPECT_EQ(String::formatted("{:4}", 42u), "  42");
+    EXPECT_EQ(String::formatted("{:08}", 42u), "00000042");
+    // EXPECT_EQ(String::formatted("{:7}", -17), "    -17");
+    EXPECT_EQ(String::formatted("{}", -17), "-17");
+    EXPECT_EQ(String::formatted("{:04}", 13), "0013");
+    EXPECT_EQ(String::formatted("{:08x}", 4096), "00001000");
+    EXPECT_EQ(String::formatted("{:x}", 0x1111222233334444ull), "1111222233334444");
 }
 
 TEST_CASE(reorder_format_arguments)
 {
-    EXPECT_EQ(AK::format("{1}{0}", "a", "b"), "ba");
-    EXPECT_EQ(AK::format("{0}{1}", "a", "b"), "ab");
-    EXPECT_EQ(AK::format("{0}{0}{0}", "a", "b"), "aaa");
-    EXPECT_EQ(AK::format("{1}{}{0}", "a", "b", "c"), "baa");
+    EXPECT_EQ(String::formatted("{1}{0}", "a", "b"), "ba");
+    EXPECT_EQ(String::formatted("{0}{1}", "a", "b"), "ab");
+    EXPECT_EQ(String::formatted("{0}{0}{0}", "a", "b"), "aaa");
+    EXPECT_EQ(String::formatted("{1}{}{0}", "a", "b", "c"), "baa");
 }
 
 TEST_CASE(escape_braces)
 {
-    EXPECT_EQ(AK::format("{{{}", "foo"), "{foo");
-    EXPECT_EQ(AK::format("{}}}", "bar"), "bar}");
+    EXPECT_EQ(String::formatted("{{{}", "foo"), "{foo");
+    EXPECT_EQ(String::formatted("{}}}", "bar"), "bar}");
 }
 
 TEST_CASE(everything)
 {
-    EXPECT_EQ(AK::format("{{{:04}/{}/{0:8}/{1}", 42u, "foo"), "{0042/foo/      42/foo");
+    EXPECT_EQ(String::formatted("{{{:04}/{}/{0:8}/{1}", 42u, "foo"), "{0042/foo/      42/foo");
 }
 
 TEST_CASE(string_builder)
@@ -76,7 +77,7 @@ TEST_CASE(string_builder)
 
 TEST_CASE(format_without_arguments)
 {
-    EXPECT_EQ(AK::format("foo"), "foo");
+    EXPECT_EQ(String::formatted("foo"), "foo");
 }
 
 TEST_MAIN(Format)

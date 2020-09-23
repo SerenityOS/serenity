@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/StringView.h>
 #include <stdarg.h>
@@ -48,9 +49,12 @@ public:
     void appendf(const char*, ...);
     void appendvf(const char*, va_list);
 
-    // Implemented in <AK/Format.h> to break circular dependency.
     template<typename... Parameters>
-    void appendff(StringView fmtstr, const Parameters&...);
+    void appendff(StringView fmtstr, const Parameters&... parameters)
+    {
+        const auto type_erased_parameters = make_type_erased_parameters(parameters...);
+        vformat(*this, fmtstr, type_erased_parameters);
+    }
 
     String build() const;
     String to_string() const;
