@@ -224,7 +224,7 @@ void AbstractView::mousedown_event(MouseEvent& event)
     } else if (event.button() == MouseButton::Left && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
-    } else {
+    } else if (event.button() != MouseButton::Right) {
         set_cursor(index, SelectionUpdate::Set);
     }
 
