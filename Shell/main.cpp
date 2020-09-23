@@ -39,108 +39,6 @@
 RefPtr<Line::Editor> editor;
 Shell* s_shell;
 
-void FileDescriptionCollector::collect()
-{
-    for (auto fd : m_fds)
-        close(fd);
-    m_fds.clear();
-}
-
-FileDescriptionCollector::~FileDescriptionCollector()
-{
-    collect();
-}
-
-void FileDescriptionCollector::add(int fd)
-{
-    m_fds.append(fd);
-}
-
-SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>& intended_rewirings)
-{
-    for (auto& rewiring : intended_rewirings) {
-        int new_fd = dup(rewiring.source_fd);
-        if (new_fd < 0) {
-            if (errno != EBADF)
-                perror("dup");
-            // The fd that will be overwritten isn't open right now,
-            // it will be cleaned up by the exec()-side collector
-            // and we have nothing to do here, so just ignore this error.
-            continue;
-        }
-
-        auto flags = fcntl(new_fd, F_GETFL);
-        auto rc = fcntl(new_fd, F_SETFL, flags | FD_CLOEXEC);
-        ASSERT(rc == 0);
-
-        m_saves.append({ rewiring.source_fd, new_fd });
-        m_collector.add(new_fd);
-    }
-}
-
-SavedFileDescriptors::~SavedFileDescriptors()
-{
-    for (auto& save : m_saves) {
-        if (dup2(save.saved, save.original) < 0) {
-            perror("dup2(~SavedFileDescriptors)");
-            continue;
-        }
-    }
-}
-
-void Shell::setup_signals()
-{
-    Core::EventLoop::register_signal(SIGCHLD, [](int) {
-        auto& jobs = s_shell->jobs;
-        Vector<u64> disowned_jobs;
-        for (auto& it : jobs) {
-            auto job_id = it.key;
-            auto& job = *it.value;
-            int wstatus = 0;
-            auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
-            if (child_pid < 0) {
-                if (errno == ECHILD) {
-                    // The child process went away before we could process its death, just assume it exited all ok.
-                    // FIXME: This should never happen, the child should stay around until we do the waitpid above.
-                    dbg() << "Child process gone, cannot get exit code for " << job_id;
-                    child_pid = job.pid();
-                } else {
-                    ASSERT_NOT_REACHED();
-                }
-            }
-#ifndef __serenity__
-            if (child_pid == 0) {
-                // Linux: if child didn't "change state", but existed.
-                continue;
-            }
-#endif
-            if (child_pid == job.pid()) {
-                if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
-                    job.set_signalled(WTERMSIG(wstatus));
-                } else if (WIFEXITED(wstatus)) {
-                    job.set_has_exit(WEXITSTATUS(wstatus));
-                } else if (WIFSTOPPED(wstatus)) {
-                    job.unblock();
-                    job.set_is_suspended(true);
-                }
-            }
-            if (job.should_be_disowned())
-                disowned_jobs.append(job_id);
-        }
-        for (auto job_id : disowned_jobs)
-            jobs.remove(job_id);
-    });
-
-    Core::EventLoop::register_signal(SIGTSTP, [](auto) {
-        auto job = s_shell->current_job();
-        s_shell->kill_job(job, SIGTSTP);
-        if (job) {
-            job->set_is_suspended(true);
-            job->unblock();
-        }
-    });
-}
-
 int main(int argc, char** argv)
 {
     Core::EventLoop loop;
@@ -163,6 +61,11 @@ int main(int argc, char** argv)
         s_shell->save_history();
     });
 
+    editor = Line::Editor::construct();
+
+    auto shell = Shell::construct(*editor);
+    s_shell = shell.ptr();
+
     s_shell->setup_signals();
 
 #ifndef __serenity__
@@ -178,11 +81,6 @@ int main(int argc, char** argv)
         return 1;
     }
 #endif
-
-    editor = Line::Editor::construct();
-
-    auto shell = Shell::construct();
-    s_shell = shell.ptr();
 
     editor->initialize();
     shell->termios = editor->termios();
@@ -200,8 +98,8 @@ int main(int argc, char** argv)
         }
         shell->highlight(editor);
     };
-    editor->on_tab_complete = [&](const Line::Editor& editor) {
-        return shell->complete(editor);
+    editor->on_tab_complete = [&](const Line::Editor&) {
+        return shell->complete();
     };
 
     const char* command_to_run = nullptr;
