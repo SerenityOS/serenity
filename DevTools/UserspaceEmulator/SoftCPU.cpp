@@ -1627,7 +1627,15 @@ void SoftCPU::FISUB_RM32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FISUBR_RM32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FUCOMPP(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FIDIV_RM32(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FIDIVR_RM32(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FIDIVR_RM32(const X86::Instruction& insn)
+{
+    ASSERT(!insn.modrm().is_register());
+    auto new_s32 = insn.modrm().read32<ValueWithShadow<u32>>(*this, insn);
+    // FIXME: Respect shadow values
+    // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
+    fpu_set(0, (long double)(int32_t)new_s32.value() / fpu_get(0));
+}
 
 void SoftCPU::FILD_RM32(const X86::Instruction& insn)
 {
