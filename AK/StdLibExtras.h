@@ -299,6 +299,11 @@ struct Conditional<false, TrueType, FalseType> {
 };
 
 template<typename T>
+struct IsNullPointer : IsSame<decltype(nullptr), typename RemoveCV<T>::Type> {
+};
+
+
+template<typename T>
 struct RemoveReference {
     typedef T Type;
 };
