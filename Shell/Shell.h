@@ -137,7 +137,7 @@ public:
     static Vector<StringView> split_path(const StringView&);
 
     void highlight(Line::Editor&) const;
-    Vector<Line::CompletionSuggestion> complete(const Line::Editor&);
+    Vector<Line::CompletionSuggestion> complete();
     Vector<Line::CompletionSuggestion> complete_path(const String& base, const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_program_name(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
@@ -196,7 +196,7 @@ public:
 #undef __ENUMERATE_SHELL_OPTION
 
 private:
-    Shell();
+    Shell(Line::Editor&);
     virtual ~Shell() override;
 
     // FIXME: Port to Core::Property
@@ -248,6 +248,8 @@ private:
     bool m_is_subshell { false };
 
     bool m_should_format_live { false };
+
+    RefPtr<Line::Editor> m_editor;
 };
 
 static constexpr bool is_word_character(char c)
