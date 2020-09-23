@@ -31,6 +31,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/ColorInput.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Label.h>
@@ -58,6 +59,8 @@ namespace GUI {
 
 REGISTER_WIDGET(GUI, Button)
 REGISTER_WIDGET(GUI, CheckBox)
+REGISTER_WIDGET(GUI, ColorInput)
+REGISTER_WIDGET(GUI, Frame)
 REGISTER_WIDGET(GUI, GroupBox)
 REGISTER_WIDGET(GUI, HorizontalSplitter)
 REGISTER_WIDGET(GUI, Label)
