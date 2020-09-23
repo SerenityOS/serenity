@@ -38,10 +38,12 @@ public:
     virtual ValueWithShadow<u8> read8(u32 offset) override;
     virtual ValueWithShadow<u16> read16(u32 offset) override;
     virtual ValueWithShadow<u32> read32(u32 offset) override;
+    virtual ValueWithShadow<u64> read64(u32 offset) override;
 
     virtual void write8(u32 offset, ValueWithShadow<u8>) override;
     virtual void write16(u32 offset, ValueWithShadow<u16>) override;
     virtual void write32(u32 offset, ValueWithShadow<u32>) override;
+    virtual void write64(u32 offset, ValueWithShadow<u64>) override;
 
     u8* data() { return m_data; }
     u8* shadow_data() { return m_shadow_data; }

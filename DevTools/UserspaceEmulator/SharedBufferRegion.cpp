@@ -70,6 +70,12 @@ ValueWithShadow<u32> SharedBufferRegion::read32(u32 offset)
     return { *reinterpret_cast<const u32*>(m_data + offset), *reinterpret_cast<const u32*>(m_shadow_data + offset) };
 }
 
+ValueWithShadow<u64> SharedBufferRegion::read64(u32 offset)
+{
+    ASSERT(offset + 7 < size());
+    return { *reinterpret_cast<const u64*>(m_data + offset), *reinterpret_cast<const u64*>(m_shadow_data + offset) };
+}
+
 void SharedBufferRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     ASSERT(offset < size());
@@ -89,6 +95,13 @@ void SharedBufferRegion::write32(u32 offset, ValueWithShadow<u32> value)
     ASSERT(offset + 3 < size());
     *reinterpret_cast<u32*>(m_data + offset) = value.value();
     *reinterpret_cast<u32*>(m_shadow_data + offset) = value.shadow();
+}
+
+void SharedBufferRegion::write64(u32 offset, ValueWithShadow<u64> value)
+{
+    ASSERT(offset + 7 < size());
+    *reinterpret_cast<u64*>(m_data + offset) = value.value();
+    *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
 }
 
 int SharedBufferRegion::allow_all()
