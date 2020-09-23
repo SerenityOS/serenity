@@ -53,6 +53,11 @@ class SoftCPU final
     : public X86::Interpreter
     , public X86::InstructionStream {
 public:
+    using ValueWithShadowType8 = ValueWithShadow<u8>;
+    using ValueWithShadowType16 = ValueWithShadow<u16>;
+    using ValueWithShadowType32 = ValueWithShadow<u32>;
+    using ValueWithShadowType64 = ValueWithShadow<u64>;
+
     explicit SoftCPU(Emulator&);
     void dump() const;
 
