@@ -260,7 +260,7 @@ Multiple _patterns_ can be attributed to a single given action by delimiting the
 
 The expanded _matched expression_ can optionally be given a name using the `as name` clause after the _matched expression_, with which it may be accessible in the action clauses.
 
-######
+###### Examples
 ```sh
 # Match the result of running 'make_some_value' (which is a list when captured by $(...))
 match "$(make_some_value)" as value {
