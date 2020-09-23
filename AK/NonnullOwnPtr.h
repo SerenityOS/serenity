@@ -35,7 +35,7 @@
 
 namespace AK {
 
-template<typename T>
+template<typename T, typename PtrTraits>
 class RefPtr;
 template<typename T>
 class NonnullRefPtr;
@@ -83,14 +83,14 @@ public:
     template<typename U>
     NonnullOwnPtr& operator=(const NonnullOwnPtr<U>&) = delete;
 
-    template<typename U>
-    NonnullOwnPtr(const RefPtr<U>&) = delete;
+    template<typename U, typename PtrTraits = RefPtrTraits<U>>
+    NonnullOwnPtr(const RefPtr<U, PtrTraits>&) = delete;
     template<typename U>
     NonnullOwnPtr(const NonnullRefPtr<U>&) = delete;
     template<typename U>
     NonnullOwnPtr(const WeakPtr<U>&) = delete;
-    template<typename U>
-    NonnullOwnPtr& operator=(const RefPtr<U>&) = delete;
+    template<typename U, typename PtrTraits = RefPtrTraits<U>>
+    NonnullOwnPtr& operator=(const RefPtr<U, PtrTraits>&) = delete;
     template<typename U>
     NonnullOwnPtr& operator=(const NonnullRefPtr<U>&) = delete;
     template<typename U>

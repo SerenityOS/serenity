@@ -35,7 +35,7 @@ namespace AK {
 
 template<typename T>
 class OwnPtr;
-template<typename T>
+template<typename T, typename PtrTraits>
 class RefPtr;
 
 template<typename T>
