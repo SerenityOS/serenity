@@ -47,6 +47,7 @@
 #include <signal.h>
 #include <stdio.h>
 
+RefPtr<JS::VM> vm;
 Vector<String> repl_statements;
 
 class ReplObject : public JS::GlobalObject {
@@ -167,7 +168,7 @@ static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
         // the future, but for now lets just catch the error
-        if (array.interpreter().exception())
+        if (vm->exception())
             return;
         print_value(value, seen_objects);
     }
@@ -187,7 +188,7 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
         // the future, but for now lets just catch the error
-        if (object.interpreter().exception())
+        if (vm->exception())
             return;
         print_value(value, seen_objects);
     }
@@ -353,10 +354,10 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         interpreter.run(interpreter.global_object(), *program);
     }
 
-    if (interpreter.exception()) {
+    if (vm->exception()) {
         printf("Uncaught exception: ");
-        print(interpreter.exception()->value());
-        auto trace = interpreter.exception()->trace();
+        print(vm->exception()->value());
+        auto trace = vm->exception()->trace();
         if (trace.size() > 1) {
             for (auto& function_name : trace)
                 printf(" -> %s\n", function_name.characters());
@@ -404,7 +405,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
     if (!interpreter.argument_count())
         exit(0);
     auto exit_code = interpreter.argument(0).to_number(interpreter);
-    if (interpreter.exception())
+    if (::vm->exception())
         return {};
     exit(exit_code.as_double());
 }
@@ -552,7 +553,7 @@ int main(int argc, char** argv)
 
     bool syntax_highlight = !disable_syntax_highlight;
 
-    auto vm = JS::VM::create();
+    vm = JS::VM::create();
     OwnPtr<JS::Interpreter> interpreter;
 
     interrupt_interpreter = [&] {
