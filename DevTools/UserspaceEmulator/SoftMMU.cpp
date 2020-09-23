@@ -97,6 +97,17 @@ ValueWithShadow<u32> SoftMMU::read32(X86::LogicalAddress address)
     return region->read32(address.offset() - region->base());
 }
 
+ValueWithShadow<u64> SoftMMU::read64(X86::LogicalAddress address)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        warn() << "SoftMMU::read64: No region for @" << (const void*)address.offset();
+        TODO();
+    }
+
+    return region->read64(address.offset() - region->base());
+}
+
 void SoftMMU::write8(X86::LogicalAddress address, ValueWithShadow<u8> value)
 {
     auto* region = find_region(address);
@@ -128,6 +139,17 @@ void SoftMMU::write32(X86::LogicalAddress address, ValueWithShadow<u32> value)
     }
 
     region->write32(address.offset() - region->base(), value);
+}
+
+void SoftMMU::write64(X86::LogicalAddress address, ValueWithShadow<u64> value)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        warn() << "SoftMMU::write64: No region for @" << (const void*)address.offset();
+        TODO();
+    }
+
+    region->write64(address.offset() - region->base(), value);
 }
 
 void SoftMMU::copy_to_vm(FlatPtr destination, const void* source, size_t size)
