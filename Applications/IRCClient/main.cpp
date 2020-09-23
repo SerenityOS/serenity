@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     }
 
     if (getuid() == 0) {
-        fprintf(stderr, "Refusing to run as root\n");
+        warn() << "Refusing to run as root";
         return 1;
     }
 
@@ -54,17 +54,17 @@ int main(int argc, char** argv)
         url = URL::create_with_url_or_path(app->args()[0]);
 
         if (url.protocol().to_lowercase() == "ircs") {
-            fprintf(stderr, "Secure IRC over SSL/TLS (ircs) is not supported\n");
+            warn() << "Secure IRC over SSL/TLS (ircs) is not supported";
             return 1;
         }
 
         if (url.protocol().to_lowercase() != "irc") {
-            fprintf(stderr, "Unsupported protocol\n");
+            warn() << "Unsupported protocol";
             return 1;
         }
 
         if (url.host().is_empty()) {
-            fprintf(stderr, "Invalid URL\n");
+            warn() << "Invalid URL";
             return 1;
         }
 
