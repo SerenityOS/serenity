@@ -25,25 +25,26 @@
  */
 
 #include <AK/TestSuite.h>
+
 #include <AK/String.h>
-#include <AK/Weakable.h>
 #include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 
 #ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-private-field"
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
 
 class SimpleWeakable : public Weakable<SimpleWeakable> {
 public:
-    SimpleWeakable() {}
+    SimpleWeakable() { }
 
 private:
     int m_member { 123 };
 };
 
 #ifdef __clang__
-#pragma clang diagnostic pop
+#    pragma clang diagnostic pop
 #endif
 
 TEST_CASE(basic_weak)
@@ -81,8 +82,6 @@ TEST_CASE(weakptr_move)
     }
 
     EXPECT_EQ(weak2.is_null(), true);
-
-    fprintf(stderr, "ok\n");
 }
 
 TEST_MAIN(WeakPtr)
