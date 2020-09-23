@@ -40,7 +40,6 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
-#include <stdio.h>
 
 static IRCAppWindow* s_the;
 
@@ -138,7 +137,7 @@ void IRCAppWindow::setup_actions()
     });
 
     m_close_query_action = GUI::Action::create("Close query", { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
-        printf("FIXME: Implement close-query action\n");
+        out() << "FIXME: Implement close-query action";
     });
 
     m_change_nick_action = GUI::Action::create("Change nickname", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
@@ -262,7 +261,7 @@ void IRCAppWindow::setup_menus()
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("IRC Client");
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        dbgprintf("Terminal: Quit menu activated!\n");
+        dbg() << "Terminal: Quit menu activated!";
         GUI::Application::the()->quit();
         return;
     }));

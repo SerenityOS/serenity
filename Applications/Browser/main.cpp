@@ -63,7 +63,7 @@ static String bookmarks_file_path()
 int main(int argc, char** argv)
 {
     if (getuid() == 0) {
-        fprintf(stderr, "Refusing to run as root\n");
+        warn() << "Refusing to run as root";
         return 1;
     }
 

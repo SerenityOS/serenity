@@ -68,6 +68,12 @@ struct Formatter<StringView> {
     bool parse(StringView flags);
     void format(StringBuilder& builder, StringView value);
 };
+template<>
+struct Formatter<const char*> : Formatter<StringView> {
+};
+template<>
+struct Formatter<char*> : Formatter<StringView> {
+};
 template<size_t Size>
 struct Formatter<char[Size]> : Formatter<StringView> {
 };
