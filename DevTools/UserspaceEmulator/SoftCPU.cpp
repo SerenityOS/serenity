@@ -1743,7 +1743,9 @@ void SoftCPU::FDIV_RM64(const X86::Instruction& insn)
 void SoftCPU::FDIVR_RM64(const X86::Instruction& insn)
 {
     if (insn.modrm().is_register()) {
-        fpu_set(insn.modrm().register_index(), fpu_get(0) / fpu_get(insn.modrm().register_index()));
+        // XXX this is FDIVR, Instruction decodes this weirdly
+        //fpu_set(insn.modrm().register_index(), fpu_get(0) / fpu_get(insn.modrm().register_index()));
+        fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) / fpu_get(0));
     } else {
         auto new_f64 = insn.modrm().read64<ValueWithShadow<u64>>(*this, insn);
         // FIXME: Respect shadow values
