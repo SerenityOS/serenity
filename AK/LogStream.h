@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
@@ -206,13 +207,38 @@ DebugLogStream klog();
 
 void dump_bytes(ReadonlyBytes);
 
+#ifndef KERNEL
+template<typename... Parameters>
+void outf(StringView fmtstr, const Parameters&... parameters)
+{
+    const auto type_erased_parameters = make_type_erased_parameters(parameters...);
+    vformat(out(), fmtstr, type_erased_parameters);
+}
+template<typename... Parameters>
+void warnf(StringView fmtstr, const Parameters&... parameters)
+{
+    const auto type_erased_parameters = make_type_erased_parameters(parameters...);
+    vformat(warn(), fmtstr, type_erased_parameters);
+}
+#endif
+
+template<typename... Parameters>
+void dbgf(StringView fmtstr, const Parameters&... parameters)
+{
+    const auto type_erased_parameters = make_type_erased_parameters(parameters...);
+    vformat(dbg(), fmtstr, type_erased_parameters);
+}
+
 }
 
 using AK::dbg;
+using AK::dbgf;
 using AK::klog;
 using AK::LogStream;
 
 #if !defined(KERNEL)
 using AK::out;
+using AK::outf;
 using AK::warn;
+using AK::warnf;
 #endif

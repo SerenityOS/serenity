@@ -142,6 +142,12 @@ void vformat(StringBuilder& builder, StringView fmtstr, AK::Span<const TypeErase
 
     vformat(builder, fmtstr.substring_view(closing + 1), parameters, argument_index);
 }
+void vformat(const LogStream& stream, StringView fmtstr, Span<const TypeErasedParameter> parameters)
+{
+    StringBuilder builder;
+    vformat(builder, fmtstr, parameters);
+    stream << builder.to_string();
+}
 
 bool Formatter<StringView>::parse(StringView flags)
 {
