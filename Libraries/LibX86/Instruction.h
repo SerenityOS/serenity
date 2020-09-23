@@ -395,14 +395,14 @@ public:
     template<typename CPU, typename T>
     void write64(CPU&, const Instruction&, T);
 
-    template<typename T, typename CPU>
-    T read8(CPU&, const Instruction&);
-    template<typename T, typename CPU>
-    T read16(CPU&, const Instruction&);
-    template<typename T, typename CPU>
-    T read32(CPU&, const Instruction&);
-    template<typename T, typename CPU>
-    T read64(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType8 read8(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType16 read16(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType32 read32(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType64 read64(CPU&, const Instruction&);
 
     template<typename CPU>
     LogicalAddress resolve(const CPU&, const Instruction&);
@@ -771,8 +771,8 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, const Instructio
     cpu.write_memory64(address, value);
 }
 
-template<typename T, typename CPU>
-ALWAYS_INLINE T MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.const_gpr8(reg8());
@@ -781,8 +781,8 @@ ALWAYS_INLINE T MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& in
     return cpu.read_memory8(address);
 }
 
-template<typename T, typename CPU>
-ALWAYS_INLINE T MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.const_gpr16(reg16());
@@ -791,8 +791,8 @@ ALWAYS_INLINE T MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& i
     return cpu.read_memory16(address);
 }
 
-template<typename T, typename CPU>
-ALWAYS_INLINE T MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.const_gpr32(reg32());
@@ -801,8 +801,8 @@ ALWAYS_INLINE T MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& i
     return cpu.read_memory32(address);
 }
 
-template<typename T, typename CPU>
-ALWAYS_INLINE T MemoryOrRegisterReference::read64(CPU& cpu, const Instruction& insn)
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::read64(CPU& cpu, const Instruction& insn)
 {
     ASSERT(!is_register());
     auto address = resolve(cpu, insn);
