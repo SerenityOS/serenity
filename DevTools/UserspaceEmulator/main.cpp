@@ -30,6 +30,7 @@
 #include <AK/LogStream.h>
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibELF/Loader.h>
 #include <getopt.h>
@@ -38,12 +39,13 @@
 
 int main(int argc, char** argv, char** env)
 {
-    if (argc == 1) {
-        out() << "Usage: UserspaceEmulator <command>";
-        return 0;
-    }
+    Vector<const char*> command;
 
-    auto executable_path = Core::find_executable_in_path(argv[1]);
+    Core::ArgsParser parser;
+    parser.add_positional_argument(command, "Command to emulate", "command");
+    parser.parse(argc, argv);
+
+    auto executable_path = Core::find_executable_in_path(command[0]);
 
     MappedFile mapped_file(executable_path);
     if (!mapped_file.is_valid()) {
@@ -54,8 +56,8 @@ int main(int argc, char** argv, char** env)
     auto elf = ELF::Loader::create((const u8*)mapped_file.data(), mapped_file.size());
 
     Vector<String> arguments;
-    for (int i = 1; i < argc; ++i) {
-        arguments.append(argv[i]);
+    for (auto arg: command) {
+        arguments.append(arg);
     }
 
     Vector<String> environment;
