@@ -610,14 +610,6 @@ void IconView::keydown_event(KeyEvent& event)
     if (!m_visual_row_count || !m_visual_column_count)
         return;
 
-    if (event.key() == KeyCode::Key_F2) {
-        if (is_editable() && edit_triggers() & EditTrigger::EditKeyPressed) {
-            begin_editing(cursor_index());
-            event.accept();
-            return;
-        }
-    }
-
     if (event.key() == KeyCode::Key_Return) {
         activate_selected();
         return;
