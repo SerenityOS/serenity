@@ -34,6 +34,7 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <serenity.h>
 #include <spawn.h>
@@ -202,6 +203,11 @@ void DirectoryView::setup_model()
 void DirectoryView::setup_icon_view()
 {
     m_icon_view = add<GUI::IconView>();
+    m_icon_view->set_editable(true);
+    m_icon_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed);
+    m_icon_view->aid_create_editing_delegate = [](auto&) {
+        return make<GUI::StringModelEditingDelegate>();
+    };
 
     if (is_desktop()) {
         m_icon_view->set_frame_shape(Gfx::FrameShape::NoFrame);
@@ -229,6 +235,12 @@ void DirectoryView::setup_icon_view()
 void DirectoryView::setup_columns_view()
 {
     m_columns_view = add<GUI::ColumnsView>();
+    m_columns_view->set_editable(true);
+    m_columns_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed);
+    m_columns_view->aid_create_editing_delegate = [](auto&) {
+        return make<GUI::StringModelEditingDelegate>();
+    };
+
     m_columns_view->set_model(m_sorting_model);
     m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);
 
@@ -253,8 +265,13 @@ void DirectoryView::setup_columns_view()
 void DirectoryView::setup_table_view()
 {
     m_table_view = add<GUI::TableView>();
-    m_table_view->set_model(m_sorting_model);
+    m_table_view->set_editable(true);
+    m_table_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed);
+    m_table_view->aid_create_editing_delegate = [](auto&) {
+        return make<GUI::StringModelEditingDelegate>();
+    };
 
+    m_table_view->set_model(m_sorting_model);
     m_table_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
     m_table_view->on_activation = [&](auto& index) {
