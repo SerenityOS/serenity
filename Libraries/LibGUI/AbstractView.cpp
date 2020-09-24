@@ -445,6 +445,12 @@ void AbstractView::set_edit_triggers(unsigned triggers)
     m_edit_triggers = triggers;
 }
 
+void AbstractView::hide_event(HideEvent& event)
+{
+    stop_editing();
+    ScrollableWidget::hide_event(event);
+}
+
 void AbstractView::keydown_event(KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_F2) {
