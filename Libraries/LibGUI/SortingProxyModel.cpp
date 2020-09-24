@@ -285,4 +285,14 @@ bool SortingProxyModel::is_column_sortable(int column_index) const
     return source().is_column_sortable(column_index);
 }
 
+bool SortingProxyModel::is_editable(const ModelIndex& proxy_index) const
+{
+    return source().is_editable(map_to_source(proxy_index));
+}
+
+void SortingProxyModel::set_data(const ModelIndex& proxy_index, const Variant& data)
+{
+    source().set_data(map_to_source(proxy_index), data);
+}
+
 }

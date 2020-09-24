@@ -45,6 +45,8 @@ public:
     virtual StringView drag_data_type() const override;
     virtual ModelIndex parent_index(const ModelIndex&) const override;
     virtual ModelIndex index(int row, int column, const ModelIndex& parent) const override;
+    virtual bool is_editable(const ModelIndex&) const override;
+    virtual void set_data(const ModelIndex&, const Variant&) override;
 
     virtual bool is_column_sortable(int column_index) const override;
 
