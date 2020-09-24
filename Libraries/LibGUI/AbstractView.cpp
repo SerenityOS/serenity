@@ -447,6 +447,14 @@ void AbstractView::set_edit_triggers(unsigned triggers)
 
 void AbstractView::keydown_event(KeyEvent& event)
 {
+    if (event.key() == KeyCode::Key_F2) {
+        if (is_editable() && edit_triggers() & EditTrigger::EditKeyPressed) {
+            begin_editing(cursor_index());
+            event.accept();
+            return;
+        }
+    }
+
     SelectionUpdate selection_update = SelectionUpdate::Set;
     if (event.modifiers() == KeyModifier::Mod_Shift) {
         selection_update = SelectionUpdate::Shift;

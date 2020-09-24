@@ -166,14 +166,6 @@ void TableView::keydown_event(KeyEvent& event)
     if (!model())
         return;
 
-    if (event.key() == KeyCode::Key_F2) {
-        if (is_editable() && edit_triggers() & EditTrigger::EditKeyPressed) {
-            begin_editing(cursor_index());
-            event.accept();
-            return;
-        }
-    }
-
     if (event.key() == KeyCode::Key_Return) {
         activate(cursor_index());
         return;
