@@ -38,6 +38,7 @@ public:
     void set_model_column(int column) { m_model_column = column; }
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
+    virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
 
 private:
     ColumnsView();
