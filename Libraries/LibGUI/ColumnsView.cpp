@@ -315,19 +315,6 @@ void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection
         set_cursor(new_index, selection_update);
 }
 
-void ColumnsView::keydown_event(KeyEvent& event)
-{
-    if (!model())
-        return;
-
-    if (event.key() == KeyCode::Key_Return) {
-        activate_selected();
-        return;
-    }
-
-    AbstractView::keydown_event(event);
-}
-
 Gfx::IntRect ColumnsView::content_rect(const ModelIndex& index) const
 {
     if (!index.is_valid())

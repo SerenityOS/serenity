@@ -399,7 +399,7 @@ void AbstractTableView::keydown_event(KeyEvent& event)
         }
     }
 
-    return AbstractView::keydown_event(event);
+    AbstractView::keydown_event(event);
 }
 
 }
