@@ -39,6 +39,7 @@
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -604,6 +605,26 @@ void FileSystemModel::set_should_show_dotfiles(bool show)
         return;
     m_should_show_dotfiles = show;
     update();
+}
+
+bool FileSystemModel::is_editable(const ModelIndex& index) const
+{
+    if (!index.is_valid())
+        return false;
+    return index.column() == Column::Name;
+}
+
+void FileSystemModel::set_data(const ModelIndex& index, const Variant& data)
+{
+    ASSERT(is_editable(index));
+    Node& node = const_cast<Node&>(this->node(index));
+    auto dirname = LexicalPath(node.full_path()).dirname();
+    auto new_full_path = String::formatted("{}/{}", dirname, data.to_string());
+    int rc = rename(node.full_path().characters(), new_full_path.characters());
+    if (rc < 0) {
+        if (on_error)
+            on_error(errno, strerror(errno));
+    }
 }
 
 }
