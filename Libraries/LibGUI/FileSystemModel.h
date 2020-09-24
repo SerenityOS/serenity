@@ -149,6 +149,8 @@ public:
     virtual StringView drag_data_type() const override { return "text/uri-list"; }
     virtual bool accepts_drag(const ModelIndex&, const StringView& data_type) override;
     virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
+    virtual bool is_editable(const ModelIndex&) const override;
+    virtual void set_data(const ModelIndex&, const Variant&) override;
 
     static String timestamp_string(time_t timestamp)
     {
