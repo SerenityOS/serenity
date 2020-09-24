@@ -147,8 +147,3 @@ blockquote {
     margin-left: 25px;
     margin-right: 25px;
 }
-
-/* FIXME: I think this should only apply in quirks mode. */
-table {
-    text-align: left;
-}

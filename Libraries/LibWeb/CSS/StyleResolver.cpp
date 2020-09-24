@@ -57,10 +57,23 @@ static StyleSheet& default_stylesheet()
     return *sheet;
 }
 
+static StyleSheet& quirks_mode_stylesheet()
+{
+    static StyleSheet* sheet;
+    if (!sheet) {
+        extern const char quirks_mode_stylesheet_source[];
+        String css = quirks_mode_stylesheet_source;
+        sheet = parse_css(CSS::ParsingContext(), css).leak_ref();
+    }
+    return *sheet;
+}
+
 template<typename Callback>
 void StyleResolver::for_each_stylesheet(Callback callback) const
 {
     callback(default_stylesheet());
+    if (document().in_quirks_mode())
+        callback(quirks_mode_stylesheet());
     for (auto& sheet : document().style_sheets().sheets()) {
         callback(sheet);
     }

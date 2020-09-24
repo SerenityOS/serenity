@@ -16,6 +16,7 @@ set(SOURCES
     CSS/Parser/CSSParser.cpp
     CSS/PropertyID.cpp
     CSS/PropertyID.h
+    CSS/QuirksModeStyleSheetSource.cpp
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
     CSS/StyleDeclaration.cpp
@@ -324,6 +325,14 @@ add_custom_command(
 add_custom_command(
     OUTPUT CSS/DefaultStyleSheetSource.cpp
     COMMAND ${write_if_different} CSS/DefaultStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh default_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Default.css
+    VERBATIM
+    DEPENDS Scripts/GenerateStyleSheetSource.sh
+    MAIN_DEPENDENCY CSS/Default.css
+)
+
+add_custom_command(
+    OUTPUT CSS/QuirksModeStyleSheetSource.cpp
+    COMMAND ${write_if_different} CSS/QuirksModeStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh quirks_mode_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/QuirksMode.css
     VERBATIM
     DEPENDS Scripts/GenerateStyleSheetSource.sh
     MAIN_DEPENDENCY CSS/Default.css
