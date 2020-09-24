@@ -198,11 +198,6 @@ void ListView::keydown_event(KeyEvent& event)
     if (!model())
         return;
 
-    ModelIndex new_index;
-    if (event.key() == KeyCode::Key_Return) {
-        activate_selected();
-        return;
-    }
     if (event.key() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
             on_escape_pressed();

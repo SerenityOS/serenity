@@ -461,6 +461,12 @@ void AbstractView::keydown_event(KeyEvent& event)
         }
     }
 
+    if (event.key() == KeyCode::Key_Return) {
+        activate_selected();
+        event.accept();
+        return;
+    }
+
     SelectionUpdate selection_update = SelectionUpdate::Set;
     if (event.modifiers() == KeyModifier::Mod_Shift) {
         selection_update = SelectionUpdate::Shift;
@@ -506,6 +512,8 @@ void AbstractView::keydown_event(KeyEvent& event)
         event.accept();
         return;
     }
+
+    Widget::keydown_event(event);
 }
 
 }

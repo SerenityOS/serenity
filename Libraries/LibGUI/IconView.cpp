@@ -603,20 +603,6 @@ void IconView::set_selection(const ModelIndex& new_index)
     AbstractView::set_selection(new_index);
 }
 
-void IconView::keydown_event(KeyEvent& event)
-{
-    if (!model())
-        return;
-    if (!m_visual_row_count || !m_visual_column_count)
-        return;
-
-    if (event.key() == KeyCode::Key_Return) {
-        activate_selected();
-        return;
-    }
-    AbstractView::keydown_event(event);
-}
-
 void IconView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
 {
     if (!model())

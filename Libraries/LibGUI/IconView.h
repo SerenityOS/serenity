@@ -63,7 +63,6 @@ private:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
-    virtual void keydown_event(KeyEvent&) override;
     virtual void drag_move_event(DragEvent&) override;
 
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;

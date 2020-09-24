@@ -166,11 +166,6 @@ void TableView::keydown_event(KeyEvent& event)
     if (!model())
         return;
 
-    if (event.key() == KeyCode::Key_Return) {
-        activate(cursor_index());
-        return;
-    }
-
     AbstractTableView::keydown_event(event);
 
     if (event.is_accepted())
