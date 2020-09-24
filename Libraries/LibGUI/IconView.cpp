@@ -388,6 +388,14 @@ void IconView::update_item_rects(int item_index, ItemData& item_data) const
     item_data.text_rect.set_top(item_rect.y() + item_data.text_offset_y);
 }
 
+Gfx::IntRect IconView::content_rect(const ModelIndex& index) const
+{
+    if (!index.is_valid())
+        return {};
+    auto& item_data = get_item_data(index.row());
+    return item_data.text_rect;
+}
+
 void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Font& font) const
 {
     auto item_rect = this->item_rect(item_index);
@@ -601,6 +609,14 @@ void IconView::keydown_event(KeyEvent& event)
         return;
     if (!m_visual_row_count || !m_visual_column_count)
         return;
+
+    if (event.key() == KeyCode::Key_F2) {
+        if (is_editable() && edit_triggers() & EditTrigger::EditKeyPressed) {
+            begin_editing(cursor_index());
+            event.accept();
+            return;
+        }
+    }
 
     if (event.key() == KeyCode::Key_Return) {
         activate_selected();
