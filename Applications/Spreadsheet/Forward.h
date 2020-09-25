@@ -28,11 +28,14 @@
 
 namespace Spreadsheet {
 
-struct Cell;
+class ConditionView;
 class Sheet;
-struct Position;
+class SheetGlobalObject;
 class Workbook;
 class WorkbookObject;
-class SheetGlobalObject;
+struct Cell;
+struct ConditionalFormat;
+struct Format;
+struct Position;
 
 }

@@ -109,16 +109,37 @@ void Cell::update_data()
     if (!dirty)
         return;
 
-    dirty = false;
-    if (kind == Formula) {
-        if (!evaluated_externally)
-            evaluated_data = sheet->evaluate(data, this);
+    if (dirty) {
+        dirty = false;
+        if (kind == Formula) {
+            if (!evaluated_externally)
+                evaluated_data = sheet->evaluate(data, this);
+        }
+
+        for (auto& ref : referencing_cells) {
+            if (ref) {
+                ref->dirty = true;
+                ref->update();
+            }
+        }
     }
 
-    for (auto& ref : referencing_cells) {
-        if (ref) {
-            ref->dirty = true;
-            ref->update();
+    m_evaluated_formats.background_color.clear();
+    m_evaluated_formats.foreground_color.clear();
+    StringBuilder builder;
+    for (auto& fmt : m_conditional_formats) {
+        if (!fmt.condition.is_empty()) {
+            builder.clear();
+            builder.append("return (");
+            builder.append(fmt.condition);
+            builder.append(')');
+            auto value = sheet->evaluate(builder.string_view(), this);
+            if (value.to_boolean()) {
+                if (fmt.background_color.has_value())
+                    m_evaluated_formats.background_color = fmt.background_color;
+                if (fmt.foreground_color.has_value())
+                    m_evaluated_formats.foreground_color = fmt.foreground_color;
+            }
         }
     }
 }

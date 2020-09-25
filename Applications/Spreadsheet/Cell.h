@@ -27,6 +27,7 @@
 #pragma once
 
 #include "CellType/Type.h"
+#include "ConditionalFormatting.h"
 #include "Forward.h"
 #include "JSIntegration.h"
 #include <AK/String.h>
@@ -62,6 +63,14 @@ struct Cell : public Weakable<Cell> {
     void set_type(const CellType*);
     void set_type_metadata(CellTypeMetadata&&);
 
+    const Format& evaluated_formats() const { return m_evaluated_formats; }
+    const Vector<ConditionalFormat>& conditional_formats() const { return m_conditional_formats; }
+    void set_conditional_formats(Vector<ConditionalFormat>&& fmts)
+    {
+        dirty = true;
+        m_conditional_formats = move(fmts);
+    }
+
     String typed_display() const;
     JS::Value typed_js_data() const;
 
@@ -90,6 +99,9 @@ struct Cell : public Weakable<Cell> {
     Vector<WeakPtr<Cell>> referencing_cells;
     const CellType* m_type { nullptr };
     CellTypeMetadata m_type_metadata;
+
+    Vector<ConditionalFormat> m_conditional_formats;
+    Format m_evaluated_formats;
 
 private:
     void update_data();
