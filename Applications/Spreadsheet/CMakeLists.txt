@@ -4,6 +4,7 @@ compile_json_gui(CondView.json CondFormattingViewUI.h cond_fmt_view_ui_json)
 set(SOURCES
     Cell.cpp
     CellSyntaxHighlighter.cpp
+    CellType/Date.cpp
     CellType/Format.cpp
     CellType/Identity.cpp
     CellType/Numeric.cpp
