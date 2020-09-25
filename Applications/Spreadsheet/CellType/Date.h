@@ -24,40 +24,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Type.h"
-#include "Date.h"
-#include "Identity.h"
-#include "Numeric.h"
-#include "String.h"
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
+#pragma once
 
-static HashMap<String, Spreadsheet::CellType*> s_cell_types;
-static Spreadsheet::StringCell s_string_cell;
-static Spreadsheet::NumericCell s_numeric_cell;
-static Spreadsheet::IdentityCell s_identity_cell;
-static Spreadsheet::DateCell s_date_cell;
+#include "Type.h"
 
 namespace Spreadsheet {
 
-const CellType* CellType::get_by_name(const StringView& name)
-{
-    return s_cell_types.get(name).value_or(nullptr);
-}
+class DateCell : public CellType {
 
-Vector<StringView> CellType::names()
-{
-    Vector<StringView> names;
-    for (auto& it : s_cell_types)
-        names.append(it.key);
-    return names;
-}
-
-CellType::CellType(const StringView& name)
-    : m_name(name)
-{
-    ASSERT(!s_cell_types.contains(name));
-    s_cell_types.set(name, this);
-}
+public:
+    DateCell();
+    virtual ~DateCell() override;
+    virtual String display(Cell&, const CellTypeMetadata&) const override;
+    virtual JS::Value js_value(Cell&, const CellTypeMetadata&) const override;
+};
 
 }
