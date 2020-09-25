@@ -31,6 +31,8 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 
+namespace Inspector {
+
 class RemoteObjectPropertyModel;
 
 class RemoteObject {
@@ -51,3 +53,5 @@ public:
 
     NonnullRefPtr<RemoteObjectPropertyModel> m_property_model;
 };
+
+}

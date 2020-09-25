@@ -32,6 +32,8 @@
 #include <LibGUI/Application.h>
 #include <stdio.h>
 
+namespace Inspector {
+
 RemoteObjectGraphModel::RemoteObjectGraphModel(RemoteProcess& process)
     : m_process(process)
 {
@@ -117,4 +119,6 @@ GUI::Variant RemoteObjectGraphModel::data(const GUI::ModelIndex& index, GUI::Mod
 void RemoteObjectGraphModel::update()
 {
     did_update();
+}
+
 }

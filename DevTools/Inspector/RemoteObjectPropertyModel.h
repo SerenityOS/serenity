@@ -31,6 +31,8 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/Model.h>
 
+namespace Inspector {
+
 class RemoteObject;
 
 class RemoteObjectPropertyModel final : public GUI::Model {
@@ -66,3 +68,5 @@ private:
     RemoteObject& m_object;
     mutable NonnullOwnPtrVector<JsonPath> m_paths;
 };
+
+}

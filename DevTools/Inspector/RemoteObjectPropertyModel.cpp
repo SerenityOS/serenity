@@ -28,6 +28,8 @@
 #include "RemoteObject.h"
 #include "RemoteProcess.h"
 
+namespace Inspector {
+
 RemoteObjectPropertyModel::RemoteObjectPropertyModel(RemoteObject& object)
     : m_object(object)
 {
@@ -234,4 +236,6 @@ const JsonPath* RemoteObjectPropertyModel::find_cached_path(const Vector<JsonPat
     }
 
     return nullptr;
+}
+
 }
