@@ -380,4 +380,9 @@ void ClassicStylePainter::paint_check_box(Painter& painter, const IntRect& rect,
     }
 }
 
+void ClassicStylePainter::paint_transparency_grid(Painter& painter, const IntRect& rect, const Palette& palette)
+{
+    painter.fill_rect_with_checkerboard(rect, { 8, 8 }, palette.base().darkened(0.9), palette.base());
+}
+
 }
