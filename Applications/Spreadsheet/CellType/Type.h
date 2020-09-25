@@ -52,8 +52,13 @@ public:
     virtual JS::Value js_value(Cell&, const CellTypeMetadata&) const = 0;
     virtual ~CellType() { }
 
+    const String& name() const { return m_name; }
+
 protected:
     CellType(const StringView& name);
+
+private:
+    String m_name;
 };
 
 }
