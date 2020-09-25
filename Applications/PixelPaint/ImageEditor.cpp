@@ -64,7 +64,7 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(frame_inner_rect());
 
-    painter.fill_rect_with_checkerboard(rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
+    Gfx::StylePainter::paint_transparency_grid(painter, rect(), palette());
 
     if (m_image) {
         painter.draw_rect(m_editor_image_rect.inflated(2, 2), Color::Black);

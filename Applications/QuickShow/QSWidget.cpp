@@ -186,7 +186,7 @@ void QSWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(frame_inner_rect());
 
-    painter.fill_rect_with_checkerboard(frame_inner_rect(), { 8, 8 }, palette().base().darkened(0.9), palette().base());
+    Gfx::StylePainter::paint_transparency_grid(painter, frame_inner_rect(), palette());
 
     if (!m_bitmap.is_null())
         painter.draw_scaled_bitmap(m_bitmap_rect, *m_bitmap, m_bitmap->rect());
