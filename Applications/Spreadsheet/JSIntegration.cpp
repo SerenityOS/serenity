@@ -46,6 +46,12 @@ SheetGlobalObject::~SheetGlobalObject()
 JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receiver) const
 {
     if (name.is_string()) {
+        if (name.as_string() == "value") {
+            if (auto cell = m_sheet.current_evaluated_cell())
+                return cell->js_data();
+
+            return JS::js_undefined();
+        }
         if (auto pos = Sheet::parse_cell_name(name.as_string()); pos.has_value()) {
             auto& cell = m_sheet.ensure(pos.value());
             cell.reference_from(m_sheet.current_evaluated_cell());

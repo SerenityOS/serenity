@@ -140,6 +140,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
                 auto& cell = m_sheet->ensure(position);
                 cell.set_type(dialog->type());
                 cell.set_type_metadata(dialog->metadata());
+                cell.set_conditional_formats(dialog->conditional_formats());
             }
 
             m_table_view->update();

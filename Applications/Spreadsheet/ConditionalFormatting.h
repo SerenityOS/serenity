@@ -26,34 +26,48 @@
 
 #pragma once
 
-#include "../Forward.h"
-#include "../ConditionalFormatting.h"
-#include <AK/Forward.h>
+#include "Forward.h"
 #include <AK/String.h>
+#include <LibGUI/ScrollableWidget.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/TextAlignment.h>
-#include <LibJS/Forward.h>
 
 namespace Spreadsheet {
 
-struct CellTypeMetadata {
-    int length { -1 };
-    String format;
-    Gfx::TextAlignment alignment { Gfx::TextAlignment::CenterRight };
-    Format static_format;
+struct Format {
+    Optional<Color> foreground_color;
+    Optional<Color> background_color;
 };
 
-class CellType {
+struct ConditionalFormat : public Format {
+    String condition;
+};
+
+class ConditionView : public GUI::Widget {
+    C_OBJECT(ConditionView)
 public:
-    static const CellType* get_by_name(const StringView&);
-    static Vector<StringView> names();
+    virtual ~ConditionView() override;
 
-    virtual String display(Cell&, const CellTypeMetadata&) const = 0;
-    virtual JS::Value js_value(Cell&, const CellTypeMetadata&) const = 0;
-    virtual ~CellType() { }
+private:
+    ConditionView(ConditionalFormat&);
 
-protected:
-    CellType(const StringView& name);
+    ConditionalFormat& m_format;
+};
+
+class ConditionsView : public GUI::Widget {
+    C_OBJECT(ConditionsView)
+public:
+    virtual ~ConditionsView() override;
+
+    void set_formats(Vector<ConditionalFormat>*);
+
+    void add_format();
+    void remove_top();
+
+private:
+    ConditionsView();
+
+    Vector<ConditionalFormat>* m_formats { nullptr };
+    NonnullRefPtrVector<GUI::Widget> m_widgets;
 };
 
 }

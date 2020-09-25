@@ -25,6 +25,7 @@
  */
 
 #include "SpreadsheetModel.h"
+#include "ConditionalFormatting.h"
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -85,7 +86,10 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
                 return Color(Color::Red);
         }
 
-        if (auto color = cell->type_metadata().static_foreground_color; color.has_value())
+        if (cell->evaluated_formats().foreground_color.has_value())
+            return cell->evaluated_formats().foreground_color.value();
+
+        if (auto color = cell->type_metadata().static_format.foreground_color; color.has_value())
             return color.value();
 
         return {};
@@ -96,7 +100,10 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         if (!cell)
             return {};
 
-        if (auto color = cell->type_metadata().static_background_color; color.has_value())
+        if (cell->evaluated_formats().background_color.has_value())
+            return cell->evaluated_formats().background_color.value();
+
+        if (auto color = cell->type_metadata().static_format.background_color; color.has_value())
             return color.value();
 
         return {};
