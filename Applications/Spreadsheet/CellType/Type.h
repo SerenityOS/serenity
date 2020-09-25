@@ -26,8 +26,8 @@
 
 #pragma once
 
-#include "../Forward.h"
 #include "../ConditionalFormatting.h"
+#include "../Forward.h"
 #include <AK/Forward.h>
 #include <AK/String.h>
 #include <LibGfx/Color.h>
