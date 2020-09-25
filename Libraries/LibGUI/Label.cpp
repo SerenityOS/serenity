@@ -38,6 +38,8 @@ Label::Label(const StringView& text)
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);
     set_frame_shape(Gfx::FrameShape::NoFrame);
+
+    REGISTER_STRING_PROPERTY("text", text, set_text);
 }
 
 Label::~Label()

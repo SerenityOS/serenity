@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/JsonObject.h>
 #include <AK/String.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Application.h>
@@ -38,7 +39,7 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
 
-#define REGISTER_WIDGET(namespace_, class_name)               \
+#define REGISTER_WIDGET(namespace_, class_name)                    \
     extern GUI::WidgetClassRegistration registration_##class_name; \
     GUI::WidgetClassRegistration registration_##class_name(#namespace_ "::" #class_name, []() { return namespace_::class_name::construct(); });
 
