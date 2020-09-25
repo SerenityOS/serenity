@@ -198,9 +198,9 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
         {
             auto& checkbox = right_side.add<GUI::CheckBox>("Override display format");
             auto& editor = right_side.add<GUI::TextEditor>();
-            checkbox.set_checked(!m_format.is_null());
+            checkbox.set_checked(!m_format.is_empty());
             editor.set_should_hide_unnecessary_scrollbars(true);
-            editor.set_enabled(!m_format.is_null());
+            editor.set_enabled(!m_format.is_empty());
             editor.set_text(m_format);
 
             checkbox.set_preferred_size(0, 20);

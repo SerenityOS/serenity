@@ -44,7 +44,7 @@ String NumericCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 {
     auto value = js_value(cell, metadata);
     String string;
-    if (metadata.format.is_null())
+    if (metadata.format.is_empty())
         string = value.to_string_without_side_effects();
     else
         string = format_double(metadata.format.characters(), value.to_double(cell.sheet->interpreter()));
