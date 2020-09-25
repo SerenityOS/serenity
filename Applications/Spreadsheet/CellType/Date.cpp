@@ -24,40 +24,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Type.h"
 #include "Date.h"
-#include "Identity.h"
-#include "Numeric.h"
-#include "String.h"
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
-
-static HashMap<String, Spreadsheet::CellType*> s_cell_types;
-static Spreadsheet::StringCell s_string_cell;
-static Spreadsheet::NumericCell s_numeric_cell;
-static Spreadsheet::IdentityCell s_identity_cell;
-static Spreadsheet::DateCell s_date_cell;
+#include "../Cell.h"
+#include "../Spreadsheet.h"
+#include <LibCore/DateTime.h>
 
 namespace Spreadsheet {
 
-const CellType* CellType::get_by_name(const StringView& name)
+DateCell::DateCell()
+    : CellType("Date")
 {
-    return s_cell_types.get(name).value_or(nullptr);
 }
 
-Vector<StringView> CellType::names()
+DateCell::~DateCell()
 {
-    Vector<StringView> names;
-    for (auto& it : s_cell_types)
-        names.append(it.key);
-    return names;
 }
 
-CellType::CellType(const StringView& name)
-    : m_name(name)
+String DateCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 {
-    ASSERT(!s_cell_types.contains(name));
-    s_cell_types.set(name, this);
+    auto timestamp = js_value(cell, metadata);
+    auto string = Core::DateTime::from_timestamp(timestamp.to_i32(cell.sheet->interpreter())).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S" : metadata.format.characters());
+
+    if (metadata.length >= 0)
+        return string.substring(0, metadata.length);
+
+    return string;
+}
+
+JS::Value DateCell::js_value(Cell& cell, const CellTypeMetadata&) const
+{
+    auto value = cell.js_data().to_double(cell.sheet->interpreter());
+    return JS::Value(value / 1000); // Turn it to seconds
 }
 
 }
