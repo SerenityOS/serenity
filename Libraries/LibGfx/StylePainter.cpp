@@ -78,4 +78,9 @@ void StylePainter::paint_check_box(Painter& painter, const IntRect& rect, const 
     current().paint_check_box(painter, rect, palette, is_enabled, is_checked, is_being_pressed);
 }
 
+void StylePainter::paint_transparency_grid(Painter& painter, const IntRect& rect, const Palette& palette)
+{
+    current().paint_transparency_grid(painter, rect, palette);
+}
+
 }
