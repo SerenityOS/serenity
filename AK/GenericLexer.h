@@ -36,6 +36,7 @@ public:
     explicit GenericLexer(const StringView& input);
     virtual ~GenericLexer();
 
+	// A lambda/function can be used to match characters as the user pleases
     using Condition = Function<bool(char)>;
 
     size_t tell() const { return m_index; }
@@ -82,8 +83,13 @@ constexpr auto is_any_of(const StringView& values)
     return [values](auto c) { return values.contains(c); };
 }
 
-// ctype adaptors
-// FIXME: maybe put them in an another file?
+/*
+ * CType adapters: pass them as Conditions to a GenericLexer's methods
+ * Examples:
+ *   - `if (lexer.next_is(is_digit))`
+ *   - `auto name = lexer.consume_while(is_alphanum);
+ *   - `lexer.ignore_until(is_any_of("<^>"))`
+ */
 bool is_alpha(char);
 bool is_alphanum(char);
 bool is_control(char);
