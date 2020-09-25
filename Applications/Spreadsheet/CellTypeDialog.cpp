@@ -28,18 +28,23 @@
 #include "Cell.h"
 #include "Spreadsheet.h"
 #include <AK/StringBuilder.h>
+#include <Applications/Spreadsheet/CondFormattingUI.h>
+#include <Applications/Spreadsheet/CondFormattingViewUI.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
+#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
+
+REGISTER_WIDGET(Spreadsheet, ConditionsView);
 
 namespace Spreadsheet {
 
@@ -56,7 +61,7 @@ CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, 
         builder.appendf("Format %zu Cells", positions.size());
 
     set_title(builder.string_view());
-    resize(270, 360);
+    resize(285, 360);
 
     auto& main_widget = set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
@@ -138,8 +143,8 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
         m_type = &cell.type();
         m_vertical_alignment = vertical_alignment_from(cell.type_metadata().alignment);
         m_horizontal_alignment = horizontal_alignment_from(cell.type_metadata().alignment);
-        m_static_background_color = cell.type_metadata().static_background_color;
-        m_static_foreground_color = cell.type_metadata().static_foreground_color;
+        m_static_format = cell.type_metadata().static_format;
+        m_conditional_formats = cell.conditional_formats();
     }
 
     auto& type_tab = tabs.add_tab<GUI::Widget>("Type");
@@ -317,10 +322,10 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                 auto& foreground_selector = foreground_container.add<GUI::ColorInput>();
                 foreground_selector.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
                 foreground_selector.set_preferred_size(0, 22);
-                if (m_static_foreground_color.has_value())
-                    foreground_selector.set_color(m_static_foreground_color.value());
+                if (m_static_format.foreground_color.has_value())
+                    foreground_selector.set_color(m_static_format.foreground_color.value());
                 foreground_selector.on_change = [&]() {
-                    m_static_foreground_color = foreground_selector.color();
+                    m_static_format.foreground_color = foreground_selector.color();
                 };
             }
 
@@ -340,13 +345,31 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
                 auto& background_selector = background_container.add<GUI::ColorInput>();
                 background_selector.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
                 background_selector.set_preferred_size(0, 22);
-                if (m_static_background_color.has_value())
-                    background_selector.set_color(m_static_background_color.value());
+                if (m_static_format.background_color.has_value())
+                    background_selector.set_color(m_static_format.background_color.value());
                 background_selector.on_change = [&]() {
-                    m_static_background_color = background_selector.color();
+                    m_static_format.background_color = background_selector.color();
                 };
             }
         }
+    }
+
+    auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional Format");
+    conditional_fmt_tab.load_from_json(cond_fmt_ui_json);
+    {
+        auto& view = static_cast<Spreadsheet::ConditionsView&>(*conditional_fmt_tab.find_descendant_by_name("conditions_view"));
+        view.set_formats(&m_conditional_formats);
+
+        auto& add_button = static_cast<GUI::Button&>(*conditional_fmt_tab.find_descendant_by_name("add_button"));
+        add_button.on_click = [&](auto) {
+            view.add_format();
+        };
+
+        // FIXME: Disable this when empty.
+        auto& remove_button = static_cast<GUI::Button&>(*conditional_fmt_tab.find_descendant_by_name("remove_button"));
+        remove_button.on_click = [&](auto) {
+            view.remove_top();
+        };
     }
 }
 
@@ -355,8 +378,7 @@ CellTypeMetadata CellTypeDialog::metadata() const
     CellTypeMetadata metadata;
     metadata.format = m_format;
     metadata.length = m_length;
-    metadata.static_foreground_color = m_static_foreground_color;
-    metadata.static_background_color = m_static_background_color;
+    metadata.static_format = m_static_format;
 
     switch (m_vertical_alignment) {
     case VerticalAlignment::Top:
@@ -401,6 +423,87 @@ CellTypeMetadata CellTypeDialog::metadata() const
     }
 
     return metadata;
+}
+
+ConditionView::ConditionView(ConditionalFormat& fmt)
+    : m_format(fmt)
+{
+    load_from_json(cond_fmt_view_ui_json);
+
+    auto& fg_input = *static_cast<GUI::ColorInput*>(find_descendant_by_name("foreground_input"));
+    auto& bg_input = *static_cast<GUI::ColorInput*>(find_descendant_by_name("background_input"));
+    auto& formula_editor = *static_cast<GUI::TextEditor*>(find_descendant_by_name("formula_editor"));
+
+    if (m_format.foreground_color.has_value())
+        fg_input.set_color(m_format.foreground_color.value());
+
+    if (m_format.background_color.has_value())
+        bg_input.set_color(m_format.background_color.value());
+
+    formula_editor.set_text(m_format.condition);
+
+    // FIXME: Allow unsetting these.
+    fg_input.on_change = [&] {
+        m_format.foreground_color = fg_input.color();
+    };
+
+    bg_input.on_change = [&] {
+        m_format.background_color = bg_input.color();
+    };
+
+    formula_editor.set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+    formula_editor.set_should_hide_unnecessary_scrollbars(true);
+    formula_editor.set_font(&Gfx::Font::default_fixed_width_font());
+    formula_editor.on_change = [&] {
+        m_format.condition = formula_editor.text();
+    };
+}
+
+ConditionView::~ConditionView()
+{
+}
+
+ConditionsView::ConditionsView()
+{
+    set_layout<GUI::VerticalBoxLayout>().set_spacing(2);
+}
+
+void ConditionsView::set_formats(Vector<ConditionalFormat>* formats)
+{
+    ASSERT(!m_formats);
+
+    m_formats = formats;
+
+    for (auto& entry : *m_formats)
+        m_widgets.append(add<ConditionView>(entry));
+}
+
+void ConditionsView::add_format()
+{
+    ASSERT(m_formats);
+
+    m_formats->empend();
+    auto& last = m_formats->last();
+
+    m_widgets.append(add<ConditionView>(last));
+
+    update();
+}
+
+void ConditionsView::remove_top()
+{
+    ASSERT(m_formats);
+
+    if (m_formats->is_empty())
+        return;
+
+    m_formats->take_last();
+    m_widgets.take_last()->remove_from_parent();
+    update();
+}
+
+ConditionsView::~ConditionsView()
+{
 }
 
 }

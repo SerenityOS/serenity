@@ -27,6 +27,7 @@
 #pragma once
 
 #include "CellType/Type.h"
+#include "ConditionalFormatting.h"
 #include "Forward.h"
 #include <LibGUI/Dialog.h>
 
@@ -38,6 +39,7 @@ class CellTypeDialog : public GUI::Dialog {
 public:
     CellTypeMetadata metadata() const;
     const CellType* type() const { return m_type; }
+    Vector<ConditionalFormat> conditional_formats() { return m_conditional_formats; }
 
     enum class HorizontalAlignment : int {
         Left = 0,
@@ -60,8 +62,8 @@ private:
     String m_format;
     HorizontalAlignment m_horizontal_alignment { HorizontalAlignment::Right };
     VerticalAlignment m_vertical_alignment { VerticalAlignment::Center };
-    Optional<Color> m_static_foreground_color;
-    Optional<Color> m_static_background_color;
+    Format m_static_format;
+    Vector<ConditionalFormat> m_conditional_formats;
 };
 
 }
