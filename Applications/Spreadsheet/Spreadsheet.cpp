@@ -225,6 +225,13 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     auto json = sheet->interpreter().global_object().get("JSON");
     auto& parse_function = json.as_object().get("parse").as_function();
 
+    auto read_format = [](auto& format, const auto& obj) {
+        if (auto value = obj.get("foreground_color"); value.is_string())
+            format.foreground_color = Color::from_string(value.as_string());
+        if (auto value = obj.get("background_color"); value.is_string())
+            format.background_color = Color::from_string(value.as_string());
+    };
+
     cells.for_each_member([&](auto& name, JsonValue& value) {
         auto position_option = parse_cell_name(name);
         if (!position_option.has_value())
@@ -247,6 +254,52 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
         }
         }
 
+        auto type_name = obj.get_or("type", "Numeric").to_string();
+        cell->set_type(type_name);
+
+        auto type_meta = obj.get("type_metadata");
+        if (type_meta.is_object()) {
+            auto& meta_obj = type_meta.as_object();
+            auto meta = cell->type_metadata();
+            if (auto value = meta_obj.get("length"); value.is_number())
+                meta.length = value.to_i32();
+            if (auto value = meta_obj.get("format"); value.is_string())
+                meta.format = value.as_string();
+            read_format(meta.static_format, meta_obj);
+
+            cell->set_type_metadata(move(meta));
+        }
+
+        auto conditional_formats = obj.get("conditional_formats");
+        auto cformats = cell->conditional_formats();
+        if (conditional_formats.is_array()) {
+            conditional_formats.as_array().for_each([&](const auto& fmt_val) {
+                if (!fmt_val.is_object())
+                    return IterationDecision::Continue;
+
+                auto& fmt_obj = fmt_val.as_object();
+                auto fmt_cond = fmt_obj.get("condition").to_string();
+                if (fmt_cond.is_empty())
+                    return IterationDecision::Continue;
+
+                ConditionalFormat fmt;
+                fmt.condition = move(fmt_cond);
+                read_format(fmt, fmt_obj);
+                cformats.append(move(fmt));
+
+                return IterationDecision::Continue;
+            });
+            cell->set_conditional_formats(move(cformats));
+        }
+
+        auto evaluated_format = obj.get("evaluated_formats");
+        if (evaluated_format.is_object()) {
+            auto& evaluated_format_obj = evaluated_format.as_object();
+            auto& evaluated_fmts = cell->m_evaluated_formats;
+
+            read_format(evaluated_fmts, evaluated_format_obj);
+        }
+
         sheet->m_cells.set(position, cell.release_nonnull());
         return IterationDecision::Continue;
     });
@@ -258,6 +311,13 @@ JsonObject Sheet::to_json() const
 {
     JsonObject object;
     object.set("name", m_name);
+
+    auto save_format = [](const auto& format, auto& obj) {
+        if (format.foreground_color.has_value())
+            obj.set("foreground_color", format.foreground_color.value().to_string());
+        if (format.background_color.has_value())
+            obj.set("background_color", format.background_color.value().to_string());
+    };
 
     auto columns = JsonArray();
     for (auto& column : m_columns)
@@ -283,6 +343,39 @@ JsonObject Sheet::to_json() const
         } else {
             data.set("value", it.value->data);
         }
+
+        // Set type & meta
+        auto& type = it.value->type();
+        auto& meta = it.value->type_metadata();
+        data.set("type", type.name());
+
+        JsonObject metadata_object;
+        metadata_object.set("length", meta.length);
+        metadata_object.set("format", meta.format);
+#if 0
+        metadata_object.set("alignment", alignment_to_string(meta.alignment));
+#endif
+        save_format(meta.static_format, metadata_object);
+
+        data.set("type_metadata", move(metadata_object));
+
+        // Set conditional formats
+        JsonArray conditional_formats;
+        for (auto& fmt : it.value->conditional_formats()) {
+            JsonObject fmt_object;
+            fmt_object.set("condition", fmt.condition);
+            save_format(fmt, fmt_object);
+
+            conditional_formats.append(move(fmt_object));
+        }
+
+        data.set("conditional_formats", move(conditional_formats));
+
+        auto& evaluated_formats = it.value->evaluated_formats();
+        JsonObject evaluated_formats_obj;
+
+        save_format(evaluated_formats, evaluated_formats_obj);
+        data.set("evaluated_formats", move(evaluated_formats_obj));
 
         cells.set(key, move(data));
     }
