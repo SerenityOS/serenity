@@ -226,6 +226,7 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     case TokenType::RegexLiteral:
     case TokenType::RegexFlags:
     case TokenType::UnterminatedStringLiteral:
+    case TokenType::UnterminatedRegexLiteral:
         return StyleType::String;
     case TokenType::BracketClose:
     case TokenType::BracketOpen:
@@ -330,7 +331,7 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     case TokenType::Identifier:
         return StyleType::Identifier;
     default:
-        dbg() << "Unknown style type for token" << token.name();
+        dbg() << "Unknown style type for token " << token.name();
         ASSERT_NOT_REACHED();
     }
 }

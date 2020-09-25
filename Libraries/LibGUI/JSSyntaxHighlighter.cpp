@@ -49,6 +49,7 @@ static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
     case JS::TokenType::RegexLiteral:
     case JS::TokenType::RegexFlags:
     case JS::TokenType::UnterminatedStringLiteral:
+    case JS::TokenType::UnterminatedRegexLiteral:
         return { palette.syntax_string() };
     case JS::TokenType::BracketClose:
     case JS::TokenType::BracketOpen:
