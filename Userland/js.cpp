@@ -616,6 +616,7 @@ int main(int argc, char** argv)
                 case JS::TokenType::RegexLiteral:
                 case JS::TokenType::RegexFlags:
                 case JS::TokenType::UnterminatedStringLiteral:
+                case JS::TokenType::UnterminatedRegexLiteral:
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
                     break;
                 case JS::TokenType::BracketClose:
