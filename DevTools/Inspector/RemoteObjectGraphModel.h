@@ -32,6 +32,8 @@
 #include <LibCore/LocalSocket.h>
 #include <LibGUI/Model.h>
 
+namespace Inspector {
+
 class RemoteProcess;
 
 class RemoteObjectGraphModel final : public GUI::Model {
@@ -60,3 +62,5 @@ private:
     GUI::Icon m_layout_icon;
     GUI::Icon m_timer_icon;
 };
+
+}

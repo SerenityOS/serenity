@@ -29,6 +29,8 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/LocalSocket.h>
 
+namespace Inspector {
+
 class RemoteObjectGraphModel;
 class RemoteObject;
 
@@ -63,3 +65,5 @@ private:
     RefPtr<Core::LocalSocket> m_socket;
     NonnullOwnPtrVector<RemoteObject> m_roots;
 };
+
+}

@@ -31,6 +31,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+namespace Inspector {
+
 RemoteProcess* s_the;
 
 RemoteProcess& RemoteProcess::the()
@@ -194,4 +196,6 @@ void RemoteProcess::update()
         fprintf(stderr, "Couldn't connect to PID %d\n", m_pid);
         exit(1);
     }
+}
+
 }

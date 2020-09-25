@@ -36,10 +36,11 @@
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/ProcessChooser.h>
 #include <LibGUI/Splitter.h>
-#include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
+
+using namespace Inspector;
 
 [[noreturn]] static void print_usage_and_exit()
 {
