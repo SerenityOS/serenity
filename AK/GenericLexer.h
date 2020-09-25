@@ -41,6 +41,8 @@ public:
     size_t tell() const { return m_index; }
     size_t tell_remaining() const { return m_input.length() - m_index; }
 
+    StringView remaining() const { return m_input.substring_view(m_index); }
+
     bool is_eof() const;
 
     char peek(size_t offset = 0) const;
