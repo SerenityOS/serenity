@@ -118,6 +118,19 @@ private:
     virtual void resize_event(ResizeEvent&) override;
 };
 
+class ColorPreview final : public GUI::Widget {
+    C_OBJECT(ColorPreview);
+
+public:
+    void set_color(Color);
+
+private:
+    ColorPreview(Color);
+
+    Color m_color;
+    virtual void paint_event(GUI::PaintEvent&) override;
+};
+
 class CustomColorWidget final : public GUI::Widget {
     C_OBJECT(CustomColorWidget);
 
@@ -257,20 +270,10 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     preview_container.set_preferred_size(0, 128);
 
     // Current color
-    auto& current_color_widget = preview_container.add<Widget>();
-    current_color_widget.set_fill_with_background_color(true);
-
-    auto pal1 = current_color_widget.palette();
-    pal1.set_color(ColorRole::Background, m_color);
-    current_color_widget.set_palette(pal1);
+    preview_container.add<ColorPreview>(m_color);
 
     // Preview selected color
-    m_preview_widget = preview_container.add<Widget>();
-    m_preview_widget->set_fill_with_background_color(true);
-
-    auto pal2 = m_preview_widget->palette();
-    pal2.set_color(ColorRole::Background, m_color);
-    m_preview_widget->set_palette(pal2);
+    m_preview_widget = preview_container.add<ColorPreview>(m_color);
 
     vertical_container.layout()->add_spacer();
 
@@ -367,10 +370,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
 
 void ColorPicker::update_color_widgets()
 {
-    auto pal = m_preview_widget->palette();
-    pal.set_color(ColorRole::Background, m_color);
-    m_preview_widget->set_palette(pal);
-    m_preview_widget->update();
+    m_preview_widget->set_color(m_color);
 
     m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_string() : m_color.to_string_without_alpha());
 
@@ -700,6 +700,34 @@ void ColorSlider::paint_event(GUI::PaintEvent& event)
 void ColorSlider::resize_event(ResizeEvent&)
 {
     recalculate_position();
+}
+
+ColorPreview::ColorPreview(Color color)
+    : m_color(color)
+{
+}
+
+void ColorPreview::set_color(Color color)
+{
+    if (m_color == color)
+        return;
+
+    m_color = color;
+    update();
+}
+
+void ColorPreview::paint_event(PaintEvent& event)
+{
+    Painter painter(*this);
+    painter.add_clip_rect(event.rect());
+
+    if (m_color.alpha() < 255) {
+        Gfx::StylePainter::paint_transparency_grid(painter, rect(), palette());
+        painter.fill_rect(rect(), m_color);
+        painter.fill_rect({ 0, 0, rect().width() / 4, rect().height() }, m_color.with_alpha(255));
+    } else {
+        painter.fill_rect(rect(), m_color);
+    }
 }
 
 }
