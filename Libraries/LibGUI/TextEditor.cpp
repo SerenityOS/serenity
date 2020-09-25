@@ -53,6 +53,8 @@ namespace GUI {
 TextEditor::TextEditor(Type type)
     : m_type(type)
 {
+    REGISTER_STRING_PROPERTY("text", text, set_text);
+
     set_accepts_emoji_input(true);
     set_override_cursor(Gfx::StandardCursor::IBeam);
     set_background_role(ColorRole::Base);
@@ -70,6 +72,7 @@ TextEditor::TextEditor(Type type)
     });
     m_automatic_selection_scroll_timer->stop();
     create_actions();
+
 }
 
 TextEditor::~TextEditor()
