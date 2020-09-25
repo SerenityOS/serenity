@@ -38,35 +38,75 @@ namespace AK {
 template<typename T, typename = void>
 struct Formatter;
 
+struct TypeErasedParameter {
+    const void* value;
+    void (*formatter)(StringBuilder& builder, const void* value, StringView specifier, Span<const TypeErasedParameter> parameters);
+};
+
 } // namespace AK
 
 namespace AK::Detail::Format {
 
 template<typename T>
-bool format_value(StringBuilder& builder, const void* value, StringView flags)
+void format_value(StringBuilder& builder, const void* value, StringView specifier, AK::Span<const TypeErasedParameter> parameters)
 {
     Formatter<T> formatter;
 
-    if (!formatter.parse(flags))
-        return false;
-
-    formatter.format(builder, *static_cast<const T*>(value));
-    return true;
+    formatter.parse(specifier);
+    formatter.format(builder, *static_cast<const T*>(value), parameters);
 }
 
 } // namespace AK::Detail::Format
 
 namespace AK {
 
-struct TypeErasedParameter {
-    const void* value;
-    bool (*formatter)(StringBuilder& builder, const void* value, StringView flags);
+constexpr size_t max_format_arguments = 256;
+
+// We use the same format for most types for consistency. This is taken directly from std::format.
+// Not all valid options do anything yet.
+// https://en.cppreference.com/w/cpp/utility/format/formatter#Standard_format_specification
+struct StandardFormatter {
+    enum class Align {
+        Default,
+        Left,
+        Right,
+        Center,
+    };
+    enum class Sign {
+        NegativeOnly,
+        PositiveAndNegative,
+        ReserveSpace,
+        Default = NegativeOnly
+    };
+    enum class Mode {
+        Default,
+        Binary,
+        Decimal,
+        Octal,
+        Hexadecimal,
+        Character,
+        String,
+        Pointer,
+    };
+
+    static constexpr size_t value_not_set = 0;
+    static constexpr size_t value_from_arg = NumericLimits<size_t>::max() - max_format_arguments;
+
+    Align m_align = Align::Default;
+    Sign m_sign = Sign::NegativeOnly;
+    Mode m_mode = Mode::Default;
+    bool m_alternative_form = false;
+    char m_fill = ' ';
+    bool m_zero_pad = false;
+    size_t m_width = value_not_set;
+    size_t m_precision = value_not_set;
+
+    void parse(StringView specifier);
 };
 
 template<>
-struct Formatter<StringView> {
-    bool parse(StringView flags);
-    void format(StringBuilder& builder, StringView value);
+struct Formatter<StringView> : StandardFormatter {
+    void format(StringBuilder& builder, StringView value, Span<const TypeErasedParameter>);
 };
 template<>
 struct Formatter<const char*> : Formatter<StringView> {
@@ -82,18 +122,14 @@ struct Formatter<String> : Formatter<StringView> {
 };
 
 template<typename T>
-struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> {
-    bool parse(StringView flags);
-    void format(StringBuilder&, T value);
-
-    bool zero_pad { false };
-    bool hexadecimal { false };
-    size_t field_width { 0 };
+struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFormatter {
+    void format(StringBuilder&, T value, Span<const TypeErasedParameter>);
 };
 
 template<typename... Parameters>
 Array<TypeErasedParameter, sizeof...(Parameters)> make_type_erased_parameters(const Parameters&... parameters)
 {
+    static_assert(sizeof...(Parameters) <= max_format_arguments);
     return { TypeErasedParameter { &parameters, Detail::Format::format_value<Parameters> }... };
 }
 
