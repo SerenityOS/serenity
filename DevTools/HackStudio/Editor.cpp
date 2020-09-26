@@ -25,16 +25,22 @@
  */
 
 #include "Editor.h"
-#include "CppAutoComplete.h"
+#include "Debugger/Debugger.h"
 #include "EditorWrapper.h"
+#include "HackStudio.h"
+#include "Language.h"
 #include <AK/ByteBuffer.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/CppSyntaxHighlighter.h>
+#include <LibGUI/INISyntaxHighlighter.h>
+#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
+#include <LibGUI/ShellSyntaxHighlighter.h>
 #include <LibGUI/SyntaxHighlighter.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
@@ -269,10 +275,10 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Left && event.position().x() < ruler_line_rect.width()) {
         if (!breakpoint_lines().contains_slow(text_position.line())) {
             breakpoint_lines().append(text_position.line());
-            on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);
+            Debugger::on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);
         } else {
             breakpoint_lines().remove_first_matching([&](size_t line) { return line == text_position.line(); });
-            on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Removed);
+            Debugger::on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Removed);
         }
     }
 
@@ -462,6 +468,25 @@ void Editor::set_document(GUI::TextDocument& doc)
 {
     ASSERT(doc.is_code_document());
     GUI::TextEditor::set_document(doc);
+
+    CodeDocument& code_document = static_cast<CodeDocument&>(doc);
+    switch (code_document.language()) {
+    case Language::Cpp:
+        set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
+        cpp_Language_server_connection().post_message(Messages::CppLanguageServer::FileOpened(code_document.file_path().string()));
+        break;
+    case Language::JavaScript:
+        set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
+        break;
+    case Language::Ini:
+        set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
+        break;
+    case Language::Shell:
+        set_syntax_highlighter(make<GUI::ShellSyntaxHighlighter>());
+        break;
+    default:
+        set_syntax_highlighter(nullptr);
+    }
 }
 
 Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data()
@@ -492,8 +517,15 @@ Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data(
 
 void Editor::update_autocomplete(const AutoCompleteRequestData& data)
 {
-    // TODO: Move this part to a language server component :)
-    auto suggestions = CppAutoComplete::get_suggestions(text(), data.position);
+    if (code_document().language() != Language::Cpp)
+        return;
+    auto autocomplete_response = cpp_Language_server_connection().send_sync<Messages::CppLanguageServer::AutoCompleteSuggestions>(
+        code_document().file_path().string(),
+        data.position.line(),
+        data.position.column());
+    ASSERT(autocomplete_response);
+
+    auto suggestions = autocomplete_response->suggestions();
     if (suggestions.is_empty()) {
         close_autocomplete();
         return;
@@ -513,6 +545,60 @@ void Editor::close_autocomplete()
 {
     m_autocomplete_box->close();
     m_autocomplete_in_focus = false;
+}
+
+void Editor::on_edit_action(const GUI::Command& command)
+{
+    if (code_document().language() != Language::Cpp)
+        return;
+
+    if (command.is_insert_text()) {
+        const GUI::InsertTextCommand& insert_command = static_cast<const GUI::InsertTextCommand&>(command);
+        cpp_Language_server_connection().post_message(
+            Messages::CppLanguageServer::FileEditInsertText(
+                code_document().file_path().string(),
+                insert_command.text(),
+                insert_command.range().start().line(),
+                insert_command.range().start().column()));
+        return;
+    }
+
+    if (command.is_remove_text()) {
+        const GUI::RemoveTextCommand& remove_command = static_cast<const GUI::RemoveTextCommand&>(command);
+        cpp_Language_server_connection().post_message(
+            Messages::CppLanguageServer::FileEditRemoveText(
+                code_document().file_path().string(),
+                remove_command.range().start().line(),
+                remove_command.range().start().column(),
+                remove_command.range().end().line(),
+                remove_command.range().end().column()));
+        return;
+    }
+
+    ASSERT_NOT_REACHED();
+}
+
+void Editor::undo()
+{
+    TextEditor::undo();
+    flush_file_content_to_langauge_server();
+}
+
+void Editor::redo()
+{
+    TextEditor::redo();
+    flush_file_content_to_langauge_server();
+}
+
+void Editor::flush_file_content_to_langauge_server()
+{
+    if (code_document().language() != Language::Cpp)
+        return;
+
+    cpp_Language_server_connection().post_message(
+        Messages::CppLanguageServer::SetFileContent(
+            code_document().file_path().string(),
+            document().text()));
 }
 
 }

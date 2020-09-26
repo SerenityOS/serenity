@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include "Language.h"
+#include <AK/LexicalPath.h>
 #include <LibGUI/TextDocument.h>
 
 namespace HackStudio {
@@ -33,6 +35,7 @@ namespace HackStudio {
 class CodeDocument final : public GUI::TextDocument {
 public:
     virtual ~CodeDocument() override;
+    static NonnullRefPtr<CodeDocument> create(const LexicalPath& file_path, Client* client = nullptr);
     static NonnullRefPtr<CodeDocument> create(Client* client = nullptr);
 
     const Vector<size_t>& breakpoint_lines() const { return m_breakpoint_lines; }
@@ -40,12 +43,17 @@ public:
     Optional<size_t> execution_position() const { return m_execution_position; }
     void set_execution_position(size_t line) { m_execution_position = line; }
     void clear_execution_position() { m_execution_position.clear(); }
+    const LexicalPath& file_path() const { return m_file_path; }
+    Language language() const { return m_language; }
 
     virtual bool is_code_document() const override final { return true; }
 
 private:
-    explicit CodeDocument(Client* client);
+    explicit CodeDocument(const LexicalPath& file_path, Client* client = nullptr);
+    explicit CodeDocument(Client* client = nullptr);
 
+    LexicalPath m_file_path;
+    Language m_language { Language::Unknown };
     Vector<size_t> m_breakpoint_lines;
     Optional<size_t> m_execution_position;
 };

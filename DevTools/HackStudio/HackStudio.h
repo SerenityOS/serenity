@@ -27,6 +27,7 @@
 #pragma once
 
 #include "EditorWrapper.h"
+#include "LanguageClients/Cpp/ServerConnection.h"
 #include "Project.h"
 #include <AK/String.h>
 #include <LibGUI/TextEditor.h>
@@ -40,5 +41,6 @@ void open_file(const String&);
 Project& project();
 String currently_open_file();
 void set_current_editor_wrapper(RefPtr<EditorWrapper>);
+LanguageClients::Cpp::ServerConnection& cpp_Language_server_connection();
 
 }
