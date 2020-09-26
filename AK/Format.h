@@ -81,9 +81,11 @@ struct StandardFormatter {
     enum class Mode {
         Default,
         Binary,
+        BinaryUppercase,
         Decimal,
         Octal,
         Hexadecimal,
+        HexadecimalUppercase,
         Character,
         String,
         Pointer,

@@ -209,12 +209,16 @@ void StandardFormatter::parse(StringView specifier)
 
     if (lexer.consume_specific('b'))
         m_mode = Mode::Binary;
+    else if (lexer.consume_specific('B'))
+        m_mode = Mode::BinaryUppercase;
     else if (lexer.consume_specific('d'))
         m_mode = Mode::Decimal;
     else if (lexer.consume_specific('o'))
         m_mode = Mode::Octal;
     else if (lexer.consume_specific('x'))
         m_mode = Mode::Hexadecimal;
+    else if (lexer.consume_specific('X'))
+        m_mode = Mode::HexadecimalUppercase;
     else if (lexer.consume_specific('c'))
         m_mode = Mode::Character;
     else if (lexer.consume_specific('s'))
@@ -251,28 +255,30 @@ void Formatter<StringView>::format(StringBuilder& builder, StringView value, Spa
 template<typename T>
 void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringBuilder& builder, T value, Span<const TypeErasedParameter> parameters)
 {
-    if (m_align != Align::Default)
-        TODO();
-    if (m_sign != Sign::Default)
-        TODO();
-    if (m_alternative_form)
-        TODO();
     if (m_precision != value_not_set)
         ASSERT_NOT_REACHED();
     if (m_mode == Mode::Character)
         TODO();
 
-    int base;
-    if (m_mode == Mode::Binary)
-        TODO();
-    else if (m_mode == Mode::Octal)
-        TODO();
-    else if (m_mode == Mode::Decimal || m_mode == Mode::Default)
+    u8 base;
+    bool upper_case = false;
+    if (m_mode == Mode::Binary) {
+        base = 2;
+    } else if (m_mode == Mode::BinaryUppercase) {
+        base = 2;
+        upper_case = true;
+    } else if (m_mode == Mode::Octal) {
+        base = 8;
+    } else if (m_mode == Mode::Decimal || m_mode == Mode::Default) {
         base = 10;
-    else if (m_mode == Mode::Hexadecimal)
+    } else if (m_mode == Mode::Hexadecimal) {
         base = 16;
-    else
+    } else if (m_mode == Mode::HexadecimalUppercase) {
+        base = 16;
+        upper_case = true;
+    } else {
         ASSERT_NOT_REACHED();
+    }
 
     size_t width = m_width;
     if (m_width >= value_from_arg) {
@@ -283,16 +289,34 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
         width = *reinterpret_cast<const size_t*>(parameter.value);
     }
 
-    // FIXME: We really need one canonical print implementation that just takes a base.
-    (void)base;
-
-    char* bufptr;
-    if (m_mode == Mode::Hexadecimal)
-        PrintfImplementation::print_hex([&](auto, char ch) { builder.append(ch); }, bufptr, value, false, false, false, m_zero_pad, width);
-    else if (IsSame<typename MakeUnsigned<T>::Type, T>::value)
-        PrintfImplementation::print_u64([&](auto, char ch) { builder.append(ch); }, bufptr, value, false, m_zero_pad, width);
+    PrintfImplementation::Align align;
+    if (m_align == Align::Left)
+        align = PrintfImplementation::Align::Left;
+    else if (m_align == Align::Right)
+        align = PrintfImplementation::Align::Right;
+    else if (m_align == Align::Center)
+        align = PrintfImplementation::Align::Center;
+    else if (m_align == Align::Default)
+        align = PrintfImplementation::Align::Right;
     else
-        PrintfImplementation::print_i64([&](auto, char ch) { builder.append(ch); }, bufptr, value, false, m_zero_pad, width);
+        ASSERT_NOT_REACHED();
+
+    PrintfImplementation::SignMode sign_mode;
+    if (m_sign == Sign::Default)
+        sign_mode = PrintfImplementation::SignMode::OnlyIfNeeded;
+    else if (m_sign == Sign::NegativeOnly)
+        sign_mode = PrintfImplementation::SignMode::OnlyIfNeeded;
+    else if (m_sign == Sign::PositiveAndNegative)
+        sign_mode = PrintfImplementation::SignMode::Always;
+    else if (m_sign == Sign::ReserveSpace)
+        sign_mode = PrintfImplementation::SignMode::Reserved;
+    else
+        ASSERT_NOT_REACHED();
+
+    if (IsSame<typename MakeUnsigned<T>::Type, T>::value)
+        PrintfImplementation::convert_unsigned_to_string(value, builder, base, m_alternative_form, upper_case, m_zero_pad, align, width, m_fill, sign_mode);
+    else
+        PrintfImplementation::convert_signed_to_string(value, builder, base, m_alternative_form, upper_case, m_zero_pad, align, width, m_fill, sign_mode);
 }
 
 template struct Formatter<unsigned char, void>;
