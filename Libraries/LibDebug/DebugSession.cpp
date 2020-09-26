@@ -266,4 +266,12 @@ void* DebugSession::single_step()
     return (void*)regs.eip;
 }
 
+void DebugSession::detach()
+{
+    for (auto& breakpoint : m_breakpoints.keys()) {
+        remove_breakpoint(breakpoint);
+    }
+    continue_debugee();
+}
+
 }
