@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace AK {
@@ -36,7 +37,7 @@ public:
     explicit GenericLexer(const StringView& input);
     virtual ~GenericLexer();
 
-	// A lambda/function can be used to match characters as the user pleases
+    // A lambda/function can be used to match characters as the user pleases
     using Condition = Function<bool(char)>;
 
     size_t tell() const { return m_index; }
@@ -64,8 +65,8 @@ public:
     StringView consume_until(char);
     StringView consume_until(const char*);
     StringView consume_until(Condition);
-    // FIXME: provide an escape character
-    StringView consume_quoted_string();
+    StringView consume_quoted_string(char escape_char = 0);
+    String consume_and_unescape_string(char escape_char = '\\');
 
     void ignore(size_t count = 1);
     void ignore_while(Condition);
