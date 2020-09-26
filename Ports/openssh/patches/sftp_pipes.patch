@@ -1,0 +1,16 @@
+e5a0b5cc530260b1ee94105e8c989ba21856b4a2 Use pipes instead of socketpair in SFTP
+diff --git a/sftp.c b/sftp.c
+index 2799e4a1..9ce7055a 100644
+--- a/sftp.c
++++ b/sftp.c
+@@ -2296,6 +2296,10 @@ interactive_loop(struct sftp_conn *conn, char *file1, char *file2)
+ 	return (err >= 0 ? 0 : -1);
+ }
+ 
++#ifdef __serenity__
++#define USE_PIPES 1
++#endif
++
+ static void
+ connect_to_server(char *path, char **args, int *in, int *out)
+ {

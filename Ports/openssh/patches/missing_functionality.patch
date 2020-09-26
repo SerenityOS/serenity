@@ -1,0 +1,641 @@
+08ba07f3ef1eb9cc40204cda0af3886ee071fd47 Ifdef out unimplemented functionality
+diff --git a/atomicio.c b/atomicio.c
+index e00c9f0d..e51a9999 100644
+--- a/atomicio.c
++++ b/atomicio.c
+@@ -120,7 +120,7 @@ atomiciov6(ssize_t (*f) (int, const struct iovec *, int), int fd,
+ 	memcpy(iov, _iov, (size_t)iovcnt * sizeof(*_iov));
+ 
+ 	pfd.fd = fd;
+-#ifndef BROKEN_READV_COMPARISON
++#if !defined(BROKEN_READV_COMPARISON) && !defined(__serenity__)
+ 	pfd.events = f == readv ? POLLIN : POLLOUT;
+ #else
+ 	pfd.events = POLLIN|POLLOUT;
+diff --git a/defines.h b/defines.h
+index b8ea88b2..1089ee18 100644
+--- a/defines.h
++++ b/defines.h
+@@ -55,8 +55,13 @@ enum
+ /*
+  * Definitions for IP type of service (ip_tos)
+  */
++#ifndef __serenity__
+ #include <netinet/in_systm.h>
++#endif
+ #include <netinet/ip.h>
++#ifdef __serenity__
++#include <arpa/inet.h>
++#endif
+ #ifndef IPTOS_LOWDELAY
+ # define IPTOS_LOWDELAY          0x10
+ # define IPTOS_THROUGHPUT        0x08
+diff --git a/dns.c b/dns.c
+index e4f9bf83..779886fa 100644
+--- a/dns.c
++++ b/dns.c
+@@ -25,6 +25,8 @@
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#ifndef __serenity__
++
+ #include "includes.h"
+ 
+ #include <sys/types.h>
+@@ -353,3 +355,5 @@ export_dns_rr(const char *hostname, struct sshkey *key, FILE *f, int generic)
+ 
+ 	return success;
+ }
++
++#endif
+diff --git a/dns.h b/dns.h
+index 91f3c632..0de0a81b 100644
+--- a/dns.h
++++ b/dns.h
+@@ -25,6 +25,8 @@
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#ifndef __serenity__
++
+ #ifndef DNS_H
+ #define DNS_H
+ 
+@@ -56,3 +58,5 @@ int	verify_host_key_dns(const char *, struct sockaddr *,
+ int	export_dns_rr(const char *, struct sshkey *, FILE *, int);
+ 
+ #endif /* DNS_H */
++
++#endif
+diff --git a/hostfile.c b/hostfile.c
+index a4a35597..699d7f2c 100644
+--- a/hostfile.c
++++ b/hostfile.c
+@@ -44,7 +44,9 @@
+ #include <netinet/in.h>
+ 
+ #include <errno.h>
++#ifndef __serenity__
+ #include <resolv.h>
++#endif
+ #include <stdarg.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+diff --git a/includes.h b/includes.h
+index 0fd71792..405d3aa2 100644
+--- a/includes.h
++++ b/includes.h
+@@ -110,7 +110,9 @@
+ #endif
+ 
+ #include <netinet/in.h>
++#ifndef __serenity__
+ #include <netinet/in_systm.h> /* For typedefs */
++#endif
+ #ifdef HAVE_RPC_TYPES_H
+ # include <rpc/types.h> /* For INADDR_LOOPBACK */
+ #endif
+diff --git a/loginrec.c b/loginrec.c
+index e5289deb..c670f0be 100644
+--- a/loginrec.c
++++ b/loginrec.c
+@@ -460,7 +460,7 @@ login_write(struct logininfo *li)
+ #ifdef USE_WTMP
+ 	wtmp_write_entry(li);
+ #endif
+-#ifdef USE_UTMPX
++#ifndef __serenity__
+ 	utmpx_write_entry(li);
+ #endif
+ #ifdef USE_WTMPX
+@@ -493,7 +493,7 @@ login_utmp_only(struct logininfo *li)
+ # ifdef USE_WTMP
+ 	wtmp_write_entry(li);
+ # endif
+-# ifdef USE_UTMPX
++# ifndef __serenity__
+ 	utmpx_write_entry(li);
+ # endif
+ # ifdef USE_WTMPX
+@@ -724,7 +724,7 @@ construct_utmp(struct logininfo *li,
+  ** variations.
+  **/
+ 
+-#if defined(USE_UTMPX) || defined (USE_WTMPX)
++#if !defined(__serenity__)
+ /* build the utmpx structure */
+ void
+ set_utmpx_time(struct logininfo *li, struct utmpx *utx)
+@@ -983,7 +983,7 @@ utmp_write_entry(struct logininfo *li)
+  **/
+ 
+ /* not much point if we don't want utmpx entries */
+-#ifdef USE_UTMPX
++#ifndef __serenity__
+ 
+ /* if we have the wherewithall, use pututxline etc. */
+ # if !defined(DISABLE_PUTUTXLINE) && defined(HAVE_SETUTXENT) && \
+diff --git a/misc.c b/misc.c
+index 554ceb0b..67464ef2 100644
+--- a/misc.c
++++ b/misc.c
+@@ -50,7 +50,9 @@
+ #include <unistd.h>
+ 
+ #include <netinet/in.h>
++#ifndef __serenity__
+ #include <netinet/in_systm.h>
++#endif
+ #include <netinet/ip.h>
+ #include <netinet/tcp.h>
+ #include <arpa/inet.h>
+diff --git a/monitor.c b/monitor.c
+index b6e855d5..bde8f383 100644
+--- a/monitor.c
++++ b/monitor.c
+@@ -1752,8 +1752,10 @@ monitor_openfds(struct monitor *mon, int do_logfds)
+ 	int on = 1;
+ #endif
+ 
++#ifndef __serenity__
+ 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == -1)
+ 		fatal("%s: socketpair: %s", __func__, strerror(errno));
++#endif
+ #ifdef SO_ZEROIZE
+ 	if (setsockopt(pair[0], SOL_SOCKET, SO_ZEROIZE, &on, sizeof(on)) == -1)
+ 		error("setsockopt SO_ZEROIZE(0): %.100s", strerror(errno));
+diff --git a/openbsd-compat/bsd-misc.c b/openbsd-compat/bsd-misc.c
+index 059b6d3b..2a248c81 100644
+--- a/openbsd-compat/bsd-misc.c
++++ b/openbsd-compat/bsd-misc.c
+@@ -362,7 +362,7 @@ pledge(const char *promises, const char *paths[])
+ }
+ #endif
+ 
+-#ifndef HAVE_MBTOWC
++#if !defined(HAVE_MBTOWC) && !defined(__serenity__)
+ /* a mbtowc that only supports ASCII */
+ int
+ mbtowc(wchar_t *pwc, const char *s, size_t n)
+diff --git a/openbsd-compat/getrrsetbyname-ldns.c b/openbsd-compat/getrrsetbyname-ldns.c
+index 4647b623..d684f6fb 100644
+--- a/openbsd-compat/getrrsetbyname-ldns.c
++++ b/openbsd-compat/getrrsetbyname-ldns.c
+@@ -43,6 +43,8 @@
+  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#ifndef __serenity__
++
+ #include "includes.h"
+ 
+ #if !defined (HAVE_GETRRSETBYNAME) && defined (HAVE_LDNS)
+@@ -282,3 +284,5 @@ freerrset(struct rrsetinfo *rrset)
+ 
+ 
+ #endif /* !defined (HAVE_GETRRSETBYNAME) && defined (HAVE_LDNS) */
++
++#endif
+diff --git a/openbsd-compat/getrrsetbyname.c b/openbsd-compat/getrrsetbyname.c
+index dc6fe053..9e7fefd0 100644
+--- a/openbsd-compat/getrrsetbyname.c
++++ b/openbsd-compat/getrrsetbyname.c
+@@ -45,6 +45,8 @@
+ 
+ /* OPENBSD ORIGINAL: lib/libc/net/getrrsetbyname.c */
+ 
++#ifndef __serenity__
++
+ #include "includes.h"
+ 
+ #if !defined (HAVE_GETRRSETBYNAME) && !defined (HAVE_LDNS)
+@@ -608,3 +610,5 @@ count_dns_rr(struct dns_rr *p, u_int16_t class, u_int16_t type)
+ }
+ 
+ #endif /*  !defined (HAVE_GETRRSETBYNAME) && !defined (HAVE_LDNS) */
++
++#endif
+diff --git a/openbsd-compat/getrrsetbyname.h b/openbsd-compat/getrrsetbyname.h
+index 1283f550..0b33705e 100644
+--- a/openbsd-compat/getrrsetbyname.h
++++ b/openbsd-compat/getrrsetbyname.h
+@@ -45,6 +45,8 @@
+  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#ifndef __serenity__
++
+ #ifndef _GETRRSETBYNAME_H
+ #define _GETRRSETBYNAME_H
+ 
+@@ -108,3 +110,5 @@ void		freerrset(struct rrsetinfo *);
+ #endif /* !defined(HAVE_GETRRSETBYNAME) */
+ 
+ #endif /* _GETRRSETBYNAME_H */
++
++#endif
+diff --git a/openbsd-compat/mktemp.c b/openbsd-compat/mktemp.c
+index 4eb52f42..50e1bb12 100644
+--- a/openbsd-compat/mktemp.c
++++ b/openbsd-compat/mktemp.c
+@@ -34,7 +34,7 @@
+ #include <ctype.h>
+ #include <unistd.h>
+ 
+-#if !defined(HAVE_MKDTEMP) || defined(HAVE_STRICT_MKSTEMP)
++#if !defined(HAVE_MKDTEMP) || defined(HAVE_STRICT_MKSTEMP) && !defined(__serenity__)
+ 
+ #define MKTEMP_NAME	0
+ #define MKTEMP_FILE	1
+diff --git a/readconf.c b/readconf.c
+index 2afcbaec..034ad492 100644
+--- a/readconf.c
++++ b/readconf.c
+@@ -21,7 +21,9 @@
+ #include <sys/un.h>
+ 
+ #include <netinet/in.h>
++#ifndef __serenity__
+ #include <netinet/in_systm.h>
++#endif
+ #include <netinet/ip.h>
+ #include <arpa/inet.h>
+ 
+@@ -1064,11 +1066,12 @@ parse_time:
+ 	case oCheckHostIP:
+ 		intptr = &options->check_host_ip;
+ 		goto parse_flag;
+-
++#ifndef __serenity__
+ 	case oVerifyHostKeyDNS:
+ 		intptr = &options->verify_host_key_dns;
+ 		multistate_ptr = multistate_yesnoask;
+ 		goto parse_multistate;
++	#endif
+ 
+ 	case oStrictHostKeyChecking:
+ 		intptr = &options->strict_host_key_checking;
+diff --git a/regress/netcat.c b/regress/netcat.c
+index fe94dd90..57c52d3b 100644
+--- a/regress/netcat.c
++++ b/regress/netcat.c
+@@ -1369,7 +1369,9 @@ usage(int ret)
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
++#ifndef __serenity__
+ #include <resolv.h>
++#endif
+ 
+ #define SOCKS_PORT	"1080"
+ #define HTTP_PROXY_PORT	"3128"
+diff --git a/sandbox-pledge.c b/sandbox-pledge.c
+index d28fc272..a244241c 100644
+--- a/sandbox-pledge.c
++++ b/sandbox-pledge.c
+@@ -21,7 +21,9 @@
+ 
+ #include <sys/types.h>
+ #include <sys/ioctl.h>
++#ifndef __serenity__
+ #include <sys/syscall.h>
++#endif
+ #include <sys/socket.h>
+ #include <sys/wait.h>
+ 
+diff --git a/servconf.c b/servconf.c
+index ba0a92c7..02b68a9a 100644
+--- a/servconf.c
++++ b/servconf.c
+@@ -20,7 +20,9 @@
+ #endif
+ 
+ #include <netinet/in.h>
++#ifndef __serenity__
+ #include <netinet/in_systm.h>
++#endif
+ #include <netinet/ip.h>
+ #ifdef HAVE_NET_ROUTE_H
+ #include <net/route.h>
+diff --git a/ssh-add.c b/ssh-add.c
+index a40198ab..e218270b 100644
+--- a/ssh-add.c
++++ b/ssh-add.c
+@@ -535,6 +535,7 @@ lock_agent(int agent_fd, int lock)
+ 	return (ret);
+ }
+ 
++#ifndef __serenity__
+ static int
+ load_resident_keys(int agent_fd, const char *skprovider, int qflag)
+ {
+@@ -583,6 +584,7 @@ load_resident_keys(int agent_fd, const char *skprovider, int qflag)
+ 		return SSH_ERR_KEY_NOT_FOUND;
+ 	return ok == 1 ? 0 : ok;
+ }
++#endif
+ 
+ static int
+ do_file(int agent_fd, int deleting, int key_only, char *file, int qflag,
+@@ -775,6 +777,7 @@ main(int argc, char **argv)
+ 			ret = 1;
+ 		goto done;
+ 	}
++	#ifndef __serenity__
+ 	if (do_download) {
+ 		if (skprovider == NULL)
+ 			fatal("Cannot download keys without provider");
+@@ -782,6 +785,7 @@ main(int argc, char **argv)
+ 			ret = 1;
+ 		goto done;
+ 	}
++	#endif
+ 	if (argc == 0) {
+ 		char buf[PATH_MAX];
+ 		struct passwd *pw;
+diff --git a/ssh-agent.c b/ssh-agent.c
+index e081413b..811dc115 100644
+--- a/ssh-agent.c
++++ b/ssh-agent.c
+@@ -1308,10 +1308,12 @@ main(int ac, char **av)
+ 	 * a few spare for libc / stack protectors / sanitisers, etc.
+ 	 */
+ #define SSH_AGENT_MIN_FDS (3+1+1+1+4)
++#ifndef __serenity__
+ 	if (rlim.rlim_cur < SSH_AGENT_MIN_FDS)
+ 		fatal("%s: file descriptor rlimit %lld too low (minimum %u)",
+ 		    __progname, (long long)rlim.rlim_cur, SSH_AGENT_MIN_FDS);
+ 	maxfds = rlim.rlim_cur - SSH_AGENT_MIN_FDS;
++#endif
+ 
+ 	parent_pid = getpid();
+ 
+diff --git a/ssh-keygen.c b/ssh-keygen.c
+index 2c5c75db..85e8a9e2 100644
+--- a/ssh-keygen.c
++++ b/ssh-keygen.c
+@@ -1464,6 +1464,7 @@ do_change_passphrase(struct passwd *pw)
+ 	exit(0);
+ }
+ 
++#ifndef __serenity__
+ /*
+  * Print the SSHFP RR.
+  */
+@@ -1491,6 +1492,7 @@ do_print_resource_record(struct passwd *pw, char *fname, char *hname,
+ 	free(comment);
+ 	return 1;
+ }
++#endif
+ 
+ /*
+  * Change the comment of a private key file.
+@@ -2929,6 +2931,7 @@ skip_ssh_url_preamble(const char *s)
+ 	return s;
+ }
+ 
++#ifndef __serenity__
+ static int
+ do_download_sk(const char *skprovider, const char *device)
+ {
+@@ -3026,6 +3029,7 @@ do_download_sk(const char *skprovider, const char *device)
+ 	free(keys);
+ 	return ok ? 0 : -1;
+ }
++#endif
+ 
+ static void
+ usage(void)
+@@ -3437,6 +3441,7 @@ main(int argc, char **argv)
+ 	}
+ 	if (pkcs11provider != NULL)
+ 		do_download(pw);
++#ifndef __serenity__
+ 	if (download_sk) {
+ 		for (i = 0; i < nopts; i++) {
+ 			if (strncasecmp(opts[i], "device=", 7) == 0) {
+@@ -3448,6 +3453,7 @@ main(int argc, char **argv)
+ 		}
+ 		return do_download_sk(sk_provider, sk_device);
+ 	}
++#endif
+ 	if (print_fingerprint || print_bubblebabble)
+ 		do_fingerprint(pw);
+ 	if (change_passphrase)
+@@ -3465,6 +3471,8 @@ main(int argc, char **argv)
+ #endif /* WITH_OPENSSL */
+ 	if (print_public)
+ 		do_print_public(pw);
++
++#ifndef __serenity__
+ 	if (rr_hostname != NULL) {
+ 		unsigned int n = 0;
+ 
+@@ -3496,6 +3504,7 @@ main(int argc, char **argv)
+ 			exit(0);
+ 		}
+ 	}
++#endif
+ 
+ 	if (do_gen_candidates || do_screen_candidates) {
+ 		if (argc <= 0)
+@@ -3527,6 +3536,7 @@ main(int argc, char **argv)
+ 		printf("Generating public/private %s key pair.\n",
+ 		    key_type_name);
+ 	switch (type) {
++#ifndef __serenity__
+ 	case KEY_ECDSA_SK:
+ 	case KEY_ED25519_SK:
+ 		for (i = 0; i < nopts; i++) {
+@@ -3593,6 +3603,7 @@ main(int argc, char **argv)
+ 			passphrase = NULL;
+ 		}
+ 		break;
++#endif
+ 	default:
+ 		if ((r = sshkey_generate(type, bits, &private)) != 0)
+ 			fatal("sshkey_generate failed");
+diff --git a/ssh-keyscan.c b/ssh-keyscan.c
+index a5e64407..c7964ae9 100644
+--- a/ssh-keyscan.c
++++ b/ssh-keyscan.c
+@@ -311,7 +311,9 @@ keyprint_one(const char *host, struct sshkey *key)
+ 	found_one = 1;
+ 
+ 	if (print_sshfp) {
++#ifndef __serenity__
+ 		export_dns_rr(host, key, stdout, 0);
++#endif
+ 		return;
+ 	}
+ 
+diff --git a/ssh-pkcs11-client.c b/ssh-pkcs11-client.c
+index 8a0ffef5..12d05317 100644
+--- a/ssh-pkcs11-client.c
++++ b/ssh-pkcs11-client.c
+@@ -241,6 +241,7 @@ wrap_key(struct sshkey *k)
+ 		fatal("%s: unknown key type", __func__);
+ }
+ 
++#ifndef __serenity__
+ static int
+ pkcs11_start_helper_methods(void)
+ {
+@@ -310,6 +311,7 @@ pkcs11_start_helper(void)
+ 	fd = pair[0];
+ 	return (0);
+ }
++#endif
+ 
+ int
+ pkcs11_add_provider(char *name, char *pin, struct sshkey ***keysp,
+@@ -323,7 +325,11 @@ pkcs11_add_provider(char *name, char *pin, struct sshkey ***keysp,
+ 	u_int nkeys, i;
+ 	struct sshbuf *msg;
+ 
+-	if (fd < 0 && pkcs11_start_helper() < 0)
++	if (fd < 0 
++#ifndef __serenity__
++		&& pkcs11_start_helper() < 0
++#endif
++		)
+ 		return (-1);
+ 
+ 	if ((msg = sshbuf_new()) == NULL)
+diff --git a/ssh-sk-client.c b/ssh-sk-client.c
+index 8d7e6c30..21b3ab39 100644
+--- a/ssh-sk-client.c
++++ b/ssh-sk-client.c
+@@ -15,6 +15,8 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#ifndef __serenity__
++
+ #include "includes.h"
+ 
+ #include <sys/types.h>
+@@ -447,3 +449,5 @@ sshsk_load_resident(const char *provider_path, const char *device,
+ 	errno = oerrno;
+ 	return r;
+ }
++
++#endif
+diff --git a/sshbuf-misc.c b/sshbuf-misc.c
+index 9b5aa208..20c526b1 100644
+--- a/sshbuf-misc.c
++++ b/sshbuf-misc.c
+@@ -28,7 +28,9 @@
+ #include <stdio.h>
+ #include <limits.h>
+ #include <string.h>
++#ifndef __serenity__
+ #include <resolv.h>
++#endif
+ #include <ctype.h>
+ 
+ #include "ssherr.h"
+diff --git a/sshconnect.c b/sshconnect.c
+index af08be41..9e748a23 100644
+--- a/sshconnect.c
++++ b/sshconnect.c
+@@ -120,6 +120,7 @@ stderr_null(void)
+ 		close(devnull);
+ }
+ 
++#ifndef __serenity__
+ /*
+  * Connect to the given ssh server using a proxy command that passes a
+  * a connected fd back to us.
+@@ -202,6 +203,7 @@ ssh_proxy_fdpass_connect(struct ssh *ssh, const char *host,
+ 
+ 	return 0;
+ }
++#endif
+ 
+ /*
+  * Connect to the given ssh server using a proxy command.
+@@ -566,10 +568,13 @@ ssh_connect(struct ssh *ssh, const char *host, const char *host_arg,
+ 		if ((ssh_packet_set_connection(ssh, in, out)) == NULL)
+ 			return -1; /* ssh_packet_set_connection logs error */
+ 		return 0;
+-	} else if (options.proxy_use_fdpass) {
++	} 
++	#ifndef __serenity__
++	else if (options.proxy_use_fdpass) {
+ 		return ssh_proxy_fdpass_connect(ssh, host, host_arg, port,
+ 		    options.proxy_command);
+ 	}
++	#endif
+ 	return ssh_proxy_connect(ssh, host, host_arg, port,
+ 	    options.proxy_command);
+ }
+@@ -1218,7 +1223,7 @@ verify_host_key(char *host, struct sockaddr *hostaddr, struct sshkey *host_key)
+ 			goto out;
+ 		}
+ 	}
+-
++#ifndef __serenity__
+ 	if (options.verify_host_key_dns) {
+ 		/*
+ 		 * XXX certs are not yet supported for DNS, so downgrade
+@@ -1247,6 +1252,7 @@ verify_host_key(char *host, struct sockaddr *hostaddr, struct sshkey *host_key)
+ 			}
+ 		}
+ 	}
++#endif
+ 	r = check_host_key(host, hostaddr, options.port, host_key, RDRW,
+ 	    options.user_hostfiles, options.num_user_hostfiles,
+ 	    options.system_hostfiles, options.num_system_hostfiles);
+diff --git a/sshd.c b/sshd.c
+index 6f8f11a3..1ecf3e32 100644
+--- a/sshd.c
++++ b/sshd.c
+@@ -1231,6 +1231,8 @@ server_accept_loop(int *sock_in, int *sock_out, int *newsock, int *config_s)
+ 				continue;
+ 			}
+ 
++// FIXME: socketpair is seemingly required for SSHD to work, but doesn't current exist.
++#ifndef __serenity__
+ 			if (rexec_flag && socketpair(AF_UNIX,
+ 			    SOCK_STREAM, 0, config_s) == -1) {
+ 				error("reexec socketpair: %s",
+@@ -1240,6 +1242,7 @@ server_accept_loop(int *sock_in, int *sock_out, int *newsock, int *config_s)
+ 				close(startup_p[1]);
+ 				continue;
+ 			}
++#endif
+ 
+ 			for (j = 0; j < options.max_startups; j++)
+ 				if (startup_pipes[j] == -1) {
+diff --git a/sshkey.c b/sshkey.c
+index 1571e3d9..2b5c611c 100644
+--- a/sshkey.c
++++ b/sshkey.c
+@@ -42,7 +42,9 @@
+ #include <limits.h>
+ #include <stdio.h>
+ #include <string.h>
++#ifndef __serenity__
+ #include <resolv.h>
++#endif
+ #include <time.h>
+ #ifdef HAVE_UTIL_H
+ #include <util.h>
+@@ -2759,6 +2761,7 @@ sshkey_sign(struct sshkey *key,
+ 	case KEY_ED25519_CERT:
+ 		r = ssh_ed25519_sign(key, sigp, lenp, data, datalen, compat);
+ 		break;
++		#ifndef __serenity__
+ 	case KEY_ED25519_SK:
+ 	case KEY_ED25519_SK_CERT:
+ 	case KEY_ECDSA_SK_CERT:
+@@ -2766,6 +2769,7 @@ sshkey_sign(struct sshkey *key,
+ 		r = sshsk_sign(sk_provider, key, sigp, lenp, data,
+ 		    datalen, compat, /* XXX PIN */ NULL);
+ 		break;
++		#endif
+ #ifdef WITH_XMSS
+ 	case KEY_XMSS:
+ 	case KEY_XMSS_CERT:

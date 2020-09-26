@@ -1,0 +1,13 @@
+cd1bd18834e519c4787a4e3672fa0afdf1b22da7 Add Serenity to config.sub
+diff --git a/config.sub b/config.sub
+index 973a2980..cf386e5c 100755
+--- a/config.sub
++++ b/config.sub
+@@ -1339,6 +1339,7 @@ case $os in
+ 	# Each alternative MUST end in a * to match a version number.
+ 	# sysv* is not here because it comes later, after sysvr4.
+ 	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++		   | serenity* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]*\
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* | kopensolaris* | plan9* \
