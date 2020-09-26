@@ -293,10 +293,12 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
                         auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
                         subcommand_ast = ast->command();
                     }
-                    NonnullRefPtr<AST::Node> substitute = adopt(*new AST::Join(subcommand_ast->position(),
-                        subcommand_ast.release_nonnull(),
-                        adopt(*new AST::CommandLiteral(subcommand_ast->position(), command))));
-                    for (auto& subst_command : substitute->run(*this)->resolve_as_commands(*this)) {
+                    auto subcommand_nonnull = subcommand_ast.release_nonnull();
+                    NonnullRefPtr<AST::Node> substitute = adopt(*new AST::Join(subcommand_nonnull->position(),
+                        subcommand_nonnull,
+                        adopt(*new AST::CommandLiteral(subcommand_nonnull->position(), command))));
+                    auto res = substitute->run(*this);
+                    for (auto& subst_command : res->resolve_as_commands(*this)) {
                         if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
                             commands.append(subst_command);
                         else
