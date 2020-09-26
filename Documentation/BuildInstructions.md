@@ -37,6 +37,24 @@ sudo apt-get install gcc-9 g++-9
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /usr/bin/g++ g++ /usr/bin/g++-9
 ```
 
+On Debian you can install it by switching to the Debian testing branch:
+```bash
+sudo echo "deb http://http.us.debian.org/debian/ testing non-free contrib main" >> /etc/apt/sources.list
+sudo apt update
+```
+
+Afterwards you can install gcc-9 with apt like:
+```bash
+sudo apt install gcc-9 g++-9
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /usr/bin/g++ g++ /usr/bin/g++-9
+```
+
+If you don't want to stay on the testing branch you can switch back by running:
+```bash
+sudo sed -i '$d' /etc/apt/sources.list
+sudo apt update
+```
+
 Ensure your CMake version is >= 3.16 with `cmake --version`. If your system doesn't provide a suitable version of CMake, you can download a binary release from the [CMake website](https://cmake.org/download).
 
 #### macOS prerequisites
