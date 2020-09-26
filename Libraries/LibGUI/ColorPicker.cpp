@@ -161,6 +161,15 @@ ColorPicker::~ColorPicker()
 {
 }
 
+void ColorPicker::set_color_has_alpha_channel(bool has_alpha)
+{
+    if (m_color_has_alpha_channel == has_alpha)
+        return;
+
+    m_color_has_alpha_channel = has_alpha;
+    update_color_widgets();
+}
+
 void ColorPicker::build_ui()
 {
     auto& root_container = set_main_widget<Widget>();
