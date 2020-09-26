@@ -46,31 +46,19 @@ namespace HackStudio {
 void DebugInfoWidget::init_toolbar()
 {
     m_continue_action = GUI::Action::create("Continue", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-continue.png"), [](auto&) {
-        pthread_mutex_lock(Debugger::the().continue_mutex());
-        Debugger::the().set_continue_type(Debugger::ContinueType::Continue);
-        pthread_cond_signal(Debugger::the().continue_cond());
-        pthread_mutex_unlock(Debugger::the().continue_mutex());
+        Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::Continue);
     });
 
     m_singlestep_action = GUI::Action::create("Step Over", { Mod_None, Key_F10 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-over.png"), [](auto&) {
-        pthread_mutex_lock(Debugger::the().continue_mutex());
-        Debugger::the().set_continue_type(Debugger::ContinueType::SourceStepOver);
-        pthread_cond_signal(Debugger::the().continue_cond());
-        pthread_mutex_unlock(Debugger::the().continue_mutex());
+        Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOver);
     });
 
     m_step_in_action = GUI::Action::create("Step In", { Mod_None, Key_F11 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-in.png"), [](auto&) {
-        pthread_mutex_lock(Debugger::the().continue_mutex());
-        Debugger::the().set_continue_type(Debugger::ContinueType::SourceSingleStep);
-        pthread_cond_signal(Debugger::the().continue_cond());
-        pthread_mutex_unlock(Debugger::the().continue_mutex());
+        Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceSingleStep);
     });
 
     m_step_out_action = GUI::Action::create("Step Out", { Mod_Shift, Key_F11 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-step-out.png"), [](auto&) {
-        pthread_mutex_lock(Debugger::the().continue_mutex());
-        Debugger::the().set_continue_type(Debugger::ContinueType::SourceStepOut);
-        pthread_cond_signal(Debugger::the().continue_cond());
-        pthread_mutex_unlock(Debugger::the().continue_mutex());
+        Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOut);
     });
 
     m_toolbar->add_action(*m_continue_action);

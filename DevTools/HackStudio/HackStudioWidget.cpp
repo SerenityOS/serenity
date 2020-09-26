@@ -678,9 +678,15 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
 
     GUI::WidgetClassRegistration::for_each([&, this](const GUI::WidgetClassRegistration& reg) {
         constexpr size_t gui_namespace_prefix_length = sizeof("GUI::") - 1;
-        auto icon_path = String::format("/res/icons/hackstudio/G%s.png", reg.class_name().substring(gui_namespace_prefix_length, reg.class_name().length() - gui_namespace_prefix_length).characters());
+        auto icon_path = String::format(
+            "/res/icons/hackstudio/G%s.png",
+            reg.class_name().substring(
+                                gui_namespace_prefix_length,
+                                reg.class_name().length() - gui_namespace_prefix_length)
+                .characters());
         if (!Core::File::exists(icon_path))
             return;
+
         auto action = GUI::Action::create_checkable(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg, this](auto&) {
             m_form_editor_widget->set_tool(make<WidgetTool>(*m_form_editor_widget, reg));
             auto widget = reg.construct();
@@ -897,6 +903,20 @@ void HackStudioWidget::initialize_menubar(GUI::MenuBar& menubar)
     create_build_menubar(menubar);
     create_view_menubar(menubar);
     create_help_menubar(menubar);
+}
+
+HackStudioWidget::~HackStudioWidget()
+{
+    if (!m_debugger_thread.is_null()) {
+        Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::Exit);
+        void* retval;
+        dbg() << "Waiting for debugger thread to terminate";
+        int rc = pthread_join(m_debugger_thread->tid(), &retval);
+        if (rc < 0) {
+            perror("pthread_join");
+            dbg() << "error joining debugger thread";
+        }
+    }
 }
 
 }

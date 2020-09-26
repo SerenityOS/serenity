@@ -48,6 +48,7 @@ class HackStudioWidget : public GUI::Widget {
     C_OBJECT(HackStudioWidget)
 
 public:
+    virtual ~HackStudioWidget() override;
     void open_file(const String& filename);
 
     Vector<String> selected_file_names() const;
