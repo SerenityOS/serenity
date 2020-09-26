@@ -26,45 +26,24 @@
 
 #pragma once
 
-#include "Forward.h"
-#include <LibJS/Forward.h>
-#include <LibJS/Runtime/GlobalObject.h>
+#include <AK/String.h>
+#include <AK/Types.h>
 
 namespace Spreadsheet {
 
-class SheetGlobalObject final : public JS::GlobalObject {
-    JS_OBJECT(SheetGlobalObject, JS::GlobalObject);
+struct Position {
+    String column;
+    size_t row { 0 };
 
-public:
-    SheetGlobalObject(Sheet&);
+    bool operator==(const Position& other) const
+    {
+        return row == other.row && column == other.column;
+    }
 
-    virtual ~SheetGlobalObject() override;
-
-    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}) const override;
-    virtual bool put(const JS::PropertyName&, JS::Value value, JS::Value receiver = {}) override;
-    virtual void initialize() override;
-
-    JS_DECLARE_NATIVE_FUNCTION(parse_cell_name);
-    JS_DECLARE_NATIVE_FUNCTION(current_cell_position);
-
-private:
-    Sheet& m_sheet;
-};
-
-class WorkbookObject final : public JS::Object {
-    JS_OBJECT(WorkbookObject, JS::Object);
-
-public:
-    WorkbookObject(Workbook&);
-
-    virtual ~WorkbookObject() override;
-
-    virtual void initialize(JS::GlobalObject&) override;
-
-    JS_DECLARE_NATIVE_FUNCTION(sheet);
-
-private:
-    Workbook& m_workbook;
+    bool operator!=(const Position& other) const
+    {
+        return !(other == *this);
+    }
 };
 
 }

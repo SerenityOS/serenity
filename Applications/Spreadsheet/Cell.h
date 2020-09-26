@@ -30,6 +30,7 @@
 #include "ConditionalFormatting.h"
 #include "Forward.h"
 #include "JSIntegration.h"
+#include "Position.h"
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
@@ -37,20 +38,22 @@
 namespace Spreadsheet {
 
 struct Cell : public Weakable<Cell> {
-    Cell(String data, WeakPtr<Sheet> sheet)
+    Cell(String data, Position position, WeakPtr<Sheet> sheet)
         : dirty(false)
         , data(move(data))
         , kind(LiteralString)
         , sheet(sheet)
+        , m_position(move(position))
     {
     }
 
-    Cell(String source, JS::Value&& cell_value, WeakPtr<Sheet> sheet)
+    Cell(String source, JS::Value&& cell_value, Position position, WeakPtr<Sheet> sheet)
         : dirty(false)
         , data(move(source))
         , evaluated_data(move(cell_value))
         , kind(Formula)
         , sheet(sheet)
+        , m_position(move(position))
     {
     }
 
@@ -62,6 +65,13 @@ struct Cell : public Weakable<Cell> {
     void set_type(const StringView& name);
     void set_type(const CellType*);
     void set_type_metadata(CellTypeMetadata&&);
+
+    const Position& position() const { return m_position; }
+    void set_position(Position position, Badge<Sheet>)
+    {
+        dirty = true;
+        m_position = move(position);
+    }
 
     const Format& evaluated_formats() const { return m_evaluated_formats; }
     const Vector<ConditionalFormat>& conditional_formats() const { return m_conditional_formats; }
@@ -99,6 +109,7 @@ struct Cell : public Weakable<Cell> {
     Vector<WeakPtr<Cell>> referencing_cells;
     const CellType* m_type { nullptr };
     CellTypeMetadata m_type_metadata;
+    Position m_position;
 
     Vector<ConditionalFormat> m_conditional_formats;
     Format m_evaluated_formats;

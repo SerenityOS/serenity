@@ -82,6 +82,7 @@ void SheetGlobalObject::initialize()
 {
     GlobalObject::initialize();
     define_native_function("parse_cell_name", parse_cell_name, 1);
+    define_native_function("current_cell_position", current_cell_position, 0);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
@@ -102,6 +103,36 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
     auto object = JS::Object::create_empty(global_object);
     object->put("column", JS::js_string(vm, position.value().column));
     object->put("row", JS::Value((unsigned)position.value().row));
+
+    return object;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
+{
+    if (vm.argument_count() != 0) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected no arguments to current_cell_position()");
+        return {};
+    }
+
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return JS::js_null();
+
+    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
+        return {};
+    }
+
+    auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
+    auto* current_cell = sheet_object->m_sheet.current_evaluated_cell();
+    if (!current_cell)
+        return JS::js_null();
+
+    auto position = current_cell->position();
+
+    auto object = JS::Object::create_empty(global_object);
+    object->put("column", JS::js_string(vm, position.column));
+    object->put("row", JS::Value((unsigned)position.row));
 
     return object;
 }
