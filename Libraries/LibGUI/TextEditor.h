@@ -131,8 +131,8 @@ public:
     void do_delete();
     void delete_current_line();
     void select_all();
-    void undo() { document().undo(); }
-    void redo() { document().redo(); }
+    virtual void undo() { document().undo(); }
+    virtual void redo() { document().redo(); }
 
     Function<void()> on_change;
     Function<void()> on_mousedown;
@@ -263,9 +263,12 @@ private:
     inline void execute(Args&&... args)
     {
         auto command = make<T>(*m_document, forward<Args>(args)...);
+        on_edit_action(*command);
         command->execute_from(*this);
         m_document->add_to_undo_stack(move(command));
     }
+
+    virtual void on_edit_action(const Command&) { }
 
     Type m_type { MultiLine };
     Mode m_mode { Editable };

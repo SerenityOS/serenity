@@ -55,12 +55,15 @@ public:
     void set_execution_position(size_t line_number);
     void clear_execution_position();
 
-    BreakpointChangeCallback on_breakpoint_change;
-
     const CodeDocument& code_document() const;
     CodeDocument& code_document();
 
     virtual void set_document(GUI::TextDocument&) override;
+
+    virtual void on_edit_action(const GUI::Command&) override;
+
+    virtual void undo() override;
+    virtual void redo() override;
 
 private:
     virtual void focusin_event(GUI::FocusEvent&) override;
@@ -90,6 +93,8 @@ private:
     void update_autocomplete(const AutoCompleteRequestData&);
     void show_autocomplete(const AutoCompleteRequestData&);
     void close_autocomplete();
+
+    void flush_file_content_to_langauge_server();
 
     explicit Editor();
 

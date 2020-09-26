@@ -35,7 +35,7 @@
 
 namespace HackStudio {
 
-EditorWrapper::EditorWrapper(BreakpointChangeCallback breakpoint_change_callback)
+EditorWrapper::EditorWrapper()
 {
     set_layout<GUI::VerticalBoxLayout>();
 
@@ -72,8 +72,6 @@ EditorWrapper::EditorWrapper(BreakpointChangeCallback breakpoint_change_callback
     m_editor->on_open = [](String path) {
         open_file(path);
     };
-
-    m_editor->on_breakpoint_change = move(breakpoint_change_callback);
 }
 
 EditorWrapper::~EditorWrapper()

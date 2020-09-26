@@ -28,9 +28,28 @@
 
 namespace HackStudio {
 
+NonnullRefPtr<CodeDocument> CodeDocument::create(const LexicalPath& file_path, Client* client)
+{
+    return adopt(*new CodeDocument(file_path, client));
+}
+
 NonnullRefPtr<CodeDocument> CodeDocument::create(Client* client)
 {
     return adopt(*new CodeDocument(client));
+}
+
+CodeDocument::CodeDocument(const LexicalPath& file_path, Client* client)
+    : TextDocument(client)
+    , m_file_path(file_path)
+{
+    if (file_path.basename().ends_with(".cpp") || file_path.basename().ends_with(".h"))
+        m_language = Language::Cpp;
+    else if (file_path.basename().ends_with(".js"))
+        m_language = Language::JavaScript;
+    else if (file_path.basename().ends_with(".ini"))
+        m_language = Language::Ini;
+    else if (file_path.basename().ends_with(".sh"))
+        m_language = Language::Shell;
 }
 
 CodeDocument::CodeDocument(Client* client)

@@ -123,6 +123,7 @@ private:
 
     String m_currently_open_file;
     OwnPtr<Project> m_project;
+
     RefPtr<GUI::TreeView> m_project_tree_view;
     RefPtr<GUI::VerticalSplitter> m_right_hand_splitter;
     RefPtr<GUI::StackWidget> m_right_hand_stack;

@@ -57,16 +57,12 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/InputBox.h>
-#include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/ShellSyntaxHighlighter.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TabWidget.h>
@@ -210,17 +206,6 @@ void HackStudioWidget::open_file(const String& filename)
         current_editor().set_document(const_cast<GUI::TextDocument&>(external_file->document()));
         current_editor().set_mode(GUI::TextEditor::ReadOnly);
     }
-
-    if (filename.ends_with(".cpp") || filename.ends_with(".h"))
-        current_editor().set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
-    else if (filename.ends_with(".js"))
-        current_editor().set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
-    else if (filename.ends_with(".ini"))
-        current_editor().set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
-    else if (filename.ends_with(".sh"))
-        current_editor().set_syntax_highlighter(make<GUI::ShellSyntaxHighlighter>());
-    else
-        current_editor().set_syntax_highlighter(nullptr);
 
     if (filename.ends_with(".frm")) {
         set_edit_mode(EditMode::Form);
@@ -366,7 +351,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
 void HackStudioWidget::add_new_editor(GUI::Widget& parent)
 {
-    auto wrapper = EditorWrapper::construct(Debugger::on_breakpoint_change);
+    auto wrapper = EditorWrapper::construct();
     if (m_action_tab_widget) {
         parent.insert_child_before(wrapper, *m_action_tab_widget);
     } else {
