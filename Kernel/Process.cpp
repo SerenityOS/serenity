@@ -246,8 +246,8 @@ void Process::kill_threads_except_self()
             || thread.state() == Thread::State::Dying)
             return IterationDecision::Continue;
 
-        // At this point, we have no joiner anymore
-        thread.m_joiner = nullptr;
+        // We need to detach this thread in case it hasn't been joined
+        thread.detach();
         thread.set_should_die();
         return IterationDecision::Continue;
     });
@@ -258,6 +258,8 @@ void Process::kill_threads_except_self()
 void Process::kill_all_threads()
 {
     for_each_thread([&](Thread& thread) {
+        // We need to detach this thread in case it hasn't been joined
+        thread.detach();
         thread.set_should_die();
         return IterationDecision::Continue;
     });
@@ -355,6 +357,7 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
     } else {
         // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
         first_thread = new Thread(*this);
+        first_thread->detach();
     }
 }
 
@@ -769,7 +772,8 @@ Thread* Process::create_kernel_thread(void (*entry)(), u32 priority, const Strin
     thread->set_name(name);
     thread->set_affinity(affinity);
     thread->set_priority(priority);
-    thread->set_joinable(joinable);
+    if (!joinable)
+        thread->detach();
 
     auto& tss = thread->tss();
     tss.eip = (FlatPtr)entry;

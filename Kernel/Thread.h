@@ -96,8 +96,46 @@ public:
 
     u32 effective_priority() const;
 
-    void set_joinable(bool j) { m_is_joinable = j; }
-    bool is_joinable() const { return m_is_joinable; }
+    KResult try_join(Thread& joiner)
+    {
+        if (&joiner == this)
+            return KResult(-EDEADLK);
+
+        ScopedSpinLock lock(m_lock);
+        if (!m_is_joinable || state() == Dead)
+            return KResult(-EINVAL);
+
+        Thread* expected = nullptr;
+        if (!m_joiner.compare_exchange_strong(expected, &joiner, AK::memory_order_acq_rel))
+            return KResult(-EINVAL);
+
+        // From this point on the thread is no longer joinable by anyone
+        // else. It also means that if the join is timed, it becomes
+        // detached when a timeout happens.
+        m_is_joinable = false;
+        return KSuccess;
+    }
+
+    void join_done()
+    {
+        // To avoid possible deadlocking, this function must not acquire
+        // m_lock. This deadlock could occur if the joiner times out
+        // almost at the same time as this thread, and calls into this
+        // function to clear the joiner.
+        m_joiner.store(nullptr, AK::memory_order_release);
+    }
+
+    void detach()
+    {
+        ScopedSpinLock lock(m_lock);
+        m_is_joinable = false;
+    }
+
+    bool is_joinable() const
+    {
+        ScopedSpinLock lock(m_lock);
+        return m_is_joinable;
+    }
 
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
@@ -129,10 +167,30 @@ public:
         virtual const char* state_string() const = 0;
         virtual bool is_reason_signal() const { return false; }
         virtual timespec* override_timeout(timespec* timeout) { return timeout; }
-        void set_interrupted_by_death() { m_was_interrupted_by_death = true; }
-        bool was_interrupted_by_death() const { return m_was_interrupted_by_death; }
-        void set_interrupted_by_signal() { m_was_interrupted_while_blocked = true; }
-        bool was_interrupted_by_signal() const { return m_was_interrupted_while_blocked; }
+        virtual void was_unblocked() { }
+        void set_interrupted_by_death()
+        {
+            ScopedSpinLock lock(m_lock);
+            m_was_interrupted_by_death = true;
+        }
+        bool was_interrupted_by_death() const
+        {
+            ScopedSpinLock lock(m_lock);
+            return m_was_interrupted_by_death;
+        }
+        void set_interrupted_by_signal()
+        {
+            ScopedSpinLock lock(m_lock);
+            m_was_interrupted_while_blocked = true;
+        }
+        bool was_interrupted_by_signal() const
+        {
+            ScopedSpinLock lock(m_lock);
+            return m_was_interrupted_while_blocked;
+        }
+
+    protected:
+        mutable RecursiveSpinLock m_lock;
 
     private:
         bool m_was_interrupted_while_blocked { false };
@@ -142,14 +200,16 @@ public:
 
     class JoinBlocker final : public Blocker {
     public:
-        explicit JoinBlocker(Thread& joinee, void*& joinee_exit_value);
+        explicit JoinBlocker(Thread& joinee, KResult& try_join_result, void*& joinee_exit_value);
         virtual bool should_unblock(Thread&) override;
         virtual const char* state_string() const override { return "Joining"; }
-        void set_joinee_exit_value(void* value) { m_joinee_exit_value = value; }
+        virtual void was_unblocked() override;
+        void joinee_exited(void* value);
 
     private:
-        Thread& m_joinee;
+        Thread* m_joinee;
         void*& m_joinee_exit_value;
+        bool m_join_error { false };
     };
 
     class FileDescriptionBlocker : public Blocker {
@@ -344,32 +404,39 @@ public:
     {
         T t(forward<Args>(args)...);
 
-        {
-            ScopedSpinLock lock(m_lock);
-            // We should never be blocking a blocked (or otherwise non-active) thread.
-            ASSERT(state() == Thread::Running);
-            ASSERT(m_blocker == nullptr);
+        ScopedSpinLock lock(m_lock);
+        // We should never be blocking a blocked (or otherwise non-active) thread.
+        ASSERT(state() == Thread::Running);
+        ASSERT(m_blocker == nullptr);
 
-            if (t.should_unblock(*this)) {
-                // Don't block if the wake condition is already met
-                return BlockResult::NotBlocked;
-            }
-
-            m_blocker = &t;
-            m_blocker_timeout = t.override_timeout(timeout);
-            set_state(Thread::Blocked);
+        if (t.should_unblock(*this)) {
+            // Don't block if the wake condition is already met
+            return BlockResult::NotBlocked;
         }
+
+        m_blocker = &t;
+        m_blocker_timeout = t.override_timeout(timeout);
+        set_state(Thread::Blocked);
+
+        // Release our lock
+        lock.unlock();
 
         // Yield to the scheduler, and wait for us to resume unblocked.
         yield_without_holding_big_lock();
 
-        ScopedSpinLock lock(m_lock);
+        // Acquire our lock again
+        lock.lock();
+
         // We should no longer be blocked once we woke up
         ASSERT(state() != Thread::Blocked);
 
         // Remove ourselves...
         m_blocker = nullptr;
         m_blocker_timeout = nullptr;
+
+        // Notify the blocker that we are no longer blocking. It may need
+        // to clean up now while we're still holding m_lock
+        t.was_unblocked();
 
         if (t.was_interrupted_by_signal())
             return BlockResult::InterruptedBySignal;
@@ -492,14 +559,23 @@ public:
 
     void set_active(bool active)
     {
-        ASSERT(g_scheduler_lock.own_lock());
-        m_is_active = active;
+        m_is_active.store(active, AK::memory_order_release);
     }
 
     bool is_finalizable() const
     {
-        ASSERT(g_scheduler_lock.own_lock());
-        return !m_is_active;
+        // We can't finalize as long as this thread is still running
+        // Note that checking for Running state here isn't sufficient
+        // as the thread may not be in Running state but switching out.
+        // m_is_active is set to false once the context switch is
+        // complete and the thread is not executing on any processor.
+        if (m_is_active.load(AK::memory_order_consume))
+            return false;
+        // We can't finalize until the thread is either detached or
+        // a join has started. We can't make m_is_joinable atomic
+        // because that would introduce a race in try_join.
+        ScopedSpinLock lock(m_lock);
+        return !m_is_joinable;
     }
 
     Thread* clone(Process&);
@@ -559,10 +635,9 @@ private:
     timespec* m_blocker_timeout { nullptr };
     const char* m_wait_reason { nullptr };
 
-    bool m_is_active { false };
+    Atomic<bool> m_is_active { false };
     bool m_is_joinable { true };
-    Thread* m_joiner { nullptr };
-    Thread* m_joinee { nullptr };
+    Atomic<Thread*> m_joiner { nullptr };
     void* m_exit_value { nullptr };
 
     unsigned m_syscall_count { 0 };

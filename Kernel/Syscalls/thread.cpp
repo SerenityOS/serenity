@@ -71,7 +71,8 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     thread->set_name(builder.to_string());
 
     thread->set_priority(requested_thread_priority);
-    thread->set_joinable(is_thread_joinable);
+    if (!is_thread_joinable)
+        thread->detach();
 
     auto& tss = thread->tss();
     tss.eip = (FlatPtr)entry;
@@ -109,7 +110,7 @@ int Process::sys$detach_thread(pid_t tid)
     if (!thread->is_joinable())
         return -EINVAL;
 
-    thread->set_joinable(false);
+    thread->detach();
     return 0;
 }
 
@@ -126,31 +127,20 @@ int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
     if (thread == current_thread)
         return -EDEADLK;
 
-    if (thread->m_joinee == current_thread)
-        return -EDEADLK;
-
-    ASSERT(thread->m_joiner != current_thread);
-    if (thread->m_joiner)
-        return -EINVAL;
-
-    if (!thread->is_joinable())
-        return -EINVAL;
-
     void* joinee_exit_value = nullptr;
 
     // NOTE: pthread_join() cannot be interrupted by signals. Only by death.
     for (;;) {
-        auto result = current_thread->block<Thread::JoinBlocker>(nullptr, *thread, joinee_exit_value);
+        KResult try_join_result(KSuccess);
+        auto result = current_thread->block<Thread::JoinBlocker>(nullptr, *thread, try_join_result, joinee_exit_value);
+        if (result == Thread::BlockResult::NotBlocked) {
+            ASSERT_INTERRUPTS_DISABLED();
+            if (try_join_result.is_error())
+                return try_join_result.error();
+            break;
+        }
         if (result == Thread::BlockResult::InterruptedByDeath) {
-            // NOTE: This cleans things up so that Thread::finalize() won't
-            //       get confused about a missing joiner when finalizing the joinee.
-            InterruptDisabler disabler_t;
-
-            if (current_thread->m_joinee) {
-                current_thread->m_joinee->m_joiner = nullptr;
-                current_thread->m_joinee = nullptr;
-            }
-
+            ASSERT_INTERRUPTS_DISABLED();
             break;
         }
     }
