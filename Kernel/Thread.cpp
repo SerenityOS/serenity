@@ -151,6 +151,14 @@ void Thread::set_should_die()
             // the kernel stacks can clean up. We won't ever return back
             // to user mode, though
             resume_from_stopped();
+        } else if (state() == Queued) {
+            // m_queue can only be accessed safely if g_scheduler_lock is held!
+            if (m_queue) {
+                m_queue->dequeue(*this);
+                m_queue = nullptr;
+                // Wake the thread
+                wake_from_queue();
+            }
         }
     }
 
@@ -973,6 +981,8 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // we need to wait until the scheduler lock is released again
         {
             ScopedSpinLock sched_lock(g_scheduler_lock);
+            // m_queue can only be accessed safely if g_scheduler_lock is held!
+            m_queue = &queue;
             if (!queue.enqueue(*current_thread)) {
                 // The WaitQueue was already requested to wake someone when
                 // nobody was waiting. So return right away as we shouldn't
@@ -1026,9 +1036,18 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // scheduler lock, which is held when we insert into the queue
         ScopedSpinLock sched_lock(g_scheduler_lock);
 
-        // If our thread was still in the queue, we timed out
-        if (queue.dequeue(*current_thread))
-            result = BlockResult::InterruptedByTimeout;
+        if (m_queue) {
+            ASSERT(m_queue == &queue);
+            // If our thread was still in the queue, we timed out
+            m_queue = nullptr;
+            if (queue.dequeue(*current_thread))
+                result = BlockResult::InterruptedByTimeout;
+        } else {
+            // Our thread was already removed from the queue. The only
+            // way this can happen if someone else is trying to kill us.
+            // In this case, the queue should not contain us anymore.
+            return BlockResult::InterruptedByDeath;
+        }
 
         // Make sure we cancel the timer if woke normally.
         if (timeout && !result.was_interrupted())
