@@ -110,6 +110,8 @@ Thread::~Thread()
 
     auto thread_cnt_before = m_process->m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
     ASSERT(thread_cnt_before != 0);
+
+    ASSERT(!m_joiner);
 }
 
 void Thread::unblock()
@@ -192,6 +194,9 @@ void Thread::die_if_needed()
 void Thread::yield_without_holding_big_lock()
 {
     bool did_unlock = unlock_process_if_locked();
+    // NOTE: Even though we call Scheduler::yield here, unless we happen
+    // to be outside of a critical section, the yield will be postponed
+    // until leaving it in relock_process.
     Scheduler::yield();
     relock_process(did_unlock);
 }
@@ -203,8 +208,20 @@ bool Thread::unlock_process_if_locked()
 
 void Thread::relock_process(bool did_unlock)
 {
-    if (did_unlock)
+    // Clearing the critical section may trigger the context switch
+    // flagged by calling Scheduler::donate_to or Scheduler::yield
+    // above. We have to do it this way because we intentionally
+    // leave the critical section here to be able to switch contexts.
+    u32 prev_flags;
+    u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
+
+    if (did_unlock) {
+        // We've unblocked, relock the process if needed and carry on.
         process().big_lock().lock();
+    }
+
+    // NOTE: We may be on a differenct CPU now!
+    Processor::current().restore_critical(prev_crit, prev_flags);
 }
 
 u64 Thread::sleep(u64 ticks)
@@ -263,14 +280,9 @@ void Thread::finalize()
 #endif
     set_state(Thread::State::Dead);
 
-    if (m_joiner) {
-        ScopedSpinLock lock(m_joiner->m_lock);
-        ASSERT(m_joiner->m_joinee == this);
-        static_cast<JoinBlocker*>(m_joiner->m_blocker)->set_joinee_exit_value(m_exit_value);
-        static_cast<JoinBlocker*>(m_joiner->m_blocker)->set_interrupted_by_death();
-        m_joiner->m_joinee = nullptr;
-        // NOTE: We clear the joiner pointer here as well, to be tidy.
-        m_joiner = nullptr;
+    if (auto* joiner = m_joiner.exchange(nullptr, AK::memory_order_acq_rel)) {
+        // Notify joiner that we exited
+        static_cast<JoinBlocker*>(joiner->m_blocker)->joinee_exited(m_exit_value);
     }
 
     if (m_dump_backtrace_on_finalization)
@@ -993,18 +1005,8 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
                 Scheduler::yield();
         }
 
-        // Clearing the critical section may trigger the context switch
-        // flagged by calling Scheduler::donate_to or Scheduler::yield
-        // above. We have to do it this way because we intentionally
-        // leave the critical section here to be able to switch contexts.
-        u32 prev_flags;
-        u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
-
         // We've unblocked, relock the process if needed and carry on.
         relock_process(did_unlock);
-
-        // NOTE: We may be on a differenct CPU now!
-        Processor::current().restore_critical(prev_crit, prev_flags);
 
         // This looks counter productive, but we may not actually leave
         // the critical section we just restored. It depends on whether
