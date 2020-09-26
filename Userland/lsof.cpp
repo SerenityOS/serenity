@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
     int arg_uid_int = -1;
     int arg_pgid { -1 };
     pid_t arg_pid { -1 };
+    const char* arg_file_name { nullptr };
 
     Core::ArgsParser parser;
     if (argc == 1)
@@ -109,6 +110,7 @@ int main(int argc, char* argv[])
         parser.add_option(arg_fd, "Select file descriptor", nullptr, 'd', "fd");
         parser.add_option(arg_uid, "Select login/UID", nullptr, 'u', "login/UID");
         parser.add_option(arg_pgid, "Select process group ID", nullptr, 'g', "PGID");
+        parser.add_positional_argument(arg_file_name, "File name", "name", Core::ArgsParser::Required::No);
         parser.parse(argc, argv);
     }
     {
@@ -134,7 +136,8 @@ int main(int argc, char* argv[])
                     || (arg_fd != -1 && file.fd == arg_fd)
                     || (arg_uid_int != -1 && (int)process.value.uid == arg_uid_int)
                     || (arg_uid != nullptr && process.value.username == arg_uid)
-                    || (arg_pgid != -1 && (int)process.value.pgid == arg_pgid))
+                    || (arg_pgid != -1 && (int)process.value.pgid == arg_pgid)
+                    || (arg_file_name != nullptr && file.name == arg_file_name))
                     display_entry(file, process.value);
             }
         }
