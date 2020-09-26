@@ -84,19 +84,62 @@ Atomic<bool> g_finalizer_has_work { false };
 static Process* s_colonel_process;
 u64 g_uptime;
 
-Thread::JoinBlocker::JoinBlocker(Thread& joinee, void*& joinee_exit_value)
-    : m_joinee(joinee)
+Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*& joinee_exit_value)
+    : m_joinee(&joinee)
     , m_joinee_exit_value(joinee_exit_value)
 {
-    ASSERT(m_joinee.m_joiner == nullptr);
-    auto current_thread = Thread::current();
-    m_joinee.m_joiner = current_thread;
-    current_thread->m_joinee = &joinee;
+    auto* current_thread = Thread::current();
+    // We need to hold our lock to avoid a race where try_join succeeds
+    // but the joinee is joining immediately
+    ScopedSpinLock lock(m_lock);
+    try_join_result = joinee.try_join(*current_thread);
+    m_join_error = try_join_result.is_error();
 }
 
-bool Thread::JoinBlocker::should_unblock(Thread& joiner)
+void Thread::JoinBlocker::was_unblocked()
 {
-    return !joiner.m_joinee;
+    ScopedSpinLock lock(m_lock);
+    if (!m_join_error && m_joinee) {
+        // If the joinee hasn't exited yet, remove ourselves now
+        ASSERT(m_joinee != Thread::current());
+        m_joinee->join_done();
+        m_joinee = nullptr;
+    }
+}
+
+bool Thread::JoinBlocker::should_unblock(Thread&)
+{
+    // We need to acquire our lock as the joinee could call joinee_exited
+    // at any moment
+    ScopedSpinLock lock(m_lock);
+
+    if (m_join_error) {
+        // Thread::block calls should_unblock before actually blocking.
+        // If detected that we can't really block due to an error, we'll
+        // return true here, which will cause Thread::block to return
+        // with BlockResult::NotBlocked. Technically, because m_join_error
+        // will only be set in the constructor, we don't need any lock
+        // to check for it, but at the same time there should not be
+        // any contention, either...
+        return true;
+    }
+
+    return m_joinee == nullptr;
+}
+
+void Thread::JoinBlocker::joinee_exited(void* value)
+{
+    ScopedSpinLock lock(m_lock);
+    if (!m_joinee) {
+        // m_joinee can be nullptr if the joiner timed out and the
+        // joinee waits on m_lock while the joiner holds it but has
+        // not yet called join_done.
+        return;
+    }
+
+    m_joinee_exit_value = value;
+    m_joinee = nullptr;
+    set_interrupted_by_death();
 }
 
 Thread::FileDescriptionBlocker::FileDescriptionBlocker(const FileDescription& description)
