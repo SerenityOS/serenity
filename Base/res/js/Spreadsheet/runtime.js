@@ -128,6 +128,12 @@ function select(criteria, t, f) {
     return f;
 }
 
+function choose(index, ...args) {
+    if (index > args.length) return undefined;
+    if (index < 0) return undefined;
+    return args[index];
+}
+
 function now() {
     return new Date();
 }
@@ -296,6 +302,19 @@ select.__documentation = JSON.stringify({
     doc: "Selects between the two `true` and `false` values based on the value of `criteria`",
     examples: {
         "select(A1, A2, A3)": "Evaluates to A2 if A1 is true, A3 otherwise",
+    },
+});
+
+choose.__documentation = JSON.stringify({
+    name: "choose",
+    argc: 1,
+    argnames: ["index"],
+    doc: "Selects an argument by the given `index`, starting at zero",
+    examples: {
+        "choose(A3, 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')":
+            "Get the day name by the number in A3",
+        "choose(randRange(0, 2), 'Well', 'Hello', 'Friends')":
+            "Randomly pick one of the three words 'well', 'hello' and 'friends'",
     },
 });
 
