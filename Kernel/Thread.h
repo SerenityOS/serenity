@@ -438,11 +438,11 @@ public:
         // to clean up now while we're still holding m_lock
         t.was_unblocked();
 
-        if (t.was_interrupted_by_signal())
-            return BlockResult::InterruptedBySignal;
-
         if (t.was_interrupted_by_death())
             return BlockResult::InterruptedByDeath;
+
+        if (t.was_interrupted_by_signal())
+            return BlockResult::InterruptedBySignal;
 
         return BlockResult::WokeNormally;
     }
@@ -634,6 +634,7 @@ private:
     Blocker* m_blocker { nullptr };
     timespec* m_blocker_timeout { nullptr };
     const char* m_wait_reason { nullptr };
+    WaitQueue* m_queue { nullptr };
 
     Atomic<bool> m_is_active { false };
     bool m_is_joinable { true };
