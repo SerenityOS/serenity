@@ -1,0 +1,51 @@
+05b4800c752f5c57deec758118b28fc329a226e8 %.100s and sscanf doesn't do as expected
+diff --git a/kex.c b/kex.c
+index 09c7258e..4c670986 100644
+--- a/kex.c
++++ b/kex.c
+@@ -1182,7 +1182,7 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
+ 	sshbuf_reset(our_version);
+ 	if (version_addendum != NULL && *version_addendum == '\0')
+ 		version_addendum = NULL;
+-	if ((r = sshbuf_putf(our_version, "SSH-%d.%d-%.100s%s%s\r\n",
++	if ((r = sshbuf_putf(our_version, "SSH-%d.%d-%s%s%s\r\n",
+ 	   PROTOCOL_MAJOR_2, PROTOCOL_MINOR_2, SSH_VERSION,
+ 	    version_addendum == NULL ? "" : " ",
+ 	    version_addendum == NULL ? "" : version_addendum)) != 0) {
+@@ -1210,7 +1210,7 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
+ 		r = SSH_ERR_ALLOC_FAIL;
+ 		goto out;
+ 	}
+-	debug("Local version string %.100s", our_version_string);
++	debug("Local version string %s", our_version_string);
+ 
+ 	/* Read other side's version identification. */
+ 	for (n = 0; ; n++) {
+@@ -1310,6 +1310,7 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
+ 		goto out;
+ 	}
+ 
++#ifndef __serenity__
+ 	/*
+ 	 * Check that the versions match.  In future this might accept
+ 	 * several versions and set appropriate flags to handle them.
+@@ -1318,11 +1319,19 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
+ 	    &remote_major, &remote_minor, remote_version) != 3) {
+ 		error("Bad remote protocol version identification: '%.100s'",
+ 		    peer_version_string);
++#else
++	// Assume SSH2.0 for now
++	remote_major = 2;
++	remote_minor = 0;
++	// Don't want this executing with other paths but we still need the invalid label.
++	if (0)
++	{
+  invalid:
+ 		send_error(ssh, "Invalid SSH identification string.");
+ 		r = SSH_ERR_INVALID_FORMAT;
+ 		goto out;
+ 	}
++#endif
+ 	debug("Remote protocol version %d.%d, remote software version %.100s",
+ 	    remote_major, remote_minor, remote_version);
+ 	ssh->compat = compat_datafellows(remote_version);

@@ -1,0 +1,42 @@
+f524cc245e63092372d78c3d80959b589aeebcc2 Add missing sigaction pledges
+diff --git a/clientloop.c b/clientloop.c
+index da396c72..3ff4ea89 100644
+--- a/clientloop.c
++++ b/clientloop.c
+@@ -1239,31 +1239,31 @@ client_loop(struct ssh *ssh, int have_pty, int escape_char_arg,
+ 	if (options.control_master &&
+ 	    !option_clear_or_none(options.control_path)) {
+ 		debug("pledge: id");
+-		if (pledge("stdio rpath wpath cpath unix inet dns recvfd sendfd proc exec id tty",
++		if (pledge("stdio rpath wpath cpath unix inet dns recvfd sendfd proc exec id tty sigaction",
+ 		    NULL) == -1)
+ 			fatal("%s pledge(): %s", __func__, strerror(errno));
+ 
+ 	} else if (options.forward_x11 || options.permit_local_command) {
+ 		debug("pledge: exec");
+-		if (pledge("stdio rpath wpath cpath unix inet dns proc exec tty",
++		if (pledge("stdio rpath wpath cpath unix inet dns proc exec tty sigaction",
+ 		    NULL) == -1)
+ 			fatal("%s pledge(): %s", __func__, strerror(errno));
+ 
+ 	} else if (options.update_hostkeys) {
+ 		debug("pledge: filesystem full");
+-		if (pledge("stdio rpath wpath cpath unix inet dns proc tty",
++		if (pledge("stdio rpath wpath cpath unix inet dns proc tty sigaction",
+ 		    NULL) == -1)
+ 			fatal("%s pledge(): %s", __func__, strerror(errno));
+ 
+ 	} else if (!option_clear_or_none(options.proxy_command) ||
+ 	    fork_after_authentication_flag) {
+ 		debug("pledge: proc");
+-		if (pledge("stdio cpath unix inet dns proc tty", NULL) == -1)
++		if (pledge("stdio cpath unix inet dns proc tty sigaction", NULL) == -1)
+ 			fatal("%s pledge(): %s", __func__, strerror(errno));
+ 
+ 	} else {
+ 		debug("pledge: network");
+-		if (pledge("stdio unix inet dns proc tty", NULL) == -1)
++		if (pledge("stdio unix inet dns proc tty sigaction", NULL) == -1)
+ 			fatal("%s pledge(): %s", __func__, strerror(errno));
+ 	}
+ 

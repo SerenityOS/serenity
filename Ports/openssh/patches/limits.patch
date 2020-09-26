@@ -1,0 +1,300 @@
+90d6ca5fd87f81c62f3cdde73d4366cfccbab846 Add serenity_limits.h as a slight replacement of limits.h
+diff --git a/auth.c b/auth.c
+index 086b8ebb..494bb824 100644
+--- a/auth.c
++++ b/auth.c
+@@ -77,6 +77,10 @@
+ #include "compat.h"
+ #include "channels.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ /* import */
+ extern ServerOptions options;
+ extern struct include_list includes;
+diff --git a/clientloop.c b/clientloop.c
+index 3ff4ea89..80fd49fa 100644
+--- a/clientloop.c
++++ b/clientloop.c
+@@ -112,6 +112,10 @@
+ #include "ssherr.h"
+ #include "hostfile.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ /* import options */
+ extern Options options;
+ 
+diff --git a/misc.c b/misc.c
+index 67464ef2..2442c744 100644
+--- a/misc.c
++++ b/misc.c
+@@ -77,6 +77,10 @@
+ #include "ssherr.h"
+ #include "platform.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ /* remove newline at end of string */
+ char *
+ chop(char *s)
+diff --git a/moduli.c b/moduli.c
+index 8dd36b1c..afee5a25 100644
+--- a/moduli.c
++++ b/moduli.c
+@@ -62,6 +62,10 @@
+ 
+ #include "openbsd-compat/openssl-compat.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ /*
+  * File output defines
+  */
+diff --git a/openbsd-compat/bsd-closefrom.c b/openbsd-compat/bsd-closefrom.c
+index 8fadca2d..d645c4c7 100644
+--- a/openbsd-compat/bsd-closefrom.c
++++ b/openbsd-compat/bsd-closefrom.c
+@@ -50,6 +50,10 @@
+ # include <libproc.h>
+ #endif
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ #ifndef OPEN_MAX
+ # define OPEN_MAX	256
+ #endif
+diff --git a/openbsd-compat/glob.c b/openbsd-compat/glob.c
+index e8915178..0d3ee0b2 100644
+--- a/openbsd-compat/glob.c
++++ b/openbsd-compat/glob.c
+@@ -76,6 +76,10 @@
+ #include <string.h>
+ #include <unistd.h>
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ #if !defined(HAVE_GLOB) || !defined(GLOB_HAS_ALTDIRFUNC) || \
+     !defined(GLOB_HAS_GL_MATCHC) || !defined(GLOB_HAS_GL_STATV) || \
+     !defined(HAVE_DECL_GLOB_NOMATCH) || HAVE_DECL_GLOB_NOMATCH == 0 || \
+diff --git a/readconf.c b/readconf.c
+index 034ad492..8ecaf697 100644
+--- a/readconf.c
++++ b/readconf.c
+@@ -70,6 +70,10 @@
+ #include "myproposal.h"
+ #include "digest.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ /* Format of the configuration file:
+ 
+    # Configuration data is parsed as follows:
+diff --git a/scp.c b/scp.c
+index b4492a06..155029aa 100644
+--- a/scp.c
++++ b/scp.c
+@@ -123,6 +123,10 @@
+ #include "progressmeter.h"
+ #include "utf8.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ extern char *__progname;
+ 
+ #define COPY_BUFLEN	16384
+diff --git a/serenity_limits.h b/serenity_limits.h
+new file mode 100644
+index 00000000..8ee56cc2
+--- /dev/null
++++ b/serenity_limits.h
+@@ -0,0 +1,38 @@
++/*
++ * Copyright (c) 2020, The SerenityOS developers.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice, this
++ *    list of conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ *    this list of conditions and the following disclaimer in the documentation
++ *    and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
++ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
++ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
++ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++/*
++ * This header exists because limits.h just straight up does not work.
++ * OpenSSH requires PATH_MAX and SSIZE_MAX and while all the files that require it do include limits.h, it just does not work.
++ * For example:
++ * auth.c:430:30: error: 'PATH_MAX' undeclared (first use in this function)
++ *   430 |  char *file, uidstr[32], ret[PATH_MAX];
++ *       |
++ * But, defining them here does work? No idea why any of this happens.
++ */
++
++#define PATH_MAX 4096
++#define SSIZE_MAX 2147483647
+diff --git a/servconf.c b/servconf.c
+index 02b68a9a..dddf1b3c 100644
+--- a/servconf.c
++++ b/servconf.c
+@@ -72,6 +72,10 @@
+ #include "myproposal.h"
+ #include "digest.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ static void add_listen_addr(ServerOptions *, const char *,
+     const char *, int);
+ static void add_one_listen_addr(ServerOptions *, const char *,
+diff --git a/session.c b/session.c
+index 18cdfa8c..ca1f0c8b 100644
+--- a/session.c
++++ b/session.c
+@@ -105,6 +105,10 @@
+ #include <selinux/selinux.h>
+ #endif
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ #define IS_INTERNAL_SFTP(c) \
+ 	(!strncmp(c, INTERNAL_SFTP_NAME, sizeof(INTERNAL_SFTP_NAME) - 1) && \
+ 	 (c[sizeof(INTERNAL_SFTP_NAME) - 1] == '\0' || \
+diff --git a/sftp-realpath.c b/sftp-realpath.c
+index 9ac40181..d3c71ecd 100644
+--- a/sftp-realpath.c
++++ b/sftp-realpath.c
+@@ -44,6 +44,10 @@
+ # define SYMLOOP_MAX 32
+ #endif
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ /* XXX rewrite sftp-server to use POSIX realpath and remove this hack */
+ 
+ char *sftp_realpath(const char *path, char *resolved);
+diff --git a/sftp-server.c b/sftp-server.c
+index 359204fa..36c2f263 100644
+--- a/sftp-server.c
++++ b/sftp-server.c
+@@ -51,6 +51,10 @@
+ #include "sftp.h"
+ #include "sftp-common.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ char *sftp_realpath(const char *, char *); /* sftp-realpath.c */
+ 
+ /* Our verbosity */
+diff --git a/sftp.c b/sftp.c
+index 9ce7055a..a5cb9cee 100644
+--- a/sftp.c
++++ b/sftp.c
+@@ -70,6 +70,10 @@ typedef void EditLine;
+ #include "sftp-common.h"
+ #include "sftp-client.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ #define DEFAULT_COPY_BUFLEN	32768	/* Size of buffer for up/download */
+ #define DEFAULT_NUM_REQUESTS	64	/* # concurrent outstanding requests */
+ 
+diff --git a/ssh-add.c b/ssh-add.c
+index e218270b..ad2fbf44 100644
+--- a/ssh-add.c
++++ b/ssh-add.c
+@@ -68,6 +68,10 @@
+ #include "digest.h"
+ #include "ssh-sk.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ /* argv0 */
+ extern char *__progname;
+ 
+diff --git a/ssh-agent.c b/ssh-agent.c
+index 811dc115..22d0fbe5 100644
+--- a/ssh-agent.c
++++ b/ssh-agent.c
+@@ -92,6 +92,10 @@
+ #include "ssh-pkcs11.h"
+ #include "sk-api.h"
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ #ifndef DEFAULT_PROVIDER_WHITELIST
+ # define DEFAULT_PROVIDER_WHITELIST "/usr/lib*/*,/usr/local/lib*/*"
+ #endif
+diff --git a/ssh-keygen.c b/ssh-keygen.c
+index 85e8a9e2..129d3276 100644
+--- a/ssh-keygen.c
++++ b/ssh-keygen.c
+@@ -66,6 +66,10 @@
+ #include "ssh-sk.h"
+ #include "sk-api.h" /* XXX for SSH_SK_USER_PRESENCE_REQD; remove */
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ #ifdef WITH_OPENSSL
+ # define DEFAULT_KEY_TYPE_NAME "rsa"
+ #else
+diff --git a/ssh.c b/ssh.c
+index 98b6ce78..5e559a5c 100644
+--- a/ssh.c
++++ b/ssh.c
+@@ -113,6 +113,10 @@
+ #include "ssh-pkcs11.h"
+ #endif
+ 
++#ifdef __serenity__
++#include "serenity_limits.h"
++#endif
++
+ extern char *__progname;
+ 
+ /* Saves a copy of argv for setproctitle emulation */
