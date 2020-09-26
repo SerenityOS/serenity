@@ -267,6 +267,72 @@ function here() {
     return new Position(position.column, position.row, thisSheet);
 }
 
+function internal_lookup(
+    req_lookup_value,
+    lookup_inputs,
+    lookup_outputs,
+    if_missing,
+    mode,
+    reference
+) {
+    lookup_outputs = lookup_outputs ?? lookup_inputs;
+
+    if (lookup_inputs.length > lookup_outputs.length)
+        throw new Error(
+            `Uneven lengths in outputs and inputs: ${lookup_inputs.length} > ${lookup_outputs.length}`
+        );
+
+    let references = lookup_outputs;
+    lookup_inputs = resolve(lookup_inputs);
+    lookup_outputs = resolve(lookup_outputs);
+    if_missing = if_missing ?? undefined;
+    mode = mode ?? "exact";
+    const lookup_value = req_lookup_value;
+    let matches = null;
+
+    if (mode === "exact") {
+        matches = value => value === lookup_value;
+    } else if (mode === "nextlargest") {
+        matches = value => value >= lookup_value;
+    } else if (mode === "nextsmallest") {
+        matches = value => value <= lookup_value;
+    } else {
+        throw new Error(`Match mode '${mode}' not supported`);
+    }
+
+    let retval = if_missing;
+    for (let i = 0; i < lookup_inputs.length; ++i) {
+        if (matches(lookup_inputs[i])) {
+            retval = reference ? Position.from_name(references[i]) : lookup_outputs[i];
+            break;
+        }
+    }
+
+    return retval;
+}
+
+function lookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mode) {
+    return internal_lookup(
+        req_lookup_value,
+        lookup_inputs,
+        lookup_outputs,
+        if_missing,
+        mode,
+        false
+    );
+}
+
+function reflookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mode) {
+    return internal_lookup(
+        req_lookup_value,
+        lookup_inputs,
+        lookup_outputs,
+        if_missing ?? here(),
+        mode,
+        true
+    );
+}
+
 // Cheat the system and add documentation
 range.__documentation = JSON.stringify({
     name: "range",
@@ -527,5 +593,62 @@ here.__documentation = JSON.stringify({
         "here().up().value()": "Get the value of the cell above this one",
         "here().up().with_column('A')":
             "Get a Position above this one in column A, for instance, evaluates to A2 if run in B3.",
+    },
+});
+
+lookup.__documentation = JSON.stringify({
+    name: "lookup",
+    argc: 2,
+    argnames: [
+        "lookup value",
+        "lookup source",
+        "lookup target",
+        "value if no match",
+        "match method",
+    ],
+    doc:
+        "Allows for finding things in a table or tabular data, by looking for matches in one range, and " +
+        "grabbing the corresponding output value from another range.\n" +
+        "if `lookup target` is not specified or is nullish, it is assumed to be the same as the `lookup source`\n." +
+        "if nothing matches, the value `value if no match`" +
+        " is returned, which is `undefined` by default.\nBy setting the `match method`, the function can be altered to return " +
+        "the closest ordered value (above or below) instead of an exact match. The valid choices for `match method` are:\n" +
+        "- `'exact'`: The default method. Uses strict equality to match values.\n" +
+        "- `'nextlargest'`: Uses the greater-or-equal operator to match values.\n" +
+        "- `'nextsmallest'`: Uses the less-than-or-equal operator to match values.\n",
+    examples: {
+        "lookup(F3, R`B2:B11`, R`D2:D11`)":
+            "Look for the value of F3 in the range B2:B11, and return the corresponding value from the D column",
+        "lookup(E2, R`C2:C5`, R`B2:B5`, 0, 'nextlargest')":
+            "Find the closest (larger) value to E2 in range C2:C5, and evaluate to 0 if no value in that range is larger",
+    },
+});
+
+reflookup.__documentation = JSON.stringify({
+    name: "reflookup",
+    argc: 2,
+    argnames: [
+        "lookup value",
+        "lookup source",
+        "lookup target",
+        "value if no match",
+        "match method",
+    ],
+    doc:
+        "Allows for finding references to things in a table or tabular data, by looking for matches in one range, and " +
+        "grabbing the corresponding output value from another range.\n" +
+        "if `lookup target` is not specified or is nullish, it is assumed to be the same as the `lookup source`\n." +
+        "if nothing matches, the value `value if no match`" +
+        " is returned, which is `undefined` by default.\nBy setting the `match method`, the function can be altered to return " +
+        "the closest ordered value (above or below) instead of an exact match. The valid choices for `match method` are:\n" +
+        "- `'exact'`: The default method. Uses strict equality to match values.\n" +
+        "- `'nextlargest'`: Uses the greater-or-equal operator to match values.\n" +
+        "- `'nextsmallest'`: Uses the less-than-or-equal operator to match values.\n" +
+        "\nThis function return a `Position` (see `here()`)",
+    examples: {
+        "reflookup(F3, R`B2:B11`, R`D2:D11`)":
+            "Look for the value of F3 in the range B2:B11, and return the corresponding cell name from the D column",
+        "reflookup(E2, R`C2:C5`, R`B2:B5`, here(), 'nextlargest')":
+            "Find the cell with the closest (larger) value to E2 in range C2:C5, and evaluate to the current cell if no value in that range is larger",
     },
 });
