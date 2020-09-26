@@ -1,8 +1,82 @@
+// FIXME: Figure out a way to document non-function entities too.
+class Position {
+    constructor(column, row, sheet) {
+        this.column = column;
+        this.row = row;
+        this.sheet = sheet ?? thisSheet;
+        this.name = `${column}${row}`;
+    }
+
+    static from_name(name) {
+        let sheet = thisSheet;
+        let obj = sheet.parse_cell_name(name);
+        return new Position(obj.column, obj.row, sheet);
+    }
+
+    up(how_many) {
+        how_many = how_many ?? 1;
+        const row = Math.max(0, this.row - how_many);
+        return new Position(this.column, row, this.sheet);
+    }
+
+    down(how_many) {
+        how_many = how_many ?? 1;
+        const row = Math.max(0, this.row + how_many);
+        return new Position(this.column, row, this.sheet);
+    }
+
+    left(how_many) {
+        how_many = how_many ?? 1;
+        const column = Math.min(
+            "Z".charCodeAt(0),
+            Math.max("A".charCodeAt(0), this.column.charCodeAt(0) - how_many)
+        );
+        return new Position(String.fromCharCode(column), this.row, this.sheet);
+    }
+
+    right(how_many) {
+        how_many = how_many ?? 1;
+        const column = Math.min(
+            "Z".charCodeAt(0),
+            Math.max("A".charCodeAt(0), this.column.charCodeAt(0) + how_many)
+        );
+        return new Position(String.fromCharCode(column), this.row, this.sheet);
+    }
+
+    with_column(value) {
+        return new Position(value, this.row, this.sheet);
+    }
+
+    with_row(value) {
+        return new Position(this.column, value, this.sheet);
+    }
+
+    in_sheet(the_sheet) {
+        return new Position(this.column, this.row, sheet(the_sheet));
+    }
+
+    value() {
+        return this.sheet[this.name];
+    }
+
+    valueOf() {
+        return value();
+    }
+
+    toString() {
+        return `<Cell at ${this.name}>`;
+    }
+}
+
 function range(start, end, columnStep, rowStep) {
     columnStep = integer(columnStep ?? 1);
     rowStep = integer(rowStep ?? 1);
-    start = parse_cell_name(start) ?? { column: "A", row: 0 };
-    end = parse_cell_name(end) ?? start;
+    if (!(start instanceof Position)) {
+        start = parse_cell_name(start) ?? { column: "A", row: 0 };
+    }
+    if (!(end instanceof Position)) {
+        end = parse_cell_name(end) ?? start;
+    }
 
     if (end.column.length > 1 || start.column.length > 1)
         throw new TypeError("Only single-letter column names are allowed (TODO)");
@@ -170,6 +244,21 @@ function variance(cells) {
 
 function stddev(cells) {
     return Math.sqrt(variance(cells));
+}
+
+// Lookup
+
+function row() {
+    return thisSheet.current_cell_position().row;
+}
+
+function column() {
+    return thisSheet.current_cell_position().column;
+}
+
+function here() {
+    const position = current_cell_position();
+    return new Position(position.column, position.row, thisSheet);
 }
 
 // Cheat the system and add documentation
@@ -380,5 +469,44 @@ stddev.__documentation = JSON.stringify({
     doc: "Calculates the standard deviation of the numeric values in the given range of cells",
     examples: {
         'stddev(range("A0", "C4"))': "Calculate the standard deviation of the values in A0:C4",
+    },
+});
+
+row.__documentation = JSON.stringify({
+    name: "row",
+    argc: 0,
+    argnames: [],
+    doc: "Returns the row number of the current cell",
+    examples: {},
+});
+
+column.__documentation = JSON.stringify({
+    name: "column",
+    argc: 0,
+    argnames: [],
+    doc: "Returns the column name of the current cell",
+    examples: {},
+});
+
+here.__documentation = JSON.stringify({
+    name: "here",
+    argc: 0,
+    argnames: [],
+    doc:
+        "Returns an object representing the current cell's position, see `Position` below.\n\n" +
+        "## Position\na `Position` is an object representing a given cell position in a given sheet.\n" +
+        "### Methods:\n- `up(count = 1)`: goes up count cells, or returns the top position if at the top\n" +
+        "- `down(count = 1)`: goes down count cells\n" +
+        "- `left(count = 1)`: Goes left count cells, or returns the leftmost position if the edge\n" +
+        "- `right(count = 1)`: Goes right count cells.\n" +
+        "- `with_row(row)`: Returns a Position with its column being this object's, and its row being the provided the value.\n" +
+        "- `with_column(column)`: Similar to `with_row()`, but changes the column instead.\n" +
+        "- `in_sheet(the_sheet)`: Returns a Position with the same column and row as this one, but with its sheet being `the_sheet`.\n" +
+        "- `value()`: Returns the value at the position which it represents, in the object's sheet (current sheet by default).\n\n" +
+        "**NOTE**: Currently only supports single-letter column names",
+    examples: {
+        "here().up().value()": "Get the value of the cell above this one",
+        "here().up().with_column('A')":
+            "Get a Position above this one in column A, for instance, evaluates to A2 if run in B3.",
     },
 });

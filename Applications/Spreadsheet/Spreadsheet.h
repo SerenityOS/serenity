@@ -41,21 +41,6 @@
 
 namespace Spreadsheet {
 
-struct Position {
-    String column;
-    size_t row { 0 };
-
-    bool operator==(const Position& other) const
-    {
-        return row == other.row && column == other.column;
-    }
-
-    bool operator!=(const Position& other) const
-    {
-        return !(other == *this);
-    }
-};
-
 class Sheet : public Core::Object {
     C_OBJECT(Sheet);
 
@@ -89,7 +74,7 @@ public:
         if (auto cell = at(position))
             return *cell;
 
-        m_cells.set(position, make<Cell>(String::empty(), make_weak_ptr()));
+        m_cells.set(position, make<Cell>(String::empty(), position, make_weak_ptr()));
         return *at(position);
     }
 
