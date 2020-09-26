@@ -150,9 +150,6 @@ public:
     const CallFrame& call_frame() { return m_call_stack.last(); }
     const Vector<CallFrame>& call_stack() { return m_call_stack; }
 
-    void push_environment(LexicalEnvironment*);
-    void pop_environment();
-
     const LexicalEnvironment* current_environment() const { return m_call_stack.last().environment; }
     LexicalEnvironment* current_environment() { return m_call_stack.last().environment; }
 
