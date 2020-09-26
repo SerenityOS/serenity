@@ -60,17 +60,18 @@ public:
     // Thread entry point
     static int start_static();
 
-    pthread_mutex_t* continue_mutex() { return &m_continue_mutex; }
-    pthread_cond_t* continue_cond() { return &m_continue_cond; }
+    pthread_mutex_t* continue_mutex() { return &m_ui_action_mutex; }
+    pthread_cond_t* continue_cond() { return &m_ui_action_cond; }
 
-    enum class ContinueType {
+    enum class DebuggerAction {
         Continue,
         SourceSingleStep,
         SourceStepOut,
         SourceStepOver,
+        Exit,
     };
 
-    void set_continue_type(ContinueType type) { m_continue_type = type; }
+    void set_requested_debugger_action(DebuggerAction);
     void reset_breakpoints() { m_breakpoints.clear(); }
 
 private:
@@ -119,8 +120,9 @@ private:
     OwnPtr<Debug::DebugSession> m_debug_session;
     DebuggingState m_state;
 
-    pthread_mutex_t m_continue_mutex {};
-    pthread_cond_t m_continue_cond {};
+    pthread_mutex_t m_ui_action_mutex {};
+    pthread_cond_t m_ui_action_cond {};
+    DebuggerAction m_requested_debugger_action { DebuggerAction::Continue };
 
     Vector<Debug::DebugInfo::SourcePosition> m_breakpoints;
 
@@ -129,8 +131,6 @@ private:
     Function<HasControlPassedToUser(const PtraceRegisters&)> m_on_stopped_callback;
     Function<void()> m_on_continue_callback;
     Function<void()> m_on_exit_callback;
-
-    ContinueType m_continue_type { ContinueType::Continue };
 };
 
 }
