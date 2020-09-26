@@ -30,7 +30,7 @@ sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qem
 apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel patch gcc
 ```
 
-Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
+Ensure your gcc version is >= 9 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
 ```bash
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get install gcc-9 g++-9
