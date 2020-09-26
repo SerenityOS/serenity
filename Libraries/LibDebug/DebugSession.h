@@ -90,10 +90,13 @@ public:
     };
     void continue_debugee(ContinueType type = ContinueType::FreeRun);
 
-    //returns the wstatus result of waitpid()
+    // Returns the wstatus result of waitpid()
     int continue_debugee_and_wait(ContinueType type = ContinueType::FreeRun);
 
+    // Returns the new eip
     void* single_step();
+
+    void detach();
 
     template<typename Callback>
     void run(Callback callback);
@@ -236,7 +239,11 @@ void DebugSession::run(Callback callback)
             state = State::SingleStep;
         }
 
-        if (decision == DebugDecision::Kill || decision == DebugDecision::Detach) {
+        if (decision == DebugDecision::Detach) {
+            detach();
+            break;
+        }
+        if (decision == DebugDecision::Kill) {
             ASSERT_NOT_REACHED(); // TODO: implement
         }
 
