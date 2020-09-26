@@ -40,11 +40,12 @@ TEST_CASE(format_integers)
     EXPECT_EQ(String::formatted("{}", 42u), "42");
     EXPECT_EQ(String::formatted("{:4}", 42u), "  42");
     EXPECT_EQ(String::formatted("{:08}", 42u), "00000042");
-    // EXPECT_EQ(String::formatted("{:7}", -17), "    -17");
+    EXPECT_EQ(String::formatted("{:7}", -17), "    -17");
     EXPECT_EQ(String::formatted("{}", -17), "-17");
     EXPECT_EQ(String::formatted("{:04}", 13), "0013");
     EXPECT_EQ(String::formatted("{:08x}", 4096), "00001000");
     EXPECT_EQ(String::formatted("{:x}", 0x1111222233334444ull), "1111222233334444");
+    EXPECT_EQ(String::formatted("{:4}", 12345678), "12345678");
 }
 
 TEST_CASE(reorder_format_arguments)
@@ -78,6 +79,38 @@ TEST_CASE(string_builder)
 TEST_CASE(format_without_arguments)
 {
     EXPECT_EQ(String::formatted("foo"), "foo");
+}
+
+TEST_CASE(format_upper_case_integer)
+{
+    EXPECT_EQ(String::formatted("{:4X}", 0xff), "  FF");
+    EXPECT_EQ(String::formatted("{:#4X}", 0xff), "0XFF");
+
+    EXPECT_EQ(String::formatted("{:b}", 0xff), "11111111");
+    EXPECT_EQ(String::formatted("{:B}", 0xff), "11111111");
+    EXPECT_EQ(String::formatted("{:#b}", 0xff), "0b11111111");
+}
+
+TEST_CASE(format_aligned)
+{
+    EXPECT_EQ(String::formatted("{:*<8}", 13), "13******");
+    EXPECT_EQ(String::formatted("{:*^8}", 13), "***13***");
+    EXPECT_EQ(String::formatted("{:*>8}", 13), "******13");
+    EXPECT_EQ(String::formatted("{:*>+8}", 13), "*****+13");
+    EXPECT_EQ(String::formatted("{:*^ 8}", 13), "** 13***");
+}
+
+TEST_CASE(format_octal)
+{
+    EXPECT_EQ(String::formatted("{:o}", 0744), "744");
+    EXPECT_EQ(String::formatted("{:#o}", 0744), "0744");
+}
+
+TEST_CASE(zero_pad)
+{
+    EXPECT_EQ(String::formatted("{: <010}", 42), "42        ");
+    EXPECT_EQ(String::formatted("{:010}", 42), "0000000042");
+    EXPECT_EQ(String::formatted("{:/^010}", 42), "////42////");
 }
 
 TEST_MAIN(Format)
