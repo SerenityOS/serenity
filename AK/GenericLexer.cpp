@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/GenericLexer.h>
+#include <AK/StringBuilder.h>
 
 namespace AK {
 
@@ -211,27 +212,61 @@ StringView GenericLexer::consume_until(Condition condition)
     return m_input.substring_view(start, length);
 }
 
-// Consume a string surrounded by single or double quotes
-// The returned StringView does not include the quotes
-StringView GenericLexer::consume_quoted_string()
+/*
+ * Consume a string surrounded by single or double quotes. The returned
+ * StringView does not include the quotes. An escape character can be provided
+ * to capture the enclosing quotes. Please note that the escape character will
+ * still be in the resulting StringView
+ */
+StringView GenericLexer::consume_quoted_string(char escape_char)
 {
     if (!is_quote(peek()))
         return {};
 
     char quote_char = consume();
     size_t start = m_index;
-    while (!is_eof() && peek() != quote_char)
+    while (!is_eof()) {
+        if (next_is(escape_char))
+            m_index++;
+        else if (next_is(quote_char))
+            break;
         m_index++;
+    }
     size_t length = m_index - start;
 
     if (peek() != quote_char) {
-        m_index = start - 1; // Restore the index in case the string is unterminated
+        // Restore the index in case the string is unterminated
+        m_index = start - 1;
         return {};
     }
 
+    // Ignore closing quote
     ignore();
 
     return m_input.substring_view(start, length);
+}
+
+String GenericLexer::consume_and_unescape_string(char escape_char)
+{
+    auto view = consume_quoted_string(escape_char);
+    if (view.is_null())
+        return {};
+
+    // Transform common escape sequences
+    auto unescape_character = [](char c) {
+        static const char* escape_map = "n\nr\rt\tb\bf\f";
+        for (size_t i = 0; escape_map[i] != '\0'; i += 2)
+            if (c == escape_map[i])
+                return escape_map[i + 1];
+        return c;
+    };
+
+    StringBuilder builder;
+    for (size_t i = 0; i < view.length(); ++i) {
+        char c = (view[i] == escape_char) ? unescape_character(view[++i]) : view[i];
+        builder.append(c);
+    }
+    return builder.to_string();
 }
 
 // Ignore a number of characters (1 by default)
