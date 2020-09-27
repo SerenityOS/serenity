@@ -50,9 +50,4 @@ Symbol* js_symbol(VM& vm, String description, bool is_global)
     return js_symbol(vm.heap(), move(description), is_global);
 }
 
-Symbol* js_symbol(Interpreter& interpreter, String description, bool is_global)
-{
-    return js_symbol(interpreter.heap(), description, is_global);
-}
-
 }
