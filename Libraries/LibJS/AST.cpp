@@ -1513,7 +1513,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
                 auto& str_to_spread = key.as_string().string();
 
                 for (size_t i = 0; i < str_to_spread.length(); i++) {
-                    object->define_property(i, js_string(interpreter, str_to_spread.substring(i, 1)));
+                    object->define_property(i, js_string(interpreter.heap(), str_to_spread.substring(i, 1)));
                     if (interpreter.exception())
                         return {};
                 }
@@ -1613,7 +1613,7 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
 Value StringLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    return js_string(interpreter, m_value);
+    return js_string(interpreter.heap(), m_value);
 }
 
 Value NumericLiteral::execute(Interpreter&, GlobalObject&) const
@@ -1706,7 +1706,7 @@ Value TemplateLiteral::execute(Interpreter& interpreter, GlobalObject& global_ob
         string_builder.append(string);
     }
 
-    return js_string(interpreter, string_builder.build());
+    return js_string(interpreter.heap(), string_builder.build());
 }
 
 void TaggedTemplateLiteral::dump(int indent) const

@@ -61,7 +61,7 @@ static String ak_string_from(VM& vm, GlobalObject& global_object)
 }
 
 StringPrototype::StringPrototype(GlobalObject& global_object)
-    : StringObject(*js_string(interpreter(), String::empty()), *global_object.object_prototype())
+    : StringObject(*js_string(global_object.heap(), String::empty()), *global_object.object_prototype())
 {
 }
 
