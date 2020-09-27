@@ -34,6 +34,7 @@
 #include <LibCore/File.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
+#include <ctype.h>
 
 namespace Spreadsheet {
 
@@ -192,8 +193,8 @@ Cell* Sheet::at(const Position& position)
 Optional<Position> Sheet::parse_cell_name(const StringView& name)
 {
     GenericLexer lexer(name);
-    auto col = lexer.consume_while([](auto c) { return is_alpha(c); });
-    auto row = lexer.consume_while([](auto c) { return is_alphanum(c) && !is_alpha(c); });
+    auto col = lexer.consume_while(isalpha);
+    auto row = lexer.consume_while(isdigit);
 
     if (!lexer.is_eof() || row.is_empty() || col.is_empty())
         return {};

@@ -35,6 +35,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <ctype.h>
 #include <stdio.h>
 
 struct OpenFile {
@@ -56,8 +57,8 @@ static bool parse_name(StringView name, OpenFile& file)
         return true;
     } else {
         file.type = component1;
-        auto component2 = lexer.consume_while([](char c) { return is_printable(c) && !is_whitespace(c) && c != '('; });
-        lexer.ignore_while(is_whitespace);
+        auto component2 = lexer.consume_while([](char c) { return isprint(c) && !isspace(c) && c != '('; });
+        lexer.ignore_while(isspace);
         file.name = component2;
 
         if (lexer.tell_remaining() == 0) {

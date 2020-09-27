@@ -29,6 +29,7 @@
 #include <AK/PrintfImplementation.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <ctype.h>
 
 namespace {
 
@@ -79,7 +80,7 @@ static bool parse_number(GenericLexer& lexer, size_t& value)
 
     bool consumed_at_least_one = false;
     while (!lexer.is_eof()) {
-        if (lexer.next_is(is_digit)) {
+        if (lexer.next_is(isdigit)) {
             value *= 10;
             value += lexer.consume() - '0';
             consumed_at_least_one = true;

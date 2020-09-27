@@ -34,6 +34,7 @@
 #include <LibCore/File.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
+#include <ctype.h>
 #include <stdio.h>
 
 // FIXME: Move this somewhere else when it's needed (e.g. in the Browser)
@@ -43,7 +44,7 @@ public:
     {
         GenericLexer lexer(value);
 
-        lexer.ignore_while(is_whitespace);
+        lexer.ignore_while(isspace);
 
         if (lexer.consume_specific("inline")) {
             m_kind = Kind::Inline;
@@ -55,7 +56,7 @@ public:
         if (lexer.consume_specific("attachment")) {
             m_kind = Kind::Attachment;
             if (lexer.consume_specific(";")) {
-                lexer.ignore_while(is_whitespace);
+                lexer.ignore_while(isspace);
                 if (lexer.consume_specific("filename=")) {
                     // RFC 2183: "A short (length <= 78 characters)
                     //            parameter value containing only non-`tspecials' characters SHOULD be
@@ -77,7 +78,7 @@ public:
         if (lexer.consume_specific("form-data")) {
             m_kind = Kind::FormData;
             while (lexer.consume_specific(";")) {
-                lexer.ignore_while(is_whitespace);
+                lexer.ignore_while(isspace);
                 if (lexer.consume_specific("name=")) {
                     m_name = lexer.consume_quoted_string();
                 } else if (lexer.consume_specific("filename=")) {

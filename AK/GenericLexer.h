@@ -136,42 +136,12 @@ constexpr auto is_any_of(const StringView& values)
     return [values](auto c) { return values.contains(c); };
 }
 
-/*
- * CType adapters: pass them as Conditions to a GenericLexer's methods
- * Examples:
- *   - `if (lexer.next_is(is_digit))`
- *   - `auto name = lexer.consume_while(is_alphanum);
- *   - `lexer.ignore_until(is_any_of("<^>"))`
- */
-bool is_alpha(char);
-bool is_alphanum(char);
-bool is_control(char);
-bool is_digit(char);
-bool is_graphic(char);
-bool is_hex_digit(char);
-bool is_lowercase(char);
-bool is_path_separator(char);
-bool is_printable(char);
-bool is_punctuation(char);
-bool is_quote(char);
-bool is_uppercase(char);
-bool is_whitespace(char);
+constexpr auto is_path_separator = is_any_of("/\\");
+constexpr auto is_quote = is_any_of("'\"");
 
 }
 
 using AK::GenericLexer;
-
-using AK::is_alpha;
-using AK::is_alphanum;
 using AK::is_any_of;
-using AK::is_control;
-using AK::is_digit;
-using AK::is_graphic;
-using AK::is_hex_digit;
-using AK::is_lowercase;
 using AK::is_path_separator;
-using AK::is_printable;
-using AK::is_punctuation;
 using AK::is_quote;
-using AK::is_uppercase;
-using AK::is_whitespace;
