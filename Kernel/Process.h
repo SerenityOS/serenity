@@ -125,14 +125,14 @@ public:
         return current_thread ? &current_thread->process() : nullptr;
     }
 
-    static NonnullRefPtr<Process> create_kernel_process(Thread*& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
-    static RefPtr<Process> create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static NonnullRefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
+    static RefPtr<Process> create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t, gid_t, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
     static Vector<ProcessID> all_pids();
     static AK::NonnullRefPtrVector<Process> all_processes();
 
-    Thread* create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
+    RefPtr<Thread> create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }
@@ -466,7 +466,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(Thread*& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(RefPtr<Thread>& first_thread, const String& name, uid_t, gid_t, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
     static ProcessID allocate_pid();
 
     Range allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);

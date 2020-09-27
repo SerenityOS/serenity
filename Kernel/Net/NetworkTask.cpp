@@ -61,7 +61,7 @@ static void handle_tcp(const IPv4Packet&, const timeval& packet_timestamp);
 
 void NetworkTask::spawn()
 {
-    Thread* thread = nullptr;
+    RefPtr<Thread> thread;
     Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main);
 }
 

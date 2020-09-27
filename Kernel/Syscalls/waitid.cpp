@@ -68,7 +68,9 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
         return reap(*waitee_process);
     } else {
         // FIXME: PID/TID BUG
-        auto* waitee_thread = Thread::from_tid(waitee_pid.value());
+        // Make sure to hold the scheduler lock so that we operate on a consistent state
+        ScopedSpinLock scheduler_lock(g_scheduler_lock);
+        auto waitee_thread = Thread::from_tid(waitee_pid.value());
         if (!waitee_thread)
             return KResult(-ECHILD);
         ASSERT((options & WNOHANG) || waitee_thread->state() == Thread::State::Stopped);

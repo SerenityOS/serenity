@@ -32,6 +32,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <AK/WeakPtr.h>
+#include <AK/Weakable.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
@@ -66,7 +68,9 @@ struct ThreadSpecificData {
 
 #define THREAD_AFFINITY_DEFAULT 0xffffffff
 
-class Thread {
+class Thread
+    : public RefCounted<Thread>
+    , public Weakable<Thread> {
     AK_MAKE_NONCOPYABLE(Thread);
     AK_MAKE_NONMOVABLE(Thread);
 
@@ -82,7 +86,7 @@ public:
     explicit Thread(NonnullRefPtr<Process>);
     ~Thread();
 
-    static Thread* from_tid(ThreadID);
+    static RefPtr<Thread> from_tid(ThreadID);
     static void finalize_dying_threads();
 
     ThreadID tid() const { return m_tid; }
@@ -143,9 +147,23 @@ public:
     String backtrace();
     Vector<FlatPtr> raw_backtrace(FlatPtr ebp, FlatPtr eip) const;
 
-    const String& name() const { return m_name; }
-    void set_name(const StringView& s) { m_name = s; }
-    void set_name(String&& name) { m_name = move(name); }
+    String name() const
+    {
+        // Because the name can be changed, we can't return a const
+        // reference here. We must make a copy
+        ScopedSpinLock lock(m_lock);
+        return m_name;
+    }
+    void set_name(const StringView& s)
+    {
+        ScopedSpinLock lock(m_lock);
+        m_name = s;
+    }
+    void set_name(String&& name)
+    {
+        ScopedSpinLock lock(m_lock);
+        m_name = move(name);
+    }
 
     void finalize();
 
@@ -452,7 +470,7 @@ public:
         return block<ConditionBlocker>(nullptr, state_string, move(condition));
     }
 
-    BlockResult wait_on(WaitQueue& queue, const char* reason, timeval* timeout = nullptr, Atomic<bool>* lock = nullptr, Thread* beneficiary = nullptr);
+    BlockResult wait_on(WaitQueue& queue, const char* reason, timeval* timeout = nullptr, Atomic<bool>* lock = nullptr, RefPtr<Thread> beneficiary = {});
     void wake_from_queue();
 
     void unblock();
@@ -578,7 +596,7 @@ public:
         return !m_is_joinable;
     }
 
-    Thread* clone(Process&);
+    RefPtr<Thread> clone(Process&);
 
     template<typename Callback>
     static IterationDecision for_each_in_state(State, Callback);

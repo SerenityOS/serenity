@@ -100,17 +100,20 @@ Thread::Thread(NonnullRefPtr<Process> process)
         m_tss.esp0 = m_kernel_stack_top;
     }
 
+    // We need to add another reference if we could successfully create
+    // all the resources needed for this thread. The reason for this is that
+    // we don't want to delete this thread after dropping the reference,
+    // it may still be running or scheduled to be run.
+    // The finalizer is responsible for dropping this reference once this
+    // thread is ready to be cleaned up.
+    ref();
+
     if (m_process->pid() != 0)
         Scheduler::init_thread(*this);
 }
 
 Thread::~Thread()
 {
-    kfree_aligned(m_fpu_state);
-
-    auto thread_cnt_before = m_process->m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
-    ASSERT(thread_cnt_before != 0);
-
     ASSERT(!m_joiner);
 }
 
@@ -269,9 +272,11 @@ const char* Thread::state_string() const
         return "Stopped";
     case Thread::Queued:
         return "Queued";
-    case Thread::Blocked:
+    case Thread::Blocked: {
+        ScopedSpinLock lock(m_lock);
         ASSERT(m_blocker != nullptr);
         return m_blocker->state_string();
+    }
     }
     klog() << "Thread::state_string(): Invalid state: " << state();
     ASSERT_NOT_REACHED();
@@ -295,6 +300,13 @@ void Thread::finalize()
 
     if (m_dump_backtrace_on_finalization)
         dbg() << backtrace_impl();
+
+    kfree_aligned(m_fpu_state);
+
+    auto thread_cnt_before = m_process->m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+    ASSERT(thread_cnt_before != 0);
+    if (thread_cnt_before == 1)
+        process().finalize();
 }
 
 void Thread::finalize_dying_threads()
@@ -310,11 +322,12 @@ void Thread::finalize_dying_threads()
         });
     }
     for (auto* thread : dying_threads) {
-        auto& process = thread->process();
         thread->finalize();
-        delete thread;
-        if (process.m_thread_count.load(AK::MemoryOrder::memory_order_consume) == 0)
-            process.finalize();
+
+        // This thread will never execute again, drop the running reference
+        // NOTE: This may not necessarily drop the last reference if anything
+        //       else is still holding onto this thread!
+        thread->unref();
     }
 }
 
@@ -762,9 +775,9 @@ KResultOr<u32> Thread::make_userspace_stack_for_main_thread(Vector<String> argum
     return new_esp;
 }
 
-Thread* Thread::clone(Process& process)
+RefPtr<Thread> Thread::clone(Process& process)
 {
-    auto* clone = new Thread(process);
+    auto clone = adopt(*new Thread(process));
     memcpy(clone->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
     clone->m_signal_mask = m_signal_mask;
     memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));
@@ -967,7 +980,7 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
     return stream << value.process().name() << "(" << value.pid().value() << ":" << value.tid().value() << ")";
 }
 
-Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeval* timeout, Atomic<bool>* lock, Thread* beneficiary)
+Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeval* timeout, Atomic<bool>* lock, RefPtr<Thread> beneficiary)
 {
     auto* current_thread = Thread::current();
     TimerId timer_id {};
@@ -1046,7 +1059,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
             // Our thread was already removed from the queue. The only
             // way this can happen if someone else is trying to kill us.
             // In this case, the queue should not contain us anymore.
-            return BlockResult::InterruptedByDeath;
+            result = BlockResult::InterruptedByDeath;
         }
 
         // Make sure we cancel the timer if woke normally.
@@ -1071,10 +1084,10 @@ void Thread::wake_from_queue()
         set_state(State::Running);
 }
 
-Thread* Thread::from_tid(ThreadID tid)
+RefPtr<Thread> Thread::from_tid(ThreadID tid)
 {
-    InterruptDisabler disabler;
-    Thread* found_thread = nullptr;
+    RefPtr<Thread> found_thread;
+    ScopedSpinLock lock(g_scheduler_lock);
     Thread::for_each([&](auto& thread) {
         if (thread.tid() == tid) {
             found_thread = &thread;
@@ -1109,6 +1122,7 @@ void Thread::tracer_trap(const RegisterState& regs)
 
 const Thread::Blocker& Thread::blocker() const
 {
+    ASSERT(m_lock.own_lock());
     ASSERT(m_blocker);
     return *m_blocker;
 }
