@@ -371,45 +371,45 @@ size_t Value::to_size_t(GlobalObject& global_object) const
     return number.as_size_t();
 }
 
-Value greater_than(Interpreter& interpreter, Value lhs, Value rhs)
+Value greater_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    TriState relation = abstract_relation(interpreter, false, lhs, rhs);
+    TriState relation = abstract_relation(global_object, false, lhs, rhs);
     if (relation == TriState::Unknown)
         return Value(false);
     return Value(relation == TriState::True);
 }
 
-Value greater_than_equals(Interpreter& interpreter, Value lhs, Value rhs)
+Value greater_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    TriState relation = abstract_relation(interpreter, true, lhs, rhs);
+    TriState relation = abstract_relation(global_object, true, lhs, rhs);
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
     return Value(true);
 }
 
-Value less_than(Interpreter& interpreter, Value lhs, Value rhs)
+Value less_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    TriState relation = abstract_relation(interpreter, true, lhs, rhs);
+    TriState relation = abstract_relation(global_object, true, lhs, rhs);
     if (relation == TriState::Unknown)
         return Value(false);
     return Value(relation == TriState::True);
 }
 
-Value less_than_equals(Interpreter& interpreter, Value lhs, Value rhs)
+Value less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    TriState relation = abstract_relation(interpreter, false, lhs, rhs);
+    TriState relation = abstract_relation(global_object, false, lhs, rhs);
     if (relation == TriState::Unknown || relation == TriState::True)
         return Value(false);
     return Value(true);
 }
 
-Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
+Value bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() || !rhs_numeric.is_finite_number())
@@ -417,18 +417,18 @@ Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
         return Value((i32)lhs_numeric.as_double() & (i32)rhs_numeric.as_double());
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
+        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
     return {};
 }
 
-Value bitwise_or(Interpreter& interpreter, Value lhs, Value rhs)
+Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
@@ -440,18 +440,18 @@ Value bitwise_or(Interpreter& interpreter, Value lhs, Value rhs)
         return Value((i32)lhs_numeric.as_double() | (i32)rhs_numeric.as_double());
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
+        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
     return {};
 }
 
-Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
+Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number() && !rhs_numeric.is_finite_number())
@@ -463,33 +463,33 @@ Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
         return Value((i32)lhs_numeric.as_double() ^ (i32)rhs_numeric.as_double());
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
+        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
     return {};
 }
 
-Value bitwise_not(Interpreter& interpreter, Value lhs)
+Value bitwise_not(GlobalObject& global_object, Value lhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (lhs_numeric.is_number())
         return Value(~(i32)lhs_numeric.as_double());
     auto big_integer_bitwise_not = lhs_numeric.as_bigint().big_integer();
     big_integer_bitwise_not = big_integer_bitwise_not.plus(Crypto::SignedBigInteger { 1 });
     big_integer_bitwise_not.negate();
-    return js_bigint(interpreter, big_integer_bitwise_not);
+    return js_bigint(global_object.heap(), big_integer_bitwise_not);
 }
 
-Value unary_plus(Interpreter& interpreter, Value lhs)
+Value unary_plus(GlobalObject& global_object, Value lhs)
 {
-    return lhs.to_number(interpreter.global_object());
+    return lhs.to_number(global_object.global_object());
 }
 
-Value unary_minus(Interpreter& interpreter, Value lhs)
+Value unary_minus(GlobalObject& global_object, Value lhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (lhs_numeric.is_number()) {
         if (lhs_numeric.is_nan())
@@ -497,19 +497,19 @@ Value unary_minus(Interpreter& interpreter, Value lhs)
         return Value(-lhs_numeric.as_double());
     }
     if (lhs_numeric.as_bigint().big_integer() == BIGINT_ZERO)
-        return js_bigint(interpreter, BIGINT_ZERO);
+        return js_bigint(global_object.heap(), BIGINT_ZERO);
     auto big_integer_negated = lhs_numeric.as_bigint().big_integer();
     big_integer_negated.negate();
-    return js_bigint(interpreter, big_integer_negated);
+    return js_bigint(global_object.heap(), big_integer_negated);
 }
 
-Value left_shift(Interpreter& interpreter, Value lhs, Value rhs)
+Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
@@ -520,17 +520,17 @@ Value left_shift(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "left-shift");
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "left-shift");
     return {};
 }
 
-Value right_shift(Interpreter& interpreter, Value lhs, Value rhs)
+Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
@@ -541,17 +541,17 @@ Value right_shift(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "right-shift");
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "right-shift");
     return {};
 }
 
-Value unsigned_right_shift(Interpreter& interpreter, Value lhs, Value rhs)
+Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (!lhs_numeric.is_finite_number())
@@ -560,101 +560,101 @@ Value unsigned_right_shift(Interpreter& interpreter, Value lhs, Value rhs)
             return lhs_numeric;
         return Value((unsigned)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
     }
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperator, "unsigned right-shift");
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperator, "unsigned right-shift");
     return {};
 }
 
-Value add(Interpreter& interpreter, Value lhs, Value rhs)
+Value add(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto lhs_primitive = lhs.to_primitive();
-    if (interpreter.exception())
+    if (global_object.vm().exception())
         return {};
     auto rhs_primitive = rhs.to_primitive();
-    if (interpreter.exception())
+    if (global_object.vm().exception())
         return {};
 
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
-        auto lhs_string = lhs_primitive.to_string(interpreter.global_object());
-        if (interpreter.exception())
+        auto lhs_string = lhs_primitive.to_string(global_object.global_object());
+        if (global_object.vm().exception())
             return {};
-        auto rhs_string = rhs_primitive.to_string(interpreter.global_object());
-        if (interpreter.exception())
+        auto rhs_string = rhs_primitive.to_string(global_object.global_object());
+        if (global_object.vm().exception())
             return {};
         StringBuilder builder(lhs_string.length() + rhs_string.length());
         builder.append(lhs_string);
         builder.append(rhs_string);
-        return js_string(interpreter, builder.to_string());
+        return js_string(global_object.heap(), builder.to_string());
     }
 
-    auto lhs_numeric = lhs_primitive.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs_primitive.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs_primitive.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs_primitive.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "addition");
+        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "addition");
     return {};
 }
 
-Value sub(Interpreter& interpreter, Value lhs, Value rhs)
+Value sub(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() - rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer()));
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "subtraction");
+        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer()));
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "subtraction");
     return {};
 }
 
-Value mul(Interpreter& interpreter, Value lhs, Value rhs)
+Value mul(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer()));
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "multiplication");
+        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer()));
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "multiplication");
     return {};
 }
 
-Value div(Interpreter& interpreter, Value lhs, Value rhs)
+Value div(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "division");
+        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "division");
     return {};
 }
 
-Value mod(Interpreter& interpreter, Value lhs, Value rhs)
+Value mod(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_numeric = lhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
         if (lhs_numeric.is_nan() || rhs_numeric.is_nan())
@@ -665,8 +665,8 @@ Value mod(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(index - trunc * period);
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "modulo");
+        return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
+    global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::BigIntBadOperatorOtherType, "modulo");
     return {};
 }
 
@@ -687,14 +687,14 @@ Value exp(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
-Value in(Interpreter& interpreter, Value lhs, Value rhs)
+Value in(GlobalObject& global_object, Value lhs, Value rhs)
 {
     if (!rhs.is_object()) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::InOperatorWithObject);
+        global_object.vm().throw_exception<TypeError>(global_object.global_object(), ErrorType::InOperatorWithObject);
         return {};
     }
-    auto lhs_string = lhs.to_string(interpreter.global_object());
-    if (interpreter.exception())
+    auto lhs_string = lhs.to_string(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
     return Value(rhs.as_object().has_property(lhs_string));
 }
@@ -847,7 +847,7 @@ bool strict_eq(Value lhs, Value rhs)
     return same_value_non_numeric(lhs, rhs);
 }
 
-bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
+bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
 {
     if (lhs.type() == rhs.type())
         return strict_eq(lhs, rhs);
@@ -856,32 +856,32 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
         return true;
 
     if (lhs.is_number() && rhs.is_string())
-        return abstract_eq(interpreter, lhs, rhs.to_number(interpreter.global_object()));
+        return abstract_eq(global_object, lhs, rhs.to_number(global_object.global_object()));
 
     if (lhs.is_string() && rhs.is_number())
-        return abstract_eq(interpreter, lhs.to_number(interpreter.global_object()), rhs);
+        return abstract_eq(global_object, lhs.to_number(global_object.global_object()), rhs);
 
     if (lhs.is_bigint() && rhs.is_string()) {
         auto& rhs_string = rhs.as_string().string();
         if (!is_valid_bigint_value(rhs_string))
             return false;
-        return abstract_eq(interpreter, lhs, js_bigint(interpreter, Crypto::SignedBigInteger::from_base10(rhs_string)));
+        return abstract_eq(global_object, lhs, js_bigint(global_object.heap(), Crypto::SignedBigInteger::from_base10(rhs_string)));
     }
 
     if (lhs.is_string() && rhs.is_bigint())
-        return abstract_eq(interpreter, rhs, lhs);
+        return abstract_eq(global_object, rhs, lhs);
 
     if (lhs.is_boolean())
-        return abstract_eq(interpreter, lhs.to_number(interpreter.global_object()), rhs);
+        return abstract_eq(global_object, lhs.to_number(global_object.global_object()), rhs);
 
     if (rhs.is_boolean())
-        return abstract_eq(interpreter, lhs, rhs.to_number(interpreter.global_object()));
+        return abstract_eq(global_object, lhs, rhs.to_number(global_object.global_object()));
 
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object())
-        return abstract_eq(interpreter, lhs, rhs.to_primitive());
+        return abstract_eq(global_object, lhs, rhs.to_primitive());
 
     if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol()))
-        return abstract_eq(interpreter, lhs.to_primitive(), rhs);
+        return abstract_eq(global_object, lhs.to_primitive(), rhs);
 
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
         if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
@@ -897,24 +897,24 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
     return false;
 }
 
-TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs, Value rhs)
+TriState abstract_relation(GlobalObject& global_object, bool left_first, Value lhs, Value rhs)
 {
     Value x_primitive;
     Value y_primitive;
 
     if (left_first) {
         x_primitive = lhs.to_primitive(Value::PreferredType::Number);
-        if (interpreter.exception())
+        if (global_object.vm().exception())
             return {};
         y_primitive = rhs.to_primitive(Value::PreferredType::Number);
-        if (interpreter.exception())
+        if (global_object.vm().exception())
             return {};
     } else {
         y_primitive = lhs.to_primitive(Value::PreferredType::Number);
-        if (interpreter.exception())
+        if (global_object.vm().exception())
             return {};
         x_primitive = rhs.to_primitive(Value::PreferredType::Number);
-        if (interpreter.exception())
+        if (global_object.vm().exception())
             return {};
     }
 
@@ -963,11 +963,11 @@ TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs,
             return TriState::False;
     }
 
-    auto x_numeric = x_primitive.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto x_numeric = x_primitive.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
-    auto y_numeric = y_primitive.to_numeric(interpreter.global_object());
-    if (interpreter.exception())
+    auto y_numeric = y_primitive.to_numeric(global_object.global_object());
+    if (global_object.vm().exception())
         return {};
 
     if (x_numeric.is_nan() || y_numeric.is_nan())
