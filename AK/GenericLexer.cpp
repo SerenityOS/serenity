@@ -75,12 +75,6 @@ bool GenericLexer::next_is(const char* expected) const
     return true;
 }
 
-// Tests the next character against a Condition
-bool GenericLexer::next_is(Condition condition) const
-{
-    return condition(peek());
-}
-
 // Consume a character and advance the parser index
 char GenericLexer::consume()
 {
@@ -154,19 +148,6 @@ StringView GenericLexer::consume_line()
     return m_input.substring_view(start, length);
 }
 
-// Consume and return characters while `condition` returns true
-StringView GenericLexer::consume_while(Condition condition)
-{
-    size_t start = m_index;
-    while (!is_eof() && condition(peek()))
-        m_index++;
-    size_t length = m_index - start;
-
-    if (length == 0)
-        return {};
-    return m_input.substring_view(start, length);
-}
-
 // Consume and return characters until `stop` is peek'd
 // The `stop` character is ignored, as it is user-defined
 StringView GenericLexer::consume_until(char stop)
@@ -193,19 +174,6 @@ StringView GenericLexer::consume_until(const char* stop)
     size_t length = m_index - start;
 
     ignore(__builtin_strlen(stop));
-
-    if (length == 0)
-        return {};
-    return m_input.substring_view(start, length);
-}
-
-// Consume and return characters until `condition` return true
-StringView GenericLexer::consume_until(Condition condition)
-{
-    size_t start = m_index;
-    while (!is_eof() && !condition(peek()))
-        m_index++;
-    size_t length = m_index - start;
 
     if (length == 0)
         return {};
@@ -276,13 +244,6 @@ void GenericLexer::ignore(size_t count)
     m_index += count;
 }
 
-// Ignore characters while `condition` returns true
-void GenericLexer::ignore_while(Condition condition)
-{
-    while (!is_eof() && condition(peek()))
-        m_index++;
-}
-
 // Ignore characters until `stop` is peek'd
 // The `stop` character is ignored as it is user-defined
 void GenericLexer::ignore_until(char stop)
@@ -301,14 +262,6 @@ void GenericLexer::ignore_until(const char* stop)
         m_index++;
 
     ignore(__builtin_strlen(stop));
-}
-
-// Ignore characters until `condition` return true
-// We don't skip the stop character as it may not be a unique value
-void GenericLexer::ignore_until(Condition condition)
-{
-    while (!is_eof() && !condition(peek()))
-        m_index++;
 }
 
 // CType adapters
