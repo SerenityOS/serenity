@@ -44,14 +44,14 @@ void Reference::put(Interpreter& interpreter, GlobalObject& global_object, Value
 
     if (is_local_variable() || is_global_variable()) {
         if (is_local_variable())
-            interpreter.set_variable(m_name.to_string(), value, global_object);
+            interpreter.vm().set_variable(m_name.to_string(), value, global_object);
         else
             global_object.put(m_name, value);
         return;
     }
 
     if (!base().is_object() && interpreter.in_strict_mode()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ReferencePrimitiveAssignment, m_name.to_string().characters());
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_string().characters());
         return;
     }
 
@@ -62,14 +62,14 @@ void Reference::put(Interpreter& interpreter, GlobalObject& global_object, Value
     object->put(m_name, value);
 }
 
-void Reference::throw_reference_error(Interpreter& interpreter, GlobalObject&)
+void Reference::throw_reference_error(Interpreter& interpreter, GlobalObject& global_object)
 {
     auto property_name = m_name.to_string();
     String message;
     if (property_name.is_empty()) {
-        interpreter.throw_exception<ReferenceError>(ErrorType::ReferenceUnresolvable);
+        interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::ReferenceUnresolvable);
     } else {
-        interpreter.throw_exception<ReferenceError>(ErrorType::UnknownIdentifier, property_name.characters());
+        interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, property_name.characters());
     }
 }
 
@@ -85,7 +85,7 @@ Value Reference::get(Interpreter& interpreter, GlobalObject& global_object)
     if (is_local_variable() || is_global_variable()) {
         Value value;
         if (is_local_variable())
-            value = interpreter.get_variable(m_name.to_string(), global_object);
+            value = interpreter.vm().get_variable(m_name.to_string(), global_object);
         else
             value = global_object.get(m_name);
         if (interpreter.exception())

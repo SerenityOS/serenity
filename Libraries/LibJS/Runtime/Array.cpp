@@ -55,7 +55,7 @@ Array* Array::typed_this(Interpreter& interpreter, GlobalObject& global_object)
     if (!this_object)
         return {};
     if (!this_object->is_array()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Array");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAn, "Array");
         return nullptr;
     }
     return static_cast<Array*>(this_object);
@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_SETTER(Array::length_setter)
     if (interpreter.exception())
         return;
     if (length.is_nan() || length.is_infinity() || length.as_double() < 0) {
-        interpreter.throw_exception<RangeError>(ErrorType::ArrayInvalidLength);
+        interpreter.vm().throw_exception<RangeError>(global_object, ErrorType::ArrayInvalidLength);
         return;
     }
     array->indexed_properties().set_array_like_size(length.as_double());

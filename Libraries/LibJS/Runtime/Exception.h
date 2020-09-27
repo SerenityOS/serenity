@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Vector.h>
 #include <LibJS/Runtime/Cell.h>
 #include <LibJS/Runtime/Value.h>
 

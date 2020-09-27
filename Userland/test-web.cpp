@@ -174,11 +174,13 @@ static void cleanup_and_exit()
     exit(1);
 }
 
+#if 0
 static void handle_sigabrt(int)
 {
     dbg() << "test-web: SIGABRT received, cleaning up.";
     cleanup_and_exit();
 }
+#endif
 
 static double get_time_in_ms()
 {
@@ -288,7 +290,7 @@ static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& 
 
 static Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
-    auto result = interpreter.get_variable("__TestResults__", interpreter.global_object());
+    auto result = interpreter.vm().get_variable("__TestResults__", interpreter.global_object());
     auto json_string = JS::JSONObject::stringify_impl(interpreter, interpreter.global_object(), result, JS::js_undefined(), JS::js_undefined());
 
     auto json = JsonValue::from_string(json_string);
@@ -336,7 +338,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     // Setup the test on the current page to get "__PageToLoad__".
     old_interpreter.run(old_interpreter.global_object(), *m_web_test_common);
     old_interpreter.run(old_interpreter.global_object(), *file_program.value());
-    auto page_to_load = URL(old_interpreter.get_variable("__PageToLoad__", old_interpreter.global_object()).as_string().string());
+    auto page_to_load = URL(old_interpreter.vm().get_variable("__PageToLoad__", old_interpreter.global_object()).as_string().string());
     if (!page_to_load.is_valid()) {
         printf("Invalid page URL for %s", test_path.characters());
         cleanup_and_exit();
@@ -360,7 +362,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             new_interpreter.run(new_interpreter.global_object(), *m_web_test_common);
             new_interpreter.run(new_interpreter.global_object(), *file_program.value());
 
-            auto& before_initial_page_load = new_interpreter.get_variable("__BeforeInitialPageLoad__", new_interpreter.global_object()).as_function();
+            auto& before_initial_page_load = new_interpreter.vm().get_variable("__BeforeInitialPageLoad__", new_interpreter.global_object()).as_function();
             (void)new_interpreter.call(before_initial_page_load, JS::js_undefined());
             if (new_interpreter.exception())
                 new_interpreter.vm().clear_exception();
@@ -370,7 +372,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             m_page_view->set_document(&parser.document());
 
             // Finally run the test by calling "__AfterInitialPageLoad__"
-            auto& after_initial_page_load = new_interpreter.get_variable("__AfterInitialPageLoad__", new_interpreter.global_object()).as_function();
+            auto& after_initial_page_load = new_interpreter.vm().get_variable("__AfterInitialPageLoad__", new_interpreter.global_object()).as_function();
             (void)new_interpreter.call(after_initial_page_load, JS::js_undefined());
             if (new_interpreter.exception())
                 new_interpreter.vm().clear_exception();
@@ -384,7 +386,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             file_result = { test_path.substring(m_web_test_root.length() + 1, test_path.length() - m_web_test_root.length() - 1) };
 
             // Collect logged messages
-            auto& arr = new_interpreter.get_variable("__UserOutput__", new_interpreter.global_object()).as_array();
+            auto& arr = new_interpreter.vm().get_variable("__UserOutput__", new_interpreter.global_object()).as_array();
             for (auto& entry : arr.indexed_properties()) {
                 auto message = entry.value_and_attributes(&new_interpreter.global_object()).value;
                 file_result.logged_messages.append(message.to_string_without_side_effects());
@@ -660,6 +662,7 @@ int main(int argc, char** argv)
     bool print_times = false;
     bool show_window = false;
 
+#if 0
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDWAIT;
@@ -669,6 +672,7 @@ int main(int argc, char** argv)
         perror("sigaction");
         return 1;
     }
+#endif
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');

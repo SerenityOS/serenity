@@ -107,7 +107,7 @@ static DOM::Window* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& gl
         return nullptr;
     }
     if (StringView("WindowObject") != this_object->class_name()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, "WindowObject");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WindowObject");
         return nullptr;
     }
     return &static_cast<WindowObject*>(this_object)->impl();
@@ -148,14 +148,14 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
     if (!impl)
         return {};
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "setInterval");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "setInterval");
         return {};
     }
     auto* callback_object = interpreter.argument(0).to_object(interpreter, global_object);
     if (!callback_object)
         return {};
     if (!callback_object->is_function()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
         return {};
     }
     i32 interval = 0;
@@ -177,14 +177,14 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
     if (!impl)
         return {};
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "setTimeout");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "setTimeout");
         return {};
     }
     auto* callback_object = interpreter.argument(0).to_object(interpreter, global_object);
     if (!callback_object)
         return {};
     if (!callback_object->is_function()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
         return {};
     }
     i32 interval = 0;
@@ -206,7 +206,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_timeout)
     if (!impl)
         return {};
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "clearTimeout");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "clearTimeout");
         return {};
     }
     i32 timer_id = interpreter.argument(0).to_i32(interpreter);
@@ -222,7 +222,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_interval)
     if (!impl)
         return {};
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "clearInterval");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "clearInterval");
         return {};
     }
     i32 timer_id = interpreter.argument(0).to_i32(interpreter);
@@ -238,14 +238,14 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
     if (!impl)
         return {};
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "requestAnimationFrame");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "requestAnimationFrame");
         return {};
     }
     auto* callback_object = interpreter.argument(0).to_object(interpreter, global_object);
     if (!callback_object)
         return {};
     if (!callback_object->is_function()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
         return {};
     }
     return JS::Value(impl->request_animation_frame(*static_cast<JS::Function*>(callback_object)));
@@ -257,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)
     if (!impl)
         return {};
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "cancelAnimationFrame");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "cancelAnimationFrame");
         return {};
     }
     auto id = interpreter.argument(0).to_i32(interpreter);
@@ -273,7 +273,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
     if (!impl)
         return {};
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "atob");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "atob");
         return {};
     }
     auto string = interpreter.argument(0).to_string(interpreter);
@@ -291,7 +291,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     if (!impl)
         return {};
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, "btoa");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "btoa");
         return {};
     }
     auto string = interpreter.argument(0).to_string(interpreter);
@@ -302,7 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     byte_string.ensure_capacity(string.length());
     for (u32 code_point : Utf8View(string)) {
         if (code_point > 0xff) {
-            interpreter.throw_exception<JS::InvalidCharacterError>(JS::ErrorType::NotAByteString, "btoa");
+            interpreter.vm().throw_exception<JS::InvalidCharacterError>(global_object, JS::ErrorType::NotAByteString, "btoa");
             return {};
         }
         byte_string.append(code_point);

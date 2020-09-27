@@ -349,7 +349,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         auto hint = error.source_location_hint(source);
         if (!hint.is_empty())
             printf("%s\n", hint.characters());
-        interpreter.throw_exception<JS::SyntaxError>(error.to_string());
+        vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
     } else {
         interpreter.run(interpreter.global_object(), *program);
     }
@@ -362,11 +362,11 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
             for (auto& function_name : trace)
                 printf(" -> %s\n", function_name.characters());
         }
-        interpreter.vm().clear_exception();
+        vm->clear_exception();
         return false;
     }
     if (s_print_last_result)
-        print(interpreter.last_value());
+        print(vm->last_value());
     return true;
 }
 
@@ -470,32 +470,32 @@ public:
 
     virtual JS::Value log() override
     {
-        puts(interpreter().join_arguments().characters());
+        puts(interpreter().vm().join_arguments().characters());
         return JS::js_undefined();
     }
     virtual JS::Value info() override
     {
-        printf("(i) %s\n", interpreter().join_arguments().characters());
+        printf("(i) %s\n", interpreter().vm().join_arguments().characters());
         return JS::js_undefined();
     }
     virtual JS::Value debug() override
     {
         printf("\033[36;1m");
-        puts(interpreter().join_arguments().characters());
+        puts(interpreter().vm().join_arguments().characters());
         printf("\033[0m");
         return JS::js_undefined();
     }
     virtual JS::Value warn() override
     {
         printf("\033[33;1m");
-        puts(interpreter().join_arguments().characters());
+        puts(interpreter().vm().join_arguments().characters());
         printf("\033[0m");
         return JS::js_undefined();
     }
     virtual JS::Value error() override
     {
         printf("\033[31;1m");
-        puts(interpreter().join_arguments().characters());
+        puts(interpreter().vm().join_arguments().characters());
         printf("\033[0m");
         return JS::js_undefined();
     }
@@ -507,7 +507,7 @@ public:
     }
     virtual JS::Value trace() override
     {
-        puts(interpreter().join_arguments().characters());
+        puts(interpreter().vm().join_arguments().characters());
         auto trace = get_trace();
         for (auto& function_name : trace) {
             if (function_name.is_empty())
@@ -558,7 +558,7 @@ int main(int argc, char** argv)
 
     interrupt_interpreter = [&] {
         auto error = JS::Error::create(interpreter->global_object(), "Error", "Received SIGINT");
-        interpreter->throw_exception(error);
+        vm->throw_exception(interpreter->global_object(), error);
     };
 
     if (script_path == nullptr) {
@@ -567,7 +567,7 @@ int main(int argc, char** argv)
         ReplConsoleClient console_client(interpreter->console());
         interpreter->console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
-        interpreter->set_underscore_is_last_value(true);
+        interpreter->vm().set_underscore_is_last_value(true);
 
         s_editor = Line::Editor::construct();
 
@@ -811,7 +811,7 @@ int main(int argc, char** argv)
 
             switch (mode) {
             case CompleteProperty: {
-                auto maybe_variable = interpreter->get_variable(variable_name, interpreter->global_object());
+                auto maybe_variable = vm->get_variable(variable_name, interpreter->global_object());
                 if (maybe_variable.is_empty()) {
                     maybe_variable = interpreter->global_object().get(FlyString(variable_name));
                     if (maybe_variable.is_empty())

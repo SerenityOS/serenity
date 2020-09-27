@@ -41,7 +41,7 @@ static ScriptFunction* typed_this(Interpreter& interpreter, GlobalObject& global
     if (!this_object)
         return nullptr;
     if (!this_object->is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAFunctionNoParam);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAFunctionNoParam);
         return nullptr;
     }
     return static_cast<ScriptFunction*>(this_object);
@@ -130,13 +130,13 @@ Value ScriptFunction::call(Interpreter& interpreter)
         arguments.append({ parameter.name, value });
         interpreter.current_environment()->set(parameter.name, { value, DeclarationKind::Var });
     }
-    return interpreter.execute_statement(global_object(), m_body, arguments, ScopeType::Function);
+    return interpreter.vm().execute_statement(global_object(), m_body, arguments, ScopeType::Function);
 }
 
 Value ScriptFunction::construct(Interpreter& interpreter, Function&)
 {
     if (m_is_arrow_function) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, m_name.characters());
+        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name.characters());
         return {};
     }
     return call(interpreter);

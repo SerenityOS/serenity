@@ -65,7 +65,7 @@ Value SymbolConstructor::call(Interpreter& interpreter)
 
 Value SymbolConstructor::construct(Interpreter& interpreter, Function&)
 {
-    interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "Symbol");
+    interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "Symbol");
     return {};
 }
 
@@ -85,7 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = interpreter.argument(0);
     if (!argument.is_symbol()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotASymbol, argument.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotASymbol, argument.to_string_without_side_effects().characters());
         return {};
     }
 

@@ -54,7 +54,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
 {
     auto this_value = interpreter.this_value(global_object);
     if (!this_value.is_object() || !this_value.as_object().is_string_iterator_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "String Iterator");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "String Iterator");
         return {};
     }
 

@@ -46,7 +46,7 @@ static StringObject* typed_this(Interpreter& interpreter, GlobalObject& global_o
     if (!this_object)
         return nullptr;
     if (!this_object->is_string_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "String");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "String");
         return nullptr;
     }
     return static_cast<StringObject*>(this_object);
@@ -141,11 +141,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     if (interpreter.exception())
         return {};
     if (count_value.as_double() < 0) {
-        interpreter.throw_exception<RangeError>(ErrorType::StringRepeatCountMustBe, "positive");
+        interpreter.vm().throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "positive");
         return {};
     }
     if (count_value.is_infinity()) {
-        interpreter.throw_exception<RangeError>(ErrorType::StringRepeatCountMustBe, "finite");
+        interpreter.vm().throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "finite");
         return {};
     }
     auto count = count_value.to_size_t(interpreter);
@@ -460,7 +460,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
     auto this_object = interpreter.this_value(global_object);
     if (this_object.is_undefined() || this_object.is_null()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ToObjectNullOrUndef);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
         return {};
     }
 

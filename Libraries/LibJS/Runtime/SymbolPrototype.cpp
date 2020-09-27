@@ -64,7 +64,7 @@ static SymbolObject* typed_this(Interpreter& interpreter, GlobalObject& global_o
     if (!this_object)
         return nullptr;
     if (!this_object->is_symbol_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Symbol");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Symbol");
         return nullptr;
     }
     return static_cast<SymbolObject*>(this_object);

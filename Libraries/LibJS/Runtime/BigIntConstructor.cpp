@@ -61,7 +61,7 @@ Value BigIntConstructor::call(Interpreter& interpreter)
         return {};
     if (primitive.is_number()) {
         if (!primitive.is_integer()) {
-            interpreter.throw_exception<RangeError>(ErrorType::BigIntIntArgument);
+            interpreter.vm().throw_exception<RangeError>(global_object(), ErrorType::BigIntIntArgument);
             return {};
         }
         return js_bigint(interpreter, Crypto::SignedBigInteger { primitive.as_i32() });
@@ -74,7 +74,7 @@ Value BigIntConstructor::call(Interpreter& interpreter)
 
 Value BigIntConstructor::construct(Interpreter& interpreter, Function&)
 {
-    interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "BigInt");
+    interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "BigInt");
     return {};
 }
 
