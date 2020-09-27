@@ -45,10 +45,10 @@ void EventDispatcher::dispatch(EventTarget& target, NonnullRefPtr<Event> event)
         auto& global_object = function.global_object();
         auto* this_value = Bindings::wrap(global_object, target);
 
-        auto& interpreter = target.script_execution_context()->interpreter();
-        (void)interpreter.call(function, this_value, Bindings::wrap(global_object, target));
-        if (interpreter.exception())
-            interpreter.vm().clear_exception();
+        auto& vm = global_object.vm();
+        (void)vm.call(function, this_value, Bindings::wrap(global_object, target));
+        if (vm.exception())
+            vm.clear_exception();
     }
 }
 
