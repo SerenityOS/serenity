@@ -260,8 +260,8 @@ static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& 
 
 static Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
-    auto result = interpreter.vm().get_variable("__TestResults__", interpreter.global_object());
-    auto json_string = JS::JSONObject::stringify_impl(interpreter, interpreter.global_object(), result, JS::js_undefined(), JS::js_undefined());
+    auto result = vm->get_variable("__TestResults__", interpreter.global_object());
+    auto json_string = JS::JSONObject::stringify_impl(interpreter.global_object(), result, JS::js_undefined(), JS::js_undefined());
 
     auto json = JsonValue::from_string(json_string);
     if (!json.has_value())

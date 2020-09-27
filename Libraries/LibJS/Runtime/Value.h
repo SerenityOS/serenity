@@ -331,7 +331,7 @@ bool same_value(Value lhs, Value rhs);
 bool same_value_zero(Value lhs, Value rhs);
 bool same_value_non_numeric(Value lhs, Value rhs);
 TriState abstract_relation(Interpreter&, bool left_first, Value lhs, Value rhs);
-size_t length_of_array_like(Interpreter&, Value);
+size_t length_of_array_like(GlobalObject&, Value);
 
 const LogStream& operator<<(const LogStream&, const Value&);
 

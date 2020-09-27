@@ -1011,13 +1011,13 @@ TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs,
         return TriState::False;
 }
 
-size_t length_of_array_like(Interpreter& interpreter, Value value)
+size_t length_of_array_like(GlobalObject& global_object, Value value)
 {
     ASSERT(value.is_object());
     auto result = value.as_object().get("length");
-    if (interpreter.exception())
+    if (global_object.vm().exception())
         return 0;
-    return result.to_size_t(interpreter.global_object());
+    return result.to_size_t(global_object);
 }
 
 }
