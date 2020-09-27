@@ -341,7 +341,7 @@ void IndexedProperties::append_all(Object* this_object, const IndexedProperties&
 
     for (auto it = properties.begin(false); it != properties.end(); ++it) {
         const auto& element = it.value_and_attributes(this_object, evaluate_accessors);
-        if (this_object && this_object->interpreter().exception())
+        if (this_object && this_object->vm().exception())
             return;
         m_storage->put(m_storage->array_like_size(), element.value, element.attributes);
     }

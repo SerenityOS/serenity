@@ -27,16 +27,16 @@
 
 #pragma once
 
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
 class Accessor final : public Cell {
 public:
-    static Accessor* create(Interpreter& interpreter, Function* getter, Function* setter)
+    static Accessor* create(VM& vm, Function* getter, Function* setter)
     {
-        return interpreter.heap().allocate_without_global_object<Accessor>(getter, setter);
+        return vm.heap().allocate_without_global_object<Accessor>(getter, setter);
     }
 
     Accessor(Function* getter, Function* setter)
@@ -55,7 +55,7 @@ public:
     {
         if (!m_getter)
             return js_undefined();
-        return interpreter().call(*m_getter, this_value);
+        return vm().call(*m_getter, this_value);
     }
 
     void call_setter(Value this_value, Value setter_value)
@@ -63,7 +63,7 @@ public:
         if (!m_setter)
             return;
         // FIXME: It might be nice if we had a way to communicate to our caller if an exception happened after this.
-        (void)interpreter().call(*m_setter, this_value, setter_value);
+        (void)vm().call(*m_setter, this_value, setter_value);
     }
 
     void visit_children(Cell::Visitor& visitor) override
