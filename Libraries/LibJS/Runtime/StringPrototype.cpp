@@ -40,24 +40,24 @@
 
 namespace JS {
 
-static StringObject* typed_this(Interpreter& interpreter, GlobalObject& global_object)
+static StringObject* typed_this(VM& vm, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
     if (!this_object->is_string_object()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "String");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "String");
         return nullptr;
     }
     return static_cast<StringObject*>(this_object);
 }
 
-static String ak_string_from(Interpreter& interpreter, GlobalObject& global_object)
+static String ak_string_from(VM& vm, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    return Value(this_object).to_string(interpreter);
+    return Value(this_object).to_string(global_object);
 }
 
 StringPrototype::StringPrototype(GlobalObject& global_object)
@@ -98,30 +98,30 @@ StringPrototype::~StringPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
     i32 index = 0;
-    if (interpreter.argument_count()) {
-        index = interpreter.argument(0).to_i32(interpreter);
-        if (interpreter.exception())
+    if (vm.argument_count()) {
+        index = vm.argument(0).to_i32(global_object);
+        if (vm.exception())
             return {};
     }
     if (index < 0 || index >= static_cast<i32>(string.length()))
-        return js_string(interpreter, String::empty());
+        return js_string(vm, String::empty());
     // FIXME: This should return a character corresponding to the i'th UTF-16 code point.
-    return js_string(interpreter, string.substring(index, 1));
+    return js_string(vm, string.substring(index, 1));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
     i32 index = 0;
-    if (interpreter.argument_count()) {
-        index = interpreter.argument(0).to_i32(interpreter);
-        if (interpreter.exception())
+    if (vm.argument_count()) {
+        index = vm.argument(0).to_i32(global_object);
+        if (vm.exception())
             return {};
     }
     if (index < 0 || index >= static_cast<i32>(string.length()))
@@ -132,50 +132,50 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    if (!interpreter.argument_count())
-        return js_string(interpreter, String::empty());
-    auto count_value = interpreter.argument(0).to_number(interpreter);
-    if (interpreter.exception())
+    if (!vm.argument_count())
+        return js_string(vm, String::empty());
+    auto count_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
         return {};
     if (count_value.as_double() < 0) {
-        interpreter.vm().throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "positive");
+        vm.throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "positive");
         return {};
     }
     if (count_value.is_infinity()) {
-        interpreter.vm().throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "finite");
+        vm.throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "finite");
         return {};
     }
-    auto count = count_value.to_size_t(interpreter);
-    if (interpreter.exception())
+    auto count = count_value.to_size_t(global_object);
+    if (vm.exception())
         return {};
     StringBuilder builder;
     for (size_t i = 0; i < count; ++i)
         builder.append(string);
-    return js_string(interpreter, builder.to_string());
+    return js_string(vm, builder.to_string());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    if (!interpreter.argument_count())
+    if (!vm.argument_count())
         return Value(false);
-    auto search_string = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto search_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
     auto string_length = string.length();
     auto search_string_length = search_string.length();
     size_t start = 0;
-    if (interpreter.argument_count() > 1) {
-        auto number = interpreter.argument(1).to_number(interpreter);
-        if (interpreter.exception())
+    if (vm.argument_count() > 1) {
+        auto number = vm.argument(1).to_number(global_object);
+        if (vm.exception())
             return {};
         if (!number.is_nan())
-            start = min(number.to_size_t(interpreter), string_length);
+            start = min(number.to_size_t(global_object), string_length);
     }
     if (start + search_string_length > string_length)
         return Value(false);
@@ -186,34 +186,34 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    auto needle = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto needle = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
     return Value((i32)string.index_of(needle).value_or(-1));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return js_string(interpreter, string.to_lowercase());
+    return js_string(vm, string.to_lowercase());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return js_string(interpreter, string.to_uppercase());
+    return js_string(vm, string.to_uppercase());
 }
 
 JS_DEFINE_NATIVE_GETTER(StringPrototype::length_getter)
 {
-    auto* string_object = typed_this(interpreter, global_object);
+    auto* string_object = typed_this(vm, global_object);
     if (!string_object)
         return {};
     return Value((i32)string_object->primitive_string().string().length());
@@ -221,10 +221,10 @@ JS_DEFINE_NATIVE_GETTER(StringPrototype::length_getter)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 {
-    auto* string_object = typed_this(interpreter, global_object);
+    auto* string_object = typed_this(vm, global_object);
     if (!string_object)
         return {};
-    return js_string(interpreter, string_object->primitive_string().string());
+    return js_string(vm, string_object->primitive_string().string());
 }
 
 enum class PadPlacement {
@@ -232,21 +232,22 @@ enum class PadPlacement {
     End,
 };
 
-static Value pad_string(Interpreter& interpreter, const String& string, PadPlacement placement)
+static Value pad_string(GlobalObject& global_object, const String& string, PadPlacement placement)
 {
-    auto max_length = interpreter.argument(0).to_size_t(interpreter);
-    if (interpreter.exception())
+    auto& vm = global_object.vm();
+    auto max_length = vm.argument(0).to_size_t(global_object);
+    if (vm.exception())
         return {};
     if (max_length <= string.length())
-        return js_string(interpreter, string);
+        return js_string(vm, string);
 
     String fill_string = " ";
-    if (!interpreter.argument(1).is_undefined()) {
-        fill_string = interpreter.argument(1).to_string(interpreter);
-        if (interpreter.exception())
+    if (!vm.argument(1).is_undefined()) {
+        fill_string = vm.argument(1).to_string(global_object);
+        if (vm.exception())
             return {};
         if (fill_string.is_empty())
-            return js_string(interpreter, string);
+            return js_string(vm, string);
     }
 
     auto fill_length = max_length - string.length();
@@ -257,92 +258,92 @@ static Value pad_string(Interpreter& interpreter, const String& string, PadPlace
     auto filler = filler_builder.build().substring(0, fill_length);
 
     if (placement == PadPlacement::Start)
-        return js_string(interpreter, String::format("%s%s", filler.characters(), string.characters()));
-    return js_string(interpreter, String::format("%s%s", string.characters(), filler.characters()));
+        return js_string(vm, String::format("%s%s", filler.characters(), string.characters()));
+    return js_string(vm, String::format("%s%s", string.characters(), filler.characters()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return pad_string(interpreter, string, PadPlacement::Start);
+    return pad_string(global_object, string, PadPlacement::Start);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return pad_string(interpreter, string, PadPlacement::End);
+    return pad_string(global_object, string, PadPlacement::End);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return js_string(interpreter, string.trim_whitespace(String::TrimMode::Both));
+    return js_string(vm, string.trim_whitespace(String::TrimMode::Both));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return js_string(interpreter, string.trim_whitespace(String::TrimMode::Left));
+    return js_string(vm, string.trim_whitespace(String::TrimMode::Left));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    return js_string(interpreter, string.trim_whitespace(String::TrimMode::Right));
+    return js_string(vm, string.trim_whitespace(String::TrimMode::Right));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
     StringBuilder builder;
     builder.append(string);
-    for (size_t i = 0; i < interpreter.argument_count(); ++i) {
-        auto string_argument = interpreter.argument(i).to_string(interpreter);
-        if (interpreter.exception())
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        auto string_argument = vm.argument(i).to_string(global_object);
+        if (vm.exception())
             return {};
         builder.append(string_argument);
     }
-    return js_string(interpreter, builder.to_string());
+    return js_string(vm, builder.to_string());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    if (interpreter.argument_count() == 0)
-        return js_string(interpreter, string);
+    if (vm.argument_count() == 0)
+        return js_string(vm, string);
 
     // FIXME: index_start and index_end should index a UTF-16 code_point view of the string.
     auto string_length = string.length();
-    auto index_start = min(interpreter.argument(0).to_size_t(interpreter), string_length);
-    if (interpreter.exception())
+    auto index_start = min(vm.argument(0).to_size_t(global_object), string_length);
+    if (vm.exception())
         return {};
     auto index_end = string_length;
-    if (interpreter.argument_count() >= 2) {
-        index_end = min(interpreter.argument(1).to_size_t(interpreter), string_length);
-        if (interpreter.exception())
+    if (vm.argument_count() >= 2) {
+        index_end = min(vm.argument(1).to_size_t(global_object), string_length);
+        if (vm.exception())
             return {};
     }
 
     if (index_start == index_end)
-        return js_string(interpreter, String(""));
+        return js_string(vm, String(""));
 
     if (index_start > index_end) {
-        if (interpreter.argument_count() == 1)
-            return js_string(interpreter, String(""));
+        if (vm.argument_count() == 1)
+            return js_string(vm, String(""));
         auto temp_index_start = index_start;
         index_start = index_end;
         index_end = temp_index_start;
@@ -350,23 +351,23 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 
     auto part_length = index_end - index_start;
     auto string_part = string.substring(index_start, part_length);
-    return js_string(interpreter, string_part);
+    return js_string(vm, string_part);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
-    auto search_string = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto search_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
 
     // FIXME: position should index a UTF-16 code_point view of the string.
     size_t position = 0;
-    if (interpreter.argument_count() >= 2) {
-        position = interpreter.argument(1).to_size_t(interpreter);
-        if (interpreter.exception())
+    if (vm.argument_count() >= 2) {
+        position = vm.argument(1).to_size_t(global_object);
+        if (vm.exception())
             return {};
         if (position >= string.length())
             return Value(false);
@@ -382,17 +383,17 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
 
-    if (interpreter.argument_count() == 0)
-        return js_string(interpreter, string);
+    if (vm.argument_count() == 0)
+        return js_string(vm, string);
 
     // FIXME: index_start and index_end should index a UTF-16 code_point view of the string.
     auto string_length = static_cast<i32>(string.length());
-    auto index_start = interpreter.argument(0).to_i32(interpreter);
-    if (interpreter.exception())
+    auto index_start = vm.argument(0).to_i32(global_object);
+    if (vm.exception())
         return {};
     auto index_end = string_length;
 
@@ -402,13 +403,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     else if (index_start < 0)
         index_start = string_length + index_start;
 
-    if (interpreter.argument_count() >= 2) {
-        index_end = interpreter.argument(1).to_i32(interpreter);
-        if (interpreter.exception())
+    if (vm.argument_count() >= 2) {
+        index_end = vm.argument(1).to_i32(global_object);
+        if (vm.exception())
             return {};
 
         if (index_end < negative_min_index)
-            return js_string(interpreter, String::empty());
+            return js_string(vm, String::empty());
 
         if (index_end > string_length)
             index_end = string_length;
@@ -417,33 +418,33 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     }
 
     if (index_start >= index_end)
-        return js_string(interpreter, String::empty());
+        return js_string(vm, String::empty());
 
     auto part_length = index_end - index_start;
     auto string_part = string.substring(index_start, part_length);
-    return js_string(interpreter, string_part);
+    return js_string(vm, string_part);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 {
-    auto string = ak_string_from(interpreter, global_object);
+    auto string = ak_string_from(vm, global_object);
     if (string.is_null())
         return {};
 
-    if (interpreter.argument_count() == 0)
+    if (vm.argument_count() == 0)
         return Value(-1);
 
-    auto search_string = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto search_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
     if (search_string.length() > string.length())
         return Value(-1);
     auto max_index = string.length() - search_string.length();
     auto from_index = max_index;
-    if (interpreter.argument_count() >= 2) {
+    if (vm.argument_count() >= 2) {
         // FIXME: from_index should index a UTF-16 code_point view of the string.
-        from_index = min(interpreter.argument(1).to_size_t(interpreter), max_index);
-        if (interpreter.exception())
+        from_index = min(vm.argument(1).to_size_t(global_object), max_index);
+        if (vm.exception())
             return {};
     }
 
@@ -458,14 +459,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
-    auto this_object = interpreter.this_value(global_object);
+    auto this_object = vm.this_value(global_object);
     if (this_object.is_undefined() || this_object.is_null()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
+        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
         return {};
     }
 
-    auto string = this_object.to_string(interpreter);
-    if (interpreter.exception())
+    auto string = this_object.to_string(global_object);
+    if (vm.exception())
         return {};
     return StringIterator::create(global_object, string);
 }

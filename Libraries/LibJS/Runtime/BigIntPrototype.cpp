@@ -52,13 +52,13 @@ BigIntPrototype::~BigIntPrototype()
 {
 }
 
-static BigIntObject* bigint_object_from(Interpreter& interpreter, GlobalObject& global_object)
+static BigIntObject* bigint_object_from(VM& vm, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
     if (!this_object->is_bigint_object()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "BigInt");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "BigInt");
         return nullptr;
     }
     return static_cast<BigIntObject*>(this_object);
@@ -66,20 +66,20 @@ static BigIntObject* bigint_object_from(Interpreter& interpreter, GlobalObject& 
 
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
-    auto* bigint_object = bigint_object_from(interpreter, global_object);
+    auto* bigint_object = bigint_object_from(vm, global_object);
     if (!bigint_object)
         return {};
-    return js_string(interpreter, bigint_object->bigint().big_integer().to_base10());
+    return js_string(vm, bigint_object->bigint().big_integer().to_base10());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 {
-    return to_string(interpreter, global_object);
+    return to_string(vm, global_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
-    auto* bigint_object = bigint_object_from(interpreter, global_object);
+    auto* bigint_object = bigint_object_from(vm, global_object);
     if (!bigint_object)
         return {};
     return bigint_object->value_of();

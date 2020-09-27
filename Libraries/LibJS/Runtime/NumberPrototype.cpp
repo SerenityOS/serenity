@@ -63,37 +63,37 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
     Value number_value;
 
-    auto this_value = interpreter.this_value(global_object);
+    auto this_value = vm.this_value(global_object);
     if (this_value.is_number()) {
         number_value = this_value;
     } else if (this_value.is_object() && this_value.as_object().is_number_object()) {
         number_value = static_cast<NumberObject&>(this_value.as_object()).value_of();
     } else {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NumberIncompatibleThis, "toString");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NumberIncompatibleThis, "toString");
         return {};
     }
 
     int radix;
-    auto argument = interpreter.argument(0);
+    auto argument = vm.argument(0);
     if (argument.is_undefined()) {
         radix = 10;
     } else {
-        radix = argument.to_i32(interpreter);
+        radix = argument.to_i32(global_object);
     }
 
-    if (interpreter.exception() || radix < 2 || radix > 36) {
-        interpreter.vm().throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
+    if (vm.exception() || radix < 2 || radix > 36) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
         return {};
     }
 
     if (number_value.is_positive_infinity())
-        return js_string(interpreter, "Infinity");
+        return js_string(vm, "Infinity");
     if (number_value.is_negative_infinity())
-        return js_string(interpreter, "-Infinity");
+        return js_string(vm, "-Infinity");
     if (number_value.is_nan())
-        return js_string(interpreter, "NaN");
+        return js_string(vm, "NaN");
     if (number_value.is_positive_zero() || number_value.is_negative_zero())
-        return js_string(interpreter, "0");
+        return js_string(vm, "0");
 
     double number = number_value.as_double();
     bool negative = number < 0;
@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
             characters.take_last();
     }
 
-    return js_string(interpreter, String(characters.data(), characters.size()));
+    return js_string(vm, String(characters.data(), characters.size()));
 }
 
 }

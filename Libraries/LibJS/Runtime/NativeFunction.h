@@ -35,9 +35,9 @@ class NativeFunction : public Function {
     JS_OBJECT(NativeFunction, Function);
 
 public:
-    static NativeFunction* create(GlobalObject&, const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>);
+    static NativeFunction* create(GlobalObject&, const FlyString& name, AK::Function<Value(VM&, GlobalObject&)>);
 
-    explicit NativeFunction(const FlyString& name, AK::Function<Value(Interpreter&, GlobalObject&)>, Object& prototype);
+    explicit NativeFunction(const FlyString& name, AK::Function<Value(VM&, GlobalObject&)>, Object& prototype);
     virtual void initialize(GlobalObject&) override { }
     virtual ~NativeFunction() override;
 
@@ -56,7 +56,7 @@ private:
     virtual LexicalEnvironment* create_environment() override final;
 
     FlyString m_name;
-    AK::Function<Value(Interpreter&, GlobalObject&)> m_native_function;
+    AK::Function<Value(VM&, GlobalObject&)> m_native_function;
 };
 
 }

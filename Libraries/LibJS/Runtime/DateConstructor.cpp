@@ -165,31 +165,31 @@ Value DateConstructor::call()
     return js_string(heap(), static_cast<Date&>(date.as_object()).string());
 }
 
-Value DateConstructor::construct(Interpreter& interpreter, Function&)
+Value DateConstructor::construct(Interpreter&, Function&)
 {
-    if (interpreter.argument_count() == 0) {
+    if (vm().argument_count() == 0) {
         struct timeval tv;
         gettimeofday(&tv, nullptr);
         auto datetime = Core::DateTime::now();
         auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
         return Date::create(global_object(), datetime, milliseconds);
     }
-    if (interpreter.argument_count() == 1) {
-        auto value = interpreter.argument(0);
+    if (vm().argument_count() == 1) {
+        auto value = vm().argument(0);
         if (value.is_string())
             value = parse_simplified_iso8601(value.as_string().string());
         // A timestamp since the epoch, in UTC.
         // FIXME: Date() probably should use a double as internal representation, so that NaN arguments and larger offsets are handled correctly.
-        double value_as_double = value.to_double(interpreter);
+        double value_as_double = value.to_double(global_object());
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<u16>(fmod(value_as_double, 1000));
         return Date::create(global_object(), datetime, milliseconds);
     }
     // A date/time in components, in local time.
     // FIXME: This doesn't construct an "Invalid Date" object if one of the parameters is NaN.
-    auto arg_or = [&interpreter](size_t i, i32 fallback) { return interpreter.argument_count() > i ? interpreter.argument(i).to_i32(interpreter) : fallback; };
-    int year = interpreter.argument(0).to_i32(interpreter);
-    int month_index = interpreter.argument(1).to_i32(interpreter);
+    auto arg_or = [this](size_t i, i32 fallback) { return vm().argument_count() > i ? vm().argument(i).to_i32(global_object()) : fallback; };
+    int year = vm().argument(0).to_i32(global_object());
+    int month_index = vm().argument(1).to_i32(global_object());
     int day = arg_or(2, 1);
     int hours = arg_or(3, 0);
     int minutes = arg_or(4, 0);
@@ -219,11 +219,11 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 {
-    if (!interpreter.argument_count())
+    if (!vm.argument_count())
         return js_nan();
 
-    auto iso_8601 = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto iso_8601 = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return js_nan();
 
     return parse_simplified_iso8601(iso_8601);
@@ -231,8 +231,8 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
 {
-    auto arg_or = [&interpreter](size_t i, i32 fallback) { return interpreter.argument_count() > i ? interpreter.argument(i).to_i32(interpreter) : fallback; };
-    int year = interpreter.argument(0).to_i32(interpreter);
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_i32(global_object) : fallback; };
+    int year = vm.argument(0).to_i32(global_object);
     if (year >= 0 && year <= 99)
         year += 1900;
 

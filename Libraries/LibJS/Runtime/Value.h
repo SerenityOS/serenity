@@ -240,16 +240,16 @@ public:
     i32 as_i32() const;
     size_t as_size_t() const;
 
-    String to_string(Interpreter&) const;
-    PrimitiveString* to_primitive_string(Interpreter&);
+    String to_string(GlobalObject&) const;
+    PrimitiveString* to_primitive_string(GlobalObject&);
     Value to_primitive(PreferredType preferred_type = PreferredType::Default) const;
-    Object* to_object(Interpreter&, GlobalObject&) const;
-    Value to_numeric(Interpreter&) const;
-    Value to_number(Interpreter&) const;
+    Object* to_object(GlobalObject&) const;
+    Value to_numeric(GlobalObject&) const;
+    Value to_number(GlobalObject&) const;
     BigInt* to_bigint(GlobalObject&) const;
-    double to_double(Interpreter&) const;
-    i32 to_i32(Interpreter&) const;
-    size_t to_size_t(Interpreter&) const;
+    double to_double(GlobalObject&) const;
+    i32 to_i32(GlobalObject&) const;
+    size_t to_size_t(GlobalObject&) const;
     bool to_boolean() const;
 
     String to_string_without_side_effects() const;
@@ -320,16 +320,16 @@ Value sub(Interpreter&, Value lhs, Value rhs);
 Value mul(Interpreter&, Value lhs, Value rhs);
 Value div(Interpreter&, Value lhs, Value rhs);
 Value mod(Interpreter&, Value lhs, Value rhs);
-Value exp(Interpreter&, Value lhs, Value rhs);
+Value exp(GlobalObject&, Value lhs, Value rhs);
 Value in(Interpreter&, Value lhs, Value rhs);
-Value instance_of(Interpreter&, Value lhs, Value rhs);
-Value ordinary_has_instance(Interpreter& interpreter, Value lhs, Value rhs);
+Value instance_of(GlobalObject&, Value lhs, Value rhs);
+Value ordinary_has_instance(GlobalObject&, Value lhs, Value rhs);
 
 bool abstract_eq(Interpreter&, Value lhs, Value rhs);
-bool strict_eq(Interpreter&, Value lhs, Value rhs);
-bool same_value(Interpreter&, Value lhs, Value rhs);
-bool same_value_zero(Interpreter&, Value lhs, Value rhs);
-bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs);
+bool strict_eq(Value lhs, Value rhs);
+bool same_value(Value lhs, Value rhs);
+bool same_value_zero(Value lhs, Value rhs);
+bool same_value_non_numeric(Value lhs, Value rhs);
 TriState abstract_relation(Interpreter&, bool left_first, Value lhs, Value rhs);
 size_t length_of_array_like(Interpreter&, Value);
 

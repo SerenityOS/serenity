@@ -48,7 +48,12 @@ PrimitiveString* js_string(Heap& heap, String string)
 
 PrimitiveString* js_string(Interpreter& interpreter, String string)
 {
-    return js_string(interpreter.heap(), string);
+    return js_string(interpreter.heap(), move(string));
+}
+
+PrimitiveString* js_string(VM& vm, String string)
+{
+    return js_string(vm.heap(), move(string));
 }
 
 }

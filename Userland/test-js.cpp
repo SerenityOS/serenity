@@ -160,7 +160,7 @@ void TestRunnerGlobalObject::initialize()
 
 JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)
 {
-    return JS::Value(interpreter.in_strict_mode());
+    return JS::Value(vm.interpreter().in_strict_mode());
 }
 
 static void cleanup_and_exit()

@@ -46,7 +46,7 @@ IteratorPrototype::~IteratorPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(IteratorPrototype::symbol_iterator)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
     return this_object;

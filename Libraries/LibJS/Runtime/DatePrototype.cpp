@@ -36,13 +36,13 @@
 
 namespace JS {
 
-static Date* typed_this(Interpreter& interpreter, GlobalObject& global_object)
+static Date* typed_this(VM& vm, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
     if (!this_object->is_date()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Date");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Date");
         return nullptr;
     }
     return static_cast<Date*>(this_object);
@@ -96,7 +96,7 @@ DatePrototype::~DatePrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->date()));
@@ -104,7 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->day()));
@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->full_year()));
@@ -120,7 +120,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->hours()));
@@ -128,7 +128,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->milliseconds()));
@@ -136,7 +136,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->minutes()));
@@ -144,7 +144,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->month()));
@@ -152,7 +152,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->seconds()));
@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(this_object->time());
@@ -168,7 +168,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->utc_date()));
@@ -176,7 +176,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->utc_day()));
@@ -184,7 +184,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->utc_full_year()));
@@ -192,7 +192,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->utc_hours()));
@@ -200,7 +200,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->utc_milliseconds()));
@@ -208,7 +208,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->utc_month()));
@@ -216,7 +216,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->utc_minutes()));
@@ -224,7 +224,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return Value(static_cast<double>(this_object->utc_seconds()));
@@ -232,68 +232,68 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     auto string = this_object->date_string();
-    return js_string(interpreter, move(string));
+    return js_string(vm, move(string));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     auto string = this_object->iso_date_string();
-    return js_string(interpreter, move(string));
+    return js_string(vm, move(string));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     // FIXME: Optional locales, options params.
     auto string = this_object->locale_date_string();
-    return js_string(interpreter, move(string));
+    return js_string(vm, move(string));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     // FIXME: Optional locales, options params.
     auto string = this_object->locale_string();
-    return js_string(interpreter, move(string));
+    return js_string(vm, move(string));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     // FIXME: Optional locales, options params.
     auto string = this_object->locale_time_string();
-    return js_string(interpreter, move(string));
+    return js_string(vm, move(string));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_time_string)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     auto string = this_object->time_string();
-    return js_string(interpreter, move(string));
+    return js_string(vm, move(string));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     auto string = this_object->string();
-    return js_string(interpreter, move(string));
+    return js_string(vm, move(string));
 }
 
 }

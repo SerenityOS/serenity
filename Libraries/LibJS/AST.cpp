@@ -75,13 +75,13 @@ static void update_function_name(Value& value, const FlyString& name)
     update_function_name(value, name, visited);
 }
 
-static String get_function_name(Interpreter& interpreter, Value value)
+static String get_function_name(GlobalObject& global_object, Value value)
 {
     if (value.is_symbol())
         return String::format("[%s]", value.as_symbol().description().characters());
     if (value.is_string())
         return value.as_string().string();
-    return value.to_string(interpreter);
+    return value.to_string(global_object);
 }
 
 Value ScopeNode::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -106,6 +106,8 @@ Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& globa
 
 CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interpreter& interpreter, GlobalObject& global_object) const
 {
+    auto& vm = interpreter.vm();
+
     if (is_new_expression()) {
         // Computing |this| is irrelevant for "new" expression.
         return { js_undefined(), m_callee->execute(interpreter, global_object) };
@@ -129,13 +131,13 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
             return {};
         }
 
-        auto* this_value = is_super_property_lookup ? &interpreter.this_value(global_object).as_object() : lookup_target.to_object(interpreter, global_object);
+        auto* this_value = is_super_property_lookup ? &vm.this_value(global_object).as_object() : lookup_target.to_object(global_object);
         if (interpreter.exception())
             return {};
         auto property_name = member_expression.computed_property_name(interpreter, global_object);
         if (!property_name.is_valid())
             return {};
-        auto callee = lookup_target.to_object(interpreter, global_object)->get(property_name).value_or(js_undefined());
+        auto callee = lookup_target.to_object(global_object)->get(property_name).value_or(js_undefined());
         return { this_value, callee };
     }
     return { &global_object, m_callee->execute(interpreter, global_object) };
@@ -387,7 +389,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto rhs_result = m_rhs->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    auto* object = rhs_result.to_object(interpreter, global_object);
+    auto* object = rhs_result.to_object(global_object);
     while (object) {
         auto property_names = object->get_own_properties(*object, Object::PropertyKind::Key, true);
         for (auto& property_name : property_names.as_object().indexed_properties()) {
@@ -479,11 +481,11 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     case BinaryOp::Modulo:
         return mod(interpreter, lhs_result, rhs_result);
     case BinaryOp::Exponentiation:
-        return exp(interpreter, lhs_result, rhs_result);
+        return exp(global_object, lhs_result, rhs_result);
     case BinaryOp::TypedEquals:
-        return Value(strict_eq(interpreter, lhs_result, rhs_result));
+        return Value(strict_eq(lhs_result, rhs_result));
     case BinaryOp::TypedInequals:
-        return Value(!strict_eq(interpreter, lhs_result, rhs_result));
+        return Value(!strict_eq(lhs_result, rhs_result));
     case BinaryOp::AbstractEquals:
         return Value(abstract_eq(interpreter, lhs_result, rhs_result));
     case BinaryOp::AbstractInequals:
@@ -511,7 +513,7 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     case BinaryOp::In:
         return in(interpreter, lhs_result, rhs_result);
     case BinaryOp::InstanceOf:
-        return instance_of(interpreter, lhs_result, rhs_result);
+        return instance_of(global_object, lhs_result, rhs_result);
     }
 
     ASSERT_NOT_REACHED();
@@ -576,6 +578,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
 
 Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
+    auto& vm = interpreter.vm();
     if (m_op == UnaryOp::Delete) {
         auto reference = m_lhs->to_reference(interpreter, global_object);
         if (interpreter.exception())
@@ -586,7 +589,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         ASSERT(!reference.is_local_variable());
         if (reference.is_global_variable())
             return global_object.delete_property(reference.name());
-        auto* base_object = reference.base().to_object(interpreter, global_object);
+        auto* base_object = reference.base().to_object(global_object);
         if (!base_object)
             return {};
         return base_object->delete_property(reference.name());
@@ -626,25 +629,25 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             ASSERT_NOT_REACHED();
             return {};
         case Value::Type::Undefined:
-            return js_string(interpreter, "undefined");
+            return js_string(vm, "undefined");
         case Value::Type::Null:
             // yes, this is on purpose. yes, this is how javascript works.
             // yes, it's silly.
-            return js_string(interpreter, "object");
+            return js_string(vm, "object");
         case Value::Type::Number:
-            return js_string(interpreter, "number");
+            return js_string(vm, "number");
         case Value::Type::String:
-            return js_string(interpreter, "string");
+            return js_string(vm, "string");
         case Value::Type::Object:
             if (lhs_result.is_function())
-                return js_string(interpreter, "function");
-            return js_string(interpreter, "object");
+                return js_string(vm, "function");
+            return js_string(vm, "object");
         case Value::Type::Boolean:
-            return js_string(interpreter, "boolean");
+            return js_string(vm, "boolean");
         case Value::Type::Symbol:
-            return js_string(interpreter, "symbol");
+            return js_string(vm, "symbol");
         case Value::Type::BigInt:
-            return js_string(interpreter, "bigint");
+            return js_string(vm, "bigint");
         default:
             ASSERT_NOT_REACHED();
         }
@@ -730,20 +733,20 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         method_function.set_home_object(&target);
 
         if (method.kind() == ClassMethod::Kind::Method) {
-            target.define_property(StringOrSymbol::from_value(interpreter, key), method_value);
+            target.define_property(StringOrSymbol::from_value(global_object, key), method_value);
         } else {
             String accessor_name = [&] {
                 switch (method.kind()) {
                 case ClassMethod::Kind::Getter:
-                    return String::format("get %s", get_function_name(interpreter, key).characters());
+                    return String::format("get %s", get_function_name(global_object, key).characters());
                 case ClassMethod::Kind::Setter:
-                    return String::format("set %s", get_function_name(interpreter, key).characters());
+                    return String::format("set %s", get_function_name(global_object, key).characters());
                 default:
                     ASSERT_NOT_REACHED();
                 }
             }();
             update_function_name(method_value, accessor_name);
-            target.define_accessor(StringOrSymbol::from_value(interpreter, key), method_function, method.kind() == ClassMethod::Kind::Getter, Attribute::Configurable | Attribute::Enumerable);
+            target.define_accessor(StringOrSymbol::from_value(global_object, key), method_function, method.kind() == ClassMethod::Kind::Getter, Attribute::Configurable | Attribute::Enumerable);
         }
         if (interpreter.exception())
             return {};
@@ -1232,7 +1235,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = exp(interpreter, lhs_result, rhs_result);
+        rhs_result = exp(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::BitwiseAndAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
@@ -1282,7 +1285,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
         return {};
     }
-    update_function_name(rhs_result, get_function_name(interpreter, reference.name().to_value(interpreter)));
+    update_function_name(rhs_result, get_function_name(global_object, reference.name().to_value(interpreter)));
     reference.put(interpreter, global_object, rhs_result);
 
     if (interpreter.exception())
@@ -1298,7 +1301,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto old_value = reference.get(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    old_value = old_value.to_numeric(interpreter);
+    old_value = old_value.to_numeric(global_object);
     if (interpreter.exception())
         return {};
 
@@ -1528,7 +1531,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         if (value.is_function() && property.is_method())
             value.as_function().set_home_object(object);
 
-        String name = get_function_name(interpreter, key);
+        String name = get_function_name(global_object, key);
         if (property.type() == ObjectProperty::Type::Getter) {
             name = String::format("get %s", name.characters());
         } else if (property.type() == ObjectProperty::Type::Setter) {
@@ -1539,11 +1542,11 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
         if (property.type() == ObjectProperty::Type::Getter || property.type() == ObjectProperty::Type::Setter) {
             ASSERT(value.is_function());
-            object->define_accessor(PropertyName::from_value(interpreter, key), value.as_function(), property.type() == ObjectProperty::Type::Getter, Attribute::Configurable | Attribute::Enumerable);
+            object->define_accessor(PropertyName::from_value(global_object, key), value.as_function(), property.type() == ObjectProperty::Type::Getter, Attribute::Configurable | Attribute::Enumerable);
             if (interpreter.exception())
                 return {};
         } else {
-            object->define_property(PropertyName::from_value(interpreter, key), value);
+            object->define_property(PropertyName::from_value(global_object, key), value);
             if (interpreter.exception())
                 return {};
         }
@@ -1577,7 +1580,7 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, 
     if (index.is_symbol())
         return &index.as_symbol();
 
-    auto index_string = index.to_string(interpreter);
+    auto index_string = index.to_string(global_object);
     if (interpreter.exception())
         return {};
     return index_string;
@@ -1599,7 +1602,7 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto object_value = m_object->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    auto* object_result = object_value.to_object(interpreter, global_object);
+    auto* object_result = object_value.to_object(global_object);
     if (interpreter.exception())
         return {};
     auto property_name = computed_property_name(interpreter, global_object);
@@ -1697,7 +1700,7 @@ Value TemplateLiteral::execute(Interpreter& interpreter, GlobalObject& global_ob
         auto expr = expression.execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        auto string = expr.to_string(interpreter);
+        auto string = expr.to_string(global_object);
         if (interpreter.exception())
             return {};
         string_builder.append(string);
@@ -1849,7 +1852,7 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
             auto test_result = switch_case.test()->execute(interpreter, global_object);
             if (interpreter.exception())
                 return {};
-            if (!strict_eq(interpreter, discriminant_result, test_result))
+            if (!strict_eq(discriminant_result, test_result))
                 continue;
         }
         falling_through = true;

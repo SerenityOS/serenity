@@ -125,8 +125,8 @@ TestRunnerObject::~TestRunnerObject()
 
 JS_DEFINE_NATIVE_FUNCTION(TestRunnerObject::change_page)
 {
-    auto url = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto url = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
 
     if (g_on_page_change)

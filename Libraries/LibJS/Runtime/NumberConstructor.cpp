@@ -69,15 +69,15 @@ Value NumberConstructor::call()
 {
     if (!vm().argument_count())
         return Value(0);
-    return vm().argument(0).to_number(interpreter());
+    return vm().argument(0).to_number(global_object());
 }
 
-Value NumberConstructor::construct(Interpreter& interpreter, Function&)
+Value NumberConstructor::construct(Interpreter&, Function&)
 {
     double number = 0;
-    if (interpreter.argument_count()) {
-        number = interpreter.argument(0).to_double(interpreter);
-        if (interpreter.exception())
+    if (vm().argument_count()) {
+        number = vm().argument(0).to_double(global_object());
+        if (vm().exception())
             return {};
     }
     return NumberObject::create(global_object(), number);
@@ -85,24 +85,24 @@ Value NumberConstructor::construct(Interpreter& interpreter, Function&)
 
 JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_finite)
 {
-    return Value(interpreter.argument(0).is_finite_number());
+    return Value(vm.argument(0).is_finite_number());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_integer)
 {
-    return Value(interpreter.argument(0).is_integer());
+    return Value(vm.argument(0).is_integer());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_nan)
 {
-    return Value(interpreter.argument(0).is_nan());
+    return Value(vm.argument(0).is_nan());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_safe_integer)
 {
-    if (!interpreter.argument(0).is_number())
+    if (!vm.argument(0).is_number())
         return Value(false);
-    auto value = interpreter.argument(0).as_double();
+    auto value = vm.argument(0).as_double();
     return Value((int64_t)value == value && value >= MIN_SAFE_INTEGER && value <= MAX_SAFE_INTEGER);
 }
 

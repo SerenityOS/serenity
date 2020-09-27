@@ -76,13 +76,13 @@ String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global
                     return {};
                 String item;
                 if (replacer_value.is_string() || replacer_value.is_number()) {
-                    item = replacer_value.to_string(interpreter);
+                    item = replacer_value.to_string(global_object);
                     if (interpreter.exception())
                         return {};
                 } else if (replacer_value.is_object()) {
                     auto& value_object = replacer_value.as_object();
                     if (value_object.is_string_object() || value_object.is_number_object()) {
-                        item = value_object.value_of().to_string(interpreter);
+                        item = value_object.value_of().to_string(global_object);
                         if (interpreter.exception())
                             return {};
                     }
@@ -133,22 +133,23 @@ String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global
 
 JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 {
-    if (!interpreter.argument_count())
+    if (!vm.argument_count())
         return js_undefined();
 
-    auto value = interpreter.argument(0);
-    auto replacer = interpreter.argument(1);
-    auto space = interpreter.argument(2);
+    auto value = vm.argument(0);
+    auto replacer = vm.argument(1);
+    auto space = vm.argument(2);
 
-    auto string = stringify_impl(interpreter, global_object, value, replacer, space);
+    auto string = stringify_impl(vm.interpreter(), global_object, value, replacer, space);
     if (string.is_null())
         return js_undefined();
 
-    return js_string(interpreter, string);
+    return js_string(vm, string);
 }
 
 String JSONObject::serialize_json_property(Interpreter& interpreter, StringifyState& state, const PropertyName& key, Object* holder)
 {
+    auto& global_object = interpreter.global_object();
     auto value = holder->get(key);
     if (interpreter.exception())
         return {};
@@ -183,7 +184,7 @@ String JSONObject::serialize_json_property(Interpreter& interpreter, StringifySt
         return quote_json_string(value.as_string().string());
     if (value.is_number()) {
         if (value.is_finite_number())
-            return value.to_string(interpreter);
+            return value.to_string(global_object);
         return "null";
     }
     if (value.is_object() && !value.is_function()) {
@@ -192,7 +193,7 @@ String JSONObject::serialize_json_property(Interpreter& interpreter, StringifySt
         return serialize_json_object(interpreter, state, value.as_object());
     }
     if (value.is_bigint())
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::JsonBigInt);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::JsonBigInt);
     return {};
 }
 
@@ -385,25 +386,25 @@ String JSONObject::quote_json_string(String string)
 
 JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
-    if (!interpreter.argument_count())
+    if (!vm.argument_count())
         return js_undefined();
-    auto string = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
-    auto reviver = interpreter.argument(1);
+    auto reviver = vm.argument(1);
 
     auto json = JsonValue::from_string(string);
     if (!json.has_value()) {
-        interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::JsonMalformed);
+        vm.throw_exception<SyntaxError>(global_object, ErrorType::JsonMalformed);
         return {};
     }
-    Value result = parse_json_value(interpreter, global_object, json.value());
+    Value result = parse_json_value(vm.interpreter(), global_object, json.value());
     if (reviver.is_function()) {
         auto* holder_object = Object::create_empty(global_object);
         holder_object->define_property(String::empty(), result);
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
-        return internalize_json_property(interpreter, holder_object, String::empty(), reviver.as_function());
+        return internalize_json_property(vm.interpreter(), holder_object, String::empty(), reviver.as_function());
     }
     return result;
 }

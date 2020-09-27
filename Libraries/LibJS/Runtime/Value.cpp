@@ -134,17 +134,17 @@ String Value::to_string_without_side_effects() const
     }
 }
 
-PrimitiveString* Value::to_primitive_string(Interpreter& interpreter)
+PrimitiveString* Value::to_primitive_string(GlobalObject& global_object)
 {
     if (is_string())
         return &as_string();
-    auto string = to_string(interpreter);
-    if (interpreter.exception())
+    auto string = to_string(global_object);
+    if (global_object.vm().exception())
         return nullptr;
-    return js_string(interpreter, string);
+    return js_string(global_object.heap(), string);
 }
 
-String Value::to_string(Interpreter& interpreter) const
+String Value::to_string(GlobalObject& global_object) const
 {
     switch (m_type) {
     case Type::Undefined:
@@ -164,15 +164,15 @@ String Value::to_string(Interpreter& interpreter) const
     case Type::String:
         return m_value.as_string->string();
     case Type::Symbol:
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "symbol", "string");
+        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "string");
         return {};
     case Type::BigInt:
         return m_value.as_bigint->big_integer().to_base10();
     case Type::Object: {
         auto primitive_value = as_object().to_primitive(PreferredType::String);
-        if (interpreter.exception())
+        if (global_object.vm().exception())
             return {};
-        return primitive_value.to_string(interpreter);
+        return primitive_value.to_string(global_object);
     }
     default:
         ASSERT_NOT_REACHED();
@@ -211,12 +211,12 @@ Value Value::to_primitive(PreferredType preferred_type) const
     return *this;
 }
 
-Object* Value::to_object(Interpreter& interpreter, GlobalObject& global_object) const
+Object* Value::to_object(GlobalObject& global_object) const
 {
     switch (m_type) {
     case Type::Undefined:
     case Type::Null:
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
+        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
         return nullptr;
     case Type::Boolean:
         return BooleanObject::create(global_object, m_value.as_bool);
@@ -236,17 +236,17 @@ Object* Value::to_object(Interpreter& interpreter, GlobalObject& global_object) 
     }
 }
 
-Value Value::to_numeric(Interpreter& interpreter) const
+Value Value::to_numeric(GlobalObject& global_object) const
 {
     auto primitive = to_primitive(Value::PreferredType::Number);
-    if (interpreter.exception())
+    if (global_object.vm().exception())
         return {};
     if (primitive.is_bigint())
         return primitive;
-    return primitive.to_number(interpreter);
+    return primitive.to_number(global_object);
 }
 
-Value Value::to_number(Interpreter& interpreter) const
+Value Value::to_number(GlobalObject& global_object) const
 {
     switch (m_type) {
     case Type::Undefined:
@@ -272,16 +272,16 @@ Value Value::to_number(Interpreter& interpreter) const
         return Value(parsed_double);
     }
     case Type::Symbol:
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "symbol", "number");
+        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "number");
         return {};
     case Type::BigInt:
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "BigInt", "number");
+        global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
         return {};
     case Type::Object: {
         auto primitive = m_value.as_object->to_primitive(PreferredType::Number);
-        if (interpreter.exception())
+        if (global_object.vm().exception())
             return {};
-        return primitive.to_number(interpreter);
+        return primitive.to_number(global_object);
     }
     default:
         ASSERT_NOT_REACHED();
@@ -337,18 +337,18 @@ size_t Value::as_size_t() const
     return min((double)as_i32(), MAX_ARRAY_LIKE_INDEX);
 }
 
-double Value::to_double(Interpreter& interpreter) const
+double Value::to_double(GlobalObject& global_object) const
 {
-    auto number = to_number(interpreter);
-    if (interpreter.exception())
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
         return 0;
     return number.as_double();
 }
 
-i32 Value::to_i32(Interpreter& interpreter) const
+i32 Value::to_i32(GlobalObject& global_object) const
 {
-    auto number = to_number(interpreter);
-    if (interpreter.exception())
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
         return 0;
     if (number.is_nan())
         return 0;
@@ -357,12 +357,12 @@ i32 Value::to_i32(Interpreter& interpreter) const
     return number.as_i32();
 }
 
-size_t Value::to_size_t(Interpreter& interpreter) const
+size_t Value::to_size_t(GlobalObject& global_object) const
 {
     if (is_empty())
         return 0;
-    auto number = to_number(interpreter);
-    if (interpreter.exception())
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
         return 0;
     if (number.is_nan())
         return 0;
@@ -405,10 +405,10 @@ Value less_than_equals(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -424,10 +424,10 @@ Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value bitwise_or(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -447,10 +447,10 @@ Value bitwise_or(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -470,7 +470,7 @@ Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value bitwise_not(Interpreter& interpreter, Value lhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (lhs_numeric.is_number())
@@ -483,12 +483,12 @@ Value bitwise_not(Interpreter& interpreter, Value lhs)
 
 Value unary_plus(Interpreter& interpreter, Value lhs)
 {
-    return lhs.to_number(interpreter);
+    return lhs.to_number(interpreter.global_object());
 }
 
 Value unary_minus(Interpreter& interpreter, Value lhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (lhs_numeric.is_number()) {
@@ -505,10 +505,10 @@ Value unary_minus(Interpreter& interpreter, Value lhs)
 
 Value left_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -526,10 +526,10 @@ Value left_shift(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value right_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -547,10 +547,10 @@ Value right_shift(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value unsigned_right_shift(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -574,10 +574,10 @@ Value add(Interpreter& interpreter, Value lhs, Value rhs)
         return {};
 
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
-        auto lhs_string = lhs_primitive.to_string(interpreter);
+        auto lhs_string = lhs_primitive.to_string(interpreter.global_object());
         if (interpreter.exception())
             return {};
-        auto rhs_string = rhs_primitive.to_string(interpreter);
+        auto rhs_string = rhs_primitive.to_string(interpreter.global_object());
         if (interpreter.exception())
             return {};
         StringBuilder builder(lhs_string.length() + rhs_string.length());
@@ -586,10 +586,10 @@ Value add(Interpreter& interpreter, Value lhs, Value rhs)
         return js_string(interpreter, builder.to_string());
     }
 
-    auto lhs_numeric = lhs_primitive.to_numeric(interpreter);
+    auto lhs_numeric = lhs_primitive.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs_primitive.to_numeric(interpreter);
+    auto rhs_numeric = rhs_primitive.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
@@ -602,10 +602,10 @@ Value add(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value sub(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
@@ -618,10 +618,10 @@ Value sub(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value mul(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
@@ -634,10 +634,10 @@ Value mul(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value div(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
@@ -650,10 +650,10 @@ Value div(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value mod(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
+    auto lhs_numeric = lhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
+    auto rhs_numeric = rhs.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric)) {
@@ -670,19 +670,20 @@ Value mod(Interpreter& interpreter, Value lhs, Value rhs)
     return {};
 }
 
-Value exp(Interpreter& interpreter, Value lhs, Value rhs)
+Value exp(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    auto lhs_numeric = lhs.to_numeric(interpreter);
-    if (interpreter.exception())
+    auto& vm = global_object.vm();
+    auto lhs_numeric = lhs.to_numeric(global_object);
+    if (vm.exception())
         return {};
-    auto rhs_numeric = rhs.to_numeric(interpreter);
-    if (interpreter.exception())
+    auto rhs_numeric = rhs.to_numeric(global_object);
+    if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
         return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
     if (both_bigint(lhs_numeric, rhs_numeric))
-        return js_bigint(interpreter, Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
-    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "exponentiation");
+        return js_bigint(vm.heap(), Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
+    vm.throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "exponentiation");
     return {};
 }
 
@@ -692,44 +693,46 @@ Value in(Interpreter& interpreter, Value lhs, Value rhs)
         interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::InOperatorWithObject);
         return {};
     }
-    auto lhs_string = lhs.to_string(interpreter);
+    auto lhs_string = lhs.to_string(interpreter.global_object());
     if (interpreter.exception())
         return {};
     return Value(rhs.as_object().has_property(lhs_string));
 }
 
-Value instance_of(Interpreter& interpreter, Value lhs, Value rhs)
+Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    auto& vm = global_object.vm();
     if (!rhs.is_object()) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
         return {};
     }
-    auto has_instance_method = rhs.as_object().get(interpreter.vm().well_known_symbol_has_instance());
+    auto has_instance_method = rhs.as_object().get(vm.well_known_symbol_has_instance());
     if (!has_instance_method.is_empty()) {
         if (!has_instance_method.is_function()) {
-            interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
             return {};
         }
 
-        return Value(interpreter.call(has_instance_method.as_function(), rhs, lhs).to_boolean());
+        return Value(vm.call(has_instance_method.as_function(), rhs, lhs).to_boolean());
     }
 
     if (!rhs.is_function()) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::NotAFunction, rhs.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, rhs.to_string_without_side_effects().characters());
         return {};
     }
-    return ordinary_has_instance(interpreter, lhs, rhs);
+    return ordinary_has_instance(global_object, lhs, rhs);
 }
 
-Value ordinary_has_instance(Interpreter& interpreter, Value lhs, Value rhs)
+Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
 {
+    auto& vm = global_object.vm();
     if (!rhs.is_function())
         return Value(false);
     auto& rhs_function = rhs.as_function();
 
     if (rhs_function.is_bound_function()) {
         auto& bound_target = static_cast<BoundFunction&>(rhs_function);
-        return instance_of(interpreter, lhs, Value(&bound_target.target_function()));
+        return instance_of(global_object, lhs, Value(&bound_target.target_function()));
     }
 
     if (!lhs.is_object())
@@ -737,20 +740,20 @@ Value ordinary_has_instance(Interpreter& interpreter, Value lhs, Value rhs)
 
     Object* lhs_object = &lhs.as_object();
     auto rhs_prototype = rhs_function.get("prototype");
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
 
     if (!rhs_prototype.is_object()) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects().characters());
         return {};
     }
     while (true) {
         lhs_object = lhs_object->prototype();
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
         if (!lhs_object)
             return Value(false);
-        if (same_value(interpreter, rhs_prototype, lhs_object))
+        if (same_value(rhs_prototype, lhs_object))
             return Value(true);
     }
 }
@@ -760,7 +763,7 @@ const LogStream& operator<<(const LogStream& stream, const Value& value)
     return stream << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects());
 }
 
-bool same_value(Interpreter& interpreter, Value lhs, Value rhs)
+bool same_value(Value lhs, Value rhs)
 {
     if (lhs.type() != rhs.type())
         return false;
@@ -783,10 +786,10 @@ bool same_value(Interpreter& interpreter, Value lhs, Value rhs)
         return lhs_big_integer == rhs_big_integer;
     }
 
-    return same_value_non_numeric(interpreter, lhs, rhs);
+    return same_value_non_numeric(lhs, rhs);
 }
 
-bool same_value_zero(Interpreter& interpreter, Value lhs, Value rhs)
+bool same_value_zero(Value lhs, Value rhs)
 {
     if (lhs.type() != rhs.type())
         return false;
@@ -800,10 +803,10 @@ bool same_value_zero(Interpreter& interpreter, Value lhs, Value rhs)
     if (lhs.is_bigint())
         return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
 
-    return same_value_non_numeric(interpreter, lhs, rhs);
+    return same_value_non_numeric(lhs, rhs);
 }
 
-bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs)
+bool same_value_non_numeric(Value lhs, Value rhs)
 {
     ASSERT(!lhs.is_number() && !lhs.is_bigint());
     ASSERT(lhs.type() == rhs.type());
@@ -825,7 +828,7 @@ bool same_value_non_numeric(Interpreter&, Value lhs, Value rhs)
     }
 }
 
-bool strict_eq(Interpreter& interpreter, Value lhs, Value rhs)
+bool strict_eq(Value lhs, Value rhs)
 {
     if (lhs.type() != rhs.type())
         return false;
@@ -841,22 +844,22 @@ bool strict_eq(Interpreter& interpreter, Value lhs, Value rhs)
     if (lhs.is_bigint())
         return lhs.as_bigint().big_integer() == rhs.as_bigint().big_integer();
 
-    return same_value_non_numeric(interpreter, lhs, rhs);
+    return same_value_non_numeric(lhs, rhs);
 }
 
 bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
 {
     if (lhs.type() == rhs.type())
-        return strict_eq(interpreter, lhs, rhs);
+        return strict_eq(lhs, rhs);
 
     if ((lhs.is_undefined() || lhs.is_null()) && (rhs.is_undefined() || rhs.is_null()))
         return true;
 
     if (lhs.is_number() && rhs.is_string())
-        return abstract_eq(interpreter, lhs, rhs.to_number(interpreter));
+        return abstract_eq(interpreter, lhs, rhs.to_number(interpreter.global_object()));
 
     if (lhs.is_string() && rhs.is_number())
-        return abstract_eq(interpreter, lhs.to_number(interpreter), rhs);
+        return abstract_eq(interpreter, lhs.to_number(interpreter.global_object()), rhs);
 
     if (lhs.is_bigint() && rhs.is_string()) {
         auto& rhs_string = rhs.as_string().string();
@@ -869,10 +872,10 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
         return abstract_eq(interpreter, rhs, lhs);
 
     if (lhs.is_boolean())
-        return abstract_eq(interpreter, lhs.to_number(interpreter), rhs);
+        return abstract_eq(interpreter, lhs.to_number(interpreter.global_object()), rhs);
 
     if (rhs.is_boolean())
-        return abstract_eq(interpreter, lhs, rhs.to_number(interpreter));
+        return abstract_eq(interpreter, lhs, rhs.to_number(interpreter.global_object()));
 
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object())
         return abstract_eq(interpreter, lhs, rhs.to_primitive());
@@ -960,10 +963,10 @@ TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs,
             return TriState::False;
     }
 
-    auto x_numeric = x_primitive.to_numeric(interpreter);
+    auto x_numeric = x_primitive.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
-    auto y_numeric = y_primitive.to_numeric(interpreter);
+    auto y_numeric = y_primitive.to_numeric(interpreter.global_object());
     if (interpreter.exception())
         return {};
 
@@ -1014,7 +1017,7 @@ size_t length_of_array_like(Interpreter& interpreter, Value value)
     auto result = value.as_object().get("length");
     if (interpreter.exception())
         return 0;
-    return result.to_size_t(interpreter);
+    return result.to_size_t(interpreter.global_object());
 }
 
 }

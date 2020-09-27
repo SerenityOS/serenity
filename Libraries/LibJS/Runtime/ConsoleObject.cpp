@@ -60,47 +60,47 @@ ConsoleObject::~ConsoleObject()
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::log)
 {
-    return interpreter.console().log();
+    return vm.interpreter().console().log();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::debug)
 {
-    return interpreter.console().debug();
+    return vm.interpreter().console().debug();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::info)
 {
-    return interpreter.console().info();
+    return vm.interpreter().console().info();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::warn)
 {
-    return interpreter.console().warn();
+    return vm.interpreter().console().warn();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::error)
 {
-    return interpreter.console().error();
+    return vm.interpreter().console().error();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::trace)
 {
-    return interpreter.console().trace();
+    return vm.interpreter().console().trace();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::count)
 {
-    return interpreter.console().count();
+    return vm.interpreter().console().count();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::count_reset)
 {
-    return interpreter.console().count_reset();
+    return vm.interpreter().console().count_reset();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::clear)
 {
-    return interpreter.console().clear();
+    return vm.interpreter().console().clear();
 }
 
 }

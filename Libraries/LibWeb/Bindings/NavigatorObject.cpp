@@ -62,7 +62,7 @@ NavigatorObject::~NavigatorObject()
 
 JS_DEFINE_NATIVE_GETTER(NavigatorObject::user_agent_getter)
 {
-    return JS::js_string(interpreter, ResourceLoader::the().user_agent());
+    return JS::js_string(vm, ResourceLoader::the().user_agent());
 }
 
 }

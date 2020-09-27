@@ -55,7 +55,7 @@ void Reference::put(Interpreter& interpreter, GlobalObject& global_object, Value
         return;
     }
 
-    auto* object = base().to_object(interpreter, global_object);
+    auto* object = base().to_object(global_object);
     if (!object)
         return;
 
@@ -97,7 +97,7 @@ Value Reference::get(Interpreter& interpreter, GlobalObject& global_object)
         return value;
     }
 
-    auto* object = base().to_object(interpreter, global_object);
+    auto* object = base().to_object(global_object);
     if (!object)
         return {};
 

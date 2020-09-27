@@ -49,13 +49,13 @@ Array::~Array()
 {
 }
 
-Array* Array::typed_this(Interpreter& interpreter, GlobalObject& global_object)
+Array* Array::typed_this(VM& vm, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
     if (!this_object->is_array()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAn, "Array");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Array");
         return nullptr;
     }
     return static_cast<Array*>(this_object);
@@ -63,7 +63,7 @@ Array* Array::typed_this(Interpreter& interpreter, GlobalObject& global_object)
 
 JS_DEFINE_NATIVE_GETTER(Array::length_getter)
 {
-    auto* array = typed_this(interpreter, global_object);
+    auto* array = typed_this(vm, global_object);
     if (!array)
         return {};
     return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
@@ -71,14 +71,14 @@ JS_DEFINE_NATIVE_GETTER(Array::length_getter)
 
 JS_DEFINE_NATIVE_SETTER(Array::length_setter)
 {
-    auto* array = typed_this(interpreter, global_object);
+    auto* array = typed_this(vm, global_object);
     if (!array)
         return;
-    auto length = value.to_number(interpreter);
-    if (interpreter.exception())
+    auto length = value.to_number(global_object);
+    if (vm.exception())
         return;
     if (length.is_nan() || length.is_infinity() || length.as_double() < 0) {
-        interpreter.vm().throw_exception<RangeError>(global_object, ErrorType::ArrayInvalidLength);
+        vm.throw_exception<RangeError>(global_object, ErrorType::ArrayInvalidLength);
         return;
     }
     array->indexed_properties().set_array_like_size(length.as_double());

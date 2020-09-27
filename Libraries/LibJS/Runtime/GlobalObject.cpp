@@ -153,36 +153,36 @@ void GlobalObject::visit_children(Visitor& visitor)
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 {
     dbg() << "Forced garbage collection requested!";
-    interpreter.heap().collect_garbage();
+    vm.heap().collect_garbage();
     return js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_nan)
 {
-    auto number = interpreter.argument(0).to_number(interpreter);
-    if (interpreter.exception())
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
         return {};
     return Value(number.is_nan());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_finite)
 {
-    auto number = interpreter.argument(0).to_number(interpreter);
-    if (interpreter.exception())
+    auto number = vm.argument(0).to_number(global_object);
+    if (vm.exception())
         return {};
     return Value(number.is_finite_number());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
-    if (interpreter.argument(0).is_number())
-        return interpreter.argument(0);
-    auto string = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    if (vm.argument(0).is_number())
+        return vm.argument(0);
+    auto string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
     for (size_t length = string.length(); length > 0; --length) {
         // This can't throw, so no exception check is fine.
-        auto number = Value(js_string(interpreter, string.substring(0, length))).to_number(interpreter);
+        auto number = Value(js_string(vm, string.substring(0, length))).to_number(global_object);
         if (!number.is_nan())
             return number;
     }

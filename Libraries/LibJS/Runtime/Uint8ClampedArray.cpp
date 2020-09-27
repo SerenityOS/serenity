@@ -55,11 +55,11 @@ Uint8ClampedArray::~Uint8ClampedArray()
 
 JS_DEFINE_NATIVE_GETTER(Uint8ClampedArray::length_getter)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
     if (StringView(this_object->class_name()) != "Uint8ClampedArray") {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Uint8ClampedArray");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Uint8ClampedArray");
         return {};
     }
     return Value(static_cast<const Uint8ClampedArray*>(this_object)->length());
@@ -69,7 +69,7 @@ bool Uint8ClampedArray::put_by_index(u32 property_index, Value value)
 {
     // FIXME: Use attributes
     ASSERT(property_index < m_length);
-    auto number = value.to_i32(interpreter());
+    auto number = value.to_i32(global_object());
     if (vm().exception())
         return {};
     m_data[property_index] = clamp(number, 0, 255);

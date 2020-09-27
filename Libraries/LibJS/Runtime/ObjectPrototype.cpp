@@ -57,25 +57,25 @@ ObjectPrototype::~ObjectPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto name = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto name = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
     return Value(this_object->has_own_property(name));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 {
-    auto this_value = interpreter.this_value(global_object);
+    auto this_value = vm.this_value(global_object);
 
     if (this_value.is_undefined())
-        return js_string(interpreter, "[object Undefined]");
+        return js_string(vm, "[object Undefined]");
     if (this_value.is_null())
-        return js_string(interpreter, "[object Null]");
+        return js_string(vm, "[object Null]");
 
-    auto* this_object = this_value.to_object(interpreter, global_object);
+    auto* this_object = this_value.to_object(global_object);
     if (!this_object)
         return {};
 
@@ -104,12 +104,12 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         tag = "Object";
     }
 
-    return js_string(interpreter, String::format("[object %s]", tag.characters()));
+    return js_string(vm, String::format("[object %s]", tag.characters()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
     return this_object->invoke("toString");
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
     return this_object->value_of();

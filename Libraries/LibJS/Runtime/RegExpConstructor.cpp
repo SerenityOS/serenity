@@ -53,15 +53,16 @@ Value RegExpConstructor::call()
     return construct(interpreter(), *this);
 }
 
-Value RegExpConstructor::construct(Interpreter& interpreter, Function&)
+Value RegExpConstructor::construct(Interpreter&, Function&)
 {
-    if (!interpreter.argument_count())
+    auto& vm = this->vm();
+    if (!vm.argument_count())
         return RegExpObject::create(global_object(), "(?:)", "");
-    auto contents = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto contents = vm.argument(0).to_string(global_object());
+    if (vm.exception())
         return {};
-    auto flags = interpreter.argument_count() > 1 ? interpreter.argument(1).to_string(interpreter) : "";
-    if (interpreter.exception())
+    auto flags = vm.argument_count() > 1 ? vm.argument(1).to_string(global_object()) : "";
+    if (vm.exception())
         return {};
     return RegExpObject::create(global_object(), contents, flags);
 }

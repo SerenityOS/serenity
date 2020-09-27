@@ -88,8 +88,8 @@ Value ArrayConstructor::construct(Interpreter&, Function&)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 {
-    auto value = interpreter.argument(0);
-    auto object = value.to_object(interpreter, global_object);
+    auto value = vm.argument(0);
+    auto object = value.to_object(global_object);
     if (!object)
         return {};
 
@@ -98,23 +98,23 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     // Array.from() lets you create Arrays from:
     if (auto size = object->indexed_properties().array_like_size()) {
         // * array-like objects (objects with a length property and indexed elements)
-        MarkedValueList elements(interpreter.heap());
+        MarkedValueList elements(vm.heap());
         elements.ensure_capacity(size);
         for (size_t i = 0; i < size; ++i) {
             elements.append(object->get(i));
-            if (interpreter.exception())
+            if (vm.exception())
                 return {};
         }
         array->set_indexed_property_elements(move(elements));
     } else {
         // * iterable objects
         get_iterator_values(global_object, value, [&](Value element) {
-            if (interpreter.exception())
+            if (vm.exception())
                 return IterationDecision::Break;
             array->indexed_properties().append(element);
             return IterationDecision::Continue;
         });
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
     }
 
@@ -126,15 +126,15 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 {
-    auto value = interpreter.argument(0);
+    auto value = vm.argument(0);
     return Value(value.is_array());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
     auto* array = Array::create(global_object);
-    for (size_t i = 0; i < interpreter.argument_count(); ++i)
-        array->indexed_properties().append(interpreter.argument(i));
+    for (size_t i = 0; i < vm.argument_count(); ++i)
+        array->indexed_properties().append(vm.argument(i));
     return array;
 }
 

@@ -38,7 +38,7 @@ Object* get_iterator(GlobalObject& global_object, Value value, String hint, Valu
     if (method.is_empty()) {
         if (hint == "async")
             TODO();
-        auto object = value.to_object(interpreter, global_object);
+        auto object = value.to_object(global_object);
         if (!object)
             return {};
         method = object->get(global_object.vm().well_known_symbol_iterator());
