@@ -217,6 +217,9 @@ inline void InlineLinkedList<T>::remove(T* node)
         ASSERT(node == m_tail);
         m_tail = node->prev();
     }
+
+    node->set_next(0);
+    node->set_prev(0);
 }
 
 template<typename T>
