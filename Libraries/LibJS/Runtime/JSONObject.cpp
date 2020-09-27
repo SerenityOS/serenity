@@ -56,9 +56,9 @@ JSONObject::~JSONObject()
 {
 }
 
-String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global_object, Value value, Value replacer, Value space)
+String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Value replacer, Value space)
 {
-
+    auto& vm = global_object.vm();
     StringifyState state;
 
     if (replacer.is_object()) {
@@ -66,24 +66,24 @@ String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global
             state.replacer_function = &replacer.as_function();
         } else if (replacer.is_array()) {
             auto& replacer_object = replacer.as_object();
-            auto replacer_length = length_of_array_like(interpreter, replacer);
-            if (interpreter.exception())
+            auto replacer_length = length_of_array_like(global_object, replacer);
+            if (vm.exception())
                 return {};
             Vector<String> list;
             for (size_t i = 0; i < replacer_length; ++i) {
                 auto replacer_value = replacer_object.get(i);
-                if (interpreter.exception())
+                if (vm.exception())
                     return {};
                 String item;
                 if (replacer_value.is_string() || replacer_value.is_number()) {
                     item = replacer_value.to_string(global_object);
-                    if (interpreter.exception())
+                    if (vm.exception())
                         return {};
                 } else if (replacer_value.is_object()) {
                     auto& value_object = replacer_value.as_object();
                     if (value_object.is_string_object() || value_object.is_number_object()) {
                         item = value_object.value_of().to_string(global_object);
-                        if (interpreter.exception())
+                        if (vm.exception())
                             return {};
                     }
                 }
@@ -120,10 +120,10 @@ String JSONObject::stringify_impl(Interpreter& interpreter, GlobalObject& global
 
     auto* wrapper = Object::create_empty(global_object);
     wrapper->define_property(String::empty(), value);
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
-    auto result = serialize_json_property(interpreter, state, String::empty(), wrapper);
-    if (interpreter.exception())
+    auto result = serialize_json_property(global_object, state, String::empty(), wrapper);
+    if (vm.exception())
         return {};
     if (result.is_null())
         return {};
@@ -140,33 +140,33 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
     auto replacer = vm.argument(1);
     auto space = vm.argument(2);
 
-    auto string = stringify_impl(vm.interpreter(), global_object, value, replacer, space);
+    auto string = stringify_impl(global_object, value, replacer, space);
     if (string.is_null())
         return js_undefined();
 
     return js_string(vm, string);
 }
 
-String JSONObject::serialize_json_property(Interpreter& interpreter, StringifyState& state, const PropertyName& key, Object* holder)
+String JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, const PropertyName& key, Object* holder)
 {
-    auto& global_object = interpreter.global_object();
+    auto& vm = global_object.vm();
     auto value = holder->get(key);
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     if (value.is_object()) {
         auto to_json = value.as_object().get("toJSON");
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
         if (to_json.is_function()) {
-            value = interpreter.call(to_json.as_function(), value, js_string(interpreter, key.to_string()));
-            if (interpreter.exception())
+            value = vm.call(to_json.as_function(), value, js_string(vm, key.to_string()));
+            if (vm.exception())
                 return {};
         }
     }
 
     if (state.replacer_function) {
-        value = interpreter.call(*state.replacer_function, holder, js_string(interpreter, key.to_string()), value);
-        if (interpreter.exception())
+        value = vm.call(*state.replacer_function, holder, js_string(vm, key.to_string()), value);
+        if (vm.exception())
             return {};
     }
 
@@ -189,18 +189,19 @@ String JSONObject::serialize_json_property(Interpreter& interpreter, StringifySt
     }
     if (value.is_object() && !value.is_function()) {
         if (value.is_array())
-            return serialize_json_array(interpreter, state, static_cast<Array&>(value.as_object()));
-        return serialize_json_object(interpreter, state, value.as_object());
+            return serialize_json_array(global_object, state, static_cast<Array&>(value.as_object()));
+        return serialize_json_object(global_object, state, value.as_object());
     }
     if (value.is_bigint())
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::JsonBigInt);
+        vm.throw_exception<TypeError>(global_object, ErrorType::JsonBigInt);
     return {};
 }
 
-String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyState& state, Object& object)
+String JSONObject::serialize_json_object(GlobalObject& global_object, StringifyState& state, Object& object)
 {
+    auto& vm = global_object.vm();
     if (state.seen_objects.contains(&object)) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::JsonCircular);
+        vm.throw_exception<TypeError>(global_object, ErrorType::JsonCircular);
         return {};
     }
 
@@ -210,8 +211,8 @@ String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyStat
     Vector<String> property_strings;
 
     auto process_property = [&](const PropertyName& key) {
-        auto serialized_property_string = serialize_json_property(interpreter, state, key, &object);
-        if (interpreter.exception())
+        auto serialized_property_string = serialize_json_property(global_object, state, key, &object);
+        if (vm.exception())
             return;
         if (!serialized_property_string.is_null()) {
             property_strings.append(String::format(
@@ -226,7 +227,7 @@ String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyStat
         auto property_list = state.property_list.value();
         for (auto& property : property_list) {
             process_property(property);
-            if (interpreter.exception())
+            if (vm.exception())
                 return {};
         }
     } else {
@@ -235,14 +236,14 @@ String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyStat
             if (!value_and_attributes.attributes.is_enumerable())
                 continue;
             process_property(entry.index());
-            if (interpreter.exception())
+            if (vm.exception())
                 return {};
         }
         for (auto& [key, metadata] : object.shape().property_table_ordered()) {
             if (!metadata.attributes.is_enumerable())
                 continue;
             process_property(key);
-            if (interpreter.exception())
+            if (vm.exception())
                 return {};
         }
     }
@@ -280,10 +281,11 @@ String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyStat
     return builder.to_string();
 }
 
-String JSONObject::serialize_json_array(Interpreter& interpreter, StringifyState& state, Object& object)
+String JSONObject::serialize_json_array(GlobalObject& global_object, StringifyState& state, Object& object)
 {
+    auto& vm = global_object.vm();
     if (state.seen_objects.contains(&object)) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::JsonCircular);
+        vm.throw_exception<TypeError>(global_object, ErrorType::JsonCircular);
         return {};
     }
 
@@ -292,14 +294,14 @@ String JSONObject::serialize_json_array(Interpreter& interpreter, StringifyState
     state.indent = String::format("%s%s", state.indent.characters(), state.gap.characters());
     Vector<String> property_strings;
 
-    auto length = length_of_array_like(interpreter, Value(&object));
-    if (interpreter.exception())
+    auto length = length_of_array_like(global_object, Value(&object));
+    if (vm.exception())
         return {};
     for (size_t i = 0; i < length; ++i) {
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
-        auto serialized_property_string = serialize_json_property(interpreter, state, i, &object);
-        if (interpreter.exception())
+        auto serialized_property_string = serialize_json_property(global_object, state, i, &object);
+        if (vm.exception())
             return {};
         if (serialized_property_string.is_null()) {
             property_strings.append("null");
@@ -398,23 +400,23 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
         vm.throw_exception<SyntaxError>(global_object, ErrorType::JsonMalformed);
         return {};
     }
-    Value result = parse_json_value(vm.interpreter(), global_object, json.value());
+    Value result = parse_json_value(global_object, json.value());
     if (reviver.is_function()) {
         auto* holder_object = Object::create_empty(global_object);
         holder_object->define_property(String::empty(), result);
         if (vm.exception())
             return {};
-        return internalize_json_property(vm.interpreter(), holder_object, String::empty(), reviver.as_function());
+        return internalize_json_property(global_object, holder_object, String::empty(), reviver.as_function());
     }
     return result;
 }
 
-Value JSONObject::parse_json_value(Interpreter& interpreter, GlobalObject& global_object, const JsonValue& value)
+Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue& value)
 {
     if (value.is_object())
-        return Value(parse_json_object(interpreter, global_object, value.as_object()));
+        return Value(parse_json_object(global_object, value.as_object()));
     if (value.is_array())
-        return Value(parse_json_array(interpreter, global_object, value.as_array()));
+        return Value(parse_json_array(global_object, value.as_array()));
     if (value.is_null())
         return js_null();
 #if !defined(KERNEL)
@@ -424,42 +426,43 @@ Value JSONObject::parse_json_value(Interpreter& interpreter, GlobalObject& globa
     if (value.is_number())
         return Value(value.to_i32(0));
     if (value.is_string())
-        return js_string(interpreter, value.to_string());
+        return js_string(global_object.heap(), value.to_string());
     if (value.is_bool())
         return Value(static_cast<bool>(value.as_bool()));
     ASSERT_NOT_REACHED();
 }
 
-Object* JSONObject::parse_json_object(Interpreter& interpreter, GlobalObject& global_object, const JsonObject& json_object)
+Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObject& json_object)
 {
     auto* object = Object::create_empty(global_object);
     json_object.for_each_member([&](auto& key, auto& value) {
-        object->define_property(key, parse_json_value(interpreter, global_object, value));
+        object->define_property(key, parse_json_value(global_object, value));
     });
     return object;
 }
 
-Array* JSONObject::parse_json_array(Interpreter& interpreter, GlobalObject& global_object, const JsonArray& json_array)
+Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray& json_array)
 {
     auto* array = Array::create(global_object);
     size_t index = 0;
     json_array.for_each([&](auto& value) {
-        array->define_property(index++, parse_json_value(interpreter, global_object, value));
+        array->define_property(index++, parse_json_value(global_object, value));
     });
     return array;
 }
 
-Value JSONObject::internalize_json_property(Interpreter& interpreter, Object* holder, const PropertyName& name, Function& reviver)
+Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, const PropertyName& name, Function& reviver)
 {
+    auto& vm = global_object.vm();
     auto value = holder->get(name);
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     if (value.is_object()) {
         auto& value_object = value.as_object();
 
         auto process_property = [&](const PropertyName& key) {
-            auto element = internalize_json_property(interpreter, &value_object, key, reviver);
-            if (interpreter.exception())
+            auto element = internalize_json_property(global_object, &value_object, key, reviver);
+            if (vm.exception())
                 return;
             if (element.is_undefined()) {
                 value_object.delete_property(key);
@@ -469,10 +472,10 @@ Value JSONObject::internalize_json_property(Interpreter& interpreter, Object* ho
         };
 
         if (value_object.is_array()) {
-            auto length = length_of_array_like(interpreter, value);
+            auto length = length_of_array_like(global_object, value);
             for (size_t i = 0; i < length; ++i) {
                 process_property(i);
-                if (interpreter.exception())
+                if (vm.exception())
                     return {};
             }
         } else {
@@ -481,20 +484,20 @@ Value JSONObject::internalize_json_property(Interpreter& interpreter, Object* ho
                 if (!value_and_attributes.attributes.is_enumerable())
                     continue;
                 process_property(entry.index());
-                if (interpreter.exception())
+                if (vm.exception())
                     return {};
             }
             for (auto& [key, metadata] : value_object.shape().property_table_ordered()) {
                 if (!metadata.attributes.is_enumerable())
                     continue;
                 process_property(key);
-                if (interpreter.exception())
+                if (vm.exception())
                     return {};
             }
         }
     }
 
-    return interpreter.call(reviver, Value(holder), js_string(interpreter, name.to_string()), value);
+    return vm.call(reviver, Value(holder), js_string(vm, name.to_string()), value);
 }
 
 }
