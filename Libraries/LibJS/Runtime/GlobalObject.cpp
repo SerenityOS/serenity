@@ -27,7 +27,6 @@
 
 #include <AK/LogStream.h>
 #include <LibJS/Heap/DeferGC.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayIteratorPrototype.h>
 #include <LibJS/Runtime/ArrayPrototype.h>

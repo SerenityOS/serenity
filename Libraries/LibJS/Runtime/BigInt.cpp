@@ -25,7 +25,7 @@
  */
 
 #include <LibCrypto/BigInt/SignedBigInteger.h>
-#include <LibJS/Interpreter.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/BigInt.h>
 
 namespace JS {

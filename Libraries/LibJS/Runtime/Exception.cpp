@@ -24,8 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
+#include <AK/String.h>
 #include <LibJS/Runtime/Exception.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 

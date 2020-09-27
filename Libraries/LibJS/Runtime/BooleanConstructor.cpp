@@ -25,7 +25,6 @@
  */
 
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/BooleanConstructor.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/BooleanPrototype.h>

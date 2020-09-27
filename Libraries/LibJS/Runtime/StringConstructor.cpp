@@ -26,7 +26,6 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>

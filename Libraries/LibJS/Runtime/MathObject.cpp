@@ -27,7 +27,6 @@
 
 #include <AK/FlyString.h>
 #include <AK/Function.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <math.h>

@@ -27,7 +27,6 @@
 
 #include <AK/Function.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/Error.h>
