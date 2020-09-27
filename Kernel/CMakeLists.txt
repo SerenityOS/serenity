@@ -223,7 +223,6 @@ set(VT_SOURCES
     ../Libraries/LibVT/Line.cpp
 )
 
-
 set(KEYBOARD_SOURCES
     ../Libraries/LibKeyboard/CharacterMap.cpp
 )
@@ -233,6 +232,10 @@ set(CRYPTO_SOURCES
     ../Libraries/LibCrypto/Hash/SHA2.cpp
 )
 
+set(C_SOURCES
+    ../Libraries/LibC/ctype.cpp
+)
+
 set(SOURCES
     ${KERNEL_SOURCES}
     ${AK_SOURCES}
@@ -240,6 +243,7 @@ set(SOURCES
     ${VT_SOURCES}
     ${KEYBOARD_SOURCES}
     ${CRYPTO_SOURCES}
+    ${C_SOURCES}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DKERNEL")

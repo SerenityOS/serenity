@@ -28,6 +28,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/Memory.h>
+#include <ctype.h>
 
 namespace AK {
 
@@ -104,27 +105,27 @@ Optional<JsonValue> JsonParser::parse_object()
     if (!consume_specific('{'))
         return {};
     for (;;) {
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         if (peek() == '}')
             break;
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         auto name = consume_and_unescape_string();
         if (name.is_null())
             return {};
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         if (!consume_specific(':'))
             return {};
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         auto value = parse_helper();
         if (!value.has_value())
             return {};
         object.set(name, move(value.value()));
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         if (peek() == '}')
             break;
         if (!consume_specific(','))
             return {};
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         if (peek() == '}')
             return {};
     }
@@ -139,23 +140,23 @@ Optional<JsonValue> JsonParser::parse_array()
     if (!consume_specific('['))
         return {};
     for (;;) {
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         if (peek() == ']')
             break;
         auto element = parse_helper();
         if (!element.has_value())
             return {};
         array.append(element.value());
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         if (peek() == ']')
             break;
         if (!consume_specific(','))
             return {};
-        ignore_while(is_whitespace);
+        ignore_while(isspace);
         if (peek() == ']')
             return {};
     }
-    ignore_while(is_whitespace);
+    ignore_while(isspace);
     if (!consume_specific(']'))
         return {};
     return array;
@@ -260,7 +261,7 @@ Optional<JsonValue> JsonParser::parse_null()
 
 Optional<JsonValue> JsonParser::parse_helper()
 {
-    ignore_while(is_whitespace);
+    ignore_while(isspace);
     auto type_hint = peek();
     switch (type_hint) {
     case '{':
@@ -297,7 +298,7 @@ Optional<JsonValue> JsonParser::parse()
     auto result = parse_helper();
     if (!result.has_value())
         return {};
-    ignore_while(is_whitespace);
+    ignore_while(isspace);
     if (!is_eof())
         return {};
     return result;
