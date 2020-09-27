@@ -168,8 +168,13 @@ extern "C" [[noreturn]] void init()
     Process::initialize();
     Scheduler::initialize();
 
-    Thread* init_stage2_thread = nullptr;
-    Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
+    {
+        RefPtr<Thread> init_stage2_thread;
+        Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
+        // We need to make sure we drop the reference for init_stage2_thread
+        // before calling into Scheduler::start, otherwise we will have a
+        // dangling Thread that never gets cleaned up
+    }
 
     Scheduler::start();
     ASSERT_NOT_REACHED();
@@ -351,7 +356,7 @@ void init_stage2()
 
     // FIXME: It would be nicer to set the mode from userspace.
     tty0->set_graphical(!text_mode);
-    Thread* thread = nullptr;
+    RefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().lookup("init").value_or("/bin/SystemServer");
     Process::create_user_process(thread, userspace_init, (uid_t)0, (gid_t)0, ProcessID(0), error, {}, {}, tty0);
     if (error != 0) {

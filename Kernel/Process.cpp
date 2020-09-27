@@ -265,7 +265,7 @@ void Process::kill_all_threads()
     });
 }
 
-RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String& path, uid_t uid, gid_t gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
+RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t uid, gid_t gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
     auto parts = path.split('/');
     if (arguments.is_empty()) {
@@ -298,7 +298,7 @@ RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {
         dbg() << "Failed to exec " << path << ": " << error;
-        delete first_thread;
+        first_thread = nullptr;
         return {};
     }
 
@@ -311,7 +311,7 @@ RefPtr<Process> Process::create_user_process(Thread*& first_thread, const String
     return process;
 }
 
-NonnullRefPtr<Process> Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)(), u32 affinity)
+NonnullRefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*e)(), u32 affinity)
 {
     auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
     first_thread->tss().eip = (FlatPtr)e;
@@ -327,7 +327,7 @@ NonnullRefPtr<Process> Process::create_kernel_process(Thread*& first_thread, Str
     return process;
 }
 
-Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(allocate_pid())
     , m_euid(uid)
@@ -356,14 +356,15 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
         first_thread = Thread::current()->clone(*this);
     } else {
         // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
-        first_thread = new Thread(*this);
+        first_thread = adopt(*new Thread(*this));
         first_thread->detach();
     }
 }
 
 Process::~Process()
 {
-    ASSERT(thread_count() == 0);
+    ASSERT(!m_next && !m_prev);  // should have been reaped
+    ASSERT(thread_count() == 0); // all threads should have been finalized
 }
 
 void Process::dump_regions()
@@ -613,7 +614,7 @@ void Process::finalize()
     {
         InterruptDisabler disabler;
         // FIXME: PID/TID BUG
-        if (auto* parent_thread = Thread::from_tid(m_ppid.value())) {
+        if (auto parent_thread = Thread::from_tid(m_ppid.value())) {
             if (parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
                 // NOTE: If the parent doesn't care about this process, let it go.
                 m_ppid = 0;
@@ -761,13 +762,13 @@ KResult Process::send_signal(u8 signal, Process* sender)
     return KResult(-ESRCH);
 }
 
-Thread* Process::create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity, bool joinable)
+RefPtr<Thread> Process::create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity, bool joinable)
 {
     ASSERT((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
     // FIXME: Do something with guard pages?
 
-    auto* thread = new Thread(*this);
+    auto thread = adopt(*new Thread(*this));
 
     thread->set_name(name);
     thread->set_affinity(affinity);

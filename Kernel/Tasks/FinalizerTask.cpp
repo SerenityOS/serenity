@@ -31,7 +31,8 @@ namespace Kernel {
 
 void FinalizerTask::spawn()
 {
-    Process::create_kernel_process(g_finalizer, "FinalizerTask", [] {
+    RefPtr<Thread> finalizer_thread;
+    Process::create_kernel_process(finalizer_thread, "FinalizerTask", [] {
         Thread::current()->set_priority(THREAD_PRIORITY_LOW);
         for (;;) {
             Thread::current()->wait_on(*g_finalizer_wait_queue, "FinalizerTask");
@@ -41,6 +42,7 @@ void FinalizerTask::spawn()
                 Thread::finalize_dying_threads();
         }
     });
+    g_finalizer = finalizer_thread;
 }
 
 }

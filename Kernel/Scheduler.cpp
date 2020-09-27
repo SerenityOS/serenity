@@ -50,7 +50,7 @@ class SchedulerPerProcessorData {
 public:
     SchedulerPerProcessorData() = default;
 
-    Thread* m_pending_beneficiary { nullptr };
+    WeakPtr<Thread> m_pending_beneficiary;
     const char* m_pending_donate_reason { nullptr };
     bool m_in_scheduler { true };
 };
@@ -599,7 +599,7 @@ bool Scheduler::donate_to_and_switch(Thread* beneficiary, const char* reason)
     return Scheduler::context_switch(beneficiary);
 }
 
-bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
+bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
 {
     ASSERT(beneficiary);
 
@@ -625,7 +625,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     ASSERT(!proc.in_irq());
 
     if (proc.in_critical() > 1) {
-        scheduler_data.m_pending_beneficiary = beneficiary; // Save the beneficiary
+        scheduler_data.m_pending_beneficiary = beneficiary->make_weak_ptr(); // Save the beneficiary
         scheduler_data.m_pending_donate_reason = reason;
         proc.invoke_scheduler_async();
         return false;
@@ -740,7 +740,7 @@ void Scheduler::initialize()
 {
     ASSERT(&Processor::current() != nullptr); // sanity check
 
-    Thread* idle_thread = nullptr;
+    RefPtr<Thread> idle_thread;
     g_scheduler_data = new SchedulerData;
     g_finalizer_wait_queue = new WaitQueue;
 

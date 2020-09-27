@@ -36,8 +36,10 @@ namespace Kernel {
 pid_t Process::sys$fork(RegisterState& regs)
 {
     REQUIRE_PROMISE(proc);
-    Thread* child_first_thread = nullptr;
-    auto* child = new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_is_kernel_process, m_cwd, m_executable, m_tty, this);
+    RefPtr<Thread> child_first_thread;
+    auto child = adopt(*new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_is_kernel_process, m_cwd, m_executable, m_tty, this));
+    if (!child_first_thread)
+        return -ENOMEM;
     child->m_root_directory = m_root_directory;
     child->m_root_directory_relative_to_global_root = m_root_directory_relative_to_global_root;
     child->m_promises = m_promises;
@@ -92,6 +94,7 @@ pid_t Process::sys$fork(RegisterState& regs)
     {
         ScopedSpinLock lock(g_processes_lock);
         g_processes->prepend(child);
+        child->ref(); // This reference will be dropped by Process::reap
     }
 
     child_first_thread->set_affinity(Thread::current()->affinity());
