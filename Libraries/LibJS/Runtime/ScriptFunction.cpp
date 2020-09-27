@@ -143,7 +143,7 @@ Value ScriptFunction::call()
     return interpreter->execute_statement(global_object(), m_body, arguments, ScopeType::Function);
 }
 
-Value ScriptFunction::construct(Interpreter&, Function&)
+Value ScriptFunction::construct(Function&)
 {
     if (m_is_arrow_function) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name.characters());

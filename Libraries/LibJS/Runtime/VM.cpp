@@ -220,7 +220,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // If we are a Derived constructor, |this| has not been constructed before super is called.
     Value this_value = function.constructor_kind() == Function::ConstructorKind::Base ? new_object : Value {};
     call_frame.this_value = this_value;
-    auto result = function.construct(interpreter(), new_target);
+    auto result = function.construct(new_target);
 
     this_value = current_environment()->get_this_binding();
     pop_call_frame();

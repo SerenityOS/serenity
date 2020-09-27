@@ -54,9 +54,9 @@ Value BooleanConstructor::call()
     return Value(vm().argument(0).to_boolean());
 }
 
-Value BooleanConstructor::construct(Interpreter& interpreter, Function&)
+Value BooleanConstructor::construct(Function&)
 {
-    return BooleanObject::create(global_object(), interpreter.argument(0).to_boolean());
+    return BooleanObject::create(global_object(), vm().argument(0).to_boolean());
 }
 
 }

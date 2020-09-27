@@ -492,7 +492,7 @@ Value ProxyObject::call()
     return vm().call(trap.as_function(), Value(&m_handler), move(arguments));
 }
 
-Value ProxyObject::construct(Interpreter& interpreter, Function& new_target)
+Value ProxyObject::construct(Function& new_target)
 {
     auto& vm = this->vm();
     if (!is_function()) {
@@ -507,7 +507,7 @@ Value ProxyObject::construct(Interpreter& interpreter, Function& new_target)
     if (vm.exception())
         return {};
     if (trap.is_empty() || trap.is_undefined() || trap.is_null())
-        return static_cast<Function&>(m_target).construct(interpreter, new_target);
+        return static_cast<Function&>(m_target).construct(new_target);
     if (!trap.is_function()) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "construct");
         return {};

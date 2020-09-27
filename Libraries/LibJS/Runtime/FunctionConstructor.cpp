@@ -53,10 +53,10 @@ FunctionConstructor::~FunctionConstructor()
 
 Value FunctionConstructor::call()
 {
-    return construct(interpreter(), *this);
+    return construct(*this);
 }
 
-Value FunctionConstructor::construct(Interpreter& interpreter, Function&)
+Value FunctionConstructor::construct(Function&)
 {
     auto& vm = this->vm();
     String parameters_source = "";
@@ -88,7 +88,17 @@ Value FunctionConstructor::construct(Interpreter& interpreter, Function&)
         vm.throw_exception<SyntaxError>(global_object(), error.to_string());
         return {};
     }
-    return function_expression->execute(interpreter, global_object());
+
+    OwnPtr<Interpreter> local_interpreter;
+    Interpreter* interpreter = vm.interpreter_if_exists();
+
+    if (!interpreter) {
+        local_interpreter = Interpreter::create_with_existing_global_object(global_object());
+        interpreter = local_interpreter.ptr();
+    }
+
+    VM::InterpreterExecutionScope scope(*interpreter);
+    return function_expression->execute(*interpreter, global_object());
 }
 
 }

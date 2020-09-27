@@ -50,10 +50,10 @@ RegExpConstructor::~RegExpConstructor()
 
 Value RegExpConstructor::call()
 {
-    return construct(interpreter(), *this);
+    return construct(*this);
 }
 
-Value RegExpConstructor::construct(Interpreter&, Function&)
+Value RegExpConstructor::construct(Function&)
 {
     auto& vm = this->vm();
     if (!vm.argument_count())

@@ -63,9 +63,9 @@ Value SymbolConstructor::call()
     return js_symbol(heap(), vm().argument(0).to_string(global_object()), false);
 }
 
-Value SymbolConstructor::construct(Interpreter& interpreter, Function&)
+Value SymbolConstructor::construct(Function&)
 {
-    interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "Symbol");
+    vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "Symbol");
     return {};
 }
 

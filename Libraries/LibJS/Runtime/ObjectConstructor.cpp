@@ -69,7 +69,7 @@ Value ObjectConstructor::call()
     return Object::create_empty(global_object());
 }
 
-Value ObjectConstructor::construct(Interpreter&, Function&)
+Value ObjectConstructor::construct(Function&)
 {
     return call();
 }

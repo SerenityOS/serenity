@@ -49,15 +49,16 @@ ErrorConstructor::~ErrorConstructor()
 
 Value ErrorConstructor::call()
 {
-    return construct(interpreter(), *this);
+    return construct(*this);
 }
 
-Value ErrorConstructor::construct(Interpreter& interpreter, Function&)
+Value ErrorConstructor::construct(Function&)
 {
+    auto& vm = this->vm();
     String message = "";
-    if (!interpreter.call_frame().arguments.is_empty() && !interpreter.call_frame().arguments[0].is_undefined()) {
-        message = interpreter.call_frame().arguments[0].to_string(global_object());
-        if (interpreter.exception())
+    if (!vm.call_frame().arguments.is_empty() && !vm.call_frame().arguments[0].is_undefined()) {
+        message = vm.call_frame().arguments[0].to_string(global_object());
+        if (vm.exception())
             return {};
     }
     return Error::create(global_object(), "Error", message);
@@ -77,9 +78,9 @@ Value ErrorConstructor::construct(Interpreter& interpreter, Function&)
     ConstructorName::~ConstructorName() { }                                                              \
     Value ConstructorName::call()                                                                        \
     {                                                                                                    \
-        return construct(interpreter(), *this);                                                          \
+        return construct(*this);                                                                         \
     }                                                                                                    \
-    Value ConstructorName::construct(Interpreter&, Function&)                                            \
+    Value ConstructorName::construct(Function&)                                                          \
     {                                                                                                    \
         String message = "";                                                                             \
         if (!vm().call_frame().arguments.is_empty() && !vm().call_frame().arguments[0].is_undefined()) { \

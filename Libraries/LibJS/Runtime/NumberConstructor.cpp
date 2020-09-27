@@ -72,7 +72,7 @@ Value NumberConstructor::call()
     return vm().argument(0).to_number(global_object());
 }
 
-Value NumberConstructor::construct(Interpreter&, Function&)
+Value NumberConstructor::construct(Function&)
 {
     double number = 0;
     if (vm().argument_count()) {
