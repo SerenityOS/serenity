@@ -26,7 +26,6 @@
 
 #include <LibGUI/DisplayLink.h>
 #include <LibGUI/MessageBox.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Timer.h>
@@ -86,6 +85,7 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
 {
     // We should not be here if there's no JS wrapper for the Window object.
     ASSERT(wrapper());
+    auto& vm = wrapper()->vm();
 
     // NOTE: This protector pointer keeps the timer alive until the end of this function no matter what.
     NonnullRefPtr protector(timer);
@@ -94,10 +94,9 @@ void Window::timer_did_fire(Badge<Timer>, Timer& timer)
         m_timers.remove(timer.id());
     }
 
-    auto& interpreter = document().interpreter();
-    (void)interpreter.call(timer.callback(), wrapper());
-    if (interpreter.exception())
-        interpreter.vm().clear_exception();
+    (void)vm.call(timer.callback(), wrapper());
+    if (vm.exception())
+        vm.clear_exception();
 }
 
 i32 Window::allocate_timer_id(Badge<Timer>)
@@ -122,11 +121,11 @@ i32 Window::request_animation_frame(JS::Function& callback)
 
     i32 link_id = GUI::DisplayLink::register_callback([handle = make_handle(&callback)](i32 link_id) {
         auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
-        auto& interpreter = function.interpreter();
+        auto& vm = function.vm();
         fake_timestamp += 10;
-        (void)interpreter.call(function, {}, JS::Value(fake_timestamp));
-        if (interpreter.exception())
-            interpreter.vm().clear_exception();
+        (void)vm.call(function, {}, JS::Value(fake_timestamp));
+        if (vm.exception())
+            vm.clear_exception();
         GUI::DisplayLink::unregister_callback(link_id);
     });
 
