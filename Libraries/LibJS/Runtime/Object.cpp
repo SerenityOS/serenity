@@ -189,13 +189,13 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
 
         for (size_t i = 0; i < str.length(); ++i) {
             if (kind == PropertyKind::Key) {
-                properties_array->define_property(i, js_string(interpreter(), String::number(i)));
+                properties_array->define_property(i, js_string(vm(), String::number(i)));
             } else if (kind == PropertyKind::Value) {
-                properties_array->define_property(i, js_string(interpreter(), String::format("%c", str[i])));
+                properties_array->define_property(i, js_string(vm(), String::format("%c", str[i])));
             } else {
                 auto* entry_array = Array::create(global_object());
-                entry_array->define_property(0, js_string(interpreter(), String::number(i)));
-                entry_array->define_property(1, js_string(interpreter(), String::format("%c", str[i])));
+                entry_array->define_property(0, js_string(vm(), String::number(i)));
+                entry_array->define_property(1, js_string(vm(), String::format("%c", str[i])));
                 properties_array->define_property(i, entry_array);
             }
             if (vm().exception())
@@ -212,12 +212,12 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
             continue;
 
         if (kind == PropertyKind::Key) {
-            properties_array->define_property(property_index, js_string(interpreter(), String::number(entry.index())));
+            properties_array->define_property(property_index, js_string(vm(), String::number(entry.index())));
         } else if (kind == PropertyKind::Value) {
             properties_array->define_property(property_index, value_and_attributes.value);
         } else {
             auto* entry_array = Array::create(global_object());
-            entry_array->define_property(0, js_string(interpreter(), String::number(entry.index())));
+            entry_array->define_property(0, js_string(vm(), String::number(entry.index())));
             entry_array->define_property(1, value_and_attributes.value);
             properties_array->define_property(property_index, entry_array);
         }
@@ -358,7 +358,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
     if (is_accessor_property) {
         if (descriptor.has_property("value") || descriptor.has_property("writable")) {
             if (throw_exceptions)
-                interpreter().vm().throw_exception<TypeError>(global_object(), ErrorType::AccessorValueOrWritable);
+                vm().throw_exception<TypeError>(global_object(), ErrorType::AccessorValueOrWritable);
             return false;
         }
 
@@ -375,14 +375,14 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         if (getter.is_function()) {
             getter_function = &getter.as_function();
         } else if (!getter.is_undefined()) {
-            interpreter().vm().throw_exception<TypeError>(global_object(), ErrorType::AccessorBadField, "get");
+            vm().throw_exception<TypeError>(global_object(), ErrorType::AccessorBadField, "get");
             return false;
         }
 
         if (setter.is_function()) {
             setter_function = &setter.as_function();
         } else if (!setter.is_undefined()) {
-            interpreter().vm().throw_exception<TypeError>(global_object(), ErrorType::AccessorBadField, "set");
+            vm().throw_exception<TypeError>(global_object(), ErrorType::AccessorBadField, "set");
             return false;
         }
 
@@ -465,7 +465,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         dbg() << "Disallow define_property of non-extensible object";
 #endif
         if (throw_exceptions && interpreter().in_strict_mode())
-            interpreter().vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_name.to_display_string().characters());
+            vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_name.to_display_string().characters());
         return false;
     }
 
@@ -499,7 +499,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         dbg() << "Disallow reconfig of non-configurable property";
 #endif
         if (throw_exceptions)
-            interpreter().vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string().characters());
+            vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string().characters());
         return false;
     }
 
@@ -837,17 +837,17 @@ Value Object::to_primitive(Value::PreferredType preferred_type) const
 
 Value Object::to_string() const
 {
+    auto& vm = this->vm();
     auto to_string_property = get("toString");
     if (to_string_property.is_function()) {
         auto& to_string_function = to_string_property.as_function();
-        auto& interpreter = const_cast<Object*>(this)->interpreter();
-        auto to_string_result = interpreter.call(to_string_function, const_cast<Object*>(this));
+        auto to_string_result = vm.call(to_string_function, const_cast<Object*>(this));
         if (to_string_result.is_object())
-            interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::Convert, "object", "string");
-        if (interpreter.exception())
+            vm.throw_exception<TypeError>(global_object(), ErrorType::Convert, "object", "string");
+        if (vm.exception())
             return {};
         auto* string = to_string_result.to_primitive_string(global_object());
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
         return string;
     }
@@ -856,15 +856,15 @@ Value Object::to_string() const
 
 Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments)
 {
-    auto& interpreter = this->interpreter();
+    auto& vm = this->vm();
     auto property = get(property_name).value_or(js_undefined());
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     if (!property.is_function()) {
-        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, property.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, property.to_string_without_side_effects().characters());
         return {};
     }
-    return interpreter.call(property.as_function(), this, move(arguments));
+    return vm.call(property.as_function(), this, move(arguments));
 }
 
 Value Object::call_native_property_getter(Object* this_object, Value property) const
