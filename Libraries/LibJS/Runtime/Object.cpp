@@ -392,7 +392,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
               << "setter=" << setter.to_string_without_side_effects() << "}";
 #endif
 
-        return define_property(property_name, Accessor::create(interpreter(), getter_function, setter_function), attributes, throw_exceptions);
+        return define_property(property_name, Accessor::create(vm(), getter_function, setter_function), attributes, throw_exceptions);
     }
 
     auto value = descriptor.get("value");
@@ -438,7 +438,7 @@ bool Object::define_accessor(const PropertyName& property_name, Function& getter
             accessor = &existing_property.as_accessor();
     }
     if (!accessor) {
-        accessor = Accessor::create(interpreter(), nullptr, nullptr);
+        accessor = Accessor::create(vm(), nullptr, nullptr);
         bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
         if (vm().exception())
             return {};
