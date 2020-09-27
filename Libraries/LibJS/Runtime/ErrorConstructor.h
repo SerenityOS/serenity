@@ -40,7 +40,7 @@ public:
     virtual ~ErrorConstructor() override;
 
     virtual Value call() override;
-    virtual Value construct(Interpreter&, Function& new_target) override;
+    virtual Value construct(Function& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }
@@ -55,7 +55,7 @@ private:
         virtual void initialize(GlobalObject&) override;                                          \
         virtual ~ConstructorName() override;                                                      \
         virtual Value call() override;                                                            \
-        virtual Value construct(Interpreter&, Function& new_target) override;                     \
+        virtual Value construct(Function& new_target) override;                                   \
                                                                                                   \
     private:                                                                                      \
         virtual bool has_constructor() const override { return true; }                            \

@@ -63,7 +63,7 @@ Value NativeFunction::call()
     return m_native_function(vm(), global_object());
 }
 
-Value NativeFunction::construct(Interpreter&, Function&)
+Value NativeFunction::construct(Function&)
 {
     return {};
 }

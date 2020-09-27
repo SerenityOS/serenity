@@ -159,13 +159,13 @@ DateConstructor::~DateConstructor()
 
 Value DateConstructor::call()
 {
-    auto date = construct(interpreter(), *this);
+    auto date = construct(*this);
     if (!date.is_object())
         return {};
     return js_string(heap(), static_cast<Date&>(date.as_object()).string());
 }
 
-Value DateConstructor::construct(Interpreter&, Function&)
+Value DateConstructor::construct(Function&)
 {
     if (vm().argument_count() == 0) {
         struct timeval tv;

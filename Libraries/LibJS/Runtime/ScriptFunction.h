@@ -45,7 +45,7 @@ public:
     const Vector<FunctionNode::Parameter>& parameters() const { return m_parameters; };
 
     virtual Value call() override;
-    virtual Value construct(Interpreter&, Function& new_target) override;
+    virtual Value construct(Function& new_target) override;
 
     virtual const FlyString& name() const override { return m_name; };
     void set_name(const FlyString& name) { m_name = name; };

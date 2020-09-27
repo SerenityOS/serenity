@@ -58,13 +58,13 @@ XMLHttpRequestConstructor::~XMLHttpRequestConstructor()
 
 JS::Value XMLHttpRequestConstructor::call()
 {
-    return construct(interpreter(), *this);
+    return construct(*this);
 }
 
-JS::Value XMLHttpRequestConstructor::construct(JS::Interpreter& interpreter, Function&)
+JS::Value XMLHttpRequestConstructor::construct(Function&)
 {
     auto& window = static_cast<WindowObject&>(global_object());
-    return interpreter.heap().allocate<XMLHttpRequestWrapper>(window, window, XMLHttpRequest::create(window.impl()));
+    return heap().allocate<XMLHttpRequestWrapper>(window, window, XMLHttpRequest::create(window.impl()));
 }
 
 }

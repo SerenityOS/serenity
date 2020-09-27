@@ -55,22 +55,23 @@ Value ProxyConstructor::call()
     return {};
 }
 
-Value ProxyConstructor::construct(Interpreter& interpreter, Function&)
+Value ProxyConstructor::construct(Function&)
 {
-    if (interpreter.argument_count() < 2) {
-        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyTwoArguments);
+    auto& vm = this->vm();
+    if (vm.argument_count() < 2) {
+        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyTwoArguments);
         return {};
     }
 
-    auto target = interpreter.argument(0);
-    auto handler = interpreter.argument(1);
+    auto target = vm.argument(0);
+    auto handler = vm.argument(1);
 
     if (!target.is_object()) {
-        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects().characters());
         return {};
     }
     if (!handler.is_object()) {
-        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects().characters());
         return {};
     }
     return ProxyObject::create(global_object(), target.as_object(), handler.as_object());
