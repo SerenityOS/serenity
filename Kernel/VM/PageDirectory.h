@@ -40,9 +40,12 @@ class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static NonnullRefPtr<PageDirectory> create_for_userspace(Process& process, const RangeAllocator* parent_range_allocator = nullptr)
+    static RefPtr<PageDirectory> create_for_userspace(Process& process, const RangeAllocator* parent_range_allocator = nullptr)
     {
-        return adopt(*new PageDirectory(process, parent_range_allocator));
+        auto page_directory = adopt(*new PageDirectory(process, parent_range_allocator));
+        if (!page_directory->process())
+            return {};
+        return page_directory;
     }
     static NonnullRefPtr<PageDirectory> create_kernel_page_directory() { return adopt(*new PageDirectory); }
     static RefPtr<PageDirectory> find_by_cr3(u32);

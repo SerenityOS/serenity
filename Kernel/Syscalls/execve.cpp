@@ -284,11 +284,15 @@ KResultOr<Process::LoadResult> Process::load(NonnullRefPtr<FileDescription> main
     NonnullOwnPtrVector<Region> old_regions;
 
     {
+        auto page_directory = PageDirectory::create_for_userspace(*this);
+        if (!page_directory)
+            return KResult(-ENOMEM);
+
         // Need to make sure we don't swap contexts in the middle
         ScopedCritical critical;
         old_page_directory = move(m_page_directory);
         old_regions = move(m_regions);
-        m_page_directory = PageDirectory::create_for_userspace(*this);
+        m_page_directory = page_directory.release_nonnull();
     }
 
     ArmedScopeGuard rollback_regions_guard([&]() {
