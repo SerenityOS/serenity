@@ -74,7 +74,6 @@ PageDirectory::PageDirectory()
 }
 
 PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_range_allocator)
-    : m_process(&process)
 {
     ScopedSpinLock lock(s_mm_lock);
     if (parent_range_allocator) {
@@ -87,9 +86,17 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
 
     // Set up a userspace page directory
     m_directory_table = MM.allocate_user_physical_page();
+    if (!m_directory_table)
+        return;
     m_directory_pages[0] = MM.allocate_user_physical_page();
+    if (!m_directory_pages[0])
+        return;
     m_directory_pages[1] = MM.allocate_user_physical_page();
+    if (!m_directory_pages[1])
+        return;
     m_directory_pages[2] = MM.allocate_user_physical_page();
+    if (!m_directory_pages[2])
+        return;
     // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=0xc0000000)
     m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
 
@@ -135,6 +142,9 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     auto* new_pd = MM.quickmap_pd(*this, 0);
     memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
 
+    // If we got here, we successfully created it. Set m_process now
+    m_process = &process;
+
     cr3_map().set(cr3(), this);
 }
 
@@ -144,7 +154,8 @@ PageDirectory::~PageDirectory()
     dbg() << "MM: ~PageDirectory K" << this;
 #endif
     ScopedSpinLock lock(s_mm_lock);
-    cr3_map().remove(cr3());
+    if (m_process)
+        cr3_map().remove(cr3());
 }
 
 }
