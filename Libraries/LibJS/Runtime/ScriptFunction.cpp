@@ -130,7 +130,7 @@ Value ScriptFunction::call(Interpreter& interpreter)
         arguments.append({ parameter.name, value });
         interpreter.current_environment()->set(parameter.name, { value, DeclarationKind::Var });
     }
-    return interpreter.vm().execute_statement(global_object(), m_body, arguments, ScopeType::Function);
+    return interpreter.execute_statement(global_object(), m_body, arguments, ScopeType::Function);
 }
 
 Value ScriptFunction::construct(Interpreter& interpreter, Function&)

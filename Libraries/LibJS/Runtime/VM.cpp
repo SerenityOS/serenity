@@ -132,70 +132,6 @@ Symbol* VM::get_global_symbol(const String& description)
     return new_global_symbol;
 }
 
-bool VM::in_strict_mode() const
-{
-    if (m_scope_stack.is_empty())
-        return true;
-    return m_scope_stack.last().scope_node->in_strict_mode();
-}
-
-void VM::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type, GlobalObject& global_object)
-{
-    for (auto& declaration : scope_node.functions()) {
-        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment());
-        set_variable(declaration.name(), function, global_object);
-    }
-
-    if (scope_type == ScopeType::Function) {
-        m_scope_stack.append({ scope_type, scope_node, false });
-        return;
-    }
-
-    HashMap<FlyString, Variable> scope_variables_with_declaration_kind;
-    scope_variables_with_declaration_kind.ensure_capacity(16);
-
-    for (auto& declaration : scope_node.variables()) {
-        for (auto& declarator : declaration.declarations()) {
-            if (scope_node.is_program()) {
-                global_object.put(declarator.id().string(), js_undefined());
-                if (exception())
-                    return;
-            } else {
-                scope_variables_with_declaration_kind.set(declarator.id().string(), { js_undefined(), declaration.declaration_kind() });
-            }
-        }
-    }
-
-    for (auto& argument : arguments) {
-        scope_variables_with_declaration_kind.set(argument.name, { argument.value, DeclarationKind::Var });
-    }
-
-    bool pushed_lexical_environment = false;
-
-    if (!scope_variables_with_declaration_kind.is_empty()) {
-        auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(global_object, move(scope_variables_with_declaration_kind), current_environment());
-        m_call_stack.last().environment = block_lexical_environment;
-        pushed_lexical_environment = true;
-    }
-
-    m_scope_stack.append({ scope_type, scope_node, pushed_lexical_environment });
-}
-
-void VM::exit_scope(const ScopeNode& scope_node)
-{
-    while (!m_scope_stack.is_empty()) {
-        auto popped_scope = m_scope_stack.take_last();
-        if (popped_scope.pushed_environment)
-            m_call_stack.last().environment = m_call_stack.last().environment->parent();
-        if (popped_scope.scope_node.ptr() == &scope_node)
-            break;
-    }
-
-    // If we unwind all the way, just reset m_unwind_until so that future "return" doesn't break.
-    if (m_scope_stack.is_empty())
-        m_unwind_until = ScopeType::None;
-}
-
 void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_object, bool first_assignment)
 {
     if (m_call_stack.size()) {
@@ -247,36 +183,6 @@ Reference VM::get_reference(const FlyString& name)
         }
     }
     return { Reference::GlobalVariable, name };
-}
-
-Value VM::execute_statement(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
-{
-    if (!statement.is_scope_node())
-        return statement.execute(interpreter(), global_object);
-
-    auto& block = static_cast<const ScopeNode&>(statement);
-    enter_scope(block, move(arguments), scope_type, global_object);
-
-    if (block.children().is_empty())
-        m_last_value = js_undefined();
-
-    for (auto& node : block.children()) {
-        m_last_value = node.execute(interpreter(), global_object);
-        if (should_unwind()) {
-            if (!block.label().is_null() && should_unwind_until(ScopeType::Breakable, block.label()))
-                stop_unwind();
-            break;
-        }
-    }
-
-    bool did_return = m_unwind_until == ScopeType::Function;
-
-    if (m_unwind_until == scope_type)
-        m_unwind_until = ScopeType::None;
-
-    exit_scope(block);
-
-    return did_return ? m_last_value : js_undefined();
 }
 
 Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject& global_object)

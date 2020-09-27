@@ -112,7 +112,8 @@ public:
         return m_call_stack.last();
     }
     void pop_call_frame() { m_call_stack.take_last(); }
-    const CallFrame& call_frame() { return m_call_stack.last(); }
+    CallFrame& call_frame() { return m_call_stack.last(); }
+    const CallFrame& call_frame() const { return m_call_stack.last(); }
     const Vector<CallFrame>& call_stack() const { return m_call_stack; }
     Vector<CallFrame>& call_stack() { return m_call_stack; }
 
@@ -153,6 +154,7 @@ public:
     }
 
     Value last_value() const { return m_last_value; }
+    void set_last_value(Badge<Interpreter>, Value value) { m_last_value = value; }
 
     bool underscore_is_last_value() const { return m_underscore_is_last_value; }
     void set_underscore_is_last_value(bool b) { m_underscore_is_last_value = b; }
@@ -171,13 +173,12 @@ public:
     }
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 
+    ScopeType unwind_until() const { return m_unwind_until; }
+
     Value get_variable(const FlyString& name, GlobalObject&);
     void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false);
 
     Reference get_reference(const FlyString& name);
-
-    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
-    void exit_scope(const ScopeNode&);
 
     template<typename T, typename... Args>
     void throw_exception(GlobalObject& global_object, Args&&... args)
@@ -197,8 +198,6 @@ public:
         return throw_exception(global_object, T::create(global_object, String::format(type.message(), forward<Args>(args)...)));
     }
 
-    Value execute_statement(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
-
     Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject&);
 
     String join_arguments() const;
@@ -215,7 +214,6 @@ private:
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;
 
-    Vector<ScopeFrame> m_scope_stack;
     Vector<CallFrame> m_call_stack;
 
     Value m_last_value;

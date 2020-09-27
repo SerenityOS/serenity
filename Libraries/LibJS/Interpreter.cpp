@@ -106,4 +106,91 @@ Value Interpreter::call_internal(Function& function, Value this_value, Optional<
     return result;
 }
 
+void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type, GlobalObject& global_object)
+{
+    for (auto& declaration : scope_node.functions()) {
+        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment());
+        vm().set_variable(declaration.name(), function, global_object);
+    }
+
+    if (scope_type == ScopeType::Function) {
+        m_scope_stack.append({ scope_type, scope_node, false });
+        return;
+    }
+
+    HashMap<FlyString, Variable> scope_variables_with_declaration_kind;
+    scope_variables_with_declaration_kind.ensure_capacity(16);
+
+    for (auto& declaration : scope_node.variables()) {
+        for (auto& declarator : declaration.declarations()) {
+            if (scope_node.is_program()) {
+                global_object.put(declarator.id().string(), js_undefined());
+                if (exception())
+                    return;
+            } else {
+                scope_variables_with_declaration_kind.set(declarator.id().string(), { js_undefined(), declaration.declaration_kind() });
+            }
+        }
+    }
+
+    for (auto& argument : arguments) {
+        scope_variables_with_declaration_kind.set(argument.name, { argument.value, DeclarationKind::Var });
+    }
+
+    bool pushed_lexical_environment = false;
+
+    if (!scope_variables_with_declaration_kind.is_empty()) {
+        auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(global_object, move(scope_variables_with_declaration_kind), current_environment());
+        vm().call_stack().last().environment = block_lexical_environment;
+        pushed_lexical_environment = true;
+    }
+
+    m_scope_stack.append({ scope_type, scope_node, pushed_lexical_environment });
+}
+
+void Interpreter::exit_scope(const ScopeNode& scope_node)
+{
+    while (!m_scope_stack.is_empty()) {
+        auto popped_scope = m_scope_stack.take_last();
+        if (popped_scope.pushed_environment)
+            vm().call_frame().environment = vm().call_frame().environment->parent();
+        if (popped_scope.scope_node.ptr() == &scope_node)
+            break;
+    }
+
+    // If we unwind all the way, just reset m_unwind_until so that future "return" doesn't break.
+    if (m_scope_stack.is_empty())
+        vm().unwind(ScopeType::None);
+}
+
+Value Interpreter::execute_statement(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
+{
+    if (!statement.is_scope_node())
+        return statement.execute(*this, global_object);
+
+    auto& block = static_cast<const ScopeNode&>(statement);
+    enter_scope(block, move(arguments), scope_type, global_object);
+
+    if (block.children().is_empty())
+        vm().set_last_value({}, js_undefined());
+
+    for (auto& node : block.children()) {
+        vm().set_last_value({}, node.execute(*this, global_object));
+        if (vm().should_unwind()) {
+            if (!block.label().is_null() && vm().should_unwind_until(ScopeType::Breakable, block.label()))
+                vm().stop_unwind();
+            break;
+        }
+    }
+
+    bool did_return = vm().unwind_until() == ScopeType::Function;
+
+    if (vm().unwind_until() == scope_type)
+        vm().unwind(ScopeType::None);
+
+    exit_scope(block);
+
+    return did_return ? vm().last_value() : js_undefined();
+}
+
 }
