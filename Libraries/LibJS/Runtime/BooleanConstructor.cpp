@@ -49,9 +49,9 @@ BooleanConstructor::~BooleanConstructor()
 {
 }
 
-Value BooleanConstructor::call(Interpreter& interpreter)
+Value BooleanConstructor::call()
 {
-    return Value(interpreter.argument(0).to_boolean());
+    return Value(vm().argument(0).to_boolean());
 }
 
 Value BooleanConstructor::construct(Interpreter& interpreter, Function&)

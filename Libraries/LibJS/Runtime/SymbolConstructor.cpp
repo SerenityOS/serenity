@@ -56,11 +56,11 @@ SymbolConstructor::~SymbolConstructor()
 {
 }
 
-Value SymbolConstructor::call(Interpreter& interpreter)
+Value SymbolConstructor::call()
 {
-    if (!interpreter.argument_count())
-        return js_symbol(interpreter, "", false);
-    return js_symbol(interpreter, interpreter.argument(0).to_string(interpreter), false);
+    if (!vm().argument_count())
+        return js_symbol(heap(), "", false);
+    return js_symbol(heap(), vm().argument(0).to_string(interpreter()), false);
 }
 
 Value SymbolConstructor::construct(Interpreter& interpreter, Function&)

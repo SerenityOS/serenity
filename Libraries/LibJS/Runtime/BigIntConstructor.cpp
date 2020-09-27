@@ -54,20 +54,20 @@ BigIntConstructor::~BigIntConstructor()
 {
 }
 
-Value BigIntConstructor::call(Interpreter& interpreter)
+Value BigIntConstructor::call()
 {
-    auto primitive = interpreter.argument(0).to_primitive(interpreter, Value::PreferredType::Number);
-    if (interpreter.exception())
+    auto primitive = vm().argument(0).to_primitive(Value::PreferredType::Number);
+    if (vm().exception())
         return {};
     if (primitive.is_number()) {
         if (!primitive.is_integer()) {
-            interpreter.vm().throw_exception<RangeError>(global_object(), ErrorType::BigIntIntArgument);
+            vm().throw_exception<RangeError>(global_object(), ErrorType::BigIntIntArgument);
             return {};
         }
-        return js_bigint(interpreter, Crypto::SignedBigInteger { primitive.as_i32() });
+        return js_bigint(heap(), Crypto::SignedBigInteger { primitive.as_i32() });
     }
-    auto* bigint = interpreter.argument(0).to_bigint(interpreter);
-    if (interpreter.exception())
+    auto* bigint = vm().argument(0).to_bigint(global_object());
+    if (vm().exception())
         return {};
     return bigint;
 }

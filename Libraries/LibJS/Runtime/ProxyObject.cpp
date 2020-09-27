@@ -460,36 +460,36 @@ void ProxyObject::visit_children(Cell::Visitor& visitor)
     visitor.visit(&m_handler);
 }
 
-Value ProxyObject::call(Interpreter& interpreter)
+Value ProxyObject::call()
 {
     if (!is_function()) {
-        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, Value(this).to_string_without_side_effects().characters());
+        vm().throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, Value(this).to_string_without_side_effects().characters());
         return {};
     }
     if (m_is_revoked) {
-        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
+        vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return {};
     }
     auto trap = m_handler.get("apply");
-    if (interpreter.exception())
+    if (vm().exception())
         return {};
     if (trap.is_empty() || trap.is_undefined() || trap.is_null())
-        return static_cast<Function&>(m_target).call(interpreter);
+        return static_cast<Function&>(m_target).call();
     if (!trap.is_function()) {
-        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "apply");
+        vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "apply");
         return {};
     }
-    MarkedValueList arguments(interpreter.heap());
+    MarkedValueList arguments(heap());
     arguments.append(Value(&m_target));
     arguments.append(Value(&m_handler));
     // FIXME: Pass global object
-    auto arguments_array = Array::create(interpreter.global_object());
-    interpreter.vm().for_each_argument([&](auto& argument) {
+    auto arguments_array = Array::create(global_object());
+    vm().for_each_argument([&](auto& argument) {
         arguments_array->indexed_properties().append(argument);
     });
     arguments.append(arguments_array);
 
-    return interpreter.call(trap.as_function(), Value(&m_handler), move(arguments));
+    return vm().call(trap.as_function(), Value(&m_handler), move(arguments));
 }
 
 Value ProxyObject::construct(Interpreter& interpreter, Function& new_target)

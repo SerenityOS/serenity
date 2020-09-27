@@ -41,6 +41,7 @@
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -203,7 +204,7 @@ bool Value::to_boolean() const
     }
 }
 
-Value Value::to_primitive(Interpreter&, PreferredType preferred_type) const
+Value Value::to_primitive(PreferredType preferred_type) const
 {
     if (is_object())
         return as_object().to_primitive(preferred_type);
@@ -237,7 +238,7 @@ Object* Value::to_object(Interpreter& interpreter, GlobalObject& global_object) 
 
 Value Value::to_numeric(Interpreter& interpreter) const
 {
-    auto primitive = to_primitive(interpreter, Value::PreferredType::Number);
+    auto primitive = to_primitive(Value::PreferredType::Number);
     if (interpreter.exception())
         return {};
     if (primitive.is_bigint())
@@ -287,37 +288,38 @@ Value Value::to_number(Interpreter& interpreter) const
     }
 }
 
-BigInt* Value::to_bigint(Interpreter& interpreter) const
+BigInt* Value::to_bigint(GlobalObject& global_object) const
 {
-    auto primitive = to_primitive(interpreter, PreferredType::Number);
-    if (interpreter.exception())
+    auto& vm = global_object.vm();
+    auto primitive = to_primitive(PreferredType::Number);
+    if (vm.exception())
         return nullptr;
     switch (primitive.type()) {
     case Type::Undefined:
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "undefined", "BigInt");
+        vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "undefined", "BigInt");
         return nullptr;
     case Type::Null:
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "null", "BigInt");
+        vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "null", "BigInt");
         return nullptr;
     case Type::Boolean: {
         auto value = primitive.as_bool() ? 1 : 0;
-        return js_bigint(interpreter, Crypto::SignedBigInteger { value });
+        return js_bigint(vm.heap(), Crypto::SignedBigInteger { value });
     }
     case Type::BigInt:
         return &primitive.as_bigint();
     case Type::Number:
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "number", "BigInt");
+        vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
         return {};
     case Type::String: {
         auto& string = primitive.as_string().string();
         if (!is_valid_bigint_value(string)) {
-            interpreter.vm().throw_exception<SyntaxError>(interpreter.global_object(), ErrorType::BigIntInvalidValue, string.characters());
+            vm.throw_exception<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string.characters());
             return {};
         }
-        return js_bigint(interpreter, Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
+        return js_bigint(vm.heap(), Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
     }
     case Type::Symbol:
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "symbol", "BigInt");
+        vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
         return {};
     default:
         ASSERT_NOT_REACHED();
@@ -564,10 +566,10 @@ Value unsigned_right_shift(Interpreter& interpreter, Value lhs, Value rhs)
 
 Value add(Interpreter& interpreter, Value lhs, Value rhs)
 {
-    auto lhs_primitive = lhs.to_primitive(interpreter);
+    auto lhs_primitive = lhs.to_primitive();
     if (interpreter.exception())
         return {};
-    auto rhs_primitive = rhs.to_primitive(interpreter);
+    auto rhs_primitive = rhs.to_primitive();
     if (interpreter.exception())
         return {};
 
@@ -873,10 +875,10 @@ bool abstract_eq(Interpreter& interpreter, Value lhs, Value rhs)
         return abstract_eq(interpreter, lhs, rhs.to_number(interpreter));
 
     if ((lhs.is_string() || lhs.is_number() || lhs.is_bigint() || lhs.is_symbol()) && rhs.is_object())
-        return abstract_eq(interpreter, lhs, rhs.to_primitive(interpreter));
+        return abstract_eq(interpreter, lhs, rhs.to_primitive());
 
     if (lhs.is_object() && (rhs.is_string() || rhs.is_number() || lhs.is_bigint() || rhs.is_symbol()))
-        return abstract_eq(interpreter, lhs.to_primitive(interpreter), rhs);
+        return abstract_eq(interpreter, lhs.to_primitive(), rhs);
 
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
         if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
@@ -898,17 +900,17 @@ TriState abstract_relation(Interpreter& interpreter, bool left_first, Value lhs,
     Value y_primitive;
 
     if (left_first) {
-        x_primitive = lhs.to_primitive(interpreter, Value::PreferredType::Number);
+        x_primitive = lhs.to_primitive(Value::PreferredType::Number);
         if (interpreter.exception())
             return {};
-        y_primitive = rhs.to_primitive(interpreter, Value::PreferredType::Number);
+        y_primitive = rhs.to_primitive(Value::PreferredType::Number);
         if (interpreter.exception())
             return {};
     } else {
-        y_primitive = lhs.to_primitive(interpreter, Value::PreferredType::Number);
+        y_primitive = lhs.to_primitive(Value::PreferredType::Number);
         if (interpreter.exception())
             return {};
-        x_primitive = rhs.to_primitive(interpreter, Value::PreferredType::Number);
+        x_primitive = rhs.to_primitive(Value::PreferredType::Number);
         if (interpreter.exception())
             return {};
     }

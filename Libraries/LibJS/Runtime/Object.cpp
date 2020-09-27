@@ -870,20 +870,20 @@ Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueLi
 Value Object::call_native_property_getter(Object* this_object, Value property) const
 {
     ASSERT(property.is_native_property());
-    auto& call_frame = interpreter().vm().push_call_frame();
+    auto& call_frame = vm().push_call_frame();
     call_frame.this_value = this_object;
     auto result = property.as_native_property().get(interpreter(), global_object());
-    interpreter().vm().pop_call_frame();
+    vm().pop_call_frame();
     return result;
 }
 
 void Object::call_native_property_setter(Object* this_object, Value property, Value value) const
 {
     ASSERT(property.is_native_property());
-    auto& call_frame = interpreter().vm().push_call_frame();
+    auto& call_frame = vm().push_call_frame();
     call_frame.this_value = this_object;
     property.as_native_property().set(interpreter(), global_object(), value);
-    interpreter().vm().pop_call_frame();
+    vm().pop_call_frame();
 }
 
 }

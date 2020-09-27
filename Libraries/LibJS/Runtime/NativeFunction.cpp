@@ -58,9 +58,9 @@ NativeFunction::~NativeFunction()
 {
 }
 
-Value NativeFunction::call(Interpreter& interpreter)
+Value NativeFunction::call()
 {
-    return m_native_function(interpreter, global_object());
+    return m_native_function(interpreter(), global_object());
 }
 
 Value NativeFunction::construct(Interpreter&, Function&)

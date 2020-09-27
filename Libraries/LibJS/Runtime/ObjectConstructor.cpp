@@ -64,14 +64,14 @@ ObjectConstructor::~ObjectConstructor()
 {
 }
 
-Value ObjectConstructor::call(Interpreter&)
+Value ObjectConstructor::call()
 {
     return Object::create_empty(global_object());
 }
 
-Value ObjectConstructor::construct(Interpreter& interpreter, Function&)
+Value ObjectConstructor::construct(Interpreter&, Function&)
 {
-    return call(interpreter);
+    return call();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)

@@ -65,11 +65,11 @@ NumberConstructor::~NumberConstructor()
 {
 }
 
-Value NumberConstructor::call(Interpreter& interpreter)
+Value NumberConstructor::call()
 {
-    if (!interpreter.argument_count())
+    if (!vm().argument_count())
         return Value(0);
-    return interpreter.argument(0).to_number(interpreter);
+    return vm().argument(0).to_number(interpreter());
 }
 
 Value NumberConstructor::construct(Interpreter& interpreter, Function&)

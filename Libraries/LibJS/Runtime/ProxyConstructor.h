@@ -38,7 +38,7 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~ProxyConstructor() override;
 
-    virtual Value call(Interpreter&) override;
+    virtual Value call() override;
     virtual Value construct(Interpreter&, Function& new_target) override;
 
 private:

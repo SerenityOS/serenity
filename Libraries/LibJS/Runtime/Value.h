@@ -242,11 +242,11 @@ public:
 
     String to_string(Interpreter&) const;
     PrimitiveString* to_primitive_string(Interpreter&);
-    Value to_primitive(Interpreter&, PreferredType preferred_type = PreferredType::Default) const;
+    Value to_primitive(PreferredType preferred_type = PreferredType::Default) const;
     Object* to_object(Interpreter&, GlobalObject&) const;
     Value to_numeric(Interpreter&) const;
     Value to_number(Interpreter&) const;
-    BigInt* to_bigint(Interpreter&) const;
+    BigInt* to_bigint(GlobalObject&) const;
     double to_double(Interpreter&) const;
     i32 to_i32(Interpreter&) const;
     size_t to_size_t(Interpreter&) const;

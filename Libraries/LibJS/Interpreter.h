@@ -58,6 +58,8 @@ public:
         return interpreter;
     }
 
+    static NonnullOwnPtr<Interpreter> create_with_existing_global_object(GlobalObject&);
+
     template<typename... Args>
     [[nodiscard]] ALWAYS_INLINE Value call(Function& function, Value this_value, Args... args)
     {
@@ -110,7 +112,10 @@ public:
 private:
     explicit Interpreter(VM&);
 
-    [[nodiscard]] Value call_internal(Function&, Value this_value, Optional<MarkedValueList>);
+    [[nodiscard]] Value call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
+    {
+        return vm().call(function, this_value, move(arguments));
+    }
 
     NonnullRefPtr<VM> m_vm;
 

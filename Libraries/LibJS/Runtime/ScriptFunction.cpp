@@ -106,9 +106,19 @@ LexicalEnvironment* ScriptFunction::create_environment()
     return environment;
 }
 
-Value ScriptFunction::call(Interpreter& interpreter)
+Value ScriptFunction::call()
 {
-    auto& argument_values = interpreter.call_frame().arguments;
+    OwnPtr<Interpreter> local_interpreter;
+    Interpreter* interpreter = vm().interpreter_if_exists();
+
+    if (!interpreter) {
+        local_interpreter = Interpreter::create_with_existing_global_object(global_object());
+        interpreter = local_interpreter.ptr();
+    }
+
+    VM::InterpreterExecutionScope scope(*interpreter);
+
+    auto& argument_values = vm().call_frame().arguments;
     ArgumentVector arguments;
     for (size_t i = 0; i < m_parameters.size(); ++i) {
         auto parameter = parameters()[i];
@@ -122,24 +132,24 @@ Value ScriptFunction::call(Interpreter& interpreter)
             if (i < argument_values.size() && !argument_values[i].is_undefined()) {
                 value = argument_values[i];
             } else if (parameter.default_value) {
-                value = parameter.default_value->execute(interpreter, global_object());
-                if (interpreter.exception())
+                value = parameter.default_value->execute(*interpreter, global_object());
+                if (vm().exception())
                     return {};
             }
         }
         arguments.append({ parameter.name, value });
-        interpreter.current_environment()->set(parameter.name, { value, DeclarationKind::Var });
+        vm().current_environment()->set(parameter.name, { value, DeclarationKind::Var });
     }
-    return interpreter.execute_statement(global_object(), m_body, arguments, ScopeType::Function);
+    return interpreter->execute_statement(global_object(), m_body, arguments, ScopeType::Function);
 }
 
-Value ScriptFunction::construct(Interpreter& interpreter, Function&)
+Value ScriptFunction::construct(Interpreter&, Function&)
 {
     if (m_is_arrow_function) {
-        interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name.characters());
+        vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name.characters());
         return {};
     }
-    return call(interpreter);
+    return call();
 }
 
 JS_DEFINE_NATIVE_GETTER(ScriptFunction::length_getter)

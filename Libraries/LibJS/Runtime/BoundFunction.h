@@ -38,7 +38,7 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~BoundFunction();
 
-    virtual Value call(Interpreter& interpreter) override;
+    virtual Value call() override;
 
     virtual Value construct(Interpreter&, Function& new_target) override;
 
