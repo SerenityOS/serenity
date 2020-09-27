@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define PARSE_ASSERT(x)                                                   \
     if (!(x)) {                                                           \
