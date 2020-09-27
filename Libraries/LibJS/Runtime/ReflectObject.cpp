@@ -38,7 +38,7 @@ static Object* get_target_object_from(Interpreter& interpreter, const String& na
 {
     auto target = interpreter.argument(0);
     if (!target.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ReflectArgumentMustBeAnObject, name.characters());
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::ReflectArgumentMustBeAnObject, name.characters());
         return nullptr;
     }
     return static_cast<Object*>(&target.as_object());
@@ -48,7 +48,7 @@ static Function* get_target_function_from(Interpreter& interpreter, const String
 {
     auto target = interpreter.argument(0);
     if (!target.is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ReflectArgumentMustBeAFunction, name.characters());
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::ReflectArgumentMustBeAFunction, name.characters());
         return nullptr;
     }
     return &target.as_function();
@@ -57,7 +57,7 @@ static Function* get_target_function_from(Interpreter& interpreter, const String
 static void prepare_arguments_list(Interpreter& interpreter, Value value, MarkedValueList* arguments)
 {
     if (!value.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ReflectBadArgumentsList);
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::ReflectBadArgumentsList);
         return;
     }
     auto& arguments_list = value.as_object();
@@ -130,12 +130,12 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
         auto new_target_value = interpreter.argument(2);
         if (!new_target_value.is_function()
             || (new_target_value.as_object().is_native_function() && !static_cast<NativeFunction&>(new_target_value.as_object()).has_constructor())) {
-            interpreter.throw_exception<TypeError>(ErrorType::ReflectBadNewTarget);
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ReflectBadNewTarget);
             return {};
         }
         new_target = &new_target_value.as_function();
     }
-    return interpreter.construct(*target, *new_target, move(arguments), global_object);
+    return interpreter.vm().construct(*target, *new_target, move(arguments), global_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
@@ -144,7 +144,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
     if (!target)
         return {};
     if (!interpreter.argument(2).is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ReflectBadDescriptorArgument);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ReflectBadDescriptorArgument);
         return {};
     }
     auto property_key = StringOrSymbol::from_value(interpreter, interpreter.argument(1));
@@ -268,7 +268,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set_prototype_of)
         return {};
     auto prototype_value = interpreter.argument(1);
     if (!prototype_value.is_object() && !prototype_value.is_null()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeWrongType);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
         return {};
     }
     Object* prototype = nullptr;

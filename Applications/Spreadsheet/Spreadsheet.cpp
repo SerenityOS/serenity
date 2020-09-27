@@ -164,7 +164,7 @@ JS::Value Sheet::evaluate(const StringView& source, Cell* on_behalf_of)
         return exc;
     }
 
-    auto value = interpreter().last_value();
+    auto value = interpreter().vm().last_value();
     if (value.is_empty())
         return JS::js_undefined();
     return value;

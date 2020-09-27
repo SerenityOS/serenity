@@ -192,14 +192,14 @@ String JSONObject::serialize_json_property(Interpreter& interpreter, StringifySt
         return serialize_json_object(interpreter, state, value.as_object());
     }
     if (value.is_bigint())
-        interpreter.throw_exception<TypeError>(ErrorType::JsonBigInt);
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::JsonBigInt);
     return {};
 }
 
 String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyState& state, Object& object)
 {
     if (state.seen_objects.contains(&object)) {
-        interpreter.throw_exception<TypeError>(ErrorType::JsonCircular);
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::JsonCircular);
         return {};
     }
 
@@ -282,7 +282,7 @@ String JSONObject::serialize_json_object(Interpreter& interpreter, StringifyStat
 String JSONObject::serialize_json_array(Interpreter& interpreter, StringifyState& state, Object& object)
 {
     if (state.seen_objects.contains(&object)) {
-        interpreter.throw_exception<TypeError>(ErrorType::JsonCircular);
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::JsonCircular);
         return {};
     }
 
@@ -394,7 +394,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 
     auto json = JsonValue::from_string(string);
     if (!json.has_value()) {
-        interpreter.throw_exception<SyntaxError>(ErrorType::JsonMalformed);
+        interpreter.vm().throw_exception<SyntaxError>(global_object, ErrorType::JsonMalformed);
         return {};
     }
     Value result = parse_json_value(interpreter, global_object, json.value());

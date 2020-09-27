@@ -106,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 {
     if (interpreter.argument_count() < 2) {
-        interpreter.throw_exception<TypeError>(ErrorType::ObjectSetPrototypeOfTwoArgs);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfTwoArgs);
         return {};
     }
     auto* object = interpreter.argument(0).to_object(interpreter, global_object);
@@ -119,12 +119,12 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
     } else if (prototype_value.is_object()) {
         prototype = &prototype_value.as_object();
     } else {
-        interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeWrongType);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
         return {};
     }
     if (!object->set_prototype(prototype)) {
         if (!interpreter.exception())
-            interpreter.throw_exception<TypeError>(ErrorType::ObjectSetPrototypeOfReturnedFalse);
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
         return {};
     }
     return object;
@@ -145,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
         return argument;
     if (!argument.as_object().prevent_extensions()) {
         if (!interpreter.exception())
-            interpreter.throw_exception<TypeError>(ErrorType::ObjectPreventExtensionsReturnedFalse);
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPreventExtensionsReturnedFalse);
         return {};
     }
     return argument;
@@ -165,11 +165,11 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property_)
 {
     if (!interpreter.argument(0).is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Object argument");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Object argument");
         return {};
     }
     if (!interpreter.argument(2).is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Descriptor argument");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Descriptor argument");
         return {};
     }
     auto& object = interpreter.argument(0).as_object();
@@ -180,9 +180,9 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property_)
     if (!object.define_property(property_key, descriptor)) {
         if (!interpreter.exception()) {
             if (object.is_proxy_object()) {
-                interpreter.throw_exception<TypeError>(ErrorType::ObjectDefinePropertyReturnedFalse);
+                interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectDefinePropertyReturnedFalse);
             } else {
-                interpreter.throw_exception<TypeError>(ErrorType::NonExtensibleDefine, property_key.to_display_string().characters());
+                interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NonExtensibleDefine, property_key.to_display_string().characters());
             }
         }
         return {};
@@ -198,7 +198,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ConvertUndefinedToObject);
         return {};
     }
 
@@ -212,7 +212,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ConvertUndefinedToObject);
         return {};
     }
     auto* obj_arg = interpreter.argument(0).to_object(interpreter, global_object);
@@ -225,7 +225,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
     if (!interpreter.argument_count()) {
-        interpreter.throw_exception<TypeError>(ErrorType::ConvertUndefinedToObject);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ConvertUndefinedToObject);
         return {};
     }
     auto* obj_arg = interpreter.argument(0).to_object(interpreter, global_object);

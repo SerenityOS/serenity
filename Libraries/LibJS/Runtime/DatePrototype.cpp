@@ -42,7 +42,7 @@ static Date* typed_this(Interpreter& interpreter, GlobalObject& global_object)
     if (!this_object)
         return nullptr;
     if (!this_object->is_date()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Date");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Date");
         return nullptr;
     }
     return static_cast<Date*>(this_object);

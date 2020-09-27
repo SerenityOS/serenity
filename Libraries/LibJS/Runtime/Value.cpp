@@ -163,7 +163,7 @@ String Value::to_string(Interpreter& interpreter) const
     case Type::String:
         return m_value.as_string->string();
     case Type::Symbol:
-        interpreter.throw_exception<TypeError>(ErrorType::Convert, "symbol", "string");
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "symbol", "string");
         return {};
     case Type::BigInt:
         return m_value.as_bigint->big_integer().to_base10();
@@ -215,7 +215,7 @@ Object* Value::to_object(Interpreter& interpreter, GlobalObject& global_object) 
     switch (m_type) {
     case Type::Undefined:
     case Type::Null:
-        interpreter.throw_exception<TypeError>(ErrorType::ToObjectNullOrUndef);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
         return nullptr;
     case Type::Boolean:
         return BooleanObject::create(global_object, m_value.as_bool);
@@ -271,10 +271,10 @@ Value Value::to_number(Interpreter& interpreter) const
         return Value(parsed_double);
     }
     case Type::Symbol:
-        interpreter.throw_exception<TypeError>(ErrorType::Convert, "symbol", "number");
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "symbol", "number");
         return {};
     case Type::BigInt:
-        interpreter.throw_exception<TypeError>(ErrorType::Convert, "BigInt", "number");
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "BigInt", "number");
         return {};
     case Type::Object: {
         auto primitive = m_value.as_object->to_primitive(PreferredType::Number);
@@ -294,10 +294,10 @@ BigInt* Value::to_bigint(Interpreter& interpreter) const
         return nullptr;
     switch (primitive.type()) {
     case Type::Undefined:
-        interpreter.throw_exception<TypeError>(ErrorType::Convert, "undefined", "BigInt");
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "undefined", "BigInt");
         return nullptr;
     case Type::Null:
-        interpreter.throw_exception<TypeError>(ErrorType::Convert, "null", "BigInt");
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "null", "BigInt");
         return nullptr;
     case Type::Boolean: {
         auto value = primitive.as_bool() ? 1 : 0;
@@ -306,18 +306,18 @@ BigInt* Value::to_bigint(Interpreter& interpreter) const
     case Type::BigInt:
         return &primitive.as_bigint();
     case Type::Number:
-        interpreter.throw_exception<TypeError>(ErrorType::Convert, "number", "BigInt");
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "number", "BigInt");
         return {};
     case Type::String: {
         auto& string = primitive.as_string().string();
         if (!is_valid_bigint_value(string)) {
-            interpreter.throw_exception<SyntaxError>(ErrorType::BigIntInvalidValue, string.characters());
+            interpreter.vm().throw_exception<SyntaxError>(interpreter.global_object(), ErrorType::BigIntInvalidValue, string.characters());
             return {};
         }
         return js_bigint(interpreter, Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
     }
     case Type::Symbol:
-        interpreter.throw_exception<TypeError>(ErrorType::Convert, "symbol", "BigInt");
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::Convert, "symbol", "BigInt");
         return {};
     default:
         ASSERT_NOT_REACHED();
@@ -416,7 +416,7 @@ Value bitwise_and(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_and(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise AND");
     return {};
 }
 
@@ -439,7 +439,7 @@ Value bitwise_or(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_or(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise OR");
     return {};
 }
 
@@ -462,7 +462,7 @@ Value bitwise_xor(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().bitwise_xor(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "bitwise XOR");
     return {};
 }
 
@@ -518,7 +518,7 @@ Value left_shift(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "left-shift");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "left-shift");
     return {};
 }
 
@@ -539,7 +539,7 @@ Value right_shift(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         TODO();
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "right-shift");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "right-shift");
     return {};
 }
 
@@ -558,7 +558,7 @@ Value unsigned_right_shift(Interpreter& interpreter, Value lhs, Value rhs)
             return lhs_numeric;
         return Value((unsigned)lhs_numeric.as_double() >> (i32)rhs_numeric.as_double());
     }
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperator, "unsigned right-shift");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperator, "unsigned right-shift");
     return {};
 }
 
@@ -594,7 +594,7 @@ Value add(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() + rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().plus(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "addition");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "addition");
     return {};
 }
 
@@ -610,7 +610,7 @@ Value sub(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() - rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "subtraction");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "subtraction");
     return {};
 }
 
@@ -626,7 +626,7 @@ Value mul(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() * rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().multiplied_by(rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "multiplication");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "multiplication");
     return {};
 }
 
@@ -642,7 +642,7 @@ Value div(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(lhs_numeric.as_double() / rhs_numeric.as_double());
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).quotient);
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "division");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "division");
     return {};
 }
 
@@ -664,7 +664,7 @@ Value mod(Interpreter& interpreter, Value lhs, Value rhs)
     }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, lhs_numeric.as_bigint().big_integer().divided_by(rhs_numeric.as_bigint().big_integer()).remainder);
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "modulo");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "modulo");
     return {};
 }
 
@@ -680,14 +680,14 @@ Value exp(Interpreter& interpreter, Value lhs, Value rhs)
         return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
     if (both_bigint(lhs_numeric, rhs_numeric))
         return js_bigint(interpreter, Crypto::NumberTheory::Power(lhs_numeric.as_bigint().big_integer(), rhs_numeric.as_bigint().big_integer()));
-    interpreter.throw_exception<TypeError>(ErrorType::BigIntBadOperatorOtherType, "exponentiation");
+    interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::BigIntBadOperatorOtherType, "exponentiation");
     return {};
 }
 
 Value in(Interpreter& interpreter, Value lhs, Value rhs)
 {
     if (!rhs.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::InOperatorWithObject);
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::InOperatorWithObject);
         return {};
     }
     auto lhs_string = lhs.to_string(interpreter);
@@ -699,13 +699,13 @@ Value in(Interpreter& interpreter, Value lhs, Value rhs)
 Value instance_of(Interpreter& interpreter, Value lhs, Value rhs)
 {
     if (!rhs.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
         return {};
     }
     auto has_instance_method = rhs.as_object().get(interpreter.vm().well_known_symbol_has_instance());
     if (!has_instance_method.is_empty()) {
         if (!has_instance_method.is_function()) {
-            interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
+            interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
             return {};
         }
 
@@ -713,7 +713,7 @@ Value instance_of(Interpreter& interpreter, Value lhs, Value rhs)
     }
 
     if (!rhs.is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, rhs.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::NotAFunction, rhs.to_string_without_side_effects().characters());
         return {};
     }
     return ordinary_has_instance(interpreter, lhs, rhs);
@@ -739,7 +739,7 @@ Value ordinary_has_instance(Interpreter& interpreter, Value lhs, Value rhs)
         return {};
 
     if (!rhs_prototype.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects().characters());
         return {};
     }
     while (true) {

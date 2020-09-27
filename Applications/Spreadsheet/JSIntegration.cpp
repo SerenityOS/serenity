@@ -87,12 +87,12 @@ void SheetGlobalObject::initialize()
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 {
     if (interpreter.argument_count() != 1) {
-        interpreter.throw_exception<JS::TypeError>("Expected exactly one argument to parse_cell_name()");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to parse_cell_name()");
         return {};
     }
     auto name_value = interpreter.argument(0);
     if (!name_value.is_string()) {
-        interpreter.throw_exception<JS::TypeError>("Expected a String argument to parse_cell_name()");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, "Expected a String argument to parse_cell_name()");
         return {};
     }
     auto position = Sheet::parse_cell_name(name_value.as_string().string());
@@ -125,12 +125,12 @@ void WorkbookObject::initialize(JS::GlobalObject& global_object)
 JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
 {
     if (interpreter.argument_count() != 1) {
-        interpreter.throw_exception<JS::TypeError>("Expected exactly one argument to sheet()");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to sheet()");
         return {};
     }
     auto name_value = interpreter.argument(0);
     if (!name_value.is_string() && !name_value.is_number()) {
-        interpreter.throw_exception<JS::TypeError>("Expected a String or Number argument to sheet()");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, "Expected a String or Number argument to sheet()");
         return {};
     }
 
@@ -139,7 +139,7 @@ JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
         return {};
 
     if (!this_object->inherits("WorkbookObject")) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, "WorkbookObject");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WorkbookObject");
         return {};
     }
 

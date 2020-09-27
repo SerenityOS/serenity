@@ -32,7 +32,7 @@ namespace JS {
 Exception::Exception(Value value)
     : m_value(value)
 {
-    auto& call_stack = interpreter().call_stack();
+    auto& call_stack = vm().call_stack();
     for (ssize_t i = call_stack.size() - 1; i >= 0; --i) {
         auto function_name = call_stack[i].function_name;
         if (function_name.is_empty())

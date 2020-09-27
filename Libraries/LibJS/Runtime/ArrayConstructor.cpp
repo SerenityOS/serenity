@@ -67,7 +67,7 @@ Value ArrayConstructor::call(Interpreter& interpreter)
     if (interpreter.argument_count() == 1 && interpreter.argument(0).is_number()) {
         auto array_length_value = interpreter.argument(0);
         if (!array_length_value.is_integer() || array_length_value.as_i32() < 0) {
-            interpreter.throw_exception<TypeError>(ErrorType::ArrayInvalidLength);
+            interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::ArrayInvalidLength);
             return {};
         }
         auto* array = Array::create(global_object());

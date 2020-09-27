@@ -89,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     if (interpreter.exception())
         return {};
     if (raw.is_empty() || raw.is_undefined() || raw.is_null()) {
-        interpreter.throw_exception<TypeError>(ErrorType::StringRawCannotConvert, raw.is_null() ? "null" : "undefined");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::StringRawCannotConvert, raw.is_null() ? "null" : "undefined");
         return {};
     }
     if (!raw.is_array())

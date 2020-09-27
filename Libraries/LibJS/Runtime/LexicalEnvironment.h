@@ -87,6 +87,8 @@ public:
     Function* current_function() const { return m_current_function; }
     void set_current_function(Function& function) { m_current_function = &function; }
 
+    EnvironmentRecordType type() const { return m_environment_record_type; }
+
 private:
     virtual const char* class_name() const override { return "LexicalEnvironment"; }
     virtual void visit_children(Visitor&) override;

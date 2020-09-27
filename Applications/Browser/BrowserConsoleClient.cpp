@@ -41,7 +41,7 @@ namespace Browser {
 
 JS::Value BrowserConsoleClient::log()
 {
-    m_console_widget.print_html(interpreter().join_arguments());
+    m_console_widget.print_html(interpreter().vm().join_arguments());
     return JS::js_undefined();
 }
 
@@ -50,7 +50,7 @@ JS::Value BrowserConsoleClient::info()
     StringBuilder html;
     html.append("<span class=\"info\">");
     html.append("(i) ");
-    html.append(interpreter().join_arguments());
+    html.append(interpreter().vm().join_arguments());
     html.append("</span>");
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -61,7 +61,7 @@ JS::Value BrowserConsoleClient::debug()
     StringBuilder html;
     html.append("<span class=\"debug\">");
     html.append("(d) ");
-    html.append(interpreter().join_arguments());
+    html.append(interpreter().vm().join_arguments());
     html.append("</span>");
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -72,7 +72,7 @@ JS::Value BrowserConsoleClient::warn()
     StringBuilder html;
     html.append("<span class=\"warn\">");
     html.append("(w) ");
-    html.append(interpreter().join_arguments());
+    html.append(interpreter().vm().join_arguments());
     html.append("</span>");
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -83,7 +83,7 @@ JS::Value BrowserConsoleClient::error()
     StringBuilder html;
     html.append("<span class=\"error\">");
     html.append("(e) ");
-    html.append(interpreter().join_arguments());
+    html.append(interpreter().vm().join_arguments());
     html.append("</span>");
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -98,7 +98,7 @@ JS::Value BrowserConsoleClient::clear()
 JS::Value BrowserConsoleClient::trace()
 {
     StringBuilder html;
-    html.append(interpreter().join_arguments());
+    html.append(interpreter().vm().join_arguments());
     auto trace = get_trace();
     for (auto& function_name : trace) {
         if (function_name.is_empty())

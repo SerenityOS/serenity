@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     } else if (this_value.is_object() && this_value.as_object().is_number_object()) {
         number_value = static_cast<NumberObject&>(this_value.as_object()).value_of();
     } else {
-        interpreter.throw_exception<TypeError>(ErrorType::NumberIncompatibleThis, "toString");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NumberIncompatibleThis, "toString");
         return {};
     }
 
@@ -82,7 +82,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     }
 
     if (interpreter.exception() || radix < 2 || radix > 36) {
-        interpreter.throw_exception<RangeError>(ErrorType::InvalidRadix);
+        interpreter.vm().throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
         return {};
     }
 

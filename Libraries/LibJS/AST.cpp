@@ -86,7 +86,7 @@ static String get_function_name(Interpreter& interpreter, Value value)
 
 Value ScopeNode::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    return interpreter.execute_statement(global_object, *this);
+    return interpreter.vm().execute_statement(global_object, *this);
 }
 
 Value FunctionDeclaration::execute(Interpreter&, GlobalObject&) const
@@ -113,7 +113,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 
     if (m_callee->is_super_expression()) {
         // If we are calling super, |this| has not been initalized yet, and would not be meaningful to provide.
-        auto new_target = interpreter.get_new_target();
+        auto new_target = interpreter.vm().get_new_target();
         ASSERT(new_target.is_function());
         return { js_undefined(), new_target };
     }
@@ -125,7 +125,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         if (interpreter.exception())
             return {};
         if (is_super_property_lookup && (lookup_target.is_null() || lookup_target.is_undefined())) {
-            interpreter.throw_exception<TypeError>(ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects().characters());
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects().characters());
             return {};
         }
 
@@ -160,9 +160,9 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             } else {
                 expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
             }
-            interpreter.throw_exception<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects().characters(), call_type, expression_string.characters());
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects().characters(), call_type, expression_string.characters());
         } else {
-            interpreter.throw_exception<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects().characters(), call_type);
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IsNotA, callee.to_string_without_side_effects().characters(), call_type);
         }
         return {};
     }
@@ -192,17 +192,17 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     Object* new_object = nullptr;
     Value result;
     if (is_new_expression()) {
-        result = interpreter.construct(function, function, move(arguments), global_object);
+        result = interpreter.vm().construct(function, function, move(arguments), global_object);
         if (result.is_object())
             new_object = &result.as_object();
     } else if (m_callee->is_super_expression()) {
         auto* super_constructor = interpreter.current_environment()->current_function()->prototype();
         // FIXME: Functions should track their constructor kind.
         if (!super_constructor || !super_constructor->is_function()) {
-            interpreter.throw_exception<TypeError>(ErrorType::NotAConstructor, "Super constructor");
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
             return {};
         }
-        result = interpreter.construct(static_cast<Function&>(*super_constructor), function, move(arguments), global_object);
+        result = interpreter.vm().construct(static_cast<Function&>(*super_constructor), function, move(arguments), global_object);
         if (interpreter.exception())
             return {};
 
@@ -227,7 +227,7 @@ Value ReturnStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
     auto value = argument() ? argument()->execute(interpreter, global_object) : js_undefined();
     if (interpreter.exception())
         return {};
-    interpreter.unwind(ScopeType::Function);
+    interpreter.vm().unwind(ScopeType::Function);
     return value;
 }
 
@@ -238,10 +238,10 @@ Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object
         return {};
 
     if (predicate_result.to_boolean())
-        return interpreter.execute_statement(global_object, *m_consequent);
+        return interpreter.vm().execute_statement(global_object, *m_consequent);
 
     if (m_alternate)
-        return interpreter.execute_statement(global_object, *m_alternate);
+        return interpreter.vm().execute_statement(global_object, *m_alternate);
 
     return js_undefined();
 }
@@ -252,7 +252,7 @@ Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     while (m_test->execute(interpreter, global_object).to_boolean()) {
         if (interpreter.exception())
             return {};
-        last_value = interpreter.execute_statement(global_object, *m_body);
+        last_value = interpreter.vm().execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return {};
     }
@@ -266,7 +266,7 @@ Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_o
     do {
         if (interpreter.exception())
             return {};
-        last_value = interpreter.execute_statement(global_object, *m_body);
+        last_value = interpreter.vm().execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return {};
     } while (m_test->execute(interpreter, global_object).to_boolean());
@@ -283,12 +283,12 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         NonnullRefPtrVector<VariableDeclaration> decls;
         decls.append(*static_cast<const VariableDeclaration*>(m_init.ptr()));
         wrapper->add_variables(decls);
-        interpreter.enter_scope(*wrapper, {}, ScopeType::Block, global_object);
+        interpreter.vm().enter_scope(*wrapper, {}, ScopeType::Block, global_object);
     }
 
     auto wrapper_cleanup = ScopeGuard([&] {
         if (wrapper)
-            interpreter.exit_scope(*wrapper);
+            interpreter.vm().exit_scope(*wrapper);
     });
 
     Value last_value = js_undefined();
@@ -306,14 +306,14 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
                 return {};
             if (!test_result.to_boolean())
                 break;
-            last_value = interpreter.execute_statement(global_object, *m_body);
+            last_value = interpreter.vm().execute_statement(global_object, *m_body);
             if (interpreter.exception())
                 return {};
-            if (interpreter.should_unwind()) {
-                if (interpreter.should_unwind_until(ScopeType::Continuable, m_label)) {
-                    interpreter.stop_unwind();
-                } else if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
-                    interpreter.stop_unwind();
+            if (interpreter.vm().should_unwind()) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                    interpreter.vm().stop_unwind();
+                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                    interpreter.vm().stop_unwind();
                     break;
                 } else {
                     return js_undefined();
@@ -327,14 +327,14 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         }
     } else {
         while (true) {
-            last_value = interpreter.execute_statement(global_object, *m_body);
+            last_value = interpreter.vm().execute_statement(global_object, *m_body);
             if (interpreter.exception())
                 return {};
-            if (interpreter.should_unwind()) {
-                if (interpreter.should_unwind_until(ScopeType::Continuable, m_label)) {
-                    interpreter.stop_unwind();
-                } else if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
-                    interpreter.stop_unwind();
+            if (interpreter.vm().should_unwind()) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                    interpreter.vm().stop_unwind();
+                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                    interpreter.vm().stop_unwind();
                     break;
                 } else {
                     return js_undefined();
@@ -359,7 +359,7 @@ static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalO
         ASSERT(!variable_declaration->declarations().is_empty());
         if (variable_declaration->declaration_kind() != DeclarationKind::Var) {
             wrapper = create_ast_node<BlockStatement>();
-            interpreter.enter_scope(*wrapper, {}, ScopeType::Block, global_object);
+            interpreter.vm().enter_scope(*wrapper, {}, ScopeType::Block, global_object);
         }
         variable_declaration->execute(interpreter, global_object);
         variable_name = variable_declaration->declarations().first().id().string();
@@ -381,7 +381,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto variable_name = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
     auto wrapper_cleanup = ScopeGuard([&] {
         if (wrapper)
-            interpreter.exit_scope(*wrapper);
+            interpreter.vm().exit_scope(*wrapper);
     });
     auto last_value = js_undefined();
     auto rhs_result = m_rhs->execute(interpreter, global_object);
@@ -391,17 +391,17 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     while (object) {
         auto property_names = object->get_own_properties(*object, Object::PropertyKind::Key, true);
         for (auto& property_name : property_names.as_object().indexed_properties()) {
-            interpreter.set_variable(variable_name, property_name.value_and_attributes(object).value, global_object);
+            interpreter.vm().set_variable(variable_name, property_name.value_and_attributes(object).value, global_object);
             if (interpreter.exception())
                 return {};
-            last_value = interpreter.execute_statement(global_object, *m_body);
+            last_value = interpreter.vm().execute_statement(global_object, *m_body);
             if (interpreter.exception())
                 return {};
-            if (interpreter.should_unwind()) {
-                if (interpreter.should_unwind_until(ScopeType::Continuable, m_label)) {
-                    interpreter.stop_unwind();
-                } else if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
-                    interpreter.stop_unwind();
+            if (interpreter.vm().should_unwind()) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                    interpreter.vm().stop_unwind();
+                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                    interpreter.vm().stop_unwind();
                     break;
                 } else {
                     return js_undefined();
@@ -425,7 +425,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto variable_name = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
     auto wrapper_cleanup = ScopeGuard([&] {
         if (wrapper)
-            interpreter.exit_scope(*wrapper);
+            interpreter.vm().exit_scope(*wrapper);
     });
     auto last_value = js_undefined();
     auto rhs_result = m_rhs->execute(interpreter, global_object);
@@ -433,15 +433,15 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         return {};
 
     get_iterator_values(global_object, rhs_result, [&](Value value) {
-        interpreter.set_variable(variable_name, value, global_object);
-        last_value = interpreter.execute_statement(global_object, *m_body);
+        interpreter.vm().set_variable(variable_name, value, global_object);
+        last_value = interpreter.vm().execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return IterationDecision::Break;
-        if (interpreter.should_unwind()) {
-            if (interpreter.should_unwind_until(ScopeType::Continuable, m_label)) {
-                interpreter.stop_unwind();
-            } else if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
-                interpreter.stop_unwind();
+        if (interpreter.vm().should_unwind()) {
+            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                interpreter.vm().stop_unwind();
+            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                interpreter.vm().stop_unwind();
                 return IterationDecision::Break;
             } else {
                 return IterationDecision::Break;
@@ -453,7 +453,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     if (interpreter.exception())
         return {};
 
-    if (interpreter.should_unwind())
+    if (interpreter.vm().should_unwind())
         return js_undefined();
     return last_value;
 }
@@ -560,7 +560,7 @@ Reference Expression::to_reference(Interpreter&, GlobalObject&) const
 
 Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) const
 {
-    return interpreter.get_reference(string());
+    return interpreter.vm().get_reference(string());
 }
 
 Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
@@ -601,7 +601,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         // FIXME: standard recommends checking with is_unresolvable but it ALWAYS return false here
         if (reference.is_local_variable() || reference.is_global_variable()) {
             auto name = reference.name();
-            lhs_result = interpreter.get_variable(name.to_string(), global_object).value_or(js_undefined());
+            lhs_result = interpreter.vm().get_variable(name.to_string(), global_object).value_or(js_undefined());
             if (interpreter.exception())
                 return {};
         }
@@ -684,7 +684,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception())
             return {};
         if (!super_constructor.is_function() && !super_constructor.is_null()) {
-            interpreter.throw_exception<TypeError>(ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects().characters());
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects().characters());
             return {};
         }
         class_constructor->set_constructor_kind(Function::ConstructorKind::Derived);
@@ -712,7 +712,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         return {};
 
     if (!class_prototype.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, "Class prototype");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Class prototype");
         return {};
     }
     for (const auto& method : m_methods) {
@@ -1153,9 +1153,9 @@ void ForOfStatement::dump(int indent) const
 
 Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    auto value = interpreter.get_variable(string(), global_object);
+    auto value = interpreter.vm().get_variable(string(), global_object);
     if (value.is_empty()) {
-        interpreter.throw_exception<ReferenceError>(ErrorType::UnknownIdentifier, string().characters());
+        interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, string().characters());
         return {};
     }
     return value;
@@ -1180,7 +1180,7 @@ Value SpreadExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
 Value ThisExpression::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    return interpreter.resolve_this_binding();
+    return interpreter.vm().resolve_this_binding();
 }
 
 void ThisExpression::dump(int indent) const
@@ -1279,7 +1279,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         return {};
 
     if (reference.is_unresolvable()) {
-        interpreter.throw_exception<ReferenceError>(ErrorType::InvalidLeftHandAssignment);
+        interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
         return {};
     }
     update_function_name(rhs_result, get_function_name(interpreter, reference.name().to_value(interpreter)));
@@ -1410,7 +1410,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
                 return {};
             auto variable_name = declarator.id().string();
             update_function_name(initalizer_result, variable_name);
-            interpreter.set_variable(variable_name, initalizer_result, global_object, true);
+            interpreter.vm().set_variable(variable_name, initalizer_result, global_object, true);
         }
     }
     return js_undefined();
@@ -1723,7 +1723,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
     if (interpreter.exception())
         return {};
     if (!tag.is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, tag.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAFunction, tag.to_string_without_side_effects().characters());
         return {};
     }
     auto& tag_function = tag.as_function();
@@ -1793,12 +1793,12 @@ void ThrowStatement::dump(int indent) const
 
 Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.execute_statement(global_object, m_block, {}, ScopeType::Try);
+    interpreter.vm().execute_statement(global_object, m_block, {}, ScopeType::Try);
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
             interpreter.vm().clear_exception();
             ArgumentVector arguments { { m_handler->parameter(), exception->value() } };
-            interpreter.execute_statement(global_object, m_handler->body(), move(arguments));
+            interpreter.vm().execute_statement(global_object, m_handler->body(), move(arguments));
         }
     }
 
@@ -1807,14 +1807,14 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         // execute() the finalizer without an exception in our way.
         auto* previous_exception = interpreter.exception();
         interpreter.vm().clear_exception();
-        interpreter.stop_unwind();
+        interpreter.vm().stop_unwind();
         m_finalizer->execute(interpreter, global_object);
         // If we previously had an exception and the finalizer didn't
         // throw a new one, restore the old one.
         // FIXME: This will print debug output in throw_exception() for
         // a seconds time with INTERPRETER_DEBUG enabled.
         if (previous_exception && !interpreter.exception())
-            interpreter.throw_exception(previous_exception);
+            interpreter.vm().throw_exception(previous_exception);
     }
 
     return js_undefined();
@@ -1830,9 +1830,9 @@ Value CatchClause::execute(Interpreter&, GlobalObject&) const
 Value ThrowStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     auto value = m_argument->execute(interpreter, global_object);
-    if (interpreter.exception())
+    if (interpreter.vm().exception())
         return {};
-    interpreter.throw_exception(value);
+    interpreter.vm().throw_exception(global_object, value);
     return {};
 }
 
@@ -1858,9 +1858,9 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
             statement.execute(interpreter, global_object);
             if (interpreter.exception())
                 return {};
-            if (interpreter.should_unwind()) {
-                if (interpreter.should_unwind_until(ScopeType::Breakable, m_label)) {
-                    interpreter.stop_unwind();
+            if (interpreter.vm().should_unwind()) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                    interpreter.vm().stop_unwind();
                     return {};
                 }
                 return {};
@@ -1878,13 +1878,13 @@ Value SwitchCase::execute(Interpreter&, GlobalObject&) const
 
 Value BreakStatement::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.unwind(ScopeType::Breakable, m_target_label);
+    interpreter.vm().unwind(ScopeType::Breakable, m_target_label);
     return js_undefined();
 }
 
 Value ContinueStatement::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    interpreter.unwind(ScopeType::Continuable, m_target_label);
+    interpreter.vm().unwind(ScopeType::Continuable, m_target_label);
     return js_undefined();
 }
 

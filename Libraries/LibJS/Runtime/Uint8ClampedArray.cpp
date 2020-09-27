@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_GETTER(Uint8ClampedArray::length_getter)
     if (!this_object)
         return {};
     if (StringView(this_object->class_name()) != "Uint8ClampedArray") {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Uint8ClampedArray");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Uint8ClampedArray");
         return {};
     }
     return Value(static_cast<const Uint8ClampedArray*>(this_object)->length());

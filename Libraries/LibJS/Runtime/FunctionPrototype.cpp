@@ -66,7 +66,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
     auto& function = static_cast<Function&>(*this_object);
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     if (arg_array.is_null() || arg_array.is_undefined())
         return interpreter.call(function, this_arg);
     if (!arg_array.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::FunctionArgsNotObject);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::FunctionArgsNotObject);
         return {};
     }
     auto length_property = arg_array.as_object().get("length");
@@ -100,7 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
     auto& this_function = static_cast<Function&>(*this_object);
@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
     auto& function = static_cast<Function&>(*this_object);
@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
     String function_name = static_cast<Function*>(this_object)->name();
@@ -182,7 +182,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
     if (!this_object)
         return {};
     if (!this_object->is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotA, "Function");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
     return ordinary_has_instance(interpreter, interpreter.argument(0), this_object);

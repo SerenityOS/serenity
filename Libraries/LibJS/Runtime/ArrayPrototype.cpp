@@ -90,12 +90,12 @@ ArrayPrototype::~ArrayPrototype()
 static Function* callback_from_args(Interpreter& interpreter, const String& name)
 {
     if (interpreter.argument_count() < 1) {
-        interpreter.throw_exception<TypeError>(ErrorType::ArrayPrototypeOneArg, name.characters());
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::ArrayPrototypeOneArg, name.characters());
         return nullptr;
     }
     auto callback = interpreter.argument(0);
     if (!callback.is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAFunction, callback.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::NotAFunction, callback.to_string_without_side_effects().characters());
         return nullptr;
     }
     return &callback.as_function();
@@ -199,7 +199,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
     auto argument_count = interpreter.argument_count();
     auto new_length = length + argument_count;
     if (new_length > MAX_ARRAY_LIKE_INDEX) {
-        interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
         return {};
     }
     for (size_t i = 0; i < argument_count; ++i) {
@@ -474,7 +474,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce)
             start += 1;
         }
         if (!start_found) {
-            interpreter.throw_exception<TypeError>(ErrorType::ReduceNoInitial);
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ReduceNoInitial);
             return {};
         }
     }
@@ -527,7 +527,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
             start -= 1;
         }
         if (!start_found) {
-            interpreter.throw_exception<TypeError>(ErrorType::ReduceNoInitial);
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ReduceNoInitial);
             return {};
         }
     }
@@ -729,7 +729,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
     size_t new_length = initial_length + insert_count - actual_delete_count;
 
     if (new_length > MAX_ARRAY_LIKE_INDEX) {
-        interpreter.throw_exception<TypeError>(ErrorType::ArrayMaxSize);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
         return {};
     }
 

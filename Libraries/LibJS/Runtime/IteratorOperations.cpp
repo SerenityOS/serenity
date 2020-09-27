@@ -46,14 +46,14 @@ Object* get_iterator(GlobalObject& global_object, Value value, String hint, Valu
             return {};
     }
     if (!method.is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects().characters());
         return nullptr;
     }
     auto iterator = interpreter.call(method.as_function(), value);
     if (interpreter.exception())
         return {};
     if (!iterator.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotIterable, value.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects().characters());
         return nullptr;
     }
     return &iterator.as_object();
@@ -62,12 +62,13 @@ Object* get_iterator(GlobalObject& global_object, Value value, String hint, Valu
 Object* iterator_next(Object& iterator, Value value)
 {
     auto& interpreter = iterator.interpreter();
+    auto& global_object = iterator.global_object();
     auto next_method = iterator.get("next");
     if (interpreter.exception())
         return {};
 
     if (!next_method.is_function()) {
-        interpreter.throw_exception<TypeError>(ErrorType::IterableNextNotAFunction);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IterableNextNotAFunction);
         return nullptr;
     }
 
@@ -80,7 +81,7 @@ Object* iterator_next(Object& iterator, Value value)
     if (interpreter.exception())
         return {};
     if (!result.is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::IterableNextBadReturn);
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IterableNextBadReturn);
         return nullptr;
     }
 

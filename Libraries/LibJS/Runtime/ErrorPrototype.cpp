@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::name_getter)
     if (!this_object)
         return {};
     if (!this_object->is_error()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
         return {};
     }
     return js_string(interpreter, static_cast<const Error*>(this_object)->name());
@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_SETTER(ErrorPrototype::name_setter)
     if (!this_object)
         return;
     if (!this_object->is_error()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
         return;
     }
     auto name = value.to_string(interpreter);
@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::message_getter)
     if (!this_object)
         return {};
     if (!this_object->is_error()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAn, "Error");
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAn, "Error");
         return {};
     }
     return js_string(interpreter, static_cast<const Error*>(this_object)->message());
@@ -95,7 +95,7 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::message_getter)
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
     if (!interpreter.this_value(global_object).is_object()) {
-        interpreter.throw_exception<TypeError>(ErrorType::NotAnObject, interpreter.this_value(global_object).to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAnObject, interpreter.this_value(global_object).to_string_without_side_effects().characters());
         return {};
     }
     auto& this_object = interpreter.this_value(global_object).as_object();

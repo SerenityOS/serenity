@@ -506,7 +506,7 @@ void generate_implementation(const IDL::Interface& interface)
         out() << "    if (!this_object)";
         out() << "        return {};";
         out() << "    if (!this_object->inherits(\"" << wrapper_class << "\")) {";
-        out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << interface.fully_qualified_name << "\");";
+        out() << "        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, \"" << interface.fully_qualified_name << "\");";
         out() << "        return nullptr;";
         out() << "    }";
         out() << "    return &static_cast<" << wrapper_class << "*>(this_object)->impl();";
@@ -526,7 +526,7 @@ void generate_implementation(const IDL::Interface& interface)
             generate_return();
         } else if (parameter.type.name == "EventListener") {
             out() << "    if (!" << js_name << js_suffix << ".is_function()) {";
-            out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"Function\");";
+            out() << "        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, \"Function\");";
             generate_return();
             out() << "    }";
             out() << "    auto " << cpp_name << " = adopt(*new EventListener(JS::make_handle(&" << js_name << js_suffix << ".as_function())));";
@@ -535,7 +535,7 @@ void generate_implementation(const IDL::Interface& interface)
             out() << "    if (interpreter.exception())";
             generate_return();
             out() << "    if (!" << cpp_name << "_object->inherits(\"" << parameter.type.name << "Wrapper\")) {";
-            out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, \"" << parameter.type.name << "\");";
+            out() << "        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, \"" << parameter.type.name << "\");";
             generate_return();
             out() << "    }";
             out() << "    auto& " << cpp_name << " = static_cast<" << parameter.type.name << "Wrapper*>(" << cpp_name << "_object)->impl();";
@@ -658,9 +658,9 @@ void generate_implementation(const IDL::Interface& interface)
         if (function.length() > 0) {
             out() << "    if (interpreter.argument_count() < " << function.length() << ") {";
             if (function.length() == 1)
-                out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountOne, \"" << function.name << "\");";
+                out() << "        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, \"" << function.name << "\");";
             else
-                out() << "        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
+                out() << "        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::BadArgCountMany, \"" << function.name << "\", \"" << function.length() << "\");";
             out() << "        return {};";
             out() << "    }";
         }

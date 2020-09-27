@@ -92,7 +92,7 @@ ConsoleWidget::ConsoleWidget()
             auto hint = error.source_location_hint(js_source);
             if (!hint.is_empty())
                 output_html.append(String::format("<pre>%s</pre>", escape_html_entities(hint).characters()));
-            m_interpreter->throw_exception<JS::SyntaxError>(error.to_string());
+            m_interpreter->vm().throw_exception<JS::SyntaxError>(m_interpreter->global_object(), error.to_string());
         } else {
             m_interpreter->run(m_interpreter->global_object(), *program);
         }
@@ -106,7 +106,7 @@ ConsoleWidget::ConsoleWidget()
             return;
         }
 
-        print_html(JS::MarkupGenerator::html_from_value(m_interpreter->last_value()));
+        print_html(JS::MarkupGenerator::html_from_value(m_interpreter->vm().last_value()));
     };
 
     auto& clear_button = bottom_container.add<GUI::Button>();

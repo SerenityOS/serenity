@@ -84,7 +84,7 @@ Value FunctionConstructor::construct(Interpreter& interpreter, Function&)
     auto function_expression = parser.parse_function_node<FunctionExpression>();
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
-        interpreter.throw_exception<SyntaxError>(error.to_string());
+        interpreter.vm().throw_exception<SyntaxError>(global_object(), error.to_string());
         return {};
     }
     return function_expression->execute(interpreter, global_object());

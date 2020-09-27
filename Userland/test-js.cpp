@@ -260,7 +260,7 @@ static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& 
 
 static Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
 {
-    auto result = interpreter.get_variable("__TestResults__", interpreter.global_object());
+    auto result = interpreter.vm().get_variable("__TestResults__", interpreter.global_object());
     auto json_string = JS::JSONObject::stringify_impl(interpreter, interpreter.global_object(), result, JS::js_undefined(), JS::js_undefined());
 
     auto json = JsonValue::from_string(json_string);
@@ -310,7 +310,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     JSFileResult file_result { test_path.substring(m_test_root.length() + 1, test_path.length() - m_test_root.length() - 1) };
 
     // Collect logged messages
-    auto& arr = interpreter->get_variable("__UserOutput__", interpreter->global_object()).as_array();
+    auto& arr = interpreter->vm().get_variable("__UserOutput__", interpreter->global_object()).as_array();
     for (auto& entry : arr.indexed_properties()) {
         auto message = entry.value_and_attributes(&interpreter->global_object()).value;
         file_result.logged_messages.append(message.to_string_without_side_effects());
@@ -579,7 +579,6 @@ void TestRunner::print_test_results() const
 int main(int argc, char** argv)
 {
     bool print_times = false;
-
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDWAIT;

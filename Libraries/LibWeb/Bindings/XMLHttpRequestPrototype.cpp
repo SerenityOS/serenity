@@ -64,7 +64,7 @@ static XMLHttpRequest* impl_from(JS::Interpreter& interpreter, JS::GlobalObject&
     if (!this_object)
         return nullptr;
     if (StringView("XMLHttpRequestWrapper") != this_object->class_name()) {
-        interpreter.throw_exception<JS::TypeError>(JS::ErrorType::NotA, "XMLHttpRequest");
+        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "XMLHttpRequest");
         return nullptr;
     }
     return &static_cast<XMLHttpRequestWrapper*>(this_object)->impl();
