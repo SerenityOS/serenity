@@ -51,7 +51,6 @@ private:
 };
 
 Symbol* js_symbol(Heap&, String description, bool is_global);
-Symbol* js_symbol(Interpreter&, String description, bool is_global);
 Symbol* js_symbol(VM&, String description, bool is_global);
 
 }
