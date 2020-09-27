@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -32,8 +31,7 @@ namespace JS {
 
 Error* Error::create(GlobalObject& global_object, const FlyString& name, const String& message)
 {
-    auto& interpreter = global_object.interpreter();
-    return interpreter.heap().allocate<Error>(global_object, name, message, *global_object.error_prototype());
+    return global_object.heap().allocate<Error>(global_object, name, message, *global_object.error_prototype());
 }
 
 Error::Error(const FlyString& name, const String& message, Object& prototype)

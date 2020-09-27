@@ -25,7 +25,6 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Error.h>
@@ -35,8 +34,7 @@ namespace JS {
 
 Array* Array::create(GlobalObject& global_object)
 {
-    auto& interpreter = global_object.interpreter();
-    return interpreter.heap().allocate<Array>(global_object, *global_object.array_prototype());
+    return global_object.heap().allocate<Array>(global_object, *global_object.array_prototype());
 }
 
 Array::Array(Object& prototype)

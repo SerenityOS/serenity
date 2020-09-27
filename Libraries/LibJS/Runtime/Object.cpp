@@ -547,7 +547,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
         dbg() << "Disallow define_property of non-extensible object";
 #endif
         if (throw_exceptions && interpreter().in_strict_mode())
-            interpreter().vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_index);
+            vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_index);
         return false;
     }
 
@@ -566,7 +566,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
         dbg() << "Disallow reconfig of non-configurable property";
 #endif
         if (throw_exceptions)
-            interpreter().vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
+            vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
         return false;
     }
 
