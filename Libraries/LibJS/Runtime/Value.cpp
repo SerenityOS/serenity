@@ -32,7 +32,6 @@
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>

@@ -27,7 +27,6 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/DateTime.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 

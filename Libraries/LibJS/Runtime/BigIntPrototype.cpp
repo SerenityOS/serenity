@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
+#include <AK/Function.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BigIntPrototype.h>
 #include <LibJS/Runtime/Error.h>

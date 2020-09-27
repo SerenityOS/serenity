@@ -25,7 +25,6 @@
  */
 
 #include <LibJS/Heap/DeferGC.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Shape.h>
 

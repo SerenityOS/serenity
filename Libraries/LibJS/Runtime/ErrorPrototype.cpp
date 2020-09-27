@@ -26,7 +26,6 @@
 
 #include <AK/Function.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>

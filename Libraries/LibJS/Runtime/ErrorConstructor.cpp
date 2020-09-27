@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>

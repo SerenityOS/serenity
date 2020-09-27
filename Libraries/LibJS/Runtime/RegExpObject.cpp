@@ -26,7 +26,6 @@
 
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>

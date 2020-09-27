@@ -27,7 +27,6 @@
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ProxyPrototype.h>

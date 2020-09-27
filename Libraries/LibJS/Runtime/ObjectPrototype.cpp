@@ -27,7 +27,6 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Value.h>

@@ -25,7 +25,6 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>

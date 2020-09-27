@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/NonnullRefPtrVector.h>
 #include <LibWeb/DOM/Node.h>
 
 namespace Web::DOM {
