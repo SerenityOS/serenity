@@ -136,10 +136,10 @@ public:
         return StringOrSymbol(as_symbol());
     }
 
-    Value to_value(Interpreter& interpreter) const
+    Value to_value(VM& vm) const
     {
         if (is_string())
-            return js_string(interpreter, m_string);
+            return js_string(vm, m_string);
         if (is_number())
             return Value(m_number);
         if (is_symbol())

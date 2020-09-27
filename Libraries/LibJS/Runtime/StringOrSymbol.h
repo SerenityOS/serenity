@@ -99,10 +99,10 @@ public:
         ASSERT_NOT_REACHED();
     }
 
-    Value to_value(Interpreter& interpreter) const
+    Value to_value(VM& vm) const
     {
         if (is_string())
-            return js_string(interpreter, as_string());
+            return js_string(vm, as_string());
         if (is_symbol())
             return const_cast<Symbol*>(as_symbol());
         return {};
