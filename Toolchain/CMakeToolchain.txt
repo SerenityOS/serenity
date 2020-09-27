@@ -1,7 +1,7 @@
 set(CMAKE_SYSTEM_NAME Generic)
 
 if (NOT DEFINED ENV{SERENITY_ROOT})
-    message(FATAL_ERROR "SERENITY_ROOT not set. Please source Toolchain/BuildIt.sh.")
+    message(FATAL_ERROR "SERENITY_ROOT not set.")
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
