@@ -102,8 +102,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value)
 int Process::sys$detach_thread(pid_t tid)
 {
     REQUIRE_PROMISE(thread);
-    InterruptDisabler disabler;
-    auto* thread = Thread::from_tid(tid);
+    auto thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
 
@@ -118,8 +117,7 @@ int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
 {
     REQUIRE_PROMISE(thread);
 
-    InterruptDisabler disabler;
-    auto* thread = Thread::from_tid(tid);
+    auto thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
 
@@ -134,19 +132,13 @@ int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
         KResult try_join_result(KSuccess);
         auto result = current_thread->block<Thread::JoinBlocker>(nullptr, *thread, try_join_result, joinee_exit_value);
         if (result == Thread::BlockResult::NotBlocked) {
-            ASSERT_INTERRUPTS_DISABLED();
             if (try_join_result.is_error())
                 return try_join_result.error();
             break;
         }
-        if (result == Thread::BlockResult::InterruptedByDeath) {
-            ASSERT_INTERRUPTS_DISABLED();
-            break;
-        }
+        if (result == Thread::BlockResult::InterruptedByDeath)
+            return 0; // we're not going to return back to user mode
     }
-
-    // NOTE: 'thread' is very possibly deleted at this point. Clear it just to be safe.
-    thread = nullptr;
 
     if (exit_value && !copy_to_user(exit_value, &joinee_exit_value))
         return -EFAULT;
@@ -164,8 +156,7 @@ int Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, si
     if (name.length() > max_thread_name_size)
         return -EINVAL;
 
-    InterruptDisabler disabler;
-    auto* thread = Thread::from_tid(tid);
+    auto thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
 
@@ -179,15 +170,16 @@ int Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buff
     if (buffer_size == 0)
         return -EINVAL;
 
-    InterruptDisabler disabler;
-    auto* thread = Thread::from_tid(tid);
+    auto thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
 
-    if (thread->name().length() + 1 > (size_t)buffer_size)
+    // We must make a temporary copy here to avoid a race with sys$set_thread_name
+    auto thread_name = thread->name();
+    if (thread_name.length() + 1 > (size_t)buffer_size)
         return -ENAMETOOLONG;
 
-    if (!copy_to_user(buffer, thread->name().characters(), thread->name().length() + 1))
+    if (!copy_to_user(buffer, thread_name.characters(), thread_name.length() + 1))
         return -EFAULT;
     return 0;
 }
