@@ -86,7 +86,7 @@ static String get_function_name(Interpreter& interpreter, Value value)
 
 Value ScopeNode::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    return interpreter.vm().execute_statement(global_object, *this);
+    return interpreter.execute_statement(global_object, *this);
 }
 
 Value FunctionDeclaration::execute(Interpreter&, GlobalObject&) const
@@ -238,10 +238,10 @@ Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object
         return {};
 
     if (predicate_result.to_boolean())
-        return interpreter.vm().execute_statement(global_object, *m_consequent);
+        return interpreter.execute_statement(global_object, *m_consequent);
 
     if (m_alternate)
-        return interpreter.vm().execute_statement(global_object, *m_alternate);
+        return interpreter.execute_statement(global_object, *m_alternate);
 
     return js_undefined();
 }
@@ -252,7 +252,7 @@ Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     while (m_test->execute(interpreter, global_object).to_boolean()) {
         if (interpreter.exception())
             return {};
-        last_value = interpreter.vm().execute_statement(global_object, *m_body);
+        last_value = interpreter.execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return {};
     }
@@ -266,7 +266,7 @@ Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_o
     do {
         if (interpreter.exception())
             return {};
-        last_value = interpreter.vm().execute_statement(global_object, *m_body);
+        last_value = interpreter.execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return {};
     } while (m_test->execute(interpreter, global_object).to_boolean());
@@ -283,12 +283,12 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         NonnullRefPtrVector<VariableDeclaration> decls;
         decls.append(*static_cast<const VariableDeclaration*>(m_init.ptr()));
         wrapper->add_variables(decls);
-        interpreter.vm().enter_scope(*wrapper, {}, ScopeType::Block, global_object);
+        interpreter.enter_scope(*wrapper, {}, ScopeType::Block, global_object);
     }
 
     auto wrapper_cleanup = ScopeGuard([&] {
         if (wrapper)
-            interpreter.vm().exit_scope(*wrapper);
+            interpreter.exit_scope(*wrapper);
     });
 
     Value last_value = js_undefined();
@@ -306,7 +306,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
                 return {};
             if (!test_result.to_boolean())
                 break;
-            last_value = interpreter.vm().execute_statement(global_object, *m_body);
+            last_value = interpreter.execute_statement(global_object, *m_body);
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
@@ -327,7 +327,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         }
     } else {
         while (true) {
-            last_value = interpreter.vm().execute_statement(global_object, *m_body);
+            last_value = interpreter.execute_statement(global_object, *m_body);
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
@@ -359,7 +359,7 @@ static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalO
         ASSERT(!variable_declaration->declarations().is_empty());
         if (variable_declaration->declaration_kind() != DeclarationKind::Var) {
             wrapper = create_ast_node<BlockStatement>();
-            interpreter.vm().enter_scope(*wrapper, {}, ScopeType::Block, global_object);
+            interpreter.enter_scope(*wrapper, {}, ScopeType::Block, global_object);
         }
         variable_declaration->execute(interpreter, global_object);
         variable_name = variable_declaration->declarations().first().id().string();
@@ -381,7 +381,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto variable_name = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
     auto wrapper_cleanup = ScopeGuard([&] {
         if (wrapper)
-            interpreter.vm().exit_scope(*wrapper);
+            interpreter.exit_scope(*wrapper);
     });
     auto last_value = js_undefined();
     auto rhs_result = m_rhs->execute(interpreter, global_object);
@@ -394,7 +394,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
             interpreter.vm().set_variable(variable_name, property_name.value_and_attributes(object).value, global_object);
             if (interpreter.exception())
                 return {};
-            last_value = interpreter.vm().execute_statement(global_object, *m_body);
+            last_value = interpreter.execute_statement(global_object, *m_body);
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
@@ -425,7 +425,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     auto variable_name = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
     auto wrapper_cleanup = ScopeGuard([&] {
         if (wrapper)
-            interpreter.vm().exit_scope(*wrapper);
+            interpreter.exit_scope(*wrapper);
     });
     auto last_value = js_undefined();
     auto rhs_result = m_rhs->execute(interpreter, global_object);
@@ -434,7 +434,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     get_iterator_values(global_object, rhs_result, [&](Value value) {
         interpreter.vm().set_variable(variable_name, value, global_object);
-        last_value = interpreter.vm().execute_statement(global_object, *m_body);
+        last_value = interpreter.execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return IterationDecision::Break;
         if (interpreter.vm().should_unwind()) {
@@ -1793,12 +1793,12 @@ void ThrowStatement::dump(int indent) const
 
 Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    interpreter.vm().execute_statement(global_object, m_block, {}, ScopeType::Try);
+    interpreter.execute_statement(global_object, m_block, {}, ScopeType::Try);
     if (auto* exception = interpreter.exception()) {
         if (m_handler) {
             interpreter.vm().clear_exception();
             ArgumentVector arguments { { m_handler->parameter(), exception->value() } };
-            interpreter.vm().execute_statement(global_object, m_handler->body(), move(arguments));
+            interpreter.execute_statement(global_object, m_handler->body(), move(arguments));
         }
     }
 

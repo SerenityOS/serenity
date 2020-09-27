@@ -88,12 +88,24 @@ public:
     Console& console() { return m_console; }
     const Console& console() const { return m_console; }
 
-    bool in_strict_mode() const { return vm().in_strict_mode(); }
+    bool in_strict_mode() const
+    {
+        // FIXME: This implementation is bogus; strict mode is per-file or per-function, not per-block!
+        if (m_scope_stack.is_empty())
+            return true;
+        return m_scope_stack.last().scope_node->in_strict_mode();
+    }
+
     size_t argument_count() const { return vm().argument_count(); }
     Value argument(size_t index) const { return vm().argument(index); }
     Value this_value(Object& global_object) const { return vm().this_value(global_object); }
     LexicalEnvironment* current_environment() { return vm().current_environment(); }
     const CallFrame& call_frame() { return vm().call_frame(); }
+
+    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
+    void exit_scope(const ScopeNode&);
+
+    Value execute_statement(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
 
 private:
     explicit Interpreter(VM&);
@@ -105,6 +117,8 @@ private:
     Handle<Object> m_global_object;
 
     Console m_console;
+
+    Vector<ScopeFrame> m_scope_stack;
 };
 
 template<>
