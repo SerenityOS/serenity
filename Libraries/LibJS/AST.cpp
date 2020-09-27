@@ -471,15 +471,15 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
     switch (m_op) {
     case BinaryOp::Addition:
-        return add(interpreter, lhs_result, rhs_result);
+        return add(global_object, lhs_result, rhs_result);
     case BinaryOp::Subtraction:
-        return sub(interpreter, lhs_result, rhs_result);
+        return sub(global_object, lhs_result, rhs_result);
     case BinaryOp::Multiplication:
-        return mul(interpreter, lhs_result, rhs_result);
+        return mul(global_object, lhs_result, rhs_result);
     case BinaryOp::Division:
-        return div(interpreter, lhs_result, rhs_result);
+        return div(global_object, lhs_result, rhs_result);
     case BinaryOp::Modulo:
-        return mod(interpreter, lhs_result, rhs_result);
+        return mod(global_object, lhs_result, rhs_result);
     case BinaryOp::Exponentiation:
         return exp(global_object, lhs_result, rhs_result);
     case BinaryOp::TypedEquals:
@@ -487,31 +487,31 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     case BinaryOp::TypedInequals:
         return Value(!strict_eq(lhs_result, rhs_result));
     case BinaryOp::AbstractEquals:
-        return Value(abstract_eq(interpreter, lhs_result, rhs_result));
+        return Value(abstract_eq(global_object, lhs_result, rhs_result));
     case BinaryOp::AbstractInequals:
-        return Value(!abstract_eq(interpreter, lhs_result, rhs_result));
+        return Value(!abstract_eq(global_object, lhs_result, rhs_result));
     case BinaryOp::GreaterThan:
-        return greater_than(interpreter, lhs_result, rhs_result);
+        return greater_than(global_object, lhs_result, rhs_result);
     case BinaryOp::GreaterThanEquals:
-        return greater_than_equals(interpreter, lhs_result, rhs_result);
+        return greater_than_equals(global_object, lhs_result, rhs_result);
     case BinaryOp::LessThan:
-        return less_than(interpreter, lhs_result, rhs_result);
+        return less_than(global_object, lhs_result, rhs_result);
     case BinaryOp::LessThanEquals:
-        return less_than_equals(interpreter, lhs_result, rhs_result);
+        return less_than_equals(global_object, lhs_result, rhs_result);
     case BinaryOp::BitwiseAnd:
-        return bitwise_and(interpreter, lhs_result, rhs_result);
+        return bitwise_and(global_object, lhs_result, rhs_result);
     case BinaryOp::BitwiseOr:
-        return bitwise_or(interpreter, lhs_result, rhs_result);
+        return bitwise_or(global_object, lhs_result, rhs_result);
     case BinaryOp::BitwiseXor:
-        return bitwise_xor(interpreter, lhs_result, rhs_result);
+        return bitwise_xor(global_object, lhs_result, rhs_result);
     case BinaryOp::LeftShift:
-        return left_shift(interpreter, lhs_result, rhs_result);
+        return left_shift(global_object, lhs_result, rhs_result);
     case BinaryOp::RightShift:
-        return right_shift(interpreter, lhs_result, rhs_result);
+        return right_shift(global_object, lhs_result, rhs_result);
     case BinaryOp::UnsignedRightShift:
-        return unsigned_right_shift(interpreter, lhs_result, rhs_result);
+        return unsigned_right_shift(global_object, lhs_result, rhs_result);
     case BinaryOp::In:
-        return in(interpreter, lhs_result, rhs_result);
+        return in(global_object, lhs_result, rhs_result);
     case BinaryOp::InstanceOf:
         return instance_of(global_object, lhs_result, rhs_result);
     }
@@ -616,13 +616,13 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
     switch (m_op) {
     case UnaryOp::BitwiseNot:
-        return bitwise_not(interpreter, lhs_result);
+        return bitwise_not(global_object, lhs_result);
     case UnaryOp::Not:
         return Value(!lhs_result.to_boolean());
     case UnaryOp::Plus:
-        return unary_plus(interpreter, lhs_result);
+        return unary_plus(global_object, lhs_result);
     case UnaryOp::Minus:
-        return unary_minus(interpreter, lhs_result);
+        return unary_minus(global_object, lhs_result);
     case UnaryOp::Typeof:
         switch (lhs_result.type()) {
         case Value::Type::Empty:
@@ -1205,31 +1205,31 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = add(interpreter, lhs_result, rhs_result);
+        rhs_result = add(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::SubtractionAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = sub(interpreter, lhs_result, rhs_result);
+        rhs_result = sub(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::MultiplicationAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = mul(interpreter, lhs_result, rhs_result);
+        rhs_result = mul(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::DivisionAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = div(interpreter, lhs_result, rhs_result);
+        rhs_result = div(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::ModuloAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = mod(interpreter, lhs_result, rhs_result);
+        rhs_result = mod(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::ExponentiationAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
@@ -1241,37 +1241,37 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = bitwise_and(interpreter, lhs_result, rhs_result);
+        rhs_result = bitwise_and(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::BitwiseOrAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = bitwise_or(interpreter, lhs_result, rhs_result);
+        rhs_result = bitwise_or(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::BitwiseXorAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = bitwise_xor(interpreter, lhs_result, rhs_result);
+        rhs_result = bitwise_xor(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::LeftShiftAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = left_shift(interpreter, lhs_result, rhs_result);
+        rhs_result = left_shift(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::RightShiftAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = right_shift(interpreter, lhs_result, rhs_result);
+        rhs_result = right_shift(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::UnsignedRightShiftAssignment:
         lhs_result = m_lhs->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        rhs_result = unsigned_right_shift(interpreter, lhs_result, rhs_result);
+        rhs_result = unsigned_right_shift(global_object, lhs_result, rhs_result);
         break;
     }
     if (interpreter.exception())
