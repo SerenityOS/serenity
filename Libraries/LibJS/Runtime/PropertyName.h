@@ -40,14 +40,14 @@ public:
         Symbol,
     };
 
-    static PropertyName from_value(Interpreter& interpreter, Value value)
+    static PropertyName from_value(GlobalObject& global_object, Value value)
     {
         if (value.is_symbol())
             return &value.as_symbol();
         if (value.is_number())
             return value.as_i32();
         if (!value.is_empty())
-            return value.to_string(interpreter);
+            return value.to_string(global_object);
         return {};
     }
 

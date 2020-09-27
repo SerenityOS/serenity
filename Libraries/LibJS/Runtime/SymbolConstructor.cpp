@@ -60,7 +60,7 @@ Value SymbolConstructor::call()
 {
     if (!vm().argument_count())
         return js_symbol(heap(), "", false);
-    return js_symbol(heap(), vm().argument(0).to_string(interpreter()), false);
+    return js_symbol(heap(), vm().argument(0).to_string(global_object()), false);
 }
 
 Value SymbolConstructor::construct(Interpreter& interpreter, Function&)
@@ -72,10 +72,10 @@ Value SymbolConstructor::construct(Interpreter& interpreter, Function&)
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
     String description;
-    if (!interpreter.argument_count()) {
+    if (!vm.argument_count()) {
         description = "undefined";
     } else {
-        description = interpreter.argument(0).to_string(interpreter);
+        description = vm.argument(0).to_string(global_object);
     }
 
     return global_object.vm().get_global_symbol(description);
@@ -83,15 +83,15 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
-    auto argument = interpreter.argument(0);
+    auto argument = vm.argument(0);
     if (!argument.is_symbol()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotASymbol, argument.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotASymbol, argument.to_string_without_side_effects().characters());
         return {};
     }
 
     auto& symbol = argument.as_symbol();
     if (symbol.is_global())
-        return js_string(interpreter, symbol.description());
+        return js_string(vm, symbol.description());
 
     return js_undefined();
 }

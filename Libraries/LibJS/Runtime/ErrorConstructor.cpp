@@ -56,38 +56,38 @@ Value ErrorConstructor::construct(Interpreter& interpreter, Function&)
 {
     String message = "";
     if (!interpreter.call_frame().arguments.is_empty() && !interpreter.call_frame().arguments[0].is_undefined()) {
-        message = interpreter.call_frame().arguments[0].to_string(interpreter);
+        message = interpreter.call_frame().arguments[0].to_string(global_object());
         if (interpreter.exception())
             return {};
     }
     return Error::create(global_object(), "Error", message);
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                          \
-    ConstructorName::ConstructorName(GlobalObject& global_object)                                                      \
-        : NativeFunction(*global_object.function_prototype())                                                          \
-    {                                                                                                                  \
-    }                                                                                                                  \
-    void ConstructorName::initialize(GlobalObject& global_object)                                                      \
-    {                                                                                                                  \
-        NativeFunction::initialize(global_object);                                                                     \
-        define_property("prototype", global_object.snake_name##_prototype(), 0);                                       \
-        define_property("length", Value(1), Attribute::Configurable);                                                  \
-    }                                                                                                                  \
-    ConstructorName::~ConstructorName() { }                                                                            \
-    Value ConstructorName::call()                                                                                      \
-    {                                                                                                                  \
-        return construct(interpreter(), *this);                                                                        \
-    }                                                                                                                  \
-    Value ConstructorName::construct(Interpreter& interpreter, Function&)                                              \
-    {                                                                                                                  \
-        String message = "";                                                                                           \
-        if (!interpreter.call_frame().arguments.is_empty() && !interpreter.call_frame().arguments[0].is_undefined()) { \
-            message = interpreter.call_frame().arguments[0].to_string(interpreter);                                    \
-            if (interpreter.exception())                                                                               \
-                return {};                                                                                             \
-        }                                                                                                              \
-        return ClassName::create(global_object(), message);                                                            \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                            \
+    ConstructorName::ConstructorName(GlobalObject& global_object)                                        \
+        : NativeFunction(*global_object.function_prototype())                                            \
+    {                                                                                                    \
+    }                                                                                                    \
+    void ConstructorName::initialize(GlobalObject& global_object)                                        \
+    {                                                                                                    \
+        NativeFunction::initialize(global_object);                                                       \
+        define_property("prototype", global_object.snake_name##_prototype(), 0);                         \
+        define_property("length", Value(1), Attribute::Configurable);                                    \
+    }                                                                                                    \
+    ConstructorName::~ConstructorName() { }                                                              \
+    Value ConstructorName::call()                                                                        \
+    {                                                                                                    \
+        return construct(interpreter(), *this);                                                          \
+    }                                                                                                    \
+    Value ConstructorName::construct(Interpreter&, Function&)                                            \
+    {                                                                                                    \
+        String message = "";                                                                             \
+        if (!vm().call_frame().arguments.is_empty() && !vm().call_frame().arguments[0].is_undefined()) { \
+            message = vm().call_frame().arguments[0].to_string(global_object());                         \
+            if (vm().exception())                                                                        \
+                return {};                                                                               \
+        }                                                                                                \
+        return ClassName::create(global_object(), message);                                              \
     }
 
 JS_ENUMERATE_ERROR_SUBCLASSES

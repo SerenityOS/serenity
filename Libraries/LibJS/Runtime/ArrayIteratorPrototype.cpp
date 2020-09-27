@@ -52,9 +52,9 @@ ArrayIteratorPrototype::~ArrayIteratorPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 {
-    auto this_value = interpreter.this_value(global_object);
+    auto this_value = vm.this_value(global_object);
     if (!this_value.is_object() || !this_value.as_object().is_array_iterator_object()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAn, "Array Iterator");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Array Iterator");
         return {};
     }
     auto& this_object = this_value.as_object();
@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
         return create_iterator_result_object(global_object, Value(static_cast<i32>(index)), false);
 
     auto value = array.get(index);
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, value, false);

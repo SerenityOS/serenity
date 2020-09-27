@@ -300,7 +300,7 @@ Value VM::get_new_target() const
     return get_this_environment()->new_target();
 }
 
-Value VM::call(Function& function, Value this_value, Optional<MarkedValueList> arguments)
+Value VM::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     ASSERT(!exception());
 

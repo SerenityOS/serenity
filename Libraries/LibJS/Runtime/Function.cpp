@@ -61,7 +61,7 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
                 return bound_this_value;
             return &global_object();
         default:
-            return bound_this_value.to_object(interpreter(), global_object());
+            return bound_this_value.to_object(global_object());
         }
     }();
 

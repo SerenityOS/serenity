@@ -43,7 +43,7 @@ DateCell::~DateCell()
 String DateCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 {
     auto timestamp = js_value(cell, metadata);
-    auto string = Core::DateTime::from_timestamp(timestamp.to_i32(cell.sheet->interpreter())).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S" : metadata.format.characters());
+    auto string = Core::DateTime::from_timestamp(timestamp.to_i32(cell.sheet->global_object())).to_string(metadata.format.is_empty() ? "%Y-%m-%d %H:%M:%S" : metadata.format.characters());
 
     if (metadata.length >= 0)
         return string.substring(0, metadata.length);
@@ -53,7 +53,7 @@ String DateCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 
 JS::Value DateCell::js_value(Cell& cell, const CellTypeMetadata&) const
 {
-    auto value = cell.js_data().to_double(cell.sheet->interpreter());
+    auto value = cell.js_data().to_double(cell.sheet->global_object());
     return JS::Value(value / 1000); // Turn it to seconds
 }
 

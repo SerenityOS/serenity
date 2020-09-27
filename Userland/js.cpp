@@ -390,9 +390,9 @@ ReplObject::~ReplObject()
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 {
-    if (!interpreter.argument_count())
+    if (!vm.argument_count())
         return JS::Value(false);
-    String save_path = interpreter.argument(0).to_string_without_side_effects();
+    String save_path = vm.argument(0).to_string_without_side_effects();
     StringView path = StringView(save_path.characters());
     if (write_to_file(path)) {
         return JS::Value(true);
@@ -402,9 +402,9 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
-    if (!interpreter.argument_count())
+    if (!vm.argument_count())
         exit(0);
-    auto exit_code = interpreter.argument(0).to_number(interpreter);
+    auto exit_code = vm.argument(0).to_number(global_object);
     if (::vm->exception())
         return {};
     exit(exit_code.as_double());
@@ -422,10 +422,10 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
 {
-    if (!interpreter.argument_count())
+    if (!vm.argument_count())
         return JS::Value(false);
 
-    for (auto& file : interpreter.call_frame().arguments) {
+    for (auto& file : vm.call_frame().arguments) {
         String file_name = file.as_string().string();
         auto js_file = Core::File::construct(file_name);
         if (!js_file->open(Core::IODevice::ReadOnly)) {
@@ -439,7 +439,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
         } else {
             source = file_contents;
         }
-        parse_and_run(interpreter, source);
+        parse_and_run(vm.interpreter(), source);
     }
     return JS::Value(true);
 }
@@ -822,7 +822,7 @@ int main(int argc, char** argv)
                 if (!variable.is_object())
                     break;
 
-                const auto* object = variable.to_object(*interpreter, interpreter->global_object());
+                const auto* object = variable.to_object(interpreter->global_object());
                 const auto& shape = object->shape();
                 list_all_properties(shape, property_name);
                 if (results.size())

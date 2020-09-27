@@ -58,13 +58,13 @@ XMLHttpRequestPrototype::~XMLHttpRequestPrototype()
 {
 }
 
-static XMLHttpRequest* impl_from(JS::Interpreter& interpreter, JS::GlobalObject& global_object)
+static XMLHttpRequest* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
     if (StringView("XMLHttpRequestWrapper") != this_object->class_name()) {
-        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "XMLHttpRequest");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "XMLHttpRequest");
         return nullptr;
     }
     return &static_cast<XMLHttpRequestWrapper*>(this_object)->impl();
@@ -72,14 +72,14 @@ static XMLHttpRequest* impl_from(JS::Interpreter& interpreter, JS::GlobalObject&
 
 JS_DEFINE_NATIVE_FUNCTION(XMLHttpRequestPrototype::open)
 {
-    auto* impl = impl_from(interpreter, global_object);
+    auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    auto arg0 = interpreter.argument(0).to_string(interpreter);
-    if (interpreter.exception())
+    auto arg0 = vm.argument(0).to_string(global_object);
+    if (vm.exception())
         return {};
-    auto arg1 = interpreter.argument(1).to_string(interpreter);
-    if (interpreter.exception())
+    auto arg1 = vm.argument(1).to_string(global_object);
+    if (vm.exception())
         return {};
     impl->open(arg0, arg1);
     return JS::js_undefined();
@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(XMLHttpRequestPrototype::open)
 
 JS_DEFINE_NATIVE_FUNCTION(XMLHttpRequestPrototype::send)
 {
-    auto* impl = impl_from(interpreter, global_object);
+    auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
     impl->send();
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(XMLHttpRequestPrototype::send)
 
 JS_DEFINE_NATIVE_GETTER(XMLHttpRequestPrototype::ready_state_getter)
 {
-    auto* impl = impl_from(interpreter, global_object);
+    auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
     return JS::Value((i32)impl->ready_state());
@@ -104,10 +104,10 @@ JS_DEFINE_NATIVE_GETTER(XMLHttpRequestPrototype::ready_state_getter)
 
 JS_DEFINE_NATIVE_GETTER(XMLHttpRequestPrototype::response_text_getter)
 {
-    auto* impl = impl_from(interpreter, global_object);
+    auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    return JS::js_string(interpreter, impl->response_text());
+    return JS::js_string(vm, impl->response_text());
 }
 
 }

@@ -742,7 +742,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
     return put_own_property(*this, string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
-bool Object::define_native_function(const StringOrSymbol& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+bool Object::define_native_function(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     String function_name;
     if (property_name.is_string()) {
@@ -760,7 +760,7 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
     return define_property(property_name, function, attribute);
 }
 
-bool Object::define_native_property(const StringOrSymbol& property_name, AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
+bool Object::define_native_property(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
     return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
@@ -846,7 +846,7 @@ Value Object::to_string() const
             interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::Convert, "object", "string");
         if (interpreter.exception())
             return {};
-        auto* string = to_string_result.to_primitive_string(interpreter);
+        auto* string = to_string_result.to_primitive_string(global_object());
         if (interpreter.exception())
             return {};
         return string;
@@ -872,7 +872,7 @@ Value Object::call_native_property_getter(Object* this_object, Value property) c
     ASSERT(property.is_native_property());
     auto& call_frame = vm().push_call_frame();
     call_frame.this_value = this_object;
-    auto result = property.as_native_property().get(interpreter(), global_object());
+    auto result = property.as_native_property().get(vm(), global_object());
     vm().pop_call_frame();
     return result;
 }
@@ -882,7 +882,7 @@ void Object::call_native_property_setter(Object* this_object, Value property, Va
     ASSERT(property.is_native_property());
     auto& call_frame = vm().push_call_frame();
     call_frame.this_value = this_object;
-    property.as_native_property().set(interpreter(), global_object(), value);
+    property.as_native_property().set(vm(), global_object(), value);
     vm().pop_call_frame();
 }
 

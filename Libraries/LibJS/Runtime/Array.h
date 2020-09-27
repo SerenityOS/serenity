@@ -39,7 +39,7 @@ public:
     explicit Array(Object& prototype);
     virtual ~Array() override;
 
-    static Array* typed_this(Interpreter&, GlobalObject&);
+    static Array* typed_this(VM&, GlobalObject&);
 
 private:
     virtual bool is_array() const override { return true; }

@@ -32,6 +32,7 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
+#include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -206,10 +207,25 @@ public:
     const LexicalEnvironment* get_this_environment() const;
     Value get_new_target() const;
 
-    [[nodiscard]] Value call(Function&, Value this_value, Optional<MarkedValueList> arguments);
+    template<typename... Args>
+    [[nodiscard]] ALWAYS_INLINE Value call(Function& function, Value this_value, Args... args)
+    {
+        // Are there any values in this argpack?
+        // args = [] -> if constexpr (false)
+        // args = [x, y, z] -> if constexpr ((void)x, true || ...)
+        if constexpr ((((void)args, true) || ...)) {
+            MarkedValueList arglist { heap() };
+            (..., arglist.append(move(args)));
+            return call(function, this_value, move(arglist));
+        }
+
+        return call(function, this_value);
+    }
 
 private:
     VM();
+
+    [[nodiscard]] Value call_internal(Function&, Value this_value, Optional<MarkedValueList> arguments);
 
     Exception* m_exception { nullptr };
 
@@ -233,5 +249,14 @@ private:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 };
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value VM::call(Function& function, Value this_value, MarkedValueList arguments) { return call_internal(function, this_value, move(arguments)); }
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value VM::call(Function& function, Value this_value, Optional<MarkedValueList> arguments) { return call_internal(function, this_value, move(arguments)); }
+
+template<>
+[[nodiscard]] ALWAYS_INLINE Value VM::call(Function& function, Value this_value) { return call(function, this_value, Optional<MarkedValueList> {}); }
 
 }

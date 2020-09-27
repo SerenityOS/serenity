@@ -27,22 +27,22 @@
 #pragma once
 
 #define JS_DECLARE_NATIVE_FUNCTION(name) \
-    static JS::Value name(JS::Interpreter&, JS::GlobalObject&)
+    static JS::Value name(JS::VM&, JS::GlobalObject&)
 
 #define JS_DECLARE_NATIVE_GETTER(name) \
-    static JS::Value name(JS::Interpreter&, JS::GlobalObject&)
+    static JS::Value name(JS::VM&, JS::GlobalObject&)
 
 #define JS_DECLARE_NATIVE_SETTER(name) \
-    static void name(JS::Interpreter&, JS::GlobalObject&, JS::Value)
+    static void name(JS::VM&, JS::GlobalObject&, JS::Value)
 
 #define JS_DEFINE_NATIVE_FUNCTION(name) \
-    JS::Value name([[maybe_unused]] JS::Interpreter& interpreter, [[maybe_unused]] JS::GlobalObject& global_object)
+    JS::Value name([[maybe_unused]] JS::VM& vm, [[maybe_unused]] JS::GlobalObject& global_object)
 
 #define JS_DEFINE_NATIVE_GETTER(name) \
-    JS::Value name([[maybe_unused]] JS::Interpreter& interpreter, [[maybe_unused]] JS::GlobalObject& global_object)
+    JS::Value name([[maybe_unused]] JS::VM& vm, [[maybe_unused]] JS::GlobalObject& global_object)
 
 #define JS_DEFINE_NATIVE_SETTER(name) \
-    void name([[maybe_unused]] JS::Interpreter& interpreter, [[maybe_unused]] JS::GlobalObject& global_object, JS::Value value)
+    void name([[maybe_unused]] JS::VM& vm, [[maybe_unused]] JS::GlobalObject& global_object, JS::Value value)
 
 #define JS_ENUMERATE_NATIVE_OBJECTS                                              \
     __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor)               \

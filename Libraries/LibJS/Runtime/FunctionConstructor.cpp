@@ -58,25 +58,26 @@ Value FunctionConstructor::call()
 
 Value FunctionConstructor::construct(Interpreter& interpreter, Function&)
 {
+    auto& vm = this->vm();
     String parameters_source = "";
     String body_source = "";
-    if (interpreter.argument_count() == 1) {
-        body_source = interpreter.argument(0).to_string(interpreter);
-        if (interpreter.exception())
+    if (vm.argument_count() == 1) {
+        body_source = vm.argument(0).to_string(global_object());
+        if (vm.exception())
             return {};
     }
-    if (interpreter.argument_count() > 1) {
+    if (vm.argument_count() > 1) {
         Vector<String> parameters;
-        for (size_t i = 0; i < interpreter.argument_count() - 1; ++i) {
-            parameters.append(interpreter.argument(i).to_string(interpreter));
-            if (interpreter.exception())
+        for (size_t i = 0; i < vm.argument_count() - 1; ++i) {
+            parameters.append(vm.argument(i).to_string(global_object()));
+            if (vm.exception())
                 return {};
         }
         StringBuilder parameters_builder;
         parameters_builder.join(',', parameters);
         parameters_source = parameters_builder.build();
-        body_source = interpreter.argument(interpreter.argument_count() - 1).to_string(interpreter);
-        if (interpreter.exception())
+        body_source = vm.argument(vm.argument_count() - 1).to_string(global_object());
+        if (vm.exception())
             return {};
     }
     auto source = String::format("function anonymous(%s) { %s }", parameters_source.characters(), body_source.characters());
@@ -84,7 +85,7 @@ Value FunctionConstructor::construct(Interpreter& interpreter, Function&)
     auto function_expression = parser.parse_function_node<FunctionExpression>();
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
-        interpreter.vm().throw_exception<SyntaxError>(global_object(), error.to_string());
+        vm.throw_exception<SyntaxError>(global_object(), error.to_string());
         return {};
     }
     return function_expression->execute(interpreter, global_object());

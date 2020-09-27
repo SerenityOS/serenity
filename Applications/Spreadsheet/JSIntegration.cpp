@@ -86,21 +86,21 @@ void SheetGlobalObject::initialize()
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
 {
-    if (interpreter.argument_count() != 1) {
-        interpreter.vm().throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to parse_cell_name()");
+    if (vm.argument_count() != 1) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to parse_cell_name()");
         return {};
     }
-    auto name_value = interpreter.argument(0);
+    auto name_value = vm.argument(0);
     if (!name_value.is_string()) {
-        interpreter.vm().throw_exception<JS::TypeError>(global_object, "Expected a String argument to parse_cell_name()");
+        vm.throw_exception<JS::TypeError>(global_object, "Expected a String argument to parse_cell_name()");
         return {};
     }
     auto position = Sheet::parse_cell_name(name_value.as_string().string());
     if (!position.has_value())
         return JS::js_undefined();
 
-    auto object = JS::Object::create_empty(interpreter.global_object());
-    object->put("column", JS::js_string(interpreter, position.value().column));
+    auto object = JS::Object::create_empty(global_object);
+    object->put("column", JS::js_string(vm, position.value().column));
     object->put("row", JS::Value((unsigned)position.value().row));
 
     return object;
@@ -124,22 +124,22 @@ void WorkbookObject::initialize(JS::GlobalObject& global_object)
 
 JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
 {
-    if (interpreter.argument_count() != 1) {
-        interpreter.vm().throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to sheet()");
+    if (vm.argument_count() != 1) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to sheet()");
         return {};
     }
-    auto name_value = interpreter.argument(0);
+    auto name_value = vm.argument(0);
     if (!name_value.is_string() && !name_value.is_number()) {
-        interpreter.vm().throw_exception<JS::TypeError>(global_object, "Expected a String or Number argument to sheet()");
+        vm.throw_exception<JS::TypeError>(global_object, "Expected a String or Number argument to sheet()");
         return {};
     }
 
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
 
     if (!this_object->inherits("WorkbookObject")) {
-        interpreter.vm().throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WorkbookObject");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WorkbookObject");
         return {};
     }
 

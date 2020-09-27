@@ -56,7 +56,7 @@ Value BoundFunction::call()
 
 Value BoundFunction::construct(Interpreter& interpreter, Function& new_target)
 {
-    if (auto this_value = interpreter.this_value(global_object()); m_constructor_prototype && this_value.is_object()) {
+    if (auto this_value = vm().this_value(global_object()); m_constructor_prototype && this_value.is_object()) {
         this_value.as_object().set_prototype(m_constructor_prototype);
         if (interpreter.exception())
             return {};

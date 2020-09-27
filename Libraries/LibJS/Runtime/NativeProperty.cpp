@@ -29,7 +29,7 @@
 
 namespace JS {
 
-NativeProperty::NativeProperty(AK::Function<Value(Interpreter&, GlobalObject&)> getter, AK::Function<void(Interpreter&, GlobalObject&, Value)> setter)
+NativeProperty::NativeProperty(AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter)
     : m_getter(move(getter))
     , m_setter(move(setter))
 {
@@ -39,18 +39,18 @@ NativeProperty::~NativeProperty()
 {
 }
 
-Value NativeProperty::get(Interpreter& interpreter, GlobalObject& global_object) const
+Value NativeProperty::get(VM& vm, GlobalObject& global_object) const
 {
     if (!m_getter)
         return js_undefined();
-    return m_getter(interpreter, global_object);
+    return m_getter(vm, global_object);
 }
 
-void NativeProperty::set(Interpreter& interpreter, GlobalObject& global_object, Value value)
+void NativeProperty::set(VM& vm, GlobalObject& global_object, Value value)
 {
     if (!m_setter)
         return;
-    m_setter(interpreter, global_object, move(value));
+    m_setter(vm, global_object, move(value));
 }
 
 }

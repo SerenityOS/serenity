@@ -34,42 +34,45 @@
 
 namespace JS {
 
-static Object* get_target_object_from(Interpreter& interpreter, const String& name)
+static Object* get_target_object_from(GlobalObject& global_object, const String& name)
 {
-    auto target = interpreter.argument(0);
+    auto& vm = global_object.vm();
+    auto target = vm.argument(0);
     if (!target.is_object()) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::ReflectArgumentMustBeAnObject, name.characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReflectArgumentMustBeAnObject, name.characters());
         return nullptr;
     }
     return static_cast<Object*>(&target.as_object());
 }
 
-static Function* get_target_function_from(Interpreter& interpreter, const String& name)
+static Function* get_target_function_from(GlobalObject& global_object, const String& name)
 {
-    auto target = interpreter.argument(0);
+    auto& vm = global_object.vm();
+    auto target = vm.argument(0);
     if (!target.is_function()) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::ReflectArgumentMustBeAFunction, name.characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReflectArgumentMustBeAFunction, name.characters());
         return nullptr;
     }
     return &target.as_function();
 }
 
-static void prepare_arguments_list(Interpreter& interpreter, Value value, MarkedValueList* arguments)
+static void prepare_arguments_list(GlobalObject& global_object, Value value, MarkedValueList* arguments)
 {
+    auto& vm = global_object.vm();
     if (!value.is_object()) {
-        interpreter.vm().throw_exception<TypeError>(interpreter.global_object(), ErrorType::ReflectBadArgumentsList);
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReflectBadArgumentsList);
         return;
     }
     auto& arguments_list = value.as_object();
     auto length_property = arguments_list.get("length");
-    if (interpreter.exception())
+    if (vm.exception())
         return;
-    auto length = length_property.to_size_t(interpreter);
-    if (interpreter.exception())
+    auto length = length_property.to_size_t(global_object);
+    if (vm.exception())
         return;
     for (size_t i = 0; i < length; ++i) {
         auto element = arguments_list.get(String::number(i));
-        if (interpreter.exception())
+        if (vm.exception())
             return;
         arguments->append(element.value_or(js_undefined()));
     }
@@ -105,70 +108,70 @@ ReflectObject::~ReflectObject()
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
 {
-    auto* target = get_target_function_from(interpreter, "apply");
+    auto* target = get_target_function_from(global_object, "apply");
     if (!target)
         return {};
-    auto this_arg = interpreter.argument(1);
-    MarkedValueList arguments(interpreter.heap());
-    prepare_arguments_list(interpreter, interpreter.argument(2), &arguments);
-    if (interpreter.exception())
+    auto this_arg = vm.argument(1);
+    MarkedValueList arguments(vm.heap());
+    prepare_arguments_list(global_object, vm.argument(2), &arguments);
+    if (vm.exception())
         return {};
-    return interpreter.call(*target, this_arg, move(arguments));
+    return vm.call(*target, this_arg, move(arguments));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
 {
-    auto* target = get_target_function_from(interpreter, "construct");
+    auto* target = get_target_function_from(global_object, "construct");
     if (!target)
         return {};
-    MarkedValueList arguments(interpreter.heap());
-    prepare_arguments_list(interpreter, interpreter.argument(1), &arguments);
-    if (interpreter.exception())
+    MarkedValueList arguments(vm.heap());
+    prepare_arguments_list(global_object, vm.argument(1), &arguments);
+    if (vm.exception())
         return {};
     auto* new_target = target;
-    if (interpreter.argument_count() > 2) {
-        auto new_target_value = interpreter.argument(2);
+    if (vm.argument_count() > 2) {
+        auto new_target_value = vm.argument(2);
         if (!new_target_value.is_function()
             || (new_target_value.as_object().is_native_function() && !static_cast<NativeFunction&>(new_target_value.as_object()).has_constructor())) {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ReflectBadNewTarget);
+            vm.throw_exception<TypeError>(global_object, ErrorType::ReflectBadNewTarget);
             return {};
         }
         new_target = &new_target_value.as_function();
     }
-    return interpreter.vm().construct(*target, *new_target, move(arguments), global_object);
+    return vm.construct(*target, *new_target, move(arguments), global_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
 {
-    auto* target = get_target_object_from(interpreter, "defineProperty");
+    auto* target = get_target_object_from(global_object, "defineProperty");
     if (!target)
         return {};
-    if (!interpreter.argument(2).is_object()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ReflectBadDescriptorArgument);
+    if (!vm.argument(2).is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReflectBadDescriptorArgument);
         return {};
     }
-    auto property_key = StringOrSymbol::from_value(interpreter, interpreter.argument(1));
-    if (interpreter.exception())
+    auto property_key = StringOrSymbol::from_value(global_object, vm.argument(1));
+    if (vm.exception())
         return {};
-    auto& descriptor = interpreter.argument(2).as_object();
+    auto& descriptor = vm.argument(2).as_object();
     auto success = target->define_property(property_key, descriptor, false);
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     return Value(success);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
 {
-    auto* target = get_target_object_from(interpreter, "deleteProperty");
+    auto* target = get_target_object_from(global_object, "deleteProperty");
     if (!target)
         return {};
 
-    auto property_key = interpreter.argument(1);
-    auto property_name = PropertyName::from_value(interpreter, property_key);
-    if (interpreter.exception())
+    auto property_key = vm.argument(1);
+    auto property_name = PropertyName::from_value(global_object, property_key);
+    if (vm.exception())
         return {};
-    auto property_key_number = property_key.to_number(interpreter);
-    if (interpreter.exception())
+    auto property_key_number = property_key.to_number(global_object);
+    if (vm.exception())
         return {};
     if (property_key_number.is_finite_number()) {
         auto property_key_as_double = property_key_number.as_double();
@@ -180,32 +183,32 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
 {
-    auto* target = get_target_object_from(interpreter, "get");
+    auto* target = get_target_object_from(global_object, "get");
     if (!target)
         return {};
-    auto property_key = PropertyName::from_value(interpreter, interpreter.argument(1));
-    if (interpreter.exception())
+    auto property_key = PropertyName::from_value(global_object, vm.argument(1));
+    if (vm.exception())
         return {};
     Value receiver = {};
-    if (interpreter.argument_count() > 2)
-        receiver = interpreter.argument(2);
+    if (vm.argument_count() > 2)
+        receiver = vm.argument(2);
     return target->get(property_key, receiver).value_or(js_undefined());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
 {
-    auto* target = get_target_object_from(interpreter, "getOwnPropertyDescriptor");
+    auto* target = get_target_object_from(global_object, "getOwnPropertyDescriptor");
     if (!target)
         return {};
-    auto property_key = PropertyName::from_value(interpreter, interpreter.argument(1));
-    if (interpreter.exception())
+    auto property_key = PropertyName::from_value(global_object, vm.argument(1));
+    if (vm.exception())
         return {};
     return target->get_own_property_descriptor_object(property_key);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_prototype_of)
 {
-    auto* target = get_target_object_from(interpreter, "getPrototypeOf");
+    auto* target = get_target_object_from(global_object, "getPrototypeOf");
     if (!target)
         return {};
     return target->prototype();
@@ -213,18 +216,18 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_prototype_of)
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::has)
 {
-    auto* target = get_target_object_from(interpreter, "has");
+    auto* target = get_target_object_from(global_object, "has");
     if (!target)
         return {};
-    auto property_key = PropertyName::from_value(interpreter, interpreter.argument(1));
-    if (interpreter.exception())
+    auto property_key = PropertyName::from_value(global_object, vm.argument(1));
+    if (vm.exception())
         return {};
     return Value(target->has_property(property_key));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::is_extensible)
 {
-    auto* target = get_target_object_from(interpreter, "isExtensible");
+    auto* target = get_target_object_from(global_object, "isExtensible");
     if (!target)
         return {};
     return Value(target->is_extensible());
@@ -232,7 +235,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::is_extensible)
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
 {
-    auto* target = get_target_object_from(interpreter, "ownKeys");
+    auto* target = get_target_object_from(global_object, "ownKeys");
     if (!target)
         return {};
     return target->get_own_properties(*target, PropertyKind::Key);
@@ -240,7 +243,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)
 {
-    auto* target = get_target_object_from(interpreter, "preventExtensions");
+    auto* target = get_target_object_from(global_object, "preventExtensions");
     if (!target)
         return {};
     return Value(target->prevent_extensions());
@@ -248,27 +251,27 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
 {
-    auto* target = get_target_object_from(interpreter, "set");
+    auto* target = get_target_object_from(global_object, "set");
     if (!target)
         return {};
-    auto property_key = interpreter.argument(1).to_string(interpreter);
-    if (interpreter.exception())
+    auto property_key = vm.argument(1).to_string(global_object);
+    if (vm.exception())
         return {};
-    auto value = interpreter.argument(2);
+    auto value = vm.argument(2);
     Value receiver = {};
-    if (interpreter.argument_count() > 3)
-        receiver = interpreter.argument(3);
+    if (vm.argument_count() > 3)
+        receiver = vm.argument(3);
     return Value(target->put(property_key, value, receiver));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set_prototype_of)
 {
-    auto* target = get_target_object_from(interpreter, "setPrototypeOf");
+    auto* target = get_target_object_from(global_object, "setPrototypeOf");
     if (!target)
         return {};
-    auto prototype_value = interpreter.argument(1);
+    auto prototype_value = vm.argument(1);
     if (!prototype_value.is_object() && !prototype_value.is_null()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
+        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
         return {};
     }
     Object* prototype = nullptr;

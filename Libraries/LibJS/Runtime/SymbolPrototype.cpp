@@ -58,13 +58,13 @@ SymbolPrototype::~SymbolPrototype()
 {
 }
 
-static SymbolObject* typed_this(Interpreter& interpreter, GlobalObject& global_object)
+static SymbolObject* typed_this(VM& vm, GlobalObject& global_object)
 {
-    auto* this_object = interpreter.this_value(global_object).to_object(interpreter, global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return nullptr;
     if (!this_object->is_symbol_object()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "Symbol");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Symbol");
         return nullptr;
     }
     return static_cast<SymbolObject*>(this_object);
@@ -72,24 +72,24 @@ static SymbolObject* typed_this(Interpreter& interpreter, GlobalObject& global_o
 
 JS_DEFINE_NATIVE_GETTER(SymbolPrototype::description_getter)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
-    return js_string(interpreter, this_object->description());
+    return js_string(vm, this_object->description());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     auto string = this_object->primitive_symbol().to_string();
-    return js_string(interpreter, move(string));
+    return js_string(vm, move(string));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::value_of)
 {
-    auto* this_object = typed_this(interpreter, global_object);
+    auto* this_object = typed_this(vm, global_object);
     if (!this_object)
         return {};
     return this_object->value_of();

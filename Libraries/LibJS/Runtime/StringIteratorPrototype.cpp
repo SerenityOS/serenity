@@ -52,9 +52,9 @@ StringIteratorPrototype::~StringIteratorPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
 {
-    auto this_value = interpreter.this_value(global_object);
+    auto this_value = vm.this_value(global_object);
     if (!this_value.is_object() || !this_value.as_object().is_string_iterator_object()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotA, "String Iterator");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "String Iterator");
         return {};
     }
 
@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
     builder.append_code_point(*utf8_iterator);
     ++utf8_iterator;
 
-    return create_iterator_result_object(global_object, js_string(interpreter, builder.to_string()), false);
+    return create_iterator_result_object(global_object, js_string(vm, builder.to_string()), false);
 }
 
 }
