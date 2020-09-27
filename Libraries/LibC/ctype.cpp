@@ -25,7 +25,6 @@
  */
 
 #include <ctype.h>
-#include <string.h>
 
 extern "C" {
 

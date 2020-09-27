@@ -32,9 +32,9 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RadioButton.h>
 #include <LibKeyboard/CharacterMapFile.h>
-#include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 
 KeyboardMapperWidget::KeyboardMapperWidget()
 {
