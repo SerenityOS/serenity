@@ -1285,7 +1285,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
         return {};
     }
-    update_function_name(rhs_result, get_function_name(global_object, reference.name().to_value(interpreter)));
+    update_function_name(rhs_result, get_function_name(global_object, reference.name().to_value(interpreter.vm())));
     reference.put(interpreter, global_object, rhs_result);
 
     if (interpreter.exception())

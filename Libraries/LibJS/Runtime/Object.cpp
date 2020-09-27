@@ -237,12 +237,12 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
             continue;
 
         if (kind == PropertyKind::Key) {
-            properties_array->define_property(property_index, it.key.to_value(interpreter()));
+            properties_array->define_property(property_index, it.key.to_value(vm()));
         } else if (kind == PropertyKind::Value) {
             properties_array->define_property(property_index, this_object.get(it.key));
         } else {
             auto* entry_array = Array::create(global_object());
-            entry_array->define_property(0, it.key.to_value(interpreter()));
+            entry_array->define_property(0, it.key.to_value(vm()));
             entry_array->define_property(1, this_object.get(it.key));
             properties_array->define_property(property_index, entry_array);
         }

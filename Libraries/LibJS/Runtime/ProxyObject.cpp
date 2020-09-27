@@ -279,7 +279,7 @@ bool ProxyObject::define_property(const StringOrSymbol& property_name, const Obj
         return false;
     }
 
-    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target), property_name.to_value(interpreter()), Value(const_cast<Object*>(&descriptor))).to_boolean();
+    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target), property_name.to_value(vm()), Value(const_cast<Object*>(&descriptor))).to_boolean();
     if (vm().exception() || !trap_result)
         return false;
     auto target_desc = m_target.get_own_property_descriptor(property_name);
