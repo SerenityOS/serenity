@@ -157,7 +157,7 @@ JS::Value Cell::js_data()
     if (kind == Formula)
         return evaluated_data;
 
-    return JS::js_string(sheet->interpreter(), data);
+    return JS::js_string(sheet->interpreter().heap(), data);
 }
 
 String Cell::source() const

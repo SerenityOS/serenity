@@ -51,7 +51,7 @@ String StringCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 JS::Value StringCell::js_value(Cell& cell, const CellTypeMetadata& metadata) const
 {
     auto string = display(cell, metadata);
-    return JS::js_string(cell.sheet->interpreter(), string);
+    return JS::js_string(cell.sheet->interpreter().heap(), string);
 }
 
 }
