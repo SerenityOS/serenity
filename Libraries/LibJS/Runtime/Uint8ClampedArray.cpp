@@ -25,7 +25,6 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Uint8ClampedArray.h>
@@ -34,8 +33,7 @@ namespace JS {
 
 Uint8ClampedArray* Uint8ClampedArray::create(GlobalObject& global_object, u32 length)
 {
-    auto& interpreter = global_object.interpreter();
-    return interpreter.heap().allocate<Uint8ClampedArray>(global_object, length, *global_object.array_prototype());
+    return global_object.heap().allocate<Uint8ClampedArray>(global_object, length, *global_object.array_prototype());
 }
 
 Uint8ClampedArray::Uint8ClampedArray(u32 length, Object& prototype)

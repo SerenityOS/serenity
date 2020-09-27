@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -32,8 +31,7 @@ namespace JS {
 
 BooleanObject* BooleanObject::create(GlobalObject& global_object, bool value)
 {
-    auto& interpreter = global_object.interpreter();
-    return interpreter.heap().allocate<BooleanObject>(global_object, value, *global_object.boolean_prototype());
+    return global_object.heap().allocate<BooleanObject>(global_object, value, *global_object.boolean_prototype());
 }
 
 BooleanObject::BooleanObject(bool value, Object& prototype)
