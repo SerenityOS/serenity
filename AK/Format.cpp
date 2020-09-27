@@ -168,6 +168,43 @@ void vformat_impl(StringBuilder& builder, FormatStringParser& parser, Span<const
     vformat_impl(builder, parser, parameters, argument_index);
 }
 
+size_t decode_value(size_t value, Span<const AK::TypeErasedParameter> parameters)
+{
+    if (value == AK::StandardFormatter::value_from_next_arg)
+        TODO();
+
+    if (value >= AK::StandardFormatter::value_from_arg) {
+        const auto parameter = parameters.at(value - AK::StandardFormatter::value_from_arg);
+
+        Optional<i64> svalue;
+        if (parameter.type == AK::TypeErasedParameter::Type::UInt8)
+            value = *reinterpret_cast<const u8*>(parameter.value);
+        else if (parameter.type == AK::TypeErasedParameter::Type::UInt16)
+            value = *reinterpret_cast<const u16*>(parameter.value);
+        else if (parameter.type == AK::TypeErasedParameter::Type::UInt32)
+            value = *reinterpret_cast<const u32*>(parameter.value);
+        else if (parameter.type == AK::TypeErasedParameter::Type::UInt64)
+            value = *reinterpret_cast<const u64*>(parameter.value);
+        else if (parameter.type == AK::TypeErasedParameter::Type::Int8)
+            svalue = *reinterpret_cast<const i8*>(parameter.value);
+        else if (parameter.type == AK::TypeErasedParameter::Type::Int16)
+            svalue = *reinterpret_cast<const i16*>(parameter.value);
+        else if (parameter.type == AK::TypeErasedParameter::Type::Int32)
+            svalue = *reinterpret_cast<const i32*>(parameter.value);
+        else if (parameter.type == AK::TypeErasedParameter::Type::Int64)
+            svalue = *reinterpret_cast<const i64*>(parameter.value);
+        else
+            ASSERT_NOT_REACHED();
+
+        if (svalue.has_value()) {
+            ASSERT(svalue.value() >= 0);
+            value = static_cast<size_t>(svalue.value());
+        }
+    }
+
+    return value;
+}
+
 } // namespace
 
 namespace AK {
@@ -307,14 +344,7 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
         ASSERT_NOT_REACHED();
     }
 
-    size_t width = m_width;
-    if (m_width >= value_from_arg) {
-        const auto parameter = parameters.at(m_width - value_from_arg);
-
-        // FIXME: Totally unsave cast. We should store the type in TypeErasedParameter. For compactness it could be smart to
-        //        find a few addresses that can not be valid function pointers and encode the type information there?
-        width = *reinterpret_cast<const size_t*>(parameter.value);
-    }
+    auto width = decode_value(m_width, parameters);
 
     PrintfImplementation::Align align;
     if (m_align == Align::Left)

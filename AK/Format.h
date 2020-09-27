@@ -39,7 +39,43 @@ template<typename T, typename = void>
 struct Formatter;
 
 struct TypeErasedParameter {
+    enum class Type {
+        UInt8,
+        UInt16,
+        UInt32,
+        UInt64,
+        Int8,
+        Int16,
+        Int32,
+        Int64,
+        Custom
+    };
+
+    template<typename T>
+    static Type get_type()
+    {
+        if (IsSame<T, u8>::value)
+            return Type::UInt8;
+        if (IsSame<T, u16>::value)
+            return Type::UInt16;
+        if (IsSame<T, u32>::value)
+            return Type::UInt32;
+        if (IsSame<T, u64>::value)
+            return Type::UInt64;
+        if (IsSame<T, i8>::value)
+            return Type::Int8;
+        if (IsSame<T, i16>::value)
+            return Type::Int16;
+        if (IsSame<T, i32>::value)
+            return Type::Int32;
+        if (IsSame<T, i64>::value)
+            return Type::Int64;
+
+        return Type::Custom;
+    }
+
     const void* value;
+    Type type;
     void (*formatter)(StringBuilder& builder, const void* value, StringView flags, Span<const TypeErasedParameter> parameters);
 };
 
@@ -92,7 +128,8 @@ struct StandardFormatter {
     };
 
     static constexpr size_t value_not_set = 0;
-    static constexpr size_t value_from_arg = NumericLimits<size_t>::max() - max_format_arguments;
+    static constexpr size_t value_from_next_arg = NumericLimits<size_t>::max();
+    static constexpr size_t value_from_arg = NumericLimits<size_t>::max() - max_format_arguments - 1;
 
     Align m_align = Align::Default;
     Sign m_sign = Sign::NegativeOnly;
@@ -132,7 +169,8 @@ template<typename... Parameters>
 Array<TypeErasedParameter, sizeof...(Parameters)> make_type_erased_parameters(const Parameters&... parameters)
 {
     static_assert(sizeof...(Parameters) <= max_format_arguments);
-    return { TypeErasedParameter { &parameters, Detail::Format::format_value<Parameters> }... };
+
+    return { TypeErasedParameter { &parameters, TypeErasedParameter::get_type<Parameters>(), Detail::Format::format_value<Parameters> }... };
 }
 
 void vformat(StringBuilder& builder, StringView fmtstr, Span<const TypeErasedParameter>);
