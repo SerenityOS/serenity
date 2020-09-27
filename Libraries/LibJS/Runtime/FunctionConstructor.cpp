@@ -51,9 +51,9 @@ FunctionConstructor::~FunctionConstructor()
 {
 }
 
-Value FunctionConstructor::call(Interpreter& interpreter)
+Value FunctionConstructor::call()
 {
-    return construct(interpreter, *this);
+    return construct(interpreter(), *this);
 }
 
 Value FunctionConstructor::construct(Interpreter& interpreter, Function&)

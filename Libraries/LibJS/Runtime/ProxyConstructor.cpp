@@ -49,9 +49,9 @@ ProxyConstructor::~ProxyConstructor()
 {
 }
 
-Value ProxyConstructor::call(Interpreter& interpreter)
+Value ProxyConstructor::call()
 {
-    interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyCallWithNew);
+    vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyCallWithNew);
     return {};
 }
 

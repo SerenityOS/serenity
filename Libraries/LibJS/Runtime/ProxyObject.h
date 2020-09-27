@@ -39,7 +39,7 @@ public:
     ProxyObject(Object& target, Object& handler, Object& prototype);
     virtual ~ProxyObject() override;
 
-    virtual Value call(Interpreter&) override;
+    virtual Value call() override;
     virtual Value construct(Interpreter&, Function& new_target) override;
     virtual const FlyString& name() const override;
     virtual LexicalEnvironment* create_environment() override;

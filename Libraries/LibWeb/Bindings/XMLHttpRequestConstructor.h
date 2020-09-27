@@ -36,7 +36,7 @@ public:
     virtual void initialize(JS::GlobalObject&) override;
     virtual ~XMLHttpRequestConstructor() override;
 
-    virtual JS::Value call(JS::Interpreter&) override;
+    virtual JS::Value call() override;
     virtual JS::Value construct(JS::Interpreter& interpreter, Function& new_target) override;
 
 private:

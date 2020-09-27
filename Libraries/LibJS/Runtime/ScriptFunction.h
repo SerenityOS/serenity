@@ -44,7 +44,7 @@ public:
     const Statement& body() const { return m_body; }
     const Vector<FunctionNode::Parameter>& parameters() const { return m_parameters; };
 
-    virtual Value call(Interpreter&) override;
+    virtual Value call() override;
     virtual Value construct(Interpreter&, Function& new_target) override;
 
     virtual const FlyString& name() const override { return m_name; };

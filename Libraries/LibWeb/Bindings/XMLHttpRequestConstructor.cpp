@@ -56,9 +56,9 @@ XMLHttpRequestConstructor::~XMLHttpRequestConstructor()
 {
 }
 
-JS::Value XMLHttpRequestConstructor::call(JS::Interpreter& interpreter)
+JS::Value XMLHttpRequestConstructor::call()
 {
-    return construct(interpreter, *this);
+    return construct(interpreter(), *this);
 }
 
 JS::Value XMLHttpRequestConstructor::construct(JS::Interpreter& interpreter, Function&)

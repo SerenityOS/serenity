@@ -47,9 +47,9 @@ ErrorConstructor::~ErrorConstructor()
 {
 }
 
-Value ErrorConstructor::call(Interpreter& interpreter)
+Value ErrorConstructor::call()
 {
-    return construct(interpreter, *this);
+    return construct(interpreter(), *this);
 }
 
 Value ErrorConstructor::construct(Interpreter& interpreter, Function&)
@@ -75,9 +75,9 @@ Value ErrorConstructor::construct(Interpreter& interpreter, Function&)
         define_property("length", Value(1), Attribute::Configurable);                                                  \
     }                                                                                                                  \
     ConstructorName::~ConstructorName() { }                                                                            \
-    Value ConstructorName::call(Interpreter& interpreter)                                                              \
+    Value ConstructorName::call()                                                                                      \
     {                                                                                                                  \
-        return construct(interpreter, *this);                                                                          \
+        return construct(interpreter(), *this);                                                                        \
     }                                                                                                                  \
     Value ConstructorName::construct(Interpreter& interpreter, Function&)                                              \
     {                                                                                                                  \

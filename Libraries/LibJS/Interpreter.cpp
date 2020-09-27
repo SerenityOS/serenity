@@ -44,6 +44,14 @@
 
 namespace JS {
 
+NonnullOwnPtr<Interpreter> Interpreter::create_with_existing_global_object(GlobalObject& global_object)
+{
+    DeferGC defer_gc(global_object.heap());
+    auto interpreter = adopt_own(*new Interpreter(global_object.vm()));
+    interpreter->m_global_object = make_handle(static_cast<Object*>(&global_object));
+    return interpreter;
+}
+
 Interpreter::Interpreter(VM& vm)
     : m_vm(vm)
     , m_console(*this)
@@ -82,28 +90,6 @@ GlobalObject& Interpreter::global_object()
 const GlobalObject& Interpreter::global_object() const
 {
     return static_cast<const GlobalObject&>(*m_global_object.cell());
-}
-
-Value Interpreter::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
-{
-    ASSERT(!exception());
-
-    VM::InterpreterExecutionScope scope(*this);
-
-    auto& call_frame = vm().push_call_frame();
-    call_frame.function_name = function.name();
-    call_frame.this_value = function.bound_this().value_or(this_value);
-    call_frame.arguments = function.bound_arguments();
-    if (arguments.has_value())
-        call_frame.arguments.append(arguments.value().values());
-    call_frame.environment = function.create_environment();
-
-    ASSERT(call_frame.environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
-    call_frame.environment->bind_this_value(call_frame.this_value);
-
-    auto result = function.call(*this);
-    vm().pop_call_frame();
-    return result;
 }
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type, GlobalObject& global_object)

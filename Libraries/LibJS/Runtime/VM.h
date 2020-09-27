@@ -206,6 +206,8 @@ public:
     const LexicalEnvironment* get_this_environment() const;
     Value get_new_target() const;
 
+    [[nodiscard]] Value call(Function&, Value this_value, Optional<MarkedValueList> arguments);
+
 private:
     VM();
 

@@ -49,9 +49,9 @@ BoundFunction::~BoundFunction()
 {
 }
 
-Value BoundFunction::call(Interpreter& interpreter)
+Value BoundFunction::call()
 {
-    return m_target_function->call(interpreter);
+    return m_target_function->call();
 }
 
 Value BoundFunction::construct(Interpreter& interpreter, Function& new_target)

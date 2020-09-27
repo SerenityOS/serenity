@@ -39,7 +39,7 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~ErrorConstructor() override;
 
-    virtual Value call(Interpreter&) override;
+    virtual Value call() override;
     virtual Value construct(Interpreter&, Function& new_target) override;
 
 private:
@@ -54,7 +54,7 @@ private:
         explicit ConstructorName(GlobalObject&);                                                  \
         virtual void initialize(GlobalObject&) override;                                          \
         virtual ~ConstructorName() override;                                                      \
-        virtual Value call(Interpreter&) override;                                                \
+        virtual Value call() override;                                                \
         virtual Value construct(Interpreter&, Function& new_target) override;                     \
                                                                                                   \
     private:                                                                                      \

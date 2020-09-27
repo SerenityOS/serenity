@@ -59,15 +59,15 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
     define_native_function("of", of, 0, attr);
 }
 
-Value ArrayConstructor::call(Interpreter& interpreter)
+Value ArrayConstructor::call()
 {
-    if (interpreter.argument_count() <= 0)
+    if (vm().argument_count() <= 0)
         return Array::create(global_object());
 
-    if (interpreter.argument_count() == 1 && interpreter.argument(0).is_number()) {
-        auto array_length_value = interpreter.argument(0);
+    if (vm().argument_count() == 1 && vm().argument(0).is_number()) {
+        auto array_length_value = vm().argument(0);
         if (!array_length_value.is_integer() || array_length_value.as_i32() < 0) {
-            interpreter.vm().throw_exception<TypeError>(global_object(), ErrorType::ArrayInvalidLength);
+            vm().throw_exception<TypeError>(global_object(), ErrorType::ArrayInvalidLength);
             return {};
         }
         auto* array = Array::create(global_object());
@@ -76,14 +76,14 @@ Value ArrayConstructor::call(Interpreter& interpreter)
     }
 
     auto* array = Array::create(global_object());
-    for (size_t i = 0; i < interpreter.argument_count(); ++i)
-        array->indexed_properties().append(interpreter.argument(i));
+    for (size_t i = 0; i < vm().argument_count(); ++i)
+        array->indexed_properties().append(vm().argument(i));
     return array;
 }
 
-Value ArrayConstructor::construct(Interpreter& interpreter, Function&)
+Value ArrayConstructor::construct(Interpreter&, Function&)
 {
-    return call(interpreter);
+    return call();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)

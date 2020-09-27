@@ -48,9 +48,9 @@ RegExpConstructor::~RegExpConstructor()
 {
 }
 
-Value RegExpConstructor::call(Interpreter& interpreter)
+Value RegExpConstructor::call()
 {
-    return construct(interpreter, *this);
+    return construct(interpreter(), *this);
 }
 
 Value RegExpConstructor::construct(Interpreter& interpreter, Function&)

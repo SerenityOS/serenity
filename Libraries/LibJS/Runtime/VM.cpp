@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/StringBuilder.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -298,6 +298,26 @@ const LexicalEnvironment* VM::get_this_environment() const
 Value VM::get_new_target() const
 {
     return get_this_environment()->new_target();
+}
+
+Value VM::call(Function& function, Value this_value, Optional<MarkedValueList> arguments)
+{
+    ASSERT(!exception());
+
+    auto& call_frame = push_call_frame();
+    call_frame.function_name = function.name();
+    call_frame.this_value = function.bound_this().value_or(this_value);
+    call_frame.arguments = function.bound_arguments();
+    if (arguments.has_value())
+        call_frame.arguments.append(arguments.value().values());
+    call_frame.environment = function.create_environment();
+
+    ASSERT(call_frame.environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
+    call_frame.environment->bind_this_value(call_frame.this_value);
+
+    auto result = function.call();
+    pop_call_frame();
+    return result;
 }
 
 }

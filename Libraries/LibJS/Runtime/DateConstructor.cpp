@@ -157,12 +157,12 @@ DateConstructor::~DateConstructor()
 {
 }
 
-Value DateConstructor::call(Interpreter& interpreter)
+Value DateConstructor::call()
 {
-    auto date = construct(interpreter, *this);
+    auto date = construct(interpreter(), *this);
     if (!date.is_object())
         return {};
-    return js_string(interpreter, static_cast<Date&>(date.as_object()).string());
+    return js_string(heap(), static_cast<Date&>(date.as_object()).string());
 }
 
 Value DateConstructor::construct(Interpreter& interpreter, Function&)

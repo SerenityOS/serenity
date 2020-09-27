@@ -55,14 +55,14 @@ StringConstructor::~StringConstructor()
 {
 }
 
-Value StringConstructor::call(Interpreter& interpreter)
+Value StringConstructor::call()
 {
-    if (!interpreter.argument_count())
-        return js_string(interpreter, "");
-    if (interpreter.argument(0).is_symbol())
-        return js_string(interpreter, interpreter.argument(0).as_symbol().to_string());
-    auto* string = interpreter.argument(0).to_primitive_string(interpreter);
-    if (interpreter.exception())
+    if (!vm().argument_count())
+        return js_string(heap(), "");
+    if (vm().argument(0).is_symbol())
+        return js_string(heap(), vm().argument(0).as_symbol().to_string());
+    auto* string = vm().argument(0).to_primitive_string(interpreter());
+    if (vm().exception())
         return {};
     return string;
 }
