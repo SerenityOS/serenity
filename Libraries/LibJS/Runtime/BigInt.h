@@ -47,6 +47,5 @@ private:
 };
 
 BigInt* js_bigint(Heap&, Crypto::SignedBigInteger);
-BigInt* js_bigint(Interpreter&, Crypto::SignedBigInteger);
 
 }

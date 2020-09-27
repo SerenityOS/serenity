@@ -1311,13 +1311,13 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         if (old_value.is_number())
             new_value = Value(old_value.as_double() + 1);
         else
-            new_value = js_bigint(interpreter, old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
+            new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
         break;
     case UpdateOp::Decrement:
         if (old_value.is_number())
             new_value = Value(old_value.as_double() - 1);
         else
-            new_value = js_bigint(interpreter, old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+            new_value = js_bigint(interpreter.heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -1623,7 +1623,7 @@ Value NumericLiteral::execute(Interpreter&, GlobalObject&) const
 
 Value BigIntLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
-    return js_bigint(interpreter, Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
+    return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
 }
 
 Value BooleanLiteral::execute(Interpreter&, GlobalObject&) const

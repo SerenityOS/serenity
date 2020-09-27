@@ -45,9 +45,4 @@ BigInt* js_bigint(Heap& heap, Crypto::SignedBigInteger big_integer)
     return heap.allocate_without_global_object<BigInt>(move(big_integer));
 }
 
-BigInt* js_bigint(Interpreter& interpreter, Crypto::SignedBigInteger big_integer)
-{
-    return js_bigint(interpreter.heap(), move(big_integer));
-}
-
 }
