@@ -50,8 +50,8 @@ void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
     }
 
     auto effective_method = method().to_lowercase();
-    if (effective_method != "get") {
-        if (effective_method == "post" || effective_method == "dialog") {
+    if (effective_method != "get" && effective_method != "post") {
+        if (effective_method == "dialog") {
             dbg() << "Unsupported form method '" << method() << "'";
             return;
         }
@@ -69,10 +69,24 @@ void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
         return IterationDecision::Continue;
     });
 
-    url.set_query(urlencode(parameters));
+    if (effective_method == "get") {
+        url.set_query(urlencode(parameters));
+    }
 
     // FIXME: We shouldn't let the form just do this willy-nilly.
-    document().frame()->page().load(url);
+
+    LoadRequest request;
+    request.set_url(url);
+
+    if (effective_method == "post") {
+        auto body = urlencode(parameters).to_byte_buffer();
+        request.set_method("POST");
+        request.set_header("Content-Type", "application/x-www-form-urlencoded");
+        request.set_header("Content-Length", String::number(body.size()));
+        request.set_body(body);
+    }
+
+    document().frame()->page().load(request);
 }
 
 }
