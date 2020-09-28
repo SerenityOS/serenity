@@ -76,7 +76,28 @@ struct TypeErasedParameter {
 
     const void* value;
     Type type;
-    void (*formatter)(StringBuilder& builder, const void* value, StringView flags, Span<const TypeErasedParameter> parameters);
+    void (*formatter)(StringBuilder& builder, const void* value, class FormatterContext&);
+};
+
+class FormatterContext {
+public:
+    FormatterContext(Span<const TypeErasedParameter> parameters)
+        : m_parameters(parameters)
+    {
+    }
+
+    const TypeErasedParameter& parameter_at(size_t index) const { return m_parameters.at(index); }
+    size_t parameter_count() const { return m_parameters.size(); }
+
+    StringView flags() const { return m_flags; }
+    void set_flags(StringView value) { m_flags = value; }
+
+    size_t take_next_index() { return m_next_index++; }
+
+private:
+    Span<const TypeErasedParameter> m_parameters;
+    StringView m_flags;
+    size_t m_next_index { 0 };
 };
 
 } // namespace AK
@@ -84,12 +105,12 @@ struct TypeErasedParameter {
 namespace AK::Detail::Format {
 
 template<typename T>
-void format_value(StringBuilder& builder, const void* value, StringView flags, AK::Span<const TypeErasedParameter> parameters)
+void format_value(StringBuilder& builder, const void* value, FormatterContext& context)
 {
     Formatter<T> formatter;
 
-    formatter.parse(flags);
-    formatter.format(builder, *static_cast<const T*>(value), parameters);
+    formatter.parse(context);
+    formatter.format(builder, *static_cast<const T*>(value), context);
 }
 
 } // namespace AK::Detail::Format
@@ -140,12 +161,12 @@ struct StandardFormatter {
     size_t m_width = value_not_set;
     size_t m_precision = value_not_set;
 
-    void parse(StringView flags);
+    void parse(FormatterContext&);
 };
 
 template<>
 struct Formatter<StringView> : StandardFormatter {
-    void format(StringBuilder& builder, StringView value, Span<const TypeErasedParameter>);
+    void format(StringBuilder& builder, StringView value, FormatterContext&);
 };
 template<>
 struct Formatter<const char*> : Formatter<StringView> {
@@ -162,7 +183,7 @@ struct Formatter<String> : Formatter<StringView> {
 
 template<typename T>
 struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFormatter {
-    void format(StringBuilder&, T value, Span<const TypeErasedParameter>);
+    void format(StringBuilder&, T value, FormatterContext&);
 };
 
 template<typename... Parameters>
