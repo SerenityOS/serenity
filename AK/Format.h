@@ -40,7 +40,7 @@ struct Formatter;
 
 struct TypeErasedParameter {
     const void* value;
-    void (*formatter)(StringBuilder& builder, const void* value, StringView specifier, Span<const TypeErasedParameter> parameters);
+    void (*formatter)(StringBuilder& builder, const void* value, StringView flags, Span<const TypeErasedParameter> parameters);
 };
 
 } // namespace AK
@@ -48,11 +48,11 @@ struct TypeErasedParameter {
 namespace AK::Detail::Format {
 
 template<typename T>
-void format_value(StringBuilder& builder, const void* value, StringView specifier, AK::Span<const TypeErasedParameter> parameters)
+void format_value(StringBuilder& builder, const void* value, StringView flags, AK::Span<const TypeErasedParameter> parameters)
 {
     Formatter<T> formatter;
 
-    formatter.parse(specifier);
+    formatter.parse(flags);
     formatter.format(builder, *static_cast<const T*>(value), parameters);
 }
 
@@ -103,7 +103,7 @@ struct StandardFormatter {
     size_t m_width = value_not_set;
     size_t m_precision = value_not_set;
 
-    void parse(StringView specifier);
+    void parse(StringView flags);
 };
 
 template<>
@@ -135,7 +135,7 @@ Array<TypeErasedParameter, sizeof...(Parameters)> make_type_erased_parameters(co
     return { TypeErasedParameter { &parameters, Detail::Format::format_value<Parameters> }... };
 }
 
-void vformat(StringBuilder& builder, StringView fmtstr, Span<const TypeErasedParameter>, size_t argument_index = 0);
+void vformat(StringBuilder& builder, StringView fmtstr, Span<const TypeErasedParameter>);
 void vformat(const LogStream& stream, StringView fmtstr, Span<const TypeErasedParameter>);
 
 } // namespace AK
