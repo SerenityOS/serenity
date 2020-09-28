@@ -47,13 +47,13 @@ bool Client::is_supported_protocol(const String& protocol)
     return send_sync<Messages::ProtocolServer::IsSupportedProtocol>(protocol)->supported();
 }
 
-RefPtr<Download> Client::start_download(const String& url, const HashMap<String, String>& request_headers)
+RefPtr<Download> Client::start_download(const String& method, const String& url, const HashMap<String, String>& request_headers, const ByteBuffer& request_body)
 {
     IPC::Dictionary header_dictionary;
     for (auto& it : request_headers)
         header_dictionary.add(it.key, it.value);
 
-    i32 download_id = send_sync<Messages::ProtocolServer::StartDownload>(url, header_dictionary)->download_id();
+    i32 download_id = send_sync<Messages::ProtocolServer::StartDownload>(method, url, header_dictionary, String::copy(request_body))->download_id();
     if (download_id < 0)
         return nullptr;
     auto download = Download::create_from_id({}, *this, download_id);

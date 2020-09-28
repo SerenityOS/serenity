@@ -37,7 +37,7 @@ public:
     virtual ~Protocol();
 
     const String& name() const { return m_name; }
-    virtual OwnPtr<Download> start_download(ClientConnection&, const URL&, const HashMap<String, String>& headers) = 0;
+    virtual OwnPtr<Download> start_download(ClientConnection&, const String& method, const URL&, const HashMap<String, String>& headers, const ByteBuffer& request_body) = 0;
 
     static Protocol* find_by_name(const String&);
 

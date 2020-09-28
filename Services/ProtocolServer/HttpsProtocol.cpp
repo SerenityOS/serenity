@@ -40,12 +40,16 @@ HttpsProtocol::~HttpsProtocol()
 {
 }
 
-OwnPtr<Download> HttpsProtocol::start_download(ClientConnection& client, const URL& url, const HashMap<String, String>& headers)
+OwnPtr<Download> HttpsProtocol::start_download(ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, const ByteBuffer& request_body)
 {
     HTTP::HttpRequest request;
-    request.set_method(HTTP::HttpRequest::Method::GET);
+    if (method.equals_ignoring_case("post"))
+        request.set_method(HTTP::HttpRequest::Method::POST);
+    else
+        request.set_method(HTTP::HttpRequest::Method::GET);
     request.set_url(url);
     request.set_headers(headers);
+    request.set_body(request_body);
     auto job = HTTP::HttpsJob::construct(request);
     auto download = HttpsDownload::create_with_job({}, client, (HTTP::HttpsJob&)*job);
     job->start();

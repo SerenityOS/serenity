@@ -35,7 +35,7 @@ public:
     GeminiProtocol();
     virtual ~GeminiProtocol() override;
 
-    virtual OwnPtr<Download> start_download(ClientConnection&, const URL&, const HashMap<String, String>&) override;
+    virtual OwnPtr<Download> start_download(ClientConnection&, const String& method, const URL&, const HashMap<String, String>&, const ByteBuffer& request_body) override;
 };
 
 }

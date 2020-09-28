@@ -96,7 +96,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
     s_resource_cache.set(request, resource);
 
     load(
-        request.url(),
+        request,
         [=](auto& data, auto& headers) {
             const_cast<Resource&>(*resource).did_load({}, data, headers);
         },
@@ -107,8 +107,9 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, const LoadRe
     return resource;
 }
 
-void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+void ResourceLoader::load(const LoadRequest& request, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
 {
+    auto& url = request.url();
     if (is_port_blocked(url.port())) {
         dbg() << "ResourceLoader::load: Error: blocked port " << url.port() << " for URL: " << url;
         return;
@@ -157,7 +158,12 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
     if (url.protocol() == "http" || url.protocol() == "https" || url.protocol() == "gemini") {
         HashMap<String, String> headers;
         headers.set("User-Agent", m_user_agent);
-        auto download = protocol_client().start_download(url.to_string(), headers);
+
+        for (auto& it : request.headers()) {
+            headers.set(it.key, it.value);
+        }
+
+        auto download = protocol_client().start_download(request.method(), url.to_string(), headers, request.body());
         if (!download) {
             if (error_callback)
                 error_callback("Failed to initiate load");
@@ -190,6 +196,13 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const
 
     if (error_callback)
         error_callback(String::format("Protocol not implemented: %s", url.protocol().characters()));
+}
+
+void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)> success_callback, Function<void(const String&)> error_callback)
+{
+    LoadRequest request;
+    request.set_url(url);
+    load(request, move(success_callback), move(error_callback));
 }
 
 bool ResourceLoader::is_port_blocked(int port)

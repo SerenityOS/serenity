@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/URL.h>
@@ -60,6 +61,9 @@ public:
     Method method() const { return m_method; }
     void set_method(Method method) { m_method = method; }
 
+    const ByteBuffer& body() const { return m_body; }
+    void set_body(const ByteBuffer& body) { m_body = body; }
+
     String method_name() const;
     ByteBuffer to_raw_request() const;
 
@@ -74,6 +78,7 @@ private:
     String m_resource;
     Method m_method { GET };
     Vector<Header> m_headers;
+    ByteBuffer m_body;
 };
 
 }
