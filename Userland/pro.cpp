@@ -159,7 +159,7 @@ int main(int argc, char** argv)
     Core::EventLoop loop;
     auto protocol_client = Protocol::Client::construct();
 
-    auto download = protocol_client->start_download(url.to_string());
+    auto download = protocol_client->start_download("GET", url.to_string());
     if (!download) {
         fprintf(stderr, "Failed to start download for '%s'\n", url_str);
         return 1;

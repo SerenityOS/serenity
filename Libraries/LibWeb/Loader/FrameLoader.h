@@ -45,6 +45,7 @@ public:
     ~FrameLoader();
 
     bool load(const URL&, Type);
+    bool load(const LoadRequest&, Type);
 
     Frame& frame() { return m_frame; }
     const Frame& frame() const { return m_frame; }

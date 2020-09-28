@@ -29,6 +29,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/URL.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Forward.h>
@@ -59,6 +60,7 @@ public:
     void set_focused_frame(Badge<EventHandler>, Frame&);
 
     void load(const URL&);
+    void load(const LoadRequest&);
 
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);

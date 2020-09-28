@@ -44,7 +44,7 @@ public:
     virtual void handshake() override;
 
     bool is_supported_protocol(const String&);
-    RefPtr<Download> start_download(const String& url, const HashMap<String, String>& request_headers = {});
+    RefPtr<Download> start_download(const String& method, const String& url, const HashMap<String, String>& request_headers = {}, const ByteBuffer& request_body = {});
 
     bool stop_download(Badge<Download>, Download&);
     bool set_certificate(Badge<Download>, Download&, String, String);

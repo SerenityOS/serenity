@@ -79,6 +79,10 @@ ByteBuffer HttpRequest::to_raw_request() const
         builder.append("\r\n");
     }
     builder.append("Connection: close\r\n\r\n");
+    if (!m_body.is_empty()) {
+        builder.append((const char*)m_body.data(), m_body.size());
+        builder.append("\r\n");
+    }
     return builder.to_byte_buffer();
 }
 

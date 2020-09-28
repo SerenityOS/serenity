@@ -139,17 +139,15 @@ RefPtr<DOM::Document> FrameLoader::create_document_from_mime_type(const ByteBuff
     return nullptr;
 }
 
-bool FrameLoader::load(const URL& url, Type type)
+bool FrameLoader::load(const LoadRequest& request, Type type)
 {
-    dbg() << "FrameLoader::load: " << url;
-
-    if (!url.is_valid()) {
-        load_error_page(url, "Invalid URL");
+    if (!request.is_valid()) {
+        load_error_page(request.url(), "Invalid request");
         return false;
     }
 
-    LoadRequest request;
-    request.set_url(url);
+    auto& url = request.url();
+
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
     if (type == Type::Navigation)
@@ -178,6 +176,21 @@ bool FrameLoader::load(const URL& url, Type type)
     }
 
     return true;
+}
+
+bool FrameLoader::load(const URL& url, Type type)
+{
+    dbg() << "FrameLoader::load: " << url;
+
+    if (!url.is_valid()) {
+        load_error_page(url, "Invalid URL");
+        return false;
+    }
+
+    LoadRequest request;
+    request.set_url(url);
+
+    return load(request, type);
 }
 
 void FrameLoader::load_error_page(const URL& failed_url, const String& error)

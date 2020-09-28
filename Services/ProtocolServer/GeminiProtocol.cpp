@@ -40,7 +40,7 @@ GeminiProtocol::~GeminiProtocol()
 {
 }
 
-OwnPtr<Download> GeminiProtocol::start_download(ClientConnection& client, const URL& url, const HashMap<String, String>&)
+OwnPtr<Download> GeminiProtocol::start_download(ClientConnection& client, const String&, const URL& url, const HashMap<String, String>&, const ByteBuffer&)
 {
     Gemini::GeminiRequest request;
     request.set_url(url);
