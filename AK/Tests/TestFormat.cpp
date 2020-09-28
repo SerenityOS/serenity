@@ -113,4 +113,9 @@ TEST_CASE(zero_pad)
     EXPECT_EQ(String::formatted("{:/^010}", 42), "////42////");
 }
 
+TEST_CASE(replacement_field)
+{
+    EXPECT_EQ(String::formatted("{:*>{1}}", 13, static_cast<size_t>(10)), "********13");
+}
+
 TEST_MAIN(Format)
