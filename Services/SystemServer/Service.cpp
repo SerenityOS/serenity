@@ -29,6 +29,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/File.h>
 #include <LibCore/Socket.h>
 #include <grp.h>
 #include <libgen.h>
@@ -84,36 +85,13 @@ Service* Service::find_by_pid(pid_t pid)
     return (*it).value;
 }
 
-static int ensure_parent_directories(const char* path)
-{
-    ASSERT(path[0] == '/');
-
-    char* parent_buffer = strdup(path);
-    const char* parent = dirname(parent_buffer);
-
-    int rc = 0;
-    while (true) {
-        int rc = mkdir(parent, 0755);
-
-        if (rc == 0)
-            break;
-
-        if (errno != ENOENT)
-            break;
-
-        ensure_parent_directories(parent);
-    };
-
-    free(parent_buffer);
-    return rc;
-}
-
 void Service::setup_socket()
 {
     ASSERT(!m_socket_path.is_null());
     ASSERT(m_socket_fd == -1);
 
-    ensure_parent_directories(m_socket_path.characters());
+    auto ok = Core::File::ensure_parent_directories(m_socket_path);
+    ASSERT(ok);
 
     // Note: we use SOCK_CLOEXEC here to make sure we don't leak every socket to
     // all the clients. We'll make the one we do need to pass down !CLOEXEC later
