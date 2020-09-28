@@ -27,10 +27,13 @@
 #ifdef __serenity__
 #    include <Kernel/API/Syscall.h>
 #endif
+#include <AK/ScopeGuard.h>
 #include <LibCore/File.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -130,6 +133,37 @@ String File::real_path_for(const String& filename)
     String real_path(path);
     free(path);
     return real_path;
+}
+
+bool File::ensure_parent_directories(const String& path)
+{
+    ASSERT(path.starts_with("/"));
+
+    int saved_errno = 0;
+    ScopeGuard restore_errno = [&saved_errno] { errno = saved_errno; };
+
+    char* parent_buffer = strdup(path.characters());
+    ScopeGuard free_buffer = [parent_buffer] { free(parent_buffer); };
+
+    const char* parent = dirname(parent_buffer);
+
+    int rc = mkdir(parent, 0755);
+    saved_errno = errno;
+
+    if (rc == 0 || errno == EEXIST)
+        return true;
+
+    if (errno != ENOENT)
+        return false;
+
+    bool ok = ensure_parent_directories(parent);
+    saved_errno = errno;
+    if (!ok)
+        return false;
+
+    rc = mkdir(parent, 0755);
+    saved_errno = errno;
+    return rc == 0;
 }
 
 #ifdef __serenity__
