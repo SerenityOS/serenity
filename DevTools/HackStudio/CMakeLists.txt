@@ -32,4 +32,4 @@ set(SOURCES
 )
 
 serenity_bin(HackStudio)
-target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibGfx LibCore LibVT LibDebug LibX86 LibDiff)
+target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibGfx LibCore LibVT LibDebug LibX86 LibDiff LibShell)

@@ -47,6 +47,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/ShellSyntaxHighlighter.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StatusBar.h>
 #include <LibGUI/TextBox.h>
@@ -437,6 +438,13 @@ TextEditorWidget::TextEditorWidget()
     });
     syntax_actions.add_action(*m_ini_highlight);
     syntax_menu.add_action(*m_ini_highlight);
+
+    m_shell_highlight = GUI::Action::create_checkable("Shell File", [&](auto&) {
+        m_editor->set_syntax_highlighter(make<GUI::ShellSyntaxHighlighter>());
+        m_editor->update();
+    });
+    syntax_actions.add_action(*m_shell_highlight);
+    syntax_menu.add_action(*m_shell_highlight);
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
