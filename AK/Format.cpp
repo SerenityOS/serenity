@@ -33,39 +33,111 @@
 
 namespace {
 
+constexpr size_t use_next_index = NumericLimits<size_t>::max();
+
 struct FormatSpecifier {
     StringView flags;
-    size_t index { 0 };
+    size_t index;
 };
 
-static bool find_next_unescaped(size_t& index, StringView input, char ch)
-{
-    constexpr size_t unset = NumericLimits<size_t>::max();
+class FormatStringParser : public GenericLexer {
+public:
+    explicit FormatStringParser(StringView input)
+        : GenericLexer(input)
+    {
+    }
 
-    index = unset;
-    for (size_t idx = 0; idx < input.length(); ++idx) {
-        if (input[idx] == ch) {
-            if (index == unset)
-                index = idx;
-            else
-                index = unset;
-        } else if (index != unset) {
-            return true;
+    StringView consume_literal()
+    {
+        const auto begin = tell();
+
+        while (!is_eof()) {
+            if (consume_specific("{{"))
+                continue;
+
+            if (consume_specific("}}"))
+                continue;
+
+            if (next_is(is_any_of("{}")))
+                return m_input.substring_view(begin, tell() - begin);
+
+            consume();
         }
+
+        return m_input.substring_view(begin);
     }
 
-    return index != unset;
-}
-static bool find_next(size_t& index, StringView input, char ch)
-{
-    for (index = 0; index < input.length(); ++index) {
-        if (input[index] == ch)
-            return index;
+    bool consume_number(size_t& value)
+    {
+        value = 0;
+
+        bool consumed_at_least_one = false;
+        while (next_is(isdigit)) {
+            value *= 10;
+            value += consume() - '0';
+            consumed_at_least_one = true;
+        }
+
+        return consumed_at_least_one;
     }
 
-    return false;
-}
-static void write_escaped_literal(StringBuilder& builder, StringView literal)
+    bool consume_specifier(FormatSpecifier& specifier)
+    {
+        ASSERT(!next_is('}'));
+
+        if (!consume_specific('{'))
+            return false;
+
+        if (!consume_number(specifier.index))
+            specifier.index = use_next_index;
+
+        if (consume_specific(':')) {
+            const auto begin = tell();
+
+            size_t level = 1;
+            while (level > 0) {
+                ASSERT(!is_eof());
+
+                if (consume_specific('{')) {
+                    ++level;
+                    continue;
+                }
+
+                if (consume_specific('}')) {
+                    --level;
+                    continue;
+                }
+
+                consume();
+            }
+
+            specifier.flags = m_input.substring_view(begin, tell() - begin - 1);
+        } else {
+            if (!consume_specific('}'))
+                ASSERT_NOT_REACHED();
+
+            specifier.flags = "";
+        }
+
+        return true;
+    }
+
+    bool consume_replacement_field(size_t& index)
+    {
+        if (!consume_specific('{'))
+            return false;
+
+        if (!consume_number(index))
+            return use_next_index;
+
+        if (!consume_specific('}'))
+            ASSERT_NOT_REACHED();
+
+        return true;
+    }
+};
+
+void write_escaped_literal(StringBuilder& builder, StringView literal)
 {
     for (size_t idx = 0; idx < literal.length(); ++idx) {
         builder.append(literal[idx]);
@@ -74,163 +146,117 @@ static void write_escaped_literal(StringBuilder& builder, StringView literal)
     }
 }
 
-static bool parse_number(GenericLexer& lexer, size_t& value)
+void vformat_impl(StringBuilder& builder, FormatStringParser& parser, Span<const AK::TypeErasedParameter> parameters, size_t argument_index = 0)
 {
-    value = 0;
+    const auto literal = parser.consume_literal();
+    write_escaped_literal(builder, literal);
 
-    bool consumed_at_least_one = false;
-    while (!lexer.is_eof()) {
-        if (lexer.next_is(isdigit)) {
-            value *= 10;
-            value += lexer.consume() - '0';
-            consumed_at_least_one = true;
-        } else {
-            break;
-        }
+    FormatSpecifier specifier;
+    if (!parser.consume_specifier(specifier)) {
+        ASSERT(parser.is_eof());
+        return;
     }
 
-    return consumed_at_least_one;
-}
+    if (specifier.index == use_next_index)
+        specifier.index = argument_index++;
 
-constexpr size_t use_next_index = NumericLimits<size_t>::max();
+    ASSERT(specifier.index < parameters.size());
 
-static bool parse_format_specifier(StringView input, FormatSpecifier& specifier)
-{
-    GenericLexer lexer { input };
+    auto& parameter = parameters[specifier.index];
+    parameter.formatter(builder, parameter.value, specifier.flags, parameters);
 
-    if (!parse_number(lexer, specifier.index))
-        specifier.index = use_next_index;
-
-    if (!lexer.consume_specific(':'))
-        return lexer.is_eof();
-
-    specifier.flags = lexer.consume_all();
-    return true;
-}
-
-static bool parse_nested_replacement_field(GenericLexer& lexer, size_t& index)
-{
-    if (!lexer.consume_specific('{'))
-        return false;
-
-    if (!parse_number(lexer, index))
-        index = use_next_index;
-
-    if (!lexer.consume_specific('}'))
-        ASSERT_NOT_REACHED();
-
-    return true;
+    vformat_impl(builder, parser, parameters, argument_index);
 }
 
 } // namespace
 
 namespace AK {
 
-void vformat(StringBuilder& builder, StringView fmtstr, AK::Span<const TypeErasedParameter> parameters, size_t argument_index)
+void vformat(StringBuilder& builder, StringView fmtstr, Span<const TypeErasedParameter> parameters)
 {
-    size_t opening;
-    if (!find_next_unescaped(opening, fmtstr, '{')) {
-        size_t dummy;
-        if (find_next_unescaped(dummy, fmtstr, '}'))
-            ASSERT_NOT_REACHED();
-
-        write_escaped_literal(builder, fmtstr);
-        return;
-    }
-
-    write_escaped_literal(builder, fmtstr.substring_view(0, opening));
-
-    size_t closing;
-    if (!find_next(closing, fmtstr.substring_view(opening), '}'))
-        ASSERT_NOT_REACHED();
-    closing += opening;
-
-    FormatSpecifier specifier;
-    if (!parse_format_specifier(fmtstr.substring_view(opening + 1, closing - (opening + 1)), specifier))
-        ASSERT_NOT_REACHED();
-
-    if (specifier.index == NumericLimits<size_t>::max())
-        specifier.index = argument_index++;
-
-    if (specifier.index >= parameters.size())
-        ASSERT_NOT_REACHED();
-
-    auto& parameter = parameters[specifier.index];
-    parameter.formatter(builder, parameter.value, specifier.flags, parameters);
-
-    vformat(builder, fmtstr.substring_view(closing + 1), parameters, argument_index);
+    FormatStringParser parser { fmtstr };
+    vformat_impl(builder, parser, parameters);
 }
 void vformat(const LogStream& stream, StringView fmtstr, Span<const TypeErasedParameter> parameters)
 {
     StringBuilder builder;
-    vformat(builder, fmtstr, parameters);
+    FormatStringParser parser { fmtstr };
+    vformat_impl(builder, parser, parameters);
     stream << builder.to_string();
 }
 
-void StandardFormatter::parse(StringView specifier)
+void StandardFormatter::parse(StringView flags)
 {
-    GenericLexer lexer { specifier };
+    FormatStringParser parser { flags };
 
-    if (StringView { "<^>" }.contains(lexer.peek(1))) {
-        ASSERT(!lexer.next_is(is_any_of("{}")));
-        m_fill = lexer.consume();
+    if (StringView { "<^>" }.contains(parser.peek(1))) {
+        ASSERT(!parser.next_is(is_any_of("{}")));
+        m_fill = parser.consume();
     }
 
-    if (lexer.consume_specific('<'))
+    if (parser.consume_specific('<'))
         m_align = Align::Left;
-    else if (lexer.consume_specific('^'))
+    else if (parser.consume_specific('^'))
         m_align = Align::Center;
-    else if (lexer.consume_specific('>'))
+    else if (parser.consume_specific('>'))
         m_align = Align::Right;
 
-    if (lexer.consume_specific('-'))
+    if (parser.consume_specific('-'))
         m_sign = Sign::NegativeOnly;
-    else if (lexer.consume_specific('+'))
+    else if (parser.consume_specific('+'))
         m_sign = Sign::PositiveAndNegative;
-    else if (lexer.consume_specific(' '))
+    else if (parser.consume_specific(' '))
         m_sign = Sign::ReserveSpace;
 
-    if (lexer.consume_specific('#'))
+    if (parser.consume_specific('#'))
         m_alternative_form = true;
 
-    if (lexer.consume_specific('0'))
+    if (parser.consume_specific('0'))
         m_zero_pad = true;
 
-    if (size_t index = 0; parse_nested_replacement_field(lexer, index))
-        m_width = value_from_arg + index;
-    else if (size_t width = 0; parse_number(lexer, width))
-        m_width = width;
+    if (size_t index = 0; parser.consume_replacement_field(index)) {
+        if (index == use_next_index)
+            TODO();
 
-    if (lexer.consume_specific('.')) {
-        if (size_t index = 0; parse_nested_replacement_field(lexer, index))
-            m_precision = value_from_arg + index;
-        else if (size_t precision = 0; parse_number(lexer, precision))
-            m_precision = precision;
+        m_width = value_from_arg + index;
+    } else if (size_t width = 0; parser.consume_number(width)) {
+        m_width = width;
     }
 
-    if (lexer.consume_specific('b'))
+    if (parser.consume_specific('.')) {
+        if (size_t index = 0; parser.consume_replacement_field(index)) {
+            if (index == use_next_index)
+                TODO();
+
+            m_precision = value_from_arg + index;
+        } else if (size_t precision = 0; parser.consume_number(precision)) {
+            m_precision = precision;
+        }
+    }
+
+    if (parser.consume_specific('b'))
         m_mode = Mode::Binary;
-    else if (lexer.consume_specific('B'))
+    else if (parser.consume_specific('B'))
         m_mode = Mode::BinaryUppercase;
-    else if (lexer.consume_specific('d'))
+    else if (parser.consume_specific('d'))
         m_mode = Mode::Decimal;
-    else if (lexer.consume_specific('o'))
+    else if (parser.consume_specific('o'))
         m_mode = Mode::Octal;
-    else if (lexer.consume_specific('x'))
+    else if (parser.consume_specific('x'))
         m_mode = Mode::Hexadecimal;
-    else if (lexer.consume_specific('X'))
+    else if (parser.consume_specific('X'))
         m_mode = Mode::HexadecimalUppercase;
-    else if (lexer.consume_specific('c'))
+    else if (parser.consume_specific('c'))
         m_mode = Mode::Character;
-    else if (lexer.consume_specific('s'))
+    else if (parser.consume_specific('s'))
         m_mode = Mode::String;
-    else if (lexer.consume_specific('p'))
+    else if (parser.consume_specific('p'))
         m_mode = Mode::Pointer;
 
-    if (!lexer.is_eof())
-        dbg() << __PRETTY_FUNCTION__ << " did not consume '" << lexer.remaining() << "'";
+    if (!parser.is_eof())
+        dbg() << __PRETTY_FUNCTION__ << " did not consume '" << parser.remaining() << "'";
 
-    ASSERT(lexer.is_eof());
+    ASSERT(parser.is_eof());
 }
 
 void Formatter<StringView>::format(StringBuilder& builder, StringView value, Span<const TypeErasedParameter>)
