@@ -1445,6 +1445,9 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(InodeIdentifier parent_id, 
     if (static_cast<const Ext2FSInode&>(*parent_inode).m_raw_inode.i_links_count == 0)
         return KResult(-ENOENT);
 
+    if (name.length() > EXT2_NAME_LEN)
+        return KResult(-ENAMETOOLONG);
+
 #ifdef EXT2_DEBUG
     dbg() << "Ext2FS: Adding inode '" << name << "' (mode " << String::format("%o", mode) << ") to parent directory " << parent_inode->identifier();
 #endif
