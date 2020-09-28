@@ -578,7 +578,7 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
         path = path_arg.value();
     }
 
-    auto copy_user_strings = [this](const auto& list, auto& output) {
+    auto copy_user_strings = [](const auto& list, auto& output) {
         if (!list.length)
             return true;
         Checked size = sizeof(list.length);
