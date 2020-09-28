@@ -144,6 +144,7 @@ private:
     int virt$ttyname(int fd, FlatPtr buffer, size_t buffer_size);
     int virt$getcwd(FlatPtr buffer, size_t buffer_size);
     int virt$waitid(FlatPtr);
+    int virt$getsid(pid_t);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
 

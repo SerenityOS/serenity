@@ -293,6 +293,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$gettid();
     case SC_getpid:
         return virt$getpid();
+    case SC_getsid:
+        return virt$getsid(arg1);
     case SC_pledge:
         return virt$pledge(arg1);
     case SC_unveil:
@@ -1323,6 +1325,11 @@ int Emulator::virt$getcwd(FlatPtr buffer, size_t buffer_size)
         return rc;
     mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
     return rc;
+}
+
+int Emulator::virt$getsid(pid_t pid)
+{
+    return syscall(SC_getsid, pid);
 }
 
 int Emulator::virt$access(FlatPtr path, size_t path_length, int type)
