@@ -245,11 +245,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     for (size_t i = 0; i < m_fds.size(); ++i) {
         auto& description_and_flags = m_fds[i];
-        if (description_and_flags.description() && description_and_flags.flags() & FD_CLOEXEC) {
-            // FIXME: Should this error path be observed somehow?
-            (void)description_and_flags.description()->close();
+        if (description_and_flags.description() && description_and_flags.flags() & FD_CLOEXEC)
             description_and_flags = {};
-        }
     }
 
     new_main_thread = nullptr;
