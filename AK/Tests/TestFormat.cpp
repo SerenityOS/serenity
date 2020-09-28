@@ -119,6 +119,7 @@ TEST_CASE(replacement_field)
     EXPECT_EQ(String::formatted("{:*<{1}}", 7, 4), "7***");
     EXPECT_EQ(String::formatted("{:{2}}", -5, 8, 16), "              -5");
     EXPECT_EQ(String::formatted("{{{:*^{1}}}}", 1, 3), "{*1*}");
+    EXPECT_EQ(String::formatted("{:0{}}", 1, 3), "001");
 }
 
 TEST_MAIN(Format)
