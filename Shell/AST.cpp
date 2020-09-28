@@ -121,7 +121,15 @@ Vector<Command> Node::to_lazy_evaluated_commands(RefPtr<Shell> shell)
 
 void Node::dump(int level) const
 {
-    print_indented(String::format("%s at %d:%d", class_name().characters(), m_position.start_offset, m_position.end_offset), level);
+    print_indented(String::format("%s at %d:%d (from %d.%d to %d.%d)",
+                       class_name().characters(),
+                       m_position.start_offset,
+                       m_position.end_offset,
+                       m_position.start_line.line_number,
+                       m_position.start_line.line_column,
+                       m_position.end_line.line_number,
+                       m_position.end_line.line_column),
+        level);
 }
 
 Node::Node(Position position)
@@ -226,10 +234,11 @@ HitTestResult And::hit_test_position(size_t offset)
     return result;
 }
 
-And::And(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
+And::And(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right, Position and_position)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
+    , m_and_position(and_position)
 {
     if (m_left->is_syntax_error())
         set_is_syntax_error(m_left->syntax_error_node());
@@ -913,7 +922,7 @@ void ForLoop::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightM
 {
     editor.stylize({ m_position.start_offset, m_position.start_offset + 3 }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
     if (m_in_kw_position.has_value())
-        editor.stylize({ m_in_kw_position.value(), m_in_kw_position.value() + 2 }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+        editor.stylize({ m_in_kw_position.value().start_offset, m_in_kw_position.value().end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
 
     metadata.is_first_in_list = false;
     m_iterated_expression->highlight_in_editor(editor, shell, metadata);
@@ -937,7 +946,7 @@ HitTestResult ForLoop::hit_test_position(size_t offset)
     return m_block->hit_test_position(offset);
 }
 
-ForLoop::ForLoop(Position position, String variable_name, NonnullRefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<size_t> in_kw_position)
+ForLoop::ForLoop(Position position, String variable_name, NonnullRefPtr<AST::Node> iterated_expr, RefPtr<AST::Node> block, Optional<Position> in_kw_position)
     : Node(move(position))
     , m_variable_name(move(variable_name))
     , m_iterated_expression(move(iterated_expr))
@@ -1541,10 +1550,11 @@ HitTestResult Or::hit_test_position(size_t offset)
     return result;
 }
 
-Or::Or(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
+Or::Or(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right, Position or_position)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
+    , m_or_position(or_position)
 {
     if (m_left->is_syntax_error())
         set_is_syntax_error(m_left->syntax_error_node());
@@ -1796,10 +1806,11 @@ HitTestResult Sequence::hit_test_position(size_t offset)
     return m_right->hit_test_position(offset);
 }
 
-Sequence::Sequence(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
+Sequence::Sequence(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right, Position separator_position)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
+    , m_separator_position(separator_position)
 {
     if (m_left->is_syntax_error())
         set_is_syntax_error(m_left->syntax_error_node());
