@@ -26,7 +26,7 @@
 
 #include "CppAutoComplete.h"
 #include <AK/HashTable.h>
-#include <LibGUI/CppLexer.h>
+#include <LibCpp/Lexer.h>
 
 // #define DEBUG_AUTOCOMPLETE
 
@@ -34,7 +34,7 @@ namespace HackStudio {
 Vector<String> CppAutoComplete::get_suggestions(const String& code, GUI::TextPosition autocomplete_position)
 {
     auto lines = code.split('\n', true);
-    GUI::CppLexer lexer(code);
+    Cpp::Lexer lexer(code);
     auto tokens = lexer.lex();
 
     auto index_of_target_token = token_in_position(tokens, autocomplete_position);
@@ -52,12 +52,12 @@ Vector<String> CppAutoComplete::get_suggestions(const String& code, GUI::TextPos
     return suggestions;
 }
 
-String CppAutoComplete::text_of_token(const Vector<String> lines, const GUI::CppToken& token)
+String CppAutoComplete::text_of_token(const Vector<String> lines, const Cpp::Token& token)
 {
     return lines[token.m_start.line].substring(token.m_start.column, token.m_end.column - token.m_start.column + 1);
 }
 
-Optional<size_t> CppAutoComplete::token_in_position(const Vector<GUI::CppToken>& tokens, GUI::TextPosition position)
+Optional<size_t> CppAutoComplete::token_in_position(const Vector<Cpp::Token>& tokens, GUI::TextPosition position)
 {
     for (size_t token_index = 0; token_index < tokens.size(); ++token_index) {
         auto& token = tokens[token_index];
@@ -70,7 +70,7 @@ Optional<size_t> CppAutoComplete::token_in_position(const Vector<GUI::CppToken>&
     return {};
 }
 
-Vector<String> CppAutoComplete::identifier_prefixes(const Vector<String> lines, const Vector<GUI::CppToken>& tokens, size_t target_token_index)
+Vector<String> CppAutoComplete::identifier_prefixes(const Vector<String> lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
 {
     auto partial_input = text_of_token(lines, tokens[target_token_index]);
     Vector<String> suggestions;
@@ -79,7 +79,7 @@ Vector<String> CppAutoComplete::identifier_prefixes(const Vector<String> lines, 
 
     for (size_t i = 0; i < target_token_index; ++i) {
         auto& token = tokens[i];
-        if (token.m_type != GUI::CppToken::Type::Identifier)
+        if (token.m_type != Cpp::Token::Type::Identifier)
             continue;
         auto text = text_of_token(lines, token);
         if (text.starts_with(partial_input) && !suggestions_lookup.contains(text)) {

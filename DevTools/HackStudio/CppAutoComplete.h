@@ -28,7 +28,7 @@
 
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibGUI/CppLexer.h>
+#include <LibCpp/Lexer.h>
 #include <LibGUI/TextPosition.h>
 
 namespace HackStudio {
@@ -39,8 +39,8 @@ public:
     static Vector<String> get_suggestions(const String& code, GUI::TextPosition autocomplete_position);
 
 private:
-    static Optional<size_t> token_in_position(const Vector<GUI::CppToken>&, GUI::TextPosition);
-    static String text_of_token(const Vector<String> lines, const GUI::CppToken&);
-    static Vector<String> identifier_prefixes(const Vector<String> lines, const Vector<GUI::CppToken>&, size_t target_token_index);
+    static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, GUI::TextPosition);
+    static String text_of_token(const Vector<String> lines, const Cpp::Token&);
+    static Vector<String> identifier_prefixes(const Vector<String> lines, const Vector<Cpp::Token>&, size_t target_token_index);
 };
 };

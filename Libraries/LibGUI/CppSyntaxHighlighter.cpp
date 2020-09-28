@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGUI/CppLexer.h>
+#include <LibCpp/Lexer.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGfx/Font.h>
@@ -32,30 +32,30 @@
 
 namespace GUI {
 
-static TextStyle style_for_token_type(Gfx::Palette palette, CppToken::Type type)
+static TextStyle style_for_token_type(Gfx::Palette palette, Cpp::Token::Type type)
 {
     switch (type) {
-    case CppToken::Type::Keyword:
+    case Cpp::Token::Type::Keyword:
         return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
-    case CppToken::Type::KnownType:
+    case Cpp::Token::Type::KnownType:
         return { palette.syntax_type(), &Gfx::Font::default_bold_fixed_width_font() };
-    case CppToken::Type::Identifier:
+    case Cpp::Token::Type::Identifier:
         return { palette.syntax_identifier() };
-    case CppToken::Type::DoubleQuotedString:
-    case CppToken::Type::SingleQuotedString:
-    case CppToken::Type::RawString:
+    case Cpp::Token::Type::DoubleQuotedString:
+    case Cpp::Token::Type::SingleQuotedString:
+    case Cpp::Token::Type::RawString:
         return { palette.syntax_string() };
-    case CppToken::Type::Integer:
-    case CppToken::Type::Float:
+    case Cpp::Token::Type::Integer:
+    case Cpp::Token::Type::Float:
         return { palette.syntax_number() };
-    case CppToken::Type::IncludePath:
+    case Cpp::Token::Type::IncludePath:
         return { palette.syntax_preprocessor_value() };
-    case CppToken::Type::EscapeSequence:
+    case Cpp::Token::Type::EscapeSequence:
         return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
-    case CppToken::Type::PreprocessorStatement:
-    case CppToken::Type::IncludeStatement:
+    case Cpp::Token::Type::PreprocessorStatement:
+    case Cpp::Token::Type::IncludeStatement:
         return { palette.syntax_preprocessor_statement() };
-    case CppToken::Type::Comment:
+    case Cpp::Token::Type::Comment:
         return { palette.syntax_comment() };
     default:
         return { palette.base_text() };
@@ -64,21 +64,21 @@ static TextStyle style_for_token_type(Gfx::Palette palette, CppToken::Type type)
 
 bool CppSyntaxHighlighter::is_identifier(void* token) const
 {
-    auto cpp_token = static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(token));
-    return cpp_token == GUI::CppToken::Type::Identifier;
+    auto cpp_token = static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token));
+    return cpp_token == Cpp::Token::Type::Identifier;
 }
 
 bool CppSyntaxHighlighter::is_navigatable(void* token) const
 {
-    auto cpp_token = static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(token));
-    return cpp_token == GUI::CppToken::Type::IncludePath;
+    auto cpp_token = static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token));
+    return cpp_token == Cpp::Token::Type::IncludePath;
 }
 
 void CppSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 {
     ASSERT(m_editor);
     auto text = m_editor->text();
-    CppLexer lexer(text);
+    Cpp::Lexer lexer(text);
     auto tokens = lexer.lex();
 
     Vector<GUI::TextDocumentSpan> spans;
@@ -92,7 +92,7 @@ void CppSyntaxHighlighter::rehighlight(Gfx::Palette palette)
         auto style = style_for_token_type(palette, token.m_type);
         span.color = style.color;
         span.font = style.font;
-        span.is_skippable = token.m_type == CppToken::Type::Whitespace;
+        span.is_skippable = token.m_type == Cpp::Token::Type::Whitespace;
         span.data = reinterpret_cast<void*>(token.m_type);
         spans.append(span);
     }
@@ -108,16 +108,16 @@ Vector<SyntaxHighlighter::MatchingTokenPair> CppSyntaxHighlighter::matching_toke
 {
     static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
-        pairs.append({ reinterpret_cast<void*>(CppToken::Type::LeftCurly), reinterpret_cast<void*>(CppToken::Type::RightCurly) });
-        pairs.append({ reinterpret_cast<void*>(CppToken::Type::LeftParen), reinterpret_cast<void*>(CppToken::Type::RightParen) });
-        pairs.append({ reinterpret_cast<void*>(CppToken::Type::LeftBracket), reinterpret_cast<void*>(CppToken::Type::RightBracket) });
+        pairs.append({ reinterpret_cast<void*>(Cpp::Token::Type::LeftCurly), reinterpret_cast<void*>(Cpp::Token::Type::RightCurly) });
+        pairs.append({ reinterpret_cast<void*>(Cpp::Token::Type::LeftParen), reinterpret_cast<void*>(Cpp::Token::Type::RightParen) });
+        pairs.append({ reinterpret_cast<void*>(Cpp::Token::Type::LeftBracket), reinterpret_cast<void*>(Cpp::Token::Type::RightBracket) });
     }
     return pairs;
 }
 
 bool CppSyntaxHighlighter::token_types_equal(void* token1, void* token2) const
 {
-    return static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(token1)) == static_cast<GUI::CppToken::Type>(reinterpret_cast<size_t>(token2));
+    return static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token1)) == static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token2));
 }
 
 CppSyntaxHighlighter::~CppSyntaxHighlighter()

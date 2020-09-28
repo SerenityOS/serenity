@@ -29,7 +29,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
-namespace GUI {
+namespace Cpp {
 
 #define FOR_EACH_TOKEN_TYPE        \
     __TOKEN(Unknown)               \
@@ -98,12 +98,12 @@ namespace GUI {
     __TOKEN(KnownType)             \
     __TOKEN(Identifier)
 
-struct CppPosition {
+struct Position {
     size_t line;
     size_t column;
 };
 
-struct CppToken {
+struct Token {
     enum class Type {
 #define __TOKEN(x) x,
         FOR_EACH_TOKEN_TYPE
@@ -123,15 +123,15 @@ struct CppToken {
     }
 
     Type m_type { Type::Unknown };
-    CppPosition m_start;
-    CppPosition m_end;
+    Position m_start;
+    Position m_end;
 };
 
-class CppLexer {
+class Lexer {
 public:
-    CppLexer(const StringView&);
+    Lexer(const StringView&);
 
-    Vector<CppToken> lex();
+    Vector<Token> lex();
 
 private:
     char peek(size_t offset = 0) const;
@@ -139,8 +139,8 @@ private:
 
     StringView m_input;
     size_t m_index { 0 };
-    CppPosition m_previous_position { 0, 0 };
-    CppPosition m_position { 0, 0 };
+    Position m_previous_position { 0, 0 };
+    Position m_position { 0, 0 };
 };
 
 }
