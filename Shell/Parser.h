@@ -42,6 +42,12 @@ public:
 
     RefPtr<AST::Node> parse();
 
+    struct SavedOffset {
+        size_t offset;
+        AST::Position::Line line;
+    };
+    SavedOffset save_offset() const;
+
 private:
     RefPtr<AST::Node> parse_toplevel();
     RefPtr<AST::Node> parse_sequence();
@@ -76,34 +82,55 @@ private:
     bool at_end() const { return m_input.length() <= m_offset; }
     char peek();
     char consume();
-    void putback();
     bool expect(char);
     bool expect(const StringView&);
+
+    void restore_to(size_t offset, AST::Position::Line line)
+    {
+        m_offset = offset;
+        m_line = move(line);
+    }
+
+    AST::Position::Line line() const { return m_line; }
 
     StringView consume_while(Function<bool(char)>);
 
     struct ScopedOffset {
-        ScopedOffset(Vector<size_t>& offsets, size_t offset)
+        ScopedOffset(Vector<size_t>& offsets, Vector<AST::Position::Line>& lines, size_t offset, size_t lineno, size_t linecol)
             : offsets(offsets)
+            , lines(lines)
             , offset(offset)
+            , line({ lineno, linecol })
         {
             offsets.append(offset);
+            lines.append(line);
         }
         ~ScopedOffset()
         {
             auto last = offsets.take_last();
             ASSERT(last == offset);
+
+            auto last_line = lines.take_last();
+            ASSERT(last_line == line);
         }
 
         Vector<size_t>& offsets;
+        Vector<AST::Position::Line>& lines;
         size_t offset;
+        AST::Position::Line line;
     };
+
+    void restore_to(const ScopedOffset& offset) { restore_to(offset.offset, offset.line); }
 
     OwnPtr<ScopedOffset> push_start();
 
     StringView m_input;
     size_t m_offset { 0 };
+
+    AST::Position::Line m_line { 0, 0 };
+
     Vector<size_t> m_rule_start_offsets;
+    Vector<AST::Position::Line> m_rule_start_lines;
 };
 
 #if 0

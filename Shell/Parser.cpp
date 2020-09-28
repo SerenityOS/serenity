@@ -29,6 +29,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
+Parser::SavedOffset Parser::save_offset() const
+{
+    return { m_offset, m_line };
+}
+
 char Parser::peek()
 {
     if (m_offset == m_input.length())
@@ -39,6 +44,8 @@ char Parser::peek()
     auto ch = m_input[m_offset];
     if (ch == '\\' && m_input.length() > m_offset + 1 && m_input[m_offset + 1] == '\n') {
         m_offset += 2;
+        ++m_line.line_number;
+        m_line.line_column = 0;
         return peek();
     }
 
@@ -50,13 +57,14 @@ char Parser::consume()
     auto ch = peek();
     ++m_offset;
 
-    return ch;
-}
+    if (ch == '\n') {
+        ++m_line.line_number;
+        m_line.line_column = 0;
+    } else {
+        ++m_line.line_column;
+    }
 
-void Parser::putback()
-{
-    ASSERT(m_offset > 0);
-    --m_offset;
+    return ch;
 }
 
 bool Parser::expect(char ch)
@@ -67,13 +75,14 @@ bool Parser::expect(char ch)
 bool Parser::expect(const StringView& expected)
 {
     auto offset_at_start = m_offset;
+    auto line_at_start = line();
 
     if (expected.length() + m_offset > m_input.length())
         return false;
 
     for (size_t i = 0; i < expected.length(); ++i) {
         if (peek() != expected[i]) {
-            m_offset = offset_at_start;
+            restore_to(offset_at_start, line_at_start);
             return false;
         }
 
@@ -86,12 +95,12 @@ bool Parser::expect(const StringView& expected)
 template<typename A, typename... Args>
 NonnullRefPtr<A> Parser::create(Args... args)
 {
-    return adopt(*new A(AST::Position { m_rule_start_offsets.last(), m_offset }, args...));
+    return adopt(*new A(AST::Position { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() }, args...));
 }
 
 [[nodiscard]] OwnPtr<Parser::ScopedOffset> Parser::push_start()
 {
-    return make<ScopedOffset>(m_rule_start_offsets, m_offset);
+    return make<ScopedOffset>(m_rule_start_offsets, m_rule_start_lines, m_offset, m_line.line_number, m_line.line_column);
 }
 
 static constexpr bool is_whitespace(char c)
@@ -128,13 +137,14 @@ static inline char to_byte(char a, char b)
 RefPtr<AST::Node> Parser::parse()
 {
     m_offset = 0;
+    m_line = { 0, 0 };
 
     auto toplevel = parse_toplevel();
 
     if (m_offset < m_input.length()) {
         // Parsing stopped midway, this is a syntax error.
         auto error_start = push_start();
-        m_offset = m_input.length();
+        consume_while([](auto) { return true; });
         auto syntax_error_node = create<AST::SyntaxError>("Unexpected tokens past the end");
         if (!toplevel)
             toplevel = move(syntax_error_node);
@@ -162,6 +172,8 @@ RefPtr<AST::Node> Parser::parse_sequence()
     auto rule_start = push_start();
     auto var_decls = parse_variable_decls();
 
+    auto pos_before_seps = save_offset();
+
     switch (peek()) {
     case '}':
         return var_decls;
@@ -171,9 +183,15 @@ RefPtr<AST::Node> Parser::parse_sequence()
             break;
 
         consume_while(is_any_of("\n;"));
+
+        auto pos_after_seps = save_offset();
+
         auto rest = parse_sequence();
         if (rest)
-            return create<AST::Sequence>(var_decls.release_nonnull(), rest.release_nonnull());
+            return create<AST::Sequence>(
+                var_decls.release_nonnull(),
+                rest.release_nonnull(),
+                AST::Position { pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line });
         return var_decls;
     }
     default:
@@ -189,24 +207,38 @@ RefPtr<AST::Node> Parser::parse_sequence()
         return var_decls;
 
     if (var_decls)
-        first = create<AST::Sequence>(var_decls.release_nonnull(), first.release_nonnull());
+        first = create<AST::Sequence>(
+            var_decls.release_nonnull(),
+            first.release_nonnull(),
+            AST::Position { pos_before_seps.offset, pos_before_seps.offset, pos_before_seps.line, pos_before_seps.line });
 
     consume_while(is_whitespace);
 
+    pos_before_seps = save_offset();
     switch (peek()) {
     case ';':
-    case '\n':
+    case '\n': {
         consume_while(is_any_of("\n;"));
+        auto pos_after_seps = save_offset();
+
         if (auto expr = parse_sequence()) {
-            return create<AST::Sequence>(first.release_nonnull(), expr.release_nonnull()); // Sequence
+            return create<AST::Sequence>(
+                first.release_nonnull(),
+                expr.release_nonnull(),
+                AST::Position { pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_after_seps.line }); // Sequence
         }
         return first;
+    }
     case '&': {
         auto execute_pipe_seq = first->would_execute() ? first.release_nonnull() : static_cast<NonnullRefPtr<AST::Node>>(create<AST::Execute>(first.release_nonnull()));
         consume();
+        auto pos_after_seps = save_offset();
         auto bg = create<AST::Background>(execute_pipe_seq); // Execute Background
         if (auto rest = parse_sequence())
-            return create<AST::Sequence>(move(bg), rest.release_nonnull()); // Sequence Background Sequence
+            return create<AST::Sequence>(
+                move(bg),
+                rest.release_nonnull(),
+                AST::Position { pos_before_seps.offset, pos_after_seps.offset, pos_before_seps.line, pos_before_seps.line }); // Sequence Background Sequence
 
         return bg;
     }
@@ -221,13 +253,13 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
 
     consume_while(is_whitespace);
 
-    auto offset_before_name = m_offset;
+    auto pos_before_name = save_offset();
     auto var_name = consume_while(is_word_character);
     if (var_name.is_empty())
         return nullptr;
 
     if (!expect('=')) {
-        m_offset = offset_before_name;
+        restore_to(pos_before_name.offset, pos_before_name.line);
         return nullptr;
     }
 
@@ -236,12 +268,12 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
     auto start = push_start();
     auto expression = parse_expression();
     if (!expression || expression->is_syntax_error()) {
-        m_offset = start->offset;
+        restore_to(*start);
         if (peek() == '(') {
             consume();
             auto command = parse_pipe_sequence();
             if (!command)
-                m_offset = start->offset;
+                restore_to(*start);
             else if (!expect(')'))
                 command->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating close paren"));
             expression = command;
@@ -252,7 +284,7 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
             auto string_start = push_start();
             expression = create<AST::StringLiteral>("");
         } else {
-            m_offset = offset_before_name;
+            restore_to(pos_before_name.offset, pos_before_name.line);
             return nullptr;
         }
     }
@@ -280,14 +312,14 @@ RefPtr<AST::Node> Parser::parse_function_decl()
     auto rule_start = push_start();
 
     auto restore = [&] {
-        m_offset = rule_start->offset;
+        restore_to(*rule_start);
         return nullptr;
     };
 
     consume_while(is_whitespace);
-    auto offset_before_name = m_offset;
+    auto pos_before_name = save_offset();
     auto function_name = consume_while(is_word_character);
-    auto offset_after_name = m_offset;
+    auto pos_after_name = save_offset();
     if (function_name.is_empty())
         return restore();
 
@@ -302,12 +334,13 @@ RefPtr<AST::Node> Parser::parse_function_decl()
             break;
 
         auto name_offset = m_offset;
+        auto start_line = line();
         auto arg_name = consume_while(is_word_character);
         if (arg_name.is_empty()) {
             // FIXME: Should this be a syntax error, or just return?
             return restore();
         }
-        arguments.append({ arg_name, { name_offset, m_offset } });
+        arguments.append({ arg_name, { name_offset, m_offset, start_line, line() } });
     }
 
     consume_while(is_whitespace);
@@ -322,7 +355,7 @@ RefPtr<AST::Node> Parser::parse_function_decl()
             return create<AST::FunctionDeclaration>(
                 AST::FunctionDeclaration::NameWithPosition {
                     move(function_name),
-                    { offset_before_name, offset_after_name } },
+                    { pos_before_name.offset, pos_after_name.offset, pos_before_name.line, pos_after_name.line } },
                 move(arguments),
                 move(syntax_error));
         }
@@ -345,7 +378,7 @@ RefPtr<AST::Node> Parser::parse_function_decl()
             return create<AST::FunctionDeclaration>(
                 AST::FunctionDeclaration::NameWithPosition {
                     move(function_name),
-                    { offset_before_name, offset_after_name } },
+                    { pos_before_name.offset, pos_after_name.offset, pos_before_name.line, pos_after_name.line } },
                 move(arguments),
                 move(body));
         }
@@ -354,7 +387,7 @@ RefPtr<AST::Node> Parser::parse_function_decl()
     return create<AST::FunctionDeclaration>(
         AST::FunctionDeclaration::NameWithPosition {
             move(function_name),
-            { offset_before_name, offset_after_name } },
+            { pos_before_name.offset, pos_after_name.offset, pos_before_name.line, pos_after_name.line } },
         move(arguments),
         move(body));
 }
@@ -368,17 +401,19 @@ RefPtr<AST::Node> Parser::parse_or_logical_sequence()
         return nullptr;
 
     consume_while(is_whitespace);
-    auto saved_offset = m_offset;
-    if (!expect("||")) {
-        m_offset = saved_offset;
+    auto pos_before_or = save_offset();
+    if (!expect("||"))
         return and_sequence;
-    }
+    auto pos_after_or = save_offset();
 
     auto right_and_sequence = parse_and_logical_sequence();
     if (!right_and_sequence)
         right_and_sequence = create<AST::SyntaxError>("Expected an expression after '||'");
 
-    return create<AST::Or>(and_sequence.release_nonnull(), right_and_sequence.release_nonnull());
+    return create<AST::Or>(
+        and_sequence.release_nonnull(),
+        right_and_sequence.release_nonnull(),
+        AST::Position { pos_before_or.offset, pos_after_or.offset, pos_before_or.line, pos_after_or.line });
 }
 
 RefPtr<AST::Node> Parser::parse_and_logical_sequence()
@@ -390,17 +425,19 @@ RefPtr<AST::Node> Parser::parse_and_logical_sequence()
         return nullptr;
 
     consume_while(is_whitespace);
-    auto saved_offset = m_offset;
-    if (!expect("&&")) {
-        m_offset = saved_offset;
+    auto pos_before_and = save_offset();
+    if (!expect("&&"))
         return pipe_sequence;
-    }
+    auto pos_after_end = save_offset();
 
     auto right_and_sequence = parse_and_logical_sequence();
     if (!right_and_sequence)
         right_and_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
 
-    return create<AST::And>(pipe_sequence.release_nonnull(), right_and_sequence.release_nonnull());
+    return create<AST::And>(
+        pipe_sequence.release_nonnull(),
+        right_and_sequence.release_nonnull(),
+        AST::Position { pos_before_and.offset, pos_after_end.offset, pos_before_and.line, pos_after_end.line });
 }
 
 RefPtr<AST::Node> Parser::parse_pipe_sequence()
@@ -419,13 +456,14 @@ RefPtr<AST::Node> Parser::parse_pipe_sequence()
     if (peek() != '|')
         return left;
 
+    auto before_pipe = save_offset();
     consume();
 
     if (auto pipe_seq = parse_pipe_sequence()) {
         return create<AST::Pipe>(left.release_nonnull(), pipe_seq.release_nonnull()); // Pipe
     }
 
-    putback();
+    restore_to(before_pipe.offset, before_pipe.line);
     return left;
 }
 
@@ -478,28 +516,26 @@ RefPtr<AST::Node> Parser::parse_control_structure()
 RefPtr<AST::Node> Parser::parse_for_loop()
 {
     auto rule_start = push_start();
-    if (!expect("for")) {
-        m_offset = rule_start->offset;
+    if (!expect("for"))
         return nullptr;
-    }
 
     if (consume_while(is_any_of(" \t\n")).is_empty()) {
-        m_offset = rule_start->offset;
+        restore_to(*rule_start);
         return nullptr;
     }
 
     auto variable_name = consume_while(is_word_character);
-    Optional<size_t> in_start_position;
+    Optional<AST::Position> in_start_position;
     if (variable_name.is_empty()) {
         variable_name = "it";
     } else {
         consume_while(is_whitespace);
         auto in_error_start = push_start();
-        in_start_position = in_error_start->offset;
         if (!expect("in")) {
             auto syntax_error = create<AST::SyntaxError>("Expected 'in' after a variable name in a 'for' loop");
             return create<AST::ForLoop>(move(variable_name), move(syntax_error), nullptr); // ForLoop Var Iterated Block
         }
+        in_start_position = AST::Position { in_error_start->offset, m_offset, in_error_start->line, line() };
     }
 
     consume_while(is_whitespace);
@@ -542,13 +578,11 @@ RefPtr<AST::Node> Parser::parse_for_loop()
 RefPtr<AST::Node> Parser::parse_if_expr()
 {
     auto rule_start = push_start();
-    if (!expect("if")) {
-        m_offset = rule_start->offset;
+    if (!expect("if"))
         return nullptr;
-    }
 
     if (consume_while(is_any_of(" \t\n")).is_empty()) {
-        m_offset = rule_start->offset;
+        restore_to(*rule_start);
         return nullptr;
     }
 
@@ -595,7 +629,7 @@ RefPtr<AST::Node> Parser::parse_if_expr()
     {
         auto else_start = push_start();
         if (expect("else"))
-            else_position = AST::Position { else_start->offset, m_offset };
+            else_position = AST::Position { else_start->offset, m_offset, else_start->line, line() };
     }
 
     if (else_position.has_value()) {
@@ -642,7 +676,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
         return nullptr;
 
     if (consume_while(is_whitespace).is_empty()) {
-        m_offset = rule_start->offset;
+        restore_to(*rule_start);
         return nullptr;
     }
 
@@ -658,8 +692,9 @@ RefPtr<AST::Node> Parser::parse_match_expr()
     String match_name;
     Optional<AST::Position> as_position;
     auto as_start = m_offset;
+    auto as_line = line();
     if (expect("as")) {
-        as_position = AST::Position { as_start, m_offset };
+        as_position = AST::Position { as_start, m_offset, as_line, line() };
 
         if (consume_while(is_any_of(" \t\n")).is_empty()) {
             auto node = create<AST::MatchExpr>(
@@ -730,9 +765,10 @@ AST::MatchEntry Parser::parse_match_entry()
     consume_while(is_any_of(" \t\n"));
 
     auto previous_pipe_start_position = m_offset;
+    auto previous_pipe_start_line = line();
     RefPtr<AST::SyntaxError> error;
     while (expect('|')) {
-        pipe_positions.append({ previous_pipe_start_position, m_offset });
+        pipe_positions.append({ previous_pipe_start_position, m_offset, previous_pipe_start_line, line() });
         consume_while(is_any_of(" \t\n"));
         auto pattern = parse_match_pattern();
         if (!pattern) {
@@ -742,6 +778,9 @@ AST::MatchEntry Parser::parse_match_entry()
         consume_while(is_any_of(" \t\n"));
 
         patterns.append(pattern.release_nonnull());
+
+        previous_pipe_start_line = line();
+        previous_pipe_start_position = m_offset;
     }
 
     consume_while(is_any_of(" \t\n"));
@@ -864,7 +903,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
         return create<AST::ReadWriteRedirection>(pipe_fd, path.release_nonnull()); // Redirection ReadWrite
     }
     default:
-        m_offset = rule_start->offset;
+        restore_to(*rule_start);
         return nullptr;
     }
 }
@@ -930,7 +969,7 @@ RefPtr<AST::Node> Parser::parse_expression()
         consume();
         auto list = parse_list_expression();
         if (!expect(')')) {
-            m_offset = rule_start->offset;
+            restore_to(*rule_start);
             return nullptr;
         }
         return read_concat(create<AST::CastToList>(move(list))); // Cast To List
@@ -1126,7 +1165,7 @@ RefPtr<AST::Node> Parser::parse_variable()
     auto name = consume_while(is_word_character);
 
     if (name.length() == 0) {
-        putback();
+        restore_to(rule_start->offset, rule_start->line);
         return nullptr;
     }
 
@@ -1215,6 +1254,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
         return nullptr;
 
     auto current_end = m_offset;
+    auto current_line = line();
     auto string = builder.to_string();
     if (string.starts_with('~')) {
         String username;
@@ -1231,7 +1271,9 @@ RefPtr<AST::Node> Parser::parse_bareword()
 
         // Synthesize a Tilde Node with the correct positioning information.
         {
-            m_offset -= string.length();
+            restore_to(rule_start->offset, rule_start->line);
+            auto ch = consume();
+            ASSERT(ch == '~');
             tilde = create<AST::Tilde>(move(username));
         }
 
@@ -1240,9 +1282,8 @@ RefPtr<AST::Node> Parser::parse_bareword()
 
         // Synthesize a BarewordLiteral Node with the correct positioning information.
         {
-            m_offset = tilde->position().end_offset;
             auto text_start = push_start();
-            m_offset = current_end;
+            restore_to(current_end, current_line);
             text = create<AST::BarewordLiteral>(move(string));
         }
 
@@ -1267,6 +1308,7 @@ RefPtr<AST::Node> Parser::parse_glob()
 
     char ch = peek();
     if (ch == '*' || ch == '?') {
+        auto saved_offset = save_offset();
         consume();
         StringBuilder textbuilder;
         if (bareword_part) {
@@ -1276,7 +1318,7 @@ RefPtr<AST::Node> Parser::parse_glob()
                 text = bareword->text();
             } else {
                 // FIXME: Allow composition of tilde+bareword with globs: '~/foo/bar/baz*'
-                putback();
+                restore_to(saved_offset.offset, saved_offset.line);
                 bareword_part->set_is_syntax_error(*create<AST::SyntaxError>(String::format("Unexpected %s inside a glob", bareword_part->class_name().characters())));
                 return bareword_part;
             }
