@@ -64,6 +64,8 @@ public:
             auto jt = other.m_headers.find(it.key);
             if (jt == other.m_headers.end())
                 return false;
+            if (it.value != jt->value)
+                return false;
         }
         return m_url == other.m_url && m_method == other.m_method && m_body == other.m_body;
     }
