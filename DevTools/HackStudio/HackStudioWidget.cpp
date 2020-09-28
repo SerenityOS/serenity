@@ -66,6 +66,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/ShellSyntaxHighlighter.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TabWidget.h>
@@ -216,6 +217,8 @@ void HackStudioWidget::open_file(const String& filename)
         current_editor().set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
     else if (filename.ends_with(".ini"))
         current_editor().set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
+    else if (filename.ends_with(".sh"))
+        current_editor().set_syntax_highlighter(make<GUI::ShellSyntaxHighlighter>());
     else
         current_editor().set_syntax_highlighter(nullptr);
 
