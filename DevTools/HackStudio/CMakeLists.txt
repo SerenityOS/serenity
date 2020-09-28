@@ -1,7 +1,9 @@
+add_subdirectory(LanguageServers)
+add_subdirectory(LanguageClients)
+
 set(SOURCES
     AutoCompleteBox.cpp
     CodeDocument.cpp
-    CppAutoComplete.cpp
     CursorTool.cpp
     Debugger/BacktraceModel.cpp
     Debugger/DebugInfoWidget.cpp
@@ -33,3 +35,4 @@ set(SOURCES
 
 serenity_bin(HackStudio)
 target_link_libraries(HackStudio LibWeb LibMarkdown LibGUI LibGfx LibCore LibVT LibDebug LibX86 LibDiff LibShell)
+add_dependencies(HackStudio CppLanguageServer)

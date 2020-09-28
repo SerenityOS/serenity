@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,30 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/LexicalPath.h>
+#include <DevTools/HackStudio/LanguageServers/Cpp/ClientConnection.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
+#include <LibCore/LocalServer.h>
+#include <LibIPC/ClientConnection.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-#include <AK/String.h>
+int main(int, char**)
+{
+    Core::EventLoop event_loop;
+    if (pledge("stdio unix rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
-namespace GUI {
-
-class Command {
-public:
-    virtual ~Command();
-
-    virtual void undo() { }
-    virtual void redo() { }
-
-    String action_text() const { return m_action_text; }
-
-    virtual bool is_insert_text() const { return false; }
-    virtual bool is_remove_text() const { return false; }
-
-protected:
-    Command() { }
-    void set_action_text(const String& text) { m_action_text = text; }
-
-private:
-    String m_action_text;
-};
-
+    auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
+    IPC::new_client_connection<LanguageServers::Cpp::ClientConnection>(socket.release_nonnull(), 1);
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+    return event_loop.exec();
 }

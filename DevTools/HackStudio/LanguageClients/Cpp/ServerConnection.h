@@ -26,21 +26,35 @@
 
 #pragma once
 
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <LibCpp/Lexer.h>
-#include <LibGUI/TextPosition.h>
+#include <AK/LexicalPath.h>
+#include <DevTools/HackStudio/LanguageServers/Cpp/CppLanguageClientEndpoint.h>
+#include <DevTools/HackStudio/LanguageServers/Cpp/CppLanguageServerEndpoint.h>
+#include <LibIPC/ServerConnection.h>
 
-namespace HackStudio {
-class CppAutoComplete {
+namespace LanguageClients {
+namespace Cpp {
+
+class ServerConnection : public IPC::ServerConnection<CppLanguageClientEndpoint, CppLanguageServerEndpoint>
+    , public CppLanguageClientEndpoint {
+    C_OBJECT(ServerConnection)
 public:
-    CppAutoComplete() = delete;
-
-    static Vector<String> get_suggestions(const String& code, GUI::TextPosition autocomplete_position);
+    virtual void handshake() override
+    {
+        auto response = send_sync<Messages::CppLanguageServer::Greet>(m_project_path.string());
+        set_my_client_id(response->client_id());
+    }
 
 private:
-    static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, GUI::TextPosition);
-    static String text_of_token(const Vector<String> lines, const Cpp::Token&);
-    static Vector<String> identifier_prefixes(const Vector<String> lines, const Vector<Cpp::Token>&, size_t target_token_index);
+    ServerConnection(const String& project_path)
+        : IPC::ServerConnection<CppLanguageClientEndpoint, CppLanguageServerEndpoint>(*this, "/tmp/portal/language/cpp")
+        , m_project_path(project_path)
+    {
+    }
+
+    virtual void handle(const Messages::CppLanguageClient::Dummy&) override { }
+
+    LexicalPath m_project_path;
 };
-};
+
+}
+}

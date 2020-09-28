@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,27 +27,24 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Vector.h>
+#include <LibCpp/Lexer.h>
+#include <LibGUI/TextPosition.h>
 
-namespace GUI {
+namespace LanguageServers::Cpp {
 
-class Command {
+using namespace ::Cpp;
+
+class AutoComplete {
 public:
-    virtual ~Command();
+    AutoComplete() = delete;
 
-    virtual void undo() { }
-    virtual void redo() { }
-
-    String action_text() const { return m_action_text; }
-
-    virtual bool is_insert_text() const { return false; }
-    virtual bool is_remove_text() const { return false; }
-
-protected:
-    Command() { }
-    void set_action_text(const String& text) { m_action_text = text; }
+    static Vector<String> get_suggestions(const String& code, GUI::TextPosition autocomplete_position);
 
 private:
-    String m_action_text;
+    static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, GUI::TextPosition);
+    static String text_of_token(const Vector<String> lines, const Cpp::Token&);
+    static Vector<String> identifier_prefixes(const Vector<String> lines, const Vector<Cpp::Token>&, size_t target_token_index);
 };
 
 }

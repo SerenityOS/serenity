@@ -1,0 +1,11 @@
+endpoint CppLanguageServer = 8001
+{
+    Greet(String project_root) => (i32 client_id)
+
+    FileOpened(String file_name) =|
+    FileEditInsertText(String file_name, String text, i32 start_line, i32 start_column) =|
+    FileEditRemoveText(String file_name, i32 start_line, i32 start_column, i32 end_line, i32 end_column) =|
+    SetFileContent(String file_name, String content) =|
+
+    AutoCompleteSuggestions(String file_name, i32 cursor_line, i32 cursor_column) => (Vector<String> suggestions)
+}
