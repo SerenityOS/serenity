@@ -164,7 +164,7 @@ void TestSuite::main(const String& suite_name, int argc, char** argv)
             out() << "    " << test.name();
         }
     } else {
-        out() << "Running " << matching_tests.size() << " cases out of " << m_cases.size();
+        out() << "Running " << matching_tests.size() << " cases out of " << m_cases.size() << ".";
 
         run(matching_tests);
     }
@@ -199,13 +199,13 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
     for (const auto& t : tests) {
         const auto test_type = t.is_benchmark() ? "benchmark" : "test";
 
-        dbg() << "START Running " << test_type << " " << t.name();
+        warnf("Running {} '{}'.", test_type, t.name());
 
         TestElapsedTimer timer;
         t.func()();
         const auto time = timer.elapsed_milliseconds();
 
-        warn() << "\033[32;1mPASS\033[0m: " << time << " ms running " << test_type << " " << t.name();
+        dbgf("Completed {} '{}' in {}ms", test_type, t.name(), time);
 
         if (t.is_benchmark()) {
             m_benchtime += time;
