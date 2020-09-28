@@ -1254,14 +1254,7 @@ bool TextEditor::write_to_file(const StringView& path)
 
 String TextEditor::text() const
 {
-    StringBuilder builder;
-    for (size_t i = 0; i < line_count(); ++i) {
-        auto& line = this->line(i);
-        builder.append(line.view());
-        if (i != line_count() - 1)
-            builder.append('\n');
-    }
-    return builder.to_string();
+    return document().text();
 }
 
 void TextEditor::clear()

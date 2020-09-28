@@ -103,6 +103,7 @@ public:
 
     void update_views(Badge<TextDocumentLine>);
 
+    String text() const;
     String text_in_range(const TextRange&) const;
 
     Vector<TextRange> find_all(const StringView& needle) const;
@@ -210,6 +211,9 @@ public:
     InsertTextCommand(TextDocument&, const String&, const TextPosition&);
     virtual void undo() override;
     virtual void redo() override;
+    virtual bool is_insert_text() const override { return true; }
+    const String& text() const { return m_text; }
+    const TextRange& range() const { return m_range; }
 
 private:
     String m_text;
@@ -221,6 +225,8 @@ public:
     RemoveTextCommand(TextDocument&, const String&, const TextRange&);
     virtual void undo() override;
     virtual void redo() override;
+    virtual bool is_remove_text() const override { return true; }
+    const TextRange& range() const { return m_range; }
 
 private:
     String m_text;
