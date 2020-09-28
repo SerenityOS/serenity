@@ -24,27 +24,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "CppLexer.h"
+#include "Lexer.h"
 #include <AK/HashTable.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <ctype.h>
 
-namespace GUI {
+namespace Cpp {
 
-CppLexer::CppLexer(const StringView& input)
+Lexer::Lexer(const StringView& input)
     : m_input(input)
 {
 }
 
-char CppLexer::peek(size_t offset) const
+char Lexer::peek(size_t offset) const
 {
     if ((m_index + offset) >= m_input.length())
         return 0;
     return m_input[m_index + offset];
 }
 
-char CppLexer::consume()
+char Lexer::consume()
 {
     ASSERT(m_index < m_input.length());
     char ch = m_input[m_index++];
@@ -224,15 +224,15 @@ static bool is_known_type(const StringView& string)
     return types.contains(string);
 }
 
-Vector<CppToken> CppLexer::lex()
+Vector<Token> Lexer::lex()
 {
-    Vector<CppToken> tokens;
+    Vector<Token> tokens;
 
     size_t token_start_index = 0;
-    CppPosition token_start_position;
+    Position token_start_position;
 
     auto emit_token = [&](auto type) {
-        CppToken token;
+        Token token;
         token.m_type = type;
         token.m_start = m_position;
         token.m_end = m_position;
@@ -245,7 +245,7 @@ Vector<CppToken> CppLexer::lex()
         token_start_position = m_position;
     };
     auto commit_token = [&](auto type) {
-        CppToken token;
+        Token token;
         token.m_type = type;
         token.m_start = token_start_position;
         token.m_end = m_previous_position;
@@ -339,31 +339,31 @@ Vector<CppToken> CppLexer::lex()
             begin_token();
             while (isspace(peek()))
                 consume();
-            commit_token(CppToken::Type::Whitespace);
+            commit_token(Token::Type::Whitespace);
             continue;
         }
         if (ch == '(') {
-            emit_token(CppToken::Type::LeftParen);
+            emit_token(Token::Type::LeftParen);
             continue;
         }
         if (ch == ')') {
-            emit_token(CppToken::Type::RightParen);
+            emit_token(Token::Type::RightParen);
             continue;
         }
         if (ch == '{') {
-            emit_token(CppToken::Type::LeftCurly);
+            emit_token(Token::Type::LeftCurly);
             continue;
         }
         if (ch == '}') {
-            emit_token(CppToken::Type::RightCurly);
+            emit_token(Token::Type::RightCurly);
             continue;
         }
         if (ch == '[') {
-            emit_token(CppToken::Type::LeftBracket);
+            emit_token(Token::Type::LeftBracket);
             continue;
         }
         if (ch == ']') {
-            emit_token(CppToken::Type::RightBracket);
+            emit_token(Token::Type::RightBracket);
             continue;
         }
         if (ch == '<') {
@@ -373,23 +373,23 @@ Vector<CppToken> CppLexer::lex()
                 consume();
                 if (peek() == '=') {
                     consume();
-                    commit_token(CppToken::Type::LessLessEquals);
+                    commit_token(Token::Type::LessLessEquals);
                     continue;
                 }
-                commit_token(CppToken::Type::LessLess);
+                commit_token(Token::Type::LessLess);
                 continue;
             }
             if (peek() == '=') {
                 consume();
-                commit_token(CppToken::Type::LessEquals);
+                commit_token(Token::Type::LessEquals);
                 continue;
             }
             if (peek() == '>') {
                 consume();
-                commit_token(CppToken::Type::LessGreater);
+                commit_token(Token::Type::LessGreater);
                 continue;
             }
-            commit_token(CppToken::Type::Less);
+            commit_token(Token::Type::Less);
             continue;
         }
         if (ch == '>') {
@@ -399,22 +399,22 @@ Vector<CppToken> CppLexer::lex()
                 consume();
                 if (peek() == '=') {
                     consume();
-                    commit_token(CppToken::Type::GreaterGreaterEquals);
+                    commit_token(Token::Type::GreaterGreaterEquals);
                     continue;
                 }
-                commit_token(CppToken::Type::GreaterGreater);
+                commit_token(Token::Type::GreaterGreater);
                 continue;
             }
             if (peek() == '=') {
                 consume();
-                commit_token(CppToken::Type::GreaterEquals);
+                commit_token(Token::Type::GreaterEquals);
                 continue;
             }
-            commit_token(CppToken::Type::Greater);
+            commit_token(Token::Type::Greater);
             continue;
         }
         if (ch == ',') {
-            emit_token(CppToken::Type::Comma);
+            emit_token(Token::Type::Comma);
             continue;
         }
         if (ch == '+') {
@@ -422,15 +422,15 @@ Vector<CppToken> CppLexer::lex()
             consume();
             if (peek() == '+') {
                 consume();
-                commit_token(CppToken::Type::PlusPlus);
+                commit_token(Token::Type::PlusPlus);
                 continue;
             }
             if (peek() == '=') {
                 consume();
-                commit_token(CppToken::Type::PlusEquals);
+                commit_token(Token::Type::PlusEquals);
                 continue;
             }
-            commit_token(CppToken::Type::Plus);
+            commit_token(Token::Type::Plus);
             continue;
         }
         if (ch == '-') {
@@ -438,45 +438,45 @@ Vector<CppToken> CppLexer::lex()
             consume();
             if (peek() == '-') {
                 consume();
-                commit_token(CppToken::Type::MinusMinus);
+                commit_token(Token::Type::MinusMinus);
                 continue;
             }
             if (peek() == '=') {
                 consume();
-                commit_token(CppToken::Type::MinusEquals);
+                commit_token(Token::Type::MinusEquals);
                 continue;
             }
             if (peek() == '>') {
                 consume();
                 if (peek() == '*') {
                     consume();
-                    commit_token(CppToken::Type::ArrowAsterisk);
+                    commit_token(Token::Type::ArrowAsterisk);
                     continue;
                 }
-                commit_token(CppToken::Type::Arrow);
+                commit_token(Token::Type::Arrow);
                 continue;
             }
-            commit_token(CppToken::Type::Minus);
+            commit_token(Token::Type::Minus);
             continue;
         }
         if (ch == '*') {
-            emit_token_equals(CppToken::Type::Asterisk, CppToken::Type::AsteriskEquals);
+            emit_token_equals(Token::Type::Asterisk, Token::Type::AsteriskEquals);
             continue;
         }
         if (ch == '%') {
-            emit_token_equals(CppToken::Type::Percent, CppToken::Type::PercentEquals);
+            emit_token_equals(Token::Type::Percent, Token::Type::PercentEquals);
             continue;
         }
         if (ch == '^') {
-            emit_token_equals(CppToken::Type::Caret, CppToken::Type::CaretEquals);
+            emit_token_equals(Token::Type::Caret, Token::Type::CaretEquals);
             continue;
         }
         if (ch == '!') {
-            emit_token_equals(CppToken::Type::ExclamationMark, CppToken::Type::ExclamationMarkEquals);
+            emit_token_equals(Token::Type::ExclamationMark, Token::Type::ExclamationMarkEquals);
             continue;
         }
         if (ch == '=') {
-            emit_token_equals(CppToken::Type::Equals, CppToken::Type::EqualsEquals);
+            emit_token_equals(Token::Type::Equals, Token::Type::EqualsEquals);
             continue;
         }
         if (ch == '&') {
@@ -484,15 +484,15 @@ Vector<CppToken> CppLexer::lex()
             consume();
             if (peek() == '&') {
                 consume();
-                commit_token(CppToken::Type::AndAnd);
+                commit_token(Token::Type::AndAnd);
                 continue;
             }
             if (peek() == '=') {
                 consume();
-                commit_token(CppToken::Type::AndEquals);
+                commit_token(Token::Type::AndEquals);
                 continue;
             }
-            commit_token(CppToken::Type::And);
+            commit_token(Token::Type::And);
             continue;
         }
         if (ch == '|') {
@@ -500,23 +500,23 @@ Vector<CppToken> CppLexer::lex()
             consume();
             if (peek() == '|') {
                 consume();
-                commit_token(CppToken::Type::PipePipe);
+                commit_token(Token::Type::PipePipe);
                 continue;
             }
             if (peek() == '=') {
                 consume();
-                commit_token(CppToken::Type::PipeEquals);
+                commit_token(Token::Type::PipeEquals);
                 continue;
             }
-            commit_token(CppToken::Type::Pipe);
+            commit_token(Token::Type::Pipe);
             continue;
         }
         if (ch == '~') {
-            emit_token(CppToken::Type::Tilde);
+            emit_token(Token::Type::Tilde);
             continue;
         }
         if (ch == '?') {
-            emit_token(CppToken::Type::QuestionMark);
+            emit_token(Token::Type::QuestionMark);
             continue;
         }
         if (ch == ':') {
@@ -526,17 +526,17 @@ Vector<CppToken> CppLexer::lex()
                 consume();
                 if (peek() == '*') {
                     consume();
-                    commit_token(CppToken::Type::ColonColonAsterisk);
+                    commit_token(Token::Type::ColonColonAsterisk);
                     continue;
                 }
-                commit_token(CppToken::Type::ColonColon);
+                commit_token(Token::Type::ColonColon);
                 continue;
             }
-            commit_token(CppToken::Type::Colon);
+            commit_token(Token::Type::Colon);
             continue;
         }
         if (ch == ';') {
-            emit_token(CppToken::Type::Semicolon);
+            emit_token(Token::Type::Semicolon);
             continue;
         }
         if (ch == '.') {
@@ -544,10 +544,10 @@ Vector<CppToken> CppLexer::lex()
             consume();
             if (peek() == '*') {
                 consume();
-                commit_token(CppToken::Type::DotAsterisk);
+                commit_token(Token::Type::DotAsterisk);
                 continue;
             }
-            commit_token(CppToken::Type::Dot);
+            commit_token(Token::Type::Dot);
             continue;
         }
         if (ch == '#') {
@@ -560,12 +560,12 @@ Vector<CppToken> CppLexer::lex()
 
             auto directive = StringView(m_input.characters_without_null_termination() + token_start_index, m_index - token_start_index);
             if (directive == "#include") {
-                commit_token(CppToken::Type::IncludeStatement);
+                commit_token(Token::Type::IncludeStatement);
 
                 begin_token();
                 while (isspace(peek()))
                     consume();
-                commit_token(CppToken::Type::Whitespace);
+                commit_token(Token::Type::Whitespace);
 
                 begin_token();
                 if (peek() == '<' || peek() == '"') {
@@ -574,11 +574,11 @@ Vector<CppToken> CppLexer::lex()
                         consume();
 
                     if (peek() && consume() == '\n') {
-                        commit_token(CppToken::Type::IncludePath);
+                        commit_token(Token::Type::IncludePath);
                         continue;
                     }
 
-                    commit_token(CppToken::Type::IncludePath);
+                    commit_token(Token::Type::IncludePath);
                     begin_token();
                 }
             }
@@ -586,14 +586,14 @@ Vector<CppToken> CppLexer::lex()
             while (peek() && peek() != '\n')
                 consume();
 
-            commit_token(CppToken::Type::PreprocessorStatement);
+            commit_token(Token::Type::PreprocessorStatement);
             continue;
         }
         if (ch == '/' && peek(1) == '/') {
             begin_token();
             while (peek() && peek() != '\n')
                 consume();
-            commit_token(CppToken::Type::Comment);
+            commit_token(Token::Type::Comment);
             continue;
         }
         if (ch == '/' && peek(1) == '*') {
@@ -615,11 +615,11 @@ Vector<CppToken> CppLexer::lex()
                 consume();
             }
 
-            commit_token(CppToken::Type::Comment);
+            commit_token(Token::Type::Comment);
             continue;
         }
         if (ch == '/') {
-            emit_token_equals(CppToken::Type::Slash, CppToken::Type::SlashEquals);
+            emit_token_equals(Token::Type::Slash, Token::Type::SlashEquals);
             continue;
         }
         if (size_t prefix = match_string_prefix('"'); prefix > 0) {
@@ -629,11 +629,11 @@ Vector<CppToken> CppLexer::lex()
             while (peek()) {
                 if (peek() == '\\') {
                     if (size_t escape = match_escape_sequence(); escape > 0) {
-                        commit_token(CppToken::Type::DoubleQuotedString);
+                        commit_token(Token::Type::DoubleQuotedString);
                         begin_token();
                         for (size_t i = 0; i < escape; ++i)
                             consume();
-                        commit_token(CppToken::Type::EscapeSequence);
+                        commit_token(Token::Type::EscapeSequence);
                         begin_token();
                         continue;
                     }
@@ -642,7 +642,7 @@ Vector<CppToken> CppLexer::lex()
                 if (consume() == '"')
                     break;
             }
-            commit_token(CppToken::Type::DoubleQuotedString);
+            commit_token(Token::Type::DoubleQuotedString);
             continue;
         }
         if (size_t prefix = match_string_prefix('R'); prefix > 0 && peek(prefix) == '"') {
@@ -664,7 +664,7 @@ Vector<CppToken> CppLexer::lex()
                     }
                 }
             }
-            commit_token(CppToken::Type::RawString);
+            commit_token(Token::Type::RawString);
             continue;
         }
         if (size_t prefix = match_string_prefix('\''); prefix > 0) {
@@ -674,11 +674,11 @@ Vector<CppToken> CppLexer::lex()
             while (peek()) {
                 if (peek() == '\\') {
                     if (size_t escape = match_escape_sequence(); escape > 0) {
-                        commit_token(CppToken::Type::SingleQuotedString);
+                        commit_token(Token::Type::SingleQuotedString);
                         begin_token();
                         for (size_t i = 0; i < escape; ++i)
                             consume();
-                        commit_token(CppToken::Type::EscapeSequence);
+                        commit_token(Token::Type::EscapeSequence);
                         begin_token();
                         continue;
                     }
@@ -687,14 +687,14 @@ Vector<CppToken> CppLexer::lex()
                 if (consume() == '\'')
                     break;
             }
-            commit_token(CppToken::Type::SingleQuotedString);
+            commit_token(Token::Type::SingleQuotedString);
             continue;
         }
         if (isdigit(ch) || (ch == '.' && isdigit(peek(1)))) {
             begin_token();
             consume();
 
-            auto type = ch == '.' ? CppToken::Type::Float : CppToken::Type::Integer;
+            auto type = ch == '.' ? Token::Type::Float : Token::Type::Integer;
             bool is_hex = false;
             bool is_binary = false;
 
@@ -703,7 +703,7 @@ Vector<CppToken> CppLexer::lex()
                 if (ch != 'e' && ch != 'E' && ch != 'p' && ch != 'P')
                     return 0;
 
-                type = CppToken::Type::Float;
+                type = Token::Type::Float;
                 size_t length = 1;
                 ch = peek(length);
                 if (ch == '+' || ch == '-') {
@@ -719,10 +719,10 @@ Vector<CppToken> CppLexer::lex()
                 size_t length = 0;
                 for (;;) {
                     char ch = peek(length);
-                    if ((ch == 'u' || ch == 'U') && type == CppToken::Type::Integer) {
+                    if ((ch == 'u' || ch == 'U') && type == Token::Type::Integer) {
                         ++length;
                     } else if ((ch == 'f' || ch == 'F') && !is_binary) {
-                        type = CppToken::Type::Float;
+                        type = Token::Type::Float;
                         ++length;
                     } else if (ch == 'l' || ch == 'L') {
                         ++length;
@@ -745,8 +745,8 @@ Vector<CppToken> CppLexer::lex()
 
                 for (char ch = peek(); (is_hex ? isxdigit(ch) : isdigit(ch)) || (ch == '\'' && peek(1) != '\'') || ch == '.'; ch = peek()) {
                     if (ch == '.') {
-                        if (type == CppToken::Type::Integer) {
-                            type = CppToken::Type::Float;
+                        if (type == Token::Type::Integer) {
+                            type = Token::Type::Float;
                         } else
                             break;
                     };
@@ -773,15 +773,15 @@ Vector<CppToken> CppLexer::lex()
                 consume();
             auto token_view = StringView(m_input.characters_without_null_termination() + token_start_index, m_index - token_start_index);
             if (is_keyword(token_view))
-                commit_token(CppToken::Type::Keyword);
+                commit_token(Token::Type::Keyword);
             else if (is_known_type(token_view))
-                commit_token(CppToken::Type::KnownType);
+                commit_token(Token::Type::KnownType);
             else
-                commit_token(CppToken::Type::Identifier);
+                commit_token(Token::Type::Identifier);
             continue;
         }
         dbg() << "Unimplemented token character: " << ch;
-        emit_token(CppToken::Type::Unknown);
+        emit_token(Token::Type::Unknown);
     }
     return tokens;
 }

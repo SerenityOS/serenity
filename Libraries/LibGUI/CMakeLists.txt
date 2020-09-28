@@ -17,7 +17,6 @@ set(SOURCES
     ComboBox.cpp
     Command.cpp
     ControlBoxButton.cpp
-    CppLexer.cpp
     CppSyntaxHighlighter.cpp
     Desktop.cpp
     Dialog.cpp
@@ -96,4 +95,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread)
+target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibCpp)
