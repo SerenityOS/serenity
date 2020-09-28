@@ -282,6 +282,18 @@ void TextDocument::set_all_cursors(const TextPosition& position)
     }
 }
 
+String TextDocument::text() const
+{
+    StringBuilder builder;
+    for (size_t i = 0; i < line_count(); ++i) {
+        auto& line = this->line(i);
+        builder.append(line.view());
+        if (i != line_count() - 1)
+            builder.append('\n');
+    }
+    return builder.to_string();
+}
+
 String TextDocument::text_in_range(const TextRange& a_range) const
 {
     auto range = a_range.normalized();
