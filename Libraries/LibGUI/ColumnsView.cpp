@@ -323,8 +323,8 @@ Gfx::IntRect ColumnsView::content_rect(const ModelIndex& index) const
     int column_x = 0;
     for (auto& column : m_columns) {
         if (column.parent_index == index.parent())
-            return { column_x, index.row() * item_height(), column.width, item_height() };
-        column_x += column.width;
+            return { column_x + icon_size(), index.row() * item_height(), column.width - icon_size(), item_height() };
+        column_x += column.width + 1;
     }
 
     return {};
