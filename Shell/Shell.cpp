@@ -873,6 +873,8 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
 bool Shell::run_file(const String& filename, bool explicitly_invoked)
 {
     TemporaryChange script_change { current_script, filename };
+    TemporaryChange interactive_change { m_is_interactive, false };
+
     auto file_result = Core::File::open(filename, Core::File::ReadOnly);
     if (file_result.is_error()) {
         if (explicitly_invoked)
