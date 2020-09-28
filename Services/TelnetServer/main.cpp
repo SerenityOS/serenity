@@ -126,7 +126,7 @@ int main(int argc, char** argv)
     }
 
     if (!server->listen({}, port)) {
-        perror("listen");
+        warnf("Listening on 0.0.0.0:{} failed", port);
         exit(1);
     }
 

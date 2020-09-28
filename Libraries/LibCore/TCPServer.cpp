@@ -61,14 +61,17 @@ bool TCPServer::listen(const IPv4Address& address, u16 port)
     if (m_listening)
         return false;
 
-    int rc;
     auto socket_address = SocketAddress(address, port);
     auto in = socket_address.to_sockaddr_in();
-    rc = ::bind(m_fd, (const sockaddr*)&in, sizeof(in));
-    ASSERT(rc == 0);
+    if (::bind(m_fd, (const sockaddr*)&in, sizeof(in)) < 0) {
+        perror("TCPServer::listen: bind");
+        return false;
+    }
 
-    rc = ::listen(m_fd, 5);
-    ASSERT(rc == 0);
+    if (::listen(m_fd, 5) < 0) {
+        perror("TCPServer::listen: listen");
+        return false;
+    }
     m_listening = true;
 
     m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
