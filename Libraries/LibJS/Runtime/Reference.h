@@ -85,11 +85,11 @@ public:
         return m_global_variable;
     }
 
-    void put(Interpreter&, GlobalObject&, Value);
-    Value get(Interpreter&, GlobalObject&);
+    void put(GlobalObject&, Value);
+    Value get(GlobalObject&);
 
 private:
-    void throw_reference_error(Interpreter&, GlobalObject&);
+    void throw_reference_error(GlobalObject&);
 
     Value m_base { js_undefined() };
     PropertyName m_name;
