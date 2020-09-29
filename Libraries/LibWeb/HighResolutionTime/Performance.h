@@ -42,6 +42,7 @@ public:
     ~Performance();
 
     double now() const { return m_timer.elapsed(); }
+    double time_origin() const;
 
     virtual void ref_event_target() override;
     virtual void unref_event_target() override;

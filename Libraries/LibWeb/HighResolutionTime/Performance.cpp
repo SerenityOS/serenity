@@ -44,6 +44,12 @@ Performance::~Performance()
 {
 }
 
+double Performance::time_origin() const
+{
+    auto origin = m_timer.origin_time();
+    return (origin.tv_sec * 1000.0) + (origin.tv_usec / 1000.0);
+}
+
 void Performance::ref_event_target()
 {
     m_window.ref();
