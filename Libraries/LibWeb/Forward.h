@@ -132,6 +132,10 @@ class HTMLVideoElement;
 class ImageData;
 }
 
+namespace Web::HighResolutionTime {
+class Performance;
+}
+
 namespace Web {
 class EventHandler;
 class Frame;
@@ -242,6 +246,7 @@ class ImageDataWrapper;
 class LocationObject;
 class MouseEventWrapper;
 class NodeWrapper;
+class PerformanceWrapper;
 class ScriptExecutionContext;
 class TextWrapper;
 class UIEventWrapper;
