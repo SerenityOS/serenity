@@ -27,6 +27,7 @@
 #pragma once
 
 #include "Assertions.h"
+#include "Atomic.h"
 #include "RefCounted.h"
 #include "RefPtr.h"
 
@@ -41,20 +42,56 @@ class Weakable;
 template<typename T>
 class WeakPtr;
 
-template<typename T>
-class WeakLink : public RefCounted<WeakLink<T>> {
-    friend class Weakable<T>;
+class WeakLink : public RefCounted<WeakLink> {
+    template<typename T>
+    friend class Weakable;
+    template<typename T>
+    friend class WeakPtr;
 
 public:
-    T* ptr() { return m_ptr; }
-    const T* ptr() const { return m_ptr; }
+    template<typename T, typename PtrTraits = RefPtrTraits<T>>
+    RefPtr<T, PtrTraits> strong_ref() const
+    {
+        RefPtr<T, PtrTraits> ref;
+
+        {
+#ifdef KERNEL
+            // We don't want to be pre-empted while we have the lock bit set
+            Kernel::ScopedCritical critical;
+#endif
+            FlatPtr bits = RefPtrTraits<void>::lock(m_bits);
+            T* ptr = static_cast<T*>(RefPtrTraits<void>::as_ptr(bits));
+            if (ptr)
+                ref = *ptr;
+            RefPtrTraits<void>::unlock(m_bits, bits);
+        }
+
+        return ref;
+    }
+
+    template<typename T>
+    T* unsafe_ptr() const
+    {
+        return static_cast<T*>(RefPtrTraits<void>::as_ptr(m_bits.load(AK::MemoryOrder::memory_order_acquire)));
+    }
+
+    bool is_null() const
+    {
+        return RefPtrTraits<void>::is_null(m_bits.load(AK::MemoryOrder::memory_order_relaxed));
+    }
+
+    void revoke()
+    {
+        RefPtrTraits<void>::exchange(m_bits, RefPtrTraits<void>::default_null_value);
+    }
 
 private:
+    template<typename T>
     explicit WeakLink(T& weakable)
-        : m_ptr(&weakable)
+        : m_bits(RefPtrTraits<void>::as_bits(&weakable))
     {
     }
-    T* m_ptr;
+    mutable Atomic<FlatPtr> m_bits;
 };
 
 template<typename T>
@@ -63,7 +100,8 @@ private:
     class Link;
 
 public:
-    WeakPtr<T> make_weak_ptr();
+    template<typename U = T>
+    WeakPtr<U> make_weak_ptr() const;
 
 protected:
     Weakable() { }
@@ -79,11 +117,11 @@ protected:
     void revoke_weak_ptrs()
     {
         if (m_link)
-            m_link->m_ptr = nullptr;
+            m_link->revoke();
     }
 
 private:
-    RefPtr<WeakLink<T>> m_link;
+    mutable RefPtr<WeakLink> m_link;
 #ifdef WEAKABLE_DEBUG
     bool m_being_destroyed { false };
 #endif

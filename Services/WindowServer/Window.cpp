@@ -659,18 +659,18 @@ void Window::recalculate_rect()
 
 void Window::add_child_window(Window& child_window)
 {
-    m_child_windows.append(child_window.make_weak_ptr());
+    m_child_windows.append(child_window);
 }
 
 void Window::add_accessory_window(Window& accessory_window)
 {
-    m_accessory_windows.append(accessory_window.make_weak_ptr());
+    m_accessory_windows.append(accessory_window);
 }
 
 void Window::set_parent_window(Window& parent_window)
 {
     ASSERT(!m_parent_window);
-    m_parent_window = parent_window.make_weak_ptr();
+    m_parent_window = parent_window;
     if (m_accessory)
         parent_window.add_accessory_window(*this);
     else

@@ -33,6 +33,9 @@ struct Object : public RefCounted<Object> {
     int x;
 };
 
+struct Object2 : Object {
+};
+
 TEST_CASE(basics)
 {
     RefPtr<Object> object = adopt(*new Object);
@@ -65,6 +68,42 @@ TEST_CASE(assign_ptr)
     EXPECT_EQ(object->ref_count(), 1u);
     object = object.ptr();
     EXPECT_EQ(object->ref_count(), 1u);
+}
+
+TEST_CASE(copy_move_ref)
+{
+    RefPtr<Object2> object = adopt(*new Object2);
+    EXPECT_EQ(object->ref_count(), 1u);
+    {
+        auto object2 = object;
+        EXPECT_EQ(object->ref_count(), 2u);
+
+        RefPtr<Object> object1 = object;
+        EXPECT_EQ(object->ref_count(), 3u);
+
+        object1 = move(object2);
+        EXPECT_EQ(object->ref_count(), 2u);
+
+        RefPtr<Object> object3(move(object1));
+        EXPECT_EQ(object3->ref_count(), 2u);
+
+        object1 = object3;
+        EXPECT_EQ(object3->ref_count(), 3u);
+    }
+    EXPECT_EQ(object->ref_count(), 1u);
+}
+
+TEST_CASE(swap)
+{
+    RefPtr<Object> object_a = adopt(*new Object);
+    RefPtr<Object> object_b = adopt(*new Object);
+    auto* ptr_a = object_a.ptr();
+    auto* ptr_b = object_b.ptr();
+    swap(object_a, object_b);
+    EXPECT_EQ(object_a, ptr_b);
+    EXPECT_EQ(object_b, ptr_a);
+    EXPECT_EQ(object_a->ref_count(), 1u);
+    EXPECT_EQ(object_b->ref_count(), 1u);
 }
 
 TEST_CASE(assign_moved_self)

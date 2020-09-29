@@ -82,7 +82,7 @@ void Layout::notify_adopted(Badge<Widget>, Widget& widget)
 {
     if (m_owner == &widget)
         return;
-    m_owner = widget.make_weak_ptr();
+    m_owner = widget;
 }
 
 void Layout::notify_disowned(Badge<Widget>, Widget& widget)
@@ -117,7 +117,7 @@ void Layout::add_widget(Widget& widget)
 {
     Entry entry;
     entry.type = Entry::Type::Widget;
-    entry.widget = widget.make_weak_ptr();
+    entry.widget = widget;
     add_entry(move(entry));
 }
 
@@ -125,7 +125,7 @@ void Layout::insert_widget_before(Widget& widget, Widget& before_widget)
 {
     Entry entry;
     entry.type = Entry::Type::Widget;
-    entry.widget = widget.make_weak_ptr();
+    entry.widget = widget;
     m_entries.insert_before_matching(move(entry), [&](auto& existing_entry) {
         return existing_entry.type == Entry::Type::Widget && existing_entry.widget.ptr() == &before_widget;
     });

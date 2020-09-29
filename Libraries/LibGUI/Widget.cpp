@@ -533,10 +533,7 @@ void Widget::set_focus_proxy(Widget* proxy)
     if (m_focus_proxy == proxy)
         return;
 
-    if (proxy)
-        m_focus_proxy = proxy->make_weak_ptr();
-    else
-        m_focus_proxy = nullptr;
+    m_focus_proxy = proxy;
 }
 
 FocusPolicy Widget::focus_policy() const

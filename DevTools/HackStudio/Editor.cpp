@@ -61,7 +61,7 @@ Editor::Editor()
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
 
-    m_autocomplete_box = make<AutoCompleteBox>(make_weak_ptr());
+    m_autocomplete_box = make<AutoCompleteBox>(*this);
 }
 
 Editor::~Editor()

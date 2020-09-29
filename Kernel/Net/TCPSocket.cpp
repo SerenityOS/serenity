@@ -130,7 +130,7 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
 void TCPSocket::release_to_originator()
 {
     ASSERT(!!m_originator);
-    m_originator->release_for_accept(this);
+    m_originator.strong_ref()->release_for_accept(this);
 }
 
 void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)

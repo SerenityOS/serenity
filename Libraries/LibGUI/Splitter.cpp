@@ -124,8 +124,8 @@ void Splitter::mousedown_event(MouseEvent& event)
     if (!get_resize_candidates_at(event.position(), first, second))
         return;
 
-    m_first_resizee = first->make_weak_ptr();
-    m_second_resizee = second->make_weak_ptr();
+    m_first_resizee = *first;
+    m_second_resizee = *second;
     m_first_resizee_start_size = first->size();
     m_second_resizee_start_size = second->size();
     m_resize_origin = event.position();

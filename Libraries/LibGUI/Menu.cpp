@@ -162,7 +162,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
         }
     }
     all_menus().set(m_menu_id, this);
-    m_last_default_action = default_action ? default_action->make_weak_ptr() : nullptr;
+    m_last_default_action = default_action;
     return m_menu_id;
 }
 

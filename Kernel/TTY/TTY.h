@@ -51,7 +51,12 @@ public:
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
 
-    ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
+    ProcessGroupID pgid() const
+    {
+        if (auto pg = m_pg.strong_ref())
+            return pg->pgid();
+        return 0;
+    }
 
     void set_termios(const termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }

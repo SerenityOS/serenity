@@ -978,7 +978,7 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     m_thread_specific_data = VirtualAddress(thread_specific_data);
     thread_specific_data->self = thread_specific_data;
     if (process().m_master_tls_size)
-        memcpy(thread_local_storage, process().m_master_tls_region->vaddr().as_ptr(), process().m_master_tls_size);
+        memcpy(thread_local_storage, process().m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), process().m_master_tls_size);
     return KSuccess;
 }
 

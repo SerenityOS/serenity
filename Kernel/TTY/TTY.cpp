@@ -166,8 +166,8 @@ void TTY::emit(u8 ch)
         if (ch == m_termios.c_cc[VSUSP]) {
             dbg() << tty_name() << ": VSUSP pressed!";
             generate_signal(SIGTSTP);
-            if (m_original_process_parent)
-                (void)m_original_process_parent->send_signal(SIGCHLD, nullptr);
+            if (auto original_process_parent = m_original_process_parent.strong_ref())
+                (void)original_process_parent->send_signal(SIGCHLD, nullptr);
             // TODO: Else send it to the session leader maybe?
             return;
         }
@@ -330,11 +330,11 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             return -EPERM;
         if (process && pgid != process->pgid())
             return -EPERM;
-        m_pg = process_group->make_weak_ptr();
+        m_pg = *process_group;
 
         if (process) {
             if (auto parent = Process::from_pid(process->ppid())) {
-                m_original_process_parent = parent->make_weak_ptr();
+                m_original_process_parent = *parent;
                 return 0;
             }
         }

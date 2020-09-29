@@ -40,7 +40,7 @@ Tool::~Tool()
 
 void Tool::setup(ImageEditor& editor)
 {
-    m_editor = editor.make_weak_ptr();
+    m_editor = editor;
 }
 
 void Tool::set_action(GUI::Action* action)

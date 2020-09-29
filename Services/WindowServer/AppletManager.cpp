@@ -69,7 +69,7 @@ void AppletManager::event(Core::Event& event)
 
 void AppletManager::add_applet(Window& applet)
 {
-    m_applets.append(applet.make_weak_ptr());
+    m_applets.append(applet);
 
     // Prune any dead weak pointers from the applet list.
     m_applets.remove_all_matching([](auto& entry) {

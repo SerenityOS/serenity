@@ -113,7 +113,7 @@ DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, unsigned index, SlavePTY* pty)
     : Inode(fs, index)
 {
     if (pty)
-        m_pty = pty->make_weak_ptr();
+        m_pty = *pty;
 }
 
 DevPtsFSInode::~DevPtsFSInode()
@@ -132,9 +132,9 @@ ssize_t DevPtsFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, Fi
 
 InodeMetadata DevPtsFSInode::metadata() const
 {
-    if (m_pty) {
+    if (auto pty = m_pty.strong_ref()) {
         auto metadata = m_metadata;
-        metadata.mtime = m_pty->time_of_last_write();
+        metadata.mtime = pty->time_of_last_write();
         return metadata;
     }
     return m_metadata;
