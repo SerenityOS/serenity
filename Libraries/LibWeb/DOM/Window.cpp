@@ -30,6 +30,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Page/Frame.h>
 
@@ -42,6 +43,7 @@ NonnullRefPtr<Window> Window::create_with_document(Document& document)
 
 Window::Window(Document& document)
     : m_document(document)
+    , m_performance(make<HighResolutionTime::Performance>(*this))
 {
 }
 

@@ -56,6 +56,8 @@ private:
     JS_DECLARE_NATIVE_GETTER(document_getter);
     JS_DECLARE_NATIVE_SETTER(document_setter);
 
+    JS_DECLARE_NATIVE_GETTER(performance_getter);
+
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
     JS_DECLARE_NATIVE_FUNCTION(set_interval);

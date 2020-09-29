@@ -38,6 +38,7 @@
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/Bindings/PerformanceWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
@@ -62,6 +63,7 @@ void WindowObject::initialize()
     define_property("frames", this, JS::Attribute::Enumerable);
     define_property("self", this, JS::Attribute::Enumerable);
     define_native_property("document", document_getter, document_setter, JS::Attribute::Enumerable);
+    define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
     define_native_function("alert", alert);
     define_native_function("confirm", confirm);
     define_native_function("setInterval", set_interval, 1);
@@ -323,6 +325,14 @@ JS_DEFINE_NATIVE_SETTER(WindowObject::document_setter)
 {
     // FIXME: Figure out what we should do here. Just ignore attempts to set window.document for now.
     UNUSED_PARAM(value);
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    return wrap(global_object, impl->performance());
 }
 
 }

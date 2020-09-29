@@ -129,6 +129,7 @@ set(SOURCES
     HTML/Parser/HTMLTokenizer.cpp
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
+    HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
     Layout/BoxModelMetrics.cpp
     Layout/LayoutBlock.cpp
@@ -298,6 +299,7 @@ libweb_js_wrapper(HTML/HTMLUListElement)
 libweb_js_wrapper(HTML/HTMLUnknownElement)
 libweb_js_wrapper(HTML/HTMLVideoElement)
 libweb_js_wrapper(HTML/ImageData)
+libweb_js_wrapper(HighResolutionTime/Performance)
 libweb_js_wrapper(UIEvents/MouseEvent)
 libweb_js_wrapper(UIEvents/UIEvent)
 

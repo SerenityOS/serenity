@@ -64,6 +64,8 @@ public:
     i32 allocate_timer_id(Badge<Timer>);
     void timer_did_fire(Badge<Timer>, Timer&);
 
+    HighResolutionTime::Performance& performance() { return *m_performance; }
+
 private:
     explicit Window(Document&);
 
@@ -72,6 +74,8 @@ private:
 
     IDAllocator m_timer_id_allocator;
     HashMap<int, NonnullRefPtr<Timer>> m_timers;
+
+    NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
 };
 
 }
