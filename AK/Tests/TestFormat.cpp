@@ -130,4 +130,10 @@ TEST_CASE(complex_string_specifiers)
     EXPECT_EQ(String::formatted("{:^9}", "abcd"), "  abcd   ");
 }
 
+TEST_CASE(cast_integer_to_character)
+{
+    EXPECT_EQ(String::formatted("{:c}", static_cast<int>('a')), "a");
+    EXPECT_EQ(String::formatted("{:c}", static_cast<unsigned int>('f')), "f");
+}
+
 TEST_MAIN(Format)
