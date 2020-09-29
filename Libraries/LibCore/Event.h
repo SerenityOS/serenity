@@ -130,11 +130,11 @@ public:
     ChildEvent(Type, Object& child, Object* insertion_before_child = nullptr);
     ~ChildEvent();
 
-    Object* child() { return m_child.ptr(); }
-    const Object* child() const { return m_child.ptr(); }
+    Object* child();
+    const Object* child() const;
 
-    Object* insertion_before_child() { return m_insertion_before_child.ptr(); }
-    const Object* insertion_before_child() const { return m_insertion_before_child.ptr(); }
+    Object* insertion_before_child();
+    const Object* insertion_before_child() const;
 
 private:
     WeakPtr<Object> m_child;

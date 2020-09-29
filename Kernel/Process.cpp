@@ -194,7 +194,7 @@ bool Process::deallocate_region(Region& region)
     OwnPtr<Region> region_protector;
     ScopedSpinLock lock(m_lock);
 
-    if (m_region_lookup_cache.region == &region)
+    if (m_region_lookup_cache.region.unsafe_ptr() == &region)
         m_region_lookup_cache.region = nullptr;
     for (size_t i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
@@ -209,13 +209,13 @@ Region* Process::find_region_from_range(const Range& range)
 {
     ScopedSpinLock lock(m_lock);
     if (m_region_lookup_cache.range == range && m_region_lookup_cache.region)
-        return m_region_lookup_cache.region;
+        return m_region_lookup_cache.region.unsafe_ptr();
 
     size_t size = PAGE_ROUND_UP(range.size());
     for (auto& region : m_regions) {
         if (region.vaddr() == range.base() && region.size() == size) {
             m_region_lookup_cache.range = range;
-            m_region_lookup_cache.region = region.make_weak_ptr();
+            m_region_lookup_cache.region = region;
             return &region;
         }
     }

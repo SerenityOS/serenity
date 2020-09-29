@@ -69,26 +69,26 @@ public:
 
     ALWAYS_INLINE void ref() const
     {
-        auto old_ref_count = m_ref_count++;
+        auto old_ref_count = m_ref_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed);
         ASSERT(old_ref_count > 0);
         ASSERT(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
     }
 
     ALWAYS_INLINE RefCountType ref_count() const
     {
-        return m_ref_count;
+        return m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
     }
 
 protected:
     RefCountedBase() { }
     ALWAYS_INLINE ~RefCountedBase()
     {
-        ASSERT(m_ref_count == 0);
+        ASSERT(m_ref_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);
     }
 
     ALWAYS_INLINE RefCountType deref_base() const
     {
-        auto old_ref_count = m_ref_count--;
+        auto old_ref_count = m_ref_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
         ASSERT(old_ref_count > 0);
         return old_ref_count - 1;
     }

@@ -92,13 +92,13 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
                 auto* region = process.allocate_region_with_vmobject(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
                 if (!region)
                     return (void*)-ENOMEM;
-                ref.region = region->make_weak_ptr();
-                ref.region->set_shared(true);
+                ref.region = region;
+                region->set_shared(true);
             }
             ref.count++;
             m_total_refs++;
             sanity_check("ref_for_process_and_get_address");
-            return ref.region->vaddr().as_ptr();
+            return ref.region.unsafe_ptr()->vaddr().as_ptr(); // TODO: Region needs to be RefCounted!
         }
     }
     ASSERT_NOT_REACHED();
@@ -133,7 +133,7 @@ void SharedBuffer::deref_for_process(Process& process)
 #ifdef SHARED_BUFFER_DEBUG
                 dbg() << "Releasing shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid().value();
 #endif
-                process.deallocate_region(*ref.region);
+                process.deallocate_region(*ref.region.unsafe_ptr()); // TODO: Region needs to be RefCounted!
 #ifdef SHARED_BUFFER_DEBUG
                 dbg() << "Released shared buffer reference on " << m_shbuf_id << " of size " << size() << " by PID " << process.pid().value();
 #endif
@@ -187,9 +187,10 @@ void SharedBuffer::seal()
     LOCKER(shared_buffers().lock());
     m_writable = false;
     for (auto& ref : m_refs) {
-        if (ref.region) {
-            ref.region->set_writable(false);
-            ref.region->remap();
+        // TODO: Region needs to be RefCounted!
+        if (auto* region = ref.region.unsafe_ptr()) {
+            region->set_writable(false);
+            region->remap();
         }
     }
 }

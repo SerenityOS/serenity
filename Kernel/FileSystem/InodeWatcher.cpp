@@ -36,15 +36,15 @@ NonnullRefPtr<InodeWatcher> InodeWatcher::create(Inode& inode)
 }
 
 InodeWatcher::InodeWatcher(Inode& inode)
-    : m_inode(inode.make_weak_ptr())
+    : m_inode(inode)
 {
     inode.register_watcher({}, *this);
 }
 
 InodeWatcher::~InodeWatcher()
 {
-    if (RefPtr<Inode> safe_inode = m_inode.ptr())
-        safe_inode->unregister_watcher({}, *this);
+    if (auto inode = m_inode.strong_ref())
+        inode->unregister_watcher({}, *this);
 }
 
 bool InodeWatcher::can_read(const FileDescription&, size_t) const
@@ -88,9 +88,9 @@ KResultOr<size_t> InodeWatcher::write(FileDescription&, size_t, const UserOrKern
 
 String InodeWatcher::absolute_path(const FileDescription&) const
 {
-    if (!m_inode)
-        return "InodeWatcher:(gone)";
-    return String::format("InodeWatcher:%s", m_inode->identifier().to_string().characters());
+    if (auto inode = m_inode.strong_ref())
+        return String::format("InodeWatcher:%s", inode->identifier().to_string().characters());
+    return "InodeWatcher:(gone)";
 }
 
 void InodeWatcher::notify_inode_event(Badge<Inode>, Event::Type event_type)

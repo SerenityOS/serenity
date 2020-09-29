@@ -83,7 +83,7 @@ public:
     Window& ensure_menu_window();
 
     Window* window_menu_of() { return m_window_menu_of; }
-    void set_window_menu_of(Window& window) { m_window_menu_of = window.make_weak_ptr(); }
+    void set_window_menu_of(Window& window) { m_window_menu_of = window; }
     bool is_window_menu_open() { return m_is_window_menu_open; }
     void set_window_menu_open(bool is_open) { m_is_window_menu_open = is_open; }
 

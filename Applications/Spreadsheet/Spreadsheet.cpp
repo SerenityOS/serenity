@@ -345,12 +345,12 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
         OwnPtr<Cell> cell;
         switch (kind) {
         case Cell::LiteralString:
-            cell = make<Cell>(obj.get("value").to_string(), position, sheet->make_weak_ptr());
+            cell = make<Cell>(obj.get("value").to_string(), position, *sheet);
             break;
         case Cell::Formula: {
             auto& interpreter = sheet->interpreter();
             auto value = interpreter.vm().call(parse_function, json, JS::js_string(interpreter.heap(), obj.get("value").as_string()));
-            cell = make<Cell>(obj.get("source").to_string(), move(value), position, sheet->make_weak_ptr());
+            cell = make<Cell>(obj.get("source").to_string(), move(value), position, *sheet);
             break;
         }
         }

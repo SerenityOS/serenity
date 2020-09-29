@@ -88,8 +88,8 @@ pid_t Process::sys$fork(RegisterState& regs)
             auto& child_region = child->add_region(region.clone());
             child_region.map(child->page_directory());
 
-            if (&region == m_master_tls_region)
-                child->m_master_tls_region = child_region.make_weak_ptr();
+            if (&region == m_master_tls_region.unsafe_ptr())
+                child->m_master_tls_region = child_region;
         }
 
         ScopedSpinLock processes_lock(g_processes_lock);

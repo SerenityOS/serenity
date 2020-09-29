@@ -230,7 +230,7 @@ void WindowSwitcher::refresh()
             longest_title_width = max(longest_title_width, wm.font().width(window.title()));
             if (selected_window == &window)
                 m_selected_index = m_windows.size();
-            m_windows.append(window.make_weak_ptr());
+            m_windows.append(window);
             return IterationDecision::Continue;
         },
         true);

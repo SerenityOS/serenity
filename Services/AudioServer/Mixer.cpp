@@ -148,7 +148,7 @@ void Mixer::set_muted(bool muted)
 }
 
 BufferQueue::BufferQueue(ClientConnection& client)
-    : m_client(client.make_weak_ptr())
+    : m_client(client)
 {
 }
 

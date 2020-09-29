@@ -444,7 +444,7 @@ void WindowManager::start_window_move(Window& window, const MouseEvent& event)
     dbg() << "[WM] Begin moving Window{" << &window << "}";
 #endif
     move_to_front_and_make_active(window);
-    m_move_window = window.make_weak_ptr();
+    m_move_window = window;
     m_move_window->set_default_positioned(false);
     m_move_origin = event.position();
     m_move_window_origin = window.position();
@@ -478,7 +478,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
     dbg() << "[WM] Begin resizing Window{" << &window << "}";
 #endif
     m_resizing_mouse_button = button;
-    m_resize_window = window.make_weak_ptr();
+    m_resize_window = window;
     m_resize_origin = position;
     m_resize_window_original_rect = window.rect();
 
@@ -739,7 +739,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
 
 void WindowManager::set_cursor_tracking_button(Button* button)
 {
-    m_cursor_tracking_button = button ? button->make_weak_ptr() : nullptr;
+    m_cursor_tracking_button = button;
 }
 
 auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) const -> const ClickMetadata&
@@ -811,7 +811,7 @@ void WindowManager::start_menu_doubleclick(Window& window, const MouseEvent& eve
 #if defined(DOUBLECLICK_DEBUG)
         dbg() << "Initial mousedown on window " << &window << " for menu (previous was " << m_double_click_info.m_clicked_window << ')';
 #endif
-        m_double_click_info.m_clicked_window = window.make_weak_ptr();
+        m_double_click_info.m_clicked_window = window;
         m_double_click_info.reset();
     }
 
@@ -844,7 +844,7 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
 #if defined(DOUBLECLICK_DEBUG)
         dbg() << "Initial mouseup on window " << &window << " (previous was " << m_double_click_info.m_clicked_window << ')';
 #endif
-        m_double_click_info.m_clicked_window = window.make_weak_ptr();
+        m_double_click_info.m_clicked_window = window;
         m_double_click_info.reset();
     }
 
@@ -994,7 +994,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                     auto translated_event = event.translated(-window.position());
                     deliver_mouse_event(window, translated_event);
                     if (event.type() == Event::MouseDown) {
-                        m_active_input_tracking_window = window.make_weak_ptr();
+                        m_active_input_tracking_window = window;
                     }
                 }
                 return;
@@ -1135,7 +1135,7 @@ void WindowManager::set_highlight_window(Window* window)
         return;
     if (auto* previous_highlight_window = m_highlight_window.ptr())
         previous_highlight_window->invalidate();
-    m_highlight_window = window ? window->make_weak_ptr() : nullptr;
+    m_highlight_window = window;
     if (m_highlight_window)
         m_highlight_window->invalidate();
 }
@@ -1179,7 +1179,7 @@ Window* WindowManager::set_active_input_window(Window* window)
         Core::EventLoop::current().post_event(*previous_input_window, make<Event>(Event::WindowInputLeft));
 
     if (window) {
-        m_active_input_window = window->make_weak_ptr();
+        m_active_input_window = *window;
         Core::EventLoop::current().post_event(*window, make<Event>(Event::WindowInputEntered));
     } else {
         m_active_input_window = nullptr;
@@ -1230,7 +1230,7 @@ void WindowManager::set_active_window(Window* window, bool make_input)
     }
 
     if (window) {
-        m_active_window = window->make_weak_ptr();
+        m_active_window = *window;
         active_client = m_active_window->client();
         Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
         m_active_window->invalidate();
@@ -1260,7 +1260,7 @@ void WindowManager::set_hovered_window(Window* window)
     if (m_hovered_window)
         Core::EventLoop::current().post_event(*m_hovered_window, make<Event>(Event::WindowLeft));
 
-    m_hovered_window = window ? window->make_weak_ptr() : nullptr;
+    m_hovered_window = window;
 
     if (m_hovered_window)
         Core::EventLoop::current().post_event(*m_hovered_window, make<Event>(Event::WindowEntered));
@@ -1314,12 +1314,12 @@ const Cursor& WindowManager::active_cursor() const
 
 void WindowManager::set_hovered_button(Button* button)
 {
-    m_hovered_button = button ? button->make_weak_ptr() : nullptr;
+    m_hovered_button = button;
 }
 
 void WindowManager::set_resize_candidate(Window& window, ResizeDirection direction)
 {
-    m_resize_candidate = window.make_weak_ptr();
+    m_resize_candidate = window;
     m_resize_direction = direction;
 }
 
@@ -1358,7 +1358,7 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
 void WindowManager::start_dnd_drag(ClientConnection& client, const String& text, Gfx::Bitmap* bitmap, const Core::MimeData& mime_data)
 {
     ASSERT(!m_dnd_client);
-    m_dnd_client = client.make_weak_ptr();
+    m_dnd_client = client;
     m_dnd_text = text;
     m_dnd_bitmap = bitmap;
     m_dnd_mime_data = mime_data;

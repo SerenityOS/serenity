@@ -45,7 +45,7 @@ HTMLScriptElement::~HTMLScriptElement()
 
 void HTMLScriptElement::set_parser_document(Badge<HTMLDocumentParser>, DOM::Document& document)
 {
-    m_parser_document = document.make_weak_ptr();
+    m_parser_document = document;
 }
 
 void HTMLScriptElement::set_non_blocking(Badge<HTMLDocumentParser>, bool non_blocking)
@@ -82,12 +82,12 @@ void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
     // FIXME: Check the "type" and "language" attributes
 
     if (parser_document) {
-        m_parser_document = parser_document->make_weak_ptr();
+        m_parser_document = *parser_document;
         m_non_blocking = false;
     }
 
     m_already_started = true;
-    m_preparation_time_document = document().make_weak_ptr();
+    m_preparation_time_document = document();
 
     if (parser_document && parser_document.ptr() != m_preparation_time_document.ptr()) {
         return;

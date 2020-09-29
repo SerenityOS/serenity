@@ -297,7 +297,7 @@ void Window::handle_mouse_event(MouseEvent& event)
     ASSERT(result.widget);
     set_hovered_widget(result.widget);
     if (event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
-        m_automatic_cursor_tracking_widget = result.widget->make_weak_ptr();
+        m_automatic_cursor_tracking_widget = *result.widget;
     if (result.widget != m_global_cursor_tracking_widget.ptr())
         return result.widget->dispatch_event(*local_event, this);
     return;
@@ -562,7 +562,7 @@ void Window::set_focused_widget(Widget* widget, FocusSource source)
         Core::EventLoop::current().post_event(*m_focused_widget, make<FocusEvent>(Event::FocusOut, source));
         m_focused_widget->update();
     }
-    m_focused_widget = widget ? widget->make_weak_ptr() : nullptr;
+    m_focused_widget = widget;
     if (m_focused_widget) {
         Core::EventLoop::current().post_event(*m_focused_widget, make<FocusEvent>(Event::FocusIn, source));
         m_focused_widget->update();
@@ -573,14 +573,14 @@ void Window::set_global_cursor_tracking_widget(Widget* widget)
 {
     if (widget == m_global_cursor_tracking_widget)
         return;
-    m_global_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
+    m_global_cursor_tracking_widget = widget;
 }
 
 void Window::set_automatic_cursor_tracking_widget(Widget* widget)
 {
     if (widget == m_automatic_cursor_tracking_widget)
         return;
-    m_automatic_cursor_tracking_widget = widget ? widget->make_weak_ptr() : nullptr;
+    m_automatic_cursor_tracking_widget = widget;
 }
 
 void Window::set_has_alpha_channel(bool value)
@@ -621,7 +621,7 @@ void Window::set_hovered_widget(Widget* widget)
     if (m_hovered_widget)
         Core::EventLoop::current().post_event(*m_hovered_widget, make<Event>(Event::Leave));
 
-    m_hovered_widget = widget ? widget->make_weak_ptr() : nullptr;
+    m_hovered_widget = widget;
 
     if (m_hovered_widget)
         Core::EventLoop::current().post_event(*m_hovered_widget, make<Event>(Event::Enter));

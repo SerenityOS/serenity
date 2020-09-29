@@ -50,7 +50,7 @@ Application* Application::the()
 Application::Application(int argc, char** argv)
 {
     ASSERT(!*s_the);
-    *s_the = make_weak_ptr();
+    *s_the = *this;
     m_event_loop = make<Core::EventLoop>();
     WindowServerConnection::the();
     Clipboard::initialize({});

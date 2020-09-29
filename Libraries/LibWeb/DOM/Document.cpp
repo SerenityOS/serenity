@@ -234,7 +234,7 @@ String Document::title() const
 
 void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 {
-    m_frame = frame.make_weak_ptr();
+    m_frame = frame;
     for_each_in_subtree([&](auto& node) {
         node.document_did_attach_to_frame(frame);
         return IterationDecision::Continue;
@@ -584,10 +584,7 @@ void Document::set_focused_element(Element* element)
     if (m_focused_element == element)
         return;
 
-    if (element)
-        m_focused_element = element->make_weak_ptr();
-    else
-        m_focused_element = nullptr;
+    m_focused_element = element;
 
     if (m_layout_root)
         m_layout_root->set_needs_display();

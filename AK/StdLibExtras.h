@@ -146,6 +146,8 @@ struct IntegralConstant {
 
 typedef IntegralConstant<bool, false> FalseType;
 typedef IntegralConstant<bool, true> TrueType;
+template<typename...>
+using VoidType = void;
 
 template<class T>
 struct IsLvalueReference : FalseType {
@@ -301,7 +303,6 @@ struct Conditional<false, TrueType, FalseType> {
 template<typename T>
 struct IsNullPointer : IsSame<decltype(nullptr), typename RemoveCV<T>::Type> {
 };
-
 
 template<typename T>
 struct RemoveReference {

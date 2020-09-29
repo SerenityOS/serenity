@@ -35,7 +35,8 @@
 #    pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
 
-class SimpleWeakable : public Weakable<SimpleWeakable> {
+class SimpleWeakable : public Weakable<SimpleWeakable>
+    , public RefCounted<SimpleWeakable> {
 public:
     SimpleWeakable() { }
 
@@ -53,18 +54,18 @@ TEST_CASE(basic_weak)
     WeakPtr<SimpleWeakable> weak2;
 
     {
-        SimpleWeakable simple;
-        weak1 = simple.make_weak_ptr();
-        weak2 = simple.make_weak_ptr();
+        auto simple = adopt(*new SimpleWeakable);
+        weak1 = simple;
+        weak2 = simple;
         EXPECT_EQ(weak1.is_null(), false);
         EXPECT_EQ(weak2.is_null(), false);
-        EXPECT_EQ(weak1.ptr(), &simple);
-        EXPECT_EQ(weak1.ptr(), weak2.ptr());
+        EXPECT_EQ(weak1.strong_ref().ptr(), simple.ptr());
+        EXPECT_EQ(weak1.strong_ref().ptr(), weak2.strong_ref().ptr());
     }
 
     EXPECT_EQ(weak1.is_null(), true);
-    EXPECT_EQ(weak1.ptr(), nullptr);
-    EXPECT_EQ(weak1.ptr(), weak2.ptr());
+    EXPECT_EQ(weak1.strong_ref().ptr(), nullptr);
+    EXPECT_EQ(weak1.strong_ref().ptr(), weak2.strong_ref().ptr());
 }
 
 TEST_CASE(weakptr_move)
@@ -73,12 +74,12 @@ TEST_CASE(weakptr_move)
     WeakPtr<SimpleWeakable> weak2;
 
     {
-        SimpleWeakable simple;
-        weak1 = simple.make_weak_ptr();
+        auto simple = adopt(*new SimpleWeakable);
+        weak1 = simple;
         weak2 = move(weak1);
         EXPECT_EQ(weak1.is_null(), true);
         EXPECT_EQ(weak2.is_null(), false);
-        EXPECT_EQ(weak2.ptr(), &simple);
+        EXPECT_EQ(weak2.strong_ref().ptr(), simple.ptr());
     }
 
     EXPECT_EQ(weak2.is_null(), true);

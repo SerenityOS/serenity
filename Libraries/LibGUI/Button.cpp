@@ -129,7 +129,7 @@ void Button::context_menu_event(ContextMenuEvent& context_menu_event)
 
 void Button::set_action(Action& action)
 {
-    m_action = action.make_weak_ptr();
+    m_action = action;
     action.register_button({}, *this);
     set_enabled(action.is_enabled());
     set_checkable(action.is_checkable());

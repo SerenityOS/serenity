@@ -26,11 +26,15 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
 #include <AK/LogStream.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
+#ifdef KERNEL
+#    include <Kernel/Arch/i386/CPU.h>
+#endif
 
 namespace AK {
 
@@ -39,19 +43,87 @@ class OwnPtr;
 
 template<typename T>
 struct RefPtrTraits {
-    static T* as_ptr(FlatPtr bits)
+    ALWAYS_INLINE static T* as_ptr(FlatPtr bits)
     {
-        return (T*)bits;
+        return (T*)(bits & ~(FlatPtr)1);
     }
 
-    static FlatPtr as_bits(T* ptr)
+    ALWAYS_INLINE static FlatPtr as_bits(T* ptr)
     {
+        ASSERT(!((FlatPtr)ptr & 1));
         return (FlatPtr)ptr;
     }
 
-    static bool is_null(FlatPtr bits)
+    template<typename U, typename PtrTraits>
+    ALWAYS_INLINE static FlatPtr convert_from(FlatPtr bits)
     {
-        return !bits;
+        if (PtrTraits::is_null(bits))
+            return default_null_value;
+        return as_bits(PtrTraits::as_ptr(bits));
+    }
+
+    ALWAYS_INLINE static bool is_null(FlatPtr bits)
+    {
+        return !(bits & ~(FlatPtr)1);
+    }
+
+    ALWAYS_INLINE static FlatPtr exchange(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
+    {
+        // Only exchange when lock is not held
+        ASSERT(!(new_value & 1));
+        FlatPtr expected = atomic_var.load(AK::MemoryOrder::memory_order_relaxed);
+        for (;;) {
+            expected &= ~(FlatPtr)1; // only if lock bit is not set
+            if (atomic_var.compare_exchange_strong(expected, new_value, AK::MemoryOrder::memory_order_acq_rel))
+                break;
+#ifdef KERNEL
+            Kernel::Processor::wait_check();
+#endif
+        }
+        return expected;
+    }
+
+    ALWAYS_INLINE static bool exchange_if_null(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
+    {
+        // Only exchange when lock is not held
+        ASSERT(!(new_value & 1));
+        for (;;) {
+            FlatPtr expected = default_null_value; // only if lock bit is not set
+            if (atomic_var.compare_exchange_strong(expected, new_value, AK::MemoryOrder::memory_order_acq_rel))
+                break;
+            if (!is_null(expected))
+                return false;
+#ifdef KERNEL
+            Kernel::Processor::wait_check();
+#endif
+        }
+        return true;
+    }
+
+    ALWAYS_INLINE static FlatPtr lock(Atomic<FlatPtr>& atomic_var)
+    {
+        // This sets the lock bit atomically, preventing further modifications.
+        // This is important when e.g. copying a RefPtr where the source
+        // might be released and freed too quickly. This allows us
+        // to temporarily lock the pointer so we can add a reference, then
+        // unlock it
+        FlatPtr bits;
+        for (;;) {
+            bits = atomic_var.fetch_or(1, AK::MemoryOrder::memory_order_acq_rel);
+            if (!(bits & 1))
+                break;
+#ifdef KERNEL
+            Kernel::Processor::wait_check();
+#endif
+        }
+        ASSERT(!(bits & 1));
+        return bits;
+    }
+
+    ALWAYS_INLINE static void unlock(Atomic<FlatPtr>& atomic_var, FlatPtr new_value)
+    {
+        ASSERT(!(new_value & 1));
+        atomic_var.store(new_value, AK::MemoryOrder::memory_order_release);
     }
 
     static constexpr FlatPtr default_null_value = 0;
@@ -63,6 +135,9 @@ template<typename T, typename PtrTraits>
 class RefPtr {
     template<typename U, typename P>
     friend class RefPtr;
+    template<typename U>
+    friend class WeakPtr;
+
 public:
     enum AdoptTag {
         Adopt
@@ -79,62 +154,55 @@ public:
     {
         T* ptr = const_cast<T*>(&object);
         ASSERT(ptr);
-        ASSERT(!ptr == PtrTraits::is_null(m_bits));
+        ASSERT(!is_null());
         ptr->ref();
     }
     RefPtr(AdoptTag, T& object)
         : m_bits(PtrTraits::as_bits(&object))
     {
-        ASSERT(&object);
-        ASSERT(!PtrTraits::is_null(m_bits));
+        ASSERT(!is_null());
     }
     RefPtr(RefPtr&& other)
         : m_bits(other.leak_ref_raw())
     {
     }
     ALWAYS_INLINE RefPtr(const NonnullRefPtr<T>& other)
-        : m_bits(PtrTraits::as_bits(const_cast<T*>(other.ptr())))
+        : m_bits(PtrTraits::as_bits(const_cast<T*>(other.add_ref())))
     {
-        ASSERT(!PtrTraits::is_null(m_bits));
-        PtrTraits::as_ptr(m_bits)->ref();
     }
     template<typename U>
     ALWAYS_INLINE RefPtr(const NonnullRefPtr<U>& other)
-        : m_bits(PtrTraits::as_bits(const_cast<U*>(other.ptr())))
+        : m_bits(PtrTraits::as_bits(const_cast<U*>(other.add_ref())))
     {
-        ASSERT(!PtrTraits::is_null(m_bits));
-        PtrTraits::as_ptr(m_bits)->ref();
     }
     template<typename U>
     ALWAYS_INLINE RefPtr(NonnullRefPtr<U>&& other)
         : m_bits(PtrTraits::as_bits(&other.leak_ref()))
     {
-        ASSERT(!PtrTraits::is_null(m_bits));
+        ASSERT(!is_null());
     }
     template<typename U, typename P = RefPtrTraits<U>>
     RefPtr(RefPtr<U, P>&& other)
-        : m_bits(other.leak_ref_raw())
+        : m_bits(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()))
     {
     }
     RefPtr(const RefPtr& other)
-        : m_bits(PtrTraits::as_bits(const_cast<T*>(other.ptr())))
+        : m_bits(other.add_ref_raw())
     {
-        ref_if_not_null(const_cast<T*>(other.ptr()));
     }
     template<typename U, typename P = RefPtrTraits<U>>
     RefPtr(const RefPtr<U, P>& other)
-        : m_bits(PtrTraits::as_bits(const_cast<U*>(other.ptr())))
+        : m_bits(other.add_ref_raw())
     {
-        ref_if_not_null(const_cast<U*>(other.ptr()));
     }
     ALWAYS_INLINE ~RefPtr()
     {
         clear();
 #ifdef SANITIZE_PTRS
         if constexpr (sizeof(T*) == 8)
-            m_bits = 0xe0e0e0e0e0e0e0e0;
+            m_bits.store(0xe0e0e0e0e0e0e0e0, AK::MemoryOrder::memory_order_relaxed);
         else
-            m_bits = 0xe0e0e0e0;
+            m_bits.store(0xe0e0e0e0, AK::MemoryOrder::memory_order_relaxed);
 #endif
     }
     RefPtr(std::nullptr_t) { }
@@ -144,79 +212,85 @@ public:
     template<typename U>
     RefPtr& operator=(const OwnPtr<U>&) = delete;
 
-    template<typename U>
-    void swap(RefPtr<U, PtrTraits>& other)
+    void swap(RefPtr& other)
     {
-        ::swap(m_bits, other.m_bits);
+        if (this == &other)
+            return;
+
+        // NOTE: swap is not atomic!
+        FlatPtr other_bits = PtrTraits::exchange(other.m_bits, PtrTraits::default_null_value);
+        FlatPtr bits = PtrTraits::exchange(m_bits, other_bits);
+        PtrTraits::exchange(other.m_bits, bits);
+    }
+
+    template<typename U, typename P = RefPtrTraits<U>>
+    void swap(RefPtr<U, P>& other)
+    {
+        // NOTE: swap is not atomic!
+        FlatPtr other_bits = P::exchange(other.m_bits, P::default_null_value);
+        FlatPtr bits = PtrTraits::exchange(m_bits, PtrTraits::template convert_from<U, P>(other_bits));
+        P::exchange(other.m_bits, P::template convert_from<U, P>(bits));
     }
 
     ALWAYS_INLINE RefPtr& operator=(RefPtr&& other)
     {
-        RefPtr tmp = move(other);
-        swap(tmp);
+        if (this != &other)
+            assign_raw(other.leak_ref_raw());
         return *this;
     }
 
-    template<typename U>
-    ALWAYS_INLINE RefPtr& operator=(RefPtr<U, PtrTraits>&& other)
+    template<typename U, typename P = RefPtrTraits<U>>
+    ALWAYS_INLINE RefPtr& operator=(RefPtr<U, P>&& other)
     {
-        RefPtr tmp = move(other);
-        swap(tmp);
+        assign_raw(PtrTraits::template convert_from<U, P>(other.leak_ref_raw()));
         return *this;
     }
 
     template<typename U>
     ALWAYS_INLINE RefPtr& operator=(NonnullRefPtr<U>&& other)
     {
-        RefPtr tmp = move(other);
-        swap(tmp);
-        ASSERT(!PtrTraits::is_null(m_bits));
+        assign_raw(PtrTraits::as_bits(&other.leak_ref()));
         return *this;
     }
 
     ALWAYS_INLINE RefPtr& operator=(const NonnullRefPtr<T>& other)
     {
-        RefPtr tmp = other;
-        swap(tmp);
-        ASSERT(!PtrTraits::is_null(m_bits));
+        assign_raw(PtrTraits::as_bits(other.add_ref()));
         return *this;
     }
 
     template<typename U>
     ALWAYS_INLINE RefPtr& operator=(const NonnullRefPtr<U>& other)
     {
-        RefPtr tmp = other;
-        swap(tmp);
-        ASSERT(!PtrTraits::is_null(m_bits));
+        assign_raw(PtrTraits::as_bits(other.add_ref()));
         return *this;
     }
 
     ALWAYS_INLINE RefPtr& operator=(const RefPtr& other)
     {
-        RefPtr tmp = other;
-        swap(tmp);
+        if (this != &other)
+            assign_raw(other.add_ref_raw());
         return *this;
     }
 
     template<typename U>
     ALWAYS_INLINE RefPtr& operator=(const RefPtr<U>& other)
     {
-        RefPtr tmp = other;
-        swap(tmp);
+        assign_raw(other.add_ref_raw());
         return *this;
     }
 
     ALWAYS_INLINE RefPtr& operator=(const T* ptr)
     {
-        RefPtr tmp = ptr;
-        swap(tmp);
+        ref_if_not_null(const_cast<T*>(ptr));
+        assign_raw(PtrTraits::as_bits(const_cast<T*>(ptr)));
         return *this;
     }
 
     ALWAYS_INLINE RefPtr& operator=(const T& object)
     {
-        RefPtr tmp = object;
-        swap(tmp);
+        const_cast<T&>(object).ref();
+        assign_raw(PtrTraits::as_bits(const_cast<T*>(&object)));
         return *this;
     }
 
@@ -226,99 +300,166 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE void clear()
+    ALWAYS_INLINE bool assign_if_null(RefPtr&& other)
     {
-        unref_if_not_null(PtrTraits::as_ptr(m_bits));
-        m_bits = PtrTraits::default_null_value;
+        if (this == &other)
+            return is_null();
+        return PtrTraits::exchange_if_null(m_bits, other.leak_ref_raw());
     }
 
-    bool operator!() const { return PtrTraits::is_null(m_bits); }
+    template<typename U, typename P = RefPtrTraits<U>>
+    ALWAYS_INLINE bool assign_if_null(RefPtr<U, P>&& other)
+    {
+        if (this == &other)
+            return is_null();
+        return PtrTraits::exchange_if_null(m_bits, PtrTraits::template convert_from<U, P>(other.leak_ref_raw()));
+    }
+
+    ALWAYS_INLINE void clear()
+    {
+        assign_raw(PtrTraits::default_null_value);
+    }
+
+    bool operator!() const { return PtrTraits::is_null(m_bits.load(AK::MemoryOrder::memory_order_relaxed)); }
 
     [[nodiscard]] T* leak_ref()
     {
-        FlatPtr bits = exchange(m_bits, PtrTraits::default_null_value);
-        return !PtrTraits::is_null(bits) ? PtrTraits::as_ptr(bits) : nullptr;
+        FlatPtr bits = PtrTraits::exchange(m_bits, PtrTraits::default_null_value);
+        return PtrTraits::as_ptr(bits);
     }
 
     NonnullRefPtr<T> release_nonnull()
     {
-        ASSERT(!PtrTraits::is_null(m_bits));
-        return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *leak_ref());
+        FlatPtr bits = PtrTraits::exchange(m_bits, PtrTraits::default_null_value);
+        ASSERT(!PtrTraits::is_null(bits));
+        return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *PtrTraits::as_ptr(bits));
     }
 
-    ALWAYS_INLINE T* ptr() { return !PtrTraits::is_null(m_bits) ? PtrTraits::as_ptr(m_bits) : nullptr; }
-    ALWAYS_INLINE const T* ptr() const { return !PtrTraits::is_null(m_bits) ? PtrTraits::as_ptr(m_bits) : nullptr; }
+    ALWAYS_INLINE T* ptr() { return as_ptr(); }
+    ALWAYS_INLINE const T* ptr() const { return as_ptr(); }
 
     ALWAYS_INLINE T* operator->()
     {
-        ASSERT(!PtrTraits::is_null(m_bits));
-        return PtrTraits::as_ptr(m_bits);
+        return as_nonnull_ptr();
     }
 
     ALWAYS_INLINE const T* operator->() const
     {
-        ASSERT(!PtrTraits::is_null(m_bits));
-        return PtrTraits::as_ptr(m_bits);
+        return as_nonnull_ptr();
     }
 
     ALWAYS_INLINE T& operator*()
     {
-        ASSERT(!PtrTraits::is_null(m_bits));
-        return *PtrTraits::as_ptr(m_bits);
+        return *as_nonnull_ptr();
     }
 
     ALWAYS_INLINE const T& operator*() const
     {
-        ASSERT(!PtrTraits::is_null(m_bits));
-        return *PtrTraits::as_ptr(m_bits);
+        return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE operator const T*() const { return PtrTraits::as_ptr(m_bits); }
-    ALWAYS_INLINE operator T*() { return PtrTraits::as_ptr(m_bits); }
+    ALWAYS_INLINE operator const T*() const { return as_ptr(); }
+    ALWAYS_INLINE operator T*() { return as_ptr(); }
 
-    operator bool() { return !PtrTraits::is_null(m_bits); }
+    operator bool() { return !is_null(); }
 
-    bool operator==(std::nullptr_t) const { return PtrTraits::is_null(m_bits); }
-    bool operator!=(std::nullptr_t) const { return !PtrTraits::is_null(m_bits); }
+    bool operator==(std::nullptr_t) const { return is_null(); }
+    bool operator!=(std::nullptr_t) const { return !is_null(); }
 
-    bool operator==(const RefPtr& other) const { return m_bits == other.m_bits; }
-    bool operator!=(const RefPtr& other) const { return m_bits != other.m_bits; }
+    bool operator==(const RefPtr& other) const { return as_ptr() == other.as_ptr(); }
+    bool operator!=(const RefPtr& other) const { return as_ptr() != other.as_ptr(); }
 
-    bool operator==(RefPtr& other) { return m_bits == other.m_bits; }
-    bool operator!=(RefPtr& other) { return m_bits != other.m_bits; }
+    bool operator==(RefPtr& other) { return as_ptr() == other.as_ptr(); }
+    bool operator!=(RefPtr& other) { return as_ptr() != other.as_ptr(); }
 
-    bool operator==(const T* other) const { return PtrTraits::as_ptr(m_bits) == other; }
-    bool operator!=(const T* other) const { return PtrTraits::as_ptr(m_bits) != other; }
+    bool operator==(const T* other) const { return as_ptr() == other; }
+    bool operator!=(const T* other) const { return as_ptr() != other; }
 
-    bool operator==(T* other) { return PtrTraits::as_ptr(m_bits) == other; }
-    bool operator!=(T* other) { return PtrTraits::as_ptr(m_bits) != other; }
+    bool operator==(T* other) { return as_ptr() == other; }
+    bool operator!=(T* other) { return as_ptr() != other; }
 
-    bool is_null() const { return PtrTraits::is_null(m_bits); }
-    
+    bool is_null() const { return PtrTraits::is_null(m_bits.load(AK::MemoryOrder::memory_order_relaxed)); }
+
     template<typename U = T, typename EnableIf<IsSame<U, T>::value && !IsNullPointer<typename PtrTraits::NullType>::value>::Type* = nullptr>
     typename PtrTraits::NullType null_value() const
     {
         // make sure we are holding a null value
-        ASSERT(PtrTraits::is_null(m_bits));
-        return PtrTraits::to_null_value(m_bits);
+        FlatPtr bits = m_bits.load(AK::MemoryOrder::memory_order_relaxed);
+        ASSERT(PtrTraits::is_null(bits));
+        return PtrTraits::to_null_value(bits);
     }
     template<typename U = T, typename EnableIf<IsSame<U, T>::value && !IsNullPointer<typename PtrTraits::NullType>::value>::Type* = nullptr>
     void set_null_value(typename PtrTraits::NullType value)
     {
-         // make sure that new null value would be interpreted as a null value
-         FlatPtr bits = PtrTraits::from_null_value(value);
-         ASSERT(PtrTraits::is_null(bits));
-         clear();
-         m_bits = bits;
+        // make sure that new null value would be interpreted as a null value
+        FlatPtr bits = PtrTraits::from_null_value(value);
+        ASSERT(PtrTraits::is_null(bits));
+        assign_raw(bits);
     }
 
 private:
-    [[nodiscard]] FlatPtr leak_ref_raw()
+    template<typename F>
+    void do_while_locked(F f) const
     {
-        return exchange(m_bits, PtrTraits::default_null_value);
+#ifdef KERNEL
+        // We don't want to be pre-empted while we have the lock bit set
+        Kernel::ScopedCritical critical;
+#endif
+        FlatPtr bits = PtrTraits::lock(m_bits);
+        T* ptr = PtrTraits::as_ptr(bits);
+        f(ptr);
+        PtrTraits::unlock(m_bits, bits);
     }
 
-    FlatPtr m_bits { PtrTraits::default_null_value };
+    [[nodiscard]] ALWAYS_INLINE FlatPtr leak_ref_raw()
+    {
+        return PtrTraits::exchange(m_bits, PtrTraits::default_null_value);
+    }
+
+    [[nodiscard]] ALWAYS_INLINE FlatPtr add_ref_raw() const
+    {
+#ifdef KERNEL
+        // We don't want to be pre-empted while we have the lock bit set
+        Kernel::ScopedCritical critical;
+#endif
+        // This prevents a race condition between thread A and B:
+        // 1. Thread A copies RefPtr, e.g. through assignment or copy constructor,
+        //    gets the pointer from source, but is pre-empted before adding
+        //    another reference
+        // 2. Thread B calls clear, leak_ref, or release_nonnull on source, and
+        //    then drops the last reference, causing the object to be deleted
+        // 3. Thread A finishes step #1 by attempting to add a reference to
+        //    the object that was already deleted in step #2
+        FlatPtr bits = PtrTraits::lock(m_bits);
+        if (T* ptr = PtrTraits::as_ptr(bits))
+            ptr->ref();
+        PtrTraits::unlock(m_bits, bits);
+        return bits;
+    }
+
+    ALWAYS_INLINE void assign_raw(FlatPtr bits)
+    {
+        FlatPtr prev_bits = PtrTraits::exchange(m_bits, bits);
+        unref_if_not_null(PtrTraits::as_ptr(prev_bits));
+    }
+
+    ALWAYS_INLINE T* as_ptr() const
+    {
+        return PtrTraits::as_ptr(m_bits.load(AK::MemoryOrder::memory_order_relaxed));
+    }
+
+    ALWAYS_INLINE T* as_nonnull_ptr() const
+    {
+        return as_nonnull_ptr(m_bits.load(AK::MemoryOrder::memory_order_relaxed));
+    }
+
+    ALWAYS_INLINE T* as_nonnull_ptr(FlatPtr bits) const
+    {
+        ASSERT(!PtrTraits::is_null(bits));
+        return PtrTraits::as_ptr(bits);
+    }
+
+    mutable Atomic<FlatPtr> m_bits { PtrTraits::default_null_value };
 };
 
 template<typename T, typename PtrTraits = RefPtrTraits<T>>
@@ -344,6 +485,12 @@ template<typename T, typename U, typename PtrTraits = RefPtrTraits<T>>
 inline RefPtr<T> static_ptr_cast(const RefPtr<U>& ptr)
 {
     return RefPtr<T, PtrTraits>(static_cast<const T*>(ptr.ptr()));
+}
+
+template<typename T, typename PtrTraitsT, typename U, typename PtrTraitsU>
+inline void swap(RefPtr<T, PtrTraitsT>& a, RefPtr<U, PtrTraitsU>& b)
+{
+    a.swap(b);
 }
 
 }

@@ -40,4 +40,32 @@ ChildEvent::~ChildEvent()
 {
 }
 
+Object* ChildEvent::child()
+{
+    if (auto ref = m_child.strong_ref())
+        return ref.ptr();
+    return nullptr;
+}
+
+const Object* ChildEvent::child() const
+{
+    if (auto ref = m_child.strong_ref())
+        return ref.ptr();
+    return nullptr;
+}
+
+Object* ChildEvent::insertion_before_child()
+{
+    if (auto ref = m_insertion_before_child.strong_ref())
+        return ref.ptr();
+    return nullptr;
+}
+
+const Object* ChildEvent::insertion_before_child() const
+{
+    if (auto ref = m_insertion_before_child.strong_ref())
+        return ref.ptr();
+    return nullptr;
+}
+
 }

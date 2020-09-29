@@ -82,7 +82,7 @@ public:
         if (auto cell = at(position))
             return *cell;
 
-        m_cells.set(position, make<Cell>(String::empty(), position, make_weak_ptr()));
+        m_cells.set(position, make<Cell>(String::empty(), position, *this));
         return *at(position);
     }
 

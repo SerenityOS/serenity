@@ -485,6 +485,7 @@ bool Scheduler::pick_next()
 
     Thread* thread_to_schedule = nullptr;
 
+    auto pending_beneficiary = scheduler_data.m_pending_beneficiary.strong_ref();
     Vector<Thread*, 128> sorted_runnables;
     for_each_runnable([&](auto& thread) {
         if ((thread.affinity() & (1u << Processor::current().id())) == 0)
@@ -492,7 +493,7 @@ bool Scheduler::pick_next()
         if (thread.state() == Thread::Running && &thread != current_thread)
             return IterationDecision::Continue;
         sorted_runnables.append(&thread);
-        if (&thread == scheduler_data.m_pending_beneficiary) {
+        if (&thread == pending_beneficiary) {
             thread_to_schedule = &thread;
             return IterationDecision::Break;
         }
@@ -628,7 +629,7 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
     ASSERT(!proc.in_irq());
 
     if (proc.in_critical() > 1) {
-        scheduler_data.m_pending_beneficiary = beneficiary->make_weak_ptr(); // Save the beneficiary
+        scheduler_data.m_pending_beneficiary = *beneficiary; // Save the beneficiary
         scheduler_data.m_pending_donate_reason = reason;
         proc.invoke_scheduler_async();
         return false;

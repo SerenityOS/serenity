@@ -129,14 +129,14 @@ void Inode::will_be_destroyed()
 
 void Inode::inode_contents_changed(off_t offset, ssize_t size, const UserOrKernelBuffer& data)
 {
-    if (m_shared_vmobject)
-        m_shared_vmobject->inode_contents_changed({}, offset, size, data);
+    if (auto shared_vmobject = this->shared_vmobject())
+        shared_vmobject->inode_contents_changed({}, offset, size, data);
 }
 
 void Inode::inode_size_changed(size_t old_size, size_t new_size)
 {
-    if (m_shared_vmobject)
-        m_shared_vmobject->inode_size_changed({}, old_size, new_size);
+    if (auto shared_vmobject = this->shared_vmobject())
+        shared_vmobject->inode_size_changed({}, old_size, new_size);
 }
 
 int Inode::set_atime(time_t)
@@ -166,7 +166,7 @@ KResult Inode::decrement_link_count()
 
 void Inode::set_shared_vmobject(SharedInodeVMObject& vmobject)
 {
-    m_shared_vmobject = vmobject.make_weak_ptr();
+    m_shared_vmobject = vmobject;
 }
 
 bool Inode::bind_socket(LocalSocket& socket)
@@ -258,6 +258,21 @@ KResult Inode::prepare_to_write_data()
         return chmod(metadata.mode & ~(04000 | 02000));
     }
     return KSuccess;
+}
+
+RefPtr<SharedInodeVMObject> Inode::shared_vmobject()
+{
+    return m_shared_vmobject.strong_ref();
+}
+
+RefPtr<SharedInodeVMObject> Inode::shared_vmobject() const
+{
+    return m_shared_vmobject.strong_ref();
+}
+
+bool Inode::is_shared_vmobject(const SharedInodeVMObject& other) const
+{
+    return m_shared_vmobject.unsafe_ptr() == &other;
 }
 
 }
