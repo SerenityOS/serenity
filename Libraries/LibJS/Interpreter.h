@@ -32,7 +32,6 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <LibJS/AST.h>
-#include <LibJS/Console.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Heap/Heap.h>
@@ -87,9 +86,6 @@ public:
     Heap& heap() { return vm().heap(); }
     Exception* exception() { return vm().exception(); }
 
-    Console& console() { return m_console; }
-    const Console& console() const { return m_console; }
-
     bool in_strict_mode() const
     {
         // FIXME: This implementation is bogus; strict mode is per-file or per-function, not per-block!
@@ -120,8 +116,6 @@ private:
     NonnullRefPtr<VM> m_vm;
 
     Handle<Object> m_global_object;
-
-    Console m_console;
 
     Vector<ScopeFrame> m_scope_stack;
 };

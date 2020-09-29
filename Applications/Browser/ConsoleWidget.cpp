@@ -129,8 +129,8 @@ void ConsoleWidget::set_interpreter(WeakPtr<JS::Interpreter> interpreter)
         return;
 
     m_interpreter = interpreter;
-    m_console_client = adopt_own(*new BrowserConsoleClient(interpreter->console(), *this));
-    interpreter->console().set_client(*m_console_client.ptr());
+    m_console_client = make<BrowserConsoleClient>(interpreter->global_object().console(), *this);
+    interpreter->global_object().console().set_client(*m_console_client.ptr());
 
     clear_output();
 }

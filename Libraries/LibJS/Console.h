@@ -40,12 +40,12 @@ class Console {
     AK_MAKE_NONMOVABLE(Console);
 
 public:
-    Console(Interpreter&);
+    explicit Console(GlobalObject&);
 
     void set_client(ConsoleClient& client) { m_client = &client; }
 
-    Interpreter& interpreter() { return m_interpreter; }
-    const Interpreter& interpreter() const { return m_interpreter; }
+    GlobalObject& global_object() { return m_global_object; }
+    const GlobalObject& global_object() const { return m_global_object; }
 
     HashMap<String, unsigned>& counters() { return m_counters; }
     const HashMap<String, unsigned>& counters() const { return m_counters; }
@@ -67,7 +67,7 @@ public:
     bool counter_reset(String label);
 
 private:
-    Interpreter& m_interpreter;
+    GlobalObject& m_global_object;
     ConsoleClient* m_client { nullptr };
 
     HashMap<String, unsigned> m_counters;
@@ -91,8 +91,10 @@ public:
     virtual Value count_reset() = 0;
 
 protected:
-    Interpreter& interpreter() { return m_console.interpreter(); }
-    const Interpreter& interpreter() const { return m_console.interpreter(); }
+    VM& vm();
+
+    GlobalObject& global_object() { return m_console.global_object(); }
+    const GlobalObject& global_object() const { return m_console.global_object(); }
 
     Vector<String> get_trace() const;
 
