@@ -203,7 +203,7 @@ public:
 
     String join_arguments() const;
 
-    Value resolve_this_binding() const;
+    Value resolve_this_binding(GlobalObject&) const;
     const LexicalEnvironment* get_this_environment() const;
     Value get_new_target() const;
 

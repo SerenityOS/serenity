@@ -72,7 +72,7 @@ Value Interpreter::run(GlobalObject& global_object, const Program& program)
     global_call_frame.this_value = &global_object;
     global_call_frame.function_name = "(global execution context)";
     global_call_frame.environment = heap().allocate<LexicalEnvironment>(global_object, LexicalEnvironment::EnvironmentRecordType::Global);
-    global_call_frame.environment->bind_this_value(&global_object);
+    global_call_frame.environment->bind_this_value(global_object, &global_object);
     if (vm().exception())
         return {};
     vm().call_stack().append(move(global_call_frame));
