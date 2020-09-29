@@ -22,6 +22,9 @@ a {
 span#ua {
     color: red;
 }
+span#loadtime {
+    color: yellow;
+}
 </style>
 <script src="welcome.js"></script>
 </head>
@@ -29,6 +32,7 @@ span#ua {
     <h1>Welcome to the Serenity Browser!</h1>
     <p>This is a very simple browser built on the LibWeb and LibJS engines.</p>
     <p>Your user agent is: <b><span id="ua"></span></b></p>
+    <p>This page loaded in <b><span id="loadtime"></span></b> ms</p>
     <p>Some small test pages:</p>
     <ul>
         <li><a href="checkbox.html">checkbox</a></li>
@@ -93,5 +97,8 @@ span#ua {
         <li><a href="pgmsuite.html">PGM test suite</a></li>
         <li><a href="ppmsuite.html">PPM test suite</a></li>
     </ul>
+    <script>
+        document.getElementById("loadtime").innerHTML = performance.now();
+    </script>
 </body>
 </html>
