@@ -63,7 +63,7 @@ public:
     LexicalEnvironment* parent() const { return m_parent; }
 
     Optional<Variable> get(const FlyString&) const;
-    void set(const FlyString&, Variable);
+    void set(GlobalObject&, const FlyString&, Variable);
 
     void clear();
 
@@ -75,8 +75,8 @@ public:
 
     bool has_this_binding() const;
     ThisBindingStatus this_binding_status() const { return m_this_binding_status; }
-    Value get_this_binding() const;
-    void bind_this_value(Value this_value);
+    Value get_this_binding(GlobalObject&) const;
+    void bind_this_value(GlobalObject&, Value this_value);
 
     // Not a standard operation.
     void replace_this_binding(Value this_value) { m_this_value = this_value; }

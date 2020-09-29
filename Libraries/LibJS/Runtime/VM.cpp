@@ -145,7 +145,7 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
                     return;
                 }
 
-                environment->set(name, { value, possible_match.value().declaration_kind });
+                environment->set(global_object, name, { value, possible_match.value().declaration_kind });
                 return;
             }
         }
@@ -204,7 +204,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     Object* new_object = nullptr;
     if (function.constructor_kind() == Function::ConstructorKind::Base) {
         new_object = Object::create_empty(global_object);
-        current_environment()->bind_this_value(new_object);
+        current_environment()->bind_this_value(global_object, new_object);
         if (exception())
             return {};
         auto prototype = new_target.get("prototype");
@@ -222,7 +222,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     call_frame.this_value = this_value;
     auto result = function.construct(new_target);
 
-    this_value = current_environment()->get_this_binding();
+    this_value = current_environment()->get_this_binding(global_object);
     pop_call_frame();
     call_frame_popper.disarm();
 
@@ -280,9 +280,9 @@ String VM::join_arguments() const
     return joined_arguments.build();
 }
 
-Value VM::resolve_this_binding() const
+Value VM::resolve_this_binding(GlobalObject& global_object) const
 {
-    return get_this_environment()->get_this_binding();
+    return get_this_environment()->get_this_binding(global_object);
 }
 
 const LexicalEnvironment* VM::get_this_environment() const
@@ -313,7 +313,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     call_frame.environment = function.create_environment();
 
     ASSERT(call_frame.environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
-    call_frame.environment->bind_this_value(call_frame.this_value);
+    call_frame.environment->bind_this_value(function.global_object(), call_frame.this_value);
 
     auto result = function.call();
     pop_call_frame();

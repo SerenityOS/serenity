@@ -208,7 +208,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (interpreter.exception())
             return {};
 
-        interpreter.current_environment()->bind_this_value(result);
+        interpreter.current_environment()->bind_this_value(global_object, result);
     } else {
         result = interpreter.call(function, this_value, move(arguments));
     }
@@ -761,7 +761,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
 
-    interpreter.current_environment()->set(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
+    interpreter.current_environment()->set(global_object, m_class_expression->name(), { class_constructor, DeclarationKind::Let });
 
     return js_undefined();
 }
@@ -1181,9 +1181,9 @@ Value SpreadExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     return m_target->execute(interpreter, global_object);
 }
 
-Value ThisExpression::execute(Interpreter& interpreter, GlobalObject&) const
+Value ThisExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    return interpreter.vm().resolve_this_binding();
+    return interpreter.vm().resolve_this_binding(global_object);
 }
 
 void ThisExpression::dump(int indent) const

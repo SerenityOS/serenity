@@ -138,7 +138,7 @@ Value ScriptFunction::call()
             }
         }
         arguments.append({ parameter.name, value });
-        vm().current_environment()->set(parameter.name, { value, DeclarationKind::Var });
+        vm().current_environment()->set(global_object(), parameter.name, { value, DeclarationKind::Var });
     }
     return interpreter->execute_statement(global_object(), m_body, arguments, ScopeType::Function);
 }
