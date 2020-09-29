@@ -122,4 +122,12 @@ TEST_CASE(replacement_field)
     EXPECT_EQ(String::formatted("{:0{}}", 1, 3), "001");
 }
 
+TEST_CASE(complex_string_specifiers)
+{
+    EXPECT_EQ(String::formatted("{:.8}", "123456789"), "12345678");
+    EXPECT_EQ(String::formatted("{:9}", "abcd"), "abcd     ");
+    EXPECT_EQ(String::formatted("{:>9}", "abcd"), "     abcd");
+    EXPECT_EQ(String::formatted("{:^9}", "abcd"), "  abcd   ");
+}
+
 TEST_MAIN(Format)

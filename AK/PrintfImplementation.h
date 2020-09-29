@@ -141,7 +141,7 @@ inline size_t convert_unsigned_to_string(
     };
 
     const auto used_by_field = used_by_significant_digits + used_by_prefix;
-    const auto used_by_padding = static_cast<size_t>(max<ssize_t>(0, static_cast<ssize_t>(width) - static_cast<ssize_t>(used_by_field)));
+    const auto used_by_padding = width < used_by_field ? 0 : width - used_by_field;
 
     if (align == Align::Left) {
         const auto used_by_right_padding = used_by_padding;
