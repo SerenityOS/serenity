@@ -26,7 +26,6 @@
 
 #include <AK/FlyString.h>
 #include <AK/StringBuilder.h>
-#include <LibJS/Interpreter.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>

@@ -25,7 +25,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Text.h>

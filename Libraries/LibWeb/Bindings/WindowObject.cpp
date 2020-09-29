@@ -30,7 +30,6 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/Shape.h>
