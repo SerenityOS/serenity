@@ -49,6 +49,13 @@ struct NumericLimits<signed char> {
 };
 
 template<>
+struct NumericLimits<char> {
+    static constexpr char min() { return -__SCHAR_MAX__ - 1; }
+    static constexpr char max() { return __SCHAR_MAX__; }
+    static constexpr bool is_signed() { return true; }
+};
+
+template<>
 struct NumericLimits<short> {
     static constexpr short min() { return -__SHRT_MAX__ - 1; }
     static constexpr short max() { return __SHRT_MAX__; }
