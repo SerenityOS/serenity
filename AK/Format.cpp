@@ -366,10 +366,8 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
 {
     if (m_precision != value_not_set)
         ASSERT_NOT_REACHED();
-    if (m_mode == Mode::Character)
-        TODO();
 
-    u8 base;
+    u8 base = 0;
     bool upper_case = false;
     if (m_mode == Mode::Binary) {
         base = 2;
@@ -385,11 +383,52 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
     } else if (m_mode == Mode::HexadecimalUppercase) {
         base = 16;
         upper_case = true;
+    } else if (m_mode == Mode::Character) {
+        // special case
     } else {
         ASSERT_NOT_REACHED();
     }
 
     auto width = decode_value(m_width, context);
+
+    const auto put_padding = [&](size_t amount, char fill) {
+        for (size_t i = 0; i < amount; ++i)
+            builder.append(fill);
+    };
+
+    if (m_mode == Mode::Character) {
+        // FIXME: We just support ASCII for now, in the future maybe unicode?
+        ASSERT(value >= 0 && value <= 127);
+
+        const size_t used_by_value = 1;
+        const auto used_by_padding = width < used_by_value ? 0 : width - used_by_value;
+
+        if (m_align == Align::Left || m_align == Align::Default) {
+            const auto used_by_right_padding = used_by_padding;
+
+            builder.append(static_cast<char>(value));
+            put_padding(used_by_right_padding, m_fill);
+            return;
+        }
+        if (m_align == Align::Center) {
+            const auto used_by_left_padding = used_by_padding / 2;
+            const auto used_by_right_padding = ceil_div<size_t, size_t>(used_by_padding, 2);
+
+            put_padding(used_by_left_padding, m_fill);
+            builder.append(static_cast<char>(value));
+            put_padding(used_by_right_padding, m_fill);
+            return;
+        }
+        if (m_align == Align::Right) {
+            const auto used_by_left_padding = used_by_padding;
+
+            put_padding(used_by_left_padding, m_fill);
+            builder.append(static_cast<char>(value));
+            return;
+        }
+
+        ASSERT_NOT_REACHED();
+    }
 
     PrintfImplementation::Align align;
     if (m_align == Align::Left)
