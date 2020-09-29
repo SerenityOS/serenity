@@ -38,9 +38,11 @@ public:
     void start();
     int elapsed() const;
 
+    const struct timeval& origin_time() const { return m_origin_time; }
+
 private:
     bool m_valid { false };
-    struct timeval m_start_time {
+    struct timeval m_origin_time {
         0, 0
     };
 };
