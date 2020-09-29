@@ -122,8 +122,8 @@ public:
     }
     virtual ~RPCClient() override
     {
-        if (m_inspected_object)
-            m_inspected_object->decrement_inspector_count({});
+        if (auto inspected_object = m_inspected_object.strong_ref())
+            inspected_object->decrement_inspector_count({});
     }
 
     void send_response(const JsonObject& response)
@@ -177,10 +177,10 @@ public:
             auto address = request.get("address").to_number<FlatPtr>();
             for (auto& object : Object::all_objects()) {
                 if ((FlatPtr)&object == address) {
-                    if (m_inspected_object)
-                        m_inspected_object->decrement_inspector_count({});
-                    m_inspected_object = object.make_weak_ptr();
-                    m_inspected_object->increment_inspector_count({});
+                    if (auto inspected_object = m_inspected_object.strong_ref())
+                        inspected_object->decrement_inspector_count({});
+                    m_inspected_object = object;
+                    object.increment_inspector_count({});
                     break;
                 }
             }
@@ -364,7 +364,7 @@ void EventLoop::pump(WaitMode mode)
 
     for (size_t i = 0; i < events.size(); ++i) {
         auto& queued_event = events.at(i);
-        auto* receiver = queued_event.receiver.ptr();
+        auto receiver = queued_event.receiver.strong_ref();
         auto& event = *queued_event.event;
 #ifdef EVENTLOOP_DEBUG
         if (receiver)
@@ -639,15 +639,16 @@ try_select_again:
         auto& timer = *it.value;
         if (!timer.has_expired(now))
             continue;
-        if (it.value->fire_when_not_visible == TimerShouldFireWhenNotVisible::No
-            && it.value->owner
-            && !it.value->owner->is_visible_for_timer_purposes()) {
+        auto owner = timer.owner.strong_ref();
+        if (timer.fire_when_not_visible == TimerShouldFireWhenNotVisible::No
+            && owner && !owner->is_visible_for_timer_purposes()) {
             continue;
         }
 #ifdef EVENTLOOP_DEBUG
-        dbgln("Core::EventLoop: Timer {} has expired, sending Core::TimerEvent to {}", timer.timer_id, timer.owner);
+        dbgln("Core::EventLoop: Timer {} has expired, sending Core::TimerEvent to {}", timer.timer_id, *owner);
 #endif
-        post_event(*timer.owner, make<TimerEvent>(timer.timer_id));
+        if (owner)
+            post_event(*owner, make<TimerEvent>(timer.timer_id));
         if (timer.should_reload) {
             timer.reload(now);
         } else {
@@ -688,9 +689,9 @@ Optional<struct timeval> EventLoop::get_next_timer_expiration()
     Optional<struct timeval> soonest {};
     for (auto& it : *s_timers) {
         auto& fire_time = it.value->fire_time;
+        auto owner = it.value->owner.strong_ref();
         if (it.value->fire_when_not_visible == TimerShouldFireWhenNotVisible::No
-            && it.value->owner
-            && !it.value->owner->is_visible_for_timer_purposes()) {
+            && owner && !owner->is_visible_for_timer_purposes()) {
             continue;
         }
         if (!soonest.has_value() || fire_time.tv_sec < soonest.value().tv_sec || (fire_time.tv_sec == soonest.value().tv_sec && fire_time.tv_usec < soonest.value().tv_usec))
@@ -703,7 +704,7 @@ int EventLoop::register_timer(Object& object, int milliseconds, bool should_relo
 {
     ASSERT(milliseconds >= 0);
     auto timer = make<EventLoopTimer>();
-    timer->owner = object.make_weak_ptr();
+    timer->owner = object;
     timer->interval = milliseconds;
     timeval now;
     timespec now_spec;
@@ -750,7 +751,7 @@ void EventLoop::wake()
 }
 
 EventLoop::QueuedEvent::QueuedEvent(Object& receiver, NonnullOwnPtr<Event> event)
-    : receiver(receiver.make_weak_ptr())
+    : receiver(receiver)
     , event(move(event))
 {
 }

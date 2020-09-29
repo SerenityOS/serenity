@@ -159,7 +159,7 @@ public:
     static Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
     RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
-    void set_originator(TCPSocket& originator) { m_originator = originator.make_weak_ptr(); }
+    void set_originator(TCPSocket& originator) { m_originator = originator; }
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
     void release_for_accept(RefPtr<TCPSocket>);

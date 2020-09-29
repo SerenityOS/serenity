@@ -31,7 +31,7 @@
 namespace Protocol {
 
 Download::Download(Client& client, i32 download_id)
-    : m_client(client.make_weak_ptr())
+    : m_client(client)
     , m_download_id(download_id)
 {
 }

@@ -128,7 +128,7 @@ void SyntaxHighlighter::highlight_matching_token_pair()
 void SyntaxHighlighter::attach(TextEditor& editor)
 {
     ASSERT(!m_editor);
-    m_editor = editor.make_weak_ptr();
+    m_editor = editor;
 }
 
 void SyntaxHighlighter::detach()

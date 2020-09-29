@@ -102,8 +102,9 @@ public:
     void will_be_destroyed();
 
     void set_shared_vmobject(SharedInodeVMObject&);
-    SharedInodeVMObject* shared_vmobject() { return m_shared_vmobject.ptr(); }
-    const SharedInodeVMObject* shared_vmobject() const { return m_shared_vmobject.ptr(); }
+    RefPtr<SharedInodeVMObject> shared_vmobject();
+    RefPtr<SharedInodeVMObject> shared_vmobject() const;
+    bool is_shared_vmobject(const SharedInodeVMObject&) const;
 
     static InlineLinkedList<Inode>& all_with_lock();
     static void sync();
