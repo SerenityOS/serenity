@@ -62,10 +62,18 @@ float Length::relative_length_to_px(const LayoutNode& layout_node) const
 const char* Length::unit_name() const
 {
     switch (m_type) {
+    case Type::Cm:
+        return "cm";
+    case Type::In:
+        return "in";
     case Type::Px:
         return "px";
     case Type::Pt:
         return "pt";
+    case Type::Mm:
+        return "mm";
+    case Type::Q:
+        return "Q";
     case Type::Ex:
         return "ex";
     case Type::Em:

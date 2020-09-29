@@ -37,6 +37,10 @@ public:
         Undefined,
         Percentage,
         Auto,
+        Cm,
+        In,
+        Mm,
+        Q,
         Px,
         Pt,
         Ex,
@@ -88,7 +92,17 @@ public:
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_auto() const { return m_type == Type::Auto; }
-    bool is_absolute() const { return m_type == Type::Px || m_type == Type::Pt; }
+
+    bool is_absolute() const
+    {
+        return m_type == Type::Cm
+            || m_type == Type::In
+            || m_type == Type::Mm
+            || m_type == Type::Px
+            || m_type == Type::Pt
+            || m_type == Type::Q;
+    }
+
     bool is_relative() const
     {
         return m_type == Type::Ex
@@ -108,10 +122,18 @@ public:
         switch (m_type) {
         case Type::Auto:
             return 0;
+        case Type::Cm:
+            return m_value * (96.0f / 2.54f); // 1cm = 96px/2.54
+        case Type::In:
+            return m_value * 96.0f; // 1in = 2.54 cm = 96px
         case Type::Px:
-            return m_value;
+            return m_value; // 1px = 1/96th of 1in
         case Type::Pt:
-            return m_value * 1.33333333f;
+            return m_value * 1.33333333f; // 1pt = 1/72th of 1in
+        case Type::Mm:
+            return m_value * (0.1f * (96.0f / 2.54f)); // 1mm = 1/10th of 1cm
+        case Type::Q:
+            return m_value * (0.025f * (96.0f / 2.54f)); // 1Q = 1/40th of 1cm
         case Type::Undefined:
         case Type::Percentage:
         default:
