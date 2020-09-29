@@ -30,7 +30,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/TextBox.h>
-#include <LibJS/Interpreter.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
@@ -41,7 +40,7 @@ namespace Browser {
 
 JS::Value BrowserConsoleClient::log()
 {
-    m_console_widget.print_html(interpreter().vm().join_arguments());
+    m_console_widget.print_html(vm().join_arguments());
     return JS::js_undefined();
 }
 
@@ -50,7 +49,7 @@ JS::Value BrowserConsoleClient::info()
     StringBuilder html;
     html.append("<span class=\"info\">");
     html.append("(i) ");
-    html.append(interpreter().vm().join_arguments());
+    html.append(vm().join_arguments());
     html.append("</span>");
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -61,7 +60,7 @@ JS::Value BrowserConsoleClient::debug()
     StringBuilder html;
     html.append("<span class=\"debug\">");
     html.append("(d) ");
-    html.append(interpreter().vm().join_arguments());
+    html.append(vm().join_arguments());
     html.append("</span>");
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -72,7 +71,7 @@ JS::Value BrowserConsoleClient::warn()
     StringBuilder html;
     html.append("<span class=\"warn\">");
     html.append("(w) ");
-    html.append(interpreter().vm().join_arguments());
+    html.append(vm().join_arguments());
     html.append("</span>");
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -83,7 +82,7 @@ JS::Value BrowserConsoleClient::error()
     StringBuilder html;
     html.append("<span class=\"error\">");
     html.append("(e) ");
-    html.append(interpreter().vm().join_arguments());
+    html.append(vm().join_arguments());
     html.append("</span>");
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -98,7 +97,7 @@ JS::Value BrowserConsoleClient::clear()
 JS::Value BrowserConsoleClient::trace()
 {
     StringBuilder html;
-    html.append(interpreter().vm().join_arguments());
+    html.append(vm().join_arguments());
     auto trace = get_trace();
     for (auto& function_name : trace) {
         if (function_name.is_empty())
@@ -111,7 +110,7 @@ JS::Value BrowserConsoleClient::trace()
 
 JS::Value BrowserConsoleClient::count()
 {
-    auto label = interpreter().argument_count() ? interpreter().argument(0).to_string_without_side_effects() : "default";
+    auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
     auto counter_value = m_console.counter_increment(label);
     m_console_widget.print_html(String::format("%s: %u", label.characters(), counter_value));
     return JS::js_undefined();
@@ -119,7 +118,7 @@ JS::Value BrowserConsoleClient::count()
 
 JS::Value BrowserConsoleClient::count_reset()
 {
-    auto label = interpreter().argument_count() ? interpreter().argument(0).to_string_without_side_effects() : "default";
+    auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
     if (m_console.counter_reset(label)) {
         m_console_widget.print_html(String::format("%s: 0", label.characters()));
     } else {

@@ -98,6 +98,7 @@ class ASTNode;
 class BigInt;
 class BoundFunction;
 class Cell;
+class Console;
 class DeferGC;
 class Error;
 class Exception;

@@ -29,7 +29,6 @@
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <LibJS/Console.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -60,47 +59,47 @@ ConsoleObject::~ConsoleObject()
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::log)
 {
-    return vm.interpreter().console().log();
+    return global_object.console().log();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::debug)
 {
-    return vm.interpreter().console().debug();
+    return global_object.console().debug();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::info)
 {
-    return vm.interpreter().console().info();
+    return global_object.console().info();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::warn)
 {
-    return vm.interpreter().console().warn();
+    return global_object.console().warn();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::error)
 {
-    return vm.interpreter().console().error();
+    return global_object.console().error();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::trace)
 {
-    return vm.interpreter().console().trace();
+    return global_object.console().trace();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::count)
 {
-    return vm.interpreter().console().count();
+    return global_object.console().count();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::count_reset)
 {
-    return vm.interpreter().console().count_reset();
+    return global_object.console().count_reset();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::clear)
 {
-    return vm.interpreter().console().clear();
+    return global_object.console().clear();
 }
 
 }

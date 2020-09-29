@@ -41,6 +41,8 @@ public:
 
     virtual ~GlobalObject() override;
 
+    Console& console() { return *m_console; }
+
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)            \
@@ -65,6 +67,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(is_nan);
     JS_DECLARE_NATIVE_FUNCTION(is_finite);
     JS_DECLARE_NATIVE_FUNCTION(parse_float);
+
+    NonnullOwnPtr<Console> m_console;
 
     Shape* m_empty_object_shape { nullptr };
 

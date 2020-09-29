@@ -26,6 +26,7 @@
  */
 
 #include <AK/LogStream.h>
+#include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayIteratorPrototype.h>
@@ -68,6 +69,7 @@ namespace JS {
 
 GlobalObject::GlobalObject()
     : Object(GlobalObjectTag::Tag)
+    , m_console(make<Console>(*this))
 {
 }
 

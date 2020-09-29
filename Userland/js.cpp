@@ -470,32 +470,32 @@ public:
 
     virtual JS::Value log() override
     {
-        puts(interpreter().vm().join_arguments().characters());
+        puts(vm().join_arguments().characters());
         return JS::js_undefined();
     }
     virtual JS::Value info() override
     {
-        printf("(i) %s\n", interpreter().vm().join_arguments().characters());
+        printf("(i) %s\n", vm().join_arguments().characters());
         return JS::js_undefined();
     }
     virtual JS::Value debug() override
     {
         printf("\033[36;1m");
-        puts(interpreter().vm().join_arguments().characters());
+        puts(vm().join_arguments().characters());
         printf("\033[0m");
         return JS::js_undefined();
     }
     virtual JS::Value warn() override
     {
         printf("\033[33;1m");
-        puts(interpreter().vm().join_arguments().characters());
+        puts(vm().join_arguments().characters());
         printf("\033[0m");
         return JS::js_undefined();
     }
     virtual JS::Value error() override
     {
         printf("\033[31;1m");
-        puts(interpreter().vm().join_arguments().characters());
+        puts(vm().join_arguments().characters());
         printf("\033[0m");
         return JS::js_undefined();
     }
@@ -507,7 +507,7 @@ public:
     }
     virtual JS::Value trace() override
     {
-        puts(interpreter().vm().join_arguments().characters());
+        puts(vm().join_arguments().characters());
         auto trace = get_trace();
         for (auto& function_name : trace) {
             if (function_name.is_empty())
@@ -518,14 +518,14 @@ public:
     }
     virtual JS::Value count() override
     {
-        auto label = interpreter().argument_count() ? interpreter().argument(0).to_string_without_side_effects() : "default";
+        auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
         auto counter_value = m_console.counter_increment(label);
         printf("%s: %u\n", label.characters(), counter_value);
         return JS::js_undefined();
     }
     virtual JS::Value count_reset() override
     {
-        auto label = interpreter().argument_count() ? interpreter().argument(0).to_string_without_side_effects() : "default";
+        auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
         if (m_console.counter_reset(label)) {
             printf("%s: 0\n", label.characters());
         } else {
@@ -564,8 +564,8 @@ int main(int argc, char** argv)
     if (script_path == nullptr) {
         s_print_last_result = true;
         interpreter = JS::Interpreter::create<ReplObject>(*vm);
-        ReplConsoleClient console_client(interpreter->console());
-        interpreter->console().set_client(console_client);
+        ReplConsoleClient console_client(interpreter->global_object().console());
+        interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
         interpreter->vm().set_underscore_is_last_value(true);
 
@@ -846,8 +846,8 @@ int main(int argc, char** argv)
         repl(*interpreter);
     } else {
         interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
-        ReplConsoleClient console_client(interpreter->console());
-        interpreter->console().set_client(console_client);
+        ReplConsoleClient console_client(interpreter->global_object().console());
+        interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
 
         signal(SIGINT, [](int) {

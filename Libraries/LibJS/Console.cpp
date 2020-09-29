@@ -26,12 +26,12 @@
  */
 
 #include <LibJS/Console.h>
-#include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
-Console::Console(Interpreter& interpreter)
-    : m_interpreter(interpreter)
+Console::Console(GlobalObject& global_object)
+    : m_global_object(global_object)
 {
 }
 
@@ -120,10 +120,15 @@ bool Console::counter_reset(String label)
     return true;
 }
 
+VM& ConsoleClient::vm()
+{
+    return global_object().vm();
+}
+
 Vector<String> ConsoleClient::get_trace() const
 {
     Vector<String> trace;
-    auto& call_stack = m_console.interpreter().vm().call_stack();
+    auto& call_stack = m_console.global_object().vm().call_stack();
     // -2 to skip the console.trace() call frame
     for (ssize_t i = call_stack.size() - 2; i >= 0; --i)
         trace.append(call_stack[i].function_name);

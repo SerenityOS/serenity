@@ -54,7 +54,6 @@ NonnullOwnPtr<Interpreter> Interpreter::create_with_existing_global_object(Globa
 
 Interpreter::Interpreter(VM& vm)
     : m_vm(vm)
-    , m_console(*this)
 {
 }
 
