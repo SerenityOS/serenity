@@ -435,7 +435,6 @@ void generate_implementation(const IDL::Interface& interface)
     auto& wrapper_base_class = interface.wrapper_base_class;
 
     out() << "#include <AK/FlyString.h>";
-    out() << "#include <LibJS/Interpreter.h>";
     out() << "#include <LibJS/Runtime/Array.h>";
     out() << "#include <LibJS/Runtime/Value.h>";
     out() << "#include <LibJS/Runtime/GlobalObject.h>";

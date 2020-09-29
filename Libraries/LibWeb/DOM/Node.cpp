@@ -26,7 +26,6 @@
 
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibWeb/Bindings/EventWrapper.h>

@@ -25,7 +25,6 @@
  */
 
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibWeb/Bindings/WindowObject.h>

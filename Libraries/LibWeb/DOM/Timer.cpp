@@ -25,7 +25,6 @@
  */
 
 #include <LibCore/Timer.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
