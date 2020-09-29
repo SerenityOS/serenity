@@ -300,24 +300,65 @@ void StandardFormatter::parse(FormatterContext& context)
     ASSERT(parser.is_eof());
 }
 
-void Formatter<StringView>::format(StringBuilder& builder, StringView value, FormatterContext&)
+void Formatter<StringView>::format(StringBuilder& builder, StringView value, FormatterContext& context)
 {
-    if (m_align != Align::Default)
-        TODO();
     if (m_sign != Sign::Default)
         ASSERT_NOT_REACHED();
     if (m_alternative_form)
         ASSERT_NOT_REACHED();
     if (m_zero_pad)
         ASSERT_NOT_REACHED();
-    if (m_width != value_not_set)
-        TODO();
-    if (m_precision != value_not_set)
-        TODO();
     if (m_mode != Mode::Default && m_mode != Mode::String)
         ASSERT_NOT_REACHED();
+    if (m_width != value_not_set && m_precision != value_not_set)
+        ASSERT_NOT_REACHED();
 
-    builder.append(value);
+    if (m_align == Align::Default)
+        m_align = Align::Left;
+
+    const auto width = decode_value(m_width, context);
+    const auto precision = decode_value(m_precision, context);
+
+    const auto put_padding = [&](size_t amount, char fill) {
+        for (size_t i = 0; i < amount; ++i)
+            builder.append(fill);
+    };
+    const auto put_bytes = [&](ReadonlyBytes bytes) {
+        for (size_t i = 0; i < bytes.size(); ++i)
+            builder.append(static_cast<char>(bytes[i]));
+    };
+
+    auto used_by_string = value.length();
+    if (precision != value_not_set)
+        used_by_string = min(used_by_string, precision);
+
+    const auto used_by_padding = width < used_by_string ? 0 : width - used_by_string;
+
+    if (m_align == Align::Left) {
+        const auto used_by_right_padding = used_by_padding;
+
+        put_bytes(value.bytes().trim(used_by_string));
+        put_padding(used_by_right_padding, m_fill);
+        return;
+    }
+    if (m_align == Align::Center) {
+        const auto used_by_left_padding = used_by_padding / 2;
+        const auto used_by_right_padding = ceil_div<size_t, size_t>(used_by_padding, 2);
+
+        put_padding(used_by_left_padding, m_fill);
+        put_bytes(value.bytes().trim(used_by_string));
+        put_padding(used_by_right_padding, m_fill);
+        return;
+    }
+    if (m_align == Align::Right) {
+        const auto used_by_left_padding = used_by_padding;
+
+        put_padding(used_by_left_padding, m_fill);
+        put_bytes(value.bytes().trim(used_by_string));
+        return;
+    }
+
+    ASSERT_NOT_REACHED();
 }
 
 template<typename T>
