@@ -166,6 +166,12 @@ struct StandardFormatter {
 
 template<>
 struct Formatter<StringView> : StandardFormatter {
+    Formatter() { }
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
     void format(StringBuilder& builder, StringView value, FormatterContext&);
 };
 template<>
@@ -183,7 +189,18 @@ struct Formatter<String> : Formatter<StringView> {
 
 template<typename T>
 struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFormatter {
+    Formatter() { }
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
     void format(StringBuilder&, T value, FormatterContext&);
+};
+
+template<>
+struct Formatter<bool> : StandardFormatter {
+    void format(StringBuilder&, bool value, FormatterContext&);
 };
 
 template<typename... Parameters>
