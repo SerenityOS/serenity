@@ -136,4 +136,15 @@ TEST_CASE(cast_integer_to_character)
     EXPECT_EQ(String::formatted("{:c}", static_cast<unsigned int>('f')), "f");
 }
 
+TEST_CASE(boolean_values)
+{
+    EXPECT_EQ(String::formatted("{}", true), "true");
+    EXPECT_EQ(String::formatted("{}", false), "false");
+    EXPECT_EQ(String::formatted("{:6}", true), "true  ");
+    EXPECT_EQ(String::formatted("{:>4}", false), "false");
+    EXPECT_EQ(String::formatted("{:d}", false), "0");
+    EXPECT_EQ(String::formatted("{:d}", true), "1");
+    EXPECT_EQ(String::formatted("{:#08x}", true), "0x000001");
+}
+
 TEST_MAIN(Format)
