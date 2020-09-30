@@ -91,44 +91,71 @@ SavedFileDescriptors::~SavedFileDescriptors()
 void Shell::setup_signals()
 {
     Core::EventLoop::register_signal(SIGCHLD, [](int) {
+#ifdef SH_DEBUG
+        dbg() << "SIGCHLD!";
+#endif
         auto& jobs = s_shell->jobs;
         Vector<u64> disowned_jobs;
-        for (auto& it : jobs) {
-            auto job_id = it.key;
-            auto& job = *it.value;
-            int wstatus = 0;
-            auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
-            if (child_pid < 0) {
-                if (errno == ECHILD) {
-                    // The child process went away before we could process its death, just assume it exited all ok.
-                    // FIXME: This should never happen, the child should stay around until we do the waitpid above.
-                    dbg() << "Child process gone, cannot get exit code for " << job_id;
-                    child_pid = job.pid();
-                } else {
-                    ASSERT_NOT_REACHED();
+        // Workaround the fact that we can't receive *who* exactly changed state.
+        // The child might still be alive (and even running) when this signal is dispatched to us
+        // so just...repeat until we find a suitable child.
+        // This, of course, will mean that someone can send us a SIGCHILD and we'd be spinning here forever,
+        // so just give up after a few tries.
+        auto tries = 4;
+        bool found_child = false;
+        do {
+            if (tries-- == 0)
+                break;
+            for (auto& it : jobs) {
+                auto job_id = it.key;
+                auto& job = *it.value;
+                int wstatus = 0;
+#ifdef SH_DEBUG
+                dbgf("waitpid({}) = ...", job.pid());
+#endif
+                auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
+#ifdef SH_DEBUG
+                dbgf("... = {} - {}", child_pid, wstatus);
+#endif
+
+                if (child_pid < 0) {
+                    if (errno == ECHILD) {
+                        // The child process went away before we could process its death, just assume it exited all ok.
+                        // FIXME: This should never happen, the child should stay around until we do the waitpid above.
+                        dbg() << "Child process gone, cannot get exit code for " << job_id;
+                        child_pid = job.pid();
+                    } else {
+                        ASSERT_NOT_REACHED();
+                    }
                 }
+                if (child_pid == 0) {
+                    // If the child existed, but wasn't dead.
+                    continue;
+                }
+                if (child_pid == job.pid()) {
+                    if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
+                        job.set_signalled(WTERMSIG(wstatus));
+                    } else if (WIFEXITED(wstatus)) {
+                        job.set_has_exit(WEXITSTATUS(wstatus));
+                    } else if (WIFSTOPPED(wstatus)) {
+                        job.unblock();
+                        job.set_is_suspended(true);
+                    }
+                    found_child = true;
+                }
+                if (job.should_be_disowned())
+                    disowned_jobs.append(job_id);
             }
-#ifndef __serenity__
-            if (child_pid == 0) {
-                // Linux: if child didn't "change state", but existed.
-                continue;
+            for (auto job_id : disowned_jobs)
+                jobs.remove(job_id);
+
+#ifdef SH_DEBUG
+            if (!found_child) {
+                dbg() << "DIDN'T FIND A CHILD?!?!?!?!?!?!?!?";
+                dbg() << "RETRY!";
             }
 #endif
-            if (child_pid == job.pid()) {
-                if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
-                    job.set_signalled(WTERMSIG(wstatus));
-                } else if (WIFEXITED(wstatus)) {
-                    job.set_has_exit(WEXITSTATUS(wstatus));
-                } else if (WIFSTOPPED(wstatus)) {
-                    job.unblock();
-                    job.set_is_suspended(true);
-                }
-            }
-            if (job.should_be_disowned())
-                disowned_jobs.append(job_id);
-        }
-        for (auto job_id : disowned_jobs)
-            jobs.remove(job_id);
+        } while (!found_child);
     });
 
     Core::EventLoop::register_signal(SIGTSTP, [](auto) {
@@ -235,10 +262,23 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (getsid(getpid()) == 0) {
+    auto pid = getpid();
+    if (auto sid = getsid(pid); sid == 0) {
         if (setsid() < 0) {
             perror("setsid");
             // Let's just hope that it's ok.
+        }
+    } else if (sid != pid) {
+        if (getpgid(pid) != pid) {
+            dbgf("We were already in a session with sid={} (we are {}), let's do some gymnastics", sid, pid);
+            if (setpgid(pid, sid) < 0) {
+                auto strerr = strerror(errno);
+                dbgf("couldn't setpgid: {}", strerr);
+            }
+            if (setsid() < 0) {
+                auto strerr = strerror(errno);
+                dbgf("couldn't setsid: {}", strerr);
+            }
         }
     }
 
