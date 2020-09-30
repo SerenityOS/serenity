@@ -158,6 +158,8 @@ public:
 
     bool read_single_line();
 
+    void notify_child_event();
+
     struct termios termios;
     struct termios default_termios;
     bool was_interrupted { false };
