@@ -367,6 +367,22 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
     if (m_precision != value_not_set)
         ASSERT_NOT_REACHED();
 
+    if (m_mode == Mode::Pointer) {
+        if (m_sign != Sign::Default)
+            ASSERT_NOT_REACHED();
+        if (m_align != Align::Default)
+            ASSERT_NOT_REACHED();
+        if (m_alternative_form)
+            ASSERT_NOT_REACHED();
+        if (m_width != value_not_set)
+            ASSERT_NOT_REACHED();
+
+        m_mode = Mode::Hexadecimal;
+        m_alternative_form = true;
+        m_width = 2 * sizeof(void*) + 2;
+        m_zero_pad = true;
+    }
+
     u8 base = 0;
     bool upper_case = false;
     if (m_mode == Mode::Binary) {
@@ -389,7 +405,7 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
         ASSERT_NOT_REACHED();
     }
 
-    auto width = decode_value(m_width, context);
+    const auto width = decode_value(m_width, context);
 
     const auto put_padding = [&](size_t amount, char fill) {
         for (size_t i = 0; i < amount; ++i)

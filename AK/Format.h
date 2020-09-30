@@ -198,6 +198,15 @@ struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFor
     void format(StringBuilder&, T value, FormatterContext&);
 };
 
+template<typename T>
+struct Formatter<T*> : StandardFormatter {
+    void format(StringBuilder& builder, T* value, FormatterContext& context)
+    {
+        Formatter<FlatPtr> formatter { *this };
+        formatter.format(builder, reinterpret_cast<FlatPtr>(value), context);
+    }
+};
+
 template<>
 struct Formatter<bool> : StandardFormatter {
     void format(StringBuilder&, bool value, FormatterContext&);
