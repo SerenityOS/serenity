@@ -115,10 +115,9 @@ static bool unpack_file_for_central_directory_index(off_t central_directory_inde
         return false;
     off_t extra_field_length = buffer[1] << 8 | buffer[0];
 
-    if (!seek_and_read(buffer, file, local_file_header_index + LFHFileNameBaseOffset, file_name_length))
-        return false;
     char file_name[file_name_length + 1];
-    memcpy(file_name, buffer, file_name_length);
+    if (!seek_and_read((u8*)file_name, file, local_file_header_index + LFHFileNameBaseOffset, file_name_length))
+        return false;
     file_name[file_name_length] = '\0';
 
     if (file_name[file_name_length - 1] == '/') {
