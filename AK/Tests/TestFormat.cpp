@@ -147,4 +147,19 @@ TEST_CASE(boolean_values)
     EXPECT_EQ(String::formatted("{:#08x}", true), "0x000001");
 }
 
+TEST_CASE(pointers)
+{
+    void* ptr = reinterpret_cast<void*>(0x4000);
+
+    if (sizeof(void*) == 4) {
+        EXPECT_EQ(String::formatted("{:p}", 32), "0x00000020");
+        EXPECT_EQ(String::formatted("{:p}", ptr), "0x00004000");
+    } else if (sizeof(void*) == 8) {
+        EXPECT_EQ(String::formatted("{:p}", 32), "0x0000000000000020");
+        EXPECT_EQ(String::formatted("{:p}", ptr), "0x0000000000004000");
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+}
+
 TEST_MAIN(Format)
