@@ -133,10 +133,23 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (getsid(getpid()) == 0) {
+    auto pid = getpid();
+    if (auto sid = getsid(pid); sid == 0) {
         if (setsid() < 0) {
             perror("setsid");
             // Let's just hope that it's ok.
+        }
+    } else if (sid != pid) {
+        if (getpgid(pid) != pid) {
+            dbgf("We were already in a session with sid={} (we are {}), let's do some gymnastics", sid, pid);
+            if (setpgid(pid, sid) < 0) {
+                auto strerr = strerror(errno);
+                dbgf("couldn't setpgid: {}", strerr);
+            }
+            if (setsid() < 0) {
+                auto strerr = strerror(errno);
+                dbgf("couldn't setsid: {}", strerr);
+            }
         }
     }
 
