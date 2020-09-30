@@ -60,43 +60,10 @@ extern char** environ;
 void Shell::setup_signals()
 {
     Core::EventLoop::register_signal(SIGCHLD, [this](int) {
-        Vector<u64> disowned_jobs;
-        for (auto& it : jobs) {
-            auto job_id = it.key;
-            auto& job = *it.value;
-            int wstatus = 0;
-            auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
-            if (child_pid < 0) {
-                if (errno == ECHILD) {
-                    // The child process went away before we could process its death, just assume it exited all ok.
-                    // FIXME: This should never happen, the child should stay around until we do the waitpid above.
-                    dbg() << "Child process gone, cannot get exit code for " << job_id;
-                    child_pid = job.pid();
-                } else {
-                    ASSERT_NOT_REACHED();
-                }
-            }
-#ifndef __serenity__
-            if (child_pid == 0) {
-                // Linux: if child didn't "change state", but existed.
-                continue;
-            }
+#ifdef SH_DEBUG
+        dbg() << "SIGCHLD!";
 #endif
-            if (child_pid == job.pid()) {
-                if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
-                    job.set_signalled(WTERMSIG(wstatus));
-                } else if (WIFEXITED(wstatus)) {
-                    job.set_has_exit(WEXITSTATUS(wstatus));
-                } else if (WIFSTOPPED(wstatus)) {
-                    job.unblock();
-                    job.set_is_suspended(true);
-                }
-            }
-            if (job.should_be_disowned())
-                disowned_jobs.append(job_id);
-        }
-        for (auto job_id : disowned_jobs)
-            jobs.remove(job_id);
+        notify_child_event();
     });
 
     Core::EventLoop::register_signal(SIGTSTP, [this](auto) {
@@ -1411,6 +1378,67 @@ void Shell::custom_event(Core::CustomEvent& event)
             Core::EventLoop::current().post_event(*this, make<Core::CustomEvent>(ShellEventType::ReadLine));
         return;
     }
+}
+
+void Shell::notify_child_event()
+{
+    Vector<u64> disowned_jobs;
+    // Workaround the fact that we can't receive *who* exactly changed state.
+    // The child might still be alive (and even running) when this signal is dispatched to us
+    // so just...repeat until we find a suitable child.
+    // This, of course, will mean that someone can send us a SIGCHILD and we'd be spinning here
+    // until the next child event we can actually handle.
+    bool found_child = false;
+    do {
+        // Ignore stray SIGCHLD when there are no jobs.
+        if (jobs.is_empty())
+            return;
+
+        for (auto& it : jobs) {
+            auto job_id = it.key;
+            auto& job = *it.value;
+            int wstatus = 0;
+#ifdef SH_DEBUG
+            dbgf("waitpid({}) = ...", job.pid());
+#endif
+            auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
+#ifdef SH_DEBUG
+            dbgf("... = {} - {}", child_pid, wstatus);
+#endif
+
+            if (child_pid < 0) {
+                if (errno == ECHILD) {
+                    // The child process went away before we could process its death, just assume it exited all ok.
+                    // FIXME: This should never happen, the child should stay around until we do the waitpid above.
+                    dbg() << "Child process gone, cannot get exit code for " << job_id;
+                    child_pid = job.pid();
+                } else {
+                    ASSERT_NOT_REACHED();
+                }
+            }
+            if (child_pid == 0) {
+                // If the child existed, but wasn't dead.
+                continue;
+            }
+            if (child_pid == job.pid()) {
+                if (WIFSIGNALED(wstatus) && !WIFSTOPPED(wstatus)) {
+                    job.set_signalled(WTERMSIG(wstatus));
+                } else if (WIFEXITED(wstatus)) {
+                    job.set_has_exit(WEXITSTATUS(wstatus));
+                } else if (WIFSTOPPED(wstatus)) {
+                    job.unblock();
+                    job.set_is_suspended(true);
+                }
+                found_child = true;
+            }
+            if (job.should_be_disowned())
+                disowned_jobs.append(job_id);
+        }
+
+        for (auto job_id : disowned_jobs) {
+            jobs.remove(job_id);
+        }
+    } while (!found_child);
 }
 
 Shell::Shell(Line::Editor& editor)

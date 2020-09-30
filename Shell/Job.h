@@ -52,7 +52,8 @@ public:
 #ifdef JOB_TIME_INFO
         if (m_active) {
             auto elapsed = m_command_timer.elapsed();
-            dbg() << "Command \"" << m_cmd << "\" finished in " << elapsed << " ms";
+            // Don't mistake this for the command!
+            dbg() << "Job entry \"" << m_cmd << "\" deleted in " << elapsed << " ms";
         }
 #endif
     }
