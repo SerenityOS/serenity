@@ -34,7 +34,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/wait.h>
 
 RefPtr<Line::Editor> editor;
 Shell* s_shell;
