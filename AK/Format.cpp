@@ -460,6 +460,17 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(StringB
         PrintfImplementation::convert_signed_to_string(value, builder, base, m_alternative_form, upper_case, m_zero_pad, align, width, m_fill, sign_mode);
 }
 
+void Formatter<bool>::format(StringBuilder& builder, bool value, FormatterContext& context)
+{
+    if (m_mode == Mode::Binary || m_mode == Mode::BinaryUppercase || m_mode == Mode::Decimal || m_mode == Mode::Octal || m_mode == Mode::Hexadecimal || m_mode == Mode::HexadecimalUppercase) {
+        Formatter<u8> formatter { *this };
+        return formatter.format(builder, static_cast<u8>(value), context);
+    } else {
+        Formatter<StringView> formatter { *this };
+        formatter.format(builder, value ? "true" : "false", context);
+    }
+}
+
 template struct Formatter<unsigned char, void>;
 template struct Formatter<unsigned short, void>;
 template struct Formatter<unsigned int, void>;
