@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <AK/Platform.h>
 
 #pragma once
@@ -160,3 +161,11 @@ inline void ValueAndShadowReference<T>::operator=(const ValueWithShadow<T>& othe
 }
 
 }
+
+template<typename T>
+struct AK::Formatter<UserspaceEmulator::ValueWithShadow<T>> : AK::Formatter<T> {
+    void format(StringBuilder& builder, UserspaceEmulator::ValueWithShadow<T> value, FormatterContext& context)
+    {
+        return Formatter<T>::format(builder, value.value(), context);
+    }
+};

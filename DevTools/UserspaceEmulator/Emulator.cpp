@@ -234,7 +234,7 @@ void Emulator::dump_backtrace()
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
 #ifdef DEBUG_SPAM
-    dbgprintf("Syscall: %s (%x)\n", Syscall::to_string((Syscall::Function)function), function);
+    dbgf("Syscall: {} ({:x})", Syscall::to_string((Syscall::Function)function), function);
 #endif
     switch (function) {
     case SC_chdir:
@@ -379,7 +379,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_fork:
         return virt$fork();
     default:
-        report("\n==%d==  \033[31;1mUnimplemented syscall: %s\033[0m, %p\n", getpid(), Syscall::to_string((Syscall::Function)function));
+        warnf("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
         TODO();
     }
@@ -950,7 +950,7 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
         mmu().copy_from_vm(&termios, arg, sizeof(termios));
         return syscall(SC_ioctl, fd, request, &termios);
     }
-    dbg() << "Unsupported ioctl: " << request;
+    dbgf("Unsupported ioctl: {}", request);
     dump_backtrace();
     TODO();
 }
@@ -983,11 +983,10 @@ int Emulator::virt$execve(FlatPtr params_addr)
     copy_string_list(arguments, params.arguments);
     copy_string_list(environment, params.environment);
 
-    report("\n");
-    report("==%d==  \033[33;1mSyscall:\033[0m execve\n", getpid());
-    report("==%d==  @ %s\n", getpid(), path.characters());
+    warnf("\n=={}==  \033[33;1mSyscall:\033[0m execve", getpid());
+    warnf("=={}==  @ {}", getpid(), path);
     for (auto& argument : arguments)
-        report("==%d==    - %s\n", getpid(), argument.characters());
+        warnf("=={}==    - {}", getpid(), argument);
 
     Vector<char*> argv;
     Vector<char*> envp;
@@ -1200,7 +1199,7 @@ void Emulator::dispatch_one_pending_signal()
         auto action = default_signal_action(signum);
         if (action == DefaultSignalAction::Ignore)
             return;
-        report("\n==%d== Got signal %d (%s), no handler registered\n", getpid(), signum, strsignal(signum));
+        warnf("\n=={}== Got signal {} ({}), no handler registered", getpid(), signum, strsignal(signum));
         m_shutdown = true;
         return;
     }
@@ -1210,7 +1209,7 @@ void Emulator::dispatch_one_pending_signal()
         return;
     }
 
-    report("\n==%d== Got signal %d (%s), handler at %p\n", getpid(), signum, strsignal(signum), handler.handler);
+    warnf("\n=={}== Got signal {} ({}), handler at {:p}", getpid(), signum, strsignal(signum), handler.handler);
 
     auto old_esp = m_cpu.esp();
 
