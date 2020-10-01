@@ -44,8 +44,21 @@ public:
     int shbuf_id() const { return m_shbuf_id; }
     void seal();
     int size() const { return m_size; }
-    void* data() { return m_data; }
-    const void* data() const { return m_data; }
+
+    template<typename T>
+    T* data()
+    {
+        static_assert(IsVoid<T>::value || is_trivial<T>());
+        return (T*)m_data;
+    }
+
+    template<typename T>
+    const T* data() const
+    {
+        static_assert(IsVoid<T>::value || is_trivial<T>());
+        return (const T*)m_data;
+    }
+
     void set_volatile();
     [[nodiscard]] bool set_nonvolatile();
 

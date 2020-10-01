@@ -47,7 +47,7 @@ public:
     {
         if (!has_data())
             return nullptr;
-        return static_cast<const u8*>(m_shared_buffer->data());
+        return m_shared_buffer->data<u8>();
     }
 
     size_t data_size() const

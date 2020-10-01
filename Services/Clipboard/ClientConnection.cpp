@@ -83,7 +83,7 @@ OwnPtr<Messages::ClipboardServer::GetClipboardDataResponse> ClientConnection::ha
         //        It would be even nicer if a SharedBuffer could have an arbitrary number of clients..
         RefPtr<SharedBuffer> shared_buffer = SharedBuffer::create_with_size(storage.data_size());
         ASSERT(shared_buffer);
-        memcpy(shared_buffer->data(), storage.data(), storage.data_size());
+        memcpy(shared_buffer->data<void>(), storage.data(), storage.data_size());
         shared_buffer->seal();
         shared_buffer->share_with(client_pid());
         shbuf_id = shared_buffer->shbuf_id();

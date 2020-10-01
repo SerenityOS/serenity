@@ -46,7 +46,7 @@ Storage::~Storage()
 
 void Storage::set_data(NonnullRefPtr<SharedBuffer> data, size_t data_size, const String& mime_type, const HashMap<String, String>& metadata)
 {
-    dbg() << "Storage::set_data <- [" << mime_type << "] " << data->data() << " (" << data_size << " bytes)";
+    dbg() << "Storage::set_data <- [" << mime_type << "] " << data->data<void>() << " (" << data_size << " bytes)";
     for (auto& it : metadata) {
         dbg() << "  " << it.key << ": " << it.value;
     }
