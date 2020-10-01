@@ -57,6 +57,8 @@ extern char** environ;
 
 //#define SH_DEBUG
 
+namespace Shell {
+
 // FIXME: This should eventually be removed once we've established that
 //        waitpid() is not passed the same job twice.
 #ifdef __serenity__
@@ -523,6 +525,10 @@ bool Shell::is_runnable(const StringView& name)
 
 int Shell::run_command(const StringView& cmd)
 {
+    // The default-constructed mode of the shell
+    // should not be used for execution!
+    ASSERT(!m_default_constructed);
+
     if (cmd.is_empty())
         return 0;
 
@@ -1158,7 +1164,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
     auto token_length = escape_token(token).length();
-    m_editor->suggest(token_length, original_token.length() - token_length);
+    if (m_editor)
+        m_editor->suggest(token_length, original_token.length() - token_length);
 
     // only suggest dot-files if path starts with a dot
     Core::DirIterator files(path,
@@ -1195,7 +1202,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
         return complete_path("", name, offset);
 
     String completion = *match;
-    m_editor->suggest(escape_token(name).length(), 0);
+    if (m_editor)
+        m_editor->suggest(escape_token(name).length(), 0);
 
     // Now that we have a program name starting with our token, we look at
     // other program names starting with our token and cut off any mismatching
@@ -1220,7 +1228,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, 
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
 
-    m_editor->suggest(offset);
+    if (m_editor)
+        m_editor->suggest(offset);
 
     // Look at local variables.
     for (auto& frame : m_local_frames) {
@@ -1252,7 +1261,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
 
-    m_editor->suggest(offset);
+    if (m_editor)
+        m_editor->suggest(offset);
 
     Core::DirIterator di("/home", Core::DirIterator::SkipParentAndBaseDir);
 
@@ -1274,7 +1284,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
     while (start < option.length() && option[start] == '-' && start < 2)
         ++start;
     auto option_pattern = offset > start ? option.substring_view(start, offset - start) : "";
-    m_editor->suggest(offset);
+    if (m_editor)
+        m_editor->suggest(offset);
 
     Vector<Line::CompletionSuggestion> suggestions;
 
@@ -1459,6 +1470,42 @@ void Shell::notify_child_event()
     } while (!found_child);
 }
 
+Shell::Shell()
+    : m_default_constructed(true)
+{
+    push_frame().leak_frame();
+
+    int rc = gethostname(hostname, Shell::HostNameSize);
+    if (rc < 0)
+        perror("gethostname");
+
+    {
+        auto* pw = getpwuid(getuid());
+        if (pw) {
+            username = pw->pw_name;
+            home = pw->pw_dir;
+            setenv("HOME", pw->pw_dir, 1);
+        }
+        endpwent();
+    }
+
+    // For simplicity, start at the user's home directory.
+    this->cwd = home;
+    setenv("PWD", home.characters(), 1);
+
+    // Add the default PATH vars.
+    {
+        StringBuilder path;
+        path.append(getenv("PATH"));
+        if (path.length())
+            path.append(":");
+        path.append("/bin:/usr/bin:/usr/local/bin");
+        setenv("PATH", path.to_string().characters(), true);
+    }
+
+    cache_path();
+}
+
 Shell::Shell(Line::Editor& editor)
     : m_editor(editor)
 {
@@ -1507,6 +1554,9 @@ Shell::Shell(Line::Editor& editor)
 
 Shell::~Shell()
 {
+    if (m_default_constructed)
+        return;
+
     stop_all_jobs();
     save_history();
 }
@@ -1640,4 +1690,6 @@ SavedFileDescriptors::~SavedFileDescriptors()
             continue;
         }
     }
+}
+
 }

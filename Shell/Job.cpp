@@ -31,6 +31,8 @@
 #include <stdio.h>
 #include <sys/wait.h>
 
+namespace Shell {
+
 bool Job::print_status(PrintStatusMode mode)
 {
     int wstatus;
@@ -109,4 +111,6 @@ void Job::unblock() const
 {
     if (!m_exited && on_exit)
         on_exit(*this);
+}
+
 }

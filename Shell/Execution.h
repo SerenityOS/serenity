@@ -33,6 +33,8 @@
 #include <AK/Vector.h>
 #include <LibCore/ElapsedTimer.h>
 
+namespace Shell {
+
 class FileDescriptionCollector {
 public:
     FileDescriptionCollector() { }
@@ -59,3 +61,5 @@ private:
     Vector<SavedFileDescriptor> m_saves;
     FileDescriptionCollector m_collector;
 };
+
+}

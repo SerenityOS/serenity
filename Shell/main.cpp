@@ -36,7 +36,7 @@
 #include <string.h>
 
 RefPtr<Line::Editor> editor;
-Shell* s_shell;
+Shell::Shell* s_shell;
 
 int main(int argc, char** argv)
 {
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 
     editor = Line::Editor::construct();
 
-    auto shell = Shell::construct(*editor);
+    auto shell = Shell::Shell::construct(*editor);
     s_shell = shell.ptr();
 
     s_shell->setup_signals();
@@ -163,15 +163,15 @@ int main(int argc, char** argv)
                 shell->run_file(file_path, false);
             }
         };
-        run_rc_file(Shell::global_init_file_path);
-        run_rc_file(Shell::local_init_file_path);
+        run_rc_file(Shell::Shell::global_init_file_path);
+        run_rc_file(Shell::Shell::local_init_file_path);
     }
 
     {
         Vector<String> args;
         for (auto* arg : script_args)
             args.empend(arg);
-        shell->set_local_variable("ARGV", adopt(*new AST::ListValue(move(args))));
+        shell->set_local_variable("ARGV", adopt(*new Shell::AST::ListValue(move(args))));
     }
 
     if (command_to_run) {
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
 
     shell->add_child(*editor);
 
-    Core::EventLoop::current().post_event(*shell, make<Core::CustomEvent>(Shell::ShellEventType::ReadLine));
+    Core::EventLoop::current().post_event(*shell, make<Core::CustomEvent>(Shell::Shell::ShellEventType::ReadLine));
 
     return loop.exec();
 }

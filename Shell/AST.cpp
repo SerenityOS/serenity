@@ -37,7 +37,7 @@
 
 //#define EXECUTE_DEBUG
 
-namespace AST {
+namespace Shell::AST {
 
 template<typename T, typename... Args>
 static inline NonnullRefPtr<T> create(Args... args)

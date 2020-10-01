@@ -26,8 +26,7 @@
 
 #pragma once
 
-class Shell;
-namespace AST {
+namespace Shell::AST {
 
 struct Command;
 class Node;
@@ -73,5 +72,11 @@ class Tilde;
 class VariableDeclarations;
 class WriteAppendRedirection;
 class WriteRedirection;
+
+}
+
+namespace Shell {
+
+class Shell;
 
 }

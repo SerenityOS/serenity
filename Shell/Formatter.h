@@ -34,6 +34,8 @@
 #include <AK/Vector.h>
 #include <ctype.h>
 
+namespace Shell {
+
 class Formatter final : public AST::NodeVisitor {
 public:
     Formatter(const StringView& source, ssize_t cursor = -1)
@@ -119,3 +121,5 @@ private:
 
     StringView m_trivia;
 };
+
+}

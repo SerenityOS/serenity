@@ -27,7 +27,7 @@
 #include "NodeVisitor.h"
 #include "AST.h"
 
-namespace AST {
+namespace Shell::AST {
 
 void NodeVisitor::visit(const AST::PathRedirectionNode* node)
 {
