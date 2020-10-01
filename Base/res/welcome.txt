@@ -51,8 +51,7 @@ Serenity includes several development tools to enable you to create new
 applications for Serenity. You can build a new graphical tool, craft a new
 server, hack on a kernel, hammer the browser... the possibilities are endless!
 
-This is all possibly by using HackStudio, Visual Builder, Terminal, and the
-(optional) GNU tools.
+This is all possibly by using HackStudio, Terminal, and the (optional) GNU tools.
 
 * Multimedia
 $ /res/icons/16x16/audio-volume-medium.png

@@ -80,7 +80,6 @@ include_directories(.)
 
 add_subdirectory(Meta/Lagom)
 add_subdirectory(DevTools/IPCCompiler)
-add_subdirectory(DevTools/FormCompiler)
 add_subdirectory(Libraries/LibWeb/CodeGenerators)
 add_subdirectory(AK/Tests)
 
