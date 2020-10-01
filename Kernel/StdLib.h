@@ -61,48 +61,56 @@ inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 template<typename T>
 [[nodiscard]] inline bool copy_from_user(T* dest, const T* src)
 {
+    static_assert(is_trivially_copyable<T>());
     return copy_from_user(dest, src, sizeof(T));
 }
 
 template<typename T>
 [[nodiscard]] inline bool copy_to_user(T* dest, const T* src)
 {
+    static_assert(is_trivially_copyable<T>());
     return copy_to_user(dest, src, sizeof(T));
 }
 
 template<typename T>
 [[nodiscard]] inline bool copy_from_user(T* dest, Userspace<const T*> src)
 {
+    static_assert(is_trivially_copyable<T>());
     return copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
 }
 
 template<typename T>
 [[nodiscard]] inline bool copy_from_user(T* dest, Userspace<T*> src)
 {
+    static_assert(is_trivially_copyable<T>());
     return copy_from_user(dest, src.unsafe_userspace_ptr(), sizeof(T));
 }
 
 template<typename T>
 [[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, const T* src)
 {
+    static_assert(is_trivially_copyable<T>());
     return copy_to_user(dest.unsafe_userspace_ptr(), src, sizeof(T));
 }
 
 template<typename T>
 [[nodiscard]] inline bool copy_to_user(Userspace<T*> dest, const void* src, size_t size)
 {
+    static_assert(is_trivially_copyable<T>());
     return copy_to_user(dest.unsafe_userspace_ptr(), src, size);
 }
 
 template<typename T>
 [[nodiscard]] inline bool copy_from_user(void* dest, Userspace<const T*> src, size_t size)
 {
+    static_assert(is_trivially_copyable<T>());
     return copy_from_user(dest, src.unsafe_userspace_ptr(), size);
 }
 
 template<typename T>
 [[nodiscard]] inline bool copy_n_from_user(T* dest, const T* src, size_t count)
 {
+    static_assert(is_trivially_copyable<T>());
     Checked size = sizeof(T);
     size *= count;
     if (size.has_overflow())
@@ -113,6 +121,7 @@ template<typename T>
 template<typename T>
 [[nodiscard]] inline bool copy_n_to_user(T* dest, const T* src, size_t count)
 {
+    static_assert(is_trivially_copyable<T>());
     Checked size = sizeof(T);
     size *= count;
     if (size.has_overflow())
@@ -123,6 +132,7 @@ template<typename T>
 template<typename T>
 [[nodiscard]] inline bool copy_n_from_user(T* dest, Userspace<const T*> src, size_t count)
 {
+    static_assert(is_trivially_copyable<T>());
     Checked size = sizeof(T);
     size *= count;
     if (size.has_overflow())
@@ -133,6 +143,7 @@ template<typename T>
 template<typename T>
 [[nodiscard]] inline bool copy_n_to_user(Userspace<T*> dest, const T* src, size_t count)
 {
+    static_assert(is_trivially_copyable<T>());
     Checked size = sizeof(T);
     size *= count;
     if (size.has_overflow())
