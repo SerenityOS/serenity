@@ -26,35 +26,28 @@
 
 #pragma once
 
+#include "../LanguageClient.h"
 #include <AK/LexicalPath.h>
-#include <DevTools/HackStudio/LanguageServers/Cpp/CppLanguageClientEndpoint.h>
-#include <DevTools/HackStudio/LanguageServers/Cpp/CppLanguageServerEndpoint.h>
+#include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
+#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
 #include <LibIPC/ServerConnection.h>
 
+#define LANGUAGE_CLIENT(namespace_, socket_name)                                               \
+    namespace namespace_ {                                                                     \
+    class ServerConnection : public HackStudio::ServerConnection {                             \
+        C_OBJECT(ServerConnection)                                                             \
+    private:                                                                                   \
+        ServerConnection(const String& project_path)                                           \
+            : HackStudio::ServerConnection("/tmp/portal/language/" #socket_name, project_path) \
+        {                                                                                      \
+        }                                                                                      \
+    };                                                                                         \
+    }
+
 namespace LanguageClients {
-namespace Cpp {
 
-class ServerConnection : public IPC::ServerConnection<CppLanguageClientEndpoint, CppLanguageServerEndpoint>
-    , public CppLanguageClientEndpoint {
-    C_OBJECT(ServerConnection)
-public:
-    virtual void handshake() override
-    {
-        auto response = send_sync<Messages::CppLanguageServer::Greet>(m_project_path.string());
-        set_my_client_id(response->client_id());
-    }
-
-private:
-    ServerConnection(const String& project_path)
-        : IPC::ServerConnection<CppLanguageClientEndpoint, CppLanguageServerEndpoint>(*this, "/tmp/portal/language/cpp")
-        , m_project_path(project_path)
-    {
-    }
-
-    virtual void handle(const Messages::CppLanguageClient::Dummy&) override { }
-
-    LexicalPath m_project_path;
-};
+LANGUAGE_CLIENT(Cpp, cpp)
 
 }
-}
+
+#undef LANGUAGE_CLIENT
