@@ -473,7 +473,7 @@ void Editor::set_document(GUI::TextDocument& doc)
     switch (code_document.language()) {
     case Language::Cpp:
         set_syntax_highlighter(make<GUI::CppSyntaxHighlighter>());
-        cpp_Language_server_connection().post_message(Messages::CppLanguageServer::FileOpened(code_document.file_path().string()));
+        m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_directory());
         break;
     case Language::JavaScript:
         set_syntax_highlighter(make<GUI::JSSyntaxHighlighter>());
@@ -487,6 +487,9 @@ void Editor::set_document(GUI::TextDocument& doc)
     default:
         set_syntax_highlighter(nullptr);
     }
+
+    if (m_language_client)
+        m_language_client->open_file(code_document.file_path().string());
 }
 
 Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data()
@@ -517,22 +520,25 @@ Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data(
 
 void Editor::update_autocomplete(const AutoCompleteRequestData& data)
 {
-    if (code_document().language() != Language::Cpp)
+    if (!m_language_client)
         return;
-    auto autocomplete_response = cpp_Language_server_connection().send_sync<Messages::CppLanguageServer::AutoCompleteSuggestions>(
+
+    m_language_client->on_autocomplete_suggestions = [=, this](auto suggestions) {
+        if (suggestions.is_empty()) {
+            close_autocomplete();
+            return;
+        }
+
+        show_autocomplete(data);
+
+        m_autocomplete_box->update_suggestions(data.partial_input, move(suggestions));
+        m_autocomplete_in_focus = true;
+    };
+
+    m_language_client->request_autocomplete(
         code_document().file_path().string(),
         data.position.line(),
         data.position.column());
-    ASSERT(autocomplete_response);
-
-    auto suggestions = autocomplete_response->suggestions();
-    if (suggestions.is_empty()) {
-        close_autocomplete();
-        return;
-    }
-
-    m_autocomplete_box->update_suggestions(data.partial_input, move(suggestions));
-    m_autocomplete_in_focus = true;
 }
 
 void Editor::show_autocomplete(const AutoCompleteRequestData& data)
@@ -549,29 +555,27 @@ void Editor::close_autocomplete()
 
 void Editor::on_edit_action(const GUI::Command& command)
 {
-    if (code_document().language() != Language::Cpp)
+    if (!m_language_client)
         return;
 
     if (command.is_insert_text()) {
         const GUI::InsertTextCommand& insert_command = static_cast<const GUI::InsertTextCommand&>(command);
-        cpp_Language_server_connection().post_message(
-            Messages::CppLanguageServer::FileEditInsertText(
-                code_document().file_path().string(),
-                insert_command.text(),
-                insert_command.range().start().line(),
-                insert_command.range().start().column()));
+        m_language_client->insert_text(
+            code_document().file_path().string(),
+            insert_command.text(),
+            insert_command.range().start().line(),
+            insert_command.range().start().column());
         return;
     }
 
     if (command.is_remove_text()) {
         const GUI::RemoveTextCommand& remove_command = static_cast<const GUI::RemoveTextCommand&>(command);
-        cpp_Language_server_connection().post_message(
-            Messages::CppLanguageServer::FileEditRemoveText(
-                code_document().file_path().string(),
-                remove_command.range().start().line(),
-                remove_command.range().start().column(),
-                remove_command.range().end().line(),
-                remove_command.range().end().column()));
+        m_language_client->remove_text(
+            code_document().file_path().string(),
+            remove_command.range().start().line(),
+            remove_command.range().start().column(),
+            remove_command.range().end().line(),
+            remove_command.range().end().column());
         return;
     }
 
@@ -592,13 +596,11 @@ void Editor::redo()
 
 void Editor::flush_file_content_to_langauge_server()
 {
-    if (code_document().language() != Language::Cpp)
+    if (!m_language_client)
         return;
 
-    cpp_Language_server_connection().post_message(
-        Messages::CppLanguageServer::SetFileContent(
-            code_document().file_path().string(),
-            document().text()));
+    m_language_client->set_file_content(
+        code_document().file_path().string(),
+        document().text());
 }
-
 }

@@ -1,0 +1,4 @@
+endpoint LanguageClient = 8002
+{
+    AutoCompleteSuggestions(Vector<String> suggestions) =|
+}
