@@ -52,13 +52,13 @@ Palette::~Palette()
 
 const SystemTheme& PaletteImpl::theme() const
 {
-    return *(const SystemTheme*)m_theme_buffer->data();
+    return *m_theme_buffer->data<SystemTheme>();
 }
 
 Color PaletteImpl::color(ColorRole role) const
 {
     ASSERT((int)role < (int)ColorRole::__Count);
-    return theme().color[(int)role];
+    return Color::from_rgba(theme().color[(int)role]);
 }
 
 int PaletteImpl::metric(MetricRole role) const
@@ -76,7 +76,7 @@ String PaletteImpl::path(PathRole role) const
 NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
 {
     auto new_theme_buffer = SharedBuffer::create_with_size(m_theme_buffer->size());
-    memcpy(new_theme_buffer->data(), m_theme_buffer->data(), m_theme_buffer->size());
+    memcpy(new_theme_buffer->data<SystemTheme>(), &theme(), m_theme_buffer->size());
     return adopt(*new PaletteImpl(*new_theme_buffer));
 }
 
@@ -85,7 +85,7 @@ void Palette::set_color(ColorRole role, Color color)
     if (m_impl->ref_count() != 1)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
-    theme.color[(int)role] = color;
+    theme.color[(int)role] = color.value();
 }
 
 void Palette::set_metric(MetricRole role, int value)
@@ -101,7 +101,8 @@ void Palette::set_path(PathRole role, String path)
     if (m_impl->ref_count() != 1)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
-    theme.path[(int)role] = path;
+    memcpy(theme.path[(int)role], path.characters(), min(path.length() + 1, sizeof(theme.path[(int)role])));
+    theme.path[(int)role][sizeof(theme.path[(int)role]) - 1] = '\0';
 }
 
 PaletteImpl::~PaletteImpl()

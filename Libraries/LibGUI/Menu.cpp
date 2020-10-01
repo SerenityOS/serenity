@@ -118,7 +118,7 @@ static int ensure_realized_icon(IconContainerType& container)
             auto shared_buffer = SharedBuffer::create_with_size(container.icon()->size_in_bytes());
             ASSERT(shared_buffer);
             auto shared_icon = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, container.icon()->size());
-            memcpy(shared_buffer->data(), container.icon()->scanline_u8(0), container.icon()->size_in_bytes());
+            memcpy(shared_buffer->template data<u8>(), container.icon()->scanline_u8(0), container.icon()->size_in_bytes());
             shared_buffer->seal();
             shared_buffer->share_with(WindowServerConnection::the().server_pid());
             container.set_icon(shared_icon);
