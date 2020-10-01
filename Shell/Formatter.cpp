@@ -29,6 +29,8 @@
 #include "Parser.h"
 #include <AK/TemporaryChange.h>
 
+namespace Shell {
+
 String Formatter::format()
 {
     auto node = Parser(m_source).parse();
@@ -594,4 +596,6 @@ void Formatter::visit(const AST::WriteRedirection* node)
     else
         current_builder().append(" >");
     NodeVisitor::visit(node);
+}
+
 }

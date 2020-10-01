@@ -38,7 +38,7 @@
 #include <AK/Vector.h>
 #include <LibLine/Editor.h>
 
-namespace AST {
+namespace Shell::AST {
 
 struct HighlightMetadata {
     bool is_first_in_list { true };

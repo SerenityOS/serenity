@@ -33,6 +33,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 
+namespace Shell {
+
 class Parser {
 public:
     Parser(StringView input)
@@ -232,3 +234,5 @@ glob :: [*?] bareword?
       | bareword [*?]
 )";
 #endif
+
+}
