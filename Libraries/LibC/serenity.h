@@ -72,6 +72,8 @@ int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
 
 int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size);
 
+int get_keymap_name(char* buffer, size_t buffer_size);
+
 ALWAYS_INLINE void send_secret_data_to_userspace_emulator(uintptr_t data1, uintptr_t data2, uintptr_t data3)
 {
     asm volatile(

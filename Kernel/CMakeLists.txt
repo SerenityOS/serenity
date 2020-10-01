@@ -110,6 +110,7 @@ set(KERNEL_SOURCES
     Syscalls/ftruncate.cpp
     Syscalls/futex.cpp
     Syscalls/get_dir_entries.cpp
+    Syscalls/get_keymap_name.cpp
     Syscalls/get_stack_bounds.cpp
     Syscalls/getrandom.cpp
     Syscalls/getuid.cpp

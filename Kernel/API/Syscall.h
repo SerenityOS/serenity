@@ -164,6 +164,7 @@ namespace Kernel {
     S(fchdir)                 \
     S(getrandom)              \
     S(setkeymap)              \
+    S(get_keymap_name)        \
     S(clock_gettime)          \
     S(clock_settime)          \
     S(clock_nanosleep)        \
