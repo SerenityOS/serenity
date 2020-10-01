@@ -15,7 +15,7 @@ Unlike many other software projects, SerenityOS is not concerned with gaining th
 That said, please do file any bugs you find, keeping the following in mind:
 
 * One issue per bug. Putting multiple things in the same issue makes both discussion and completion unnecessarily complicated.
-* No build issues (or other support requests.) If the Travis CI is green, the build problem is most likely on your side. Work it out locally, or ask on IRC.
+* No build issues (or other support requests.) If the Travis CI is red, the build problem is most likely on your side. Work it out locally, or ask on IRC.
 
 ## Feature policy
 
