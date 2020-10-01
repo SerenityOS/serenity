@@ -64,6 +64,8 @@ public:
         if (pointer < reinterpret_cast<FlatPtr>(m_storage))
             return nullptr;
         size_t cell_index = (pointer - reinterpret_cast<FlatPtr>(m_storage)) / m_cell_size;
+        if (cell_index >= cell_count())
+            return nullptr;
         return cell(cell_index);
     }
 
