@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+namespace Shell {
+
 Parser::SavedOffset Parser::save_offset() const
 {
     return { m_offset, m_line };
@@ -1349,4 +1351,6 @@ StringView Parser::consume_while(Function<bool(char)> condition)
         consume();
 
     return m_input.substring_view(start_offset, m_offset - start_offset);
+}
+
 }

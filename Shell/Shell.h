@@ -64,6 +64,8 @@
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
     __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")
 
+namespace Shell {
+
 class Shell;
 
 class Shell : public Core::Object {
@@ -199,6 +201,7 @@ public:
 
 private:
     Shell(Line::Editor&);
+    Shell();
     virtual ~Shell() override;
 
     // FIXME: Port to Core::Property
@@ -252,9 +255,13 @@ private:
     bool m_should_format_live { false };
 
     RefPtr<Line::Editor> m_editor;
+
+    bool m_default_constructed { false };
 };
 
 static constexpr bool is_word_character(char c)
 {
     return c == '_' || (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a');
+}
+
 }

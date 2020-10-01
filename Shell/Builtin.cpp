@@ -35,6 +35,8 @@
 
 extern char** environ;
 
+namespace Shell {
+
 int Shell::builtin_alias(int argc, const char** argv)
 {
     Vector<const char*> arguments;
@@ -805,4 +807,6 @@ bool Shell::has_builtin(const StringView& name) const
 
 #undef __ENUMERATE_SHELL_BUILTIN
     return false;
+}
+
 }

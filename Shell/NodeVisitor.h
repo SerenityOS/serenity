@@ -28,7 +28,7 @@
 
 #include "Forward.h"
 
-namespace AST {
+namespace Shell::AST {
 
 class NodeVisitor {
 public:

@@ -41,6 +41,8 @@
 #    undef JOB_TIME_INFO
 #endif
 
+namespace Shell {
+
 struct LocalFrame;
 
 class Job : public RefCounted<Job> {
@@ -127,3 +129,5 @@ private:
     bool m_should_be_disowned { false };
     OwnPtr<AST::Command> m_command;
 };
+
+}

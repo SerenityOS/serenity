@@ -33,6 +33,8 @@
 
 namespace GUI {
 
+using namespace Shell;
+
 enum class AugmentedTokenKind : u32 {
     __TokenTypeCount = (u32)AST::Node::Kind::__Count,
     OpenParen,
