@@ -453,6 +453,18 @@ struct IsBaseOf : public IntegralConstant<bool, __is_base_of(Base, Derived)> {
 };
 
 template<typename T>
+constexpr bool is_trivial()
+{
+    return __is_trivial(T);
+}
+
+template<typename T>
+constexpr bool is_trivially_copyable()
+{
+    return __is_trivially_copyable(T);
+}
+
+template<typename T>
 struct __IsIntegral : FalseType {
 };
 template<>
@@ -502,6 +514,8 @@ using AK::Conditional;
 using AK::declval;
 using AK::exchange;
 using AK::forward;
+using AK::is_trivial;
+using AK::is_trivially_copyable;
 using AK::IsBaseOf;
 using AK::IsClass;
 using AK::IsConst;
