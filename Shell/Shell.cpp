@@ -57,6 +57,12 @@ extern char** environ;
 
 //#define SH_DEBUG
 
+// FIXME: This should eventually be removed once we've established that
+//        waitpid() is not passed the same job twice.
+#ifdef __serenity__
+#    define ENSURE_WAITID_ONCE
+#endif
+
 void Shell::setup_signals()
 {
     Core::EventLoop::register_signal(SIGCHLD, [this](int) {
@@ -1382,6 +1388,9 @@ void Shell::custom_event(Core::CustomEvent& event)
 
 void Shell::notify_child_event()
 {
+#ifdef ENSURE_WAITID_ONCE
+    static HashTable<pid_t> s_waited_for_pids;
+#endif
     Vector<u64> disowned_jobs;
     // Workaround the fact that we can't receive *who* exactly changed state.
     // The child might still be alive (and even running) when this signal is dispatched to us
@@ -1397,6 +1406,12 @@ void Shell::notify_child_event()
         for (auto& it : jobs) {
             auto job_id = it.key;
             auto& job = *it.value;
+#ifdef ENSURE_WAITID_ONCE
+            // Theoretically, this should never trip, as jobs are removed from
+            // the job table when waitpid() succeeds *and* the child is dead.
+            ASSERT(!s_waited_for_pids.contains(job.pid()));
+#endif
+
             int wstatus = 0;
 #ifdef SH_DEBUG
             dbgf("waitpid({}) = ...", job.pid());
@@ -1430,6 +1445,9 @@ void Shell::notify_child_event()
                     job.set_is_suspended(true);
                 }
                 found_child = true;
+#ifdef ENSURE_WAITID_ONCE
+                s_waited_for_pids.set(child_pid);
+#endif
             }
             if (job.should_be_disowned())
                 disowned_jobs.append(job_id);
