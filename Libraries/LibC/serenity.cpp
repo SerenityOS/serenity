@@ -142,5 +142,4 @@ int get_keymap_name(char* buffer, size_t buffer_size)
     int rc = syscall(SC_get_keymap_name, buffer, buffer_size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
 }
