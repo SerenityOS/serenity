@@ -127,7 +127,7 @@ bool Decoder::decode(Dictionary& dictionary)
     m_stream >> size;
     if (m_stream.handle_any_error())
         return false;
-    if (size >= NumericLimits<i32>::max()) {
+    if (size >= (size_t)NumericLimits<i32>::max()) {
         ASSERT_NOT_REACHED();
     }
 
