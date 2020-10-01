@@ -90,7 +90,7 @@ Clipboard::DataAndType Clipboard::data_and_type() const
         dbgprintf("GUI::Clipboard::data() clipping contents size is greater than shared buffer size\n");
         return {};
     }
-    auto data = ByteBuffer::copy(shared_buffer->data(), response->data_size());
+    auto data = ByteBuffer::copy(shared_buffer->data<void>(), response->data_size());
     auto type = response->mime_type();
     auto metadata = response->metadata().entries();
     return { data, type, metadata };
@@ -104,7 +104,7 @@ void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<S
         return;
     }
     if (!data.is_empty())
-        memcpy(shared_buffer->data(), data.data(), data.size());
+        memcpy(shared_buffer->data<void>(), data.data(), data.size());
     shared_buffer->seal();
     shared_buffer->share_with(connection().server_pid());
 

@@ -50,7 +50,7 @@ void Download::did_finish(Badge<Client>, bool success, Optional<u32> status_code
     RefPtr<SharedBuffer> shared_buffer;
     if (success && shbuf_id != -1) {
         shared_buffer = SharedBuffer::create_from_shbuf_id(shbuf_id);
-        payload = ByteBuffer::wrap(shared_buffer->data(), total_size);
+        payload = ByteBuffer::wrap(shared_buffer->data<void>(), total_size);
     }
 
     // FIXME: It's a bit silly that we copy the response headers here just so we can move them into a HashMap with different traits.

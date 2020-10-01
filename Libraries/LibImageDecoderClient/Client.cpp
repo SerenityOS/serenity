@@ -57,7 +57,7 @@ RefPtr<Gfx::Bitmap> Client::decode_image(const ByteBuffer& encoded_data)
         return nullptr;
     }
 
-    memcpy(encoded_buffer->data(), encoded_data.data(), encoded_data.size());
+    memcpy(encoded_buffer->data<void>(), encoded_data.data(), encoded_data.size());
 
     encoded_buffer->seal();
     encoded_buffer->share_with(server_pid());

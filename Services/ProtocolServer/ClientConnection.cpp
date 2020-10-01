@@ -91,7 +91,7 @@ void ClientConnection::did_finish_download(Badge<Download>, Download& download, 
     RefPtr<SharedBuffer> buffer;
     if (success && download.payload().size() > 0 && !download.payload().is_null()) {
         buffer = SharedBuffer::create_with_size(download.payload().size());
-        memcpy(buffer->data(), download.payload().data(), download.payload().size());
+        memcpy(buffer->data<void>(), download.payload().data(), download.payload().size());
         buffer->seal();
         buffer->share_with(client_pid());
         m_shared_buffers.set(buffer->shbuf_id(), buffer);

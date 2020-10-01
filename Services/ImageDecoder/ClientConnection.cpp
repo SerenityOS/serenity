@@ -79,7 +79,7 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
     dbg() << "Trying to decode " << message.encoded_size() << " bytes of image(?) data in shbuf_id=" << message.encoded_shbuf_id() << " (shbuf size: " << encoded_buffer->size() << ")";
 #endif
 
-    auto decoder = Gfx::ImageDecoder::create((const u8*)encoded_buffer->data(), message.encoded_size());
+    auto decoder = Gfx::ImageDecoder::create(encoded_buffer->data<u8>(), message.encoded_size());
     auto bitmap = decoder->bitmap();
 
     if (!bitmap) {

@@ -143,9 +143,9 @@ enum class PathRole {
 };
 
 struct SystemTheme {
-    Color color[(int)ColorRole::__Count];
+    RGBA32 color[(int)ColorRole::__Count];
     int metric[(int)MetricRole::__Count];
-    String path[(int)PathRole::__Count];
+    char path[(int)PathRole::__Count][256]; // TODO: PATH_MAX?
 };
 
 const SystemTheme& current_system_theme();

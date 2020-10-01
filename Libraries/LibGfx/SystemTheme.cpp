@@ -27,6 +27,7 @@
 #include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/SystemTheme.h>
+#include <string.h>
 
 namespace Gfx {
 
@@ -49,7 +50,7 @@ int current_system_theme_buffer_id()
 void set_system_theme(SharedBuffer& buffer)
 {
     theme_buffer = buffer;
-    theme_page = (SystemTheme*)theme_buffer->data();
+    theme_page = theme_buffer->data<SystemTheme>();
 }
 
 RefPtr<SharedBuffer> load_system_theme(const String& path)
@@ -57,7 +58,7 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     auto file = Core::ConfigFile::open(path);
     auto buffer = SharedBuffer::create_with_size(sizeof(SystemTheme));
 
-    auto* data = (SystemTheme*)buffer->data();
+    auto* data = buffer->data<SystemTheme>();
 
     auto get_color = [&](auto& name) {
         auto color_string = file->read_entry("Colors", name);
@@ -100,7 +101,7 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
 
 #undef __ENUMERATE_COLOR_ROLE
 #define __ENUMERATE_COLOR_ROLE(role) \
-    data->color[(int)ColorRole::role] = get_color(#role);
+    data->color[(int)ColorRole::role] = get_color(#role).value();
     ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
 #undef __ENUMERATE_COLOR_ROLE
 
@@ -111,8 +112,12 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_METRIC(TitleButtonWidth);
     DO_METRIC(TitleButtonHeight);
 
-#define DO_PATH(x) \
-    data->path[(int)PathRole::x] = get_path(#x, (int)PathRole::x)
+#define DO_PATH(x)                                                                                               \
+    do {                                                                                                         \
+        auto path = get_path(#x, (int)PathRole::x);                                                              \
+        memcpy(data->path[(int)PathRole::x], path, min(strlen(path) + 1, sizeof(data->path[(int)PathRole::x]))); \
+        data->path[(int)PathRole::x][sizeof(data->path[(int)PathRole::x]) - 1] = '\0';                           \
+    } while (0)
 
     DO_PATH(TitleButtonIcons);
 

@@ -169,7 +169,7 @@ RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRef
 
 Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
     : m_size(size)
-    , m_data(shared_buffer->data())
+    , m_data(shared_buffer->data<void>())
     , m_pitch(minimum_pitch(size.width(), format))
     , m_format(format)
     , m_shared_buffer(move(shared_buffer))
@@ -255,7 +255,7 @@ RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
     auto bitmap = Bitmap::create_with_shared_buffer(m_format, *buffer, m_size, palette_to_vector());
     if (!bitmap)
         return nullptr;
-    memcpy(buffer->data(), scanline(0), size_in_bytes());
+    memcpy(buffer->data<void>(), scanline(0), size_in_bytes());
     return bitmap;
 }
 
