@@ -28,16 +28,16 @@
 
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
-#include <DevTools/HackStudio/LanguageServers/Cpp/CppLanguageClientEndpoint.h>
-#include <DevTools/HackStudio/LanguageServers/Cpp/CppLanguageServerEndpoint.h>
+#include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
+#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
 #include <LibGUI/TextDocument.h>
 #include <LibIPC/ClientConnection.h>
 
 namespace LanguageServers::Cpp {
 
 class ClientConnection final
-    : public IPC::ClientConnection<CppLanguageClientEndpoint, CppLanguageServerEndpoint>
-    , public CppLanguageServerEndpoint {
+    : public IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>
+    , public LanguageServerEndpoint {
     C_OBJECT(ClientConnection);
 
 public:
@@ -47,12 +47,12 @@ public:
     virtual void die() override;
 
 private:
-    virtual OwnPtr<Messages::CppLanguageServer::GreetResponse> handle(const Messages::CppLanguageServer::Greet&) override;
-    virtual void handle(const Messages::CppLanguageServer::FileOpened&) override;
-    virtual void handle(const Messages::CppLanguageServer::FileEditInsertText&) override;
-    virtual void handle(const Messages::CppLanguageServer::FileEditRemoveText&) override;
-    virtual void handle(const Messages::CppLanguageServer::SetFileContent&) override;
-    virtual OwnPtr<Messages::CppLanguageServer::AutoCompleteSuggestionsResponse> handle(const Messages::CppLanguageServer::AutoCompleteSuggestions&) override;
+    virtual OwnPtr<Messages::LanguageServer::GreetResponse> handle(const Messages::LanguageServer::Greet&) override;
+    virtual void handle(const Messages::LanguageServer::FileOpened&) override;
+    virtual void handle(const Messages::LanguageServer::FileEditInsertText&) override;
+    virtual void handle(const Messages::LanguageServer::FileEditRemoveText&) override;
+    virtual void handle(const Messages::LanguageServer::SetFileContent&) override;
+    virtual void handle(const Messages::LanguageServer::AutoCompleteSuggestions&) override;
 
     RefPtr<GUI::TextDocument> document_for(const String& file_name);
 

@@ -38,7 +38,7 @@ namespace LanguageServers::Cpp {
 static HashMap<int, RefPtr<ClientConnection>> s_connections;
 
 ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
-    : IPC::ClientConnection<CppLanguageClientEndpoint, CppLanguageServerEndpoint>(*this, move(socket), client_id)
+    : IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);
 }
@@ -53,13 +53,13 @@ void ClientConnection::die()
     exit(0);
 }
 
-OwnPtr<Messages::CppLanguageServer::GreetResponse> ClientConnection::handle(const Messages::CppLanguageServer::Greet& message)
+OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const Messages::LanguageServer::Greet& message)
 {
     m_project_root = LexicalPath(message.project_root());
 #ifdef DEBUG_CPP_LANGUAGE_SERVER
     dbg() << "project_root: " << m_project_root.string();
 #endif
-    return make<Messages::CppLanguageServer::GreetResponse>(client_id());
+    return make<Messages::LanguageServer::GreetResponse>(client_id());
 }
 
 class DefaultDocumentClient final : public GUI::TextDocument::Client {
@@ -74,12 +74,12 @@ public:
     virtual void document_did_set_cursor(const GUI::TextPosition&) override {};
 
     virtual bool is_automatic_indentation_enabled() const override { return true; }
-    virtual int soft_tab_width() const { return 4; }
+    virtual int soft_tab_width() const override { return 4; }
 };
 
 static DefaultDocumentClient s_default_document_client;
 
-void ClientConnection::handle(const Messages::CppLanguageServer::FileOpened& message)
+void ClientConnection::handle(const Messages::LanguageServer::FileOpened& message)
 {
     LexicalPath file_path(String::format("%s/%s", m_project_root.string().characters(), message.file_name().characters()));
 #ifdef DEBUG_CPP_LANGUAGE_SERVER
@@ -103,7 +103,7 @@ void ClientConnection::handle(const Messages::CppLanguageServer::FileOpened& mes
 #endif
 }
 
-void ClientConnection::handle(const Messages::CppLanguageServer::FileEditInsertText& message)
+void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
 {
 #ifdef DEBUG_CPP_LANGUAGE_SERVER
     dbg() << "InsertText for file: " << message.file_name();
@@ -122,7 +122,7 @@ void ClientConnection::handle(const Messages::CppLanguageServer::FileEditInsertT
 #endif
 }
 
-void ClientConnection::handle(const Messages::CppLanguageServer::FileEditRemoveText& message)
+void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText& message)
 {
 #ifdef DEBUG_CPP_LANGUAGE_SERVER
     dbg() << "RemoveText for file: " << message.file_name();
@@ -147,9 +147,7 @@ void ClientConnection::handle(const Messages::CppLanguageServer::FileEditRemoveT
 #endif
 }
 
-// FIXME: The work we do here could be taxing and block the client for a significant time.
-//        Would should turn this to an async IPC endpoint and report the reuslts back in a separate Server->Client message.
-OwnPtr<Messages::CppLanguageServer::AutoCompleteSuggestionsResponse> ClientConnection::handle(const Messages::CppLanguageServer::AutoCompleteSuggestions& message)
+void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
 {
 #ifdef DEBUG_CPP_LANGUAGE_SERVER
     dbg() << "AutoCompleteSuggestions for: " << message.file_name() << " " << message.cursor_line() << ":" << message.cursor_column();
@@ -158,11 +156,11 @@ OwnPtr<Messages::CppLanguageServer::AutoCompleteSuggestionsResponse> ClientConne
     auto document = document_for(message.file_name());
     if (!document) {
         dbg() << "file " << message.file_name() << " has not been opened";
-        return nullptr;
+        return;
     }
 
     Vector<String> suggestions = AutoComplete::get_suggestions(document->text(), { (size_t)message.cursor_line(), (size_t)message.cursor_column() });
-    return make<Messages::CppLanguageServer::AutoCompleteSuggestionsResponse>(suggestions);
+    post_message(Messages::LanguageClient::AutoCompleteSuggestions(move(suggestions)));
 }
 
 RefPtr<GUI::TextDocument> ClientConnection::document_for(const String& file_name)
@@ -174,7 +172,7 @@ RefPtr<GUI::TextDocument> ClientConnection::document_for(const String& file_name
     return document_optional.value();
 }
 
-void ClientConnection::handle(const Messages::CppLanguageServer::SetFileContent& message)
+void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& message)
 {
     auto document = document_for(message.file_name());
     if (!document) {

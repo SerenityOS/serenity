@@ -1,4 +1,0 @@
-endpoint CppLanguageClient = 8002
-{
-    Dummy() =|
-}

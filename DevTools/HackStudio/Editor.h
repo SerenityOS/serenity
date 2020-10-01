@@ -29,6 +29,7 @@
 #include "AutoCompleteBox.h"
 #include "CodeDocument.h"
 #include "Debugger/BreakpointCallback.h"
+#include "LanguageClient.h"
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <LibGUI/TextEditor.h>
@@ -107,6 +108,8 @@ private:
     bool m_hovering_link { false };
     bool m_holding_ctrl { false };
     bool m_autocomplete_in_focus { false };
+
+    OwnPtr<LanguageClient> m_language_client;
 };
 
 }

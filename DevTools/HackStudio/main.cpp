@@ -26,7 +26,6 @@
 
 #include "HackStudio.h"
 #include "HackStudioWidget.h"
-#include "LanguageClients/Cpp/ServerConnection.h"
 #include "Project.h"
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -52,13 +51,11 @@ using namespace HackStudio;
 
 static RefPtr<GUI::Window> s_window;
 static RefPtr<HackStudioWidget> s_hack_studio_widget;
-static RefPtr<LanguageClients::Cpp::ServerConnection> s_cpp_Language_server_connection;
 
 static bool make_is_available();
 static void update_path_environment_variable();
 static String path_to_project(const String& path_argument_absolute_path);
 static void open_default_project_file(const String& project_path);
-static void initialize_connections_to_language_servers(const String& project_path);
 
 int main(int argc, char** argv)
 {
@@ -94,8 +91,6 @@ int main(int argc, char** argv)
     auto menubar = GUI::MenuBar::construct();
     auto project_path = path_to_project(argument_absolute_path);
     s_hack_studio_widget = s_window->set_main_widget<HackStudioWidget>(project_path);
-
-    initialize_connections_to_language_servers(project_path);
 
     s_hack_studio_widget->initialize_menubar(menubar);
     app->set_menubar(menubar);
@@ -152,13 +147,6 @@ static void open_default_project_file(const String& project_path)
         open_file(s_hack_studio_widget->project().default_file());
 }
 
-static void initialize_connections_to_language_servers(const String& project_path)
-{
-    LexicalPath project_root_dir(LexicalPath(project_path).dirname());
-    s_cpp_Language_server_connection = LanguageClients::Cpp::ServerConnection::construct(project_root_dir.string());
-    s_cpp_Language_server_connection->handshake();
-}
-
 namespace HackStudio {
 
 GUI::TextEditor& current_editor()
@@ -193,12 +181,6 @@ String currently_open_file()
 void set_current_editor_wrapper(RefPtr<EditorWrapper> wrapper)
 {
     s_hack_studio_widget->set_current_editor_wrapper(wrapper);
-}
-
-LanguageClients::Cpp::ServerConnection& cpp_Language_server_connection()
-{
-    ASSERT(s_cpp_Language_server_connection);
-    return *s_cpp_Language_server_connection;
 }
 
 }
