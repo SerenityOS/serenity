@@ -42,7 +42,7 @@ DIE::DIE(const CompilationUnit& unit, u32 offset)
     m_data_offset = stream.offset();
 
     if (m_abbreviation_code == 0) {
-        // An abbrevation code of 0 ( = null DIE entry) means the end of a chain of sibilings
+        // An abbreviation code of 0 ( = null DIE entry) means the end of a chain of siblings
         m_tag = EntryTag::None;
     } else {
         auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);
@@ -218,7 +218,7 @@ void DIE::for_each_child(Function<void(const DIE& child)> callback) const
         }
 
         if (!sibling.has_value()) {
-            // NOTE: According to the spec, the compiler does't have to supply the sibling information.
+            // NOTE: According to the spec, the compiler doesn't have to supply the sibling information.
             // When it doesn't, we have to recursively iterate the current child's children to find where they end
             current_child->for_each_child([&](const DIE& sub_child) {
                 sibling_offset = sub_child.offset() + sub_child.size();

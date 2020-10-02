@@ -28,7 +28,7 @@
 
 #include <stdint.h>
 
-// The following defintions and comments are largely pulled from the Itanium Exception handling ABI
+// The following definitions and comments are largely pulled from the Itanium Exception handling ABI
 // Reference: https://itanium-cxx-abi.github.io/cxx-abi/abi-eh.htm, version 1.22
 // This header defines the methods, types, and constants outlined in Level I. Base ABI
 // Also, from the Intel386 psABI version 1.1

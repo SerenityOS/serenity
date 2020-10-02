@@ -182,7 +182,7 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
     };
     const char mon_long_names[12][10] = {
         "January", "February", "March", "April", "May", "June",
-        "July", "Auguest", "September", "October", "November", "December"
+        "July", "August", "September", "October", "November", "December"
     };
 
     StringBuilder builder { max_size };

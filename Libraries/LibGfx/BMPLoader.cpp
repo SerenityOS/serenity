@@ -470,7 +470,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
     // value of the file size.
     streamer.drop_bytes(4);
 
-    // Ingore reserved bytes
+    // Ignore reserved bytes
     streamer.drop_bytes(4);
     context.data_offset = streamer.read_u32();
 

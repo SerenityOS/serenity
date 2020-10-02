@@ -74,7 +74,7 @@ private:
     ColorField(Color color);
 
     Color m_color;
-    // save hue seperately so full white color doesn't reset it to 0
+    // save hue separately so full white color doesn't reset it to 0
     double m_hue;
 
     RefPtr<Gfx::Bitmap> m_color_bitmap;
@@ -518,7 +518,7 @@ void ColorField::set_color(Color color)
         return;
 
     m_color = color;
-    // don't save m_hue here by default, we dont want to set it to 0 in case color is full white
+    // don't save m_hue here by default, we don't want to set it to 0 in case color is full white
     // m_hue = color.to_hsv().hue;
 
     recalculate_position();
