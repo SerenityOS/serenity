@@ -32,6 +32,8 @@ namespace Web::SVG {
 
 class SVGGeometryElement : public SVGGraphicsElement {
 public:
+    using WrapperType = Bindings::SVGGeometryElementWrapper;
+
 protected:
     SVGGeometryElement(DOM::Document& document, const FlyString& tag_name);
 };

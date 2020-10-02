@@ -104,6 +104,8 @@ private:
 
 class SVGPathElement final : public SVGGeometryElement {
 public:
+    using WrapperType = Bindings::SVGPathElementWrapper;
+
     SVGPathElement(DOM::Document&, const FlyString& tag_name);
     virtual ~SVGPathElement() override = default;
 
@@ -116,3 +118,7 @@ private:
 };
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::SVG::SVGPathElement)
+static bool is_type(const Web::DOM::Node& node) { return node.is_svg_element() && downcast<Web::SVG::SVGElement>(node).local_name() == Web::SVG::TagNames::path; }
+AK_END_TYPE_TRAITS()

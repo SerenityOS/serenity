@@ -32,6 +32,8 @@ namespace Web::SVG {
 
 class SVGElement : public DOM::Element {
 public:
+    using WrapperType = Bindings::SVGElementWrapper;
+
     virtual bool is_graphics_element() const { return false; }
 
 protected:
