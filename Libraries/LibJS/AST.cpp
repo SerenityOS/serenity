@@ -126,7 +126,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         auto lookup_target = is_super_property_lookup ? interpreter.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        if (is_super_property_lookup && (lookup_target.is_null() || lookup_target.is_undefined())) {
+        if (is_super_property_lookup && lookup_target.is_nullish()) {
             interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects().characters());
             return {};
         }
@@ -543,7 +543,7 @@ Value LogicalExpression::execute(Interpreter& interpreter, GlobalObject& global_
         return rhs_result;
     }
     case LogicalOp::NullishCoalescing:
-        if (lhs_result.is_null() || lhs_result.is_undefined()) {
+        if (lhs_result.is_nullish()) {
             auto rhs_result = m_rhs->execute(interpreter, global_object);
             if (interpreter.exception())
                 return {};
