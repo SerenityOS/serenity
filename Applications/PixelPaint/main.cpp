@@ -218,51 +218,51 @@ int main(int argc, char** argv)
     auto& edge_detect_submenu = spatial_filters_menu.add_submenu("Edge Detect");
     edge_detect_submenu.add_action(GUI::Action::create("Laplacian (cardinal)", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
-            PixelPaint::LaplacianFilter filter;
-            if (auto parameters = PixelPaint::FilterParameters<PixelPaint::LaplacianFilter>::get(layer->bitmap(), layer->rect(), false))
+            Gfx::LaplacianFilter filter;
+            if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(layer->bitmap(), layer->rect(), false))
                 filter.apply(*parameters);
         }
     }));
     edge_detect_submenu.add_action(GUI::Action::create("Laplacian (diagonal)", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
-            PixelPaint::LaplacianFilter filter;
-            if (auto parameters = PixelPaint::FilterParameters<PixelPaint::LaplacianFilter>::get(layer->bitmap(), layer->rect(), true))
+            Gfx::LaplacianFilter filter;
+            if (auto parameters = PixelPaint::FilterParameters<Gfx::LaplacianFilter>::get(layer->bitmap(), layer->rect(), true))
                 filter.apply(*parameters);
         }
     }));
     auto& blur_submenu = spatial_filters_menu.add_submenu("Blur and Sharpen");
     blur_submenu.add_action(GUI::Action::create("Gaussian Blur (3x3)", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
-            PixelPaint::SpatialGaussianBlurFilter<3> filter;
-            if (auto parameters = PixelPaint::FilterParameters<PixelPaint::SpatialGaussianBlurFilter<3>>::get(layer->bitmap(), layer->rect()))
+            Gfx::SpatialGaussianBlurFilter<3> filter;
+            if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<3>>::get(layer->bitmap(), layer->rect()))
                 filter.apply(*parameters);
         }
     }));
     blur_submenu.add_action(GUI::Action::create("Gaussian Blur (5x5)", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
-            PixelPaint::SpatialGaussianBlurFilter<5> filter;
-            if (auto parameters = PixelPaint::FilterParameters<PixelPaint::SpatialGaussianBlurFilter<5>>::get(layer->bitmap(), layer->rect()))
+            Gfx::SpatialGaussianBlurFilter<5> filter;
+            if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<5>>::get(layer->bitmap(), layer->rect()))
                 filter.apply(*parameters);
         }
     }));
     blur_submenu.add_action(GUI::Action::create("Box Blur (3x3)", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
-            PixelPaint::BoxBlurFilter<3> filter;
-            if (auto parameters = PixelPaint::FilterParameters<PixelPaint::BoxBlurFilter<3>>::get(layer->bitmap(), layer->rect()))
+            Gfx::BoxBlurFilter<3> filter;
+            if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<3>>::get(layer->bitmap(), layer->rect()))
                 filter.apply(*parameters);
         }
     }));
     blur_submenu.add_action(GUI::Action::create("Box Blur (5x5)", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
-            PixelPaint::BoxBlurFilter<5> filter;
-            if (auto parameters = PixelPaint::FilterParameters<PixelPaint::BoxBlurFilter<5>>::get(layer->bitmap(), layer->rect()))
+            Gfx::BoxBlurFilter<5> filter;
+            if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<5>>::get(layer->bitmap(), layer->rect()))
                 filter.apply(*parameters);
         }
     }));
     blur_submenu.add_action(GUI::Action::create("Sharpen", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
-            PixelPaint::SharpenFilter filter;
-            if (auto parameters = PixelPaint::FilterParameters<PixelPaint::SharpenFilter>::get(layer->bitmap(), layer->rect()))
+            Gfx::SharpenFilter filter;
+            if (auto parameters = PixelPaint::FilterParameters<Gfx::SharpenFilter>::get(layer->bitmap(), layer->rect()))
                 filter.apply(*parameters);
         }
     }));
@@ -270,8 +270,8 @@ int main(int argc, char** argv)
     spatial_filters_menu.add_separator();
     spatial_filters_menu.add_action(GUI::Action::create("Generic 5x5 Convolution", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
-            PixelPaint::GenericConvolutionFilter<5> filter;
-            if (auto parameters = PixelPaint::FilterParameters<PixelPaint::GenericConvolutionFilter<5>>::get(layer->bitmap(), layer->rect(), window))
+            Gfx::GenericConvolutionFilter<5> filter;
+            if (auto parameters = PixelPaint::FilterParameters<Gfx::GenericConvolutionFilter<5>>::get(layer->bitmap(), layer->rect(), window))
                 filter.apply(*parameters);
         }
     }));
