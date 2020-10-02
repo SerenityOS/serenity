@@ -52,8 +52,7 @@ public:
     template<typename... Parameters>
     void appendff(StringView fmtstr, const Parameters&... parameters)
     {
-        const auto type_erased_parameters = make_type_erased_parameters(parameters...);
-        vformat(*this, fmtstr, type_erased_parameters);
+        vformat(*this, fmtstr, VariadicFormatParams { parameters... });
     }
 
     String build() const;

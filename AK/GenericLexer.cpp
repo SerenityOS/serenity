@@ -26,6 +26,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/GenericLexer.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace AK {

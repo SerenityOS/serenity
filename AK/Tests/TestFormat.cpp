@@ -162,4 +162,22 @@ TEST_CASE(pointers)
     }
 }
 
+// If the format implementation did absolutely nothing, all tests would pass. This
+// is because when a test fails we only write "FAIL" to stdout using format.
+//
+// This is a bit scary, thus this test. At least this test should fail in this case.
+TEST_CASE(ensure_that_format_works)
+{
+
+    if (String::formatted("FAIL") != "FAIL") {
+        fprintf(stderr, "FAIL\n");
+        exit(1);
+    }
+
+    if (String::formatted("{} FAIL {}", 1, 2) != "1 FAIL 2") {
+        fprintf(stderr, "FAIL\n");
+        exit(1);
+    }
+}
+
 TEST_MAIN(Format)
