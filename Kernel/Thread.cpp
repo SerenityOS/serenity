@@ -231,7 +231,7 @@ void Thread::relock_process(bool did_unlock)
         process().big_lock().lock();
     }
 
-    // NOTE: We may be on a differenct CPU now!
+    // NOTE: We may be on a different CPU now!
     Processor::current().restore_critical(prev_crit, prev_flags);
 }
 

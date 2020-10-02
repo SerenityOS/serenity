@@ -213,7 +213,7 @@ pop3s		995/tcp				# POP-3 over SSL
 #> providing services to unknown callers, a service contact port is
 #> defined.  This list specifies the port used by the server process as its
 #> contact port.  While the IANA can not control uses of these ports it
-#> does register or list uses of these ports as a convienence to the
+#> does register or list uses of these ports as a convenience to the
 #> community.
 #
 socks		1080/tcp			# socks proxy server
@@ -392,7 +392,7 @@ afs3-vlserver	7003/tcp			# volume location database
 afs3-vlserver	7003/udp
 afs3-kaserver	7004/tcp			# AFS/Kerberos authentication
 afs3-kaserver	7004/udp
-afs3-volser	7005/tcp			# volume managment server
+afs3-volser	7005/tcp			# volume management server
 afs3-volser	7005/udp
 afs3-errors	7006/tcp			# error interpretation service
 afs3-errors	7006/udp

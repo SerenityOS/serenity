@@ -28,7 +28,7 @@ This program must be run as root.
 ## Files
 
 * `/etc/passwd` - user information (such as UID and GID) in this file is deleted.
-* `/home/` - user home directroy is deleted if the `-r` flag is specified.
+* `/home/` - user home directory is deleted if the `-r` flag is specified.
 
 ## Examples
 

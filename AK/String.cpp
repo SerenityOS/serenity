@@ -302,7 +302,7 @@ bool String::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
-int String::replace(const String& needle, const String& replacement, bool all_occurences)
+int String::replace(const String& needle, const String& replacement, bool all_occurrences)
 {
     if (is_empty())
         return 0;
@@ -316,7 +316,7 @@ int String::replace(const String& needle, const String& replacement, bool all_oc
 
         pos = ptr - characters();
         positions.append(pos);
-        if (!all_occurences)
+        if (!all_occurrences)
             break;
 
         start = pos + 1;

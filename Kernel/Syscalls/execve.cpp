@@ -104,8 +104,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     InodeMetadata loader_metadata;
 
     // FIXME: Hoooo boy this is a hack if I ever saw one.
-    //      This is the 'random' offset we're giving to our ET_DYN exectuables to start as.
-    //      It also happens to be the static Virtual Addresss offset every static exectuable gets :)
+    //      This is the 'random' offset we're giving to our ET_DYN executables to start as.
+    //      It also happens to be the static Virtual Address offset every static executable gets :)
     //      Without this, some assumptions by the ELF loading hooks below are severely broken.
     //      0x08000000 is a verified random number chosen by random dice roll https://xkcd.com/221/
     m_load_offset = interpreter_description ? 0x08000000 : 0;
@@ -113,7 +113,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     // FIXME: We should be able to load both the PT_INTERP interpreter and the main program... once the RTLD is smart enough
     if (interpreter_description) {
         loader_metadata = interpreter_description->metadata();
-        // we don't need the interpreter file desciption after we've loaded (or not) it into memory
+        // we don't need the interpreter file description after we've loaded (or not) it into memory
         interpreter_description = nullptr;
     } else {
         loader_metadata = main_program_description->metadata();
@@ -176,10 +176,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
         // FIXME: Move TLS region allocation to userspace: LibC and the dynamic loader.
         //     LibC if we end up with a statically linked executable, and the
-        //     dynamic loader so that it can create new TLS blocks for each shared libarary
+        //     dynamic loader so that it can create new TLS blocks for each shared library
         //     that gets loaded as part of DT_NEEDED processing, and via dlopen()
         //     If that doesn't happen quickly, at least pass the location of the TLS region
-        //     some ELF Auxilliary Vector so the loader can use it/create new ones as necessary.
+        //     some ELF Auxiliary Vector so the loader can use it/create new ones as necessary.
         loader->tls_section_hook = [&](size_t size, size_t alignment) {
             ASSERT(size);
             master_tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
@@ -195,7 +195,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         }
         // FIXME: Validate that this virtual address is within executable region,
         //     instead of just non-null. You could totally have a DSO with entry point of
-        //     the beginning of the text segement.
+        //     the beginning of the text segment.
         if (!loader->entry().offset(m_load_offset).get()) {
             klog() << "do_exec: Failure loading " << path.characters() << ", entry pointer is invalid! (" << loader->entry().offset(m_load_offset) << ")";
             return -ENOEXEC;

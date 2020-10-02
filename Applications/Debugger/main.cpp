@@ -151,10 +151,10 @@ static bool handle_breakpoint_command(const String& command)
 
     bool success = g_debug_session->insert_breakpoint(reinterpret_cast<void*>(breakpoint_address));
     if (!success) {
-        fprintf(stderr, "coult not insert breakpoint at: %08x\n", breakpoint_address);
+        fprintf(stderr, "could not insert breakpoint at: %08x\n", breakpoint_address);
         return false;
     }
-    printf("breakpoint insterted at: %08x\n", breakpoint_address);
+    printf("breakpoint inserted at: %08x\n", breakpoint_address);
     return true;
 }
 

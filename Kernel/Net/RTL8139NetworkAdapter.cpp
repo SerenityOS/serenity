@@ -359,7 +359,7 @@ void RTL8139NetworkAdapter::receive()
 
     // we never have to worry about the packet wrapping around the buffer,
     // since we set RXCFG_WRAP_INHIBIT, which allows the rtl8139 to write data
-    // past the end of the alloted space.
+    // past the end of the allotted space.
     memcpy(m_packet_buffer->vaddr().as_ptr(), (const u8*)(start_of_packet + 4), length - 4);
     // let the card know that we've read this data
     m_rx_buffer_offset = ((m_rx_buffer_offset + length + 4 + 3) & ~3) % RX_BUFFER_SIZE;

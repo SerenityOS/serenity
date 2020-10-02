@@ -45,7 +45,7 @@ mounted file system.
 
 If `MS_BIND` is specified in `flags`, `fs_type` is ignored and a bind mount is
 performed instead. In this case, the file or directory specified by `source_fd`
-is overlayed over `target` — the target appears to be replaced by a copy of the
+is overlaid over `target` — the target appears to be replaced by a copy of the
 source. This can be used as an alternative to symlinks or hardlinks.
 
 Each bind mount has its own set of flags, independent of the others or the

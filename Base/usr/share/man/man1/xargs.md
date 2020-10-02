@@ -12,7 +12,7 @@ $ xargs [options...] [command [initial-arguments...]]
 
 `xargs` reads items from a stream, delimited by some blank character (`delimiter`), and executes the `command` as many times as there are items, with any processed `initial-arguments`, possibly followed by a number of items read from the input.
 
-If a `placeholder` is explicitly specified, the `max-lines` limit is set to 1, and each argument in `initial-arguments` is processed by replacing any occurence of the `placeholder` with the input item, and treating the entire resulting value as _one_ argument.
+If a `placeholder` is explicitly specified, the `max-lines` limit is set to 1, and each argument in `initial-arguments` is processed by replacing any occurrence of the `placeholder` with the input item, and treating the entire resulting value as _one_ argument.
 
 It is to be noted that `command` is also subject to substitution in this mode.
 

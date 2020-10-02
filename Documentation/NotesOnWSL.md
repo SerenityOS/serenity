@@ -69,7 +69,7 @@ To run SerenityOS in a WHPX-enabled QEMU VM:
 WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is terrible.
 This is because WSL2 runs as a Hyper-V virtual machine and uses the 9P file system protocol to access host windows files, over Hyper-V sockets.
 
-For a more in depth explaination of the technical limitations of their approach, see [this issue on the WSL github](https://github.com/microsoft/WSL/issues/4197#issuecomment-604592340)
+For a more in depth explanation of the technical limitations of their approach, see [this issue on the WSL github](https://github.com/microsoft/WSL/issues/4197#issuecomment-604592340)
 
 The recommendation from the Microsoft team on that issue is:
 

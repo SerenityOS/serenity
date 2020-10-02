@@ -48,7 +48,7 @@ public:
     String to_string() const;
 
 private:
-    // Internal representation ofthe current decimal value.
+    // Internal representation of the current decimal value.
     bool m_negative { false };
     long m_int_value { 0 };
     long m_frac_value { 0 };

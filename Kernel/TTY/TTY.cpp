@@ -55,7 +55,7 @@ void TTY::set_default_termios()
 KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
     if (Process::current()->pgid() != pgid()) {
-        // FIXME: Should we propigate this error path somehow?
+        // FIXME: Should we propagate this error path somehow?
         (void)Process::current()->send_signal(SIGTTIN, nullptr);
         return KResult(-EINTR);
     }
@@ -203,8 +203,8 @@ void TTY::emit(u8 ch)
 
 bool TTY::can_do_backspace() const
 {
-    //can't do back space if we're empty. Plus, we don't want to
-    //removing any lines "commited" by newlines or ^D.
+    // can't do back space if we're empty. Plus, we don't want to
+    // remove any lines "committed" by newlines or ^D.
     if (!m_input_buffer.is_empty() && !is_eol(m_input_buffer.last()) && m_input_buffer.last() != '\0') {
         return true;
     }
