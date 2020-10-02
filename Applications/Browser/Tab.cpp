@@ -74,6 +74,17 @@ URL url_from_user_input(const String& input)
     return URL(builder.build());
 }
 
+static void start_download(const URL& url)
+{
+    auto window = GUI::Window::construct();
+    window->resize(300, 150);
+    window->set_title(String::format("0%% of %s", url.basename().characters()));
+    window->set_resizable(false);
+    window->set_main_widget<DownloadWidget>(url);
+    window->show();
+    (void)window.leak_ref();
+}
+
 Tab::Tab(Type type)
     : m_type(type)
 {
@@ -154,27 +165,21 @@ Tab::Tab(Type type)
     };
 
     m_link_context_menu = GUI::Menu::construct();
-    auto default_action = GUI::Action::create("Open", [this](auto&) {
+    auto link_default_action = GUI::Action::create("Open", [this](auto&) {
         hooks().on_link_click(m_link_context_menu_url, "", 0);
     });
-    m_link_context_menu->add_action(default_action);
-    m_link_context_menu_default_action = default_action;
+    m_link_context_menu->add_action(link_default_action);
+    m_link_context_menu_default_action = link_default_action;
     m_link_context_menu->add_action(GUI::Action::create("Open in new tab", [this](auto&) {
         hooks().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
+    m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("Copy link", [this](auto&) {
         GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_string());
     }));
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("Download", [this](auto&) {
-        auto window = GUI::Window::construct();
-        window->resize(300, 150);
-        auto url = m_link_context_menu_url;
-        window->set_title(String::format("0%% of %s", url.basename().characters()));
-        window->set_resizable(false);
-        window->set_main_widget<DownloadWidget>(url);
-        window->show();
-        (void)window.leak_ref();
+        start_download(m_link_context_menu_url);
     }));
 
     hooks().on_link_context_menu_request = [this](auto& url, auto& screen_position) {
