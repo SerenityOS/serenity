@@ -47,8 +47,8 @@
 
 class Mask {
 private:
-    mode_t removal_mask;  //the bits that will be removed
-    mode_t applying_mask; //the bits that will be setted
+    mode_t removal_mask;  // the bits that will be removed
+    mode_t applying_mask; // the bits that will be set
 
 public:
     Mask()
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
         }
     }
 
-    /* set the mask for each files' permissions */
+    /* set the mask for each file's permissions */
     struct stat current_access;
     int i = 2;
     while (i < argc) {

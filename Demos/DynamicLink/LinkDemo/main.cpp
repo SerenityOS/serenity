@@ -89,7 +89,7 @@ int main(int argc, char** argv, char** envp)
 
     printf("I think I called my lib function!\n");
 
-    // Test getting a method that takes and returns arugments now
+    // Test getting a method that takes and returns arguments now
     const char* (*other_func)(int) = (const char* (*)(int))dlsym(handle, "other_lib_function");
 
     printf("Found other lib function address %p\n", other_func);

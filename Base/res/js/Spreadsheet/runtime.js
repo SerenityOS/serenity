@@ -440,7 +440,7 @@ reduce.__documentation = JSON.stringify({
         "to the `accumulator`\n The `reduction function` should be a function of arity 2, taking " +
         "first the accumulator, then the current value, and returning the new accumulator value\n\n" +
         "Please keep in mind that this function respects the cell type, and can yield non-numeric " +
-        "values to the `curent value`.",
+        "values to the `current value`.",
     examples: {
         'reduce((acc, x) => acc * x, 1, range("A0", "A5"))':
             "Calculate the product of all values in the range A0:A5",

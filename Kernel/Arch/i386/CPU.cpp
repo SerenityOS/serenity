@@ -1590,7 +1590,7 @@ void Processor::initialize_context_switching(Thread& initial_thread)
     m_scheduler_initialized = true;
 
     asm volatile(
-        "movl %[new_esp], %%esp \n" // swich to new stack
+        "movl %[new_esp], %%esp \n" // switch to new stack
         "pushl %[from_to_thread] \n" // to_thread
         "pushl %[from_to_thread] \n" // from_thread
         "pushl $" __STRINGIFY(GDT_SELECTOR_CODE0) " \n"

@@ -67,9 +67,9 @@ The expression can take any of the following forms:
 
 ### File permission checks
 
-* `-r <file>` whether the curent user has read access to the file
-* `-w <file>` whether the curent user has write access to the file
-* `-x <file>` whether the curent user has execute access to the file
+* `-r <file>` whether the current user has read access to the file
+* `-w <file>` whether the current user has write access to the file
+* `-x <file>` whether the current user has execute access to the file
 * `-e <file>` whether the file exists
 
 

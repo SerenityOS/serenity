@@ -62,7 +62,7 @@
  * - Time 6: PB1 forks into PB2
  * - Time 7: PB1 dies (PGB now has no leader)
  * - Time 8: PB2 calls pgrp(0, PGA)
- *     Note: PB2 writes "1" (exploit successfull) or "0" (bug is fixed) to a pipe
+ *     Note: PB2 writes "1" (exploit successful) or "0" (bug is fixed) to a pipe
  * - Time 9: If PX hasn't received any message yet through the pipe, it declares the test as failed (for lack of knowledge). Otherwise, it outputs accordingly.
  */
 
@@ -246,7 +246,7 @@ static void run_pb2(void* pipe_fd_ptr)
     sleep_steps(2);
 
     // Time 8: PB2 calls pgrp(0, PGA)
-    //   Note: PB2 writes "1" (exploit successfull) or "0" (bug is fixed) to a pipe
+    //   Note: PB2 writes "1" (exploit successful) or "0" (bug is fixed) to a pipe
     dbg() << "PB2 starts with SID=" << getsid(0) << ", PGID=" << getpgid(0) << ", PID=" << getpid() << ".";
     dbg() << "PB2 calls pgrp(0, PGA)";
     int pga = getpid() - 3;

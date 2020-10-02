@@ -99,7 +99,7 @@ void Client::handle_command(const Command& command)
         // them can be disabled (or re-enabled) after connecting.
         break;
     case CMD_DONT:
-        // no response - we only "support" two options (echo and suppres
+        // no response - we only "support" two options (echo and suppress
         // go-ahead), and both of them are always enabled.
         break;
     case CMD_WILL:

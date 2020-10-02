@@ -90,7 +90,7 @@ RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
     auto& entry = header.entry[index - 1];
 
     if (header.mbr_signature != MBR_SIGNATURE) {
-        klog() << "MBRPartitionTable::initialize: bad mbr signature - not initalized? 0x" << String::format("%x", header.mbr_signature);
+        klog() << "MBRPartitionTable::initialize: bad mbr signature - not initialized? 0x" << String::format("%x", header.mbr_signature);
         return nullptr;
     }
 

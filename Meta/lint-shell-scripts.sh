@@ -9,7 +9,7 @@ ERRORS=()
 while IFS= read -r f; do
     if file "$f" | grep --quiet shell; then
         {
-            shellcheck "$f" && echo -e "[\033[0;32mOK\033[0m]: sucessfully linted $f"
+            shellcheck "$f" && echo -e "[\033[0;32mOK\033[0m]: successfully linted $f"
         } || {
             ERRORS+=("$f")
         }

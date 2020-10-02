@@ -29,7 +29,7 @@ writes some data to the pipe which the parent reads:
 ```c++
 #include <AK/Assertions.h>
 #include <stdio.h>
-#incldue <unistd.h>
+#include <unistd.h>
 
 int main()
 {

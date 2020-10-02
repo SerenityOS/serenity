@@ -3,7 +3,7 @@
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path/.." || exit 1
 
-# The __cxa_guard_* calls are generated for (non trivial) initialzation of local static objects.
+# The __cxa_guard_* calls are generated for (non trivial) initialization of local static objects.
 # These symbols are OK to use within serenity code, but they are problematic in LibC because their
 # existence breaks ports (the implementation of these symbols resides in libstdc++.a which we do not link against in ports).
 # To eliminate the need for these symbols, avoid doing non-trivial construction of local statics in LibC.

@@ -79,7 +79,7 @@ GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, GUI::
             if (data.is_array())
                 return String::format("<Array with %d element%s", data.as_array().size(), data.as_array().size() == 1 ? ">" : "s>");
             if (data.is_object())
-                return String::format("<Object with %d entrie%s", data.as_object().size(), data.as_object().size() == 1 ? ">" : "s>");
+                return String::format("<Object with %d entr%s", data.as_object().size(), data.as_object().size() == 1 ? "y>" : "ies>");
             return data;
         }
         }

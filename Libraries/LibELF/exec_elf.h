@@ -618,7 +618,7 @@ typedef struct {
  *	NT_OPENBSD_PROCINFO
  *		Note is a "elfcore_procinfo" structure.
  *	NT_OPENBSD_AUXV
- *		Note is a a bunch of Auxilliary Vectors, terminated by
+ *		Note is a a bunch of Auxiliary Vectors, terminated by
  *		an AT_NULL entry.
  *	NT_OPENBSD_REGS
  *		Note is a "reg" structure.

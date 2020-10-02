@@ -80,7 +80,7 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     if (!address.has_value()) {
         dbg() << "Warning: couldn't get instruction address from source";
         // TODO: Currently, the GUI will indicate that a breakpoint was inserted/removed at this line,
-        // regardless of whether we actually succeeded to insert it. (For example a breakpoint on a comment, or an include statemanet).
+        // regardless of whether we actually succeeded to insert it. (For example a breakpoint on a comment, or an include statement).
         // We should indicate failure via a return value from this function, and not update the breakpoint GUI if we fail.
         return;
     }
@@ -180,7 +180,7 @@ int Debugger::debugger_loop()
             do_step_over(regs);
             return Debug::DebugSession::DebugDecision::Continue;
         case DebuggerAction::Exit:
-            // NOTE: Is detaching from the debugee the best thing to do here?
+            // NOTE: Is detaching from the debuggee the best thing to do here?
             // We could display a dialog in the UI, remind the user that there is
             // a live debugged process, and ask whether they want to terminate/detach.
             dbg() << "Debugger exiting";

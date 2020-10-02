@@ -40,7 +40,7 @@ Any sequence of _Double Quoted String Part_ tokens:
 * Escaped sequences
 
 ##### Variable Reference
-Any sequence of _Identifier_ characters, or a _Special Variable_ follwing a `$`
+Any sequence of _Identifier_ characters, or a _Special Variable_ following a `$`
 
 ##### Evaluate expression
 Any expression following a `$` that is not a variable reference:
@@ -331,7 +331,7 @@ list_expression :: ' '* expression (' '+ list_expression)?
 
 expression :: evaluate expression?
             | string_composite expression?
-            | comment expession?
+            | comment expression?
             | '(' list_expression ')' expression?
 
 evaluate :: '$' '(' pipe_sequence ')'

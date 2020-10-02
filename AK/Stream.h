@@ -75,7 +75,7 @@ namespace AK {
 
 class InputStream : public virtual AK::Detail::Stream {
 public:
-    // Reads at least one byte unless none are requested or none are avaliable. Does nothing
+    // Reads at least one byte unless none are requested or none are available. Does nothing
     // and returns zero if there is already an error.
     virtual size_t read(Bytes) = 0;
 

@@ -476,10 +476,10 @@ bool Menu::activate_default()
     return false;
 }
 
-MenuItem* Menu::item_with_identifier(unsigned identifer)
+MenuItem* Menu::item_with_identifier(unsigned identifier)
 {
     for (auto& item : m_items) {
-        if (item.identifier() == identifer)
+        if (item.identifier() == identifier)
             return &item;
     }
     return nullptr;

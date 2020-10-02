@@ -332,7 +332,7 @@ public:
 
     // The function will return the next range of unset bits starting from the
     // @from value.
-    // @from: the postition from which the search starts. The var will be
+    // @from: the position from which the search starts. The var will be
     //        changed and new value is the offset of the found block.
     // @min_length: minimum size of the range which will be returned.
     // @max_length: maximum size of the range which will be returned.

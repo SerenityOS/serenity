@@ -536,9 +536,9 @@ Board::Result Board::game_result() const
         auto repeats = m_previous_states.get(*this);
         if (repeats.has_value()) {
             if (repeats.value() == 3)
-                return Result::ThreeFoldRepitition;
+                return Result::ThreeFoldRepetition;
             if (repeats.value() >= 5)
-                return Result::FiveFoldRepitition;
+                return Result::FiveFoldRepetition;
         }
 
         return Result::NotFinished;

@@ -152,14 +152,14 @@ void TestSuite::main(const String& suite_name, int argc, char** argv)
 
     args_parser.add_option(do_tests_only, "Only run tests.", "tests", 0);
     args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0);
-    args_parser.add_option(do_list_cases, "List avaliable test cases.", "list", 0);
+    args_parser.add_option(do_list_cases, "List available test cases.", "list", 0);
     args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     const auto& matching_tests = find_cases(search_string, !do_benchmarks_only, !do_tests_only);
 
     if (do_list_cases) {
-        out() << "Avaliable cases for " << suite_name << ":";
+        out() << "Available cases for " << suite_name << ":";
         for (const auto& test : matching_tests) {
             out() << "    " << test.name();
         }

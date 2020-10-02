@@ -184,8 +184,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto left = config->read_num_entry("Window", "Left", 150);
     auto top = config->read_num_entry("Window", "Top", 75);
     auto width = config->read_num_entry("Window", "Width", 640);
-    auto heigth = config->read_num_entry("Window", "Heigth", 480);
-    window->set_rect({ left, top, width, heigth });
+    auto height = config->read_num_entry("Window", "Height", 480);
+    window->set_rect({ left, top, width, height });
 
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.set_layout<GUI::VerticalBoxLayout>();
@@ -683,7 +683,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     window->show();
 
-    // Read direcory read mode from config.
+    // Read directory read mode from config.
     auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");
 
     if (dir_view_mode.contains("Table")) {
@@ -702,7 +702,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         config->write_num_entry("Window", "Left", window->x());
         config->write_num_entry("Window", "Top", window->y());
         config->write_num_entry("Window", "Width", window->width());
-        config->write_num_entry("Window", "Heigth", window->height());
+        config->write_num_entry("Window", "Height", window->height());
         config->sync();
 
         return GUI::Window::CloseRequestDecision::Close;

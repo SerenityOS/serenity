@@ -181,7 +181,7 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBu
         if (m_content.has_value() && m_content.value().capacity() >= (size_t)new_size) {
             m_content.value().set_size(new_size);
         } else {
-            // Grow the content buffer 2x the new sizeto accomodate repeating write() calls.
+            // Grow the content buffer 2x the new sizeto accommodate repeating write() calls.
             // Note that we're not actually committing physical memory to the buffer
             // until it's needed. We only grow VM here.
 
