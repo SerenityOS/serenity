@@ -123,11 +123,6 @@ static constexpr auto is_not(char c)
     return [c](char ch) { return ch != c; };
 }
 
-static constexpr auto is_any_of(StringView s)
-{
-    return [s](char ch) { return s.contains(ch); };
-}
-
 static inline char to_byte(char a, char b)
 {
     char buf[3] { a, b, 0 };
