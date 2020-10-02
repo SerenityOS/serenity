@@ -87,6 +87,7 @@ public:
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) { }
     virtual void page_did_request_context_menu(const Gfx::IntPoint&) { }
     virtual void page_did_request_link_context_menu(const Gfx::IntPoint&, const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
+    virtual void page_did_request_image_context_menu(const Gfx::IntPoint&, const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap*) { }
     virtual void page_did_click_link(const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_middle_click_link(const URL&, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers) { }
     virtual void page_did_enter_tooltip_area(const Gfx::IntPoint&, const String&) { }

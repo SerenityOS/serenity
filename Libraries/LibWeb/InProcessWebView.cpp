@@ -36,6 +36,7 @@
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ShareableBitmap.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -169,6 +170,16 @@ void InProcessWebView::page_did_request_link_context_menu(const Gfx::IntPoint& c
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
+}
+
+void InProcessWebView::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap* bitmap)
+{
+    if (!on_image_context_menu_request)
+        return;
+    Gfx::ShareableBitmap shareable_bitmap;
+    if (bitmap)
+        shareable_bitmap = Gfx::ShareableBitmap(*bitmap);
+    on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), shareable_bitmap);
 }
 
 void InProcessWebView::page_did_click_link(const URL& url, const String& target, unsigned modifiers)

@@ -31,6 +31,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Page/EventHandler.h>
@@ -153,6 +154,13 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     node->dispatch_event(UIEvents::MouseEvent::create("mousedown", offset.x(), offset.y()));
     if (!layout_root())
         return true;
+
+    if (button == GUI::MouseButton::Right && is<HTML::HTMLImageElement>(*node)) {
+        auto& image_element = downcast<HTML::HTMLImageElement>(*node);
+        auto image_url = image_element.document().complete_url(image_element.src());
+        page_client.page_did_request_image_context_menu(m_frame.to_main_frame_position(position), image_url, "", modifiers, image_element.bitmap());
+        return true;
+    }
 
     if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
         auto href = link->href();

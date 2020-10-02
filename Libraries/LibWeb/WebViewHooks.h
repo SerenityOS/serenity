@@ -37,6 +37,7 @@ public:
     Function<void(const Gfx::IntPoint& screen_position)> on_context_menu_request;
     Function<void(const URL&, const String& target, unsigned modifiers)> on_link_click;
     Function<void(const URL&, const Gfx::IntPoint& screen_position)> on_link_context_menu_request;
+    Function<void(const URL&, const Gfx::IntPoint& screen_position, const Gfx::ShareableBitmap&)> on_image_context_menu_request;
     Function<void(const URL&, const String& target, unsigned modifiers)> on_link_middle_click;
     Function<void(const URL&)> on_link_hover;
     Function<void(const String&)> on_title_change;
