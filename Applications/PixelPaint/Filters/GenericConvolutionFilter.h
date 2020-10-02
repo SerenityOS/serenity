@@ -78,22 +78,6 @@ public:
     virtual const char* class_name() const override { return "GenericConvolutionFilter"; }
 
     virtual void apply(const Filter::Parameters&) override;
-
-    OwnPtr<Parameters> get_parameters(Gfx::Bitmap&, const Gfx::IntRect&, GUI::Window* parent_window);
-};
-
-template<size_t N>
-class GenericConvolutionFilterInputDialog : public GUI::Dialog {
-    C_OBJECT(GenericConvolutionFilterInputDialog);
-
-public:
-    const Matrix<N, float>& matrix() const { return m_matrix; }
-    bool should_wrap() const { return m_should_wrap; }
-
-private:
-    explicit GenericConvolutionFilterInputDialog(GUI::Window*);
-    Matrix<N, float> m_matrix {};
-    bool m_should_wrap { false };
 };
 
 }

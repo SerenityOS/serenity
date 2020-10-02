@@ -36,8 +36,6 @@ public:
     virtual ~SharpenFilter();
 
     virtual const char* class_name() const override { return "SharpenFilter"; }
-
-    OwnPtr<GenericConvolutionFilter::Parameters> get_parameters(Gfx::Bitmap&, const Gfx::IntRect&);
 };
 
 }

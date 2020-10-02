@@ -38,8 +38,6 @@ public:
     virtual ~SpatialGaussianBlurFilter();
 
     virtual const char* class_name() const override { return "SpatialGaussianBlurFilter"; }
-
-    OwnPtr<typename GenericConvolutionFilter<N>::Parameters> get_parameters(Gfx::Bitmap&, const Gfx::IntRect&);
 };
 
 }
