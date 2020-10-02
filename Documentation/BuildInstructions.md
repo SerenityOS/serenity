@@ -17,7 +17,7 @@ sudo dnf install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs @"C Deve
 
 **openSUSE**
 ```bash
-sudo zypper install curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ patterns-devel-C-C++-devel_C_C++
+sudo zypper install curl cmake mpfr-devel mpc-devel gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ patterns-devel-C-C++-devel_C_C++
 ```
 
 **Arch Linux / Manjaro**
