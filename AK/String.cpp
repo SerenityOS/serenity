@@ -441,10 +441,10 @@ InputStream& operator>>(InputStream& stream, String& string)
     }
 }
 
-String String::vformatted(StringView fmtstr, Span<const TypeErasedParameter> parameters)
+String String::vformatted(StringView fmtstr, TypeErasedFormatParams params)
 {
     StringBuilder builder;
-    vformat(builder, fmtstr, parameters);
+    vformat(builder, fmtstr, params);
     return builder.to_string();
 }
 

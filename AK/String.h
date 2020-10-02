@@ -239,13 +239,12 @@ public:
 
     static String format(const char*, ...);
 
-    static String vformatted(StringView fmtstr, Span<const TypeErasedParameter>);
+    static String vformatted(StringView fmtstr, TypeErasedFormatParams);
 
     template<typename... Parameters>
     static String formatted(StringView fmtstr, const Parameters&... parameters)
     {
-        const auto type_erased_parameters = make_type_erased_parameters(parameters...);
-        return vformatted(fmtstr, type_erased_parameters);
+        return vformatted(fmtstr, VariadicFormatParams { parameters... });
     }
 
     template<typename T>

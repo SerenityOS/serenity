@@ -211,22 +211,19 @@ void dump_bytes(ReadonlyBytes);
 template<typename... Parameters>
 void outf(StringView fmtstr, const Parameters&... parameters)
 {
-    const auto type_erased_parameters = make_type_erased_parameters(parameters...);
-    vformat(out(), fmtstr, type_erased_parameters);
+    vformat(out(), fmtstr, VariadicFormatParams { parameters... });
 }
 template<typename... Parameters>
 void warnf(StringView fmtstr, const Parameters&... parameters)
 {
-    const auto type_erased_parameters = make_type_erased_parameters(parameters...);
-    vformat(warn(), fmtstr, type_erased_parameters);
+    vformat(warn(), fmtstr, VariadicFormatParams { parameters... });
 }
 #endif
 
 template<typename... Parameters>
 void dbgf(StringView fmtstr, const Parameters&... parameters)
 {
-    const auto type_erased_parameters = make_type_erased_parameters(parameters...);
-    vformat(dbg(), fmtstr, type_erased_parameters);
+    vformat(dbg(), fmtstr, VariadicFormatParams { parameters... });
 }
 
 }
