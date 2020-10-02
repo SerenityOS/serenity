@@ -24,25 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "BoxBlurFilter.h"
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
-#include <LibGUI/SpinBox.h>
+#pragma once
 
-namespace PixelPaint {
+#include "GenericConvolutionFilter.h"
 
-template<size_t N>
-BoxBlurFilter<N>::BoxBlurFilter()
-{
-}
+namespace Gfx {
 
-template<size_t N>
-BoxBlurFilter<N>::~BoxBlurFilter()
-{
-}
+class LaplacianFilter : public GenericConvolutionFilter<3> {
+public:
+    LaplacianFilter() { }
+    virtual ~LaplacianFilter() { }
+
+    virtual const char* class_name() const override { return "LaplacianFilter"; }
+};
 
 }
-
-template class PixelPaint::BoxBlurFilter<3>;
-template class PixelPaint::BoxBlurFilter<5>;
