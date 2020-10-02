@@ -36,8 +36,6 @@ public:
     virtual ~LaplacianFilter();
 
     virtual const char* class_name() const override { return "LaplacianFilter"; }
-
-    OwnPtr<GenericConvolutionFilter::Parameters> get_parameters(Gfx::Bitmap&, const Gfx::IntRect&, bool diagonal);
 };
 
 }

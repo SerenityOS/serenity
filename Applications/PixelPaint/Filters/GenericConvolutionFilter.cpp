@@ -26,14 +26,6 @@
 
 #include "GenericConvolutionFilter.h"
 #include <AK/TemporaryChange.h>
-#include <LibGUI/Action.h>
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
-#include <LibGUI/Dialog.h>
-#include <LibGUI/Menu.h>
-#include <LibGUI/Painter.h>
-#include <LibGUI/TextBox.h>
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
@@ -105,76 +97,6 @@ void GenericConvolutionFilter<N>::apply(const Filter::Parameters& parameters)
     }
 }
 
-template<size_t N>
-OwnPtr<typename GenericConvolutionFilter<N>::Parameters>
-GenericConvolutionFilter<N>::get_parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect, GUI::Window* parent_window)
-{
-    auto input = GenericConvolutionFilterInputDialog<N>::construct(parent_window);
-    input->exec();
-    if (input->result() == GUI::Dialog::ExecOK)
-        return make<Parameters>(bitmap, rect, input->matrix(), input->should_wrap());
-
-    return {};
-}
-
-template<size_t N>
-GenericConvolutionFilterInputDialog<N>::GenericConvolutionFilterInputDialog(Window* parent_window)
-    : Dialog(parent_window)
-{
-    // FIXME: Help! Make this GUI less ugly.
-    StringBuilder builder;
-    builder.appendf("%zux%zu", N, N);
-    builder.append(" Convolution");
-    set_title(builder.string_view());
-
-    resize(200, 250);
-    auto& main_widget = set_main_widget<GUI::Frame>();
-    main_widget.set_frame_shape(Gfx::FrameShape::Container);
-    main_widget.set_frame_shadow(Gfx::FrameShadow::Raised);
-    main_widget.set_fill_with_background_color(true);
-    auto& layout = main_widget.template set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 4, 4, 4, 4 });
-
-    size_t index = 0;
-    size_t columns = N;
-    size_t rows = N;
-
-    for (size_t row = 0; row < rows; ++row) {
-        auto& horizontal_container = main_widget.template add<GUI::Widget>();
-        horizontal_container.template set_layout<GUI::HorizontalBoxLayout>();
-        for (size_t column = 0; column < columns; ++column) {
-            if (index < columns * rows) {
-                auto& textbox = horizontal_container.template add<GUI::TextBox>();
-                textbox.set_preferred_size({ 30, 50 });
-                textbox.on_change = [&, row = row, column = column] {
-                    auto& element = m_matrix.elements()[row][column];
-                    char* endptr = nullptr;
-                    auto value = strtof(textbox.text().characters(), &endptr);
-                    if (endptr != nullptr)
-                        element = value;
-                    else
-                        textbox.set_text("");
-                };
-            } else {
-                horizontal_container.template add<GUI::Widget>();
-            }
-        }
-    }
-
-    auto& norm_checkbox = main_widget.template add<GUI::CheckBox>("Normalize");
-    norm_checkbox.set_checked(false);
-
-    auto& wrap_checkbox = main_widget.template add<GUI::CheckBox>("Wrap");
-    wrap_checkbox.set_checked(m_should_wrap);
-
-    auto& button = main_widget.template add<GUI::Button>("Done");
-    button.on_click = [&](auto) {
-        m_should_wrap = wrap_checkbox.is_checked();
-        if (norm_checkbox.is_checked())
-            normalize(m_matrix);
-        done(ExecOK);
-    };
-}
 }
 
 template class PixelPaint::GenericConvolutionFilter<3>;
