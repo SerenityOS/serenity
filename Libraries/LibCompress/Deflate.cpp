@@ -110,7 +110,7 @@ u32 CanonicalCode::read_symbol(InputBitStream& stream) const
     for (;;) {
         code_bits = code_bits << 1 | stream.read_bits(1);
 
-        // FIXME: This seems really inefficent, this could be an index into an array instead.
+        // FIXME: This seems really inefficient, this could be an index into an array instead.
         size_t index;
         if (AK::binary_search(m_symbol_codes.span(), code_bits, AK::integral_compare<u32>, &index))
             return m_symbol_values[index];

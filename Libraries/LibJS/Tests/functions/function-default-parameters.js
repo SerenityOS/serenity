@@ -106,7 +106,7 @@ test("parameter with a function default value", () => {
     expect(arrowFunc(() => 10)).toBe(10);
 });
 
-test("parameter with an arrow function default vlaue", () => {
+test("parameter with an arrow function default value", () => {
     function func(a = () => 5) {
         return a();
     }

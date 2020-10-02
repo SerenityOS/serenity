@@ -80,7 +80,7 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
 
         if (!child.get_attribute(Dwarf::Attribute::LowPc).has_value()) {
 #ifdef DEBUG_SPAM
-            dbg() << "DWARF: Couldn't find attribtue LowPc for scope";
+            dbg() << "DWARF: Couldn't find attribute LowPc for scope";
 #endif
             return;
         }
@@ -165,7 +165,7 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
 {
     NonnullOwnPtrVector<DebugInfo::VariableInfo> variables;
 
-    // TODO: We can store the scopes in a better data strucutre
+    // TODO: We can store the scopes in a better data structure
     for (const auto& scope : m_scopes) {
         if (regs.eip < scope.address_low || regs.eip >= scope.address_high)
             continue;
@@ -236,7 +236,7 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
 
     if (variable_die.tag() == Dwarf::EntryTag::FormalParameter
         && !variable_die.get_attribute(Dwarf::Attribute::Name).has_value()) {
-        // We don't want to display info for unused paramters
+        // We don't want to display info for unused parameters
         return {};
     }
 

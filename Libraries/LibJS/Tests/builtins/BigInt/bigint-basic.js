@@ -3,7 +3,7 @@ describe("correct behavior", () => {
         expect(typeof 1n).toBe("bigint");
     });
 
-    test("bigint string coersion", () => {
+    test("bigint string coercion", () => {
         expect("" + 123n).toBe("123");
     });
 

@@ -93,9 +93,9 @@ void Terminal::alter_mode(bool should_set, bool question_param, const ParamVecto
             // Hide cursor command, but doesn't need to be run (for now, because
             // we don't do inverse control codes anyways)
             if (should_set)
-                dbgprintf("Terminal: Hide Cursor escapecode recieved. Not needed: ignored.\n");
+                dbgprintf("Terminal: Hide Cursor escapecode received. Not needed: ignored.\n");
             else
-                dbgprintf("Terminal: Show Cursor escapecode recieved. Not needed: ignored.\n");
+                dbgprintf("Terminal: Show Cursor escapecode received. Not needed: ignored.\n");
             break;
         default:
             break;
