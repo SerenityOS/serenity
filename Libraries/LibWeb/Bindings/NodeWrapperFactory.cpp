@@ -100,6 +100,8 @@
 #include <LibWeb/Bindings/HTMLVideoElementWrapper.h>
 #include <LibWeb/Bindings/NodeWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
+#include <LibWeb/Bindings/SVGPathElementWrapper.h>
+#include <LibWeb/Bindings/SVGSVGElementWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Node.h>
@@ -170,6 +172,8 @@
 #include <LibWeb/HTML/HTMLUListElement.h>
 #include <LibWeb/HTML/HTMLUnknownElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
+#include <LibWeb/SVG/SVGPathElement.h>
+#include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web::Bindings {
 
@@ -315,6 +319,10 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLVideoElement>(node)));
     if (is<HTML::HTMLElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLElement>(node)));
+    if (is<SVG::SVGSVGElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<SVG::SVGSVGElement>(node)));
+    if (is<SVG::SVGPathElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<SVG::SVGPathElement>(node)));
     if (is<DOM::Element>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<DOM::Element>(node)));
     if (is<DOM::DocumentFragment>(node))

@@ -47,6 +47,8 @@ static const SVGPaintingContext default_painting_context = {
 
 class SVGGraphicsElement : public SVGElement {
 public:
+    using WrapperType = Bindings::SVGGraphicsElementWrapper;
+
     SVGGraphicsElement(DOM::Document&, const FlyString& tag_name);
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;

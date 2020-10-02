@@ -136,6 +136,14 @@ namespace Web::HighResolutionTime {
 class Performance;
 }
 
+namespace Web::SVG {
+class SVGElement;
+class SVGGeometryElement;
+class SVGGraphicsElement;
+class SVGPathElement;
+class SVGSVGElement;
+}
+
 namespace Web {
 class EventHandler;
 class Frame;
@@ -248,6 +256,11 @@ class MouseEventWrapper;
 class NodeWrapper;
 class PerformanceWrapper;
 class ScriptExecutionContext;
+class SVGElementWrapper;
+class SVGGeometryElementWrapper;
+class SVGGraphicsElementWrapper;
+class SVGPathElementWrapper;
+class SVGSVGElementWrapper;
 class TextWrapper;
 class UIEventWrapper;
 class WindowObject;
