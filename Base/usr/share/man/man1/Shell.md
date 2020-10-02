@@ -5,9 +5,10 @@
 ## Synopsis
 
 ```**sh
-$ Shell [--skip-shellrc]
+$ Shell [--skip-shellrc] [--live-formatting]
 $ Shell [--skip-shellrc] command_file [arguments...]
 $ Shell [--skip-shellrc] -c command_string [arguments...]
+$ Shell [--skip-shellrc] --format command_file
 ```
 
 ## Description
@@ -25,6 +26,8 @@ The `Shell` utility does not promise POSIX `sh` interoperability.
 
 * `-c`, `--command-string`: Executes the given string as a command and exits
 * `--skip-shellrc`: Skips running the initialisation file (at `~/.shellrc`)
+* `--format`: Format shell code from the given file and print the result to standard output
+* `-f`, `--live-formatting`: Enable live formatting of the line editor buffer (in REPL mode)
 
 ## Examples
 
