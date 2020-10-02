@@ -53,7 +53,7 @@ struct syslog_data {
 
 /*
  * Many of these facilities don't really make sense anymore, but we keep them
- * for compatability purposes.
+ * for compatibility purposes.
  */
 #define LOG_KERN     ( 0 << 3)
 #define LOG_USER     ( 1 << 3)

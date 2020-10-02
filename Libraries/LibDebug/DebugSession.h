@@ -180,7 +180,7 @@ void DebugSession::run(Callback callback)
         }
 
         if (current_breakpoint.has_value()) {
-            // We want to make the breakpoint transparrent to the user of the debugger.
+            // We want to make the breakpoint transparent to the user of the debugger.
             // To achieive this, we perform two rollbacks:
             // 1. Set regs.eip to point at the actual address of the instruction we breaked on.
             //    regs.eip currently points to one byte after the address of the original instruction,
@@ -212,7 +212,7 @@ void DebugSession::run(Callback callback)
 
         // Re-enable the breakpoint if it wasn't removed by the user
         if (current_breakpoint.has_value() && m_breakpoints.contains(current_breakpoint.value().address)) {
-            // The current breakpoint was removed to make it transparrent to the user.
+            // The current breakpoint was removed to make it transparent to the user.
             // We now want to re-enable it - the code execution flow could hit it again.
             // To re-enable the breakpoint, we first perform a single step and execute the
             // instruction of the breakpoint, and then redo the INT3 patch in its first byte.

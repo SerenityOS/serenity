@@ -1757,7 +1757,7 @@ void Parser::consume_or_insert_semicolon()
         return;
     }
     // Insert semicolon if...
-    // ...token is preceeded by one or more newlines
+    // ...token is preceded by one or more newlines
     if (m_parser_state.m_current_token.trivia().contains('\n'))
         return;
     // ...token is a closing curly brace

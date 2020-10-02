@@ -96,7 +96,7 @@ NonnullOwnPtr<Command> Endpoint::read_command()
     String line(ReadonlyBytes(m_in->read_line(4096).bytes()), Chomp);
 
 #ifdef UCI_DEBUG
-    dbg() << class_name() << " Recieved UCI Command: " << line;
+    dbg() << class_name() << " Received UCI Command: " << line;
 #endif
 
     if (line == "uci") {

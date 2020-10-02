@@ -36,7 +36,7 @@ int ptrace(int request, pid_t tid, void* addr, int data)
 
     // PT_PEEK needs special handling since the syscall wrapper
     // returns the peeked value as an int, which can be negative because of the cast.
-    // When using PT_PEEK, the user can check if an error occured
+    // When using PT_PEEK, the user can check if an error occurred
     // by looking at errno rather than the return value.
 
     u32 out_data;

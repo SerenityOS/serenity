@@ -30,7 +30,7 @@ test("use strict with double quotes after statement does not yield strict mode c
     expect(isStrictMode()).toBeFalse();
 });
 
-test("strict mode propogates down the scope chain", () => {
+test("strict mode propagates down the scope chain", () => {
     "use strict";
     expect(isStrictMode()).toBeTrue();
     (function() {
@@ -38,7 +38,7 @@ test("strict mode propogates down the scope chain", () => {
     })();
 });
 
-test("strict mode does not propogate up the scope chain", () => {
+test("strict mode does not propagate up the scope chain", () => {
     expect(isStrictMode()).toBeFalse();
     (function() {
         "use strict";

@@ -10,7 +10,7 @@ test("regular exponentiation", () => {
     expect((2 ** 3) ** 2).toBe(64);
 });
 
-test("exponentation with negatives", () => {
+test("exponentiation with negatives", () => {
     expect(2 ** -3).toBe(0.125);
     expect((-2) ** 3).toBe(-8);
 
@@ -18,7 +18,7 @@ test("exponentation with negatives", () => {
     // expect("-2 ** 3").not.toEval();
 });
 
-test("exponentation with non-numeric primitives", () => {
+test("exponentiation with non-numeric primitives", () => {
     expect("2" ** "3").toBe(8);
     expect("" ** []).toBe(1);
     expect([] ** null).toBe(1);
@@ -26,7 +26,7 @@ test("exponentation with non-numeric primitives", () => {
     expect(undefined ** null).toBe(1);
 });
 
-test("exponentation that produces NaN", () => {
+test("exponentiation that produces NaN", () => {
     expect(NaN ** 2).toBeNaN();
     expect(2 ** NaN).toBeNaN();
     expect(undefined ** 2).toBeNaN();

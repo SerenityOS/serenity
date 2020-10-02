@@ -125,7 +125,7 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
                     auto timeout_diff = Core::DateTime::now().timestamp() - m_context.handshake_initiation_timestamp;
                     // If the timeout duration was actually within the max wait time (with a margin of error),
                     // we're not operating slow, so the server timed out.
-                    // otherwise, it's our fault that the negotitation is taking too long, so extend the timer :P
+                    // otherwise, it's our fault that the negotiation is taking too long, so extend the timer :P
                     if (timeout_diff < m_max_wait_time_for_handshake_in_seconds + 1) {
                         // The server did not respond fast enough,
                         // time the connection out.

@@ -342,7 +342,7 @@ const char* const sys_errlist[] = {
     "Connection aborted",
     "Connection already in progress",
     "Connection reset",
-    "Desination address required",
+    "Destination address required",
     "Host unreachable",
     "Illegal byte sequence",
     "Message size",

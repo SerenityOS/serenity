@@ -365,7 +365,7 @@ void endservent()
 }
 
 // Fill the service entry buffer with the information contained
-// in the currently read line, returns true if successfull,
+// in the currently read line, returns true if successful,
 // false if failure occurs.
 static bool fill_getserv_buffers(const char* line, ssize_t read)
 {
@@ -376,7 +376,7 @@ static bool fill_getserv_buffers(const char* line, ssize_t read)
 
     // This indicates an incorrect file format.
     // Services file entries should always at least contain
-    // name and port/protocol, seperated by tabs.
+    // name and port/protocol, separated by tabs.
     if (split_line.size() < 2) {
         fprintf(stderr, "getservent(): malformed services file\n");
         return false;

@@ -110,7 +110,7 @@ test("arrow functions in objects", () => {
     expect(foobar.x.z()).toBe(foobar.x);
 });
 
-test("strict mode propogation", () => {
+test("strict mode propagation", () => {
     (() => {
         "use strict";
         expect(isStrictMode()).toBeTrue();

@@ -114,7 +114,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     }
 
     if (m_callee->is_super_expression()) {
-        // If we are calling super, |this| has not been initalized yet, and would not be meaningful to provide.
+        // If we are calling super, |this| has not been initialized yet, and would not be meaningful to provide.
         auto new_target = interpreter.vm().get_new_target();
         ASSERT(new_target.is_function());
         return { js_undefined(), new_target };

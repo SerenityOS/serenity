@@ -33,7 +33,7 @@ test("item added to array before exhaustion is accessible", () => {
     expect(it.next()).toEqual({ value: undefined, done: true });
 });
 
-test("item added to array after exhaustion is inaccesible", () => {
+test("item added to array after exhaustion is inaccessible", () => {
     const a = [1, 2];
     const it = a.values();
     expect(it.next()).toEqual({ value: 1, done: false });
