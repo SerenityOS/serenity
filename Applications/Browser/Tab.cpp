@@ -187,6 +187,32 @@ Tab::Tab(Type type)
         m_link_context_menu->popup(screen_position, m_link_context_menu_default_action);
     };
 
+    m_image_context_menu = GUI::Menu::construct();
+    m_image_context_menu->add_action(GUI::Action::create("Open image", [this](auto&) {
+        hooks().on_link_click(m_image_context_menu_url, "", 0);
+    }));
+    m_image_context_menu->add_action(GUI::Action::create("Open image in new tab", [this](auto&) {
+        hooks().on_link_click(m_image_context_menu_url, "_blank", 0);
+    }));
+    m_image_context_menu->add_separator();
+    m_image_context_menu->add_action(GUI::Action::create("Copy image", [this](auto&) {
+        if (m_image_context_menu_bitmap.is_valid())
+            GUI::Clipboard::the().set_bitmap(*m_image_context_menu_bitmap.bitmap());
+    }));
+    m_image_context_menu->add_action(GUI::Action::create("Copy image URL", [this](auto&) {
+        GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_string());
+    }));
+    m_image_context_menu->add_separator();
+    m_image_context_menu->add_action(GUI::Action::create("Download", [this](auto&) {
+        start_download(m_image_context_menu_url);
+    }));
+
+    hooks().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, const Gfx::ShareableBitmap& shareable_bitmap) {
+        m_image_context_menu_url = image_url;
+        m_image_context_menu_bitmap = shareable_bitmap;
+        m_image_context_menu->popup(screen_position);
+    };
+
     hooks().on_link_middle_click = [this](auto& href, auto&, auto) {
         hooks().on_link_click(href, "_blank", 0);
     };
