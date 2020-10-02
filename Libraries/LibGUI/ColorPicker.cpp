@@ -443,12 +443,12 @@ void ColorButton::paint_event(PaintEvent& event)
 
     Gfx::StylePainter::paint_button(painter, rect(), palette(), Gfx::ButtonStyle::Normal, is_being_pressed(), is_hovered(), is_checked(), is_enabled());
 
-    painter.fill_rect({ 1, 1, rect().width() - 2, rect().height() - 2 }, m_color);
+    painter.fill_rect(rect().shrunken(2, 2), m_color);
 
     if (m_selected) {
-        painter.fill_rect({ 3, 3, rect().width() - 6, rect().height() - 6 }, Color::Black);
-        painter.fill_rect({ 5, 5, rect().width() - 10, rect().height() - 10 }, Color::White);
-        painter.fill_rect({ 7, 6, rect().width() - 14, rect().height() - 14 }, m_color);
+        painter.fill_rect(rect().shrunken(6, 6), Color::Black);
+        painter.fill_rect(rect().shrunken(10, 10), Color::White);
+        painter.fill_rect(rect().shrunken(14, 14), m_color);
     }
 }
 
