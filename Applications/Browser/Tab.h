@@ -29,6 +29,7 @@
 #include "History.h"
 #include <AK/URL.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/HttpJob.h>
 #include <LibWeb/Forward.h>
 
@@ -103,6 +104,10 @@ private:
     RefPtr<GUI::Menu> m_link_context_menu;
     RefPtr<GUI::Action> m_link_context_menu_default_action;
     URL m_link_context_menu_url;
+
+    RefPtr<GUI::Menu> m_image_context_menu;
+    Gfx::ShareableBitmap m_image_context_menu_bitmap;
+    URL m_image_context_menu_url;
 
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<GUI::Menu> m_page_context_menu;
