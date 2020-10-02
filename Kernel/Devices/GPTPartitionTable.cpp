@@ -76,7 +76,7 @@ RefPtr<DiskPartition> GPTPartitionTable::partition(unsigned index)
     unsigned lba = header.partition_array_start_lba + (((index - 1) * header.partition_entry_size) / BytesPerSector);
 
     if (header.sig[0] != GPT_SIGNATURE) {
-        klog() << "GPTPartitionTable::initialize: bad gpt signature - not initalized? 0x" << String::format("%x", header.sig);
+        klog() << "GPTPartitionTable::initialize: bad gpt signature - not initialized? 0x" << String::format("%x", header.sig);
         return nullptr;
     }
 

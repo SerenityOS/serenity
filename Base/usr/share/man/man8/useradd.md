@@ -36,7 +36,7 @@ This program must be run as root.
 ## Files
 
 * `/etc/passwd` - new user information (such as UID and GID) is appended to this file.
-* `/home/` - user home directroy is created here if the `-m` flag is specified.
+* `/home/` - user home directory is created here if the `-m` flag is specified.
 
 ## Examples
 

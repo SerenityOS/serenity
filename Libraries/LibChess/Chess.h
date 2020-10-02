@@ -137,8 +137,8 @@ public:
         StaleMate,
         FiftyMoveRule,
         SeventyFiveMoveRule,
-        ThreeFoldRepitition,
-        FiveFoldRepitition,
+        ThreeFoldRepetition,
+        FiveFoldRepetition,
         InsufficientMaterial,
         NotFinished,
     };

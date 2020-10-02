@@ -192,7 +192,7 @@ RefPtr<DiskPartition> EBRPartitionTable::partition(unsigned index)
 
     auto& header = this->header();
     if (header.mbr_signature != MBR_SIGNATURE) {
-        klog() << "EBRPartitionTable::initialize: bad MBR signature - not initalized? 0x" << String::format("%x", header.mbr_signature);
+        klog() << "EBRPartitionTable::initialize: bad MBR signature - not initialized? 0x" << String::format("%x", header.mbr_signature);
         return nullptr;
     }
     if (index_is_extended_partition(index))

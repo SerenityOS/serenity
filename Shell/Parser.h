@@ -194,7 +194,7 @@ list_expression :: ' '* expression (' '+ list_expression)?
 
 expression :: evaluate expression?
             | string_composite expression?
-            | comment expession?
+            | comment expression?
             | '(' list_expression ')' expression?
 
 evaluate :: '$' '(' pipe_sequence ')'

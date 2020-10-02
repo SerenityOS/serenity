@@ -52,7 +52,7 @@ public:
     DebugSession(int pid);
     ~DebugSession();
 
-    int pid() const { return m_debugee_pid; }
+    int pid() const { return m_debuggee_pid; }
 
     bool poke(u32* address, u32 data);
     Optional<u32> peek(u32* address) const;
@@ -88,10 +88,10 @@ public:
         FreeRun,
         Syscall,
     };
-    void continue_debugee(ContinueType type = ContinueType::FreeRun);
+    void continue_debuggee(ContinueType type = ContinueType::FreeRun);
 
     // Returns the wstatus result of waitpid()
-    int continue_debugee_and_wait(ContinueType type = ContinueType::FreeRun);
+    int continue_debuggee_and_wait(ContinueType type = ContinueType::FreeRun);
 
     // Returns the new eip
     void* single_step();
@@ -126,8 +126,8 @@ private:
 
     static NonnullOwnPtr<const MappedFile> initialize_executable_mapped_file(int pid);
 
-    int m_debugee_pid { -1 };
-    bool m_is_debugee_dead { false };
+    int m_debuggee_pid { -1 };
+    bool m_is_debuggee_dead { false };
 
     NonnullOwnPtr<const MappedFile> m_executable;
     NonnullRefPtr<const ELF::Loader> m_elf;
@@ -150,13 +150,13 @@ void DebugSession::run(Callback callback)
     State state { State::FreeRun };
 
     auto do_continue_and_wait = [&]() {
-        int wstatus = continue_debugee_and_wait((state == State::FreeRun) ? ContinueType::FreeRun : ContinueType::Syscall);
+        int wstatus = continue_debuggee_and_wait((state == State::FreeRun) ? ContinueType::FreeRun : ContinueType::Syscall);
 
-        // FIXME: This check actually only checks whether the debugee
+        // FIXME: This check actually only checks whether the debuggee
         // stopped because it hit a breakpoint/syscall/is in single stepping mode or not
         if (WSTOPSIG(wstatus) != SIGTRAP) {
             callback(DebugBreakReason::Exited, Optional<PtraceRegisters>());
-            m_is_debugee_dead = true;
+            m_is_debuggee_dead = true;
             return true;
         }
         return false;

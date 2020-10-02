@@ -1255,7 +1255,7 @@ void signal_trampoline_dummy(void)
     // then calls the signal handler. We do this because, when interrupting a
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
-    // neccessary to preserve it here.
+    // necessary to preserve it here.
     asm(
         ".intel_syntax noprefix\n"
         "asm_signal_trampoline:\n"

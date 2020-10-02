@@ -1282,7 +1282,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
             text = create<AST::BarewordLiteral>(move(string));
         }
 
-        return create<AST::Juxtaposition>(tilde.release_nonnull(), text.release_nonnull()); // Juxtaposition Varible Bareword
+        return create<AST::Juxtaposition>(tilde.release_nonnull(), text.release_nonnull()); // Juxtaposition Variable Bareword
     }
 
     if (string.starts_with("\\~")) {

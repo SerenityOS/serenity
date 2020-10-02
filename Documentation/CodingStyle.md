@@ -493,7 +493,7 @@ UniqueObject& my_unique_object(); // Free function.
 
 ### Comments
 
-[](#comments-sentences) Make comments look like sentences by starting with a capital letter and ending with a period (punctation). One exception may be end of line comments like this `if (x == y) // false for NaN`.
+[](#comments-sentences) Make comments look like sentences by starting with a capital letter and ending with a period (punctuation). One exception may be end of line comments like this `if (x == y) // false for NaN`.
 
 [](#comments-fixme) Use FIXME: (without attribution) to denote items that need to be addressed in the future.
 

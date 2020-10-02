@@ -188,7 +188,7 @@ void DiffViewer::setup_properties()
 
 Vector<String> DiffViewer::split_to_lines(const String& text)
 {
-    // NOTE: This is slightly different thatn text.split('\n')
+    // NOTE: This is slightly different than text.split('\n')
     Vector<String> lines;
     size_t next_line_start_index = 0;
     for (size_t i = 0; i < text.length(); ++i) {

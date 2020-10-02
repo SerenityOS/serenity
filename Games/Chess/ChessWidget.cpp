@@ -161,18 +161,18 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
             case Chess::Board::Result::SeventyFiveMoveRule:
                 msg = "Draw by 75 move rule.";
                 break;
-            case Chess::Board::Result::ThreeFoldRepitition:
+            case Chess::Board::Result::ThreeFoldRepetition:
                 update();
                 if (GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?", "Claim Draw?",
                         GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
                     == GUI::Dialog::ExecYes) {
-                    msg = "Draw by threefold repitition.";
+                    msg = "Draw by threefold repetition.";
                 } else {
                     over = false;
                 }
                 break;
-            case Chess::Board::Result::FiveFoldRepitition:
-                msg = "Draw by fivefold repitition.";
+            case Chess::Board::Result::FiveFoldRepetition:
+                msg = "Draw by fivefold repetition.";
                 break;
             case Chess::Board::Result::InsufficientMaterial:
                 msg = "Draw by insufficient material.";

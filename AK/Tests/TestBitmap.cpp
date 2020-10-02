@@ -158,7 +158,7 @@ TEST_CASE(set_range)
         bitmap.set_range(48, 32, true);
         bitmap.set_range(94, 39, true);
         bitmap.set_range(190, 71, true);
-        bitmap.set_range(190 + 71 - 7, 21, false); // slighly overlapping clear
+        bitmap.set_range(190 + 71 - 7, 21, false); // slightly overlapping clear
         for (size_t i = 0; i < bitmap.size(); i++) {
             bool should_be_set = (i >= 48 && i < 48 + 32)
                 || (i >= 94 && i < 94 + 39)
