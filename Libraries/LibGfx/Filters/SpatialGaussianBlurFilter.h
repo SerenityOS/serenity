@@ -27,16 +27,17 @@
 #pragma once
 
 #include "GenericConvolutionFilter.h"
+#include <AK/StdLibExtras.h>
 
-namespace PixelPaint {
+namespace Gfx {
 
-template<size_t N>
-class BoxBlurFilter : public GenericConvolutionFilter<N> {
+template<size_t N, typename = typename AK::EnableIf<N % 2 == 1>::Type>
+class SpatialGaussianBlurFilter : public GenericConvolutionFilter<N> {
 public:
-    BoxBlurFilter();
-    virtual ~BoxBlurFilter();
+    SpatialGaussianBlurFilter() { }
+    virtual ~SpatialGaussianBlurFilter() { }
 
-    virtual const char* class_name() const override { return "BoxBlurFilter"; }
+    virtual const char* class_name() const override { return "SpatialGaussianBlurFilter"; }
 };
 
 }

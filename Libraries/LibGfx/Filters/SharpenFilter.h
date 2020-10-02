@@ -24,16 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "LaplacianFilter.h"
+#pragma once
 
-namespace PixelPaint {
+#include "GenericConvolutionFilter.h"
 
-LaplacianFilter::LaplacianFilter()
-{
-}
+namespace Gfx {
 
-LaplacianFilter::~LaplacianFilter()
-{
-}
+class SharpenFilter : public GenericConvolutionFilter<3> {
+public:
+    SharpenFilter() { }
+    virtual ~SharpenFilter() { }
+
+    virtual const char* class_name() const override { return "SharpenFilter"; }
+};
 
 }

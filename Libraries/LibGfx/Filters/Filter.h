@@ -26,16 +26,40 @@
 
 #pragma once
 
-#include "GenericConvolutionFilter.h"
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Rect.h>
 
-namespace PixelPaint {
+namespace Gfx {
 
-class SharpenFilter : public GenericConvolutionFilter<3> {
+class Filter {
 public:
-    SharpenFilter();
-    virtual ~SharpenFilter();
+    class Parameters {
+    public:
+        Parameters(Bitmap& bitmap, const IntRect& rect)
+            : m_target_bitmap(bitmap)
+            , m_target_rect(rect)
 
-    virtual const char* class_name() const override { return "SharpenFilter"; }
+        {
+        }
+
+        Bitmap& bitmap() const { return m_target_bitmap; }
+        const IntRect& rect() const { return m_target_rect; }
+        virtual bool is_generic_convolution_filter() const { return false; }
+
+        virtual ~Parameters() { }
+
+    private:
+        Bitmap& m_target_bitmap;
+        IntRect m_target_rect;
+    };
+    virtual ~Filter() { }
+
+    virtual const char* class_name() const = 0;
+
+    virtual void apply(const Parameters&) = 0;
+
+protected:
+    Filter() { }
 };
 
 }
