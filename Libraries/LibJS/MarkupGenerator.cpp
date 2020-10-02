@@ -101,7 +101,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
         output_html.append(open_style_type(StyleType::String));
     else if (value.is_number())
         output_html.append(open_style_type(StyleType::Number));
-    else if (value.is_boolean() || value.is_null() || value.is_undefined())
+    else if (value.is_boolean() || value.is_nullish())
         output_html.append(open_style_type(StyleType::KeywordBold));
 
     if (value.is_string())

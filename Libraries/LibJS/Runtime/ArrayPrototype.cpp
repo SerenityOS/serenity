@@ -295,7 +295,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
         auto value = this_object->get(i).value_or(js_undefined());
         if (vm.exception())
             return {};
-        if (value.is_undefined() || value.is_null())
+        if (value.is_nullish())
             continue;
         auto* value_object = value.to_object(global_object);
         ASSERT(value_object);
@@ -331,7 +331,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
         auto value = this_object->get(i).value_or(js_undefined());
         if (vm.exception())
             return {};
-        if (value.is_undefined() || value.is_null())
+        if (value.is_nullish())
             continue;
         auto string = value.to_string(global_object);
         if (vm.exception())

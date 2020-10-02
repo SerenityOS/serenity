@@ -459,7 +459,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
     auto this_object = vm.this_value(global_object);
-    if (this_object.is_undefined() || this_object.is_null()) {
+    if (this_object.is_nullish()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndef);
         return {};
     }

@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     auto raw = template_object->get("raw");
     if (vm.exception())
         return {};
-    if (raw.is_empty() || raw.is_undefined() || raw.is_null()) {
+    if (raw.is_empty() || raw.is_nullish()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::StringRawCannotConvert, raw.is_null() ? "null" : "undefined");
         return {};
     }

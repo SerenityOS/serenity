@@ -82,7 +82,7 @@ Object* ProxyObject::prototype()
     auto trap = m_handler.get("getPrototypeOf");
     if (vm().exception())
         return nullptr;
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.prototype();
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "getPrototypeOf");
@@ -131,7 +131,7 @@ bool ProxyObject::set_prototype(Object* object)
     auto trap = m_handler.get("setPrototypeOf");
     if (vm().exception())
         return false;
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.set_prototype(object);
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "setPrototypeOf");
@@ -162,7 +162,7 @@ bool ProxyObject::is_extensible() const
     auto trap = m_handler.get("isExtensible");
     if (vm().exception())
         return false;
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.is_extensible();
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "isExtensible");
@@ -189,7 +189,7 @@ bool ProxyObject::prevent_extensions()
     auto trap = m_handler.get("preventExtensions");
     if (vm().exception())
         return false;
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.prevent_extensions();
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "preventExtensions");
@@ -216,7 +216,7 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(const Prop
     auto trap = m_handler.get("getOwnPropertyDescriptor");
     if (vm().exception())
         return {};
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.get_own_property_descriptor(name);
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "getOwnPropertyDescriptor");
@@ -271,7 +271,7 @@ bool ProxyObject::define_property(const StringOrSymbol& property_name, const Obj
     auto trap = m_handler.get("defineProperty");
     if (vm().exception())
         return false;
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.define_property(property_name, descriptor, throw_exceptions);
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "defineProperty");
@@ -322,7 +322,7 @@ bool ProxyObject::has_property(const PropertyName& name) const
     auto trap = m_handler.get("has");
     if (vm().exception())
         return false;
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.has_property(name);
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "has");
@@ -360,7 +360,7 @@ Value ProxyObject::get(const PropertyName& name, Value) const
     auto trap = m_handler.get("get");
     if (vm().exception())
         return {};
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.get(name);
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "get");
@@ -395,7 +395,7 @@ bool ProxyObject::put(const PropertyName& name, Value value, Value)
     auto trap = m_handler.get("set");
     if (vm().exception())
         return false;
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.put(name, value);
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "set");
@@ -428,7 +428,7 @@ Value ProxyObject::delete_property(const PropertyName& name)
     auto trap = m_handler.get("deleteProperty");
     if (vm().exception())
         return {};
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return m_target.delete_property(name);
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "deleteProperty");
@@ -472,7 +472,7 @@ Value ProxyObject::call()
     auto trap = m_handler.get("apply");
     if (vm().exception())
         return {};
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return static_cast<Function&>(m_target).call();
     if (!trap.is_function()) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "apply");
@@ -505,7 +505,7 @@ Value ProxyObject::construct(Function& new_target)
     auto trap = m_handler.get("construct");
     if (vm.exception())
         return {};
-    if (trap.is_empty() || trap.is_undefined() || trap.is_null())
+    if (trap.is_empty() || trap.is_nullish())
         return static_cast<Function&>(m_target).construct(new_target);
     if (!trap.is_function()) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "construct");

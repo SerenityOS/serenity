@@ -851,7 +851,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
     if (lhs.type() == rhs.type())
         return strict_eq(lhs, rhs);
 
-    if ((lhs.is_undefined() || lhs.is_null()) && (rhs.is_undefined() || rhs.is_null()))
+    if (lhs.is_nullish() && rhs.is_nullish())
         return true;
 
     if (lhs.is_number() && rhs.is_string())
