@@ -290,7 +290,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime")) {
+    if (namespace_.is_one_of("DOM", "HTML", "UIEvents", "HighResolutionTime", "SVG")) {
         StringBuilder builder;
         builder.append(namespace_);
         builder.append("::");
@@ -381,6 +381,8 @@ static void generate_header(const IDL::Interface& interface)
     out() << "#include <LibWeb/UIEvents/" << interface.name << ".h>";
     out() << "#elif __has_include(<LibWeb/HighResolutionTime/" << interface.name << ".h>)";
     out() << "#include <LibWeb/HighResolutionTime/" << interface.name << ".h>";
+    out() << "#elif __has_include(<LibWeb/SVG/" << interface.name << ".h>)";
+    out() << "#include <LibWeb/SVG/" << interface.name << ".h>";
     out() << "#endif";
 
     if (wrapper_base_class != "Wrapper")
