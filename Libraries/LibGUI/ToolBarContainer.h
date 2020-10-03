@@ -38,6 +38,7 @@ public:
 private:
     explicit ToolBarContainer(Gfx::Orientation = Gfx::Orientation::Horizontal);
 
+    virtual void custom_layout() override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void child_event(Core::ChildEvent&) override;
 
