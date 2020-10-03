@@ -1185,6 +1185,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
                 } else {
                     suggestions.append({ escape_token(file), " " });
                 }
+                suggestions.last().input_offset = token_length;
             }
         }
     }
@@ -1202,8 +1203,9 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
         return complete_path("", name, offset);
 
     String completion = *match;
+    auto token_length = escape_token(name).length();
     if (m_editor)
-        m_editor->suggest(escape_token(name).length(), 0);
+        m_editor->suggest(token_length, 0);
 
     // Now that we have a program name starting with our token, we look at
     // other program names starting with our token and cut off any mismatching
@@ -1214,11 +1216,14 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
     int index = match - cached_path.data();
     for (int i = index - 1; i >= 0 && cached_path[i].starts_with(name); --i) {
         suggestions.append({ cached_path[i], " " });
+        suggestions.last().input_offset = token_length;
     }
     for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(name); ++i) {
         suggestions.append({ cached_path[i], " " });
+        suggestions.last().input_offset = token_length;
     }
     suggestions.append({ cached_path[index], " " });
+    suggestions.last().input_offset = token_length;
 
     return suggestions;
 }
@@ -1250,6 +1255,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, 
             if (suggestions.contains_slow(name))
                 continue;
             suggestions.append(move(name));
+            suggestions.last().input_offset = offset;
         }
     }
 
@@ -1271,8 +1277,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(const String& name, size
 
     while (di.has_next()) {
         String name = di.next_path();
-        if (name.starts_with(pattern))
+        if (name.starts_with(pattern)) {
             suggestions.append(name);
+            suggestions.last().input_offset = offset;
+        }
     }
 
     return suggestions;
@@ -1309,9 +1317,11 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
                 builder.append(view);
                 return builder.to_string();
             };
-#define __ENUMERATE_SHELL_OPTION(name, d_, descr_)        \
-    if (StringView { #name }.starts_with(option_pattern)) \
-        suggestions.append(maybe_negate(#name));
+#define __ENUMERATE_SHELL_OPTION(name, d_, descr_)          \
+    if (StringView { #name }.starts_with(option_pattern)) { \
+        suggestions.append(maybe_negate(#name));            \
+        suggestions.last().input_offset = offset;           \
+    }
 
             ENUMERATE_SHELL_OPTIONS();
 #undef __ENUMERATE_SHELL_OPTION

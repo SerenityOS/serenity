@@ -72,6 +72,7 @@ public:
     Vector<u32> trailing_trivia;
     Style style;
     size_t start_index { 0 };
+    size_t input_offset { 0 };
 
     Utf32View text_view;
     Utf32View trivia_view;
