@@ -178,7 +178,7 @@ public:
             flush();
 
             if (bytes.size() - nwritten >= Size)
-                nwritten += m_stream.write_or_error(bytes.slice(nwritten));
+                nwritten += m_stream.write(bytes.slice(nwritten));
 
             nwritten += write(bytes.slice(nwritten));
         }
