@@ -342,14 +342,16 @@ void Widget::handle_mousedoubleclick_event(MouseEvent& event)
 
 void Widget::handle_enter_event(Core::Event& event)
 {
-    window()->update_cursor({});
+    if (auto* window = this->window())
+        window->update_cursor({});
     show_tooltip();
     enter_event(event);
 }
 
 void Widget::handle_leave_event(Core::Event& event)
 {
-    window()->update_cursor({});
+    if (auto* window = this->window())
+        window->update_cursor({});
     Application::the()->hide_tooltip();
     leave_event(event);
 }
