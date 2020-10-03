@@ -55,6 +55,7 @@ public:
     TarStream(InputStream&);
     void advance();
     bool finished() const { return m_finished; }
+    bool valid() const;
     const Header& header() const { return m_header; }
     TarFileStream file_contents();
 

@@ -111,12 +111,17 @@ void TarStream::advance()
         m_finished = true;
         return;
     }
-    if (m_header.magic() == "") {
+    if (!valid()) {
         m_finished = true;
         return;
     }
 
     ASSERT(m_stream.discard_or_error(block_size - sizeof(Header)));
+}
+
+bool TarStream::valid() const
+{
+    return header().magic() == ustar_magic;
 }
 
 TarFileStream TarStream::file_contents()
