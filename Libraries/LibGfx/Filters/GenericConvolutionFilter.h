@@ -71,20 +71,33 @@ public:
         bool m_should_wrap { false };
     };
 
+    class ApplyCache {
+        template<size_t>
+        friend class GenericConvolutionFilter;
+    private:
+        RefPtr<Gfx::Bitmap> m_target;
+    };
+
     GenericConvolutionFilter() { }
     virtual ~GenericConvolutionFilter() { }
 
     virtual const char* class_name() const override { return "GenericConvolutionFilter"; }
 
-    virtual void apply(const Filter::Parameters& parameters)
+    virtual void apply(const Filter::Parameters& parameters) override
     {
         ASSERT(parameters.is_generic_convolution_filter());
-
         auto& gcf_params = static_cast<const GenericConvolutionFilter::Parameters&>(parameters);
 
-        auto& source = gcf_params.bitmap();
-        const auto& source_rect = gcf_params.rect();
-        auto target = Gfx::Bitmap::create(source.format(), parameters.rect().size());
+        ApplyCache apply_cache;
+        apply(gcf_params, apply_cache);
+    }
+
+    void apply(const GenericConvolutionFilter::Parameters& parameters, ApplyCache& apply_cache)
+    {
+        auto& source = parameters.bitmap();
+        const auto& source_rect = parameters.rect();
+        if (!apply_cache.m_target || apply_cache.m_target->size().contains(parameters.rect().size()))
+            apply_cache.m_target = Gfx::Bitmap::create(source.format(), parameters.rect().size());
 
         // FIXME: Help! I am naive!
         for (auto i_ = 0; i_ < source_rect.width(); ++i_) {
@@ -95,7 +108,7 @@ public:
                 for (auto k = 0; k < 4; ++k) {
                     auto ki = i + k - 2;
                     if (ki < 0 || ki >= source.size().width()) {
-                        if (gcf_params.should_wrap())
+                        if (parameters.should_wrap())
                             ki = (ki + source.size().width()) % source.size().width();
                         else
                             continue;
@@ -104,7 +117,7 @@ public:
                     for (auto l = 0; l < 4; ++l) {
                         auto lj = j + l - 2;
                         if (lj < 0 || lj >= source.size().height()) {
-                            if (gcf_params.should_wrap())
+                            if (parameters.should_wrap())
                                 lj = (lj + source.size().height()) % source.size().height();
                             else
                                 continue;
@@ -113,12 +126,12 @@ public:
                         auto pixel = source.get_pixel(ki, lj);
                         FloatVector3 pixel_value(pixel.red(), pixel.green(), pixel.blue());
 
-                        value = value + pixel_value * gcf_params.kernel().elements()[k][l];
+                        value = value + pixel_value * parameters.kernel().elements()[k][l];
                     }
                 }
 
                 // The float->u8 overflow is intentional.
-                target->set_pixel(i_, j_, Color(value.x(), value.y(), value.z(), source.get_pixel(i, j).alpha()));
+                apply_cache.m_target->set_pixel(i_, j_, Color(value.x(), value.y(), value.z(), source.get_pixel(i, j).alpha()));
             }
         }
 
@@ -127,7 +140,7 @@ public:
             auto i = i_ + source_rect.x();
             for (auto j_ = 0; j_ < source_rect.height(); ++j_) {
                 auto j = j_ + source_rect.y();
-                source.set_pixel(i, j, target->get_pixel(i_, j_));
+                source.set_pixel(i, j, apply_cache.m_target->get_pixel(i_, j_));
             }
         }
     }
