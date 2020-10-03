@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,43 @@
 
 #pragma once
 
-#include "../LanguageClient.h"
+#include "AutoComplete.h"
+#include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
+#include <DevTools/HackStudio/AutoCompleteResponse.h>
+#include <LibGUI/TextDocument.h>
+#include <LibIPC/ClientConnection.h>
+
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
-#include <LibIPC/ServerConnection.h>
 
-#define LANGUAGE_CLIENT(namespace_, socket_name)                                               \
-    namespace namespace_ {                                                                     \
-    class ServerConnection : public HackStudio::ServerConnection {                             \
-        C_OBJECT(ServerConnection)                                                             \
-    private:                                                                                   \
-        ServerConnection(const String& project_path)                                           \
-            : HackStudio::ServerConnection("/tmp/portal/language/" #socket_name, project_path) \
-        {                                                                                      \
-        }                                                                                      \
-    };                                                                                         \
-    }
+namespace LanguageServers::Shell {
 
-namespace LanguageClients {
+class ClientConnection final
+    : public IPC::ClientConnection<LanguageClientEndpoint, LanguageServerEndpoint>
+    , public LanguageServerEndpoint {
+    C_OBJECT(ClientConnection);
 
-LANGUAGE_CLIENT(Cpp, cpp)
-LANGUAGE_CLIENT(Shell, shell)
+public:
+    explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
+    ~ClientConnection() override;
+
+    virtual void die() override;
+
+private:
+    virtual OwnPtr<Messages::LanguageServer::GreetResponse> handle(const Messages::LanguageServer::Greet&) override;
+    virtual void handle(const Messages::LanguageServer::FileOpened&) override;
+    virtual void handle(const Messages::LanguageServer::FileEditInsertText&) override;
+    virtual void handle(const Messages::LanguageServer::FileEditRemoveText&) override;
+    virtual void handle(const Messages::LanguageServer::SetFileContent&) override;
+    virtual void handle(const Messages::LanguageServer::AutoCompleteSuggestions&) override;
+
+    RefPtr<GUI::TextDocument> document_for(const String& file_name);
+
+    LexicalPath m_project_root;
+    HashMap<String, NonnullRefPtr<GUI::TextDocument>> m_open_files;
+
+    AutoComplete m_autocomplete;
+};
 
 }
-
-#undef LANGUAGE_CLIENT
