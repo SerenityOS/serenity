@@ -26,18 +26,20 @@
 
 #pragma once
 
+#include "AutoCompleteResponse.h"
 #include <AK/WeakPtr.h>
 #include <LibGUI/Widget.h>
 
 namespace HackStudio {
 
 class Editor;
+
 class AutoCompleteBox final {
 public:
     explicit AutoCompleteBox(WeakPtr<Editor>);
     ~AutoCompleteBox();
 
-    void update_suggestions(const String partial_input, Vector<String>&& suggestions);
+    void update_suggestions(Vector<AutoCompleteResponse>&& suggestions);
     void show(Gfx::IntPoint suggstion_box_location);
     void close();
 
@@ -51,6 +53,5 @@ private:
     WeakPtr<Editor> m_editor;
     RefPtr<GUI::Window> m_popup_window;
     RefPtr<GUI::TableView> m_suggestion_view;
-    String m_partial_input;
 };
 }

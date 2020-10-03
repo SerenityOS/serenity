@@ -28,10 +28,12 @@
 
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
-#include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
-#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
+#include <DevTools/HackStudio/AutoCompleteResponse.h>
 #include <LibGUI/TextDocument.h>
 #include <LibIPC/ClientConnection.h>
+
+#include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
+#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
 
 namespace LanguageServers::Cpp {
 

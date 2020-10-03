@@ -32,7 +32,7 @@
 
 namespace LanguageServers::Cpp {
 
-Vector<String> AutoComplete::get_suggestions(const String& code, GUI::TextPosition autocomplete_position)
+Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, GUI::TextPosition autocomplete_position)
 {
     auto lines = code.split('\n', true);
     Lexer lexer(code);
@@ -46,7 +46,7 @@ Vector<String> AutoComplete::get_suggestions(const String& code, GUI::TextPositi
 
 #ifdef DEBUG_AUTOCOMPLETE
     for (auto& suggestion : suggestions) {
-        dbg() << "suggestion: " << suggestion;
+        dbg() << "suggestion: " << suggestion.completion;
     }
 #endif
 
@@ -71,10 +71,10 @@ Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& token
     return {};
 }
 
-Vector<String> AutoComplete::identifier_prefixes(const Vector<String> lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
+Vector<AutoCompleteResponse> AutoComplete::identifier_prefixes(const Vector<String> lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
 {
     auto partial_input = text_of_token(lines, tokens[target_token_index]);
-    Vector<String> suggestions;
+    Vector<AutoCompleteResponse> suggestions;
 
     HashTable<String> suggestions_lookup; // To avoid duplicate results
 
@@ -85,7 +85,7 @@ Vector<String> AutoComplete::identifier_prefixes(const Vector<String> lines, con
         auto text = text_of_token(lines, token);
         if (text.starts_with(partial_input) && !suggestions_lookup.contains(text)) {
             suggestions_lookup.set(text);
-            suggestions.append(text);
+            suggestions.append({ text, partial_input.length(), HackStudio::CompletionKind::Identifier });
         }
     }
     return suggestions;

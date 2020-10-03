@@ -86,7 +86,6 @@ private:
 
     struct AutoCompleteRequestData {
         GUI::TextPosition position;
-        String partial_input;
     };
 
     Optional<AutoCompleteRequestData> get_autocomplete_request_data();

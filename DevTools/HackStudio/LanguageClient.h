@@ -26,12 +26,14 @@
 
 #pragma once
 
+#include "AutoCompleteResponse.h"
 #include <AK/Forward.h>
 #include <AK/LexicalPath.h>
 #include <AK/Types.h>
+#include <LibIPC/ServerConnection.h>
+
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
-#include <LibIPC/ServerConnection.h>
 
 namespace HackStudio {
 
@@ -104,9 +106,9 @@ public:
     virtual void remove_text(const String& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column);
     virtual void request_autocomplete(const String& path, size_t cursor_line, size_t cursor_column);
 
-    void provide_autocomplete_suggestions(const Vector<String>&);
+    void provide_autocomplete_suggestions(const Vector<AutoCompleteResponse>&);
 
-    Function<void(Vector<String>)> on_autocomplete_suggestions;
+    Function<void(Vector<AutoCompleteResponse>)> on_autocomplete_suggestions;
 
 private:
     ServerConnection& m_connection;
