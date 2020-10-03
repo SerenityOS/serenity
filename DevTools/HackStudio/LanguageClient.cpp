@@ -61,7 +61,7 @@ void LanguageClient::request_autocomplete(const String& path, size_t cursor_line
     m_connection.post_message(Messages::LanguageServer::AutoCompleteSuggestions(path, cursor_line, cursor_column));
 }
 
-void LanguageClient::provide_autocomplete_suggestions(const Vector<String>& suggestions)
+void LanguageClient::provide_autocomplete_suggestions(const Vector<AutoCompleteResponse>& suggestions)
 {
     if (on_autocomplete_suggestions)
         on_autocomplete_suggestions(suggestions);

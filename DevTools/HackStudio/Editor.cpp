@@ -494,28 +494,10 @@ void Editor::set_document(GUI::TextDocument& doc)
 
 Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data()
 {
-    auto highlighter = wrapper().editor().syntax_highlighter();
-    if (!highlighter)
+    if (!wrapper().editor().m_language_client)
         return {};
-    auto& spans = document().spans();
-    for (size_t span_index = 2; span_index < spans.size(); ++span_index) {
-        auto& span = spans[span_index];
-        if (!span.range.contains(cursor())) {
-            continue;
-        }
 
-        if (highlighter->is_identifier(spans[span_index - 1].data)) {
-            auto completion_span = spans[span_index - 1];
-
-            auto adjusted_range = completion_span.range;
-            auto end_line_length = document().line(completion_span.range.end().line()).length();
-            adjusted_range.end().set_column(min(end_line_length, adjusted_range.end().column() + 1));
-            auto text_in_span = document().text_in_range(adjusted_range);
-
-            return AutoCompleteRequestData { completion_span.range.end(), text_in_span };
-        }
-    }
-    return {};
+    return Editor::AutoCompleteRequestData { { cursor().line(), cursor().column() > 0 ? cursor().column() - 1 : 0 } };
 }
 
 void Editor::update_autocomplete(const AutoCompleteRequestData& data)
@@ -531,7 +513,7 @@ void Editor::update_autocomplete(const AutoCompleteRequestData& data)
 
         show_autocomplete(data);
 
-        m_autocomplete_box->update_suggestions(data.partial_input, move(suggestions));
+        m_autocomplete_box->update_suggestions(move(suggestions));
         m_autocomplete_in_focus = true;
     };
 
