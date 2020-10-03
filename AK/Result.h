@@ -39,9 +39,16 @@ public:
         : m_result(res)
     {
     }
-
+    Result(ValueType && res)
+        : m_result(move(res))
+    {
+    }
     Result(const ErrorType& error)
         : m_error(error)
+    {
+    }
+    Result(ErrorType && error)
+        : m_error(move(error))
     {
     }
 
