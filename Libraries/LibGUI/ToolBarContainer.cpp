@@ -111,6 +111,8 @@ void ToolBarContainer::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     for (auto& toolbar : m_toolbars) {
+        if (!toolbar.is_visible())
+            continue;
         auto rect = toolbar.relative_rect();
         painter.draw_line(rect.top_left().translated(0, -1), rect.top_right().translated(0, -1), palette().threed_highlight());
         painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), palette().threed_shadow1());
