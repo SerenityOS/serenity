@@ -46,6 +46,7 @@ enum FileType {
 };
 
 constexpr size_t block_size = 512;
+constexpr const char* ustar_magic = "ustar ";
 
 class Header {
 public:
@@ -59,14 +60,14 @@ public:
     time_t timestamp() const { return get_tar_field(m_timestamp); }
     FileType type_flag() const { return FileType(m_type_flag); }
     const StringView link_name() const { return m_link_name; }
-    const StringView magic() const { return m_magic; }
-    const StringView version() const { return m_version; }
+    const StringView magic() const { return StringView(m_magic, sizeof(m_magic)); }
+    const StringView version() const { return StringView(m_version, sizeof(m_version)); }
     const StringView owner_name() const { return m_owner_name; }
     const StringView group_name() const { return m_group_name; }
     int major() const { return get_tar_field(m_major); }
     int minor() const { return get_tar_field(m_minor); }
 
-    //private:
+private:
     char m_file_name[100];
     char m_mode[8];
     char m_uid[8];
