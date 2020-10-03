@@ -119,7 +119,7 @@ private:
 
 template<size_t N>
 struct FilterParameters<Gfx::SpatialGaussianBlurFilter<N>> {
-    static OwnPtr<typename Gfx::SpatialGaussianBlurFilter<N>::Parameters> get(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
+    static OwnPtr<typename Gfx::SpatialGaussianBlurFilter<N>::Parameters> get()
     {
         Matrix<N, float> kernel;
         auto sigma = 1.0f;
@@ -134,37 +134,37 @@ struct FilterParameters<Gfx::SpatialGaussianBlurFilter<N>> {
 
         normalize(kernel);
 
-        return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(bitmap, rect, kernel);
+        return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(kernel);
     }
 };
 
 template<>
 struct FilterParameters<Gfx::SharpenFilter> {
-    static OwnPtr<Gfx::GenericConvolutionFilter<3>::Parameters> get(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
+    static OwnPtr<Gfx::GenericConvolutionFilter<3>::Parameters> get()
     {
-        return make<Gfx::GenericConvolutionFilter<3>::Parameters>(bitmap, rect, Matrix<3, float>(0, -1, 0, -1, 5, -1, 0, -1, 0));
+        return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(0, -1, 0, -1, 5, -1, 0, -1, 0));
     }
 };
 
 template<>
 struct FilterParameters<Gfx::LaplacianFilter> {
-    static OwnPtr<Gfx::GenericConvolutionFilter<3>::Parameters> get(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect, bool diagonal)
+    static OwnPtr<Gfx::GenericConvolutionFilter<3>::Parameters> get(bool diagonal)
     {
         if (diagonal)
-            return make<Gfx::GenericConvolutionFilter<3>::Parameters>(bitmap, rect, Matrix<3, float>(-1, -1, -1, -1, 8, -1, -1, -1, -1));
+            return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(-1, -1, -1, -1, 8, -1, -1, -1, -1));
 
-        return make<Gfx::GenericConvolutionFilter<3>::Parameters>(bitmap, rect, Matrix<3, float>(0, -1, 0, -1, 4, -1, 0, -1, 0));
+        return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(0, -1, 0, -1, 4, -1, 0, -1, 0));
     }
 };
 
 template<size_t N>
 struct FilterParameters<Gfx::GenericConvolutionFilter<N>> {
-    static OwnPtr<typename Gfx::GenericConvolutionFilter<N>::Parameters> get(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect, GUI::Window* parent_window)
+    static OwnPtr<typename Gfx::GenericConvolutionFilter<N>::Parameters> get(GUI::Window* parent_window)
     {
         auto input = GenericConvolutionFilterInputDialog<N>::construct(parent_window);
         input->exec();
         if (input->result() == GUI::Dialog::ExecOK)
-            return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(bitmap, rect, input->matrix(), input->should_wrap());
+            return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(input->matrix(), input->should_wrap());
 
         return {};
     }
@@ -172,7 +172,7 @@ struct FilterParameters<Gfx::GenericConvolutionFilter<N>> {
 
 template<size_t N>
 struct FilterParameters<Gfx::BoxBlurFilter<N>> {
-    static OwnPtr<typename Gfx::GenericConvolutionFilter<N>::Parameters> get(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect)
+    static OwnPtr<typename Gfx::GenericConvolutionFilter<N>::Parameters> get()
     {
         Matrix<N, float> kernel;
 
@@ -184,7 +184,7 @@ struct FilterParameters<Gfx::BoxBlurFilter<N>> {
 
         normalize(kernel);
 
-        return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(bitmap, rect, kernel);
+        return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(kernel);
     }
 };
 
