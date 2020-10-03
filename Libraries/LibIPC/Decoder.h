@@ -28,6 +28,7 @@
 
 #include <AK/Forward.h>
 #include <AK/NumericLimits.h>
+#include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
@@ -37,8 +38,8 @@ namespace IPC {
 template<typename T>
 inline bool decode(Decoder&, T&)
 {
+    static_assert(DependentFalse<T>, "Base IPC::decoder() instantiated");
     ASSERT_NOT_REACHED();
-    return false;
 }
 
 class Decoder {
