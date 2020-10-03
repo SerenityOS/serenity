@@ -53,9 +53,8 @@ class GenericConvolutionFilter : public Filter {
 public:
     class Parameters : public Filter::Parameters {
     public:
-        Parameters(Gfx::Bitmap& bitmap, const Gfx::IntRect& rect, Gfx::Matrix<N, float> kernel, bool should_wrap = false)
-            : Filter::Parameters(bitmap, rect)
-            , m_kernel(move(kernel))
+        Parameters(const Gfx::Matrix<N, float>& kernel, bool should_wrap = false)
+            : m_kernel(kernel)
             , m_should_wrap(should_wrap)
 
         {
@@ -83,21 +82,19 @@ public:
 
     virtual const char* class_name() const override { return "GenericConvolutionFilter"; }
 
-    virtual void apply(const Filter::Parameters& parameters) override
+    virtual void apply(Bitmap& bitmap, const IntRect& rect, const Filter::Parameters& parameters) override
     {
         ASSERT(parameters.is_generic_convolution_filter());
         auto& gcf_params = static_cast<const GenericConvolutionFilter::Parameters&>(parameters);
 
         ApplyCache apply_cache;
-        apply(gcf_params, apply_cache);
+        apply(bitmap, rect, gcf_params, apply_cache);
     }
 
-    void apply(const GenericConvolutionFilter::Parameters& parameters, ApplyCache& apply_cache)
+    void apply(Bitmap& source, const IntRect& source_rect, const GenericConvolutionFilter::Parameters& parameters, ApplyCache& apply_cache)
     {
-        auto& source = parameters.bitmap();
-        const auto& source_rect = parameters.rect();
-        if (!apply_cache.m_target || apply_cache.m_target->size().contains(parameters.rect().size()))
-            apply_cache.m_target = Gfx::Bitmap::create(source.format(), parameters.rect().size());
+        if (!apply_cache.m_target || !apply_cache.m_target->size().contains(source_rect.size()))
+            apply_cache.m_target = Gfx::Bitmap::create(source.format(), source_rect.size());
 
         // FIXME: Help! I am naive!
         for (auto i_ = 0; i_ < source_rect.width(); ++i_) {
