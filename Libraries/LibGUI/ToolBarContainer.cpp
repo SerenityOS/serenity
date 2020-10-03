@@ -58,16 +58,27 @@ void ToolBarContainer::did_add_toolbar(Widget& toolbar)
     recompute_preferred_size();
 }
 
+void ToolBarContainer::custom_layout()
+{
+    recompute_preferred_size();
+}
+
 void ToolBarContainer::recompute_preferred_size()
 {
-    int preferred_size = 4 + (m_toolbars.size() - 1) * 2;
+    int visible_toolbar_count = 0;
+    int preferred_size = 4;
 
     for (auto& toolbar : m_toolbars) {
+        if (!toolbar.is_visible())
+            continue;
+        ++visible_toolbar_count;
         if (m_orientation == Gfx::Orientation::Horizontal)
             preferred_size += toolbar.preferred_size().height();
         else
             preferred_size += toolbar.preferred_size().width();
     }
+
+    preferred_size += (visible_toolbar_count - 1) * 2;
 
     if (m_orientation == Gfx::Orientation::Horizontal)
         set_preferred_size(0, preferred_size);
