@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,31 +24,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "../LanguageClient.h"
 #include <AK/LexicalPath.h>
-#include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
-#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
-#include <LibIPC/ServerConnection.h>
+#include <DevTools/HackStudio/LanguageServers/Shell/ClientConnection.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
+#include <LibCore/LocalServer.h>
+#include <LibIPC/ClientConnection.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-#define LANGUAGE_CLIENT(namespace_, socket_name)                                               \
-    namespace namespace_ {                                                                     \
-    class ServerConnection : public HackStudio::ServerConnection {                             \
-        C_OBJECT(ServerConnection)                                                             \
-    private:                                                                                   \
-        ServerConnection(const String& project_path)                                           \
-            : HackStudio::ServerConnection("/tmp/portal/language/" #socket_name, project_path) \
-        {                                                                                      \
-        }                                                                                      \
-    };                                                                                         \
+int main(int, char**)
+{
+    Core::EventLoop event_loop;
+    if (pledge("stdio unix rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
     }
 
-namespace LanguageClients {
-
-LANGUAGE_CLIENT(Cpp, cpp)
-LANGUAGE_CLIENT(Shell, shell)
-
+    auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
+    IPC::new_client_connection<LanguageServers::Shell::ClientConnection>(socket.release_nonnull(), 1);
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+    return event_loop.exec();
 }
-
-#undef LANGUAGE_CLIENT

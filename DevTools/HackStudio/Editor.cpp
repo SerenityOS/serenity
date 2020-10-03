@@ -483,6 +483,7 @@ void Editor::set_document(GUI::TextDocument& doc)
         break;
     case Language::Shell:
         set_syntax_highlighter(make<GUI::ShellSyntaxHighlighter>());
+        m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_directory());
         break;
     default:
         set_syntax_highlighter(nullptr);
