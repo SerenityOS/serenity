@@ -37,7 +37,7 @@ static RefPtr<Gfx::Bitmap> s_cplusplus_icon;
 
 class AutoCompleteSuggestionModel final : public GUI::Model {
 public:
-    explicit AutoCompleteSuggestionModel(Vector<String>&& suggestions)
+    explicit AutoCompleteSuggestionModel(Vector<AutoCompleteResponse>&& suggestions)
         : m_suggestions(move(suggestions))
     {
     }
@@ -48,6 +48,12 @@ public:
         __Column_Count,
     };
 
+    enum InternalRole {
+        __ModelRoleCustom = (int)GUI::ModelRole::Custom,
+        PartialInputLength,
+        Kind,
+    };
+
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_suggestions.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Column_Count; }
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
@@ -55,21 +61,29 @@ public:
         auto& suggestion = m_suggestions.at(index.row());
         if (role == GUI::ModelRole::Display) {
             if (index.column() == Column::Name) {
-                return suggestion;
+                return suggestion.completion;
             }
             if (index.column() == Column::Icon) {
                 // TODO: Have separate icons for fields, functions, methods etc
-                if (suggestion.ends_with(".cpp"))
+                // FIXME: Probably should have different icons for the different kinds, rather than for "c++".
+                if (suggestion.kind == CompletionKind::Identifier)
                     return *s_cplusplus_icon;
                 return *s_cplusplus_icon;
             }
         }
+
+        if ((int)role == InternalRole::Kind)
+            return (u32)suggestion.kind;
+
+        if ((int)role == InternalRole::PartialInputLength)
+            return (i64)suggestion.partial_input_length;
+
         return {};
     }
     virtual void update() override {};
 
 private:
-    Vector<String> m_suggestions;
+    Vector<AutoCompleteResponse> m_suggestions;
 };
 
 AutoCompleteBox::~AutoCompleteBox() { }
@@ -89,9 +103,8 @@ AutoCompleteBox::AutoCompleteBox(WeakPtr<Editor> editor)
     m_suggestion_view->set_column_headers_visible(false);
 }
 
-void AutoCompleteBox::update_suggestions(String partial_input, Vector<String>&& suggestions)
+void AutoCompleteBox::update_suggestions(Vector<AutoCompleteResponse>&& suggestions)
 {
-    m_partial_input = partial_input;
     if (suggestions.is_empty())
         return;
 
@@ -112,7 +125,6 @@ void AutoCompleteBox::show(Gfx::IntPoint suggstion_box_location)
 
 void AutoCompleteBox::close()
 {
-    m_partial_input.empty();
     m_popup_window->hide();
 }
 
@@ -155,11 +167,10 @@ void AutoCompleteBox::apply_suggestion()
 
     auto suggestion_index = m_suggestion_view->model()->index(selected_index.row(), AutoCompleteSuggestionModel::Column::Name);
     auto suggestion = suggestion_index.data().to_string();
+    size_t partial_length = suggestion_index.data((GUI::ModelRole)AutoCompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
 
-    ASSERT(!m_partial_input.is_null());
-    ASSERT(suggestion.starts_with(m_partial_input));
-
-    auto completion = suggestion.substring(m_partial_input.length(), suggestion.length() - m_partial_input.length());
+    ASSERT(suggestion.length() >= partial_length);
+    auto completion = suggestion.substring_view(partial_length, suggestion.length() - partial_length);
     m_editor->insert_at_cursor_or_replace_selection(completion);
 }
 
