@@ -26,6 +26,7 @@
 
 #include <AK/LogStream.h>
 #include <AK/Vector.h>
+#include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FileStream.h>
 #include <LibTar/TarStream.h>
@@ -41,6 +42,7 @@ int main(int argc, char** argv)
     bool extract = false;
     bool list = false;
     bool verbose = false;
+    bool gzip = false;
     const char* archive_file = nullptr;
     Vector<const char*> paths;
 
@@ -49,6 +51,7 @@ int main(int argc, char** argv)
     args_parser.add_option(extract, "Extract archive", "extract", 'x');
     args_parser.add_option(list, "List contents", "list", 't');
     args_parser.add_option(verbose, "Print paths", "verbose", 'v');
+    args_parser.add_option(gzip, "compress or uncompress file using gzip", "gzip", 'z');
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
@@ -69,8 +72,17 @@ int main(int argc, char** argv)
             }
             file = maybe_file.value();
         }
-        Core::InputFileStream input_stream(file);
-        Tar::TarStream tar_stream(input_stream);
+
+        Core::InputFileStream file_stream(file);
+        Compress::GzipDecompressor gzip_stream(file_stream);
+
+        InputStream& file_input_stream = file_stream;
+        InputStream& gzip_input_stream = gzip_stream;
+        Tar::TarStream tar_stream((gzip) ? gzip_input_stream : file_input_stream);
+        if (!tar_stream.valid()) {
+            warn() << "the provided file is not a well-formatted ustar file";
+            return 1;
+        }
         for (; !tar_stream.finished(); tar_stream.advance()) {
             if (list || verbose)
                 out() << tar_stream.header().file_name();
@@ -112,7 +124,7 @@ int main(int argc, char** argv)
                 }
             }
         }
-        input_stream.close();
+        file_stream.close();
         return 0;
     }
 
