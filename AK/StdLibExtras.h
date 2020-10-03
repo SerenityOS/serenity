@@ -504,6 +504,9 @@ using CopyConst =
 template<typename... Ts>
 using Void = void;
 
+template<typename... _Ignored>
+inline constexpr auto DependentFalse = false;
+
 }
 
 using AK::AddConst;
@@ -512,6 +515,7 @@ using AK::ceil_div;
 using AK::clamp;
 using AK::Conditional;
 using AK::declval;
+using AK::DependentFalse;
 using AK::exchange;
 using AK::forward;
 using AK::is_trivial;
