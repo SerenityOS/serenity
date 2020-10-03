@@ -452,7 +452,6 @@ double strtod(const char* str, char** endptr)
                 digits_usable = true;
                 break;
             case DigitConsumeDecision::PosOverflow:
-                // fallthrough
             case DigitConsumeDecision::NegOverflow:
                 is_a_digit = true;
                 digits_overflow = true;
@@ -509,7 +508,6 @@ double strtod(const char* str, char** endptr)
                     exponent_usable = true;
                     break;
                 case DigitConsumeDecision::PosOverflow:
-                    // fallthrough
                 case DigitConsumeDecision::NegOverflow:
                     is_a_digit = true;
                     exponent_overflow = true;
@@ -901,7 +899,7 @@ long long strtoll(const char* str, char** endptr, int base)
                 // The very first actual digit must pass here:
                 digits_usable = true;
                 break;
-            case DigitConsumeDecision::PosOverflow: // fall-through
+            case DigitConsumeDecision::PosOverflow:
             case DigitConsumeDecision::NegOverflow:
                 is_a_digit = true;
                 overflow = true;
@@ -977,7 +975,7 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
                 // The very first actual digit must pass here:
                 digits_usable = true;
                 break;
-            case DigitConsumeDecision::PosOverflow: // fall-through
+            case DigitConsumeDecision::PosOverflow:
             case DigitConsumeDecision::NegOverflow:
                 is_a_digit = true;
                 overflow = true;
