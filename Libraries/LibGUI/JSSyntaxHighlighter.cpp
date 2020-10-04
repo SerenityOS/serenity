@@ -35,110 +35,23 @@ namespace GUI {
 
 static TextStyle style_for_token_type(Gfx::Palette palette, JS::TokenType type)
 {
-    switch (type) {
-    case JS::TokenType::Invalid:
-    case JS::TokenType::Eof:
+    switch (JS::Token::category(type)) {
+    case JS::TokenCategory::Invalid:
         return { palette.syntax_comment() };
-    case JS::TokenType::NumericLiteral:
-    case JS::TokenType::BigIntLiteral:
+    case JS::TokenCategory::Number:
         return { palette.syntax_number() };
-    case JS::TokenType::StringLiteral:
-    case JS::TokenType::TemplateLiteralStart:
-    case JS::TokenType::TemplateLiteralEnd:
-    case JS::TokenType::TemplateLiteralString:
-    case JS::TokenType::RegexLiteral:
-    case JS::TokenType::RegexFlags:
-    case JS::TokenType::UnterminatedStringLiteral:
-    case JS::TokenType::UnterminatedRegexLiteral:
+    case JS::TokenCategory::String:
         return { palette.syntax_string() };
-    case JS::TokenType::BracketClose:
-    case JS::TokenType::BracketOpen:
-    case JS::TokenType::Comma:
-    case JS::TokenType::CurlyClose:
-    case JS::TokenType::CurlyOpen:
-    case JS::TokenType::ParenClose:
-    case JS::TokenType::ParenOpen:
-    case JS::TokenType::Semicolon:
-    case JS::TokenType::TemplateLiteralExprStart:
-    case JS::TokenType::TemplateLiteralExprEnd:
+    case JS::TokenCategory::Punctuation:
         return { palette.syntax_punctuation() };
-    case JS::TokenType::Ampersand:
-    case JS::TokenType::AmpersandEquals:
-    case JS::TokenType::Asterisk:
-    case JS::TokenType::DoubleAsteriskEquals:
-    case JS::TokenType::AsteriskEquals:
-    case JS::TokenType::Caret:
-    case JS::TokenType::CaretEquals:
-    case JS::TokenType::DoubleAmpersand:
-    case JS::TokenType::DoubleAsterisk:
-    case JS::TokenType::DoublePipe:
-    case JS::TokenType::DoubleQuestionMark:
-    case JS::TokenType::Equals:
-    case JS::TokenType::EqualsEquals:
-    case JS::TokenType::EqualsEqualsEquals:
-    case JS::TokenType::ExclamationMark:
-    case JS::TokenType::ExclamationMarkEquals:
-    case JS::TokenType::ExclamationMarkEqualsEquals:
-    case JS::TokenType::GreaterThan:
-    case JS::TokenType::GreaterThanEquals:
-    case JS::TokenType::LessThan:
-    case JS::TokenType::LessThanEquals:
-    case JS::TokenType::Minus:
-    case JS::TokenType::MinusEquals:
-    case JS::TokenType::MinusMinus:
-    case JS::TokenType::Percent:
-    case JS::TokenType::PercentEquals:
-    case JS::TokenType::Period:
-    case JS::TokenType::Pipe:
-    case JS::TokenType::PipeEquals:
-    case JS::TokenType::Plus:
-    case JS::TokenType::PlusEquals:
-    case JS::TokenType::PlusPlus:
-    case JS::TokenType::QuestionMark:
-    case JS::TokenType::QuestionMarkPeriod:
-    case JS::TokenType::ShiftLeft:
-    case JS::TokenType::ShiftLeftEquals:
-    case JS::TokenType::ShiftRight:
-    case JS::TokenType::ShiftRightEquals:
-    case JS::TokenType::Slash:
-    case JS::TokenType::SlashEquals:
-    case JS::TokenType::Tilde:
-    case JS::TokenType::UnsignedShiftRight:
-    case JS::TokenType::UnsignedShiftRightEquals:
+    case JS::TokenCategory::Operator:
         return { palette.syntax_operator() };
-    case JS::TokenType::BoolLiteral:
-    case JS::TokenType::Class:
-    case JS::TokenType::Const:
-    case JS::TokenType::Delete:
-    case JS::TokenType::Debugger:
-    case JS::TokenType::Extends:
-    case JS::TokenType::Function:
-    case JS::TokenType::In:
-    case JS::TokenType::Instanceof:
-    case JS::TokenType::Interface:
-    case JS::TokenType::Let:
-    case JS::TokenType::New:
-    case JS::TokenType::NullLiteral:
-    case JS::TokenType::Super:
-    case JS::TokenType::Typeof:
-    case JS::TokenType::Var:
-    case JS::TokenType::Void:
+    case JS::TokenCategory::Keyword:
         return { palette.syntax_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
-    case JS::TokenType::Await:
-    case JS::TokenType::Catch:
-    case JS::TokenType::Do:
-    case JS::TokenType::Else:
-    case JS::TokenType::Finally:
-    case JS::TokenType::For:
-    case JS::TokenType::If:
-    case JS::TokenType::Return:
-    case JS::TokenType::Try:
-    case JS::TokenType::While:
-    case JS::TokenType::Yield:
+    case JS::TokenCategory::ControlKeyword:
         return { palette.syntax_control_keyword(), &Gfx::Font::default_bold_fixed_width_font() };
-    case JS::TokenType::Identifier:
+    case JS::TokenCategory::Identifier:
         return { palette.syntax_identifier() };
-
     default:
         return { palette.base_text() };
     }
