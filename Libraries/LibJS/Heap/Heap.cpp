@@ -285,14 +285,14 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     int time_spent = measurement_timer.elapsed();
 
     if (print_report) {
-        dbg() << "Garbage collection report";
-        dbg() << "=============================================";
-        dbg() << "     Time spent: " << time_spent << " ms";
-        dbg() << "     Live cells: " << live_cells << " (" << live_cell_bytes << " bytes)";
-        dbg() << "Collected cells: " << collected_cells << " (" << collected_cell_bytes << " bytes)";
-        dbg() << "    Live blocks: " << m_blocks.size() << " (" << m_blocks.size() * HeapBlock::block_size << " bytes)";
-        dbg() << "   Freed blocks: " << empty_blocks.size() << " (" << empty_blocks.size() * HeapBlock::block_size << " bytes)";
-        dbg() << "=============================================";
+        dbgln("Garbage collection report");
+        dbgln("=============================================");
+        dbgln("     Time spent: {} ms", time_spent);
+        dbgln("     Live cells: {} ({} bytes)", live_cells, live_cell_bytes);
+        dbgln("Collected cells: {} ({} bytes)", collected_cells, collected_cell_bytes);
+        dbgln("    Live blocks: {} ({} bytes)", m_blocks.size(), m_blocks.size() * HeapBlock::block_size);
+        dbgln("   Freed blocks: {} ({} bytes)", empty_blocks.size(), empty_blocks.size() * HeapBlock::block_size);
+        dbgln("=============================================");
     }
 }
 

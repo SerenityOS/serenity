@@ -255,13 +255,13 @@ void VM::throw_exception(Exception* exception)
 #ifdef VM_DEBUG
     if (exception->value().is_object() && exception->value().as_object().is_error()) {
         auto& error = static_cast<Error&>(exception->value().as_object());
-        dbg() << "Throwing JavaScript Error: " << error.name() << ", " << error.message();
+        dbgln("Throwing JavaScript Error: {}, {}", error.name(), error.message());
 
         for (ssize_t i = m_call_stack.size() - 1; i >= 0; --i) {
             auto function_name = m_call_stack[i].function_name;
             if (function_name.is_empty())
                 function_name = "<anonymous>";
-            dbg() << "  " << function_name;
+            dbgln("  {}", function_name);
         }
     }
 #endif
