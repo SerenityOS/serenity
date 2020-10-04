@@ -123,7 +123,7 @@ String Value::to_string_without_side_effects() const
     case Type::BigInt:
         return m_value.as_bigint->to_string();
     case Type::Object:
-        return String::format("[object %s]", as_object().class_name());
+        return String::formatted("[object {}]", as_object().class_name());
     case Type::Accessor:
         return "<accessor>";
     case Type::NativeProperty:
