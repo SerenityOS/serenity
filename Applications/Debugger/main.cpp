@@ -50,7 +50,7 @@ OwnPtr<Debug::DebugSession> g_debug_session;
 
 static void handle_sigint(int)
 {
-    printf("Debugger: SIGINT\n");
+    outln("Debugger: SIGINT");
 
     // The destructor of DebugSession takes care of detaching
     g_debug_session = nullptr;
@@ -58,21 +58,13 @@ static void handle_sigint(int)
 
 static void handle_print_registers(const PtraceRegisters& regs)
 {
-    printf("eax: 0x%x\n", regs.eax);
-    printf("ecx: 0x%x\n", regs.ecx);
-    printf("edx: 0x%x\n", regs.edx);
-    printf("ebx: 0x%x\n", regs.ebx);
-    printf("esp: 0x%x\n", regs.esp);
-    printf("ebp: 0x%x\n", regs.ebp);
-    printf("esi: 0x%x\n", regs.esi);
-    printf("edi: 0x%x\n", regs.edi);
-    printf("eip: 0x%x\n", regs.eip);
-    printf("eflags: 0x%x\n", regs.eflags);
+    outln("eax={:08x} ebx={:08x} ecx={:08x} edx={:08x}", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    outln("esp={:08x} ebp={:08x} esi={:08x} edi={:08x}", regs.esp, regs.ebp, regs.esi, regs.edi);
+    outln("eip={:08x} eflags={:08x}", regs.eip, regs.eflags);
 }
 
 static bool handle_disassemble_command(const String& command, void* first_instruction)
 {
-    (void)demangle("foo");
     auto parts = command.split(' ');
     size_t number_of_instructions_to_disassemble = 5;
     if (parts.size() == 2) {
@@ -102,9 +94,7 @@ static bool handle_disassemble_command(const String& command, void* first_instru
         if (!insn.has_value())
             break;
 
-        printf(String::format("   %08x ", offset + reinterpret_cast<size_t>(first_instruction)).characters());
-        printf("<+%lu>:\t", reinterpret_cast<size_t>(offset));
-        printf("%s\n", insn.value().to_string(offset).characters());
+        outln("    {:p} <+{}>:\t{}", offset + reinterpret_cast<size_t>(first_instruction), offset, insn.value().to_string(offset));
     }
 
     return true;
@@ -131,10 +121,10 @@ static bool handle_breakpoint_command(const String& command)
             return false;
         auto file = source_arguments[0];
         if (!file.contains("/"))
-            file = String::format("./%s", file.characters());
+            file = String::formatted("./{}", file);
         auto result = g_debug_session->debug_info().get_instruction_from_source(file, line.value());
         if (!result.has_value()) {
-            printf("No matching instruction found\n");
+            outln("No matching instruction found");
             return false;
         }
         breakpoint_address = result.value();
@@ -143,7 +133,7 @@ static bool handle_breakpoint_command(const String& command)
     } else {
         auto symbol = g_debug_session->elf().find_demangled_function(argument);
         if (!symbol.has_value()) {
-            printf("symbol %s not found\n", parts[1].characters());
+            outln("symbol {} not found", parts[1]);
             return false;
         }
         breakpoint_address = reinterpret_cast<u32>(symbol.value().value());
@@ -151,23 +141,23 @@ static bool handle_breakpoint_command(const String& command)
 
     bool success = g_debug_session->insert_breakpoint(reinterpret_cast<void*>(breakpoint_address));
     if (!success) {
-        fprintf(stderr, "could not insert breakpoint at: %08x\n", breakpoint_address);
+        warnln("could not insert breakpoint at: {:p}", breakpoint_address);
         return false;
     }
-    printf("breakpoint inserted at: %08x\n", breakpoint_address);
+    warnln("breakpoint inserted at: {:p}", breakpoint_address);
     return true;
 }
 
 static void print_help()
 {
-    printf("Options:\n"
-           "cont - Continue execution\n"
-           "si - step to the next instruction\n"
-           "sl - step to the next source line\n"
-           "line - show the position of the current instruction in the source code\n"
-           "regs - Print registers\n"
-           "dis [number of instructions] - Print disassembly\n"
-           "bp <address/symbol/file:line> - Insert a breakpoint\n");
+    new_out("Options:\n"
+            "cont - Continue execution\n"
+            "si - step to the next instruction\n"
+            "sl - step to the next source line\n"
+            "line - show the position of the current instruction in the source code\n"
+            "regs - Print registers\n"
+            "dis [number of instructions] - Print disassembly\n"
+            "bp <address/symbol/file:line> - Insert a breakpoint\n");
 }
 
 int main(int argc, char** argv)
@@ -188,7 +178,7 @@ int main(int argc, char** argv)
 
     auto result = Debug::DebugSession::exec_and_attach(command);
     if (!result) {
-        fprintf(stderr, "Failed to start debugging session for: \"%s\"\n", command);
+        warnln("Failed to start debugging session for: \"{}\"", command);
         exit(1);
     }
     g_debug_session = result.release_nonnull();
@@ -206,7 +196,7 @@ int main(int argc, char** argv)
 
     g_debug_session->run([&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
-            printf("Program exited.\n");
+            outln("Program exited.");
             return Debug::DebugSession::DebugDecision::Detach;
         }
 
@@ -220,20 +210,20 @@ int main(int argc, char** argv)
             bool no_source_info = !source_position.has_value();
             if (no_source_info || source_position.value() != previous_source_position) {
                 if (no_source_info)
-                    printf("No source information for current instruction! stoppoing.\n");
+                    outln("No source information for current instruction! stoppoing.");
                 in_step_line = false;
             } else {
                 return Debug::DebugSession::DebugDecision::SingleStep;
             }
         }
 
-        printf("Program is stopped at: 0x%x (%s)\n", regs.eip, symbol_at_ip.characters());
+        outln("Program is stopped at: {:p} ({})", regs.eip, symbol_at_ip);
 
         if (source_position.has_value()) {
             previous_source_position = source_position.value();
-            printf("Source location: %s:%lu\n", source_position.value().file_path.characters(), source_position.value().line_number);
+            outln("Source location: {}:{}", source_position.value().file_path, source_position.value().line_number);
         } else {
-            printf("(No source location information for the current instruction)\n");
+            outln("(No source location information for the current instruction)");
         }
 
         for (;;) {
@@ -262,7 +252,7 @@ int main(int argc, char** argv)
                     in_step_line = true;
                     success = true;
                 } else {
-                    printf("No source location information for the current instruction\n");
+                    outln("No source location information for the current instruction");
                 }
             } else if (command == "regs") {
                 handle_print_registers(regs);
