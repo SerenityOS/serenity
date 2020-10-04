@@ -57,11 +57,6 @@ Heap::~Heap()
     collect_garbage(CollectionType::CollectEverything);
 }
 
-Interpreter& Heap::interpreter()
-{
-    return vm().interpreter();
-}
-
 Cell* Heap::allocate_cell(size_t size)
 {
     if (should_collect_on_every_allocation()) {

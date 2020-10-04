@@ -71,7 +71,6 @@ public:
 
     void collect_garbage(CollectionType = CollectionType::CollectGarbage, bool print_report = false);
 
-    Interpreter& interpreter();
     VM& vm() { return m_vm; }
 
     bool should_collect_on_every_allocation() const { return m_should_collect_on_every_allocation; }
