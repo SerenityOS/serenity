@@ -129,8 +129,6 @@ public:
     void add_functions(NonnullRefPtrVector<FunctionDeclaration>);
     const NonnullRefPtrVector<VariableDeclaration>& variables() const { return m_variables; }
     const NonnullRefPtrVector<FunctionDeclaration>& functions() const { return m_functions; }
-    bool in_strict_mode() const { return m_strict_mode; }
-    void set_strict_mode() { m_strict_mode = true; }
 
 protected:
     ScopeNode() { }
@@ -140,14 +138,20 @@ private:
     NonnullRefPtrVector<Statement> m_children;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
     NonnullRefPtrVector<FunctionDeclaration> m_functions;
-    bool m_strict_mode { false };
 };
 
 class Program final : public ScopeNode {
 public:
     Program() { }
 
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+
+    bool is_strict_mode() const { return m_is_strict_mode; }
+    void set_strict_mode() { m_is_strict_mode = true; }
+
 private:
+    bool m_is_strict_mode { false };
+
     virtual bool is_program() const override { return true; }
     virtual const char* class_name() const override { return "Program"; }
 };
@@ -180,14 +184,16 @@ public:
     const Statement& body() const { return *m_body; }
     const Vector<Parameter>& parameters() const { return m_parameters; };
     i32 function_length() const { return m_function_length; }
+    bool is_strict_mode() const { return m_is_strict_mode; }
 
 protected:
-    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables)
+    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode)
         : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
         , m_variables(move(variables))
         , m_function_length(function_length)
+        , m_is_strict_mode(is_strict_mode)
     {
     }
 
@@ -201,6 +207,7 @@ private:
     const Vector<Parameter> m_parameters;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
     const i32 m_function_length;
+    bool m_is_strict_mode;
 };
 
 class FunctionDeclaration final
@@ -209,8 +216,8 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables)
-        : FunctionNode(name, move(body), move(parameters), function_length, move(variables))
+    FunctionDeclaration(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode = false)
+        : FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
     {
     }
 
@@ -227,8 +234,8 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_arrow_function = false)
-        : FunctionNode(name, move(body), move(parameters), function_length, move(variables))
+    FunctionExpression(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode, bool is_arrow_function = false)
+        : FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
         , m_is_arrow_function(is_arrow_function)
     {
     }

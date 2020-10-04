@@ -50,6 +50,7 @@ public:
 
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();
+    NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool with_semicolon = true);
     NonnullRefPtr<Statement> parse_for_statement();
