@@ -68,7 +68,7 @@ public:
     String time_string() const { return m_datetime.to_string("%T GMT+0000 (UTC)"); }
     String string() const
     {
-        return String::format("%s %s", date_string().characters(), time_string().characters());
+        return String::formatted("{} {}", date_string(), time_string());
     }
 
     String iso_date_string() const;
