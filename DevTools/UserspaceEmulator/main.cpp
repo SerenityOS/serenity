@@ -78,7 +78,7 @@ int main(int argc, char** argv, char** env)
     }
     int rc = pthread_setname_np(pthread_self(), builder.to_string().characters());
     if (rc != 0) {
-        fprintf(stderr, "pthread_setname_np: %s\n", strerror(rc));
+        warnln("pthread_setname_np: {}", strerror(rc));
         return 1;
     }
     return emulator.exec();
