@@ -1129,6 +1129,8 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
         auto name = static_cast<const Identifier&>(*lhs).string();
         if (name == "eval" || name == "arguments")
             syntax_error(String::formatted("'{}' cannot be assigned to in strict mode code", name));
+    } else if (m_parser_state.m_strict_mode && lhs->is_call_expression()) {
+        syntax_error("Cannot assign to function call");
     }
     return create_ast_node<AssignmentExpression>(assignment_op, move(lhs), parse_expression(min_precedence, associativity));
 }
