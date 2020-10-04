@@ -148,7 +148,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     String function_body;
 
     if (this_object->is_native_function() || this_object->is_bound_function()) {
-        function_body = String::format("  [%s]", this_object->class_name());
+        function_body = String::formatted("  [{}]", this_object->class_name());
     } else {
         StringBuilder parameters_builder;
         auto first = true;
@@ -169,10 +169,9 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
         function_body = "  ???";
     }
 
-    auto function_source = String::format("function %s(%s) {\n%s\n}",
-        function_name.is_null() ? "" : function_name.characters(),
-        function_parameters.characters(),
-        function_body.characters());
+    auto function_source = String::formatted(
+        "function {}({}) {{\n{}\n}}",
+        function_name.is_null() ? "" : function_name, function_parameters, function_body);
     return js_string(vm, function_source);
 }
 
