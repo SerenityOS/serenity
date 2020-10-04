@@ -93,7 +93,7 @@ int fprintf(FILE*, const char* fmt, ...);
 int printf(const char* fmt, ...);
 int dbgprintf(const char* fmt, ...);
 void dbgputch(char);
-ssize_t dbgputstr(const char*, ssize_t);
+int dbgputstr(const char*, ssize_t);
 int sprintf(char* buffer, const char* fmt, ...);
 int snprintf(char* buffer, size_t, const char* fmt, ...);
 int putchar(int ch);

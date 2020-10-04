@@ -35,7 +35,7 @@
 extern "C" {
 int vdbgprintf(const char* fmt, va_list);
 int dbgprintf(const char* fmt, ...);
-ssize_t dbgputstr(const char*, ssize_t);
+int dbgputstr(const char*, ssize_t);
 int sprintf(char* buf, const char* fmt, ...);
 int snprintf(char* buffer, size_t, const char* fmt, ...);
 }
@@ -44,9 +44,10 @@ int snprintf(char* buffer, size_t, const char* fmt, ...);
 #    include <stdio.h>
 #    define kprintf printf
 #    define dbgprintf(...) fprintf(stderr, __VA_ARGS__)
-inline size_t dbgputstr(const char* characters, ssize_t length)
+inline int dbgputstr(const char* characters, ssize_t length)
 {
-    return fwrite(characters, 1, length, stderr);
+    fwrite(characters, 1, length, stderr);
+    return 0;
 }
 #endif
 template<size_t N>
