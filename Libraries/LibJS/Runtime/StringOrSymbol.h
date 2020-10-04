@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/Value.h>
@@ -52,6 +53,13 @@ public:
     }
 
     StringOrSymbol(const String& string)
+        : m_ptr(string.impl())
+    {
+        ASSERT(!string.is_null());
+        static_cast<const StringImpl*>(m_ptr)->ref();
+    }
+
+    StringOrSymbol(const FlyString& string)
         : m_ptr(string.impl())
     {
         ASSERT(!string.is_null());
