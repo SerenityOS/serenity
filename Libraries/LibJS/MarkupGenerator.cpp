@@ -77,7 +77,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
         if (seen_objects.contains(&value.as_object())) {
             // FIXME: Maybe we should only do this for circular references,
             //        not for all reoccurring objects.
-            output_html.appendf("&lt;already printed Object %p&gt;", &value.as_object());
+            output_html.appendff("&lt;already printed Object {:p}&gt;", &value.as_object());
             return;
         }
         seen_objects.set(&value.as_object());
@@ -146,7 +146,7 @@ void MarkupGenerator::object_to_html(const Object& object, StringBuilder& html_o
 
     size_t index = 0;
     for (auto& it : object.shape().property_table_ordered()) {
-        html_output.append(wrap_string_in_style(String::format("\"%s\"", escape_html_entities(it.key.to_display_string()).characters()), StyleType::String));
+        html_output.append(wrap_string_in_style(String::formatted("\"{}\"", escape_html_entities(it.key.to_display_string())), StyleType::String));
         html_output.append(wrap_string_in_style(": ", StyleType::Punctuation));
         value_to_html(object.get_direct(it.value.offset), html_output, seen_objects);
         if (index != object.shape().property_count() - 1)
@@ -159,20 +159,20 @@ void MarkupGenerator::object_to_html(const Object& object, StringBuilder& html_o
 
 void MarkupGenerator::function_to_html(const Object& function, StringBuilder& html_output, HashTable<Object*>&)
 {
-    html_output.appendf("[%s]", function.class_name());
+    html_output.appendff("[{}]", function.class_name());
 }
 
 void MarkupGenerator::date_to_html(const Object& date, StringBuilder& html_output, HashTable<Object*>&)
 {
-    html_output.appendf("Date %s", static_cast<const JS::Date&>(date).string().characters());
+    html_output.appendff("Date {}", static_cast<const JS::Date&>(date).string());
 }
 
 void MarkupGenerator::error_to_html(const Object& object, StringBuilder& html_output, HashTable<Object*>&)
 {
     auto& error = static_cast<const Error&>(object);
-    html_output.append(wrap_string_in_style(String::format("[%s]", error.name().characters()), StyleType::Invalid));
+    html_output.append(wrap_string_in_style(String::formatted("[{}]", error.name()), StyleType::Invalid));
     if (!error.message().is_empty()) {
-        html_output.appendf(": %s", escape_html_entities(error.message()).characters());
+        html_output.appendff(": {}", escape_html_entities(error.message()));
     }
 }
 
@@ -338,12 +338,12 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
 
 String MarkupGenerator::open_style_type(StyleType type)
 {
-    return String::format("<span style=\"%s\">", style_from_style_type(type).characters());
+    return String::formatted("<span style=\"{}\">", style_from_style_type(type));
 }
 
 String MarkupGenerator::wrap_string_in_style(String source, StyleType type)
 {
-    return String::format("<span style=\"%s\">%s</span>", style_from_style_type(type).characters(), escape_html_entities(source).characters());
+    return String::formatted("<span style=\"{}\">{}</span>", style_from_style_type(type), escape_html_entities(source));
 }
 
 }
