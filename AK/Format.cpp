@@ -30,6 +30,14 @@
 #include <AK/StringBuilder.h>
 #include <ctype.h>
 
+#ifdef KERNEL
+#    include <Kernel/Process.h>
+#    include <Kernel/Thread.h>
+#else
+#    include <stdio.h>
+#    include <unistd.h>
+#endif
+
 namespace AK {
 
 namespace {
@@ -538,6 +546,81 @@ void Formatter<bool>::format(TypeErasedFormatParams& params, FormatBuilder& buil
         Formatter<StringView> formatter { *this };
         return formatter.format(params, builder, value ? "true" : "false");
     }
+}
+
+#ifndef KERNEL
+void raw_out(StringView string)
+{
+    const auto retval = ::fwrite(string.characters_without_null_termination(), 1, string.length(), stdout);
+    ASSERT(retval == string.length());
+}
+void vout(StringView fmtstr, TypeErasedFormatParams params, bool newline)
+{
+    StringBuilder builder;
+    vformat(builder, fmtstr, params);
+
+    if (newline && !builder.is_empty())
+        builder.append('\n');
+
+    raw_out(builder.to_string());
+}
+
+void raw_warn(StringView string)
+{
+    const auto retval = ::write(STDERR_FILENO, string.characters_without_null_termination(), string.length());
+    ASSERT(static_cast<size_t>(retval) == string.length());
+}
+void vwarn(StringView fmtstr, TypeErasedFormatParams params, bool newline)
+{
+    StringBuilder builder;
+    vformat(builder, fmtstr, params);
+
+    if (newline && !builder.is_empty())
+        builder.append('\n');
+
+    raw_warn(builder.to_string());
+}
+#endif
+
+void raw_dbg(StringView string)
+{
+    const auto retval = dbgputstr(string.characters_without_null_termination(), string.length());
+    ASSERT(static_cast<size_t>(retval) == string.length());
+}
+void vdbg(StringView fmtstr, TypeErasedFormatParams params, bool newline)
+{
+    StringBuilder builder;
+
+// FIXME: This logic is redundant with the stuff in LogStream.cpp.
+#if defined(__serenity__)
+#    ifdef KERNEL
+    if (Kernel::Processor::is_initialized() && Kernel::Thread::current()) {
+        auto& thread = *Kernel::Thread::current();
+        builder.appendff("\033[34;1m[{}({}:{})]\033[0m: ", thread.process().name(), thread.pid().value(), thread.tid().value());
+    } else {
+        builder.appendff("\033[34;1m[Kernel]\033[0m: ");
+    }
+#    else
+    static TriState got_process_name = TriState::Unknown;
+    static char process_name_buffer[256];
+
+    if (got_process_name == TriState::Unknown) {
+        if (get_process_name(process_name_buffer, sizeof(process_name_buffer)) == 0)
+            got_process_name = TriState::True;
+        else
+            got_process_name = TriState::False;
+    }
+    if (got_process_name == TriState::True)
+        builder.appendff("\033[33;1m{}({})\033[0m: ", process_name_buffer, getpid());
+#    endif
+#endif
+
+    vformat(builder, fmtstr, params);
+
+    if (newline && !builder.is_empty())
+        builder.append('\n');
+
+    raw_dbg(builder.to_string());
 }
 
 template struct Formatter<unsigned char, void>;

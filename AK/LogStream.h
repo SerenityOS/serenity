@@ -207,35 +207,13 @@ DebugLogStream klog();
 
 void dump_bytes(ReadonlyBytes);
 
-#ifndef KERNEL
-template<typename... Parameters>
-void outf(StringView fmtstr, const Parameters&... parameters)
-{
-    vformat(out(), fmtstr, VariadicFormatParams { parameters... });
-}
-template<typename... Parameters>
-void warnf(StringView fmtstr, const Parameters&... parameters)
-{
-    vformat(warn(), fmtstr, VariadicFormatParams { parameters... });
-}
-#endif
-
-template<typename... Parameters>
-void dbgf(StringView fmtstr, const Parameters&... parameters)
-{
-    vformat(dbg(), fmtstr, VariadicFormatParams { parameters... });
-}
-
 }
 
 using AK::dbg;
-using AK::dbgf;
 using AK::klog;
 using AK::LogStream;
 
 #if !defined(KERNEL)
 using AK::out;
-using AK::outf;
 using AK::warn;
-using AK::warnf;
 #endif

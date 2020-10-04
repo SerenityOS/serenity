@@ -1414,11 +1414,11 @@ void Shell::notify_child_event()
 
             int wstatus = 0;
 #ifdef SH_DEBUG
-            dbgf("waitpid({}) = ...", job.pid());
+            dbgln("waitpid({}) = ...", job.pid());
 #endif
             auto child_pid = waitpid(job.pid(), &wstatus, WNOHANG | WUNTRACED);
 #ifdef SH_DEBUG
-            dbgf("... = {} - {}", child_pid, wstatus);
+            dbgln("... = {} - {}", child_pid, wstatus);
 #endif
 
             if (child_pid < 0) {

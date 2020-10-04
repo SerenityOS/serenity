@@ -258,14 +258,14 @@ void IRCClient::send_whois(const String& nick)
 void IRCClient::handle(const Message& msg)
 {
 #ifdef IRC_DEBUG
-    outf("IRCClient::execute: prefix='{}', command='{}', arguments={}",
+    outln("IRCClient::execute: prefix='{}', command='{}', arguments={}",
         msg.prefix,
         msg.command,
         msg.arguments.size());
 
     size_t index = 0;
     for (auto& arg : msg.arguments)
-        outf("    [{}]: {}", index++, arg);
+        outln("    [{}]: {}", index++, arg);
 #endif
 
     auto numeric = msg.command.to_uint();
@@ -489,7 +489,7 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
     bool is_ctcp = has_ctcp_payload(msg.arguments[1]);
 
 #ifdef IRC_DEBUG
-    outf("handle_privmsg_or_notice: type='{}'{}, sender_nick='{}', target='{}'",
+    outln("handle_privmsg_or_notice: type='{}'{}, sender_nick='{}', target='{}'",
         type == PrivmsgOrNotice::Privmsg ? "privmsg" : "notice",
         is_ctcp ? " (ctcp)" : "",
         sender_nick,
@@ -671,11 +671,11 @@ void IRCClient::handle_rpl_welcome(const Message& msg)
     auto channel_str = m_config->read_entry("Connection", "AutoJoinChannels", "");
     if (channel_str.is_empty())
         return;
-    dbgf("IRCClient: Channels to autojoin: {}", channel_str);
+    dbgln("IRCClient: Channels to autojoin: {}", channel_str);
     auto channels = channel_str.split(',');
     for (auto& channel : channels) {
         join_channel(channel);
-        dbgf("IRCClient: Auto joining channel: {}", channel);
+        dbgln("IRCClient: Auto joining channel: {}", channel);
     }
 }
 
@@ -1153,7 +1153,7 @@ void IRCClient::send_ctcp_request(const StringView& peer, const StringView& payl
 
 void IRCClient::handle_ctcp_request(const StringView& peer, const StringView& payload)
 {
-    dbgf("handle_ctcp_request: {}", payload);
+    dbgln("handle_ctcp_request: {}", payload);
 
     if (payload == "VERSION") {
         auto version = ctcp_version_reply();
@@ -1187,5 +1187,5 @@ void IRCClient::handle_ctcp_request(const StringView& peer, const StringView& pa
 
 void IRCClient::handle_ctcp_response(const StringView& peer, const StringView& payload)
 {
-    dbgf("handle_ctcp_response({}): {}", peer, payload);
+    dbgln("handle_ctcp_response({}): {}", peer, payload);
 }
