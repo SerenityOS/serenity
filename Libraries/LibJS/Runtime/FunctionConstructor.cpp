@@ -80,7 +80,7 @@ Value FunctionConstructor::construct(Function&)
         if (vm.exception())
             return {};
     }
-    auto source = String::format("function anonymous(%s) { %s }", parameters_source.characters(), body_source.characters());
+    auto source = String::formatted("function anonymous({}) {{ {} }}", parameters_source, body_source);
     auto parser = Parser(Lexer(source));
     auto function_expression = parser.parse_function_node<FunctionExpression>();
     if (parser.has_errors()) {

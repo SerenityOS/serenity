@@ -33,7 +33,7 @@ BoundFunction::BoundFunction(GlobalObject& global_object, Function& target_funct
     : Function::Function(*global_object.function_prototype(), bound_this, move(arguments))
     , m_target_function(&target_function)
     , m_constructor_prototype(constructor_prototype)
-    , m_name(String::format("bound %s", target_function.name().characters()))
+    , m_name(String::formatted("bound {}", target_function.name()))
     , m_length(length)
 {
 }

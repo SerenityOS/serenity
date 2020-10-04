@@ -207,7 +207,7 @@ String JSONObject::serialize_json_object(GlobalObject& global_object, StringifyS
 
     state.seen_objects.set(&object);
     String previous_indent = state.indent;
-    state.indent = String::format("%s%s", state.indent.characters(), state.gap.characters());
+    state.indent = String::formatted("{}{}", state.indent, state.gap);
     Vector<String> property_strings;
 
     auto process_property = [&](const PropertyName& key) {
@@ -215,11 +215,11 @@ String JSONObject::serialize_json_object(GlobalObject& global_object, StringifyS
         if (vm.exception())
             return;
         if (!serialized_property_string.is_null()) {
-            property_strings.append(String::format(
-                "%s:%s%s",
-                quote_json_string(key.to_string()).characters(),
+            property_strings.append(String::formatted(
+                "{}:{}{}",
+                quote_json_string(key.to_string()),
                 state.gap.is_empty() ? "" : " ",
-                serialized_property_string.characters()));
+                serialized_property_string));
         }
     };
 
@@ -263,7 +263,7 @@ String JSONObject::serialize_json_object(GlobalObject& global_object, StringifyS
         } else {
             builder.append('\n');
             builder.append(state.indent);
-            auto separator = String::format(",\n%s", state.indent.characters());
+            auto separator = String::formatted(",\n{}", state.indent);
             for (auto& property_string : property_strings) {
                 if (!first)
                     builder.append(separator);
@@ -291,7 +291,7 @@ String JSONObject::serialize_json_array(GlobalObject& global_object, StringifySt
 
     state.seen_objects.set(&object);
     String previous_indent = state.indent;
-    state.indent = String::format("%s%s", state.indent.characters(), state.gap.characters());
+    state.indent = String::formatted("{}{}", state.indent, state.gap);
     Vector<String> property_strings;
 
     auto length = length_of_array_like(global_object, Value(&object));
@@ -327,7 +327,7 @@ String JSONObject::serialize_json_array(GlobalObject& global_object, StringifySt
         } else {
             builder.append("[\n");
             builder.append(state.indent);
-            auto separator = String::format(",\n%s", state.indent.characters());
+            auto separator = String::formatted(",\n{}", state.indent);
             bool first = true;
             for (auto& property_string : property_strings) {
                 if (!first)
