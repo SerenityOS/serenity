@@ -135,6 +135,13 @@ public:
         return *this;
     }
 
+    unsigned hash() const
+    {
+        if (is_string())
+            return static_cast<const StringImpl*>(m_ptr)->hash();
+        return ptr_hash(as_symbol());
+    }
+
 private:
     ALWAYS_INLINE u64 bits() const
     {
@@ -155,10 +162,6 @@ template<>
 struct AK::Traits<JS::StringOrSymbol> : public GenericTraits<JS::StringOrSymbol> {
     static unsigned hash(const JS::StringOrSymbol& key)
     {
-        if (key.is_string())
-            return key.as_string().hash();
-        if (key.is_symbol())
-            return ptr_hash(key.as_symbol());
-        return 0;
+        return key.hash();
     }
 };
