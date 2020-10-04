@@ -162,10 +162,10 @@ String Keypad::to_string() const
     StringBuilder builder;
     if (m_negative)
         builder.append("-");
-    builder.appendf("%ld.", m_int_value);
+    builder.appendff("{}", m_int_value);
 
     if (m_frac_length > 0)
-        builder.appendf("%0*ld", m_frac_length, m_frac_value);
+        builder.appendff(".{:0{}}", m_frac_value, m_frac_length);
 
     return builder.to_string();
 }
