@@ -149,6 +149,8 @@ public:
 
     Value invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments = {});
 
+    void ensure_shape_is_unique();
+
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
@@ -165,7 +167,6 @@ private:
     void call_native_property_setter(Object* this_object, Value property, Value) const;
 
     void set_shape(Shape&);
-    void ensure_shape_is_unique();
 
     bool m_is_extensible { true };
     Shape* m_shape { nullptr };
