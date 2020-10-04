@@ -43,7 +43,7 @@ public:
 
     virtual const char* class_name() const = 0;
 
-    virtual void apply(Bitmap&, const IntRect&, const Parameters&) = 0;
+    virtual void apply(Bitmap&, const IntRect&, const Bitmap&, const IntRect&, const Parameters&) = 0;
 
 protected:
     Filter() { }
