@@ -309,7 +309,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     call_frame.this_value = function.bound_this().value_or(this_value);
     call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
-        call_frame.arguments.append(arguments.value().values());
+        call_frame.arguments.append(move(arguments.release_value().values()));
     call_frame.environment = function.create_environment();
 
     ASSERT(call_frame.environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
