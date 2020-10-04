@@ -109,7 +109,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     ok_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     ok_button.set_preferred_size(80, 20);
     ok_button.on_click = [this](auto) {
-        dbg() << "TODO: Add event icon on specific tile";
+        dbgln("TODO: Add event icon on specific tile");
         done(Dialog::ExecOK);
     };
 
