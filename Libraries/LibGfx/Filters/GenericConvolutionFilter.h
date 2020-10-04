@@ -82,40 +82,63 @@ public:
 
     virtual const char* class_name() const override { return "GenericConvolutionFilter"; }
 
-    virtual void apply(Bitmap& bitmap, const IntRect& rect, const Filter::Parameters& parameters) override
+    virtual void apply(Bitmap& target_bitmap, const IntRect& target_rect, const Bitmap& source_bitmap, const IntRect& source_rect, const Filter::Parameters& parameters) override
     {
         ASSERT(parameters.is_generic_convolution_filter());
         auto& gcf_params = static_cast<const GenericConvolutionFilter::Parameters&>(parameters);
 
         ApplyCache apply_cache;
-        apply(bitmap, rect, gcf_params, apply_cache);
+        apply(target_bitmap, target_rect, source_bitmap, source_rect, gcf_params, apply_cache);
     }
 
-    void apply(Bitmap& source, const IntRect& source_rect, const GenericConvolutionFilter::Parameters& parameters, ApplyCache& apply_cache)
+    void apply(Bitmap& target, IntRect target_rect, const Bitmap& source, const IntRect& source_rect, const GenericConvolutionFilter::Parameters& parameters, ApplyCache& apply_cache)
     {
-        if (!apply_cache.m_target || !apply_cache.m_target->size().contains(source_rect.size()))
+        // The target area (where the filter is applied) must be entirely
+        // contained by the source area. source_rect should be describing
+        // the pixels that can be accessed to apply this filter, while
+        // target_rect should describe the area where to apply the filter on.
+        ASSERT(source_rect.contains(target_rect));
+        ASSERT(source.size().contains(target.size()));
+        ASSERT(target.rect().contains(target_rect));
+        ASSERT(source.rect().contains(source_rect));
+
+        // If source is different from target, it should still be describing
+        // essentially the same bitmap. But it allows us to modify target
+        // without a temporary bitmap. This is important if this filter
+        // is applied on multiple areas of the same bitmap, at which point
+        // we would need to be able to access unmodified pixels if the
+        // areas are (almost) adjacent.
+        int source_delta_x = target_rect.x() - source_rect.x();
+        int source_delta_y = target_rect.y() - source_rect.y();
+        if (&target == &source && (!apply_cache.m_target || !apply_cache.m_target->size().contains(source_rect.size()))) {
+            // TODO: We probably don't need the entire source_rect, we could inflate
+            // the target_rect appropriately
             apply_cache.m_target = Gfx::Bitmap::create(source.format(), source_rect.size());
+            target_rect.move_by(-target_rect.location());
+        }
+
+        Bitmap* render_target_bitmap = (&target != &source) ? &target : apply_cache.m_target.ptr();
 
         // FIXME: Help! I am naive!
-        for (auto i_ = 0; i_ < source_rect.width(); ++i_) {
-            auto i = i_ + source_rect.x();
-            for (auto j_ = 0; j_ < source_rect.height(); ++j_) {
-                auto j = j_ + source_rect.y();
+        for (auto i_ = 0; i_ < target_rect.width(); ++i_) {
+            auto i = i_ + target_rect.x();
+            for (auto j_ = 0; j_ < target_rect.height(); ++j_) {
+                auto j = j_ + target_rect.y();
                 FloatVector3 value(0, 0, 0);
                 for (auto k = 0; k < 4; ++k) {
                     auto ki = i + k - 2;
-                    if (ki < 0 || ki >= source.size().width()) {
+                    if (i < source_rect.x() || i > source_rect.right()) {
                         if (parameters.should_wrap())
-                            ki = (ki + source.size().width()) % source.size().width();
+                            ki = (ki + source.size().width()) % source.size().width(); // TODO: fix up using source_rect
                         else
                             continue;
                     }
 
                     for (auto l = 0; l < 4; ++l) {
                         auto lj = j + l - 2;
-                        if (lj < 0 || lj >= source.size().height()) {
+                        if (j < source_rect.y() || j > source_rect.bottom()) {
                             if (parameters.should_wrap())
-                                lj = (lj + source.size().height()) % source.size().height();
+                                lj = (lj + source.size().height()) % source.size().height(); // TODO: fix up using source_rect
                             else
                                 continue;
                         }
@@ -128,16 +151,18 @@ public:
                 }
 
                 // The float->u8 overflow is intentional.
-                apply_cache.m_target->set_pixel(i_, j_, Color(value.x(), value.y(), value.z(), source.get_pixel(i, j).alpha()));
+                render_target_bitmap->set_pixel(i, j, Color(value.x(), value.y(), value.z(), source.get_pixel(i + source_delta_x, j + source_delta_y).alpha()));
             }
         }
 
-        // FIXME: Substitute for some sort of faster "blit" method.
-        for (auto i_ = 0; i_ < source_rect.width(); ++i_) {
-            auto i = i_ + source_rect.x();
-            for (auto j_ = 0; j_ < source_rect.height(); ++j_) {
-                auto j = j_ + source_rect.y();
-                source.set_pixel(i, j, apply_cache.m_target->get_pixel(i_, j_));
+        if (render_target_bitmap != &target) {
+            // FIXME: Substitute for some sort of faster "blit" method.
+            for (auto i_ = 0; i_ < target_rect.width(); ++i_) {
+                auto i = i_ + target_rect.x();
+                for (auto j_ = 0; j_ < target_rect.height(); ++j_) {
+                    auto j = j_ + target_rect.y();
+                    target.set_pixel(i, j, render_target_bitmap->get_pixel(i_, j_));
+                }
             }
         }
     }
