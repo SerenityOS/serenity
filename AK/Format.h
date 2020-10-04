@@ -281,6 +281,14 @@ struct Formatter<T*> : StandardFormatter {
 };
 
 template<>
+struct Formatter<char> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, char value)
+    {
+        Formatter<StringView>::format(params, builder, { &value, 1 });
+    }
+};
+
+template<>
 struct Formatter<bool> : StandardFormatter {
     void format(TypeErasedFormatParams&, FormatBuilder&, bool value);
 };
