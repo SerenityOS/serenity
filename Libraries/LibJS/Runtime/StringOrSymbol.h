@@ -51,8 +51,10 @@ public:
     }
 
     StringOrSymbol(const String& string)
-        : m_ptr(StringImpl::create(string.characters(), string.length()).leak_ref())
+        : m_ptr(string.impl())
     {
+        ASSERT(!string.is_null());
+        static_cast<const StringImpl*>(m_ptr)->ref();
     }
 
     ~StringOrSymbol()
