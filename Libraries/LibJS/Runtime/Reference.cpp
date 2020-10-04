@@ -25,7 +25,6 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -50,7 +49,7 @@ void Reference::put(GlobalObject& global_object, Value value)
         return;
     }
 
-    if (!base().is_object() && vm.interpreter().in_strict_mode()) {
+    if (!base().is_object() && vm.in_strict_mode()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_string().characters());
         return;
     }

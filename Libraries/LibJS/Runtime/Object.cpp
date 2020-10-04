@@ -26,7 +26,6 @@
 
 #include <AK/String.h>
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -464,7 +463,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
 #ifdef OBJECT_DEBUG
         dbg() << "Disallow define_property of non-extensible object";
 #endif
-        if (throw_exceptions && interpreter().in_strict_mode())
+        if (throw_exceptions && vm().in_strict_mode())
             vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_name.to_display_string().characters());
         return false;
     }
@@ -546,7 +545,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 #ifdef OBJECT_DEBUG
         dbg() << "Disallow define_property of non-extensible object";
 #endif
-        if (throw_exceptions && interpreter().in_strict_mode())
+        if (throw_exceptions && vm().in_strict_mode())
             vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_index);
         return false;
     }
@@ -870,7 +869,7 @@ Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueLi
 Value Object::call_native_property_getter(Object* this_object, Value property) const
 {
     ASSERT(property.is_native_property());
-    auto& call_frame = vm().push_call_frame();
+    auto& call_frame = vm().push_call_frame(vm().in_strict_mode());
     call_frame.this_value = this_object;
     auto result = property.as_native_property().get(vm(), global_object());
     vm().pop_call_frame();
@@ -880,7 +879,7 @@ Value Object::call_native_property_getter(Object* this_object, Value property) c
 void Object::call_native_property_setter(Object* this_object, Value property, Value value) const
 {
     ASSERT(property.is_native_property());
-    auto& call_frame = vm().push_call_frame();
+    auto& call_frame = vm().push_call_frame(vm().in_strict_mode());
     call_frame.this_value = this_object;
     property.as_native_property().set(vm(), global_object(), value);
     vm().pop_call_frame();

@@ -47,6 +47,8 @@ public:
     virtual const FlyString& name() const override { return m_name; };
     virtual bool has_constructor() const { return false; }
 
+    virtual bool is_strict_mode() const override;
+
 protected:
     NativeFunction(const FlyString& name, Object& prototype);
     explicit NativeFunction(Object& prototype);

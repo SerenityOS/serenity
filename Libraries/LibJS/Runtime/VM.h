@@ -50,7 +50,6 @@ struct ScopeFrame {
     ScopeType type;
     NonnullRefPtr<ScopeNode> scope_node;
     bool pushed_environment { false };
-    bool is_strict_mode { false };
 };
 
 struct CallFrame {
@@ -58,6 +57,7 @@ struct CallFrame {
     Value this_value;
     Vector<Value> arguments;
     LexicalEnvironment* environment { nullptr };
+    bool is_strict_mode { false };
 };
 
 struct Argument {
@@ -108,9 +108,9 @@ public:
 
     PrimitiveString& empty_string() { return *m_empty_string; }
 
-    CallFrame& push_call_frame()
+    CallFrame& push_call_frame(bool strict_mode = false)
     {
-        m_call_stack.append({ {}, js_undefined(), {}, nullptr });
+        m_call_stack.append({ {}, js_undefined(), {}, nullptr, strict_mode });
         return m_call_stack.last();
     }
     void pop_call_frame() { m_call_stack.take_last(); }

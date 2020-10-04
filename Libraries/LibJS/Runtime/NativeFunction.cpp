@@ -73,4 +73,9 @@ LexicalEnvironment* NativeFunction::create_environment()
     return heap().allocate<LexicalEnvironment>(global_object(), LexicalEnvironment::EnvironmentRecordType::Function);
 }
 
+bool NativeFunction::is_strict_mode() const
+{
+    return vm().in_strict_mode();
+}
+
 }
