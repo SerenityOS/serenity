@@ -850,7 +850,7 @@ Value Object::to_string() const
             return {};
         return string;
     }
-    return js_string(heap(), String::format("[object %s]", class_name()));
+    return js_string(heap(), String::formatted("[object {}]", class_name()));
 }
 
 Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments)

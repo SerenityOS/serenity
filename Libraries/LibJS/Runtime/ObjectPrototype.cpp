@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         tag = "Object";
     }
 
-    return js_string(vm, String::format("[object %s]", tag.characters()));
+    return js_string(vm, String::formatted("[object {}]", tag));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)

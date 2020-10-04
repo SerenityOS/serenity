@@ -123,7 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
         return js_string(vm, message);
     if (message.length() == 0)
         return js_string(vm, name);
-    return js_string(vm, String::format("%s: %s", name.characters(), message.characters()));
+    return js_string(vm, String::formatted("{}: {}", name, message));
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \

@@ -41,7 +41,7 @@ public:
 
     const String& description() const { return m_description; }
     bool is_global() const { return m_is_global; }
-    String to_string() const { return String::format("Symbol(%s)", description().characters()); }
+    String to_string() const { return String::formatted("Symbol({})", description()); }
 
 private:
     virtual const char* class_name() const override { return "Symbol"; }

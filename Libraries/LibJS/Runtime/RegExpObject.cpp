@@ -51,7 +51,7 @@ RegExpObject::~RegExpObject()
 
 Value RegExpObject::to_string() const
 {
-    return js_string(heap(), String::format("/%s/%s", content().characters(), flags().characters()));
+    return js_string(heap(), String::formatted("/{}/{}", content(), flags()));
 }
 
 }
