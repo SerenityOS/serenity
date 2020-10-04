@@ -171,6 +171,4 @@ private:
     FlatPtr m_signal_trampoline { 0 };
 };
 
-void report(const char*, ...);
-
 }
