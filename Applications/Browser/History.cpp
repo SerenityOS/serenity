@@ -30,10 +30,10 @@ namespace Browser {
 
 void History::dump() const
 {
-    dbgf("Dump {} items(s)", m_items.size());
+    dbgln("Dump {} items(s)", m_items.size());
     int i = 0;
     for (auto& item : m_items) {
-        dbgf("[{}] {} {}", i, item, m_current == i ? '*' : ' ');
+        dbgln("[{}] {} {}", i, item, m_current == i ? '*' : ' ');
         ++i;
     }
 }
