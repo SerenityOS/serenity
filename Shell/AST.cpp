@@ -1617,10 +1617,16 @@ HitTestResult Pipe::hit_test_position(size_t offset)
         return {};
 
     auto result = m_left->hit_test_position(offset);
-    if (result.matching_node)
+    if (result.matching_node) {
+        if (!result.closest_command_node)
+            result.closest_command_node = m_right;
         return result;
+    }
 
-    return m_right->hit_test_position(offset);
+    result = m_right->hit_test_position(offset);
+    if (!result.closest_command_node)
+        result.closest_command_node = m_right;
+    return result;
 }
 
 Pipe::Pipe(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
@@ -1801,9 +1807,16 @@ HitTestResult Sequence::hit_test_position(size_t offset)
         return {};
 
     auto result = m_left->hit_test_position(offset);
-    if (result.matching_node)
+    if (result.matching_node) {
+        if (!result.closest_command_node)
+            result.closest_command_node = m_right;
         return result;
-    return m_right->hit_test_position(offset);
+    }
+
+    result = m_right->hit_test_position(offset);
+    if (!result.closest_command_node)
+        result.closest_command_node = m_right;
+    return result;
 }
 
 Sequence::Sequence(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right, Position separator_position)
