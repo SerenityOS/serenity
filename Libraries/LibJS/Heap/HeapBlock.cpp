@@ -73,13 +73,6 @@ HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
     m_freelist = next;
 }
 
-Cell* HeapBlock::allocate()
-{
-    if (!m_freelist)
-        return nullptr;
-    return exchange(m_freelist, m_freelist->next);
-}
-
 void HeapBlock::deallocate(Cell* cell)
 {
     ASSERT(cell->is_live());

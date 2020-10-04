@@ -42,7 +42,13 @@ public:
     size_t cell_size() const { return m_cell_size; }
     size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
 
-    Cell* allocate();
+    ALWAYS_INLINE Cell* allocate()
+    {
+        if (!m_freelist)
+            return nullptr;
+        return exchange(m_freelist, m_freelist->next);
+    }
+
     void deallocate(Cell*);
 
     template<typename Callback>
