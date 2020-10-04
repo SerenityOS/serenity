@@ -974,38 +974,32 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Addition, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::PlusEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::AdditionAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::AdditionAssignment, move(lhs), min_precedence, associativity);
     case TokenType::Minus:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Subtraction, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::MinusEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::SubtractionAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::SubtractionAssignment, move(lhs), min_precedence, associativity);
     case TokenType::Asterisk:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Multiplication, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::AsteriskEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::MultiplicationAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::MultiplicationAssignment, move(lhs), min_precedence, associativity);
     case TokenType::Slash:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Division, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::SlashEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::DivisionAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::DivisionAssignment, move(lhs), min_precedence, associativity);
     case TokenType::Percent:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Modulo, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::PercentEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::ModuloAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::ModuloAssignment, move(lhs), min_precedence, associativity);
     case TokenType::DoubleAsterisk:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::Exponentiation, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::DoubleAsteriskEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::ExponentiationAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::ExponentiationAssignment, move(lhs), min_precedence, associativity);
     case TokenType::GreaterThan:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::GreaterThan, move(lhs), parse_expression(min_precedence, associativity));
@@ -1040,56 +1034,36 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::BitwiseAnd, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::AmpersandEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::BitwiseAndAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::BitwiseAndAssignment, move(lhs), min_precedence, associativity);
     case TokenType::Pipe:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::BitwiseOr, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::PipeEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::BitwiseOrAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::BitwiseOrAssignment, move(lhs), min_precedence, associativity);
     case TokenType::Caret:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::BitwiseXor, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::CaretEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::BitwiseXorAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::BitwiseXorAssignment, move(lhs), min_precedence, associativity);
     case TokenType::ShiftLeft:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::LeftShift, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ShiftLeftEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::LeftShiftAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::LeftShiftAssignment, move(lhs), min_precedence, associativity);
     case TokenType::ShiftRight:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::RightShift, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::ShiftRightEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::RightShiftAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::RightShiftAssignment, move(lhs), min_precedence, associativity);
     case TokenType::UnsignedShiftRight:
         consume();
         return create_ast_node<BinaryExpression>(BinaryOp::UnsignedRightShift, move(lhs), parse_expression(min_precedence, associativity));
     case TokenType::UnsignedShiftRightEquals:
-        consume();
-        return create_ast_node<AssignmentExpression>(AssignmentOp::UnsignedRightShiftAssignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::UnsignedRightShiftAssignment, move(lhs), min_precedence, associativity);
     case TokenType::ParenOpen:
         return parse_call_expression(move(lhs));
     case TokenType::Equals:
-        consume();
-        if (!lhs->is_identifier() && !lhs->is_member_expression() && !lhs->is_call_expression()) {
-            syntax_error("Invalid left-hand side in assignment");
-            return create_ast_node<ErrorExpression>();
-        }
-        if (m_parser_state.m_strict_mode && lhs->is_identifier()) {
-            auto name = static_cast<const Identifier&>(*lhs).string();
-            if (name == "eval" || name == "arguments") {
-                syntax_error(
-                    String::formatted("'{}' cannot be assigned to in strict mode code", name),
-                    m_parser_state.m_current_token.line_number(),
-                    m_parser_state.m_current_token.line_column());
-            }
-        }
-        return create_ast_node<AssignmentExpression>(AssignmentOp::Assignment, move(lhs), parse_expression(min_precedence, associativity));
+        return parse_assignment_expression(AssignmentOp::Assignment, move(lhs), min_precedence, associativity);
     case TokenType::Period:
         consume();
         if (!match_identifier_name())
@@ -1131,6 +1105,32 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         consume();
         return create_ast_node<ErrorExpression>();
     }
+}
+
+NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(AssignmentOp assignment_op, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity associativity)
+{
+    ASSERT(match(TokenType::Equals)
+        || match(TokenType::PlusEquals)
+        || match(TokenType::MinusEquals)
+        || match(TokenType::AsteriskEquals)
+        || match(TokenType::SlashEquals)
+        || match(TokenType::PercentEquals)
+        || match(TokenType::DoubleAsteriskEquals)
+        || match(TokenType::AmpersandEquals)
+        || match(TokenType::PipeEquals)
+        || match(TokenType::CaretEquals)
+        || match(TokenType::ShiftLeftEquals)
+        || match(TokenType::ShiftRightEquals)
+        || match(TokenType::UnsignedShiftRightEquals));
+    consume();
+    if (!lhs->is_identifier() && !lhs->is_member_expression() && !lhs->is_call_expression()) {
+        syntax_error("Invalid left-hand side in assignment");
+    } else if (m_parser_state.m_strict_mode && lhs->is_identifier()) {
+        auto name = static_cast<const Identifier&>(*lhs).string();
+        if (name == "eval" || name == "arguments")
+            syntax_error(String::formatted("'{}' cannot be assigned to in strict mode code", name));
+    }
+    return create_ast_node<AssignmentExpression>(assignment_op, move(lhs), parse_expression(min_precedence, associativity));
 }
 
 NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)

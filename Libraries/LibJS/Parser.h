@@ -84,6 +84,7 @@ public:
     NonnullRefPtr<ClassDeclaration> parse_class_declaration();
     NonnullRefPtr<ClassExpression> parse_class_expression(bool expect_class_name);
     NonnullRefPtr<Expression> parse_property_key();
+    NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity);
 
     struct Error {
         String message;

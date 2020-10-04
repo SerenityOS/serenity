@@ -10,3 +10,19 @@ test("assignment to inline function call", () => {
         (function () {})() = "foo";
     }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
 });
+
+test("assignment to invalid LHS is syntax error", () => {
+    expect("1 += 1").not.toEval();
+    expect("1 -= 1").not.toEval();
+    expect("1 *= 1").not.toEval();
+    expect("1 /= 1").not.toEval();
+    expect("1 %= 1").not.toEval();
+    expect("1 **= 1").not.toEval();
+    expect("1 &= 1").not.toEval();
+    expect("1 |= 1").not.toEval();
+    expect("1 ^= 1").not.toEval();
+    expect("1 <<= 1").not.toEval();
+    expect("1 >>= 1").not.toEval();
+    expect("1 >>>= 1").not.toEval();
+    expect("1 = 1").not.toEval();
+});
