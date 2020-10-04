@@ -38,6 +38,7 @@ Shape* Shape::create_unique_clone() const
     ensure_property_table();
     new_shape->ensure_property_table();
     (*new_shape->m_property_table) = *m_property_table;
+    new_shape->m_property_count = new_shape->m_property_table->size();
     return new_shape;
 }
 
@@ -78,6 +79,7 @@ Shape::Shape(Shape& previous_shape, const StringOrSymbol& property_name, Propert
     , m_attributes(attributes)
     , m_prototype(previous_shape.m_prototype)
     , m_transition_type(transition_type)
+    , m_property_count(transition_type == TransitionType::Put ? previous_shape.m_property_count + 1 : previous_shape.m_property_count)
 {
 }
 
@@ -86,6 +88,7 @@ Shape::Shape(Shape& previous_shape, Object* new_prototype)
     , m_previous(&previous_shape)
     , m_prototype(new_prototype)
     , m_transition_type(TransitionType::Prototype)
+    , m_property_count(previous_shape.m_property_count)
 {
 }
 
@@ -125,13 +128,13 @@ const HashMap<StringOrSymbol, PropertyMetadata>& Shape::property_table() const
 
 size_t Shape::property_count() const
 {
-    return property_table().size();
+    return m_property_count;
 }
 
 Vector<Shape::Property> Shape::property_table_ordered() const
 {
     auto vec = Vector<Shape::Property>();
-    vec.resize(property_table().size());
+    vec.resize(property_count());
 
     for (auto& it : property_table()) {
         vec[it.value.offset] = { it.key, it.value };
@@ -176,6 +179,7 @@ void Shape::add_property_to_unique_shape(const StringOrSymbol& property_name, Pr
     ASSERT(m_property_table);
     ASSERT(!m_property_table->contains(property_name));
     m_property_table->set(property_name, { m_property_table->size(), attributes });
+    ++m_property_count;
 }
 
 void Shape::reconfigure_property_in_unique_shape(const StringOrSymbol& property_name, PropertyAttributes attributes)
@@ -190,7 +194,8 @@ void Shape::remove_property_from_unique_shape(const StringOrSymbol& property_nam
 {
     ASSERT(is_unique());
     ASSERT(m_property_table);
-    m_property_table->remove(property_name);
+    if (m_property_table->remove(property_name))
+        --m_property_count;
     for (auto& it : *m_property_table) {
         ASSERT(it.value.offset != offset);
         if (it.value.offset > offset)
