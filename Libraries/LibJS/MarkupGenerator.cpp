@@ -204,131 +204,28 @@ String MarkupGenerator::style_from_style_type(StyleType type)
 
 MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
 {
-    switch (token.type()) {
-    case TokenType::Enum:
-    case TokenType::Eof:
-    case TokenType::Implements:
-    case TokenType::Invalid:
-    case TokenType::Package:
-    case TokenType::Private:
-    case TokenType::Protected:
-    case TokenType::Public:
-    case TokenType::Static:
-    case TokenType::UnterminatedTemplateLiteral:
+    switch (token.category()) {
+    case TokenCategory::Invalid:
         return StyleType::Invalid;
-    case TokenType::NumericLiteral:
-    case TokenType::BigIntLiteral:
+    case TokenCategory::Number:
         return StyleType::Number;
-    case TokenType::StringLiteral:
-    case TokenType::TemplateLiteralStart:
-    case TokenType::TemplateLiteralEnd:
-    case TokenType::TemplateLiteralString:
-    case TokenType::RegexLiteral:
-    case TokenType::RegexFlags:
-    case TokenType::UnterminatedStringLiteral:
-    case TokenType::UnterminatedRegexLiteral:
+    case TokenCategory::String:
         return StyleType::String;
-    case TokenType::BracketClose:
-    case TokenType::BracketOpen:
-    case TokenType::Comma:
-    case TokenType::CurlyClose:
-    case TokenType::CurlyOpen:
-    case TokenType::ParenClose:
-    case TokenType::ParenOpen:
-    case TokenType::Semicolon:
-    case TokenType::Colon:
-    case TokenType::Period:
+    case TokenCategory::Punctuation:
         return StyleType::Punctuation;
-    case TokenType::Ampersand:
-    case TokenType::AmpersandEquals:
-    case TokenType::Arrow:
-    case TokenType::Asterisk:
-    case TokenType::AsteriskEquals:
-    case TokenType::Caret:
-    case TokenType::CaretEquals:
-    case TokenType::DoubleAmpersand:
-    case TokenType::DoubleAsterisk:
-    case TokenType::DoubleAsteriskEquals:
-    case TokenType::DoublePipe:
-    case TokenType::DoubleQuestionMark:
-    case TokenType::Equals:
-    case TokenType::EqualsEquals:
-    case TokenType::EqualsEqualsEquals:
-    case TokenType::ExclamationMark:
-    case TokenType::ExclamationMarkEquals:
-    case TokenType::ExclamationMarkEqualsEquals:
-    case TokenType::GreaterThan:
-    case TokenType::GreaterThanEquals:
-    case TokenType::LessThan:
-    case TokenType::LessThanEquals:
-    case TokenType::Minus:
-    case TokenType::MinusEquals:
-    case TokenType::MinusMinus:
-    case TokenType::Percent:
-    case TokenType::PercentEquals:
-    case TokenType::Pipe:
-    case TokenType::PipeEquals:
-    case TokenType::Plus:
-    case TokenType::PlusEquals:
-    case TokenType::PlusPlus:
-    case TokenType::QuestionMark:
-    case TokenType::QuestionMarkPeriod:
-    case TokenType::ShiftLeft:
-    case TokenType::ShiftLeftEquals:
-    case TokenType::ShiftRight:
-    case TokenType::ShiftRightEquals:
-    case TokenType::Slash:
-    case TokenType::SlashEquals:
-    case TokenType::Tilde:
-    case TokenType::TripleDot:
-    case TokenType::UnsignedShiftRight:
-    case TokenType::UnsignedShiftRightEquals:
+    case TokenCategory::Operator:
         return StyleType::Operator;
-    case TokenType::BoolLiteral:
-    case TokenType::NullLiteral:
-        return StyleType::KeywordBold;
-    case TokenType::Async:
-    case TokenType::Class:
-    case TokenType::Const:
-    case TokenType::Debugger:
-    case TokenType::Delete:
-    case TokenType::Export:
-    case TokenType::Extends:
-    case TokenType::Function:
-    case TokenType::Import:
-    case TokenType::In:
-    case TokenType::Instanceof:
-    case TokenType::Interface:
-    case TokenType::Let:
-    case TokenType::New:
-    case TokenType::Super:
-    case TokenType::TemplateLiteralExprStart:
-    case TokenType::TemplateLiteralExprEnd:
-    case TokenType::This:
-    case TokenType::Throw:
-    case TokenType::Typeof:
-    case TokenType::Var:
-    case TokenType::Void:
-        return StyleType::Keyword;
-    case TokenType::Await:
-    case TokenType::Break:
-    case TokenType::Case:
-    case TokenType::Catch:
-    case TokenType::Continue:
-    case TokenType::Default:
-    case TokenType::Do:
-    case TokenType::Else:
-    case TokenType::Finally:
-    case TokenType::For:
-    case TokenType::If:
-    case TokenType::Return:
-    case TokenType::Switch:
-    case TokenType::Try:
-    case TokenType::While:
-    case TokenType::With:
-    case TokenType::Yield:
+    case TokenCategory::Keyword:
+        switch (token.type()) {
+        case TokenType::BoolLiteral:
+        case TokenType::NullLiteral:
+            return StyleType::KeywordBold;
+        default:
+            return StyleType::Keyword;
+        }
+    case TokenCategory::ControlKeyword:
         return StyleType::ControlKeyword;
-    case TokenType::Identifier:
+    case TokenCategory::Identifier:
         return StyleType::Identifier;
     default:
         dbgln("Unknown style type for token {}", token.name());

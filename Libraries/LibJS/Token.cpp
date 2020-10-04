@@ -35,9 +35,9 @@ namespace JS {
 const char* Token::name(TokenType type)
 {
     switch (type) {
-#define __ENUMERATE_JS_TOKEN(x) \
-    case TokenType::x:          \
-        return #x;
+#define __ENUMERATE_JS_TOKEN(type, category) \
+    case TokenType::type:                    \
+        return #type;
         ENUMERATE_JS_TOKENS
 #undef __ENUMERATE_JS_TOKEN
     default:
@@ -49,6 +49,24 @@ const char* Token::name(TokenType type)
 const char* Token::name() const
 {
     return name(m_type);
+}
+
+TokenCategory Token::category(TokenType type)
+{
+    switch (type) {
+#define __ENUMERATE_JS_TOKEN(type, category) \
+    case TokenType::type:                    \
+        return TokenCategory::category;
+        ENUMERATE_JS_TOKENS
+#undef __ENUMERATE_JS_TOKEN
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+TokenCategory Token::category() const
+{
+    return category(m_type);
 }
 
 double Token::double_value() const
