@@ -91,7 +91,7 @@ ConsoleWidget::ConsoleWidget()
             auto error = parser.errors()[0];
             auto hint = error.source_location_hint(js_source);
             if (!hint.is_empty())
-                output_html.append(String::format("<pre>%s</pre>", escape_html_entities(hint).characters()));
+                output_html.append(String::formatted("<pre>{}</pre>", escape_html_entities(hint)));
             m_interpreter->vm().throw_exception<JS::SyntaxError>(m_interpreter->global_object(), error.to_string());
         } else {
             m_interpreter->run(m_interpreter->global_object(), *program);

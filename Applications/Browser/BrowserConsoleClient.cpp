@@ -102,7 +102,7 @@ JS::Value BrowserConsoleClient::trace()
     for (auto& function_name : trace) {
         if (function_name.is_empty())
             function_name = "&lt;anonymous&gt;";
-        html.appendf(" -> %s<br>", function_name.characters());
+        html.appendff(" -> {}<br>", function_name);
     }
     m_console_widget.print_html(html.string_view());
     return JS::js_undefined();
@@ -112,7 +112,7 @@ JS::Value BrowserConsoleClient::count()
 {
     auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
     auto counter_value = m_console.counter_increment(label);
-    m_console_widget.print_html(String::format("%s: %u", label.characters(), counter_value));
+    m_console_widget.print_html(String::formatted("{}: {}", label, counter_value));
     return JS::js_undefined();
 }
 
@@ -120,9 +120,9 @@ JS::Value BrowserConsoleClient::count_reset()
 {
     auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
     if (m_console.counter_reset(label)) {
-        m_console_widget.print_html(String::format("%s: 0", label.characters()));
+        m_console_widget.print_html(String::formatted("{}: 0", label));
     } else {
-        m_console_widget.print_html(String::format("\"%s\" doesn't have a count", label.characters()));
+        m_console_widget.print_html(String::formatted("\"{}\" doesn't have a count", label));
     }
     return JS::js_undefined();
 }
