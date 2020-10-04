@@ -331,7 +331,7 @@ MarkupGenerator::StyleType MarkupGenerator::style_type_for_token(Token token)
     case TokenType::Identifier:
         return StyleType::Identifier;
     default:
-        dbg() << "Unknown style type for token " << token.name();
+        dbgln("Unknown style type for token {}", token.name());
         ASSERT_NOT_REACHED();
     }
 }
