@@ -72,6 +72,17 @@ enum class WindowMenuDefaultAction {
     Restore
 };
 
+enum class TransparencyFilter {
+    None = 0,
+
+    // Blur filters (LowestBlur ... HighestBlur)
+    LowestBlur,
+    BlurLow = LowestBlur,
+    BlurMedium,
+    BlurHigh,
+    HighestBlur = BlurHigh
+};
+
 class Window final : public Core::Object
     , public InlineLinkedListNode<Window> {
     C_OBJECT(Window)
@@ -281,6 +292,9 @@ public:
         return true;
     }
 
+    void set_transparency_filter(TransparencyFilter);
+    TransparencyFilter transparency_filter() const { return m_transparency_filter; }
+
     Gfx::DisjointRectSet& opaque_rects() { return m_opaque_rects; }
     Gfx::DisjointRectSet& transparency_rects() { return m_transparency_rects; }
     Gfx::DisjointRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
@@ -337,6 +351,7 @@ private:
     int m_window_id { -1 };
     i32 m_client_id { -1 };
     float m_opacity { 1 };
+    TransparencyFilter m_transparency_filter { TransparencyFilter::None };
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
     NonnullRefPtr<Gfx::Bitmap> m_icon;

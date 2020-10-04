@@ -285,6 +285,18 @@ void Window::set_opacity(float opacity)
     WindowManager::the().notify_opacity_changed(*this);
 }
 
+void Window::set_transparency_filter(TransparencyFilter transparency_filter)
+{
+    if (m_transparency_filter == transparency_filter)
+        return;
+    m_transparency_filter = transparency_filter;
+    if (is_opaque())
+        return;
+    // Because applying a filter affects the transparency rects, we may need to recompute occlusions
+    Compositor::the().invalidate_occlusions();
+    Compositor::the().invalidate_screen(frame().rect());
+}
+
 void Window::set_occluded(bool occluded)
 {
     if (m_occluded == occluded)

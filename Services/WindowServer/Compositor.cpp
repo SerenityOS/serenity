@@ -34,6 +34,7 @@
 #include <AK/Memory.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Timer.h>
+#include <LibGfx/Filters/SpatialGaussianBlurFilter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibThread/BackgroundAction.h>
@@ -42,6 +43,93 @@
 //#define OCCLUSIONS_DEBUG
 
 namespace WindowServer {
+
+template<typename FilterType>
+class BackgroundFilter {
+public:
+    virtual void apply(Gfx::Bitmap& target_bitmap, const Gfx::IntRect& target_rect, const Gfx::Bitmap& source_bitmap, const Gfx::IntRect& source_rect) = 0;
+
+protected:
+    template<typename... Args>
+    BackgroundFilter(Args&&... args)
+        : m_params(forward<Args>(args)...)
+    {
+    }
+
+    FilterType m_filter;
+    FilterType::Parameters m_params;
+};
+
+template<size_t N>
+class GaussianBlurBackgroundFilter : public BackgroundFilter<Gfx::SpatialGaussianBlurFilter<N>> {
+    typedef BackgroundFilter<Gfx::SpatialGaussianBlurFilter<N>> Base;
+public:
+    GaussianBlurBackgroundFilter()
+        : Base(calc_matrix())
+    {
+    }
+
+    virtual void apply(Gfx::Bitmap& target_bitmap, const Gfx::IntRect& target_rect, const Gfx::Bitmap& source_bitmap, const Gfx::IntRect& source_rect) override
+    {
+        Base::m_filter.apply(target_bitmap, target_rect, source_bitmap, source_rect, Base::m_params, m_apply_cache);
+    }
+
+private:
+    static Matrix<N, float> calc_matrix()
+    {
+        Matrix<N, float> kernel;
+        auto sigma = 1.0f;
+        auto s = 2.0f * sigma * sigma;
+
+        for (auto x = -(ssize_t)N / 2; x <= (ssize_t)N / 2; x++) {
+            for (auto y = -(ssize_t)N / 2; y <= (ssize_t)N / 2; y++) {
+                auto r = sqrt(x * x + y * y);
+                kernel.elements()[x + 2][y + 2] = (exp(-(r * r) / s)) / (M_PI * s);
+            }
+        }
+
+        Gfx::normalize(kernel);
+        return kernel;
+    }
+
+    Gfx::SpatialGaussianBlurFilter<N>::ApplyCache m_apply_cache;
+};
+
+static GaussianBlurBackgroundFilter<3> s_gaussian_blur_3;
+static GaussianBlurBackgroundFilter<5> s_gaussian_blur_5;
+static GaussianBlurBackgroundFilter<7> s_gaussian_blur_7;
+
+static void apply_transparency_filter(Gfx::Bitmap& target_bitmap, const Gfx::IntRect& target_rect, const Gfx::Bitmap& source_bitmap, const Gfx::IntRect& source_rect, TransparencyFilter transparency_filter)
+{
+    switch (transparency_filter) {
+        case TransparencyFilter::None:
+            break;
+        case TransparencyFilter::BlurLow:
+            s_gaussian_blur_3.apply(target_bitmap, target_rect, source_bitmap, source_rect);
+            break;
+        case TransparencyFilter::BlurMedium:
+            s_gaussian_blur_5.apply(target_bitmap, target_rect, source_bitmap, source_rect);
+            break;
+        case TransparencyFilter::BlurHigh:
+            s_gaussian_blur_7.apply(target_bitmap, target_rect, source_bitmap, source_rect);
+            break;
+    }
+}
+
+Gfx::IntSize Compositor::rect_adjustment_for_transparency_filter(TransparencyFilter transparency_filter)
+{
+    switch (transparency_filter) {
+        case TransparencyFilter::None:
+            break;
+        case TransparencyFilter::BlurLow:
+            return { 3 * 2, 3 * 2 };
+        case TransparencyFilter::BlurMedium:
+            return { 5 * 2, 5 * 2 };
+        case TransparencyFilter::BlurHigh:
+            return { 7 * 2, 7 * 2 };
+    }
+    return {};
+}
 
 Compositor& Compositor::the()
 {
@@ -101,10 +189,12 @@ void Compositor::init_bitmaps()
         m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
 
     m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
+    m_temp_filter_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, size);
 
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
     m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
+    m_temp_filter_painter = make<Gfx::Painter>(*m_temp_filter_bitmap);
 
     m_buffers_are_flipped = false;
 
@@ -242,6 +332,7 @@ void Compositor::compose()
 
     auto back_painter = *m_back_painter;
     auto temp_painter = *m_temp_painter;
+    auto temp_filter_painter = *m_temp_filter_painter;
 
     auto paint_wallpaper = [&](Gfx::Painter& painter, const Gfx::IntRect& rect) {
         // FIXME: If the wallpaper is opaque, no need to fill with color!
@@ -288,7 +379,7 @@ void Compositor::compose()
 #endif
 
         RefPtr<Gfx::Bitmap> backing_store = window.backing_store();
-        auto compose_window_rect = [&](Gfx::Painter& painter, const Gfx::IntRect& rect) {
+        auto compose_window_rect = [&](Gfx::Painter& painter, const Gfx::IntRect& rect, bool rendering_transparency) {
             if (!window.is_fullscreen()) {
                 rect.for_each_intersected(frame_rects, [&](const Gfx::IntRect& intersected_rect) {
                     // TODO: Should optimize this to use a backing buffer
@@ -349,6 +440,17 @@ void Compositor::compose()
                 return;
             auto dst = backing_rect.location().translated(dirty_rect_in_backing_coordinates.location());
 
+            if (rendering_transparency && !window.is_opaque() && window.transparency_filter() != TransparencyFilter::None) {
+                Gfx::IntRect target_rect = rect.intersected(window.rect());
+                // The source rect (which is the inflated target rect) should be
+                // entirely available in m_temp_filter_bitmap. We should have
+                // copied that before rendering the transparency rects.
+                Gfx::IntRect source_rect = target_rect.inflated(rect_adjustment_for_transparency_filter(window.transparency_filter())).intersected(ws.rect());
+                // Now apply the filter on the target rect using m_temp_filter_bitmap
+                // as a undisturbed source
+                apply_transparency_filter(*painter.target(), target_rect, *m_temp_filter_bitmap, source_rect, window.transparency_filter());
+            }
+
             if (window.client() && window.client()->is_unresponsive()) {
                 painter.blit_filtered(dst, *backing_store, dirty_rect_in_backing_coordinates, [](Color src) {
                     return src.to_grayscale().darkened(0.75f);
@@ -383,7 +485,7 @@ void Compositor::compose()
                 prepare_rect(render_rect);
                 Gfx::PainterStateSaver saver(back_painter);
                 back_painter.add_clip_rect(render_rect);
-                compose_window_rect(back_painter, render_rect);
+                compose_window_rect(back_painter, render_rect, false);
                 return IterationDecision::Continue;
             });
         }
@@ -401,7 +503,27 @@ void Compositor::compose()
                 return IterationDecision::Continue;
             });
         }
+
         auto& transparency_rects = window.transparency_rects();
+
+        // If this window uses transparency filters, we need to copy transparency areas
+        // to m_temp_filter_bitmap first. We need to do this so that the filters can
+        // have an undisturbed source, as they may need to access pixels that may be
+        // overwritten between iterating and applying the transparency rectangles.
+        if (!transparency_rects.is_empty()) {
+            for (auto& dirty_rect : dirty_rects.rects()) {
+                // We need to inflate the dirty rect here for the filter
+                // The transparency rects were already inflated in the
+                // occlusions calculations
+                auto inflated_dirty_rect = dirty_rect.inflated(rect_adjustment_for_transparency_filter(window.transparency_filter()));
+                transparency_rects.for_each_intersected(inflated_dirty_rect, [&](const Gfx::IntRect& render_rect) {
+                    temp_filter_painter.blit(render_rect.location(), *m_temp_bitmap, render_rect);
+                    return IterationDecision::Continue;
+                });
+            }
+        }
+
+        // Render transparent portions to the temporary buffer
         if (!transparency_rects.is_empty()) {
             transparency_rects.for_each_intersected(dirty_rects, [&](const Gfx::IntRect& render_rect) {
 #ifdef COMPOSE_DEBUG
@@ -410,7 +532,7 @@ void Compositor::compose()
                 prepare_transparency_rect(render_rect);
                 Gfx::PainterStateSaver saver(temp_painter);
                 temp_painter.add_clip_rect(render_rect);
-                compose_window_rect(temp_painter, render_rect);
+                compose_window_rect(temp_painter, render_rect, true);
                 return IterationDecision::Continue;
             });
         }
@@ -873,12 +995,17 @@ void Compositor::recompute_occlusions()
             }
 
             Gfx::DisjointRectSet opaque_covering;
+            Gfx::IntSize filter_adjustment;
+            auto adjusted_window_frame_rect = window_frame_rect;
             if (w.is_opaque()) {
                 visible_opaque = visible_rects.intersected(window_frame_rect);
                 transparency_rects.clear();
             } else {
                 visible_opaque.clear();
-                transparency_rects = visible_rects.intersected(window_frame_rect);
+                filter_adjustment = rect_adjustment_for_transparency_filter(w.transparency_filter());
+                adjusted_window_frame_rect.inflate(filter_adjustment);
+                adjusted_window_frame_rect.intersect(screen_rect);
+                transparency_rects = visible_rects.intersected(adjusted_window_frame_rect);
             }
 
             bool found_this_window = false;
@@ -892,7 +1019,19 @@ void Compositor::recompute_occlusions()
                 if (w2.is_minimized())
                     return IterationDecision::Continue;
                 auto window_frame_rect2 = w2.frame().rect().intersected(screen_rect);
+                Gfx::IntSize filter_adjustment2;
                 auto covering_rect = window_frame_rect2.intersected(window_frame_rect);
+                if (covering_rect.is_empty())
+                    return IterationDecision::Continue;
+                if (w2.is_opaque()) {
+                    // Shrink the covering rect if we're covering a window with a filter with that covered window's filter adjustment
+                    covering_rect.shrink(filter_adjustment);
+                } else {
+                    filter_adjustment2 = rect_adjustment_for_transparency_filter(w2.transparency_filter());
+                    // Inflate the covering rect with this covering window's filter adjustment
+                    covering_rect.inflate(filter_adjustment2);
+                    covering_rect.intersect(screen_rect);
+                }
                 if (covering_rect.is_empty())
                     return IterationDecision::Continue;
 

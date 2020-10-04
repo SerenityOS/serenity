@@ -31,12 +31,12 @@
 #include <LibCore/Object.h>
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Forward.h>
+#include "Window.h"
 
 namespace WindowServer {
 
 class ClientConnection;
 class Cursor;
-class Window;
 
 enum class WallpaperMode {
     Simple,
@@ -73,6 +73,8 @@ public:
 
     void invalidate_occlusions() { m_occlusions_dirty = true; }
 
+    static Gfx::IntSize rect_adjustment_for_transparency_filter(TransparencyFilter);
+
 private:
     Compositor();
     void init_bitmaps();
@@ -101,9 +103,11 @@ private:
     RefPtr<Gfx::Bitmap> m_front_bitmap;
     RefPtr<Gfx::Bitmap> m_back_bitmap;
     RefPtr<Gfx::Bitmap> m_temp_bitmap;
+    RefPtr<Gfx::Bitmap> m_temp_filter_bitmap;
     OwnPtr<Gfx::Painter> m_back_painter;
     OwnPtr<Gfx::Painter> m_front_painter;
     OwnPtr<Gfx::Painter> m_temp_painter;
+    OwnPtr<Gfx::Painter> m_temp_filter_painter;
 
     Gfx::DisjointRectSet m_dirty_screen_rects;
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;

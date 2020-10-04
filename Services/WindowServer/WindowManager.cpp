@@ -967,15 +967,34 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 }
             }
 
-            if (m_keyboard_modifiers == Mod_Logo && event.type() == Event::MouseWheel) {
-                float opacity_change = -event.wheel_delta() * 0.05f;
-                float new_opacity = window.opacity() + opacity_change;
-                if (new_opacity < 0.05f)
-                    new_opacity = 0.05f;
-                if (new_opacity > 1.0f)
-                    new_opacity = 1.0f;
-                window.set_opacity(new_opacity);
-                return;
+            if (event.type() == Event::MouseWheel) {
+                if (m_keyboard_modifiers == Mod_Logo) {
+                    float opacity_change = -event.wheel_delta() * 0.05f;
+                    float new_opacity = window.opacity() + opacity_change;
+                    if (new_opacity < 0.05f)
+                        new_opacity = 0.05f;
+                    if (new_opacity > 1.0f)
+                        new_opacity = 1.0f;
+                    window.set_opacity(new_opacity);
+                    return;
+                } else if (m_keyboard_modifiers == (Mod_Ctrl | Mod_Logo)) {
+                    // increase or reduce blur
+                    auto delta = event.wheel_delta();
+                    auto blur_filter = window.transparency_filter();
+                    if (delta > 0) {
+                        if (blur_filter == TransparencyFilter::None)
+                            blur_filter = TransparencyFilter::LowestBlur;
+                        else if (blur_filter < TransparencyFilter::HighestBlur)
+                            blur_filter = (TransparencyFilter)((int)blur_filter + 1);
+                    } else if (delta < 0) {
+                        if (blur_filter == TransparencyFilter::LowestBlur)
+                            blur_filter = TransparencyFilter::None;
+                        else if (blur_filter > TransparencyFilter::LowestBlur)
+                            blur_filter = (TransparencyFilter)((int)blur_filter - 1);
+                    }
+                    window.set_transparency_filter(blur_filter);
+                    return;
+                }
             }
 
             // Well okay, let's see if we're hitting the frame or the window inside the frame.
