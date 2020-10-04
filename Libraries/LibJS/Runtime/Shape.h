@@ -112,6 +112,7 @@ private:
     bool m_unique { false };
     Object* m_prototype { nullptr };
     TransitionType m_transition_type { TransitionType::Invalid };
+    size_t m_property_count { 0 };
 };
 
 }
