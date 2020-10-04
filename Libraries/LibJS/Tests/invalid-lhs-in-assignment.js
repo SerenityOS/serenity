@@ -5,6 +5,10 @@ test("assignment to function call", () => {
     }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
 });
 
+test("assignment to function call in strict mode", () => {
+    expect("'use strict'; foo() = 'foo'").not.toEval();
+});
+
 test("assignment to inline function call", () => {
     expect(() => {
         (function () {})() = "foo";
