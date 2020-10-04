@@ -103,6 +103,14 @@ inline const LogStream& operator<<(const LogStream& stream, const URL& value)
 }
 
 template<>
+struct Formatter<URL> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const URL& value)
+    {
+        Formatter<StringView>::format(params, builder, value.to_string());
+    }
+};
+
+template<>
 struct Traits<URL> : public GenericTraits<URL> {
     static unsigned hash(const URL& url) { return url.to_string().hash(); }
 };
