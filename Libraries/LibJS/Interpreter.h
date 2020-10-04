@@ -71,9 +71,6 @@ public:
     Heap& heap() { return vm().heap(); }
     Exception* exception() { return vm().exception(); }
 
-    size_t argument_count() const { return vm().argument_count(); }
-    Value argument(size_t index) const { return vm().argument(index); }
-    Value this_value(Object& global_object) const { return vm().this_value(global_object); }
     LexicalEnvironment* current_environment() { return vm().current_environment(); }
 
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
