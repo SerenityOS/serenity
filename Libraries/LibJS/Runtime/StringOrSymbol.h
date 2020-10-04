@@ -29,6 +29,7 @@
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/Value.h>
+#include <string.h>
 
 namespace JS {
 
@@ -118,8 +119,15 @@ public:
 
     ALWAYS_INLINE bool operator==(const StringOrSymbol& other) const
     {
-        if (is_string())
-            return other.is_string() && as_string() == other.as_string();
+        if (is_string()) {
+            if (!other.is_string())
+                return false;
+            auto* this_impl = static_cast<const StringImpl*>(m_ptr);
+            auto* other_impl = static_cast<const StringImpl*>(other.m_ptr);
+            if (this_impl->length() != other_impl->length())
+                return false;
+            return !memcmp(this_impl->characters(), other_impl->characters(), this_impl->length());
+        }
         if (is_symbol())
             return other.is_symbol() && as_symbol() == other.as_symbol();
         return true;
