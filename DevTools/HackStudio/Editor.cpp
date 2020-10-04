@@ -497,7 +497,7 @@ Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data(
     if (!wrapper().editor().m_language_client)
         return {};
 
-    return Editor::AutoCompleteRequestData { { cursor().line(), cursor().column() > 0 ? cursor().column() - 1 : 0 } };
+    return Editor::AutoCompleteRequestData { cursor() };
 }
 
 void Editor::update_autocomplete(const AutoCompleteRequestData& data)
