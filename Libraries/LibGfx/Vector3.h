@@ -87,6 +87,23 @@ public:
         return *this * inv_length;
     }
 
+    Vector3 clamped(T m, T x) const
+    {
+        Vector3 copy { *this };
+        copy.clamp(m, x);
+        return copy;
+    }
+
+    void clamp(T min_value, T max_value)
+    {
+        m_x = max(min_value, m_x);
+        m_y = max(min_value, m_y);
+        m_z = max(min_value, m_z);
+        m_x = min(max_value, m_x);
+        m_y = min(max_value, m_y);
+        m_z = min(max_value, m_z);
+    }
+
     void normalize()
     {
         T inv_length = 1 / length();

@@ -121,14 +121,15 @@ template<size_t N>
 struct FilterParameters<Gfx::SpatialGaussianBlurFilter<N>> {
     static OwnPtr<typename Gfx::SpatialGaussianBlurFilter<N>::Parameters> get()
     {
+        constexpr static ssize_t offset = N / 2;
         Matrix<N, float> kernel;
         auto sigma = 1.0f;
         auto s = 2.0f * sigma * sigma;
 
-        for (auto x = -(ssize_t)N / 2; x <= (ssize_t)N / 2; x++) {
-            for (auto y = -(ssize_t)N / 2; y <= (ssize_t)N / 2; y++) {
+        for (auto x = -offset; x <= offset; x++) {
+            for (auto y = -offset; y <= offset; y++) {
                 auto r = sqrt(x * x + y * y);
-                kernel.elements()[x + 2][y + 2] = (exp(-(r * r) / s)) / (M_PI * s);
+                kernel.elements()[x + offset][y + offset] = (exp(-(r * r) / s)) / (M_PI * s);
             }
         }
 
