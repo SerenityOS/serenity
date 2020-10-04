@@ -148,7 +148,7 @@ Value ScriptFunction::call()
 Value ScriptFunction::construct(Function&)
 {
     if (m_is_arrow_function) {
-        vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name.characters());
+        vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name);
         return {};
     }
     return call();

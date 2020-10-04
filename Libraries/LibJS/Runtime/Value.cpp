@@ -312,7 +312,7 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
     case Type::String: {
         auto& string = primitive.as_string().string();
         if (!is_valid_bigint_value(string)) {
-            vm.throw_exception<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string.characters());
+            vm.throw_exception<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string);
             return {};
         }
         return js_bigint(vm.heap(), Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
@@ -702,13 +702,13 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
     if (!rhs.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects());
         return {};
     }
     auto has_instance_method = rhs.as_object().get(vm.well_known_symbol_has_instance());
     if (!has_instance_method.is_empty()) {
         if (!has_instance_method.is_function()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects().characters());
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects());
             return {};
         }
 
@@ -716,7 +716,7 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
     }
 
     if (!rhs.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, rhs.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, rhs.to_string_without_side_effects());
         return {};
     }
     return ordinary_has_instance(global_object, lhs, rhs);
@@ -743,7 +743,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
         return {};
 
     if (!rhs_prototype.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects());
         return {};
     }
     while (true) {

@@ -66,11 +66,11 @@ Value ProxyConstructor::construct(Function&)
     auto handler = vm.argument(1);
 
     if (!target.is_object()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructorBadType, "target", target.to_string_without_side_effects());
         return {};
     }
     if (!handler.is_object()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyConstructorBadType, "handler", handler.to_string_without_side_effects());
         return {};
     }
     return ProxyObject::create(global_object(), target.as_object(), handler.as_object());

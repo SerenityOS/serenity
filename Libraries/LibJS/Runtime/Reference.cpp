@@ -50,7 +50,7 @@ void Reference::put(GlobalObject& global_object, Value value)
     }
 
     if (!base().is_object() && vm.in_strict_mode()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_string().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_string());
         return;
     }
 
@@ -68,7 +68,7 @@ void Reference::throw_reference_error(GlobalObject& global_object)
     if (property_name.is_empty()) {
         global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::ReferenceUnresolvable);
     } else {
-        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, property_name.characters());
+        global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, property_name);
     }
 }
 

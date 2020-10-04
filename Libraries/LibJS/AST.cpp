@@ -132,7 +132,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         if (interpreter.exception())
             return {};
         if (is_super_property_lookup && lookup_target.is_nullish()) {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects().characters());
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects());
             return {};
         }
 
@@ -167,9 +167,9 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             } else {
                 expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
             }
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects().characters(), call_type, expression_string.characters());
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), call_type, expression_string);
         } else {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IsNotA, callee.to_string_without_side_effects().characters(), call_type);
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IsNotA, callee.to_string_without_side_effects(), call_type);
         }
         return {};
     }
@@ -692,7 +692,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception())
             return {};
         if (!super_constructor.is_function() && !super_constructor.is_null()) {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects().characters());
+            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ClassDoesNotExtendAConstructorOrNull, super_constructor.to_string_without_side_effects());
             return {};
         }
         class_constructor->set_constructor_kind(Function::ConstructorKind::Derived);
@@ -1163,7 +1163,7 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
 {
     auto value = interpreter.vm().get_variable(string(), global_object);
     if (value.is_empty()) {
-        interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, string().characters());
+        interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, string());
         return {};
     }
     return value;
@@ -1731,7 +1731,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
     if (interpreter.exception())
         return {};
     if (!tag.is_function()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAFunction, tag.to_string_without_side_effects().characters());
+        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAFunction, tag.to_string_without_side_effects());
         return {};
     }
     auto& tag_function = tag.as_function();
