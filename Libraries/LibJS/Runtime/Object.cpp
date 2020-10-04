@@ -747,7 +747,7 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
     if (property_name.is_string()) {
         function_name = property_name.as_string();
     } else {
-        function_name = String::format("[%s]", property_name.as_symbol()->description().characters());
+        function_name = String::formatted("[{}]", property_name.as_symbol()->description());
     }
     auto* function = NativeFunction::create(global_object(), function_name, move(native_function));
     function->define_property("length", Value(length), Attribute::Configurable);

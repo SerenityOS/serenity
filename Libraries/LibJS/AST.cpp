@@ -78,7 +78,7 @@ static void update_function_name(Value& value, const FlyString& name)
 static String get_function_name(GlobalObject& global_object, Value value)
 {
     if (value.is_symbol())
-        return String::format("[%s]", value.as_symbol().description().characters());
+        return String::formatted("[{}]", value.as_symbol().description());
     if (value.is_string())
         return value.as_string().string();
     return value.to_string(global_object);
@@ -743,9 +743,9 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             String accessor_name = [&] {
                 switch (method.kind()) {
                 case ClassMethod::Kind::Getter:
-                    return String::format("get %s", get_function_name(global_object, key).characters());
+                    return String::formatted("get {}", get_function_name(global_object, key));
                 case ClassMethod::Kind::Setter:
-                    return String::format("set %s", get_function_name(global_object, key).characters());
+                    return String::formatted("set {}", get_function_name(global_object, key));
                 default:
                     ASSERT_NOT_REACHED();
                 }
@@ -1538,9 +1538,9 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
         String name = get_function_name(global_object, key);
         if (property.type() == ObjectProperty::Type::Getter) {
-            name = String::format("get %s", name.characters());
+            name = String::formatted("get {}", name);
         } else if (property.type() == ObjectProperty::Type::Setter) {
-            name = String::format("set %s", name.characters());
+            name = String::formatted("set {}", name);
         }
 
         update_function_name(value, name);
@@ -1597,9 +1597,9 @@ String MemberExpression::to_string_approximation() const
     if (m_object->is_identifier())
         object_string = static_cast<const Identifier&>(*m_object).string();
     if (is_computed())
-        return String::format("%s[<computed>]", object_string.characters());
+        return String::formatted("{}[<computed>]", object_string);
     ASSERT(m_property->is_identifier());
-    return String::format("%s.%s", object_string.characters(), static_cast<const Identifier&>(*m_property).string().characters());
+    return String::formatted("{}.{}", object_string, static_cast<const Identifier&>(*m_property).string());
 }
 
 Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const

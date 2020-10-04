@@ -256,9 +256,10 @@ static Value pad_string(GlobalObject& global_object, const String& string, PadPl
         filler_builder.append(fill_string);
     auto filler = filler_builder.build().substring(0, fill_length);
 
-    if (placement == PadPlacement::Start)
-        return js_string(vm, String::format("%s%s", filler.characters(), string.characters()));
-    return js_string(vm, String::format("%s%s", string.characters(), filler.characters()));
+    auto formatted = placement == PadPlacement::Start
+        ? String::formatted("{}{}", filler, string)
+        : String::formatted("{}{}", string, filler);
+    return js_string(vm, formatted);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
