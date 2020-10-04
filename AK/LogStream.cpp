@@ -115,6 +115,8 @@ static char process_name_buffer[256];
 DebugLogStream dbg()
 {
     DebugLogStream stream;
+
+    // FIXME: This logic is redundant with the stuff in Format.cpp.
 #if defined(__serenity__) && !defined(KERNEL)
     if (got_process_name == TriState::Unknown) {
         if (get_process_name(process_name_buffer, sizeof(process_name_buffer)) == 0)

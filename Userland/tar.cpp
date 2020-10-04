@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (create + extract + list != 1) {
-        warnf("exactly one of -c, -x, and -t can be used");
+        warnln("exactly one of -c, -x, and -t can be used");
         return 1;
     }
 
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
         if (archive_file) {
             auto maybe_file = Core::File::open(archive_file, Core::IODevice::OpenMode::ReadOnly);
             if (maybe_file.is_error()) {
-                warnf("Core::File::open: {}", maybe_file.error());
+                warnln("Core::File::open: {}", maybe_file.error());
                 return 1;
             }
             file = maybe_file.value();

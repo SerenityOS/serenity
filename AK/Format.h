@@ -299,4 +299,47 @@ struct Formatter<bool> : StandardFormatter {
 void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams);
 void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams);
 
+#ifndef KERNEL
+void vout(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
+void raw_out(StringView string);
+
+// FIXME: Rename this function to 'out' when that name becomes avaliable.
+template<typename... Parameters>
+void new_out(StringView fmtstr, const Parameters&... parameters) { vout(fmtstr, VariadicFormatParams { parameters... }); }
+template<typename... Parameters>
+void outln(StringView fmtstr, const Parameters&... parameters) { vout(fmtstr, VariadicFormatParams { parameters... }, true); }
+
+void vwarn(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
+void raw_warn(StringView string);
+
+// FIXME: Rename this function to 'warn' when that name becomes avaliable.
+template<typename... Parameters>
+void new_warn(StringView fmtstr, const Parameters&... parameters) { vwarn(fmtstr, VariadicFormatParams { parameters... }); }
+template<typename... Parameters>
+void warnln(StringView fmtstr, const Parameters&... parameters) { vwarn(fmtstr, VariadicFormatParams { parameters... }, true); }
+#endif
+
+void vdbg(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
+void raw_dbg(StringView string);
+
+// FIXME: Rename this function to 'dbg' when that name becomes avaliable.
+template<typename... Parameters>
+void new_dbg(StringView fmtstr, const Parameters&... parameters) { vdbg(fmtstr, VariadicFormatParams { parameters... }); }
+template<typename... Parameters>
+void dbgln(StringView fmtstr, const Parameters&... parameters) { vdbg(fmtstr, VariadicFormatParams { parameters... }, true); }
+
 } // namespace AK
+
+#ifndef KERNEL
+using AK::new_out;
+using AK::outln;
+using AK::raw_out;
+
+using AK::new_warn;
+using AK::raw_warn;
+using AK::warnln;
+#endif
+
+using AK::dbgln;
+using AK::new_dbg;
+using AK::raw_dbg;
