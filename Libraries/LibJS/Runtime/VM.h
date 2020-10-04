@@ -197,7 +197,7 @@ public:
     template<typename T, typename... Args>
     void throw_exception(GlobalObject& global_object, ErrorType type, Args&&... args)
     {
-        return throw_exception(global_object, T::create(global_object, String::format(type.message(), forward<Args>(args)...)));
+        return throw_exception(global_object, T::create(global_object, String::formatted(type.message(), forward<Args>(args)...)));
     }
 
     Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject&);

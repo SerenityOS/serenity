@@ -462,7 +462,7 @@ void ProxyObject::visit_children(Cell::Visitor& visitor)
 Value ProxyObject::call()
 {
     if (!is_function()) {
-        vm().throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, Value(this).to_string_without_side_effects().characters());
+        vm().throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, Value(this).to_string_without_side_effects());
         return {};
     }
     if (m_is_revoked) {
@@ -495,7 +495,7 @@ Value ProxyObject::construct(Function& new_target)
 {
     auto& vm = this->vm();
     if (!is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, Value(this).to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, Value(this).to_string_without_side_effects());
         return {};
     }
     if (m_is_revoked) {

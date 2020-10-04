@@ -45,14 +45,14 @@ Object* get_iterator(GlobalObject& global_object, Value value, String hint, Valu
             return {};
     }
     if (!method.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
         return nullptr;
     }
     auto iterator = vm.call(method.as_function(), value);
     if (vm.exception())
         return {};
     if (!iterator.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotIterable, value.to_string_without_side_effects());
         return nullptr;
     }
     return &iterator.as_object();

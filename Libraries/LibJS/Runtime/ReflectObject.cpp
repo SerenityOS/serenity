@@ -38,7 +38,7 @@ static Object* get_target_object_from(GlobalObject& global_object, const String&
     auto& vm = global_object.vm();
     auto target = vm.argument(0);
     if (!target.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ReflectArgumentMustBeAnObject, name.characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReflectArgumentMustBeAnObject, name);
         return nullptr;
     }
     return static_cast<Object*>(&target.as_object());
@@ -49,7 +49,7 @@ static Function* get_target_function_from(GlobalObject& global_object, const Str
     auto& vm = global_object.vm();
     auto target = vm.argument(0);
     if (!target.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ReflectArgumentMustBeAFunction, name.characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReflectArgumentMustBeAFunction, name);
         return nullptr;
     }
     return &target.as_function();

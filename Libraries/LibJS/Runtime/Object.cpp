@@ -464,7 +464,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         dbg() << "Disallow define_property of non-extensible object";
 #endif
         if (throw_exceptions && vm().in_strict_mode())
-            vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_name.to_display_string().characters());
+            vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_name.to_display_string());
         return false;
     }
 
@@ -498,7 +498,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         dbg() << "Disallow reconfig of non-configurable property";
 #endif
         if (throw_exceptions)
-            vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string().characters());
+            vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string());
         return false;
     }
 
@@ -860,7 +860,7 @@ Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueLi
     if (vm.exception())
         return {};
     if (!property.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, property.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, property.to_string_without_side_effects());
         return {};
     }
     return vm.call(property.as_function(), this, move(arguments));

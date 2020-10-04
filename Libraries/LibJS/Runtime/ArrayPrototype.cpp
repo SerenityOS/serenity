@@ -90,12 +90,12 @@ static Function* callback_from_args(GlobalObject& global_object, const String& n
 {
     auto& vm = global_object.vm();
     if (vm.argument_count() < 1) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ArrayPrototypeOneArg, name.characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::ArrayPrototypeOneArg, name);
         return nullptr;
     }
     auto callback = vm.argument(0);
     if (!callback.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, callback.to_string_without_side_effects());
         return nullptr;
     }
     return &callback.as_function();
