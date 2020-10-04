@@ -193,8 +193,6 @@ int main(int argc, char** argv)
 
         new_tab.load(url);
 
-        dbgln("Added new tab {:p}, loading {}", &new_tab, url);
-
         if (activate)
             tab_widget.set_active_widget(&new_tab);
     };
