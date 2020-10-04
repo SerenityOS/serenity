@@ -212,7 +212,10 @@ Optional<JsonValue> JsonParser::parse_number()
             whole = number.value();
         }
 
-        int fraction = fraction_string.to_uint().value();
+        auto fraction_string_uint = fraction_string.to_uint();
+        if (!fraction_string_uint.has_value())
+            return {};
+        int fraction = fraction_string_uint.value();
         fraction *= (whole < 0) ? -1 : 1;
 
         auto divider = 1;
