@@ -94,7 +94,7 @@ public:
         {
             if (line == 0 || column == 0)
                 return message;
-            return String::format("%s (line: %zu, column: %zu)", message.characters(), line, column);
+            return String::formatted("{} (line: {}, column: {})", message, line, column);
         }
 
         String source_location_hint(const StringView& source, const char spacer = ' ', const char indicator = '^') const
