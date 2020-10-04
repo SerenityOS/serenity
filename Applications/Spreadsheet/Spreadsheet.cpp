@@ -249,7 +249,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
             break;
         case Cell::Formula: {
             auto& interpreter = sheet->interpreter();
-            auto value = interpreter.call(parse_function, json, JS::js_string(interpreter.heap(), obj.get("value").as_string()));
+            auto value = interpreter.vm().call(parse_function, json, JS::js_string(interpreter.heap(), obj.get("value").as_string()));
             cell = make<Cell>(obj.get("source").to_string(), move(value), position, sheet->make_weak_ptr());
             break;
         }
@@ -339,7 +339,7 @@ JsonObject Sheet::to_json() const
         if (it.value->kind == Cell::Formula) {
             data.set("source", it.value->data);
             auto json = interpreter().global_object().get("JSON");
-            auto stringified = interpreter().call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data);
+            auto stringified = interpreter().vm().call(json.as_object().get("stringify").as_function(), json, it.value->evaluated_data);
             data.set("value", stringified.to_string_without_side_effects());
         } else {
             data.set("value", it.value->data);

@@ -59,21 +59,6 @@ public:
 
     static NonnullOwnPtr<Interpreter> create_with_existing_global_object(GlobalObject&);
 
-    template<typename... Args>
-    [[nodiscard]] ALWAYS_INLINE Value call(Function& function, Value this_value, Args... args)
-    {
-        // Are there any values in this argpack?
-        // args = [] -> if constexpr (false)
-        // args = [x, y, z] -> if constexpr ((void)x, true || ...)
-        if constexpr ((((void)args, true) || ...)) {
-            MarkedValueList arglist { heap() };
-            (..., arglist.append(move(args)));
-            return call(function, this_value, move(arglist));
-        }
-
-        return call(function, this_value);
-    }
-
     ~Interpreter();
 
     Value run(GlobalObject&, const Program&);
@@ -90,7 +75,6 @@ public:
     Value argument(size_t index) const { return vm().argument(index); }
     Value this_value(Object& global_object) const { return vm().this_value(global_object); }
     LexicalEnvironment* current_environment() { return vm().current_environment(); }
-    const CallFrame& call_frame() { return vm().call_frame(); }
 
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
@@ -100,11 +84,6 @@ public:
 private:
     explicit Interpreter(VM&);
 
-    [[nodiscard]] Value call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
-    {
-        return vm().call(function, this_value, move(arguments));
-    }
-
     void push_scope(ScopeFrame frame);
 
     Vector<ScopeFrame> m_scope_stack;
@@ -113,14 +92,5 @@ private:
 
     Handle<Object> m_global_object;
 };
-
-template<>
-[[nodiscard]] ALWAYS_INLINE Value Interpreter::call(Function& function, Value this_value, MarkedValueList arguments) { return call_internal(function, this_value, move(arguments)); }
-
-template<>
-[[nodiscard]] ALWAYS_INLINE Value Interpreter::call(Function& function, Value this_value, Optional<MarkedValueList> arguments) { return call_internal(function, this_value, move(arguments)); }
-
-template<>
-[[nodiscard]] ALWAYS_INLINE Value Interpreter::call(Function& function, Value this_value) { return call(function, this_value, Optional<MarkedValueList> {}); }
 
 }

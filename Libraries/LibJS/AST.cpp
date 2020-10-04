@@ -215,7 +215,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 
         interpreter.current_environment()->bind_this_value(global_object, result);
     } else {
-        result = interpreter.call(function, this_value, move(arguments));
+        result = interpreter.vm().call(function, this_value, move(arguments));
     }
 
     if (interpreter.exception())
@@ -1760,7 +1760,7 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
         raw_strings->indexed_properties().append(value);
     }
     strings->define_property("raw", raw_strings, 0);
-    return interpreter.call(tag_function, js_undefined(), move(arguments));
+    return interpreter.vm().call(tag_function, js_undefined(), move(arguments));
 }
 
 void TryStatement::dump(int indent) const
