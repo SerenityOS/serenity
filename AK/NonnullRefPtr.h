@@ -248,6 +248,14 @@ inline const LogStream& operator<<(const LogStream& stream, const NonnullRefPtr<
     return stream << value.ptr();
 }
 
+template<typename T>
+struct Formatter<NonnullRefPtr<T>> : Formatter<const T*> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const NonnullRefPtr<T>& value)
+    {
+        Formatter<const T*>::format(params, builder, value.ptr());
+    }
+};
+
 template<typename T, typename U>
 inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b)
 {
