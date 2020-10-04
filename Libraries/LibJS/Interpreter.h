@@ -88,10 +88,9 @@ public:
 
     bool in_strict_mode() const
     {
-        // FIXME: This implementation is bogus; strict mode is per-file or per-function, not per-block!
         if (m_scope_stack.is_empty())
-            return true;
-        return m_scope_stack.last().scope_node->in_strict_mode();
+            return false;
+        return m_scope_stack.last().is_strict_mode;
     }
 
     size_t argument_count() const { return vm().argument_count(); }
@@ -100,10 +99,10 @@ public:
     LexicalEnvironment* current_environment() { return vm().current_environment(); }
     const CallFrame& call_frame() { return vm().call_frame(); }
 
-    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
+    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&, bool is_strict = false);
     void exit_scope(const ScopeNode&);
 
-    Value execute_statement(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
+    Value execute_statement(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block, bool is_strict = false);
 
 private:
     explicit Interpreter(VM&);
@@ -113,11 +112,13 @@ private:
         return vm().call(function, this_value, move(arguments));
     }
 
+    void push_scope(ScopeFrame frame);
+
+    Vector<ScopeFrame> m_scope_stack;
+
     NonnullRefPtr<VM> m_vm;
 
     Handle<Object> m_global_object;
-
-    Vector<ScopeFrame> m_scope_stack;
 };
 
 template<>

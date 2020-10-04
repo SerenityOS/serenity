@@ -89,6 +89,11 @@ Value ScopeNode::execute(Interpreter& interpreter, GlobalObject& global_object) 
     return interpreter.execute_statement(global_object, *this);
 }
 
+Value Program::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    return interpreter.execute_statement(global_object, *this, {}, ScopeType::Block, m_is_strict_mode);
+}
+
 Value FunctionDeclaration::execute(Interpreter&, GlobalObject&) const
 {
     return js_undefined();
@@ -96,7 +101,7 @@ Value FunctionDeclaration::execute(Interpreter&, GlobalObject&) const
 
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_environment(), m_is_arrow_function);
+    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_environment(), is_strict_mode(), m_is_arrow_function);
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const

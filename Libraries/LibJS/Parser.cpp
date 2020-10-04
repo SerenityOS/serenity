@@ -390,10 +390,12 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     if (function_length == -1)
         function_length = parameters.size();
 
-    auto function_body_result = [this]() -> RefPtr<BlockStatement> {
+    bool is_strict = false;
+
+    auto function_body_result = [&]() -> RefPtr<BlockStatement> {
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
-            return parse_block_statement();
+            return parse_block_statement(is_strict);
         }
         if (match_expression()) {
             // Parse a function body which returns a single expression
@@ -414,7 +416,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     if (!function_body_result.is_null()) {
         state_rollback_guard.disarm();
         auto body = function_body_result.release_nonnull();
-        return create_ast_node<FunctionExpression>("", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last(), true);
+        return create_ast_node<FunctionExpression>("", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last(), is_strict, true);
     }
 
     return nullptr;
@@ -562,9 +564,9 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             constructor_body->append(create_ast_node<ExpressionStatement>(move(super_call)));
             constructor_body->add_variables(m_parser_state.m_var_scopes.last());
 
-            constructor = create_ast_node<FunctionExpression>(class_name, move(constructor_body), Vector { FunctionNode::Parameter { "args", nullptr, true } }, 0, NonnullRefPtrVector<VariableDeclaration>());
+            constructor = create_ast_node<FunctionExpression>(class_name, move(constructor_body), Vector { FunctionNode::Parameter { "args", nullptr, true } }, 0, NonnullRefPtrVector<VariableDeclaration>(), true);
         } else {
-            constructor = create_ast_node<FunctionExpression>(class_name, move(constructor_body), Vector<FunctionNode::Parameter> {}, 0, NonnullRefPtrVector<VariableDeclaration>());
+            constructor = create_ast_node<FunctionExpression>(class_name, move(constructor_body), Vector<FunctionNode::Parameter> {}, 0, NonnullRefPtrVector<VariableDeclaration>(), true);
         }
     }
 
@@ -1204,6 +1206,12 @@ NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 
 NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 {
+    bool dummy = false;
+    return parse_block_statement(dummy);
+}
+
+NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
+{
     ScopePusher scope(*this, ScopePusher::Let);
     auto block = create_ast_node<BlockStatement>();
     consume(TokenType::CurlyOpen);
@@ -1212,7 +1220,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
     bool initial_strict_mode_state = m_parser_state.m_strict_mode;
     if (initial_strict_mode_state) {
         m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
-        block->set_strict_mode();
+        is_strict = true;
     } else {
         m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Looking;
     }
@@ -1225,7 +1233,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 
             if (first && !initial_strict_mode_state) {
                 if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Found) {
-                    block->set_strict_mode();
+                    is_strict = true;
                     m_parser_state.m_strict_mode = true;
                 }
                 m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
@@ -1292,10 +1300,11 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_funct
     if (function_length == -1)
         function_length = parameters.size();
 
-    auto body = parse_block_statement();
+    bool is_strict = false;
+    auto body = parse_block_statement(is_strict);
     body->add_variables(m_parser_state.m_var_scopes.last());
     body->add_functions(m_parser_state.m_function_scopes.last());
-    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>());
+    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(), is_strict);
 }
 
 NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool with_semicolon)

@@ -50,6 +50,7 @@ struct ScopeFrame {
     ScopeType type;
     NonnullRefPtr<ScopeNode> scope_node;
     bool pushed_environment { false };
+    bool is_strict_mode { false };
 };
 
 struct CallFrame {
