@@ -36,7 +36,7 @@
 
 #define TODO_INSN()                                                                 \
     do {                                                                            \
-        report("\n==%d== Unimplemented instruction: %s\n", getpid(), __FUNCTION__); \
+        warnln("\n=={}== Unimplemented instruction: {}\n", getpid(), __FUNCTION__); \
         m_emulator.dump_backtrace();                                                \
         _exit(0);                                                                   \
     } while (0)

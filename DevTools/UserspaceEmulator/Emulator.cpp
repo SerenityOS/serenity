@@ -217,12 +217,11 @@ void Emulator::dump_backtrace(const Vector<FlatPtr>& backtrace)
         u32 offset = 0;
         String symbol = m_elf->symbolicate(address, &offset);
         auto source_position = m_debug_info->get_source_position(address);
-        report("==%d==    %#08x  %s", getpid(), address, symbol.characters());
+        new_warn("=={}==    {:p}  {}", getpid(), address, symbol);
         if (source_position.has_value())
-            report(" (\033[34;1m%s\033[0m:%zu)", LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
+            warnln(" (\033[34;1m{}\033[0m:{})", LexicalPath(source_position.value().file_path).basename(), source_position.value().line_number);
         else
-            report(" +%#x", offset);
-        report("\n");
+            warnln(" +{:x}", offset);
     }
 }
 
@@ -897,7 +896,7 @@ u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
 
 void Emulator::virt$exit(int status)
 {
-    report("\n==%d==  \033[33;1mSyscall: exit(%d)\033[0m, shutting down!\n", getpid(), status);
+    warnln("\n=={}==  \033[33;1mSyscall: exit({})\033[0m, shutting down!", getpid(), status);
     m_exit_status = status;
     m_shutdown = true;
 }
@@ -1237,14 +1236,6 @@ void Emulator::dispatch_one_pending_signal()
     ASSERT((m_cpu.esp().value() % 16) == 0);
 
     m_cpu.set_eip(m_signal_trampoline);
-}
-
-void report(const char* format, ...)
-{
-    va_list ap;
-    va_start(ap, format);
-    vfprintf(stderr, format, ap);
-    va_end(ap);
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
