@@ -159,7 +159,7 @@ void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSugges
         return;
     }
 
-    auto suggestions = AutoComplete::get_suggestions(document->text(), { (size_t)message.cursor_line(), (size_t)message.cursor_column() });
+    auto suggestions = AutoComplete::get_suggestions(document->text(), { (size_t)message.cursor_line(), (size_t)max(message.cursor_column(), message.cursor_column() - 1) });
     post_message(Messages::LanguageClient::AutoCompleteSuggestions(move(suggestions)));
 }
 
