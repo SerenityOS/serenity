@@ -91,15 +91,15 @@ const GlobalObject& Interpreter::global_object() const
     return static_cast<const GlobalObject&>(*m_global_object.cell());
 }
 
-void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type, GlobalObject& global_object)
+void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type, GlobalObject& global_object, bool is_strict)
 {
     for (auto& declaration : scope_node.functions()) {
-        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment());
+        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment(), is_strict);
         vm().set_variable(declaration.name(), function, global_object);
     }
 
     if (scope_type == ScopeType::Function) {
-        m_scope_stack.append({ scope_type, scope_node, false });
+        push_scope({ scope_type, scope_node, false, is_strict });
         return;
     }
 
@@ -130,7 +130,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
         pushed_lexical_environment = true;
     }
 
-    m_scope_stack.append({ scope_type, scope_node, pushed_lexical_environment });
+    push_scope({ scope_type, scope_node, pushed_lexical_environment, is_strict });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
@@ -148,13 +148,20 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
         vm().unwind(ScopeType::None);
 }
 
-Value Interpreter::execute_statement(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type)
+void Interpreter::push_scope(ScopeFrame frame)
+{
+    if (in_strict_mode())
+        frame.is_strict_mode = true;
+    m_scope_stack.append(move(frame));
+}
+
+Value Interpreter::execute_statement(GlobalObject& global_object, const Statement& statement, ArgumentVector arguments, ScopeType scope_type, bool is_strict)
 {
     if (!statement.is_scope_node())
         return statement.execute(*this, global_object);
 
     auto& block = static_cast<const ScopeNode&>(statement);
-    enter_scope(block, move(arguments), scope_type, global_object);
+    enter_scope(block, move(arguments), scope_type, global_object, is_strict);
 
     if (block.children().is_empty())
         vm().set_last_value({}, js_undefined());
