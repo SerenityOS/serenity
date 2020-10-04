@@ -56,6 +56,8 @@ public:
         return *m_target_function;
     }
 
+    virtual bool is_strict_mode() const override { return m_target_function->is_strict_mode(); }
+
 private:
     virtual bool is_bound_function() const override { return true; }
 

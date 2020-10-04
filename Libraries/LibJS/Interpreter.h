@@ -86,23 +86,16 @@ public:
     Heap& heap() { return vm().heap(); }
     Exception* exception() { return vm().exception(); }
 
-    bool in_strict_mode() const
-    {
-        if (m_scope_stack.is_empty())
-            return false;
-        return m_scope_stack.last().is_strict_mode;
-    }
-
     size_t argument_count() const { return vm().argument_count(); }
     Value argument(size_t index) const { return vm().argument(index); }
     Value this_value(Object& global_object) const { return vm().this_value(global_object); }
     LexicalEnvironment* current_environment() { return vm().current_environment(); }
     const CallFrame& call_frame() { return vm().call_frame(); }
 
-    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&, bool is_strict = false);
+    void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
 
-    Value execute_statement(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block, bool is_strict = false);
+    Value execute_statement(GlobalObject&, const Statement&, ArgumentVector = {}, ScopeType = ScopeType::Block);
 
 private:
     explicit Interpreter(VM&);

@@ -50,6 +50,9 @@ public:
     virtual const FlyString& name() const override { return m_name; };
     void set_name(const FlyString& name) { m_name = name; };
 
+protected:
+    virtual bool is_strict_mode() const final { return m_is_strict; }
+
 private:
     virtual bool is_script_function() const override { return true; }
     virtual LexicalEnvironment* create_environment() override;
@@ -62,9 +65,9 @@ private:
     NonnullRefPtr<Statement> m_body;
     const Vector<FunctionNode::Parameter> m_parameters;
     LexicalEnvironment* m_parent_environment { nullptr };
-    i32 m_function_length;
-    bool m_is_strict;
-    bool m_is_arrow_function;
+    i32 m_function_length { 0 };
+    bool m_is_strict { false };
+    bool m_is_arrow_function { false };
 };
 
 }
