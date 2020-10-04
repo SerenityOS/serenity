@@ -658,7 +658,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for ++foo()
         if (!rhs->is_identifier() && !rhs->is_member_expression())
-            syntax_error(String::format("Right-hand side of prefix increment operator must be identifier or member expression, got %s", rhs->class_name()), rhs_start_line, rhs_start_column);
+            syntax_error(String::formatted("Right-hand side of prefix increment operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start_line, rhs_start_column);
         return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(rhs), true);
     }
     case TokenType::MinusMinus: {
@@ -669,7 +669,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for --foo()
         if (!rhs->is_identifier() && !rhs->is_member_expression())
-            syntax_error(String::format("Right-hand side of prefix decrement operator must be identifier or member expression, got %s", rhs->class_name()), rhs_start_line, rhs_start_column);
+            syntax_error(String::formatted("Right-hand side of prefix decrement operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start_line, rhs_start_column);
         return create_ast_node<UpdateExpression>(UpdateOp::Decrement, move(rhs), true);
     }
     case TokenType::ExclamationMark:
@@ -856,7 +856,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token)
         String message;
         if (status == Token::StringValueStatus::MalformedHexEscape || status == Token::StringValueStatus::MalformedUnicodeEscape) {
             auto type = status == Token::StringValueStatus::MalformedUnicodeEscape ? "unicode" : "hexadecimal";
-            message = String::format("Malformed %s escape sequence", type);
+            message = String::formatted("Malformed {} escape sequence", type);
         } else if (status == Token::StringValueStatus::UnicodeEscapeOverflow) {
             message = "Unicode code_point must not be greater than 0x10ffff in escape sequence";
         }
@@ -1084,7 +1084,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
             auto name = static_cast<const Identifier&>(*lhs).string();
             if (name == "eval" || name == "arguments") {
                 syntax_error(
-                    String::format("'%s' cannot be assigned to in strict mode code", name.characters()),
+                    String::formatted("'{}' cannot be assigned to in strict mode code", name),
                     m_parser_state.m_current_token.line_number(),
                     m_parser_state.m_current_token.line_column());
             }
@@ -1105,14 +1105,14 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for foo()++
         if (!lhs->is_identifier() && !lhs->is_member_expression())
-            syntax_error(String::format("Left-hand side of postfix increment operator must be identifier or member expression, got %s", lhs->class_name()));
+            syntax_error(String::formatted("Left-hand side of postfix increment operator must be identifier or member expression, got {}", lhs->class_name()));
         consume();
         return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(lhs));
     case TokenType::MinusMinus:
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for foo()--
         if (!lhs->is_identifier() && !lhs->is_member_expression())
-            syntax_error(String::format("Left-hand side of postfix increment operator must be identifier or member expression, got %s", lhs->class_name()));
+            syntax_error(String::formatted("Left-hand side of postfix increment operator must be identifier or member expression, got {}", lhs->class_name()));
         consume();
         return create_ast_node<UpdateExpression>(UpdateOp::Decrement, move(lhs));
     case TokenType::DoubleAmpersand:
@@ -1790,7 +1790,7 @@ Token Parser::consume(TokenType expected_type)
 
 void Parser::expected(const char* what)
 {
-    syntax_error(String::format("Unexpected token %s. Expected %s", m_parser_state.m_current_token.name(), what));
+    syntax_error(String::formatted("Unexpected token {}. Expected {}", m_parser_state.m_current_token.name(), what));
 }
 
 void Parser::syntax_error(const String& message, size_t line, size_t column)
