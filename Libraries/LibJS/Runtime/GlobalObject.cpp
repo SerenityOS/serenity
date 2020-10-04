@@ -75,6 +75,8 @@ GlobalObject::GlobalObject()
 
 void GlobalObject::initialize()
 {
+    ensure_shape_is_unique();
+
     // These are done first since other prototypes depend on their presence.
     m_empty_object_shape = heap().allocate<Shape>(*this, *this);
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
