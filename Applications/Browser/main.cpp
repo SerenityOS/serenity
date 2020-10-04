@@ -144,7 +144,7 @@ int main(int argc, char** argv)
 
     tab_widget.on_change = [&](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);
-        window->set_title(String::format("%s - Browser", tab.title().characters()));
+        window->set_title(String::formatted("{} - Browser", tab.title()));
         tab.did_become_active();
     };
 
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
         new_tab.on_title_change = [&](auto title) {
             tab_widget.set_tab_title(new_tab, title);
             if (tab_widget.active_widget() == &new_tab)
-                window->set_title(String::format("%s - Browser", title.characters()));
+                window->set_title(String::formatted("{} - Browser", title));
         };
 
         new_tab.on_favicon_change = [&](auto& bitmap) {
@@ -193,7 +193,7 @@ int main(int argc, char** argv)
 
         new_tab.load(url);
 
-        dbg() << "Added new tab " << &new_tab << ", loading " << url;
+        dbgf("Added new tab {:p}, loading {}", &new_tab, url);
 
         if (activate)
             tab_widget.set_active_widget(&new_tab);

@@ -78,7 +78,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     browser_image.load_from_file("/res/graphics/download-animation.gif");
     animation_layout.add_spacer();
 
-    auto& source_label = add<GUI::Label>(String::format("From: %s", url.to_string().characters()));
+    auto& source_label = add<GUI::Label>(String::formatted("From: {}", url));
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     source_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     source_label.set_preferred_size(0, 16);
@@ -92,7 +92,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_progress_label->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     m_progress_label->set_preferred_size(0, 16);
 
-    auto& destination_label = add<GUI::Label>(String::format("To: %s", m_destination_path.characters()));
+    auto& destination_label = add<GUI::Label>(String::formatted("To: {}", m_destination_path));
     destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     destination_label.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     destination_label.set_preferred_size(0, 16);
@@ -138,7 +138,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
         StringBuilder builder;
         builder.append("Downloaded ");
         builder.append(human_readable_size(downloaded_size));
-        builder.appendf(" in %d sec", m_elapsed_timer.elapsed() / 1000);
+        builder.appendff(" in {} sec", m_elapsed_timer.elapsed() / 1000);
         m_progress_label->set_text(builder.to_string());
     }
 
@@ -146,7 +146,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
         StringBuilder builder;
         if (total_size.has_value()) {
             int percent = roundf(((float)downloaded_size / (float)total_size.value()) * 100);
-            builder.appendf("%d%%", percent);
+            builder.appendff("{}%", percent);
         } else {
             builder.append(human_readable_size(downloaded_size));
         }
@@ -172,14 +172,14 @@ void DownloadWidget::did_finish(bool success, const ByteBuffer& payload, RefPtr<
     m_cancel_button->update();
 
     if (!success) {
-        GUI::MessageBox::show(window(), String::format("Download failed for some reason"), "Download failed", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Download failed for some reason"), "Download failed", GUI::MessageBox::Type::Error);
         window()->close();
         return;
     }
 
     auto file_or_error = Core::File::open(m_destination_path, Core::IODevice::WriteOnly);
     if (file_or_error.is_error()) {
-        GUI::MessageBox::show(window(), String::format("Cannot open %s for writing", m_destination_path.characters()), "Download failed", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Cannot open {} for writing", m_destination_path), "Download failed", GUI::MessageBox::Type::Error);
         window()->close();
         return;
     }

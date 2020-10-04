@@ -78,7 +78,7 @@ static void start_download(const URL& url)
 {
     auto window = GUI::Window::construct();
     window->resize(300, 150);
-    window->set_title(String::format("0%% of %s", url.basename().characters()));
+    window->set_title(String::formatted("0% of {}", url.basename()));
     window->set_resizable(false);
     window->set_main_widget<DownloadWidget>(url);
     window->show();
@@ -504,7 +504,7 @@ void Tab::did_become_active()
             m_statusbar->set_text("");
             return;
         }
-        m_statusbar->set_text(String::format("Loading (%d pending resources...)", Web::ResourceLoader::the().pending_loads()));
+        m_statusbar->set_text(String::formatted("Loading ({} pending resources...)", Web::ResourceLoader::the().pending_loads()));
     };
 
     BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, unsigned modifiers) {
@@ -546,4 +546,5 @@ Web::WebViewHooks& Tab::hooks()
         return *m_page_view;
     return *m_web_content_view;
 }
+
 }
