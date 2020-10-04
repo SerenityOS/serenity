@@ -61,8 +61,6 @@ public:
 
     Heap& heap() const;
     VM& vm() const;
-    Interpreter& interpreter();
-    Interpreter& interpreter() const;
 
 protected:
     Cell() { }
