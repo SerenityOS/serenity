@@ -1044,7 +1044,7 @@ void dbgputch(char ch)
     syscall(SC_dbgputch, ch);
 }
 
-ssize_t dbgputstr(const char* characters, ssize_t length)
+int dbgputstr(const char* characters, ssize_t length)
 {
     int rc = syscall(SC_dbgputstr, characters, length);
     __RETURN_WITH_ERRNO(rc, rc, -1);

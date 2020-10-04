@@ -585,7 +585,7 @@ void vwarn(StringView fmtstr, TypeErasedFormatParams params, bool newline)
 void raw_dbg(StringView string)
 {
     const auto retval = dbgputstr(string.characters_without_null_termination(), string.length());
-    ASSERT(static_cast<size_t>(retval) == string.length());
+    ASSERT(retval == 0);
 }
 void vdbg(StringView fmtstr, TypeErasedFormatParams params, bool newline)
 {
