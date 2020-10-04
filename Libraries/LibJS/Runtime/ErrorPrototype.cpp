@@ -94,7 +94,7 @@ JS_DEFINE_NATIVE_GETTER(ErrorPrototype::message_getter)
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
     if (!vm.this_value(global_object).is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, vm.this_value(global_object).to_string_without_side_effects().characters());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, vm.this_value(global_object).to_string_without_side_effects());
         return {};
     }
     auto& this_object = vm.this_value(global_object).as_object();

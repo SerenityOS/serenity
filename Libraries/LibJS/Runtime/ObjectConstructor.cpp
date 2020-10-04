@@ -181,7 +181,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property_)
             if (object.is_proxy_object()) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::ObjectDefinePropertyReturnedFalse);
             } else {
-                vm.throw_exception<TypeError>(global_object, ErrorType::NonExtensibleDefine, property_key.to_display_string().characters());
+                vm.throw_exception<TypeError>(global_object, ErrorType::NonExtensibleDefine, property_key.to_display_string());
             }
         }
         return {};
