@@ -1198,84 +1198,67 @@ void ThisExpression::dump(int indent) const
 
 Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    auto rhs_result = m_rhs->execute(interpreter, global_object);
-    if (interpreter.exception())
-        return {};
+#define EXECUTE_LHS_AND_RHS()                                    \
+    do {                                                         \
+        lhs_result = m_lhs->execute(interpreter, global_object); \
+        if (interpreter.exception())                             \
+            return {};                                           \
+        rhs_result = m_rhs->execute(interpreter, global_object); \
+        if (interpreter.exception())                             \
+            return {};                                           \
+    } while (0)
 
     Value lhs_result;
+    Value rhs_result;
     switch (m_op) {
     case AssignmentOp::Assignment:
         break;
     case AssignmentOp::AdditionAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = add(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::SubtractionAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = sub(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::MultiplicationAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = mul(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::DivisionAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = div(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::ModuloAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = mod(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::ExponentiationAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = exp(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::BitwiseAndAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = bitwise_and(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::BitwiseOrAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = bitwise_or(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::BitwiseXorAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = bitwise_xor(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::LeftShiftAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = left_shift(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::RightShiftAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = right_shift(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::UnsignedRightShiftAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS_AND_RHS();
         rhs_result = unsigned_right_shift(global_object, lhs_result, rhs_result);
         break;
     }
@@ -1285,6 +1268,12 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
     auto reference = m_lhs->to_reference(interpreter, global_object);
     if (interpreter.exception())
         return {};
+
+    if (m_op == AssignmentOp::Assignment) {
+        rhs_result = m_rhs->execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+    }
 
     if (reference.is_unresolvable()) {
         interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);

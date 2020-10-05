@@ -53,3 +53,38 @@ test("basic functionality", () => {
     expect((x >>>= 2)).toBe(2);
     expect(x).toBe(2);
 });
+
+test("evaluation order", () => {
+    for (const op of [
+        "=",
+        "+=",
+        "-=",
+        "*=",
+        "/=",
+        "%=",
+        "**=",
+        "&=",
+        "|=",
+        "^=",
+        "<<=",
+        ">>=",
+        ">>>=",
+    ]) {
+        var a = [];
+        function b() {
+            b.hasBeenCalled = true;
+            throw Error();
+        }
+        function c() {
+            c.hasBeenCalled = true;
+            throw Error();
+        }
+        b.hasBeenCalled = false;
+        c.hasBeenCalled = false;
+        expect(() => {
+            new Function(`a[b()] ${op} c()`)();
+        }).toThrow(Error);
+        expect(b.hasBeenCalled).toBeTrue();
+        expect(c.hasBeenCalled).toBeFalse();
+    }
+});
