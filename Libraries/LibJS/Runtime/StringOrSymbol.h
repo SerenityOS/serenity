@@ -55,20 +55,20 @@ public:
         : m_ptr(string.impl())
     {
         ASSERT(!string.is_null());
-        static_cast<const StringImpl*>(m_ptr)->ref();
+        as_string_impl().ref();
     }
 
     StringOrSymbol(const FlyString& string)
         : m_ptr(string.impl())
     {
         ASSERT(!string.is_null());
-        static_cast<const StringImpl*>(m_ptr)->ref();
+        as_string_impl().ref();
     }
 
     ~StringOrSymbol()
     {
         if (is_string())
-            reinterpret_cast<const StringImpl*>(m_ptr)->unref();
+            as_string_impl().unref();
     }
 
     StringOrSymbol(const Symbol* symbol)
@@ -81,7 +81,7 @@ public:
     {
         m_ptr = other.m_ptr;
         if (is_string())
-            reinterpret_cast<const StringImpl*>(m_ptr)->ref();
+            as_string_impl().ref();
     }
 
     ALWAYS_INLINE bool is_valid() const { return m_ptr != nullptr; }
@@ -91,7 +91,7 @@ public:
     ALWAYS_INLINE String as_string() const
     {
         ASSERT(is_string());
-        return reinterpret_cast<const StringImpl*>(m_ptr);
+        return as_string_impl();
     }
 
     ALWAYS_INLINE const Symbol* as_symbol() const
@@ -126,13 +126,8 @@ public:
 
     ALWAYS_INLINE bool operator==(const StringOrSymbol& other) const
     {
-        if (is_string()) {
-            if (!other.is_string())
-                return false;
-            auto* this_impl = static_cast<const StringImpl*>(m_ptr);
-            auto* other_impl = static_cast<const StringImpl*>(other.m_ptr);
-            return *this_impl == *other_impl;
-        }
+        if (is_string())
+            return other.is_string() && as_string_impl() == other.as_string_impl();
         if (is_symbol())
             return other.is_symbol() && as_symbol() == other.as_symbol();
         return true;
@@ -144,14 +139,14 @@ public:
             return *this;
         m_ptr = other.m_ptr;
         if (is_string())
-            reinterpret_cast<const StringImpl*>(m_ptr)->ref();
+            as_string_impl().ref();
         return *this;
     }
 
     unsigned hash() const
     {
         if (is_string())
-            return static_cast<const StringImpl*>(m_ptr)->hash();
+            return as_string_impl().hash();
         return ptr_hash(as_symbol());
     }
 
@@ -164,6 +159,12 @@ private:
     ALWAYS_INLINE void set_symbol_flag()
     {
         m_ptr = reinterpret_cast<const void*>(bits() | 1ul);
+    }
+
+    ALWAYS_INLINE const StringImpl& as_string_impl() const
+    {
+        ASSERT(is_string());
+        return *reinterpret_cast<const StringImpl*>(m_ptr);
     }
 
     const void* m_ptr { nullptr };
