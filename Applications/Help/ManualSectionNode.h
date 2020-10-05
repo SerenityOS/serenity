@@ -34,7 +34,7 @@ public:
 
     ManualSectionNode(String section, String name)
         : m_section(section)
-        , m_full_name(String::format("%s. %s", section.characters(), name.characters()))
+        , m_full_name(String::formatted("{}. {}", section, name))
     {
     }
 
