@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
         page_view.load_html(html, URL::create_with_file_protocol(path));
 
         String page_and_section = model->page_and_section(tree_view.selection().first());
-        window->set_title(String::format("%s - Help", page_and_section.characters()));
+        window->set_title(String::formatted("{} - Help", page_and_section));
     };
 
     tree_view.on_selection_change = [&] {
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
     auto open_external = [&](auto& url) {
         if (!Desktop::Launcher::open(url)) {
             GUI::MessageBox::show(window,
-                String::format("The link to '%s' could not be opened.", url.to_string().characters()),
+                String::formatted("The link to '{}' could not be opened.", url),
                 "Failed to open link",
                 GUI::MessageBox::Type::Error);
         }
@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
         }
         auto tree_view_index = model->index_from_path(path);
         if (tree_view_index.has_value()) {
-            dbg() << "Found path _" << path << "_ in model at index " << tree_view_index.value();
+            dbgln("Found path _{}_ in model at index {}", path, tree_view_index.value());
             tree_view.selection().set(tree_view_index.value());
             return;
         }
