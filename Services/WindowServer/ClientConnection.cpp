@@ -31,7 +31,6 @@
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Compositor.h>
-#include <WindowServer/EventLoop.h>
 #include <WindowServer/Menu.h>
 #include <WindowServer/MenuBar.h>
 #include <WindowServer/MenuItem.h>

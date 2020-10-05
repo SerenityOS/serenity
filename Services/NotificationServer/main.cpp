@@ -25,7 +25,6 @@
  */
 
 #include "ClientConnection.h"
-#include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/WindowServerConnection.h>
