@@ -122,7 +122,10 @@ public:
         FocusOutline,
         Overlay,
     };
+
+    virtual void before_children_paint(PaintContext&, PaintPhase) {};
     virtual void paint(PaintContext&, PaintPhase);
+    virtual void after_children_paint(PaintContext&, PaintPhase) {};
 
     bool is_floating() const;
     bool is_absolutely_positioned() const;
