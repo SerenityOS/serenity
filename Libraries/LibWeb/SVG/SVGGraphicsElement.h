@@ -33,18 +33,6 @@
 
 namespace Web::SVG {
 
-struct SVGPaintingContext {
-    Gfx::Color fill_color;
-    Gfx::Color stroke_color;
-    float stroke_width;
-};
-
-static const SVGPaintingContext default_painting_context = {
-    Gfx::Color::Black,
-    Gfx::Color::Black,
-    1.0f
-};
-
 class SVGGraphicsElement : public SVGElement {
 public:
     using WrapperType = Bindings::SVGGraphicsElementWrapper;
@@ -53,9 +41,9 @@ public:
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
-    virtual void paint(Gfx::Painter& painter, const SVGPaintingContext& context) = 0;
-
-    SVGPaintingContext make_painting_context_from(const SVGPaintingContext& context);
+    const Optional<Gfx::Color>& fill_color() const { return m_fill_color; }
+    const Optional<Gfx::Color>& stroke_color() const { return m_stroke_color; }
+    const Optional<float>& stroke_width() const { return m_stroke_width; }
 
 protected:
     Optional<Gfx::Color> m_fill_color;

@@ -32,7 +32,7 @@ class SVGContext {
 public:
     SVGContext()
     {
-        push_state();
+        m_states.append(State());
     }
 
     const Gfx::Color& fill_color() const { return state().fill_color; }
@@ -43,9 +43,8 @@ public:
     void set_stroke_color(Gfx::Color color) { state().stroke_color = color; }
     void set_stroke_width(float width) { state().stroke_width = width; }
 
-    void push_state() { m_states.append(State()); }
-
-    void pop_state() { m_states.take_last(); }
+    void save() { m_states.append(m_states.last()); }
+    void restore() { m_states.take_last(); }
 
 private:
     struct State {

@@ -24,28 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/SVG/SVGGraphicsElement.h>
+#include <LibWeb/Layout/LayoutSVGGraphics.h>
 
-namespace Web::SVG {
+namespace Web {
 
-SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, const FlyString& tag_name)
-    : SVGElement(document, tag_name)
+LayoutSVGGraphics::LayoutSVGGraphics(DOM::Document& document, SVG::SVGGraphicsElement& element, NonnullRefPtr<CSS::StyleProperties> properties)
+    : LayoutSVG(document, element, properties)
 {
 }
 
-void SVGGraphicsElement::parse_attribute(const FlyString& name, const String& value)
+void LayoutSVGGraphics::before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase)
 {
-    SVGElement::parse_attribute(name, value);
+    LayoutSVG::before_children_paint(context, phase);
+    if (phase != LayoutNode::PaintPhase::Foreground)
+        return;
 
-    if (name == "fill") {
-        m_fill_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke") {
-        m_stroke_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke-width") {
-        auto result = value.to_int();
-        if (result.has_value())
-            m_stroke_width = result.value();
-    }
+    auto& graphics_element = downcast<SVG::SVGGraphicsElement>(node());
+
+    if (graphics_element.fill_color().has_value())
+        context.svg_context().set_fill_color(graphics_element.fill_color().value());
+    if (graphics_element.stroke_color().has_value())
+        context.svg_context().set_stroke_color(graphics_element.stroke_color().value());
+    if (graphics_element.stroke_width().has_value())
+        context.svg_context().set_stroke_width(graphics_element.stroke_width().value());
+}
+
+void LayoutSVGGraphics::layout(LayoutNode::LayoutMode mode)
+{
+    LayoutReplaced::layout(mode);
+
+    for_each_child([&](auto& child) { child.layout(mode); });
 }
 
 }

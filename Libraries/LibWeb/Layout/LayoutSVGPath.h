@@ -24,28 +24,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/SVG/SVGGraphicsElement.h>
+#pragma once
 
-namespace Web::SVG {
+#include <LibWeb/Layout/LayoutSVGGraphics.h>
 
-SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, const FlyString& tag_name)
-    : SVGElement(document, tag_name)
-{
-}
+namespace Web {
 
-void SVGGraphicsElement::parse_attribute(const FlyString& name, const String& value)
-{
-    SVGElement::parse_attribute(name, value);
+class LayoutSVGPath final : public LayoutSVGGraphics {
+public:
+    LayoutSVGPath(DOM::Document&, SVG::SVGPathElement&, NonnullRefPtr<CSS::StyleProperties>);
+    virtual ~LayoutSVGPath() override = default;
 
-    if (name == "fill") {
-        m_fill_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke") {
-        m_stroke_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke-width") {
-        auto result = value.to_int();
-        if (result.has_value())
-            m_stroke_width = result.value();
-    }
-}
+    SVG::SVGPathElement& node() { return downcast<SVG::SVGPathElement>(LayoutSVGGraphics::node()); }
+
+    void layout(LayoutMode mode) override;
+    void paint(PaintContext& context, PaintPhase phase) override;
+
+private:
+    virtual const char* class_name() const override { return "LayoutSVGPath"; }
+};
 
 }

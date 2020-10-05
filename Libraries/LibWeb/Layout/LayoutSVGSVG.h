@@ -24,28 +24,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/SVG/SVGGraphicsElement.h>
+#pragma once
 
-namespace Web::SVG {
+#include <LibWeb/Layout/LayoutSVGGraphics.h>
+#include <LibWeb/SVG/SVGSVGElement.h>
 
-SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, const FlyString& tag_name)
-    : SVGElement(document, tag_name)
-{
-}
+namespace Web {
 
-void SVGGraphicsElement::parse_attribute(const FlyString& name, const String& value)
-{
-    SVGElement::parse_attribute(name, value);
+class LayoutSVGSVG final : public LayoutSVGGraphics {
+public:
+    LayoutSVGSVG(DOM::Document&, SVG::SVGSVGElement&, NonnullRefPtr<CSS::StyleProperties>);
+    ~LayoutSVGSVG() override = default;
 
-    if (name == "fill") {
-        m_fill_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke") {
-        m_stroke_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke-width") {
-        auto result = value.to_int();
-        if (result.has_value())
-            m_stroke_width = result.value();
-    }
-}
+    SVG::SVGSVGElement& node() { return downcast<SVG::SVGSVGElement>(LayoutSVGGraphics::node()); }
+
+    void layout(LayoutMode = LayoutMode::Default) override;
+
+    void before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase) override;
+    void after_children_paint(PaintContext& context, PaintPhase phase) override;
+
+private:
+    const char* class_name() const override { return "LayoutSVGSVG"; }
+};
 
 }
