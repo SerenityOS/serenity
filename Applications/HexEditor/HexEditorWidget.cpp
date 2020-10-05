@@ -54,11 +54,11 @@ HexEditorWidget::HexEditorWidget()
     m_editor = add<HexEditor>();
 
     m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
-        m_statusbar->set_text(0, String::format("Offset: %8X", position));
-        m_statusbar->set_text(1, String::format("Edit Mode: %s", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
-        m_statusbar->set_text(2, String::format("Selection Start: %d", selection_start));
-        m_statusbar->set_text(3, String::format("Selection End: %d", selection_end));
-        m_statusbar->set_text(4, String::format("Selected Bytes: %d", abs(selection_end - selection_start) + 1));
+        m_statusbar->set_text(0, String::formatted("Offset: {:#010X}", position));
+        m_statusbar->set_text(1, String::formatted("Edit Mode: {}", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
+        m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start));
+        m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end));
+        m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", abs(selection_end - selection_start) + 1));
     };
 
     m_editor->on_change = [this] {
@@ -126,7 +126,7 @@ HexEditorWidget::HexEditorWidget()
 
         m_document_dirty = false;
         set_path(LexicalPath(save_path.value()));
-        dbg() << "Wrote document to " << save_path.value();
+        dbgln("Wrote document to {}", save_path.value());
     });
 
     auto menubar = GUI::MenuBar::construct();
@@ -227,7 +227,7 @@ void HexEditorWidget::open_file(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        GUI::MessageBox::show(window(), String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 
