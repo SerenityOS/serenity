@@ -70,6 +70,8 @@ public:
     Shape* create_configure_transition(const StringOrSymbol&, PropertyAttributes attributes);
     Shape* create_prototype_transition(Object* new_prototype);
 
+    void add_property_without_transition(const StringOrSymbol&, PropertyAttributes);
+
     bool is_unique() const { return m_unique; }
     Shape* create_unique_clone() const;
 

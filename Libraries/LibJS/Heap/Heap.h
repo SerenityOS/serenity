@@ -35,6 +35,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Cell.h>
+#include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
@@ -60,7 +61,12 @@ public:
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         auto* cell = static_cast<T*>(memory);
+        constexpr bool is_object = IsBaseOf<Object, T>::value;
+        if constexpr (is_object)
+            static_cast<Object*>(cell)->disable_transitions();
         cell->initialize(global_object);
+        if constexpr (is_object)
+            static_cast<Object*>(cell)->enable_transitions();
         return cell;
     }
 

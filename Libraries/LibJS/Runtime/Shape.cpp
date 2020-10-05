@@ -210,4 +210,11 @@ void Shape::remove_property_from_unique_shape(const StringOrSymbol& property_nam
     }
 }
 
+void Shape::add_property_without_transition(const StringOrSymbol& property_name, PropertyAttributes attributes)
+{
+    ensure_property_table();
+    if (m_property_table->set(property_name, { m_property_count, attributes }) == AK::HashSetResult::InsertedNewEntry)
+        ++m_property_count;
+}
+
 }
