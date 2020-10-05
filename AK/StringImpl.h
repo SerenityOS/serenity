@@ -70,6 +70,13 @@ public:
         return characters()[i];
     }
 
+    bool operator==(const StringImpl& other) const
+    {
+        if (length() != other.length())
+            return false;
+        return !__builtin_memcmp(characters(), other.characters(), length());
+    }
+
     unsigned hash() const
     {
         if (!m_has_hash)
