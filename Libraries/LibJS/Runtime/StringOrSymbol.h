@@ -30,7 +30,6 @@
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/Value.h>
-#include <string.h>
 
 namespace JS {
 
@@ -132,9 +131,7 @@ public:
                 return false;
             auto* this_impl = static_cast<const StringImpl*>(m_ptr);
             auto* other_impl = static_cast<const StringImpl*>(other.m_ptr);
-            if (this_impl->length() != other_impl->length())
-                return false;
-            return !memcmp(this_impl->characters(), other_impl->characters(), this_impl->length());
+            return *this_impl == *other_impl;
         }
         if (is_symbol())
             return other.is_symbol() && as_symbol() == other.as_symbol();

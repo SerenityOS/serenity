@@ -60,10 +60,7 @@ bool String::operator==(const String& other) const
     if (!other.m_impl)
         return false;
 
-    if (length() != other.length())
-        return false;
-
-    return !memcmp(characters(), other.characters(), length());
+    return *m_impl == *other.m_impl;
 }
 
 bool String::operator==(const StringView& other) const
