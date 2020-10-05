@@ -24,28 +24,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/SVG/SVGGraphicsElement.h>
+#include <LibWeb/Layout/LayoutSVGSVG.h>
 
-namespace Web::SVG {
+namespace Web {
 
-SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, const FlyString& tag_name)
-    : SVGElement(document, tag_name)
+LayoutSVGSVG::LayoutSVGSVG(DOM::Document& document, SVG::SVGSVGElement& element, NonnullRefPtr<CSS::StyleProperties> properties)
+    : LayoutSVGGraphics(document, element, properties)
 {
 }
 
-void SVGGraphicsElement::parse_attribute(const FlyString& name, const String& value)
+void LayoutSVGSVG::layout(LayoutMode layout_mode)
 {
-    SVGElement::parse_attribute(name, value);
+    set_has_intrinsic_width(true);
+    set_has_intrinsic_height(true);
+    set_intrinsic_width(node().width());
+    set_intrinsic_height(node().height());
+    LayoutSVGGraphics::layout(layout_mode);
+}
 
-    if (name == "fill") {
-        m_fill_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke") {
-        m_stroke_color = Gfx::Color::from_string(value).value_or(Color::Transparent);
-    } else if (name == "stroke-width") {
-        auto result = value.to_int();
-        if (result.has_value())
-            m_stroke_width = result.value();
-    }
+void LayoutSVGSVG::before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase)
+{
+    if (phase != LayoutNode::PaintPhase::Foreground)
+        return;
+
+    if (!context.has_svg_context())
+        context.set_svg_context(SVGContext());
+
+    LayoutSVGGraphics::before_children_paint(context, phase);
+}
+
+void LayoutSVGSVG::after_children_paint(PaintContext& context, LayoutNode::PaintPhase phase)
+{
+    LayoutSVGGraphics::after_children_paint(context, phase);
+    if (phase != LayoutNode::PaintPhase::Foreground)
+        return;
 }
 
 }

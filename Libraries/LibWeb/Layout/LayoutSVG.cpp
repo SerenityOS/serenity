@@ -31,37 +31,25 @@
 
 namespace Web {
 
-LayoutSVG::LayoutSVG(DOM::Document& document, SVG::SVGSVGElement& element, NonnullRefPtr<CSS::StyleProperties> style)
+LayoutSVG::LayoutSVG(DOM::Document& document, SVG::SVGElement& element, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutReplaced(document, element, move(style))
 {
 }
 
-void LayoutSVG::layout(LayoutMode layout_mode)
+void LayoutSVG::before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase)
 {
-    set_has_intrinsic_width(true);
-    set_has_intrinsic_height(true);
-    set_intrinsic_width(node().width());
-    set_intrinsic_height(node().height());
-    LayoutReplaced::layout(layout_mode);
+    LayoutNode::before_children_paint(context, phase);
+    if (phase != LayoutNode::PaintPhase::Foreground)
+        return;
+    context.svg_context().save();
 }
 
-void LayoutSVG::paint(PaintContext& context, PaintPhase phase)
+void LayoutSVG::after_children_paint(PaintContext& context, LayoutNode::PaintPhase phase)
 {
-    if (!is_visible())
+    LayoutNode::after_children_paint(context, phase);
+    if (phase != LayoutNode::PaintPhase::Foreground)
         return;
-
-    LayoutReplaced::paint(context, phase);
-
-    if (phase == PaintPhase::Foreground) {
-        if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
-            return;
-
-        if (!node().bitmap())
-            node().create_bitmap_as_top_level_svg_element();
-
-        ASSERT(node().bitmap());
-        context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
-    }
+    context.svg_context().restore();
 }
 
 }

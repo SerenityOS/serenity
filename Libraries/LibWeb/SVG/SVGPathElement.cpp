@@ -29,6 +29,7 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/Layout/LayoutSVGPath.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <ctype.h>
 
@@ -429,6 +430,14 @@ SVGPathElement::SVGPathElement(DOM::Document& document, const FlyString& tag_nam
 {
 }
 
+RefPtr<LayoutNode> SVGPathElement::create_layout_node(const CSS::StyleProperties* parent_style)
+{
+    auto style = document().style_resolver().resolve_style(*this, parent_style);
+    if (style->display() == CSS::Display::None)
+        return nullptr;
+    return adopt(*new LayoutSVGPath(document(), *this, move(style)));
+}
+
 void SVGPathElement::parse_attribute(const FlyString& name, const String& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
@@ -437,8 +446,11 @@ void SVGPathElement::parse_attribute(const FlyString& name, const String& value)
         m_instructions = PathDataParser(value).parse();
 }
 
-void SVGPathElement::paint(Gfx::Painter& painter, const SVGPaintingContext& context)
+Gfx::Path& SVGPathElement::get_path()
 {
+    if (m_path.has_value())
+        return m_path.value();
+
     Gfx::Path path;
 
     for (auto& instruction : m_instructions) {
@@ -640,15 +652,8 @@ void SVGPathElement::paint(Gfx::Painter& painter, const SVGPaintingContext& cont
         }
     }
 
-    // We need to fill the path before applying the stroke, however the filled
-    // path must be closed, whereas the stroke path may not necessary be closed.
-    // Copy the path and close it for filling, but use the previous path for stroke
-    auto closed_path = path;
-    closed_path.close();
-
-    // Fills are computed as though all paths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
-    painter.fill_path(closed_path, m_fill_color.value_or(context.fill_color), Gfx::Painter::WindingRule::EvenOdd);
-    painter.stroke_path(path, m_stroke_color.value_or(context.stroke_color), m_stroke_width.value_or(context.stroke_width));
+    m_path = path;
+    return m_path.value();
 }
 
 }

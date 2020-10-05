@@ -148,6 +148,9 @@ set(SOURCES
     Layout/LayoutPosition.cpp
     Layout/LayoutReplaced.cpp
     Layout/LayoutSVG.cpp
+    Layout/LayoutSVGGraphics.cpp
+    Layout/LayoutSVGPath.cpp
+    Layout/LayoutSVGSVG.cpp
     Layout/LayoutTable.cpp
     Layout/LayoutTableCell.cpp
     Layout/LayoutTableRow.cpp
