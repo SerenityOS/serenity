@@ -165,8 +165,11 @@ private:
         { TokenType::ShiftRightEquals, 3 },
         { TokenType::UnsignedShiftRightEquals, 3 },
         { TokenType::AmpersandEquals, 3 },
-        { TokenType::PipeEquals, 3 },
         { TokenType::CaretEquals, 3 },
+        { TokenType::PipeEquals, 3 },
+        { TokenType::DoubleAmpersandEquals, 3 },
+        { TokenType::DoublePipeEquals, 3 },
+        { TokenType::DoubleQuestionMarkEquals, 3 },
 
         { TokenType::Yield, 2 },
 
@@ -1092,12 +1095,18 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::DoubleAmpersand:
         consume();
         return create_ast_node<LogicalExpression>(LogicalOp::And, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::DoubleAmpersandEquals:
+        return parse_assignment_expression(AssignmentOp::AndAssignment, move(lhs), min_precedence, associativity);
     case TokenType::DoublePipe:
         consume();
         return create_ast_node<LogicalExpression>(LogicalOp::Or, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::DoublePipeEquals:
+        return parse_assignment_expression(AssignmentOp::OrAssignment, move(lhs), min_precedence, associativity);
     case TokenType::DoubleQuestionMark:
         consume();
         return create_ast_node<LogicalExpression>(LogicalOp::NullishCoalescing, move(lhs), parse_expression(min_precedence, associativity));
+    case TokenType::DoubleQuestionMarkEquals:
+        return parse_assignment_expression(AssignmentOp::NullishAssignment, move(lhs), min_precedence, associativity);
     case TokenType::QuestionMark:
         return parse_conditional_expression(move(lhs));
     default:
@@ -1121,7 +1130,10 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
         || match(TokenType::CaretEquals)
         || match(TokenType::ShiftLeftEquals)
         || match(TokenType::ShiftRightEquals)
-        || match(TokenType::UnsignedShiftRightEquals));
+        || match(TokenType::UnsignedShiftRightEquals)
+        || match(TokenType::DoubleAmpersandEquals)
+        || match(TokenType::DoublePipeEquals)
+        || match(TokenType::DoubleQuestionMarkEquals));
     consume();
     if (!lhs->is_identifier() && !lhs->is_member_expression() && !lhs->is_call_expression()) {
         syntax_error("Invalid left-hand side in assignment");
@@ -1705,8 +1717,11 @@ bool Parser::match_secondary_expression(Vector<TokenType> forbidden) const
         || type == TokenType::UnsignedShiftRight
         || type == TokenType::UnsignedShiftRightEquals
         || type == TokenType::DoubleAmpersand
+        || type == TokenType::DoubleAmpersandEquals
         || type == TokenType::DoublePipe
-        || type == TokenType::DoubleQuestionMark;
+        || type == TokenType::DoublePipeEquals
+        || type == TokenType::DoubleQuestionMark
+        || type == TokenType::DoubleQuestionMarkEquals;
 }
 
 bool Parser::match_statement() const
