@@ -333,7 +333,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             StringBuilder copy_text;
             for (auto& path : paths) {
                 auto url = URL::create_with_file_protocol(path);
-                copy_text.appendf("%s\n", url.to_string().characters());
+                copy_text.appendff("{}\n", url);
             }
             GUI::Clipboard::the().set_data(copy_text.build().bytes(), "text/uri-list");
         },
@@ -370,12 +370,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto do_paste = [&](const GUI::Action& action) {
         auto data_and_type = GUI::Clipboard::the().data_and_type();
         if (data_and_type.mime_type != "text/uri-list") {
-            dbg() << "Cannot paste clipboard type " << data_and_type.mime_type;
+            dbgln("Cannot paste clipboard type {}", data_and_type.mime_type);
             return;
         }
         auto copied_lines = String::copy(data_and_type.data).split('\n');
         if (copied_lines.is_empty()) {
-            dbg() << "No files to paste";
+            dbgln("No files to paste");
             return;
         }
 
@@ -390,13 +390,13 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 continue;
             URL url = uri_as_string;
             if (!url.is_valid() || url.protocol() != "file") {
-                dbg() << "Cannot paste URI " << uri_as_string;
+                dbgln("Cannot paste URI {}", uri_as_string);
                 continue;
             }
 
-            auto new_path = String::format("%s/%s", target_directory.characters(), url.basename().characters());
+            auto new_path = String::formatted("{}/{}", target_directory, url.basename());
             if (!FileUtils::copy_file_or_directory(url.path(), new_path)) {
-                auto error_message = String::format("Could not paste %s.", url.path().characters());
+                auto error_message = String::formatted("Could not paste {}.", url.path());
                 GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
             } else {
                 refresh_tree_view();
@@ -521,7 +521,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         window->set_icon(bitmap);
         location_textbox.set_icon(bitmap);
 
-        window->set_title(String::format("%s - File Manager", new_path.characters()));
+        window->set_title(String::formatted("{} - File Manager", new_path));
         location_textbox.set_text(new_path);
 
         if (!is_reacting_to_tree_view_selection_change) {
@@ -615,9 +615,9 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                         directory_view.launch(URL::create_with_file_protocol(full_path), launcher_handler);
                     });
                     if (default_file_handler->details().launcher_type == Desktop::Launcher::LauncherType::Application)
-                        file_open_action->set_text(String::format("Run %s", file_open_action->text().characters()));
+                        file_open_action->set_text(String::formatted("Run {}", file_open_action->text()));
                     else
-                        file_open_action->set_text(String::format("Open in %s", file_open_action->text().characters()));
+                        file_open_action->set_text(String::formatted("Open in {}", file_open_action->text()));
 
                     file_context_menu_action_default_action = file_open_action;
 

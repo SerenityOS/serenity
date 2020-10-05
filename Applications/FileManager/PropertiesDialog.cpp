@@ -127,9 +127,9 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
         }
     }
 
-    properties.append({ "Size:", String::format("%zu bytes", st.st_size) });
-    properties.append({ "Owner:", String::format("%s (%lu)", owner_name.characters(), st.st_uid) });
-    properties.append({ "Group:", String::format("%s (%lu)", group_name.characters(), st.st_gid) });
+    properties.append({ "Size:", String::formatted("{} bytes", st.st_size) });
+    properties.append({ "Owner:", String::formatted("{} ({})", owner_name, st.st_uid) });
+    properties.append({ "Group:", String::formatted("{} ({})", group_name, st.st_gid) });
     properties.append({ "Created at:", GUI::FileSystemModel::timestamp_string(st.st_ctime) });
     properties.append({ "Last modified:", GUI::FileSystemModel::timestamp_string(st.st_mtime) });
 
@@ -172,7 +172,7 @@ void PropertiesDialog::update()
 {
     auto bitmap = GUI::FileIconProvider::icon_for_path(m_name, m_mode).bitmap_for_size(32);
     m_icon->set_bitmap(bitmap);
-    set_title(String::format("%s - Properties", m_name.characters()));
+    set_title(String::formatted("{} - Properties", m_name));
 }
 
 void PropertiesDialog::permission_changed(mode_t mask, bool set)
@@ -189,7 +189,7 @@ void PropertiesDialog::permission_changed(mode_t mask, bool set)
 
 String PropertiesDialog::make_full_path(const String& name)
 {
-    return String::format("%s/%s", m_parent_path.characters(), name.characters());
+    return String::formatted("{}/{}", m_parent_path, name);
 }
 
 bool PropertiesDialog::apply_changes()
@@ -199,12 +199,12 @@ bool PropertiesDialog::apply_changes()
         String new_file = make_full_path(new_name).characters();
 
         if (GUI::FilePicker::file_exists(new_file)) {
-            GUI::MessageBox::show(this, String::format("A file \"%s\" already exists!", new_name.characters()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::formatted("A file \"{}\" already exists!", new_name), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 
         if (rename(make_full_path(m_name).characters(), new_file.characters())) {
-            GUI::MessageBox::show(this, String::format("Could not rename file: %s!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::formatted("Could not rename file: {}!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 
@@ -215,7 +215,7 @@ bool PropertiesDialog::apply_changes()
 
     if (m_permissions_dirty) {
         if (chmod(make_full_path(m_name).characters(), m_mode)) {
-            GUI::MessageBox::show(this, String::format("Could not update permissions: %s!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(this, String::formatted("Could not update permissions: {}!", strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return false;
         }
 

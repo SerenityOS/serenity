@@ -97,7 +97,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
 {
     if (!index.is_valid())
         return;
-    dbgprintf("on activation: %d,%d, this=%p, m_model=%p\n", index.row(), index.column(), this, m_model.ptr());
+    dbgln("on activation: {},{}, this={:p}, m_model={:p}", index.row(), index.column(), this, m_model.ptr());
     auto& node = this->node(index);
     auto path = node.full_path();
 
@@ -162,7 +162,7 @@ void DirectoryView::setup_model()
 
     m_model->on_error = [this](int, const char* error_string) {
         auto failed_path = m_model->root_path();
-        auto error_message = String::format("Could not read %s:\n%s", failed_path.characters(), error_string);
+        auto error_message = String::formatted("Could not read {}:\n{}", failed_path, error_string);
         m_error_label->set_text(error_message);
         set_active_widget(m_error_label);
 
@@ -359,7 +359,7 @@ void DirectoryView::set_status_message(const StringView& message)
 
 void DirectoryView::open_parent_directory()
 {
-    auto path = String::format("%s/..", model().root_path().characters());
+    auto path = String::formatted("{}/..", model().root_path());
     model().set_root_path(path);
 }
 
@@ -387,10 +387,9 @@ void DirectoryView::update_statusbar()
 {
     size_t total_size = model().node({}).total_size;
     if (current_view().selection().is_empty()) {
-        set_status_message(String::format("%d item%s (%s)",
+        set_status_message(String::formatted("{} item(s) ({})",
             model().row_count(),
-            model().row_count() != 1 ? "s" : "",
-            human_readable_size(total_size).characters()));
+            human_readable_size(total_size)));
         return;
     }
 
@@ -485,14 +484,11 @@ void DirectoryView::setup_actions()
     m_mkdir_action = GUI::Action::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         String value;
         if (GUI::InputBox::show(value, window(), "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto new_dir_path = LexicalPath::canonicalized_path(
-                String::format("%s/%s",
-                    path().characters(),
-                    value.characters()));
+            auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
             }
         }
     });
@@ -500,25 +496,22 @@ void DirectoryView::setup_actions()
     m_touch_action = GUI::Action::create("New file...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
         String value;
         if (GUI::InputBox::show(value, window(), "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto new_file_path = LexicalPath::canonicalized_path(
-                String::format("%s/%s",
-                    path().characters(),
-                    value.characters()));
+            auto new_file_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
             struct stat st;
             int rc = stat(new_file_path.characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::format("stat(\"%s\") failed: %s", new_file_path.characters(), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), String::formatted("stat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             if (rc == 0) {
-                GUI::MessageBox::show(window(), String::format("%s: Already exists", new_file_path.characters()), "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), String::formatted("{}: Already exists", new_file_path), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             int fd = creat(new_file_path.characters(), 0666);
             if (fd < 0) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::format("creat(\"%s\") failed: %s", new_file_path.characters(), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), String::format("creat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             rc = close(fd);
@@ -555,7 +548,7 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
         return;
     auto urls = event.mime_data().urls();
     if (urls.is_empty()) {
-        dbg() << "No files to drop";
+        dbgln("No files to drop");
         return;
     }
 
@@ -566,17 +559,12 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
     for (auto& url_to_copy : urls) {
         if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
             continue;
-        auto new_path = String::format("%s/%s",
-            target_node.full_path().characters(),
-            LexicalPath(url_to_copy.path()).basename().characters());
-
+        auto new_path = String::formatted("{}/{}", target_node.full_path(), LexicalPath(url_to_copy.path()).basename());
         if (url_to_copy.path() == new_path)
             continue;
 
         if (!FileUtils::copy_file_or_directory(url_to_copy.path(), new_path)) {
-            auto error_message = String::format("Could not copy %s into %s.",
-                url_to_copy.to_string().characters(),
-                new_path.characters());
+            auto error_message = String::formatted("Could not copy {} into {}.", url_to_copy.to_string(), new_path);
             GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
         }
     }
