@@ -74,6 +74,8 @@ const char* Length::unit_name() const
         return "mm";
     case Type::Q:
         return "Q";
+    case Type::Pc:
+        return "pc";
     case Type::Ex:
         return "ex";
     case Type::Em:

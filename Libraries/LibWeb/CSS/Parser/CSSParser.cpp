@@ -284,6 +284,9 @@ static CSS::Length parse_length(const CSS::ParsingContext& context, const String
     } else if (view.ends_with("pt", CaseSensitivity::CaseInsensitive)) {
         type = CSS::Length::Type::Pt;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
+    } else if (view.ends_with("pc", CaseSensitivity::CaseInsensitive)) {
+        type = CSS::Length::Type::Pc;
+        value = try_parse_float(view.substring_view(0, view.length() - 2));
     } else if (view.ends_with("mm", CaseSensitivity::CaseInsensitive)) {
         type = CSS::Length::Type::Mm;
         value = try_parse_float(view.substring_view(0, view.length() - 2));
