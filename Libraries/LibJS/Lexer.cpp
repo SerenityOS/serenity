@@ -89,6 +89,9 @@ Lexer::Lexer(StringView source)
         s_three_char_tokens.set("**=", TokenType::DoubleAsteriskEquals);
         s_three_char_tokens.set("<<=", TokenType::ShiftLeftEquals);
         s_three_char_tokens.set(">>=", TokenType::ShiftRightEquals);
+        s_three_char_tokens.set("&&=", TokenType::DoubleAmpersandEquals);
+        s_three_char_tokens.set("||=", TokenType::DoublePipeEquals);
+        s_three_char_tokens.set("\?\?=", TokenType::DoubleQuestionMarkEquals);
         s_three_char_tokens.set(">>>", TokenType::UnsignedShiftRight);
         s_three_char_tokens.set("...", TokenType::TripleDot);
     }

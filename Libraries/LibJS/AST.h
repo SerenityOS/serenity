@@ -816,6 +816,9 @@ enum class AssignmentOp {
     LeftShiftAssignment,
     RightShiftAssignment,
     UnsignedRightShiftAssignment,
+    AndAssignment,
+    OrAssignment,
+    NullishAssignment,
 };
 
 class AssignmentExpression final : public Expression {

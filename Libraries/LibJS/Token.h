@@ -36,7 +36,6 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(AmpersandEquals, Operator)             \
     __ENUMERATE_JS_TOKEN(Arrow, Operator)                       \
     __ENUMERATE_JS_TOKEN(Asterisk, Operator)                    \
-    __ENUMERATE_JS_TOKEN(DoubleAsteriskEquals, Operator)        \
     __ENUMERATE_JS_TOKEN(AsteriskEquals, Operator)              \
     __ENUMERATE_JS_TOKEN(Async, Keyword)                        \
     __ENUMERATE_JS_TOKEN(Await, Keyword)                        \
@@ -61,9 +60,13 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Delete, Keyword)                       \
     __ENUMERATE_JS_TOKEN(Do, ControlKeyword)                    \
     __ENUMERATE_JS_TOKEN(DoubleAmpersand, Operator)             \
+    __ENUMERATE_JS_TOKEN(DoubleAmpersandEquals, Operator)       \
     __ENUMERATE_JS_TOKEN(DoubleAsterisk, Operator)              \
+    __ENUMERATE_JS_TOKEN(DoubleAsteriskEquals, Operator)        \
     __ENUMERATE_JS_TOKEN(DoublePipe, Operator)                  \
+    __ENUMERATE_JS_TOKEN(DoublePipeEquals, Operator)            \
     __ENUMERATE_JS_TOKEN(DoubleQuestionMark, Operator)          \
+    __ENUMERATE_JS_TOKEN(DoubleQuestionMarkEquals, Operator)    \
     __ENUMERATE_JS_TOKEN(Else, ControlKeyword)                  \
     __ENUMERATE_JS_TOKEN(Enum, Keyword)                         \
     __ENUMERATE_JS_TOKEN(Eof, Invalid)                          \
@@ -113,8 +116,8 @@ namespace JS {
     __ENUMERATE_JS_TOKEN(Public, Keyword)                       \
     __ENUMERATE_JS_TOKEN(QuestionMark, Operator)                \
     __ENUMERATE_JS_TOKEN(QuestionMarkPeriod, Operator)          \
-    __ENUMERATE_JS_TOKEN(RegexLiteral, String)                  \
     __ENUMERATE_JS_TOKEN(RegexFlags, String)                    \
+    __ENUMERATE_JS_TOKEN(RegexLiteral, String)                  \
     __ENUMERATE_JS_TOKEN(Return, ControlKeyword)                \
     __ENUMERATE_JS_TOKEN(Semicolon, Punctuation)                \
     __ENUMERATE_JS_TOKEN(ShiftLeft, Operator)                   \

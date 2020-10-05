@@ -1261,6 +1261,30 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         EXECUTE_LHS_AND_RHS();
         rhs_result = unsigned_right_shift(global_object, lhs_result, rhs_result);
         break;
+    case AssignmentOp::AndAssignment:
+        lhs_result = m_lhs->execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+        if (!lhs_result.to_boolean())
+            return lhs_result;
+        rhs_result = m_rhs->execute(interpreter, global_object);
+        break;
+    case AssignmentOp::OrAssignment:
+        lhs_result = m_lhs->execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+        if (lhs_result.to_boolean())
+            return lhs_result;
+        rhs_result = m_rhs->execute(interpreter, global_object);
+        break;
+    case AssignmentOp::NullishAssignment:
+        lhs_result = m_lhs->execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+        if (!lhs_result.is_nullish())
+            return lhs_result;
+        rhs_result = m_rhs->execute(interpreter, global_object);
+        break;
     }
     if (interpreter.exception())
         return {};
@@ -1365,6 +1389,15 @@ void AssignmentExpression::dump(int indent) const
         break;
     case AssignmentOp::UnsignedRightShiftAssignment:
         op_string = ">>>=";
+        break;
+    case AssignmentOp::AndAssignment:
+        op_string = "&&=";
+        break;
+    case AssignmentOp::OrAssignment:
+        op_string = "||=";
+        break;
+    case AssignmentOp::NullishAssignment:
+        op_string = "\?\?=";
         break;
     }
 
