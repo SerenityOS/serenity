@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     } else {
         edited_font = Gfx::Font::load_from_file(path)->clone();
         if (!edited_font) {
-            String message = String::format("Couldn't load font: %s\n", path);
+            String message = String::formatted("Couldn't load font: {}\n", path);
             GUI::MessageBox::show(nullptr, message, "Font Editor", GUI::MessageBox::Type::Error);
             return 1;
         }
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
         if (font->type() == Gfx::FontTypes::Default)
             font->set_type(Gfx::FontTypes::LatinExtendedA);
 
-        window->set_title(String::format("%s - Font Editor", path.characters()));
+        window->set_title(String::formatted("{} - Font Editor", path));
         auto& font_editor_widget = window->set_main_widget<FontEditorWidget>(path, move(font));
         window->set_rect({ point, { font_editor_widget.preferred_width(), font_editor_widget.preferred_height() } });
     };
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 
         RefPtr<Gfx::Font> new_font = Gfx::Font::load_from_file(open_path.value())->clone();
         if (!new_font) {
-            String message = String::format("Couldn't load font: %s\n", open_path.value().characters());
+            String message = String::formatted("Couldn't load font: {}\n", open_path.value());
             GUI::MessageBox::show(window, message, "Font Editor", GUI::MessageBox::Type::Error);
             return;
         }
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
             return;
 
         if (editor->save_as(save_path.value()))
-            window->set_title(String::format("%s - Font Editor", save_path.value().characters()));
+            window->set_title(String::formatted("{} - Font Editor", save_path.value()));
     }));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
