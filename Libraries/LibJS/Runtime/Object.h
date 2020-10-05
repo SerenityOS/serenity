@@ -151,6 +151,9 @@ public:
 
     void ensure_shape_is_unique();
 
+    void enable_transitions() { m_transitions_enabled = true; }
+    void disable_transitions() { m_transitions_enabled = false; }
+
 protected:
     enum class GlobalObjectTag { Tag };
     enum class ConstructWithoutPrototypeTag { Tag };
@@ -169,6 +172,7 @@ private:
     void set_shape(Shape&);
 
     bool m_is_extensible { true };
+    bool m_transitions_enabled { true };
     Shape* m_shape { nullptr };
     Vector<Value> m_storage;
     IndexedProperties m_indexed_properties;

@@ -486,8 +486,11 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         if (m_shape->is_unique()) {
             m_shape->add_property_to_unique_shape(property_name, attributes);
             m_storage.resize(m_shape->property_count());
-        } else {
+        } else if (m_transitions_enabled) {
             set_shape(*m_shape->create_put_transition(property_name, attributes));
+        } else {
+            m_shape->add_property_without_transition(property_name, attributes);
+            m_storage.resize(m_shape->property_count());
         }
         metadata = shape().lookup(property_name);
         ASSERT(metadata.has_value());
