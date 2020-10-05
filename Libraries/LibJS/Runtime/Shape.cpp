@@ -148,16 +148,22 @@ void Shape::ensure_property_table() const
     if (m_property_table)
         return;
     m_property_table = make<HashMap<StringOrSymbol, PropertyMetadata>>();
-    m_property_table->ensure_capacity(m_property_count);
 
     DeferGC defer(heap());
 
+    u32 next_offset = 0;
+
     Vector<const Shape*, 64> transition_chain;
-    for (auto* shape = this; shape->m_previous; shape = shape->m_previous) {
+    for (auto* shape = m_previous; shape; shape = shape->m_previous) {
+        if (shape->m_property_table) {
+            *m_property_table = *shape->m_property_table;
+            next_offset = shape->m_property_count;
+            break;
+        }
         transition_chain.append(shape);
     }
+    transition_chain.append(this);
 
-    u32 next_offset = 0;
     for (ssize_t i = transition_chain.size() - 1; i >= 0; --i) {
         auto* shape = transition_chain[i];
         if (!shape->m_property_name.is_valid()) {
