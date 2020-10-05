@@ -215,8 +215,7 @@ int main(int argc, char** argv)
     out();
 
     for (auto& endpoint : endpoints) {
-        out() << "namespace Messages {";
-        out() << "namespace " << endpoint.name << " {";
+        out() << "namespace Messages::" << endpoint.name << " {";
         out();
 
         HashMap<String, int> message_ids;
@@ -335,8 +334,7 @@ int main(int argc, char** argv)
             }
             do_message(message.name, message.inputs, response_name);
         }
-        out() << "} // namespace " << endpoint.name;
-        out() << "} // namespace Messages";
+        out() << "}";
         out();
 
         out() << "class " << endpoint.name << "Endpoint : public IPC::Endpoint {";
