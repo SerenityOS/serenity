@@ -31,12 +31,12 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/UDPSocket.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 LookupServer::LookupServer()
