@@ -109,10 +109,12 @@ int main(int argc, char** argv)
     }
 
     bool set_time = false;
+    bool verbose = false;
     // FIXME: Change to serenityos.pool.ntp.org once https://manage.ntppool.org/manage/vendor/zone?a=km5a8h&id=vz-14154g is approved.
     const char* host = "time.google.com";
     Core::ArgsParser args_parser;
     args_parser.add_option(set_time, "Adjust system time (requires root)", "set", 's');
+    args_parser.add_option(verbose, "Verbose output", "verbose", 'v');
     args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -218,25 +220,27 @@ int main(int argc, char** argv)
         }
     }
 
-    printf("NTP response from %s:\n", inet_ntoa(peer_address.sin_addr));
-    printf("Leap Information: %d\n", packet.li_vn_mode >> 6);
-    printf("Version Number: %d\n", (packet.li_vn_mode >> 3) & 7);
-    printf("Mode: %d\n", packet.li_vn_mode & 7);
-    printf("Stratum: %d\n", packet.stratum);
-    printf("Poll: %d\n", packet.stratum);
-    printf("Precision: %d\n", packet.precision);
-    printf("Root delay: %#x\n", ntohl(packet.root_delay));
-    printf("Root dispersion: %#x\n", ntohl(packet.root_dispersion));
-    printf("Reference ID: %#x\n", ntohl(packet.reference_id));
-    printf("Reference timestamp:   %#016llx (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
-    printf("Origin timestamp:      %#016llx (%s)\n", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
-    printf("Receive timestamp:     %#016llx (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
-    printf("Transmit timestamp:    %#016llx (%s)\n", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
-    printf("Destination timestamp: %#016llx (%s)\n", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
+    if (verbose) {
+        printf("NTP response from %s:\n", inet_ntoa(peer_address.sin_addr));
+        printf("Leap Information: %d\n", packet.li_vn_mode >> 6);
+        printf("Version Number: %d\n", (packet.li_vn_mode >> 3) & 7);
+        printf("Mode: %d\n", packet.li_vn_mode & 7);
+        printf("Stratum: %d\n", packet.stratum);
+        printf("Poll: %d\n", packet.stratum);
+        printf("Precision: %d\n", packet.precision);
+        printf("Root delay: %#x\n", ntohl(packet.root_delay));
+        printf("Root dispersion: %#x\n", ntohl(packet.root_dispersion));
+        printf("Reference ID: %#x\n", ntohl(packet.reference_id));
+        printf("Reference timestamp:   %#016llx (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
+        printf("Origin timestamp:      %#016llx (%s)\n", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
+        printf("Receive timestamp:     %#016llx (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
+        printf("Transmit timestamp:    %#016llx (%s)\n", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
+        printf("Destination timestamp: %#016llx (%s)\n", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
 
-    // When the system isn't under load, user-space t and packet_t are identical. If a shell with `yes` is running, it can be as high as 30ms in this program,
-    // which gets user-space time immediately after the recvmsg() call. In programs that have an event loop reading from multiple sockets, it could be higher.
-    printf("Receive latency: %lld.%06d s\n", t.tv_sec, t.tv_usec);
+        // When the system isn't under load, user-space t and packet_t are identical. If a shell with `yes` is running, it can be as high as 30ms in this program,
+        // which gets user-space time immediately after the recvmsg() call. In programs that have an event loop reading from multiple sockets, it could be higher.
+        printf("Receive latency: %lld.%06d s\n", t.tv_sec, t.tv_usec);
+    }
 
     // Parts of the "Clock Filter" computations, https://tools.ietf.org/html/rfc5905#section-10
     NtpTimestamp T1 = origin_timestamp;
@@ -256,6 +260,7 @@ int main(int argc, char** argv)
     // Both T2-T1 and T3-T4 estimate this; this takes the average of both.
     // Or, equivalently, (T1+T4)/2 estimates local time, (T2+T3)/2 estimate server time, this is the difference.
     double offset_s = 0.5 * (timestamp_difference_in_seconds(T1, T2) + timestamp_difference_in_seconds(T4, T3));
-    printf("Delay: %f\n", delay_s);
+    if (verbose)
+        printf("Delay: %f\n", delay_s);
     printf("Offset: %f\n", offset_s);
 }
