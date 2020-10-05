@@ -95,11 +95,15 @@ void LayoutNode::paint(PaintContext& context, PaintPhase phase)
     if (!is_visible())
         return;
 
+    before_children_paint(context, phase);
+
     for_each_child([&](auto& child) {
         if (child.is_box() && downcast<LayoutBox>(child).stacking_context())
             return;
         child.paint(context, phase);
     });
+
+    after_children_paint(context, phase);
 }
 
 HitTestResult LayoutNode::hit_test(const Gfx::IntPoint& position, HitTestType type) const
