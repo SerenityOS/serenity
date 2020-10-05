@@ -114,6 +114,8 @@ void Shape::visit_children(Cell::Visitor& visitor)
 
 Optional<PropertyMetadata> Shape::lookup(const StringOrSymbol& property_name) const
 {
+    if (m_property_count == 0)
+        return {};
     auto property = property_table().get(property_name);
     if (!property.has_value())
         return {};
