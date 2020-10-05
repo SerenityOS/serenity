@@ -33,7 +33,7 @@
 
 String ManualSectionNode::path() const
 {
-    return String::format("/usr/share/man/man%s", m_section.characters());
+    return String::formatted("/usr/share/man/man{}", m_section);
 }
 
 void ManualSectionNode::reify_if_needed() const

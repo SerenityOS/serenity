@@ -107,7 +107,7 @@ String ManualModel::page_and_section(const GUI::ModelIndex& index) const
         return {};
     auto* page = static_cast<const ManualPageNode*>(node);
     auto* section = static_cast<const ManualSectionNode*>(page->parent());
-    return String::format("%s(%s)", page->name().characters(), section->section_name().characters());
+    return String::formatted("{}({})", page->name(), section->section_name());
 }
 
 GUI::ModelIndex ManualModel::index(int row, int column, const GUI::ModelIndex& parent_index) const

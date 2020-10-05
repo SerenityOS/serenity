@@ -40,5 +40,5 @@ NonnullOwnPtrVector<ManualNode>& ManualPageNode::children() const
 
 String ManualPageNode::path() const
 {
-    return String::format("%s/%s.md", m_section.path().characters(), m_page.characters());
+    return String::formatted("{}/{}.md", m_section.path(), m_page);
 }
