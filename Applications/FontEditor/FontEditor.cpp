@@ -121,7 +121,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     font_metadata_group_box.set_layout<GUI::VerticalBoxLayout>();
     font_metadata_group_box.layout()->set_margins({ 5, 15, 5, 5 });
     font_metadata_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    font_metadata_group_box.set_preferred_size(0, 165);
+    font_metadata_group_box.set_preferred_size(0, 195);
     font_metadata_group_box.set_title("Font metadata");
 
     //// Name Row
@@ -212,11 +212,30 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     baseline_label.set_text("Baseline:");
 
     auto& baseline_spinbox = baseline_container.add<GUI::SpinBox>();
-    baseline_spinbox.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    baseline_spinbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
     baseline_spinbox.set_preferred_size(100, 0);
     baseline_spinbox.set_min(0);
     baseline_spinbox.set_max(m_edited_font->glyph_height() - 1);
     baseline_spinbox.set_value(m_edited_font->baseline());
+
+    //// Mean line Row
+    auto& mean_line_container = font_metadata_group_box.add<GUI::Widget>();
+    mean_line_container.set_layout<GUI::HorizontalBoxLayout>();
+    mean_line_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    mean_line_container.set_preferred_size(0, 22);
+
+    auto& mean_line_label = mean_line_container.add<GUI::Label>();
+    mean_line_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    mean_line_label.set_preferred_size(100, 0);
+    mean_line_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    mean_line_label.set_text("Mean Line:");
+
+    auto& mean_line_spinbox = mean_line_container.add<GUI::SpinBox>();
+    mean_line_spinbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    mean_line_spinbox.set_preferred_size(100, 0);
+    mean_line_spinbox.set_min(0);
+    mean_line_spinbox.set_max(m_edited_font->glyph_height() - 1);
+    mean_line_spinbox.set_value(m_edited_font->mean_line());
 
     //// Fixed checkbox Row
     auto& fixed_width_checkbox = font_metadata_group_box.add<GUI::CheckBox>();
@@ -259,7 +278,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
         right_site_width = max(right_site_width, m_glyph_map_widget->preferred_width());
 
         m_preferred_width = m_glyph_editor_widget->width() + right_site_width + 20;
-        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 270;
+        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 300;
     };
 
     m_glyph_editor_widget->on_glyph_altered = [this, update_demo](u8 glyph) {
@@ -304,6 +323,12 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
 
     baseline_spinbox.on_change = [this, update_demo](int value) {
         m_edited_font->set_baseline(value);
+        m_glyph_editor_widget->update();
+        update_demo();
+    };
+
+    mean_line_spinbox.on_change = [this, update_demo](int value) {
+        m_edited_font->set_mean_line(value);
         m_glyph_editor_widget->update();
         update_demo();
     };
