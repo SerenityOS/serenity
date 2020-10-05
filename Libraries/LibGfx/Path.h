@@ -33,6 +33,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Point.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx {
 
@@ -174,11 +175,20 @@ public:
     const NonnullRefPtrVector<Segment>& segments() const { return m_segments; }
     const auto& split_lines()
     {
-        if (m_split_lines.has_value())
-            return m_split_lines.value();
-        segmentize_path();
-        ASSERT(m_split_lines.has_value());
+        if (!m_split_lines.has_value()) {
+            segmentize_path();
+            ASSERT(m_split_lines.has_value());
+        }
         return m_split_lines.value();
+    }
+
+    const Gfx::FloatRect& bounding_box()
+    {
+        if (!m_bounding_box.has_value()) {
+            segmentize_path();
+            ASSERT(m_bounding_box.has_value());
+        }
+        return m_bounding_box.value();
     }
 
     String to_string() const;
@@ -199,6 +209,7 @@ private:
     NonnullRefPtrVector<Segment> m_segments {};
 
     Optional<Vector<SplitLineSegment>> m_split_lines {};
+    Optional<Gfx::FloatRect> m_bounding_box;
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const Path& path)
