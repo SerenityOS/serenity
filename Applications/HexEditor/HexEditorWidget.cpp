@@ -54,7 +54,7 @@ HexEditorWidget::HexEditorWidget()
     m_editor = add<HexEditor>();
 
     m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
-        m_statusbar->set_text(0, String::formatted("Offset: {:#010X}", position));
+        m_statusbar->set_text(0, String::formatted("Offset: {:#08X}", position));
         m_statusbar->set_text(1, String::formatted("Edit Mode: {}", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
         m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start));
         m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end));

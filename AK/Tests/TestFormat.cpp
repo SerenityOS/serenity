@@ -111,6 +111,8 @@ TEST_CASE(zero_pad)
     EXPECT_EQ(String::formatted("{: <010}", 42), "42        ");
     EXPECT_EQ(String::formatted("{:010}", 42), "0000000042");
     EXPECT_EQ(String::formatted("{:/^010}", 42), "////42////");
+    EXPECT_EQ(String::formatted("{:04x}", -32), "-0020");
+    EXPECT_EQ(String::formatted("{:#06x}", -64), "-0x000040");
 }
 
 TEST_CASE(replacement_field)
@@ -144,7 +146,7 @@ TEST_CASE(boolean_values)
     EXPECT_EQ(String::formatted("{:>4}", false), "false");
     EXPECT_EQ(String::formatted("{:d}", false), "0");
     EXPECT_EQ(String::formatted("{:d}", true), "1");
-    EXPECT_EQ(String::formatted("{:#08x}", true), "0x000001");
+    EXPECT_EQ(String::formatted("{:#08x}", true), "0x00000001");
 }
 
 TEST_CASE(pointers)
