@@ -38,6 +38,8 @@
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
 
+//#define GEMINI_DEBUG 1
+
 namespace Web {
 
 FrameLoader::FrameLoader(Frame& frame)
@@ -115,9 +117,16 @@ static RefPtr<DOM::Document> create_image_document(const ByteBuffer& data, const
 
 static RefPtr<DOM::Document> create_gemini_document(const ByteBuffer& data, const URL& url)
 {
-    auto gemini_document = Gemini::Document::parse({ (const char*)data.data(), data.size() }, url);
+    StringView gemini_data { data };
+    auto gemini_document = Gemini::Document::parse(gemini_data, url);
+    String html_data = gemini_document->render_to_html();
 
-    return HTML::parse_html_document(gemini_document->render_to_html(), url, "utf-8");
+#if GEMINI_DEBUG
+    dbgln("Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
+    dbgln("Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
+#endif
+
+    return HTML::parse_html_document(move(html_data), url, "utf-8");
 }
 
 RefPtr<DOM::Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
