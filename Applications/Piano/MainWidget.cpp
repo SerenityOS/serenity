@@ -69,6 +69,8 @@ MainWidget::MainWidget(TrackManager& track_manager)
     m_knobs_widget = m_keys_and_knobs_container->add<KnobsWidget>(track_manager, *this);
     m_knobs_widget->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     m_knobs_widget->set_preferred_size(350, 0);
+
+    m_roll_widget->set_keys_widget(m_keys_widget);
 }
 
 MainWidget::~MainWidget()

@@ -92,6 +92,8 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
 
     for (int y = 0; y < notes_to_paint; ++y) {
         int y_pos = y * note_height;
+
+        int note = (note_count - note_offset - 1) - y;
         for (int x = 0; x < horizontal_notes_to_paint; ++x) {
             // This is needed to avoid rounding errors. You can't just use
             // m_note_width as the width.
@@ -104,6 +106,9 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
                 painter.fill_rect(rect, Color::LightGray);
             else
                 painter.fill_rect(rect, Color::White);
+
+            if (keys_widget() && keys_widget()->note_is_set(note))
+                painter.fill_rect(rect, note_pressed_color.with_alpha(128));
 
             painter.draw_line(rect.top_right(), rect.bottom_right(), Color::Black);
             painter.draw_line(rect.bottom_left(), rect.bottom_right(), Color::Black);

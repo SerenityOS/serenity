@@ -63,6 +63,17 @@ void KeysWidget::set_key(int key, Switch switch_key)
     m_track_manager.set_note_current_octave(key, switch_key);
 }
 
+bool KeysWidget::note_is_set(int note) const
+{
+    if (note < m_track_manager.octave_base())
+        return false;
+
+    if (note >= m_track_manager.octave_base() + note_count)
+        return false;
+
+    return m_key_on[note - m_track_manager.octave_base()] != 0;
+}
+
 int KeysWidget::key_code_to_key(int key_code) const
 {
     switch (key_code) {
