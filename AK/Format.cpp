@@ -281,18 +281,30 @@ void FormatBuilder::put_u64(
     SignMode sign_mode,
     bool is_negative)
 {
+    if (align == Align::Default)
+        align = Align::Right;
+
     Array<u8, 128> buffer;
 
     const auto used_by_digits = convert_unsigned_to_string(value, buffer, base, upper_case);
 
-    auto used_by_prefix = sign_mode == SignMode::OnlyIfNeeded ? static_cast<size_t>(is_negative) : 1;
-    if (prefix) {
-        if (base == 8)
+    size_t used_by_prefix = 0;
+    if (align == Align::Right && zero_pad) {
+        // We want String::formatted("{:#08x}", 32) to produce '0x00000020' instead of '0x000020'. This
+        // behaviour differs from both fmtlib and printf, but is more intuitive.
+        used_by_prefix = 0;
+    } else {
+        if (is_negative || sign_mode != SignMode::OnlyIfNeeded)
             used_by_prefix += 1;
-        else if (base == 16)
-            used_by_prefix += 2;
-        else if (base == 2)
-            used_by_prefix += 2;
+
+        if (prefix) {
+            if (base == 8)
+                used_by_prefix += 1;
+            else if (base == 16)
+                used_by_prefix += 2;
+            else if (base == 2)
+                used_by_prefix += 2;
+        }
     }
 
     const auto used_by_field = used_by_prefix + used_by_digits;
@@ -341,7 +353,7 @@ void FormatBuilder::put_u64(
         put_prefix();
         put_digits();
         put_padding(fill, used_by_right_padding);
-    } else if (align == Align::Right || align == Align::Default) {
+    } else if (align == Align::Right) {
         const auto used_by_left_padding = used_by_padding;
 
         if (zero_pad) {
@@ -505,7 +517,7 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(TypeEra
 
         m_mode = Mode::Hexadecimal;
         m_alternative_form = true;
-        m_width = 2 * sizeof(void*) + 2;
+        m_width = 2 * sizeof(void*);
         m_zero_pad = true;
     }
 

@@ -204,8 +204,9 @@ private:
     Array<TypeErasedParameter, sizeof...(Parameters)> m_data;
 };
 
-// We use the same format for most types for consistency. This is taken directly from std::format.
-// Not all valid options do anything yet.
+// We use the same format for most types for consistency. This is taken directly from
+// std::format. One difference is that we are not counting the width or sign towards the
+// total width when calculating zero padding for numbers.
 // https://en.cppreference.com/w/cpp/utility/format/formatter#Standard_format_specification
 struct StandardFormatter {
     enum class Mode {

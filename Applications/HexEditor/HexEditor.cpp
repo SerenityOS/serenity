@@ -164,7 +164,7 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     output_string_builder.appendff("unsigned char raw_data[{}] = {{\n", (m_selection_end - m_selection_start) + 1);
     output_string_builder.append("    ");
     for (int i = m_selection_start, j = 1; i <= m_selection_end; i++, j++) {
-        output_string_builder.appendff("{:#04X}", m_buffer.data()[i]);
+        output_string_builder.appendff("{:#02X}", m_buffer.data()[i]);
         if (i != m_selection_end)
             output_string_builder.append(", ");
         if ((j % 12) == 0) {
@@ -516,7 +516,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
         };
 
         bool is_current_line = (m_position / bytes_per_row()) == i;
-        auto line = String::formatted("{:#010X}", i * bytes_per_row());
+        auto line = String::formatted("{:#08X}", i * bytes_per_row());
         painter.draw_text(
             side_offset_rect,
             line,
