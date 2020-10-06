@@ -93,3 +93,18 @@ inline const LogStream& operator<<(const LogStream& stream, const TextRange& val
 }
 
 }
+
+namespace AK {
+
+template<>
+struct Formatter<GUI::TextRange> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const GUI::TextRange& value)
+    {
+        if (value.is_valid())
+            Formatter<StringView>::format(params, builder, String::formatted("{}-{}", value.start(), value.end()));
+        else
+            Formatter<StringView>::format(params, builder, "GUI::TextRange(Invalid)");
+    }
+};
+
+}
