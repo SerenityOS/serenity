@@ -188,4 +188,10 @@ TEST_CASE(format_string_literal_as_pointer)
     EXPECT_EQ(String::formatted("{:p}", literal), String::formatted("{:p}", reinterpret_cast<FlatPtr>(literal)));
 }
 
+TEST_CASE(format_character)
+{
+    char a = 'a';
+    EXPECT_EQ(String::formatted("{}", true ? a : 'b'), "a");
+}
+
 TEST_MAIN(Format)

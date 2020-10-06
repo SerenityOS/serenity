@@ -71,7 +71,7 @@ IRCAppWindow::~IRCAppWindow()
 
 void IRCAppWindow::update_title()
 {
-    set_title(String::format("%s@%s:%d - IRC Client", m_client->nickname().characters(), m_client->hostname().characters(), m_client->port()));
+    set_title(String::formatted("{}@{}:{} - IRC Client", m_client->nickname(), m_client->hostname(), m_client->port()));
 }
 
 void IRCAppWindow::setup_client()
