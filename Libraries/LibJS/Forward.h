@@ -95,6 +95,7 @@
 namespace JS {
 
 class ASTNode;
+class Allocator;
 class BigInt;
 class BoundFunction;
 class Cell;

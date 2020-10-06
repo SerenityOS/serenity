@@ -33,6 +33,7 @@
 #include <AK/Vector.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Allocator.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Cell.h>
 #include <LibJS/Runtime/Object.h>
@@ -101,13 +102,25 @@ private:
 
     Cell* cell_from_possible_pointer(FlatPtr);
 
+    Allocator& allocator_for_size(size_t);
+
+    template<typename Callback>
+    void for_each_block(Callback callback)
+    {
+        for (auto& allocator : m_allocators) {
+            if (allocator->for_each_block(callback) == IterationDecision::Break)
+                return;
+        }
+    }
+
     size_t m_max_allocations_between_gc { 10000 };
     size_t m_allocations_since_last_gc { false };
 
     bool m_should_collect_on_every_allocation { false };
 
     VM& m_vm;
-    Vector<NonnullOwnPtr<HeapBlock>> m_blocks;
+
+    Vector<NonnullOwnPtr<Allocator>> m_allocators;
     HashTable<HandleImpl*> m_handles;
 
     HashTable<MarkedValueList*> m_marked_value_lists;

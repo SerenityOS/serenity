@@ -27,6 +27,7 @@
 #include <AK/Badge.h>
 #include <AK/HashTable.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibJS/Heap/Allocator.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
@@ -50,11 +51,28 @@ namespace JS {
 Heap::Heap(VM& vm)
     : m_vm(vm)
 {
+    m_allocators.append(make<Allocator>(16));
+    m_allocators.append(make<Allocator>(32));
+    m_allocators.append(make<Allocator>(64));
+    m_allocators.append(make<Allocator>(128));
+    m_allocators.append(make<Allocator>(256));
+    m_allocators.append(make<Allocator>(512));
+    m_allocators.append(make<Allocator>(1024));
+    m_allocators.append(make<Allocator>(3172));
 }
 
 Heap::~Heap()
 {
     collect_garbage(CollectionType::CollectEverything);
+}
+
+ALWAYS_INLINE Allocator& Heap::allocator_for_size(size_t cell_size)
+{
+    for (auto& allocator : m_allocators) {
+        if (allocator->cell_size() >= cell_size)
+            return *allocator;
+    }
+    ASSERT_NOT_REACHED();
 }
 
 Cell* Heap::allocate_cell(size_t size)
@@ -68,18 +86,8 @@ Cell* Heap::allocate_cell(size_t size)
         ++m_allocations_since_last_gc;
     }
 
-    for (auto& block : m_blocks) {
-        if (size > block->cell_size())
-            continue;
-        if (auto* cell = block->allocate())
-            return cell;
-    }
-
-    size_t cell_size = round_up_to_power_of_two(size, 16);
-    auto block = HeapBlock::create_with_cell_size(*this, cell_size);
-    auto* cell = block->allocate();
-    m_blocks.append(move(block));
-    return cell;
+    auto& allocator = allocator_for_size(size);
+    return allocator.allocate_cell(*this);
 }
 
 void Heap::collect_garbage(CollectionType collection_type, bool print_report)
@@ -203,7 +211,15 @@ void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
 Cell* Heap::cell_from_possible_pointer(FlatPtr pointer)
 {
     auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(pointer));
-    if (m_blocks.find([possible_heap_block](auto& block) { return block.ptr() == possible_heap_block; }) == m_blocks.end())
+    bool found = false;
+    for_each_block([&](auto& block) {
+        if (&block == possible_heap_block) {
+            found = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    if (!found)
         return nullptr;
     return possible_heap_block->cell_from_possible_pointer(pointer);
 }
@@ -240,57 +256,77 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     dbg() << "sweep_dead_cells:";
 #endif
     Vector<HeapBlock*, 32> empty_blocks;
+    Vector<HeapBlock*, 32> full_blocks_that_became_usable;
 
     size_t collected_cells = 0;
     size_t live_cells = 0;
     size_t collected_cell_bytes = 0;
     size_t live_cell_bytes = 0;
 
-    for (auto& block : m_blocks) {
+    for_each_block([&](auto& block) {
         bool block_has_live_cells = false;
-        block->for_each_cell([&](Cell* cell) {
+        bool block_was_full = block.is_full();
+        block.for_each_cell([&](Cell* cell) {
             if (cell->is_live()) {
                 if (!cell->is_marked()) {
 #ifdef HEAP_DEBUG
                     dbg() << "  ~ " << cell;
 #endif
-                    block->deallocate(cell);
+                    block.deallocate(cell);
                     ++collected_cells;
-                    collected_cell_bytes += block->cell_size();
+                    collected_cell_bytes += block.cell_size();
                 } else {
                     cell->set_marked(false);
                     block_has_live_cells = true;
                     ++live_cells;
-                    live_cell_bytes += block->cell_size();
+                    live_cell_bytes += block.cell_size();
                 }
             }
         });
         if (!block_has_live_cells)
-            empty_blocks.append(block);
-    }
+            empty_blocks.append(&block);
+        else if (block_was_full != block.is_full())
+            full_blocks_that_became_usable.append(&block);
+        return IterationDecision::Continue;
+    });
 
     for (auto* block : empty_blocks) {
 #ifdef HEAP_DEBUG
-        dbg() << " - Reclaim HeapBlock @ " << block << ": cell_size=" << block->cell_size();
+        dbg() << " - HeapBlock empty @ " << block << ": cell_size=" << block->cell_size();
 #endif
-        m_blocks.remove_first_matching([block](auto& entry) { return entry == block; });
+        allocator_for_size(block->cell_size()).block_did_become_empty({}, *block);
+    }
+
+    for (auto* block : full_blocks_that_became_usable) {
+#ifdef HEAP_DEBUG
+        dbg() << " - HeapBlock usable again @ " << block << ": cell_size=" << block->cell_size();
+#endif
+        allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
     }
 
 #ifdef HEAP_DEBUG
-    for (auto& block : m_blocks) {
-        dbg() << " > Live HeapBlock @ " << block << ": cell_size=" << block->cell_size();
-    }
+    for_each_block([&](auto& block) {
+        dbg() << " > Live HeapBlock @ " << &block << ": cell_size=" << block.cell_size();
+        return IterationDecision::Continue;
+    });
 #endif
 
     int time_spent = measurement_timer.elapsed();
 
     if (print_report) {
+
+        size_t live_block_count = 0;
+        for_each_block([&](auto&) {
+            ++live_block_count;
+            return IterationDecision::Continue;
+        });
+
         dbgln("Garbage collection report");
         dbgln("=============================================");
         dbgln("     Time spent: {} ms", time_spent);
         dbgln("     Live cells: {} ({} bytes)", live_cells, live_cell_bytes);
         dbgln("Collected cells: {} ({} bytes)", collected_cells, collected_cell_bytes);
-        dbgln("    Live blocks: {} ({} bytes)", m_blocks.size(), m_blocks.size() * HeapBlock::block_size);
+        dbgln("    Live blocks: {} ({} bytes)", live_block_count, live_block_count * HeapBlock::block_size);
         dbgln("   Freed blocks: {} ({} bytes)", empty_blocks.size(), empty_blocks.size() * HeapBlock::block_size);
         dbgln("=============================================");
     }
