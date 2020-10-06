@@ -127,10 +127,7 @@ void SoundPlayerWidget::open_file(String path)
     OwnPtr<Audio::WavLoader> loader = make<Audio::WavLoader>(path);
     if (loader->has_error()) {
         GUI::MessageBox::show(window(),
-            String::format(
-                "Failed to load WAV file: %s (%s)",
-                path.characters(),
-                loader->error_string()),
+            String::formatted("Failed to load WAV file: {} ({})", path, loader->error_string()),
             "Filetype error", GUI::MessageBox::Type::Error);
         return;
     }
@@ -142,12 +139,11 @@ void SoundPlayerWidget::open_file(String path)
     m_play->set_enabled(true);
     m_stop->set_enabled(true);
 
-    m_window.set_title(String::format("%s - SoundPlayer", loader->file()->filename().characters()));
-    m_status->set_text(String::format(
-        "Sample rate %uHz, %u %s, %u bits per sample",
+    m_window.set_title(String::formatted("{} - SoundPlayer", loader->file()->filename()));
+    m_status->set_text(String::formatted(
+        "Sample rate {}Hz, {} channel(s), {} bits per sample",
         loader->sample_rate(),
         loader->num_channels(),
-        (loader->num_channels() == 1) ? "channel" : "channels",
         loader->bits_per_sample()));
 
     m_manager.set_loader(move(loader));
@@ -177,14 +173,14 @@ void SoundPlayerWidget::update_position(const int position)
     float seconds = (total_norm_samples / static_cast<float>(PLAYBACK_MANAGER_RATE));
     float remaining_seconds = m_manager.total_length() - seconds;
 
-    m_elapsed->set_text(String::format(
-        "Elapsed:\n%u:%02u.%02u",
+    m_elapsed->set_text(String::formatted(
+        "Elapsed:\n{}:{:02}.{:02}",
         static_cast<int>(seconds / 60),
         static_cast<int>(seconds) % 60,
         static_cast<int>(seconds * 100) % 100));
 
-    m_remaining->set_text(String::format(
-        "Remaining:\n%u:%02u.%02u",
+    m_remaining->set_text(String::formatted(
+        "Remaining:\n{}:{:02}.{:02}",
         static_cast<int>(remaining_seconds / 60),
         static_cast<int>(remaining_seconds) % 60,
         static_cast<int>(remaining_seconds * 100) % 100));
