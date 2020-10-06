@@ -339,14 +339,15 @@ public:
     }
 
     template<typename Callback>
-    void remove_first_matching(Callback callback)
+    bool remove_first_matching(Callback callback)
     {
         for (size_t i = 0; i < size(); ++i) {
             if (callback(at(i))) {
                 remove(i);
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     template<typename Callback>
