@@ -65,7 +65,7 @@ GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, GUI::ModelRo
         case Column::Name: {
             auto& window = m_client->window_at(index.row());
             if (window.unread_count())
-                return String::format("%s (%d)", window.name().characters(), window.unread_count());
+                return String::formatted("{} ({})", window.name(), window.unread_count());
             return window.name();
         }
         }

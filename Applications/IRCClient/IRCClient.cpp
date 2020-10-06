@@ -134,7 +134,7 @@ void IRCClient::receive_from_server()
         auto line = m_socket->read_line(PAGE_SIZE);
         if (line.is_null()) {
             if (!m_socket->is_connected()) {
-                out() << "IRCClient: Connection closed!";
+                outln("IRCClient: Connection closed!");
                 exit(1);
             }
             ASSERT_NOT_REACHED();
