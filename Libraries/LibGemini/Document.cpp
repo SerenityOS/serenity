@@ -74,6 +74,7 @@ void Document::read_lines(const StringView& source)
             } else {
                 m_lines.append(make<Control>(Control::PreformattedEnd));
             }
+            continue;
         }
 
         if (m_inside_preformatted_block) {
