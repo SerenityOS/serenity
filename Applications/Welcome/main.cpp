@@ -80,7 +80,7 @@ static Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
             line = line.substring(0, line.length() - 1); // remove newline
         switch (line[0]) {
         case '*':
-            dbg() << "menu_item line:\t" << line;
+            dbgln("menu_item line:\t{}", line);
             if (started)
                 pages.append(current);
             else
@@ -90,25 +90,25 @@ static Optional<Vector<ContentPage>> parse_welcome_file(const String& path)
             current.menu_name = line.substring(2, line.length() - 2);
             break;
         case '$':
-            dbg() << "icon line: \t" << line;
+            dbgln("icon line: \t{}", line);
             current.icon = line.substring(2, line.length() - 2);
             break;
         case '>':
-            dbg() << "title line:\t" << line;
+            dbgln("title line:\t{}", line);
             current.title = line.substring(2, line.length() - 2);
             break;
         case '\n':
-            dbg() << "newline";
+            dbgln("newline");
 
             if (!current_output_line.to_string().is_empty())
                 current.content.append(current_output_line.to_string());
             current_output_line.clear();
             break;
         case '#':
-            dbg() << "comment line:\t" << line;
+            dbgln("comment line:\t{}", line);
             break;
         default:
-            dbg() << "content line:\t" << line;
+            dbgln("content line:\t", line);
             if (current_output_line.length() != 0)
                 current_output_line.append(' ');
             current_output_line.append(line);
