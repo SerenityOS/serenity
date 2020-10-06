@@ -415,6 +415,12 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
     return define_property(property_name, value, attributes, throw_exceptions);
 }
 
+bool Object::define_property_without_transition(const PropertyName& property_name, Value value, PropertyAttributes attributes, bool throw_exceptions)
+{
+    TemporaryChange change(m_transitions_enabled, false);
+    return define_property(property_name, value, attributes, throw_exceptions);
+}
+
 bool Object::define_property(const PropertyName& property_name, Value value, PropertyAttributes attributes, bool throw_exceptions)
 {
     if (property_name.is_number())
@@ -753,10 +759,10 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
         function_name = String::formatted("[{}]", property_name.as_symbol()->description());
     }
     auto* function = NativeFunction::create(global_object(), function_name, move(native_function));
-    function->define_property("length", Value(length), Attribute::Configurable);
+    function->define_property_without_transition("length", Value(length), Attribute::Configurable);
     if (vm().exception())
         return {};
-    function->define_property("name", js_string(heap(), function_name), Attribute::Configurable);
+    function->define_property_without_transition("name", js_string(heap(), function_name), Attribute::Configurable);
     if (vm().exception())
         return {};
     return define_property(property_name, function, attribute);

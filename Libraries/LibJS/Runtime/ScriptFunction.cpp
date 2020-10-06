@@ -69,7 +69,7 @@ void ScriptFunction::initialize(GlobalObject& global_object)
     Function::initialize(global_object);
     if (!m_is_arrow_function) {
         Object* prototype = Object::create_empty(global_object);
-        prototype->define_property("constructor", this, Attribute::Writable | Attribute::Configurable);
+        prototype->define_property_without_transition("constructor", this, Attribute::Writable | Attribute::Configurable);
         define_property("prototype", prototype, 0);
     }
     define_native_property("length", length_getter, nullptr, Attribute::Configurable);
