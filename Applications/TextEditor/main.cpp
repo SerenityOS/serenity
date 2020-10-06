@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     } else if (preview_mode_view == "none") {
         text_widget.set_preview_mode(TextEditorWidget::PreviewMode::None);
     } else {
-        fprintf(stderr, "Invalid mode '%s'\n", preview_mode);
+        warnln("Invalid mode '{}'", preview_mode);
         return 1;
     }
 

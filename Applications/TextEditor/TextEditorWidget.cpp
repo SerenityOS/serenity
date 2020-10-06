@@ -96,7 +96,7 @@ TextEditorWidget::TextEditorWidget()
         if (!Desktop::Launcher::open(url)) {
             GUI::MessageBox::show(
                 window(),
-                String::format("The link to '%s' could not be opened.", url.to_string().characters()),
+                String::formatted("The link to '{}' could not be opened.", url),
                 "Failed to open link",
                 GUI::MessageBox::Type::Error);
         }
@@ -114,16 +114,16 @@ TextEditorWidget::TextEditorWidget()
     m_find_next_action = GUI::Action::create("Find next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"), [&](auto&) {
         auto needle = m_find_textbox->text();
         if (needle.is_empty()) {
-            dbg() << "find_next(\"\")";
+            dbgln("find_next(\"\")");
             return;
         }
         auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().end());
-        dbg() << "find_next(\"" << needle << "\") returned " << found_range;
+        dbgln("find_next(\"{}\") returned {}", needle, found_range);
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {
             GUI::MessageBox::show(window(),
-                String::format("Not found: \"%s\"", needle.characters()),
+                String::formatted("Not found: \"{}\"", needle),
                 "Not found",
                 GUI::MessageBox::Type::Information);
         }
@@ -132,7 +132,7 @@ TextEditorWidget::TextEditorWidget()
     m_find_previous_action = GUI::Action::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-previous.png"), [&](auto&) {
         auto needle = m_find_textbox->text();
         if (needle.is_empty()) {
-            dbg() << "find_prev(\"\")";
+            dbgln("find_prev(\"\")");
             return;
         }
 
@@ -142,12 +142,12 @@ TextEditorWidget::TextEditorWidget()
 
         auto found_range = m_editor->document().find_previous(needle, selection_start);
 
-        dbg() << "find_prev(\"" << needle << "\") returned " << found_range;
+        dbgln("find_prev(\"{}\") returned {}", needle, found_range);
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {
             GUI::MessageBox::show(window(),
-                String::format("Not found: \"%s\"", needle.characters()),
+                String::formatted("Not found: \"{}\"", needle),
                 "Not found",
                 GUI::MessageBox::Type::Information);
         }
@@ -171,7 +171,7 @@ TextEditorWidget::TextEditorWidget()
             m_editor->insert_at_cursor_or_replace_selection(substitute);
         } else {
             GUI::MessageBox::show(window(),
-                String::format("Not found: \"%s\"", needle.characters()),
+                String::formatted("Not found: \"{}\"", needle),
                 "Not found",
                 GUI::MessageBox::Type::Information);
         }
@@ -194,7 +194,7 @@ TextEditorWidget::TextEditorWidget()
             m_editor->insert_at_cursor_or_replace_selection(substitute);
         } else {
             GUI::MessageBox::show(window(),
-                String::format("Not found: \"%s\"", needle.characters()),
+                String::formatted("Not found: \"{}\"", needle),
                 "Not found",
                 GUI::MessageBox::Type::Information);
         }
@@ -312,7 +312,7 @@ TextEditorWidget::TextEditorWidget()
 
         m_document_dirty = false;
         set_path(LexicalPath(save_path.value()));
-        dbg() << "Wrote document to " << save_path.value();
+        dbgln("Wrote document to {}", save_path.value());
     });
 
     m_save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GUI::Action&) {
@@ -516,7 +516,7 @@ void TextEditorWidget::open_sesame(const String& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
-        GUI::MessageBox::show(window(), String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
         return;
     }
 
@@ -618,6 +618,6 @@ void TextEditorWidget::update_html_preview()
 void TextEditorWidget::update_statusbar_cursor_position()
 {
     StringBuilder builder;
-    builder.appendf("Line: %d, Column: %d", m_editor->cursor().line() + 1, m_editor->cursor().column());
+    builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column());
     m_statusbar->set_text(builder.to_string());
 }
