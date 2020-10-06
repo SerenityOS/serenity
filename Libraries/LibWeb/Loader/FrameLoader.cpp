@@ -38,7 +38,7 @@
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
 
-//#define GEMINI_DEBUG 1
+//#define GEMINI_DEBUG
 
 namespace Web {
 
@@ -121,7 +121,7 @@ static RefPtr<DOM::Document> create_gemini_document(const ByteBuffer& data, cons
     auto gemini_document = Gemini::Document::parse(gemini_data, url);
     String html_data = gemini_document->render_to_html();
 
-#if GEMINI_DEBUG
+#ifdef GEMINI_DEBUG
     dbgln("Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
     dbgln("Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 #endif
