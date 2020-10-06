@@ -165,7 +165,7 @@ void PlaybackManager::next_buffer()
     remove_dead_buffers();
     if (!m_next_buffer) {
         if (!m_connection->get_remaining_samples() && !m_paused) {
-            dbg() << "Exhausted samples :^)";
+            dbgln("Exhausted samples :^)");
             stop();
         }
 
