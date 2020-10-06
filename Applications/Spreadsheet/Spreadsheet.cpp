@@ -64,16 +64,15 @@ Sheet::Sheet(Workbook& workbook)
         auto buffer = file_or_error.value()->read_all();
         JS::Parser parser { JS::Lexer(buffer) };
         if (parser.has_errors()) {
-            dbg() << "Spreadsheet: Failed to parse runtime code";
+            dbgln("Spreadsheet: Failed to parse runtime code");
             for (auto& error : parser.errors())
-                dbg() << "Error: " << error.to_string() << "\n"
-                      << error.source_location_hint(buffer);
+                dbgln("Error: {}\n{}", error.to_string(), error.source_location_hint(buffer));
         } else {
             interpreter().run(global_object(), parser.parse_program());
             if (auto exc = interpreter().exception()) {
-                dbg() << "Spreadsheet: Failed to run runtime code: ";
+                dbgln("Spreadsheet: Failed to run runtime code: ");
                 for (auto& t : exc->trace())
-                    dbg() << t;
+                    dbgln("{}", t);
                 interpreter().vm().clear_exception();
             }
         }
@@ -331,7 +330,7 @@ JsonObject Sheet::to_json() const
     for (auto& it : m_cells) {
         StringBuilder builder;
         builder.append(it.key.column);
-        builder.appendf("%zu", it.key.row);
+        builder.appendff("{}", it.key.row);
         auto key = builder.to_string();
 
         JsonObject data;
@@ -399,7 +398,7 @@ JsonObject Sheet::gather_documentation() const
         if (!value_object.has_own_property(doc_name))
             return;
 
-        dbg() << "Found '" << it.key.to_display_string() << "'";
+        dbgln("Found '{}'", it.key.to_display_string());
         auto doc = value_object.get(doc_name);
         if (!doc.is_string())
             return;
@@ -410,7 +409,7 @@ JsonObject Sheet::gather_documentation() const
         if (doc_object.has_value())
             object.set(it.key.to_display_string(), doc_object.value());
         else
-            dbg() << "Sheet::gather_documentation(): Failed to parse the documentation for '" << it.key.to_display_string() << "'!";
+            dbgln("Sheet::gather_documentation(): Failed to parse the documentation for '{}'!", it.key.to_display_string());
     };
 
     for (auto& it : interpreter().global_object().shape().property_table())

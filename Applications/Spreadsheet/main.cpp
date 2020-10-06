@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
     if (filename) {
         if (!Core::File::exists(filename) || Core::File::is_directory(filename)) {
-            fprintf(stderr, "File does not exist or is a directory: %s\n", filename);
+            warnln("File does not exist or is a directory: {}", filename);
             return 1;
         }
     }

@@ -104,7 +104,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                 auto& position = selection.first();
                 StringBuilder builder;
                 builder.append(position.column);
-                builder.appendf("%zu", position.row);
+                builder.appendff("{}", position.row);
                 m_current_cell_label->set_enabled(true);
                 m_current_cell_label->set_text(builder.string_view());
 
@@ -121,7 +121,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             // There are many cells selected, change all of them.
             StringBuilder builder;
-            builder.appendf("<%zu>", selection.size());
+            builder.appendff("<{}>", selection.size());
             m_current_cell_label->set_enabled(true);
             m_current_cell_label->set_text(builder.string_view());
 
@@ -184,7 +184,7 @@ void SpreadsheetWidget::add_sheet()
 {
     StringBuilder name;
     name.append("Sheet");
-    name.appendf(" %d", m_workbook->sheets().size() + 1);
+    name.appendff(" {}", m_workbook->sheets().size() + 1);
 
     auto& sheet = m_workbook->add_sheet(name.string_view());
 
