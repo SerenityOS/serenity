@@ -182,4 +182,10 @@ TEST_CASE(ensure_that_format_works)
     }
 }
 
+TEST_CASE(format_string_literal_as_pointer)
+{
+    const char* literal = "abc";
+    EXPECT_EQ(String::formatted("{:p}", literal), String::formatted("{:p}", reinterpret_cast<FlatPtr>(literal)));
+}
+
 TEST_MAIN(Format)
