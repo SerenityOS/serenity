@@ -113,7 +113,7 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
             return;
         String error_string = m_track_manager.current_track().set_recorded_sample(open_path.value());
         if (!error_string.is_empty()) {
-            GUI::MessageBox::show(window(), String::format("Failed to load WAV file: %s", error_string.characters()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), String::formatted("Failed to load WAV file: {}", error_string.characters()), "Error", GUI::MessageBox::Type::Error);
             return;
         }
         m_recorded_sample_name->set_text(open_path.value());
