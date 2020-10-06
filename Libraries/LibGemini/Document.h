@@ -89,7 +89,7 @@ public:
 
 private:
     URL m_url;
-    StringView m_name;
+    String m_name;
 };
 
 class Preformatted : public Line {
