@@ -55,9 +55,9 @@ void ThreadStackWidget::set_ids(pid_t pid, pid_t tid)
 
 void ThreadStackWidget::refresh()
 {
-    auto file = Core::File::construct(String::format("/proc/%d/stacks/%d", m_pid, m_tid));
+    auto file = Core::File::construct(String::formatted("/proc/{}/stacks/{}", m_pid, m_tid));
     if (!file->open(Core::IODevice::ReadOnly)) {
-        m_stack_editor->set_text(String::format("Unable to open %s", file->filename().characters()));
+        m_stack_editor->set_text(String::formatted("Unable to open {}", file->filename()));
         return;
     }
 

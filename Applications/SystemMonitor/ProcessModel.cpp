@@ -153,7 +153,7 @@ String ProcessModel::column_name(int column) const
 
 static String pretty_byte_size(size_t size)
 {
-    return String::format("%uK", size / 1024);
+    return String::formatted("{}K", size / 1024);
 }
 
 GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const

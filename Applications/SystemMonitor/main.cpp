@@ -97,7 +97,7 @@ private:
 
 static bool can_access_pid(pid_t pid)
 {
-    auto path = String::format("/proc/%d", pid);
+    auto path = String::formatted("/proc/{}", pid);
     return access(path.characters(), X_OK) == 0;
 }
 
@@ -469,21 +469,21 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
                 auto bus = object.get("bus").to_u32();
                 auto slot = object.get("slot").to_u32();
                 auto function = object.get("function").to_u32();
-                return String::format("%04x:%02x:%02x.%d", seg, bus, slot, function);
+                return String::formatted("{:04x}:{:02x}:{:02x}.{}", seg, bus, slot, function);
             });
         pci_fields.empend(
             "Class", Gfx::TextAlignment::CenterLeft,
             [db](const JsonObject& object) {
                 auto class_id = object.get("class").to_u32();
                 String class_name = db->get_class(class_id);
-                return class_name == "" ? String::format("%04x", class_id) : class_name;
+                return class_name == "" ? String::formatted("{:04x}", class_id) : class_name;
             });
         pci_fields.empend(
             "Vendor", Gfx::TextAlignment::CenterLeft,
             [db](const JsonObject& object) {
                 auto vendor_id = object.get("vendor_id").to_u32();
                 String vendor_name = db->get_vendor(vendor_id);
-                return vendor_name == "" ? String::format("%02x", vendor_id) : vendor_name;
+                return vendor_name == "" ? String::formatted("{:02x}", vendor_id) : vendor_name;
             });
         pci_fields.empend(
             "Device", Gfx::TextAlignment::CenterLeft,
@@ -491,13 +491,13 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
                 auto vendor_id = object.get("vendor_id").to_u32();
                 auto device_id = object.get("device_id").to_u32();
                 String device_name = db->get_device(vendor_id, device_id);
-                return device_name == "" ? String::format("%02x", device_id) : device_name;
+                return device_name == "" ? String::formatted("{:02x}", device_id) : device_name;
             });
         pci_fields.empend(
             "Revision", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
                 auto revision_id = object.get("revision_id").to_u32();
-                return String::format("%02x", revision_id);
+                return String::formatted("{:02x}", revision_id);
             });
 
         pci_table_view.set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/pci", move(pci_fields))));
@@ -545,7 +545,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
             cpu_graph.set_text_color(Color::Green);
             cpu_graph.set_graph_color(Color::from_rgb(0x00bb00));
             cpu_graph.text_formatter = [](int value, int) {
-                return String::format("%d%%", value);
+                return String::formatted("{}%", value);
             };
             cpu_graphs.append(&cpu_graph);
         }
@@ -563,7 +563,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
         memory_graph.set_text_color(Color::Cyan);
         memory_graph.set_graph_color(Color::from_rgb(0x00bbbb));
         memory_graph.text_formatter = [](int value, int max) {
-            return String::format("%d / %d KiB", value, max);
+            return String::formatted("{} / {} KiB", value, max);
         };
 
         self.add<MemoryStatsWidget>(memory_graph);

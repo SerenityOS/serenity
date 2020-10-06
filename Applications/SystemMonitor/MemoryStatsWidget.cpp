@@ -119,12 +119,12 @@ void MemoryStatsWidget::refresh()
     size_t user_pages_available = user_physical_allocated + user_physical_available;
     size_t supervisor_pages_available = super_physical_alloc + super_physical_free;
 
-    m_kmalloc_space_label->set_text(String::format("%uK/%uK", bytes_to_kb(kmalloc_allocated), bytes_to_kb(kmalloc_sum_available)));
-    m_user_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(user_physical_allocated), page_count_to_kb(user_pages_available)));
-    m_supervisor_physical_pages_label->set_text(String::format("%uK/%uK", page_count_to_kb(super_physical_alloc), page_count_to_kb(supervisor_pages_available)));
-    m_kmalloc_count_label->set_text(String::format("%u", kmalloc_call_count));
-    m_kfree_count_label->set_text(String::format("%u", kfree_call_count));
-    m_kmalloc_difference_label->set_text(String::format("+%u", kmalloc_call_count - kfree_call_count));
+    m_kmalloc_space_label->set_text(String::formatted("{}K/{}K", bytes_to_kb(kmalloc_allocated), bytes_to_kb(kmalloc_sum_available)));
+    m_user_physical_pages_label->set_text(String::formatted("{}K/{}K", page_count_to_kb(user_physical_allocated), page_count_to_kb(user_pages_available)));
+    m_supervisor_physical_pages_label->set_text(String::formatted("{}K/{}K", page_count_to_kb(super_physical_alloc), page_count_to_kb(supervisor_pages_available)));
+    m_kmalloc_count_label->set_text(String::formatted("{}", kmalloc_call_count));
+    m_kfree_count_label->set_text(String::formatted("{}", kfree_call_count));
+    m_kmalloc_difference_label->set_text(String::formatted("{:+}", kmalloc_call_count - kfree_call_count));
 
     m_graph.set_max(page_count_to_kb(user_pages_available));
     m_graph.add_value(page_count_to_kb(user_physical_allocated));
