@@ -40,11 +40,7 @@ struct FlyStringImplTraits : public AK::Traits<StringImpl*> {
     {
         ASSERT(a);
         ASSERT(b);
-        if (a == b)
-            return true;
-        if (a->length() != b->length())
-            return false;
-        return !__builtin_memcmp(a->characters(), b->characters(), a->length());
+        return *a == *b;
     }
 };
 
