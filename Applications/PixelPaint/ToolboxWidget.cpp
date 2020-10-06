@@ -121,7 +121,7 @@ void ToolboxWidget::setup_tools()
         button.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
         button.set_preferred_size(0, 32);
         button.set_checkable(true);
-        button.set_icon(Gfx::Bitmap::load_from_file(String::format("/res/icons/pixelpaint/%s.png", icon_name.to_string().characters())));
+        button.set_icon(Gfx::Bitmap::load_from_file(String::formatted("/res/icons/pixelpaint/{}.png", icon_name)));
         return button;
     };
 

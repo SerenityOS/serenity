@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 
         auto bitmap = Gfx::Bitmap::load_from_file(open_path.value());
         if (!bitmap) {
-            GUI::MessageBox::show(window, String::format("Failed to load '%s'", open_path.value().characters()), "Open failed", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::formatted("Failed to load '{}'", open_path.value()), "Open failed", GUI::MessageBox::Type::Error);
             return;
         }
     }));
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 auto layer = PixelPaint::Layer::create_with_size(*image_editor.image(), dialog->layer_size(), dialog->layer_name());
                 if (!layer) {
-                    GUI::MessageBox::show_error(window, String::format("Unable to create layer with size %s", dialog->size().to_string().characters()));
+                    GUI::MessageBox::show_error(window, String::formatted("Unable to create layer with size {}", dialog->size().to_string()));
                     return;
                 }
                 image_editor.image()->add_layer(layer.release_nonnull());
