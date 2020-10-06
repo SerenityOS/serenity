@@ -90,12 +90,12 @@ int main(int argc, char** argv)
     JsonObject keymap_object = json.value().as_object();
     ASSERT(keymap_object.has("keymap"));
     String current_keymap = keymap_object.get("keymap").to_string();
-    dbg() << "KeyboardSettings thinks the current keymap is: " << current_keymap;
+    dbgln("KeyboardSettings thinks the current keymap is: {}", current_keymap);
 
     Vector<String> character_map_files;
     Core::DirIterator iterator("/res/keymaps/", Core::DirIterator::Flags::SkipDots);
     if (iterator.has_error()) {
-        GUI::MessageBox::show(nullptr, String::format("Error on reading mapping file list: %d", iterator.error_string()), "Keyboard settings", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, String::formatted("Error on reading mapping file list: {}", iterator.error_string()), "Keyboard settings", GUI::MessageBox::Type::Error);
         return -1;
     }
 
