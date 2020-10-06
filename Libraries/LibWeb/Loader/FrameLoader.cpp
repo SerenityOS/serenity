@@ -115,9 +115,9 @@ static RefPtr<DOM::Document> create_image_document(const ByteBuffer& data, const
 
 static RefPtr<DOM::Document> create_gemini_document(const ByteBuffer& data, const URL& url)
 {
-    auto markdown_document = Gemini::Document::parse({ (const char*)data.data(), data.size() }, url);
+    auto gemini_document = Gemini::Document::parse({ (const char*)data.data(), data.size() }, url);
 
-    return HTML::parse_html_document(markdown_document->render_to_html(), url, "utf-8");
+    return HTML::parse_html_document(gemini_document->render_to_html(), url, "utf-8");
 }
 
 RefPtr<DOM::Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
