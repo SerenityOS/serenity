@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     LibThread::Thread audio_thread([&] {
         auto audio = Core::File::construct("/dev/audio");
         if (!audio->open(Core::IODevice::WriteOnly)) {
-            dbgprintf("Can't open audio device: %s", audio->error_string());
+            dbgln("Can't open audio device: {}", audio->error_string());
             return 1;
         }
 
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
             return;
         wav_writer.set_file(save_path.value());
         if (wav_writer.has_error()) {
-            GUI::MessageBox::show(window, String::format("Failed to export WAV file: %s", wav_writer.error_string()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window, String::formatted("Failed to export WAV file: {}", wav_writer.error_string()), "Error", GUI::MessageBox::Type::Error);
             wav_writer.clear_error();
             return;
         }
