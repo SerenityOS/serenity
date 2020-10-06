@@ -132,21 +132,21 @@ String HelpWindow::render(const GUI::ModelIndex& index)
 
     markdown_builder.append("# ARGUMENTS\n");
     if (argc > 0)
-        markdown_builder.appendf("%d required argument%s: \n", argc, argc > 1 ? "s" : "");
+        markdown_builder.appendff("{} required argument(s):\n", argc);
     else
         markdown_builder.appendf("No required arguments.\n");
 
     for (size_t i = 0; i < argc; ++i)
-        markdown_builder.appendf("- `%s`\n", argnames.at(i).to_string().characters());
+        markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string());
 
     if (argc > 0)
         markdown_builder.append("\n");
 
     if ((size_t)argnames.size() > argc) {
         auto opt_count = argnames.size() - argc;
-        markdown_builder.appendf("%d optional argument%s: \n", opt_count, opt_count > 1 ? "s" : "");
+        markdown_builder.appendff("{} optional argument(s):\n", opt_count);
         for (size_t i = argc; i < (size_t)argnames.size(); ++i)
-            markdown_builder.appendf("- `%s`\n", argnames.at(i).to_string().characters());
+            markdown_builder.appendff("- `{}`\n", argnames.at(i).to_string());
         markdown_builder.append("\n");
     }
 
@@ -157,7 +157,7 @@ String HelpWindow::render(const GUI::ModelIndex& index)
     if (!examples.is_empty()) {
         markdown_builder.append("# EXAMPLES\n");
         examples.for_each_member([&](auto& text, auto& description_value) {
-            markdown_builder.appendf("- %s\n\n```js\n%s\n```\n", description_value.to_string().characters(), text.characters());
+            markdown_builder.appendf("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
         });
     }
 

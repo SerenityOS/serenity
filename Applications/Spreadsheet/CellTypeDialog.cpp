@@ -56,9 +56,9 @@ CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, 
     StringBuilder builder;
 
     if (positions.size() == 1)
-        builder.appendf("Format Cell %s%zu", positions.first().column.characters(), positions.first().row);
+        builder.appendff("Format Cell {}{}", positions.first().column, positions.first().row);
     else
-        builder.appendf("Format %zu Cells", positions.size());
+        builder.appendff("Format {} Cells", positions.size());
 
     set_title(builder.string_view());
     resize(285, 360);
