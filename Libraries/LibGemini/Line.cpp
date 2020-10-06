@@ -127,7 +127,7 @@ String Link::render_to_html() const
 String Preformatted::render_to_html() const
 {
     StringBuilder builder;
-    builder.append(escape_html_entities(m_text.substring_view(3, m_text.length() - 3)));
+    builder.append(escape_html_entities(m_text));
     builder.append("\n");
 
     return builder.build();
