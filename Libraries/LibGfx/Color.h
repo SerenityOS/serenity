@@ -117,7 +117,7 @@ public:
         m_value |= value;
     }
 
-    Color with_alpha(u8 alpha)
+    Color with_alpha(u8 alpha) const
     {
         return Color((m_value & 0x00ffffff) | alpha << 24);
     }

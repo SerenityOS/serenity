@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include "KeysWidget.h"
 #include "Music.h"
 #include <LibGUI/ScrollableWidget.h>
 
@@ -37,6 +38,9 @@ class RollWidget final : public GUI::ScrollableWidget {
 public:
     virtual ~RollWidget() override;
 
+    const KeysWidget* keys_widget() const { return m_keys_widget; }
+    void set_keys_widget(const KeysWidget* widget) { m_keys_widget = widget; }
+
 private:
     explicit RollWidget(TrackManager&);
 
@@ -45,6 +49,7 @@ private:
     virtual void mousewheel_event(GUI::MouseEvent&) override;
 
     TrackManager& m_track_manager;
+    const KeysWidget* m_keys_widget;
 
     int m_roll_width { 0 };
     int m_num_notes { 0 };
