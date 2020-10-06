@@ -41,6 +41,7 @@ public:
     int mouse_note() const;
 
     void set_key(int key, Switch);
+    bool note_is_set(int note) const;
 
 private:
     explicit KeysWidget(TrackManager&);
