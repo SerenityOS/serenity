@@ -52,6 +52,7 @@ public:
         Set,
         Shift,
         Ctrl,
+        ClearIfNotSelected
     };
 
     virtual void move_cursor(CursorMovement, SelectionUpdate) { }
