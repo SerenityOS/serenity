@@ -238,6 +238,17 @@ struct StandardFormatter {
     void parse(TypeErasedFormatParams&, FormatParser&);
 };
 
+template<typename T>
+struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFormatter {
+    Formatter() { }
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    void format(TypeErasedFormatParams&, FormatBuilder&, T value);
+};
+
 template<>
 struct Formatter<StringView> : StandardFormatter {
     Formatter() { }
@@ -250,29 +261,27 @@ struct Formatter<StringView> : StandardFormatter {
 };
 template<>
 struct Formatter<const char*> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const char* value)
+    {
+        if (m_mode == Mode::Pointer) {
+            Formatter<FlatPtr> formatter { *this };
+            formatter.format(params, builder, reinterpret_cast<FlatPtr>(value));
+        } else {
+            Formatter<StringView>::format(params, builder, value);
+        }
+    }
 };
 template<>
-struct Formatter<char*> : Formatter<StringView> {
+struct Formatter<char*> : Formatter<const char*> {
 };
 template<size_t Size>
-struct Formatter<char[Size]> : Formatter<StringView> {
+struct Formatter<char[Size]> : Formatter<const char*> {
 };
 template<>
 struct Formatter<String> : Formatter<StringView> {
 };
 template<>
 struct Formatter<FlyString> : Formatter<StringView> {
-};
-
-template<typename T>
-struct Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type> : StandardFormatter {
-    Formatter() { }
-    explicit Formatter(StandardFormatter formatter)
-        : StandardFormatter(formatter)
-    {
-    }
-
-    void format(TypeErasedFormatParams&, FormatBuilder&, T value);
 };
 
 template<typename T>
