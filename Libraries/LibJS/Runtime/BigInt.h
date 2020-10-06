@@ -27,7 +27,6 @@
 #pragma once
 
 #include <LibCrypto/BigInt/SignedBigInteger.h>
-#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Cell.h>
 
 namespace JS {
