@@ -90,7 +90,7 @@ int main(int argc, char** argv)
             return;
         }
 
-        window->set_title(String::format("%s %s %d%% - QuickShow", widget.path().characters(), widget.bitmap()->size().to_string().characters(), scale));
+        window->set_title(String::formatted("{} {} {}% - QuickShow", widget.path(), widget.bitmap()->size().to_string(), scale));
 
         if (window->is_fullscreen())
             return;
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
                 return;
 
             auto msgbox_result = GUI::MessageBox::show(window,
-                String::format("Really delete %s?", path.characters()),
+                String::formatted("Really delete {}?", path),
                 "Confirm deletion",
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::OKCancel);
@@ -155,12 +155,12 @@ int main(int argc, char** argv)
                 return;
 
             auto unlink_result = unlink(widget.path().characters());
-            dbg() << "unlink_result::" << unlink_result;
+            dbgln("unlink_result::{}", unlink_result);
 
             if (unlink_result < 0) {
                 int saved_errno = errno;
                 GUI::MessageBox::show(window,
-                    String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
+                    String::formatted("unlink({}) failed: {}", path, strerror(saved_errno)),
                     "Delete failed",
                     GUI::MessageBox::Type::Error);
 
