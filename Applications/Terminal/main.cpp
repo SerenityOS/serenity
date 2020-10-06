@@ -67,9 +67,8 @@ static void utmp_update(const char* tty, pid_t pid, bool create)
     }
     if (utmpupdate_pid)
         return;
-    char shell_pid_string[64];
-    snprintf(shell_pid_string, sizeof(shell_pid_string), "%d", pid);
-    execl("/bin/utmpupdate", "/bin/utmpupdate", "-f", "Terminal", "-p", shell_pid_string, (create ? "-c" : "-d"), tty, nullptr);
+    const auto shell_pid_string = String::formatted("{}", pid);
+    execl("/bin/utmpupdate", "/bin/utmpupdate", "-f", "Terminal", "-p", shell_pid_string.characters(), (create ? "-c" : "-d"), tty, nullptr);
 }
 
 static pid_t run_command(int ptm_fd, String command)
@@ -77,7 +76,7 @@ static pid_t run_command(int ptm_fd, String command)
     pid_t pid = fork();
     if (pid < 0) {
         perror("fork");
-        dbg() << "run_command: could not fork to run '" << command << "'";
+        dbgln("run_command: could not fork to run '{}'", command);
         return pid;
     }
 
@@ -317,7 +316,7 @@ int main(int argc, char** argv)
         }));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        dbgprintf("Terminal: Quit menu activated!\n");
+        dbgln("Terminal: Quit menu activated!");
         GUI::Application::the()->quit();
     }));
 
@@ -382,7 +381,7 @@ int main(int argc, char** argv)
 
     config->sync();
     int result = app->exec();
-    dbg() << "Exiting terminal, updating utmp";
+    dbgln("Exiting terminal, updating utmp");
     utmp_update(pts_name, 0, false);
     return result;
 }
