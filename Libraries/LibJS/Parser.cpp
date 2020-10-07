@@ -396,6 +396,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     bool is_strict = false;
 
     auto function_body_result = [&]() -> RefPtr<BlockStatement> {
+        TemporaryChange change(m_parser_state.m_in_function_context, true);
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
             return parse_block_statement(is_strict);
@@ -1202,6 +1203,9 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
 
 NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 {
+    if (!m_parser_state.m_in_function_context)
+        syntax_error("'return' not allowed outside of a function");
+
     consume(TokenType::Return);
 
     // Automatic semicolon insertion: terminate statement when return is followed by newline
@@ -1315,6 +1319,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_funct
         function_length = parameters.size();
 
     bool is_strict = false;
+    TemporaryChange change(m_parser_state.m_in_function_context, true);
     auto body = parse_block_statement(is_strict);
     body->add_variables(m_parser_state.m_var_scopes.last());
     body->add_functions(m_parser_state.m_function_scopes.last());
