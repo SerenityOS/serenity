@@ -63,12 +63,12 @@ int global_lib_variable = 1234;
 
 void global_lib_function()
 {
-    printf("Hello from Dynamic Lib! g_glob::m_i == %d\n", g_glob.get_i());
+    outln("Hello from Dynamic Lib! g_glob::m_i == {}", g_glob.get_i());
 }
 
 const char* other_lib_function(int my_argument)
 {
-    dbgprintf("Hello from Dynamic Lib, now from the debug port! g_glob::m_i == %d\n", g_glob.get_i());
+    dbgln("Hello from Dynamic Lib, now from the debug port! g_glob::m_i == {}", g_glob.get_i());
 
     int sum = my_argument + global_lib_variable;
 
@@ -77,7 +77,7 @@ const char* other_lib_function(int my_argument)
     //     the malloc of the main program which would be what they call 'very crash'.
     //     Feels very Windows :)
     static String s_string;
-    s_string = String::format("Here's your string! Sum of argument and global_lib_variable: %d", sum);
+    s_string = String::formatted("Here's your string! Sum of argument and global_lib_variable: {}", sum);
     return s_string.characters();
 }
 }

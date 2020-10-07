@@ -32,34 +32,32 @@
 
 int main(int argc, char** argv, char** envp)
 {
-    for (int i = 0; i < argc; ++i) {
-        printf("argv[%d]: %s\n", i, argv[i]);
-    }
+    for (int i = 0; i < argc; ++i)
+        outln("argv[{}]: {}", i, argv[i]);
 
     char** env;
-    for (env = envp; *env; ++env) {
-        printf("env: %s\n", *env);
-    }
+    for (env = envp; *env; ++env)
+        outln("env: {}", *env);
+
     for (auxv_t* auxvp = (auxv_t*)++env; auxvp->a_type != AT_NULL; ++auxvp) {
-        printf("AuxVal: Type=%ld, Val/Ptr=%p\n", auxvp->a_type, auxvp->a_un.a_ptr);
+        outln("AuxVal: Type={}, Val/Ptr={}", auxvp->a_type, auxvp->a_un.a_ptr);
         if (auxvp->a_type == AT_PLATFORM) {
-            printf("    Platform: %s\n", (char*)auxvp->a_un.a_ptr);
+            outln("    Platform: {}", (char*)auxvp->a_un.a_ptr);
         } else if (auxvp->a_type == AT_EXECFN) {
-            printf("    Filename: %s\n", (char*)auxvp->a_un.a_ptr);
+            outln("    Filename: {}", (char*)auxvp->a_un.a_ptr);
         } else if (auxvp->a_type == AT_RANDOM) {
             auto byte_ptr = (uint8_t*)auxvp->a_un.a_ptr;
-            printf("    My Random bytes are: ");
-            for (size_t i = 0; i < 16; ++i) {
-                printf("0x%2x ", byte_ptr[i]);
-            }
-            printf("\n");
+            outln("    My Random bytes are: ");
+            for (size_t i = 0; i < 16; ++i)
+                new_out("{:#02x} ", byte_ptr[i]);
+            outln();
         }
     }
 
     void* handle = dlopen("/usr/lib/libDynamicLib.so", RTLD_LAZY | RTLD_GLOBAL);
 
     if (!handle) {
-        printf("Failed to dlopen! %s\n", dlerror());
+        warnln("Failed to dlopen! {}", dlerror());
         return 1;
     }
 
@@ -67,57 +65,57 @@ int main(int argc, char** argv, char** envp)
     int* ptr_global = (int*)dlsym(handle, "global_lib_variable");
 
     if (!ptr_global) {
-        printf("Failed to dlsym for \"global_lib_variable\"! %s\n", dlerror());
+        warnln("Failed to dlsym for \"global_lib_variable\"! {}", dlerror());
         return 2;
     }
 
-    printf("Found global lib variable address: %p\n", ptr_global);
+    outln("Found global lib variable address: {}", ptr_global);
 
-    printf("Global lib variable is %d\n", *ptr_global);
+    outln("Global lib variable is {}", *ptr_global);
 
     // Test getting a method from the library and calling it
     void (*lib_func)(void) = (void (*)(void))dlsym(handle, "global_lib_function");
 
-    printf("Found global lib function address: %p\n", lib_func);
+    outln("Found global lib function address: {}", lib_func);
 
     if (!lib_func) {
-        printf("Failed to dlsym for \"global_lib_function\"! %s\n", dlerror());
+        warnln("Failed to dlsym for \"global_lib_function\"! {}", dlerror());
         return 2;
     }
 
     lib_func();
 
-    printf("I think I called my lib function!\n");
+    outln("I think I called my lib function!");
 
     // Test getting a method that takes and returns arguments now
     const char* (*other_func)(int) = (const char* (*)(int))dlsym(handle, "other_lib_function");
 
-    printf("Found other lib function address %p\n", other_func);
+    outln("Found other lib function address {}", other_func);
 
     if (!other_func) {
-        printf("Failed to dlsym for \"other_lib_function\"! %s\n", dlerror());
+        warnln("Failed to dlsym for \"other_lib_function\"! {}", dlerror());
         return 2;
     }
 
     // Call it twice with different arguments
     String formatted_result = other_func(10);
 
-    printf("(%d + %d = %d) %s\n", *ptr_global, 10, *ptr_global + 10, formatted_result.characters());
+    outln("({} + {} = {}) {}", *ptr_global, 10, *ptr_global + 10, formatted_result);
 
     *ptr_global = 17;
 
     formatted_result = other_func(5);
 
-    printf("(%d + %d = %d) %s\n", *ptr_global, 5, *ptr_global + 5, formatted_result.characters());
+    outln("({} + {} = {}) {}", *ptr_global, 5, *ptr_global + 5, formatted_result);
 
     int ret = dlclose(handle);
 
     if (ret < 0) {
-        printf("Failed to dlclose! %s\n", dlerror());
+        warnln("Failed to dlclose! {}", dlerror());
         return 3;
     }
 
-    printf("Bye for now!\n");
+    outln("Bye for now!");
 
     return 0;
 }
