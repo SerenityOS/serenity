@@ -96,7 +96,7 @@ String urlencode(const StringView& input)
     for (char ch : input) {
         if (in_userinfo_set((u8)ch)) {
             builder.append('%');
-            builder.appendf("%02X", (u8)ch);
+            builder.appendff("{:02X}", ch);
         } else {
             builder.append(ch);
         }

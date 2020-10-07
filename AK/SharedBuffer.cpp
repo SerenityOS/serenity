@@ -40,7 +40,7 @@
 
 static String shbuf_shm_name(int shbuf_id)
 {
-    return String::format("/serenity-shm:%d", shbuf_id);
+    return String::formatted("/serenity-shm:{}", shbuf_id);
 }
 
 #    endif

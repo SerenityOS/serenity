@@ -68,7 +68,7 @@ public:
 
     String to_string() const
     {
-        return String::format("%u.%u.%u.%u", m_data[0], m_data[1], m_data[2], m_data[3]);
+        return String::formatted("{}.{}.{}.{}", m_data[0], m_data[1], m_data[2], m_data[3]);
     }
 
     static Optional<IPv4Address> from_string(const StringView& string)

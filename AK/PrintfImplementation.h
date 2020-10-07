@@ -401,7 +401,7 @@ struct PrintfImpl {
     }
     ALWAYS_INLINE int format_unrecognized(char format_op, const char* fmt, const ModifierState&, ArgumentListRefT) const
     {
-        dbg() << "printf_internal: Unimplemented format specifier " << format_op << " (fmt: " << fmt << ")";
+        dbgln("printf_internal: Unimplemented format specifier {} (fmt: {})", format_op, fmt);
         return 0;
     }
 

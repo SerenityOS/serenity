@@ -465,7 +465,7 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
         m_mode = Mode::Pointer;
 
     if (!parser.is_eof())
-        dbg() << __PRETTY_FUNCTION__ << " did not consume '" << parser.remaining() << "'";
+        dbgln("{} did not consume '{}'", __PRETTY_FUNCTION__, parser.remaining());
 
     ASSERT(parser.is_eof());
 }
