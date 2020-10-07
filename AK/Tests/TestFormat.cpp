@@ -156,9 +156,11 @@ TEST_CASE(pointers)
     if (sizeof(void*) == 4) {
         EXPECT_EQ(String::formatted("{:p}", 32), "0x00000020");
         EXPECT_EQ(String::formatted("{:p}", ptr), "0x00004000");
+        EXPECT_EQ(String::formatted("{}", ptr), "0x00004000");
     } else if (sizeof(void*) == 8) {
         EXPECT_EQ(String::formatted("{:p}", 32), "0x0000000000000020");
         EXPECT_EQ(String::formatted("{:p}", ptr), "0x0000000000004000");
+        EXPECT_EQ(String::formatted("{}", ptr), "0x0000000000004000");
     } else {
         ASSERT_NOT_REACHED();
     }
