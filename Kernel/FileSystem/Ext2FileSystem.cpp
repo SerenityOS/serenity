@@ -1135,7 +1135,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
         } else {
             if (group_index == preferred_group_index)
                 group_index = 1;
-            for (; group_index < m_block_group_count; ++group_index) {
+            for (; group_index <= m_block_group_count; ++group_index) {
                 if (group_descriptor(group_index).bg_free_blocks_count) {
                     found_a_group = true;
                     break;
