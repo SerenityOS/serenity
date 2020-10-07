@@ -57,7 +57,7 @@ MappedFile::MappedFile(const StringView& file_name)
     }
 
 #ifdef DEBUG_MAPPED_FILE
-    dbgprintf("MappedFile{%s} := { fd=%d, m_size=%zu, m_map=%p }\n", file_name.to_string().characters(), fd, m_size, m_map);
+    dbgln("MappedFile(\"{}\") := ( fd={}, m_size={}, m_map={} )", file_name, fd, m_size, m_map);
 #endif
 
     close(fd);

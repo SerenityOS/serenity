@@ -306,7 +306,7 @@ URL URL::complete_url(const String& string) const
         return {};
 
     if (string.starts_with("//")) {
-        URL url(String::format("%s:%s", m_protocol.characters(), string.characters()));
+        URL url(String::formatted("{}:{}", m_protocol, string));
         if (url.is_valid())
             return url;
     }

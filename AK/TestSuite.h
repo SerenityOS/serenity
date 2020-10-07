@@ -28,34 +28,43 @@
 
 #define AK_TEST_SUITE
 
-#define ASSERT(x)                                                                                         \
-    do {                                                                                                  \
-        if (!(x))                                                                                         \
-            fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: ASSERT(%s) failed\n", __FILE__, __LINE__, #x); \
+extern "C" __attribute__((noreturn)) void abort() noexcept;
+
+namespace AK {
+
+template<typename... Parameters>
+void warnln(const char* fmtstr, const Parameters&...);
+
+}
+
+using AK::warnln;
+
+#define ASSERT(x)                                                                                    \
+    do {                                                                                             \
+        if (!(x))                                                                                    \
+            ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: ASSERT({}) failed", __FILE__, __LINE__, #x); \
     } while (false)
 
-#define RELEASE_ASSERT(x)                                                                                         \
-    do {                                                                                                          \
-        if (!(x))                                                                                                 \
-            fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: RELEASE_ASSERT(%s) failed\n", __FILE__, __LINE__, #x); \
+#define RELEASE_ASSERT(x)                                                                                    \
+    do {                                                                                                     \
+        if (!(x))                                                                                            \
+            ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: RELEASE_ASSERT({}) failed", __FILE__, __LINE__, #x); \
     } while (false)
 
-#define ASSERT_NOT_REACHED()                                                                                \
-    do {                                                                                                    \
-        fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: ASSERT_NOT_REACHED() called\n", __FILE__, __LINE__); \
-        abort();                                                                                            \
+#define ASSERT_NOT_REACHED()                                                                           \
+    do {                                                                                               \
+        ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: ASSERT_NOT_REACHED() called", __FILE__, __LINE__); \
+        ::abort();                                                                                     \
     } while (false)
 
-#define TODO()                                                                                \
-    do {                                                                                      \
-        fprintf(stderr, "\033[31;1mFAIL\033[0m: %s:%d: TODO() called\n", __FILE__, __LINE__); \
-        abort();                                                                              \
+#define TODO()                                                                                   \
+    do {                                                                                         \
+        ::AK::warnln(stderr, "\033[31;1mFAIL\033[0m: {}:{}: TODO() called", __FILE__, __LINE__); \
+        ::abort();                                                                               \
     } while (false)
 
-#include <stdio.h>
-
+#include <AK/Format.h>
 #include <AK/Function.h>
-#include <AK/LogStream.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
 
@@ -159,12 +168,12 @@ void TestSuite::main(const String& suite_name, int argc, char** argv)
     const auto& matching_tests = find_cases(search_string, !do_benchmarks_only, !do_tests_only);
 
     if (do_list_cases) {
-        out() << "Available cases for " << suite_name << ":";
+        outln("Available cases for {}:", suite_name);
         for (const auto& test : matching_tests) {
-            out() << "    " << test.name();
+            outln("    {}", test.name());
         }
     } else {
-        out() << "Running " << matching_tests.size() << " cases out of " << m_cases.size() << ".";
+        outln("Running {} cases out of {}.", matching_tests.size(), m_cases.size());
 
         run(matching_tests);
     }
@@ -216,37 +225,13 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
         }
     }
 
-    dbg() << "Finished " << test_count << " tests and " << benchmark_count << " benchmarks in " << global_timer.elapsed_milliseconds() << " ms ("
-          << m_testtime << " tests, " << m_benchtime << " benchmarks, " << (global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime)) << " other)";
-}
-
-// Use SFINAE to print if we can.
-// This trick is good enough for TestSuite.h, but not flexible enough to be put into LogStream.h.
-template<typename Stream, typename LHS, typename RHS, typename = void>
-struct MaybeStream {
-    static const Stream& call(const Stream& stream, const LHS&, const RHS&)
-    {
-        return stream;
-    }
-};
-template<typename Stream, typename LHS, typename RHS>
-struct MaybeStream<Stream, LHS, RHS, AK::Void<decltype(*reinterpret_cast<const Stream*>(0) << "" << *reinterpret_cast<const LHS*>(0) << "" << *reinterpret_cast<const RHS*>(0) << "")>> {
-    static const Stream& call(const Stream& stream, const LHS& lhs, const RHS& rhs)
-    {
-        return stream << ": LHS=\"" << lhs << "\", RHS=\"" << rhs << "\"";
-    }
-};
-template<typename Stream, typename LHS, typename RHS>
-static const Stream& maybe_print_rhs_lhs(const Stream& stream, const LHS& lhs, const RHS& rhs)
-{
-    return MaybeStream<Stream, LHS, RHS>::call(stream, lhs, rhs);
-}
-template<typename Stream, typename LHS, typename RHS>
-static const Stream& force_print_rhs_lhs(const Stream& stream, const LHS& lhs, const RHS& rhs)
-{
-    using _ = decltype(*reinterpret_cast<const Stream*>(0) << "" << *reinterpret_cast<const LHS*>(0) << "" << *reinterpret_cast<const RHS*>(0) << "");
-    (void)sizeof(_);
-    return MaybeStream<Stream, LHS, RHS>::call(stream, lhs, rhs);
+    dbgln("Finished {} tests and {} benchmarks in {}ms ({}ms tests, {}ms benchmarks, {}ms other).",
+        test_count,
+        benchmark_count,
+        global_timer.elapsed_milliseconds(),
+        m_testtime,
+        m_benchtime,
+        global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime));
 }
 
 }
@@ -292,26 +277,26 @@ using AK::TestSuite;
         TestSuite::release();                                       \
     }
 
-#define EXPECT_EQ(a, b)                                                                                                                              \
-    do {                                                                                                                                             \
-        auto lhs = (a);                                                                                                                              \
-        auto rhs = (b);                                                                                                                              \
-        if (lhs != rhs)                                                                                                                              \
-            AK::maybe_print_rhs_lhs(warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT_EQ(" #a ", " #b ") failed", lhs, rhs); \
+#define EXPECT_EQ(a, b)                                                                                                                                                                \
+    do {                                                                                                                                                                               \
+        auto lhs = (a);                                                                                                                                                                \
+        auto rhs = (b);                                                                                                                                                                \
+        if (lhs != rhs)                                                                                                                                                                \
+            warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, FormatIfSupported { lhs }, FormatIfSupported { rhs }); \
     } while (false)
 
 // If you're stuck and `EXPECT_EQ` seems to refuse to print anything useful,
 // try this: It'll spit out a nice compiler error telling you why it doesn't print.
-#define EXPECT_EQ_FORCE(a, b)                                                                                                                        \
-    do {                                                                                                                                             \
-        auto lhs = (a);                                                                                                                              \
-        auto rhs = (b);                                                                                                                              \
-        if (lhs != rhs)                                                                                                                              \
-            AK::force_print_rhs_lhs(warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT_EQ(" #a ", " #b ") failed", lhs, rhs); \
+#define EXPECT_EQ_FORCE(a, b)                                                                                                              \
+    do {                                                                                                                                   \
+        auto lhs = (a);                                                                                                                    \
+        auto rhs = (b);                                                                                                                    \
+        if (lhs != rhs)                                                                                                                    \
+            warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_EQ({}, {}) failed with lhs={} and rhs={}", __FILE__, __LINE__, #a, #b, lhs, rhs); \
     } while (false)
 
-#define EXPECT(x)                                                                                      \
-    do {                                                                                               \
-        if (!(x))                                                                                      \
-            warn() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": EXPECT(" #x ") failed"; \
+#define EXPECT(x)                                                                              \
+    do {                                                                                       \
+        if (!(x))                                                                              \
+            warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT({}) failed", __FILE__, __LINE__, #x); \
     } while (false)
