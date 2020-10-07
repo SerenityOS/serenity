@@ -101,7 +101,7 @@ private:
     Heap& m_heap;
     size_t m_cell_size { 0 };
     FreelistEntry* m_freelist { nullptr };
-    u8 m_storage[];
+    alignas(Cell) u8 m_storage[];
 };
 
 }
