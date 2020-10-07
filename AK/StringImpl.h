@@ -130,6 +130,14 @@ inline constexpr u32 string_hash(const char* characters, size_t length)
     return hash;
 }
 
+template<>
+struct Formatter<StringImpl> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const StringImpl& value)
+    {
+        Formatter<StringView>::format(params, builder, { value.characters(), value.length() });
+    }
+};
+
 }
 
 using AK::Chomp;
