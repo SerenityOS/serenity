@@ -1549,8 +1549,6 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
             continue;
         }
 
-        if (interpreter.exception())
-            return {};
         auto value = property.value().execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
@@ -1595,22 +1593,11 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, 
         ASSERT(m_property->is_identifier());
         return static_cast<const Identifier&>(*m_property).string();
     }
-    auto index = m_property->execute(interpreter, global_object);
+    auto value = m_property->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
-
-    ASSERT(!index.is_empty());
-
-    if (index.is_integer() && index.as_i32() >= 0)
-        return index.as_i32();
-
-    if (index.is_symbol())
-        return &index.as_symbol();
-
-    auto index_string = index.to_string(global_object);
-    if (interpreter.exception())
-        return {};
-    return index_string;
+    ASSERT(!value.is_empty());
+    return PropertyName::from_value(global_object, value);
 }
 
 String MemberExpression::to_string_approximation() const
