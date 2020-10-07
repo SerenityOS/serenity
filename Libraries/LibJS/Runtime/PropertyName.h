@@ -42,13 +42,13 @@ public:
 
     static PropertyName from_value(GlobalObject& global_object, Value value)
     {
+        if (value.is_empty())
+            return {};
         if (value.is_symbol())
             return &value.as_symbol();
-        if (value.is_number())
+        if (value.is_integer() && value.as_i32() >= 0)
             return value.as_i32();
-        if (!value.is_empty())
-            return value.to_string(global_object);
-        return {};
+        return value.to_string(global_object);
     }
 
     PropertyName() { }
