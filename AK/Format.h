@@ -321,6 +321,7 @@ template<typename... Parameters>
 void new_out(StringView fmtstr, const Parameters&... parameters) { vout(fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void outln(StringView fmtstr, const Parameters&... parameters) { vout(fmtstr, VariadicFormatParams { parameters... }, true); }
+inline void outln() { raw_out("\n"); }
 
 void vwarn(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
 void raw_warn(StringView string);
@@ -330,6 +331,7 @@ template<typename... Parameters>
 void new_warn(StringView fmtstr, const Parameters&... parameters) { vwarn(fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void warnln(StringView fmtstr, const Parameters&... parameters) { vwarn(fmtstr, VariadicFormatParams { parameters... }, true); }
+inline void warnln() { raw_out("\n"); }
 #endif
 
 void vdbg(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
@@ -340,6 +342,7 @@ template<typename... Parameters>
 void new_dbg(StringView fmtstr, const Parameters&... parameters) { vdbg(fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void dbgln(StringView fmtstr, const Parameters&... parameters) { vdbg(fmtstr, VariadicFormatParams { parameters... }, true); }
+inline void dbgln() { raw_dbg("\n"); }
 
 } // namespace AK
 
