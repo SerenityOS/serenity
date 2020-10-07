@@ -998,13 +998,29 @@ void Processor::cpu_detect()
         u32 family = (processor_info.eax() >> 8) & 0xf;
         if (!(family == 6 && model < 3 && stepping < 3))
             set_feature(CPUFeature::SEP);
+        if ((family == 6 && model >= 3) || (family == 0xf && model >= 0xe))
+            set_feature(CPUFeature::CONSTANT_TSC);
     }
+
+    u32 max_extended_leaf = CPUID(0x80000000).eax();
+
+    ASSERT(max_extended_leaf >= 0x80000001);
     CPUID extended_processor_info(0x80000001);
     if (extended_processor_info.edx() & (1 << 20))
         set_feature(CPUFeature::NX);
+    if (extended_processor_info.edx() & (1 << 27))
+        set_feature(CPUFeature::RDTSCP);
     if (extended_processor_info.edx() & (1 << 11)) {
         // Only available in 64 bit mode
         set_feature(CPUFeature::SYSCALL);
+    }
+
+    if (max_extended_leaf >= 0x80000007) {
+        CPUID cpuid(0x80000007);
+        if (cpuid.edx() & (1 << 8)) {
+            set_feature(CPUFeature::CONSTANT_TSC);
+            set_feature(CPUFeature::NONSTOP_TSC);
+        }
     }
 
     CPUID extended_features(0x7);
@@ -1107,6 +1123,12 @@ String Processor::features_string() const
                     return "sse";
                 case CPUFeature::TSC:
                     return "tsc";
+                case CPUFeature::RDTSCP:
+                    return "rdtscp";
+                case CPUFeature::CONSTANT_TSC:
+                    return "constant_tsc";
+                case CPUFeature::NONSTOP_TSC:
+                    return "nonstop_tsc";
                 case CPUFeature::UMIP:
                     return "umip";
                 case CPUFeature::SEP:
