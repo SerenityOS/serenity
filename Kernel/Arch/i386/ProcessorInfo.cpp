@@ -34,6 +34,7 @@ namespace Kernel {
 ProcessorInfo::ProcessorInfo(Processor& processor)
     : m_processor(processor)
 {
+    u32 max_leaf;
     {
         CPUID cpuid(0);
         StringBuilder builder;
@@ -44,12 +45,14 @@ ProcessorInfo::ProcessorInfo(Processor& processor)
                 (value >> 16) & 0xff,
                 (value >> 24) & 0xff);
         };
+        max_leaf = cpuid.eax();
         emit_u32(cpuid.ebx());
         emit_u32(cpuid.edx());
         emit_u32(cpuid.ecx());
         m_cpuid = builder.build();
     }
     {
+        ASSERT(max_leaf >= 1);
         CPUID cpuid(1);
         m_stepping = cpuid.eax() & 0xf;
         u32 model = (cpuid.eax() >> 4) & 0xf;
@@ -68,9 +71,10 @@ ProcessorInfo::ProcessorInfo(Processor& processor)
             m_display_model = model;
         }
     }
-    {
-        // FIXME: Check first that this is supported by calling CPUID with eax=0x80000000
-        //        and verifying that the returned eax>=0x80000004.
+
+    u32 max_extended_leaf = CPUID(0x80000000).eax();
+
+    if (max_extended_leaf >= 0x80000004) {
         alignas(u32) char buffer[48];
         u32* bufptr = reinterpret_cast<u32*>(buffer);
         auto copy_brand_string_part_to_buffer = [&](u32 i) {
