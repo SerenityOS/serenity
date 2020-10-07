@@ -44,8 +44,8 @@ struct TCPFlags {
 class [[gnu::packed]] TCPPacket
 {
 public:
-    TCPPacket() { }
-    ~TCPPacket() { }
+    TCPPacket() = default;
+    ~TCPPacket() = default;
 
     size_t header_size() const { return data_offset() * sizeof(u32); }
 
