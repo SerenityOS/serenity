@@ -35,13 +35,13 @@ namespace AK {
 static String number_string_with_one_decimal(u64 number, u32 unit, const char* suffix)
 {
     int decimal = (number % unit) * 10 / unit;
-    return String::format("%llu.%d %s", number / unit, decimal, suffix);
+    return String::formatted("{}.{} {}", number / unit, decimal, suffix);
 }
 
 static inline String human_readable_size(size_t size)
 {
     if (size < 1 * KiB)
-        return String::format("%zu B", size);
+        return String::formatted("{} B", size);
     if (size < 1 * MiB)
         return number_string_with_one_decimal(size, KiB, "KiB");
     if (size < 1 * GiB)
