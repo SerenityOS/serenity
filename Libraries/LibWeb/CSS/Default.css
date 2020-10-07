@@ -2,7 +2,12 @@ html {
     font-family: Katica;
 }
 
-head, link, meta, script, style, title {
+head,
+link,
+meta,
+script,
+style,
+title {
     display: none;
 }
 
@@ -10,12 +15,16 @@ body {
     margin: 8px;
 }
 
-h1, h2 {
+h1,
+h2 {
     font-family: Pebbleton;
     font-weight: bold;
 }
 
-h3 {
+h3,
+h4,
+h5,
+h6 {
     font-weight: bold;
 }
 
@@ -32,26 +41,51 @@ code {
     font-weight: lighter;
 }
 
-u, ins {
+u,
+ins {
     text-decoration: underline;
 }
 
-strong, b {
+strong,
+b {
     font-weight: bold;
 }
 
-html, address,
+html,
+address,
 blockquote,
-body, dd, div,
-dl, dt, fieldset, form,
-frame, frameset,
+body,
+dd,
+div,
+dl,
+dt,
+fieldset,
+form,
+frame,
+frameset,
 hgroup,
-h1, h2, h3, h4,
-h5, h6, noframes,
-ol, p, ul, center,
-dir, hr, menu, pre,
-header, footer, nav, main,
-article, aside, section {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+noframes,
+ol,
+p,
+ul,
+center,
+dir,
+hr,
+menu,
+pre,
+header,
+footer,
+nav,
+main,
+article,
+aside,
+section {
     display: block;
 }
 
@@ -59,19 +93,27 @@ center {
     text-align: -libweb-center;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
     margin: 8px 0 8px 0;
 }
 
-h4, p,
-blockquote, ul,
-fieldset, form,
-ol, dl, dir,
+h4,
+p,
+blockquote,
+ul,
+fieldset,
+form,
+ol,
+dl,
+dir,
 menu {
     margin: 4px 0 4px 0;
 }
 
-h5, h6 {
+h5,
+h6 {
     margin: 2px 0 2px 0;
 }
 
@@ -127,7 +169,8 @@ tr {
     display: table-row;
 }
 
-td, th {
+td,
+th {
     display: table-cell;
 }
 
