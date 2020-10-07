@@ -317,6 +317,8 @@ template<typename... Parameters>
 void new_out(StringView fmtstr, const Parameters&... parameters) { vout(fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void outln(StringView fmtstr, const Parameters&... parameters) { vout(fmtstr, VariadicFormatParams { parameters... }, true); }
+template<typename... Parameters>
+void outln(const char* fmtstr, const Parameters&... parameters) { outln(StringView { fmtstr }, parameters...); }
 inline void outln() { raw_out("\n"); }
 
 void vwarn(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
@@ -327,6 +329,8 @@ template<typename... Parameters>
 void new_warn(StringView fmtstr, const Parameters&... parameters) { vwarn(fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void warnln(StringView fmtstr, const Parameters&... parameters) { vwarn(fmtstr, VariadicFormatParams { parameters... }, true); }
+template<typename... Parameters>
+void warnln(const char* fmtstr, const Parameters&... parameters) { warnln(StringView { fmtstr }, parameters...); }
 inline void warnln() { raw_out("\n"); }
 #endif
 
@@ -338,6 +342,8 @@ template<typename... Parameters>
 void new_dbg(StringView fmtstr, const Parameters&... parameters) { vdbg(fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void dbgln(StringView fmtstr, const Parameters&... parameters) { vdbg(fmtstr, VariadicFormatParams { parameters... }, true); }
+template<typename... Parameters>
+void dbgln(const char* fmtstr, const Parameters&... parameters) { dbgln(StringView { fmtstr }, parameters...); }
 inline void dbgln() { raw_dbg("\n"); }
 
 } // namespace AK
