@@ -164,13 +164,9 @@ private:
 
 class TypeErasedFormatParams {
 public:
-    explicit TypeErasedFormatParams(Span<const TypeErasedParameter> parameters)
-        : m_parameters(parameters)
-    {
-    }
-
     Span<const TypeErasedParameter> parameters() const { return m_parameters; }
 
+    void set_parameters(Span<const TypeErasedParameter> parameters) { m_parameters = parameters; }
     size_t take_next_index() { return m_next_index++; }
 
     size_t decode(size_t value, size_t default_value = 0);
@@ -195,9 +191,9 @@ public:
     static_assert(sizeof...(Parameters) <= max_format_arguments);
 
     explicit VariadicFormatParams(const Parameters&... parameters)
-        : TypeErasedFormatParams(m_data)
-        , m_data({ TypeErasedParameter { &parameters, TypeErasedParameter::get_type<Parameters>(), __format_value<Parameters> }... })
+        : m_data({ TypeErasedParameter { &parameters, TypeErasedParameter::get_type<Parameters>(), __format_value<Parameters> }... })
     {
+        this->set_parameters(m_data);
     }
 
 private:
