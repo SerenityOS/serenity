@@ -640,7 +640,6 @@ template struct Formatter<unsigned short, void>;
 template struct Formatter<unsigned int, void>;
 template struct Formatter<unsigned long, void>;
 template struct Formatter<unsigned long long, void>;
-template struct Formatter<char, void>;
 template struct Formatter<short, void>;
 template struct Formatter<int, void>;
 template struct Formatter<long, void>;
