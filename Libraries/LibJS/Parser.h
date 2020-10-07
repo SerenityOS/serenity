@@ -158,6 +158,7 @@ private:
         bool m_strict_mode { false };
         bool m_allow_super_property_lookup { false };
         bool m_allow_super_constructor_call { false };
+        bool m_in_function_context { false };
 
         explicit ParserState(Lexer);
     };
