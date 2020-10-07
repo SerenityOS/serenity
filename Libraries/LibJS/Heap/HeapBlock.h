@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Cell.h>
@@ -78,6 +79,8 @@ public:
             return nullptr;
         return cell(cell_index);
     }
+
+    IntrusiveListNode m_list_node;
 
 private:
     HeapBlock(Heap&, size_t cell_size);

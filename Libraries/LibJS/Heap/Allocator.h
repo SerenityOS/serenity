@@ -26,9 +26,11 @@
 
 #pragma once
 
+#include <AK/IntrusiveList.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/HeapBlock.h>
 
 namespace JS {
 
@@ -45,11 +47,11 @@ public:
     IterationDecision for_each_block(Callback callback)
     {
         for (auto& block : m_full_blocks) {
-            if (callback(*block) == IterationDecision::Break)
+            if (callback(block) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         for (auto& block : m_usable_blocks) {
-            if (callback(*block) == IterationDecision::Break)
+            if (callback(block) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -61,8 +63,9 @@ public:
 private:
     const size_t m_cell_size;
 
-    Vector<NonnullOwnPtr<HeapBlock>> m_full_blocks;
-    Vector<NonnullOwnPtr<HeapBlock>> m_usable_blocks;
+    typedef IntrusiveList<HeapBlock, &HeapBlock::m_list_node> BlockList;
+    BlockList m_full_blocks;
+    BlockList m_usable_blocks;
 };
 
 }
