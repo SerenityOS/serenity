@@ -42,35 +42,28 @@ Allocator::~Allocator()
 Cell* Allocator::allocate_cell(Heap& heap)
 {
     if (m_usable_blocks.is_empty()) {
-        m_usable_blocks.append(HeapBlock::create_with_cell_size(heap, m_cell_size));
+        auto block = HeapBlock::create_with_cell_size(heap, m_cell_size);
+        m_usable_blocks.append(*block.leak_ptr());
     }
 
     auto& block = *m_usable_blocks.last();
     auto* cell = block.allocate();
     ASSERT(cell);
-    if (block.is_full()) {
-        m_full_blocks.append(m_usable_blocks.take_last());
-    }
+    if (block.is_full())
+        m_full_blocks.append(*m_usable_blocks.last());
     return cell;
 }
 
 void Allocator::block_did_become_empty(Badge<Heap>, HeapBlock& block)
 {
-    bool removed_something = false;
-    removed_something |= m_full_blocks.remove_first_matching([&block](auto& entry) { return entry == &block; });
-    removed_something |= m_usable_blocks.remove_first_matching([&block](auto& entry) { return entry == &block; });
-    ASSERT(removed_something);
+    block.m_list_node.remove();
+    delete &block;
 }
 
 void Allocator::block_did_become_usable(Badge<Heap>, HeapBlock& block)
 {
     ASSERT(!block.is_full());
-    auto it = m_full_blocks.find([&](auto& entry) {
-        return entry == &block;
-    });
-    ASSERT(it != m_full_blocks.end());
-    auto owned_block = m_full_blocks.take(it.index());
-    m_usable_blocks.append(move(owned_block));
+    m_usable_blocks.append(block);
 }
 
 }
