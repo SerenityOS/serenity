@@ -288,6 +288,9 @@ template<typename T>
 struct Formatter<T*> : StandardFormatter {
     void format(TypeErasedFormatParams& params, FormatBuilder& builder, T* value)
     {
+        if (m_mode == Mode::Default)
+            m_mode = Mode::Pointer;
+
         Formatter<FlatPtr> formatter { *this };
         formatter.format(params, builder, reinterpret_cast<FlatPtr>(value));
     }
