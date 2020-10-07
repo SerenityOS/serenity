@@ -32,7 +32,6 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/UDPServer.h>
-#include <LibCore/UDPSocket.h>
 #include <net/if.h>
 #include <net/route.h>
 #include <sys/ioctl.h>
