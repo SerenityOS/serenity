@@ -549,6 +549,17 @@ void Formatter<T, typename EnableIf<IsIntegral<T>::value>::Type>::format(TypeEra
         builder.put_i64(value, base, m_alternative_form, upper_case, m_zero_pad, m_align, width, m_fill, m_sign_mode);
 }
 
+void Formatter<char>::format(TypeErasedFormatParams& params, FormatBuilder& builder, char value)
+{
+    if (m_mode == Mode::Binary || m_mode == Mode::BinaryUppercase || m_mode == Mode::Decimal || m_mode == Mode::Octal || m_mode == Mode::Hexadecimal || m_mode == Mode::HexadecimalUppercase) {
+        // Trick: signed char != char. (Sometimes weird features are actually helpful.)
+        Formatter<signed char> formatter { *this };
+        return formatter.format(params, builder, static_cast<signed char>(value));
+    } else {
+        Formatter<StringView> formatter { *this };
+        return formatter.format(params, builder, { &value, 1 });
+    }
+}
 void Formatter<bool>::format(TypeErasedFormatParams& params, FormatBuilder& builder, bool value)
 {
     if (m_mode == Mode::Binary || m_mode == Mode::BinaryUppercase || m_mode == Mode::Decimal || m_mode == Mode::Octal || m_mode == Mode::Hexadecimal || m_mode == Mode::HexadecimalUppercase) {
