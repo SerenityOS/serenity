@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     window->show();
 
     view.on_title_change = [&](auto& title) {
-        window->set_title(String::format("%s - WebView", title.characters()));
+        window->set_title(String::formatted("{} - WebView", title));
     };
 
     view.on_link_hover = [&](auto& url) {

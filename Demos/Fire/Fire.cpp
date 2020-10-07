@@ -70,9 +70,6 @@ static const Color s_palette[] = {
     Color(0xCF, 0xCF, 0x6F), Color(0xEF, 0xEF, 0xC7), Color(0xFF, 0xFF, 0xFF)
 };
 
-/*
- * Fire Widget
-*/
 class Fire : public GUI::Widget {
     C_OBJECT(Fire)
 public:
@@ -173,7 +170,7 @@ void Fire::timer_event(Core::TimerEvent&)
     }
 
     if ((cycles % 50) == 0) {
-        dbgprintf("%d total cycles. finished 50 in %d ms, avg %d ms\n", cycles, timeAvg, timeAvg / 50);
+        dbgln("{} total cycles. finished 50 in {} ms, avg {} ms", cycles, timeAvg, timeAvg / 50);
         stats->set_text(String::format("%d ms", timeAvg / 50));
         timeAvg = 0;
     }
@@ -181,9 +178,6 @@ void Fire::timer_event(Core::TimerEvent&)
     update();
 }
 
-/*
- * Mouse handling events
-*/
 void Fire::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left)
@@ -217,9 +211,6 @@ void Fire::mouseup_event(GUI::MouseEvent& event)
     return GUI::Widget::mouseup_event(event);
 }
 
-/*
- * Main
-*/
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
