@@ -28,7 +28,6 @@
 #include "ImageEditor.h"
 #include "Layer.h"
 #include <AK/Queue.h>
-#include <AK/SinglyLinkedList.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
