@@ -127,7 +127,7 @@ public:
 
     void schedule_style_update();
 
-    Vector<const Element*> get_elements_by_name(const String&) const;
+    NonnullRefPtrVector<Element> get_elements_by_name(const String&) const;
     NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
 
     const String& source() const { return m_source; }
