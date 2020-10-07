@@ -606,15 +606,18 @@ enum class CPUFeature : u32 {
     SMEP = (1 << 6),
     SSE = (1 << 7),
     TSC = (1 << 8),
-    UMIP = (1 << 9),
-    SEP = (1 << 10),
-    SYSCALL = (1 << 11),
-    MMX = (1 << 12),
-    SSE2 = (1 << 13),
-    SSE3 = (1 << 14),
-    SSSE3 = (1 << 15),
-    SSE4_1 = (1 << 16),
-    SSE4_2 = (1 << 17)
+    RDTSCP = (1 << 9),
+    CONSTANT_TSC = (1 << 10),
+    NONSTOP_TSC = (1 << 11),
+    UMIP = (1 << 12),
+    SEP = (1 << 13),
+    SYSCALL = (1 << 14),
+    MMX = (1 << 15),
+    SSE2 = (1 << 16),
+    SSE3 = (1 << 17),
+    SSSE3 = (1 << 18),
+    SSE4_1 = (1 << 19),
+    SSE4_2 = (1 << 20),
 };
 
 class Thread;
