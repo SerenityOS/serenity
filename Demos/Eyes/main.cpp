@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     }
 
     if ((grid_rows > 0) ^ (grid_columns > 0)) {
-        fprintf(stderr, "Expected either both or none of 'grid-rows' and 'grid-cols' to be passed.\n");
+        warnln("Expected either both or none of 'grid-rows' and 'grid-cols' to be passed.");
         return 1;
     }
 

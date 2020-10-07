@@ -177,8 +177,8 @@ void Cube::timer_event(Core::TimerEvent&)
     }
 
     if ((m_cycles % 50) == 0) {
-        dbgprintf("%d total cycles. finished 50 in %d ms, avg %d ms\n", m_cycles, m_accumulated_time, m_accumulated_time / 50);
-        m_stats->set_text(String::format("%d ms", m_accumulated_time / 50));
+        dbgln("{} total cycles. finished 50 in {} ms, avg {} ms", m_cycles, m_accumulated_time, m_accumulated_time / 50);
+        m_stats->set_text(String::formatted("{} ms", m_accumulated_time / 50));
         m_accumulated_time = 0;
     }
 
