@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AK/Atomic.h>
-#include <AK/SinglyLinkedList.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
 
