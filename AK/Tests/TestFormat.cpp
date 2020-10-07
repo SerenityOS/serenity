@@ -196,4 +196,22 @@ TEST_CASE(format_character)
     EXPECT_EQ(String::formatted("{}", true ? a : 'b'), "a");
 }
 
+struct A {
+};
+struct B {
+};
+template<>
+struct AK::Formatter<B> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, B)
+    {
+        Formatter<StringView>::format(params, builder, "B");
+    }
+};
+
+TEST_CASE(format_if_supported)
+{
+    EXPECT_EQ(String::formatted("{}", FormatIfSupported { A {} }), "?");
+    EXPECT_EQ(String::formatted("{}", FormatIfSupported { B {} }), "B");
+}
+
 TEST_MAIN(Format)
