@@ -56,7 +56,7 @@
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGfx/Font.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/InProcessWebView.h>
+#include <LibWeb/OutOfProcessWebView.h>
 #include <string.h>
 
 TextEditorWidget::TextEditorWidget()
@@ -85,7 +85,7 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    m_page_view = static_cast<Web::InProcessWebView&>(*find_descendant_by_name("webview"));
+    m_page_view = static_cast<Web::OutOfProcessWebView&>(*find_descendant_by_name("webview"));
     m_page_view->on_link_hover = [this](auto& url) {
         if (url.is_valid())
             m_statusbar->set_text(url.to_string());
