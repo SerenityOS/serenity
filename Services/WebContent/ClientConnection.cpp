@@ -91,6 +91,14 @@ void ClientConnection::handle(const Messages::WebContentServer::LoadURL& message
     page().load(message.url());
 }
 
+void ClientConnection::handle(const Messages::WebContentServer::LoadHTML& message)
+{
+#ifdef DEBUG_SPAM
+    dbg() << "handle: WebContentServer::LoadHTML: html=" << message.html() << ", url=" << message.url();
+#endif
+    page().load_html(message.html(), message.url());
+}
+
 void ClientConnection::handle(const Messages::WebContentServer::SetViewportRect& message)
 {
 #ifdef DEBUG_SPAM

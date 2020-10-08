@@ -5,6 +5,7 @@ endpoint WebContentServer = 89
     UpdateSystemTheme(i32 shbuf_id) =|
 
     LoadURL(URL url) =|
+    LoadHTML(String html, URL url) =|
 
     Paint(Gfx::IntRect content_rect, i32 shbuf_id) =|
     SetViewportRect(Gfx::IntRect rect) =|

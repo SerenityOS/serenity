@@ -52,6 +52,12 @@ void OutOfProcessWebView::load(const URL& url)
     client().post_message(Messages::WebContentServer::LoadURL(url));
 }
 
+void OutOfProcessWebView::load_html(const StringView& html, const URL& url)
+{
+    m_url = url;
+    client().post_message(Messages::WebContentServer::LoadHTML(html, url));
+}
+
 void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 {
     GUI::ScrollableWidget::paint_event(event);
