@@ -93,7 +93,7 @@ GUI::Variant WidgetTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
         return m_widget_icon;
     }
     if (role == GUI::ModelRole::Display) {
-        return String::format("%s (%s)", widget->class_name(), widget->relative_rect().to_string().characters());
+        return String::formatted("{} ({})", widget->class_name(), widget->relative_rect());
     }
     return {};
 }

@@ -40,7 +40,7 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
 {
     auto containing_function = debug_session.debug_info().get_containing_function(regs.eip);
     if (!containing_function.has_value()) {
-        dbg() << "Cannot disassemble as the containing function was not found.";
+        dbgln("Cannot disassemble as the containing function was not found.");
         return;
     }
 
@@ -110,12 +110,11 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
 
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::Address)
-            return String::format("%#08x", insn.address);
+            return String::formatted("{:p}", insn.address);
         if (index.column() == Column::InstructionBytes) {
             StringBuilder builder;
-            for (auto ch : insn.bytes) {
-                builder.appendf("%02x ", (u8)ch);
-            }
+            for (auto ch : insn.bytes)
+                builder.appendff("{:02x} ", static_cast<unsigned char>(ch));
             return builder.to_string();
         }
         if (index.column() == Column::Disassembly)

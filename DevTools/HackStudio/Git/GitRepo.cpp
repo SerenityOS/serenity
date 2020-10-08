@@ -132,7 +132,7 @@ bool GitRepo::commit(const String& message)
 
 Optional<String> GitRepo::original_file_content(const LexicalPath& file) const
 {
-    return command({ "show", String::format("HEAD:%s", file.string().characters()) });
+    return command({ "show", String::formatted("HEAD:{}", file) });
 }
 
 Optional<String> GitRepo::unstaged_diff(const LexicalPath& file) const

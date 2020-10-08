@@ -59,7 +59,7 @@ Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::
     do {
         String name = debug_session.debug_info().name_of_containing_function(current_instruction);
         if (name.is_null()) {
-            dbg() << "BacktraceModel: couldn't find containing function for address: " << (void*)current_instruction;
+            dbgln("BacktraceModel: couldn't find containing function for address: {:p}", current_instruction);
             name = "<missing>";
         }
 

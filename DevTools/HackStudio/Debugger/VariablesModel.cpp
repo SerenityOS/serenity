@@ -84,19 +84,19 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
             return enumerator->constant_data.as_u32 == enumerator_value;
         });
         ASSERT(!it.is_end());
-        return String::format("%s::%s", variable.type_name.characters(), (*it)->name.characters());
+        return String::formatted("{}::{}", variable.type_name, (*it)->name);
     }
 
     if (variable.type_name == "int") {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
         ASSERT(value.has_value());
-        return String::format("%d", static_cast<int>(value.value()));
+        return String::formatted("{}", static_cast<int>(value.value()));
     }
 
     if (variable.type_name == "char") {
         auto value = Debugger::the().session()->peek((u32*)variable_address);
         ASSERT(value.has_value());
-        return String::format("'%c' (%d)", static_cast<char>(value.value()), static_cast<char>(value.value()));
+        return String::formatted("'{0:c}' ({0:d})", value.value());
     }
 
     if (variable.type_name == "bool") {
@@ -105,13 +105,13 @@ static String variable_value_as_string(const Debug::DebugInfo::VariableInfo& var
         return (value.value() & 1) ? "true" : "false";
     }
 
-    return String::format("type: %s @ %08x, ", variable.type_name.characters(), variable_address);
+    return String::formatted("type: {} @ {:p}, ", variable.type_name, variable_address);
 }
 
 static Optional<u32> string_to_variable_value(const StringView& string_value, const Debug::DebugInfo::VariableInfo& variable)
 {
     if (variable.is_enum_type()) {
-        auto prefix_string = String::format("%s::", variable.type_name.characters());
+        auto prefix_string = String::formatted("{}::", variable.type_name);
         auto string_to_use = string_value;
         if (string_value.starts_with(prefix_string))
             string_to_use = string_value.substring_view(prefix_string.length(), string_value.length() - prefix_string.length());
@@ -155,8 +155,9 @@ void VariablesModel::set_variable_value(const GUI::ModelIndex& index, const Stri
         return;
     }
 
-    GUI::MessageBox::show(parent_window,
-        String::format("String value \"%s\" could not be converted to a value of type %s.", string_value.to_string().characters(), variable->type_name.characters()),
+    GUI::MessageBox::show(
+        parent_window,
+        String::formatted("String value \"{}\" could not be converted to a value of type {}.", string_value, variable->type_name),
         "Set value failed",
         GUI::MessageBox::Type::Error);
 }
@@ -167,7 +168,7 @@ GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
     switch (role) {
     case GUI::ModelRole::Display: {
         auto value_as_string = variable_value_as_string(*variable);
-        return String::format("%s: %s", variable->name.characters(), value_as_string.characters());
+        return String::formatted("{}: {}", variable->name, value_as_string);
     }
     case GUI::ModelRole::Icon:
         return m_variable_icon;

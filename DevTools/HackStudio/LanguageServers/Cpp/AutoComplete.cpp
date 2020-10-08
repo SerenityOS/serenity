@@ -46,7 +46,7 @@ Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, G
 
 #ifdef DEBUG_AUTOCOMPLETE
     for (auto& suggestion : suggestions) {
-        dbg() << "suggestion: " << suggestion.completion;
+        dbgln("suggestion: {}", suggestion.completion);
     }
 #endif
 

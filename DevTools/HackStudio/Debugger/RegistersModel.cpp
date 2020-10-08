@@ -107,7 +107,7 @@ GUI::Variant RegistersModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
         if (index.column() == Column::Register)
             return reg.name;
         if (index.column() == Column::Value)
-            return String::format("%#08x", reg.value);
+            return String::formatted("{:08x}", reg.value);
         return {};
     }
     return {};

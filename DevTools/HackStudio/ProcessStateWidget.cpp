@@ -82,10 +82,10 @@ void ProcessStateWidget::refresh()
 
     auto& data = active_process_data.value();
 
-    m_pid_label->set_text(String::format("%s(%d)", data.name.characters(), pid));
+    m_pid_label->set_text(String::formatted("{}({})", data.name, pid));
     m_state_label->set_text(data.threads.first().state);
-    m_cpu_label->set_text(String::format("%d", data.threads.first().times_scheduled));
-    m_memory_label->set_text(String::format("%d", data.amount_resident));
+    m_cpu_label->set_text(String::formatted("{}", data.threads.first().times_scheduled));
+    m_memory_label->set_text(String::formatted("{}", data.amount_resident));
 }
 
 void ProcessStateWidget::set_tty_fd(int tty_fd)

@@ -161,9 +161,8 @@ void DiffViewer::set_content(const String& original, const String& diff)
     m_hunks = Diff::parse_hunks(diff);
 
 #ifdef DEBUG_DIFF
-    for (size_t i = 0; i < m_original_lines.size(); ++i) {
-        dbg() << i << ":" << m_original_lines[i];
-    }
+    for (size_t i = 0; i < m_original_lines.size(); ++i)
+        dbgln("{}:{}", i, m_original_lines[i]);
 #endif
 }
 

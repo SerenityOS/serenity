@@ -142,7 +142,7 @@ static HashMap<String, String>& man_paths()
         // FIXME: This should also search man3, possibly other places..
         Core::DirIterator it("/usr/share/man/man2", Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
-            auto path = String::format("/usr/share/man/man2/%s", it.next_path().characters());
+            auto path = String::formatted("/usr/share/man/man2/{}", it.next_path());
             auto title = LexicalPath(path).title();
             paths.set(title, path);
         }
@@ -156,7 +156,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
 #ifdef EDITOR_DEBUG
-        dbg() << "no man path for " << hovered_token;
+        dbgln("no man path for {}", hovered_token);
 #endif
         m_documentation_tooltip_window->hide();
         return;
@@ -167,18 +167,18 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
     }
 
 #ifdef EDITOR_DEBUG
-    dbg() << "opening " << it->value;
+    dbgln("opening {}", it->value);
 #endif
     auto file = Core::File::construct(it->value);
     if (!file->open(Core::File::ReadOnly)) {
-        dbg() << "failed to open " << it->value << " " << file->error_string();
+        dbgln("failed to open {}, {}", it->value, file->error_string());
         return;
     }
 
     auto man_document = Markdown::Document::parse(file->read_all());
 
     if (!man_document) {
-        dbg() << "failed to parse markdown";
+        dbgln("failed to parse markdown");
         return;
     }
 
@@ -238,7 +238,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
             adjusted_range.end().set_column(min(end_line_length, adjusted_range.end().column() + 1));
             auto hovered_span_text = document().text_in_range(adjusted_range);
 #ifdef EDITOR_DEBUG
-            dbg() << "Hovering: " << adjusted_range << " \"" << hovered_span_text << "\"";
+            dbgln("Hovering: {} \"{}\"", adjusted_range, hovered_span_text);
 #endif
 
             if (highlighter->is_navigatable(span.data)) {
@@ -305,7 +305,7 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
             auto span_text = document().text_in_range(adjusted_range);
             auto header_path = span_text.substring(1, span_text.length() - 2);
 #ifdef EDITOR_DEBUG
-            dbg() << "Ctrl+click: " << adjusted_range << " \"" << header_path << "\"";
+            dbgln("Ctrl+click: {} \"{}\"", adjusted_range, header_path);
 #endif
             navigate_to_include_if_available(header_path);
             return;
@@ -392,7 +392,7 @@ static HashMap<String, String>& include_paths()
             if (!Core::File::is_directory(path)) {
                 auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
 #ifdef EDITOR_DEBUG
-                dbg() << "Adding header \"" << key << "\" in path \"" << path << "\"";
+                dbgln("Adding header \"{}\" in path \"{}\"", key, path);
 #endif
                 paths.set(key, path);
             } else {
@@ -416,7 +416,7 @@ void Editor::navigate_to_include_if_available(String path)
     auto it = include_paths().find(path);
     if (it == include_paths().end()) {
 #ifdef EDITOR_DEBUG
-        dbg() << "no header " << path << " found.";
+        dbgln("no header {} found.", path);
 #endif
         return;
     }

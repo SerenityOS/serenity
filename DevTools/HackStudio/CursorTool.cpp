@@ -38,7 +38,7 @@ namespace HackStudio {
 void CursorTool::on_mousedown(GUI::MouseEvent& event)
 {
 #ifdef DEBUG_CURSOR_TOOL
-    dbg() << "CursorTool::on_mousedown";
+    dbgln("CursorTool::on_mousedown");
 #endif
     auto& form_widget = m_editor.form_widget();
     auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
@@ -77,7 +77,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
 void CursorTool::on_mouseup(GUI::MouseEvent& event)
 {
 #ifdef DEBUG_CURSOR_TOOL
-    dbg() << "CursorTool::on_mouseup";
+    dbgln("CursorTool::on_mouseup");
 #endif
     if (event.button() == GUI::MouseButton::Left) {
         auto& form_widget = m_editor.form_widget();
@@ -98,7 +98,7 @@ void CursorTool::on_mouseup(GUI::MouseEvent& event)
 void CursorTool::on_mousemove(GUI::MouseEvent& event)
 {
 #ifdef DEBUG_CURSOR_TOOL
-    dbg() << "CursorTool::on_mousemove";
+    dbgln("CursorTool::on_mousemove");
 #endif
     auto& form_widget = m_editor.form_widget();
 
@@ -137,7 +137,7 @@ void CursorTool::on_mousemove(GUI::MouseEvent& event)
 void CursorTool::on_keydown(GUI::KeyEvent& event)
 {
 #ifdef DEBUG_CURSOR_TOOL
-    dbg() << "CursorTool::on_keydown";
+    dbgln("CursorTool::on_keydown");
 #endif
 
     auto move_selected_widgets_by = [this](int x, int y) {

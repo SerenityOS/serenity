@@ -78,7 +78,7 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
 
     auto address = session->debug_info().get_instruction_from_source(position.file_path, position.line_number);
     if (!address.has_value()) {
-        dbg() << "Warning: couldn't get instruction address from source";
+        dbgln("Warning: couldn't get instruction address from source");
         // TODO: Currently, the GUI will indicate that a breakpoint was inserted/removed at this line,
         // regardless of whether we actually succeeded to insert it. (For example a breakpoint on a comment, or an include statement).
         // We should indicate failure via a return value from this function, and not update the breakpoint GUI if we fail.
@@ -97,7 +97,7 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
 Debug::DebugInfo::SourcePosition Debugger::create_source_position(const String& file, size_t line)
 {
     if (!file.starts_with('/') && !file.starts_with("./"))
-        return { String::format("./%s", file.characters()), line + 1 };
+        return { String::formatted("./{}", file), line + 1 };
     return { file, line + 1 };
 }
 
@@ -113,13 +113,13 @@ void Debugger::start()
     ASSERT(!!m_debug_session);
 
     for (const auto& breakpoint : m_breakpoints) {
-        dbg() << "insertig breakpoint at: " << breakpoint.file_path << ":" << breakpoint.line_number;
+        dbgln("insertig breakpoint at: {}:{}", breakpoint.file_path, breakpoint.line_number);
         auto address = m_debug_session->debug_info().get_instruction_from_source(breakpoint.file_path, breakpoint.line_number);
         if (address.has_value()) {
             bool success = m_debug_session->insert_breakpoint(reinterpret_cast<void*>(address.value()));
             ASSERT(success);
         } else {
-            dbg() << "couldn't insert breakpoint";
+            dbgln("couldn't insert breakpoint");
         }
     }
 
@@ -132,7 +132,7 @@ int Debugger::debugger_loop()
 
     m_debug_session->run([this](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
-            dbg() << "Program exited";
+            dbgln("Program exited");
             m_on_exit_callback();
             return Debug::DebugSession::DebugDecision::Detach;
         }
@@ -183,7 +183,7 @@ int Debugger::debugger_loop()
             // NOTE: Is detaching from the debuggee the best thing to do here?
             // We could display a dialog in the UI, remind the user that there is
             // a live debugged process, and ask whether they want to terminate/detach.
-            dbg() << "Debugger exiting";
+            dbgln("Debugger exiting");
             return Debug::DebugSession::DebugDecision::Detach;
         }
         ASSERT_NOT_REACHED();

@@ -57,7 +57,7 @@ OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const M
 {
     m_project_root = LexicalPath(message.project_root());
 #ifdef DEBUG_SH_LANGUAGE_SERVER
-    dbg() << "project_root: " << m_project_root.string();
+    dbgln("project_root: {}", m_project_root);
 #endif
     return make<Messages::LanguageServer::GreetResponse>(client_id());
 }
@@ -81,16 +81,16 @@ static DefaultDocumentClient s_default_document_client;
 
 void ClientConnection::handle(const Messages::LanguageServer::FileOpened& message)
 {
-    LexicalPath file_path(String::format("%s/%s", m_project_root.string().characters(), message.file_name().characters()));
+    LexicalPath file_path(String::formatted("{}/{}", m_project_root, message.file_name()));
 #ifdef DEBUG_SH_LANGUAGE_SERVER
-    dbg() << "FileOpened: " << file_path.string();
+    dbgln("FileOpened: {}", file_path);
 #endif
 
     auto file = Core::File::construct(file_path.string());
     if (!file->open(Core::IODevice::ReadOnly)) {
         errno = file->error();
         perror("open");
-        dbg() << "Failed to open project file: " << file_path.string();
+        dbgln("Failed to open project file: {}", file_path);
         return;
     }
     auto content = file->read_all();
@@ -106,31 +106,31 @@ void ClientConnection::handle(const Messages::LanguageServer::FileOpened& messag
 void ClientConnection::handle(const Messages::LanguageServer::FileEditInsertText& message)
 {
 #ifdef DEBUG_SH_LANGUAGE_SERVER
-    dbg() << "InsertText for file: " << message.file_name();
-    dbg() << "Text: " << message.text();
-    dbg() << "[" << message.start_line() << ":" << message.start_column() << "]";
+    dbgln("InsertText for file: {}", message.file_name());
+    dbgln("Text: {}", message.text());
+    dbgln("[{}:{}]", message.start_line(), message.start_column());
 #endif
     auto document = document_for(message.file_name());
     if (!document) {
-        dbg() << "file " << message.file_name() << " has not been opened";
+        dbgln("file {} has not been opened", message.file_name());
         return;
     }
     GUI::TextPosition start_position { (size_t)message.start_line(), (size_t)message.start_column() };
     document->insert_at(start_position, message.text(), &s_default_document_client);
 #ifdef DEBUG_FILE_CONTENT
-    dbg() << document->text();
+    dbgln("{}", document->text());
 #endif
 }
 
 void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText& message)
 {
 #ifdef DEBUG_SH_LANGUAGE_SERVER
-    dbg() << "RemoveText for file: " << message.file_name();
-    dbg() << "[" << message.start_line() << ":" << message.start_column() << " - " << message.end_line() << ":" << message.end_column() << "]";
+    dbgln("RemoveText for file: {}", message.file_name());
+    dbgln("[{}:{} - {}:{}]", message.start_line(), message.start_column(), message.end_line(), message.end_column());
 #endif
     auto document = document_for(message.file_name());
     if (!document) {
-        dbg() << "file " << message.file_name() << " has not been opened";
+        dbgln("file {} has not been opened", message.file_name());
         return;
     }
     GUI::TextPosition start_position { (size_t)message.start_line(), (size_t)message.start_column() };
@@ -150,12 +150,12 @@ void ClientConnection::handle(const Messages::LanguageServer::FileEditRemoveText
 void ClientConnection::handle(const Messages::LanguageServer::AutoCompleteSuggestions& message)
 {
 #ifdef DEBUG_SH_LANGUAGE_SERVER
-    dbg() << "AutoCompleteSuggestions for: " << message.file_name() << " " << message.cursor_line() << ":" << message.cursor_column();
+    dbgln("AutoCompleteSuggestions for: {} {}:{}", message.file_name(), message.cursor_line(), message.cursor_column());
 #endif
 
     auto document = document_for(message.file_name());
     if (!document) {
-        dbg() << "file " << message.file_name() << " has not been opened";
+        dbgln("file {} has not been opened", message.file_name());
         return;
     }
 
@@ -185,7 +185,7 @@ void ClientConnection::handle(const Messages::LanguageServer::SetFileContent& me
 {
     auto document = document_for(message.file_name());
     if (!document) {
-        dbg() << "file " << message.file_name() << " has not been opened";
+        dbgln("file {} has not been opened", message.file_name());
         return;
     }
     auto content = message.content();
