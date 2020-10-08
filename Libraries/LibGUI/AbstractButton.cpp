@@ -35,6 +35,9 @@ namespace GUI {
 AbstractButton::AbstractButton(const StringView& text)
     : m_text(text)
 {
+    set_background_role(Gfx::ColorRole::Button);
+    set_foreground_role(Gfx::ColorRole::ButtonText);
+
     m_auto_repeat_timer = add<Core::Timer>();
     m_auto_repeat_timer->on_timeout = [this] {
         click();
@@ -172,7 +175,7 @@ void AbstractButton::paint_text(Painter& painter, const Gfx::IntRect& rect, cons
 
     if (text().is_empty())
         return;
-    painter.draw_text(clipped_rect, text(), font, text_alignment, palette().button_text(), Gfx::TextElision::Right);
+    painter.draw_text(clipped_rect, text(), font, text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right);
     if (is_focused())
         painter.draw_rect(clipped_rect.inflated(6, 4), palette().focus_outline());
 }
