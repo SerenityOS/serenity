@@ -164,7 +164,7 @@ void DebugInfoWidget::update_state(const Debug::DebugSession& debug_session, con
     }
     auto selected_index = m_backtrace_view->model()->index(0);
     if (!selected_index.is_valid()) {
-        dbg() << "Warning: DebugInfoWidget: backtrace selected index is invalid";
+        dbgln("Warning: DebugInfoWidget: backtrace selected index is invalid");
         return;
     }
     m_backtrace_view->selection().set(selected_index);

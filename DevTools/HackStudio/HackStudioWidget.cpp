@@ -214,7 +214,7 @@ void HackStudioWidget::open_file(const String& filename)
     }
 
     m_currently_open_file = filename;
-    window()->set_title(String::format("%s - HackStudio", m_currently_open_file.characters()));
+    window()->set_title(String::formatted("{} - HackStudio", m_currently_open_file));
     m_project_tree_view->update();
 
     current_editor_wrapper().filename_label().set_text(filename);
@@ -271,11 +271,11 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_action()
             return;
         auto file = Core::File::construct(filename);
         if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
-            GUI::MessageBox::show(window(), String::format("Failed to create '%s'", filename.characters()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), String::formatted("Failed to create '{}'", filename), "Error", GUI::MessageBox::Type::Error);
             return;
         }
         if (!m_project->add_file(filename)) {
-            GUI::MessageBox::show(window(), String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), String::formatted("Failed to add '{}' to project", filename), "Error", GUI::MessageBox::Type::Error);
             // FIXME: Should we unlink the file here maybe?
             return;
         }
@@ -304,7 +304,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_existing_file_action()
             return;
         auto& filename = result.value();
         if (!m_project->add_file(filename)) {
-            GUI::MessageBox::show(window(), String::format("Failed to add '%s' to project", filename.characters()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), String::formatted("Failed to add '{}' to project", filename), "Error", GUI::MessageBox::Type::Error);
             return;
         }
         m_project_tree_view->toggle_index(m_project_tree_view->model()->index(0, 0));
@@ -322,9 +322,9 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
         String message;
         if (files.size() == 1) {
-            message = String::format("Really remove %s from the project?", LexicalPath(files[0]).basename().characters());
+            message = String::formatted("Really remove {} from the project?", LexicalPath(files[0]).basename());
         } else {
-            message = String::format("Really remove %d files from the project?", files.size());
+            message = String::formatted("Really remove {} files from the project?", files.size());
         }
 
         auto result = GUI::MessageBox::show(window(),
@@ -338,7 +338,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
         for (auto& file : files) {
             if (!m_project->remove_file(file)) {
                 GUI::MessageBox::show(window(),
-                    String::format("Removing file %s from the project failed.", file.characters()),
+                    String::formatted("Removing file {} from the project failed.", file),
                     "Removal failed",
                     GUI::MessageBox::Type::Error);
                 break;
@@ -492,11 +492,11 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
 {
     return GUI::Action::create("Debug", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"), [this](auto&) {
         if (m_project->type() != ProjectType::Cpp) {
-            GUI::MessageBox::show(window(), String::format("Cannot debug current project type", get_project_executable_path().characters()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), "Cannot debug current project type", "Error", GUI::MessageBox::Type::Error);
             return;
         }
         if (!GUI::FilePicker::file_exists(get_project_executable_path())) {
-            GUI::MessageBox::show(window(), String::format("Could not find file: %s. (did you build the project?)", get_project_executable_path().characters()), "Error", GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(window(), String::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error", GUI::MessageBox::Type::Error);
             return;
         }
         if (Debugger::the().session()) {
@@ -517,7 +517,7 @@ void HackStudioWidget::initialize_debugger()
             const auto& debug_session = *Debugger::the().session();
             auto source_position = debug_session.debug_info().get_source_position(regs.eip);
             if (!source_position.has_value()) {
-                dbg() << "Could not find source position for address: " << (void*)regs.eip;
+                dbgln("Could not find source position for address: {:p}", regs.eip);
                 return Debugger::HasControlPassedToUser::No;
             }
 
@@ -565,7 +565,7 @@ String HackStudioWidget::get_full_path_of_serenity_source(const String& file)
     relative_path_builder.join("/", path_parts);
     constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
     LexicalPath serenity_sources_base(SERENITY_LIBS_PREFIX);
-    return String::format("%s/%s", serenity_sources_base.string().characters(), relative_path_builder.to_string().characters());
+    return String::formatted("{}/{}", serenity_sources_base, relative_path_builder.to_string());
 }
 
 NonnullRefPtr<EditorWrapper> HackStudioWidget::get_editor_of_file(const String& file_name)
@@ -593,7 +593,7 @@ String HackStudioWidget::get_project_executable_path() const
 void HackStudioWidget::build(TerminalWrapper& wrapper)
 {
     if (m_project->type() == ProjectType::JavaScript && m_currently_open_file.ends_with(".js"))
-        wrapper.run_command(String::format("js -A %s", m_currently_open_file.characters()));
+        wrapper.run_command(String::formatted("js -A {}", m_currently_open_file));
     else
         wrapper.run_command("make");
 }
@@ -601,7 +601,7 @@ void HackStudioWidget::build(TerminalWrapper& wrapper)
 void HackStudioWidget::run(TerminalWrapper& wrapper)
 {
     if (m_project->type() == ProjectType::JavaScript && m_currently_open_file.ends_with(".js"))
-        wrapper.run_command(String::format("js %s", m_currently_open_file.characters()));
+        wrapper.run_command(String::format("js {}", m_currently_open_file));
     else
         wrapper.run_command("make run");
 }
@@ -666,12 +666,8 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
 
     GUI::WidgetClassRegistration::for_each([&, this](const GUI::WidgetClassRegistration& reg) {
         constexpr size_t gui_namespace_prefix_length = sizeof("GUI::") - 1;
-        auto icon_path = String::format(
-            "/res/icons/hackstudio/G%s.png",
-            reg.class_name().substring(
-                                gui_namespace_prefix_length,
-                                reg.class_name().length() - gui_namespace_prefix_length)
-                .characters());
+        auto icon_path = String::formatted("/res/icons/hackstudio/G{}.png",
+            reg.class_name().substring(gui_namespace_prefix_length, reg.class_name().length() - gui_namespace_prefix_length));
         if (!Core::File::exists(icon_path))
             return;
 
@@ -898,11 +894,11 @@ HackStudioWidget::~HackStudioWidget()
     if (!m_debugger_thread.is_null()) {
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::Exit);
         void* retval;
-        dbg() << "Waiting for debugger thread to terminate";
+        dbgln("Waiting for debugger thread to terminate");
         int rc = pthread_join(m_debugger_thread->tid(), &retval);
         if (rc < 0) {
             perror("pthread_join");
-            dbg() << "error joining debugger thread";
+            dbgln("error joining debugger thread");
         }
     }
 }

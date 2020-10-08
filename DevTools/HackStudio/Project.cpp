@@ -353,11 +353,11 @@ void Project::rebuild_tree()
 #if 0
     Function<void(ProjectTreeNode&, int indent)> dump_tree = [&](ProjectTreeNode& node, int indent) {
         for (int i = 0; i < indent; ++i)
-            printf(" ");
+            new_out(" ");
         if (node.name.is_null())
-            printf("(null)\n");
+            outln("(null)");
         else
-            printf("%s\n", node.name.characters());
+            outln("{}", node.name);
         for (auto& child : node.children) {
             dump_tree(*child, indent + 2);
         }
