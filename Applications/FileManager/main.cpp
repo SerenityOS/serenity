@@ -470,14 +470,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         GUI::Application::the()->quit();
     }));
 
+    auto action_show_dotfiles = GUI::Action::create_checkable("Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+        directory_view.set_should_show_dotfiles(action.is_checked());
+    });
+
     auto& view_menu = menubar->add_menu("View");
     view_menu.add_action(*view_as_icons_action);
     view_menu.add_action(*view_as_table_action);
     view_menu.add_action(*view_as_columns_action);
     view_menu.add_separator();
-    view_menu.add_action(GUI::Action::create_checkable("Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
-        directory_view.set_should_show_dotfiles(action.is_checked());
-    }));
+    view_menu.add_action(action_show_dotfiles);
 
     auto& go_menu = menubar->add_menu("Go");
     go_menu.add_action(go_back_action);
@@ -574,6 +576,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_view_context_menu->add_action(directory_view.touch_action());
     directory_view_context_menu->add_action(paste_action);
     directory_view_context_menu->add_action(directory_view.open_terminal_action());
+    directory_view_context_menu->add_separator();
+    directory_view_context_menu->add_action(action_show_dotfiles);
     directory_view_context_menu->add_separator();
     directory_view_context_menu->add_action(properties_action);
 
