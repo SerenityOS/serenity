@@ -148,6 +148,7 @@ namespace Web {
 class EventHandler;
 class Frame;
 class FrameLoader;
+class InProcessWebView;
 class LayoutBlock;
 class LayoutButton;
 class LayoutCheckBox;
@@ -159,9 +160,9 @@ class LineBox;
 class LineBoxFragment;
 class LoadRequest;
 class Origin;
+class OutOfProcessWebView;
 class Page;
 class PageClient;
-class InProcessWebView;
 class PaintContext;
 class Resource;
 class ResourceLoader;

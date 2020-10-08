@@ -25,7 +25,7 @@
                     "name": "editor"
                 },
                 {
-                    "class": "Web::InProcessWebView",
+                    "class": "Web::OutOfProcessWebView",
                     "name": "webview",
                     "visible": false
                 }
