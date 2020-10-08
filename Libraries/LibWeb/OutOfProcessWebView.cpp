@@ -33,6 +33,8 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/SystemTheme.h>
 
+REGISTER_WIDGET(Web, OutOfProcessWebView)
+
 namespace Web {
 
 OutOfProcessWebView::OutOfProcessWebView()
