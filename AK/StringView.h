@@ -187,6 +187,11 @@ private:
     size_t m_length { 0 };
 };
 
+template<>
+struct Traits<StringView> : public GenericTraits<String> {
+    static unsigned hash(const StringView& s) { return s.hash(); }
+};
+
 }
 
 using AK::StringView;
