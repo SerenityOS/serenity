@@ -28,7 +28,7 @@
 
 #define AK_TEST_SUITE
 
-extern "C" __attribute__((noreturn)) void abort() noexcept;
+[[noreturn]] void __portable_abort();
 
 namespace AK {
 
@@ -54,13 +54,13 @@ using AK::warnln;
 #define ASSERT_NOT_REACHED()                                                                           \
     do {                                                                                               \
         ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: ASSERT_NOT_REACHED() called", __FILE__, __LINE__); \
-        ::abort();                                                                                     \
+        ::__portable_abort();                                                                          \
     } while (false)
 
 #define TODO()                                                                                   \
     do {                                                                                         \
         ::AK::warnln(stderr, "\033[31;1mFAIL\033[0m: {}:{}: TODO() called", __FILE__, __LINE__); \
-        ::abort();                                                                               \
+        ::__portable_abort();                                                                    \
     } while (false)
 
 #include <AK/Format.h>

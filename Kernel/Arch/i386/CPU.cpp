@@ -1999,12 +1999,9 @@ void Processor::set_thread_specific(u8* data, size_t len)
 
 }
 
-#ifdef DEBUG
-void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
+void __portable_abort()
 {
     asm volatile("cli");
-    klog() << "ASSERTION FAILED: " << msg << "\n"
-           << file << ":" << line << " in " << func;
 
     // Switch back to the current process's page tables if there are any.
     // Otherwise stack walking will be a disaster.
@@ -2016,6 +2013,15 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     asm volatile("hlt");
     for (;;)
         ;
+}
+
+#ifdef DEBUG
+void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
+{
+    asm volatile("cli");
+    klog() << "ASSERTION FAILED: " << msg << "\n" << file << ":" << line << " in " << func;
+
+    __portable_abort();
 }
 #endif
 
