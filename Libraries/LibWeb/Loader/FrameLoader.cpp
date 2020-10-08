@@ -202,6 +202,14 @@ bool FrameLoader::load(const URL& url, Type type)
     return load(request, type);
 }
 
+void FrameLoader::load_html(const StringView& html, const URL& url)
+{
+    HTML::HTMLDocumentParser parser(html, "utf-8");
+    parser.run(url);
+    frame().set_document(&parser.document());
+    frame().page().client().page_did_change_title(document->title());
+}
+
 void FrameLoader::load_error_page(const URL& failed_url, const String& error)
 {
     auto error_page_url = "file:///res/html/error.html";

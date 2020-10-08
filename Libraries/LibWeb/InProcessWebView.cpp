@@ -364,9 +364,7 @@ void InProcessWebView::reload()
 
 void InProcessWebView::load_html(const StringView& html, const URL& url)
 {
-    HTML::HTMLDocumentParser parser(html, "utf-8");
-    parser.run(url);
-    set_document(&parser.document());
+    page().main_frame().loader().load_html(html, url);
 }
 
 bool InProcessWebView::load(const URL& url)

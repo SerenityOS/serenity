@@ -47,6 +47,8 @@ public:
     bool load(const URL&, Type);
     bool load(const LoadRequest&, Type);
 
+    void load_html(const StringView&, const URL&);
+
     Frame& frame() { return m_frame; }
     const Frame& frame() const { return m_frame; }
 
