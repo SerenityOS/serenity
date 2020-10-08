@@ -62,7 +62,7 @@ EditorWrapper::EditorWrapper()
     m_editor->set_automatic_indentation_enabled(true);
 
     m_editor->on_cursor_change = [this] {
-        m_cursor_label->set_text(String::format("Line: %d, Column: %d", m_editor->cursor().line() + 1, m_editor->cursor().column()));
+        m_cursor_label->set_text(String::formatted("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
     };
 
     m_editor->on_focus = [this] {

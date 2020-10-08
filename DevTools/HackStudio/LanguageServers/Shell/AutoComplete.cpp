@@ -43,16 +43,16 @@ Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, s
         return {};
 
 #ifdef DEBUG_AUTOCOMPLETE
-    dbg() << "Complete '" << code << "': ";
+    dbgln("Complete '{}'", code);
     ast->dump(1);
-    dbg() << "At offset " << offset;
+    dbgln("At offset {}", offset);
 #endif
 
     auto result = ast->complete_for_editor(m_shell, offset);
     Vector<AutoCompleteResponse> completions;
     for (auto& entry : result) {
 #ifdef DEBUG_AUTOCOMPLETE
-        dbg() << "Suggestion: '" << entry.text_string << "' starting at " << entry.input_offset;
+        dbgln("Suggestion: '{}' starting at {}", entry.text_string, entry.input_offset);
 #endif
         completions.append({ entry.text_string, entry.input_offset });
     }

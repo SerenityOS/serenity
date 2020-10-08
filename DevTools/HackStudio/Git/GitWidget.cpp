@@ -128,7 +128,7 @@ bool GitWidget::initialize_if_needed()
 void GitWidget::refresh()
 {
     if (!initialize_if_needed()) {
-        dbg() << "GitWidget initialization failed";
+        dbgln("GitWidget initialization failed");
         return;
     }
 
@@ -140,7 +140,7 @@ void GitWidget::refresh()
 
 void GitWidget::stage_file(const LexicalPath& file)
 {
-    dbg() << "staging: " << file.string();
+    dbgln("staging: {}", file);
     bool rc = m_git_repo->stage(file);
     ASSERT(rc);
     refresh();
@@ -148,7 +148,7 @@ void GitWidget::stage_file(const LexicalPath& file)
 
 void GitWidget::unstage_file(const LexicalPath& file)
 {
-    dbg() << "unstaging: " << file.string();
+    dbgln("unstaging: {}", file);
     bool rc = m_git_repo->unstage(file);
     ASSERT(rc);
     refresh();
@@ -160,7 +160,7 @@ void GitWidget::commit()
     auto res = GUI::InputBox::show(message, window(), "Commit message:", "Commit");
     if (res != GUI::InputBox::ExecOK || message.is_empty())
         return;
-    dbg() << "commit message: " << message;
+    dbgln("commit message: {}", message);
     m_git_repo->commit(message);
     refresh();
 }
