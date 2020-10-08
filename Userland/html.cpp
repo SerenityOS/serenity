@@ -32,7 +32,8 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
-#include <LibWeb/InProcessWebView.h>
+#include <LibGfx/Bitmap.h>
+#include <LibWeb/OutOfProcessWebView.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -57,12 +58,12 @@ int main(int argc, char** argv)
     auto html = f->read_all();
 
     auto window = GUI::Window::construct();
-    auto& widget = window->set_main_widget<Web::InProcessWebView>();
+    window->set_title("HTML");
+    auto& widget = window->set_main_widget<Web::OutOfProcessWebView>();
+    widget.on_title_change = [&](auto& title) {
+        window->set_title(String::formatted("{} - HTML", title));
+    };
     widget.load_html(html, url);
-    if (!widget.document()->title().is_null())
-        window->set_title(String::format("%s - HTML", widget.document()->title().characters()));
-    else
-        window->set_title("HTML");
     window->show();
 
     auto menubar = GUI::MenuBar::construct();
