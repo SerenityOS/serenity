@@ -32,7 +32,7 @@
 namespace AK {
 
 template<typename T>
-ALWAYS_INLINE T convert_between_host_and_little_endian(T value)
+ALWAYS_INLINE constexpr T convert_between_host_and_little_endian(T value)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     return value;
@@ -49,7 +49,7 @@ ALWAYS_INLINE T convert_between_host_and_little_endian(T value)
 }
 
 template<typename T>
-ALWAYS_INLINE T convert_between_host_and_big_endian(T value)
+ALWAYS_INLINE constexpr T convert_between_host_and_big_endian(T value)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     if constexpr (sizeof(T) == 8)
@@ -87,14 +87,14 @@ public:
     friend InputStream& operator>><T>(InputStream&, LittleEndian<T>&);
     friend OutputStream& operator<<<T>(OutputStream&, LittleEndian<T>);
 
-    LittleEndian() { }
+    constexpr LittleEndian() { }
 
-    LittleEndian(T value)
+    constexpr LittleEndian(T value)
         : m_value(convert_between_host_and_little_endian(value))
     {
     }
 
-    operator T() const { return convert_between_host_and_little_endian(m_value); }
+    constexpr operator T() const { return convert_between_host_and_little_endian(m_value); }
 
 private:
     T m_value { 0 };
@@ -116,14 +116,14 @@ public:
     friend InputStream& operator>><T>(InputStream&, BigEndian<T>&);
     friend OutputStream& operator<<<T>(OutputStream&, BigEndian<T>);
 
-    BigEndian() { }
+    constexpr BigEndian() = default;
 
-    BigEndian(T value)
+    constexpr BigEndian(T value)
         : m_value(convert_between_host_and_big_endian(value))
     {
     }
 
-    operator T() const { return convert_between_host_and_big_endian(m_value); }
+    constexpr operator T() const { return convert_between_host_and_big_endian(m_value); }
 
 private:
     T m_value { 0 };
