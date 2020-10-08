@@ -64,6 +64,14 @@ private:
     bool m_is_absolute { false };
 };
 
+template<>
+struct Formatter<LexicalPath> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const LexicalPath& value)
+    {
+        Formatter<StringView>::format(params, builder, value.string());
+    }
+};
+
 };
 
 using AK::LexicalPath;
