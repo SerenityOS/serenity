@@ -47,7 +47,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
-#include <LibWeb/InProcessWebView.h>
+#include <LibWeb/OutOfProcessWebView.h>
 
 // #define EDITOR_DEBUG
 
@@ -59,7 +59,7 @@ Editor::Editor()
     m_documentation_tooltip_window = GUI::Window::construct();
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::InProcessWebView>();
+    m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
 
     m_autocomplete_box = make<AutoCompleteBox>(make_weak_ptr());
 }
@@ -182,13 +182,14 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
-    auto html_text = man_document->render_to_html();
-
-    m_documentation_page_view->load_html(html_text, {});
-
-    if (auto* document = m_documentation_page_view->document()) {
-        const_cast<Web::HTML::HTMLElement*>(document->body())->set_attribute(Web::HTML::AttributeNames::style, "background-color: #dac7b5;");
-    }
+    StringBuilder html;
+    // FIXME: With the InProcessWebView we used to manipulate the document body directly,
+    // With OutOfProcessWebView this isn't possible (at the moment). The ideal solution
+    // is probably to tweak Markdown::Document::render_to_html() so we can inject styles
+    // into the rendered HTML easily.
+    html.append(man_document->render_to_html());
+    html.append("<style>body { background-color: #dac7b5; }</style>");
+    m_documentation_page_view->load_html(html.build(), {});
 
     m_documentation_tooltip_window->move_to(screen_location.translated(4, 4));
     m_documentation_tooltip_window->show();
