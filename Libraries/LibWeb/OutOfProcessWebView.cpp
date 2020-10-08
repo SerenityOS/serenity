@@ -113,6 +113,13 @@ void OutOfProcessWebView::mousemove_event(GUI::MouseEvent& event)
     client().post_message(Messages::WebContentServer::MouseMove(to_content_position(event.position()), event.button(), event.buttons(), event.modifiers()));
 }
 
+void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
+{
+    GUI::ScrollableWidget::theme_change_event(event);
+    client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
+    request_repaint();
+}
+
 void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id)
 {
     if (m_back_bitmap->shbuf_id() == shbuf_id) {
