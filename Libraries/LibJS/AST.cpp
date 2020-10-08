@@ -269,7 +269,7 @@ Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
                 interpreter.vm().stop_unwind();
                 break;
             } else {
-                return js_undefined();
+                return last_value;
             }
         }
     }
@@ -293,7 +293,7 @@ Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_o
                 interpreter.vm().stop_unwind();
                 break;
             } else {
-                return js_undefined();
+                return last_value;
             }
         }
     } while (m_test->execute(interpreter, global_object).to_boolean());
@@ -343,7 +343,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
                     interpreter.vm().stop_unwind();
                     break;
                 } else {
-                    return js_undefined();
+                    return last_value;
                 }
             }
             if (m_update) {
@@ -364,7 +364,7 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
                     interpreter.vm().stop_unwind();
                     break;
                 } else {
-                    return js_undefined();
+                    return last_value;
                 }
             }
             if (m_update) {
@@ -431,7 +431,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
                     interpreter.vm().stop_unwind();
                     break;
                 } else {
-                    return js_undefined();
+                    return last_value;
                 }
             }
         }
@@ -480,8 +480,6 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     if (interpreter.exception())
         return {};
 
-    if (interpreter.vm().should_unwind())
-        return js_undefined();
     return last_value;
 }
 
