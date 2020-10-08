@@ -262,6 +262,16 @@ Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         last_value = interpreter.execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return {};
+        if (interpreter.vm().should_unwind()) {
+            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                interpreter.vm().stop_unwind();
+            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                interpreter.vm().stop_unwind();
+                break;
+            } else {
+                return js_undefined();
+            }
+        }
     }
 
     return last_value;
@@ -276,6 +286,16 @@ Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_o
         last_value = interpreter.execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return {};
+        if (interpreter.vm().should_unwind()) {
+            if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                interpreter.vm().stop_unwind();
+            } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                interpreter.vm().stop_unwind();
+                break;
+            } else {
+                return js_undefined();
+            }
+        }
     } while (m_test->execute(interpreter, global_object).to_boolean());
 
     return last_value;
