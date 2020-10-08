@@ -47,8 +47,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/OutOfProcessWebView.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
@@ -78,6 +77,11 @@ int main(int argc, char* argv[])
     }
 
     if (unveil("/tmp/portal/launch", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/webcontent", "rw") < 0) {
         perror("unveil");
         return 1;
     }
@@ -137,7 +141,7 @@ int main(int argc, char* argv[])
     left_tab_bar.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
     left_tab_bar.set_preferred_size(200, 500);
 
-    auto& page_view = splitter.add<Web::InProcessWebView>();
+    auto& page_view = splitter.add<Web::OutOfProcessWebView>();
 
     History history;
 
@@ -151,7 +155,7 @@ int main(int argc, char* argv[])
 
     auto open_page = [&](const String& path) {
         if (path.is_null()) {
-            page_view.set_document(nullptr);
+            page_view.load_empty_document();
             return;
         }
 
@@ -178,7 +182,7 @@ int main(int argc, char* argv[])
     tree_view.on_selection_change = [&] {
         String path = model->page_path(tree_view.selection().first());
         if (path.is_null()) {
-            page_view.set_document(nullptr);
+            page_view.load_empty_document();
             window->set_title("Help");
             return;
         }
@@ -207,12 +211,12 @@ int main(int argc, char* argv[])
             auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
             index = search_model.map(index);
         } else {
-            page_view.set_document(nullptr);
+            page_view.load_empty_document();
             return;
         }
         String path = model->page_path(index);
         if (path.is_null()) {
-            page_view.set_document(nullptr);
+            page_view.load_empty_document();
             return;
         }
         tree_view.selection().clear();
