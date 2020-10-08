@@ -332,17 +332,12 @@ void warnln(const char* fmtstr, const Parameters&... parameters) { warnln(String
 inline void warnln() { raw_out("\n"); }
 #endif
 
-void vdbg(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
-void raw_dbg(StringView string);
+void vdbgln(StringView fmtstr, TypeErasedFormatParams);
 
-// FIXME: Rename this function to 'dbg' when that name becomes avaliable.
 template<typename... Parameters>
-void new_dbg(StringView fmtstr, const Parameters&... parameters) { vdbg(fmtstr, VariadicFormatParams { parameters... }); }
-template<typename... Parameters>
-void dbgln(StringView fmtstr, const Parameters&... parameters) { vdbg(fmtstr, VariadicFormatParams { parameters... }, true); }
+void dbgln(StringView fmtstr, const Parameters&... parameters) { vdbgln(fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void dbgln(const char* fmtstr, const Parameters&... parameters) { dbgln(StringView { fmtstr }, parameters...); }
-inline void dbgln() { raw_dbg("\n"); }
 
 template<typename T, typename = void>
 struct HasFormatter : TrueType {
@@ -395,7 +390,5 @@ using AK::warnln;
 #endif
 
 using AK::dbgln;
-using AK::new_dbg;
-using AK::raw_dbg;
 
 using AK::FormatIfSupported;
