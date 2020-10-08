@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/HashTable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
@@ -155,6 +156,7 @@ private:
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
         Vector<NonnullRefPtrVector<FunctionDeclaration>> m_function_scopes;
         UseStrictDirectiveState m_use_strict_directive { UseStrictDirectiveState::None };
+        HashTable<StringView> m_labels_in_scope;
         bool m_strict_mode { false };
         bool m_allow_super_property_lookup { false };
         bool m_allow_super_constructor_call { false };
