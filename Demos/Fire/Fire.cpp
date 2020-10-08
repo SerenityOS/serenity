@@ -226,7 +226,6 @@ int main(int argc, char** argv)
     auto& time = fire.add<GUI::Label>();
     time.set_relative_rect({ 0, 4, 40, 10 });
     time.move_by({ window->width() - time.width(), 0 });
-    time.set_foreground_color(Color::from_rgb(0x444444));
     fire.set_stat_label(time);
 
     window->show();
