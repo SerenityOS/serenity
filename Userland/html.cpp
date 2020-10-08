@@ -40,10 +40,12 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
 
     auto f = Core::File::construct();
+    URL url;
     bool success;
     if (argc < 2) {
         success = f->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescription::No);
     } else {
+        url = URL::create_with_file_protocol(argv[1]);
         f->set_filename(argv[1]);
         success = f->open(Core::IODevice::OpenMode::ReadOnly);
     }
@@ -56,7 +58,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     auto& widget = window->set_main_widget<Web::InProcessWebView>();
-    widget.load_html(html, URL());
+    widget.load_html(html, url);
     if (!widget.document()->title().is_null())
         window->set_title(String::format("%s - HTML", widget.document()->title().characters()));
     else
