@@ -85,8 +85,10 @@ void Frame::set_document(DOM::Document* document)
 
     m_document = document;
 
-    if (m_document)
+    if (m_document) {
         m_document->attach_to_frame({}, *this);
+        page().client().page_did_change_title(m_document->title());
+    }
 
     page().client().page_did_set_document_in_main_frame(m_document);
 }
