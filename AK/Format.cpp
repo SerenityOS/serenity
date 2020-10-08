@@ -605,12 +605,7 @@ void vwarn(StringView fmtstr, TypeErasedFormatParams params, bool newline)
 }
 #endif
 
-void raw_dbg(StringView string)
-{
-    const auto retval = dbgputstr(string.characters_without_null_termination(), string.length());
-    ASSERT(retval == 0);
-}
-void vdbg(StringView fmtstr, TypeErasedFormatParams params, bool newline)
+void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
 {
     StringBuilder builder;
 
@@ -639,11 +634,12 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams params, bool newline)
 #endif
 
     vformat(builder, fmtstr, params);
+    builder.append('\n');
 
-    if (newline && !builder.is_empty())
-        builder.append('\n');
+    const auto string = builder.build();
 
-    raw_dbg(builder.to_string());
+    const auto retval = dbgputstr(string.characters(), string.length());
+    ASSERT(retval == 0);
 }
 
 template struct Formatter<unsigned char, void>;
