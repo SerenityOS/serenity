@@ -2,8 +2,7 @@ test("'break' syntax errors", () => {
     expect("break").not.toEval();
     expect("break label").not.toEval();
     expect("{ break }").not.toEval();
-    // FIXME: Parser does not throw error on nonexistent label
-    // expect("{ break label }.not.toEval();
+    expect("{ break label }").not.toEval();
     expect("label: { break label }").toEval();
 });
 

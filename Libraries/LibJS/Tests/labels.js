@@ -37,3 +37,11 @@ test("labeled for loop with continue", () => {
     }
     expect(counter).toBe(6);
 });
+
+test("invalid label across scope", () => {
+    expect(`
+        label: {
+            (() => { break label; });
+        }
+    `).not.toEval();
+});
