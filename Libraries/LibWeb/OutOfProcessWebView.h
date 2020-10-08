@@ -47,6 +47,7 @@ public:
     void load(const URL&);
 
     void load_html(const StringView&, const URL&);
+    void load_empty_document();
 
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 shbuf_id);
