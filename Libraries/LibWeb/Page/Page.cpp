@@ -62,6 +62,11 @@ void Page::load(const LoadRequest& request)
     main_frame().loader().load(request, FrameLoader::Type::Navigation);
 }
 
+void Page::load_html(const StringView& html, const URL& url)
+{
+    main_frame().loader().load_html(html, url);
+}
+
 Gfx::Palette Page::palette() const
 {
     return m_client.palette();
