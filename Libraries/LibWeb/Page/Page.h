@@ -62,6 +62,8 @@ public:
     void load(const URL&);
     void load(const LoadRequest&);
 
+    void load_html(const StringView&, const URL&);
+
     bool handle_mouseup(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousedown(const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     bool handle_mousemove(const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
