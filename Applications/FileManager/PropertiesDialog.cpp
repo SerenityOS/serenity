@@ -61,7 +61,10 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
     general_tab.layout()->set_margins({ 12, 8, 12, 8 });
     general_tab.layout()->set_spacing(10);
 
-    general_tab.layout()->add_spacer();
+    auto& permissions_tab = tab_widget.add_tab<GUI::Widget>("Permissions");
+    permissions_tab.set_layout<GUI::VerticalBoxLayout>();
+    permissions_tab.layout()->set_margins({ 12, 8, 12, 8 });
+    permissions_tab.layout()->set_spacing(10);
 
     auto& file_container = general_tab.add<GUI::Widget>();
     file_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -88,6 +91,7 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
     };
 
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"));
+
     make_divider(general_tab);
 
     struct stat st;
@@ -135,11 +139,9 @@ PropertiesDialog::PropertiesDialog(const String& path, bool disable_rename, Wind
 
     make_property_value_pairs(properties, general_tab);
 
-    make_divider(general_tab);
-
-    make_permission_checkboxes(general_tab, { S_IRUSR, S_IWUSR, S_IXUSR }, "Owner:", m_mode);
-    make_permission_checkboxes(general_tab, { S_IRGRP, S_IWGRP, S_IXGRP }, "Group:", m_mode);
-    make_permission_checkboxes(general_tab, { S_IROTH, S_IWOTH, S_IXOTH }, "Others:", m_mode);
+    make_permission_checkboxes(permissions_tab, { S_IRUSR, S_IWUSR, S_IXUSR }, "Owner:", m_mode);
+    make_permission_checkboxes(permissions_tab, { S_IRGRP, S_IWGRP, S_IXGRP }, "Group:", m_mode);
+    make_permission_checkboxes(permissions_tab, { S_IROTH, S_IWOTH, S_IXOTH }, "Others:", m_mode);
 
     general_tab.layout()->add_spacer();
 
@@ -300,11 +302,7 @@ GUI::Button& PropertiesDialog::make_button(String text, GUI::Widget& parent)
 
 void PropertiesDialog::make_divider(GUI::Widget& parent)
 {
-    parent.layout()->add_spacer();
-
     auto& divider = parent.add<GUI::Frame>();
     divider.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
     divider.set_preferred_size({ 0, 2 });
-
-    parent.layout()->add_spacer();
 }
