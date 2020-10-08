@@ -794,6 +794,15 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
+        if (!event.shift() && m_selection.is_valid()) {
+            set_cursor(m_selection.normalized().start());
+            m_selection.clear();
+            did_update_selection();
+            if (!event.ctrl()) {
+                update();
+                return;
+            }
+        }
         if (event.ctrl()) {
             TextPosition new_cursor;
             if (document().has_spans()) {
@@ -836,6 +845,15 @@ void TextEditor::keydown_event(KeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Right) {
+        if (!event.shift() && m_selection.is_valid()) {
+            set_cursor(m_selection.normalized().end());
+            m_selection.clear();
+            did_update_selection();
+            if (!event.ctrl()) {
+                update();
+                return;
+            }
+        }
         if (event.ctrl()) {
             TextPosition new_cursor;
             if (document().has_spans()) {
