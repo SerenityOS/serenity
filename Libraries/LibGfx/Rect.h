@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
@@ -408,6 +409,18 @@ ALWAYS_INLINE IntRect enclosing_int_rect(const FloatRect& float_rect)
         (int)ceilf(float_rect.height()),
     };
 }
+
+}
+
+namespace AK {
+
+template<typename T>
+struct Formatter<Gfx::Rect<T>> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const Gfx::Rect<T>& value)
+    {
+        Formatter<StringView>::format(params, builder, value.to_string());
+    }
+};
 
 }
 
