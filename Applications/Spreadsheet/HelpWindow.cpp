@@ -157,7 +157,7 @@ String HelpWindow::render(const GUI::ModelIndex& index)
     if (!examples.is_empty()) {
         markdown_builder.append("# EXAMPLES\n");
         examples.for_each_member([&](auto& text, auto& description_value) {
-            markdown_builder.appendf("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
+            markdown_builder.appendff("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
         });
     }
 
