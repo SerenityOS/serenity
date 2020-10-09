@@ -29,6 +29,7 @@
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
 #include <ctype.h>
+#include <string.h>
 
 namespace Web::HTML {
 
@@ -137,7 +138,7 @@ namespace Web::HTML {
     if (current_input_character.has_value() && isxdigit(current_input_character.value()))
 
 #define ON_WHITESPACE \
-    if (current_input_character.has_value() && (current_input_character.value() == '\t' || current_input_character.value() == '\n' || current_input_character.value() == '\f' || current_input_character.value() == ' '))
+    if (current_input_character.has_value() && strchr("\t\n\f ", current_input_character.value()))
 
 #define ANYTHING_ELSE if (1)
 
