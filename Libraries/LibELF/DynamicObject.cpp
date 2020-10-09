@@ -160,6 +160,10 @@ void DynamicObject::parse()
         case DT_NEEDED:
             // We handle these in for_each_needed_library
             break;
+        case DT_RPATH:
+        case DT_RUNPATH:
+            // FIXME: Implement RPATH/RUNPATH handling in DynamicLoader
+            break;
         default:
             dbgprintf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
             printf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
