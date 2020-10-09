@@ -398,10 +398,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             if (!value.is_string())
                 continue;
             auto string = value.to_string();
-            if (!string.starts_with("url("))
-                continue;
-            if (!string.ends_with(')'))
-                continue;
             set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
         }
         return;
@@ -411,6 +407,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (!value.is_string())
             return;
         auto string = value.to_string();
+        if (!string.starts_with("url("))
+            return;
+        if (!string.ends_with(')'))
+            return;
         auto url = string.substring_view(4, string.length() - 5);
         if (url.length() >= 2 && url.starts_with('"') && url.ends_with('"'))
             url = url.substring_view(1, url.length() - 2);
