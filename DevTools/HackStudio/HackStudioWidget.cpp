@@ -601,7 +601,7 @@ void HackStudioWidget::build(TerminalWrapper& wrapper)
 void HackStudioWidget::run(TerminalWrapper& wrapper)
 {
     if (m_project->type() == ProjectType::JavaScript && m_currently_open_file.ends_with(".js"))
-        wrapper.run_command(String::format("js {}", m_currently_open_file));
+        wrapper.run_command(String::formatted("js {}", m_currently_open_file));
     else
         wrapper.run_command("make run");
 }
