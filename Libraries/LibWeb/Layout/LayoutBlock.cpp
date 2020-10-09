@@ -647,7 +647,7 @@ void LayoutBlock::place_block_level_non_replaced_element_in_normal_flow(LayoutBl
     }
 
     if (relevant_sibling) {
-        y += relevant_sibling->effective_offset().y() + relevant_sibling->height();
+        y += relevant_sibling->effective_offset().y() + relevant_sibling->height() + relevant_sibling->box_model().padding.bottom.to_px(*relevant_sibling);
 
         // Collapse top margin with bottom margin of preceding siblings if needed
         float my_margin_top = box.margin.top.to_px(*this);
