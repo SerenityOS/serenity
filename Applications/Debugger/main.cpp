@@ -128,8 +128,8 @@ static bool handle_breakpoint_command(const String& command)
             return false;
         }
         breakpoint_address = result.value();
-    } else if ((argument[0] >= '0' && argument[0] <= '9')) {
-        breakpoint_address = strtoul(argument.characters(), nullptr, 16);
+    } else if ((argument.starts_with("0x"))) {
+        breakpoint_address = strtoul(argument.characters() + 2, nullptr, 16);
     } else {
         auto symbol = g_debug_session->elf().find_demangled_function(argument);
         if (!symbol.has_value()) {
