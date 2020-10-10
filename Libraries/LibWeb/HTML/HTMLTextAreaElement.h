@@ -34,7 +34,7 @@ class HTMLTextAreaElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTextAreaElementWrapper;
 
-    HTMLTextAreaElement(DOM::Document&, const FlyString& local_name);
+    HTMLTextAreaElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLTextAreaElement() override;
 
     const String& type() const

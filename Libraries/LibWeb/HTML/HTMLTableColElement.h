@@ -34,7 +34,7 @@ class HTMLTableColElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableColElementWrapper;
 
-    HTMLTableColElement(DOM::Document&, const FlyString& local_name);
+    HTMLTableColElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLTableColElement() override;
 };
 

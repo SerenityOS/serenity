@@ -38,7 +38,7 @@ class HTMLImageElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLImageElementWrapper;
 
-    HTMLImageElement(DOM::Document&, const FlyString& local_name);
+    HTMLImageElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLImageElement() override;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;

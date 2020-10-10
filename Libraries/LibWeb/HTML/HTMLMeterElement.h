@@ -34,7 +34,7 @@ class HTMLMeterElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMeterElementWrapper;
 
-    HTMLMeterElement(DOM::Document&, const FlyString& local_name);
+    HTMLMeterElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLMeterElement() override;
 };
 

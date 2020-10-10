@@ -35,7 +35,7 @@ class HTMLMarqueeElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMarqueeElementWrapper;
 
-    HTMLMarqueeElement(DOM::Document&, const FlyString& local_name);
+    HTMLMarqueeElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLMarqueeElement() override;
 };
 

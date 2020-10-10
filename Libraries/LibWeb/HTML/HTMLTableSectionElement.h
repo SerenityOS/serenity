@@ -34,7 +34,7 @@ class HTMLTableSectionElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableSectionElementWrapper;
 
-    HTMLTableSectionElement(DOM::Document&, const FlyString& local_name);
+    HTMLTableSectionElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLTableSectionElement() override;
 };
 

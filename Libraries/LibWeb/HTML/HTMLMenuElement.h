@@ -34,7 +34,7 @@ class HTMLMenuElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMenuElementWrapper;
 
-    HTMLMenuElement(DOM::Document&, const FlyString& local_name);
+    HTMLMenuElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLMenuElement() override;
 };
 

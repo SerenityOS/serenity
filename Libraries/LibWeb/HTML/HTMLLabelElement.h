@@ -34,7 +34,7 @@ class HTMLLabelElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLLabelElementWrapper;
 
-    HTMLLabelElement(DOM::Document&, const FlyString& local_name);
+    HTMLLabelElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLLabelElement() override;
 };
 

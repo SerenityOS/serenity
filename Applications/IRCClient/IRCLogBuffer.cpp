@@ -42,14 +42,14 @@ IRCLogBuffer::IRCLogBuffer()
 {
     m_document = adopt(*new Web::DOM::Document);
     m_document->append_child(adopt(*new Web::DOM::DocumentType(document())));
-    auto html_element = create_element(document(), "html");
+    auto html_element = m_document->create_element("html");
     m_document->append_child(html_element);
-    auto head_element = create_element(document(), "head");
+    auto head_element = m_document->create_element("head");
     html_element->append_child(head_element);
-    auto style_element = create_element(document(), "style");
+    auto style_element = m_document->create_element("style");
     style_element->append_child(adopt(*new Web::DOM::Text(document(), "div { font-family: Csilla; font-weight: lighter; }")));
     head_element->append_child(style_element);
-    auto body_element = create_element(document(), "body");
+    auto body_element = m_document->create_element("body");
     html_element->append_child(body_element);
     m_container_element = body_element;
 }
@@ -76,7 +76,7 @@ void IRCLogBuffer::add_message(char prefix, const String& name, const String& te
         escape_html_entities(nick_string),
         escape_html_entities(text));
 
-    auto wrapper = Web::DOM::create_element(*m_document, Web::HTML::TagNames::div);
+    auto wrapper = m_document->create_element(Web::HTML::TagNames::div);
     wrapper->set_attribute(Web::HTML::AttributeNames::style, String::formatted("color: {}", color.to_string()));
     wrapper->set_inner_html(html);
     m_container_element->append_child(wrapper);
@@ -90,7 +90,7 @@ void IRCLogBuffer::add_message(const String& text, Color color)
         "<span>{}</span>",
         timestamp_string(),
         escape_html_entities(text));
-    auto wrapper = Web::DOM::create_element(*m_document, Web::HTML::TagNames::div);
+    auto wrapper = m_document->create_element(Web::HTML::TagNames::div);
     wrapper->set_attribute(Web::HTML::AttributeNames::style, String::formatted("color: {}", color.to_string()));
     wrapper->set_inner_html(html);
     m_container_element->append_child(wrapper);

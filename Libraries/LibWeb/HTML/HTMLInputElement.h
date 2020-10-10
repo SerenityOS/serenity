@@ -34,7 +34,7 @@ class HTMLInputElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLInputElementWrapper;
 
-    HTMLInputElement(DOM::Document&, const FlyString& local_name);
+    HTMLInputElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLInputElement() override;
 
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;

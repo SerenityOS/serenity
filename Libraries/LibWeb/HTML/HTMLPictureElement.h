@@ -34,7 +34,7 @@ class HTMLPictureElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLPictureElementWrapper;
 
-    HTMLPictureElement(DOM::Document&, const FlyString& local_name);
+    HTMLPictureElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLPictureElement() override;
 };
 

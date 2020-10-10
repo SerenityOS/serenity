@@ -54,6 +54,7 @@
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/SVG/TagNames.h>
@@ -460,7 +461,8 @@ JS::Value Document::run_javascript(const StringView& source)
 
 NonnullRefPtr<Element> Document::create_element(const String& tag_name)
 {
-    return DOM::create_element(*this, tag_name);
+    // FIXME: Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml", and null otherwise.
+    return DOM::create_element(*this, tag_name, Namespace::HTML);
 }
 
 NonnullRefPtr<DocumentFragment> Document::create_document_fragment()

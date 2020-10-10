@@ -35,8 +35,8 @@
 
 namespace Web::HTML {
 
-HTMLObjectElement::HTMLObjectElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLObjectElement::HTMLObjectElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
     m_image_loader.on_load = [this] {
         m_should_show_fallback_content = false;

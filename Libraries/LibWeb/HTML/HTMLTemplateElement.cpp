@@ -29,8 +29,8 @@
 
 namespace Web::HTML {
 
-HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
     m_content = adopt(*new DOM::DocumentFragment(appropriate_template_contents_owner_document(document)));
     m_content->set_host(*this);
