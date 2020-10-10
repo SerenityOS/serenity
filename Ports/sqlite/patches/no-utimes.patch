@@ -1,0 +1,18 @@
+--- sqlite-src-3330000/ext/misc/fileio.c.orig	2020-10-10 22:10:06.328544628 +1100
++++ sqlite-src-3330000/ext/misc/fileio.c	2020-10-10 22:10:13.241877994 +1100
+@@ -437,11 +437,10 @@
+     }
+ #else
+     /* Legacy unix */
+-    struct timeval times[2];
+-    times[0].tv_usec = times[1].tv_usec = 0;
+-    times[0].tv_sec = time(0);
+-    times[1].tv_sec = mtime;
+-    if( utimes(zFile, times) ){
++    struct utimbuf timep;
++    timep.actime = time(0);
++    timep.modtime = mtime;
++    if ( utime(zFile, &timep) ){
+       return 1;
+     }
+ #endif

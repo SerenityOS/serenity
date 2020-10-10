@@ -1,0 +1,12 @@
+--- sqlite-src-3330000/config.sub.orig	2020-10-10 19:55:46.525171173 +1100
++++ sqlite-src-3330000/config.sub	2020-10-10 19:56:09.155171277 +1100
+@@ -1368,7 +1368,8 @@
+ 	     | powermax* | dnix* | nx6 | nx7 | sei* | dragonfly* \
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+-	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi*)
++	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
++	     | serenity*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	qnx*)
