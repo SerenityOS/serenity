@@ -26,9 +26,7 @@
 
 #include <LibWeb/DOM/TagNames.h>
 
-namespace Web {
-namespace HTML {
-namespace TagNames {
+namespace Web::HTML::TagNames {
 
 #define __ENUMERATE_HTML_TAG(name) FlyString name;
 ENUMERATE_HTML_TAGS
@@ -37,7 +35,7 @@ ENUMERATE_HTML_TAGS
     // clang-format off
 // FIXME: clang-format gets confused here. Why?
 [[gnu::constructor]] static void initialize()
-// clang-format off
+// clang-format on
 {
     static bool s_initialized = false;
     if (s_initialized)
@@ -53,6 +51,4 @@ ENUMERATE_HTML_TAGS
     s_initialized = true;
 }
 
-}
-}
 }
