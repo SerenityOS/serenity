@@ -28,8 +28,8 @@
 
 namespace Web::HTML {
 
-HTMLMediaElement::HTMLMediaElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLMediaElement::HTMLMediaElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
 }
 

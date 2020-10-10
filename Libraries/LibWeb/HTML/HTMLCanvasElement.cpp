@@ -36,8 +36,8 @@ namespace Web::HTML {
 
 static constexpr auto max_canvas_area = 16384 * 16384;
 
-HTMLCanvasElement::HTMLCanvasElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLCanvasElement::HTMLCanvasElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
 }
 

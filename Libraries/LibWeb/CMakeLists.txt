@@ -166,6 +166,7 @@ set(SOURCES
     Loader/ImageResource.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
+    Namespace.cpp
     OutOfProcessWebView.cpp
     Page/EventHandler.cpp
     Page/Frame.cpp

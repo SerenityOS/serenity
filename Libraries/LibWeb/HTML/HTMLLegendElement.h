@@ -34,7 +34,7 @@ class HTMLLegendElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLLegendElementWrapper;
 
-    HTMLLegendElement(DOM::Document&, const FlyString& local_name);
+    HTMLLegendElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLLegendElement() override;
 };
 

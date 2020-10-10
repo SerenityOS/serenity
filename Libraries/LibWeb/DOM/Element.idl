@@ -1,5 +1,5 @@
 interface Element : Node {
-
+    readonly attribute DOMString? namespaceURI;
     readonly attribute DOMString tagName;
 
     DOMString? getAttribute(DOMString qualifiedName);
@@ -16,4 +16,3 @@ interface Element : Node {
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
 }
-

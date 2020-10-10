@@ -34,7 +34,7 @@ class HTMLUListElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLUListElementWrapper;
 
-    HTMLUListElement(DOM::Document&, const FlyString& local_name);
+    HTMLUListElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLUListElement() override;
 };
 

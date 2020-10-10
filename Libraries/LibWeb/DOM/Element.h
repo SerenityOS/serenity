@@ -34,6 +34,7 @@
 #include <LibWeb/DOM/TagNames.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/QualifiedName.h>
 
 namespace Web::DOM {
 
@@ -44,14 +45,19 @@ class Element
 public:
     using WrapperType = Bindings::ElementWrapper;
 
-    Element(Document&, const FlyString& local_name);
+    Element(Document&, const QualifiedName& qualified_name);
     virtual ~Element() override;
 
-    virtual FlyString node_name() const final { return m_tag_name; }
-    const FlyString& local_name() const { return m_tag_name; }
+    virtual FlyString node_name() const final { return m_qualified_name.local_name(); }
+    const FlyString& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
     const FlyString& tag_name() const { return local_name(); }
+
+    const FlyString& namespace_() const { return m_qualified_name.namespace_(); }
+
+    // NOTE: This is for the JS bindings
+    const FlyString& namespace_uri() const { return namespace_(); }
 
     bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
     String attribute(const FlyString& name) const;
@@ -100,7 +106,7 @@ private:
     Attribute* find_attribute(const FlyString& name);
     const Attribute* find_attribute(const FlyString& name) const;
 
-    FlyString m_tag_name;
+    QualifiedName m_qualified_name;
     Vector<Attribute> m_attributes;
 
     RefPtr<CSS::StyleProperties> m_resolved_style;

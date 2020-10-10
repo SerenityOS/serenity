@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,20 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLElement.h>
+#include <AK/FlyString.h>
 
-namespace Web::HTML {
+namespace Web::Namespace {
 
-class HTMLAreaElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLAreaElementWrapper;
+#define ENUMERATE_NAMESPACES                                            \
+    __ENUMERATE_NAMESPACE(HTML, "http://www.w3.org/1999/xhtml")         \
+    __ENUMERATE_NAMESPACE(MathML, "http://www.w3.org/1998/Math/MathML") \
+    __ENUMERATE_NAMESPACE(SVG, "http://www.w3.org/2000/svg")            \
+    __ENUMERATE_NAMESPACE(XLink, "http://www.w3.org/1999/xlink")        \
+    __ENUMERATE_NAMESPACE(XML, "http://www.w3.org/XML/1998/namespace")  \
+    __ENUMERATE_NAMESPACE(XMLNS, "http://www.w3.org/2000/xmlns/")
 
-    HTMLAreaElement(DOM::Document&, const QualifiedName& qualified_name);
-    virtual ~HTMLAreaElement() override;
-};
+#define __ENUMERATE_NAMESPACE(name, namespace_) extern FlyString name;
+ENUMERATE_NAMESPACES
+#undef __ENUMERATE_NAMESPACE
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLAreaElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::area; }
-AK_END_TYPE_TRAITS()

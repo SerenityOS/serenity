@@ -34,7 +34,7 @@ class HTMLTableCellElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableCellElementWrapper;
 
-    HTMLTableCellElement(DOM::Document&, const FlyString& local_name);
+    HTMLTableCellElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLTableCellElement() override;
 
 private:

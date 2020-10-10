@@ -34,7 +34,7 @@ class HTMLBodyElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLBodyElementWrapper;
 
-    HTMLBodyElement(DOM::Document&, const FlyString& local_name);
+    HTMLBodyElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLBodyElement() override;
 
     virtual void parse_attribute(const FlyString&, const String&) override;

@@ -35,6 +35,7 @@
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
 
@@ -78,7 +79,7 @@ static RefPtr<DOM::Document> create_text_document(const ByteBuffer& data, const 
     auto body_element = document->create_element("body");
     html_element->append_child(body_element);
 
-    auto pre_element = create_element(document, "pre");
+    auto pre_element = document->create_element("pre");
     body_element->append_child(pre_element);
 
     pre_element->append_child(document->create_text_node(String::copy(data)));
@@ -93,22 +94,22 @@ static RefPtr<DOM::Document> create_image_document(const ByteBuffer& data, const
     auto bitmap = image_decoder->bitmap();
     ASSERT(bitmap);
 
-    auto html_element = create_element(document, "html");
+    auto html_element = document->create_element("html");
     document->append_child(html_element);
 
-    auto head_element = create_element(document, "head");
+    auto head_element = document->create_element("head");
     html_element->append_child(head_element);
-    auto title_element = create_element(document, "title");
+    auto title_element = document->create_element("title");
     head_element->append_child(title_element);
 
     auto basename = LexicalPath(url.path()).basename();
     auto title_text = adopt(*new DOM::Text(document, String::format("%s [%dx%d]", basename.characters(), bitmap->width(), bitmap->height())));
     title_element->append_child(title_text);
 
-    auto body_element = create_element(document, "body");
+    auto body_element = document->create_element("body");
     html_element->append_child(body_element);
 
-    auto image_element = create_element(document, "img");
+    auto image_element = document->create_element("img");
     image_element->set_attribute(HTML::AttributeNames::src, url.to_string());
     body_element->append_child(image_element);
 

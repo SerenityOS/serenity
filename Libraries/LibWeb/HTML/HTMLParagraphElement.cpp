@@ -28,8 +28,8 @@
 
 namespace Web::HTML {
 
-HTMLParagraphElement::HTMLParagraphElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLParagraphElement::HTMLParagraphElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
 }
 

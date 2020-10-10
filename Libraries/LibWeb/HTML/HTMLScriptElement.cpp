@@ -34,8 +34,8 @@
 
 namespace Web::HTML {
 
-HTMLScriptElement::HTMLScriptElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLScriptElement::HTMLScriptElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
 }
 

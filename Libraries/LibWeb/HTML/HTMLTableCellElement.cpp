@@ -29,8 +29,8 @@
 
 namespace Web::HTML {
 
-HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
 }
 

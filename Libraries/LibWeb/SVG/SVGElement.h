@@ -37,7 +37,7 @@ public:
     virtual bool is_graphics_element() const { return false; }
 
 protected:
-    SVGElement(DOM::Document&, const FlyString& tag_name);
+    SVGElement(DOM::Document&, const QualifiedName& qualified_name);
 
 private:
     virtual bool is_svg_element() const final { return true; }

@@ -35,8 +35,8 @@
 
 namespace Web::SVG {
 
-SVGSVGElement::SVGSVGElement(DOM::Document& document, const FlyString& tag_name)
-    : SVGGraphicsElement(document, tag_name)
+SVGSVGElement::SVGSVGElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : SVGGraphicsElement(document, qualified_name)
 {
 }
 

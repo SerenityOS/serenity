@@ -34,7 +34,7 @@ class HTMLDataListElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDataListElementWrapper;
 
-    HTMLDataListElement(DOM::Document&, const FlyString& local_name);
+    HTMLDataListElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLDataListElement() override;
 };
 

@@ -35,7 +35,7 @@ class HTMLTemplateElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTemplateElementWrapper;
 
-    HTMLTemplateElement(DOM::Document&, const FlyString& local_name);
+    HTMLTemplateElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLTemplateElement() override;
 
     NonnullRefPtr<DOM::DocumentFragment> content() { return *m_content; }

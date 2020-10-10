@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,22 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibWeb/Namespace.h>
 
-#include <LibWeb/HTML/HTMLElement.h>
+namespace Web::Namespace {
 
-namespace Web::HTML {
+#define __ENUMERATE_NAMESPACE(name, namespace_) FlyString name;
+ENUMERATE_NAMESPACES
+#undef __ENUMERATE_NAMESPACE
 
-class HTMLAreaElement final : public HTMLElement {
-public:
-    using WrapperType = Bindings::HTMLAreaElementWrapper;
+    // clang-format off
+// FIXME: clang-format gets confused here. Why?
+[[gnu::constructor]] static void initialize()
+// clang-format on
+{
+    static bool s_initialized = false;
+    if (s_initialized)
+        return;
 
-    HTMLAreaElement(DOM::Document&, const QualifiedName& qualified_name);
-    virtual ~HTMLAreaElement() override;
-};
+#define __ENUMERATE_NAMESPACE(name, namespace_) \
+    name = namespace_;
+    ENUMERATE_NAMESPACES
+#undef __ENUMERATE_NAMESPACE
 
+    s_initialized = true;
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLAreaElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::area; }
-AK_END_TYPE_TRAITS()
+}

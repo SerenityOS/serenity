@@ -36,8 +36,8 @@
 
 namespace Web::HTML {
 
-HTMLImageElement::HTMLImageElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLImageElement::HTMLImageElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
     m_image_loader.on_load = [this] {
         this->document().update_layout();
