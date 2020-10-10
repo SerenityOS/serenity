@@ -27,15 +27,18 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/internals.h>
 #include <unistd.h>
 
 extern "C" {
 
+extern bool __stdio_is_initialized;
 #ifdef DEBUG
 void __assertion_failed(const char* msg)
 {
     dbgprintf("USERSPACE(%d) ASSERTION FAILED: %s\n", getpid(), msg);
-    fprintf(stderr, "ASSERTION FAILED: %s\n", msg);
+    if (__stdio_is_initialized)
+        fprintf(stderr, "ASSERTION FAILED: %s\n", msg);
     abort();
 }
 #endif
