@@ -61,5 +61,6 @@ int mprotect(void*, size_t, int prot);
 int set_mmap_name(void*, size_t, const char*);
 int madvise(void*, size_t, int advice);
 int minherit(void*, size_t, int inherit);
+void* allocate_tls(size_t);
 
 __END_DECLS

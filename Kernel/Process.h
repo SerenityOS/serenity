@@ -372,6 +372,7 @@ public:
     int sys$recvfd(int sockfd);
     long sys$sysconf(int name);
     int sys$disown(ProcessID);
+    void* sys$allocate_tls(size_t);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);

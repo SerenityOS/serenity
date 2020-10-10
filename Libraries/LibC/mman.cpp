@@ -87,4 +87,14 @@ int minherit(void* address, size_t size, int inherit)
     int rc = syscall(SC_minherit, address, size, inherit);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+void* allocate_tls(size_t size)
+{
+    int rc = syscall(SC_allocate_tls, size);
+    if (rc < 0 && -rc < EMAXERRNO) {
+        errno = -rc;
+        return MAP_FAILED;
+    }
+    return (void*)rc;
+}
 }
