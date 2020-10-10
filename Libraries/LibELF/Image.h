@@ -185,6 +185,7 @@ public:
     const Symbol symbol(unsigned) const;
     const Section section(unsigned) const;
     const ProgramHeader program_header(unsigned const) const;
+    FlatPtr program_header_table_offset() const;
 
     template<typename F>
     void for_each_section(F) const;
@@ -204,6 +205,8 @@ public:
     bool is_dynamic() const { return header().e_type == ET_DYN; }
 
     VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
+    FlatPtr base_address() const { return (FlatPtr)m_buffer; }
+    size_t size() const { return m_size; }
 
 private:
     const char* raw_data(unsigned offset) const;

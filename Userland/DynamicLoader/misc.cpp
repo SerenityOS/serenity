@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,21 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "misc.h"
+#include "AK/LogStream.h"
 
-#include <sys/cdefs.h>
+extern "C" {
+const char* __cxa_demangle(const char*, void*, void*, int*)
+{
+    dbg() << "WARNING: __cxa_demangle not supported";
+    return "";
+}
 
-__BEGIN_DECLS
-
-#define RTLD_DEFAULT 0
-#define RTLD_LAZY 2
-#define RTLD_NOW 4
-#define RTLD_GLOBAL 8
-#define RTLD_LOCAL 16
-
-int dlclose(void*);
-char* dlerror();
-void* dlopen(const char*, int);
-void* dlsym(void*, const char*);
-
-__END_DECLS
+// FIXME: Is this correct?
+void* __dso_handle = nullptr;
+}

@@ -101,7 +101,9 @@ void* dlopen(const char* filename, int flags)
         return nullptr;
     }
 
-    if (!loader->load_from_image(flags)) {
+    if (!loader->load_from_image(flags,
+            0 // total_tls_size = 0, FIXME: Support TLS when using dlopen()
+            )) {
         g_dlerror_msg = String::format("Failed to load ELF object %s", filename);
         return nullptr;
     }
