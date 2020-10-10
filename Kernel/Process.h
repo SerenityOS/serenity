@@ -421,6 +421,25 @@ public:
 
     int exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
+    struct LoadResult {
+        FlatPtr load_offset { 0 };
+        FlatPtr entry_eip { 0 };
+        size_t size { 0 };
+        FlatPtr program_headers { 0 };
+        size_t num_program_headers { 0 };
+        AK::WeakPtr<Region> tls_region;
+        size_t tls_size { 0 };
+        size_t tls_alignment { 0 };
+    };
+
+    enum class ShouldAllocateTls {
+        No = 0,
+        Yes,
+    };
+
+    int load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description);
+    KResultOr<LoadResult> load_elf_object(FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls);
+
     bool is_superuser() const
     {
         return m_euid == 0;
@@ -563,6 +582,7 @@ private:
     ThreadID m_exec_tid { 0 };
     FlatPtr m_load_offset { 0U };
     FlatPtr m_entry_eip { 0U };
+    int m_main_program_fd { -1 };
 
     OwnPtr<ThreadTracer> m_tracer;
 

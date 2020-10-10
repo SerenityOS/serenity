@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -45,15 +46,8 @@
 
 namespace Kernel {
 
-int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags)
+static bool validate_stack_size(const Vector<String>& arguments, const Vector<String>& environment)
 {
-    ASSERT(is_user_process());
-    ASSERT(!Processor::current().in_critical());
-    auto path = main_program_description->absolute_path();
-#ifdef EXEC_DEBUG
-    dbg() << "do_exec(" << path << ")";
-#endif
-
     size_t total_blob_size = 0;
     for (auto& a : arguments)
         total_blob_size += a.length() + 1;
@@ -62,31 +56,100 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     size_t total_meta_size = sizeof(char*) * (arguments.size() + 1) + sizeof(char*) * (environment.size() + 1);
 
-    // FIXME: How much stack space does process startup need?
-    if ((total_blob_size + total_meta_size) >= Thread::default_userspace_stack_size)
-        return -E2BIG;
+    // FIXME: This doesn't account for the size of the auxiliary vector
+    return (total_blob_size + total_meta_size) < Thread::default_userspace_stack_size;
+}
 
-    auto parts = path.split('/');
-    if (parts.is_empty())
-        return -ENOENT;
-
-    auto& inode = interpreter_description ? *interpreter_description->inode() : *main_program_description->inode();
+KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_description, FlatPtr load_offset, ShouldAllocateTls should_allocate_tls)
+{
+    auto& inode = *(object_description.inode());
     auto vmobject = SharedInodeVMObject::create_with_inode(inode);
-
     if (static_cast<const SharedInodeVMObject&>(*vmobject).writable_mappings()) {
         dbg() << "Refusing to execute a write-mapped program";
-        return -ETXTBSY;
+        return KResult(-ETXTBSY);
+    }
+    InodeMetadata loader_metadata = object_description.metadata();
+
+    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(loader_metadata.size), "ELF loading", Region::Access::Read);
+    if (!region) {
+        dbg() << "Could not allocate memory for ELF loading";
+        return KResult(-ENOMEM);
     }
 
-    // Disable profiling temporarily in case it's running on this process.
-    bool was_profiling = is_profiling();
-    TemporaryChange profiling_disabler(m_profiling, false);
+    Region* master_tls_region { nullptr };
+    size_t master_tls_size = 0;
+    size_t master_tls_alignment = 0;
+    m_entry_eip = 0;
 
-    // Mark this thread as the current thread that does exec
-    // No other thread from this process will be scheduled to run
-    auto current_thread = Thread::current();
-    m_exec_tid = current_thread->tid();
+    MM.enter_process_paging_scope(*this);
+    String object_name = LexicalPath(object_description.absolute_path()).basename();
+    RefPtr<ELF::Loader> loader = ELF::Loader::create(region->vaddr().as_ptr(), loader_metadata.size, move(object_name));
+    loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
+        ASSERT(size);
+        ASSERT(alignment == PAGE_SIZE);
+        int prot = 0;
+        if (is_readable)
+            prot |= PROT_READ;
+        if (is_writable)
+            prot |= PROT_WRITE;
+        if (is_executable)
+            prot |= PROT_EXEC;
+        if (auto* region = allocate_region_with_vmobject(vaddr.offset(load_offset), size, *vmobject, offset_in_image, String(name), prot)) {
+            region->set_shared(true);
+            return region->vaddr().as_ptr();
+        }
+        return nullptr;
+    };
+    loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
+        ASSERT(size);
+        ASSERT(alignment == PAGE_SIZE);
+        int prot = 0;
+        if (is_readable)
+            prot |= PROT_READ;
+        if (is_writable)
+            prot |= PROT_WRITE;
+        if (auto* region = allocate_region(vaddr.offset(load_offset), size, String(name), prot))
+            return region->vaddr().as_ptr();
+        return nullptr;
+    };
+    if (should_allocate_tls == ShouldAllocateTls::Yes) {
+        loader->tls_section_hook = [&](size_t size, size_t alignment) {
+            ASSERT(size);
+            master_tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
+            master_tls_size = size;
+            master_tls_alignment = alignment;
+            return master_tls_region->vaddr().as_ptr();
+        };
+    }
 
+    ASSERT(!Processor::current().in_critical());
+    bool success = loader->load();
+    if (!success) {
+        klog() << "do_exec: Failure loading program";
+        return KResult(-ENOEXEC);
+    }
+
+    if (!loader->entry().offset(load_offset).get()) {
+        klog() << "do_exec: Failure loading program, entry pointer is invalid! (" << loader->entry().offset(load_offset) << ")";
+        return KResult(-ENOEXEC);
+    }
+
+    // NOTE: At this point, we've committed to the new executable.
+
+    return LoadResult {
+        load_offset,
+        loader->entry().offset(load_offset).get(),
+        (size_t)loader_metadata.size,
+        VirtualAddress(loader->image().program_header_table_offset()).offset(load_offset).get(),
+        loader->image().program_header_count(),
+        master_tls_region ? master_tls_region->make_weak_ptr() : nullptr,
+        master_tls_size,
+        master_tls_alignment
+    };
+}
+
+int Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description)
+{
     RefPtr<PageDirectory> old_page_directory;
     NonnullOwnPtrVector<Region> old_regions;
 
@@ -98,122 +161,91 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         m_page_directory = PageDirectory::create_for_userspace(*this);
     }
 
+    ArmedScopeGuard rollback_regions_guard([&]() {
+        ASSERT(Process::current() == this);
+        // Need to make sure we don't swap contexts in the middle
+        ScopedCritical critical;
+        m_page_directory = move(old_page_directory);
+        m_regions = move(old_regions);
+        MM.enter_process_paging_scope(*this);
+    });
+
+    if (!interpreter_description) {
+        auto result = load_elf_object(main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes);
+        if (result.is_error())
+            return result.error();
+
+        m_load_offset = result.value().load_offset;
+        m_entry_eip = result.value().entry_eip;
+        m_master_tls_region = result.value().tls_region;
+        m_master_tls_size = result.value().tls_size;
+        m_master_tls_alignment = result.value().tls_alignment;
+
+        rollback_regions_guard.disarm();
+        return 0;
+    }
+
+    // TODO: This should be randomized for ASLR
+    constexpr FlatPtr interpreter_load_offset = 0x08000000;
+
+    auto interpreter_load_result = load_elf_object(*interpreter_description, interpreter_load_offset, ShouldAllocateTls::No);
+    if (interpreter_load_result.is_error())
+        return interpreter_load_result.error();
+
+    m_load_offset = interpreter_load_result.value().load_offset;
+    m_entry_eip = interpreter_load_result.value().entry_eip;
+
+    // TLS allocation will be done in userspace by the loader
+    m_master_tls_region = nullptr;
+    m_master_tls_size = 0;
+    m_master_tls_alignment = 0;
+
+    rollback_regions_guard.disarm();
+    return 0;
+}
+
+int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags)
+{
+    ASSERT(is_user_process());
+    ASSERT(!Processor::current().in_critical());
+    auto path = main_program_description->absolute_path();
+#ifdef EXEC_DEBUG
+    dbg() << "do_exec(" << path << ")";
+#endif
+
+    // FIXME: How much stack space does process startup need?
+    if (!validate_stack_size(arguments, environment))
+        return -E2BIG;
+
+    auto parts = path.split('/');
+    if (parts.is_empty())
+        return -ENOENT;
+
+    // Disable profiling temporarily in case it's running on this process.
+    bool was_profiling = is_profiling();
+    TemporaryChange profiling_disabler(m_profiling, false);
+
+    // Mark this thread as the current thread that does exec
+    // No other thread from this process will be scheduled to run
+    auto current_thread = Thread::current();
+    m_exec_tid = current_thread->tid();
+
 #ifdef MM_DEBUG
     dbg() << "Process " << pid().value() << " exec: PD=" << m_page_directory.ptr() << " created";
 #endif
 
-    InodeMetadata loader_metadata;
-
-    // FIXME: Hoooo boy this is a hack if I ever saw one.
-    //      This is the 'random' offset we're giving to our ET_DYN executables to start as.
-    //      It also happens to be the static Virtual Address offset every static executable gets :)
-    //      Without this, some assumptions by the ELF loading hooks below are severely broken.
-    //      0x08000000 is a verified random number chosen by random dice roll https://xkcd.com/221/
-    m_load_offset = interpreter_description ? 0x08000000 : 0;
-
-    // FIXME: We should be able to load both the PT_INTERP interpreter and the main program... once the RTLD is smart enough
-    if (interpreter_description) {
-        loader_metadata = interpreter_description->metadata();
-        // we don't need the interpreter file description after we've loaded (or not) it into memory
-        interpreter_description = nullptr;
-    } else {
-        loader_metadata = main_program_description->metadata();
+    int load_rc = load(main_program_description, interpreter_description);
+    if (load_rc) {
+        klog() << "do_exec: Failed to load main program or interpreter";
+        return load_rc;
     }
 
-    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_ROUND_UP(loader_metadata.size), "ELF loading", Region::Access::Read);
-    if (!region)
-        return -ENOMEM;
-
-    Region* master_tls_region { nullptr };
-    size_t master_tls_size = 0;
-    size_t master_tls_alignment = 0;
-    m_entry_eip = 0;
-
-    MM.enter_process_paging_scope(*this);
-    RefPtr<ELF::Loader> loader;
-    {
-        ArmedScopeGuard rollback_regions_guard([&]() {
-            ASSERT(Process::current() == this);
-            // Need to make sure we don't swap contexts in the middle
-            ScopedCritical critical;
-            m_page_directory = move(old_page_directory);
-            m_regions = move(old_regions);
-            MM.enter_process_paging_scope(*this);
-        });
-        loader = ELF::Loader::create(region->vaddr().as_ptr(), loader_metadata.size);
-        // Load the correct executable -- either interp or main program.
-        // FIXME: Once we actually load both interp and main, we'll need to be more clever about this.
-        //     In that case, both will be ET_DYN objects, so they'll both be completely relocatable.
-        //     That means, we can put them literally anywhere in User VM space (ASLR anyone?).
-        // ALSO FIXME: Reminder to really really fix that 'totally random offset' business.
-        loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
-            ASSERT(size);
-            ASSERT(alignment == PAGE_SIZE);
-            int prot = 0;
-            if (is_readable)
-                prot |= PROT_READ;
-            if (is_writable)
-                prot |= PROT_WRITE;
-            if (is_executable)
-                prot |= PROT_EXEC;
-            if (auto* region = allocate_region_with_vmobject(vaddr.offset(m_load_offset), size, *vmobject, offset_in_image, String(name), prot)) {
-                region->set_shared(true);
-                return region->vaddr().as_ptr();
-            }
-            return nullptr;
-        };
-        loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
-            ASSERT(size);
-            ASSERT(alignment == PAGE_SIZE);
-            int prot = 0;
-            if (is_readable)
-                prot |= PROT_READ;
-            if (is_writable)
-                prot |= PROT_WRITE;
-            if (auto* region = allocate_region(vaddr.offset(m_load_offset), size, String(name), prot))
-                return region->vaddr().as_ptr();
-            return nullptr;
-        };
-
-        // FIXME: Move TLS region allocation to userspace: LibC and the dynamic loader.
-        //     LibC if we end up with a statically linked executable, and the
-        //     dynamic loader so that it can create new TLS blocks for each shared library
-        //     that gets loaded as part of DT_NEEDED processing, and via dlopen()
-        //     If that doesn't happen quickly, at least pass the location of the TLS region
-        //     some ELF Auxiliary Vector so the loader can use it/create new ones as necessary.
-        loader->tls_section_hook = [&](size_t size, size_t alignment) {
-            ASSERT(size);
-            master_tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
-            master_tls_size = size;
-            master_tls_alignment = alignment;
-            return master_tls_region->vaddr().as_ptr();
-        };
-        ASSERT(!Processor::current().in_critical());
-        bool success = loader->load();
-        if (!success) {
-            klog() << "do_exec: Failure loading " << path.characters();
-            return -ENOEXEC;
-        }
-        // FIXME: Validate that this virtual address is within executable region,
-        //     instead of just non-null. You could totally have a DSO with entry point of
-        //     the beginning of the text segment.
-        if (!loader->entry().offset(m_load_offset).get()) {
-            klog() << "do_exec: Failure loading " << path.characters() << ", entry pointer is invalid! (" << loader->entry().offset(m_load_offset) << ")";
-            return -ENOEXEC;
-        }
-
-        rollback_regions_guard.disarm();
-
-        // NOTE: At this point, we've committed to the new executable.
-        m_entry_eip = loader->entry().offset(m_load_offset).get();
-
-        kill_threads_except_self();
+    kill_threads_except_self();
 
 #ifdef EXEC_DEBUG
-        klog() << "Memory layout after ELF load:";
-        dump_regions();
+    klog() << "Memory layout after ELF load:";
+    dump_regions();
 #endif
-    }
 
     m_executable = main_program_description->custody();
 
@@ -221,10 +253,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
-
-    // Copy of the master TLS region that we will clone for new threads
-    // FIXME: Handle this in userspace
-    m_master_tls_region = master_tls_region ? master_tls_region->make_weak_ptr() : nullptr;
 
     auto main_program_metadata = main_program_description->metadata();
 
@@ -248,6 +276,14 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         auto& description_and_flags = m_fds[i];
         if (description_and_flags.description() && description_and_flags.flags() & FD_CLOEXEC)
             description_and_flags = {};
+    }
+
+    if (interpreter_description) {
+        m_main_program_fd = alloc_fd();
+        ASSERT(m_main_program_fd >= 0);
+        main_program_description->seek(0, SEEK_SET);
+        main_program_description->set_readable(true);
+        m_fds[m_main_program_fd].set(move(main_program_description), FD_CLOEXEC);
     }
 
     new_main_thread = nullptr;
@@ -282,9 +318,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_name = parts.take_last();
     new_main_thread->set_name(m_name);
-
-    m_master_tls_size = master_tls_size;
-    m_master_tls_alignment = master_tls_alignment;
 
     // FIXME: PID/TID ISSUE
     m_pid = new_main_thread->tid().value();
@@ -325,7 +358,7 @@ Vector<AuxiliaryValue> Process::generate_auxiliary_vector() const
     // PH*
     auxv.append({ AuxiliaryValue::PageSize, PAGE_SIZE });
     auxv.append({ AuxiliaryValue::BaseAddress, (void*)m_load_offset });
-    // FLAGS
+
     auxv.append({ AuxiliaryValue::Entry, (void*)m_entry_eip });
     // NOTELF
     auxv.append({ AuxiliaryValue::Uid, (long)m_uid });
@@ -349,6 +382,8 @@ Vector<AuxiliaryValue> Process::generate_auxiliary_vector() const
     auxv.append({ AuxiliaryValue::Random, String(random_bytes, sizeof(random_bytes)) });
 
     auxv.append({ AuxiliaryValue::ExecFilename, m_executable->absolute_path() });
+
+    auxv.append({ AuxiliaryValue::ExecFileDescriptor, m_main_program_fd });
 
     auxv.append({ AuxiliaryValue::Null, 0L });
     return auxv;
@@ -451,10 +486,12 @@ KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_exec
             return KResult(-ENOEXEC);
         }
 
-        if (!interpreter_interpreter_path.is_empty()) {
-            dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has its own interpreter (" << interpreter_interpreter_path << ")! No thank you!";
-            return KResult(-ELOOP);
-        }
+        // FIXME: Uncomment this
+        //        How do we get gcc to not insert an interpreter section to /usr/lib/Loader.so itself?
+        // if (!interpreter_interpreter_path.is_empty()) {
+        //     dbg() << "exec(" << path << "): Interpreter (" << interpreter_description->absolute_path() << ") has its own interpreter (" << interpreter_interpreter_path << ")! No thank you!";
+        //     return KResult(-ELOOP);
+        // }
 
         return interpreter_description;
     }
@@ -608,4 +645,5 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     ASSERT(rc < 0); // We should never continue after a successful exec!
     return rc;
 }
+
 }
