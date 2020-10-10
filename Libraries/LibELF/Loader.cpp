@@ -40,8 +40,9 @@
 
 namespace ELF {
 
-Loader::Loader(const u8* buffer, size_t size, bool verbose_logging)
+Loader::Loader(const u8* buffer, size_t size, String&& name, bool verbose_logging)
     : m_image(buffer, size, verbose_logging)
+    , m_name(move(name))
 {
     if (m_image.is_valid())
         m_symbol_count = m_image.symbol_count();
@@ -101,7 +102,7 @@ bool Loader::layout()
                 program_header.alignment(),
                 program_header.is_readable(),
                 program_header.is_writable(),
-                String::format("elf-alloc-%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : ""));
+                String::format("%s-alloc-%s%s", m_name.is_empty() ? "elf" : m_name.characters(), program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : ""));
             if (!allocated_section) {
                 failed = true;
                 return;
@@ -133,7 +134,7 @@ bool Loader::layout()
                 program_header.is_readable(),
                 program_header.is_writable(),
                 program_header.is_executable(),
-                String::format("elf-map-%s%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "", program_header.is_executable() ? "x" : ""));
+                String::format("%s-map-%s%s%s", m_name.is_empty() ? "elf" : m_name.characters(), program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "", program_header.is_executable() ? "x" : ""));
             if (!mapped_section) {
                 failed = true;
             }

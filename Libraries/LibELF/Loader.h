@@ -45,7 +45,7 @@ namespace ELF {
 
 class Loader : public RefCounted<Loader> {
 public:
-    static NonnullRefPtr<Loader> create(const u8* data, size_t size, bool verbose_logging = true) { return adopt(*new Loader(data, size, verbose_logging)); }
+    static NonnullRefPtr<Loader> create(const u8* data, size_t size, String&& name = String::empty(), bool verbose_logging = true) { return adopt(*new Loader(data, size, move(name), verbose_logging)); }
     ~Loader();
 
     bool load();
@@ -67,11 +67,12 @@ public:
     Optional<Image::Symbol> find_symbol(u32 address, u32* offset = nullptr) const;
 
 private:
-    explicit Loader(const u8*, size_t, bool verbose_logging);
+    explicit Loader(const u8*, size_t, String&& name, bool verbose_logging);
 
     bool layout();
 
     Image m_image;
+    String m_name;
 
     size_t m_symbol_count { 0 };
 

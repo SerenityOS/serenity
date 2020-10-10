@@ -46,7 +46,7 @@ typedef struct
 #define AT_PAGESZ 6         /* a_val gives system page size in bytes */
 #define AT_BASE 7           /* a_ptr holds base address that Loader was loaded into memory */
 #define AT_FLAGS 8          /* a_val holds 1 bit flags. Undefined flags are 0 */
-#define AT_ENTRY 9          /* a_ptr holds entry point of application for loader */
+#define AT_ENTRY 9          /* a_ptr holds entry point of the main program */
 #define AT_NOTELF 10        /* a_val non-zero if the program is not ELF */
 #define AT_UID 11           /* a_val holds real user id of process */
 #define AT_EUID 12          /* a_val holds effective user id of process */
@@ -60,6 +60,8 @@ typedef struct
 #define AT_RANDOM 25        /* a_ptr points to 16 securely generated random bytes */
 #define AT_HWCAP2 26        /* a_val holds extended hw feature mask. Currently 0 */
 #define AT_EXECFN 31        /* a_ptr points to file name of executed program */
+#define AT_EXE_BASE 32      /* a_ptr holds base address where main program was loaded into memory */
+#define AT_EXE_SIZE 33      /* a_val holds the size of the main program in memory */
 
 #ifdef __cplusplus
 #    include <AK/String.h>
@@ -89,7 +91,9 @@ struct AuxiliaryValue {
         BasePlatform = AT_BASE_PLATFORM,
         Random = AT_RANDOM,
         HwCap2 = AT_HWCAP2,
-        ExecFilename = AT_EXECFN
+        ExecFilename = AT_EXECFN,
+        ExeBaseAddress = AT_EXE_BASE,
+        ExeSize = AT_EXE_SIZE
     };
 
     AuxiliaryValue(Type type, long val)
