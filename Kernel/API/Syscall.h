@@ -194,7 +194,8 @@ namespace Kernel {
     S(sysconf)                \
     S(set_process_name)       \
     S(disown)                 \
-    S(adjtime)
+    S(adjtime)                \
+    S(allocate_tls)
 
 namespace Syscall {
 

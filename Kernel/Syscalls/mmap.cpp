@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -415,6 +416,48 @@ int Process::sys$munmap(void* addr, size_t size)
     // FIXME: We should also support munmap() across multiple regions. (#175)
 
     return -EINVAL;
+}
+
+void* Process::sys$allocate_tls(size_t size)
+{
+    REQUIRE_PROMISE(stdio);
+
+    dbg() << "allocate TLS: " << size;
+
+    if (!size)
+        return (void*)-EINVAL;
+
+    if (!m_master_tls_region.is_null())
+        return (void*)-EEXIST;
+
+    if (thread_count() != 1)
+        return (void*)-EFAULT;
+
+    Thread* main_thread = nullptr;
+    for_each_thread([&main_thread](auto& thread) {
+        main_thread = &thread;
+        return IterationDecision::Break;
+    });
+    ASSERT(main_thread);
+
+    auto tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
+    if (!tls_region)
+        return (void*)-EFAULT;
+
+    m_master_tls_region = tls_region->make_weak_ptr();
+    dbg() << "master_tls_region: " << m_master_tls_region->vaddr();
+    m_master_tls_size = size;
+    m_master_tls_alignment = PAGE_SIZE;
+
+    auto tsr_result = main_thread->make_thread_specific_region({});
+    if (tsr_result.is_error())
+        return (void*)-EFAULT;
+
+    auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
+    tls_descriptor.set_base(main_thread->thread_specific_data().as_ptr());
+    tls_descriptor.set_limit(main_thread->thread_specific_region_size());
+
+    return m_master_tls_region.unsafe_ptr()->vaddr().as_ptr();
 }
 
 }
