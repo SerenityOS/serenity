@@ -585,6 +585,7 @@ void __stdio_init()
     new (stdout) FILE(1, O_WRONLY);
     new (stderr) FILE(2, O_WRONLY);
     stderr->setbuf(nullptr, _IONBF, 0);
+    __stdio_is_initialized = true;
 }
 
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
