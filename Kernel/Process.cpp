@@ -597,9 +597,11 @@ void Process::finalize()
         if (!description_or_error.is_error()) {
             auto& description = description_or_error.value();
             auto json = m_perf_event_buffer->to_json(m_pid, m_executable ? m_executable->absolute_path() : "");
-            // FIXME: Should this error path be surfaced somehow?
             auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json.data());
-            (void)description->write(json_buffer, json.size());
+            auto result = description->write(json_buffer, json.size());
+            if (result.is_error()) {
+                dbgln("Error while writing perfcore file: {}", result.error().error());
+            }
         }
     }
 
