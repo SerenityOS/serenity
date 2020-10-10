@@ -30,6 +30,6 @@
 
 namespace Web::DOM {
 
-NonnullRefPtr<Element> create_element(Document&, const FlyString& tag_name);
+NonnullRefPtr<Element> create_element(Document&, const FlyString& tag_name, const FlyString& namespace_);
 
 }

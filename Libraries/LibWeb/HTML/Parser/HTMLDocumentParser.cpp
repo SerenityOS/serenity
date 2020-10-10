@@ -40,6 +40,7 @@
 #include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
 
@@ -356,7 +357,7 @@ void HTMLDocumentParser::handle_before_html(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
-        auto element = create_element_for(token);
+        auto element = create_element_for(token, Namespace::HTML);
         document().append_child(element);
         m_stack_of_open_elements.push(move(element));
         m_insertion_mode = InsertionMode::BeforeHead;
@@ -373,7 +374,7 @@ void HTMLDocumentParser::handle_before_html(HTMLToken& token)
     }
 
 AnythingElse:
-    auto element = create_element(document(), HTML::TagNames::html);
+    auto element = create_element(document(), HTML::TagNames::html, Namespace::HTML);
     document().append_child(element);
     m_stack_of_open_elements.push(element);
     // FIXME: If the Document is being loaded as part of navigation of a browsing context, then: run the application cache selection algorithm with no manifest, passing it the Document object.
@@ -424,23 +425,28 @@ HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropria
     return adjusted_insertion_location;
 }
 
-NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLToken& token)
+NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLToken& token, const FlyString& namespace_)
 {
-    auto element = create_element(document(), token.tag_name());
+    auto element = create_element(document(), token.tag_name(), namespace_);
     for (auto& attribute : token.m_tag.attributes) {
         element->set_attribute(attribute.local_name_builder.to_string(), attribute.value_builder.to_string());
     }
     return element;
 }
 
-RefPtr<DOM::Element> HTMLDocumentParser::insert_html_element(const HTMLToken& token)
+RefPtr<DOM::Element> HTMLDocumentParser::insert_foreign_element(const HTMLToken& token, const FlyString& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    auto element = create_element_for(token);
+    auto element = create_element_for(token, namespace_);
     // FIXME: Check if it's possible to insert `element` at `adjusted_insertion_location`
     adjusted_insertion_location.parent->insert_before(element, adjusted_insertion_location.insert_before_sibling);
     m_stack_of_open_elements.push(element);
     return element;
+}
+
+RefPtr<DOM::Element> HTMLDocumentParser::insert_html_element(const HTMLToken& token)
+{
+    return insert_foreign_element(token, Namespace::HTML);
 }
 
 void HTMLDocumentParser::handle_before_head(HTMLToken& token)
@@ -551,7 +557,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::script) {
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-        auto element = create_element_for(token);
+        auto element = create_element_for(token, Namespace::HTML);
         auto& script_element = downcast<HTMLScriptElement>(*element);
         script_element.set_parser_document({}, document());
         script_element.set_non_blocking({}, false);
@@ -1635,8 +1641,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         adjust_mathml_attributes(token);
         adjust_foreign_attributes(token);
 
-        // FIXME: this should insert a foreign element, but lets just insert it normally for now :^)
-        insert_html_element(token);
+        insert_foreign_element(token, Namespace::MathML);
 
         if (token.is_self_closing()) {
             m_stack_of_open_elements.pop();
@@ -1651,8 +1656,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         adjust_svg_attributes(token);
         adjust_foreign_attributes(token);
 
-        // FIXME: this should insert a foreign element, but lets just insert it normally for now :^)
-        insert_html_element(token);
+        insert_foreign_element(token, Namespace::SVG);
 
         if (token.is_self_closing()) {
             m_stack_of_open_elements.pop();
@@ -2822,7 +2826,7 @@ NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Elem
         parser.m_tokenizer.switch_to({}, HTMLTokenizer::State::PLAINTEXT);
     }
 
-    auto root = create_element(context_element.document(), HTML::TagNames::html);
+    auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML);
     parser.document().append_child(root);
     parser.m_stack_of_open_elements.push(root);
 

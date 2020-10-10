@@ -49,11 +49,11 @@ ConsoleWidget::ConsoleWidget()
 
     auto base_document = adopt(*new Web::DOM::Document);
     base_document->append_child(adopt(*new Web::DOM::DocumentType(base_document)));
-    auto html_element = Web::DOM::create_element(base_document, "html");
+    auto html_element = base_document->create_element("html");
     base_document->append_child(html_element);
-    auto head_element = Web::DOM::create_element(base_document, "head");
+    auto head_element = base_document->create_element("head");
     html_element->append_child(head_element);
-    auto body_element = Web::DOM::create_element(base_document, "body");
+    auto body_element = base_document->create_element("body");
     html_element->append_child(body_element);
     m_output_container = body_element;
 
@@ -149,7 +149,7 @@ void ConsoleWidget::print_source_line(const StringView& source)
 
 void ConsoleWidget::print_html(const StringView& line)
 {
-    auto paragraph = create_element(m_output_container->document(), "p");
+    auto paragraph = m_output_container->document().create_element("p");
     paragraph->set_inner_html(line);
 
     m_output_container->append_child(paragraph);

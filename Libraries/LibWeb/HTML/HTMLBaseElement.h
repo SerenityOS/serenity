@@ -34,7 +34,7 @@ class HTMLBaseElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLBaseElementWrapper;
 
-    HTMLBaseElement(DOM::Document&, const FlyString& local_name);
+    HTMLBaseElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLBaseElement() override;
 };
 

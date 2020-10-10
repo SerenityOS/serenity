@@ -34,7 +34,7 @@ class HTMLProgressElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLProgressElementWrapper;
 
-    HTMLProgressElement(DOM::Document&, const FlyString& local_name);
+    HTMLProgressElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLProgressElement() override;
 };
 

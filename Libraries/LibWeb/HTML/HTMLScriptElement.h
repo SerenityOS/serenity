@@ -35,7 +35,7 @@ class HTMLScriptElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLScriptElementWrapper;
 
-    HTMLScriptElement(DOM::Document&, const FlyString& local_name);
+    HTMLScriptElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLScriptElement() override;
 
     bool is_non_blocking() const { return m_non_blocking; }

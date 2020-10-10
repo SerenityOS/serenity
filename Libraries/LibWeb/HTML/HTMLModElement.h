@@ -34,7 +34,7 @@ class HTMLModElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLModElementWrapper;
 
-    HTMLModElement(DOM::Document&, const FlyString& local_name);
+    HTMLModElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLModElement() override;
 };
 

@@ -34,7 +34,7 @@ class HTMLElement : public DOM::Element {
 public:
     using WrapperType = Bindings::HTMLElementWrapper;
 
-    HTMLElement(DOM::Document&, const FlyString& local_name);
+    HTMLElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLElement() override;
 
     String title() const { return attribute(HTML::AttributeNames::title); }

@@ -34,7 +34,7 @@ class HTMLQuoteElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLQuoteElementWrapper;
 
-    HTMLQuoteElement(DOM::Document&, const FlyString& local_name);
+    HTMLQuoteElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLQuoteElement() override;
 };
 

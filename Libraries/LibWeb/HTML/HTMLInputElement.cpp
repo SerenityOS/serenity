@@ -38,8 +38,8 @@
 
 namespace Web::HTML {
 
-HTMLInputElement::HTMLInputElement(DOM::Document& document, const FlyString& tag_name)
-    : HTMLElement(document, tag_name)
+HTMLInputElement::HTMLInputElement(DOM::Document& document, const QualifiedName& qualified_name)
+    : HTMLElement(document, qualified_name)
 {
 }
 

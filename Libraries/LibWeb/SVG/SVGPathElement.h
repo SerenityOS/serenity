@@ -106,7 +106,7 @@ class SVGPathElement final : public SVGGeometryElement {
 public:
     using WrapperType = Bindings::SVGPathElementWrapper;
 
-    SVGPathElement(DOM::Document&, const FlyString& tag_name);
+    SVGPathElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~SVGPathElement() override = default;
 
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;

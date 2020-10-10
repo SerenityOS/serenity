@@ -32,7 +32,7 @@ namespace Web::HTML {
 
 class HTMLFontElement final : public HTMLElement {
 public:
-    HTMLFontElement(DOM::Document&, const FlyString& local_name);
+    HTMLFontElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLFontElement() override;
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;

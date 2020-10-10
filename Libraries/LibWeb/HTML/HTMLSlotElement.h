@@ -34,7 +34,7 @@ class HTMLSlotElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLSlotElementWrapper;
 
-    HTMLSlotElement(DOM::Document&, const FlyString& local_name);
+    HTMLSlotElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLSlotElement() override;
 };
 

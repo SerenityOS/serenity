@@ -34,7 +34,7 @@ class HTMLLIElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLLIElementWrapper;
 
-    HTMLLIElement(DOM::Document&, const FlyString& local_name);
+    HTMLLIElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLLIElement() override;
 };
 

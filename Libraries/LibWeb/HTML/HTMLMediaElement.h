@@ -34,7 +34,7 @@ class HTMLMediaElement : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMediaElementWrapper;
 
-    HTMLMediaElement(DOM::Document&, const FlyString& local_name);
+    HTMLMediaElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLMediaElement() override;
 };
 

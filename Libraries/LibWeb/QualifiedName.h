@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,20 +26,27 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLElement.h>
+#include <AK/FlyString.h>
 
-namespace Web::HTML {
+namespace Web {
 
-class HTMLAreaElement final : public HTMLElement {
+class QualifiedName {
 public:
-    using WrapperType = Bindings::HTMLAreaElementWrapper;
+    QualifiedName(const FlyString& local_name, const FlyString& prefix, const FlyString& namespace_)
+        : m_local_name(local_name)
+        , m_prefix(prefix)
+        , m_namespace(namespace_)
+    {
+    }
 
-    HTMLAreaElement(DOM::Document&, const QualifiedName& qualified_name);
-    virtual ~HTMLAreaElement() override;
+    const FlyString& local_name() const { return m_local_name; }
+    const FlyString& prefix() const { return m_prefix; }
+    const FlyString& namespace_() const { return m_namespace; }
+
+private:
+    FlyString m_local_name;
+    FlyString m_prefix;
+    FlyString m_namespace;
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLAreaElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::area; }
-AK_END_TYPE_TRAITS()
