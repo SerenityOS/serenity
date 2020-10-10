@@ -208,6 +208,21 @@ constexpr int beats_per_bar = 4;
 constexpr int notes_per_beat = 4;
 constexpr int roll_length = (sample_rate / (beats_per_minute / 60)) * beats_per_bar;
 
+constexpr const char* note_names[] = {
+    "C",
+    "C#",
+    "D",
+    "D#",
+    "E",
+    "F",
+    "F#",
+    "G",
+    "G#",
+    "A",
+    "A#",
+    "B",
+};
+
 // Equal temperament, A = 440Hz
 // We calculate note frequencies relative to A4:
 // 440.0 * pow(pow(2.0, 1.0 / 12.0), N)
