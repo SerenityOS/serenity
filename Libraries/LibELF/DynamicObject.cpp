@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Andrew Kaster <andrewdkaster@gmail.com>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -142,6 +143,13 @@ void DynamicObject::parse()
             m_soname_index = entry.val();
             m_has_soname = true;
             break;
+        case DT_DEBUG:
+            break;
+        case DT_FLAGS_1:
+            break;
+        case DT_NEEDED:
+            // We handle these in for_each_needed_library
+            break;
         default:
             dbgprintf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
             printf("DynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
@@ -150,6 +158,13 @@ void DynamicObject::parse()
         }
         return IterationDecision::Continue;
     });
+
+    if (!m_size_of_relocation_entry) {
+        // TODO: FIXME, this shouldn't be hardcoded
+        // The reason we need this here is the for some reason, when there only PLT relocations, the compiler
+        // doesn't insert a 'PLTRELSZ' entry to the dynamic section
+        m_size_of_relocation_entry = sizeof(Elf32_Rel);
+    }
 
     auto hash_section_address = hash_section().address().as_ptr();
     auto num_hash_chains = ((u32*)hash_section_address)[1];
@@ -268,12 +283,18 @@ const DynamicObject::Symbol DynamicObject::HashSection::lookup_symbol(const char
             return symbol;
         }
     }
-    return m_dynamic.the_undefined_symbol();
+    return Symbol::create_undefined(m_dynamic);
 }
 
 const char* DynamicObject::symbol_string_table_string(Elf32_Word index) const
 {
     return (const char*)base_address().offset(m_string_table_offset + index).as_ptr();
+}
+
+DynamicObject::InitializationFunction DynamicObject::init_section_function() const
+{
+    ASSERT(has_init_section());
+    return (InitializationFunction)init_section().address().as_ptr();
 }
 
 static const char* name_for_dtag(Elf32_Sword d_tag)
@@ -366,6 +387,19 @@ static const char* name_for_dtag(Elf32_Sword d_tag)
     default:
         return "??";
     }
+}
+
+Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const char* name) const
+{
+    auto res = hash_section().lookup_symbol(name);
+    if (res.is_undefined())
+        return {};
+    return SymbolLookupResult { true, res.value(), (FlatPtr)res.address().as_ptr(), this };
+}
+
+NonnullRefPtr<DynamicObject> DynamicObject::construct(VirtualAddress base_address, VirtualAddress dynamic_section_address)
+{
+    return adopt(*new DynamicObject(base_address, dynamic_section_address));
 }
 
 } // end namespace ELF
