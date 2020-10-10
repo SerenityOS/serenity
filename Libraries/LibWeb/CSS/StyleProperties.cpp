@@ -174,7 +174,9 @@ void StyleProperties::load_font() const
         m_font = Gfx::Font::default_bold_font();
     else
         m_font = Gfx::Font::default_font();
-    return;
+    // FIXME: This is a hack to stop chewing CPU on sites that use a font we don't have and have a lot of text
+    //        or changes text often. Examples are the Serenity 2nd birthday page and the JS specification.
+    FontCache::the().set({ font_family, font_weight }, *m_font);
 }
 
 float StyleProperties::line_height(const LayoutNode& layout_node) const
