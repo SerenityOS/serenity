@@ -1105,6 +1105,10 @@ Vector<FlatPtr> Thread::raw_backtrace(FlatPtr ebp, FlatPtr eip) const
 
 KResult Thread::make_thread_specific_region(Badge<Process>)
 {
+    // The process may not require a TLS region
+    if (!process().m_master_tls_region)
+        return KSuccess;
+
     size_t thread_specific_region_alignment = max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
     m_thread_specific_region_size = align_up_to(process().m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
     auto* region = process().allocate_region({}, m_thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
