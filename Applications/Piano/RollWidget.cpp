@@ -29,6 +29,7 @@
 #include "TrackManager.h"
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
+#include <LibGfx/Font.h>
 #include <math.h>
 
 constexpr int note_height = 20;
@@ -122,6 +123,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
     painter.translate(horizontal_note_offset_remainder, note_offset_remainder);
 
     for (int note = note_count - (note_offset + notes_to_paint); note <= (note_count - 1) - note_offset; ++note) {
+        int y = ((note_count - 1) - note) * note_height;
         for (auto roll_note : m_track_manager.current_track().roll_notes(note)) {
             int x = m_roll_width * (static_cast<double>(roll_note.on_sample) / roll_length);
             int width = m_roll_width * (static_cast<double>(roll_note.length()) / roll_length);
@@ -130,13 +132,19 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             if (width < 2)
                 width = 2;
 
-            int y = ((note_count - 1) - note) * note_height;
             int height = note_height;
 
             Gfx::IntRect rect(x, y, width, height);
             painter.fill_rect(rect, note_pressed_color);
             painter.draw_rect(rect, Color::Black);
         }
+        Gfx::IntRect note_name_rect(3, y, 1, note_height);
+        const char* note_name = note_names[note % notes_per_octave];
+
+        painter.draw_text(note_name_rect, note_name, Gfx::TextAlignment::CenterLeft);
+        note_name_rect.move_by(Gfx::Font::default_font().width(note_name) + 2, 0);
+        if (note % notes_per_octave == 0)
+            painter.draw_text(note_name_rect, String::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
     }
 
     int x = m_roll_width * (static_cast<double>(m_track_manager.time()) / roll_length);
