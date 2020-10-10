@@ -28,9 +28,7 @@
 
 #include <AK/FlyString.h>
 
-namespace Web {
-namespace HTML {
-namespace TagNames {
+namespace Web::HTML::TagNames {
 
 #define ENUMERATE_HTML_TAGS          \
     __ENUMERATE_HTML_TAG(a)          \
@@ -177,6 +175,4 @@ namespace TagNames {
 ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
 
-}
-}
 }
