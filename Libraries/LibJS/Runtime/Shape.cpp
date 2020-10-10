@@ -195,8 +195,10 @@ void Shape::reconfigure_property_in_unique_shape(const StringOrSymbol& property_
 {
     ASSERT(is_unique());
     ASSERT(m_property_table);
-    ASSERT(m_property_table->contains(property_name));
-    m_property_table->set(property_name, { m_property_table->size(), attributes });
+    auto it = m_property_table->find(property_name);
+    ASSERT(it != m_property_table->end());
+    it->value.attributes = attributes;
+    m_property_table->set(property_name, it->value);
 }
 
 void Shape::remove_property_from_unique_shape(const StringOrSymbol& property_name, size_t offset)

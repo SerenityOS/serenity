@@ -148,6 +148,16 @@ describe("normal functionality", () => {
         expect((o[s] = 5)).toBe(5);
         expect((o[s] = 4)).toBe(4);
     });
+
+    test("issue #3735, reconfiguring property in unique shape", () => {
+        const o = {};
+        // In LibJS an object with more than 100 properties gets a unique shape
+        for (let i = 0; i < 101; ++i) {
+            o[`property${i}`] = i;
+        }
+        Object.defineProperty(o, "x", { configurable: true });
+        Object.defineProperty(o, "x", { configurable: false });
+    });
 });
 
 describe("errors", () => {
