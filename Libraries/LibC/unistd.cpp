@@ -48,7 +48,12 @@
 
 extern "C" {
 
+#ifdef NO_TLS
+static int s_cached_tid = 0;
+#else
 static __thread int s_cached_tid = 0;
+#endif
+
 static int s_cached_pid = 0;
 
 int chown(const char* pathname, uid_t uid, gid_t gid)

@@ -43,7 +43,12 @@ __BEGIN_DECLS
 
 extern const char* const sys_errlist[];
 extern int sys_nerr;
+
+#ifdef NO_TLS
+extern int errno;
+#else
 extern __thread int errno;
+#endif
 
 #define errno errno
 
