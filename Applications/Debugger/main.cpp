@@ -148,6 +148,29 @@ static bool handle_breakpoint_command(const String& command)
     return true;
 }
 
+static bool handle_examine_command(const String& command)
+{
+    auto parts = command.split(' ');
+    if (parts.size() != 2)
+        return false;
+
+    auto argument = parts[1];
+    if (argument.is_empty())
+        return false;
+
+    if (!(argument.starts_with("0x"))) {
+        return false;
+    }
+    u32 address = strtoul(argument.characters() + 2, nullptr, 16);
+    auto res = g_debug_session->peek((u32*)address);
+    if (!res.has_value()) {
+        printf("could not examine memory at address 0x%x\n", address);
+        return true;
+    }
+    printf("0x%x\n", res.value());
+    return true;
+}
+
 static void print_help()
 {
     out("Options:\n"
@@ -157,7 +180,8 @@ static void print_help()
         "line - show the position of the current instruction in the source code\n"
         "regs - Print registers\n"
         "dis [number of instructions] - Print disassembly\n"
-        "bp <address/symbol/file:line> - Insert a breakpoint\n");
+        "bp <address/symbol/file:line> - Insert a breakpoint\n"
+        "x <address> - examine dword in memory\n");
 }
 
 int main(int argc, char** argv)
@@ -263,6 +287,8 @@ int main(int argc, char** argv)
 
             } else if (command.starts_with("bp")) {
                 success = handle_breakpoint_command(command);
+            } else if (command.starts_with("x")) {
+                success = handle_examine_command(command);
             }
 
             if (success && !command.is_empty()) {
