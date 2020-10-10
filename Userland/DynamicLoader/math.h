@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,21 @@
 
 #pragma once
 
-#include <sys/cdefs.h>
+#include <AK/Types.h>
 
-__BEGIN_DECLS
+extern "C" {
 
-#define RTLD_DEFAULT 0
-#define RTLD_LAZY 2
-#define RTLD_NOW 4
-#define RTLD_GLOBAL 8
-#define RTLD_LOCAL 16
+u64 __ashldi3(u64 num, unsigned int shift);
 
-int dlclose(void*);
-char* dlerror();
-void* dlopen(const char*, int);
-void* dlsym(void*, const char*);
+u64 __lshrdi3(u64 num, unsigned int shift);
 
-__END_DECLS
+u64 __udivdi3(u64 num, u64 den);
+
+u64 __umoddi3(u64 num, u64 den);
+
+uint64_t __udivmoddi4(uint64_t num, uint64_t den, uint64_t* rem_p);
+
+int64_t __divdi3(int64_t a, int64_t b);
+
+int64_t __moddi3(int64_t a, int64_t b);
+}

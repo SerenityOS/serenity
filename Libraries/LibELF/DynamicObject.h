@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Andrew Kaster <andrewdkaster@gmail.com>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,14 +28,16 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/RefCounted.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibELF/exec_elf.h>
 
 namespace ELF {
 
-class DynamicObject {
+class DynamicObject : public RefCounted<DynamicObject> {
 public:
-    explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
+    static NonnullRefPtr<DynamicObject> construct(VirtualAddress base_address, VirtualAddress dynamic_section_address);
+
     ~DynamicObject();
     void dump() const;
 
@@ -69,6 +72,23 @@ public:
             , m_sym(sym)
             , m_index(index)
         {
+            if (section_index() == 0)
+                m_is_undefined = true;
+        }
+
+        Symbol(const Symbol& other)
+            : m_dynamic(other.m_dynamic)
+            , m_sym(other.m_sym)
+            , m_index(other.m_index)
+            , m_is_undefined(other.m_is_undefined)
+        {
+        }
+
+        static Symbol create_undefined(const DynamicObject& dynamic)
+        {
+            auto s = Symbol(dynamic, 0, {});
+            s.m_is_undefined = true;
+            return s;
         }
 
         ~Symbol() { }
@@ -80,13 +100,19 @@ public:
         unsigned index() const { return m_index; }
         unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
         unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
-        bool is_undefined() const { return this == &m_dynamic.the_undefined_symbol(); }
+
+        bool is_undefined() const
+        {
+            return m_is_undefined;
+        }
         VirtualAddress address() const { return m_dynamic.base_address().offset(value()); }
+        const DynamicObject& object() const { return m_dynamic; }
 
     private:
         const DynamicObject& m_dynamic;
         const Elf32_Sym& m_sym;
         const unsigned m_index;
+        bool m_is_undefined { false };
     };
 
     class Section {
@@ -105,7 +131,10 @@ public:
         unsigned offset() const { return m_section_offset; }
         unsigned size() const { return m_section_size_bytes; }
         unsigned entry_size() const { return m_entry_size; }
-        unsigned entry_count() const { return !entry_size() ? 0 : size() / entry_size(); }
+        unsigned entry_count() const
+        {
+            return !entry_size() ? 0 : size() / entry_size();
+        }
         VirtualAddress address() const { return m_dynamic.base_address().offset(m_section_offset); }
 
     protected:
@@ -191,9 +220,13 @@ public:
     unsigned symbol_count() const { return m_symbol_count; }
 
     const Symbol symbol(unsigned) const;
-    const Symbol& the_undefined_symbol() const { return m_the_undefined_symbol; }
 
+    typedef void (*InitializationFunction)();
+
+    bool has_init_section() const { return m_init_offset != 0; }
+    bool has_init_array_section() const { return m_init_array_offset != 0; }
     const Section init_section() const;
+    InitializationFunction init_section_function() const;
     const Section fini_section() const;
     const Section init_array_section() const;
     const Section fini_array_section() const;
@@ -215,7 +248,28 @@ public:
 
     const char* soname() const { return m_has_soname ? symbol_string_table_string(m_soname_index) : nullptr; }
 
+    Optional<FlatPtr> tls_offset() const { return m_tls_offset; }
+    Optional<FlatPtr> tls_size() const { return m_tls_size; }
+    void set_tls_offset(FlatPtr offset) { m_tls_offset = offset; }
+    void set_tls_size(FlatPtr size) { m_tls_size = size; }
+
+    template<typename F>
+    void for_each_needed_library(F) const;
+
+    template<typename F>
+    void for_each_initialization_array_function(F f) const;
+
+    struct SymbolLookupResult {
+        bool found { false };
+        FlatPtr value { 0 };
+        FlatPtr address { 0 };
+        const ELF::DynamicObject* dynamic_object { nullptr }; // The object in which the symbol is defined
+    };
+    Optional<SymbolLookupResult> lookup_symbol(const char* name) const;
+
 private:
+    explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
+
     const char* symbol_string_table_string(Elf32_Word) const;
     void parse();
 
@@ -227,7 +281,6 @@ private:
 
     VirtualAddress m_base_address;
     VirtualAddress m_dynamic_address;
-    Symbol m_the_undefined_symbol { *this, 0, {} };
 
     unsigned m_symbol_count { 0 };
 
@@ -264,6 +317,9 @@ private:
 
     bool m_has_soname { false };
     Elf32_Word m_soname_index { 0 }; // Index into dynstr table for SONAME
+
+    Optional<FlatPtr> m_tls_offset;
+    Optional<FlatPtr> m_tls_size;
     // End Section information from DT_* entries
 };
 
@@ -271,7 +327,10 @@ template<typename F>
 inline void DynamicObject::RelocationSection::for_each_relocation(F func) const
 {
     for (unsigned i = 0; i < relocation_count(); ++i) {
-        if (func(relocation(i)) == IterationDecision::Break)
+        const auto reloc = relocation(i);
+        if (reloc.type() == 0)
+            continue;
+        if (func(reloc) == IterationDecision::Break)
             break;
     }
 }
@@ -290,11 +349,37 @@ inline void DynamicObject::for_each_dynamic_entry(F func) const
 {
     auto* dyns = reinterpret_cast<const Elf32_Dyn*>(m_dynamic_address.as_ptr());
     for (unsigned i = 0;; ++i) {
+        // dbgprintf("%d\n", i);
         auto&& dyn = DynamicEntry(dyns[i]);
         if (dyn.tag() == DT_NULL)
             break;
         if (func(dyn) == IterationDecision::Break)
             break;
+    }
+}
+template<typename F>
+inline void DynamicObject::for_each_needed_library(F func) const
+{
+    for_each_dynamic_entry([func, this](auto entry) {
+        if (entry.tag() != DT_NEEDED)
+            return IterationDecision::Continue;
+        Elf32_Word offset = entry.val();
+        const char* name = (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr();
+        if (func(StringView(name)) == IterationDecision::Break)
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
+    });
+}
+
+template<typename F>
+void DynamicObject::for_each_initialization_array_function(F f) const
+{
+    if (!has_init_array_section())
+        return;
+    FlatPtr init_array = (FlatPtr)init_array_section().address().as_ptr();
+    for (size_t i = 0; i < (m_init_array_size / sizeof(void*)); ++i) {
+        InitializationFunction current = ((InitializationFunction*)(init_array))[i];
+        f(current);
     }
 }
 

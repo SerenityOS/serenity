@@ -259,6 +259,11 @@ const Image::ProgramHeader Image::program_header(unsigned index) const
     return ProgramHeader(*this, index);
 }
 
+FlatPtr Image::program_header_table_offset() const
+{
+    return header().e_phoff;
+}
+
 const Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 {
     ASSERT(index < relocation_count());
