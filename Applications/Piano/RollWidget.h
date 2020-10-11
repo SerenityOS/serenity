@@ -46,6 +46,8 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
+    virtual void mousemove_event(GUI::MouseEvent& event) override;
+    virtual void mouseup_event(GUI::MouseEvent& event) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
 
     TrackManager& m_track_manager;
@@ -55,4 +57,8 @@ private:
     int m_num_notes { 0 };
     double m_note_width { 0.0 };
     int m_zoom_level { 1 };
+
+    Optional<Gfx::IntPoint> m_note_drag_start;
+    Optional<RollNote> m_note_drag_location;
+    int m_drag_note;
 };

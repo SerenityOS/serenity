@@ -159,27 +159,56 @@ void RollWidget::mousedown_event(GUI::MouseEvent& event)
     if (!widget_inner_rect().contains(event.x(), event.y()))
         return;
 
-    int y = (event.y() + vertical_scrollbar().value()) - frame_thickness();
+    m_note_drag_start = event.position();
+
+    int y = (m_note_drag_start.value().y() + vertical_scrollbar().value()) - frame_thickness();
     y /= note_height;
+    m_drag_note = (note_count - 1) - y;
 
-    // There's a case where we can't just use x / m_note_width. For example, if
-    // your m_note_width is 3.1 you will have a rect starting at 3. When that
-    // leftmost pixel of the rect is clicked you will do 3 / 3.1 which is 0
-    // and not 1. We can avoid that case by shifting x by 1 if m_note_width is
-    // fractional, being careful not to shift out of bounds.
-    int x = (event.x() + horizontal_scrollbar().value()) - frame_thickness();
-    bool note_width_is_fractional = m_note_width - static_cast<int>(m_note_width) != 0;
-    bool x_is_not_last = x != widget_inner_rect().width() - 1;
-    if (note_width_is_fractional && x_is_not_last)
-        ++x;
-    x /= m_note_width;
+    mousemove_event(event);
+}
 
-    int note = (note_count - 1) - y;
-    u32 on_sample = roll_length * (static_cast<double>(x) / m_num_notes);
-    u32 off_sample = (roll_length * (static_cast<double>(x + 1) / m_num_notes)) - 1;
-    m_track_manager.current_track().set_roll_note(note, on_sample, off_sample);
+void RollWidget::mousemove_event(GUI::MouseEvent& event)
+{
+    if (!m_note_drag_start.has_value())
+        return;
+
+    if (m_note_drag_location.has_value()) {
+        // Clear previous note
+        m_track_manager.current_track().set_roll_note(m_drag_note, m_note_drag_location.value().on_sample, m_note_drag_location.value().off_sample);
+    }
+
+    auto get_note_x = [&](int x0) {
+        // There's a case where we can't just use x / m_note_width. For example, if
+        // your m_note_width is 3.1 you will have a rect starting at 3. When that
+        // leftmost pixel of the rect is clicked you will do 3 / 3.1 which is 0
+        // and not 1. We can avoid that case by shifting x by 1 if m_note_width is
+        // fractional, being careful not to shift out of bounds.
+        int x = (x0 + horizontal_scrollbar().value()) - frame_thickness();
+        bool note_width_is_fractional = m_note_width - static_cast<int>(m_note_width) != 0;
+        bool x_is_not_last = x != widget_inner_rect().width() - 1;
+        if (note_width_is_fractional && x_is_not_last)
+            ++x;
+        x /= m_note_width;
+        return x;
+    };
+
+    int x0 = get_note_x(m_note_drag_start.value().x());
+    int x1 = get_note_x(event.x());
+
+    u32 on_sample = roll_length * (static_cast<double>(min(x0, x1)) / m_num_notes);
+    u32 off_sample = (roll_length * (static_cast<double>(max(x0, x1) + 1) / m_num_notes)) - 1;
+    m_track_manager.current_track().set_roll_note(m_drag_note, on_sample, off_sample);
+    m_note_drag_location = RollNote({ on_sample, off_sample });
 
     update();
+}
+
+void RollWidget::mouseup_event(GUI::MouseEvent& event)
+{
+    (void)event;
+    m_note_drag_start = {};
+    m_note_drag_location = {};
 }
 
 // FIXME: Implement zoom and horizontal scroll events in LibGUI, not here.
