@@ -69,8 +69,6 @@ public:
 
     URL complete_url(const String&) const;
 
-    void fixup();
-
     CSS::StyleResolver& style_resolver() { return *m_style_resolver; }
     const CSS::StyleResolver& style_resolver() const { return *m_style_resolver; }
 
