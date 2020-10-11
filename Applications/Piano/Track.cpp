@@ -287,7 +287,7 @@ void Track::set_roll_note(int note, u32 on_sample, u32 off_sample)
             sync_roll(note);
             return;
         }
-        if (it->on_sample == new_roll_note.on_sample && it->off_sample == new_roll_note.off_sample) {
+        if (it->on_sample <= new_roll_note.on_sample && it->off_sample >= new_roll_note.on_sample) {
             if (m_time >= it->on_sample && m_time <= it->off_sample)
                 set_note(note, Off);
             m_roll_notes[note].remove(it);
@@ -300,12 +300,6 @@ void Track::set_roll_note(int note, u32 on_sample, u32 off_sample)
             m_roll_notes[note].remove(it);
             it = m_roll_notes[note].begin();
             continue;
-        }
-        if (it->on_sample < new_roll_note.on_sample && it->off_sample >= new_roll_note.on_sample) {
-            if (m_time >= new_roll_note.off_sample && m_time <= it->off_sample)
-                set_note(note, Off);
-            it->off_sample = new_roll_note.on_sample - 1;
-            ASSERT(it->length() >= 2);
         }
         ++it;
     }
