@@ -77,6 +77,16 @@ Document::~Document()
 {
 }
 
+void Document::removed_last_ref()
+{
+    ASSERT(!ref_count());
+
+    if (m_referencing_node_count)
+        return;
+
+    delete this;
+}
+
 Origin Document::origin() const
 {
     if (!m_url.is_valid())

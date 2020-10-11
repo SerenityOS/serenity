@@ -177,8 +177,26 @@ public:
     const String& ready_state() const { return m_ready_state; }
     void set_ready_state(const String&);
 
+    void ref_from_node(Badge<Node>)
+    {
+        ++m_referencing_node_count;
+    }
+
+    void unref_from_node(Badge<Node>)
+    {
+        ASSERT(m_referencing_node_count);
+        --m_referencing_node_count;
+        if (!m_referencing_node_count && !ref_count()) {
+            removed_last_ref();
+        }
+    }
+
+    void removed_last_ref();
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
+
+    unsigned m_referencing_node_count { 0 };
 
     OwnPtr<CSS::StyleResolver> m_style_resolver;
     RefPtr<CSS::StyleSheetList> m_style_sheets;

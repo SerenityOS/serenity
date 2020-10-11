@@ -30,6 +30,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
+#include <LibWeb/Forward.h>
 
 namespace Web {
 
@@ -46,17 +47,11 @@ public:
     {
         ASSERT(m_ref_count);
         if (!--m_ref_count) {
-            if (m_next_sibling)
-                m_next_sibling->m_previous_sibling = m_previous_sibling;
-            if (m_previous_sibling)
-                m_previous_sibling->m_next_sibling = m_next_sibling;
-            T* next_child;
-            for (auto* child = m_first_child; child; child = next_child) {
-                next_child = child->m_next_sibling;
-                child->m_parent = nullptr;
-                child->unref();
-            }
-            delete static_cast<T*>(this);
+            if constexpr (IsBaseOf<DOM::Node, T>::value)
+                static_cast<T*>(this)->removed_last_ref();
+            else
+                delete static_cast<T*>(this);
+            return;
         }
     }
     int ref_count() const { return m_ref_count; }
