@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -174,6 +175,16 @@ bool copy_directory(String src_path, String dst_path)
         perror("cp: mkdir");
         return false;
     }
+
+    String src_rp = Core::File::real_path_for(src_path);
+    String dst_rp = Core::File::real_path_for(dst_path);
+
+    if (!dst_rp.is_empty() && dst_rp.starts_with(src_rp)) {
+        fprintf(stderr, "cp: Cannot copy %s into itself (%s)\n",
+            src_path.characters(), dst_path.characters());
+        return false;
+    }
+
     Core::DirIterator di(src_path, Core::DirIterator::SkipDots);
     if (di.has_error()) {
         fprintf(stderr, "cp: DirIterator: %s\n", di.error_string());
