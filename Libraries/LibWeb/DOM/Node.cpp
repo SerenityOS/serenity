@@ -206,4 +206,13 @@ Bindings::EventTargetWrapper* Node::create_wrapper(JS::GlobalObject& global_obje
     return wrap(global_object, *this);
 }
 
+void Node::removed_last_ref()
+{
+    if (is<Document>(*this)) {
+        downcast<Document>(*this).removed_last_ref();
+        return;
+    }
+    delete this;
+}
+
 }
