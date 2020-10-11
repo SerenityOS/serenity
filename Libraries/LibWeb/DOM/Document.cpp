@@ -108,21 +108,6 @@ bool Document::is_child_allowed(const Node& node) const
     }
 }
 
-void Document::fixup()
-{
-    if (!first_child() || !is<DocumentType>(*first_child()))
-        prepend_child(adopt(*new DocumentType(*this)));
-
-    if (is<HTML::HTMLHtmlElement>(first_child()->next_sibling()))
-        return;
-
-    auto body = create_element("body");
-    auto html = create_element("html");
-    html->append_child(body);
-    this->donate_all_children_to(body);
-    this->append_child(html);
-}
-
 const Element* Document::document_element() const
 {
     return first_child_of_type<Element>();
