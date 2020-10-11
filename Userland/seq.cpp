@@ -30,12 +30,26 @@
 #include <string.h>
 #include <unistd.h>
 
+const char* g_usage = R"(Usage:
+    seq [-h|--help]
+    seq LAST
+    seq FIRST LAST
+    seq FIRST INCREMENT LAST
+)";
+
+static void print_usage(FILE* stream)
+{
+    fprintf(stream, g_usage);
+    return;
+}
+
 static double get_double(const char* name, const char* d_string, int* number_of_decimals)
 {
     char* end;
     double d = strtod(d_string, &end);
     if (d == 0 && end == d_string) {
-        fprintf(stderr, "%s: invalid double value \"%s\"\n", name, d_string);
+        fprintf(stderr, "%s: invalid argument \"%s\"\n", name, d_string);
+        print_usage(stderr);
         exit(1);
     }
     if (char* dot = strchr(d_string, '.'))
@@ -56,6 +70,13 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+            print_usage(stdout);
+            exit(0);
+        }
+    }
+
     double start = 1, step = 1, end = 1;
     int number_of_start_decimals = 0, number_of_step_decimals = 0, number_of_end_decimals = 0;
     switch (argc) {
@@ -73,6 +94,7 @@ int main(int argc, const char* argv[])
         break;
     default:
         fprintf(stderr, "%s: unexpected number of arguments\n", argv[0]);
+        print_usage(stderr);
         return 1;
     }
 
