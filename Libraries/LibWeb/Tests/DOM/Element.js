@@ -21,4 +21,19 @@ afterInitialPageLoad(() => {
 how this text
 is interpreted below.  `);
     });
+
+    test("Element.namespaceURI basics", () => {
+        const htmlNamespace = "http://www.w3.org/1999/xhtml";
+        const p = document.getElementsByTagName("p")[0];
+        expect(p.namespaceURI).toBe(htmlNamespace);
+
+        // createElement always sets the namespace to the HTML namespace in HTML documents.
+        const svgElement = document.createElement("svg");
+        expect(svgElement.namespaceURI).toBe(htmlNamespace);
+
+        const svgNamespace = "http://www.w3.org/2000/svg";
+        p.innerHTML = "<svg></svg>";
+        const domSVGElement = p.getElementsByTagName("svg")[0];
+        expect(domSVGElement.namespaceURI).toBe(svgNamespace);
+    });
 });

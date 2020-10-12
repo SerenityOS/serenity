@@ -35,6 +35,7 @@ ListOfActiveFormattingElements::~ListOfActiveFormattingElements()
 
 void ListOfActiveFormattingElements::add(DOM::Element& element)
 {
+    // FIXME: Implement the Noah's Ark clause https://html.spec.whatwg.org/multipage/parsing.html#push-onto-the-list-of-active-formatting-elements
     m_entries.append({ element });
 }
 
