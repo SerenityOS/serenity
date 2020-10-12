@@ -244,13 +244,13 @@ struct StringListArgument {
 };
 
 struct SC_mmap_params {
-    uint32_t addr;
-    uint32_t size;
-    uint32_t alignment;
+    uintptr_t addr;
+    size_t size;
+    size_t alignment;
     int32_t prot;
     int32_t flags;
     int32_t fd;
-    int32_t offset; // FIXME: 64-bit off_t?
+    ssize_t offset;
     StringArgument name;
 };
 
@@ -435,9 +435,9 @@ struct SC_ptrace_peek_params {
 void initialize();
 int sync();
 
-inline u32 invoke(Function function)
+inline uintptr_t invoke(Function function)
 {
-    u32 result;
+    uintptr_t result;
     asm volatile("int $0x82"
                  : "=a"(result)
                  : "a"(function)
@@ -446,34 +446,34 @@ inline u32 invoke(Function function)
 }
 
 template<typename T1>
-inline u32 invoke(Function function, T1 arg1)
+inline uintptr_t invoke(Function function, T1 arg1)
 {
-    u32 result;
+    uintptr_t result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((u32)arg1)
+                 : "a"(function), "d"((uintptr_t)arg1)
                  : "memory");
     return result;
 }
 
 template<typename T1, typename T2>
-inline u32 invoke(Function function, T1 arg1, T2 arg2)
+inline uintptr_t invoke(Function function, T1 arg1, T2 arg2)
 {
-    u32 result;
+    uintptr_t result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((u32)arg1), "c"((u32)arg2)
+                 : "a"(function), "d"((uintptr_t)arg1), "c"((uintptr_t)arg2)
                  : "memory");
     return result;
 }
 
 template<typename T1, typename T2, typename T3>
-inline u32 invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
+inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 {
-    u32 result;
+    uintptr_t result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((u32)arg1), "c"((u32)arg2), "b"((u32)arg3)
+                 : "a"(function), "d"((uintptr_t)arg1), "c"((uintptr_t)arg2), "b"((uintptr_t)arg3)
                  : "memory");
     return result;
 }

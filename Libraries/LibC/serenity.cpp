@@ -93,7 +93,7 @@ int perf_event(int type, uintptr_t arg1, FlatPtr arg2)
 
 void* shbuf_get(int shbuf_id, size_t* size)
 {
-    int rc = syscall(SC_shbuf_get, shbuf_id, size);
+    ssize_t rc = syscall(SC_shbuf_get, shbuf_id, size);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
         return (void*)-1;

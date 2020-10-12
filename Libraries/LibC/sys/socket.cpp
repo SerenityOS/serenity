@@ -103,7 +103,7 @@ ssize_t recvfrom(int sockfd, void* buffer, size_t buffer_length, int flags, stru
 
     sockaddr_storage internal_addr;
     iovec iov = { buffer, buffer_length };
-    msghdr msg = { addr ? &internal_addr : nullptr, addr ? sizeof(internal_addr) : 0, &iov, 1, nullptr, 0, 0 };
+    msghdr msg = { addr ? &internal_addr : nullptr, addr ? (socklen_t)sizeof(internal_addr) : 0, &iov, 1, nullptr, 0, 0 };
     ssize_t rc = recvmsg(sockfd, &msg, flags);
     if (rc >= 0 && addr) {
         memcpy(addr, &internal_addr, min(*addr_length, msg.msg_namelen));
