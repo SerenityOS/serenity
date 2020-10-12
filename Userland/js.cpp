@@ -280,6 +280,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         printf("\033[34;1m");
     if (value.is_string())
         putchar('"');
+    else if (value.is_negative_zero())
+        putchar('-');
     printf("%s", value.to_string_without_side_effects().characters());
     if (value.is_string())
         putchar('"');
