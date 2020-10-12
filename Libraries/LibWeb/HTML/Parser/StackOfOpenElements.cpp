@@ -127,7 +127,7 @@ DOM::Element* StackOfOpenElements::topmost_special_node_below(const DOM::Element
         auto& element = m_elements[i];
         if (&element == &formatting_element)
             break;
-        if (HTMLDocumentParser::is_special_tag(element.local_name()))
+        if (HTMLDocumentParser::is_special_tag(element.local_name(), element.namespace_()))
             found_element = &element;
     }
     return found_element;
