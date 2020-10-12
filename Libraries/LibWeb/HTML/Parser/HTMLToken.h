@@ -132,6 +132,20 @@ public:
         return {};
     }
 
+    bool has_attribute(const FlyString& attribute_name)
+    {
+        return !attribute(attribute_name).is_null();
+    }
+
+    void adjust_tag_name(const FlyString& old_name, const FlyString& new_name)
+    {
+        ASSERT(is_start_tag() || is_end_tag());
+        if (old_name == m_tag.tag_name.string_view()) {
+            m_tag.tag_name.clear();
+            m_tag.tag_name.append(new_name);
+        }
+    }
+
     void adjust_attribute_name(const FlyString& old_name, const FlyString& new_name)
     {
         ASSERT(is_start_tag() || is_end_tag());

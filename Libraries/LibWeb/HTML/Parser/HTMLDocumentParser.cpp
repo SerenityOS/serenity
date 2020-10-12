@@ -41,6 +41,7 @@
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/SVG/TagNames.h>
 
 namespace Web::HTML {
 
@@ -144,7 +145,18 @@ void HTMLDocumentParser::run(const URL& url)
 #ifdef PARSER_DEBUG
         dbg() << "[" << insertion_mode_name() << "] " << token.to_string();
 #endif
-        process_using_the_rules_for(m_insertion_mode, token);
+        // FIXME: If the adjusted current node is a MathML text integration point and the token is a start tag whose tag name is neither "mglyph" nor "malignmark"
+        // FIXME: If the adjusted current node is a MathML text integration point and the token is a character token
+        // FIXME: If the adjusted current node is a MathML annotation-xml element and the token is a start tag whose tag name is "svg"
+        // FIXME: If the adjusted current node is an HTML integration point and the token is a start tag
+        // FIXME: If the adjusted current node is an HTML integration point and the token is a character token
+        if (m_stack_of_open_elements.is_empty()
+            || adjusted_current_node().namespace_() == Namespace::HTML
+            || token.is_end_of_file()) {
+            process_using_the_rules_for(m_insertion_mode, token);
+        } else {
+            process_using_the_rules_for_foreign_content(token);
+        }
 
         if (m_stop_parsing) {
 #ifdef PARSER_DEBUG
@@ -386,6 +398,14 @@ AnythingElse:
 DOM::Element& HTMLDocumentParser::current_node()
 {
     return m_stack_of_open_elements.current_node();
+}
+
+DOM::Element& HTMLDocumentParser::adjusted_current_node()
+{
+    if (m_parsing_fragment && m_stack_of_open_elements.elements().size() == 1)
+        return *m_context_element;
+
+    return current_node();
 }
 
 DOM::Element& HTMLDocumentParser::node_before_current_node()
@@ -965,91 +985,102 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
     TODO();
 }
 
-bool HTMLDocumentParser::is_special_tag(const FlyString& tag_name)
+bool HTMLDocumentParser::is_special_tag(const FlyString& tag_name, const FlyString& namespace_)
 {
-    return tag_name.is_one_of(
-        HTML::TagNames::address,
-        HTML::TagNames::applet,
-        HTML::TagNames::area,
-        HTML::TagNames::article,
-        HTML::TagNames::aside,
-        HTML::TagNames::base,
-        HTML::TagNames::basefont,
-        HTML::TagNames::bgsound,
-        HTML::TagNames::blockquote,
-        HTML::TagNames::body,
-        HTML::TagNames::br,
-        HTML::TagNames::button,
-        HTML::TagNames::caption,
-        HTML::TagNames::center,
-        HTML::TagNames::col,
-        HTML::TagNames::colgroup,
-        HTML::TagNames::dd,
-        HTML::TagNames::details,
-        HTML::TagNames::dir,
-        HTML::TagNames::div,
-        HTML::TagNames::dl,
-        HTML::TagNames::dt,
-        HTML::TagNames::embed,
-        HTML::TagNames::fieldset,
-        HTML::TagNames::figcaption,
-        HTML::TagNames::figure,
-        HTML::TagNames::footer,
-        HTML::TagNames::form,
-        HTML::TagNames::frame,
-        HTML::TagNames::frameset,
-        HTML::TagNames::h1,
-        HTML::TagNames::h2,
-        HTML::TagNames::h3,
-        HTML::TagNames::h4,
-        HTML::TagNames::h5,
-        HTML::TagNames::h6,
-        HTML::TagNames::head,
-        HTML::TagNames::header,
-        HTML::TagNames::hgroup,
-        HTML::TagNames::hr,
-        HTML::TagNames::html,
-        HTML::TagNames::iframe,
-        HTML::TagNames::img,
-        HTML::TagNames::input,
-        HTML::TagNames::keygen,
-        HTML::TagNames::li,
-        HTML::TagNames::link,
-        HTML::TagNames::listing,
-        HTML::TagNames::main,
-        HTML::TagNames::marquee,
-        HTML::TagNames::menu,
-        HTML::TagNames::meta,
-        HTML::TagNames::nav,
-        HTML::TagNames::noembed,
-        HTML::TagNames::noframes,
-        HTML::TagNames::noscript,
-        HTML::TagNames::object,
-        HTML::TagNames::ol,
-        HTML::TagNames::p,
-        HTML::TagNames::param,
-        HTML::TagNames::plaintext,
-        HTML::TagNames::pre,
-        HTML::TagNames::script,
-        HTML::TagNames::section,
-        HTML::TagNames::select,
-        HTML::TagNames::source,
-        HTML::TagNames::style,
-        HTML::TagNames::summary,
-        HTML::TagNames::table,
-        HTML::TagNames::tbody,
-        HTML::TagNames::td,
-        HTML::TagNames::template_,
-        HTML::TagNames::textarea,
-        HTML::TagNames::tfoot,
-        HTML::TagNames::th,
-        HTML::TagNames::thead,
-        HTML::TagNames::title,
-        HTML::TagNames::tr,
-        HTML::TagNames::track,
-        HTML::TagNames::ul,
-        HTML::TagNames::wbr,
-        HTML::TagNames::xmp);
+    if (namespace_ == Namespace::HTML) {
+        return tag_name.is_one_of(
+            HTML::TagNames::address,
+            HTML::TagNames::applet,
+            HTML::TagNames::area,
+            HTML::TagNames::article,
+            HTML::TagNames::aside,
+            HTML::TagNames::base,
+            HTML::TagNames::basefont,
+            HTML::TagNames::bgsound,
+            HTML::TagNames::blockquote,
+            HTML::TagNames::body,
+            HTML::TagNames::br,
+            HTML::TagNames::button,
+            HTML::TagNames::caption,
+            HTML::TagNames::center,
+            HTML::TagNames::col,
+            HTML::TagNames::colgroup,
+            HTML::TagNames::dd,
+            HTML::TagNames::details,
+            HTML::TagNames::dir,
+            HTML::TagNames::div,
+            HTML::TagNames::dl,
+            HTML::TagNames::dt,
+            HTML::TagNames::embed,
+            HTML::TagNames::fieldset,
+            HTML::TagNames::figcaption,
+            HTML::TagNames::figure,
+            HTML::TagNames::footer,
+            HTML::TagNames::form,
+            HTML::TagNames::frame,
+            HTML::TagNames::frameset,
+            HTML::TagNames::h1,
+            HTML::TagNames::h2,
+            HTML::TagNames::h3,
+            HTML::TagNames::h4,
+            HTML::TagNames::h5,
+            HTML::TagNames::h6,
+            HTML::TagNames::head,
+            HTML::TagNames::header,
+            HTML::TagNames::hgroup,
+            HTML::TagNames::hr,
+            HTML::TagNames::html,
+            HTML::TagNames::iframe,
+            HTML::TagNames::img,
+            HTML::TagNames::input,
+            HTML::TagNames::keygen,
+            HTML::TagNames::li,
+            HTML::TagNames::link,
+            HTML::TagNames::listing,
+            HTML::TagNames::main,
+            HTML::TagNames::marquee,
+            HTML::TagNames::menu,
+            HTML::TagNames::meta,
+            HTML::TagNames::nav,
+            HTML::TagNames::noembed,
+            HTML::TagNames::noframes,
+            HTML::TagNames::noscript,
+            HTML::TagNames::object,
+            HTML::TagNames::ol,
+            HTML::TagNames::p,
+            HTML::TagNames::param,
+            HTML::TagNames::plaintext,
+            HTML::TagNames::pre,
+            HTML::TagNames::script,
+            HTML::TagNames::section,
+            HTML::TagNames::select,
+            HTML::TagNames::source,
+            HTML::TagNames::style,
+            HTML::TagNames::summary,
+            HTML::TagNames::table,
+            HTML::TagNames::tbody,
+            HTML::TagNames::td,
+            HTML::TagNames::template_,
+            HTML::TagNames::textarea,
+            HTML::TagNames::tfoot,
+            HTML::TagNames::th,
+            HTML::TagNames::thead,
+            HTML::TagNames::title,
+            HTML::TagNames::tr,
+            HTML::TagNames::track,
+            HTML::TagNames::ul,
+            HTML::TagNames::wbr,
+            HTML::TagNames::xmp);
+    } else if (namespace_ == Namespace::SVG) {
+        return tag_name.is_one_of(
+            SVG::TagNames::desc,
+            SVG::TagNames::foreignObject,
+            SVG::TagNames::title);
+    } else if (namespace_ == Namespace::MathML) {
+        TODO();
+    }
+
+    return false;
 }
 
 void HTMLDocumentParser::handle_in_body(HTMLToken& token)
@@ -1252,7 +1283,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
                 break;
             }
 
-            if (is_special_tag(node->local_name()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
+            if (is_special_tag(node->local_name(), node->namespace_()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
         }
 
@@ -1283,7 +1314,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
                 m_stack_of_open_elements.pop_until_an_element_with_tag_name_has_been_popped(HTML::TagNames::dt);
                 break;
             }
-            if (is_special_tag(node->local_name()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
+            if (is_special_tag(node->local_name(), node->namespace_()) && !node->local_name().is_one_of(HTML::TagNames::address, HTML::TagNames::div, HTML::TagNames::p))
                 break;
         }
         if (m_stack_of_open_elements.has_in_button_scope(HTML::TagNames::p))
@@ -1693,7 +1724,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
                 m_stack_of_open_elements.pop();
                 break;
             }
-            if (is_special_tag(node->local_name())) {
+            if (is_special_tag(node->local_name(), node->namespace_())) {
                 PARSE_ERROR();
                 return;
             }
@@ -1705,6 +1736,44 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
 void HTMLDocumentParser::adjust_mathml_attributes(HTMLToken& token)
 {
     token.adjust_attribute_name("definitionurl", "definitionURL");
+}
+
+void HTMLDocumentParser::adjust_svg_tag_names(HTMLToken& token)
+{
+    token.adjust_tag_name("altglyph", "altGlyph");
+    token.adjust_tag_name("altglyphdef", "altGlyphDef");
+    token.adjust_tag_name("altglyphitem", "altGlyphItem");
+    token.adjust_tag_name("animatecolor", "animateColor");
+    token.adjust_tag_name("animatemotion", "animateMotion");
+    token.adjust_tag_name("animatetransform", "animateTransform");
+    token.adjust_tag_name("clippath", "clipPath");
+    token.adjust_tag_name("feblend", "feBlend");
+    token.adjust_tag_name("fecolormatrix", "feColorMatrix");
+    token.adjust_tag_name("fecomponenttransfer", "feComponentTransfer");
+    token.adjust_tag_name("fecomposite", "feComposite");
+    token.adjust_tag_name("feconvolvematrix", "feConvolveMatrix");
+    token.adjust_tag_name("fediffuselighting", "feDiffuseLighting");
+    token.adjust_tag_name("fedisplacementmap", "feDisplacementMap");
+    token.adjust_tag_name("fedistantlight", "feDistantLight");
+    token.adjust_tag_name("fedropshadow", "feDropShadow");
+    token.adjust_tag_name("feflood", "feFlood");
+    token.adjust_tag_name("fefunca", "feFuncA");
+    token.adjust_tag_name("fefuncb", "feFuncB");
+    token.adjust_tag_name("fefuncg", "feFuncG");
+    token.adjust_tag_name("fefuncr", "feFuncR");
+    token.adjust_tag_name("fegaussianblur", "feGaussianBlur");
+    token.adjust_tag_name("feimage", "feImage");
+    token.adjust_tag_name("femerge", "feMerge");
+    token.adjust_tag_name("femergenode", "feMergeNode");
+    token.adjust_tag_name("femorphology", "feMorphology");
+    token.adjust_tag_name("feoffset", "feOffset");
+    token.adjust_tag_name("fepointlight", "fePointLight");
+    token.adjust_tag_name("fespecularlighting", "feSpecularLighting");
+    token.adjust_tag_name("fespotlight", "feSpotlight");
+    token.adjust_tag_name("glyphref", "glyphRef");
+    token.adjust_tag_name("lineargradient", "linearGradient");
+    token.adjust_tag_name("radialgradient", "radialGradient");
+    token.adjust_tag_name("textpath", "textPath");
 }
 
 void HTMLDocumentParser::adjust_svg_attributes(HTMLToken& token)
@@ -1768,24 +1837,22 @@ void HTMLDocumentParser::adjust_svg_attributes(HTMLToken& token)
     token.adjust_attribute_name("ychannelselector", "yChannelSelector");
     token.adjust_attribute_name("zoomandpan", "zoomAndPan");
 }
+
 void HTMLDocumentParser::adjust_foreign_attributes(HTMLToken& token)
 {
-    auto xlink_namespace = "http://www.w3.org/1999/xlink";
-    token.adjust_foreign_attribute("xlink:actuate", "xlink", "actuate", xlink_namespace);
-    token.adjust_foreign_attribute("xlink:arcrole", "xlink", "arcrole", xlink_namespace);
-    token.adjust_foreign_attribute("xlink:href", "xlink", "href", xlink_namespace);
-    token.adjust_foreign_attribute("xlink:role", "xlink", "role", xlink_namespace);
-    token.adjust_foreign_attribute("xlink:show", "xlink", "show", xlink_namespace);
-    token.adjust_foreign_attribute("xlink:title", "xlink", "title", xlink_namespace);
-    token.adjust_foreign_attribute("xlink:type", "xlink", "type", xlink_namespace);
+    token.adjust_foreign_attribute("xlink:actuate", "xlink", "actuate", Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:arcrole", "xlink", "arcrole", Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:href", "xlink", "href", Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:role", "xlink", "role", Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:show", "xlink", "show", Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:title", "xlink", "title", Namespace::XLink);
+    token.adjust_foreign_attribute("xlink:type", "xlink", "type", Namespace::XLink);
 
-    auto xml_namespace = "http://www.w3.org/XML/1998/namespace";
-    token.adjust_foreign_attribute("xml:lang", "xml", "lang", xml_namespace);
-    token.adjust_foreign_attribute("xml:space", "xml", "space", xml_namespace);
+    token.adjust_foreign_attribute("xml:lang", "xml", "lang", Namespace::XML);
+    token.adjust_foreign_attribute("xml:space", "xml", "space", Namespace::XML);
 
-    auto xmlns_namespace = "http://www.w3.org/2000/xmlns/";
-    token.adjust_foreign_attribute("xmlns", "", "xmlns", xmlns_namespace);
-    token.adjust_foreign_attribute("xmlns:xlink", "xmlns", "xlink", xmlns_namespace);
+    token.adjust_foreign_attribute("xmlns", "", "xmlns", Namespace::XMLNS);
+    token.adjust_foreign_attribute("xmlns:xlink", "xmlns", "xlink", Namespace::XMLNS);
 }
 
 void HTMLDocumentParser::increment_script_nesting_level()
@@ -2704,6 +2771,98 @@ void HTMLDocumentParser::handle_after_after_frameset(HTMLToken& token)
     }
 
     PARSE_ERROR();
+}
+
+void HTMLDocumentParser::process_using_the_rules_for_foreign_content(HTMLToken& token)
+{
+    if (token.is_character()) {
+        if (token.code_point() == 0) {
+            PARSE_ERROR();
+            insert_character(0xFFFD);
+            return;
+        }
+        if (token.is_parser_whitespace()) {
+            insert_character(token.code_point());
+            return;
+        }
+        insert_character(token.code_point());
+        m_frameset_ok = false;
+        return;
+    }
+
+    if (token.is_comment()) {
+        insert_comment(token);
+        return;
+    }
+
+    if (token.is_doctype()) {
+        PARSE_ERROR();
+        return;
+    }
+
+    if ((token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::b, HTML::TagNames::big, HTML::TagNames::blockquote, HTML::TagNames::body, HTML::TagNames::br, HTML::TagNames::center, HTML::TagNames::code, HTML::TagNames::dd, HTML::TagNames::div, HTML::TagNames::dl, HTML::TagNames::dt, HTML::TagNames::em, HTML::TagNames::embed, HTML::TagNames::h1, HTML::TagNames::h2, HTML::TagNames::h3, HTML::TagNames::h4, HTML::TagNames::h5, HTML::TagNames::h6, HTML::TagNames::head, HTML::TagNames::hr, HTML::TagNames::i, HTML::TagNames::img, HTML::TagNames::li, HTML::TagNames::listing, HTML::TagNames::menu, HTML::TagNames::meta, HTML::TagNames::nobr, HTML::TagNames::ol, HTML::TagNames::p, HTML::TagNames::pre, HTML::TagNames::ruby, HTML::TagNames::s, HTML::TagNames::small, HTML::TagNames::span, HTML::TagNames::strong, HTML::TagNames::strike, HTML::TagNames::sub, HTML::TagNames::sup, HTML::TagNames::table, HTML::TagNames::tt, HTML::TagNames::u, HTML::TagNames::ul, HTML::TagNames::var))
+        || (token.is_start_tag() && token.tag_name() == HTML::TagNames::font && (token.has_attribute(HTML::AttributeNames::color) || token.has_attribute(HTML::AttributeNames::face) || token.has_attribute(HTML::AttributeNames::size)))) {
+        PARSE_ERROR();
+        if (m_parsing_fragment) {
+            goto AnyOtherStartTag;
+        }
+
+        TODO();
+    }
+
+    if (token.is_start_tag()) {
+    AnyOtherStartTag:
+        if (adjusted_current_node().namespace_() == Namespace::MathML) {
+            adjust_mathml_attributes(token);
+        } else if (adjusted_current_node().namespace_() == Namespace::SVG) {
+            adjust_svg_tag_names(token);
+            adjust_svg_attributes(token);
+        }
+
+        adjust_foreign_attributes(token);
+        insert_foreign_element(token, adjusted_current_node().namespace_());
+
+        if (token.is_self_closing()) {
+            if (token.tag_name() == SVG::TagNames::script && current_node().namespace_() == Namespace::SVG) {
+                token.acknowledge_self_closing_flag_if_set();
+                goto ScriptEndTag;
+            }
+
+            m_stack_of_open_elements.pop();
+            token.acknowledge_self_closing_flag_if_set();
+        }
+
+        return;
+    }
+
+    if (token.is_end_tag() && current_node().namespace_() == Namespace::SVG && current_node().tag_name() == SVG::TagNames::script) {
+    ScriptEndTag:
+        m_stack_of_open_elements.pop();
+        TODO();
+    }
+
+    if (token.is_end_tag()) {
+        auto& node = current_node();
+        // FIXME: Not sure if this is the correct to_lowercase, as the specification says "to ASCII lowercase"
+        if (node.tag_name().to_lowercase() != token.tag_name())
+            PARSE_ERROR();
+        while (true) {
+            if (&node == &m_stack_of_open_elements.first()) {
+                ASSERT(m_parsing_fragment);
+                return;
+            }
+            // FIXME: See the above FIXME
+            if (node.tag_name().to_lowercase() == token.tag_name()) {
+                while (&current_node() != &node)
+                    m_stack_of_open_elements.pop();
+                m_stack_of_open_elements.pop();
+                return;
+            }
+            TODO();
+        }
+    }
+
+    ASSERT_NOT_REACHED();
 }
 
 void HTMLDocumentParser::reset_the_insertion_mode_appropriately()

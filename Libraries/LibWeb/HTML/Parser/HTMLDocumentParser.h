@@ -81,7 +81,7 @@ public:
 
     InsertionMode insertion_mode() const { return m_insertion_mode; }
 
-    static bool is_special_tag(const FlyString& tag_name);
+    static bool is_special_tag(const FlyString& tag_name, const FlyString& namespace_);
 
 private:
     const char* insertion_mode_name() const;
@@ -131,12 +131,14 @@ private:
     RefPtr<DOM::Element> insert_foreign_element(const HTMLToken&, const FlyString&);
     RefPtr<DOM::Element> insert_html_element(const HTMLToken&);
     DOM::Element& current_node();
+    DOM::Element& adjusted_current_node();
     DOM::Element& node_before_current_node();
     void insert_character(u32 data);
     void insert_comment(HTMLToken&);
     void reconstruct_the_active_formatting_elements();
     void close_a_p_element();
     void process_using_the_rules_for(InsertionMode, HTMLToken&);
+    void process_using_the_rules_for_foreign_content(HTMLToken&);
     void parse_generic_raw_text_element(HTMLToken&);
     void increment_script_nesting_level();
     void decrement_script_nesting_level();
@@ -144,6 +146,7 @@ private:
     void reset_the_insertion_mode_appropriately();
 
     void adjust_mathml_attributes(HTMLToken&);
+    void adjust_svg_tag_names(HTMLToken&);
     void adjust_svg_attributes(HTMLToken&);
     void adjust_foreign_attributes(HTMLToken&);
 

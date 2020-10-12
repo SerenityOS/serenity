@@ -46,6 +46,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(checked)         \
     __ENUMERATE_HTML_ATTRIBUTE(cite)            \
     __ENUMERATE_HTML_ATTRIBUTE(class_)          \
+    __ENUMERATE_HTML_ATTRIBUTE(color)           \
     __ENUMERATE_HTML_ATTRIBUTE(cols)            \
     __ENUMERATE_HTML_ATTRIBUTE(colspan)         \
     __ENUMERATE_HTML_ATTRIBUTE(content)         \
@@ -57,6 +58,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(defer)           \
     __ENUMERATE_HTML_ATTRIBUTE(direction)       \
     __ENUMERATE_HTML_ATTRIBUTE(dirname)         \
+    __ENUMERATE_HTML_ATTRIBUTE(face)            \
     __ENUMERATE_HTML_ATTRIBUTE(for_)            \
     __ENUMERATE_HTML_ATTRIBUTE(frameborder)     \
     __ENUMERATE_HTML_ATTRIBUTE(headers)         \
