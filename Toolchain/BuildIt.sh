@@ -58,8 +58,8 @@ echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
-BINUTILS_VERSION="2.33.1"
-BINUTILS_MD5SUM="1a6b16bcc926e312633fcc3fae14ba0a"
+BINUTILS_VERSION="2.35.1"
+BINUTILS_MD5SUM="bca600eea3b8fc33ad3265c9c1eee8d4"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="http://ftp.gnu.org/gnu/binutils"
@@ -206,12 +206,12 @@ pushd "$DIR/Build/"
 
     pushd binutils
         echo "XXX configure binutils"
-        "$DIR"/Tarballs/binutils-2.33.1/configure --prefix="$PREFIX" \
-                                                --target="$TARGET" \
-                                                --with-sysroot="$SYSROOT" \
-                                                --enable-shared \
-                                                --disable-nls \
-                                                ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+        "$DIR"/Tarballs/$BINUTILS_NAME/configure --prefix="$PREFIX" \
+                                                 --target="$TARGET" \
+                                                 --with-sysroot="$SYSROOT" \
+                                                 --enable-shared \
+                                                 --disable-nls \
+                                                 ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
         if [ "$(uname)" = "Darwin" ]; then
             # under macOS generated makefiles are not resolving the "intl"
             # dependency properly to allow linking its own copy of
