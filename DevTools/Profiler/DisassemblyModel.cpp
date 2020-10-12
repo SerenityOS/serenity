@@ -167,11 +167,11 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
             return insn.event_count;
         }
         if (index.column() == Column::Address)
-            return String::format("%#08x", insn.address);
+            return String::formatted("{:p}", insn.address);
         if (index.column() == Column::InstructionBytes) {
             StringBuilder builder;
             for (auto ch : insn.bytes) {
-                builder.appendf("%02x ", (u8)ch);
+                builder.appendff("{:02x} ", (u8)ch);
             }
             return builder.to_string();
         }
