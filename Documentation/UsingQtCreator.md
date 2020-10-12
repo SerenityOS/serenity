@@ -15,7 +15,7 @@ First, make sure you have a working toolchain and can build and run SerenityOS. 
 * Edit the `serenity.config` file (In Qt Creator, hit ^K or CMD+K on a Mac to open the search dialog, type the name of the file and hit return to open it)
 * Add the following `#define`s to the file: `DEBUG`, `SANITIZE_PTRS`, and `KERNEL`. Depending on what you are working on, you need to have that last define commented out. If you're planning on working in the userland, comment out `#define KERNEL`. If you're working on the Kernel, then uncomment `#define KERNEL`.
 * Edit the `serenity.cxxflags` file to say `-std=c++2a -m32`
-* Edit the `serenity.includes` file, add the following lines: `.`, `..`, `../..`, `Services/`, `Libraries/`, `Libraries/LibC/`, `Libraries/LibPthread/`, `Libraries/LibM/`, `Toolchain/Local/i686-pc-serenity/include/c++/10.1.0`, `Build/Services/`, `Build/Libraries/`, `AK/`
+* Edit the `serenity.includes` file, add the following lines: `.`, `..`, `../..`, `Services/`, `Libraries/`, `Libraries/LibC/`, `Libraries/LibPthread/`, `Libraries/LibM/`, `Toolchain/Local/i686-pc-serenity/include/c++/10.2.0`, `Build/Services/`, `Build/Libraries/`, `AK/`
 
 Qt Creator should be set up correctly now, go ahead and explore the project and try making changes. Have fun! :^)
 

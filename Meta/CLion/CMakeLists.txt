@@ -26,7 +26,7 @@ set(INCLUDE_DIRS
     "serenity/Libraries/LibPthread"
     "serenity/Libraries/LibM"
     "serenity/Services"
-    "serenity/Toolchain/Local/i686-pc-serenity/include/c++/10.1.0"
+    "serenity/Toolchain/Local/i686-pc-serenity/include/c++/10.2.0"
     "serenity/Build/Services"
     "serenity/Build/Libraries")
 
