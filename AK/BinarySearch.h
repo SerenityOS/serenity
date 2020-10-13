@@ -33,13 +33,13 @@
 namespace AK {
 
 template<typename T>
-int integral_compare(const typename RemoveConst<T>::Type& a, const typename RemoveConst<T>::Type& b)
+constexpr int integral_compare(const typename RemoveConst<T>::Type& a, const typename RemoveConst<T>::Type& b)
 {
     return a - b;
 }
 
 template<typename T, typename Compare>
-T* binary_search(Span<T> haystack, const typename RemoveConst<T>::Type& needle, Compare compare = integral_compare, size_t* nearby_index = nullptr)
+constexpr T* binary_search(Span<T> haystack, const typename RemoveConst<T>::Type& needle, Compare compare = integral_compare, size_t* nearby_index = nullptr)
 {
     if (haystack.size() == 0) {
         if (nearby_index)
