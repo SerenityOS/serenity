@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Array.h>
 #include <AK/Base64.h>
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
@@ -34,24 +35,37 @@
 
 namespace AK {
 
-static constexpr u8 s_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-static u8 s_table[256] = {};
-static bool s_initialized = false;
-
-static void build_lookup_table_if_needed()
+static constexpr auto make_alphabet()
 {
-    if (s_initialized)
-        return;
-    for (size_t i = 0; i < sizeof(s_alphabet) - 1; ++i)
-        s_table[s_alphabet[i]] = i;
-    s_initialized = true;
+    // clang-format off
+    Array alphabet = {
+      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+      'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+      'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+      'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+      'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+      'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+      'w', 'x', 'y', 'z', '0', '1', '2', '3',
+      '4', '5', '6', '7', '8', '9', '+', '/'
+    };
+    // clang-format on
+    return alphabet;
+}
+
+static constexpr auto make_lookup_table()
+{
+    constexpr auto alphabet = make_alphabet();
+    Array<u8, 256> table {};
+    for (size_t i = 0; i < alphabet.size() - 1; ++i) {
+        table[alphabet[i]] = i;
+    }
+    return table;
 }
 
 ByteBuffer decode_base64(const StringView& input)
 {
-    build_lookup_table_if_needed();
-
     auto get = [&](size_t offset, bool* is_padding = nullptr) -> u8 {
+        constexpr auto table = make_lookup_table();
         if (offset >= input.length())
             return 0;
         if (input[offset] == '=') {
@@ -59,7 +73,7 @@ ByteBuffer decode_base64(const StringView& input)
                 *is_padding = true;
             return 0;
         }
-        return s_table[(u8)input[offset]];
+        return table[input[offset]];
     };
 
     Vector<u8> output;
@@ -89,6 +103,7 @@ ByteBuffer decode_base64(const StringView& input)
 
 String encode_base64(ReadonlyBytes input)
 {
+    constexpr auto alphabet = make_alphabet();
     StringBuilder output;
 
     auto get = [&](size_t offset, bool* need_padding = nullptr) -> u8 {
@@ -113,10 +128,10 @@ String encode_base64(ReadonlyBytes input)
         u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
         u8 index3 = in2 & 0x3f;
 
-        u8 out0 = s_alphabet[index0];
-        u8 out1 = s_alphabet[index1];
-        u8 out2 = is_16bit ? '=' : s_alphabet[index2];
-        u8 out3 = is_8bit ? '=' : s_alphabet[index3];
+        u8 out0 = alphabet[index0];
+        u8 out1 = alphabet[index1];
+        u8 out2 = is_16bit ? '=' : alphabet[index2];
+        u8 out3 = is_8bit ? '=' : alphabet[index3];
 
         output.append(out0);
         output.append(out1);
