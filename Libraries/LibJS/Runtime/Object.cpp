@@ -472,6 +472,15 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
             attributes.set_has_setter();
     }
 
+    // NOTE: We disable transitions during initialize(), this makes building common runtime objects significantly faster.
+    //       Transitions are primarily interesting when scripts add properties to objects.
+    if (!m_transitions_enabled && !m_shape->is_unique()) {
+        m_shape->add_property_without_transition(property_name, attributes);
+        m_storage.resize(m_shape->property_count());
+        m_storage[m_shape->property_count() - 1] = value;
+        return true;
+    }
+
     auto metadata = shape().lookup(property_name);
     bool new_property = !metadata.has_value();
 
