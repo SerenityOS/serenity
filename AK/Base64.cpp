@@ -62,9 +62,19 @@ static constexpr auto make_lookup_table()
     return table;
 }
 
+size_t calculate_base64_decoded_length(const StringView& input)
+{
+    return input.length() * 3 / 4;
+}
+
+size_t calculate_base64_encoded_length(ReadonlyBytes input)
+{
+    return ((4 * input.size() / 3) + 3) & ~3;
+}
+
 ByteBuffer decode_base64(const StringView& input)
 {
-    auto get = [&](size_t offset, bool* is_padding = nullptr) -> u8 {
+    auto get = [&](const size_t offset, bool* is_padding = nullptr) -> u8 {
         constexpr auto table = make_lookup_table();
         if (offset >= input.length())
             return 0;
@@ -77,19 +87,20 @@ ByteBuffer decode_base64(const StringView& input)
     };
 
     Vector<u8> output;
+    output.ensure_capacity(calculate_base64_decoded_length(input));
 
     for (size_t i = 0; i < input.length(); i += 4) {
         bool in2_is_padding = false;
         bool in3_is_padding = false;
 
-        u8 in0 = get(i);
-        u8 in1 = get(i + 1);
-        u8 in2 = get(i + 2, &in2_is_padding);
-        u8 in3 = get(i + 3, &in3_is_padding);
+        const u8 in0 = get(i);
+        const u8 in1 = get(i + 1);
+        const u8 in2 = get(i + 2, &in2_is_padding);
+        const u8 in3 = get(i + 3, &in3_is_padding);
 
-        u8 out0 = (in0 << 2) | ((in1 >> 4) & 3);
-        u8 out1 = ((in1 & 0xf) << 4) | ((in2 >> 2) & 0xf);
-        u8 out2 = ((in2 & 0x3) << 6) | in3;
+        const u8 out0 = (in0 << 2) | ((in1 >> 4) & 3);
+        const u8 out1 = ((in1 & 0xf) << 4) | ((in2 >> 2) & 0xf);
+        const u8 out2 = ((in2 & 0x3) << 6) | in3;
 
         output.append(out0);
         if (!in2_is_padding)
@@ -104,9 +115,9 @@ ByteBuffer decode_base64(const StringView& input)
 String encode_base64(ReadonlyBytes input)
 {
     constexpr auto alphabet = make_alphabet();
-    StringBuilder output;
+    StringBuilder output(calculate_base64_decoded_length(input));
 
-    auto get = [&](size_t offset, bool* need_padding = nullptr) -> u8 {
+    auto get = [&](const size_t offset, bool* need_padding = nullptr) -> u8 {
         if (offset >= input.size()) {
             if (need_padding)
                 *need_padding = true;
@@ -119,19 +130,19 @@ String encode_base64(ReadonlyBytes input)
         bool is_8bit = false;
         bool is_16bit = false;
 
-        u8 in0 = get(i);
-        u8 in1 = get(i + 1, &is_16bit);
-        u8 in2 = get(i + 2, &is_8bit);
+        const u8 in0 = get(i);
+        const u8 in1 = get(i + 1, &is_16bit);
+        const u8 in2 = get(i + 2, &is_8bit);
 
-        u8 index0 = (in0 >> 2) & 0x3f;
-        u8 index1 = ((in0 << 4) | (in1 >> 4)) & 0x3f;
-        u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
-        u8 index3 = in2 & 0x3f;
+        const u8 index0 = (in0 >> 2) & 0x3f;
+        const u8 index1 = ((in0 << 4) | (in1 >> 4)) & 0x3f;
+        const u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
+        const u8 index3 = in2 & 0x3f;
 
-        u8 out0 = alphabet[index0];
-        u8 out1 = alphabet[index1];
-        u8 out2 = is_16bit ? '=' : alphabet[index2];
-        u8 out3 = is_8bit ? '=' : alphabet[index3];
+        const u8 out0 = alphabet[index0];
+        const u8 out1 = alphabet[index1];
+        const u8 out2 = is_16bit ? '=' : alphabet[index2];
+        const u8 out3 = is_8bit ? '=' : alphabet[index3];
 
         output.append(out0);
         output.append(out1);
