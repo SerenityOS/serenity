@@ -262,7 +262,7 @@ bool IndexedPropertyIterator::operator!=(const IndexedPropertyIterator& other) c
 ValueAndAttributes IndexedPropertyIterator::value_and_attributes(Object* this_object, bool evaluate_accessors)
 {
     if (m_index < m_indexed_properties.array_like_size())
-        return m_indexed_properties.get(this_object, m_index, evaluate_accessors).value();
+        return m_indexed_properties.get(this_object, m_index, evaluate_accessors).value_or({});
     return {};
 }
 
