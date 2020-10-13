@@ -29,8 +29,8 @@
 #include "SharedBufferRegion.h"
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
+#include <AK/Format.h>
 #include <AK/LexicalPath.h>
-#include <AK/LogStream.h>
 #include <Kernel/API/Syscall.h>
 #include <LibX86/ELFSymbolProvider.h>
 #include <fcntl.h>
@@ -171,7 +171,7 @@ int Emulator::exec()
         auto insn = X86::Instruction::from_stream(m_cpu, true, true);
 
         if (trace)
-            out() << (const void*)m_cpu.base_eip() << "  \033[33;1m" << insn.to_string(m_cpu.base_eip(), &symbol_provider) << "\033[0m";
+            outln("{:p}  \033[33;1m{}\033[0m", m_cpu.base_eip(), insn.to_string(m_cpu.base_eip(), &symbol_provider));
 
         (m_cpu.*insn.handler())(insn);
 
@@ -1070,7 +1070,7 @@ void Emulator::register_signal_handlers()
 int Emulator::virt$sigaction(int signum, FlatPtr act, FlatPtr oldact)
 {
     if (signum == SIGKILL) {
-        dbg() << "Attempted to sigaction() with SIGKILL";
+        dbgln("Attempted to sigaction() with SIGKILL");
         return -EINVAL;
     }
 

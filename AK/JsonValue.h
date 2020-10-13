@@ -261,6 +261,14 @@ private:
     } m_value;
 };
 
+template<>
+struct Formatter<JsonValue> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const JsonValue& value)
+    {
+        Formatter<StringView>::format(params, builder, value.to_string());
+    }
+};
+
 }
 
 using AK::JsonValue;

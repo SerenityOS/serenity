@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     auto profile = Profile::load_from_perfcore_file(path);
 
     if (!profile) {
-        fprintf(stderr, "Unable to load profile '%s'\n", path);
+        warnln("Unable to load profile '{}'", path);
         return 1;
     }
 
@@ -170,7 +170,7 @@ bool generate_profile(pid_t pid)
 
     if (profiling_enable(pid) < 0) {
         int saved_errno = errno;
-        GUI::MessageBox::show(nullptr, String::format("Unable to profile PID %d: %s", pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error);
+        GUI::MessageBox::show(nullptr, String::formatted("Unable to profile PID {}: {}", pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error);
         return false;
     }
 

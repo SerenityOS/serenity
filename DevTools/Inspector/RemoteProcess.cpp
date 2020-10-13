@@ -145,7 +145,7 @@ void RemoteProcess::update()
 
     m_socket->on_ready_to_read = [this] {
         if (m_socket->eof()) {
-            dbg() << "Disconnected from PID " << m_pid;
+            dbgln("Disconnected from PID {}", m_pid);
             m_socket->close();
             return;
         }
@@ -166,13 +166,13 @@ void RemoteProcess::update()
         }
 
         ASSERT(data.size() == length);
-        dbg() << "Got data size " << length << " and read that many bytes";
+        dbgln("Got data size {} and read that many bytes", length);
 
         auto json_value = JsonValue::from_string(data);
         ASSERT(json_value.has_value());
         ASSERT(json_value.value().is_object());
 
-        dbg() << "Got JSON response " << json_value.value().to_string();
+        dbgln("Got JSON response {}", json_value.value());
 
         auto& response = json_value.value().as_object();
 
@@ -193,7 +193,7 @@ void RemoteProcess::update()
 
     auto success = m_socket->connect(Core::SocketAddress::local(String::format("/tmp/rpc/%d", m_pid)));
     if (!success) {
-        fprintf(stderr, "Couldn't connect to PID %d\n", m_pid);
+        warnln("Couldn't connect to PID {}", m_pid);
         exit(1);
     }
 }

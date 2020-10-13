@@ -26,8 +26,8 @@
 
 #include "Emulator.h"
 #include "SoftCPU.h"
+#include <AK/Format.h>
 #include <AK/LexicalPath.h>
-#include <AK/LogStream.h>
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -49,7 +49,7 @@ int main(int argc, char** argv, char** env)
 
     MappedFile mapped_file(executable_path);
     if (!mapped_file.is_valid()) {
-        warn() << "Unable to map " << executable_path;
+        warnln("Unable to map {}", executable_path);
         return 1;
     }
 
