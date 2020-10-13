@@ -41,16 +41,17 @@ ConsoleObject::ConsoleObject(GlobalObject& global_object)
 
 void ConsoleObject::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Object::initialize(global_object);
-    define_native_function("log", log);
-    define_native_function("debug", debug);
-    define_native_function("info", info);
-    define_native_function("warn", warn);
-    define_native_function("error", error);
-    define_native_function("trace", trace);
-    define_native_function("count", count);
-    define_native_function("countReset", count_reset);
-    define_native_function("clear", clear);
+    define_native_function(vm.names.log, log);
+    define_native_function(vm.names.debug, debug);
+    define_native_function(vm.names.info, info);
+    define_native_function(vm.names.warn, warn);
+    define_native_function(vm.names.error, error);
+    define_native_function(vm.names.trace, trace);
+    define_native_function(vm.names.count, count);
+    define_native_function(vm.names.countReset, count_reset);
+    define_native_function(vm.names.clear, clear);
 }
 
 ConsoleObject::~ConsoleObject()

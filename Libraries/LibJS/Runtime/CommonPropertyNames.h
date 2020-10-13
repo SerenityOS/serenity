@@ -71,17 +71,24 @@ namespace JS {
     P(ceil)                                  \
     P(charAt)                                \
     P(charCodeAt)                            \
+    P(clear)                                 \
     P(clz32)                                 \
     P(concat)                                \
+    P(configurable)                          \
     P(console)                               \
     P(construct)                             \
     P(constructor)                           \
     P(cos)                                   \
+    P(count)                                 \
+    P(countReset)                            \
+    P(debug)                                 \
     P(defineProperty)                        \
     P(deleteProperty)                        \
     P(description)                           \
     P(done)                                  \
     P(entries)                               \
+    P(enumerable)                            \
+    P(error)                                 \
     P(every)                                 \
     P(exp)                                   \
     P(expm1)                                 \
@@ -120,6 +127,7 @@ namespace JS {
     P(hasOwnProperty)                        \
     P(includes)                              \
     P(indexOf)                               \
+    P(info)                                  \
     P(is)                                    \
     P(isArray)                               \
     P(isExtensible)                          \
@@ -132,12 +140,14 @@ namespace JS {
     P(keys)                                  \
     P(lastIndexOf)                           \
     P(length)                                \
+    P(log)                                   \
     P(log1p)                                 \
     P(map)                                   \
     P(max)                                   \
     P(message)                               \
     P(min)                                   \
     P(name)                                  \
+    P(next)                                  \
     P(now)                                   \
     P(of)                                    \
     P(ownKeys)                               \
@@ -167,6 +177,7 @@ namespace JS {
     P(splice)                                \
     P(sqrt)                                  \
     P(startsWith)                            \
+    P(stringify)                             \
     P(substring)                             \
     P(tan)                                   \
     P(toDateString)                          \
@@ -179,6 +190,7 @@ namespace JS {
     P(toString)                              \
     P(toTimeString)                          \
     P(toUpperCase)                           \
+    P(trace)                                 \
     P(trim)                                  \
     P(trimEnd)                               \
     P(trimStart)                             \
@@ -187,11 +199,9 @@ namespace JS {
     P(unshift)                               \
     P(value)                                 \
     P(valueOf)                               \
-    P(enumerable)                            \
-    P(configurable)                          \
-    P(writable)                              \
-    P(next)                                  \
-    P(values)
+    P(values)                                \
+    P(warn)                                  \
+    P(writable)
 
 struct CommonPropertyNames {
     FlyString for_ { "for" };
