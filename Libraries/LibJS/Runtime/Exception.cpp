@@ -35,7 +35,7 @@ Exception::Exception(Value value)
 {
     auto& call_stack = vm().call_stack();
     for (ssize_t i = call_stack.size() - 1; i >= 0; --i) {
-        auto function_name = call_stack[i].function_name;
+        String function_name = call_stack[i].function_name;
         if (function_name.is_empty())
             function_name = "<anonymous>";
         m_trace.append(function_name);

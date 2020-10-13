@@ -45,15 +45,16 @@ FunctionPrototype::FunctionPrototype(GlobalObject& global_object)
 
 void FunctionPrototype::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("apply", apply, 2, attr);
-    define_native_function("bind", bind, 1, attr);
-    define_native_function("call", call, 1, attr);
-    define_native_function("toString", to_string, 0, attr);
-    define_native_function(global_object.vm().well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
-    define_property("length", Value(0), Attribute::Configurable);
-    define_property("name", js_string(heap(), ""), Attribute::Configurable);
+    define_native_function(vm.names.apply, apply, 2, attr);
+    define_native_function(vm.names.bind, bind, 1, attr);
+    define_native_function(vm.names.call, call, 1, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
+    define_property(vm.names.length, Value(0), Attribute::Configurable);
+    define_property(vm.names.name, js_string(heap(), ""), Attribute::Configurable);
 }
 
 FunctionPrototype::~FunctionPrototype()
@@ -78,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
         vm.throw_exception<TypeError>(global_object, ErrorType::FunctionArgsNotObject);
         return {};
     }
-    auto length_property = arg_array.as_object().get("length");
+    auto length_property = arg_array.as_object().get(vm.names.length);
     if (vm.exception())
         return {};
     auto length = length_property.to_size_t(global_object);

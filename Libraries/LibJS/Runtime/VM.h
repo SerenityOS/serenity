@@ -30,6 +30,7 @@
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/CommonPropertyNames.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/MarkedValueList.h>
@@ -222,6 +223,8 @@ public:
 
         return call(function, this_value);
     }
+
+    CommonPropertyNames names;
 
 private:
     VM();

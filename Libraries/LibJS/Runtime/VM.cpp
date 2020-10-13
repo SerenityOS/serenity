@@ -207,7 +207,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
         current_environment()->bind_this_value(global_object, new_object);
         if (exception())
             return {};
-        auto prototype = new_target.get("prototype");
+        auto prototype = new_target.get(names.prototype);
         if (exception())
             return {};
         if (prototype.is_object()) {
@@ -230,7 +230,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
         current_environment()->replace_this_binding(result);
-        auto prototype = new_target.get("prototype");
+        auto prototype = new_target.get(names.prototype);
         if (exception())
             return {};
         if (prototype.is_object()) {

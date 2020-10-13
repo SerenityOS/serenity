@@ -31,15 +31,16 @@
 namespace JS {
 
 ErrorConstructor::ErrorConstructor(GlobalObject& global_object)
-    : NativeFunction("Error", *global_object.function_prototype())
+    : NativeFunction(vm().names.Error, *global_object.function_prototype())
 {
 }
 
 void ErrorConstructor::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("prototype", global_object.error_prototype(), 0);
-    define_property("length", Value(1), Attribute::Configurable);
+    define_property(vm.names.prototype, global_object.error_prototype(), 0);
+    define_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 ErrorConstructor::~ErrorConstructor()
@@ -60,7 +61,7 @@ Value ErrorConstructor::construct(Function&)
         if (vm.exception())
             return {};
     }
-    return Error::create(global_object(), "Error", message);
+    return Error::create(global_object(), vm.names.Error, message);
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                            \
@@ -70,9 +71,10 @@ Value ErrorConstructor::construct(Function&)
     }                                                                                                    \
     void ConstructorName::initialize(GlobalObject& global_object)                                        \
     {                                                                                                    \
+        auto& vm = this->vm();                                                                           \
         NativeFunction::initialize(global_object);                                                       \
-        define_property("prototype", global_object.snake_name##_prototype(), 0);                         \
-        define_property("length", Value(1), Attribute::Configurable);                                    \
+        define_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                  \
+        define_property(vm.names.length, Value(1), Attribute::Configurable);                             \
     }                                                                                                    \
     ConstructorName::~ConstructorName() { }                                                              \
     Value ConstructorName::call()                                                                        \

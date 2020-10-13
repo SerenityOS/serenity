@@ -63,7 +63,7 @@ static void prepare_arguments_list(GlobalObject& global_object, Value value, Mar
         return;
     }
     auto& arguments_list = value.as_object();
-    auto length_property = arguments_list.get("length");
+    auto length_property = arguments_list.get(vm.names.length);
     if (vm.exception())
         return;
     auto length = length_property.to_size_t(global_object);
@@ -84,21 +84,22 @@ ReflectObject::ReflectObject(GlobalObject& global_object)
 
 void ReflectObject::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("apply", apply, 3, attr);
-    define_native_function("construct", construct, 2, attr);
-    define_native_function("defineProperty", define_property, 3, attr);
-    define_native_function("deleteProperty", delete_property, 2, attr);
-    define_native_function("get", get, 2, attr);
-    define_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2, attr);
-    define_native_function("getPrototypeOf", get_prototype_of, 1, attr);
-    define_native_function("has", has, 2, attr);
-    define_native_function("isExtensible", is_extensible, 1, attr);
-    define_native_function("ownKeys", own_keys, 1, attr);
-    define_native_function("preventExtensions", prevent_extensions, 1, attr);
-    define_native_function("set", set, 3, attr);
-    define_native_function("setPrototypeOf", set_prototype_of, 2, attr);
+    define_native_function(vm.names.apply, apply, 3, attr);
+    define_native_function(vm.names.construct, construct, 2, attr);
+    define_native_function(vm.names.defineProperty, define_property, 3, attr);
+    define_native_function(vm.names.deleteProperty, delete_property, 2, attr);
+    define_native_function(vm.names.get, get, 2, attr);
+    define_native_function(vm.names.getOwnPropertyDescriptor, get_own_property_descriptor, 2, attr);
+    define_native_function(vm.names.getPrototypeOf, get_prototype_of, 1, attr);
+    define_native_function(vm.names.has, has, 2, attr);
+    define_native_function(vm.names.isExtensible, is_extensible, 1, attr);
+    define_native_function(vm.names.ownKeys, own_keys, 1, attr);
+    define_native_function(vm.names.preventExtensions, prevent_extensions, 1, attr);
+    define_native_function(vm.names.set, set, 3, attr);
+    define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
 }
 
 ReflectObject::~ReflectObject()

@@ -36,15 +36,16 @@
 namespace JS {
 
 FunctionConstructor::FunctionConstructor(GlobalObject& global_object)
-    : NativeFunction("Function", *global_object.function_prototype())
+    : NativeFunction(vm().names.Function, *global_object.function_prototype())
 {
 }
 
 void FunctionConstructor::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("prototype", global_object.function_prototype(), 0);
-    define_property("length", Value(1), Attribute::Configurable);
+    define_property(vm.names.prototype, global_object.function_prototype(), 0);
+    define_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 FunctionConstructor::~FunctionConstructor()

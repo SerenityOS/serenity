@@ -698,6 +698,7 @@ Value ClassMethod::execute(Interpreter& interpreter, GlobalObject& global_object
 
 Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
+    auto& vm = interpreter.vm();
     Value class_constructor_value = m_constructor->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
@@ -720,22 +721,22 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
         Object* super_constructor_prototype = nullptr;
         if (!super_constructor.is_null()) {
-            super_constructor_prototype = &super_constructor.as_object().get("prototype").as_object();
+            super_constructor_prototype = &super_constructor.as_object().get(vm.names.prototype).as_object();
             if (interpreter.exception())
                 return {};
         }
         prototype->set_prototype(super_constructor_prototype);
 
-        prototype->define_property("constructor", class_constructor, 0);
+        prototype->define_property(vm.names.constructor, class_constructor, 0);
         if (interpreter.exception())
             return {};
-        class_constructor->define_property("prototype", prototype, 0);
+        class_constructor->define_property(vm.names.prototype, prototype, 0);
         if (interpreter.exception())
             return {};
         class_constructor->set_prototype(super_constructor.is_null() ? global_object.function_prototype() : &super_constructor.as_object());
     }
 
-    auto class_prototype = class_constructor->get("prototype");
+    auto class_prototype = class_constructor->get(vm.names.prototype);
     if (interpreter.exception())
         return {};
 
@@ -1756,21 +1757,22 @@ void TaggedTemplateLiteral::dump(int indent) const
 
 Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
+    auto& vm = interpreter.vm();
     auto tag = m_tag->execute(interpreter, global_object);
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
     if (!tag.is_function()) {
-        interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAFunction, tag.to_string_without_side_effects());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, tag.to_string_without_side_effects());
         return {};
     }
     auto& tag_function = tag.as_function();
     auto& expressions = m_template_literal->expressions();
     auto* strings = Array::create(global_object);
-    MarkedValueList arguments(interpreter.heap());
+    MarkedValueList arguments(vm.heap());
     arguments.append(strings);
     for (size_t i = 0; i < expressions.size(); ++i) {
         auto value = expressions[i].execute(interpreter, global_object);
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
         // tag`${foo}`             -> "", foo, ""                -> tag(["", ""], foo)
         // tag`foo${bar}baz${qux}` -> "foo", bar, "baz", qux, "" -> tag(["foo", "baz", ""], bar, qux)
@@ -1784,12 +1786,12 @@ Value TaggedTemplateLiteral::execute(Interpreter& interpreter, GlobalObject& glo
     auto* raw_strings = Array::create(global_object);
     for (auto& raw_string : m_template_literal->raw_strings()) {
         auto value = raw_string.execute(interpreter, global_object);
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
         raw_strings->indexed_properties().append(value);
     }
-    strings->define_property("raw", raw_strings, 0);
-    return interpreter.vm().call(tag_function, js_undefined(), move(arguments));
+    strings->define_property(vm.names.raw, raw_strings, 0);
+    return vm.call(tag_function, js_undefined(), move(arguments));
 }
 
 void TryStatement::dump(int indent) const

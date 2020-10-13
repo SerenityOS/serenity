@@ -154,7 +154,7 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
     if (vm.exception())
         return {};
     if (value.is_object()) {
-        auto to_json = value.as_object().get("toJSON");
+        auto to_json = value.as_object().get(vm.names.toJSON);
         if (vm.exception())
             return {};
         if (to_json.is_function()) {

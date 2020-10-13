@@ -35,19 +35,20 @@
 namespace JS {
 
 StringConstructor::StringConstructor(GlobalObject& global_object)
-    : NativeFunction("String", *global_object.function_prototype())
+    : NativeFunction(vm().names.String, *global_object.function_prototype())
 {
 }
 
 void StringConstructor::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("prototype", global_object.string_prototype(), 0);
-    define_property("length", Value(1), Attribute::Configurable);
+    define_property(vm.names.prototype, global_object.string_prototype(), 0);
+    define_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("raw", raw, 1, attr);
-    define_native_function("fromCharCode", from_char_code, 1, attr);
+    define_native_function(vm.names.raw, raw, 1, attr);
+    define_native_function(vm.names.fromCharCode, from_char_code, 1, attr);
 }
 
 StringConstructor::~StringConstructor()
@@ -84,7 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     if (vm.exception())
         return {};
 
-    auto raw = template_object->get("raw");
+    auto raw = template_object->get(vm.names.raw);
     if (vm.exception())
         return {};
     if (raw.is_empty() || raw.is_nullish()) {

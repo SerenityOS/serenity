@@ -32,15 +32,16 @@
 namespace JS {
 
 RegExpConstructor::RegExpConstructor(GlobalObject& global_object)
-    : NativeFunction("RegExp", *global_object.function_prototype())
+    : NativeFunction(vm().names.RegExp, *global_object.function_prototype())
 {
 }
 
 void RegExpConstructor::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("prototype", global_object.regexp_prototype(), 0);
-    define_property("length", Value(2), Attribute::Configurable);
+    define_property(vm.names.prototype, global_object.regexp_prototype(), 0);
+    define_property(vm.names.length, Value(2), Attribute::Configurable);
 }
 
 RegExpConstructor::~RegExpConstructor()

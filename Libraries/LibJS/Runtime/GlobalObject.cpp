@@ -75,6 +75,8 @@ GlobalObject::GlobalObject()
 
 void GlobalObject::initialize()
 {
+    auto& vm = this->vm();
+
     ensure_shape_is_unique();
 
     // These are done first since other prototypes depend on their presence.
@@ -98,36 +100,36 @@ void GlobalObject::initialize()
 #undef __JS_ENUMERATE
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("gc", gc, 0, attr);
-    define_native_function("isNaN", is_nan, 1, attr);
-    define_native_function("isFinite", is_finite, 1, attr);
-    define_native_function("parseFloat", parse_float, 1, attr);
+    define_native_function(vm.names.gc, gc, 0, attr);
+    define_native_function(vm.names.isNaN, is_nan, 1, attr);
+    define_native_function(vm.names.isFinite, is_finite, 1, attr);
+    define_native_function(vm.names.parseFloat, parse_float, 1, attr);
 
-    define_property("NaN", js_nan(), 0);
-    define_property("Infinity", js_infinity(), 0);
-    define_property("undefined", js_undefined(), 0);
+    define_property(vm.names.NaN, js_nan(), 0);
+    define_property(vm.names.Infinity, js_infinity(), 0);
+    define_property(vm.names.undefined, js_undefined(), 0);
 
-    define_property("globalThis", this, attr);
-    define_property("console", heap().allocate<ConsoleObject>(*this, *this), attr);
-    define_property("Math", heap().allocate<MathObject>(*this, *this), attr);
-    define_property("JSON", heap().allocate<JSONObject>(*this, *this), attr);
-    define_property("Reflect", heap().allocate<ReflectObject>(*this, *this), attr);
+    define_property(vm.names.globalThis, this, attr);
+    define_property(vm.names.console, heap().allocate<ConsoleObject>(*this, *this), attr);
+    define_property(vm.names.Math, heap().allocate<MathObject>(*this, *this), attr);
+    define_property(vm.names.JSON, heap().allocate<JSONObject>(*this, *this), attr);
+    define_property(vm.names.Reflect, heap().allocate<ReflectObject>(*this, *this), attr);
 
-    add_constructor("Array", m_array_constructor, *m_array_prototype);
-    add_constructor("BigInt", m_bigint_constructor, *m_bigint_prototype);
-    add_constructor("Boolean", m_boolean_constructor, *m_boolean_prototype);
-    add_constructor("Date", m_date_constructor, *m_date_prototype);
-    add_constructor("Error", m_error_constructor, *m_error_prototype);
-    add_constructor("Function", m_function_constructor, *m_function_prototype);
-    add_constructor("Number", m_number_constructor, *m_number_prototype);
-    add_constructor("Object", m_object_constructor, *m_object_prototype);
-    add_constructor("Proxy", m_proxy_constructor, *m_proxy_prototype);
-    add_constructor("RegExp", m_regexp_constructor, *m_regexp_prototype);
-    add_constructor("String", m_string_constructor, *m_string_prototype);
-    add_constructor("Symbol", m_symbol_constructor, *m_symbol_prototype);
+    add_constructor(vm.names.Array, m_array_constructor, *m_array_prototype);
+    add_constructor(vm.names.BigInt, m_bigint_constructor, *m_bigint_prototype);
+    add_constructor(vm.names.Boolean, m_boolean_constructor, *m_boolean_prototype);
+    add_constructor(vm.names.Date, m_date_constructor, *m_date_prototype);
+    add_constructor(vm.names.Error, m_error_constructor, *m_error_prototype);
+    add_constructor(vm.names.Function, m_function_constructor, *m_function_prototype);
+    add_constructor(vm.names.Number, m_number_constructor, *m_number_prototype);
+    add_constructor(vm.names.Object, m_object_constructor, *m_object_prototype);
+    add_constructor(vm.names.Proxy, m_proxy_constructor, *m_proxy_prototype);
+    add_constructor(vm.names.RegExp, m_regexp_constructor, *m_regexp_prototype);
+    add_constructor(vm.names.String, m_string_constructor, *m_string_prototype);
+    add_constructor(vm.names.Symbol, m_symbol_constructor, *m_symbol_prototype);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    add_constructor(#ClassName, m_##snake_name##_constructor, *m_##snake_name##_prototype);
+    add_constructor(vm.names.ClassName, m_##snake_name##_constructor, *m_##snake_name##_prototype);
     JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE
 }

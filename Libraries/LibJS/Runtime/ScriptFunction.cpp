@@ -66,14 +66,15 @@ ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& nam
 
 void ScriptFunction::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Function::initialize(global_object);
     if (!m_is_arrow_function) {
         Object* prototype = Object::create_empty(global_object);
-        prototype->define_property_without_transition("constructor", this, Attribute::Writable | Attribute::Configurable);
-        define_property("prototype", prototype, 0);
+        prototype->define_property_without_transition(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
+        define_property(vm.names.prototype, prototype, 0);
     }
-    define_native_property("length", length_getter, nullptr, Attribute::Configurable);
-    define_native_property("name", name_getter, nullptr, Attribute::Configurable);
+    define_native_property(vm.names.length, length_getter, nullptr, Attribute::Configurable);
+    define_native_property(vm.names.name, name_getter, nullptr, Attribute::Configurable);
 }
 
 ScriptFunction::~ScriptFunction()

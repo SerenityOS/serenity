@@ -35,19 +35,20 @@
 namespace JS {
 
 BigIntConstructor::BigIntConstructor(GlobalObject& global_object)
-    : NativeFunction("BigInt", *global_object.function_prototype())
+    : NativeFunction(vm().names.BigInt, *global_object.function_prototype())
 {
 }
 
 void BigIntConstructor::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("prototype", global_object.bigint_prototype(), 0);
-    define_property("length", Value(1), Attribute::Configurable);
+    define_property(vm.names.prototype, global_object.bigint_prototype(), 0);
+    define_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("asIntN", as_int_n, 2, attr);
-    define_native_function("asUintN", as_uint_n, 2, attr);
+    define_native_function(vm.names.asIntN, as_int_n, 2, attr);
+    define_native_function(vm.names.asUintN, as_uint_n, 2, attr);
 }
 
 BigIntConstructor::~BigIntConstructor()

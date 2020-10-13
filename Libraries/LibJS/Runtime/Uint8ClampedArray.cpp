@@ -40,7 +40,8 @@ Uint8ClampedArray::Uint8ClampedArray(u32 length, Object& prototype)
     : Object(prototype)
     , m_length(length)
 {
-    define_native_property("length", length_getter, nullptr);
+    auto& vm = this->vm();
+    define_native_property(vm.names.length, length_getter, nullptr);
     m_data = new u8[m_length];
 }
 
