@@ -132,7 +132,7 @@ CODE prioritynames[] = {
     { "none",    INTERNAL_NOPRI },
     { "notice",  LOG_NOTICE },
     { "warning", LOG_WARNING },
-    { NULL, -1 },
+    { nullptr, -1 },
 };
 
 CODE facilitynames[] = {
@@ -158,7 +158,7 @@ CODE facilitynames[] = {
     { "syslog",   LOG_SYSLOG },
     { "user",     LOG_USER },
     { "uucp",     LOG_UUCP },
-    { NULL, -1 },
+    { nullptr, -1 },
 };
 #endif
 
