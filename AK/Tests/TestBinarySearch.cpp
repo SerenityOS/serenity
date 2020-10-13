@@ -146,4 +146,19 @@ TEST_CASE(huge_char_array)
     delete[] span.data();
 }
 
+TEST_CASE(constexpr_array_search)
+{
+    constexpr Array<int, 3> array = { 1, 17, 42 };
+
+    constexpr auto test1 = *binary_search(array.span(), 1, AK::integral_compare<int>);
+    constexpr auto test2 = *binary_search(array.span(), 17, AK::integral_compare<int>);
+    constexpr auto test3 = *binary_search(array.span(), 42, AK::integral_compare<int>);
+    constexpr auto test4 = binary_search(array.span(), 99, AK::integral_compare<int>);
+
+    static_assert(test1 == 1, "Binary search should find value at compile-time.");
+    static_assert(test2 == 17, "Binary search should find value at compile-time.");
+    static_assert(test3 == 42, "Binary search should find value at compile-time.");
+    static_assert(test4 == nullptr, "Binary search should return nullptr for missing value at compile-time.");
+}
+
 TEST_MAIN(BinarySearch)
