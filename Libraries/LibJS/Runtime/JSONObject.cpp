@@ -44,12 +44,12 @@ JSONObject::JSONObject(GlobalObject& global_object)
 
 void JSONObject::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("stringify", stringify, 3, attr);
-    define_native_function("parse", parse, 2, attr);
-
-    define_property(global_object.vm().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "JSON"), Attribute::Configurable);
+    define_native_function(vm.names.stringify, stringify, 3, attr);
+    define_native_function(vm.names.parse, parse, 2, attr);
+    define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "JSON"), Attribute::Configurable);
 }
 
 JSONObject::~JSONObject()

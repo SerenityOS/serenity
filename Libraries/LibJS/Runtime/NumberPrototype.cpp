@@ -50,9 +50,9 @@ NumberPrototype::NumberPrototype(GlobalObject& global_object)
 
 void NumberPrototype::initialize(GlobalObject& object)
 {
+    auto& vm = this->vm();
     Object::initialize(object);
-
-    define_native_function("toString", to_string, 1, Attribute::Configurable | Attribute::Writable);
+    define_native_function(vm.names.toString, to_string, 1, Attribute::Configurable | Attribute::Writable);
 }
 
 NumberPrototype::~NumberPrototype()
