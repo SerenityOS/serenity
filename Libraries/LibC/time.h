@@ -85,6 +85,4 @@ struct tm* localtime_r(const time_t* timep, struct tm* result);
 double difftime(time_t, time_t);
 size_t strftime(char* s, size_t max, const char* format, const struct tm*);
 
-#define difftime(t1, t0) (double)(t1 - t0)
-
 __END_DECLS

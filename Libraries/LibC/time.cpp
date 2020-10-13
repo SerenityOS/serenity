@@ -362,4 +362,9 @@ int clock_getres(clockid_t, struct timespec*)
 {
     ASSERT_NOT_REACHED();
 }
+
+double difftime(time_t t1, time_t t0)
+{
+    return (double)(t1 - t0);
+}
 }
