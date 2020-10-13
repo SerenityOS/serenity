@@ -28,7 +28,9 @@
 
 #define AK_TEST_SUITE
 
+#ifndef __APPLE__
 extern "C" __attribute__((noreturn)) void abort() noexcept;
+#endif
 
 namespace AK {
 
