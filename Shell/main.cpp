@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     sigemptyset(&blocked);
     sigaddset(&blocked, SIGTTOU);
     sigaddset(&blocked, SIGTTIN);
-    pthread_sigmask(SIG_BLOCK, &blocked, NULL);
+    pthread_sigmask(SIG_BLOCK, &blocked, nullptr);
 #endif
 #ifdef __serenity__
     if (pledge("stdio rpath wpath cpath proc exec tty accept sigaction unix fattr", nullptr) < 0) {

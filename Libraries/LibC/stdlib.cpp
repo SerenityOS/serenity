@@ -760,7 +760,7 @@ void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int 
         nmemb /= 2;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 div_t div(int numerator, int denominator)

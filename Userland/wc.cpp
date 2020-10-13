@@ -65,7 +65,7 @@ static Count get_count(const String& file_name)
         file_pointer = stdin;
     } else {
         count.name = file_name;
-        if ((file_pointer = fopen(file_name.characters(), "r")) == NULL) {
+        if ((file_pointer = fopen(file_name.characters(), "r")) == nullptr) {
             fprintf(stderr, "wc: unable to open %s\n", file_name.characters());
             count.exists = false;
             return count;
