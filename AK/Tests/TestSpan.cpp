@@ -30,26 +30,26 @@
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 
-TEST_CASE(default_constructor_is_empty)
+TEST_CASE(constexpr_default_constructor_is_empty)
 {
-    Span<int> span;
-    EXPECT(span.is_empty());
+    constexpr Span<int> span;
+    static_assert(span.is_empty(), "Default constructed span should be empty.");
 }
 
 TEST_CASE(implicit_converson_to_const)
 {
-    Bytes bytes0;
-    [[maybe_unused]] ReadonlyBytes bytes2 = bytes0;
-    [[maybe_unused]] ReadonlyBytes bytes3 = static_cast<ReadonlyBytes>(bytes2);
+    constexpr Bytes bytes0;
+    [[maybe_unused]] constexpr ReadonlyBytes bytes2 = bytes0;
+    [[maybe_unused]] constexpr ReadonlyBytes bytes3 = static_cast<ReadonlyBytes>(bytes2);
 }
 
 TEST_CASE(span_works_with_constant_types)
 {
-    const u8 buffer[4] { 1, 2, 3, 4 };
-    ReadonlyBytes bytes { buffer, 4 };
+    static constexpr u8 buffer[4] { 1, 2, 3, 4 };
+    constexpr ReadonlyBytes bytes { buffer, 4 };
 
-    EXPECT(AK::IsConst<AK::RemoveReference<decltype(bytes[1])>::Type>::value);
-    EXPECT_EQ(bytes[2], 3);
+    static_assert(AK::IsConst<AK::RemoveReference<decltype(bytes[1])>::Type>::value);
+    static_assert(bytes[2] == 3);
 }
 
 TEST_CASE(span_works_with_mutable_types)
@@ -109,25 +109,25 @@ TEST_CASE(at_and_index_operator_return_same_value)
 
 TEST_CASE(can_subspan_whole_span)
 {
-    u8 buffer[16];
-    Bytes bytes { buffer, 16 };
+    static constexpr u8 buffer[16] {};
+    constexpr ReadonlyBytes bytes { buffer, 16 };
 
-    Bytes slice = bytes.slice(0, 16);
+    constexpr auto slice = bytes.slice(0, 16);
 
-    EXPECT_EQ(slice.data(), buffer);
-    EXPECT_EQ(slice.size(), 16u);
+    static_assert(slice.data() == buffer);
+    static_assert(slice.size() == 16u);
 }
 
 TEST_CASE(can_subspan_as_intended)
 {
-    const u16 buffer[8] { 1, 2, 3, 4, 5, 6, 7, 8 };
+    static constexpr u16 buffer[8] { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-    Span<const u16> span { buffer, 8 };
-    auto slice = span.slice(3, 2);
+    constexpr Span<const u16> span { buffer, 8 };
+    constexpr auto slice = span.slice(3, 2);
 
-    EXPECT_EQ(slice.size(), 2u);
-    EXPECT_EQ(slice[0], 4);
-    EXPECT_EQ(slice[1], 5);
+    static_assert(slice.size() == 2u);
+    static_assert(slice[0] == 4);
+    static_assert(slice[1] == 5);
 }
 
 TEST_CASE(span_from_void_pointer)
