@@ -40,8 +40,9 @@ BoundFunction::BoundFunction(GlobalObject& global_object, Function& target_funct
 
 void BoundFunction::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Function::initialize(global_object);
-    define_property("length", Value(m_length), Attribute::Configurable);
+    define_property(vm.names.length, Value(m_length), Attribute::Configurable);
 }
 
 BoundFunction::~BoundFunction()

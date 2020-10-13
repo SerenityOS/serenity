@@ -32,21 +32,22 @@
 namespace JS {
 
 SymbolConstructor::SymbolConstructor(GlobalObject& global_object)
-    : NativeFunction("Symbol", *global_object.function_prototype())
+    : NativeFunction(vm().names.Symbol, *global_object.function_prototype())
 {
 }
 
 void SymbolConstructor::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("prototype", global_object.symbol_prototype(), 0);
-    define_property("length", Value(0), Attribute::Configurable);
+    define_property(vm.names.prototype, global_object.symbol_prototype(), 0);
+    define_property(vm.names.length, Value(0), Attribute::Configurable);
 
-    define_native_function("for", for_, 1, Attribute::Writable | Attribute::Configurable);
-    define_native_function("keyFor", key_for, 1, Attribute::Writable | Attribute::Configurable);
+    define_native_function(vm.names.for_, for_, 1, Attribute::Writable | Attribute::Configurable);
+    define_native_function(vm.names.keyFor, key_for, 1, Attribute::Writable | Attribute::Configurable);
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    define_property(#SymbolName, global_object.vm().well_known_symbol_##snake_name(), 0);
+    define_property(vm.names.SymbolName, vm.well_known_symbol_##snake_name(), 0);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 }

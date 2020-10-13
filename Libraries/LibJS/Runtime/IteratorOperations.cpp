@@ -62,7 +62,7 @@ Object* iterator_next(Object& iterator, Value value)
 {
     auto& vm = iterator.vm();
     auto& global_object = iterator.global_object();
-    auto next_method = iterator.get("next");
+    auto next_method = iterator.get(vm.names.next);
     if (vm.exception())
         return {};
 
@@ -95,9 +95,10 @@ void iterator_close(Object& iterator)
 
 Value create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
 {
+    auto& vm = global_object.vm();
     auto* object = Object::create_empty(global_object);
-    object->define_property("value", value);
-    object->define_property("done", Value(done));
+    object->define_property(vm.names.value, value);
+    object->define_property(vm.names.done, Value(done));
     return object;
 }
 
@@ -114,14 +115,14 @@ void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<
         if (!next_object)
             return;
 
-        auto done_property = next_object->get("done");
+        auto done_property = next_object->get(vm.names.done);
         if (vm.exception())
             return;
 
         if (!done_property.is_empty() && done_property.to_boolean())
             return;
 
-        auto next_value = next_object->get("value");
+        auto next_value = next_object->get(vm.names.value);
         if (vm.exception())
             return;
 

@@ -35,28 +35,29 @@
 namespace JS {
 
 ObjectConstructor::ObjectConstructor(GlobalObject& global_object)
-    : NativeFunction("Object", *global_object.function_prototype())
+    : NativeFunction(vm().names.Object, *global_object.function_prototype())
 {
 }
 
 void ObjectConstructor::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("prototype", global_object.object_prototype(), 0);
-    define_property("length", Value(1), Attribute::Configurable);
+    define_property(vm.names.prototype, global_object.object_prototype(), 0);
+    define_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("defineProperty", define_property_, 3, attr);
-    define_native_function("is", is, 2, attr);
-    define_native_function("getOwnPropertyDescriptor", get_own_property_descriptor, 2, attr);
-    define_native_function("getOwnPropertyNames", get_own_property_names, 1, attr);
-    define_native_function("getPrototypeOf", get_prototype_of, 1, attr);
-    define_native_function("setPrototypeOf", set_prototype_of, 2, attr);
-    define_native_function("isExtensible", is_extensible, 1, attr);
-    define_native_function("preventExtensions", prevent_extensions, 1, attr);
-    define_native_function("keys", keys, 1, attr);
-    define_native_function("values", values, 1, attr);
-    define_native_function("entries", entries, 1, attr);
+    define_native_function(vm.names.defineProperty, define_property_, 3, attr);
+    define_native_function(vm.names.is, is, 2, attr);
+    define_native_function(vm.names.getOwnPropertyDescriptor, get_own_property_descriptor, 2, attr);
+    define_native_function(vm.names.getOwnPropertyNames, get_own_property_names, 1, attr);
+    define_native_function(vm.names.getPrototypeOf, get_prototype_of, 1, attr);
+    define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
+    define_native_function(vm.names.isExtensible, is_extensible, 1, attr);
+    define_native_function(vm.names.preventExtensions, prevent_extensions, 1, attr);
+    define_native_function(vm.names.keys, keys, 1, attr);
+    define_native_function(vm.names.values, values, 1, attr);
+    define_native_function(vm.names.entries, entries, 1, attr);
 }
 
 ObjectConstructor::~ObjectConstructor()

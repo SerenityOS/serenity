@@ -51,7 +51,7 @@ Error::~Error()
         return global_object.heap().allocate<ClassName>(global_object, message, *global_object.snake_name##_prototype()); \
     }                                                                                                                     \
     ClassName::ClassName(const String& message, Object& prototype)                                                        \
-        : Error(#ClassName, message, prototype)                                                                           \
+        : Error(vm().names.ClassName, message, prototype)                                                                 \
     {                                                                                                                     \
     }                                                                                                                     \
     ClassName::~ClassName() { }

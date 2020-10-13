@@ -138,19 +138,20 @@ static Value parse_simplified_iso8601(const String& iso_8601)
 }
 
 DateConstructor::DateConstructor(GlobalObject& global_object)
-    : NativeFunction("Date", *global_object.function_prototype())
+    : NativeFunction(vm().names.Date, *global_object.function_prototype())
 {
 }
 
 void DateConstructor::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property("prototype", global_object.date_prototype(), 0);
-    define_property("length", Value(7), Attribute::Configurable);
+    define_property(vm.names.prototype, global_object.date_prototype(), 0);
+    define_property(vm.names.length, Value(7), Attribute::Configurable);
 
-    define_native_function("now", now, 0, Attribute::Writable | Attribute::Configurable);
-    define_native_function("parse", parse, 1, Attribute::Writable | Attribute::Configurable);
-    define_native_function("UTC", utc, 1, Attribute::Writable | Attribute::Configurable);
+    define_native_function(vm.names.now, now, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_function(vm.names.parse, parse, 1, Attribute::Writable | Attribute::Configurable);
+    define_native_function(vm.names.UTC, utc, 1, Attribute::Writable | Attribute::Configurable);
 }
 
 DateConstructor::~DateConstructor()

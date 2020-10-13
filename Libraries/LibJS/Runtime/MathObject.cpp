@@ -40,41 +40,42 @@ MathObject::MathObject(GlobalObject& global_object)
 
 void MathObject::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("abs", abs, 1, attr);
-    define_native_function("random", random, 0, attr);
-    define_native_function("sqrt", sqrt, 1, attr);
-    define_native_function("floor", floor, 1, attr);
-    define_native_function("ceil", ceil, 1, attr);
-    define_native_function("round", round, 1, attr);
-    define_native_function("max", max, 2, attr);
-    define_native_function("min", min, 2, attr);
-    define_native_function("trunc", trunc, 1, attr);
-    define_native_function("sin", sin, 1, attr);
-    define_native_function("cos", cos, 1, attr);
-    define_native_function("tan", tan, 1, attr);
-    define_native_function("pow", pow, 2, attr);
-    define_native_function("exp", exp, 1, attr);
-    define_native_function("expm1", expm1, 1, attr);
-    define_native_function("sign", sign, 1, attr);
-    define_native_function("clz32", clz32, 1, attr);
-    define_native_function("acosh", acosh, 1, attr);
-    define_native_function("asinh", asinh, 1, attr);
-    define_native_function("atanh", atanh, 1, attr);
-    define_native_function("log1p", log1p, 1, attr);
-    define_native_function("cbrt", cbrt, 1, attr);
+    define_native_function(vm.names.abs, abs, 1, attr);
+    define_native_function(vm.names.random, random, 0, attr);
+    define_native_function(vm.names.sqrt, sqrt, 1, attr);
+    define_native_function(vm.names.floor, floor, 1, attr);
+    define_native_function(vm.names.ceil, ceil, 1, attr);
+    define_native_function(vm.names.round, round, 1, attr);
+    define_native_function(vm.names.max, max, 2, attr);
+    define_native_function(vm.names.min, min, 2, attr);
+    define_native_function(vm.names.trunc, trunc, 1, attr);
+    define_native_function(vm.names.sin, sin, 1, attr);
+    define_native_function(vm.names.cos, cos, 1, attr);
+    define_native_function(vm.names.tan, tan, 1, attr);
+    define_native_function(vm.names.pow, pow, 2, attr);
+    define_native_function(vm.names.exp, exp, 1, attr);
+    define_native_function(vm.names.expm1, expm1, 1, attr);
+    define_native_function(vm.names.sign, sign, 1, attr);
+    define_native_function(vm.names.clz32, clz32, 1, attr);
+    define_native_function(vm.names.acosh, acosh, 1, attr);
+    define_native_function(vm.names.asinh, asinh, 1, attr);
+    define_native_function(vm.names.atanh, atanh, 1, attr);
+    define_native_function(vm.names.log1p, log1p, 1, attr);
+    define_native_function(vm.names.cbrt, cbrt, 1, attr);
 
-    define_property("E", Value(M_E), 0);
-    define_property("LN2", Value(M_LN2), 0);
-    define_property("LN10", Value(M_LN10), 0);
-    define_property("LOG2E", Value(log2(M_E)), 0);
-    define_property("LOG10E", Value(log10(M_E)), 0);
-    define_property("PI", Value(M_PI), 0);
-    define_property("SQRT1_2", Value(M_SQRT1_2), 0);
-    define_property("SQRT2", Value(M_SQRT2), 0);
+    define_property(vm.names.E, Value(M_E), 0);
+    define_property(vm.names.LN2, Value(M_LN2), 0);
+    define_property(vm.names.LN10, Value(M_LN10), 0);
+    define_property(vm.names.LOG2E, Value(log2(M_E)), 0);
+    define_property(vm.names.LOG10E, Value(log10(M_E)), 0);
+    define_property(vm.names.PI, Value(M_PI), 0);
+    define_property(vm.names.SQRT1_2, Value(M_SQRT1_2), 0);
+    define_property(vm.names.SQRT2, Value(M_SQRT2), 0);
 
-    define_property(global_object.vm().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Math"), Attribute::Configurable);
+    define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Math"), Attribute::Configurable);
 }
 
 MathObject::~MathObject()

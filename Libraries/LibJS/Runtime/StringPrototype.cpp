@@ -66,29 +66,30 @@ StringPrototype::StringPrototype(GlobalObject& global_object)
 
 void StringPrototype::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     StringObject::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_property("length", length_getter, nullptr, 0);
-    define_native_function("charAt", char_at, 1, attr);
-    define_native_function("charCodeAt", char_code_at, 1, attr);
-    define_native_function("repeat", repeat, 1, attr);
-    define_native_function("startsWith", starts_with, 1, attr);
-    define_native_function("indexOf", index_of, 1, attr);
-    define_native_function("toLowerCase", to_lowercase, 0, attr);
-    define_native_function("toUpperCase", to_uppercase, 0, attr);
-    define_native_function("toString", to_string, 0, attr);
-    define_native_function("padStart", pad_start, 1, attr);
-    define_native_function("padEnd", pad_end, 1, attr);
-    define_native_function("trim", trim, 0, attr);
-    define_native_function("trimStart", trim_start, 0, attr);
-    define_native_function("trimEnd", trim_end, 0, attr);
-    define_native_function("concat", concat, 1, attr);
-    define_native_function("substring", substring, 2, attr);
-    define_native_function("includes", includes, 1, attr);
-    define_native_function("slice", slice, 2, attr);
-    define_native_function("lastIndexOf", last_index_of, 1, attr);
-    define_native_function(global_object.vm().well_known_symbol_iterator(), symbol_iterator, 0, attr);
+    define_native_property(vm.names.length, length_getter, nullptr, 0);
+    define_native_function(vm.names.charAt, char_at, 1, attr);
+    define_native_function(vm.names.charCodeAt, char_code_at, 1, attr);
+    define_native_function(vm.names.repeat, repeat, 1, attr);
+    define_native_function(vm.names.startsWith, starts_with, 1, attr);
+    define_native_function(vm.names.indexOf, index_of, 1, attr);
+    define_native_function(vm.names.toLowerCase, to_lowercase, 0, attr);
+    define_native_function(vm.names.toUpperCase, to_uppercase, 0, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.padStart, pad_start, 1, attr);
+    define_native_function(vm.names.padEnd, pad_end, 1, attr);
+    define_native_function(vm.names.trim, trim, 0, attr);
+    define_native_function(vm.names.trimStart, trim_start, 0, attr);
+    define_native_function(vm.names.trimEnd, trim_end, 0, attr);
+    define_native_function(vm.names.concat, concat, 1, attr);
+    define_native_function(vm.names.substring, substring, 2, attr);
+    define_native_function(vm.names.includes, includes, 1, attr);
+    define_native_function(vm.names.slice, slice, 2, attr);
+    define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
+    define_native_function(vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
 StringPrototype::~StringPrototype()

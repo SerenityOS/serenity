@@ -154,8 +154,10 @@ TestRunnerGlobalObject::~TestRunnerGlobalObject()
 void TestRunnerGlobalObject::initialize()
 {
     JS::GlobalObject::initialize();
-    define_property("global", this, JS::Attribute::Enumerable);
-    define_native_function("isStrictMode", is_strict_mode);
+    static FlyString global_property_name { "global" };
+    static FlyString is_strict_mode_property_name { "isStrictMode" };
+    define_property(global_property_name, this, JS::Attribute::Enumerable);
+    define_native_function(is_strict_mode_property_name, is_strict_mode);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)

@@ -45,10 +45,11 @@ SymbolPrototype::SymbolPrototype(GlobalObject& global_object)
 
 void SymbolPrototype::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Object::initialize(global_object);
-    define_native_property("description", description_getter, nullptr, Attribute::Configurable);
-    define_native_function("toString", to_string, 0, Attribute::Writable | Attribute::Configurable);
-    define_native_function("valueOf", value_of, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_property(vm.names.description, description_getter, nullptr, Attribute::Configurable);
+    define_native_function(vm.names.toString, to_string, 0, Attribute::Writable | Attribute::Configurable);
+    define_native_function(vm.names.valueOf, value_of, 0, Attribute::Writable | Attribute::Configurable);
 
     define_property(global_object.vm().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Symbol"), Attribute::Configurable);
 }

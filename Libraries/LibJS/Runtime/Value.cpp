@@ -738,7 +738,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
         return Value(false);
 
     Object* lhs_object = &lhs.as_object();
-    auto rhs_prototype = rhs_function.get("prototype");
+    auto rhs_prototype = rhs_function.get(vm.names.prototype);
     if (vm.exception())
         return {};
 
@@ -1013,8 +1013,9 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
 size_t length_of_array_like(GlobalObject& global_object, Value value)
 {
     ASSERT(value.is_object());
-    auto result = value.as_object().get("length");
-    if (global_object.vm().exception())
+    auto& vm = global_object.vm();
+    auto result = value.as_object().get(vm.names.length);
+    if (vm.exception())
         return 0;
     return result.to_size_t(global_object);
 }

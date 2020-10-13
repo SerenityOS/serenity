@@ -54,35 +54,36 @@ DatePrototype::DatePrototype(GlobalObject& global_object)
 
 void DatePrototype::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function("getDate", get_date, 0, attr);
-    define_native_function("getDay", get_day, 0, attr);
-    define_native_function("getFullYear", get_full_year, 0, attr);
-    define_native_function("getHours", get_hours, 0, attr);
-    define_native_function("getMilliseconds", get_milliseconds, 0, attr);
-    define_native_function("getMinutes", get_minutes, 0, attr);
-    define_native_function("getMonth", get_month, 0, attr);
-    define_native_function("getSeconds", get_seconds, 0, attr);
-    define_native_function("getTime", get_time, 0, attr);
-    define_native_function("getUTCDate", get_utc_date, 0, attr);
-    define_native_function("getUTCDay", get_utc_day, 0, attr);
-    define_native_function("getUTCFullYear", get_utc_full_year, 0, attr);
-    define_native_function("getUTCHours", get_utc_hours, 0, attr);
-    define_native_function("getUTCMilliseconds", get_utc_milliseconds, 0, attr);
-    define_native_function("getUTCMinutes", get_utc_minutes, 0, attr);
-    define_native_function("getUTCMonth", get_utc_month, 0, attr);
-    define_native_function("getUTCSeconds", get_utc_seconds, 0, attr);
-    define_native_function("toDateString", to_date_string, 0, attr);
-    define_native_function("toISOString", to_iso_string, 0, attr);
-    define_native_function("toLocaleDateString", to_locale_date_string, 0, attr);
-    define_native_function("toLocaleString", to_locale_string, 0, attr);
-    define_native_function("toLocaleTimeString", to_locale_time_string, 0, attr);
-    define_native_function("toTimeString", to_time_string, 0, attr);
-    define_native_function("toString", to_string, 0, attr);
+    define_native_function(vm.names.getDate, get_date, 0, attr);
+    define_native_function(vm.names.getDay, get_day, 0, attr);
+    define_native_function(vm.names.getFullYear, get_full_year, 0, attr);
+    define_native_function(vm.names.getHours, get_hours, 0, attr);
+    define_native_function(vm.names.getMilliseconds, get_milliseconds, 0, attr);
+    define_native_function(vm.names.getMinutes, get_minutes, 0, attr);
+    define_native_function(vm.names.getMonth, get_month, 0, attr);
+    define_native_function(vm.names.getSeconds, get_seconds, 0, attr);
+    define_native_function(vm.names.getTime, get_time, 0, attr);
+    define_native_function(vm.names.getUTCDate, get_utc_date, 0, attr);
+    define_native_function(vm.names.getUTCDay, get_utc_day, 0, attr);
+    define_native_function(vm.names.getUTCFullYear, get_utc_full_year, 0, attr);
+    define_native_function(vm.names.getUTCHours, get_utc_hours, 0, attr);
+    define_native_function(vm.names.getUTCMilliseconds, get_utc_milliseconds, 0, attr);
+    define_native_function(vm.names.getUTCMinutes, get_utc_minutes, 0, attr);
+    define_native_function(vm.names.getUTCMonth, get_utc_month, 0, attr);
+    define_native_function(vm.names.getUTCSeconds, get_utc_seconds, 0, attr);
+    define_native_function(vm.names.toDateString, to_date_string, 0, attr);
+    define_native_function(vm.names.toISOString, to_iso_string, 0, attr);
+    define_native_function(vm.names.toLocaleDateString, to_locale_date_string, 0, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.toLocaleTimeString, to_locale_time_string, 0, attr);
+    define_native_function(vm.names.toTimeString, to_time_string, 0, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
 
     // Aliases.
-    define_native_function("valueOf", get_time, 0, attr);
+    define_native_function(vm.names.valueOf, get_time, 0, attr);
     // toJSON() isn't quite an alias for toISOString():
     // - it returns null instead of throwing RangeError
     // - its .length is 1, not 0

@@ -46,40 +46,41 @@ ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
 
 void ArrayPrototype::initialize(GlobalObject& global_object)
 {
+    auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_function("filter", filter, 1, attr);
-    define_native_function("forEach", for_each, 1, attr);
-    define_native_function("map", map, 1, attr);
-    define_native_function("pop", pop, 0, attr);
-    define_native_function("push", push, 1, attr);
-    define_native_function("shift", shift, 0, attr);
-    define_native_function("toString", to_string, 0, attr);
-    define_native_function("toLocaleString", to_locale_string, 0, attr);
-    define_native_function("unshift", unshift, 1, attr);
-    define_native_function("join", join, 1, attr);
-    define_native_function("concat", concat, 1, attr);
-    define_native_function("slice", slice, 2, attr);
-    define_native_function("indexOf", index_of, 1, attr);
-    define_native_function("reduce", reduce, 1, attr);
-    define_native_function("reduceRight", reduce_right, 1, attr);
-    define_native_function("reverse", reverse, 0, attr);
-    define_native_function("lastIndexOf", last_index_of, 1, attr);
-    define_native_function("includes", includes, 1, attr);
-    define_native_function("find", find, 1, attr);
-    define_native_function("findIndex", find_index, 1, attr);
-    define_native_function("some", some, 1, attr);
-    define_native_function("every", every, 1, attr);
-    define_native_function("splice", splice, 2, attr);
-    define_native_function("fill", fill, 1, attr);
-    define_native_function("values", values, 0, attr);
-    define_property("length", Value(0), Attribute::Configurable);
+    define_native_function(vm.names.filter, filter, 1, attr);
+    define_native_function(vm.names.forEach, for_each, 1, attr);
+    define_native_function(vm.names.map, map, 1, attr);
+    define_native_function(vm.names.pop, pop, 0, attr);
+    define_native_function(vm.names.push, push, 1, attr);
+    define_native_function(vm.names.shift, shift, 0, attr);
+    define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
+    define_native_function(vm.names.unshift, unshift, 1, attr);
+    define_native_function(vm.names.join, join, 1, attr);
+    define_native_function(vm.names.concat, concat, 1, attr);
+    define_native_function(vm.names.slice, slice, 2, attr);
+    define_native_function(vm.names.indexOf, index_of, 1, attr);
+    define_native_function(vm.names.reduce, reduce, 1, attr);
+    define_native_function(vm.names.reduceRight, reduce_right, 1, attr);
+    define_native_function(vm.names.reverse, reverse, 0, attr);
+    define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
+    define_native_function(vm.names.includes, includes, 1, attr);
+    define_native_function(vm.names.find, find, 1, attr);
+    define_native_function(vm.names.findIndex, find_index, 1, attr);
+    define_native_function(vm.names.some, some, 1, attr);
+    define_native_function(vm.names.every, every, 1, attr);
+    define_native_function(vm.names.splice, splice, 2, attr);
+    define_native_function(vm.names.fill, fill, 1, attr);
+    define_native_function(vm.names.values, values, 0, attr);
+    define_property(vm.names.length, Value(0), Attribute::Configurable);
 
     // Use define_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
-    define_property(global_object.vm().well_known_symbol_iterator(), get("values"), attr);
+    define_property(vm.well_known_symbol_iterator(), get(vm.names.values), attr);
 }
 
 ArrayPrototype::~ArrayPrototype()
@@ -103,7 +104,7 @@ static Function* callback_from_args(GlobalObject& global_object, const String& n
 
 static size_t get_length(VM& vm, Object& object)
 {
-    auto length_property = object.get("length");
+    auto length_property = object.get(vm.names.length);
     if (vm.exception())
         return 0;
     return length_property.to_size_t(object.global_object());
@@ -208,7 +209,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
             return {};
     }
     auto new_length_value = Value((i32)new_length);
-    this_object->put("length", new_length_value);
+    this_object->put(vm.names.length, new_length_value);
     if (vm.exception())
         return {};
     return new_length_value;
@@ -237,7 +238,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     }
     auto length = get_length(vm, *this_object);
     if (length == 0) {
-        this_object->put("length", Value(0));
+        this_object->put(vm.names.length, Value(0));
         return js_undefined();
     }
     auto index = length - 1;
@@ -247,7 +248,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     this_object->delete_property(index);
     if (vm.exception())
         return {};
-    this_object->put("length", Value((i32)index));
+    this_object->put(vm.names.length, Value((i32)index));
     if (vm.exception())
         return {};
     return element;
@@ -271,7 +272,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto join_function = this_object->get("join");
+    auto join_function = this_object->get(vm.names.join);
     if (vm.exception())
         return {};
     if (!join_function.is_function())
@@ -789,7 +790,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
             return {};
     }
 
-    this_object->put("length", Value((i32)new_length));
+    this_object->put(vm.names.length, Value((i32)new_length));
     if (vm.exception())
         return {};
 
