@@ -120,7 +120,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 
     if (m_callee->is_super_expression()) {
         // If we are calling super, |this| has not been initialized yet, and would not be meaningful to provide.
-        auto new_target = interpreter.vm().get_new_target();
+        auto new_target = vm.get_new_target();
         ASSERT(new_target.is_function());
         return { js_undefined(), new_target };
     }
@@ -128,16 +128,16 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     if (m_callee->is_member_expression()) {
         auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
         bool is_super_property_lookup = member_expression.object().is_super_expression();
-        auto lookup_target = is_super_property_lookup ? interpreter.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
-        if (interpreter.exception())
+        auto lookup_target = is_super_property_lookup ? vm.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
+        if (vm.exception())
             return {};
         if (is_super_property_lookup && lookup_target.is_nullish()) {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects());
+            vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, lookup_target.to_string_without_side_effects());
             return {};
         }
 
         auto* this_value = is_super_property_lookup ? &vm.this_value(global_object).as_object() : lookup_target.to_object(global_object);
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
         auto property_name = member_expression.computed_property_name(interpreter, global_object);
         if (!property_name.is_valid())
@@ -150,8 +150,9 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 
 Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
+    auto& vm = interpreter.vm();
     auto [this_value, callee] = compute_this_and_callee(interpreter, global_object);
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
 
     ASSERT(!callee.is_empty());
@@ -167,29 +168,30 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             } else {
                 expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
             }
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), call_type, expression_string);
+            vm.throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), call_type, expression_string);
         } else {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::IsNotA, callee.to_string_without_side_effects(), call_type);
+            vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, callee.to_string_without_side_effects(), call_type);
         }
         return {};
     }
 
     auto& function = callee.as_function();
 
-    MarkedValueList arguments(interpreter.heap());
+    MarkedValueList arguments(vm.heap());
+    arguments.ensure_capacity(m_arguments.size());
 
     for (size_t i = 0; i < m_arguments.size(); ++i) {
         auto value = m_arguments[i].value->execute(interpreter, global_object);
-        if (interpreter.exception())
+        if (vm.exception())
             return {};
         if (m_arguments[i].is_spread) {
             get_iterator_values(global_object, value, [&](Value iterator_value) {
-                if (interpreter.exception())
+                if (vm.exception())
                     return IterationDecision::Break;
                 arguments.append(iterator_value);
                 return IterationDecision::Continue;
             });
-            if (interpreter.exception())
+            if (vm.exception())
                 return {};
         } else {
             arguments.append(value);
@@ -199,26 +201,26 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     Object* new_object = nullptr;
     Value result;
     if (is_new_expression()) {
-        result = interpreter.vm().construct(function, function, move(arguments), global_object);
+        result = vm.construct(function, function, move(arguments), global_object);
         if (result.is_object())
             new_object = &result.as_object();
     } else if (m_callee->is_super_expression()) {
-        auto* super_constructor = interpreter.current_environment()->current_function()->prototype();
+        auto* super_constructor = vm.current_environment()->current_function()->prototype();
         // FIXME: Functions should track their constructor kind.
         if (!super_constructor || !super_constructor->is_function()) {
-            interpreter.vm().throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
             return {};
         }
-        result = interpreter.vm().construct(static_cast<Function&>(*super_constructor), function, move(arguments), global_object);
-        if (interpreter.exception())
+        result = vm.construct(static_cast<Function&>(*super_constructor), function, move(arguments), global_object);
+        if (vm.exception())
             return {};
 
-        interpreter.current_environment()->bind_this_value(global_object, result);
+        vm.current_environment()->bind_this_value(global_object, result);
     } else {
-        result = interpreter.vm().call(function, this_value, move(arguments));
+        result = vm.call(function, this_value, move(arguments));
     }
 
-    if (interpreter.exception())
+    if (vm.exception())
         return {};
 
     if (is_new_expression()) {
