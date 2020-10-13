@@ -166,14 +166,14 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
 {
     auto file = Core::File::construct(path);
     if (!file->open(Core::IODevice::ReadOnly)) {
-        fprintf(stderr, "Unable to open %s, error: %s\n", path.to_string().characters(), file->error_string());
+        warnln("Unable to open {}, error: {}", path, file->error_string());
         return nullptr;
     }
 
     auto json = JsonValue::from_string(file->read_all());
     ASSERT(json.has_value());
     if (!json.value().is_object()) {
-        fprintf(stderr, "Invalid perfcore format (not a JSON object)\n");
+        warnln("Invalid perfcore format (not a JSON object)");
         return nullptr;
     }
 
@@ -182,7 +182,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
 
     MappedFile elf_file(executable_path);
     if (!elf_file.is_valid()) {
-        fprintf(stderr, "Unable to open executable '%s' for symbolication.\n", executable_path.characters());
+        warnln("Unable to open executable '{}' for symbolication.", executable_path);
         return nullptr;
     }
 
