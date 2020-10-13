@@ -745,7 +745,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
 
     unsigned long srclen = context.compressed_data.size() - 6;
     unsigned long destlen = 0;
-    int ret = puff(NULL, &destlen, context.compressed_data.data() + 2, &srclen);
+    int ret = puff(nullptr, &destlen, context.compressed_data.data() + 2, &srclen);
     if (ret != 0) {
         context.state = PNGLoadingContext::State::Error;
         return false;

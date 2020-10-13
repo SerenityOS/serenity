@@ -175,7 +175,7 @@ int main(int argc, char** argv)
             highest_fd = max(highest_fd, fd);
         }
 
-        int ready = select(highest_fd + 1, &readfds, &writefds, &exceptfds, NULL);
+        int ready = select(highest_fd + 1, &readfds, &writefds, &exceptfds, nullptr);
         if (ready == -1) {
             if (errno == EINTR)
                 continue;
