@@ -38,9 +38,9 @@ namespace Detail {
 template<typename T>
 class Span {
 public:
-    ALWAYS_INLINE Span() = default;
+    ALWAYS_INLINE constexpr Span() = default;
 
-    ALWAYS_INLINE Span(T* values, size_t size)
+    ALWAYS_INLINE constexpr Span(T* values, size_t size)
         : m_values(values)
         , m_size(size)
     {
@@ -54,9 +54,9 @@ protected:
 template<>
 class Span<u8> {
 public:
-    ALWAYS_INLINE Span() = default;
+    ALWAYS_INLINE constexpr Span() = default;
 
-    ALWAYS_INLINE Span(u8* values, size_t size)
+    ALWAYS_INLINE constexpr Span(u8* values, size_t size)
         : m_values(values)
         , m_size(size)
     {
@@ -75,9 +75,9 @@ protected:
 template<>
 class Span<const u8> {
 public:
-    ALWAYS_INLINE Span() = default;
+    ALWAYS_INLINE constexpr Span() = default;
 
-    ALWAYS_INLINE Span(const u8* values, size_t size)
+    ALWAYS_INLINE constexpr Span(const u8* values, size_t size)
         : m_values(values)
         , m_size(size)
     {
@@ -105,18 +105,18 @@ class Span : public Detail::Span<T> {
 public:
     using Detail::Span<T>::Span;
 
-    ALWAYS_INLINE Span(std::nullptr_t)
+    ALWAYS_INLINE constexpr Span(std::nullptr_t)
         : Span()
     {
     }
 
-    ALWAYS_INLINE Span(const Span& other)
+    ALWAYS_INLINE constexpr Span(const Span& other)
         : Span(other.m_values, other.m_size)
     {
     }
 
-    ALWAYS_INLINE const T* data() const { return this->m_values; }
-    ALWAYS_INLINE T* data() { return this->m_values; }
+    ALWAYS_INLINE constexpr const T* data() const { return this->m_values; }
+    ALWAYS_INLINE constexpr T* data() { return this->m_values; }
 
     using ConstIterator = SimpleIterator<const Span, const T>;
     using Iterator = SimpleIterator<Span, T>;
@@ -127,45 +127,45 @@ public:
     constexpr ConstIterator end() const { return ConstIterator::end(*this); }
     constexpr Iterator end() { return Iterator::end(*this); }
 
-    ALWAYS_INLINE size_t size() const { return this->m_size; }
+    ALWAYS_INLINE constexpr size_t size() const { return this->m_size; }
 
-    ALWAYS_INLINE bool is_empty() const { return this->m_size == 0; }
+    ALWAYS_INLINE constexpr bool is_empty() const { return this->m_size == 0; }
 
-    ALWAYS_INLINE Span slice(size_t start, size_t length) const
+    ALWAYS_INLINE constexpr Span slice(size_t start, size_t length) const
     {
         ASSERT(start + length <= size());
         return { this->m_values + start, length };
     }
-    ALWAYS_INLINE Span slice(size_t start) const
+    ALWAYS_INLINE constexpr Span slice(size_t start) const
     {
         ASSERT(start <= size());
         return { this->m_values + start, size() - start };
     }
 
-    ALWAYS_INLINE Span trim(size_t length) const
+    ALWAYS_INLINE constexpr Span trim(size_t length) const
     {
         return { this->m_values, min(size(), length) };
     }
 
-    ALWAYS_INLINE T* offset(size_t start) const
+    ALWAYS_INLINE constexpr T* offset(size_t start) const
     {
         ASSERT(start < this->m_size);
         return this->m_values + start;
     }
 
-    ALWAYS_INLINE size_t copy_to(Span<typename RemoveConst<T>::Type> other) const
+    ALWAYS_INLINE constexpr size_t copy_to(Span<typename RemoveConst<T>::Type> other) const
     {
         ASSERT(other.size() >= size());
         return TypedTransfer<typename RemoveConst<T>::Type>::copy(other.data(), data(), size());
     }
 
-    ALWAYS_INLINE size_t copy_trimmed_to(Span<typename RemoveConst<T>::Type> other) const
+    ALWAYS_INLINE constexpr size_t copy_trimmed_to(Span<typename RemoveConst<T>::Type> other) const
     {
         const auto count = min(size(), other.size());
         return TypedTransfer<typename RemoveConst<T>::Type>::copy(other.data(), data(), count);
     }
 
-    ALWAYS_INLINE size_t fill(const T& value)
+    ALWAYS_INLINE constexpr size_t fill(const T& value)
     {
         for (size_t idx = 0; idx < size(); ++idx)
             data()[idx] = value;
@@ -173,7 +173,7 @@ public:
         return size();
     }
 
-    bool contains_slow(const T& value) const
+    bool constexpr contains_slow(const T& value) const
     {
         for (size_t i = 0; i < size(); ++i) {
             if (at(i) == value)
@@ -182,34 +182,34 @@ public:
         return false;
     }
 
-    ALWAYS_INLINE const T& at(size_t index) const
+    ALWAYS_INLINE constexpr const T& at(size_t index) const
     {
         ASSERT(index < this->m_size);
         return this->m_values[index];
     }
-    ALWAYS_INLINE T& at(size_t index)
+    ALWAYS_INLINE constexpr T& at(size_t index)
     {
         ASSERT(index < this->m_size);
         return this->m_values[index];
     }
 
-    ALWAYS_INLINE T& operator[](size_t index) const
+    ALWAYS_INLINE constexpr T& operator[](size_t index) const
     {
         return this->m_values[index];
     }
-    ALWAYS_INLINE T& operator[](size_t index)
+    ALWAYS_INLINE constexpr T& operator[](size_t index)
     {
         return this->m_values[index];
     }
 
-    ALWAYS_INLINE Span& operator=(const Span<T>& other)
+    ALWAYS_INLINE constexpr Span& operator=(const Span<T>& other)
     {
         this->m_size = other.m_size;
         this->m_values = other.m_values;
         return *this;
     }
 
-    bool operator==(Span<const T> other) const
+    constexpr bool operator==(Span<const T> other) const
     {
         if (size() != other.size())
             return false;
@@ -217,7 +217,7 @@ public:
         return TypedTransfer<T>::compare(data(), other.data(), size());
     }
 
-    ALWAYS_INLINE operator Span<const T>() const
+    ALWAYS_INLINE constexpr operator Span<const T>() const
     {
         return { data(), size() };
     }
