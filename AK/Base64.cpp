@@ -26,6 +26,7 @@
 
 #include <AK/Base64.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Once.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -36,15 +37,14 @@ namespace AK {
 
 static constexpr u8 s_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 static u8 s_table[256] = {};
-static bool s_initialized = false;
 
 static void build_lookup_table_if_needed()
 {
-    if (s_initialized)
-        return;
-    for (size_t i = 0; i < sizeof(s_alphabet) - 1; ++i)
-        s_table[s_alphabet[i]] = i;
-    s_initialized = true;
+    static OnceFlag s_initialized {};
+    call_once(s_initialized, [&] {
+        for (size_t i = 0; i < sizeof(s_alphabet) - 1; ++i)
+            s_table[s_alphabet[i]] = i;
+    });
 }
 
 ByteBuffer decode_base64(const StringView& input)

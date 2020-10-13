@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Once.h>
 #include <LibWeb/HTML/AttributeNames.h>
 
 namespace Web {
@@ -39,24 +40,22 @@ ENUMERATE_HTML_ATTRIBUTES
 [[gnu::constructor]] static void initialize()
 // clang-format off
 {
-    static bool s_initialized = false;
-    if (s_initialized)
-        return;
+    static AK::OnceFlag s_initialized {};
+    AK::call_once(s_initialized, [&] {
 
 #define __ENUMERATE_HTML_ATTRIBUTE(name) \
-    name = #name;
-    ENUMERATE_HTML_ATTRIBUTES
+        name = #name;
+        ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-    // NOTE: Special case for the class and for attributes since they're C++ keywords.
-    class_ = "class";
-    for_ = "for";
+        // NOTE: Special case for the class and for attributes since they're C++ keywords.
+        class_ = "class";
+        for_ = "for";
 
-    // NOTE: Special cases for attributes with dashes in them.
-    accept_charset = "accept-charset";
-    http_equiv = "http-equiv";
-
-    s_initialized = true;
+        // NOTE: Special cases for attributes with dashes in them.
+        accept_charset = "accept-charset";
+        http_equiv = "http-equiv";
+    });
 }
 
 }

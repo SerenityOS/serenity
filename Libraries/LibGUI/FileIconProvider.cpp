@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Once.h>
 #include <AK/String.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/FileIconProvider.h>
@@ -71,26 +72,24 @@ static Icon s_executable_icon;
 
 static void initialize_if_needed()
 {
-    static bool s_initialized = false;
-    if (s_initialized)
-        return;
-    s_hard_disk_icon = Icon::default_icon("hard-disk");
-    s_directory_icon = Icon::default_icon("filetype-folder");
-    s_directory_open_icon = Icon::default_icon("filetype-folder-open");
-    s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible");
-    s_home_directory_icon = Icon::default_icon("home-directory");
-    s_home_directory_open_icon = Icon::default_icon("home-directory-open");
-    s_file_icon = Icon::default_icon("filetype-unknown");
-    s_symlink_icon = Icon::default_icon("filetype-symlink");
-    s_socket_icon = Icon::default_icon("filetype-socket");
-    s_executable_icon = Icon::default_icon("filetype-executable");
+    static AK::OnceFlag s_initialized {};
+    AK::call_once(s_initialized, [&] {
+        s_hard_disk_icon = Icon::default_icon("hard-disk");
+        s_directory_icon = Icon::default_icon("filetype-folder");
+        s_directory_open_icon = Icon::default_icon("filetype-folder-open");
+        s_inaccessible_directory_icon = Icon::default_icon("filetype-folder-inaccessible");
+        s_home_directory_icon = Icon::default_icon("home-directory");
+        s_home_directory_open_icon = Icon::default_icon("home-directory-open");
+        s_file_icon = Icon::default_icon("filetype-unknown");
+        s_symlink_icon = Icon::default_icon("filetype-symlink");
+        s_socket_icon = Icon::default_icon("filetype-socket");
+        s_executable_icon = Icon::default_icon("filetype-executable");
 
 #define __ENUMERATE_FILETYPE(filetype_name, ...) \
     s_filetype_##filetype_name##_icon = Icon::default_icon("filetype-" #filetype_name);
-    ENUMERATE_FILETYPES(__ENUMERATE_FILETYPE)
+        ENUMERATE_FILETYPES(__ENUMERATE_FILETYPE)
 #undef __ENUMERATE_FILETYPE
-
-    s_initialized = true;
+    });
 }
 
 Icon FileIconProvider::directory_icon()

@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Once.h>
 #include <LibWeb/SVG/TagNames.h>
 
 namespace Web::SVG::TagNames {
@@ -37,15 +38,13 @@ ENUMERATE_SVG_TAGS
 [[gnu::constructor]] static void initialize()
 // clang-format off
 {
-    static bool s_initialized = false;
-    if (s_initialized)
-        return;
+    static AK::OnceFlag s_initialized {};
+    AK::call_once(s_initialized, [&] {
 
 #define __ENUMERATE_SVG_TAG(name) name = #name;
-    ENUMERATE_SVG_TAGS
+        ENUMERATE_SVG_TAGS
 #undef __ENUMERATE_SVG_TAG
-
-    s_initialized = true;
+    });
 }
 
 }

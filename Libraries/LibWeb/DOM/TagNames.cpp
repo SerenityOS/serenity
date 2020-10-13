@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Once.h>
 #include <LibWeb/DOM/TagNames.h>
 
 namespace Web {
@@ -39,18 +40,16 @@ ENUMERATE_HTML_TAGS
 [[gnu::constructor]] static void initialize()
 // clang-format off
 {
-    static bool s_initialized = false;
-    if (s_initialized)
-        return;
+    static AK::OnceFlag s_initialized {};
+    AK::call_once(s_initialized, [&] {
 
 #define __ENUMERATE_HTML_TAG(name) \
-    name = #name;
-    ENUMERATE_HTML_TAGS
+        name = #name;
+        ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
 
-    template_ = "template";
-
-    s_initialized = true;
+        template_ = "template";
+    });
 }
 
 }
