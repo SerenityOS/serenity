@@ -34,9 +34,11 @@
 int main(int argc, char** argv)
 {
     const char* path = nullptr;
+    bool should_loop = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to WAV file", "path");
+    args_parser.add_option(should_loop, "Loop playback", "loop", 'l');
     args_parser.parse(argc, argv);
 
     Core::EventLoop loop;
@@ -62,6 +64,8 @@ int main(int argc, char** argv)
             printf("%d/%d", loader.loaded_samples(), loader.total_samples());
             fflush(stdout);
             audio_client->enqueue(*samples);
+        } else if (should_loop) {
+            loader.reset();
         } else if (audio_client->get_remaining_samples()) {
             sleep(1);
         } else {
