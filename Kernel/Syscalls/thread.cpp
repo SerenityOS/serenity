@@ -137,7 +137,7 @@ int Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
             break;
         }
         if (result == Thread::BlockResult::InterruptedByDeath)
-            return 0; // we're not going to return back to user mode
+            break;
     }
 
     if (exit_value && !copy_to_user(exit_value, &joinee_exit_value))
