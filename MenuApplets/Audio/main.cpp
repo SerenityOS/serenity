@@ -108,7 +108,8 @@ public:
         m_slider->set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
         m_slider->on_value_changed = [&](int value) {
             int volume = clamp((20 - value) * 5, 0, 100);
-            m_audio_client->set_main_mix_volume(volume);
+            float volume_log = ((volume / 100.0f) * (volume / 100.0f)) * 100.0f;
+            m_audio_client->set_main_mix_volume(volume_log);
             update();
         };
 
@@ -147,7 +148,8 @@ private:
         if (m_audio_muted)
             return;
         int volume = clamp(m_audio_volume - event.wheel_delta() * 5, 0, 100);
-        m_audio_client->set_main_mix_volume(volume);
+        float volume_log = ((volume / 100.0f) * (volume / 100.0f)) * 100.0f;
+        m_audio_client->set_main_mix_volume(volume_log);
         m_slider->set_value(20 - (volume / 5));
         update();
     }
