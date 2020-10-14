@@ -43,9 +43,10 @@ enum class AugmentedTokenKind : u32 {
 
 class HighlightVisitor : public AST::NodeVisitor {
 public:
-    HighlightVisitor(Vector<GUI::TextDocumentSpan>& spans, const Gfx::Palette& palette)
+    HighlightVisitor(Vector<GUI::TextDocumentSpan>& spans, const Gfx::Palette& palette, const TextDocument& document)
         : m_spans(spans)
         , m_palette(palette)
+        , m_document(document)
     {
     }
 
@@ -56,13 +57,34 @@ private:
         size_t offset { 0 };
     };
 
-    static void set_offset_range_end(TextRange& range, const AST::Position::Line& line, size_t offset = 1)
+    AST::Position::Line offset_line(const AST::Position::Line& line, size_t offset)
     {
-        range.set_end({ line.line_number, line.line_column - min(line.line_column, offset) });
+        // We need to look at the line(s) above.
+        AST::Position::Line new_line { line };
+        while (new_line.line_column < offset) {
+            offset -= new_line.line_column;
+            --offset;
+
+            ASSERT(new_line.line_number > 0);
+            --new_line.line_number;
+
+            auto line = m_document.line(new_line.line_number);
+            new_line.line_column = line.length();
+        }
+        if (offset > 0)
+            new_line.line_column -= offset;
+
+        return new_line;
     }
-    static void set_offset_range_start(TextRange& range, const AST::Position::Line& line, size_t offset = 1)
+    void set_offset_range_end(TextRange& range, const AST::Position::Line& line, size_t offset = 1)
     {
-        range.set_start({ line.line_number, line.line_column - min(line.line_column, offset) });
+        auto new_line = offset_line(line, offset);
+        range.set_end({ new_line.line_number, new_line.line_column });
+    }
+    void set_offset_range_start(TextRange& range, const AST::Position::Line& line, size_t offset = 1)
+    {
+        auto new_line = offset_line(line, offset);
+        range.set_start({ new_line.line_number, new_line.line_column });
     }
 
     GUI::TextDocumentSpan& span_for_node(const AST::Node* node)
@@ -435,6 +457,7 @@ private:
 
     Vector<GUI::TextDocumentSpan>& m_spans;
     const Gfx::Palette& m_palette;
+    const TextDocument& m_document;
     bool m_is_first_in_command { false };
 };
 
@@ -468,7 +491,7 @@ void ShellSyntaxHighlighter::rehighlight(Gfx::Palette palette)
 
     Vector<GUI::TextDocumentSpan> spans;
     GUI::TextPosition position { 0, 0 };
-    HighlightVisitor visitor { spans, palette };
+    HighlightVisitor visitor { spans, palette, m_editor->document() };
 
     if (ast)
         ast->visit(visitor);
