@@ -140,7 +140,7 @@ void Formatter::visit(const AST::And* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    auto should_indent = m_parent_node && m_parent_node->class_name() != "And";
+    auto should_indent = m_parent_node && m_parent_node->kind() != AST::Node::Kind::And;
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     with_added_indent(should_indent ? 1 : 0, [&] {
@@ -370,7 +370,7 @@ void Formatter::visit(const AST::IfCond* node)
 
     if (node->false_branch()) {
         current_builder().append(" else ");
-        if (node->false_branch()->class_name() != "IfCond") {
+        if (node->false_branch()->kind() != AST::Node::Kind::IfCond) {
             in_new_block([&] {
                 node->false_branch()->visit(*this);
             });
@@ -446,7 +446,7 @@ void Formatter::visit(const AST::Or* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    auto should_indent = m_parent_node && m_parent_node->class_name() != "Or";
+    auto should_indent = m_parent_node && m_parent_node->kind() != AST::Node::Kind::Or;
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     with_added_indent(should_indent ? 1 : 0, [&] {
@@ -465,7 +465,7 @@ void Formatter::visit(const AST::Pipe* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    auto should_indent = m_parent_node && m_parent_node->class_name() != "Pipe";
+    auto should_indent = m_parent_node && m_parent_node->kind() != AST::Node::Kind::Pipe;
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     node->left()->visit(*this);
