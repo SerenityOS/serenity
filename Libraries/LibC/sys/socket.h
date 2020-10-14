@@ -169,7 +169,7 @@ static inline struct cmsghdr* CMSG_NXTHDR(struct msghdr* msg, struct cmsghdr* cm
     struct cmsghdr* next = (struct cmsghdr*)((char*)cmsg + CMSG_ALIGN(cmsg->cmsg_len));
     unsigned offset = (char*)next - (char*)msg->msg_control;
     if (msg->msg_controllen < offset + sizeof(struct cmsghdr))
-        return nullptr;
+        return NULL;
     return next;
 }
 
