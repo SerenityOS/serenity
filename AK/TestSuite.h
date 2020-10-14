@@ -28,8 +28,6 @@
 
 #define AK_TEST_SUITE
 
-extern "C" __attribute__((noreturn)) void abort() noexcept;
-
 namespace AK {
 
 template<typename... Parameters>
@@ -62,6 +60,8 @@ using AK::warnln;
         ::AK::warnln(stderr, "\033[31;1mFAIL\033[0m: {}:{}: TODO() called", __FILE__, __LINE__); \
         ::abort();                                                                               \
     } while (false)
+
+#include <stdlib.h>
 
 #include <AK/Format.h>
 #include <AK/Function.h>
