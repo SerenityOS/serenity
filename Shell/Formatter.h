@@ -92,6 +92,8 @@ private:
     virtual void visit(const AST::WriteRedirection*) override;
 
     void test_and_update_output_cursor(const AST::Node*);
+    void visited(const AST::Node*);
+    void will_visit(const AST::Node*);
     void insert_separator();
     void insert_indent();
 
@@ -118,6 +120,7 @@ private:
     AST::Node* m_hit_node { nullptr };
 
     const AST::Node* m_parent_node { nullptr };
+    const AST::Node* m_last_visited_node { nullptr };
 
     StringView m_trivia;
 };

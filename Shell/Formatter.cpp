@@ -93,6 +93,28 @@ void Formatter::test_and_update_output_cursor(const AST::Node* node)
     m_output_cursor = current_builder().length() + m_cursor - node->position().start_offset;
 }
 
+void Formatter::visited(const AST::Node* node)
+{
+    m_last_visited_node = node;
+}
+
+void Formatter::will_visit(const AST::Node* node)
+{
+    if (!m_last_visited_node)
+        return;
+
+    if (!node)
+        return;
+
+    auto direct_sequence_child = !m_parent_node || m_parent_node->kind() == AST::Node::Kind::Sequence;
+
+    if (direct_sequence_child && node->kind() != AST::Node::Kind::Sequence) {
+        // Collapse more than one empty line to a single one.
+        if (node->position().start_line.line_number - m_last_visited_node->position().end_line.line_number > 1)
+            current_builder().append('\n');
+    }
+}
+
 void Formatter::insert_separator()
 {
     current_builder().append('\n');
@@ -107,13 +129,16 @@ void Formatter::insert_indent()
 
 void Formatter::visit(const AST::PathRedirectionNode* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::And* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     auto should_indent = m_parent_node && m_parent_node->class_name() != "And";
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
@@ -127,10 +152,12 @@ void Formatter::visit(const AST::And* node)
 
         node->right()->visit(*this);
     });
+    visited(node);
 }
 
 void Formatter::visit(const AST::ListConcatenate* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
@@ -141,25 +168,31 @@ void Formatter::visit(const AST::ListConcatenate* node)
         first = false;
         subnode->visit(*this);
     }
+    visited(node);
 }
 
 void Formatter::visit(const AST::Background* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
 
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     NodeVisitor::visit(node);
     current_builder().append(" &");
+    visited(node);
 }
 
 void Formatter::visit(const AST::BarewordLiteral* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append(node->text());
+    visited(node);
 }
 
 void Formatter::visit(const AST::CastToCommand* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     if (m_options.explicit_parentheses)
         current_builder().append('(');
@@ -169,10 +202,12 @@ void Formatter::visit(const AST::CastToCommand* node)
 
     if (m_options.explicit_parentheses)
         current_builder().append(')');
+    visited(node);
 }
 
 void Formatter::visit(const AST::CastToList* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append('(');
 
@@ -180,14 +215,17 @@ void Formatter::visit(const AST::CastToList* node)
     NodeVisitor::visit(node);
 
     current_builder().append(')');
+    visited(node);
 }
 
 void Formatter::visit(const AST::CloseFdRedirection* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     current_builder().appendf(" %d>&-", node->fd());
+    visited(node);
 }
 
 void Formatter::visit(const AST::CommandLiteral*)
@@ -197,21 +235,26 @@ void Formatter::visit(const AST::CommandLiteral*)
 
 void Formatter::visit(const AST::Comment* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append("#");
     current_builder().append(node->text());
+    visited(node);
 }
 
 void Formatter::visit(const AST::DynamicEvaluate* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append('$');
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::DoubleQuotedString* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append("\"");
 
@@ -221,20 +264,24 @@ void Formatter::visit(const AST::DoubleQuotedString* node)
     NodeVisitor::visit(node);
 
     current_builder().append("\"");
+    visited(node);
 }
 
 void Formatter::visit(const AST::Fd2FdRedirection* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     current_builder().appendf(" %d>&%d", node->source_fd(), node->dest_fd());
     if (m_hit_node == node)
         ++m_output_cursor;
+    visited(node);
 }
 
 void Formatter::visit(const AST::FunctionDeclaration* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append(node->name().name);
     current_builder().append('(');
@@ -254,10 +301,12 @@ void Formatter::visit(const AST::FunctionDeclaration* node)
         if (node->block())
             node->block()->visit(*this);
     });
+    visited(node);
 }
 
 void Formatter::visit(const AST::ForLoop* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append("for ");
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
@@ -274,16 +323,20 @@ void Formatter::visit(const AST::ForLoop* node)
         if (node->block())
             node->block()->visit(*this);
     });
+    visited(node);
 }
 
 void Formatter::visit(const AST::Glob* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append(node->text());
+    visited(node);
 }
 
 void Formatter::visit(const AST::Execute* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     auto& builder = current_builder();
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
@@ -295,10 +348,12 @@ void Formatter::visit(const AST::Execute* node)
     }
 
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::IfCond* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
 
     current_builder().append("if ");
@@ -325,10 +380,12 @@ void Formatter::visit(const AST::IfCond* node)
     } else if (node->else_position().has_value()) {
         current_builder().append(" else ");
     }
+    visited(node);
 }
 
 void Formatter::visit(const AST::Join* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     auto should_parenthesise = m_options.explicit_parentheses;
 
@@ -342,10 +399,12 @@ void Formatter::visit(const AST::Join* node)
 
     if (should_parenthesise)
         current_builder().append(')');
+    visited(node);
 }
 
 void Formatter::visit(const AST::MatchExpr* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append("match ");
 
@@ -380,10 +439,12 @@ void Formatter::visit(const AST::MatchExpr* node)
             });
         }
     });
+    visited(node);
 }
 
 void Formatter::visit(const AST::Or* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     auto should_indent = m_parent_node && m_parent_node->class_name() != "Or";
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
@@ -397,10 +458,12 @@ void Formatter::visit(const AST::Or* node)
 
         node->right()->visit(*this);
     });
+    visited(node);
 }
 
 void Formatter::visit(const AST::Pipe* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     auto should_indent = m_parent_node && m_parent_node->class_name() != "Pipe";
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
@@ -414,10 +477,12 @@ void Formatter::visit(const AST::Pipe* node)
 
         node->right()->visit(*this);
     });
+    visited(node);
 }
 
 void Formatter::visit(const AST::ReadRedirection* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
@@ -426,10 +491,12 @@ void Formatter::visit(const AST::ReadRedirection* node)
     else
         current_builder().append(" <");
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::ReadWriteRedirection* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
@@ -438,10 +505,12 @@ void Formatter::visit(const AST::ReadWriteRedirection* node)
     else
         current_builder().append(" <>");
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::Sequence* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
 
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
@@ -449,10 +518,12 @@ void Formatter::visit(const AST::Sequence* node)
     insert_separator();
 
     node->right()->visit(*this);
+    visited(node);
 }
 
 void Formatter::visit(const AST::Subshell* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
@@ -461,31 +532,39 @@ void Formatter::visit(const AST::Subshell* node)
         NodeVisitor::visit(node);
         insert_separator();
     });
+    visited(node);
 }
 
 void Formatter::visit(const AST::SimpleVariable* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append('$');
     current_builder().append(node->name());
+    visited(node);
 }
 
 void Formatter::visit(const AST::SpecialVariable* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append('$');
     current_builder().append(node->name());
+    visited(node);
 }
 
 void Formatter::visit(const AST::Juxtaposition* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::StringLiteral* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     if (!m_options.in_double_quotes)
         current_builder().append("'");
@@ -530,30 +609,38 @@ void Formatter::visit(const AST::StringLiteral* node)
 
     if (!m_options.in_double_quotes)
         current_builder().append("'");
+    visited(node);
 }
 
 void Formatter::visit(const AST::StringPartCompose* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::SyntaxError* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::Tilde* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append(node->text());
+    visited(node);
 }
 
 void Formatter::visit(const AST::VariableDeclarations* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
@@ -573,10 +660,12 @@ void Formatter::visit(const AST::VariableDeclarations* node)
         if (entry.value->is_command())
             current_builder().append(')');
     }
+    visited(node);
 }
 
 void Formatter::visit(const AST::WriteAppendRedirection* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
@@ -585,10 +674,12 @@ void Formatter::visit(const AST::WriteAppendRedirection* node)
     else
         current_builder().append(" >>");
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 void Formatter::visit(const AST::WriteRedirection* node)
 {
+    will_visit(node);
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
@@ -597,6 +688,7 @@ void Formatter::visit(const AST::WriteRedirection* node)
     else
         current_builder().append(" >");
     NodeVisitor::visit(node);
+    visited(node);
 }
 
 }
