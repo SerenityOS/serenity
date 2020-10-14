@@ -373,6 +373,7 @@ void Formatter::visit(const AST::MatchExpr* node)
                 option.visit(*this);
             }
 
+            current_builder().append(' ');
             in_new_block([&] {
                 if (entry.body)
                     entry.body->visit(*this);
