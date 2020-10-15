@@ -251,7 +251,7 @@ String DateTime::to_string(const String& format) const
 
 bool DateTime::is_before(const String& other) const
 {
-    auto now_string = String::format("%04d%02d%02d%02d%02d%02dZ", year(), month(), weekday(), hour(), minute(), second());
+    auto now_string = String::formatted("{:04}{:02}{:02}{:02}{:02}{:02}Z", year(), month(), weekday(), hour(), minute(), second());
     return __builtin_strcasecmp(now_string.characters(), other.characters()) < 0;
 }
 
@@ -259,4 +259,5 @@ const LogStream& operator<<(const LogStream& stream, const DateTime& value)
 {
     return stream << value.to_string();
 }
+
 }
