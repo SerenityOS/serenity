@@ -27,6 +27,7 @@
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,9 +45,15 @@ int main(int argc, char** argv)
     Vector<String> lines;
 
     for (;;) {
-        char buffer[BUFSIZ];
-        auto* str = fgets(buffer, sizeof(buffer), stdin);
-        if (!str)
+        char* buffer = nullptr;
+        ssize_t buflen = 0;
+        errno = 0;
+        buflen = getline(&buffer, nullptr, stdin);
+        if (buflen == -1 && errno != 0) {
+            perror("getline");
+            exit(1);
+        }
+        if (buflen == -1)
             break;
         lines.append(buffer);
     }
