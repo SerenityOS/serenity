@@ -37,7 +37,7 @@ WavLoader::WavLoader(const StringView& path)
     : m_file(Core::File::construct(path))
 {
     if (!m_file->open(Core::IODevice::ReadOnly)) {
-        m_error_string = String::format("Can't open file: %s", m_file->error_string());
+        m_error_string = String::formatted("Can't open file: {}", m_file->error_string());
         return;
     }
 
@@ -50,7 +50,7 @@ WavLoader::WavLoader(const StringView& path)
 RefPtr<Buffer> WavLoader::get_more_samples(size_t max_bytes_to_read_from_input)
 {
 #ifdef AWAVLOADER_DEBUG
-    dbgprintf("Read WAV of format PCM with num_channels %u sample rate %u, bits per sample %u\n", m_num_channels, m_sample_rate, m_bits_per_sample);
+    dbgln("Read WAV of format PCM with num_channels {} sample rate {}, bits per sample {}", m_num_channels, m_sample_rate, m_bits_per_sample);
 #endif
 
     auto raw_samples = m_file->read(max_bytes_to_read_from_input);
@@ -82,18 +82,18 @@ bool WavLoader::parse_header()
 {
     Core::IODeviceStreamReader stream(*m_file);
 
-#define CHECK_OK(msg)                                                           \
-    do {                                                                        \
-        if (stream.handle_read_failure()) {                                     \
-            m_error_string = String::format("Premature stream EOF at %s", msg); \
-            return {};                                                          \
-        }                                                                       \
-        if (!ok) {                                                              \
-            m_error_string = String::format("Parsing failed: %s", msg);         \
-            return {};                                                          \
-        } else {                                                                \
-            dbgprintf("%s is OK!\n", msg);                                      \
-        }                                                                       \
+#define CHECK_OK(msg)                                                              \
+    do {                                                                           \
+        if (stream.handle_read_failure()) {                                        \
+            m_error_string = String::formatted("Premature stream EOF at {}", msg); \
+            return {};                                                             \
+        }                                                                          \
+        if (!ok) {                                                                 \
+            m_error_string = String::formatted("Parsing failed: {}", msg);         \
+            return {};                                                             \
+        } else {                                                                   \
+            dbgln("{} is OK!", msg);                                               \
+        }                                                                          \
     } while (0);
 
     bool ok = true;
@@ -294,7 +294,7 @@ RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper& resampl
     Vector<Sample> fdata;
     fdata.ensure_capacity(data.size() / (bits_per_sample / 8));
 #ifdef AWAVLOADER_DEBUG
-    dbg() << "Reading " << bits_per_sample << " bits and " << num_channels << " channels, total bytes: " << data.size();
+    dbgln("Reading {} bits and {} channels, total bytes: {}", bits_per_sample, num_channels, data.size());
 #endif
 
     switch (bits_per_sample) {
