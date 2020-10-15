@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,25 +24,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
+#include "ToolPropertiesWidget.h"
 #include "Tool.h"
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/GroupBox.h>
 
 namespace PixelPaint {
 
-class BucketTool final : public Tool {
-public:
-    BucketTool();
-    virtual ~BucketTool() override;
+ToolPropertiesWidget::ToolPropertiesWidget()
+{
+    set_layout<GUI::VerticalBoxLayout>();
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual GUI::Widget* get_properties_widget() override;
+    m_group_box = add<GUI::GroupBox>("Tool properties");
+    auto& layout = m_group_box->set_layout<GUI::VerticalBoxLayout>();
+    layout.set_margins({ 10, 20, 10, 10 });
+}
 
-private:
-    virtual const char* class_name() const override { return "BucketTool"; }
+void ToolPropertiesWidget::set_active_tool(Tool* tool)
+{
+    if (tool == m_active_tool)
+        return;
 
-    RefPtr<GUI::Widget> m_properties_widget;
-    int m_threshold { 0 };
-};
+    if (m_active_tool_widget != nullptr)
+        m_group_box->remove_child(*m_active_tool_widget);
+
+    m_active_tool = tool;
+    m_active_tool_widget = tool->get_properties_widget();
+    if (m_active_tool_widget != nullptr)
+        m_group_box->add_child(*m_active_tool_widget);
+}
+
+ToolPropertiesWidget::~ToolPropertiesWidget()
+{
+}
 
 }

@@ -33,6 +33,7 @@
 #include "LayerPropertiesWidget.h"
 #include "PaletteWidget.h"
 #include "Tool.h"
+#include "ToolPropertiesWidget.h"
 #include "ToolboxWidget.h"
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
@@ -84,10 +85,6 @@ int main(int argc, char** argv)
     auto& image_editor = vertical_container.add<PixelPaint::ImageEditor>();
     image_editor.set_focus(true);
 
-    toolbox.on_tool_selection = [&](auto* tool) {
-        image_editor.set_active_tool(tool);
-    };
-
     vertical_container.add<PixelPaint::PaletteWidget>(image_editor);
 
     auto& right_panel = horizontal_container.add<GUI::Widget>();
@@ -99,6 +96,13 @@ int main(int argc, char** argv)
     auto& layer_list_widget = right_panel.add<PixelPaint::LayerListWidget>();
 
     auto& layer_properties_widget = right_panel.add<PixelPaint::LayerPropertiesWidget>();
+
+    auto& tool_properties_widget = right_panel.add<PixelPaint::ToolPropertiesWidget>();
+
+    toolbox.on_tool_selection = [&](auto* tool) {
+        image_editor.set_active_tool(tool);
+        tool_properties_widget.set_active_tool(tool);
+    };
 
     window->show();
 

@@ -37,9 +37,12 @@ public:
 
     virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
+    virtual GUI::Widget* get_properties_widget() override;
 
 private:
-    int m_size { 10 };
+    RefPtr<GUI::Widget> m_properties_widget;
+    int m_size { 20 };
+    int m_hardness { 80 };
     Gfx::IntPoint m_last_position;
 
     virtual const char* class_name() const override { return "BrushTool"; }
