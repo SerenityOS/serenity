@@ -26,6 +26,7 @@
 
 #include <AK/Badge.h>
 #include <AK/HashTable.h>
+#include <AK/TemporaryChange.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Heap/Allocator.h>
 #include <LibJS/Heap/Handle.h>

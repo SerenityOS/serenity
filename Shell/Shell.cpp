@@ -31,6 +31,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <AK/TemporaryChange.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>

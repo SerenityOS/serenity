@@ -31,6 +31,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
+#include <AK/TemporaryChange.h>
 #include <LibCore/File.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>

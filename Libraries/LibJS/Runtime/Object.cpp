@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/TemporaryChange.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
