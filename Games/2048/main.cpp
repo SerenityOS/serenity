@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     auto update = [&]() {
         board_view.set_board(&game.board());
         board_view.update();
-        statusbar.set_text(String::format("Score: %d", game.score()));
+        statusbar.set_text(String::formatted("Score: {}", game.score()));
     };
 
     update();
@@ -160,7 +160,7 @@ int main(int argc, char** argv)
         case Game::MoveOutcome::Won:
             update();
             GUI::MessageBox::show(window,
-                String::format("You reached %d in %zu turns with a score of %d", game.target_tile(), game.turns(), game.score()),
+                String::formatted("You reached {} in {} turns with a score of {}", game.target_tile(), game.turns(), game.score()),
                 "You won!",
                 GUI::MessageBox::Type::Information);
             start_a_new_game();
@@ -168,7 +168,7 @@ int main(int argc, char** argv)
         case Game::MoveOutcome::GameOver:
             update();
             GUI::MessageBox::show(window,
-                String::format("You reached %d in %zu turns with a score of %d", game.largest_tile(), game.turns(), game.score()),
+                String::formatted("You reached {} in {} turns with a score of {}", game.largest_tile(), game.turns(), game.score()),
                 "You lost!",
                 GUI::MessageBox::Type::Information);
             start_a_new_game();
