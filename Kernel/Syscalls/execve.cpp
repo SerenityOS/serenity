@@ -25,6 +25,7 @@
  */
 
 #include <AK/ScopeGuard.h>
+#include <AK/TemporaryChange.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>

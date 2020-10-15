@@ -28,6 +28,7 @@
 #include "Parser.h"
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
+#include <AK/TemporaryChange.h>
 
 namespace JS {
 

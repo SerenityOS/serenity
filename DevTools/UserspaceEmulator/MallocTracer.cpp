@@ -28,6 +28,7 @@
 #include "Emulator.h"
 #include "MmapRegion.h"
 #include <AK/LogStream.h>
+#include <AK/TemporaryChange.h>
 #include <string.h>
 
 //#define REACHABLE_DEBUG
