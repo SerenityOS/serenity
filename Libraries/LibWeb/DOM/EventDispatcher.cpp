@@ -27,6 +27,8 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/Bindings/EventTargetWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
+#include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ScriptExecutionContext.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -44,9 +46,10 @@ void EventDispatcher::dispatch(EventTarget& target, NonnullRefPtr<Event> event)
         auto& function = listener.listener->function();
         auto& global_object = function.global_object();
         auto* this_value = Bindings::wrap(global_object, target);
+        auto* wrapped_event = Bindings::wrap(global_object, *event);
 
         auto& vm = global_object.vm();
-        (void)vm.call(function, this_value, Bindings::wrap(global_object, target));
+        (void)vm.call(function, this_value, wrapped_event);
         if (vm.exception())
             vm.clear_exception();
     }
