@@ -170,6 +170,13 @@ private:
 
 }
 
+namespace AK {
+template<>
+struct Formatter<Core::Object> : Formatter<StringView> {
+    void format(TypeErasedFormatParams&, FormatBuilder&, const Core::Object&);
+};
+}
+
 namespace Core {
 template<typename T, typename Callback>
 inline void Object::for_each_child_of_type(Callback callback)
