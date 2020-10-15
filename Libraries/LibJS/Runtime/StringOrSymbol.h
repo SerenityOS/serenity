@@ -84,6 +84,11 @@ public:
             as_string_impl().ref();
     }
 
+    StringOrSymbol(StringOrSymbol&& other)
+    {
+        m_ptr = exchange(other.m_ptr, nullptr);
+    }
+
     ALWAYS_INLINE bool is_valid() const { return m_ptr != nullptr; }
     ALWAYS_INLINE bool is_symbol() const { return is_valid() && (bits() & 1ul); }
     ALWAYS_INLINE bool is_string() const { return is_valid() && !(bits() & 1ul); }
@@ -140,6 +145,13 @@ public:
         m_ptr = other.m_ptr;
         if (is_string())
             as_string_impl().ref();
+        return *this;
+    }
+
+    StringOrSymbol& operator=(StringOrSymbol&& other)
+    {
+        if (this != &other)
+            m_ptr = exchange(other.m_ptr, nullptr);
         return *this;
     }
 
