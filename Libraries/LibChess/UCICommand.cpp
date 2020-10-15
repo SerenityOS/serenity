@@ -202,23 +202,23 @@ String GoCommand::to_string() const
     if (ponder)
         builder.append(" ponder");
     if (wtime.has_value())
-        builder.appendf(" wtime %i", wtime.value());
+        builder.appendff(" wtime {}", wtime.value());
     if (btime.has_value())
-        builder.appendf(" btime %i", btime.value());
+        builder.appendff(" btime {}", btime.value());
     if (winc.has_value())
-        builder.appendf(" winc %i", winc.value());
+        builder.appendff(" winc {}", winc.value());
     if (binc.has_value())
-        builder.appendf(" binc %i", binc.value());
+        builder.appendff(" binc {}", binc.value());
     if (movestogo.has_value())
-        builder.appendf(" movestogo %i", movestogo.value());
+        builder.appendff(" movestogo {}", movestogo.value());
     if (depth.has_value())
-        builder.appendf(" depth %i", depth.value());
+        builder.appendff(" depth {}", depth.value());
     if (nodes.has_value())
-        builder.appendf(" nodes %i", nodes.value());
+        builder.appendff(" nodes {}", nodes.value());
     if (mate.has_value())
-        builder.appendf(" mate %i", mate.value());
+        builder.appendff(" mate {}", mate.value());
     if (movetime.has_value())
-        builder.appendf(" movetime %i", movetime.value());
+        builder.appendff(" movetime {}", movetime.value());
     if (infinite)
         builder.append(" infinite");
 
