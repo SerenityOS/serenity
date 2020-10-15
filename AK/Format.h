@@ -30,9 +30,9 @@
 #include <AK/GenericLexer.h>
 #include <AK/StringView.h>
 
-// FIXME: I would really love to merge the format_value and make_type_erased_parameters functions,
-//        but the compiler creates weird error messages when I do that. Here is a small snippet that
-//        reproduces the issue: https://godbolt.org/z/o55crs
+#ifndef KERNEL
+#    include <stdio.h>
+#endif
 
 namespace AK {
 
@@ -307,29 +307,34 @@ void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams);
 void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams);
 
 #ifndef KERNEL
-void vout(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
-void raw_out(StringView string);
+void vout(FILE*, StringView fmtstr, TypeErasedFormatParams, bool newline = false);
 
-// FIXME: Rename this function to 'out' when that name becomes avaliable.
+// FIXME: Rename 'new_out' to 'out' when the name becomes avaliable.
 template<typename... Parameters>
-void new_out(StringView fmtstr, const Parameters&... parameters) { vout(fmtstr, VariadicFormatParams { parameters... }); }
+void new_out(FILE* file, StringView fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
-void outln(StringView fmtstr, const Parameters&... parameters) { vout(fmtstr, VariadicFormatParams { parameters... }, true); }
+void outln(FILE* file, StringView fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }, true); }
 template<typename... Parameters>
-void outln(const char* fmtstr, const Parameters&... parameters) { outln(StringView { fmtstr }, parameters...); }
-inline void outln() { raw_out("\n"); }
+void outln(FILE* file, const char* fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }, true); }
+inline void outln(FILE* file) { fputc('\n', file); }
 
-void vwarn(StringView fmtstr, TypeErasedFormatParams, bool newline = false);
-void raw_warn(StringView string);
+// FIXME: Rename 'new_out' to 'out' when the name becomes avaliable.
+template<typename... Parameters>
+void new_out(StringView fmtstr, const Parameters&... parameters) { new_out(stdout, fmtstr, parameters...); }
+template<typename... Parameters>
+void outln(StringView fmtstr, const Parameters&... parameters) { outln(stdout, fmtstr, parameters...); }
+template<typename... Parameters>
+void outln(const char* fmtstr, const Parameters&... parameters) { outln(stdout, fmtstr, parameters...); }
+inline void outln() { outln(stdout); }
 
-// FIXME: Rename this function to 'warn' when that name becomes avaliable.
+// FIXME: Rename 'new_warn' to 'warn' when the name becomes avaliable.
 template<typename... Parameters>
-void new_warn(StringView fmtstr, const Parameters&... parameters) { vwarn(fmtstr, VariadicFormatParams { parameters... }); }
+void new_warn(StringView fmtstr, const Parameters&... parameters) { new_out(stderr, fmtstr, parameters...); }
 template<typename... Parameters>
-void warnln(StringView fmtstr, const Parameters&... parameters) { vwarn(fmtstr, VariadicFormatParams { parameters... }, true); }
+void warnln(StringView fmtstr, const Parameters&... parameters) { outln(stderr, fmtstr, parameters...); }
 template<typename... Parameters>
-void warnln(const char* fmtstr, const Parameters&... parameters) { warnln(StringView { fmtstr }, parameters...); }
-inline void warnln() { raw_out("\n"); }
+void warnln(const char* fmtstr, const Parameters&... parameters) { outln(stderr, fmtstr, parameters...); }
+inline void warnln() { outln(stderr); }
 #endif
 
 void vdbgln(StringView fmtstr, TypeErasedFormatParams);
@@ -382,10 +387,8 @@ struct Formatter<FormatIfSupported<T>> : __FormatIfSupported<T, HasFormatter<T>:
 #ifndef KERNEL
 using AK::new_out;
 using AK::outln;
-using AK::raw_out;
 
 using AK::new_warn;
-using AK::raw_warn;
 using AK::warnln;
 #endif
 

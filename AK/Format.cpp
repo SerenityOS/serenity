@@ -572,36 +572,17 @@ void Formatter<bool>::format(TypeErasedFormatParams& params, FormatBuilder& buil
 }
 
 #ifndef KERNEL
-void raw_out(StringView string)
-{
-    const auto retval = ::fwrite(string.characters_without_null_termination(), 1, string.length(), stdout);
-    ASSERT(retval == string.length());
-}
-void vout(StringView fmtstr, TypeErasedFormatParams params, bool newline)
+void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams params, bool newline)
 {
     StringBuilder builder;
     vformat(builder, fmtstr, params);
 
-    if (newline && !builder.is_empty())
+    if (newline)
         builder.append('\n');
 
-    raw_out(builder.to_string());
-}
-
-void raw_warn(StringView string)
-{
-    const auto retval = ::write(STDERR_FILENO, string.characters_without_null_termination(), string.length());
+    const auto string = builder.string_view();
+    const auto retval = ::fwrite(string.characters_without_null_termination(), 1, string.length(), file);
     ASSERT(static_cast<size_t>(retval) == string.length());
-}
-void vwarn(StringView fmtstr, TypeErasedFormatParams params, bool newline)
-{
-    StringBuilder builder;
-    vformat(builder, fmtstr, params);
-
-    if (newline && !builder.is_empty())
-        builder.append('\n');
-
-    raw_warn(builder.to_string());
 }
 #endif
 
@@ -636,9 +617,9 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams params)
     vformat(builder, fmtstr, params);
     builder.append('\n');
 
-    const auto string = builder.build();
+    const auto string = builder.string_view();
 
-    const auto retval = dbgputstr(string.characters(), string.length());
+    const auto retval = dbgputstr(string.characters_without_null_termination(), string.length());
     ASSERT(retval == 0);
 }
 
