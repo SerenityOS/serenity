@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Format.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <getopt.h>
@@ -105,7 +106,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
 
         const char* arg = found_option->requires_argument ? optarg : nullptr;
         if (!found_option->accept_value(arg)) {
-            fprintf(stderr, "\033[31mInvalid value for option \033[1m%s\033[22m, dude\033[0m\n", found_option->name_for_display().characters());
+            warnln("\033[31mInvalid value for option \033[1m{}\033[22m, dude\033[0m", found_option->name_for_display());
             print_usage_and_exit();
             return false;
         }
@@ -148,7 +149,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
         for (int j = 0; j < num_values_for_arg[i]; j++) {
             const char* value = argv[optind++];
             if (!arg.accept_value(value)) {
-                fprintf(stderr, "Invalid value for argument %s\n", arg.name);
+                warnln("Invalid value for argument {}", arg.name);
                 print_usage_and_exit();
                 return false;
             }
@@ -169,67 +170,67 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
 
 void ArgsParser::print_usage(FILE* file, const char* argv0)
 {
-    fprintf(file, "Usage:\n\t\033[1m%s\033[0m", argv0);
+    new_out(file, "Usage:\n\t\033[1m{}\033[0m", argv0);
 
     for (auto& opt : m_options) {
         if (opt.long_name && !strcmp(opt.long_name, "help"))
             continue;
         if (opt.requires_argument)
-            fprintf(file, " [%s %s]", opt.name_for_display().characters(), opt.value_name);
+            new_out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
         else
-            fprintf(file, " [%s]", opt.name_for_display().characters());
+            new_out(file, " [{}]", opt.name_for_display());
     }
     for (auto& arg : m_positional_args) {
         bool required = arg.min_values > 0;
         bool repeated = arg.max_values > 1;
 
         if (required && repeated)
-            fprintf(file, " <%s...>", arg.name);
+            new_out(file, " <{}...>", arg.name);
         else if (required && !repeated)
-            fprintf(file, " <%s>", arg.name);
+            new_out(file, " <{}>", arg.name);
         else if (!required && repeated)
-            fprintf(file, " [%s...]", arg.name);
+            new_out(file, " [{}...]", arg.name);
         else if (!required && !repeated)
-            fprintf(file, " [%s]", arg.name);
+            new_out(file, " [{}]", arg.name);
     }
+    outln(file);
 
     if (!m_options.is_empty())
-        fprintf(file, "\nOptions:\n");
-
+        outln(file, "\nOptions:");
     for (auto& opt : m_options) {
         auto print_argument = [&]() {
             if (opt.value_name) {
                 if (opt.requires_argument)
-                    fprintf(file, " %s", opt.value_name);
+                    new_out(file, " {}", opt.value_name);
                 else
-                    fprintf(file, " [%s]", opt.value_name);
+                    new_out(file, " [{}]", opt.value_name);
             }
         };
-        fprintf(file, "\t");
+        new_out(file, "\t");
         if (opt.short_name) {
-            fprintf(file, "\033[1m-%c\033[0m", opt.short_name);
+            new_out(file, "\033[1m-{}\033[0m", opt.short_name);
             print_argument();
         }
         if (opt.short_name && opt.long_name)
-            fprintf(file, ", ");
+            new_out(file, ", ");
         if (opt.long_name) {
-            fprintf(file, "\033[1m--%s\033[0m", opt.long_name);
+            new_out(file, "\033[1m--{}\033[0m", opt.long_name);
             print_argument();
         }
 
         if (opt.help_string)
-            fprintf(file, "\t%s", opt.help_string);
-        fprintf(file, "\n");
+            new_out(file, "\t{}", opt.help_string);
+        outln(file);
     }
 
     if (!m_positional_args.is_empty())
-        fprintf(file, "\nArguments:\n");
+        outln(file, "\nArguments:");
 
     for (auto& arg : m_positional_args) {
-        fprintf(file, "\t\033[1m%s\033[0m", arg.name);
+        new_out(file, "\t\033[1m{}\033[0m", arg.name);
         if (arg.help_string)
-            fprintf(file, "\t%s", arg.help_string);
-        fprintf(file, "\n");
+            new_out(file, "\t{}", arg.help_string);
+        outln(file);
     }
 }
 

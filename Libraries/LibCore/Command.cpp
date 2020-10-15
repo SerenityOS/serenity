@@ -110,7 +110,7 @@ String command(const String& program, const Vector<String>& arguments, Optional<
 
     if (WEXITSTATUS(wstatus) != 0) {
 #    ifdef DBG_FAILED_COMMANDS
-        dbg() << "command failed. stderr: " << read_all_from_pipe(stderr_pipe);
+        dbgln("command failed. stderr: {}", read_all_from_pipe(stderr_pipe));
 #    endif
         return {};
     }

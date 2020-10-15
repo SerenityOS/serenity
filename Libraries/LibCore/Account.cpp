@@ -166,16 +166,16 @@ bool Account::sync()
     errno = 0;
     while ((p = getpwent())) {
         if (p->pw_uid == m_uid) {
-            new_passwd_file.appendf("%s:%s:%u:%u:%s:%s:%s\n",
-                m_username.characters(),
-                m_password_hash.characters(),
+            new_passwd_file.appendff("{}:{}:{}:{}:{}:{}:{}\n",
+                m_username,
+                m_password_hash,
                 m_uid, m_gid,
-                m_gecos.characters(),
-                m_home_directory.characters(),
-                m_shell.characters());
+                m_gecos,
+                m_home_directory,
+                m_shell);
 
         } else {
-            new_passwd_file.appendf("%s:%s:%u:%u:%s:%s:%s\n",
+            new_passwd_file.appendff("{}:{}:{}:{}:{}:{}:{}\n",
                 p->pw_name, p->pw_passwd, p->pw_uid,
                 p->pw_gid, p->pw_gecos, p->pw_dir,
                 p->pw_shell);
