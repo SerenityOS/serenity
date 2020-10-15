@@ -264,3 +264,12 @@ const LogStream& operator<<(const LogStream& stream, const Object& object)
 }
 
 }
+
+namespace AK {
+
+void Formatter<Core::Object>::format(TypeErasedFormatParams& params, FormatBuilder& builder, const Core::Object& value)
+{
+    Formatter<StringView>::format(params, builder, String::formatted("{}({})", value.class_name(), &value));
+}
+
+}
