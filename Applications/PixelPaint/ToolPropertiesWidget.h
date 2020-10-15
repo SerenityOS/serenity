@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Ben Jilks <benjyjilks@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,29 @@
 
 #pragma once
 
-#include "Tool.h"
+#include <AK/RefPtr.h>
+#include <LibGUI/Forward.h>
+#include <LibGUI/Widget.h>
 
 namespace PixelPaint {
 
-class BucketTool final : public Tool {
-public:
-    BucketTool();
-    virtual ~BucketTool() override;
+class Tool;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual GUI::Widget* get_properties_widget() override;
+class ToolPropertiesWidget final : public GUI::Widget {
+    C_OBJECT(ToolPropertiesWidget);
+
+public:
+    virtual ~ToolPropertiesWidget() override;
+
+    void set_active_tool(Tool*);
 
 private:
-    virtual const char* class_name() const override { return "BucketTool"; }
+    ToolPropertiesWidget();
 
-    RefPtr<GUI::Widget> m_properties_widget;
-    int m_threshold { 0 };
+    RefPtr<GUI::GroupBox> m_group_box;
+
+    Tool* m_active_tool { nullptr };
+    GUI::Widget* m_active_tool_widget { nullptr };
 };
 
 }

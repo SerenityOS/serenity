@@ -42,16 +42,20 @@ public:
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_tool_button_contextmenu(GUI::ContextMenuEvent&) override;
+    virtual GUI::Widget* get_properties_widget() override;
 
 private:
     virtual const char* class_name() const override { return "SprayTool"; }
     void paint_it();
+
+    RefPtr<GUI::Widget> m_properties_widget;
     RefPtr<Core::Timer> m_timer;
     Gfx::IntPoint m_last_pos;
     Color m_color;
     RefPtr<GUI::Menu> m_context_menu;
     GUI::ActionGroup m_thickness_actions;
-    int m_thickness { 1 };
+    int m_thickness { 10 };
+    int m_density { 40 };
 };
 
 }
