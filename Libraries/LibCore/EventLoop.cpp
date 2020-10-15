@@ -102,7 +102,7 @@ public:
             int nread = m_socket->read((u8*)&length, sizeof(length));
             if (nread == 0) {
 #ifdef EVENTLOOP_DEBUG
-                dbg() << "RPC client disconnected";
+                dbgln("RPC client disconnected");
 #endif
                 shutdown();
                 return;
@@ -112,7 +112,7 @@ public:
 
             auto request_json = JsonValue::from_string(request);
             if (!request_json.has_value() || !request_json.value().is_object()) {
-                dbg() << "RPC client sent invalid request";
+                dbgln("RPC client sent invalid request");
                 shutdown();
                 return;
             }
@@ -139,7 +139,7 @@ public:
         auto type = request.get("type").as_string_or({});
 
         if (type.is_null()) {
-            dbg() << "RPC client sent request without type field";
+            dbgln("RPC client sent request without type field");
             return;
         }
 
@@ -245,12 +245,12 @@ EventLoop::EventLoop()
 
         if (!s_rpc_server) {
             if (!start_rpc_server())
-                dbg() << "Core::EventLoop: Failed to start an RPC server";
+                dbgln("Core::EventLoop: Failed to start an RPC server");
         }
     }
 
 #ifdef EVENTLOOP_DEBUG
-    dbg() << getpid() << " Core::EventLoop constructed :)";
+    dbgln("{} Core::EventLoop constructed :)", getpid());
 #endif
 }
 
@@ -304,7 +304,7 @@ EventLoop& EventLoop::current()
 void EventLoop::quit(int code)
 {
 #ifdef EVENTLOOP_DEBUG
-    dbg() << "Core::EventLoop::quit(" << code << ")";
+    dbgln("Core::EventLoop::quit({})", code);
 #endif
     m_exit_requested = true;
     m_exit_code = code;
@@ -313,7 +313,7 @@ void EventLoop::quit(int code)
 void EventLoop::unquit()
 {
 #ifdef EVENTLOOP_DEBUG
-    dbg() << "Core::EventLoop::unquit()";
+    dbgln("Core::EventLoop::unquit()");
 #endif
     m_exit_requested = false;
     m_exit_code = 0;
@@ -368,7 +368,7 @@ void EventLoop::pump(WaitMode mode)
         auto& event = *queued_event.event;
 #ifdef EVENTLOOP_DEBUG
         if (receiver)
-            dbg() << "Core::EventLoop: " << *receiver << " event " << (int)event.type();
+            dbgln("Core::EventLoop: {} event {}", *receiver, event.type());
 #endif
         if (!receiver) {
             switch (event.type()) {
@@ -377,13 +377,13 @@ void EventLoop::pump(WaitMode mode)
                 return;
             default:
 #ifdef EVENTLOOP_DEBUG
-                dbg() << "Event type " << event.type() << " with no receiver :(";
+                dbgln("Event type {} with no receiver :(", event.type());
 #endif
                 break;
             }
         } else if (event.type() == Event::Type::DeferredInvoke) {
 #ifdef DEFERRED_INVOKE_DEBUG
-            dbg() << "DeferredInvoke: receiver = " << receiver->class_name() << "{" << receiver << "}";
+            dbgln("DeferredInvoke: receiver = {}", *receiver);
 #endif
             static_cast<DeferredInvocationEvent&>(event).m_invokee(*receiver);
         } else {
@@ -394,7 +394,7 @@ void EventLoop::pump(WaitMode mode)
         if (m_exit_requested) {
             LOCKER(m_private->lock);
 #ifdef EVENTLOOP_DEBUG
-            dbg() << "Core::EventLoop: Exit requested. Rejigging " << (events.size() - i) << " events.";
+            dbgln("Core::EventLoop: Exit requested. Rejigging {} events.", events.size() - i);
 #endif
             decltype(m_queued_events) new_event_queue;
             new_event_queue.ensure_capacity(m_queued_events.size() + events.size());
@@ -411,7 +411,7 @@ void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
     LOCKER(m_private->lock);
 #ifdef EVENTLOOP_DEBUG
-    dbg() << "Core::EventLoop::post_event: {" << m_queued_events.size() << "} << receiver=" << receiver << ", event=" << event;
+    dbgln("Core::EventLoop::post_event: ({}) << receivier={}, event={}", m_queued_events.size(), receiver, event);
 #endif
     m_queued_events.empend(receiver, move(event));
 }
@@ -421,7 +421,7 @@ EventLoop::SignalHandlers::SignalHandlers(int signo)
     , m_original_handler(signal(signo, EventLoop::handle_signal))
 {
 #ifdef EVENTLOOP_DEBUG
-    dbg() << "Core::EventLoop: Registered handler for signal " << m_signo;
+    dbgln("Core::EventLoop: Registered handler for signal {}", m_signo);
 #endif
 }
 
@@ -429,7 +429,7 @@ EventLoop::SignalHandlers::~SignalHandlers()
 {
     if (m_valid) {
 #ifdef EVENTLOOP_DEBUG
-        dbg() << "Core::EventLoop: Unregistering handler for signal " << m_signo;
+        dbgln("Core::EventLoop: Unregistering handler for signal {}", m_signo);
 #endif
         signal(m_signo, m_original_handler);
     }
@@ -461,7 +461,7 @@ void EventLoop::dispatch_signal(int signo)
     auto handlers = s_signal_handlers.find(signo);
     if (handlers != s_signal_handlers.end()) {
 #ifdef EVENTLOOP_DEBUG
-        dbg() << "Core::EventLoop: dispatching signal " << signo;
+        dbgln("Core::EventLoop: dispatching signal {}", signo);
 #endif
         handlers->value.dispatch();
     }
@@ -602,7 +602,7 @@ try_select_again:
             goto try_select_again;
         }
 #ifdef EVENTLOOP_DEBUG
-        dbg() << "Core::EventLoop::wait_for_event: " << marked_fd_count << " (" << saved_errno << ": " << strerror(saved_errno) << ")";
+        dbgln("Core::EventLoop::wait_for_event: {} ({}: {})", marked_fd_count, saved_errno, strerror(saved_errno));
 #endif
         // Blow up, similar to Core::safe_syscall.
         ASSERT_NOT_REACHED();
@@ -645,7 +645,7 @@ try_select_again:
             continue;
         }
 #ifdef EVENTLOOP_DEBUG
-        dbg() << "Core::EventLoop: Timer " << timer.timer_id << " has expired, sending Core::TimerEvent to " << timer.owner;
+        dbgln("Core::EventLoop: Timer {} has expired, sending Core::TimerEvent to {}", timer.timer_id, timer.owner);
 #endif
         post_event(*timer.owner, make<TimerEvent>(timer.timer_id));
         if (timer.should_reload) {

@@ -37,7 +37,7 @@ namespace Core {
 NonnullRefPtr<ConfigFile> ConfigFile::get_for_lib(const String& lib_name)
 {
     String directory = StandardPaths::config_directory();
-    auto path = String::format("%s/lib/%s.ini", directory.characters(), lib_name.characters());
+    auto path = String::formatted("{}/lib/{}.ini", directory, lib_name);
 
     return adopt(*new ConfigFile(path));
 }
@@ -45,13 +45,13 @@ NonnullRefPtr<ConfigFile> ConfigFile::get_for_lib(const String& lib_name)
 NonnullRefPtr<ConfigFile> ConfigFile::get_for_app(const String& app_name)
 {
     String directory = StandardPaths::config_directory();
-    auto path = String::format("%s/%s.ini", directory.characters(), app_name.characters());
+    auto path = String::formatted("{}/{}.ini", directory, app_name);
     return adopt(*new ConfigFile(path));
 }
 
 NonnullRefPtr<ConfigFile> ConfigFile::get_for_system(const String& app_name)
 {
-    auto path = String::format("/etc/%s.ini", app_name.characters());
+    auto path = String::formatted("/etc/{}.ini", app_name);
     return adopt(*new ConfigFile(path));
 }
 
@@ -162,7 +162,7 @@ void ConfigFile::write_bool_entry(const String& group, const String& key, bool v
 }
 void ConfigFile::write_color_entry(const String& group, const String& key, Color value)
 {
-    write_entry(group, key, String::format("%d,%d,%d,%d", value.red(), value.green(), value.blue(), value.alpha()));
+    write_entry(group, key, String::formatted("{},{},{},{}", value.red(), value.green(), value.blue(), value.alpha()));
 }
 
 bool ConfigFile::sync()
@@ -175,10 +175,10 @@ bool ConfigFile::sync()
         return false;
 
     for (auto& it : m_groups) {
-        fprintf(fp, "[%s]\n", it.key.characters());
+        outln(fp, "[{}]", it.key);
         for (auto& jt : it.value)
-            fprintf(fp, "%s=%s\n", jt.key.characters(), jt.value.characters());
-        fprintf(fp, "\n");
+            outln(fp, "{}={}", jt.key, jt.value);
+        outln(fp);
     }
 
     fclose(fp);
@@ -190,10 +190,10 @@ bool ConfigFile::sync()
 void ConfigFile::dump() const
 {
     for (auto& it : m_groups) {
-        printf("[%s]\n", it.key.characters());
+        outln("[{}]", it.key);
         for (auto& jt : it.value)
-            printf("%s=%s\n", jt.key.characters(), jt.value.characters());
-        printf("\n");
+            outln("{}={}", jt.key, jt.value);
+        outln();
     }
 }
 
