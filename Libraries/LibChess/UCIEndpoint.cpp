@@ -45,7 +45,7 @@ Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevic
 void Endpoint::send_command(const Command& command)
 {
 #ifdef UCI_DEBUG
-    dbg() << class_name() << " Sent UCI Command: " << String(command.to_string().characters(), Chomp);
+    dbgln("{} Sent UCI Command: {}", class_name(), String(command.to_string().characters(), Chomp));
 #endif
     m_out->write(command.to_string());
 }
@@ -96,7 +96,7 @@ NonnullOwnPtr<Command> Endpoint::read_command()
     String line(ReadonlyBytes(m_in->read_line(4096).bytes()), Chomp);
 
 #ifdef UCI_DEBUG
-    dbg() << class_name() << " Received UCI Command: " << line;
+    dbgln("{} Received UCI Command: {}", class_name(), line);
 #endif
 
     if (line == "uci") {
@@ -125,7 +125,7 @@ NonnullOwnPtr<Command> Endpoint::read_command()
         return make<InfoCommand>(InfoCommand::from_string(line));
     }
 
-    dbg() << "command line: " << line;
+    dbgln("command line: {}", line);
     ASSERT_NOT_REACHED();
 }
 
