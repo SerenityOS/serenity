@@ -214,4 +214,25 @@ TEST_CASE(format_if_supported)
     EXPECT_EQ(String::formatted("{}", FormatIfSupported { B {} }), "B");
 }
 
+TEST_CASE(file_descriptor)
+{
+    char filename[] = "/tmp/test-file-descriptor-XXXXXX";
+
+    int fd = mkstemp(filename);
+    FILE* file = fdopen(fd, "w+");
+
+    outln(file, "{}", "Hello, World!");
+    new_out(file, "foo");
+    outln(file, "bar");
+
+    rewind(file);
+
+    Array<u8, 256> buffer;
+    const auto nread = fread(buffer.data(), 1, buffer.size(), file);
+
+    EXPECT_EQ(StringView { "Hello, World!\nfoobar\n" }, StringView { buffer.span().trim(nread) });
+
+    fclose(file);
+}
+
 TEST_MAIN(Format)
