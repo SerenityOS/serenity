@@ -18,6 +18,7 @@ set(SOURCES
     RectangleTool.cpp
     SprayTool.cpp
     ToolboxWidget.cpp
+    ToolPropertiesWidget.cpp
     Tool.cpp
 )
 

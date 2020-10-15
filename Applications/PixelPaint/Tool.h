@@ -48,6 +48,7 @@ public:
     virtual void on_second_paint(const Layer&, GUI::PaintEvent&) { }
     virtual void on_keydown(GUI::KeyEvent&) { }
     virtual void on_keyup(GUI::KeyEvent&) { }
+    virtual GUI::Widget* get_properties_widget() { return nullptr; }
 
     virtual bool is_move_tool() const { return false; }
 
