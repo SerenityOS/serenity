@@ -158,7 +158,8 @@ const GUI::FileSystemModel::Node& DirectoryView::node(const GUI::ModelIndex& ind
 
 void DirectoryView::setup_model()
 {
-    m_model->set_root_path(Core::StandardPaths::desktop_directory());
+    if (is_desktop())
+        m_model->set_root_path(Core::StandardPaths::desktop_directory());
 
     m_model->on_error = [this](int, const char* error_string) {
         auto failed_path = m_model->root_path();
