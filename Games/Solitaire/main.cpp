@@ -32,6 +32,7 @@
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
@@ -48,7 +49,7 @@ int main(int argc, char** argv)
     window->resize(SolitaireWidget::width, SolitaireWidget::height);
 
     auto widget = SolitaireWidget::construct(window, [&](uint32_t score) {
-        window->set_title(String::format("Score: %u - Solitaire", score));
+        window->set_title(String::formatted("Score: {} - Solitaire", score));
     });
 
     auto menubar = GUI::MenuBar::construct();
