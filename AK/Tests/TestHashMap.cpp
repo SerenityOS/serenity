@@ -83,8 +83,8 @@ TEST_CASE(case_insensitive)
 {
     HashMap<String, int, CaseInsensitiveStringTraits> casemap;
     EXPECT_EQ(String("nickserv").to_lowercase(), String("NickServ").to_lowercase());
-    casemap.set("nickserv", 3);
-    casemap.set("NickServ", 3);
+    EXPECT_EQ(casemap.set("nickserv", 3), AK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(casemap.set("NickServ", 3), AK::HashSetResult::ReplacedExistingEntry);
     EXPECT_EQ(casemap.size(), 1u);
 }
 
@@ -118,6 +118,17 @@ TEST_CASE(hashmap_of_nonnullownptr_get)
     }
 
     EXPECT_EQ(objects.size(), 3u);
+}
+
+TEST_CASE(many_strings)
+{
+    HashMap<String, int> strings;
+    for (int i = 0; i < 999; ++i) {
+        strings.set(String::number(i), i);
+    }
+    for (auto& it : strings) {
+        EXPECT_EQ(it.key.to_int().value(), it.value);
+    }
 }
 
 TEST_MAIN(HashMap)
