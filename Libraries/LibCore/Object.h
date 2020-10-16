@@ -67,9 +67,9 @@ class Object
     AK_MAKE_NONCOPYABLE(Object);
     AK_MAKE_NONMOVABLE(Object);
 
-public:
     IntrusiveListNode m_all_objects_list_node;
 
+public:
     virtual ~Object();
 
     virtual const char* class_name() const = 0;
