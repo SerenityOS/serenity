@@ -72,7 +72,39 @@ private:
     BucketType* m_bucket { nullptr };
 };
 
-template<typename T, typename TraitsForT>
+struct LinearProbing {
+    LinearProbing(unsigned) { }
+    size_t next_bucket(size_t current_bucket_index) { return current_bucket_index + 1; }
+};
+
+struct QuadraticProbing {
+    QuadraticProbing(unsigned) { }
+
+    size_t next_bucket(size_t current_bucket_index)
+    {
+        ++shift;
+        return current_bucket_index + shift;
+    }
+
+    size_t shift = 0;
+};
+
+struct DoubleHashProbing {
+    DoubleHashProbing(unsigned initial_hash)
+        : hash(initial_hash)
+    {
+    }
+
+    size_t next_bucket(size_t)
+    {
+        hash = double_hash(hash);
+        return hash;
+    }
+
+    unsigned hash;
+};
+
+template<typename T, typename TraitsForT, typename ProbingType>
 class HashTable {
     static constexpr size_t load_factor_in_percent = 60;
 
@@ -315,6 +347,7 @@ private:
     {
         if (is_empty())
             return nullptr;
+        ProbingType prober(hash);
         size_t bucket_index = hash % m_capacity;
         for (;;) {
             auto& bucket = m_buckets[bucket_index];
@@ -329,8 +362,7 @@ private:
             if (!bucket.used && !bucket.deleted)
                 return nullptr;
 
-            hash = double_hash(hash);
-            bucket_index = hash % m_capacity;
+            bucket_index = prober.next_bucket(bucket_index) % m_capacity;
         }
     }
 
@@ -356,13 +388,13 @@ private:
             return *usable_bucket_for_writing;
 
         size_t bucket_index = hash % m_capacity;
+        ProbingType prober(hash);
 
         for (;;) {
             auto& bucket = m_buckets[bucket_index];
             if (!bucket.used)
                 return bucket;
-            hash = double_hash(hash);
-            bucket_index = hash % m_capacity;
+            bucket_index = prober.next_bucket(bucket_index) % m_capacity;
         }
     }
 

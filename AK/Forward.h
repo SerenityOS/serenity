@@ -87,7 +87,11 @@ class CircularQueue;
 template<typename T>
 struct Traits;
 
-template<typename T, typename = Traits<T>>
+struct LinearProbing;
+struct QuadraticProbing;
+struct DoubleHashProbing;
+
+template<typename T, typename = Traits<T>, typename = LinearProbing>
 class HashTable;
 
 template<typename K, typename V, typename = Traits<K>>
