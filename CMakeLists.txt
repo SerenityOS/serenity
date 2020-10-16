@@ -135,6 +135,16 @@ function(serenity_libc target_name fs_name)
     serenity_generated_sources(${target_name})
 endfunction()
 
+function(serenity_libc_shared target_name fs_name)
+    serenity_install_headers("")
+    serenity_install_sources("Libraries/LibC")
+    add_library(${target_name} SHARED ${SOURCES})
+    install(TARGETS ${target_name} DESTINATION usr/lib)
+    set_target_properties(${target_name} PROPERTIES OUTPUT_NAME ${fs_name})
+    target_link_directories(LibC PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+    serenity_generated_sources(${target_name})
+endfunction()
+
 function(serenity_bin target_name)
     add_executable(${target_name} ${SOURCES})
     install(TARGETS ${target_name} RUNTIME DESTINATION bin)
@@ -210,6 +220,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -g1 -fno-exceptions -fno-rtti -Wno-a
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffile-prefix-map=${CMAKE_SOURCE_DIR}=.")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG -DSANITIZE_PTRS")
+set(CMAKE_CXX_FLAGS_WITHOUT_STATIC ${CMAKE_CXX_FLAGS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 
 include_directories(Libraries/LibC)

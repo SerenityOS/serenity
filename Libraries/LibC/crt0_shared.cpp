@@ -22,9 +22,11 @@ int _start(int argc, char** argv, char** env)
     __environ_is_malloced = false;
 
     __libc_init();
-    _init();
+    // _init();
 
     int status = main(argc, argv, environ);
     return status;
 }
 }
+
+void* __dso_handle = nullptr;
