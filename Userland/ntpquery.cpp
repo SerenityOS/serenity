@@ -250,7 +250,14 @@ int main(int argc, char** argv)
         printf("Precision: %d\n", packet.precision);
         printf("Root delay: %#x\n", ntohl(packet.root_delay));
         printf("Root dispersion: %#x\n", ntohl(packet.root_dispersion));
-        printf("Reference ID: %#x\n", ntohl(packet.reference_id));
+
+        u32 ref_id = ntohl(packet.reference_id);
+        printf("Reference ID: %#x", ref_id);
+        if (packet.stratum == 1) {
+            printf(" ('%c%c%c%c')", (ref_id & 0xff000000) >> 24, (ref_id & 0xff0000) >> 16, (ref_id & 0xff00) >> 8, ref_id & 0xff);
+        }
+        printf("\n");
+
         printf("Reference timestamp:   %#016llx (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
         printf("Origin timestamp:      %#016llx (%s)\n", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
         printf("Receive timestamp:     %#016llx (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
