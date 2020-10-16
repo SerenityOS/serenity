@@ -112,6 +112,15 @@ int main(int argc, char** argv)
     bool set_time = false;
     bool verbose = false;
     // FIXME: Change to serenityos.pool.ntp.org once https://manage.ntppool.org/manage/vendor/zone?a=km5a8h&id=vz-14154g is approved.
+    // Other NTP servers:
+    // - time.nist.gov
+    // - time.apple.com
+    // - time.cloudflare.com (has NTS), https://blog.cloudflare.com/secure-time/
+    // - time.windows.com
+    //
+    // Leap seconds smearing NTP servers:
+    // - time.facebook.com , https://engineering.fb.com/production-engineering/ntp-service/ , sine-smears over 18 hours
+    // - time.google.com , https://developers.google.com/time/smear , linear-smears over 24 hours
     const char* host = "time.google.com";
     Core::ArgsParser args_parser;
     args_parser.add_option(set_time, "Adjust system time (requires root)", "set", 's');
