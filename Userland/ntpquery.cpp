@@ -168,9 +168,9 @@ int main(int argc, char** argv)
     packet.li_vn_mode = (4 << 3) | 3; // Version 4, client connection.
 
     // The server will copy the transmit_timestamp to origin_timestamp in the reply.
-    timeval t;
-    gettimeofday(&t, nullptr);
-    packet.transmit_timestamp = htobe64(ntp_timestamp_from_timeval(t));
+    timeval local_transmit_time;
+    gettimeofday(&local_transmit_time, nullptr);
+    packet.transmit_timestamp = htobe64(ntp_timestamp_from_timeval(local_transmit_time));
 
     ssize_t rc;
     rc = sendto(fd, &packet, sizeof(packet), 0, (const struct sockaddr*)&peer_address, sizeof(peer_address));
@@ -191,7 +191,8 @@ int main(int argc, char** argv)
         perror("recvmsg");
         return 1;
     }
-    gettimeofday(&t, nullptr);
+    timeval userspace_receive_time;
+    gettimeofday(&userspace_receive_time, nullptr);
     if ((size_t)rc < sizeof(packet)) {
         fprintf(stderr, "incomplete packet recv\n");
         return 1;
@@ -201,15 +202,16 @@ int main(int argc, char** argv)
     ASSERT(cmsg->cmsg_level == SOL_SOCKET);
     ASSERT(cmsg->cmsg_type == SCM_TIMESTAMP);
     ASSERT(!CMSG_NXTHDR(&msg, cmsg));
-    timeval packet_t;
-    memcpy(&packet_t, CMSG_DATA(cmsg), sizeof(packet_t));
+    timeval kernel_receive_time;
+    memcpy(&kernel_receive_time, CMSG_DATA(cmsg), sizeof(kernel_receive_time));
 
     NtpTimestamp origin_timestamp = be64toh(packet.origin_timestamp);
     NtpTimestamp receive_timestamp = be64toh(packet.receive_timestamp);
     NtpTimestamp transmit_timestamp = be64toh(packet.transmit_timestamp);
-    NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(packet_t);
+    NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(kernel_receive_time);
 
-    timersub(&t, &packet_t, &t);
+    timeval kernel_to_userspace_latency;
+    timersub(&userspace_receive_time, &kernel_receive_time, &kernel_to_userspace_latency);
 
     if (set_time) {
         // FIXME: Do all the time filtering described in 5905, or at least correct for time of flight.
@@ -239,7 +241,7 @@ int main(int argc, char** argv)
 
         // When the system isn't under load, user-space t and packet_t are identical. If a shell with `yes` is running, it can be as high as 30ms in this program,
         // which gets user-space time immediately after the recvmsg() call. In programs that have an event loop reading from multiple sockets, it could be higher.
-        printf("Receive latency: %lld.%06d s\n", t.tv_sec, t.tv_usec);
+        printf("Receive latency: %lld.%06d s\n", kernel_to_userspace_latency.tv_sec, kernel_to_userspace_latency.tv_usec);
     }
 
     // Parts of the "Clock Filter" computations, https://tools.ietf.org/html/rfc5905#section-10
