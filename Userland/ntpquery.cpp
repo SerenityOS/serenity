@@ -25,6 +25,7 @@
  */
 
 #define _GNU_SOURCE
+#include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
 #include <endian.h>
@@ -168,9 +169,12 @@ int main(int argc, char** argv)
     packet.li_vn_mode = (4 << 3) | 3; // Version 4, client connection.
 
     // The server will copy the transmit_timestamp to origin_timestamp in the reply.
+    // To not leak the local time, keep the time we sent the packet locally and
+    // send random bytes to the server.
+    auto random_transmit_timestamp = get_random<NtpTimestamp>();
     timeval local_transmit_time;
     gettimeofday(&local_transmit_time, nullptr);
-    packet.transmit_timestamp = htobe64(ntp_timestamp_from_timeval(local_transmit_time));
+    packet.transmit_timestamp = random_transmit_timestamp;
 
     ssize_t rc;
     rc = sendto(fd, &packet, sizeof(packet), 0, (const struct sockaddr*)&peer_address, sizeof(peer_address));
@@ -205,7 +209,12 @@ int main(int argc, char** argv)
     timeval kernel_receive_time;
     memcpy(&kernel_receive_time, CMSG_DATA(cmsg), sizeof(kernel_receive_time));
 
-    NtpTimestamp origin_timestamp = be64toh(packet.origin_timestamp);
+    if (packet.origin_timestamp != random_transmit_timestamp) {
+        fprintf(stderr, "expected %#016llx as origin timestamp, got %#016llx\n", random_transmit_timestamp, packet.origin_timestamp);
+        return 1;
+    }
+
+    NtpTimestamp origin_timestamp = ntp_timestamp_from_timeval(local_transmit_time);
     NtpTimestamp receive_timestamp = be64toh(packet.receive_timestamp);
     NtpTimestamp transmit_timestamp = be64toh(packet.transmit_timestamp);
     NtpTimestamp destination_timestamp = ntp_timestamp_from_timeval(kernel_receive_time);

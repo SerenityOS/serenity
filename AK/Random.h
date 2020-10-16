@@ -62,3 +62,6 @@ inline T get_random()
 }
 
 }
+
+using AK::fill_with_random;
+using AK::get_random;
