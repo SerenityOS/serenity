@@ -3,7 +3,7 @@ set(SOURCES
     lib.cpp
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -fpic") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_WIHTOUT_STATIC} -nostdlib -fpic") 
 
 add_library(SampleLib SHARED ${SOURCES})
 target_link_libraries(SampleLib LibCShared)
