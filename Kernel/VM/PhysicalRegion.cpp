@@ -112,6 +112,8 @@ Optional<unsigned> PhysicalRegion::find_one_free_page()
     m_bitmap.set(page_index, true);
     m_used++;
     m_free_hint = free_index.value() + 1; // Just a guess
+    if (m_free_hint >= m_bitmap.size())
+        m_free_hint = 0;
     return page_index;
 }
 
@@ -128,6 +130,8 @@ Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t cou
         m_bitmap.set_range<true>(page, count);
         m_used += count;
         m_free_hint = first_index.value() + count + 1; // Just a guess
+        if (m_free_hint >= m_bitmap.size())
+            m_free_hint = 0;
         return page;
     }
     return {};
