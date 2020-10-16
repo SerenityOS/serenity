@@ -74,6 +74,8 @@ private:
 
 template<typename T, typename TraitsForT>
 class HashTable {
+    static constexpr size_t load_factor_in_percent = 60;
+
     struct Bucket {
         bool used;
         bool deleted;
@@ -348,8 +350,8 @@ private:
             return *const_cast<Bucket*>(bucket_for_reading);
         }
 
-        if ((used_bucket_count() + 1) >= m_capacity)
-            rehash((size() + 1) * 2);
+        if (should_grow())
+            rehash(capacity() * 2);
         else if (usable_bucket_for_writing)
             return *usable_bucket_for_writing;
 
@@ -365,6 +367,7 @@ private:
     }
 
     size_t used_bucket_count() const { return m_size + m_deleted_count; }
+    bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
 
     Bucket* m_buckets { nullptr };
     size_t m_size { 0 };
