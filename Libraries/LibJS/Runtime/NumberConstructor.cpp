@@ -30,10 +30,9 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <math.h>
 
-// FIXME: constexpr these?
-#define EPSILON_VALUE pow(2, -52)
-#define MAX_SAFE_INTEGER_VALUE pow(2, 53) - 1
-#define MIN_SAFE_INTEGER_VALUE -(pow(2, 53) - 1)
+constexpr const double EPSILON_VALUE { __builtin_pow(2, -52) };
+constexpr const double MAX_SAFE_INTEGER_VALUE { __builtin_pow(2, 53) - 1 };
+constexpr const double MIN_SAFE_INTEGER_VALUE { -(__builtin_pow(2, 53) - 1) };
 
 namespace JS {
 
