@@ -75,4 +75,63 @@ TEST_CASE(complex_type_clear)
     EXPECT_EQ(strings.size(), 0u);
 }
 
+TEST_CASE(constexpr_construction)
+{
+    constexpr CircularQueue<int, 3> ints {};
+
+    static_assert(ints.is_empty());
+    static_assert(0u == ints.size());
+    static_assert(0u == ints.head_index());
+    static_assert(3 == ints.capacity());
+
+    static_assert(ints.begin() == ints.end());
+}
+
+TEST_CASE(constexpr_basic_operations)
+{
+    constexpr auto ints = [] {
+        CircularQueue<int, 3> ints = { { 1, 2, 3 } };
+        ints.dequeue();
+        return ints;
+    }();
+
+    static_assert(!ints.is_empty());
+    static_assert(2u == ints.size());
+    static_assert(1u == ints.head_index());
+    static_assert(3 == ints.capacity());
+
+    static_assert(2 == *ints.begin());
+    static_assert(3 == *(++ints.begin()));
+
+    static_assert(2 == ints.at(0));
+    static_assert(2 == ints.first());
+
+    static_assert(3 == ints.at(1));
+    static_assert(3 == ints.last());
+}
+
+TEST_CASE(constexpr_wrap_operations)
+{
+    constexpr auto ints = [] {
+        CircularQueue<int, 3> ints = { { 1, 2, 3 } };
+        ints.enqueue(4);
+        ints.dequeue();
+        return ints;
+    }();
+
+    static_assert(!ints.is_empty());
+    static_assert(2u == ints.size());
+    static_assert(2u == ints.head_index());
+    static_assert(3 == ints.capacity());
+
+    static_assert(3 == *ints.begin());
+    static_assert(4 == *(++ints.begin()));
+
+    static_assert(3 == ints.at(0));
+    static_assert(3 == ints.first());
+
+    static_assert(4 == ints.at(1));
+    static_assert(4 == ints.last());
+}
+
 TEST_MAIN(CircularQueue)

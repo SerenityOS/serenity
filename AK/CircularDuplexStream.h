@@ -124,7 +124,7 @@ public:
     {
         ASSERT(count <= remaining_contigous_space());
 
-        Bytes bytes { m_queue.m_storage + (m_queue.head_index() + m_queue.size()) % Capacity, count };
+        Bytes bytes { m_queue.m_storage.data() + (m_queue.head_index() + m_queue.size()) % Capacity, count };
 
         m_queue.m_size += count;
         m_total_written += count;

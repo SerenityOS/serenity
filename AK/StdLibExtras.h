@@ -82,7 +82,7 @@ inline constexpr T ceil_div(T a, U b)
 #    pragma clang diagnostic ignored "-Wconsumed"
 #endif
 template<typename T>
-inline T&& move(T& arg)
+constexpr T&& move(T& arg)
 {
     return static_cast<T&&>(arg);
 }
