@@ -151,8 +151,6 @@ void Shape::ensure_property_table() const
         return;
     m_property_table = make<HashMap<StringOrSymbol, PropertyMetadata>>();
 
-    DeferGC defer(heap());
-
     u32 next_offset = 0;
 
     Vector<const Shape*, 64> transition_chain;
