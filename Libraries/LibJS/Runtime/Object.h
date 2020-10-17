@@ -63,6 +63,7 @@ public:
     static Object* create_empty(GlobalObject&);
 
     explicit Object(Object& prototype);
+    explicit Object(Shape&);
     virtual void initialize(GlobalObject&) override;
     virtual ~Object();
 

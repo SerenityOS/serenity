@@ -84,6 +84,13 @@ void GlobalObject::initialize()
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
+    m_new_object_shape = vm.heap().allocate<Shape>(*this, *this);
+    m_new_object_shape->set_prototype_without_transition(m_object_prototype);
+
+    m_new_script_function_prototype_object_shape = vm.heap().allocate<Shape>(*this, *this);
+    m_new_script_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
+    m_new_script_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
+
     static_cast<FunctionPrototype*>(m_function_prototype)->initialize(*this);
     static_cast<ObjectPrototype*>(m_object_prototype)->initialize(*this);
 
@@ -143,6 +150,8 @@ void GlobalObject::visit_children(Visitor& visitor)
     Object::visit_children(visitor);
 
     visitor.visit(m_empty_object_shape);
+    visitor.visit(m_new_object_shape);
+    visitor.visit(m_new_script_function_prototype_object_shape);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     visitor.visit(m_##snake_name##_constructor);

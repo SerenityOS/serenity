@@ -69,8 +69,8 @@ void ScriptFunction::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Function::initialize(global_object);
     if (!m_is_arrow_function) {
-        Object* prototype = Object::create_empty(global_object);
-        prototype->define_property_without_transition(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
+        Object* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_script_function_prototype_object_shape());
+        prototype->define_property(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
         define_property(vm.names.prototype, prototype, 0);
     }
     define_native_property(vm.names.length, length_getter, nullptr, Attribute::Configurable);
