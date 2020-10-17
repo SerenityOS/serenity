@@ -1,7 +1,7 @@
 set(LIBC_SOURCES
     arpa/inet.cpp
     assert.cpp
-    #crt0.cpp
+    crt0_shared.cpp
     ctype.cpp
     cxxabi.cpp
     dirent.cpp
@@ -66,12 +66,7 @@ add_custom_command(
 )
 
 set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib")
 serenity_libc(LibC c)
 target_link_libraries(LibC crt0)
 add_dependencies(LibC LibM)
-
-set(SOURCES ${SOURCES} "crt0_shared.cpp")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib")
-serenity_libc_shared(LibCShared c)
-#add_library(LibCShared SHARED ${SOURCES})
-#install(TARGETS LibCShared DESTINATION usr/lib)

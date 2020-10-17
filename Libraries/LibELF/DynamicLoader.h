@@ -62,9 +62,6 @@ public:
 
     void dump();
 
-    // Will be called from _fixup_plt_entry, as part of the PLT trampoline
-    Elf32_Addr patch_plt_entry(u32 relocation_offset);
-
     // Requested program interpreter from program headers. May be empty string
     StringView program_interpreter() const { return m_program_interpreter; }
 
@@ -78,8 +75,8 @@ public:
     template<typename F>
     void for_each_needed_library(F) const;
 
-    using SymbolLookupFunction = DynamicObject::SymbolLookupResult (*)(const char*);
-    SymbolLookupFunction m_global_symbol_lookup_func { nullptr };
+    DynamicObject::SymbolLookupFunction m_global_symbol_lookup_func { nullptr };
+    void set_global_symbol_lookup_function(DynamicObject::SymbolLookupFunction func) { m_global_symbol_lookup_func = func; }
 
     VirtualAddress text_segment_load_address() const { return m_text_segment_load_address; }
 

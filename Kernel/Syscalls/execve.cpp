@@ -80,6 +80,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
     m_entry_eip = 0;
+    FlatPtr load_base_address = 0;
 
     MM.enter_process_paging_scope(*this);
     String object_name = LexicalPath(object_description.absolute_path()).basename();
@@ -96,6 +97,8 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
             prot |= PROT_EXEC;
         if (auto* region = allocate_region_with_vmobject(vaddr.offset(load_offset), size, *vmobject, offset_in_image, String(name), prot)) {
             region->set_shared(true);
+            if (offset_in_image == 0)
+                load_base_address = (FlatPtr)region->vaddr().as_ptr();
             return region->vaddr().as_ptr();
         }
         return nullptr;
@@ -137,7 +140,7 @@ KResultOr<Process::LoadResult> Process::load_elf_object(FileDescription& object_
     // NOTE: At this point, we've committed to the new executable.
 
     return LoadResult {
-        load_offset,
+        load_base_address,
         loader->entry().offset(load_offset).get(),
         (size_t)loader_metadata.size,
         VirtualAddress(loader->image().program_header_table_offset()).offset(load_offset).get(),
@@ -175,7 +178,7 @@ int Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPt
         if (result.is_error())
             return result.error();
 
-        m_load_offset = result.value().load_offset;
+        m_load_base = result.value().load_base;
         m_entry_eip = result.value().entry_eip;
         m_master_tls_region = result.value().tls_region;
         m_master_tls_size = result.value().tls_size;
@@ -192,7 +195,7 @@ int Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPt
     if (interpreter_load_result.is_error())
         return interpreter_load_result.error();
 
-    m_load_offset = interpreter_load_result.value().load_offset;
+    m_load_base = interpreter_load_result.value().load_base;
     m_entry_eip = interpreter_load_result.value().entry_eip;
 
     // TLS allocation will be done in userspace by the loader
@@ -357,7 +360,7 @@ Vector<AuxiliaryValue> Process::generate_auxiliary_vector() const
     // PHDR/EXECFD
     // PH*
     auxv.append({ AuxiliaryValue::PageSize, PAGE_SIZE });
-    auxv.append({ AuxiliaryValue::BaseAddress, (void*)m_load_offset });
+    auxv.append({ AuxiliaryValue::BaseAddress, (void*)m_load_base });
 
     auxv.append({ AuxiliaryValue::Entry, (void*)m_entry_eip });
     // NOTELF
