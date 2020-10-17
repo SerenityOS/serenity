@@ -12,10 +12,11 @@ window_gid=13
 
 CP="cp"
 
-# cp on macOS does not support the -d option.
+# cp on macOS and BSD systems do not support the -d option.
 # gcp comes with coreutils, which is already a dependency.
-if [ "$(uname -s)" = "Darwin" ]; then
-	CP=gcp
+OS="$(uname -s)"
+if [ "$OS" = "Darwin" ] || echo "$OS" | grep -qe 'BSD$'; then
+	CP="gcp"
 fi
 
 die() {

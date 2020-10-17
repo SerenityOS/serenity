@@ -54,7 +54,7 @@ if [ "$(uname -s)" = "Darwin" ]; then
 elif [ "$(uname -s)" = "OpenBSD" ]; then
     mount -t ext2fs "/dev/${VND}i" mnt/ || die "could not mount filesystem"
 elif [ "$(uname -s)" = "FreeBSD" ]; then
-    fuse-ext2 -o rw+ "/dev/${MD}" mnt/ || die "could not mount filesystem"
+    fuse-ext2 -o rw+,direct_io "/dev/${MD}" mnt/ || die "could not mount filesystem"
 else
     if ! mount _disk_image mnt/ ; then
         if command -v genext2fs 1>/dev/null ; then

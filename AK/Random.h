@@ -33,7 +33,7 @@
 #    include <stdlib.h>
 #endif
 
-#if defined(__linux__)
+#if defined(__unix__)
 #    include <unistd.h>
 #endif
 
@@ -47,7 +47,7 @@ inline void fill_with_random(void* buffer, size_t length)
 {
 #if defined(__serenity__)
     arc4random_buf(buffer, length);
-#elif defined(__linux__) or defined(__APPLE__)
+#elif defined(__unix__) or defined(__APPLE__)
     int rc = getentropy(buffer, length);
     (void)rc;
 #endif
