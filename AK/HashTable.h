@@ -133,6 +133,14 @@ public:
         return *this;
     }
 
+    friend void swap(HashTable& a, HashTable& b) noexcept
+    {
+        swap(a.m_buckets, b.m_buckets);
+        swap(a.m_size, b.m_size);
+        swap(a.m_capacity, b.m_capacity);
+        swap(a.m_deleted_count, b.m_deleted_count);
+    }
+
     bool is_empty() const { return !m_size; }
     size_t size() const { return m_size; }
     size_t capacity() const { return m_capacity; }
