@@ -35,6 +35,7 @@ umask 0022
 
 printf "installing base system... "
 $CP -PdR "$SERENITY_ROOT"/Base/* mnt/
+$CP "$SERENITY_ROOT"/Toolchain/Local/i686-pc-serenity/lib/libgcc_s.so mnt/usr/lib/
 $CP -PdR Root/* mnt/
 # If umask was 027 or similar when the repo was cloned,
 # file permissions in Base/ are too restrictive. Restore
