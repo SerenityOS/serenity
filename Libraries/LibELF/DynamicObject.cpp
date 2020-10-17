@@ -32,6 +32,16 @@
 #include <stdio.h>
 #include <string.h>
 
+// #define DYNAMIC_OBJECT_VERBOSE
+
+#ifdef DYNAMIC_OBJECT_VERBOSE
+#    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
+#else
+#    define VERBOSE(fmt, ...) \
+        do {                  \
+        } while (0)
+#endif
+
 namespace ELF {
 
 static const char* name_for_dtag(Elf32_Sword d_tag);
@@ -63,8 +73,8 @@ void DynamicObject::dump() const
     if (m_has_soname)
         builder.appendf("DT_SONAME: %s\n", soname()); // FIXME: Valdidate that this string is null terminated?
 
-    dbgprintf("Dynamic section at address %p contains %zu entries:\n", m_dynamic_address.as_ptr(), num_dynamic_sections);
-    dbgprintf("%s", builder.to_string().characters());
+    VERBOSE("Dynamic section at address %p contains %zu entries:\n", m_dynamic_address.as_ptr(), num_dynamic_sections);
+    VERBOSE("%s", builder.to_string().characters());
 }
 
 void DynamicObject::parse()
@@ -400,6 +410,48 @@ Optional<DynamicObject::SymbolLookupResult> DynamicObject::lookup_symbol(const c
 NonnullRefPtr<DynamicObject> DynamicObject::construct(VirtualAddress base_address, VirtualAddress dynamic_section_address)
 {
     return adopt(*new DynamicObject(base_address, dynamic_section_address));
+}
+
+// offset is in PLT relocation table
+Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
+{
+    auto relocation = plt_relocation_section().relocation_at_offset(relocation_offset);
+
+    ASSERT(relocation.type() == R_386_JMP_SLOT);
+
+    auto sym = relocation.symbol();
+    if (StringView { sym.name() } == "__cxa_demangle") {
+        dbgln("__cxa_demangle is currently not supported for shared objects");
+        // FIXME: Where is it defined?
+        ASSERT_NOT_REACHED();
+    }
+
+    u8* relocation_address = relocation.address().as_ptr();
+    auto res = lookup_symbol(sym);
+
+    if (!res.found) {
+        dbgln("did not find symbol: {} ", sym.name());
+        ASSERT_NOT_REACHED();
+    }
+
+    u32 symbol_location = res.address;
+
+    VERBOSE("DynamicLoader: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
+
+    *(u32*)relocation_address = symbol_location;
+
+    return symbol_location;
+}
+
+DynamicObject::SymbolLookupResult DynamicObject::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
+{
+    VERBOSE("looking up symbol: %s\n", symbol.name());
+    if (!symbol.is_undefined()) {
+        VERBOSE("symbol is defiend in its object\n");
+        return { true, symbol.value(), (FlatPtr)symbol.address().as_ptr(), &symbol.object() };
+    }
+    ASSERT(m_global_symbol_lookup_func);
+    return m_global_symbol_lookup_func(symbol.name());
 }
 
 } // end namespace ELF

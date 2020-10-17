@@ -95,4 +95,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibCpp LibRegex)
+target_link_libraries(LibGUI LibCore LibGfx LibIPC LibThread LibCpp LibShell LibRegex LibJS)

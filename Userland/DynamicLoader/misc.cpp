@@ -34,6 +34,5 @@ const char* __cxa_demangle(const char*, void*, void*, int*)
     return "";
 }
 
-// FIXME: Is this correct?
-void* __dso_handle = nullptr;
+void* __dso_handle __attribute__((__weak__));
 }
