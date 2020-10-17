@@ -100,16 +100,12 @@ public:
 
     HashTable& operator=(const HashTable& other)
     {
-        if (this != &other) {
-            clear();
-            rehash(other.capacity());
-            for (auto& it : other)
-                set(it);
-        }
+        HashTable temporary(other);
+        swap(*this, temporary);
         return *this;
     }
 
-    HashTable(HashTable&& other)
+    HashTable(HashTable&& other) noexcept
         : m_buckets(other.m_buckets)
         , m_size(other.m_size)
         , m_capacity(other.m_capacity)
@@ -121,15 +117,9 @@ public:
         other.m_buckets = nullptr;
     }
 
-    HashTable& operator=(HashTable&& other)
+    HashTable& operator=(HashTable&& other) noexcept
     {
-        if (this != &other) {
-            clear();
-            m_buckets = exchange(other.m_buckets, nullptr);
-            m_size = exchange(other.m_size, 0);
-            m_capacity = exchange(other.m_capacity, 0);
-            m_deleted_count = exchange(other.m_deleted_count, 0);
-        }
+        swap(*this, other);
         return *this;
     }
 
