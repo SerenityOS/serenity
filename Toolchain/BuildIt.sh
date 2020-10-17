@@ -42,6 +42,8 @@ elif [ "$(uname -s)" = "FreeBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
     NPROC="sysctl -n hw.ncpu"
+    export with_gmp=/usr/local
+    export with_mpfr=/usr/local
 fi
 
 git_patch=
