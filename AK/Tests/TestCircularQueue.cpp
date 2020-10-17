@@ -75,4 +75,16 @@ TEST_CASE(complex_type_clear)
     EXPECT_EQ(strings.size(), 0u);
 }
 
+struct ConstructorCounter {
+    static unsigned s_num_constructor_calls;
+    ConstructorCounter() { ++s_num_constructor_calls; }
+};
+unsigned ConstructorCounter::s_num_constructor_calls = 0;
+
+TEST_CASE(should_not_call_value_type_constructor_when_created)
+{
+    CircularQueue<ConstructorCounter, 10> queue;
+    EXPECT_EQ(0u, ConstructorCounter::s_num_constructor_calls);
+}
+
 TEST_MAIN(CircularQueue)
