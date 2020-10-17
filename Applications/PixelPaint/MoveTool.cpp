@@ -70,6 +70,7 @@ void MoveTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
         return;
     m_layer_being_moved = nullptr;
     m_editor->window()->set_cursor(Gfx::StandardCursor::None);
+    m_editor->did_complete_action();
 }
 
 void MoveTool::on_keydown(GUI::KeyEvent& event)

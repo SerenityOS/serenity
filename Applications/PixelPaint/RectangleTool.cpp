@@ -82,6 +82,7 @@ void RectangleTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseE
         draw_using(painter, rect);
         m_drawing_button = GUI::MouseButton::None;
         layer.did_modify_bitmap(*m_editor->image());
+        m_editor->did_complete_action();
     }
 }
 

@@ -24,32 +24,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "Tool.h"
+#include "History.h"
+#include "Image.h"
+#include "Layer.h"
+#include <AK/LogStream.h>
+#include <utility>
 
 namespace PixelPaint {
 
-class BrushTool final : public Tool {
-public:
-    BrushTool();
-    virtual ~BrushTool() override;
+void History::on_action(const Image& image)
+{
+    m_snapshots.shrink(m_snapshots.size() - m_current_index_back_into_history);
+    m_current_index_back_into_history = 0;
+    m_snapshots.append(image.take_snapshot());
+    if (m_snapshots.size() > s_max_size)
+        m_snapshots.take_first();
+}
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual GUI::Widget* get_properties_widget() override;
+bool History::undo(Image& image)
+{
+    if (m_snapshots.size() - m_current_index_back_into_history - 1 <= 0)
+        return false;
 
-private:
-    RefPtr<GUI::Widget> m_properties_widget;
-    int m_size { 20 };
-    int m_hardness { 80 };
-    bool m_was_drawing { false };
-    Gfx::IntPoint m_last_position;
+    m_current_index_back_into_history += 1;
+    const Image& last_snapshot = *m_snapshots[m_snapshots.size() - m_current_index_back_into_history - 1];
+    image.restore_snapshot(last_snapshot);
+    return true;
+}
 
-    virtual const char* class_name() const override { return "BrushTool"; }
-    void draw_line(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& start, const Gfx::IntPoint& end);
-    void draw_point(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& point);
-};
+bool History::redo(Image& image)
+{
+    if (m_current_index_back_into_history <= 0)
+        return false;
+
+    const Image& last_snapshot = *m_snapshots[m_snapshots.size() - m_current_index_back_into_history];
+    m_current_index_back_into_history -= 1;
+    image.restore_snapshot(last_snapshot);
+    return true;
+}
+
+void History::reset(const Image& image)
+{
+    m_snapshots.clear();
+    m_current_index_back_into_history = 0;
+    on_action(image);
+}
 
 }

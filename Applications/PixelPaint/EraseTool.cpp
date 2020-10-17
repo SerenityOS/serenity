@@ -72,6 +72,13 @@ void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
     }
 }
 
+void EraseTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
+{
+    if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
+        return;
+    m_editor->did_complete_action();
+}
+
 void EraseTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
 {
     if (!m_context_menu) {

@@ -26,30 +26,29 @@
 
 #pragma once
 
-#include "Tool.h"
+#include <AK/String.h>
+#include <AK/Vector.h>
 
 namespace PixelPaint {
 
-class BrushTool final : public Tool {
-public:
-    BrushTool();
-    virtual ~BrushTool() override;
+class Image;
 
-    virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual GUI::Widget* get_properties_widget() override;
+class History {
+    AK_MAKE_NONCOPYABLE(History);
+    AK_MAKE_NONMOVABLE(History);
+
+public:
+    History() = default;
+
+    void on_action(const Image&);
+    bool undo(Image&);
+    bool redo(Image&);
+    void reset(const Image&);
 
 private:
-    RefPtr<GUI::Widget> m_properties_widget;
-    int m_size { 20 };
-    int m_hardness { 80 };
-    bool m_was_drawing { false };
-    Gfx::IntPoint m_last_position;
-
-    virtual const char* class_name() const override { return "BrushTool"; }
-    void draw_line(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& start, const Gfx::IntPoint& end);
-    void draw_point(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& point);
+    static constexpr int s_max_size = 50;
+    Vector<RefPtr<Image>> m_snapshots;
+    int m_current_index_back_into_history { 0 };
 };
 
 }

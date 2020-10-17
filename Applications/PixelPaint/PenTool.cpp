@@ -57,8 +57,10 @@ void PenTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent
 
 void PenTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
-    if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right)
+    if (event.button() == GUI::MouseButton::Left || event.button() == GUI::MouseButton::Right) {
         m_last_drawing_event_position = { -1, -1 };
+        m_editor->did_complete_action();
+    }
 }
 
 void PenTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
