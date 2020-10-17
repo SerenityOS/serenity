@@ -59,7 +59,7 @@ static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int 
 
 namespace ELF {
 
-static bool s_always_bind_now = true;
+static bool s_always_bind_now = false;
 
 NonnullRefPtr<DynamicLoader> DynamicLoader::construct(const char* filename, int fd, size_t size)
 {
@@ -90,7 +90,7 @@ DynamicLoader::DynamicLoader(const char* filename, int fd, size_t size)
 
     m_tls_size = calculate_tls_size();
 
-    m_valid = is_valid();
+    m_valid = validate();
 }
 
 RefPtr<DynamicObject> DynamicLoader::dynamic_object_from_image() const
@@ -121,16 +121,14 @@ size_t DynamicLoader::calculate_tls_size() const
 bool DynamicLoader::validate()
 {
     auto* elf_header = (Elf32_Ehdr*)m_file_mapping;
-
-    if (!validate_elf_header(*elf_header, m_file_size) || !validate_program_headers(*elf_header, m_file_size, (u8*)m_file_mapping, m_file_size, &m_program_interpreter)) {
-        m_valid = false;
-    }
+    return validate_elf_header(*elf_header, m_file_size) && validate_program_headers(*elf_header, m_file_size, (u8*)m_file_mapping, m_file_size, &m_program_interpreter);
 }
 
 DynamicLoader::~DynamicLoader()
 {
     if (MAP_FAILED != m_file_mapping)
         munmap(m_file_mapping, m_file_size);
+    close(m_image_fd);
 }
 
 void* DynamicLoader::symbol_for_name(const char* name)
@@ -161,6 +159,8 @@ RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t tota
     m_dynamic_object = DynamicObject::construct(m_text_segment_load_address, m_dynamic_section_address);
     m_dynamic_object->set_tls_offset(m_tls_offset);
     m_dynamic_object->set_tls_size(m_tls_size);
+    ASSERT(m_global_symbol_lookup_func);
+    m_dynamic_object->m_global_symbol_lookup_func = m_global_symbol_lookup_func;
 
     auto rc = load_stage_2(flags, total_tls_size);
     if (!rc)
@@ -171,14 +171,13 @@ RefPtr<DynamicObject> DynamicLoader::load_from_image(unsigned flags, size_t tota
 bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
 {
     ASSERT(flags & RTLD_GLOBAL);
-    ASSERT(!(flags & RTLD_LAZY));
 
 #ifdef DYNAMIC_LOAD_DEBUG
     m_dynamic_object->dump();
 #endif
 
     if (m_dynamic_object->has_text_relocations()) {
-        dbg() << "Someone linked non -fPIC code into " << m_filename << " :(";
+        // dbg() << "Someone linked non -fPIC code into " << m_filename << " :(";
         ASSERT(m_text_segment_load_address.get() != 0);
         if (0 > mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_WRITE)) {
             perror("mprotect .text: PROT_READ | PROT_WRITE"); // FIXME: dlerror?
@@ -189,7 +188,6 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
     do_relocations(total_tls_size);
 
     if (flags & RTLD_LAZY) {
-        ASSERT_NOT_REACHED(); // TODO: Support lazy binding
         setup_plt_trampoline();
     }
 
@@ -203,9 +201,7 @@ bool DynamicLoader::load_stage_2(unsigned flags, size_t total_tls_size)
 
     call_object_init_functions();
 
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Loaded %s\n", m_filename.characters());
-#endif
+    VERBOSE("Loaded %s\n", m_filename.characters());
     return true;
 }
 
@@ -239,7 +235,13 @@ void DynamicLoader::load_program_headers()
 
     // Process regions in order: .text, .data, .tls
     auto* region = text_region_ptr;
-    void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), region->mmap_prot(), MAP_PRIVATE, m_image_fd, region->offset(), String::format(".text: %s", m_filename.characters()).characters());
+    void* text_segment_begin = mmap_with_name(nullptr,
+        region->required_load_size(),
+        region->mmap_prot(),
+        MAP_PRIVATE,
+        m_image_fd,
+        region->offset(),
+        String::format("%s: .text", m_filename.characters()).characters());
     if (MAP_FAILED == text_segment_begin) {
         ASSERT_NOT_REACHED();
     }
@@ -249,7 +251,13 @@ void DynamicLoader::load_program_headers()
     m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
 
     region = data_region_ptr;
-    void* data_segment_begin = mmap_with_name((u8*)text_segment_begin + m_text_segment_size, region->required_load_size(), region->mmap_prot(), MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format(".data: %s", m_filename.characters()).characters());
+    void* data_segment_begin = mmap_with_name((u8*)text_segment_begin + m_text_segment_size,
+        region->required_load_size(),
+        region->mmap_prot(),
+        MAP_ANONYMOUS | MAP_PRIVATE,
+        0,
+        0,
+        String::format("%s: .data", m_filename.characters()).characters());
     if (MAP_FAILED == data_segment_begin) {
         ASSERT_NOT_REACHED();
     }
@@ -279,7 +287,10 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
             auto symbol = relocation.symbol();
             VERBOSE("Absolute relocation: name: '%s', value: %p\n", symbol.name(), symbol.value());
             auto res = lookup_symbol(symbol);
-            ASSERT(res.found);
+            if (!res.found) {
+                dbgln("ERROR: symbol not found: {}", symbol.name());
+                ASSERT_NOT_REACHED();
+            }
             u32 symbol_address = res.address;
             *patch_ptr += symbol_address;
             VERBOSE("   Symbol address: %p\n", *patch_ptr);
@@ -298,13 +309,16 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
         case R_386_GLOB_DAT: {
             auto symbol = relocation.symbol();
             if (!strcmp(symbol.name(), "__deregister_frame_info") || !strcmp(symbol.name(), "_ITM_registerTMCloneTable")
-                || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info")) {
+                || !strcmp(symbol.name(), "_ITM_deregisterTMCloneTable") || !strcmp(symbol.name(), "__register_frame_info")
+                || !strcmp(symbol.name(), "__cxa_finalize") // __cxa_finalize will be called from libc's exit()
+            ) {
                 // We do not support these
                 break;
             }
             VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
             auto res = lookup_symbol(symbol);
             VERBOSE("was symbol found? %d, address: 0x%x\n", res.found, res.address);
+            ASSERT(res.found);
 
             if (!res.found) {
                 // TODO this is a hack
@@ -331,28 +345,28 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
         }
         case R_386_TLS_TPOFF32:
         case R_386_TLS_TPOFF: {
-            dbgprintf("Relocation type: R_386_TLS_TPOFF at offset %X\n", relocation.offset());
+            VERBOSE("Relocation type: R_386_TLS_TPOFF at offset %X\n", relocation.offset());
             auto symbol = relocation.symbol();
             // For some reason, LibC has a R_386_TLS_TPOFF that referes to the undefined symbol.. huh
             if (relocation.symbol_index() == 0)
                 break;
-            dbgprintf("Symbol index: %d\n", symbol.index());
-            dbgprintf("Symbol is_undefined?: %d\n", symbol.is_undefined());
-            dbgprintf("TLS relocation: '%s', value: %p\n", symbol.name(), symbol.value());
+            VERBOSE("Symbol index: %d\n", symbol.index());
+            VERBOSE("Symbol is_undefined?: %d\n", symbol.is_undefined());
+            VERBOSE("TLS relocation: '%s', value: %p\n", symbol.name(), symbol.value());
             auto res = lookup_symbol(symbol);
             if (!res.found)
                 break;
             ASSERT(res.found);
             u32 symbol_value = res.value;
-            dbgprintf("symbol value: %d\n", symbol_value);
+            VERBOSE("symbol value: %d\n", symbol_value);
             const auto dynamic_object_of_symbol = res.dynamic_object;
             ASSERT(dynamic_object_of_symbol);
             size_t offset_of_tls_end = dynamic_object_of_symbol->tls_offset().value() + dynamic_object_of_symbol->tls_size().value();
             // size_t offset_of_tls_end = tls_offset() + tls_size();
-            dbgprintf("patch ptr: 0x%x\n", patch_ptr);
-            dbgprintf("tls end offset: %d, total tls size: %d\n", offset_of_tls_end, total_tls_size);
+            VERBOSE("patch ptr: 0x%x\n", patch_ptr);
+            VERBOSE("tls end offset: %d, total tls size: %d\n", offset_of_tls_end, total_tls_size);
             *patch_ptr = (offset_of_tls_end - total_tls_size - symbol_value - sizeof(Elf32_Addr));
-            dbgprintf("*patch ptr: %d\n", (i32)*patch_ptr);
+            VERBOSE("*patch ptr: %d\n", (i32)*patch_ptr);
             break;
         }
         default:
@@ -376,8 +390,8 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
         if (m_dynamic_object->must_bind_now() || s_always_bind_now) {
             // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
             // The patch method returns the address for the LAZY fixup path, but we don't need it here
-            VERBOSE("patching plt reloaction: 0x%x", relocation.offset_in_section());
-            (void)patch_plt_entry(relocation.offset_in_section());
+            VERBOSE("patching plt reloaction: 0x%x\n", relocation.offset_in_section());
+            (void)m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
         } else {
             // LAZY-ily bind the PLT slots by just adding the base address to the offsets stored there
             // This avoids doing symbol lookup, which might be expensive
@@ -390,9 +404,7 @@ void DynamicLoader::do_relocations(size_t total_tls_size)
         return IterationDecision::Continue;
     });
 
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Done relocating!\n");
-#endif
+    VERBOSE("Done relocating!\n");
 }
 
 // Defined in <arch>/plt_trampoline.S
@@ -400,57 +412,32 @@ extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
 
 void DynamicLoader::setup_plt_trampoline()
 {
+    ASSERT(m_dynamic_object);
     VirtualAddress got_address = m_dynamic_object->plt_got_base_address();
 
     FlatPtr* got_ptr = (FlatPtr*)got_address.as_ptr();
-    got_ptr[1] = (FlatPtr)this;
+    got_ptr[1] = (FlatPtr)m_dynamic_object.ptr();
     got_ptr[2] = (FlatPtr)&_plt_trampoline;
 
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Set GOT PLT entries at %p: [0] = %p [1] = %p, [2] = %p\n", got_ptr, (void*)got_ptr[0], (void*)got_ptr[1], (void*)got_ptr[2]);
-#endif
+    VERBOSE("Set GOT PLT entries at %p: [0] = %p [1] = %p, [2] = %p\n", got_ptr, (void*)got_ptr[0], (void*)got_ptr[1], (void*)got_ptr[2]);
 }
 
 // Called from our ASM routine _plt_trampoline.
 // Tell the compiler that it might be called from other places:
-extern "C" Elf32_Addr _fixup_plt_entry(DynamicLoader* object, u32 relocation_offset);
-extern "C" Elf32_Addr _fixup_plt_entry(DynamicLoader* object, u32 relocation_offset)
+extern "C" Elf32_Addr _fixup_plt_entry(DynamicObject* object, u32 relocation_offset);
+extern "C" Elf32_Addr _fixup_plt_entry(DynamicObject* object, u32 relocation_offset)
 {
     return object->patch_plt_entry(relocation_offset);
 }
 
-// offset is in PLT relocation table
-Elf32_Addr DynamicLoader::patch_plt_entry(u32 relocation_offset)
-{
-    auto relocation = m_dynamic_object->plt_relocation_section().relocation_at_offset(relocation_offset);
-
-    ASSERT(relocation.type() == R_386_JMP_SLOT);
-
-    auto sym = relocation.symbol();
-
-    u8* relocation_address = relocation.address().as_ptr();
-    auto res = lookup_symbol(sym);
-    ASSERT(res.found);
-    u32 symbol_location = res.address;
-
-    VERBOSE("DynamicLoader: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
-
-    *(u32*)relocation_address = symbol_location;
-
-    return symbol_location;
-}
-
 void DynamicLoader::call_object_init_functions()
 {
-    dbg() << "inside call_object_init_functions of " << m_filename;
     typedef void (*InitFunc)();
 
     if (m_dynamic_object->has_init_section()) {
         auto init_function = (InitFunc)(m_dynamic_object->init_section().address().as_ptr());
 
-        // #ifdef DYNAMIC_LOAD_DEBUG
-        dbgprintf("Calling DT_INIT at %p\n", init_function);
-        // #endif
+        VERBOSE("Calling DT_INIT at %p\n", init_function);
         (init_function)();
     }
 
@@ -464,9 +451,7 @@ void DynamicLoader::call_object_init_functions()
             // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
             if (!*init_begin || ((FlatPtr)*init_begin == (FlatPtr)-1))
                 continue;
-            // #ifdef DYNAMIC_LOAD_DEBUG
-            dbgprintf("Calling DT_INITARRAY entry at %p\n", *init_begin);
-            // #endif
+            VERBOSE("Calling DT_INITARRAY entry at %p\n", *init_begin);
             (*init_begin)();
             ++init_begin;
         }
@@ -484,22 +469,7 @@ u32 DynamicLoader::ProgramHeaderRegion::mmap_prot() const
 
 DynamicObject::SymbolLookupResult DynamicLoader::lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const
 {
-    VERBOSE("looking up symbol: %s\n", symbol.name());
-    if (!symbol.is_undefined()) {
-        VERBOSE("symbol is defiend in its object\n");
-        return { true, symbol.value(), (FlatPtr)symbol.address().as_ptr(), &symbol.object() };
-    }
-    ASSERT(m_global_symbol_lookup_func);
-    return m_global_symbol_lookup_func(symbol.name());
+    return m_dynamic_object->lookup_symbol(symbol);
 }
-
-// Optional<DynamicLoader::SymbolLookupResult> DynamicLoader::lookup_symbol(const char* name) const
-// {
-//     ASSERT(m_dynamic_object);
-//     auto res = m_dynamic_object->hash_section().lookup_symbol(name);
-//     if (res.is_undefined())
-//         return {};
-//     return SymbolLookupResult { true, res.value(), (FlatPtr)res.address().as_ptr(), m_dynamic_object.ptr() };
-// }
 
 } // end namespace ELF

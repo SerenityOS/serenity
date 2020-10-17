@@ -423,7 +423,7 @@ public:
     int exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
     struct LoadResult {
-        FlatPtr load_offset { 0 };
+        FlatPtr load_base { 0 };
         FlatPtr entry_eip { 0 };
         size_t size { 0 };
         FlatPtr program_headers { 0 };
@@ -581,7 +581,7 @@ private:
     gid_t m_sgid { 0 };
 
     ThreadID m_exec_tid { 0 };
-    FlatPtr m_load_offset { 0U };
+    FlatPtr m_load_base { 0U };
     FlatPtr m_entry_eip { 0U };
     int m_main_program_fd { -1 };
 

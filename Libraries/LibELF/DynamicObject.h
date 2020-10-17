@@ -267,6 +267,13 @@ public:
     };
     Optional<SymbolLookupResult> lookup_symbol(const char* name) const;
 
+    // Will be called from _fixup_plt_entry, as part of the PLT trampoline
+    Elf32_Addr patch_plt_entry(u32 relocation_offset);
+
+    SymbolLookupResult lookup_symbol(const ELF::DynamicObject::Symbol& symbol) const;
+    using SymbolLookupFunction = DynamicObject::SymbolLookupResult (*)(const char*);
+    SymbolLookupFunction m_global_symbol_lookup_func { nullptr };
+
 private:
     explicit DynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
 

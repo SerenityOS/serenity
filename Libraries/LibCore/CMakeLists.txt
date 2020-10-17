@@ -33,4 +33,4 @@ set(SOURCES
 )
 
 serenity_lib(LibCore core)
-target_link_libraries(LibCore LibC)
+target_link_libraries(LibCore LibC LibCrypt)

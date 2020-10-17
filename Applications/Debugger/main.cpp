@@ -212,8 +212,9 @@ int main(int argc, char** argv)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
-    ASSERT(rc);
+    // bool rc = g_debug_session->insert_breakpoint(g_debug_session->elf().entry().as_ptr());
+    // bool rc = g_debug_session->insert_breakpoint((void*)0x08048f49);
+    // ASSERT(rc);
 
     Debug::DebugInfo::SourcePosition previous_source_position;
     bool in_step_line = false;

@@ -3,6 +3,8 @@ set(KERNEL_HEAP_SOURCES
     Heap/kmalloc.cpp
 )
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_STATIC}")
+
 set(KERNEL_SOURCES
     ACPI/DynamicParser.cpp
     ACPI/Initialize.cpp

@@ -422,8 +422,6 @@ void* Process::sys$allocate_tls(size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
-    dbg() << "allocate TLS: " << size;
-
     if (!size)
         return (void*)-EINVAL;
 
@@ -445,7 +443,6 @@ void* Process::sys$allocate_tls(size_t size)
         return (void*)-EFAULT;
 
     m_master_tls_region = tls_region->make_weak_ptr();
-    dbg() << "master_tls_region: " << m_master_tls_region->vaddr();
     m_master_tls_size = size;
     m_master_tls_alignment = PAGE_SIZE;
 

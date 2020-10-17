@@ -841,6 +841,8 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
 {
     if (Process::current()->veil_state() == VeilState::None)
         return KSuccess;
+    if (path == "/usr/lib/Loader.so")
+        return KSuccess;
 
     // FIXME: Figure out a nicer way to do this.
     if (String(path).contains("/.."))
