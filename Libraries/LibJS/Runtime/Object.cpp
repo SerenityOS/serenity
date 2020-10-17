@@ -84,7 +84,7 @@ PropertyDescriptor PropertyDescriptor::from_dictionary(VM& vm, const Object& obj
 
 Object* Object::create_empty(GlobalObject& global_object)
 {
-    return global_object.heap().allocate<Object>(global_object, *global_object.object_prototype());
+    return global_object.heap().allocate<Object>(global_object, *global_object.new_object_shape());
 }
 
 Object::Object(GlobalObjectTag)
@@ -99,10 +99,15 @@ Object::Object(ConstructWithoutPrototypeTag, GlobalObject& global_object)
 }
 
 Object::Object(Object& prototype)
-    : Cell()
 {
     m_shape = prototype.global_object().empty_object_shape();
     set_prototype(&prototype);
+}
+
+Object::Object(Shape& shape)
+    : m_shape(&shape)
+{
+    m_storage.resize(shape.property_count());
 }
 
 void Object::initialize(GlobalObject&)

@@ -45,6 +45,9 @@ public:
 
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
+    Shape* new_object_shape() { return m_new_object_shape; }
+    Shape* new_script_function_prototype_object_shape() { return m_new_script_function_prototype_object_shape; }
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)            \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
     Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
@@ -71,6 +74,8 @@ private:
     NonnullOwnPtr<Console> m_console;
 
     Shape* m_empty_object_shape { nullptr };
+    Shape* m_new_object_shape { nullptr };
+    Shape* m_new_script_function_prototype_object_shape { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                \
