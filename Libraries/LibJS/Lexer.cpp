@@ -347,7 +347,7 @@ Token Lexer::next()
         } while (is_identifier_middle());
 
         StringView value = m_source.substring_view(value_start - 1, m_position - value_start);
-        auto it = s_keywords.find(value);
+        auto it = s_keywords.find(value.hash(), [&](auto& entry) { return entry.key == value; });
         if (it == s_keywords.end()) {
             token_type = TokenType::Identifier;
         } else {
@@ -465,7 +465,8 @@ Token Lexer::next()
             char second_char = m_source[m_position];
             char third_char = m_source[m_position + 1];
             char three_chars[] { (char)m_current_char, second_char, third_char, 0 };
-            auto it = s_three_char_tokens.find(three_chars);
+            StringView three_chars_view { three_chars };
+            auto it = s_three_char_tokens.find(three_chars_view.hash(), [&](auto& entry) { return entry.key == three_chars_view; });
             if (it != s_three_char_tokens.end()) {
                 found_three_char_token = true;
                 consume();
@@ -479,7 +480,8 @@ Token Lexer::next()
         if (!found_four_char_token && !found_three_char_token && m_position < m_source.length()) {
             char second_char = m_source[m_position];
             char two_chars[] { (char)m_current_char, second_char, 0 };
-            auto it = s_two_char_tokens.find(two_chars);
+            StringView two_chars_view = { two_chars };
+            auto it = s_two_char_tokens.find(two_chars_view.hash(), [&](auto& entry) { return entry.key == two_chars_view; });
             if (it != s_two_char_tokens.end()) {
                 found_two_char_token = true;
                 consume();
