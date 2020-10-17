@@ -46,6 +46,7 @@ class Layer
 public:
     static RefPtr<Layer> create_with_size(Image&, const Gfx::IntSize&, const String& name);
     static RefPtr<Layer> create_with_bitmap(Image&, const Gfx::Bitmap&, const String& name);
+    static RefPtr<Layer> create_snapshot(Image&, const Layer&);
 
     ~Layer() { }
 

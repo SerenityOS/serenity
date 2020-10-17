@@ -75,6 +75,28 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
     did_modify_layer_stack();
 }
 
+RefPtr<Image> Image::take_snapshot() const
+{
+    auto snapshot = create_with_size(m_size);
+    for (const auto& layer : m_layers)
+        snapshot->add_layer(*Layer::create_snapshot(*snapshot, layer));
+    return snapshot;
+}
+
+void Image::restore_snapshot(const Image& snapshot)
+{
+    m_layers.clear();
+    select_layer(nullptr);
+    for (const auto& snapshot_layer : snapshot.m_layers) {
+        auto layer = Layer::create_snapshot(*this, snapshot_layer);
+        if (layer->is_selected())
+            select_layer(layer.ptr());
+        add_layer(*layer);
+    }
+
+    did_modify_layer_stack();
+}
+
 size_t Image::index_of(const Layer& layer) const
 {
     for (size_t i = 0; i < m_layers.size(); ++i) {
@@ -155,6 +177,12 @@ void Image::remove_layer(Layer& layer)
         client->image_did_remove_layer(index);
 
     did_modify_layer_stack();
+}
+
+void Image::select_layer(Layer* layer)
+{
+    for (auto* client : m_clients)
+        client->image_select_layer(layer);
 }
 
 void Image::add_client(ImageClient& client)

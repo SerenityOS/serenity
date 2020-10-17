@@ -144,6 +144,18 @@ int main(int argc, char** argv)
 
     edit_menu.add_action(paste_action);
 
+    auto undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
+        ASSERT(image_editor.image());
+        image_editor.undo();
+    });
+    edit_menu.add_action(undo_action);
+
+    auto redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
+        ASSERT(image_editor.image());
+        image_editor.redo();
+    });
+    edit_menu.add_action(redo_action);
+
     auto& tool_menu = menubar->add_menu("Tool");
     toolbox.for_each_tool([&](auto& tool) {
         if (tool.action())

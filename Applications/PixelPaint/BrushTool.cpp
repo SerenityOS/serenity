@@ -62,6 +62,15 @@ void BrushTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
     draw_line(layer.bitmap(), m_editor->color_for(event), m_last_position, event.position());
     layer.did_modify_bitmap(*m_editor->image());
     m_last_position = event.position();
+    m_was_drawing = true;
+}
+
+void BrushTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
+{
+    if (m_was_drawing) {
+        m_editor->did_complete_action();
+        m_was_drawing = false;
+    }
 }
 
 void BrushTool::draw_point(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& point)

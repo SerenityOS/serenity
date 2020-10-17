@@ -51,10 +51,40 @@ void ImageEditor::set_image(RefPtr<Image> image)
         m_image->remove_client(*this);
 
     m_image = move(image);
+    m_history.reset(*m_image);
     update();
 
     if (m_image)
         m_image->add_client(*this);
+}
+
+void ImageEditor::did_complete_action()
+{
+    if (!m_image)
+        return;
+    m_history.on_action(*m_image);
+}
+
+bool ImageEditor::undo()
+{
+    if (!m_image)
+        return false;
+    if (m_history.undo(*m_image)) {
+        layers_did_change();
+        return true;
+    }
+    return false;
+}
+
+bool ImageEditor::redo()
+{
+    if (!m_image)
+        return false;
+    if (m_history.redo(*m_image)) {
+        layers_did_change();
+        return true;
+    }
+    return false;
 }
 
 void ImageEditor::paint_event(GUI::PaintEvent& event)
@@ -369,6 +399,11 @@ void ImageEditor::relayout()
 void ImageEditor::image_did_change()
 {
     update();
+}
+
+void ImageEditor::image_select_layer(Layer* layer)
+{
+    set_active_layer(layer);
 }
 
 }

@@ -75,6 +75,7 @@ void EllipseTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
         draw_using(painter, Gfx::IntRect::from_two_points(m_ellipse_start_position, m_ellipse_end_position));
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
+        m_editor->did_complete_action();
     }
 }
 
