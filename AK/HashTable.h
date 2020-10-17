@@ -89,7 +89,19 @@ class HashTable {
 public:
     HashTable() { }
     HashTable(size_t capacity) { rehash(capacity); }
-    ~HashTable() { clear(); }
+
+    ~HashTable()
+    {
+        if (!m_buckets)
+            return;
+
+        for (size_t i = 0; i < m_capacity; ++i) {
+            if (m_buckets[i].used)
+                m_buckets[i].slot()->~T();
+        }
+
+        kfree(m_buckets);
+    }
 
     HashTable(const HashTable& other)
     {
@@ -188,19 +200,7 @@ public:
 
     void clear()
     {
-        if (!m_buckets)
-            return;
-
-        for (size_t i = 0; i < m_capacity; ++i) {
-            if (m_buckets[i].used)
-                m_buckets[i].slot()->~T();
-        }
-
-        kfree(m_buckets);
-        m_buckets = nullptr;
-        m_capacity = 0;
-        m_size = 0;
-        m_deleted_count = 0;
+        *this = HashTable();
     }
 
     HashSetResult set(T&& value)
