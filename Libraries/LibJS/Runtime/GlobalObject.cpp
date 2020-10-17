@@ -80,14 +80,14 @@ void GlobalObject::initialize()
     ensure_shape_is_unique();
 
     // These are done first since other prototypes depend on their presence.
-    m_empty_object_shape = heap().allocate<Shape>(*this, *this);
+    m_empty_object_shape = heap().allocate_without_global_object<Shape>(*this);
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
-    m_new_object_shape = vm.heap().allocate<Shape>(*this, *this);
+    m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
 
-    m_new_script_function_prototype_object_shape = vm.heap().allocate<Shape>(*this, *this);
+    m_new_script_function_prototype_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
     m_new_script_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
     m_new_script_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
