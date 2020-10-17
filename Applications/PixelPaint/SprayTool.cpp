@@ -104,7 +104,10 @@ void SprayTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 
 void SprayTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
 {
-    m_timer->stop();
+    if (m_timer->is_active()) {
+        m_timer->stop();
+        m_editor->did_complete_action();
+    }
 }
 
 void SprayTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)

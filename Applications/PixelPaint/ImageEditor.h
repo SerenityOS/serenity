@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "History.h"
 #include "Image.h"
 #include <LibGUI/Frame.h>
 #include <LibGfx/Point.h>
@@ -53,6 +54,10 @@ public:
 
     Tool* active_tool() { return m_active_tool; }
     void set_active_tool(Tool*);
+
+    void did_complete_action();
+    bool undo();
+    bool redo();
 
     void layers_did_change();
 
@@ -96,6 +101,7 @@ private:
     virtual void resize_event(GUI::ResizeEvent&) override;
 
     virtual void image_did_change() override;
+    virtual void image_select_layer(Layer*) override;
 
     GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent&, const Layer&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(const GUI::MouseEvent&) const;
@@ -104,6 +110,7 @@ private:
 
     RefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
+    History m_history;
 
     Tool* m_active_tool { nullptr };
 

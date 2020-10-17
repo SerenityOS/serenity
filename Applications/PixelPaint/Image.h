@@ -47,6 +47,7 @@ public:
     virtual void image_did_modify_layer(size_t) { }
     virtual void image_did_modify_layer_stack() { }
     virtual void image_did_change() { }
+    virtual void image_select_layer(Layer*) { }
 };
 
 class Image : public RefCounted<Image> {
@@ -61,6 +62,8 @@ public:
     Gfx::IntRect rect() const { return { {}, m_size }; }
 
     void add_layer(NonnullRefPtr<Layer>);
+    RefPtr<Image> take_snapshot() const;
+    void restore_snapshot(const Image&);
 
     void paint_into(GUI::Painter&, const Gfx::IntRect& dest_rect);
 
@@ -70,6 +73,7 @@ public:
     void move_layer_down(Layer&);
     void change_layer_index(size_t old_index, size_t new_index);
     void remove_layer(Layer&);
+    void select_layer(Layer*);
 
     void add_client(ImageClient&);
     void remove_client(ImageClient&);
