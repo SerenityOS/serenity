@@ -26,7 +26,15 @@
 
 #include "Image.h"
 #include "Layer.h"
+#include <AK/Base64.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonObjectSerializer.h>
+#include <AK/JsonValue.h>
+#include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/BMPDumper.h>
+#include <LibGfx/ImageDecoder.h>
+#include <stdio.h>
 
 //#define PAINT_DEBUG
 
@@ -60,6 +68,76 @@ void Image::paint_into(GUI::Painter& painter, const Gfx::IntRect& dest_rect)
         target.set_size(layer.size().width() * scale, layer.size().height() * scale);
         painter.draw_scaled_bitmap(target, layer.bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
     }
+}
+
+RefPtr<Image> Image::create_from_file(const String& file_path)
+{
+    auto file = fopen(file_path.characters(), "r");
+    fseek(file, 0L, SEEK_END);
+    auto length = ftell(file);
+    rewind(file);
+
+    auto buffer = ByteBuffer::create_uninitialized(length);
+    fread(buffer.data(), sizeof(u8), length, file);
+    fclose(file);
+
+    auto json_or_error = JsonValue::from_string(String::copy(buffer));
+    if (!json_or_error.has_value())
+        return nullptr;
+
+    auto json = json_or_error.value().as_object();
+    auto image = create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
+    json.get("layers").as_array().for_each([&](JsonValue json_layer) {
+        auto json_layer_object = json_layer.as_object();
+        auto width = json_layer_object.get("width").to_i32();
+        auto height = json_layer_object.get("height").to_i32();
+        auto name = json_layer_object.get("name").as_string();
+        auto layer = Layer::create_with_size(*image, { width, height }, name);
+        layer->set_location({ json_layer_object.get("locationx").to_i32(), json_layer_object.get("locationy").to_i32() });
+        layer->set_opacity_percent(json_layer_object.get("opacity_percent").to_i32());
+        layer->set_visible(json_layer_object.get("visable").as_bool());
+        layer->set_selected(json_layer_object.get("selected").as_bool());
+
+        auto bitmap_base64_encoded = json_layer_object.get("bitmap").as_string();
+        auto bitmap_data = decode_base64(bitmap_base64_encoded);
+        auto image_decoder = Gfx::ImageDecoder::create(bitmap_data);
+        layer->set_bitmap(*image_decoder->bitmap());
+        image->add_layer(*layer);
+    });
+
+    return image;
+}
+
+void Image::save(const String& file_path) const
+{
+    // Build json file
+    StringBuilder builder;
+    JsonObjectSerializer json(builder);
+    json.add("width", m_size.width());
+    json.add("height", m_size.height());
+    {
+        auto json_layers = json.add_array("layers");
+        for (const auto& layer : m_layers) {
+            Gfx::BMPDumper bmp_dumber;
+            auto json_layer = json_layers.add_object();
+            json_layer.add("width", layer.size().width());
+            json_layer.add("height", layer.size().height());
+            json_layer.add("name", layer.name());
+            json_layer.add("locationx", layer.location().x());
+            json_layer.add("locationy", layer.location().y());
+            json_layer.add("opacity_percent", layer.opacity_percent());
+            json_layer.add("visable", layer.is_visible());
+            json_layer.add("selected", layer.is_selected());
+            json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.bitmap())));
+        }
+    }
+    json.finish();
+
+    // Write json to disk
+    auto file = fopen(file_path.characters(), "w");
+    auto byte_buffer = builder.to_byte_buffer();
+    fwrite(byte_buffer.data(), sizeof(u8), byte_buffer.size(), file);
+    fclose(file);
 }
 
 void Image::add_layer(NonnullRefPtr<Layer> layer)

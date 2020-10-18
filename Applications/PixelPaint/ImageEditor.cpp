@@ -53,6 +53,7 @@ void ImageEditor::set_image(RefPtr<Image> image)
     m_image = move(image);
     m_history.reset(*m_image);
     update();
+    image_did_modify_layer_stack();
 
     if (m_image)
         m_image->add_client(*this);
