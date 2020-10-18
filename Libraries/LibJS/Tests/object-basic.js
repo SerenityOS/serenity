@@ -39,6 +39,13 @@ describe("correct behavior", () => {
         expect(object[symbol]).toBe(2);
     });
 
+    test("numeric keys", () => {
+        expect({0x10:true}).toBe({16:true});
+        expect({0b10:true}).toBe({2:true});
+        expect({0o10:true}).toBe({8:true});
+        expect({.5:true}).toBe({"0.5":true});
+    });
+
     test("computed properties", () => {
         const foo = "bar";
         const computed = "computed";
