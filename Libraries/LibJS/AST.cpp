@@ -1899,7 +1899,8 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
                 return {};
             if (interpreter.vm().should_unwind()) {
                 if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
-                    ASSERT_NOT_REACHED();
+                    // No stop_unwind(), the outer loop will handle that - we just need to break out of the switch/case.
+                    return {};
                 } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
                     interpreter.vm().stop_unwind();
                     return {};
