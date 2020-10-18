@@ -35,3 +35,10 @@ test("accessing properties of decimal numbers", () => {
     expect((1.1).foo).toBe("foo");
     expect((0.1).foo).toBe("foo");
 });
+
+test("invalid numeric literals", () => {
+    expect("1e").not.toEval();
+    expect("0x").not.toEval();
+    expect("0b").not.toEval();
+    expect("0o").not.toEval();
+});

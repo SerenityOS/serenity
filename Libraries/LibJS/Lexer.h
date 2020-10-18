@@ -42,7 +42,10 @@ public:
 
 private:
     void consume();
-    void consume_exponent();
+    bool consume_exponent();
+    bool consume_octal_number();
+    bool consume_hexadecimal_number();
+    bool consume_binary_number();
     bool is_eof() const;
     bool is_identifier_start() const;
     bool is_identifier_middle() const;
