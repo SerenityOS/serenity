@@ -148,3 +148,16 @@ test("cannot be constructed", () => {
         new foo();
     }).toThrowWithMessage(TypeError, "foo is not a constructor");
 });
+
+test("syntax errors", () => {
+    expect("a, => {}").not.toEval();
+    expect("(a, => {}").not.toEval();
+    expect("(,) => {}").not.toEval();
+    expect("(,,) => {}").not.toEval();
+    expect("(a,,) => {}").not.toEval();
+    expect("(a,,b) => {}").not.toEval();
+    expect("(a, ...b, ...c) => {}").not.toEval();
+    expect("(a b) => {}").not.toEval();
+    expect("(a ...b) => {}").not.toEval();
+    expect("(a = 1 = 2) => {}").not.toEval();
+});

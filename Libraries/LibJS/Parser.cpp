@@ -334,62 +334,28 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     };
 
     Vector<FunctionNode::Parameter> parameters;
-    bool parse_failed = false;
-    bool has_rest_parameter = false;
     i32 function_length = -1;
-    while (true) {
-        if (match(TokenType::Comma)) {
-            if (has_rest_parameter || !expect_parens) {
-                parse_failed = true;
-                break;
-            }
-            consume(TokenType::Comma);
-        } else if (match(TokenType::Identifier)) {
-            auto parameter_name = consume(TokenType::Identifier).value();
-            RefPtr<Expression> default_value;
-            if (expect_parens && match(TokenType::Equals)) {
-                consume(TokenType::Equals);
-                function_length = parameters.size();
-                default_value = parse_expression(2);
-            }
-            parameters.append({ parameter_name, default_value });
-        } else if (match(TokenType::TripleDot)) {
-            consume();
-            if (has_rest_parameter) {
-                parse_failed = true;
-                break;
-            }
-            has_rest_parameter = true;
-            function_length = parameters.size();
-            auto parameter_name = consume(TokenType::Identifier).value();
-            parameters.append({ parameter_name, nullptr, true });
-        } else if (match(TokenType::ParenClose)) {
-            if (expect_parens) {
-                consume(TokenType::ParenClose);
-                if (match(TokenType::Arrow)) {
-                    consume(TokenType::Arrow);
-                } else {
-                    parse_failed = true;
-                }
-                break;
-            }
-            parse_failed = true;
-            break;
-        } else if (match(TokenType::Arrow)) {
-            if (!expect_parens) {
-                consume(TokenType::Arrow);
-                break;
-            }
-            parse_failed = true;
-            break;
-        } else {
-            parse_failed = true;
-            break;
-        }
+    if (expect_parens) {
+        // We have parens around the function parameters and can re-use the same parsing
+        // logic used for regular functions: multiple parameters, default values, rest
+        // parameter, maybe a trailing comma. If we have a new syntax error afterwards we
+        // know parsing failed and rollback the parser state.
+        auto previous_syntax_errors = m_parser_state.m_errors.size();
+        parameters = parse_function_parameters(function_length);
+        if (m_parser_state.m_errors.size() > previous_syntax_errors)
+            return nullptr;
+        if (!match(TokenType::ParenClose))
+            return nullptr;
+        consume();
+    } else {
+        // No parens - this must be an identifier followed by arrow. That's it.
+        if (!match(TokenType::Identifier))
+            return nullptr;
+        parameters.append({ consume().value(), {} });
     }
-
-    if (parse_failed)
+    if (!match(TokenType::Arrow))
         return nullptr;
+    consume();
 
     if (function_length == -1)
         function_length = parameters.size();
@@ -1299,8 +1265,29 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_funct
         }
     }
     consume(TokenType::ParenOpen);
-    Vector<FunctionNode::Parameter> parameters;
     i32 function_length = -1;
+    auto parameters = parse_function_parameters(function_length);
+    consume(TokenType::ParenClose);
+
+    if (function_length == -1)
+        function_length = parameters.size();
+
+    TemporaryChange change(m_parser_state.m_in_function_context, true);
+    auto old_labels_in_scope = move(m_parser_state.m_labels_in_scope);
+    ScopeGuard guard([&]() {
+        m_parser_state.m_labels_in_scope = move(old_labels_in_scope);
+    });
+
+    bool is_strict = false;
+    auto body = parse_block_statement(is_strict);
+    body->add_variables(m_parser_state.m_var_scopes.last());
+    body->add_functions(m_parser_state.m_function_scopes.last());
+    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(), is_strict);
+}
+
+Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_length)
+{
+    Vector<FunctionNode::Parameter> parameters;
     while (match(TokenType::Identifier) || match(TokenType::TripleDot)) {
         if (match(TokenType::TripleDot)) {
             consume();
@@ -1321,22 +1308,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_funct
             break;
         consume(TokenType::Comma);
     }
-    consume(TokenType::ParenClose);
-
-    if (function_length == -1)
-        function_length = parameters.size();
-
-    TemporaryChange change(m_parser_state.m_in_function_context, true);
-    auto old_labels_in_scope = move(m_parser_state.m_labels_in_scope);
-    ScopeGuard guard([&]() {
-        m_parser_state.m_labels_in_scope = move(old_labels_in_scope);
-    });
-
-    bool is_strict = false;
-    auto body = parse_block_statement(is_strict);
-    body->add_variables(m_parser_state.m_var_scopes.last());
-    body->add_functions(m_parser_state.m_function_scopes.last());
-    return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(), is_strict);
+    return parameters;
 }
 
 NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool with_semicolon)
