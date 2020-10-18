@@ -1469,7 +1469,7 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
 
 Value VariableDeclarator::execute(Interpreter&, GlobalObject&) const
 {
-    // NOTE: This node is handled by VariableDeclaration.
+    // NOTE: VariableDeclarator execution is handled by VariableDeclaration.
     ASSERT_NOT_REACHED();
 }
 
@@ -1894,15 +1894,18 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
         falling_through = true;
 
         for (auto& statement : switch_case.consequent()) {
-            statement.execute(interpreter, global_object);
+            auto last_value = statement.execute(interpreter, global_object);
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
-                if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
+                if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
+                    ASSERT_NOT_REACHED();
+                } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
                     interpreter.vm().stop_unwind();
                     return {};
+                } else {
+                    return last_value;
                 }
-                return {};
             }
         }
     }
@@ -1912,6 +1915,8 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
 
 Value SwitchCase::execute(Interpreter&, GlobalObject&) const
 {
+    // NOTE: SwitchCase execution is handled by SwitchStatement.
+    ASSERT_NOT_REACHED();
     return {};
 }
 
