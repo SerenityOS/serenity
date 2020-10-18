@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -580,7 +581,6 @@ void TestRunner::print_test_results() const
 
 int main(int argc, char** argv)
 {
-    bool print_times = false;
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDWAIT;
@@ -600,27 +600,39 @@ int main(int argc, char** argv)
     });
 #endif
 
+    bool print_times = false;
+    const char* test_root = nullptr;
+
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
     args_parser.add_option(collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
+    args_parser.add_positional_argument(test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (getenv("DISABLE_DBG_OUTPUT")) {
         DebugLogStream::set_enabled(false);
     }
 
-    vm = JS::VM::create();
-
+    if (!test_root) {
 #ifdef __serenity__
-    TestRunner("/home/anon/js-tests", print_times).run();
+        test_root = "/home/anon/js-tests";
 #else
-    char* serenity_root = getenv("SERENITY_ROOT");
-    if (!serenity_root) {
-        printf("test-js requires the SERENITY_ROOT environment variable to be set");
+        char* serenity_root = getenv("SERENITY_ROOT");
+        if (!serenity_root) {
+            printf("No test root given, test-js requires the SERENITY_ROOT environment variable to be set");
+            return 1;
+        }
+        test_root = String::formatted("{}/Libraries/LibJS/Tests", serenity_root).characters();
+#endif
+    }
+    if (!Core::File::is_directory(test_root)) {
+        fprintf(stderr, "Test root is not a directory: %s\n", test_root);
         return 1;
     }
-    TestRunner(String::format("%s/Libraries/LibJS/Tests", serenity_root), print_times).run();
-#endif
+
+    vm = JS::VM::create();
+
+    TestRunner(test_root, print_times).run();
 
     vm = nullptr;
 
