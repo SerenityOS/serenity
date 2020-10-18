@@ -353,6 +353,10 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
             return nullptr;
         parameters.append({ consume().value(), {} });
     }
+    // If there's a newline between the closing paren and arrow it's not a valid arrow function,
+    // ASI should kick in instead (it'll then fail with "Unexpected token Arrow")
+    if (m_parser_state.m_current_token.trivia().contains('\n'))
+        return nullptr;
     if (!match(TokenType::Arrow))
         return nullptr;
     consume();
