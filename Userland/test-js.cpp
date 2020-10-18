@@ -567,7 +567,7 @@ void TestRunner::print_test_results() const
         printf("%d passed, ", m_counts.tests_passed);
         print_modifiers({ CLEAR });
     }
-    printf("%d total\n", m_counts.tests_failed + m_counts.tests_passed);
+    printf("%d total\n", m_counts.tests_failed + m_counts.tests_skipped + m_counts.tests_passed);
 
     printf("Files:       %d total\n", m_counts.files_total);
 
