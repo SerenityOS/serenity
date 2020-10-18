@@ -193,6 +193,8 @@ public:
 
     void removed_last_ref();
 
+    Window& window() { return *m_window; }
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
