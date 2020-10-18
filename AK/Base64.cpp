@@ -56,7 +56,7 @@ static constexpr auto make_lookup_table()
 {
     constexpr auto alphabet = make_alphabet();
     Array<u8, 256> table {};
-    for (size_t i = 0; i < alphabet.size() - 1; ++i) {
+    for (size_t i = 0; i < alphabet.size(); ++i) {
         table[alphabet[i]] = i;
     }
     return table;
