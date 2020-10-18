@@ -636,5 +636,5 @@ int main(int argc, char** argv)
 
     vm = nullptr;
 
-    return 0;
+    return TestRunner::the()->counts().tests_failed > 0 ? 1 : 0;
 }
