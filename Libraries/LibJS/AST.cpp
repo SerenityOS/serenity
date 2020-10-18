@@ -1442,9 +1442,10 @@ void UpdateExpression::dump(int indent) const
     }
 
     ASTNode::dump(indent);
-    print_indent(indent + 1);
-    if (m_prefixed)
+    if (m_prefixed) {
+        print_indent(indent + 1);
         printf("%s\n", op_string);
+    }
     m_argument->dump(indent + 1);
     if (!m_prefixed) {
         print_indent(indent + 1);
