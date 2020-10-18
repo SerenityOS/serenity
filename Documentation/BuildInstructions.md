@@ -91,8 +91,6 @@ Do note the ```Hardware acceleration``` and ```Note on filesystems``` sections, 
 Once you have installed a distro for WSL2, follow the Linux prerequisites above for the distro you installed, then continue as normal.
 
 ### Build
-> Before starting, make sure that you have configured your global identity for git, or the first script will fail after running for a bit.
-
 Go into the `Toolchain/` directory and run the **BuildIt.sh** script:
 ```bash
 $ cd Toolchain
