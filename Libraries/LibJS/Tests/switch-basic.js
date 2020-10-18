@@ -49,4 +49,22 @@ describe("basic switch tests", () => {
         expect(foo(42)).toBe("return from 'case 42'");
         expect(foo(43)).toBe("return from 'default'");
     });
+
+    test("continue from switch statement", () => {
+        let i = 0;
+        for (; i < 5; ++i) {
+            switch (i) {
+                case 0:
+                    continue;
+                    expect().fail();
+                case 0:
+                    expect().fail();
+                default:
+                    continue;
+                    expect().fail();
+            }
+            expect().fail();
+        }
+        expect(i).toBe(5);
+    });
 });
