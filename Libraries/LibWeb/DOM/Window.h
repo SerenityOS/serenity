@@ -32,13 +32,24 @@
 #include <AK/RefPtr.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/EventTarget.h>
 
 namespace Web::DOM {
 
-class Window : public RefCounted<Window> {
+class Window final
+    : public RefCounted<Window>
+    , public EventTarget {
 public:
     static NonnullRefPtr<Window> create_with_document(Document&);
     ~Window();
+
+    using RefCounted::ref;
+    using RefCounted::unref;
+
+    virtual void ref_event_target() override { RefCounted::ref(); }
+    virtual void unref_event_target() override { RefCounted::unref(); }
+    virtual void dispatch_event(NonnullRefPtr<Event>) override;
+    virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) override;
 
     const Document& document() const { return m_document; }
     Document& document() { return m_document; }

@@ -28,6 +28,8 @@
 #include <LibGUI/MessageBox.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
@@ -42,7 +44,8 @@ NonnullRefPtr<Window> Window::create_with_document(Document& document)
 }
 
 Window::Window(Document& document)
-    : m_document(document)
+    : EventTarget(static_cast<Bindings::ScriptExecutionContext&>(document))
+    , m_document(document)
     , m_performance(make<HighResolutionTime::Performance>(*this))
 {
 }
@@ -155,6 +158,16 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     if (!frame)
         return;
     frame->loader().load(document().url(), FrameLoader::Type::Reload);
+}
+
+void Window::dispatch_event(NonnullRefPtr<Event> event)
+{
+    EventDispatcher::dispatch(*this, event);
+}
+
+Bindings::EventTargetWrapper* Window::create_wrapper(JS::GlobalObject&)
+{
+    ASSERT_NOT_REACHED();
 }
 
 }
