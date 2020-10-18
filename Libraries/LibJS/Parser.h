@@ -48,6 +48,7 @@ public:
 
     template<typename FunctionNodeType>
     NonnullRefPtr<FunctionNodeType> parse_function_node(bool check_for_function_and_name = true, bool allow_super_property_lookup = false, bool allow_super_constructor_call = false);
+    Vector<FunctionNode::Parameter> parse_function_parameters(int& function_length);
 
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();
