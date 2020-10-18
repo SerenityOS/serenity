@@ -172,14 +172,56 @@ void Lexer::consume()
     m_current_char = m_source[m_position++];
 }
 
-void Lexer::consume_exponent()
+bool Lexer::consume_exponent()
 {
     consume();
     if (m_current_char == '-' || m_current_char == '+')
         consume();
+
+    if (!isdigit(m_current_char))
+        return false;
+
     while (isdigit(m_current_char)) {
         consume();
     }
+    return true;
+}
+
+bool Lexer::consume_octal_number()
+{
+    consume();
+    if (!(m_current_char >= '0' && m_current_char <= '7'))
+        return false;
+
+    while (m_current_char >= '0' && m_current_char <= '7') {
+        consume();
+    }
+
+    return true;
+}
+
+bool Lexer::consume_hexadecimal_number()
+{
+    consume();
+    if (!isxdigit(m_current_char))
+        return false;
+
+    while (isxdigit(m_current_char))
+        consume();
+
+    return true;
+}
+
+bool Lexer::consume_binary_number()
+{
+    consume();
+    if (!(m_current_char == '0' || m_current_char == '1'))
+        return false;
+
+    while (m_current_char == '0' || m_current_char == '1')
+        consume();
+
+    return true;
 }
 
 bool Lexer::match(char a, char b) const
@@ -355,6 +397,7 @@ Token Lexer::next()
         }
     } else if (is_numeric_literal_start()) {
         token_type = TokenType::NumericLiteral;
+        bool is_invalid_numeric_literal = false;
         if (m_current_char == '0') {
             consume();
             if (m_current_char == '.') {
@@ -363,24 +406,18 @@ Token Lexer::next()
                 while (isdigit(m_current_char))
                     consume();
                 if (m_current_char == 'e' || m_current_char == 'E')
-                    consume_exponent();
+                    is_invalid_numeric_literal = !consume_exponent();
             } else if (m_current_char == 'e' || m_current_char == 'E') {
-                consume_exponent();
+                is_invalid_numeric_literal = !consume_exponent();
             } else if (m_current_char == 'o' || m_current_char == 'O') {
                 // octal
-                consume();
-                while (m_current_char >= '0' && m_current_char <= '7')
-                    consume();
+                is_invalid_numeric_literal = !consume_octal_number();
             } else if (m_current_char == 'b' || m_current_char == 'B') {
                 // binary
-                consume();
-                while (m_current_char == '0' || m_current_char == '1')
-                    consume();
+                is_invalid_numeric_literal = !consume_binary_number();
             } else if (m_current_char == 'x' || m_current_char == 'X') {
                 // hexadecimal
-                consume();
-                while (isxdigit(m_current_char))
-                    consume();
+                is_invalid_numeric_literal = !consume_hexadecimal_number();
             } else if (m_current_char == 'n') {
                 consume();
                 token_type = TokenType::BigIntLiteral;
@@ -405,9 +442,11 @@ Token Lexer::next()
                         consume();
                 }
                 if (m_current_char == 'e' || m_current_char == 'E')
-                    consume_exponent();
+                    is_invalid_numeric_literal = !consume_exponent();
             }
         }
+        if (is_invalid_numeric_literal)
+            token_type = TokenType::Invalid;
     } else if (m_current_char == '"' || m_current_char == '\'') {
         char stop_char = m_current_char;
         consume();
