@@ -115,11 +115,20 @@ int main(int argc, char** argv)
         if (!open_path.has_value())
             return;
 
-        auto bitmap = Gfx::Bitmap::load_from_file(open_path.value());
-        if (!bitmap) {
-            GUI::MessageBox::show(window, String::formatted("Failed to load '{}'", open_path.value()), "Open failed", GUI::MessageBox::Type::Error);
+        auto image = PixelPaint::Image::create_from_file(open_path.value());
+        image_editor.set_image(image);
+        layer_list_widget.set_image(image);
+    }));
+    app_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+        if (!image_editor.image())
             return;
-        }
+
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "pp");
+
+        if (!save_path.has_value())
+            return;
+
+        image_editor.image()->save(save_path.value());
     }));
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
