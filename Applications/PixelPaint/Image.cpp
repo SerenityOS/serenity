@@ -32,7 +32,7 @@
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/BMPDumper.h>
+#include <LibGfx/BMPWriter.h>
 #include <LibGfx/ImageDecoder.h>
 #include <stdio.h>
 
@@ -118,7 +118,7 @@ void Image::save(const String& file_path) const
     {
         auto json_layers = json.add_array("layers");
         for (const auto& layer : m_layers) {
-            Gfx::BMPDumper bmp_dumber;
+            Gfx::BMPWriter bmp_dumber;
             auto json_layer = json_layers.add_object();
             json_layer.add("width", layer.size().width());
             json_layer.add("height", layer.size().height());
@@ -137,6 +137,19 @@ void Image::save(const String& file_path) const
     auto file = fopen(file_path.characters(), "w");
     auto byte_buffer = builder.to_byte_buffer();
     fwrite(byte_buffer.data(), sizeof(u8), byte_buffer.size(), file);
+    fclose(file);
+}
+
+void Image::export_bmp(const String& file_path)
+{
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, m_size);
+    GUI::Painter painter(*bitmap);
+    paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+
+    Gfx::BMPWriter dumper;
+    auto bmp = dumper.dump(bitmap);
+    auto file = fopen(file_path.characters(), "wb");
+    fwrite(bmp.data(), sizeof(u8), bmp.size(), file);
     fclose(file);
 }
 
