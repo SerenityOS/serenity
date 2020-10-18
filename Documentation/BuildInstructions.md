@@ -60,8 +60,7 @@ Ensure your CMake version is >= 3.16 with `cmake --version`. If your system does
 #### macOS prerequisites
 Make sure you have all the dependencies installed:
 ```bash
-brew tap discoteq/discoteq
-brew install coreutils flock qemu e2fsprogs m4 autoconf libtool automake bash gcc@10
+brew install coreutils qemu e2fsprogs m4 autoconf libtool automake bash gcc@10
 brew cask install osxfuse
 Toolchain/BuildFuseExt2.sh
 ```
@@ -70,7 +69,6 @@ Notes:
 - fuse-ext2 is not available as brew formula so it must be installed using `BuildFuseExt2.sh`
 - Xcode and `xcode-tools` must be installed (`git` is required by some scripts)
 - coreutils is needed to build gcc cross compiler
-- `flock` command can also be installed with `brew install util-linux` but in that case you will need to add it to `$PATH`
 - qemu is needed to run the compiled OS image. You can also build it using the `BuildQemu.sh` script
 - osxfuse, e2fsprogs, m4, autoconf, automake, libtool and `BuildFuseExt2.sh` are needed if you want to build the root filesystem disk image natively on macOS. This allows mounting an EXT2 fs and also installs commands like `mke2fs` that are not available on stock macOS. 
 - bash is needed because the default version installed on macOS doesn't support globstar
@@ -79,7 +77,7 @@ Notes:
 
 #### OpenBSD prerequisites
 ```
-pkg_add bash gmp gcc git flock gmake sudo
+pkg_add bash gmp gcc git gmake sudo
 ```
 
 #### FreeBSD prerequisites
