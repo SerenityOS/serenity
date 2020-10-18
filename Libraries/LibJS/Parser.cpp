@@ -1519,8 +1519,15 @@ NonnullRefPtr<SwitchStatement> Parser::parse_switch_statement()
 
     NonnullRefPtrVector<SwitchCase> cases;
 
-    while (match(TokenType::Case) || match(TokenType::Default))
+    auto has_default = false;
+    while (match(TokenType::Case) || match(TokenType::Default)) {
+        if (match(TokenType::Default)) {
+            if (has_default)
+                syntax_error("Multiple 'default' clauses in switch statement");
+            has_default = true;
+        }
         cases.append(parse_switch_case());
+    }
 
     consume(TokenType::CurlyClose);
 

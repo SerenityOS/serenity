@@ -68,3 +68,11 @@ describe("basic switch tests", () => {
         expect(i).toBe(5);
     });
 });
+
+describe("errors", () => {
+    test("syntax errors", () => {
+        expect("switch () {}").not.toEval();
+        expect("switch (foo) { bar }").not.toEval();
+        expect("switch (foo) { default: default: }").not.toEval();
+    });
+});
