@@ -743,11 +743,9 @@ NonnullRefPtr<Expression> Parser::parse_property_key()
     if (match(TokenType::StringLiteral)) {
         return parse_string_literal(consume());
     } else if (match(TokenType::NumericLiteral)) {
-        // FIXME: "evaluate" key to double value, see https://github.com/SerenityOS/serenity/issues/3717
-        return create_ast_node<StringLiteral>(consume_and_validate_numeric_literal().value());
+        return create_ast_node<NumericLiteral>(consume().double_value());
     } else if (match(TokenType::BigIntLiteral)) {
-        auto value = consume(TokenType::BigIntLiteral).value();
-        return create_ast_node<StringLiteral>(value.substring_view(0, value.length() - 1));
+        return create_ast_node<BigIntLiteral>(consume().value());
     } else if (match(TokenType::BracketOpen)) {
         consume(TokenType::BracketOpen);
         auto result = parse_expression(0);
