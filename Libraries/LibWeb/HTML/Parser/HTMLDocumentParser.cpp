@@ -33,6 +33,7 @@
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
@@ -164,6 +165,10 @@ void HTMLDocumentParser::run(const URL& url)
     }
 
     m_document->dispatch_event(DOM::Event::create("DOMContentLoaded"));
+
+    // FIXME: These are not in the right place, they should only fire once subresources are ready.
+    m_document->dispatch_event(DOM::Event::create("load"));
+    m_document->window().dispatch_event(DOM::Event::create("load"));
 
     auto scripts_to_execute_as_soon_as_possible = m_document->take_scripts_to_execute_as_soon_as_possible({});
     for (auto& script : scripts_to_execute_as_soon_as_possible) {
