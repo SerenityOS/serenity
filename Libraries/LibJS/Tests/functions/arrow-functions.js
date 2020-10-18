@@ -160,4 +160,5 @@ test("syntax errors", () => {
     expect("(a b) => {}").not.toEval();
     expect("(a ...b) => {}").not.toEval();
     expect("(a = 1 = 2) => {}").not.toEval();
+    expect("()\n=> {}").not.toEval();
 });
