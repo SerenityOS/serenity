@@ -71,7 +71,7 @@ int main(int argc, char** argv)
 
     if (decode) {
         auto decoded = decode_base64(StringView(buffer));
-        printf("%s\n", String::copy(decoded).characters());
+        fwrite(decoded.data(), sizeof(u8), decoded.size(), stdout);
         return 0;
     }
 
