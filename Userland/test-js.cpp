@@ -27,6 +27,7 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/LexicalPath.h>
 #include <AK/LogStream.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
@@ -126,10 +127,11 @@ public:
 
     const JSTestRunnerCounts& counts() const { return m_counts; }
 
-private:
+protected:
     static TestRunner* s_the;
 
-    JSFileResult run_file_test(const String& test_path);
+    virtual Vector<String> get_test_paths() const;
+    virtual JSFileResult run_file_test(const String& test_path);
     void print_file_result(const JSFileResult& file_result) const;
     void print_test_results() const;
 
@@ -204,24 +206,21 @@ static void iterate_directory_recursively(const String& directory_path, Callback
     }
 }
 
-static Vector<String> get_test_paths(const String& test_root)
+Vector<String> TestRunner::get_test_paths() const
 {
     Vector<String> paths;
-
-    iterate_directory_recursively(test_root, [&](const String& file_path) {
+    iterate_directory_recursively(m_test_root, [&](const String& file_path) {
         if (!file_path.ends_with("test-common.js"))
             paths.append(file_path);
     });
-
     quick_sort(paths);
-
     return paths;
 }
 
 void TestRunner::run()
 {
     size_t progress_counter = 0;
-    auto test_paths = get_test_paths(m_test_root);
+    auto test_paths = get_test_paths();
     for (auto& path : test_paths) {
         ++progress_counter;
         print_file_result(run_file_test(path));
@@ -292,7 +291,6 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
             printf("%s\n", result.error().error.to_string().characters());
             printf("%s\n", result.error().hint.characters());
             cleanup_and_exit();
-            ;
         }
         m_test_program = result.value();
     }
@@ -579,6 +577,97 @@ void TestRunner::print_test_results() const
     }
 }
 
+class Test262ParserTestRunner final : public TestRunner {
+public:
+    using TestRunner::TestRunner;
+
+private:
+    virtual Vector<String> get_test_paths() const override;
+    virtual JSFileResult run_file_test(const String& test_path) override;
+};
+
+Vector<String> Test262ParserTestRunner::get_test_paths() const
+{
+    Vector<String> paths;
+    iterate_directory_recursively(m_test_root, [&](const String& file_path) {
+        auto dirname = LexicalPath(file_path).dirname();
+        if (dirname.ends_with("early") || dirname.ends_with("fail") || dirname.ends_with("pass") || dirname.ends_with("pass-explicit"))
+            paths.append(file_path);
+    });
+    quick_sort(paths);
+    return paths;
+}
+
+JSFileResult Test262ParserTestRunner::run_file_test(const String& test_path)
+{
+    currently_running_test = test_path;
+
+    auto dirname = LexicalPath(test_path).dirname();
+    bool expecting_file_to_parse;
+    if (dirname.ends_with("early") || dirname.ends_with("fail")) {
+        expecting_file_to_parse = false;
+    } else if (dirname.ends_with("pass") || dirname.ends_with("pass-explicit")) {
+        expecting_file_to_parse = true;
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    auto start_time = get_time_in_ms();
+    String details = "";
+    TestResult test_result;
+    if (test_path.ends_with(".module.js")) {
+        test_result = TestResult::Skip;
+        m_counts.tests_skipped++;
+        m_counts.suites_passed++;
+    } else {
+        auto parse_result = parse_file(test_path);
+        if (expecting_file_to_parse) {
+            if (!parse_result.is_error()) {
+                test_result = TestResult::Pass;
+            } else {
+                test_result = TestResult::Fail;
+                details = parse_result.error().error.to_string();
+            }
+        } else {
+            if (parse_result.is_error()) {
+                test_result = TestResult::Pass;
+            } else {
+                test_result = TestResult::Fail;
+                details = "File was expected to produce a parser error but didn't";
+            }
+        }
+    }
+
+    // test262-parser-tests doesn't have "suites" and "tests" in the usual sense, it just has files
+    // and an expectation whether they should parse or not. We add one suite with one test nonetheless:
+    //
+    // - This makes interpreting skipped test easier as their file is shown as "PASS"
+    // - That way we can show additional information such as "file parsed but shouldn't have" or
+    //   parser errors for files that should parse respectively
+
+    JSTest test { expecting_file_to_parse ? "file should parse" : "file should not parse", test_result, details };
+    JSSuite suite { "Parse file", test_result, { test } };
+    JSFileResult file_result {
+        test_path.substring(m_test_root.length() + 1, test_path.length() - m_test_root.length() - 1),
+        {},
+        get_time_in_ms() - start_time,
+        test_result,
+        { suite }
+    };
+
+    if (test_result == TestResult::Fail) {
+        m_counts.tests_failed++;
+        m_counts.suites_failed++;
+    } else {
+        m_counts.tests_passed++;
+        m_counts.suites_passed++;
+    }
+    m_counts.files_total++;
+    m_total_elapsed_time_in_ms += file_result.time_taken;
+
+    return file_result;
+}
+
 int main(int argc, char** argv)
 {
     struct sigaction act;
@@ -601,13 +690,26 @@ int main(int argc, char** argv)
 #endif
 
     bool print_times = false;
+    bool test262_parser_tests = false;
     const char* test_root = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
     args_parser.add_option(collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
+    args_parser.add_option(test262_parser_tests, "Run test262 parser tests", "test262-parser-tests", 0);
     args_parser.add_positional_argument(test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    if (test262_parser_tests) {
+        if (collect_on_every_allocation) {
+            fprintf(stderr, "--collect-often and --test262-parser-tests options must not be used together\n");
+            return 1;
+        }
+        if (!test_root) {
+            fprintf(stderr, "Test root is required with --test262-parser-tests\n");
+            return 1;
+        }
+    }
 
     if (getenv("DISABLE_DBG_OUTPUT")) {
         DebugLogStream::set_enabled(false);
@@ -632,7 +734,10 @@ int main(int argc, char** argv)
 
     vm = JS::VM::create();
 
-    TestRunner(test_root, print_times).run();
+    if (test262_parser_tests)
+        Test262ParserTestRunner(test_root, print_times).run();
+    else
+        TestRunner(test_root, print_times).run();
 
     vm = nullptr;
 
