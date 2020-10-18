@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "CreateNewImageDialog.h"
 #include "CreateNewLayerDialog.h"
 #include "FilterParams.h"
 #include "Image.h"
@@ -109,6 +110,22 @@ int main(int argc, char** argv)
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("PixelPaint");
 
+    app_menu.add_action(
+        GUI::Action::create(
+            "New", [&](auto&) {
+                auto dialog = PixelPaint::CreateNewImageDialog::construct(window);
+                if (dialog->exec() == GUI::Dialog::ExecOK) {
+                    auto image = PixelPaint::Image::create_with_size(dialog->image_size());
+                    auto bg_layer = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
+                    image->add_layer(*bg_layer);
+                    bg_layer->bitmap().fill(Color::White);
+
+                    image_editor.set_image(image);
+                    layer_list_widget.set_image(image);
+                    image_editor.set_active_layer(bg_layer);
+                }
+            },
+            window));
     app_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
 
@@ -130,6 +147,22 @@ int main(int argc, char** argv)
 
         image_editor.image()->save(save_path.value());
     }));
+    auto& export_submenu = app_menu.add_submenu("Export");
+    export_submenu.add_action(
+        GUI::Action::create(
+            "As BMP", [&](auto&) {
+                if (!image_editor.image())
+                    return;
+
+                Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
+
+                if (!save_path.has_value())
+                    return;
+
+                image_editor.image()->export_bmp(save_path.value());
+            },
+            window));
+
     app_menu.add_separator();
     app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();

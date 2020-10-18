@@ -1,6 +1,7 @@
 set(SOURCES
     BrushTool.cpp
     BucketTool.cpp
+    CreateNewImageDialog.cpp
     CreateNewLayerDialog.cpp
     EllipseTool.cpp
     EraseTool.cpp
