@@ -53,6 +53,7 @@ public:
 class Image : public RefCounted<Image> {
 public:
     static RefPtr<Image> create_with_size(const Gfx::IntSize&);
+    static RefPtr<Image> create_from_file(const String& file_path);
 
     size_t layer_count() const { return m_layers.size(); }
     const Layer& layer(size_t index) const { return m_layers.at(index); }
@@ -66,6 +67,7 @@ public:
     void restore_snapshot(const Image&);
 
     void paint_into(GUI::Painter&, const Gfx::IntRect& dest_rect);
+    void save(const String& file_path) const;
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
