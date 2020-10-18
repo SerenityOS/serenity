@@ -27,6 +27,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Parser.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -55,6 +56,9 @@ void HTMLScriptElement::set_non_blocking(Badge<HTMLDocumentParser>, bool non_blo
 void HTMLScriptElement::execute_script()
 {
     document().run_javascript(m_script_source);
+
+    if (has_attribute(HTML::AttributeNames::src))
+        dispatch_event(DOM::Event::create("load"));
 }
 
 void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)
