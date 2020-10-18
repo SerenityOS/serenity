@@ -2,6 +2,7 @@ set(SOURCES
     AffineTransform.cpp
     Bitmap.cpp
     BMPLoader.cpp
+    BMPWriter.cpp
     CharacterBitmap.cpp
     ClassicStylePainter.cpp
     ClassicWindowTheme.cpp
