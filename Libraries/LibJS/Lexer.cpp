@@ -422,8 +422,7 @@ Token Lexer::next()
                 consume();
                 token_type = TokenType::BigIntLiteral;
             } else if (isdigit(m_current_char)) {
-                // octal without 'O' prefix. Forbidden in 'strict mode'
-                // FIXME: We need to make sure this produces a syntax error when in strict mode
+                // octal without '0o' prefix. Forbidden in 'strict mode'
                 do {
                     consume();
                 } while (isdigit(m_current_char));
