@@ -29,6 +29,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/TemporaryChange.h>
+#include <ctype.h>
 
 namespace JS {
 
@@ -591,7 +592,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return create_ast_node<Identifier>(consume().value());
     }
     case TokenType::NumericLiteral:
-        return create_ast_node<NumericLiteral>(consume().double_value());
+        return create_ast_node<NumericLiteral>(consume_and_validate_numeric_literal().double_value());
     case TokenType::BigIntLiteral:
         return create_ast_node<BigIntLiteral>(consume().value());
     case TokenType::BoolLiteral:
@@ -687,7 +688,8 @@ NonnullRefPtr<Expression> Parser::parse_property_key()
     if (match(TokenType::StringLiteral)) {
         return parse_string_literal(consume());
     } else if (match(TokenType::NumericLiteral)) {
-        return create_ast_node<StringLiteral>(consume(TokenType::NumericLiteral).value());
+        // FIXME: "evaluate" key to double value, see https://github.com/SerenityOS/serenity/issues/3717
+        return create_ast_node<StringLiteral>(consume_and_validate_numeric_literal().value());
     } else if (match(TokenType::BigIntLiteral)) {
         auto value = consume(TokenType::BigIntLiteral).value();
         return create_ast_node<StringLiteral>(value.substring_view(0, value.length() - 1));
@@ -1829,6 +1831,19 @@ Token Parser::consume(TokenType expected_type)
         expected(Token::name(expected_type));
     }
     return consume();
+}
+
+Token Parser::consume_and_validate_numeric_literal()
+{
+    auto is_unprefixed_octal_number = [](const StringView& value) {
+        return value.length() > 1 && value[0] == '0' && isdigit(value[1]);
+    };
+    auto literal_start_line = m_parser_state.m_current_token.line_number();
+    auto literal_start_column = m_parser_state.m_current_token.line_column();
+    auto token = consume(TokenType::NumericLiteral);
+    if (m_parser_state.m_strict_mode && is_unprefixed_octal_number(token.value()))
+        syntax_error("Unprefixed octal number not allowed in strict mode", literal_start_line, literal_start_column);
+    return token;
 }
 
 void Parser::expected(const char* what)
