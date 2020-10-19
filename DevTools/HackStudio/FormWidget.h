@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Widget.h>
 
 namespace HackStudio {
@@ -45,17 +46,23 @@ public:
     // FIXME: This should be an app-wide preference instead.
     int grid_size() const { return m_grid_size; }
 
+    GUI::Widget* widget_at(const Gfx::IntPoint&);
+
 private:
+    virtual bool accepts_focus() const override { return true; }
+
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void second_paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent&) override;
 
     FormWidget();
 
     int m_grid_size { 5 };
+    RefPtr<GUI::Menu> m_context_menu;
 };
 
 }

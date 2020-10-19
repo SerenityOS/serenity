@@ -693,16 +693,25 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
     auto& form_widgets_toolbar = m_form_inner_container->add<GUI::ToolBar>(Orientation::Vertical, 26);
     form_widgets_toolbar.set_preferred_size(38, 0);
 
+    auto& form_editor_inner_splitter = m_form_inner_container->add<GUI::HorizontalSplitter>();
+    form_editor_inner_splitter.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+
+    m_form_editor_widget = form_editor_inner_splitter.add<FormEditorWidget>();
+
     GUI::ActionGroup tool_actions;
+    tool_actions.set_unchecking_allowed(false);
     tool_actions.set_exclusive(true);
 
-    auto cursor_tool_action = GUI::Action::create_checkable("Cursor", Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Cursor.png"), [this](auto&) {
+    m_cursor_tool_action = GUI::Action::create_checkable("Cursor", Gfx::Bitmap::load_from_file("/res/icons/hackstudio/Cursor.png"), [this](auto&) {
         m_form_editor_widget->set_tool(make<CursorTool>(*m_form_editor_widget));
     });
-    cursor_tool_action->set_checked(true);
-    tool_actions.add_action(cursor_tool_action);
+    m_cursor_tool_action->set_checkable(true);
+    tool_actions.add_action(*m_cursor_tool_action);
+    form_widgets_toolbar.add_action(*m_cursor_tool_action);
 
-    form_widgets_toolbar.add_action(cursor_tool_action);
+    m_form_editor_widget->on_activate_cursor_tool = [this]() {
+        m_cursor_tool_action->activate();
+    };
 
     GUI::WidgetClassRegistration::for_each([&, this](const GUI::WidgetClassRegistration& reg) {
         constexpr size_t gui_namespace_prefix_length = sizeof("GUI::") - 1;
@@ -712,20 +721,17 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
             return;
 
         auto action = GUI::Action::create_checkable(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg, this](auto&) {
-            m_form_editor_widget->set_tool(make<WidgetTool>(*m_form_editor_widget, reg));
             auto widget = reg.construct();
             m_form_editor_widget->form_widget().add_child(widget);
-            widget->set_relative_rect(30, 30, 30, 30);
-            m_form_editor_widget->model().update();
+            m_form_editor_widget->selection().set(widget);
+            m_form_editor_widget->set_tool(make<WidgetTool>(*m_form_editor_widget));
+            m_form_editor_widget->update();
+            m_cursor_tool_action->set_checked(false);
         });
-        action->set_checked(false);
+        action->set_checkable(true);
         tool_actions.add_action(action);
         form_widgets_toolbar.add_action(move(action));
     });
-
-    auto& form_editor_inner_splitter = m_form_inner_container->add<GUI::HorizontalSplitter>();
-
-    m_form_editor_widget = form_editor_inner_splitter.add<FormEditorWidget>();
 
     auto& form_editing_pane_container = form_editor_inner_splitter.add<GUI::VerticalSplitter>();
     form_editing_pane_container.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);

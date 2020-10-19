@@ -27,17 +27,63 @@
 #include "FormWidget.h"
 #include "FormEditorWidget.h"
 #include "Tool.h"
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Widget.h>
+#include <LibGfx/Bitmap.h>
 
 namespace HackStudio {
 
 FormWidget::FormWidget()
 {
-    set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_fill_with_background_color(true);
-    set_relative_rect(5, 5, 400, 300);
+    set_relative_rect(5, 5, 1024, 1024);
 
     set_greedy_for_hits(true);
+
+    m_context_menu = GUI::Menu::construct();
+    auto action = GUI::CommonActions::make_move_to_front_action([this](auto&) {
+        // FIXME: Fix a old_ref_counted crash here
+        editor().selection().for_each([&](auto& widget) {
+            widget.move_to_front();
+            return IterationDecision::Break;
+        });
+    });
+    action->set_enabled(false);
+    m_context_menu->add_action(move(action));
+
+    action = GUI::CommonActions::make_move_to_back_action([this](auto&) {
+        editor().selection().for_each([&](auto& widget) {
+            // FIXME: Fix a old_ref_counted crash here
+            widget.move_to_back();
+            return IterationDecision::Break;
+        });
+    });
+    action->set_enabled(false);
+    m_context_menu->add_action(move(action));
+
+    m_context_menu->add_separator();
+    m_context_menu->add_action(GUI::Action::create("Layout horizontally", Gfx::Bitmap::load_from_file("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
+        editor().selection().for_each([&](GUI::Widget& widget) {
+            widget.set_layout<GUI::HorizontalBoxLayout>();
+            return IterationDecision::Break;
+        });
+    }));
+    m_context_menu->add_action(GUI::Action::create("Layout vertically", Gfx::Bitmap::load_from_file("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
+        editor().selection().for_each([&](GUI::Widget& widget) {
+            widget.set_layout<GUI::VerticalBoxLayout>();
+            return IterationDecision::Break;
+        });
+    }));
+
+    m_context_menu->add_separator();
+    m_context_menu->add_action(GUI::CommonActions::make_delete_action([this](auto&) {
+        editor().selection().for_each([&](auto& widget) {
+            widget.parent_widget()->remove_child(widget);
+            return IterationDecision::Continue;
+        });
+    }));
 }
 
 FormWidget::~FormWidget()
@@ -101,6 +147,19 @@ void FormWidget::mousemove_event(GUI::MouseEvent& event)
 void FormWidget::keydown_event(GUI::KeyEvent& event)
 {
     editor().tool().on_keydown(event);
+}
+
+GUI::Widget* FormWidget::widget_at(const Gfx::IntPoint& position)
+{
+    auto result = hit_test(position, GUI::Widget::ShouldRespectGreediness::No);
+    if (!result.widget || result.widget == this)
+        return nullptr;
+    return result.widget;
+}
+
+void FormWidget::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    m_context_menu->popup(event.screen_position());
 }
 
 }

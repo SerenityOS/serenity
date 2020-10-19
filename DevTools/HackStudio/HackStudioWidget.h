@@ -38,6 +38,7 @@
 #include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
+#include <LibGUI/Action.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
@@ -167,5 +168,6 @@ private:
     RefPtr<GUI::Action> m_debug_action;
     RefPtr<GUI::Action> m_build_action;
     RefPtr<GUI::Action> m_run_action;
+    RefPtr<GUI::Action> m_cursor_tool_action;
 };
 }

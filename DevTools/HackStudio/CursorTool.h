@@ -52,7 +52,7 @@ private:
     void set_rubber_band_position(const Gfx::IntPoint&);
     Gfx::IntRect rubber_band_rect() const;
 
-    Gfx::IntPoint m_drag_origin;
+    Gfx::IntPoint m_current_event_origin;
     HashMap<GUI::Widget*, Gfx::IntPoint> m_positions_before_drag;
     bool m_dragging { false };
 

@@ -25,32 +25,56 @@
  */
 
 #include "WidgetTool.h"
+#include "FormEditorWidget.h"
+#include "FormWidget.h"
 #include <AK/LogStream.h>
+#include <LibGfx/StandardCursor.h>
 
 namespace HackStudio {
 
 void WidgetTool::on_mousedown(GUI::MouseEvent& event)
 {
-    (void)event;
-    dbgln("WidgetTool::on_mousedown");
-}
-
-void WidgetTool::on_mouseup(GUI::MouseEvent& event)
-{
-    (void)event;
-    dbgln("WidgetTool::on_mouseup");
+    if (event.button() == GUI::MouseButton::Left) {
+        m_down_event_origin = event.position();
+        m_editor.selection().for_each([this](auto& widget) {
+            widget.set_relative_rect({ m_down_event_origin.x(), m_down_event_origin.y(), 0, 0 });
+            return IterationDecision::Break;
+        });
+    }
 }
 
 void WidgetTool::on_mousemove(GUI::MouseEvent& event)
 {
-    (void)event;
-    dbgln("WidgetTool::on_mousemove");
+    m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::Move);
+
+    if (event.buttons() & GUI::MouseButton::Left) {
+        m_editor.update();
+        auto delta = event.position() - m_down_event_origin;
+        m_editor.selection().for_each([&delta](auto& widget) {
+            widget.set_width(delta.x());
+            widget.set_height(delta.y());
+            return IterationDecision::Break;
+        });
+    }
 }
 
-void WidgetTool::on_keydown(GUI::KeyEvent& event)
+void WidgetTool::on_mouseup(GUI::MouseEvent& event)
 {
-    (void)event;
-    dbgln("WidgetTool::on_keydown");
+    if (event.button() == GUI::MouseButton::Left) {
+        m_down_event_origin = {};
+    }
+
+    m_editor.selection().for_each([](auto& widget) {
+        // When there is no MOUSE_MOVE event, set the default width and height to 30
+        if (widget.width() < 1 && widget.height() < 1) {
+            widget.set_width(30);
+            widget.set_height(30);
+        }
+        return IterationDecision::Break;
+    });
+    m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::None);
+
+    m_editor.activate_cursor_tool();
 }
 
 }

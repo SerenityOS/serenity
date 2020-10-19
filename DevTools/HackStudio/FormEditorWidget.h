@@ -50,6 +50,8 @@ public:
 
     WidgetTreeModel& model();
 
+    Function<void()> on_activate_cursor_tool;
+
     class WidgetSelection {
     public:
         Function<void(GUI::Widget&)> on_remove;
@@ -122,6 +124,12 @@ public:
     };
 
     WidgetSelection& selection() { return m_selection; }
+
+    void activate_cursor_tool()
+    {
+        if (on_activate_cursor_tool)
+            on_activate_cursor_tool();
+    }
 
 private:
     virtual void paint_event(GUI::PaintEvent&) override;

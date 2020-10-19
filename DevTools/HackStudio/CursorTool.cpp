@@ -55,7 +55,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
                     m_editor.selection().set(*result.widget);
                 }
 
-                m_drag_origin = event.position();
+                m_current_event_origin = event.position();
                 m_positions_before_drag.clear();
                 m_editor.selection().for_each([&](auto& widget) {
                     m_positions_before_drag.set(&widget, widget.relative_position());
@@ -67,10 +67,7 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
             m_rubber_banding = true;
             m_rubber_band_origin = event.position();
             m_rubber_band_position = event.position();
-            form_widget.update();
         }
-        // FIXME: Do we need to update any part of the FormEditorWidget outside the FormWidget?
-        form_widget.update();
     }
 }
 
@@ -85,14 +82,12 @@ void CursorTool::on_mouseup(GUI::MouseEvent& event)
         if (!m_dragging && !(event.modifiers() & Mod_Ctrl)) {
             if (result.widget && result.widget != &form_widget) {
                 m_editor.selection().set(*result.widget);
-                // FIXME: Do we need to update any part of the FormEditorWidget outside the FormWidget?
-                form_widget.update();
             }
         }
         m_dragging = false;
         m_rubber_banding = false;
-        form_widget.update();
     }
+    m_editor.update();
 }
 
 void CursorTool::on_mousemove(GUI::MouseEvent& event)
@@ -100,38 +95,35 @@ void CursorTool::on_mousemove(GUI::MouseEvent& event)
 #ifdef DEBUG_CURSOR_TOOL
     dbgln("CursorTool::on_mousemove");
 #endif
-    auto& form_widget = m_editor.form_widget();
-
     if (m_rubber_banding) {
         set_rubber_band_position(event.position());
         return;
     }
 
-    if (!m_dragging && event.buttons() & GUI::MouseButton::Left && event.position() != m_drag_origin) {
+    auto& form_widget = m_editor.form_widget();
+    if (!m_dragging && event.buttons() & GUI::MouseButton::Left && event.position() != m_current_event_origin) {
         auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
         if (result.widget && result.widget != &form_widget) {
             if (!m_editor.selection().contains(*result.widget)) {
                 m_editor.selection().set(*result.widget);
-                // FIXME: Do we need to update any part of the FormEditorWidget outside the FormWidget?
-                form_widget.update();
             }
         }
         m_dragging = true;
     }
 
     if (m_dragging) {
-        auto movement_delta = event.position() - m_drag_origin;
+        m_editor.update();
+        auto movement_delta = event.position() - m_current_event_origin;
         m_editor.selection().for_each([&](auto& widget) {
-            auto new_rect = widget.relative_rect();
-            new_rect.set_location(m_positions_before_drag.get(&widget).value_or({}).translated(movement_delta));
-            new_rect.set_x(new_rect.x() - (new_rect.x() % m_editor.form_widget().grid_size()));
-            new_rect.set_y(new_rect.y() - (new_rect.y() % m_editor.form_widget().grid_size()));
+            auto new_rect = widget.relative_rect().translated(movement_delta);
             widget.set_relative_rect(new_rect);
             return IterationDecision::Continue;
         });
-        m_editor.model().update();
+        m_current_event_origin = event.position();
         return;
     }
+
+    form_widget.update();
 }
 
 void CursorTool::on_keydown(GUI::KeyEvent& event)
@@ -181,8 +173,6 @@ void CursorTool::set_rubber_band_position(const Gfx::IntPoint& position)
             m_editor.selection().add(child);
         return IterationDecision::Continue;
     });
-
-    m_editor.form_widget().update();
 }
 
 Gfx::IntRect CursorTool::rubber_band_rect() const

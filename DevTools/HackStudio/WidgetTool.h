@@ -27,14 +27,15 @@
 #pragma once
 
 #include "Tool.h"
+#include <AK/NonnullRefPtr.h>
+#include <LibGfx/Point.h>
 
 namespace HackStudio {
 
 class WidgetTool final : public Tool {
 public:
-    explicit WidgetTool(FormEditorWidget& editor, const GUI::WidgetClassRegistration& meta_class)
+    explicit WidgetTool(FormEditorWidget& editor)
         : Tool(editor)
-        , m_meta_class(meta_class)
     {
     }
     virtual ~WidgetTool() override { }
@@ -44,9 +45,9 @@ private:
     virtual void on_mousedown(GUI::MouseEvent&) override;
     virtual void on_mouseup(GUI::MouseEvent&) override;
     virtual void on_mousemove(GUI::MouseEvent&) override;
-    virtual void on_keydown(GUI::KeyEvent&) override;
+    virtual void on_keydown(GUI::KeyEvent&) { }
 
-    const GUI::WidgetClassRegistration& m_meta_class;
+    Gfx::IntPoint m_down_event_origin;
 };
 
 }
