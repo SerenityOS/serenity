@@ -1,6 +1,7 @@
 set(SOURCES
     Editor.cpp
     InternalFunctions.cpp
+    KeyCallbackMachine.cpp
     SuggestionManager.cpp
     XtermSuggestionDisplay.cpp
 )
