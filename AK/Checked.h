@@ -112,10 +112,7 @@ inline constexpr bool is_within_range(Source value)
 template<typename T>
 class Checked {
 public:
-    Checked()
-        : m_value(0)
-    {
-    }
+    Checked() = default;
 
     Checked(T value)
         : m_value(value)
@@ -129,11 +126,7 @@ public:
         m_value = value;
     }
 
-    Checked(const Checked& other)
-        : m_value(other.m_value)
-        , m_overflow(other.m_overflow)
-    {
-    }
+    Checked(const Checked&) = default;
 
     Checked(Checked&& other)
         : m_value(exchange(other.m_value, 0))
@@ -147,12 +140,7 @@ public:
         return *this = Checked(value);
     }
 
-    Checked& operator=(const Checked& other)
-    {
-        m_value = other.value();
-        m_overflow = other.m_overflow;
-        return *this;
-    }
+    Checked& operator=(const Checked& other) = default;
 
     Checked& operator=(Checked&& other)
     {
@@ -272,7 +260,7 @@ public:
     }
 
 private:
-    T m_value;
+    T m_value {};
     bool m_overflow { false };
 };
 
