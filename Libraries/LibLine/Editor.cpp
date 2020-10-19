@@ -80,9 +80,9 @@ Configuration Configuration::from_config(const StringView& libname)
         GenericLexer key_lexer(binding_key);
         auto has_ctrl = false;
         auto alt = false;
-        unsigned key = 0;
+        Vector<Key> keys;
 
-        while (!key && !key_lexer.is_eof()) {
+        while (!key_lexer.is_eof()) {
             if (key_lexer.next_is("alt+")) {
                 alt = key_lexer.consume_specific("alt+");
                 continue;
@@ -100,21 +100,24 @@ Configuration Configuration::from_config(const StringView& libname)
                 continue;
             }
             // FIXME: Support utf?
-            key = key_lexer.consume();
-        }
+            unsigned key = key_lexer.consume();
+            if (has_ctrl)
+                key = ctrl(key);
 
-        if (has_ctrl)
-            key = ctrl(key);
+            keys.append(Key { key, alt ? Key::Alt : Key::None });
+            alt = false;
+            has_ctrl = false;
+        }
 
         auto value = config_file->read_entry("keybinds", binding_key);
         if (value.starts_with("internal:")) {
             configuration.set(KeyBinding {
-                Key { key, alt ? Key::Alt : Key::None },
+                keys,
                 KeyBinding::Kind::InternalFunction,
                 value.substring(9, value.length() - 9) });
         } else {
             configuration.set(KeyBinding {
-                Key { key, alt ? Key::Alt : Key::None },
+                keys,
                 KeyBinding::Kind::Insertion,
                 value });
         }
@@ -146,16 +149,16 @@ void Editor::set_default_keybinds()
     register_key_input_callback('\n', EDITOR_INTERNAL_FUNCTION(finish));
 
     // ^[.: alt-.: insert last arg of previous command (similar to `!$`)
-    register_key_input_callback({ '.', Key::Alt }, EDITOR_INTERNAL_FUNCTION(insert_last_words));
-    register_key_input_callback({ 'b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_left_word));
-    register_key_input_callback({ 'f', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_right_word));
+    register_key_input_callback(Key { '.', Key::Alt }, EDITOR_INTERNAL_FUNCTION(insert_last_words));
+    register_key_input_callback(Key { 'b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_left_word));
+    register_key_input_callback(Key { 'f', Key::Alt }, EDITOR_INTERNAL_FUNCTION(cursor_right_word));
     // ^[^H: alt-backspace: backward delete word
-    register_key_input_callback({ '\b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(erase_alnum_word_backwards));
-    register_key_input_callback({ 'd', Key::Alt }, EDITOR_INTERNAL_FUNCTION(erase_alnum_word_forwards));
-    register_key_input_callback({ 'c', Key::Alt }, EDITOR_INTERNAL_FUNCTION(capitalize_word));
-    register_key_input_callback({ 'l', Key::Alt }, EDITOR_INTERNAL_FUNCTION(lowercase_word));
-    register_key_input_callback({ 'u', Key::Alt }, EDITOR_INTERNAL_FUNCTION(uppercase_word));
-    register_key_input_callback({ 't', Key::Alt }, EDITOR_INTERNAL_FUNCTION(transpose_words));
+    register_key_input_callback(Key { '\b', Key::Alt }, EDITOR_INTERNAL_FUNCTION(erase_alnum_word_backwards));
+    register_key_input_callback(Key { 'd', Key::Alt }, EDITOR_INTERNAL_FUNCTION(erase_alnum_word_forwards));
+    register_key_input_callback(Key { 'c', Key::Alt }, EDITOR_INTERNAL_FUNCTION(capitalize_word));
+    register_key_input_callback(Key { 'l', Key::Alt }, EDITOR_INTERNAL_FUNCTION(lowercase_word));
+    register_key_input_callback(Key { 'u', Key::Alt }, EDITOR_INTERNAL_FUNCTION(uppercase_word));
+    register_key_input_callback(Key { 't', Key::Alt }, EDITOR_INTERNAL_FUNCTION(transpose_words));
 }
 
 Editor::Editor(Configuration configuration)
@@ -253,18 +256,13 @@ void Editor::register_key_input_callback(const KeyBinding& binding)
             dbg() << "LibLine: Unknown internal function '" << binding.binding << "'";
             return;
         }
-        return register_key_input_callback(binding.key, move(internal_function));
+        return register_key_input_callback(binding.keys, move(internal_function));
     }
 
-    return register_key_input_callback(binding.key, [binding = String(binding.binding)](auto& editor) {
+    return register_key_input_callback(binding.keys, [binding = String(binding.binding)](auto& editor) {
         editor.insert(binding);
         return false;
     });
-}
-
-void Editor::register_key_input_callback(Key key, Function<bool(Editor&)> callback)
-{
-    m_key_callbacks.set(key, make<KeyCallback>(move(callback)));
 }
 
 static size_t code_point_length_in_utf8(u32 code_point)
@@ -556,13 +554,9 @@ void Editor::handle_interrupt_event()
 {
     m_was_interrupted = false;
 
-    auto cb = m_key_callbacks.get(ctrl('C'));
-    if (cb.has_value()) {
-        if (!cb.value()->callback(*this)) {
-            // Oh well.
-            return;
-        }
-    }
+    m_callback_machine.interrupted(*this);
+    if (!m_callback_machine.should_process_last_pressed_key())
+        return;
 
     fprintf(stderr, "^C");
     fflush(stderr);
@@ -657,12 +651,7 @@ void Editor::handle_read_event()
                 continue;
             default: {
                 m_state = InputState::Free;
-                auto cb = m_key_callbacks.get({ code_point, Key::Alt });
-                if (cb.has_value()) {
-                    if (!cb.value()->callback(*this)) {
-                        // There's nothing interesting to do here.
-                    }
-                }
+                m_callback_machine.key_pressed(*this, { code_point, Key::Alt });
                 cleanup_suggestions();
                 continue;
             }
@@ -772,12 +761,10 @@ void Editor::handle_read_event()
             continue;
         }
 
-        auto cb = m_key_callbacks.get(code_point);
-        if (cb.has_value()) {
-            if (!cb.value()->callback(*this)) {
-                continue;
-            }
-        }
+        m_callback_machine.key_pressed(*this, code_point);
+        if (!m_callback_machine.should_process_last_pressed_key())
+            continue;
+
         m_search_offset = 0; // reset search offset on any key
 
         if (code_point == '\t' || reverse_tab) {
