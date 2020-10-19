@@ -41,6 +41,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
+#include <LibLine/KeyCallbackMachine.h>
 #include <LibLine/Span.h>
 #include <LibLine/StringMetrics.h>
 #include <LibLine/Style.h>
@@ -53,33 +54,8 @@
 
 namespace Line {
 
-struct Key {
-    enum Modifier : int {
-        None = 0,
-        Alt = 1,
-    };
-
-    int modifiers { None };
-    unsigned key { 0 };
-
-    Key(unsigned c)
-        : modifiers(None)
-        , key(c) {};
-
-    Key(unsigned c, int modifiers)
-        : modifiers(modifiers)
-        , key(c)
-    {
-    }
-
-    bool operator==(const Key& other) const
-    {
-        return other.key == key && other.modifiers == modifiers;
-    }
-};
-
 struct KeyBinding {
-    Key key;
+    Vector<Key> keys;
     enum class Kind {
         InternalFunction,
         Insertion,
@@ -171,7 +147,8 @@ public:
     const Vector<String>& history() const { return m_history; }
 
     void register_key_input_callback(const KeyBinding&);
-    void register_key_input_callback(Key, Function<bool(Editor&)> callback);
+    void register_key_input_callback(Vector<Key> keys, Function<bool(Editor&)> callback) { m_callback_machine.register_key_input_callback(move(keys), move(callback)); }
+    void register_key_input_callback(Key key, Function<bool(Editor&)> callback) { register_key_input_callback(Vector<Key> { key }, move(callback)); }
 
     static StringMetrics actual_rendered_string_metrics(const StringView&);
     static StringMetrics actual_rendered_string_metrics(const Utf32View&);
@@ -282,14 +259,6 @@ private:
 
     // FIXME: Port to Core::Property
     void save_to(JsonObject&);
-
-    struct KeyCallback {
-        KeyCallback(Function<bool(Editor&)> cb)
-            : callback(move(cb))
-        {
-        }
-        Function<bool(Editor&)> callback;
-    };
 
     void handle_interrupt_event();
     void handle_read_event();
@@ -460,7 +429,7 @@ private:
     };
     TabDirection m_tab_direction { TabDirection::Forward };
 
-    HashMap<Key, NonnullOwnPtr<KeyCallback>> m_key_callbacks;
+    KeyCallbackMachine m_callback_machine;
 
     struct termios m_termios {
     };
@@ -497,16 +466,6 @@ private:
     bool m_is_editing { false };
 
     Configuration m_configuration;
-};
-
-}
-
-namespace AK {
-
-template<>
-struct Traits<Line::Key> : public GenericTraits<Line::Key> {
-    static constexpr bool is_trivial() { return true; }
-    static unsigned hash(Line::Key k) { return pair_int_hash(k.key, k.modifiers); }
 };
 
 }
