@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/QuickSort.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/IndexedProperties.h>
 
@@ -229,22 +230,16 @@ IndexedPropertyIterator::IndexedPropertyIterator(const IndexedProperties& indexe
     , m_index(staring_index)
     , m_skip_empty(skip_empty)
 {
-    while (m_skip_empty && m_index < m_indexed_properties.array_like_size()) {
-        if (m_indexed_properties.has_index(m_index))
-            break;
-        m_index++;
-    }
+    if (m_skip_empty)
+        skip_empty_indices();
 }
 
 IndexedPropertyIterator& IndexedPropertyIterator::operator++()
 {
     m_index++;
 
-    while (m_skip_empty && m_index < m_indexed_properties.array_like_size()) {
-        if (m_indexed_properties.has_index(m_index))
-            break;
-        m_index++;
-    };
+    if (m_skip_empty)
+        skip_empty_indices();
 
     return *this;
 }
@@ -264,6 +259,21 @@ ValueAndAttributes IndexedPropertyIterator::value_and_attributes(Object* this_ob
     if (m_index < m_indexed_properties.array_like_size())
         return m_indexed_properties.get(this_object, m_index, evaluate_accessors).value_or({});
     return {};
+}
+
+void IndexedPropertyIterator::skip_empty_indices()
+{
+    auto indices = m_indexed_properties.indices();
+    if (indices.is_empty()) {
+        m_index = m_indexed_properties.array_like_size();
+        return;
+    }
+    for (auto i : indices) {
+        if (i < m_index)
+            continue;
+        m_index = i;
+        break;
+    }
 }
 
 Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 index, bool evaluate_accessors) const
@@ -352,6 +362,32 @@ void IndexedProperties::set_array_like_size(size_t new_size)
     if (m_storage->is_simple_storage() && new_size > SPARSE_ARRAY_THRESHOLD)
         switch_to_generic_storage();
     m_storage->set_array_like_size(new_size);
+}
+
+Vector<u32> IndexedProperties::indices() const
+{
+    Vector<u32> indices;
+    if (m_storage->is_simple_storage()) {
+        const auto& storage = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage);
+        const auto& elements = storage.elements();
+        indices.ensure_capacity(storage.array_like_size());
+        for (size_t i = 0; i < elements.size(); ++i) {
+            if (!elements.at(i).is_empty())
+                indices.unchecked_append(i);
+        }
+    } else {
+        const auto& storage = static_cast<const GenericIndexedPropertyStorage&>(*m_storage);
+        const auto packed_elements = storage.packed_elements();
+        indices.ensure_capacity(storage.array_like_size());
+        for (size_t i = 0; i < packed_elements.size(); ++i) {
+            if (!packed_elements.at(i).value.is_empty())
+                indices.unchecked_append(i);
+        }
+        auto sparse_elements_keys = storage.sparse_elements().keys();
+        quick_sort(sparse_elements_keys);
+        indices.append(move(sparse_elements_keys));
+    }
+    return indices;
 }
 
 Vector<ValueAndAttributes> IndexedProperties::values_unordered() const
