@@ -130,6 +130,8 @@ public:
     ValueAndAttributes value_and_attributes(Object* this_object, bool evaluate_accessors = true);
 
 private:
+    void skip_empty_indices();
+
     const IndexedProperties& m_indexed_properties;
     u32 m_index;
     bool m_skip_empty;
@@ -163,6 +165,8 @@ public:
     bool is_empty() const { return size() == 0; }
     size_t array_like_size() const { return m_storage->array_like_size(); }
     void set_array_like_size(size_t);
+
+    Vector<u32> indices() const;
 
     Vector<ValueAndAttributes> values_unordered() const;
 
