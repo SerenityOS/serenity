@@ -84,6 +84,7 @@ pushd "$DIR"
             CC=${CC},CXX=${CXX},with_gmp=${with_gmp},LDFLAGS=${LDFLAGS},
             BINUTILS_VERSION=${BINUTILS_VERSION},BINUTILS_MD5SUM=${BINUTILS_MD5SUM},
             GCC_VERSION=${GCC_VERSION},GCC_MD5SUM=${GCC_MD5SUM}"
+        CACHED_TOOLCHAIN_ARCHIVE="Cache/ToolchainLocal_${DEPS_HASH}.tar.gz"
         if ! DEPS_HASH=$("$DIR/ComputeDependenciesHash.sh" "$MD5SUM" <<<"${DEPS_CONFIG}"); then
             # Make it stand out more
             echo
@@ -99,14 +100,18 @@ pushd "$DIR"
             echo
             # Should be empty anyway, but just to make sure:
             DEPS_HASH=""
-        elif [ -r "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" ] ; then
-            echo "Cache at Cache/ToolchainLocal_${DEPS_HASH}.tar.gz exists!"
+        elif [ -r "${CACHED_TOOLCHAIN_ARCHIVE}" ] ; then
+            echo "Cache at ${CACHED_TOOLCHAIN_ARCHIVE} exists!"
             echo "Extracting toolchain from cache:"
-            tar xzf "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz"
-            echo "Done 'building' the toolchain."
-            exit 0
+            if tar xzf "${CACHED_TOOLCHAIN_ARCHIVE}" ; then
+                echo "Done 'building' the toolchain."
+                exit 0
+            else
+                echo "Could not extract cached toolchain archive, removing it and rebuilding from scratch."
+                rm -f "${CACHED_TOOLCHAIN_ARCHIVE}"
+            fi
         else
-            echo "Cache at Cache/ToolchainLocal_${DEPS_HASH}.tar.gz does not exist."
+            echo "Cache at ${CACHED_TOOLCHAIN_ARCHIVE} does not exist."
             echo "Will rebuild toolchain from scratch, and save the result."
             echo "But first, getting rid of old, outdated caches. Current caches:"
             pushd "Cache/"
