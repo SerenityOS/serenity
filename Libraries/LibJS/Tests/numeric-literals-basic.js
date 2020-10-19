@@ -1,3 +1,6 @@
+// FIXME: Some of the test cases below are duplicated, presumably to test
+// uppercase as well which then got lowercased by Prettier at some point.
+
 test("hex literals", () => {
     expect(0xff).toBe(255);
     expect(0xff).toBe(255);
@@ -6,6 +9,7 @@ test("hex literals", () => {
 test("octal literals", () => {
     expect(0o10).toBe(8);
     expect(0o10).toBe(8);
+    expect(010).toBe(8);
 });
 
 test("binary literals", () => {
@@ -41,4 +45,5 @@ test("invalid numeric literals", () => {
     expect("0x").not.toEval();
     expect("0b").not.toEval();
     expect("0o").not.toEval();
+    expect("'use strict'; 0755").not.toEval();
 });

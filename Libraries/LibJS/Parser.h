@@ -139,6 +139,7 @@ private:
     void syntax_error(const String& message, size_t line = 0, size_t column = 0);
     Token consume();
     Token consume(TokenType type);
+    Token consume_and_validate_numeric_literal();
     void consume_or_insert_semicolon();
     void save_state();
     void load_state();
