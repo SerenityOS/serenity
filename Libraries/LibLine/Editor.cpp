@@ -80,27 +80,38 @@ Configuration Configuration::from_config(const StringView& libname)
         GenericLexer key_lexer(binding_key);
         auto has_ctrl = false;
         auto alt = false;
+        auto escape = false;
         Vector<Key> keys;
 
         while (!key_lexer.is_eof()) {
-            if (key_lexer.next_is("alt+")) {
-                alt = key_lexer.consume_specific("alt+");
-                continue;
+            unsigned key;
+            if (escape) {
+                key = key_lexer.consume_escaped_character();
+                escape = false;
+            } else {
+                if (key_lexer.next_is("alt+")) {
+                    alt = key_lexer.consume_specific("alt+");
+                    continue;
+                }
+                if (key_lexer.next_is("^[")) {
+                    alt = key_lexer.consume_specific("^[");
+                    continue;
+                }
+                if (key_lexer.next_is("^")) {
+                    has_ctrl = key_lexer.consume_specific("^");
+                    continue;
+                }
+                if (key_lexer.next_is("ctrl+")) {
+                    has_ctrl = key_lexer.consume_specific("ctrl+");
+                    continue;
+                }
+                if (key_lexer.next_is("\\")) {
+                    escape = true;
+                    continue;
+                }
+                // FIXME: Support utf?
+                key = key_lexer.consume();
             }
-            if (key_lexer.next_is("^[")) {
-                alt = key_lexer.consume_specific("^[");
-                continue;
-            }
-            if (key_lexer.next_is("^")) {
-                has_ctrl = key_lexer.consume_specific("^");
-                continue;
-            }
-            if (key_lexer.next_is("ctrl+")) {
-                has_ctrl = key_lexer.consume_specific("ctrl+");
-                continue;
-            }
-            // FIXME: Support utf?
-            unsigned key = key_lexer.consume();
             if (has_ctrl)
                 key = ctrl(key);
 
@@ -109,12 +120,16 @@ Configuration Configuration::from_config(const StringView& libname)
             has_ctrl = false;
         }
 
-        auto value = config_file->read_entry("keybinds", binding_key);
+        GenericLexer value_lexer { config_file->read_entry("keybinds", binding_key) };
+        StringBuilder value_builder;
+        while (!value_lexer.is_eof())
+            value_builder.append(value_lexer.consume_escaped_character());
+        auto value = value_builder.string_view();
         if (value.starts_with("internal:")) {
             configuration.set(KeyBinding {
                 keys,
                 KeyBinding::Kind::InternalFunction,
-                value.substring(9, value.length() - 9) });
+                value.substring_view(9, value.length() - 9) });
         } else {
             configuration.set(KeyBinding {
                 keys,
