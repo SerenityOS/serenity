@@ -221,21 +221,25 @@ String GenericLexer::consume_and_unescape_string(char escape_char)
     if (view.is_null())
         return {};
 
-    // Transform common escape sequences
-    auto unescape_character = [](char c) {
-        static const char* escape_map = "n\nr\rt\tb\bf\f";
-        for (size_t i = 0; escape_map[i] != '\0'; i += 2)
-            if (c == escape_map[i])
-                return escape_map[i + 1];
-        return c;
-    };
-
     StringBuilder builder;
-    for (size_t i = 0; i < view.length(); ++i) {
-        char c = (view[i] == escape_char) ? unescape_character(view[++i]) : view[i];
-        builder.append(c);
-    }
+    for (size_t i = 0; i < view.length(); ++i)
+        builder.append(consume_escaped_character(escape_char));
     return builder.to_string();
+}
+
+char GenericLexer::consume_escaped_character(char escape_char, const StringView& escape_map)
+{
+    if (!consume_specific(escape_char))
+        return consume();
+
+    auto c = consume();
+
+    for (size_t i = 0; i < escape_map.length(); i += 2) {
+        if (c == escape_map[i])
+            return escape_map[i + 1];
+    }
+
+    return c;
 }
 
 // Ignore a number of characters (1 by default)
