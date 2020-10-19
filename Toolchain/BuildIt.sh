@@ -84,8 +84,10 @@ pushd "$DIR"
             CC=${CC},CXX=${CXX},with_gmp=${with_gmp},LDFLAGS=${LDFLAGS},
             BINUTILS_VERSION=${BINUTILS_VERSION},BINUTILS_MD5SUM=${BINUTILS_MD5SUM},
             GCC_VERSION=${GCC_VERSION},GCC_MD5SUM=${GCC_MD5SUM}"
+        DEPS_HASH=$("$DIR/ComputeDependenciesHash.sh" "$MD5SUM" <<<"${DEPS_CONFIG}")
+        DEPS_HASH_EXIT_CODE="$?"
         CACHED_TOOLCHAIN_ARCHIVE="Cache/ToolchainLocal_${DEPS_HASH}.tar.gz"
-        if ! DEPS_HASH=$("$DIR/ComputeDependenciesHash.sh" "$MD5SUM" <<<"${DEPS_CONFIG}"); then
+        if [ "$DEPS_HASH_EXIT_CODE" -ne 0 ] ; then
             # Make it stand out more
             echo
             echo
