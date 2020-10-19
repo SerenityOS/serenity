@@ -52,6 +52,7 @@ public:
     bool consume_specific(char);
     bool consume_specific(StringView);
     bool consume_specific(const char*);
+    char consume_escaped_character(char escape_char = '\\', const StringView& escape_map = "n\nr\rt\tb\bf\f");
     StringView consume(size_t count);
     StringView consume_all();
     StringView consume_line();
