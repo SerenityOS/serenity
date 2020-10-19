@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Bitmap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -43,6 +44,15 @@ public:
     {
         return adopt(*new ProfileNode(symbol, address, offset, timestamp));
     }
+
+    // These functions are only relevant for root nodes
+    void will_track_seen_events(size_t profile_event_count)
+    {
+        if (m_seen_events.size() != profile_event_count)
+            m_seen_events = Bitmap::create(profile_event_count, false);
+    }
+    bool has_seen_event(size_t event_index) const { return m_seen_events.get(event_index); }
+    void did_see_event(size_t event_index) { m_seen_events.set(event_index, true); }
 
     const String& symbol() const { return m_symbol; }
     u32 address() const { return m_address; }
@@ -113,6 +123,7 @@ private:
     u64 m_timestamp { 0 };
     Vector<NonnullRefPtr<ProfileNode>> m_children;
     HashMap<FlatPtr, size_t> m_events_per_address;
+    Bitmap m_seen_events;
 };
 
 class Profile {
@@ -158,6 +169,8 @@ public:
     bool is_inverted() const { return m_inverted; }
     void set_inverted(bool);
 
+    void set_show_top_functions(bool);
+
     bool show_percentages() const { return m_show_percentages; }
     void set_show_percentages(bool);
 
@@ -188,5 +201,6 @@ private:
 
     u32 m_deepest_stack_depth { 0 };
     bool m_inverted { false };
+    bool m_show_top_functions { false };
     bool m_show_percentages { false };
 };

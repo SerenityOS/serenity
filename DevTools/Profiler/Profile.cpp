@@ -102,7 +102,8 @@ void Profile::rebuild_tree()
             live_allocations.remove(event.ptr);
     }
 
-    for (auto& event : m_events) {
+    for (size_t event_index = 0; event_index < m_events.size(); ++event_index) {
+        auto& event = m_events.at(event_index);
         if (has_timestamp_filter_range()) {
             auto timestamp = event.timestamp;
             if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
@@ -114,8 +115,6 @@ void Profile::rebuild_tree()
 
         if (event.type == "free")
             continue;
-
-        ProfileNode* node = nullptr;
 
         auto for_each_frame = [&]<typename Callback>(Callback callback) {
             if (!m_inverted) {
@@ -131,26 +130,62 @@ void Profile::rebuild_tree()
             }
         };
 
-        for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
-            auto& symbol = frame.symbol;
-            auto& address = frame.address;
-            auto& offset = frame.offset;
+        if (!m_show_top_functions) {
+            ProfileNode* node = nullptr;
+            for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
+                auto& symbol = frame.symbol;
+                auto& address = frame.address;
+                auto& offset = frame.offset;
 
-            if (symbol.is_empty())
-                return IterationDecision::Break;
+                if (symbol.is_empty())
+                    return IterationDecision::Break;
 
-            if (!node)
-                node = &find_or_create_root(symbol, address, offset, event.timestamp);
-            else
-                node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
+                if (!node)
+                    node = &find_or_create_root(symbol, address, offset, event.timestamp);
+                else
+                    node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
 
-            node->increment_event_count();
-            if (is_innermost_frame) {
-                node->add_event_address(address);
-                node->increment_self_count();
+                node->increment_event_count();
+                if (is_innermost_frame) {
+                    node->add_event_address(address);
+                    node->increment_self_count();
+                }
+                return IterationDecision::Continue;
+            });
+        } else {
+            for (size_t i = 0; i < event.frames.size(); ++i) {
+                ProfileNode* node = nullptr;
+                ProfileNode* root = nullptr;
+                for (size_t j = i; j < event.frames.size(); ++j) {
+                    auto& frame = event.frames.at(j);
+                    auto& symbol = frame.symbol;
+                    auto& address = frame.address;
+                    auto& offset = frame.offset;
+                    if (symbol.is_empty())
+                        break;
+
+                    if (!node) {
+                        node = &find_or_create_root(symbol, address, offset, event.timestamp);
+                        root = node;
+                        root->will_track_seen_events(m_events.size());
+                    } else {
+                        node = &node->find_or_create_child(symbol, address, offset, event.timestamp);
+                    }
+
+                    if (!root->has_seen_event(event_index)) {
+                        root->did_see_event(event_index);
+                        root->increment_event_count();
+                    } else if (node != root) {
+                        node->increment_event_count();
+                    }
+
+                    if (j == event.frames.size() - 1) {
+                        node->add_event_address(address);
+                        node->increment_self_count();
+                    }
+                }
             }
-            return IterationDecision::Continue;
-        });
+        }
 
         ++filtered_event_count;
     }
@@ -280,6 +315,14 @@ void Profile::set_inverted(bool inverted)
     if (m_inverted == inverted)
         return;
     m_inverted = inverted;
+    rebuild_tree();
+}
+
+void Profile::set_show_top_functions(bool show)
+{
+    if (m_show_top_functions == show)
+        return;
+    m_show_top_functions = show;
     rebuild_tree();
 }
 
