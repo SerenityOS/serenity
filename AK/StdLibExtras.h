@@ -82,7 +82,7 @@ inline constexpr T ceil_div(T a, U b)
 #    pragma clang diagnostic ignored "-Wconsumed"
 #endif
 template<typename T>
-inline T&& move(T& arg)
+constexpr T&& move(T& arg)
 {
     return static_cast<T&&>(arg);
 }
@@ -433,7 +433,7 @@ struct IsConst<const T> : TrueType {
 };
 
 template<typename T, typename U = T>
-inline constexpr T exchange(T& slot, U&& value)
+constexpr T exchange(T& slot, U&& value)
 {
     T old_value = move(slot);
     slot = forward<U>(value);
