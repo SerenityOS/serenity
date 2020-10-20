@@ -74,7 +74,7 @@ void SoftCPU::warn_if_flags_tainted(const char* message) const
 }
 
 template<typename T, typename U>
-inline constexpr T sign_extended_to(U value)
+constexpr T sign_extended_to(U value)
 {
     if (!(value & X86::TypeTrivia<U>::sign_bit))
         return value;

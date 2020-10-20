@@ -36,7 +36,7 @@ namespace Gfx {
 enum class ColorRole;
 typedef u32 RGBA32;
 
-inline constexpr u32 make_rgb(u8 r, u8 g, u8 b)
+constexpr u32 make_rgb(u8 r, u8 g, u8 b)
 {
     return ((r << 16) | (g << 8) | b);
 }

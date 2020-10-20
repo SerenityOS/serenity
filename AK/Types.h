@@ -92,7 +92,7 @@ static_assert(explode_byte(0x80) == 0x80808080);
 static_assert(explode_byte(0x7f) == 0x7f7f7f7f);
 static_assert(explode_byte(0) == 0);
 
-inline constexpr size_t align_up_to(const size_t value, const size_t alignment)
+constexpr size_t align_up_to(const size_t value, const size_t alignment)
 {
     return (value + (alignment - 1)) & ~(alignment - 1);
 }

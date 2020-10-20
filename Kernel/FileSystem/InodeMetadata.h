@@ -35,7 +35,7 @@ namespace Kernel {
 
 class Process;
 
-inline constexpr u32 encoded_device(unsigned major, unsigned minor)
+constexpr u32 encoded_device(unsigned major, unsigned minor)
 {
     return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
 }

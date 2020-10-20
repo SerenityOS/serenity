@@ -499,7 +499,7 @@ struct [[gnu::aligned(16)]] FPUState
     u8 buffer[512];
 };
 
-inline constexpr FlatPtr page_base_of(FlatPtr address)
+constexpr FlatPtr page_base_of(FlatPtr address)
 {
     return address & PAGE_MASK;
 }
@@ -509,7 +509,7 @@ inline FlatPtr page_base_of(const void* address)
     return page_base_of((FlatPtr)address);
 }
 
-inline constexpr FlatPtr offset_in_page(FlatPtr address)
+constexpr FlatPtr offset_in_page(FlatPtr address)
 {
     return address & (~PAGE_MASK);
 }

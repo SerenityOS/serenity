@@ -51,7 +51,7 @@ struct TypeTrivia {
 };
 
 template<typename T, typename U>
-inline constexpr T sign_extended_to(U value)
+constexpr T sign_extended_to(U value)
 {
     if (!(value & TypeTrivia<U>::sign_bit))
         return value;
