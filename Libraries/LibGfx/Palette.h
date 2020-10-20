@@ -90,6 +90,8 @@ public:
     Color highlight_window_title() const { return color(ColorRole::HighlightWindowTitle); }
     Color highlight_window_title_stripes() const { return color(ColorRole::HighlightWindowTitleStripes); }
     Color highlight_window_title_shadow() const { return color(ColorRole::HighlightWindowTitleShadow); }
+    Color highlight_searching() const { return color(ColorRole::HighlightSearching); }
+    Color highlight_searching_text() const { return color(ColorRole::HighlightSearchingText); }
     Color menu_stripe() const { return color(ColorRole::MenuStripe); }
     Color menu_base() const { return color(ColorRole::MenuBase); }
     Color menu_base_text() const { return color(ColorRole::MenuBaseText); }
