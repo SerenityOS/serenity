@@ -854,20 +854,52 @@ void Painter::draw_glyph_or_emoji(const IntPoint& point, u32 code_point, const F
     draw_emoji(point, *emoji, font);
 }
 
-void Painter::draw_text_line(const IntRect& a_rect, const Utf8View& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
+static void apply_elision(Utf8View& final_text, String& elided_text, size_t offset)
+{
+    StringBuilder builder;
+    builder.append(final_text.substring_view(0, offset).as_string());
+    builder.append("...");
+    elided_text = builder.to_string();
+    final_text = Utf8View { elided_text };
+}
+
+static void apply_elision(Utf32View& final_text, Vector<u32>& elided_text, size_t offset)
+{
+    elided_text.append(final_text.code_points(), offset);
+    elided_text.append('.');
+    elided_text.append('.');
+    elided_text.append('.');
+    final_text = Utf32View { elided_text.data(), elided_text.size() };
+}
+
+template<typename TextType>
+struct ElidedText {
+};
+
+template<>
+struct ElidedText<Utf8View> {
+    typedef String Type;
+};
+
+template<>
+struct ElidedText<Utf32View> {
+    typedef Vector<u32> Type;
+};
+
+template<typename TextType, typename DrawGlyphFunction>
+void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& font, TextAlignment alignment, TextElision elision, DrawGlyphFunction draw_glyph)
 {
     auto rect = a_rect;
-    Utf8View final_text(text);
-    String elided_text;
+    TextType final_text(text);
+    typename ElidedText<TextType>::Type elided_text;
     if (elision == TextElision::Right) {
         int text_width = font.width(final_text);
         if (font.width(final_text) > rect.width()) {
             int glyph_spacing = font.glyph_spacing();
-            int byte_offset = 0;
             int new_width = font.width("...");
             if (new_width < text_width) {
-                for (auto it = final_text.begin(); it != final_text.end(); ++it) {
-                    u32 code_point = *it;
+                size_t offset = 0;
+                for (auto code_point : text) {
                     int glyph_width = font.glyph_or_emoji_width(code_point);
                     // NOTE: Glyph spacing should not be added after the last glyph on the line,
                     //       but since we are here because the last glyph does not actually fit on the line,
@@ -875,14 +907,10 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf8View& text, const 
                     int width_with_this_glyph_included = new_width + glyph_width + glyph_spacing;
                     if (width_with_this_glyph_included > rect.width())
                         break;
-                    byte_offset = final_text.byte_offset_of(it);
                     new_width += glyph_width + glyph_spacing;
+                    offset++;
                 }
-                StringBuilder builder;
-                builder.append(final_text.substring_view(0, byte_offset).as_string());
-                builder.append("...");
-                elided_text = builder.to_string();
-                final_text = Utf8View { elided_text };
+                apply_elision(final_text, elided_text, offset);
             }
         }
     }
@@ -920,74 +948,88 @@ void Painter::draw_text_line(const IntRect& a_rect, const Utf8View& text, const 
             point.move_by(space_width, 0);
             continue;
         }
-        draw_glyph_or_emoji(point, code_point, font, color);
-        point.move_by(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), 0);
+        IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.glyph_height());
+        draw_glyph({ point, glyph_size }, code_point);
+        point.move_by(glyph_size.width(), 0);
     }
 }
 
-void Painter::draw_text_line(const IntRect& a_rect, const Utf32View& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
+static inline size_t draw_text_iterator_offset(const Utf8View& text, const Utf8View::Iterator& it)
 {
-    auto rect = a_rect;
-    Utf32View final_text(text);
-    Vector<u32> elided_text;
-    if (elision == TextElision::Right) {
-        int text_width = font.width(final_text);
-        if (font.width(final_text) > rect.width()) {
-            int glyph_spacing = font.glyph_spacing();
-            int new_width = font.width("...");
-            if (new_width < text_width) {
-                size_t i = 0;
-                for (; i < text.length(); ++i) {
-                    u32 code_point = text.code_points()[i];
-                    int glyph_width = font.glyph_or_emoji_width(code_point);
-                    // NOTE: Glyph spacing should not be added after the last glyph on the line,
-                    //       but since we are here because the last glyph does not actually fit on the line,
-                    //       we don't have to worry about spacing.
-                    int width_with_this_glyph_included = new_width + glyph_width + glyph_spacing;
-                    if (width_with_this_glyph_included > rect.width())
-                        break;
-                    new_width += glyph_width + glyph_spacing;
-                }
-                elided_text.clear();
-                elided_text.append(final_text.code_points(), i);
-                elided_text.append('.');
-                elided_text.append('.');
-                elided_text.append('.');
-                final_text = Utf32View { elided_text.data(), elided_text.size() };
-            }
+    return text.byte_offset_of(it);
+}
+
+static inline size_t draw_text_iterator_offset(const Utf32View& text, const Utf32View::Iterator& it)
+{
+    return it - text.begin();
+}
+
+static inline size_t draw_text_get_length(const Utf8View& text)
+{
+    return text.byte_length();
+}
+
+static inline size_t draw_text_get_length(const Utf32View& text)
+{
+    return text.length();
+}
+
+template<typename TextType, typename DrawGlyphFunction>
+void do_draw_text(const IntRect& rect, const TextType& text, const Font& font, TextAlignment alignment, TextElision elision, DrawGlyphFunction draw_glyph)
+{
+    Vector<TextType, 32> lines;
+
+    size_t start_of_current_line = 0;
+    for (auto it = text.begin(); it != text.end(); ++it) {
+        u32 code_point = *it;
+        if (code_point == '\n') {
+            auto offset = draw_text_iterator_offset(text, it);
+            TextType line = text.substring_view(start_of_current_line, offset - start_of_current_line);
+            lines.append(line);
+            start_of_current_line = offset + 1;
         }
+    }
+
+    if (start_of_current_line != draw_text_get_length(text)) {
+        TextType line = text.substring_view(start_of_current_line, draw_text_get_length(text) - start_of_current_line);
+        lines.append(line);
+    }
+
+    static const int line_spacing = 4;
+    int line_height = font.glyph_height() + line_spacing;
+    IntRect bounding_rect { 0, 0, 0, (static_cast<int>(lines.size()) * line_height) - line_spacing };
+
+    for (auto& line : lines) {
+        auto line_width = font.width(line);
+        if (line_width > bounding_rect.width())
+            bounding_rect.set_width(line_width);
     }
 
     switch (alignment) {
     case TextAlignment::TopLeft:
-    case TextAlignment::CenterLeft:
+        bounding_rect.set_location(rect.location());
         break;
     case TextAlignment::TopRight:
+        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.y() });
+        break;
+    case TextAlignment::CenterLeft:
+        bounding_rect.set_location({ rect.x(), rect.center().y() - (bounding_rect.height() / 2) });
+        break;
     case TextAlignment::CenterRight:
-        rect.set_x(rect.right() - font.width(final_text));
+        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.center().y() - (bounding_rect.height() / 2) });
         break;
-    case TextAlignment::Center: {
-        auto shrunken_rect = rect;
-        shrunken_rect.set_width(font.width(final_text));
-        shrunken_rect.center_within(rect);
-        rect = shrunken_rect;
+    case TextAlignment::Center:
+        bounding_rect.center_within(rect);
         break;
-    }
     default:
         ASSERT_NOT_REACHED();
     }
 
-    auto point = rect.location();
-    int space_width = font.glyph_width(' ') + font.glyph_spacing();
-
-    for (size_t i = 0; i < final_text.length(); ++i) {
-        auto code_point = final_text.code_points()[i];
-        if (code_point == ' ') {
-            point.move_by(space_width, 0);
-            continue;
-        }
-        draw_glyph_or_emoji(point, code_point, font, color);
-        point.move_by(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), 0);
+    for (size_t i = 0; i < lines.size(); ++i) {
+        auto& line = lines[i];
+        IntRect line_rect { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
+        line_rect.intersect(rect);
+        draw_text_line(line_rect, line, font, alignment, elision, draw_glyph);
     }
 }
 
@@ -1004,120 +1046,38 @@ void Painter::draw_text(const IntRect& rect, const Utf32View& text, TextAlignmen
 void Painter::draw_text(const IntRect& rect, const StringView& raw_text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
 {
     Utf8View text { raw_text };
-    Vector<Utf8View, 32> lines;
-
-    int start_of_current_line = 0;
-    for (auto it = text.begin(); it != text.end(); ++it) {
-        u32 code_point = *it;
-        if (code_point == '\n') {
-            int byte_offset = text.byte_offset_of(it);
-            Utf8View line = text.substring_view(start_of_current_line, byte_offset - start_of_current_line);
-            lines.append(line);
-            start_of_current_line = byte_offset + 1;
-        }
-    }
-
-    if (start_of_current_line != text.byte_length()) {
-        Utf8View line = text.substring_view(start_of_current_line, text.byte_length() - start_of_current_line);
-        lines.append(line);
-    }
-
-    static const int line_spacing = 4;
-    int line_height = font.glyph_height() + line_spacing;
-    IntRect bounding_rect { 0, 0, 0, (static_cast<int>(lines.size()) * line_height) - line_spacing };
-
-    for (auto& line : lines) {
-        auto line_width = font.width(line);
-        if (line_width > bounding_rect.width())
-            bounding_rect.set_width(line_width);
-    }
-
-    switch (alignment) {
-    case TextAlignment::TopLeft:
-        bounding_rect.set_location(rect.location());
-        break;
-    case TextAlignment::TopRight:
-        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.y() });
-        break;
-    case TextAlignment::CenterLeft:
-        bounding_rect.set_location({ rect.x(), rect.center().y() - (bounding_rect.height() / 2) });
-        break;
-    case TextAlignment::CenterRight:
-        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.center().y() - (bounding_rect.height() / 2) });
-        break;
-    case TextAlignment::Center:
-        bounding_rect.center_within(rect);
-        break;
-    case TextAlignment::BottomRight:
-        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), (rect.bottom() + 1) - bounding_rect.height() });
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-    }
-
-    for (size_t i = 0; i < lines.size(); ++i) {
-        auto& line = lines[i];
-        IntRect line_rect { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
-        line_rect.intersect(rect);
-        draw_text_line(line_rect, line, font, alignment, color, elision);
-    }
+    do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
+        draw_glyph_or_emoji(r.location(), code_point, font, color);
+    });
 }
 
 void Painter::draw_text(const IntRect& rect, const Utf32View& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
 {
-    Vector<Utf32View, 32> lines;
+    do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
+        draw_glyph_or_emoji(r.location(), code_point, font, color);
+    });
+}
 
-    size_t start_of_current_line = 0;
-    for (size_t i = 0; i < text.length(); ++i) {
-        u32 code_point = text.code_points()[i];
-        if (code_point == '\n') {
-            Utf32View line = text.substring_view(start_of_current_line, i - start_of_current_line);
-            lines.append(line);
-            start_of_current_line = i + 1;
-        }
-    }
+void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, const IntRect& rect, const StringView& raw_text, const Font& font, TextAlignment alignment, TextElision elision)
+{
+    Utf8View text { raw_text };
+    do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
+        draw_one_glyph(r, code_point);
+    });
+}
 
-    if (start_of_current_line != text.length()) {
-        Utf32View line = text.substring_view(start_of_current_line, text.length() - start_of_current_line);
-        lines.append(line);
-    }
+void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, const IntRect& rect, const Utf8View& text, const Font& font, TextAlignment alignment, TextElision elision)
+{
+    do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
+        draw_one_glyph(r, code_point);
+    });
+}
 
-    static const int line_spacing = 4;
-    int line_height = font.glyph_height() + line_spacing;
-    IntRect bounding_rect { 0, 0, 0, (static_cast<int>(lines.size()) * line_height) - line_spacing };
-
-    for (auto& line : lines) {
-        auto line_width = font.width(line);
-        if (line_width > bounding_rect.width())
-            bounding_rect.set_width(line_width);
-    }
-
-    switch (alignment) {
-    case TextAlignment::TopLeft:
-        bounding_rect.set_location(rect.location());
-        break;
-    case TextAlignment::TopRight:
-        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.y() });
-        break;
-    case TextAlignment::CenterLeft:
-        bounding_rect.set_location({ rect.x(), rect.center().y() - (bounding_rect.height() / 2) });
-        break;
-    case TextAlignment::CenterRight:
-        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.center().y() - (bounding_rect.height() / 2) });
-        break;
-    case TextAlignment::Center:
-        bounding_rect.center_within(rect);
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-    }
-
-    for (size_t i = 0; i < lines.size(); ++i) {
-        auto& line = lines[i];
-        IntRect line_rect { bounding_rect.x(), bounding_rect.y() + static_cast<int>(i) * line_height, bounding_rect.width(), line_height };
-        line_rect.intersect(rect);
-        draw_text_line(line_rect, line, font, alignment, color, elision);
-    }
+void Painter::draw_text(Function<void(const IntRect&, u32)> draw_one_glyph, const IntRect& rect, const Utf32View& text, const Font& font, TextAlignment alignment, TextElision elision)
+{
+    do_draw_text(rect, text, font, alignment, elision, [&](const IntRect& r, u32 code_point) {
+        draw_one_glyph(r, code_point);
+    });
 }
 
 void Painter::set_pixel(const IntPoint& p, Color color)
