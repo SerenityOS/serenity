@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/FixedArray.h>
+#include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
 #include <LibTTF/Tables.h>
@@ -45,7 +45,7 @@ private:
     void draw_line(Gfx::FloatPoint, Gfx::FloatPoint);
 
     Gfx::IntSize m_size;
-    FixedArray<float> m_data;
+    AK::Vector<float> m_data;
 };
 
 class Loca {
