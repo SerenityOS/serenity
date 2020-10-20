@@ -438,10 +438,8 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
 
         m_cursor_index = index;
 
-        if (scroll_cursor_into_view) {
-            // FIXME: We should scroll into view both vertically *and* horizontally.
-            scroll_into_view(index, false, true);
-        }
+        if (scroll_cursor_into_view)
+            scroll_into_view(index, true, true);
         update();
     }
 }

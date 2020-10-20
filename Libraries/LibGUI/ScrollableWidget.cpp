@@ -180,14 +180,14 @@ void ScrollableWidget::scroll_into_view(const Gfx::IntRect& rect, bool scroll_ho
     if (scroll_vertically) {
         if (rect.top() < visible_content_rect.top()) {
             m_vertical_scrollbar->set_value(rect.top());
-        } else if (rect.bottom() > visible_content_rect.bottom()) {
+        } else if (rect.top() > visible_content_rect.top() && rect.bottom() > visible_content_rect.bottom()) {
             m_vertical_scrollbar->set_value(rect.bottom() - visible_content_rect.height() + 1);
         }
     }
     if (scroll_horizontally) {
         if (rect.left() < visible_content_rect.left()) {
             m_horizontal_scrollbar->set_value(rect.left());
-        } else if (rect.right() > visible_content_rect.right()) {
+        } else if (rect.left() > visible_content_rect.left() && rect.right() > visible_content_rect.right()) {
             m_horizontal_scrollbar->set_value(rect.right() - visible_content_rect.width() + 1);
         }
     }
