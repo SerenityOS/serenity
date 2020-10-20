@@ -40,6 +40,14 @@ enum class Associativity {
     Right
 };
 
+struct FunctionNodeParseOptions {
+    enum {
+        CheckForFunctionAndName = 1 << 0,
+        AllowSuperPropertyLookup = 1 << 1,
+        AllowSuperConstructorCall = 1 << 2,
+    };
+};
+
 class Parser {
 public:
     explicit Parser(Lexer lexer);
@@ -47,7 +55,7 @@ public:
     NonnullRefPtr<Program> parse_program();
 
     template<typename FunctionNodeType>
-    NonnullRefPtr<FunctionNodeType> parse_function_node(bool check_for_function_and_name = true, bool allow_super_property_lookup = false, bool allow_super_constructor_call = false);
+    NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName);
     Vector<FunctionNode::Parameter> parse_function_parameters(int& function_length);
 
     NonnullRefPtr<Statement> parse_statement();

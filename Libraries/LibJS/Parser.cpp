@@ -514,7 +514,10 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         }
 
         if (match(TokenType::ParenOpen)) {
-            auto function = parse_function_node<FunctionExpression>(false, true, !super_class.is_null());
+            u8 parse_options = FunctionNodeParseOptions::AllowSuperPropertyLookup;
+            if (!super_class.is_null())
+                parse_options |= FunctionNodeParseOptions::AllowSuperConstructorCall;
+            auto function = parse_function_node<FunctionExpression>(parse_options);
             auto arg_count = function->parameters().size();
 
             if (method_kind == ClassMethod::Kind::Getter && arg_count != 0) {
@@ -761,7 +764,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
         if (match(TokenType::ParenOpen)) {
             ASSERT(property_name);
-            auto function = parse_function_node<FunctionExpression>(false, true);
+            auto function = parse_function_node<FunctionExpression>(FunctionNodeParseOptions::AllowSuperPropertyLookup);
             auto arg_count = function->parameters().size();
 
             if (property_type == ObjectProperty::Type::Getter && arg_count != 0) {
@@ -1251,24 +1254,18 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
 }
 
 template<typename FunctionNodeType>
-NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(bool check_for_function_and_name, bool allow_super_property_lookup, bool allow_super_constructor_call)
+NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 {
-    TemporaryChange super_property_access_rollback(m_parser_state.m_allow_super_property_lookup, allow_super_property_lookup);
-    TemporaryChange super_constructor_call_rollback(m_parser_state.m_allow_super_constructor_call, allow_super_constructor_call);
+    TemporaryChange super_property_access_rollback(m_parser_state.m_allow_super_property_lookup, !!(parse_options & FunctionNodeParseOptions::AllowSuperPropertyLookup));
+    TemporaryChange super_constructor_call_rollback(m_parser_state.m_allow_super_constructor_call, !!(parse_options & FunctionNodeParseOptions::AllowSuperConstructorCall));
 
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Function);
 
-    if (check_for_function_and_name)
-        consume(TokenType::Function);
-
     String name;
-    if (check_for_function_and_name) {
-        if (FunctionNodeType::must_have_name()) {
+    if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
+        consume(TokenType::Function);
+        if (FunctionNodeType::must_have_name() || match(TokenType::Identifier))
             name = consume(TokenType::Identifier).value();
-        } else {
-            if (match(TokenType::Identifier))
-                name = consume(TokenType::Identifier).value();
-        }
     }
     consume(TokenType::ParenOpen);
     i32 function_length = -1;
