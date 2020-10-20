@@ -276,6 +276,10 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
         auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
         klog() << "handle_icmp: EchoRequest from " << ipv4_packet.source().to_string().characters() << ": id=" << (u16)request.identifier << ", seq=" << (u16)request.sequence_number;
         size_t icmp_packet_size = ipv4_packet.payload_size();
+        if (icmp_packet_size < sizeof(ICMPEchoPacket)) {
+            klog() << "handle_icmp: EchoRequest packet is too small, ignoring.";
+            return;
+        }
         auto buffer = ByteBuffer::create_zeroed(icmp_packet_size);
         auto& response = *(ICMPEchoPacket*)buffer.data();
         response.header.set_type(ICMPType::EchoReply);
