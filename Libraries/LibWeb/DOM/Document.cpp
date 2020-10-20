@@ -206,8 +206,33 @@ void Document::detach_from_frame(Badge<Frame>, Frame& frame)
         node.document_will_detach_from_frame(frame);
         return IterationDecision::Continue;
     });
-    m_layout_root = nullptr;
+
+    tear_down_layout_tree();
     m_frame = nullptr;
+}
+
+void Document::tear_down_layout_tree()
+{
+    if (!m_layout_root)
+        return;
+
+    // Gather up all the layout nodes in a vector and detach them from parents
+    // while the vector keeps them alive.
+
+    NonnullRefPtrVector<LayoutNode> layout_nodes;
+
+    for_each_in_subtree([&](auto& node) {
+        if (node.layout_node())
+            layout_nodes.append(*node.layout_node());
+        return IterationDecision::Continue;
+    });
+
+    for (auto& layout_node : layout_nodes) {
+        if (layout_node.parent())
+            layout_node.parent()->remove_child(layout_node);
+    }
+
+    m_layout_root = nullptr;
 }
 
 Color Document::background_color(const Palette& palette) const
@@ -256,7 +281,7 @@ URL Document::complete_url(const String& string) const
 
 void Document::invalidate_layout()
 {
-    m_layout_root = nullptr;
+    tear_down_layout_tree();
 }
 
 void Document::force_layout()

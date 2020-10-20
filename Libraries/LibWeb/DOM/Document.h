@@ -198,6 +198,8 @@ public:
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
+    void tear_down_layout_tree();
+
     unsigned m_referencing_node_count { 0 };
 
     OwnPtr<CSS::StyleResolver> m_style_resolver;
