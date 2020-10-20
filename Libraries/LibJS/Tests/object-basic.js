@@ -151,6 +151,7 @@ describe("errors", () => {
         expect("({ get ...[foo] })").not.toEval();
         expect("({ get foo(bar) {} })").not.toEval();
         expect("({ set foo() {} })").not.toEval();
+        expect("({ set foo(...bar) {} })").not.toEval();
         expect("({ set foo(bar, baz) {} })").not.toEval();
         expect("({ ...foo: bar })").not.toEval();
     });

@@ -71,6 +71,11 @@ describe("syntax errors", () => {
       set foo(bar, baz) {
       }
     }`).not.toEval();
+        expect(`
+    class A {
+      set foo(...bar) {
+      }
+    }`).not.toEval();
     });
 
     test("super reference inside different |this| scope", () => {
