@@ -627,4 +627,21 @@ void FileSystemModel::set_data(const ModelIndex& index, const Variant& data)
     }
 }
 
+Vector<ModelIndex, 1> FileSystemModel::matches(const StringView& searching, unsigned flags, const ModelIndex& index)
+{
+    Node& node = const_cast<Node&>(this->node(index));
+    node.reify_if_needed();
+    Vector<ModelIndex, 1> found_indexes;
+    for (auto& child : node.children) {
+        if (string_matches(child.name, searching, flags)) {
+            const_cast<Node&>(child).reify_if_needed();
+            found_indexes.append(child.index(Column::Name));
+            if (flags & FirstMatchOnly)
+                break;
+        }
+    }
+
+    return found_indexes;
+}
+
 }

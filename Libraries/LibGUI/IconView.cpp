@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/IconView.h>
@@ -464,13 +465,8 @@ void IconView::paint_event(PaintEvent& event)
             }
         }
 
-        Color text_color;
-        if (item_data.selected)
-            text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
-        else
-            text_color = item_data.index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(item_data.text_rect, background_color);
-        painter.draw_text(item_data.text_rect, item_text.to_string(), font_for_index(item_data.index), Gfx::TextAlignment::Center, text_color, Gfx::TextElision::Right);
+        draw_item_text(painter, item_data.index, item_data.selected, item_data.text_rect, item_text.to_string(), font_for_index(item_data.index), Gfx::TextAlignment::Center, Gfx::TextElision::Right);
 
         if (item_data.index == m_drop_candidate_index) {
             // FIXME: This visualization is not great, as it's also possible to drop things on the text label..

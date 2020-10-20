@@ -25,7 +25,9 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/DragOperation.h>
 #include <LibGUI/Model.h>
@@ -33,6 +35,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/TextBox.h>
+#include <LibGfx/Palette.h>
 
 namespace GUI {
 
@@ -44,6 +47,8 @@ AbstractView::AbstractView()
 
 AbstractView::~AbstractView()
 {
+    if (m_searching_timer)
+        m_searching_timer->stop();
     if (m_model)
         m_model->unregister_view({}, *this);
 }
@@ -421,8 +426,12 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
 {
     if (!model() || !index.is_valid()) {
         m_cursor_index = {};
+        cancel_searching();
         return;
     }
+
+    if (!m_cursor_index.is_valid() || model()->parent_index(m_cursor_index) != model()->parent_index(index))
+        cancel_searching();
 
     if (model()->is_valid(index)) {
         if (selection_update == SelectionUpdate::Set)
@@ -517,7 +526,152 @@ void AbstractView::keydown_event(KeyEvent& event)
         return;
     }
 
+    if (is_searchable()) {
+        if (event.key() == KeyCode::Key_Backspace) {
+            if (is_searching()) {
+                //if (event.modifiers() == Mod_Ctrl) {
+                // TODO: delete last word
+                //}
+                Utf8View view(m_searching);
+                size_t n_code_points = view.length();
+                if (n_code_points > 1) {
+                    n_code_points--;
+                    StringBuilder sb;
+                    for (auto it = view.begin(); it != view.end(); ++it) {
+                        if (n_code_points == 0)
+                            break;
+                        n_code_points--;
+                        sb.append_code_point(*it);
+                    }
+                    do_search(sb.to_string());
+                    start_searching_timer();
+                } else {
+                    cancel_searching();
+                }
+
+                event.accept();
+                return;
+            }
+        } else if (event.key() == KeyCode::Key_Escape) {
+            if (is_searching()) {
+                cancel_searching();
+
+                event.accept();
+                return;
+            }
+        } else if (!event.ctrl() && !event.alt() && event.code_point() != 0) {
+            StringBuilder sb;
+            sb.append(m_searching);
+            sb.append_code_point(event.code_point());
+            do_search(sb.to_string());
+            start_searching_timer();
+
+            event.accept();
+            return;
+        }
+    }
+
     Widget::keydown_event(event);
+}
+
+void AbstractView::cancel_searching()
+{
+    m_searching = nullptr;
+    if (m_searching_timer)
+        m_searching_timer->stop();
+    if (m_highlighted_search_index.is_valid()) {
+        m_highlighted_search_index = {};
+        update();
+    }
+}
+
+void AbstractView::start_searching_timer()
+{
+    if (!m_searching_timer) {
+        m_searching_timer = add<Core::Timer>();
+        m_searching_timer->set_single_shot(true);
+        m_searching_timer->on_timeout = [this] {
+            cancel_searching();
+        };
+    }
+    m_searching_timer->set_interval(5 * 1000);
+    m_searching_timer->restart();
+}
+
+void AbstractView::do_search(String&& searching)
+{
+    if (searching.is_empty() || !model()) {
+        cancel_searching();
+        return;
+    }
+
+    auto found_indexes = model()->matches(searching, Model::MatchesFlag::FirstMatchOnly | Model::MatchesFlag::MatchAtStart | Model::MatchesFlag::CaseInsensitive, model()->parent_index(cursor_index()));
+    if (!found_indexes.is_empty() && found_indexes[0].is_valid()) {
+        auto& index = found_indexes[0];
+        m_highlighted_search_index = index;
+        m_searching = move(searching);
+        set_selection(index);
+        scroll_into_view(index);
+        update();
+    }
+}
+
+bool AbstractView::is_searchable() const
+{
+    if (!m_searchable || !model())
+        return false;
+    return model()->is_searchable();
+}
+
+void AbstractView::set_searchable(bool searchable)
+{
+    if (m_searchable == searchable)
+        return;
+    m_searchable = searchable;
+    if (!m_searchable)
+        cancel_searching();
+}
+
+bool AbstractView::is_highlighting_searching(const ModelIndex& index) const
+{
+    return index == m_highlighted_search_index;
+}
+
+void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index, bool is_selected, const Gfx::IntRect& text_rect, const StringView& item_text, const Gfx::Font& font, Gfx::TextAlignment alignment, Gfx::TextElision elision)
+{
+    Color text_color;
+    if (is_selected)
+        text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
+    else
+        text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
+    if (is_highlighting_searching(index)) {
+        Utf8View searching_text(searching());
+        auto searching_length = searching_text.length();
+
+        // Highlight the text background first
+        painter.draw_text([&](const Gfx::IntRect& rect, u32) {
+            if (searching_length > 0) {
+                searching_length--;
+                painter.fill_rect(rect.inflated(0, 2), palette().highlight_searching());
+            }
+        },
+            text_rect, item_text, font, alignment, elision);
+
+        // Then draw the text
+        auto highlight_text_color = palette().highlight_searching_text();
+        searching_length = searching_text.length();
+        painter.draw_text([&](const Gfx::IntRect& rect, u32 code_point) {
+            if (searching_length > 0) {
+                searching_length--;
+                painter.draw_glyph_or_emoji(rect.location(), code_point, font, highlight_text_color);
+            } else {
+                painter.draw_glyph_or_emoji(rect.location(), code_point, font, text_color);
+            }
+        },
+            text_rect, item_text, font, alignment, elision);
+    } else {
+        painter.draw_text(text_rect, item_text, font, alignment, text_color, elision);
+    }
 }
 
 }

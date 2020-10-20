@@ -318,10 +318,8 @@ void TreeView::paint_event(PaintEvent& event)
                         if (auto bitmap = data.as_icon().bitmap_for_size(16))
                             painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
                     } else {
-                        if (!is_selected_row)
-                            text_color = cell_index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
                         auto text_alignment = cell_index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
-                        painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
+                        draw_item_text(painter, cell_index, is_selected_row, cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, Gfx::TextElision::Right);
                     }
                 }
             } else {
@@ -340,8 +338,7 @@ void TreeView::paint_event(PaintEvent& event)
                     icon_rect.right() + 1 + icon_spacing(), rect.y(),
                     rect.width() - icon_size() - icon_spacing(), rect.height()
                 };
-                auto node_text = index.data().to_string();
-                painter.draw_text(text_rect, node_text, font_for_index(index), Gfx::TextAlignment::Center, text_color);
+                draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::Center, Gfx::TextElision::None);
                 auto index_at_indent = index;
                 for (int i = indent_level; i > 0; --i) {
                     auto parent_of_index_at_indent = index_at_indent.parent();

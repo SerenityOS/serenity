@@ -141,8 +141,7 @@ void ColumnsView::paint_event(PaintEvent& event)
                 icon_rect.right() + 1 + icon_spacing(), row * item_height(),
                 column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - s_arrow_bitmap_width - icon_spacing(), item_height()
             };
-            auto text = index.data().to_string();
-            painter.draw_text(text_rect, text, Gfx::TextAlignment::CenterLeft, text_color);
+            draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::None);
 
             bool expandable = model()->row_count(index) > 0;
             if (expandable) {

@@ -59,6 +59,13 @@ public:
         InvalidateAllIndexes = 1 << 0,
     };
 
+    enum MatchesFlag {
+        AllMatching = 0,
+        FirstMatchOnly = 1 << 0,
+        CaseInsensitive = 1 << 1,
+        MatchAtStart = 1 << 2,
+    };
+
     virtual ~Model();
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const = 0;
@@ -70,9 +77,11 @@ public:
     virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const;
     virtual bool is_editable(const ModelIndex&) const { return false; }
+    virtual bool is_searchable() const { return false; }
     virtual void set_data(const ModelIndex&, const Variant&) { }
     virtual int tree_column() const { return 0; }
     virtual bool accepts_drag(const ModelIndex&, const StringView& data_type);
+    virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) { return {}; }
 
     virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
     virtual void sort([[maybe_unused]] int column, SortOrder) { }
@@ -96,6 +105,14 @@ protected:
 
     void for_each_view(Function<void(AbstractView&)>);
     void did_update(unsigned flags = UpdateFlag::InvalidateAllIndexes);
+
+    static bool string_matches(const StringView& str, const StringView& needle, unsigned flags)
+    {
+        auto case_sensitivity = (flags & CaseInsensitive) ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive;
+        if (flags & MatchAtStart)
+            return str.starts_with(needle, case_sensitivity);
+        return str.contains(needle, case_sensitivity);
+    }
 
     ModelIndex create_index(int row, int column, const void* data = nullptr) const;
 
