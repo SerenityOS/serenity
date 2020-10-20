@@ -119,4 +119,17 @@ ModelIndex FilteringProxyModel::map(const ModelIndex& index) const
     return {};
 }
 
+bool FilteringProxyModel::is_searchable() const
+{
+    return m_model.is_searchable();
+}
+
+Vector<ModelIndex, 1> FilteringProxyModel::matches(const StringView& searching, unsigned flags, const ModelIndex& index)
+{
+    auto found_indexes = m_model.matches(searching, flags, index);
+    for (size_t i = 0; i < found_indexes.size(); i++)
+        found_indexes[i] = map(found_indexes[i]);
+    return found_indexes;
+}
+
 }

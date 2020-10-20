@@ -29,6 +29,7 @@
 #include <AK/Function.h>
 #include <LibGUI/ModelSelection.h>
 #include <LibGUI/ScrollableWidget.h>
+#include <LibGfx/TextElision.h>
 
 namespace GUI {
 
@@ -67,6 +68,11 @@ public:
 
     bool is_editable() const { return m_editable; }
     void set_editable(bool editable) { m_editable = editable; }
+
+    bool is_searching() const { return !m_searching.is_null(); }
+
+    bool is_searchable() const;
+    void set_searchable(bool);
 
     enum EditTrigger {
         None = 0,
@@ -138,13 +144,22 @@ protected:
     virtual void remove_selection(const ModelIndex&);
     virtual void toggle_selection(const ModelIndex&);
 
+    void draw_item_text(Gfx::Painter&, const ModelIndex&, bool, const Gfx::IntRect&, const StringView&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextElision);
+
     virtual void did_scroll() override;
     void set_hovered_index(const ModelIndex&);
     void activate(const ModelIndex&);
     void activate_selected();
     void update_edit_widget_position();
 
+    StringView searching() const { return m_searching; }
+    void cancel_searching();
+    void start_searching_timer();
+    void do_search(String&&);
+    bool is_highlighting_searching(const ModelIndex&) const;
+
     bool m_editable { false };
+    bool m_searchable { true };
     ModelIndex m_edit_index;
     RefPtr<Widget> m_edit_widget;
     Gfx::IntRect m_edit_widget_content_rect;
@@ -154,6 +169,7 @@ protected:
     bool m_might_drag { false };
 
     ModelIndex m_hovered_index;
+    ModelIndex m_highlighted_search_index;
 
     int m_key_column { -1 };
     SortOrder m_sort_order;
@@ -161,6 +177,8 @@ protected:
 private:
     RefPtr<Model> m_model;
     ModelSelection m_selection;
+    String m_searching;
+    RefPtr<Core::Timer> m_searching_timer;
     ModelIndex m_cursor_index;
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };
     bool m_activates_on_selection { false };

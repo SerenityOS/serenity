@@ -127,11 +127,6 @@ void TableView::paint_event(PaintEvent& event)
                             painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
                     }
                 } else {
-                    Color text_color;
-                    if (is_selected_row)
-                        text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
-                    else
-                        text_color = cell_index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
                     if (!is_selected_row) {
                         auto cell_background_color = cell_index.data(ModelRole::BackgroundColor);
                         if (cell_background_color.is_valid())
@@ -139,7 +134,7 @@ void TableView::paint_event(PaintEvent& event)
                     }
 
                     auto text_alignment = cell_index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
-                    painter.draw_text(cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, text_color, Gfx::TextElision::Right);
+                    draw_item_text(painter, cell_index, is_selected_row, cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, Gfx::TextElision::Right);
                 }
             }
 
