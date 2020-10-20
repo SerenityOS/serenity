@@ -45,6 +45,8 @@ struct FunctionNodeParseOptions {
         CheckForFunctionAndName = 1 << 0,
         AllowSuperPropertyLookup = 1 << 1,
         AllowSuperConstructorCall = 1 << 2,
+        IsGetterFunction = 1 << 3,
+        IsSetterFunction = 1 << 4,
     };
 };
 
@@ -56,7 +58,7 @@ public:
 
     template<typename FunctionNodeType>
     NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName);
-    Vector<FunctionNode::Parameter> parse_function_parameters(int& function_length);
+    Vector<FunctionNode::Parameter> parse_function_parameters(int& function_length, u8 parse_options = 0);
 
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();

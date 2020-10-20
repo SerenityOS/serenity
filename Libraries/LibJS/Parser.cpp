@@ -517,15 +517,11 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             u8 parse_options = FunctionNodeParseOptions::AllowSuperPropertyLookup;
             if (!super_class.is_null())
                 parse_options |= FunctionNodeParseOptions::AllowSuperConstructorCall;
+            if (method_kind == ClassMethod::Kind::Getter)
+                parse_options |= FunctionNodeParseOptions::IsGetterFunction;
+            if (method_kind == ClassMethod::Kind::Setter)
+                parse_options |= FunctionNodeParseOptions::IsSetterFunction;
             auto function = parse_function_node<FunctionExpression>(parse_options);
-            auto arg_count = function->parameters().size();
-
-            if (method_kind == ClassMethod::Kind::Getter && arg_count != 0) {
-                syntax_error("Class getter method must have no arguments");
-            } else if (method_kind == ClassMethod::Kind::Setter && arg_count != 1) {
-                syntax_error("Class setter method must have one argument");
-            }
-
             if (is_constructor) {
                 constructor = move(function);
             } else if (!property_key.is_null()) {
@@ -764,26 +760,12 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
         if (match(TokenType::ParenOpen)) {
             ASSERT(property_name);
-            auto function = parse_function_node<FunctionExpression>(FunctionNodeParseOptions::AllowSuperPropertyLookup);
-            auto arg_count = function->parameters().size();
-
-            if (property_type == ObjectProperty::Type::Getter && arg_count != 0) {
-                syntax_error(
-                    "Object getter property must have no arguments",
-                    m_parser_state.m_current_token.line_number(),
-                    m_parser_state.m_current_token.line_column());
-                skip_to_next_property();
-                continue;
-            }
-            if (property_type == ObjectProperty::Type::Setter && arg_count != 1) {
-                syntax_error(
-                    "Object setter property must have one argument",
-                    m_parser_state.m_current_token.line_number(),
-                    m_parser_state.m_current_token.line_column());
-                skip_to_next_property();
-                continue;
-            }
-
+            u8 parse_options = FunctionNodeParseOptions::AllowSuperPropertyLookup;
+            if (property_type == ObjectProperty::Type::Getter)
+                parse_options |= FunctionNodeParseOptions::IsGetterFunction;
+            if (property_type == ObjectProperty::Type::Setter)
+                parse_options |= FunctionNodeParseOptions::IsSetterFunction;
+            auto function = parse_function_node<FunctionExpression>(parse_options);
             properties.append(create_ast_node<ObjectProperty>(*property_name, function, property_type, true));
         } else if (match(TokenType::Colon)) {
             if (!property_name) {
@@ -1256,6 +1238,8 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
 template<typename FunctionNodeType>
 NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 {
+    ASSERT(!(parse_options & FunctionNodeParseOptions::IsGetterFunction && parse_options & FunctionNodeParseOptions::IsSetterFunction));
+
     TemporaryChange super_property_access_rollback(m_parser_state.m_allow_super_property_lookup, !!(parse_options & FunctionNodeParseOptions::AllowSuperPropertyLookup));
     TemporaryChange super_constructor_call_rollback(m_parser_state.m_allow_super_constructor_call, !!(parse_options & FunctionNodeParseOptions::AllowSuperConstructorCall));
 
@@ -1269,7 +1253,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     }
     consume(TokenType::ParenOpen);
     i32 function_length = -1;
-    auto parameters = parse_function_parameters(function_length);
+    auto parameters = parse_function_parameters(function_length, parse_options);
     consume(TokenType::ParenClose);
 
     if (function_length == -1)
@@ -1288,10 +1272,14 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     return create_ast_node<FunctionNodeType>(name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(), is_strict);
 }
 
-Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_length)
+Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_length, u8 parse_options)
 {
     Vector<FunctionNode::Parameter> parameters;
     while (match(TokenType::Identifier) || match(TokenType::TripleDot)) {
+        if (parse_options & FunctionNodeParseOptions::IsGetterFunction)
+            syntax_error("Getter function must have no arguments");
+        if (parse_options & FunctionNodeParseOptions::IsSetterFunction && parameters.size() >= 1)
+            syntax_error("Setter function must have one argument");
         if (match(TokenType::TripleDot)) {
             consume();
             auto parameter_name = consume(TokenType::Identifier).value();
@@ -1311,6 +1299,8 @@ Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_
             break;
         consume(TokenType::Comma);
     }
+    if (parse_options & FunctionNodeParseOptions::IsSetterFunction && parameters.is_empty())
+        syntax_error("Setter function must have one argument");
     return parameters;
 }
 
