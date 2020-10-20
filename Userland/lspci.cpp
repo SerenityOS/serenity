@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
     auto db = PCIDB::Database::open();
     if (!db)
-        fprintf(stderr, "Couldn't open PCI ID database\n");
+        warnln("Couldn't open PCI ID database");
 
     auto proc_pci = Core::File::construct("/proc/pci");
     if (!proc_pci->open(Core::IODevice::ReadOnly)) {
@@ -99,10 +99,7 @@ int main(int argc, char** argv)
         if (class_name.is_empty())
             class_name = String::format("%04x", class_id);
 
-        printf("%04x:%02x:%02x.%d %s: %s %s (rev %02x)\n",
-            seg, bus, slot, function,
-            class_name.characters(), vendor_name.characters(),
-            device_name.characters(), revision_id);
+        outln("{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})", seg, bus, slot, function, class_name, vendor_name, device_name, revision_id);
     });
 
     return 0;

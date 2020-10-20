@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LogStream.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
@@ -50,11 +51,11 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
         } else {
             root_indent_string = "";
         }
-        printf("%s|-- ", root_indent_string.characters());
+        new_out("{}|-- ", root_indent_string);
     }
 
     String root_dir_name = AK::LexicalPath(root_path).basename();
-    printf("\033[34;1m%s\033[0m\n", root_dir_name.characters());
+    new_out("\033[34;1m{}\033[0m\n", root_dir_name);
 
     if (depth >= max_depth) {
         return;
@@ -62,7 +63,7 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
 
     Core::DirIterator di(root_path, flag_show_hidden_files ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        fprintf(stderr, "%s: %s\n", root_path.characters(), di.error_string());
+        warnln("{}: {}", root_path, di.error_string());
         return;
     }
 
@@ -70,7 +71,7 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
     while (di.has_next()) {
         String name = di.next_path();
         if (di.has_error()) {
-            fprintf(stderr, "%s: %s\n", root_path.characters(), di.error_string());
+            warnln("{}: {}", root_path, di.error_string());
             continue;
         }
         names.append(name);
@@ -92,7 +93,7 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
         struct stat st;
         int rc = lstat(full_path.characters(), &st);
         if (rc == -1) {
-            fprintf(stderr, "lstat(%s) failed: %s\n", full_path.characters(), strerror(errno));
+            warnln("lstat({}) failed: {}", full_path, strerror(errno));
             continue;
         }
 
@@ -102,16 +103,16 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
             bool at_last_entry = i == names.size() - 1;
             String new_indent_string;
             if (at_last_entry) {
-                new_indent_string = String::format("%s    ", indent_string.characters());
+                new_indent_string = String::formatted("{}    ", indent_string);
             } else {
-                new_indent_string = String::format("%s|   ", indent_string.characters());
+                new_indent_string = String::formatted("{}|   ", indent_string);
             }
 
             print_directory_tree(full_path.characters(), depth + 1, new_indent_string);
         } else if (!flag_show_only_directories) {
             g_files_seen++;
 
-            printf("%s|-- %s\n", indent_string.characters(), name.characters());
+            outln("{}|-- {}", indent_string, name);
         }
     }
 }
@@ -133,21 +134,21 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (max_depth < 1) {
-        fprintf(stderr, "%s: Invalid level, must be greater than 0.\n", argv[0]);
+        warnln("{}: Invalid level, must be greater than 0.", argv[0]);
         return 1;
     }
 
     if (directories.is_empty()) {
         print_directory_tree(".", 0, "");
-        printf("\n");
+        puts("");
     } else {
         for (const char* directory : directories) {
             print_directory_tree(directory, 0, "");
-            printf("\n");
+            puts("");
         }
     }
 
-    printf("%d directories, %d files\n", g_directories_seen, g_files_seen);
+    outln("{} directories, {} files", g_directories_seen, g_files_seen);
 
     return 0;
 }
