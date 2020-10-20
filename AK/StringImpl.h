@@ -116,7 +116,7 @@ private:
     char m_inline_buffer[0];
 };
 
-inline constexpr u32 string_hash(const char* characters, size_t length)
+constexpr u32 string_hash(const char* characters, size_t length)
 {
     u32 hash = 0;
     for (size_t i = 0; i < length; ++i) {
