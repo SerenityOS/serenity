@@ -24,8 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibGfx/FloatPoint.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/Point.h>
 #include <LibTTF/Glyf.h>
 
 namespace TTF {
@@ -211,8 +211,8 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
 
 Rasterizer::Rasterizer(Gfx::IntSize size)
     : m_size(size)
-    , m_data(m_size.width() * m_size.height())
 {
+    m_data.resize(m_size.width() * m_size.height());
     for (int i = 0; i < m_size.width() * m_size.height(); i++) {
         m_data[i] = 0.0;
     }
@@ -250,10 +250,18 @@ RefPtr<Gfx::Bitmap> Rasterizer::accumulate()
 void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
 {
     // FIXME: Shift x and y according to dy/dx
-    if (p0.x() < 0.0) { p0.set_x(roundf(p0.x())); }
-    if (p0.y() < 0.0) { p0.set_y(roundf(p0.y())); }
-    if (p1.x() < 0.0) { p1.set_x(roundf(p1.x())); }
-    if (p1.y() < 0.0) { p1.set_y(roundf(p1.y())); }
+    if (p0.x() < 0.0) {
+        p0.set_x(roundf(p0.x()));
+    }
+    if (p0.y() < 0.0) {
+        p0.set_y(roundf(p0.y()));
+    }
+    if (p1.x() < 0.0) {
+        p1.set_x(roundf(p1.x()));
+    }
+    if (p1.y() < 0.0) {
+        p1.set_y(roundf(p1.y()));
+    }
 
     ASSERT(p0.x() >= 0.0 && p0.y() >= 0.0 && p0.x() <= m_size.width() && p0.y() <= m_size.height());
     ASSERT(p1.x() >= 0.0 && p1.y() >= 0.0 && p1.x() <= m_size.width() && p1.y() <= m_size.height());
@@ -436,7 +444,7 @@ void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& aff
                     if (next_item.on_curve) {
                         path.quadratic_bezier_curve_to(item.point, next_item.point);
                     } else {
-                        auto mid_point = Gfx::FloatPoint::interpolate(item.point, next_item.point, 0.5);
+                        auto mid_point = (item.point + next_item.point) * 0.5f;
                         path.quadratic_bezier_curve_to(item.point, mid_point);
                         last_offcurve_point = next_item.point;
                     }
@@ -462,7 +470,7 @@ void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& aff
                 if (item.on_curve) {
                     path.quadratic_bezier_curve_to(point0, item.point);
                 } else {
-                    auto mid_point = Gfx::FloatPoint::interpolate(point0, item.point, 0.5);
+                    auto mid_point = (point0 + item.point) * 0.5f;
                     path.quadratic_bezier_curve_to(point0, mid_point);
                     last_offcurve_point = item.point;
                 }
@@ -494,7 +502,8 @@ Glyf::Glyph Glyf::glyph(u32 offset) const
     i16 ymin = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMin));
     i16 xmax = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::XMax));
     i16 ymax = be_i16(m_slice.offset_pointer(offset + (u32)Offsets::YMax));
-    auto slice = ByteBuffer::wrap(m_slice.offset_pointer(offset + (u32)Sizes::GlyphHeader), m_slice.size() - offset - (u32)Sizes::GlyphHeader);
+    // HACK: added const_cast because of new wrap behavior
+    auto slice = ByteBuffer::wrap(const_cast<u8*>(m_slice.offset_pointer(offset + (u32)Sizes::GlyphHeader)), m_slice.size() - offset - (u32)Sizes::GlyphHeader);
     return Glyph(slice, xmin, ymin, xmax, ymax, num_contours);
 }
 

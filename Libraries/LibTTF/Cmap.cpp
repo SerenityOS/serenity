@@ -36,33 +36,48 @@ extern i16 be_i16(const u8* ptr);
 Cmap::Subtable::Platform Cmap::Subtable::platform_id() const
 {
     switch (m_raw_platform_id) {
-    case 0:  return Platform::Unicode;
-    case 1:  return Platform::Macintosh;
-    case 3:  return Platform::Windows;
-    case 4:  return Platform::Custom;
-    default: ASSERT_NOT_REACHED();
+    case 0:
+        return Platform::Unicode;
+    case 1:
+        return Platform::Macintosh;
+    case 3:
+        return Platform::Windows;
+    case 4:
+        return Platform::Custom;
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
 
 Cmap::Subtable::Format Cmap::Subtable::format() const
 {
     switch (be_u16(m_slice.offset_pointer(0))) {
-        case 0:  return Format::ByteEncoding;
-        case 2:  return Format::HighByte;
-        case 4:  return Format::SegmentToDelta;
-        case 6:  return Format::TrimmedTable;
-        case 8:  return Format::Mixed16And32;
-        case 10: return Format::TrimmedArray;
-        case 12: return Format::SegmentedCoverage;
-        case 13: return Format::ManyToOneRange;
-        case 14: return Format::UnicodeVariationSequences;
-        default: ASSERT_NOT_REACHED();
+    case 0:
+        return Format::ByteEncoding;
+    case 2:
+        return Format::HighByte;
+    case 4:
+        return Format::SegmentToDelta;
+    case 6:
+        return Format::TrimmedTable;
+    case 8:
+        return Format::Mixed16And32;
+    case 10:
+        return Format::TrimmedArray;
+    case 12:
+        return Format::SegmentedCoverage;
+    case 13:
+        return Format::ManyToOneRange;
+    case 14:
+        return Format::UnicodeVariationSequences;
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
 
 u32 Cmap::num_subtables() const
 {
-    return be_u16(m_slice.offset_pointer((u32) Offsets::NumTables));
+    return be_u16(m_slice.offset_pointer((u32)Offsets::NumTables));
 }
 
 Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
@@ -70,12 +85,13 @@ Optional<Cmap::Subtable> Cmap::subtable(u32 index) const
     if (index >= num_subtables()) {
         return {};
     }
-    u32 record_offset = (u32) Sizes::TableHeader + index * (u32) Sizes::EncodingRecord;
+    u32 record_offset = (u32)Sizes::TableHeader + index * (u32)Sizes::EncodingRecord;
     u16 platform_id = be_u16(m_slice.offset_pointer(record_offset));
-    u16 encoding_id = be_u16(m_slice.offset_pointer(record_offset + (u32) Offsets::EncodingRecord_EncodingID));
-    u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + (u32) Offsets::EncodingRecord_Offset));
+    u16 encoding_id = be_u16(m_slice.offset_pointer(record_offset + (u32)Offsets::EncodingRecord_EncodingID));
+    u32 subtable_offset = be_u32(m_slice.offset_pointer(record_offset + (u32)Offsets::EncodingRecord_Offset));
     ASSERT(subtable_offset < m_slice.size());
-    auto subtable_slice = ByteBuffer::wrap(m_slice.offset_pointer(subtable_offset), m_slice.size() - subtable_offset);
+    // HACK: added const_cast because of new ByteBuffer::wrap behavior, should probably find another workaround
+    auto subtable_slice = ByteBuffer::wrap(const_cast<u8*>(m_slice.offset_pointer(subtable_offset)), m_slice.size() - subtable_offset);
     return Subtable(subtable_slice, platform_id, encoding_id);
 }
 
@@ -94,25 +110,25 @@ u32 Cmap::Subtable::glyph_id_for_codepoint(u32 codepoint) const
 
 u32 Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
 {
-    u32 segcount_x2 = be_u16(m_slice.offset_pointer((u32) Table4Offsets::SegCountX2));
-    if (m_slice.size() < segcount_x2 * (u32) Table4Sizes::NonConstMultiplier + (u32) Table4Sizes::Constant) {
+    u32 segcount_x2 = be_u16(m_slice.offset_pointer((u32)Table4Offsets::SegCountX2));
+    if (m_slice.size() < segcount_x2 * (u32)Table4Sizes::NonConstMultiplier + (u32)Table4Sizes::Constant) {
         return 0;
     }
     for (u32 offset = 0; offset < segcount_x2; offset += 2) {
-        u32 end_codepoint = be_u16(m_slice.offset_pointer((u32) Table4Offsets::EndConstBase + offset));
+        u32 end_codepoint = be_u16(m_slice.offset_pointer((u32)Table4Offsets::EndConstBase + offset));
         if (codepoint > end_codepoint) {
             continue;
         }
-        u32 start_codepoint = be_u16(m_slice.offset_pointer((u32) Table4Offsets::StartConstBase + segcount_x2 + offset));
+        u32 start_codepoint = be_u16(m_slice.offset_pointer((u32)Table4Offsets::StartConstBase + segcount_x2 + offset));
         if (codepoint < start_codepoint) {
             break;
         }
-        u32 delta = be_u16(m_slice.offset_pointer((u32) Table4Offsets::DeltaConstBase + segcount_x2 * 2 + offset));
-        u32 range = be_u16(m_slice.offset_pointer((u32) Table4Offsets::RangeConstBase + segcount_x2 * 3 + offset));
+        u32 delta = be_u16(m_slice.offset_pointer((u32)Table4Offsets::DeltaConstBase + segcount_x2 * 2 + offset));
+        u32 range = be_u16(m_slice.offset_pointer((u32)Table4Offsets::RangeConstBase + segcount_x2 * 3 + offset));
         if (range == 0) {
             return (codepoint + delta) & 0xffff;
         }
-        u32 glyph_offset = (u32) Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (codepoint - start_codepoint) * 2;
+        u32 glyph_offset = (u32)Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (codepoint - start_codepoint) * 2;
         ASSERT(glyph_offset + 2 <= m_slice.size());
         return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
     }
@@ -121,18 +137,18 @@ u32 Cmap::Subtable::glyph_id_for_codepoint_table_4(u32 codepoint) const
 
 u32 Cmap::Subtable::glyph_id_for_codepoint_table_12(u32 codepoint) const
 {
-    u32 num_groups = be_u32(m_slice.offset_pointer((u32) Table12Offsets::NumGroups));
-    ASSERT(m_slice.size() >= (u32) Table12Sizes::Header + (u32) Table12Sizes::Record * num_groups);
-    for (u32 offset = 0; offset < num_groups * (u32) Table12Sizes::Record; offset += (u32) Table12Sizes::Record) {
-        u32 start_codepoint = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_StartCode + offset));
+    u32 num_groups = be_u32(m_slice.offset_pointer((u32)Table12Offsets::NumGroups));
+    ASSERT(m_slice.size() >= (u32)Table12Sizes::Header + (u32)Table12Sizes::Record * num_groups);
+    for (u32 offset = 0; offset < num_groups * (u32)Table12Sizes::Record; offset += (u32)Table12Sizes::Record) {
+        u32 start_codepoint = be_u32(m_slice.offset_pointer((u32)Table12Offsets::Record_StartCode + offset));
         if (codepoint < start_codepoint) {
             break;
         }
-        u32 end_codepoint = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_EndCode + offset));
+        u32 end_codepoint = be_u32(m_slice.offset_pointer((u32)Table12Offsets::Record_EndCode + offset));
         if (codepoint > end_codepoint) {
             continue;
         }
-        u32 glyph_offset = be_u32(m_slice.offset_pointer((u32) Table12Offsets::Record_StartGlyph + offset));
+        u32 glyph_offset = be_u32(m_slice.offset_pointer((u32)Table12Offsets::Record_StartGlyph + offset));
         return codepoint - start_codepoint + glyph_offset;
     }
     return 0;
@@ -150,7 +166,7 @@ u32 Cmap::glyph_id_for_codepoint(u32 codepoint) const
 
 Optional<Cmap> Cmap::from_slice(const ByteBuffer& slice)
 {
-    if (slice.size() < (size_t) Sizes::TableHeader) {
+    if (slice.size() < (size_t)Sizes::TableHeader) {
         return {};
     }
     return Cmap(slice);
