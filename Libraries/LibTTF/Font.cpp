@@ -38,6 +38,12 @@
 
 namespace TTF {
 
+u16 be_u16(const u8* ptr);
+u32 be_u32(const u8* ptr);
+i16 be_i16(const u8* ptr);
+float be_fword(const u8* ptr);
+u32 tag_from_str(const char* str);
+
 u16 be_u16(const u8* ptr)
 {
     return (((u16)ptr[0]) << 8) | ((u16)ptr[1]);
@@ -105,9 +111,12 @@ IndexToLocFormat Head::index_to_loc_format() const
 {
     i16 raw = be_i16(m_slice.offset_pointer((u32)Offsets::IndexToLocFormat));
     switch (raw) {
-    case 0:  return IndexToLocFormat::Offset16;
-    case 1:  return IndexToLocFormat::Offset32;
-    default: ASSERT_NOT_REACHED();
+    case 0:
+        return IndexToLocFormat::Offset16;
+    case 1:
+        return IndexToLocFormat::Offset32;
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
 
@@ -428,7 +437,7 @@ int ScaledFont::width(const Utf32View& utf32) const
 {
     int width = 0;
     for (size_t i = 0; i < utf32.length(); i++) {
-        u32 glyph_id = glyph_id_for_codepoint(utf32.codepoints()[i]);
+        u32 glyph_id = glyph_id_for_codepoint(utf32.code_points()[i]);
         auto metrics = glyph_metrics(glyph_id);
         width += metrics.advance_width;
     }
