@@ -61,9 +61,9 @@ static void handle_sigint(int)
 static void print_function_call(String function_name, size_t depth)
 {
     for (size_t i = 0; i < depth; ++i) {
-        printf("  ");
+        new_out("  ");
     }
-    printf("=> %s\n", function_name.characters());
+    outln("=> {}", function_name);
 }
 
 static void print_syscall(PtraceRegisters& regs, size_t depth)
@@ -73,10 +73,9 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
     }
     const char* begin_color = g_should_output_color ? "\033[34;1m" : "";
     const char* end_color = g_should_output_color ? "\033[0m" : "";
-    printf("=> %sSC_%s(0x%x, 0x%x, 0x%x)%s\n",
+    outln("=> {}SC_{}(0x{:x}, 0x{:x}, 0x{:x}){}",
         begin_color,
-        Syscall::to_string(
-            (Syscall::Function)regs.eax),
+        Syscall::to_string((Syscall::Function)regs.eax),
         regs.edx,
         regs.ecx,
         regs.ebx,
@@ -128,7 +127,7 @@ int main(int argc, char** argv)
 
     auto result = Debug::DebugSession::exec_and_attach(command);
     if (!result) {
-        fprintf(stderr, "Failed to start debugging session for: \"%s\"\n", command);
+        warnln("Failed to start debugging session for: \"{}\"", command);
         exit(1);
     }
     g_debug_session = result.release_nonnull();
@@ -145,7 +144,7 @@ int main(int argc, char** argv)
 
     g_debug_session->run([&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
-            printf("Program exited.\n");
+            outln("Program exited.");
             return Debug::DebugSession::DebugDecision::Detach;
         }
 
