@@ -104,7 +104,7 @@ struct TypeBoundsChecker<Destination, Source, true, true, false> {
 };
 
 template<typename Destination, typename Source>
-inline constexpr bool is_within_range(Source value)
+constexpr bool is_within_range(Source value)
 {
     return TypeBoundsChecker<Destination, Source>::is_within_range(value);
 }
@@ -289,7 +289,7 @@ constexpr Checked<T> operator*(const Checked<T>& a, const Checked<T>& b)
 }
 
 template<typename T>
-constexpr inline Checked<T> operator/(const Checked<T>& a, const Checked<T>& b)
+constexpr Checked<T> operator/(const Checked<T>& a, const Checked<T>& b)
 {
     Checked<T> c { a };
     c.div(b.value());

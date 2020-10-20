@@ -205,7 +205,7 @@ enum Function {
         __Count
 };
 
-inline constexpr const char* to_string(Function function)
+constexpr const char* to_string(Function function)
 {
     switch (function) {
 #undef __ENUMERATE_SYSCALL

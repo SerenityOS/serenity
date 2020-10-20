@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-inline constexpr unsigned encoded_device(unsigned major, unsigned minor)
+constexpr unsigned encoded_device(unsigned major, unsigned minor)
 {
     return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
 }

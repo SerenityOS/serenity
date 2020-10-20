@@ -27,37 +27,37 @@
 #include <AK/Types.h>
 #include <LibCrypto/Hash/MD5.h>
 
-static constexpr inline u32 F(u32 x, u32 y, u32 z) { return (x & y) | ((~x) & z); };
-static constexpr inline u32 G(u32 x, u32 y, u32 z) { return (x & z) | ((~z) & y); };
-static constexpr inline u32 H(u32 x, u32 y, u32 z) { return x ^ y ^ z; };
-static constexpr inline u32 I(u32 x, u32 y, u32 z) { return y ^ (x | ~z); };
-static constexpr inline u32 ROTATE_LEFT(u32 x, size_t n)
+static constexpr u32 F(u32 x, u32 y, u32 z) { return (x & y) | ((~x) & z); };
+static constexpr u32 G(u32 x, u32 y, u32 z) { return (x & z) | ((~z) & y); };
+static constexpr u32 H(u32 x, u32 y, u32 z) { return x ^ y ^ z; };
+static constexpr u32 I(u32 x, u32 y, u32 z) { return y ^ (x | ~z); };
+static constexpr u32 ROTATE_LEFT(u32 x, size_t n)
 {
     return (x << n) | (x >> (32 - n));
 }
 
-static constexpr inline void round_1(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
+static constexpr void round_1(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
 {
     a += F(b, c, d) + x + ac;
     a = ROTATE_LEFT(a, s);
     a += b;
 }
 
-static constexpr inline void round_2(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
+static constexpr void round_2(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
 {
     a += G(b, c, d) + x + ac;
     a = ROTATE_LEFT(a, s);
     a += b;
 }
 
-static constexpr inline void round_3(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
+static constexpr void round_3(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
 {
     a += H(b, c, d) + x + ac;
     a = ROTATE_LEFT(a, s);
     a += b;
 }
 
-static constexpr inline void round_4(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
+static constexpr void round_4(u32& a, u32 b, u32 c, u32 d, u32 x, u32 s, u32 ac)
 {
     a += I(b, c, d) + x + ac;
     a = ROTATE_LEFT(a, s);
