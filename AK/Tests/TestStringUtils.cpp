@@ -175,4 +175,23 @@ TEST_CASE(starts_with)
     EXPECT(!AK::StringUtils::starts_with(test_string, "abc", CaseSensitivity::CaseSensitive));
 }
 
+TEST_CASE(contains)
+{
+    String test_string = "ABCDEFABCXYZ";
+    EXPECT(AK::StringUtils::contains(test_string, "ABC", CaseSensitivity::CaseSensitive));
+    EXPECT(AK::StringUtils::contains(test_string, "ABC", CaseSensitivity::CaseInsensitive));
+    EXPECT(AK::StringUtils::contains(test_string, "AbC", CaseSensitivity::CaseInsensitive));
+    EXPECT(AK::StringUtils::contains(test_string, "BCX", CaseSensitivity::CaseSensitive));
+    EXPECT(AK::StringUtils::contains(test_string, "BCX", CaseSensitivity::CaseInsensitive));
+    EXPECT(AK::StringUtils::contains(test_string, "BcX", CaseSensitivity::CaseInsensitive));
+    EXPECT(!AK::StringUtils::contains(test_string, "EFG", CaseSensitivity::CaseSensitive));
+    EXPECT(!AK::StringUtils::contains(test_string, "EfG", CaseSensitivity::CaseInsensitive));
+    EXPECT(AK::StringUtils::contains(test_string, "", CaseSensitivity::CaseSensitive));
+    EXPECT(AK::StringUtils::contains(test_string, "", CaseSensitivity::CaseInsensitive));
+    EXPECT(!AK::StringUtils::contains("", test_string, CaseSensitivity::CaseSensitive));
+    EXPECT(!AK::StringUtils::contains("", test_string, CaseSensitivity::CaseInsensitive));
+    EXPECT(!AK::StringUtils::contains(test_string, "L", CaseSensitivity::CaseSensitive));
+    EXPECT(!AK::StringUtils::contains(test_string, "L", CaseSensitivity::CaseInsensitive));
+}
+
 TEST_MAIN(StringUtils)

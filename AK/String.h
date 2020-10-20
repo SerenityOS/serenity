@@ -128,7 +128,7 @@ public:
 
     bool equals_ignoring_case(const StringView&) const;
 
-    bool contains(const String&) const;
+    bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     Optional<size_t> index_of(const String&, size_t start = 0) const;
 
     Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;

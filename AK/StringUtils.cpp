@@ -227,6 +227,34 @@ bool starts_with(const StringView& str, const StringView& start, CaseSensitivity
     return true;
 }
 
+bool contains(const StringView& str, const StringView& needle, CaseSensitivity case_sensitivity)
+{
+    if (str.is_null() || needle.is_null() || str.is_empty() || needle.length() > str.length())
+        return false;
+    if (needle.is_empty())
+        return true;
+    auto str_chars = str.characters_without_null_termination();
+    auto needle_chars = needle.characters_without_null_termination();
+    if (case_sensitivity == CaseSensitivity::CaseSensitive)
+        return memmem(str_chars, str.length(), needle_chars, needle.length()) != nullptr;
+
+    auto needle_first = to_lowercase(needle_chars[0]);
+    size_t slen = str.length() - needle.length();
+    for (size_t si = 0; si < slen; si++) {
+        if (to_lowercase(str_chars[si]) != needle_first)
+            continue;
+        size_t ni = 1;
+        while (ni < needle.length()) {
+            if (to_lowercase(str_chars[si + ni]) != to_lowercase(needle_chars[ni]))
+                break;
+            ni++;
+        }
+        if (ni == needle.length())
+            return true;
+    }
+    return false;
+}
+
 StringView trim_whitespace(const StringView& str, TrimMode mode)
 {
     auto is_whitespace_character = [](char ch) -> bool {

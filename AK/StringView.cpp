@@ -178,9 +178,9 @@ bool StringView::contains(char needle) const
     return false;
 }
 
-bool StringView::contains(const StringView& needle) const
+bool StringView::contains(const StringView& needle, CaseSensitivity case_sensitivity) const
 {
-    return memmem(m_characters, m_length, needle.m_characters, needle.m_length) != nullptr;
+    return StringUtils::contains(*this, needle, case_sensitivity);
 }
 
 bool StringView::equals_ignoring_case(const StringView& other) const
