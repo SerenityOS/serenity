@@ -117,7 +117,7 @@ public:
     {
     }
 
-    Gfx::IntPoint position() const { return m_position; }
+    const Gfx::IntPoint& position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
@@ -150,7 +150,7 @@ public:
     {
     }
 
-    Gfx::IntRect rect() const { return m_rect; }
+    const Gfx::IntRect& rect() const { return m_rect; }
 
 private:
     Gfx::IntRect m_rect;
