@@ -1278,7 +1278,7 @@ Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_
     while (match(TokenType::Identifier) || match(TokenType::TripleDot)) {
         if (parse_options & FunctionNodeParseOptions::IsGetterFunction)
             syntax_error("Getter function must have no arguments");
-        if (parse_options & FunctionNodeParseOptions::IsSetterFunction && parameters.size() >= 1)
+        if (parse_options & FunctionNodeParseOptions::IsSetterFunction && (parameters.size() >= 1 || match(TokenType::TripleDot)))
             syntax_error("Setter function must have one argument");
         if (match(TokenType::TripleDot)) {
             consume();
