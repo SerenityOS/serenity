@@ -76,7 +76,7 @@ int inet_pton(int af, const char* src, void* dst)
 
 in_addr_t inet_addr(const char* str)
 {
-    in_addr_t tmp;
+    in_addr_t tmp {};
     int rc = inet_pton(AF_INET, str, &tmp);
     if (rc < 0)
         return INADDR_NONE;
