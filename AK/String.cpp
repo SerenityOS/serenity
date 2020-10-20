@@ -275,11 +275,9 @@ bool String::matches(const StringView& mask, CaseSensitivity case_sensitivity) c
     return StringUtils::matches(*this, mask, case_sensitivity);
 }
 
-bool String::contains(const String& needle) const
+bool String::contains(const StringView& needle, CaseSensitivity case_sensitivity) const
 {
-    if (is_null() || needle.is_null())
-        return false;
-    return strstr(characters(), needle.characters());
+    return StringUtils::contains(*this, needle, case_sensitivity);
 }
 
 Optional<size_t> String::index_of(const String& needle, size_t start) const
