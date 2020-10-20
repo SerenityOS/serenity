@@ -1295,7 +1295,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
 
     switch (m_descriptor->format) {
     case OP_RM8_imm8:
-      append_mnemonic_space();
+        append_mnemonic_space();
         append_rm8();
         append(", ");
         append_imm8();
