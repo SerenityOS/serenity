@@ -32,14 +32,73 @@
 
 namespace AK {
 
+class Utf32View;
+
+class Utf32CodepointIterator {
+    friend class Utf32View;
+
+public:
+    Utf32CodepointIterator() { }
+    ~Utf32CodepointIterator() { }
+
+    bool operator==(const Utf32CodepointIterator& other) const
+    {
+        return m_ptr == other.m_ptr && m_length == other.m_length;
+    }
+    bool operator!=(const Utf32CodepointIterator& other) const
+    {
+        return !(*this == other);
+    }
+    Utf32CodepointIterator& operator++()
+    {
+        ASSERT(m_length > 0);
+        m_ptr++;
+        m_length--;
+        return *this;
+    }
+    ssize_t operator-(const Utf32CodepointIterator& other) const
+    {
+        return m_ptr - other.m_ptr;
+    }
+    u32 operator*() const
+    {
+        ASSERT(m_length > 0);
+        return *m_ptr;
+    }
+
+    constexpr int code_point_length_in_bytes() const { return sizeof(u32); }
+    bool done() const { return !m_length; }
+
+private:
+    Utf32CodepointIterator(const u32* ptr, size_t length)
+        : m_ptr(ptr)
+        , m_length((ssize_t)length)
+    {
+    }
+    const u32* m_ptr { nullptr };
+    ssize_t m_length { -1 };
+};
+
 class Utf32View {
 public:
+    typedef Utf32CodepointIterator Iterator;
+
     Utf32View() { }
     Utf32View(const u32* code_points, size_t length)
         : m_code_points(code_points)
         , m_length(length)
     {
         ASSERT(code_points || length == 0);
+    }
+
+    Utf32CodepointIterator begin() const
+    {
+        return { begin_ptr(), m_length };
+    }
+
+    Utf32CodepointIterator end() const
+    {
+        return { end_ptr(), 0 };
     }
 
     const u32* code_points() const { return m_code_points; }
@@ -57,6 +116,15 @@ public:
     }
 
 private:
+    const u32* begin_ptr() const
+    {
+        return m_code_points;
+    }
+    const u32* end_ptr() const
+    {
+        return m_code_points + m_length;
+    }
+
     const u32* m_code_points { nullptr };
     size_t m_length { 0 };
 };

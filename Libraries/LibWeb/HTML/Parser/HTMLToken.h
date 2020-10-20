@@ -77,7 +77,7 @@ public:
     {
         ASSERT(is_character());
         Utf8View view(m_comment_or_character.data.string_view());
-        ASSERT(view.length_in_code_points() == 1);
+        ASSERT(view.length() == 1);
         return *view.begin();
     }
 
