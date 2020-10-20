@@ -135,7 +135,7 @@ bool Utf8View::validate(size_t& valid_bytes) const
     return true;
 }
 
-size_t Utf8View::length_in_code_points() const
+size_t Utf8View::calculate_length() const
 {
     size_t length = 0;
     for (auto code_point : *this) {
