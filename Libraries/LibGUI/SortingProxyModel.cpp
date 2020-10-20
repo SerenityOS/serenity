@@ -295,4 +295,17 @@ void SortingProxyModel::set_data(const ModelIndex& proxy_index, const Variant& d
     source().set_data(map_to_source(proxy_index), data);
 }
 
+bool SortingProxyModel::is_searchable() const
+{
+    return source().is_searchable();
+}
+
+Vector<ModelIndex, 1> SortingProxyModel::matches(const StringView& searching, unsigned flags, const ModelIndex& proxy_index)
+{
+    auto found_indexes = source().matches(searching, flags, map_to_source(proxy_index));
+    for (size_t i = 0; i < found_indexes.size(); i++)
+        found_indexes[i] = map_to_proxy(found_indexes[i]);
+    return found_indexes;
+}
+
 }
