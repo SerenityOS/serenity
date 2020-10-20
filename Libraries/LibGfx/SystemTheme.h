@@ -51,6 +51,8 @@ namespace Gfx {
     C(HighlightWindowTitle)        \
     C(HighlightWindowTitleShadow)  \
     C(HighlightWindowTitleStripes) \
+    C(HighlightSearching)          \
+    C(HighlightSearchingText)      \
     C(HoverHighlight)              \
     C(InactiveSelection)           \
     C(InactiveSelectionText)       \
