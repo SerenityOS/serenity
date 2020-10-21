@@ -47,6 +47,7 @@ private:
     bool consume_hexadecimal_number();
     bool consume_binary_number();
     bool is_eof() const;
+    bool is_line_terminator() const;
     bool is_identifier_start() const;
     bool is_identifier_middle() const;
     bool is_line_comment_start() const;
@@ -61,7 +62,7 @@ private:
     StringView m_source;
     size_t m_position { 0 };
     Token m_current_token;
-    int m_current_char { 0 };
+    char m_current_char { 0 };
     size_t m_line_number { 1 };
     size_t m_line_column { 0 };
 
