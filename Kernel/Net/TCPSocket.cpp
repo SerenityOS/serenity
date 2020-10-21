@@ -368,6 +368,8 @@ KResult TCPSocket::protocol_listen()
 
 KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock should_block)
 {
+    Locker locker(lock());
+
     auto routing_decision = route_to(peer_address(), local_address());
     if (routing_decision.is_zero())
         return KResult(-EHOSTUNREACH);
@@ -388,8 +390,10 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_direction = Direction::Outgoing;
 
     if (should_block == ShouldBlock::Yes) {
+        locker.unlock();
         if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description).was_interrupted())
             return KResult(-EINTR);
+        locker.lock();
         ASSERT(setup_state() == SetupState::Completed);
         if (has_error()) {
             m_role = Role::None;
@@ -458,6 +462,7 @@ void TCPSocket::shut_down_for_writing()
 
 KResult TCPSocket::close()
 {
+    Locker socket_locker(lock());
     auto result = IPv4Socket::close();
     if (state() == State::CloseWait) {
 #ifdef TCP_SOCKET_DEBUG

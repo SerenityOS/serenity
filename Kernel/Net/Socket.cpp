@@ -244,6 +244,7 @@ KResultOr<size_t> Socket::write(FileDescription& description, size_t, const User
 
 KResult Socket::shutdown(int how)
 {
+    LOCKER(lock());
     if (type() == SOCK_STREAM && !is_connected())
         return KResult(-ENOTCONN);
     if (m_role == Role::Listener)
