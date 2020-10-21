@@ -28,12 +28,10 @@
 
 #include <AK/Array.h>
 
-// FIXME: Use Span<const int> as soon as Span has all the constexpr stuff too.
-template<size_t Size>
-static constexpr int constexpr_sum(const Array<int, Size>& array)
+static constexpr int constexpr_sum(const Span<const int> span)
 {
     int sum = 0;
-    for (auto value : array)
+    for (auto value : span)
         sum += value;
 
     return sum;
