@@ -30,10 +30,21 @@
 #include <LibCore/File.h>
 #include <LibMarkdown/Document.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 int main(int argc, char* argv[])
 {
+    int view_width = 0;
+    if (isatty(STDOUT_FILENO)) {
+        struct winsize ws;
+        if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0)
+            view_width = ws.ws_col;
+    }
+
+    if (view_width == 0)
+        view_width = 80;
+
     if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
@@ -104,6 +115,6 @@ int main(int argc, char* argv[])
     auto document = Markdown::Document::parse(source);
     ASSERT(document);
 
-    String rendered = document->render_for_terminal();
+    String rendered = document->render_for_terminal(view_width);
     printf("%s", rendered.characters());
 }
