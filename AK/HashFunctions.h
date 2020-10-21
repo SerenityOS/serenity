@@ -28,7 +28,7 @@
 
 #include "Types.h"
 
-inline unsigned int_hash(u32 key)
+constexpr unsigned int_hash(u32 key)
 {
     key += ~(key << 15);
     key ^= (key >> 10);
@@ -39,7 +39,7 @@ inline unsigned int_hash(u32 key)
     return key;
 }
 
-inline unsigned double_hash(u32 key)
+constexpr unsigned double_hash(u32 key)
 {
     key = ~key + (key >> 23);
     key ^= (key << 12);
@@ -49,27 +49,27 @@ inline unsigned double_hash(u32 key)
     return key;
 }
 
-inline unsigned pair_int_hash(u32 key1, u32 key2)
+constexpr unsigned pair_int_hash(u32 key1, u32 key2)
 {
     return int_hash((int_hash(key1) * 209) ^ (int_hash(key2 * 413)));
 }
 
-inline unsigned u64_hash(u64 key)
+constexpr unsigned u64_hash(u64 key)
 {
     u32 first = key & 0xFFFFFFFF;
     u32 last = key >> 32;
     return pair_int_hash(first, last);
 }
 
-inline unsigned ptr_hash(FlatPtr ptr)
+constexpr unsigned ptr_hash(FlatPtr ptr)
 {
     if constexpr (sizeof(ptr) == 8)
-        return u64_hash((u64)ptr);
+        return u64_hash(ptr);
     else
-        return int_hash((u32)ptr);
+        return int_hash(ptr);
 }
 
 inline unsigned ptr_hash(const void* ptr)
 {
-    return ptr_hash((FlatPtr)(ptr));
+    return ptr_hash(FlatPtr(ptr));
 }
