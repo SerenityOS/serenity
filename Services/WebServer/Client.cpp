@@ -96,6 +96,8 @@ void Client::handle_request(ByteBuffer raw_request)
     path_builder.append(requested_path);
     auto real_path = path_builder.to_string();
 
+    String forced_mime_type;
+
     if (Core::File::is_directory(real_path)) {
 
         if (!request.resource().ends_with("/")) {
@@ -117,6 +119,7 @@ void Client::handle_request(ByteBuffer raw_request)
             return;
         }
         real_path = index_html_path;
+        forced_mime_type = "text/html";
     }
 
     auto file = Core::File::construct(real_path);
@@ -125,7 +128,13 @@ void Client::handle_request(ByteBuffer raw_request)
         return;
     }
 
-    send_response(file->read_all(), request, Core::guess_mime_type_based_on_filename(request.url()));
+    String mime_type;
+    if (!forced_mime_type.is_null())
+        mime_type = forced_mime_type;
+    else
+        mime_type = Core::guess_mime_type_based_on_filename(request.url());
+
+    send_response(file->read_all(), request, mime_type);
 }
 
 void Client::send_response(StringView response, const HTTP::HttpRequest& request, const String& content_type)
