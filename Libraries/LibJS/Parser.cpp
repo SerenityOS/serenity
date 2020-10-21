@@ -356,7 +356,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     }
     // If there's a newline between the closing paren and arrow it's not a valid arrow function,
     // ASI should kick in instead (it'll then fail with "Unexpected token Arrow")
-    if (m_parser_state.m_current_token.trivia().contains('\n'))
+    if (m_parser_state.m_current_token.trivia_contains_line_terminator())
         return nullptr;
     if (!match(TokenType::Arrow))
         return nullptr;
@@ -1174,7 +1174,7 @@ NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
     consume(TokenType::Return);
 
     // Automatic semicolon insertion: terminate statement when return is followed by newline
-    if (m_parser_state.m_current_token.trivia().contains('\n'))
+    if (m_parser_state.m_current_token.trivia_contains_line_terminator())
         return create_ast_node<ReturnStatement>(nullptr);
 
     if (match_expression()) {
@@ -1356,7 +1356,7 @@ NonnullRefPtr<ThrowStatement> Parser::parse_throw_statement()
     consume(TokenType::Throw);
 
     // Automatic semicolon insertion: terminate statement when throw is followed by newline
-    if (m_parser_state.m_current_token.trivia().contains('\n')) {
+    if (m_parser_state.m_current_token.trivia_contains_line_terminator()) {
         syntax_error("No line break is allowed between 'throw' and its expression");
         return create_ast_node<ThrowStatement>(create_ast_node<ErrorExpression>());
     }
@@ -1373,7 +1373,7 @@ NonnullRefPtr<BreakStatement> Parser::parse_break_statement()
     if (match(TokenType::Semicolon)) {
         consume();
     } else {
-        if (match(TokenType::Identifier) && !m_parser_state.m_current_token.trivia().contains('\n')) {
+        if (match(TokenType::Identifier) && !m_parser_state.m_current_token.trivia_contains_line_terminator()) {
             target_label = consume().value();
             if (!m_parser_state.m_labels_in_scope.contains(target_label))
                 syntax_error(String::formatted("Label '{}' not found", target_label));
@@ -1398,7 +1398,7 @@ NonnullRefPtr<ContinueStatement> Parser::parse_continue_statement()
         consume();
         return create_ast_node<ContinueStatement>(target_label);
     }
-    if (match(TokenType::Identifier) && !m_parser_state.m_current_token.trivia().contains('\n')) {
+    if (match(TokenType::Identifier) && !m_parser_state.m_current_token.trivia_contains_line_terminator()) {
         target_label = consume().value();
         if (!m_parser_state.m_labels_in_scope.contains(target_label))
             syntax_error(String::formatted("Label '{}' not found", target_label));
@@ -1799,7 +1799,7 @@ void Parser::consume_or_insert_semicolon()
     }
     // Insert semicolon if...
     // ...token is preceded by one or more newlines
-    if (m_parser_state.m_current_token.trivia().contains('\n'))
+    if (m_parser_state.m_current_token.trivia_contains_line_terminator())
         return;
     // ...token is a closing curly brace
     if (match(TokenType::CurlyClose))
