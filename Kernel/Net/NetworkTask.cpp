@@ -369,6 +369,8 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
         return;
     }
 
+    LOCKER(socket->lock());
+
     ASSERT(socket->type() == SOCK_STREAM);
     ASSERT(socket->local_port() == tcp_packet.destination_port());
 
@@ -401,6 +403,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const timeval& packet_timestamp)
                 klog() << "handle_tcp: couldn't create client socket";
                 return;
             }
+            LOCKER(client->lock());
 #ifdef TCP_DEBUG
             klog() << "handle_tcp: created new client socket with tuple " << client->tuple().to_string().characters();
 #endif

@@ -131,6 +131,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
 
 KResult IPv4Socket::listen(size_t backlog)
 {
+    LOCKER(lock());
     int rc = allocate_local_port_if_needed();
     if (rc < 0)
         return KResult(-EADDRINUSE);
@@ -203,6 +204,8 @@ int IPv4Socket::allocate_local_port_if_needed()
 
 KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
 {
+    LOCKER(lock());
+
     (void)flags;
     if (addr && addr_length != sizeof(sockaddr_in))
         return KResult(-EINVAL);
