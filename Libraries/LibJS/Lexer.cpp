@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +30,8 @@
 #include <AK/StringBuilder.h>
 #include <ctype.h>
 #include <stdio.h>
+
+//#define LEXER_DEBUG
 
 namespace JS {
 
@@ -152,19 +155,57 @@ Lexer::Lexer(StringView source)
 
 void Lexer::consume()
 {
-    if (m_position > m_source.length())
-        return;
-
-    if (m_position == m_source.length()) {
+    auto did_reach_eof = [this] {
+        if (m_position != m_source.length())
+            return false;
         m_position++;
         m_line_column++;
         m_current_char = EOF;
-        return;
-    }
+        return true;
+    };
 
-    if (m_current_char == '\n') {
-        m_line_number++;
-        m_line_column = 1;
+    if (m_position > m_source.length())
+        return;
+
+    if (did_reach_eof())
+        return;
+
+    if (is_line_terminator()) {
+#ifdef LEXER_DEBUG
+        String type;
+        if (m_current_char == '\n')
+            type = "LINE FEED";
+        else if (m_current_char == '\r')
+            type = "CARRIAGE RETURN";
+        else if (m_source[m_position + 1] == (char)0xa8)
+            type = "LINE SEPARATOR";
+        else
+            type = "PARAGRAPH SEPARATOR";
+        dbg() << "Found a line terminator: " << type;
+#endif
+        // This is a three-char line terminator, we need to increase m_position some more.
+        // We might reach EOF and need to check again.
+        if (m_current_char != '\n' && m_current_char != '\r') {
+            m_position += 2;
+            if (did_reach_eof())
+                return;
+        }
+
+        // If the previous character is \r and the current one \n we already updated line number
+        // and column - don't do it again. From https://tc39.es/ecma262/#sec-line-terminators:
+        //   The sequence <CR><LF> is commonly used as a line terminator.
+        //   It should be considered a single SourceCharacter for the purpose of reporting line numbers.
+        auto second_char_of_crlf = m_position > 1 && m_source[m_position - 2] == '\r' && m_current_char == '\n';
+
+        if (!second_char_of_crlf) {
+            m_line_number++;
+            m_line_column = 1;
+#ifdef LEXER_DEBUG
+            dbg() << "Incremented line number, now at: line " << m_line_number << ", column 1";
+        } else {
+            dbg() << "Previous was CR, this is LF - not incrementing line number again.";
+#endif
+        }
     } else {
         m_line_column++;
     }
@@ -259,6 +300,17 @@ bool Lexer::is_eof() const
     return m_current_char == EOF;
 }
 
+bool Lexer::is_line_terminator() const
+{
+    if (m_current_char == '\n' || m_current_char == '\r')
+        return true;
+    if (m_position + 1 < m_source.length()) {
+        auto three_chars_view = m_source.substring_view(m_position - 1, 3);
+        return (three_chars_view == LINE_SEPARATOR) || (three_chars_view == PARAGRAPH_SEPARATOR);
+    }
+    return false;
+}
+
 bool Lexer::is_identifier_start() const
 {
     return isalpha(m_current_char) || m_current_char == '_' || m_current_char == '$';
@@ -314,15 +366,15 @@ Token Lexer::next()
     if (!in_template || m_template_states.last().in_expr) {
         // consume whitespace and comments
         while (true) {
-            if (isspace(m_current_char)) {
+            if (isspace(m_current_char) || is_line_terminator()) {
                 do {
                     consume();
-                } while (isspace(m_current_char));
+                } while (isspace(m_current_char) || is_line_terminator());
             } else if (is_line_comment_start()) {
                 consume();
                 do {
                     consume();
-                } while (!is_eof() && m_current_char != '\n');
+                } while (!is_eof() && !is_line_terminator());
             } else if (is_block_comment_start()) {
                 consume();
                 do {
@@ -449,7 +501,8 @@ Token Lexer::next()
     } else if (m_current_char == '"' || m_current_char == '\'') {
         char stop_char = m_current_char;
         consume();
-        while (m_current_char != stop_char && m_current_char != '\n' && !is_eof()) {
+        // Note: LS/PS line terminators are allowed in string literals.
+        while (m_current_char != stop_char && m_current_char != '\r' && m_current_char != '\n' && !is_eof()) {
             if (m_current_char == '\\') {
                 consume();
             }
@@ -500,10 +553,7 @@ Token Lexer::next()
 
         bool found_three_char_token = false;
         if (!found_four_char_token && m_position + 1 < m_source.length()) {
-            char second_char = m_source[m_position];
-            char third_char = m_source[m_position + 1];
-            char three_chars[] { (char)m_current_char, second_char, third_char, 0 };
-            StringView three_chars_view { three_chars };
+            auto three_chars_view = m_source.substring_view(m_position - 1, 3);
             auto it = s_three_char_tokens.find(three_chars_view.hash(), [&](auto& entry) { return entry.key == three_chars_view; });
             if (it != s_three_char_tokens.end()) {
                 found_three_char_token = true;
@@ -516,9 +566,7 @@ Token Lexer::next()
 
         bool found_two_char_token = false;
         if (!found_four_char_token && !found_three_char_token && m_position < m_source.length()) {
-            char second_char = m_source[m_position];
-            char two_chars[] { (char)m_current_char, second_char, 0 };
-            StringView two_chars_view = { two_chars };
+            auto two_chars_view = m_source.substring_view(m_position - 1, 2);
             auto it = s_two_char_tokens.find(two_chars_view.hash(), [&](auto& entry) { return entry.key == two_chars_view; });
             if (it != s_two_char_tokens.end()) {
                 found_two_char_token = true;
@@ -558,6 +606,15 @@ Token Lexer::next()
         m_source.substring_view(value_start - 1, m_position - value_start),
         value_start_line_number,
         value_start_column_number);
+
+#ifdef LEXER_DEBUG
+    dbg() << "------------------------------";
+    dbg() << "Token: " << m_current_token.name();
+    dbg() << "Trivia: _" << m_current_token.trivia() << "_";
+    dbg() << "Value: _" << m_current_token.value() << "_";
+    dbg() << "Line: " << m_current_token.line_number() << ", Column: " << m_current_token.line_column();
+    dbg() << "------------------------------";
+#endif
 
     return m_current_token;
 }

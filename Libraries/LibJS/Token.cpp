@@ -262,4 +262,9 @@ bool Token::is_identifier_name() const
         || m_type == TokenType::Yield;
 }
 
+bool Token::trivia_contains_line_terminator() const
+{
+    return m_trivia.contains('\n') || m_trivia.contains('\r') || m_trivia.contains(LINE_SEPARATOR) || m_trivia.contains(PARAGRAPH_SEPARATOR);
+}
+
 }

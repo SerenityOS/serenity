@@ -31,6 +31,14 @@
 
 namespace JS {
 
+// U+2028 LINE SEPARATOR
+constexpr const char line_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa8, 0 };
+constexpr const StringView LINE_SEPARATOR { line_separator_chars };
+
+// U+2029 PARAGRAPH SEPARATOR
+constexpr const char paragraph_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa9, 0 };
+constexpr const StringView PARAGRAPH_SEPARATOR { paragraph_separator_chars };
+
 #define ENUMERATE_JS_TOKENS                                     \
     __ENUMERATE_JS_TOKEN(Ampersand, Operator)                   \
     __ENUMERATE_JS_TOKEN(AmpersandEquals, Operator)             \
@@ -204,6 +212,7 @@ public:
     String string_value(StringValueStatus& status) const;
 
     bool is_identifier_name() const;
+    bool trivia_contains_line_terminator() const;
 
 private:
     TokenType m_type;
