@@ -109,7 +109,7 @@ void Resource::did_load(Badge<ResourceLoader>, const ByteBuffer& data, const Has
         dbg() << "No Content-Type header to go on! Guessing based on filename...";
 #endif
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
-        m_mime_type = Core::guess_mime_type_based_on_filename(url());
+        m_mime_type = Core::guess_mime_type_based_on_filename(url().path());
     }
 
     for_each_client([](auto& client) {

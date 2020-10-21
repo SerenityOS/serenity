@@ -61,6 +61,6 @@ private:
     HashMap<String, ByteBuffer> m_data;
 };
 
-String guess_mime_type_based_on_filename(const URL&);
+String guess_mime_type_based_on_filename(const StringView&);
 
 }
