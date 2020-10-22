@@ -372,6 +372,7 @@ void DirectoryView::refresh()
 void DirectoryView::open_previous_directory()
 {
     if (m_path_history_position > 0) {
+        set_active_widget(&current_view());
         m_path_history_position--;
         model().set_root_path(m_path_history[m_path_history_position]);
     }
@@ -379,6 +380,7 @@ void DirectoryView::open_previous_directory()
 void DirectoryView::open_next_directory()
 {
     if (m_path_history_position < m_path_history.size() - 1) {
+        set_active_widget(&current_view());
         m_path_history_position++;
         model().set_root_path(m_path_history[m_path_history_position]);
     }
