@@ -178,8 +178,8 @@ protected:
 private:
     friend class LayoutNodeWithStyle;
 
-    DOM::Document& m_document;
-    DOM::Node* m_node { nullptr };
+    NonnullRefPtr<DOM::Document> m_document;
+    RefPtr<DOM::Node> m_node;
 
     bool m_inline { false };
     bool m_has_style { false };
