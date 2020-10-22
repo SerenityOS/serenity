@@ -258,9 +258,12 @@ Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object
 Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     Value last_value = js_undefined();
-    while (m_test->execute(interpreter, global_object).to_boolean()) {
+    for (;;) {
+        auto test_result = m_test->execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
+        if (!test_result.to_boolean())
+            break;
         last_value = interpreter.execute_statement(global_object, *m_body);
         if (interpreter.exception())
             return {};
@@ -282,7 +285,7 @@ Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
 Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     Value last_value = js_undefined();
-    do {
+    for (;;) {
         if (interpreter.exception())
             return {};
         last_value = interpreter.execute_statement(global_object, *m_body);
@@ -298,7 +301,12 @@ Value DoWhileStatement::execute(Interpreter& interpreter, GlobalObject& global_o
                 return last_value;
             }
         }
-    } while (m_test->execute(interpreter, global_object).to_boolean());
+        auto test_result = m_test->execute(interpreter, global_object);
+        if (interpreter.exception())
+            return {};
+        if (!test_result.to_boolean())
+            break;
+    }
 
     return last_value;
 }

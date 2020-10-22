@@ -12,3 +12,9 @@ test("no braces", () => {
     while (number < 3);
     expect(number).toBe(3);
 });
+
+test("exception in test expression", () => {
+    expect(() => {
+        do {} while (foo);
+    }).toThrow(ReferenceError);
+});
