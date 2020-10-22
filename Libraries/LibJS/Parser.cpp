@@ -241,7 +241,13 @@ NonnullRefPtr<Program> Parser::parse_program()
     bool first = true;
     m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Looking;
     while (!done()) {
-        if (match_statement()) {
+        if (match_declaration()) {
+            program->append(parse_declaration());
+            if (first) {
+                first = false;
+                m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
+            }
+        } else if (match_statement()) {
             program->append(parse_statement());
             if (first) {
                 if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Found) {
@@ -252,7 +258,7 @@ NonnullRefPtr<Program> Parser::parse_program()
                 m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
             }
         } else {
-            expected("statement");
+            expected("statement or declaration");
             consume();
         }
     }
@@ -266,7 +272,7 @@ NonnullRefPtr<Program> Parser::parse_program()
     return program;
 }
 
-NonnullRefPtr<Statement> Parser::parse_statement()
+NonnullRefPtr<Declaration> Parser::parse_declaration()
 {
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::Class:
@@ -276,13 +282,24 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         m_parser_state.m_function_scopes.last().append(declaration);
         return declaration;
     }
+    case TokenType::Let:
+    case TokenType::Const:
+        return parse_variable_declaration();
+    default:
+        expected("declaration");
+        consume();
+        return create_ast_node<ErrorDeclaration>();
+    }
+}
+
+NonnullRefPtr<Statement> Parser::parse_statement()
+{
+    switch (m_parser_state.m_current_token.type()) {
     case TokenType::CurlyOpen:
         return parse_block_statement();
     case TokenType::Return:
         return parse_return_statement();
     case TokenType::Var:
-    case TokenType::Let:
-    case TokenType::Const:
         return parse_variable_declaration();
     case TokenType::For:
         return parse_for_statement();
@@ -314,11 +331,13 @@ NonnullRefPtr<Statement> Parser::parse_statement()
                 return result.release_nonnull();
         }
         if (match_expression()) {
+            if (match(TokenType::Function))
+                syntax_error("Function declaration not allowed in single-statement context");
             auto expr = parse_expression(0);
             consume_or_insert_semicolon();
             return create_ast_node<ExpressionStatement>(move(expr));
         }
-        expected("statement (missing switch case)");
+        expected("statement");
         consume();
         return create_ast_node<ErrorStatement>();
     }
@@ -614,7 +633,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     case TokenType::New:
         return parse_new_expression();
     default:
-        expected("primary expression (missing switch case)");
+        expected("primary expression");
         consume();
         return create_ast_node<ErrorExpression>();
     }
@@ -676,7 +695,7 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         consume();
         return create_ast_node<UnaryExpression>(UnaryOp::Delete, parse_expression(precedence, associativity));
     default:
-        expected("primary expression (missing switch case)");
+        expected("primary expression");
         consume();
         return create_ast_node<ErrorExpression>();
     }
@@ -1076,7 +1095,7 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
     case TokenType::QuestionMark:
         return parse_conditional_expression(move(lhs));
     default:
-        expected("secondary expression (missing switch case)");
+        expected("secondary expression");
         consume();
         return create_ast_node<ErrorExpression>();
     }
@@ -1209,8 +1228,11 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
     }
 
     while (!done() && !match(TokenType::CurlyClose)) {
-        if (match(TokenType::Semicolon)) {
-            consume();
+        if (match_declaration()) {
+            block->append(parse_declaration());
+
+            if (first && !initial_strict_mode_state)
+                m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
         } else if (match_statement()) {
             block->append(parse_statement());
 
@@ -1222,7 +1244,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
                 m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
             }
         } else {
-            expected("statement");
+            expected("statement or declaration");
             consume();
         }
 
@@ -1508,8 +1530,14 @@ NonnullRefPtr<SwitchCase> Parser::parse_switch_case()
 
     NonnullRefPtrVector<Statement> consequent;
     TemporaryChange break_change(m_parser_state.m_in_break_context, true);
-    while (match_statement())
-        consequent.append(parse_statement());
+    for (;;) {
+        if (match_declaration())
+            consequent.append(parse_declaration());
+        else if (match_statement())
+            consequent.append(parse_statement());
+        else
+            break;
+    }
 
     return create_ast_node<SwitchCase>(move(test), move(consequent));
 }
@@ -1635,18 +1663,6 @@ bool Parser::match(TokenType type) const
     return m_parser_state.m_current_token.type() == type;
 }
 
-bool Parser::match_variable_declaration() const
-{
-    switch (m_parser_state.m_current_token.type()) {
-    case TokenType::Var:
-    case TokenType::Let:
-    case TokenType::Const:
-        return true;
-    default:
-        return false;
-    }
-}
-
 bool Parser::match_expression() const
 {
     auto type = m_parser_state.m_current_token.type();
@@ -1740,17 +1756,13 @@ bool Parser::match_statement() const
 {
     auto type = m_parser_state.m_current_token.type();
     return match_expression()
-        || type == TokenType::Function
         || type == TokenType::Return
-        || type == TokenType::Let
-        || type == TokenType::Class
         || type == TokenType::Do
         || type == TokenType::If
         || type == TokenType::Throw
         || type == TokenType::Try
         || type == TokenType::While
         || type == TokenType::For
-        || type == TokenType::Const
         || type == TokenType::CurlyOpen
         || type == TokenType::Switch
         || type == TokenType::Break
@@ -1758,6 +1770,23 @@ bool Parser::match_statement() const
         || type == TokenType::Var
         || type == TokenType::Debugger
         || type == TokenType::Semicolon;
+}
+
+bool Parser::match_declaration() const
+{
+    auto type = m_parser_state.m_current_token.type();
+    return type == TokenType::Function
+        || type == TokenType::Class
+        || type == TokenType::Const
+        || type == TokenType::Let;
+}
+
+bool Parser::match_variable_declaration() const
+{
+    auto type = m_parser_state.m_current_token.type();
+    return type == TokenType::Var
+        || type == TokenType::Let
+        || type == TokenType::Const;
 }
 
 bool Parser::match_identifier_name() const

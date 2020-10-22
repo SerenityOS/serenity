@@ -172,6 +172,12 @@ public:
 class Declaration : public Statement {
 };
 
+class ErrorDeclaration final : public Declaration {
+public:
+    Value execute(Interpreter&, GlobalObject&) const override { return js_undefined(); }
+    const char* class_name() const override { return "ErrorDeclaration"; }
+};
+
 class FunctionNode {
 public:
     struct Parameter {
