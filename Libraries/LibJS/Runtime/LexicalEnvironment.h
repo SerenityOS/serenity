@@ -93,10 +93,10 @@ private:
     virtual const char* class_name() const override { return "LexicalEnvironment"; }
     virtual void visit_children(Visitor&) override;
 
+    EnvironmentRecordType m_environment_record_type : 8 { EnvironmentRecordType::Declarative };
+    ThisBindingStatus m_this_binding_status : 8 { ThisBindingStatus::Uninitialized };
     LexicalEnvironment* m_parent { nullptr };
     HashMap<FlyString, Variable> m_variables;
-    EnvironmentRecordType m_environment_record_type = EnvironmentRecordType::Declarative;
-    ThisBindingStatus m_this_binding_status = ThisBindingStatus::Uninitialized;
     Value m_home_object;
     Value m_this_value;
     Value m_new_target;
