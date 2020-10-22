@@ -47,6 +47,10 @@ VM::VM()
     : m_heap(*this)
 {
     m_empty_string = m_heap.allocate_without_global_object<PrimitiveString>(String::empty());
+    for (size_t i = 0; i < 128; ++i) {
+        m_single_ascii_character_strings[i] = m_heap.allocate_without_global_object<PrimitiveString>(String::format("%c", i));
+    }
+
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
@@ -96,6 +100,9 @@ VM::InterpreterExecutionScope::~InterpreterExecutionScope()
 void VM::gather_roots(HashTable<Cell*>& roots)
 {
     roots.set(m_empty_string);
+    for (auto* string : m_single_ascii_character_strings)
+        roots.set(string);
+
     if (m_exception)
         roots.set(m_exception);
 

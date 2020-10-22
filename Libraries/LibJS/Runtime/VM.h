@@ -108,6 +108,11 @@ public:
     Symbol* get_global_symbol(const String& description);
 
     PrimitiveString& empty_string() { return *m_empty_string; }
+    PrimitiveString& single_ascii_character_string(u8 character)
+    {
+        ASSERT(character < 0x80);
+        return *m_single_ascii_character_strings[character];
+    }
 
     CallFrame& push_call_frame(bool strict_mode = false)
     {
@@ -247,6 +252,7 @@ private:
     HashMap<String, Symbol*> m_global_symbol_map;
 
     PrimitiveString* m_empty_string { nullptr };
+    PrimitiveString* m_single_ascii_character_strings[128] {};
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     Symbol* m_well_known_symbol_##snake_name { nullptr };
