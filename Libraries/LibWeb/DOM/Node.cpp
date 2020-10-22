@@ -217,4 +217,12 @@ void Node::removed_last_ref()
     delete this;
 }
 
+void Node::set_layout_node(Badge<LayoutNode>, LayoutNode* layout_node) const
+{
+    if (layout_node)
+        m_layout_node = layout_node->make_weak_ptr();
+    else
+        m_layout_node = nullptr;
+}
+
 }

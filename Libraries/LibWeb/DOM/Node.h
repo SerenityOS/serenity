@@ -118,7 +118,7 @@ public:
     const LayoutNode* layout_node() const { return m_layout_node; }
     LayoutNode* layout_node() { return m_layout_node; }
 
-    void set_layout_node(Badge<LayoutNode>, LayoutNode* layout_node) const { m_layout_node = layout_node; }
+    void set_layout_node(Badge<LayoutNode>, LayoutNode*) const;
 
     virtual bool is_child_allowed(const Node&) const { return true; }
 
@@ -138,7 +138,7 @@ protected:
     Node(Document&, NodeType);
 
     Document* m_document { nullptr };
-    mutable LayoutNode* m_layout_node { nullptr };
+    mutable WeakPtr<LayoutNode> m_layout_node;
     NodeType m_type { NodeType::INVALID };
     bool m_needs_style_update { true };
 };
