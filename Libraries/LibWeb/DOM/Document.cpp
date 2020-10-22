@@ -81,10 +81,51 @@ Document::~Document()
 void Document::removed_last_ref()
 {
     ASSERT(!ref_count());
+    ASSERT(!m_deletion_has_begun);
 
-    if (m_referencing_node_count)
+    if (m_referencing_node_count) {
+        // The document has reached ref_count==0 but still has nodes keeping it alive.
+        // At this point, sever all the node links we control.
+        // If nodes remain elsewhere (e.g JS wrappers), they will keep the document alive.
+
+        // NOTE: This makes sure we stay alive across for the duration of the cleanup below.
+        increment_referencing_node_count();
+
+        m_focused_element = nullptr;
+        m_hovered_node = nullptr;
+        m_pending_parsing_blocking_script = nullptr;
+        m_inspected_node = nullptr;
+        m_scripts_to_execute_when_parsing_has_finished.clear();
+        m_scripts_to_execute_as_soon_as_possible.clear();
+        m_associated_inert_template_document = nullptr;
+
+        m_interpreter = nullptr;
+
+        {
+            // Gather up all the descendants of this document and prune them from the tree.
+            // FIXME: This could definitely be more elegant.
+            NonnullRefPtrVector<Node> descendants;
+            for_each_in_subtree([&](auto& node) {
+                if (&node != this)
+                    descendants.append(node);
+                return IterationDecision::Continue;
+            });
+
+            for (auto& node : descendants) {
+                ASSERT(&node.document() == this);
+                ASSERT(!node.is_document());
+                if (node.parent())
+                    node.parent()->remove_child(node);
+            }
+        }
+
+        m_in_removed_last_ref = false;
+        decrement_referencing_node_count();
         return;
+    }
 
+    m_in_removed_last_ref = false;
+    m_deletion_has_begun = true;
     delete this;
 }
 
@@ -222,9 +263,8 @@ void Document::tear_down_layout_tree()
 
     NonnullRefPtrVector<LayoutNode> layout_nodes;
 
-    for_each_in_subtree([&](auto& node) {
-        if (node.layout_node())
-            layout_nodes.append(*node.layout_node());
+    m_layout_root->for_each_in_subtree([&](auto& layout_node) {
+        layout_nodes.append(layout_node);
         return IterationDecision::Continue;
     });
 

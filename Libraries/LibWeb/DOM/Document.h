@@ -179,16 +179,12 @@ public:
 
     void ref_from_node(Badge<Node>)
     {
-        ++m_referencing_node_count;
+        increment_referencing_node_count();
     }
 
     void unref_from_node(Badge<Node>)
     {
-        ASSERT(m_referencing_node_count);
-        --m_referencing_node_count;
-        if (!m_referencing_node_count && !ref_count()) {
-            removed_last_ref();
-        }
+        decrement_referencing_node_count();
     }
 
     void removed_last_ref();
@@ -199,6 +195,23 @@ private:
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
     void tear_down_layout_tree();
+
+    void increment_referencing_node_count()
+    {
+        ASSERT(!m_deletion_has_begun);
+        ++m_referencing_node_count;
+    }
+
+    void decrement_referencing_node_count()
+    {
+        ASSERT(!m_deletion_has_begun);
+        ASSERT(m_referencing_node_count);
+        --m_referencing_node_count;
+        if (!m_referencing_node_count && !ref_count()) {
+            m_deletion_has_begun = true;
+            delete this;
+        }
+    }
 
     unsigned m_referencing_node_count { 0 };
 
