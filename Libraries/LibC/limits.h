@@ -36,6 +36,9 @@
 #if !defined MAXPATHLEN && defined PATH_MAX
 #    define MAXPATHLEN PATH_MAX
 #endif
+
+#define NAME_MAX 255
+
 #define PIPE_BUF 4096
 
 #define INT_MAX INT32_MAX
