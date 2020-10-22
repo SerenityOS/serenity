@@ -49,9 +49,9 @@ LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, L
 }
 
 LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent, EnvironmentRecordType environment_record_type)
-    : m_parent(parent)
+    : m_environment_record_type(environment_record_type)
+    , m_parent(parent)
     , m_variables(move(variables))
-    , m_environment_record_type(environment_record_type)
 {
 }
 
