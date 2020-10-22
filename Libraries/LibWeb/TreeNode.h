@@ -99,7 +99,6 @@ public:
     void append_child(NonnullRefPtr<T> node, bool notify = true);
     void insert_before(NonnullRefPtr<T> node, RefPtr<T> child, bool notify = true);
     NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node);
-    void donate_all_children_to(T& node);
 
     bool is_child_allowed(const T&) const { return true; }
 
@@ -389,24 +388,6 @@ inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node)
     (void)node.leak_ref();
 
     static_cast<T*>(this)->children_changed();
-}
-
-template<typename T>
-inline void TreeNode<T>::donate_all_children_to(T& node)
-{
-    for (T* child = m_first_child; child != nullptr;) {
-        T* next_child = child->m_next_sibling;
-
-        child->m_parent = nullptr;
-        child->m_next_sibling = nullptr;
-        child->m_previous_sibling = nullptr;
-
-        node.append_child(adopt(*child));
-        child = next_child;
-    }
-
-    m_first_child = nullptr;
-    m_last_child = nullptr;
 }
 
 template<typename T>
