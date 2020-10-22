@@ -27,6 +27,7 @@
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
+#include <LibC/limits.h>
 
 namespace Kernel {
 
@@ -296,6 +297,9 @@ KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
     LOCKER(m_lock);
     ASSERT(is_directory());
     ASSERT(child.fsid() == fsid());
+
+    if (name.length() > NAME_MAX)
+        return KResult(-ENAMETOOLONG);
 
     m_children.set(name, { name, static_cast<TmpFSInode&>(child) });
     did_add_child(child.identifier());
