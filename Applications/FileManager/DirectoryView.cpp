@@ -388,6 +388,10 @@ void DirectoryView::open_next_directory()
 
 void DirectoryView::update_statusbar()
 {
+    // If we're triggered during widget construction, just ignore it.
+    if (m_view_mode == ViewMode::Invalid)
+        return;
+
     size_t total_size = model().node({}).total_size;
     if (current_view().selection().is_empty()) {
         set_status_message(String::formatted("{} item(s) ({})",
