@@ -198,13 +198,12 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     if (arguments.has_value())
         call_frame.arguments.append(arguments.value().values());
     call_frame.environment = function.create_environment();
-
-    current_environment()->set_new_target(&new_target);
+    call_frame.environment->set_new_target(&new_target);
 
     Object* new_object = nullptr;
     if (function.constructor_kind() == Function::ConstructorKind::Base) {
         new_object = Object::create_empty(global_object);
-        current_environment()->bind_this_value(global_object, new_object);
+        call_frame.environment->bind_this_value(global_object, new_object);
         if (exception())
             return {};
         auto prototype = new_target.get(names.prototype);
@@ -222,7 +221,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     call_frame.this_value = this_value;
     auto result = function.construct(new_target);
 
-    this_value = current_environment()->get_this_binding(global_object);
+    this_value = call_frame.environment->get_this_binding(global_object);
     pop_call_frame();
     call_frame_popper.disarm();
 
