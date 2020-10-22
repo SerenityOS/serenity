@@ -60,6 +60,7 @@ public:
     NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName);
     Vector<FunctionNode::Parameter> parse_function_parameters(int& function_length, u8 parse_options = 0);
 
+    NonnullRefPtr<Declaration> parse_declaration();
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict);
@@ -147,6 +148,7 @@ private:
     bool match_unary_prefixed_expression() const;
     bool match_secondary_expression(Vector<TokenType> forbidden = {}) const;
     bool match_statement() const;
+    bool match_declaration() const;
     bool match_variable_declaration() const;
     bool match_identifier_name() const;
     bool match_property_key() const;
