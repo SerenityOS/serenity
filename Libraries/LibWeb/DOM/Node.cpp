@@ -170,6 +170,8 @@ const Element* Node::parent_element() const
 
 RefPtr<Node> Node::append_child(NonnullRefPtr<Node> node, bool notify)
 {
+    if (&node->document() != &document())
+        document().adopt_node(node);
     TreeNode<Node>::append_child(node, notify);
     return node;
 }
@@ -182,6 +184,8 @@ RefPtr<Node> Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, b
         dbg() << "FIXME: Trying to insert_before() a bogus child";
         return nullptr;
     }
+    if (&node->document() != &document())
+        document().adopt_node(node);
     TreeNode<Node>::insert_before(node, child, notify);
     return node;
 }
@@ -195,6 +199,10 @@ void Node::remove_all_children()
 
 void Node::set_document(Badge<Document>, Document& document)
 {
+    if (m_document == &document)
+        return;
+    document.ref_from_node({});
+    m_document->unref_from_node({});
     m_document = &document;
 }
 
