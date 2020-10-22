@@ -42,6 +42,10 @@ PrimitiveString* js_string(Heap& heap, String string)
 {
     if (string.is_empty())
         return &heap.vm().empty_string();
+
+    if (string.length() == 1 && (u8)string.characters()[0] < 0x80)
+        return &heap.vm().single_ascii_character_string(string.characters()[0]);
+
     return heap.allocate_without_global_object<PrimitiveString>(move(string));
 }
 
