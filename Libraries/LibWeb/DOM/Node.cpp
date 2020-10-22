@@ -54,12 +54,14 @@ Node::Node(Document& document, NodeType type)
     , m_document(&document)
     , m_type(type)
 {
+    m_document->ref_from_node({});
 }
 
 Node::~Node()
 {
     if (layout_node() && layout_node()->parent())
         layout_node()->parent()->remove_child(*layout_node());
+    m_document->unref_from_node({});
 }
 
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
