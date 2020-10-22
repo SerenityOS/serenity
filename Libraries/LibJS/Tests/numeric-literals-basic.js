@@ -46,4 +46,6 @@ test("invalid numeric literals", () => {
     expect("0b").not.toEval();
     expect("0o").not.toEval();
     expect("'use strict'; 0755").not.toEval();
+    expect("1in[]").not.toEval();
+    expect("2instanceof foo").not.toEval();
 });
