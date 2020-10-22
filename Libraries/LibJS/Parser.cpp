@@ -1827,6 +1827,8 @@ Token Parser::consume_and_validate_numeric_literal()
     auto token = consume(TokenType::NumericLiteral);
     if (m_parser_state.m_strict_mode && is_unprefixed_octal_number(token.value()))
         syntax_error("Unprefixed octal number not allowed in strict mode", literal_start_line, literal_start_column);
+    if (match_identifier_name() && m_parser_state.m_current_token.trivia().is_empty())
+        syntax_error("Numeric literal must not be immediately followed by identifier");
     return token;
 }
 
