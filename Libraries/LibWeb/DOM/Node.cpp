@@ -54,14 +54,18 @@ Node::Node(Document& document, NodeType type)
     , m_document(&document)
     , m_type(type)
 {
-    m_document->ref_from_node({});
+    if (!is_document())
+        m_document->ref_from_node({});
 }
 
 Node::~Node()
 {
+    ASSERT(m_deletion_has_begun);
     if (layout_node() && layout_node()->parent())
         layout_node()->parent()->remove_child(*layout_node());
-    m_document->unref_from_node({});
+
+    if (!is_document())
+        m_document->unref_from_node({});
 }
 
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
@@ -222,6 +226,7 @@ void Node::removed_last_ref()
         downcast<Document>(*this).removed_last_ref();
         return;
     }
+    m_deletion_has_begun = true;
     delete this;
 }
 

@@ -39,18 +39,22 @@ class TreeNode : public Weakable<T> {
 public:
     void ref()
     {
+        ASSERT(!m_in_removed_last_ref);
         ASSERT(m_ref_count);
         ++m_ref_count;
     }
 
     void unref()
     {
+        ASSERT(!m_in_removed_last_ref);
         ASSERT(m_ref_count);
         if (!--m_ref_count) {
-            if constexpr (IsBaseOf<DOM::Node, T>::value)
+            if constexpr (IsBaseOf<DOM::Node, T>::value) {
+                m_in_removed_last_ref = true;
                 static_cast<T*>(this)->removed_last_ref();
-            else
+            } else {
                 delete static_cast<T*>(this);
+            }
             return;
         }
     }
@@ -279,6 +283,9 @@ public:
 
 protected:
     TreeNode() { }
+
+    bool m_deletion_has_begun { false };
+    bool m_in_removed_last_ref { false };
 
 private:
     int m_ref_count { 1 };
