@@ -80,6 +80,8 @@ void Frame::set_document(DOM::Document* document)
     if (m_document == document)
         return;
 
+    m_cursor_position = {};
+
     if (m_document)
         m_document->detach_from_frame({}, *this);
 
