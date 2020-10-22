@@ -17,3 +17,9 @@ test("does not loop when initially false", () => {
         expect().fail();
     }
 });
+
+test("exception in test expression", () => {
+    expect(() => {
+        while (foo);
+    }).toThrow(ReferenceError);
+});
