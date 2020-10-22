@@ -1421,10 +1421,7 @@ NonnullRefPtr<TryStatement> Parser::parse_try_statement()
     consume(TokenType::Try);
 
     auto block = parse_block_statement();
-
-    RefPtr<CatchClause> handler;
-    if (match(TokenType::Catch))
-        handler = parse_catch_clause();
+    auto handler = parse_catch_clause();
 
     RefPtr<BlockStatement> finalizer;
     if (match(TokenType::Finally)) {
