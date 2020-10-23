@@ -1544,17 +1544,9 @@ _StartOfFunction:
                     for (auto ch : match.value().entity)
                         m_temporary_buffer.append(ch);
 
-                    if (consumed_as_part_of_an_attribute() && match.value().code_points.last() != ';') {
+                    if (consumed_as_part_of_an_attribute() && !match.value().entity.ends_with(';')) {
                         auto next = peek_code_point(0);
                         if (next.has_value() && (next.value() == '=' || isalnum(next.value()))) {
-                            FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
-                            SWITCH_TO_RETURN_STATE;
-                        }
-                    }
-
-                    if (consumed_as_part_of_an_attribute() && match.value().entity.ends_with(';')) {
-                        auto next_code_point = peek_code_point(0);
-                        if (next_code_point.has_value() && next_code_point.value() == '=') {
                             FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
                             SWITCH_TO_RETURN_STATE;
                         }
