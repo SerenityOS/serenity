@@ -34,6 +34,6 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "Path", "path");
     args_parser.parse(argc, argv);
 
-    out() << LexicalPath(path).dirname().characters();
+    outln("{}", LexicalPath(path).dirname());
     return 0;
 }

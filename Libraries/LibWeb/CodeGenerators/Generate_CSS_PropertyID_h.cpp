@@ -25,6 +25,7 @@
  */
 
 #include <AK/JsonObject.h>
+#include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <ctype.h>
@@ -48,7 +49,7 @@ static String title_casify(const String& dashy_name)
 int main(int argc, char** argv)
 {
     if (argc != 2) {
-        fprintf(stderr, "usage: %s <path/to/CSS/Properties.json>\n", argv[0]);
+        warnln("usage: {} <path/to/CSS/Properties.json>", argv[0]);
         return 1;
     }
     auto file = Core::File::construct(argv[1]);
@@ -59,30 +60,46 @@ int main(int argc, char** argv)
     ASSERT(json.has_value());
     ASSERT(json.value().is_object());
 
-    out() << "#pragma once";
-    out() << "#include <AK/StringView.h>";
-    out() << "#include <AK/Traits.h>";
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+    generator.append(R"~~~(
+#pragma once
 
-    out() << "namespace Web::CSS {";
-    out() << "enum class PropertyID {";
-    out() << "    Invalid,";
+#include <AK/StringView.h>
+#include <AK/Traits.h>
+
+namespace Web::CSS {
+
+enum class PropertyID {
+    Invalid,
+)~~~");
 
     json.value().as_object().for_each_member([&](auto& name, auto& value) {
         ASSERT(value.is_object());
-        out() << "    " << title_casify(name) << ",";
+
+        auto member_generator = generator.fork();
+        member_generator.set("name:titlecase", title_casify(name));
+
+        member_generator.append(R"~~~(
+    @name:titlecase@,
+)~~~");
     });
 
-    out() << "};\n\
-PropertyID property_id_from_string(const StringView&);\n\
-const char* string_from_property_id(PropertyID);\n\
-}\n\
-\n\
-namespace AK {\n\
-template<>\n\
-struct Traits<Web::CSS::PropertyID> : public GenericTraits<Web::CSS::PropertyID> {\n\
-    static unsigned hash(Web::CSS::PropertyID property_id) { return int_hash((unsigned)property_id); }\n\
-};\n\
-}\n";
+    generator.append(R"~~~(
+};
 
-    return 0;
+PropertyID property_id_from_string(const StringView&);
+const char* string_from_property_id(PropertyID);
+
+} // namespace Web::CSS
+
+namespace AK {
+template<>
+struct Traits<Web::CSS::PropertyID> : public GenericTraits<Web::CSS::PropertyID> {
+    static unsigned hash(Web::CSS::PropertyID property_id) { return int_hash((unsigned)property_id); }
+};
+} // namespace AK
+)~~~");
+
+    outln("{}", generator.as_string_view());
 }

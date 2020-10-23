@@ -137,7 +137,7 @@ void IRCAppWindow::setup_actions()
     });
 
     m_close_query_action = GUI::Action::create("Close query", { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
-        out() << "FIXME: Implement close-query action";
+        outln("FIXME: Implement close-query action");
     });
 
     m_change_nick_action = GUI::Action::create("Change nickname", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {

@@ -126,7 +126,7 @@ int main(int argc, char** argv)
         if (current_symbol < symbols.end() && !current_symbol->contains(virtual_offset)) {
             if (!is_first_symbol && current_instruction_is_in_symbol) {
                 // The previous instruction was part of a symbol that doesn't cover the current instruction, so separate it from the current instruction with a newline.
-                out();
+                outln();
                 current_instruction_is_in_symbol = (current_symbol + 1 < symbols.end() && (current_symbol + 1)->contains(virtual_offset));
             }
 
@@ -134,21 +134,19 @@ int main(int argc, char** argv)
             while (current_symbol + 1 < symbols.end() && !(current_symbol + 1)->contains(virtual_offset) && (current_symbol + 1)->address() <= virtual_offset) {
                 ++current_symbol;
                 if (!is_first_symbol)
-                    out() << "\n(" << current_symbol->name << " (" << String::format("%08x-%08x", current_symbol->address(), current_symbol->address_end()) << "))\n";
+                    outln("\n({} ({:p}-{:p}))\n", current_symbol->name, current_symbol->address(), current_symbol->address_end());
             }
             while (current_symbol + 1 < symbols.end() && (current_symbol + 1)->contains(virtual_offset)) {
                 if (!is_first_symbol && !current_instruction_is_in_symbol)
-                    out();
+                    outln();
                 ++current_symbol;
                 current_instruction_is_in_symbol = true;
-                out() << current_symbol->name << " (" << String::format("%08x-%08x", current_symbol->address(), current_symbol->address_end()) << "):";
+                outln("{} ({:p}-{:p}):", current_symbol->name, current_symbol->address(), current_symbol->address_end());
             }
 
             is_first_symbol = false;
         }
 
-        out() << String::format("%08x", virtual_offset) << "  " << insn.value().to_string(virtual_offset, symbol_provider);
+        outln("{:p}  {}", virtual_offset, insn.value().to_string(virtual_offset, symbol_provider));
     }
-
-    return 0;
 }
