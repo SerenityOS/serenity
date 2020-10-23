@@ -30,10 +30,17 @@
 
 namespace AK {
 
-String urlencode(const StringView&);
+enum class URLEncodeMode {
+    PreserveSpecialCharacters,
+    Full,
+};
+
+String urlencode(const StringView&, URLEncodeMode = URLEncodeMode::Full);
+String urlencode(const StringView&, const StringView& safe);
 String urldecode(const StringView&);
 
 }
 
 using AK::urldecode;
 using AK::urlencode;
+using AK::URLEncodeMode;

@@ -70,31 +70,30 @@ String urldecode(const StringView& input)
     return builder.to_string();
 }
 
-static inline bool in_c0_control_set(u32 c)
+String urlencode(const StringView& input, URLEncodeMode mode)
 {
-    return c <= 0x1f || c > '~';
+    switch (mode) {
+    case URLEncodeMode::PreserveSpecialCharacters:
+        return urlencode(input, "/?:@-._~!$&'()*+,;="); // https://www.ietf.org/rfc/rfc2396.txt section 2.2 and 2.3, "reserved characters" and "unreserved characters".
+    case URLEncodeMode::Full:
+        return urlencode(input, "-_.!~*'()"); // Just "unreserved characters", alphanums are never encoded.
+    }
+
+    ASSERT_NOT_REACHED();
 }
 
-static inline bool in_fragment_set(u32 c)
+static constexpr bool isalnum(char ch)
 {
-    return in_c0_control_set(c) || c == ' ' || c == '"' || c == '<' || c == '>' || c == '`';
+    return (ch <= 'Z' && ch >= 'A')
+        || (ch <= 'z' && ch >= 'a')
+        || (ch <= '9' && ch >= '0');
 }
 
-static inline bool in_path_set(u32 c)
-{
-    return in_fragment_set(c) || c == '#' || c == '?' || c == '{' || c == '}';
-}
-
-static inline bool in_userinfo_set(u32 c)
-{
-    return in_path_set(c) || c == '/' || c == ':' || c == ';' || c == '=' || c == '@' || (c >= '[' && c <= '^') || c == '|';
-}
-
-String urlencode(const StringView& input)
+String urlencode(const StringView& input, const StringView& safe)
 {
     StringBuilder builder;
     for (char ch : input) {
-        if (in_userinfo_set((u8)ch)) {
+        if (!isalnum(ch) && !safe.contains((u8)ch)) {
             builder.append('%');
             builder.appendff("{:02X}", ch);
         } else {
