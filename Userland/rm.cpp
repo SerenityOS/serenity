@@ -41,7 +41,7 @@ static int remove(bool recursive, bool force, String path)
     if (lstat(path.characters(), &path_stat) < 0) {
         if (!force)
             perror("lstat");
-        return 1;
+        return force ? 0 : 1;
     }
 
     if (S_ISDIR(path_stat.st_mode) && recursive) {
