@@ -39,6 +39,8 @@ Label::Label(const StringView& text)
     set_frame_shadow(Gfx::FrameShadow::Plain);
     set_frame_shape(Gfx::FrameShape::NoFrame);
 
+    set_foreground_role(Gfx::ColorRole::WindowText);
+
     REGISTER_STRING_PROPERTY("text", text, set_text);
 }
 
@@ -87,7 +89,7 @@ void Label::paint_event(PaintEvent& event)
     text_rect.set_width(text_rect.width() - indent * 2);
 
     if (is_enabled()) {
-        painter.draw_text(text_rect, text(), m_text_alignment, palette().window_text(), Gfx::TextElision::Right);
+        painter.draw_text(text_rect, text(), m_text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right);
     } else {
         painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, Gfx::TextElision::Right);
         painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right);
