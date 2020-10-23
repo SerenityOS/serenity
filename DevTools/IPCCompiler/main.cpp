@@ -200,7 +200,8 @@ int main(int argc, char** argv)
     while (lexer.tell() < file_contents.size())
         parse_endpoint();
 
-    SourceGenerator generator;
+    StringBuilder builder;
+    SourceGenerator generator { builder };
 
     generator.append(R"~~~(
 #pragma once
@@ -219,7 +220,7 @@ int main(int argc, char** argv)
 )~~~");
 
     for (auto& endpoint : endpoints) {
-        SourceGenerator endpoint_generator { generator };
+        auto endpoint_generator = generator.fork();
 
         endpoint_generator.set("endpoint.name", endpoint.name);
         endpoint_generator.set("endpoint.magic", String::number(endpoint.magic));
@@ -234,7 +235,7 @@ namespace Messages::@endpoint.name@ {
 enum class MessageID : i32 {
 )~~~");
         for (auto& message : endpoint.messages) {
-            SourceGenerator message_generator { endpoint_generator };
+            auto message_generator = endpoint_generator.fork();
 
             message_ids.set(message.name, message_ids.size() + 1);
             message_generator.set("message.name", message.name);
@@ -292,8 +293,7 @@ enum class MessageID : i32 {
         };
 
         auto do_message = [&](const String& name, const Vector<Parameter>& parameters, const String& response_type = {}) {
-            SourceGenerator message_generator { endpoint_generator };
-
+            auto message_generator = endpoint_generator.fork();
             message_generator.set("message.name", name);
             message_generator.set("message.response_type", response_type);
             message_generator.set("message.constructor", constructor_for_message(name, parameters));
@@ -323,7 +323,7 @@ public:
 )~~~");
 
             for (auto& parameter : parameters) {
-                SourceGenerator parameter_generator { message_generator };
+                auto parameter_generator = message_generator.fork();
 
                 parameter_generator.set("parameter.type", parameter.type);
                 parameter_generator.set("parameter.name", parameter.name);
@@ -373,7 +373,7 @@ public:
 )~~~");
 
             for (auto& parameter : parameters) {
-                SourceGenerator parameter_generator { message_generator };
+                auto parameter_generator = message_generator.fork();
 
                 parameter_generator.set("parameter.name", parameter.name);
                 parameter_generator.append(R"~~~(
@@ -387,8 +387,7 @@ public:
 )~~~");
 
             for (auto& parameter : parameters) {
-                SourceGenerator parameter_generator { message_generator };
-
+                auto parameter_generator = message_generator.fork();
                 parameter_generator.set("parameter.type", parameter.type);
                 parameter_generator.set("parameter.name", parameter.name);
                 parameter_generator.append(R"~~~(
@@ -401,8 +400,7 @@ private:
             )~~~");
 
             for (auto& parameter : parameters) {
-                SourceGenerator parameter_generator { message_generator };
-
+                auto parameter_generator = message_generator.fork();
                 parameter_generator.set("parameter.type", parameter.type);
                 parameter_generator.set("parameter.name", parameter.name);
                 parameter_generator.append(R"~~~(
@@ -484,7 +482,7 @@ public:
 
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name) {
-                SourceGenerator message_generator { endpoint_generator };
+                auto message_generator = endpoint_generator.fork();
 
                 message_generator.set("message.name", name);
 
@@ -532,7 +530,7 @@ public:
 )~~~");
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name, bool returns_something) {
-                SourceGenerator message_generator { endpoint_generator };
+                auto message_generator = endpoint_generator.fork();
 
                 message_generator.set("message.name", name);
                 message_generator.append(R"~~~(
@@ -561,7 +559,7 @@ public:
 )~~~");
 
         for (auto& message : endpoint.messages) {
-            SourceGenerator message_generator { endpoint_generator };
+            auto message_generator = endpoint_generator.fork();
 
             message_generator.set("message.name", message.name);
 
@@ -589,7 +587,7 @@ private:
 )~~~");
     }
 
-    outln("{}", generator.generate());
+    outln("{}", generator.as_string_view());
 
 #ifdef DEBUG
     for (auto& endpoint : endpoints) {
@@ -612,6 +610,4 @@ private:
         }
     }
 #endif
-
-    return 0;
 }
