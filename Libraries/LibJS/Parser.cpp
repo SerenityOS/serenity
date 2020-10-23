@@ -1443,13 +1443,19 @@ NonnullRefPtr<TryStatement> Parser::parse_try_statement()
     consume(TokenType::Try);
 
     auto block = parse_block_statement();
-    auto handler = parse_catch_clause();
+
+    RefPtr<CatchClause> handler;
+    if (match(TokenType::Catch))
+        handler = parse_catch_clause();
 
     RefPtr<BlockStatement> finalizer;
     if (match(TokenType::Finally)) {
         consume();
         finalizer = parse_block_statement();
     }
+
+    if (!handler && !finalizer)
+        syntax_error("try statement must have a 'catch' or 'finally' clause");
 
     return create_ast_node<TryStatement>(move(block), move(handler), move(finalizer));
 }
