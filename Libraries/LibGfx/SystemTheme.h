@@ -96,6 +96,8 @@ namespace Gfx {
     C(ThreedHighlight)             \
     C(ThreedShadow1)               \
     C(ThreedShadow2)               \
+    C(Tooltip)                     \
+    C(TooltipText)                 \
     C(VisitedLink)                 \
     C(Window)                      \
     C(WindowText)
