@@ -63,7 +63,7 @@ static RefPtr<DOM::Document> create_markdown_document(const ByteBuffer& data, co
 
 static RefPtr<DOM::Document> create_text_document(const ByteBuffer& data, const URL& url)
 {
-    auto document = adopt(*new DOM::Document(url));
+    auto document = DOM::Document::create(url);
 
     auto html_element = document->create_element("html");
     document->append_child(html_element);
@@ -88,7 +88,7 @@ static RefPtr<DOM::Document> create_text_document(const ByteBuffer& data, const 
 
 static RefPtr<DOM::Document> create_image_document(const ByteBuffer& data, const URL& url)
 {
-    auto document = adopt(*new DOM::Document(url));
+    auto document = DOM::Document::create(url);
 
     auto image_decoder = Gfx::ImageDecoder::create(data.data(), data.size());
     auto bitmap = image_decoder->bitmap();

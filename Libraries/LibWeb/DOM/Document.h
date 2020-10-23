@@ -57,7 +57,7 @@ class Document
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
-    explicit Document(const URL& = {});
+    static NonnullRefPtr<Document> create(const URL& url = {}) { return adopt(*new Document(url)); }
     virtual ~Document() override;
 
     void set_url(const URL& url) { m_url = url; }
@@ -192,6 +192,8 @@ public:
     Window& window() { return *m_window; }
 
 private:
+    explicit Document(const URL&);
+
     virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
     void tear_down_layout_tree();

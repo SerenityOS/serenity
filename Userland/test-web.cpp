@@ -686,7 +686,7 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
     auto& view = main_widget.add<Web::InProcessWebView>();
 
-    view.set_document(adopt(*new Web::DOM::Document));
+    view.set_document(Web::DOM::Document::create());
 
     if (show_window) {
         window->set_title("LibWeb Test Window");

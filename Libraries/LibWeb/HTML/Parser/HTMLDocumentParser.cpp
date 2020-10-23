@@ -118,7 +118,7 @@ RefPtr<DOM::Document> parse_html_document(const StringView& data, const URL& url
 HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding)
     : m_tokenizer(input, encoding)
 {
-    m_document = adopt(*new DOM::Document);
+    m_document = DOM::Document::create();
 }
 
 HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding, DOM::Document& existing_document)
