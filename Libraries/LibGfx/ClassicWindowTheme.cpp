@@ -110,13 +110,13 @@ void ClassicWindowTheme::paint_normal_frame(Painter& painter, WindowState window
 IntRect ClassicWindowTheme::title_bar_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
 {
     auto& title_font = Font::default_bold_font();
-    auto window_titlebar_height = palette.window_title_height();
+    auto window_titlebar_height = title_bar_height(palette);
     // FIXME: The top of the titlebar doesn't get redrawn properly if this padding is different
     int total_vertical_padding = title_font.glyph_height() - 1;
 
     if (window_type == WindowType::Notification)
         return { window_rect.width() + 3, total_vertical_padding / 2 - 1, window_titlebar_height, window_rect.height() };
-    return { 4, total_vertical_padding / 2, window_rect.width(), window_titlebar_height };
+    return { 4, 4, window_rect.width(), window_titlebar_height };
 }
 
 ClassicWindowTheme::FrameColors ClassicWindowTheme::compute_frame_colors(WindowState state, const Palette& palette) const
@@ -155,7 +155,7 @@ void ClassicWindowTheme::paint_notification_frame(Painter& painter, const IntRec
 
 IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, const IntRect& window_rect, const Gfx::Palette& palette) const
 {
-    auto window_titlebar_height = palette.window_title_height();
+    auto window_titlebar_height = title_bar_height(palette);
 
     switch (window_type) {
     case WindowType::Normal:
@@ -203,6 +203,12 @@ Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, const
         }
     }
     return button_rects;
+}
+
+int ClassicWindowTheme::title_bar_height(const Palette& palette) const
+{
+    auto& title_font = Font::default_bold_font();
+    return max(palette.window_title_height(), title_font.glyph_height() + 8);
 }
 
 }

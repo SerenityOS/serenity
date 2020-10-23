@@ -1444,7 +1444,7 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
 Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint& desired)
 {
     // FIXME: Find a  better source for the width and height to shift by.
-    Gfx::IntPoint shift(8, palette().window_title_height() + 10);
+    Gfx::IntPoint shift(8, Gfx::WindowTheme::current().title_bar_height(palette()) + 10);
 
     // FIXME: Find a better source for this.
     int taskbar_height = 28;
@@ -1463,7 +1463,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint
         point = overlap_window->position() + shift;
         point = { point.x() % Screen::the().width(),
             (point.y() >= (Screen::the().height() - taskbar_height))
-                ? menubar_height + palette().window_title_height()
+                ? menubar_height + Gfx::WindowTheme::current().title_bar_height(palette())
                 : point.y() };
     } else {
         point = desired;
