@@ -85,7 +85,7 @@ int main(int argc, char** argv)
         }
         for (; !tar_stream.finished(); tar_stream.advance()) {
             if (list || verbose)
-                out() << tar_stream.header().file_name();
+                outln("{}", tar_stream.header().file_name());
 
             if (extract) {
                 Tar::TarFileStream file_stream = tar_stream.file_contents();
