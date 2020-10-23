@@ -281,14 +281,14 @@ String URL::to_string() const
             builder.append(String::number(m_port));
         }
     }
-    builder.append(m_path);
+    builder.append(urlencode(m_path, URLEncodeMode::PreserveSpecialCharacters));
     if (!m_query.is_empty()) {
         builder.append('?');
-        builder.append(m_query);
+        builder.append(urlencode(m_query, URLEncodeMode::PreserveSpecialCharacters));
     }
     if (!m_fragment.is_empty()) {
         builder.append('#');
-        builder.append(m_fragment);
+        builder.append(urlencode(m_fragment, URLEncodeMode::PreserveSpecialCharacters));
     }
     return builder.to_string();
 }
