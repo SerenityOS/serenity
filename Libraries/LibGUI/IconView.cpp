@@ -465,8 +465,49 @@ void IconView::paint_event(PaintEvent& event)
             }
         }
 
-        painter.fill_rect(item_data.text_rect, background_color);
-        draw_item_text(painter, item_data.index, item_data.selected, item_data.text_rect, item_text.to_string(), font_for_index(item_data.index), Gfx::TextAlignment::Center, Gfx::TextElision::Right);
+        auto font = font_for_index(item_data.index);
+        auto text_width = font->width(item_text.to_string());
+        auto text = item_text.to_string();
+
+        if ((item_data.selected || m_hovered_index == item_data.index) && item_data.index != m_edit_index && text_width > item_data.text_rect.width()) {
+            // Item text would not fit in the item text rect, let's break it up into lines..
+
+            // FIXME: Maybe break this out into some kind of GUI::TextLayout class?
+
+            Vector<StringView, 4> lines;
+            int current_line_width = 0;
+            int current_line_start = 0;
+            Utf8View utf8_view(text);
+            auto it = utf8_view.begin();
+            for (; it != utf8_view.end(); ++it) {
+                auto codepoint = *it;
+                auto glyph_width = font->glyph_width(codepoint);
+                if (lines.size() < 1 && (current_line_width + glyph_width + font->glyph_spacing()) > item_data.text_rect.width()) {
+                    lines.append(text.substring_view(current_line_start, utf8_view.byte_offset_of(it) - current_line_start));
+                    current_line_start = utf8_view.byte_offset_of(it);
+                    current_line_width = glyph_width;
+                } else {
+                    current_line_width += glyph_width + font->glyph_spacing();
+                }
+            }
+            if (current_line_width > 0) {
+                lines.append(text.substring_view(current_line_start, utf8_view.byte_offset_of(it) - current_line_start));
+            }
+
+            for (size_t line_index = 0; line_index < lines.size(); ++line_index) {
+                Gfx::IntRect line_rect;
+                line_rect.set_width(min(item_data.text_rect.width(), font->width(lines[line_index])));
+                line_rect.set_height(item_data.text_rect.height());
+                line_rect.center_horizontally_within(item_data.text_rect);
+                line_rect.set_y(item_data.text_rect.y() + line_index * item_data.text_rect.height());
+                painter.fill_rect(line_rect, background_color);
+                draw_item_text(painter, item_data.index, item_data.selected, line_rect, lines[line_index], font, Gfx::TextAlignment::Center, Gfx::TextElision::Right);
+            }
+
+        } else {
+            painter.fill_rect(item_data.text_rect, background_color);
+            draw_item_text(painter, item_data.index, item_data.selected, item_data.text_rect, text, font, Gfx::TextAlignment::Center, Gfx::TextElision::Right);
+        }
 
         if (item_data.index == m_drop_candidate_index) {
             // FIXME: This visualization is not great, as it's also possible to drop things on the text label..
