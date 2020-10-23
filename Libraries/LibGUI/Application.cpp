@@ -125,7 +125,8 @@ private:
     {
         set_window_type(WindowType::Tooltip);
         m_label = set_main_widget<Label>();
-        m_label->set_background_color(Color::from_rgb(0xdac7b5));
+        m_label->set_background_role(Gfx::ColorRole::Tooltip);
+        m_label->set_foreground_role(Gfx::ColorRole::TooltipText);
         m_label->set_fill_with_background_color(true);
         m_label->set_frame_thickness(1);
         m_label->set_frame_shape(Gfx::FrameShape::Container);
