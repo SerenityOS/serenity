@@ -161,3 +161,12 @@ test("try/catch/finally with exception in try, catch and finally", () => {
     expect(catchHasBeenExecuted).toBeTrue();
     expect(finallyHasBeenExecuted).toBeTrue();
 });
+
+test("try statement must have either 'catch' or 'finally' clause", () => {
+    expect("try {} catch {}").toEval();
+    expect("try {} catch (e) {}").toEval();
+    expect("try {} finally {}").toEval();
+    expect("try {} catch {} finally {}").toEval();
+    expect("try {} catch (e) {} finally {}").toEval();
+    expect("try {}").not.toEval();
+});
