@@ -239,8 +239,7 @@ void AbstractTableView::move_cursor_relative(int vertical_steps, int horizontal_
 
 void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
 {
-    auto rect = row_rect(index.row()).translated(0, -m_column_header->height());
-    ScrollableWidget::scroll_into_view(rect, scroll_horizontally, scroll_vertically);
+    ScrollableWidget::scroll_into_view(content_rect(index), scroll_horizontally, scroll_vertically);
 }
 
 void AbstractTableView::doubleclick_event(MouseEvent& event)
