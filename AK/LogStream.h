@@ -139,7 +139,7 @@ private:
     int m_fd { -1 };
 };
 
-inline StdLogStream out() { return StdLogStream(STDOUT_FILENO); }
+[[deprecated("Use AK::outln or AK::new_out instead, AK::new_out will soon be renamed to AK::out.")]] inline StdLogStream out() { return StdLogStream(STDOUT_FILENO); }
 inline StdLogStream warn() { return StdLogStream(STDERR_FILENO); }
 #endif
 
