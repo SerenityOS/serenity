@@ -40,7 +40,7 @@ NonnullRefPtr<IRCLogBuffer> IRCLogBuffer::create()
 
 IRCLogBuffer::IRCLogBuffer()
 {
-    m_document = adopt(*new Web::DOM::Document);
+    m_document = Web::DOM::Document::create();
     m_document->append_child(adopt(*new Web::DOM::DocumentType(document())));
     auto html_element = m_document->create_element("html");
     m_document->append_child(html_element);
