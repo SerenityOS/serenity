@@ -77,6 +77,8 @@ private:
     RefPtr<AST::Node> parse_comment();
     RefPtr<AST::Node> parse_bareword();
     RefPtr<AST::Node> parse_glob();
+    RefPtr<AST::Node> parse_brace_expansion();
+    RefPtr<AST::Node> parse_brace_expansion_spec();
 
     template<typename A, typename... Args>
     NonnullRefPtr<A> create(Args... args);
@@ -86,6 +88,7 @@ private:
     char consume();
     bool expect(char);
     bool expect(const StringView&);
+    bool next_is(const StringView&);
 
     void restore_to(size_t offset, AST::Position::Line line)
     {
@@ -133,6 +136,8 @@ private:
 
     Vector<size_t> m_rule_start_offsets;
     Vector<AST::Position::Line> m_rule_start_lines;
+
+    bool m_is_in_brace_expansion_spec { false };
 };
 
 #if 0
@@ -206,6 +211,7 @@ string_composite :: string string_composite?
                   | variable string_composite?
                   | bareword string_composite?
                   | glob string_composite?
+                  | brace_expansion string_composite?
 
 string :: '"' dquoted_string_inner '"'
         | "'" [^']* "'"
@@ -232,6 +238,11 @@ bareword_with_tilde_expansion :: '~' bareword?
 
 glob :: [*?] bareword?
       | bareword [*?]
+
+brace_expansion :: '{' brace_expansion_spec '}'
+
+brace_expansion_spec :: expression? (',' expression?)*
+                      | expression '..' expression
 )";
 #endif
 

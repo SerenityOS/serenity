@@ -55,6 +55,12 @@ void NodeVisitor::visit(const AST::BarewordLiteral*)
 {
 }
 
+void NodeVisitor::visit(const AST::BraceExpansion* node)
+{
+    for (auto& entry : node->entries())
+        entry.visit(*this);
+}
+
 void NodeVisitor::visit(const AST::CastToCommand* node)
 {
     node->inner()->visit(*this);
@@ -151,6 +157,12 @@ void NodeVisitor::visit(const AST::Pipe* node)
 {
     node->left()->visit(*this);
     node->right()->visit(*this);
+}
+
+void NodeVisitor::visit(const AST::Range* node)
+{
+    node->start()->visit(*this);
+    node->end()->visit(*this);
 }
 
 void NodeVisitor::visit(const AST::ReadRedirection* node)

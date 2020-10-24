@@ -37,6 +37,7 @@ public:
     virtual void visit(const AST::ListConcatenate*);
     virtual void visit(const AST::Background*);
     virtual void visit(const AST::BarewordLiteral*);
+    virtual void visit(const AST::BraceExpansion*);
     virtual void visit(const AST::CastToCommand*);
     virtual void visit(const AST::CastToList*);
     virtual void visit(const AST::CloseFdRedirection*);
@@ -54,6 +55,7 @@ public:
     virtual void visit(const AST::MatchExpr*);
     virtual void visit(const AST::Or*);
     virtual void visit(const AST::Pipe*);
+    virtual void visit(const AST::Range*);
     virtual void visit(const AST::ReadRedirection*);
     virtual void visit(const AST::ReadWriteRedirection*);
     virtual void visit(const AST::Sequence*);

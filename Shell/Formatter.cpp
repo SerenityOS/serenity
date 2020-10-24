@@ -190,6 +190,25 @@ void Formatter::visit(const AST::BarewordLiteral* node)
     visited(node);
 }
 
+void Formatter::visit(const AST::BraceExpansion* node)
+{
+    will_visit(node);
+    test_and_update_output_cursor(node);
+    current_builder().append('{');
+
+    TemporaryChange<const AST::Node*> parent { m_parent_node, node };
+    bool first = true;
+    for (auto& entry : node->entries()) {
+        if (!first)
+            current_builder().append(',');
+        first = false;
+        entry.visit(*this);
+    }
+
+    current_builder().append('}');
+    visited(node);
+}
+
 void Formatter::visit(const AST::CastToCommand* node)
 {
     will_visit(node);
@@ -477,6 +496,21 @@ void Formatter::visit(const AST::Pipe* node)
 
         node->right()->visit(*this);
     });
+    visited(node);
+}
+
+void Formatter::visit(const AST::Range* node)
+{
+    will_visit(node);
+    test_and_update_output_cursor(node);
+    current_builder().append('{');
+
+    TemporaryChange<const AST::Node*> parent { m_parent_node, node };
+    node->start()->visit(*this);
+    current_builder().append("..");
+    node->end()->visit(*this);
+
+    current_builder().append('}');
     visited(node);
 }
 
