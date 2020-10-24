@@ -836,22 +836,40 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
     return create_ast_node<ArrayExpression>(move(elements));
 }
 
-NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token)
+NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token, bool in_template_literal)
 {
     auto status = Token::StringValueStatus::Ok;
     auto string = token.string_value(status);
     if (status != Token::StringValueStatus::Ok) {
         String message;
-        if (status == Token::StringValueStatus::MalformedHexEscape || status == Token::StringValueStatus::MalformedUnicodeEscape) {
+        if (status == Token::StringValueStatus::LegacyOctalEscapeSequence) {
+            m_parser_state.m_string_legacy_octal_escape_sequence_in_scope = true;
+            if (in_template_literal)
+                message = "Octal escape sequence not allowed in template literal";
+            else if (m_parser_state.m_strict_mode)
+                message = "Octal escape sequence in string literal not allowed in strict mode";
+        } else if (status == Token::StringValueStatus::MalformedHexEscape || status == Token::StringValueStatus::MalformedUnicodeEscape) {
             auto type = status == Token::StringValueStatus::MalformedUnicodeEscape ? "unicode" : "hexadecimal";
             message = String::formatted("Malformed {} escape sequence", type);
         } else if (status == Token::StringValueStatus::UnicodeEscapeOverflow) {
             message = "Unicode code_point must not be greater than 0x10ffff in escape sequence";
+        } else {
+            ASSERT_NOT_REACHED();
         }
 
         if (!message.is_empty())
             syntax_error(message, token.line_number(), token.line_column());
     }
+
+    // It is possible for string literals to precede a Use Strict Directive that places the
+    // enclosing code in strict mode, and implementations must take care to not use this
+    // extended definition of EscapeSequence with such literals. For example, attempting to
+    // parse the following source text must fail:
+    //
+    // function invalid() { "\7"; "use strict"; }
+
+    if (m_parser_state.m_string_legacy_octal_escape_sequence_in_scope && string == "use strict")
+        syntax_error("Octal escape sequence in string literal not allowed in strict mode");
 
     if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Looking) {
         if (string == "use strict" && token.type() != TokenType::TemplateLiteralString) {
@@ -884,7 +902,7 @@ NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
     while (!done() && !match(TokenType::TemplateLiteralEnd) && !match(TokenType::UnterminatedTemplateLiteral)) {
         if (match(TokenType::TemplateLiteralString)) {
             auto token = consume();
-            expressions.append(parse_string_literal(token));
+            expressions.append(parse_string_literal(token, true));
             if (is_tagged)
                 raw_strings.append(create_ast_node<StringLiteral>(token.value()));
         } else if (match(TokenType::TemplateLiteralExprStart)) {
@@ -1249,6 +1267,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
         first = false;
     }
     m_parser_state.m_strict_mode = initial_strict_mode_state;
+    m_parser_state.m_string_legacy_octal_escape_sequence_in_scope = false;
     consume(TokenType::CurlyClose);
     block->add_variables(m_parser_state.m_let_scopes.last());
     block->add_functions(m_parser_state.m_function_scopes.last());

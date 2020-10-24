@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -103,8 +104,19 @@ String Token::string_value(StringValueStatus& status) const
 {
     ASSERT(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteralString);
     auto is_template = type() == TokenType::TemplateLiteralString;
+    auto offset = is_template ? 0 : 1;
 
-    auto offset = type() == TokenType::TemplateLiteralString ? 0 : 1;
+    size_t i;
+
+    auto lookahead = [&]<typename T>(T fn, size_t distance = 1) -> bool {
+        if (i + distance >= m_value.length() - offset)
+            return false;
+        return fn(m_value[i + distance]);
+    };
+
+    auto is_octal_digit = [](char c) {
+        return c >= '0' && c <= '7';
+    };
 
     auto encoding_failure = [&status](StringValueStatus parse_status) -> String {
         status = parse_status;
@@ -112,7 +124,7 @@ String Token::string_value(StringValueStatus& status) const
     };
 
     StringBuilder builder;
-    for (size_t i = offset; i < m_value.length() - offset; ++i) {
+    for (i = offset; i < m_value.length() - offset; ++i) {
         if (m_value[i] == '\\' && i + 1 < m_value.length() - offset) {
             i++;
             switch (m_value[i]) {
@@ -133,9 +145,6 @@ String Token::string_value(StringValueStatus& status) const
                 break;
             case 'v':
                 builder.append('\v');
-                break;
-            case '0':
-                builder.append((char)0);
                 break;
             case '\'':
                 builder.append('\'');
@@ -200,9 +209,43 @@ String Token::string_value(StringValueStatus& status) const
                     builder.append(m_value[i]);
                     break;
                 }
+                if (m_value[i] == '0' && !lookahead(isdigit)) {
+                    builder.append((char)0);
+                    break;
+                }
 
-                // FIXME: Also parse octal. Should anything else generate a syntax error?
-                builder.append(m_value[i]);
+                // In non-strict mode LegacyOctalEscapeSequence is allowed in strings:
+                // https://tc39.es/ecma262/#sec-additional-syntax-string-literals
+                String octal_str;
+
+                // OctalDigit [lookahead ∉ OctalDigit]
+                if (is_octal_digit(m_value[i]) && !lookahead(is_octal_digit)) {
+                    status = StringValueStatus::LegacyOctalEscapeSequence;
+                    octal_str = String(&m_value[i], 1);
+                }
+                // ZeroToThree OctalDigit [lookahead ∉ OctalDigit]
+                else if (m_value[i] >= '0' && m_value[i] <= '3' && lookahead(is_octal_digit) && !lookahead(is_octal_digit, 2)) {
+                    status = StringValueStatus::LegacyOctalEscapeSequence;
+                    octal_str = String(m_value.substring_view(i, 2));
+                    i++;
+                }
+                // FourToSeven OctalDigit
+                else if (m_value[i] >= '4' && m_value[i] <= '7' && lookahead(is_octal_digit)) {
+                    status = StringValueStatus::LegacyOctalEscapeSequence;
+                    octal_str = String(m_value.substring_view(i, 2));
+                    i++;
+                }
+                // ZeroToThree OctalDigit OctalDigit
+                else if (m_value[i] >= '0' && m_value[i] <= '3' && lookahead(is_octal_digit) && lookahead(is_octal_digit, 2)) {
+                    status = StringValueStatus::LegacyOctalEscapeSequence;
+                    octal_str = String(m_value.substring_view(i, 3));
+                    i += 2;
+                }
+
+                if (status == StringValueStatus::LegacyOctalEscapeSequence)
+                    builder.append_code_point(strtoul(octal_str.characters(), nullptr, 8));
+                else
+                    builder.append(m_value[i]);
             }
         } else {
             builder.append(m_value[i]);
