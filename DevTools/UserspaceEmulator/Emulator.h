@@ -27,6 +27,7 @@
 #pragma once
 
 #include "MallocTracer.h"
+#include "Report.h"
 #include "SoftCPU.h"
 #include "SoftMMU.h"
 #include <AK/Types.h>

@@ -68,7 +68,7 @@ MmapRegion::~MmapRegion()
 ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
 {
     if (!is_readable()) {
-        warnln("8-bit read from unreadable MmapRegion @ {:p}", base() + offset);
+        reportln("8-bit read from unreadable MmapRegion @ {:p}", base() + offset);
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -85,7 +85,7 @@ ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
 ValueWithShadow<u16> MmapRegion::read16(u32 offset)
 {
     if (!is_readable()) {
-        warnln("16-bit read from unreadable MmapRegion @ {:p}", base() + offset);
+        reportln("16-bit read from unreadable MmapRegion @ {:p}", base() + offset);
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -102,7 +102,7 @@ ValueWithShadow<u16> MmapRegion::read16(u32 offset)
 ValueWithShadow<u32> MmapRegion::read32(u32 offset)
 {
     if (!is_readable()) {
-        warnln("32-bit read from unreadable MmapRegion @ {:p}", base() + offset);
+        reportln("32-bit read from unreadable MmapRegion @ {:p}", base() + offset);
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -119,7 +119,7 @@ ValueWithShadow<u32> MmapRegion::read32(u32 offset)
 ValueWithShadow<u64> MmapRegion::read64(u32 offset)
 {
     if (!is_readable()) {
-        warnln("64-bit read from unreadable MmapRegion @ {:p}", base() + offset);
+        reportln("64-bit read from unreadable MmapRegion @ {:p}", base() + offset);
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -136,7 +136,7 @@ ValueWithShadow<u64> MmapRegion::read64(u32 offset)
 void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     if (!is_writable()) {
-        warnln("8-bit write from unwritable MmapRegion @ {:p}", base() + offset);
+        reportln("8-bit write from unwritable MmapRegion @ {:p}", base() + offset);
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -154,7 +154,7 @@ void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
 void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)
 {
     if (!is_writable()) {
-        warnln("16-bit write from unwritable MmapRegion @ {:p}", base() + offset);
+        reportln("16-bit write from unwritable MmapRegion @ {:p}", base() + offset);
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -172,7 +172,7 @@ void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)
 void MmapRegion::write32(u32 offset, ValueWithShadow<u32> value)
 {
     if (!is_writable()) {
-        warnln("32-bit write from unwritable MmapRegion @ {:p}", base() + offset);
+        reportln("32-bit write from unwritable MmapRegion @ {:p}", base() + offset);
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -191,7 +191,7 @@ void MmapRegion::write32(u32 offset, ValueWithShadow<u32> value)
 void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
 {
     if (!is_writable()) {
-        warnln("64-bit write from unwritable MmapRegion @ {:p}", base() + offset);
+        reportln("64-bit write from unwritable MmapRegion @ {:p}", base() + offset);
         Emulator::the().dump_backtrace();
         TODO();
     }

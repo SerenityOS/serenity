@@ -37,11 +37,14 @@
 #include <pthread.h>
 #include <string.h>
 
+bool g_report_to_debug = false;
+
 int main(int argc, char** argv, char** env)
 {
     Vector<const char*> command;
 
     Core::ArgsParser parser;
+    parser.add_option(g_report_to_debug, "Write reports to the debug log", "report-to-debug", 0);
     parser.add_positional_argument(command, "Command to emulate", "command");
     parser.parse(argc, argv);
 
@@ -49,7 +52,7 @@ int main(int argc, char** argv, char** env)
 
     MappedFile mapped_file(executable_path);
     if (!mapped_file.is_valid()) {
-        warnln("Unable to map {}", executable_path);
+        reportln("Unable to map {}", executable_path);
         return 1;
     }
 
@@ -78,7 +81,7 @@ int main(int argc, char** argv, char** env)
     }
     int rc = pthread_setname_np(pthread_self(), builder.to_string().characters());
     if (rc != 0) {
-        warnln("pthread_setname_np: {}", strerror(rc));
+        reportln("pthread_setname_np: {}", strerror(rc));
         return 1;
     }
     return emulator.exec();
