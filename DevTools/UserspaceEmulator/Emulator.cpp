@@ -349,6 +349,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$dbgputstr(arg1, arg2);
     case SC_dbgputch:
         return virt$dbgputch(arg1);
+    case SC_chmod:
+        return virt$chmod(arg1, arg2, arg3);
     case SC_fchmod:
         return virt$fchmod(arg1, arg2);
     case SC_accept:
@@ -490,6 +492,12 @@ int Emulator::virt$dbgputstr(FlatPtr characters, int length)
     auto buffer = mmu().copy_buffer_from_vm(characters, length);
     dbgputstr((const char*)buffer.data(), buffer.size());
     return 0;
+}
+
+int Emulator::virt$chmod(FlatPtr path_addr, size_t path_length, mode_t mode)
+{
+    auto path = mmu().copy_buffer_from_vm(path_addr, path_length);
+    return syscall(SC_chmod, path.data(), path.size(), mode);
 }
 
 int Emulator::virt$fchmod(int fd, mode_t mode)
