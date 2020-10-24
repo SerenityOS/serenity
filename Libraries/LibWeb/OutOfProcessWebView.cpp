@@ -214,6 +214,10 @@ void OutOfProcessWebView::did_scroll()
 
 void OutOfProcessWebView::request_repaint()
 {
+    // If this widget was instantiated but not yet added to a window,
+    // it won't have a back bitmap yet, so we can just skip repaint requests.
+    if (!m_back_bitmap)
+        return;
     client().post_message(Messages::WebContentServer::Paint(m_back_bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_back_bitmap->shbuf_id()));
 }
 
