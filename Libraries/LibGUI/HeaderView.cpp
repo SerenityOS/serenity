@@ -93,10 +93,10 @@ Gfx::IntRect HeaderView::section_rect(int section) const
             continue;
         offset += section_data(i).size;
         if (orientation() == Gfx::Orientation::Horizontal)
-            offset += horizontal_padding() * 2;
+            offset += m_table_view.horizontal_padding() * 2;
     }
     if (orientation() == Gfx::Orientation::Horizontal)
-        return { offset, 0, section_size(section) + horizontal_padding() * 2, height() };
+        return { offset, 0, section_size(section) + m_table_view.horizontal_padding() * 2, height() };
     return { 0, offset, width(), section_size(section) };
 }
 
@@ -232,7 +232,7 @@ void HeaderView::paint_horizontal(Painter& painter)
             continue;
         int section_width = section_size(section);
         bool is_key_column = m_table_view.key_column() == section;
-        Gfx::IntRect cell_rect(x_offset, 0, section_width + horizontal_padding() * 2, height());
+        Gfx::IntRect cell_rect(x_offset, 0, section_width + m_table_view.horizontal_padding() * 2, height());
         bool pressed = section == m_pressed_section && m_pressed_section_is_pressed;
         bool hovered = section == m_hovered_section && model()->is_column_sortable(section);
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
@@ -248,11 +248,11 @@ void HeaderView::paint_horizontal(Painter& painter)
         } else {
             text = model()->column_name(section);
         }
-        auto text_rect = cell_rect.shrunken(horizontal_padding() * 2, 0);
+        auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
             text_rect.move_by(1, 1);
         painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
-        x_offset += section_width + horizontal_padding() * 2;
+        x_offset += section_width + m_table_view.horizontal_padding() * 2;
     }
 
     if (x_offset < rect().right()) {
@@ -276,7 +276,7 @@ void HeaderView::paint_vertical(Painter& painter)
         bool hovered = false;
         Gfx::StylePainter::paint_button(painter, cell_rect, palette(), Gfx::ButtonStyle::Normal, pressed, hovered);
         String text = String::format("%d", section);
-        auto text_rect = cell_rect.shrunken(horizontal_padding() * 2, 0);
+        auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
             text_rect.move_by(1, 1);
         painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());

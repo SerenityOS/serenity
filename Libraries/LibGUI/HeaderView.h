@@ -64,8 +64,6 @@ private:
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void leave_event(Core::Event&) override;
 
-    int horizontal_padding() const { return 5; }
-
     Gfx::IntRect section_resize_grabbable_rect(int) const;
 
     void paint_horizontal(Painter&);
