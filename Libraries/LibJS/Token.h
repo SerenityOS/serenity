@@ -208,6 +208,7 @@ public:
         MalformedHexEscape,
         MalformedUnicodeEscape,
         UnicodeEscapeOverflow,
+        LegacyOctalEscapeSequence,
     };
     String string_value(StringValueStatus& status) const;
 
