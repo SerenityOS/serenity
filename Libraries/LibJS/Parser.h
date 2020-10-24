@@ -87,7 +87,7 @@ public:
     NonnullRefPtr<RegExpLiteral> parse_regexp_literal();
     NonnullRefPtr<ObjectExpression> parse_object_expression();
     NonnullRefPtr<ArrayExpression> parse_array_expression();
-    NonnullRefPtr<StringLiteral> parse_string_literal(Token token);
+    NonnullRefPtr<StringLiteral> parse_string_literal(Token token, bool in_template_literal = false);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
@@ -184,6 +184,7 @@ private:
         bool m_in_function_context { false };
         bool m_in_break_context { false };
         bool m_in_continue_context { false };
+        bool m_string_legacy_octal_escape_sequence_in_scope { false };
 
         explicit ParserState(Lexer);
     };
