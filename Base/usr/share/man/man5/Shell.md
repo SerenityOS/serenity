@@ -108,9 +108,18 @@ The shell performs various expansions, in different stages.
 
 * Variable Expansion: Variables shall be expanded preserving their types.
 
+* Brace Expansions: Brace expansions shall be expanded to a list.
+
 * Juxtaposition Expansion: Juxtapositions shall be expanded as list products.
 
 * Other expansions: Tildes, Evaluate expressions, etc. shall be expanded as needed.
+
+### Brace Expansions
+Brace expansions are of two kinds, _normal brace expansions_ and _range brace expansions_.
+_Normal brace expansions_ are sequences of optional expressions inside braces (`{}`), delimited by a comma (`','`); a missing expression is treated as an empty string literal. Such expressions are simply expanded to the expressions they enclose.
+_Range brace expansions_ are of the form `{start_expression..end_expression}`, where `start_expression` and `end_expression` denote the bounds of an inclusive _range_, and can be one of two types:
+- Single unicode code points: The range expands to all code points between the start and end, e.g. `{a..c}` shall expand to the list `(a b c)`.
+- Numbers: The range expands to all numbers between the start and end, e.g. `{8..11}` shall expand to the list `(8 9 10 11)`.
 
 ### Juxtapositions
 Any two expressions joined without any operator are considered to be in a Juxtaposition, with the resulting value being the list product of two expressions.
@@ -341,6 +350,7 @@ string_composite :: string string_composite?
                   | variable string_composite?
                   | bareword string_composite?
                   | glob string_composite?
+                  | brace string_composite?
 
 string :: '"' dquoted_string_inner '"'
         | "'" [^']* "'"
@@ -367,6 +377,11 @@ bareword_with_tilde_expansion :: '~' bareword?
 
 glob :: [*?] bareword?
       | bareword [*?]
+
+brace_expansion :: '{' brace_expansion_spec '}'
+
+brace_expansion_spec :: expression? (',' expression?)*
+                      | expression '..' expression
 
 digit :: <native hex digit>
 number :: <number in base 10>
