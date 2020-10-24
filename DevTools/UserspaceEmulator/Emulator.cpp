@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <net/if.h>
 #include <net/route.h>
+#include <sched.h>
 #include <serenity.h>
 #include <stdio.h>
 #include <string.h>
@@ -381,6 +382,10 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$getrandom(arg1, arg2, arg3);
     case SC_fork:
         return virt$fork();
+    case SC_sched_getparam:
+        return virt$sched_getparam(arg1, arg2);
+    case SC_sched_setparam:
+        return virt$sched_setparam(arg1, arg2);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1401,6 +1406,22 @@ int Emulator::virt$chdir(FlatPtr path, size_t path_length)
 int Emulator::virt$dup2(int old_fd, int new_fd)
 {
     return syscall(SC_dup2, old_fd, new_fd);
+}
+
+int Emulator::virt$sched_getparam(pid_t pid, FlatPtr user_addr)
+{
+    sched_param user_param;
+    mmu().copy_from_vm(&user_param, user_addr, sizeof(user_param));
+    auto rc = syscall(SC_sched_getparam, pid, &user_param);
+    mmu().copy_to_vm(user_addr, &user_param, sizeof(user_param));
+    return rc;
+}
+
+int Emulator::virt$sched_setparam(int pid, FlatPtr user_addr)
+{
+    sched_param user_param;
+    mmu().copy_from_vm(&user_param, user_addr, sizeof(user_param));
+    return syscall(SC_sched_setparam, pid, &user_param);
 }
 
 }
