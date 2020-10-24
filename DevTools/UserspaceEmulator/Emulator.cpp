@@ -353,6 +353,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$chmod(arg1, arg2, arg3);
     case SC_fchmod:
         return virt$fchmod(arg1, arg2);
+    case SC_fchown:
+        return virt$fchown(arg1, arg2, arg3);
     case SC_accept:
         return virt$accept(arg1, arg2, arg3);
     case SC_setsockopt:
@@ -503,6 +505,11 @@ int Emulator::virt$chmod(FlatPtr path_addr, size_t path_length, mode_t mode)
 int Emulator::virt$fchmod(int fd, mode_t mode)
 {
     return syscall(SC_fchmod, fd, mode);
+}
+
+int Emulator::virt$fchown(int fd, uid_t uid, gid_t gid)
+{
+    return syscall(SC_fchown, fd, uid, gid);
 }
 
 int Emulator::virt$setsockopt(FlatPtr params_addr)
