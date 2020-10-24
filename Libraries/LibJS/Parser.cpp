@@ -861,6 +861,8 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token, bool in_t
             syntax_error(message, token.line_number(), token.line_column());
     }
 
+    auto is_use_strict_directive = token.value() == "'use strict'" || token.value() == "\"use strict\"";
+
     // It is possible for string literals to precede a Use Strict Directive that places the
     // enclosing code in strict mode, and implementations must take care to not use this
     // extended definition of EscapeSequence with such literals. For example, attempting to
@@ -868,15 +870,14 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token, bool in_t
     //
     // function invalid() { "\7"; "use strict"; }
 
-    if (m_parser_state.m_string_legacy_octal_escape_sequence_in_scope && string == "use strict")
+    if (m_parser_state.m_string_legacy_octal_escape_sequence_in_scope && is_use_strict_directive)
         syntax_error("Octal escape sequence in string literal not allowed in strict mode");
 
     if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Looking) {
-        if (string == "use strict" && token.type() != TokenType::TemplateLiteralString) {
+        if (is_use_strict_directive)
             m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Found;
-        } else {
+        else
             m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
-        }
     }
 
     return create_ast_node<StringLiteral>(string);
