@@ -120,6 +120,7 @@ private:
     int virt$clock_gettime(int, FlatPtr);
     int virt$dbgputstr(FlatPtr characters, int length);
     int virt$dbgputch(char);
+    int virt$chmod(FlatPtr, size_t, mode_t);
     int virt$fchmod(int, mode_t);
     int virt$listen(int, int);
     int virt$kill(pid_t, int);
