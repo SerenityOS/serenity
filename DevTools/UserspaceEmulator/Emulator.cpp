@@ -1114,11 +1114,11 @@ int Emulator::virt$realpath(FlatPtr params_addr)
     Syscall::SC_realpath_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
-    auto path = String::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
+    auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
     char host_buffer[PATH_MAX] = {};
 
     Syscall::SC_realpath_params host_params;
-    host_params.path = { path.characters(), path.length() };
+    host_params.path = { (const char*)path.data(), path.size() };
     host_params.buffer = { host_buffer, sizeof(host_buffer) };
     int rc = syscall(SC_realpath, &host_params);
     if (rc < 0)
