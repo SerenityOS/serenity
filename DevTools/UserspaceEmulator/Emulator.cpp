@@ -32,6 +32,7 @@
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <Kernel/API/Syscall.h>
+#include <LibPthread/pthread.h>
 #include <LibX86/ELFSymbolProvider.h>
 #include <fcntl.h>
 #include <net/if.h>
@@ -392,6 +393,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$sched_getparam(arg1, arg2);
     case SC_sched_setparam:
         return virt$sched_setparam(arg1, arg2);
+    case SC_set_thread_name:
+        return virt$set_thread_name(arg1, arg2, arg3);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1448,6 +1451,13 @@ int Emulator::virt$sched_setparam(int pid, FlatPtr user_addr)
     sched_param user_param;
     mmu().copy_from_vm(&user_param, user_addr, sizeof(user_param));
     return syscall(SC_sched_setparam, pid, &user_param);
+}
+
+int Emulator::virt$set_thread_name(pid_t pid, FlatPtr name_addr, size_t name_length)
+{
+    auto user_name = mmu().copy_buffer_from_vm(name_addr, name_length);
+    auto name = String::formatted("(UE) {}", StringView { user_name.data(), user_name.size() });
+    return syscall(SC_set_thread_name, pid, name.characters(), name.length());
 }
 
 }
