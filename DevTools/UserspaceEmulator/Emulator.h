@@ -152,6 +152,7 @@ private:
     int virt$getsid(pid_t);
     int virt$sched_setparam(int, FlatPtr);
     int virt$sched_getparam(pid_t, FlatPtr);
+    int virt$set_thread_name(pid_t, FlatPtr, size_t);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
 
