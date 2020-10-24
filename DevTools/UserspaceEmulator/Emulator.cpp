@@ -335,6 +335,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$fcntl(arg1, arg2, arg3);
     case SC_getgroups:
         return virt$getgroups(arg1, arg2);
+    case SC_setgroups:
+        return virt$setgroups(arg1, arg2);
     case SC_lseek:
         return virt$lseek(arg1, arg2, arg3);
     case SC_socket:
@@ -740,6 +742,15 @@ int Emulator::virt$getgroups(ssize_t count, FlatPtr groups)
         return rc;
     mmu().copy_to_vm(groups, buffer.data(), buffer.size());
     return 0;
+}
+
+int Emulator::virt$setgroups(ssize_t count, FlatPtr groups)
+{
+    if (!count)
+        return syscall(SC_setgroups, 0, nullptr);
+
+    auto buffer = mmu().copy_buffer_from_vm(groups, count * sizeof(gid_t));
+    return syscall(SC_setgroups, count, buffer.data());
 }
 
 u32 Emulator::virt$fcntl(int fd, int cmd, u32 arg)

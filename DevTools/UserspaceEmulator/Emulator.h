@@ -126,6 +126,7 @@ private:
     int virt$fstat(int, FlatPtr);
     u32 virt$fcntl(int fd, int, u32);
     int virt$getgroups(ssize_t count, FlatPtr);
+    int virt$setgroups(ssize_t count, FlatPtr);
     int virt$lseek(int fd, off_t offset, int whence);
     int virt$socket(int, int, int);
     int virt$getsockopt(FlatPtr);
