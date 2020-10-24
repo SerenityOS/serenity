@@ -286,6 +286,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$shbuf_set_volatile(arg1, arg2);
     case SC_mmap:
         return virt$mmap(arg1);
+    case SC_mount:
+        return virt$mount(arg1);
     case SC_munmap:
         return virt$munmap(arg1, arg2);
     case SC_gettid:
@@ -817,6 +819,20 @@ u32 Emulator::virt$mmap(u32 params_addr)
         mmu().add_region(MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset));
 
     return final_address;
+}
+
+u32 Emulator::virt$mount(u32 params_addr)
+{
+    Syscall::SC_mount_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    auto target = mmu().copy_buffer_from_vm((FlatPtr)params.target.characters, params.target.length);
+    auto fs_path = mmu().copy_buffer_from_vm((FlatPtr)params.fs_type.characters, params.fs_type.length);
+    params.fs_type.characters = (char*)fs_path.data();
+    params.fs_type.length = fs_path.size();
+    params.target.characters = (char*)target.data();
+    params.target.length = target.size();
+
+    return syscall(SC_mount, &params);
 }
 
 u32 Emulator::virt$gettid()

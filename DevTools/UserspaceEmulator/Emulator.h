@@ -94,6 +94,7 @@ private:
     int virt$shbuf_seal(int shbuf_id);
     int virt$shbuf_set_volatile(int shbuf_id, bool);
     u32 virt$mmap(u32);
+    u32 virt$mount(u32);
     u32 virt$munmap(FlatPtr address, u32 size);
     u32 virt$gettid();
     u32 virt$getpid();
