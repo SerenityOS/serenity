@@ -140,6 +140,10 @@ private:
         span.color = m_palette.syntax_punctuation();
         span.font = &Gfx::Font::default_bold_fixed_width_font();
     }
+    virtual void visit(const AST::BraceExpansion* node) override
+    {
+        NodeVisitor::visit(node);
+    }
     virtual void visit(const AST::BarewordLiteral* node) override
     {
         NodeVisitor::visit(node);
@@ -349,6 +353,15 @@ private:
     virtual void visit(const AST::Pipe* node) override
     {
         NodeVisitor::visit(node);
+    }
+    virtual void visit(const AST::Range* node) override
+    {
+        NodeVisitor::visit(node);
+
+        auto& span = span_for_node(node->start());
+        span.range.set_start(span.range.end());
+        set_offset_range_end(span.range, node->start()->position().end_line, 2);
+        span.color = m_palette.syntax_punctuation();
     }
     virtual void visit(const AST::ReadRedirection* node) override
     {
