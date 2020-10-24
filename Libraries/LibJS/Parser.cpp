@@ -849,10 +849,8 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token)
             message = "Unicode code_point must not be greater than 0x10ffff in escape sequence";
         }
 
-        syntax_error(
-            message,
-            m_parser_state.m_current_token.line_number(),
-            m_parser_state.m_current_token.line_column());
+        if (!message.is_empty())
+            syntax_error(message, token.line_number(), token.line_column());
     }
 
     if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Looking) {
