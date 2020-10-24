@@ -358,7 +358,10 @@ void init_stage2()
     tty0->set_graphical(!text_mode);
     RefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().lookup("init").value_or("/bin/SystemServer");
-    Process::create_user_process(thread, userspace_init, (uid_t)0, (gid_t)0, ProcessID(0), error, {}, {}, tty0);
+    auto init_args = kernel_command_line().lookup("init_args").value_or("").split(',');
+    if (!init_args.is_empty())
+        init_args.prepend(userspace_init);
+    Process::create_user_process(thread, userspace_init, (uid_t)0, (gid_t)0, ProcessID(0), error, move(init_args), {}, tty0);
     if (error != 0) {
         klog() << "init_stage2: error spawning SystemServer: " << error;
         Processor::halt();
