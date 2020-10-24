@@ -86,23 +86,30 @@ void Splitter::leave_event(Core::Event&)
 bool Splitter::get_resize_candidates_at(const Gfx::IntPoint& position, Widget*& first, Widget*& second)
 {
     int x_or_y = position.primary_offset_for_orientation(m_orientation);
-
-    auto child_widgets = this->child_widgets();
-    if (child_widgets.size() < 2)
-        return false;
-
-    for (size_t i = 0; i < child_widgets.size() - 1; ++i) {
-        auto* first_candidate = child_widgets[i];
-        auto* second_candidate = child_widgets[i + 1];
-
-        if (x_or_y > first_candidate->content_rect().last_edge_for_orientation(m_orientation)
-            && x_or_y <= second_candidate->content_rect().first_edge_for_orientation(m_orientation)) {
-            first = first_candidate;
-            second = second_candidate;
-            return true;
+    Widget* previous_widget = nullptr;
+    bool found_candidates = false;
+    for_each_child_widget([&](auto& child_widget) {
+        if (!child_widget.is_visible()) {
+            // We need to skip over widgets that are not visible as they
+            // are not necessarily in the correct location (anymore)
+            return IterationDecision::Continue;
         }
-    }
-    return false;
+        if (!previous_widget) {
+            previous_widget = &child_widget;
+            return IterationDecision::Continue;
+        }
+
+        if (x_or_y > previous_widget->content_rect().last_edge_for_orientation(m_orientation)
+            && x_or_y <= child_widget.content_rect().first_edge_for_orientation(m_orientation)) {
+            first = previous_widget;
+            second = &child_widget;
+            found_candidates = true;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+    return found_candidates;
 }
 
 void Splitter::mousedown_event(MouseEvent& event)
