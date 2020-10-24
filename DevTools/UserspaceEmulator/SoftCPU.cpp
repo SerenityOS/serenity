@@ -34,11 +34,11 @@
 #    pragma GCC optimize("O3")
 #endif
 
-#define TODO_INSN()                                                                 \
-    do {                                                                            \
-        warnln("\n=={}== Unimplemented instruction: {}\n", getpid(), __FUNCTION__); \
-        m_emulator.dump_backtrace();                                                \
-        _exit(0);                                                                   \
+#define TODO_INSN()                                                                   \
+    do {                                                                              \
+        reportln("\n=={}== Unimplemented instruction: {}\n", getpid(), __FUNCTION__); \
+        m_emulator.dump_backtrace();                                                  \
+        _exit(0);                                                                     \
     } while (0)
 
 //#define MEMORY_DEBUG
@@ -60,7 +60,7 @@ template<typename T>
 void warn_if_uninitialized(T value_with_shadow, const char* message)
 {
     if (value_with_shadow.is_uninitialized()) {
-        dbgln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n", message);
+        reportln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n", message);
         Emulator::the().dump_backtrace();
     }
 }
@@ -68,7 +68,7 @@ void warn_if_uninitialized(T value_with_shadow, const char* message)
 void SoftCPU::warn_if_flags_tainted(const char* message) const
 {
     if (m_flags_tainted) {
-        warnln("\n=={}==  \033[31;1mConditional depends on uninitialized data\033[0m ({})\n", getpid(), message);
+        reportln("\n=={}==  \033[31;1mConditional depends on uninitialized data\033[0m ({})\n", getpid(), message);
         Emulator::the().dump_backtrace();
     }
 }
@@ -1342,13 +1342,13 @@ void SoftCPU::DIV_RM16(const X86::Instruction& insn)
 {
     auto divisor = insn.modrm().read16(*this, insn);
     if (divisor.value() == 0) {
-        warnln("Divide by zero");
+        reportln("Divide by zero");
         TODO();
     }
     u32 dividend = ((u32)dx().value() << 16) | ax().value();
     auto quotient = dividend / divisor.value();
     if (quotient > NumericLimits<u16>::max()) {
-        warnln("Divide overflow");
+        reportln("Divide overflow");
         TODO();
     }
 
@@ -1363,13 +1363,13 @@ void SoftCPU::DIV_RM32(const X86::Instruction& insn)
 {
     auto divisor = insn.modrm().read32(*this, insn);
     if (divisor.value() == 0) {
-        warnln("Divide by zero");
+        reportln("Divide by zero");
         TODO();
     }
     u64 dividend = ((u64)edx().value() << 32) | eax().value();
     auto quotient = dividend / divisor.value();
     if (quotient > NumericLimits<u32>::max()) {
-        warnln("Divide overflow");
+        reportln("Divide overflow");
         TODO();
     }
 
@@ -1384,13 +1384,13 @@ void SoftCPU::DIV_RM8(const X86::Instruction& insn)
 {
     auto divisor = insn.modrm().read8(*this, insn);
     if (divisor.value() == 0) {
-        warnln("Divide by zero");
+        reportln("Divide by zero");
         TODO();
     }
     u16 dividend = ax().value();
     auto quotient = dividend / divisor.value();
     if (quotient > NumericLimits<u8>::max()) {
-        warnln("Divide overflow");
+        reportln("Divide overflow");
         TODO();
     }
 
@@ -1405,7 +1405,7 @@ void SoftCPU::ENTER32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::ESCAPE(const X86::Instruction&)
 {
-    dbgln("FIXME: x87 floating-point support");
+    reportln("FIXME: x87 floating-point support");
     m_emulator.dump_backtrace();
     TODO();
 }
@@ -1546,13 +1546,13 @@ void SoftCPU::IDIV_RM16(const X86::Instruction& insn)
     auto divisor_with_shadow = insn.modrm().read16(*this, insn);
     auto divisor = (i16)divisor_with_shadow.value();
     if (divisor == 0) {
-        warnln("Divide by zero");
+        reportln("Divide by zero");
         TODO();
     }
     i32 dividend = (i32)(((u32)dx().value() << 16) | (u32)ax().value());
     i32 result = dividend / divisor;
     if (result > NumericLimits<i16>::max() || result < NumericLimits<i16>::min()) {
-        warnln("Divide overflow");
+        reportln("Divide overflow");
         TODO();
     }
 
@@ -1566,13 +1566,13 @@ void SoftCPU::IDIV_RM32(const X86::Instruction& insn)
     auto divisor_with_shadow = insn.modrm().read32(*this, insn);
     auto divisor = (i32)divisor_with_shadow.value();
     if (divisor == 0) {
-        warnln("Divide by zero");
+        reportln("Divide by zero");
         TODO();
     }
     i64 dividend = (i64)(((u64)edx().value() << 32) | (u64)eax().value());
     i64 result = dividend / divisor;
     if (result > NumericLimits<i32>::max() || result < NumericLimits<i32>::min()) {
-        warnln("Divide overflow");
+        reportln("Divide overflow");
         TODO();
     }
 
@@ -1586,13 +1586,13 @@ void SoftCPU::IDIV_RM8(const X86::Instruction& insn)
     auto divisor_with_shadow = insn.modrm().read8(*this, insn);
     auto divisor = (i8)divisor_with_shadow.value();
     if (divisor == 0) {
-        warnln("Divide by zero");
+        reportln("Divide by zero");
         TODO();
     }
     i16 dividend = ax().value();
     i16 result = dividend / divisor;
     if (result > NumericLimits<i8>::max() || result < NumericLimits<i8>::min()) {
-        warnln("Divide overflow");
+        reportln("Divide overflow");
         TODO();
     }
 
