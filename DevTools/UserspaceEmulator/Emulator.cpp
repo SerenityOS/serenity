@@ -531,6 +531,13 @@ int Emulator::virt$setsockopt(FlatPtr params_addr)
         return rc;
     }
 
+    if (params.option == SO_BINDTODEVICE) {
+        auto ifname = mmu().copy_buffer_from_vm((FlatPtr)params.value, params.value_size);
+        params.value = ifname.data();
+        params.value_size = ifname.size();
+        return syscall(SC_setsockopt, &params);
+    }
+
     TODO();
 }
 
