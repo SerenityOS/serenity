@@ -25,6 +25,7 @@
  */
 
 #include "Parser.h"
+#include <AK/TemporaryChange.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -940,7 +941,13 @@ RefPtr<AST::Node> Parser::parse_expression()
         return move(expr);
     };
 
-    if (strchr("&|){} ;<>\n", starting_char) != nullptr)
+    if (strchr("&|)} ;<>\n", starting_char) != nullptr)
+        return nullptr;
+
+    if (m_is_in_brace_expansion_spec && starting_char == ',')
+        return nullptr;
+
+    if (m_is_in_brace_expansion_spec && next_is(".."))
         return nullptr;
 
     if (isdigit(starting_char)) {
@@ -1000,6 +1007,13 @@ RefPtr<AST::Node> Parser::parse_string_composite()
             return create<AST::Juxtaposition>(glob.release_nonnull(), next_part.release_nonnull()); // Concatenate Glob StringComposite
 
         return glob;
+    }
+
+    if (auto expansion = parse_brace_expansion()) {
+        if (auto next_part = parse_string_composite())
+            return create<AST::Juxtaposition>(expansion.release_nonnull(), next_part.release_nonnull()); // Concatenate BraceExpansion StringComposite
+
+        return expansion;
     }
 
     if (auto bareword = parse_bareword()) {
@@ -1223,8 +1237,9 @@ RefPtr<AST::Node> Parser::parse_bareword()
 {
     auto rule_start = push_start();
     StringBuilder builder;
-    auto is_acceptable_bareword_character = [](char c) {
-        return strchr("\\\"'*$&#|(){} ?;<>\n", c) == nullptr;
+    auto is_acceptable_bareword_character = [&](char c) {
+        return strchr("\\\"'*$&#|(){} ?;<>\n", c) == nullptr
+            && ((m_is_in_brace_expansion_spec && c != ',') || !m_is_in_brace_expansion_spec);
     };
     while (!at_end()) {
         char ch = peek();
@@ -1237,6 +1252,11 @@ RefPtr<AST::Node> Parser::parse_bareword()
             }
             builder.append(ch);
             continue;
+        }
+
+        if (m_is_in_brace_expansion_spec && next_is("..")) {
+            // Don't eat '..' in a brace expansion spec.
+            break;
         }
 
         if (is_acceptable_bareword_character(ch)) {
@@ -1343,6 +1363,61 @@ RefPtr<AST::Node> Parser::parse_glob()
     return bareword_part;
 }
 
+RefPtr<AST::Node> Parser::parse_brace_expansion()
+{
+    auto rule_start = push_start();
+
+    if (!expect('{'))
+        return nullptr;
+
+    if (auto spec = parse_brace_expansion_spec()) {
+        if (!expect('}'))
+            spec->set_is_syntax_error(create<AST::SyntaxError>("Expected a close brace '}' to end a brace expansion"));
+
+        return spec;
+    }
+
+    restore_to(*rule_start);
+    return nullptr;
+}
+
+RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
+{
+    TemporaryChange is_in_brace_expansion { m_is_in_brace_expansion_spec, true };
+    auto rule_start = push_start();
+    auto start_expr = parse_expression();
+    if (start_expr) {
+        if (expect("..")) {
+            if (auto end_expr = parse_expression()) {
+                if (end_expr->position().start_offset != start_expr->position().end_offset + 2)
+                    end_expr->set_is_syntax_error(create<AST::SyntaxError>("Expected no whitespace between '..' and the following expression in brace expansion"));
+
+                return create<AST::Range>(start_expr.release_nonnull(), end_expr.release_nonnull());
+            }
+
+            return create<AST::Range>(start_expr.release_nonnull(), create<AST::SyntaxError>("Expected an expression to end range brace expansion with"));
+        }
+    }
+
+    NonnullRefPtrVector<AST::Node> subexpressions;
+    if (start_expr)
+        subexpressions.append(start_expr.release_nonnull());
+
+    while (expect(',')) {
+        auto expr = parse_expression();
+        if (expr) {
+            subexpressions.append(expr.release_nonnull());
+        } else {
+            subexpressions.append(create<AST::StringLiteral>(""));
+        }
+    }
+
+    if (subexpressions.is_empty())
+        return nullptr;
+
+    return create<AST::BraceExpansion>(move(subexpressions));
+}
+
 StringView Parser::consume_while(Function<bool(char)> condition)
 {
     auto start_offset = m_offset;
@@ -1351,6 +1426,14 @@ StringView Parser::consume_while(Function<bool(char)> condition)
         consume();
 
     return m_input.substring_view(start_offset, m_offset - start_offset);
+}
+
+bool Parser::next_is(const StringView& next)
+{
+    auto start = push_start();
+    auto res = expect(next);
+    restore_to(*start);
+    return res;
 }
 
 }

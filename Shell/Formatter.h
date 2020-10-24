@@ -59,6 +59,7 @@ private:
     virtual void visit(const AST::ListConcatenate*) override;
     virtual void visit(const AST::Background*) override;
     virtual void visit(const AST::BarewordLiteral*) override;
+    virtual void visit(const AST::BraceExpansion*) override;
     virtual void visit(const AST::CastToCommand*) override;
     virtual void visit(const AST::CastToList*) override;
     virtual void visit(const AST::CloseFdRedirection*) override;
@@ -76,6 +77,7 @@ private:
     virtual void visit(const AST::MatchExpr*) override;
     virtual void visit(const AST::Or*) override;
     virtual void visit(const AST::Pipe*) override;
+    virtual void visit(const AST::Range*) override;
     virtual void visit(const AST::ReadRedirection*) override;
     virtual void visit(const AST::ReadWriteRedirection*) override;
     virtual void visit(const AST::Sequence*) override;
