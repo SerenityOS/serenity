@@ -297,6 +297,10 @@ public:
         : m_contained_values(move(static_cast<NonnullRefPtrVector<Value>&>(values)))
     {
     }
+    ListValue(NonnullRefPtrVector<Value> values)
+        : m_contained_values(move(values))
+    {
+    }
 
     const NonnullRefPtrVector<Value>& values() const { return m_contained_values; }
     NonnullRefPtrVector<Value>& values() { return m_contained_values; }
@@ -433,6 +437,7 @@ public:
         ListConcatenate,
         Background,
         BarewordLiteral,
+        BraceExpansion,
         CastToCommand,
         CastToList,
         CloseFdRedirection,
@@ -450,6 +455,7 @@ public:
         MatchExpr,
         Or,
         Pipe,
+        Range,
         ReadRedirection,
         ReadWriteRedirection,
         Sequence,
@@ -574,6 +580,24 @@ private:
     virtual RefPtr<Node> leftmost_trivial_literal() const override { return this; }
 
     String m_text;
+};
+
+class BraceExpansion final : public Node {
+public:
+    BraceExpansion(Position, NonnullRefPtrVector<Node>);
+    virtual ~BraceExpansion();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtrVector<Node>& entries() const { return m_entries; }
+
+private:
+    NODE(BraceExpansion);
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) override;
+
+    NonnullRefPtrVector<Node> m_entries;
 };
 
 class CastToCommand final : public Node {
@@ -956,6 +980,26 @@ private:
 
     NonnullRefPtr<Node> m_left;
     NonnullRefPtr<Node> m_right;
+};
+
+class Range final : public Node {
+public:
+    Range(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>);
+    virtual ~Range();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const NonnullRefPtr<Node>& start() const { return m_start; }
+    const NonnullRefPtr<Node>& end() const { return m_end; }
+
+private:
+    NODE(Range);
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) override;
+
+    NonnullRefPtr<Node> m_start;
+    NonnullRefPtr<Node> m_end;
 };
 
 class ReadRedirection final : public PathRedirectionNode {

@@ -446,6 +446,66 @@ BarewordLiteral::~BarewordLiteral()
 {
 }
 
+void BraceExpansion::dump(int level) const
+{
+    Node::dump(level);
+    for (auto& entry : m_entries)
+        entry.dump(level + 1);
+}
+
+RefPtr<Value> BraceExpansion::run(RefPtr<Shell> shell)
+{
+    NonnullRefPtrVector<Value> values;
+    for (auto& entry : m_entries) {
+        auto value = entry.run(shell);
+        if (value)
+            values.append(value.release_nonnull());
+    }
+
+    return create<ListValue>(move(values));
+}
+
+HitTestResult BraceExpansion::hit_test_position(size_t offset)
+{
+    if (!position().contains(offset))
+        return {};
+
+    for (auto& entry : m_entries) {
+        auto result = entry.hit_test_position(offset);
+        if (result.matching_node) {
+            if (!result.closest_command_node)
+                result.closest_command_node = &entry;
+            return result;
+        }
+    }
+
+    return {};
+}
+
+void BraceExpansion::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    for (auto& entry : m_entries) {
+        entry.highlight_in_editor(editor, shell, metadata);
+        metadata.is_first_in_list = false;
+    }
+}
+
+BraceExpansion::BraceExpansion(Position position, NonnullRefPtrVector<Node> entries)
+    : Node(move(position))
+    , m_entries(move(entries))
+{
+    for (auto& entry : m_entries) {
+        if (entry.is_syntax_error()) {
+            set_is_syntax_error(entry.syntax_error_node());
+            break;
+        }
+    }
+}
+
+BraceExpansion::~BraceExpansion()
+{
+}
+
 void CastToCommand::dump(int level) const
 {
     Node::dump(level);
@@ -1700,6 +1760,124 @@ PathRedirectionNode::~PathRedirectionNode()
 {
 }
 
+void Range::dump(int level) const
+{
+    Node::dump(level);
+    print_indented("(From)", level + 1);
+    m_start->dump(level + 2);
+    print_indented("(To)", level + 1);
+    m_end->dump(level + 2);
+}
+
+RefPtr<Value> Range::run(RefPtr<Shell> shell)
+{
+    constexpr static auto interpolate = [](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> NonnullRefPtrVector<Value> {
+        NonnullRefPtrVector<Value> values;
+
+        if (start->is_string() && end->is_string()) {
+            auto start_str = start->resolve_as_list(shell)[0];
+            auto end_str = end->resolve_as_list(shell)[0];
+
+            Utf8View start_view { start_str }, end_view { end_str };
+            if (start_view.validate() && end_view.validate()) {
+                if (start_view.length() == 1 && end_view.length() == 1) {
+                    // Interpolate between two code points.
+                    auto start_code_point = *start_view.begin();
+                    auto end_code_point = *end_view.begin();
+                    auto step = start_code_point > end_code_point ? -1 : 1;
+                    StringBuilder builder;
+                    for (u32 code_point = start_code_point; code_point != end_code_point; code_point += step) {
+                        builder.clear();
+                        builder.append_code_point(code_point);
+                        values.append(create<StringValue>(builder.to_string()));
+                    }
+                    // Append the ending code point too, most shells treat this as inclusive.
+                    builder.clear();
+                    builder.append_code_point(end_code_point);
+                    values.append(create<StringValue>(builder.to_string()));
+                } else {
+                    // Could be two numbers?
+                    auto start_int = start_str.to_int();
+                    auto end_int = end_str.to_int();
+                    if (start_int.has_value() && end_int.has_value()) {
+                        auto start = start_int.value();
+                        auto end = end_int.value();
+                        auto step = start > end ? 1 : -1;
+                        for (int value = start; value != end; value += step)
+                            values.append(create<StringValue>(String::number(value)));
+                        // Append the range end too, most shells treat this as inclusive.
+                        values.append(create<StringValue>(String::number(end)));
+                    } else {
+                        goto yield_start_end;
+                    }
+                }
+            } else {
+            yield_start_end:;
+                warnln("Shell: Cannot interpolate between '{}' and '{}'!", start_str, end_str);
+                // We can't really interpolate between the two, so just yield both.
+                values.append(create<StringValue>(move(start_str)));
+                values.append(create<StringValue>(move(end_str)));
+            }
+
+            return values;
+        }
+
+        warnln("Shell: Cannot apply the requested interpolation");
+        return values;
+    };
+
+    auto start_value = m_start->run(shell);
+    auto end_value = m_end->run(shell);
+    if (!start_value || !end_value)
+        return create<ListValue>({});
+
+    return create<ListValue>(interpolate(*start_value, *end_value, shell));
+}
+
+void Range::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    m_start->highlight_in_editor(editor, shell, metadata);
+
+    // Highlight the '..'
+    editor.stylize({ m_start->position().end_offset, m_end->position().start_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
+
+    metadata.is_first_in_list = false;
+    m_end->highlight_in_editor(editor, shell, metadata);
+}
+
+HitTestResult Range::hit_test_position(size_t offset)
+{
+    if (!position().contains(offset))
+        return {};
+
+    auto result = m_start->hit_test_position(offset);
+    if (result.matching_node) {
+        if (!result.closest_command_node)
+            result.closest_command_node = m_start;
+        return result;
+    }
+
+    result = m_end->hit_test_position(offset);
+    if (!result.closest_command_node)
+        result.closest_command_node = m_end;
+    return result;
+}
+
+Range::Range(Position position, NonnullRefPtr<Node> start, NonnullRefPtr<Node> end)
+    : Node(move(position))
+    , m_start(move(start))
+    , m_end(move(end))
+{
+    if (m_start->is_syntax_error())
+        set_is_syntax_error(m_start->syntax_error_node());
+    else if (m_end->is_syntax_error())
+        set_is_syntax_error(m_end->syntax_error_node());
+}
+
+Range::~Range()
+{
+}
+
 void ReadRedirection::dump(int level) const
 {
     Node::dump(level);
@@ -2116,6 +2294,9 @@ RefPtr<Value> StringLiteral::run(RefPtr<Shell>)
 
 void StringLiteral::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
 {
+    if (m_text.is_empty())
+        return;
+
     Line::Style style { Line::Style::Foreground(Line::Style::XtermColor::Yellow) };
     if (metadata.is_first_in_list)
         style.unify_with({ Line::Style::Bold });
