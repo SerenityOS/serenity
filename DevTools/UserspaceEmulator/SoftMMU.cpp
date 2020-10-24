@@ -25,6 +25,7 @@
  */
 
 #include "SoftMMU.h"
+#include "Report.h"
 #include "SharedBufferRegion.h"
 #include <AK/ByteBuffer.h>
 
@@ -68,7 +69,7 @@ ValueWithShadow<u8> SoftMMU::read8(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
-        warnln("SoftMMU::read8: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::read8: No region for @ {:p}", address.offset());
         TODO();
     }
 
@@ -79,7 +80,7 @@ ValueWithShadow<u16> SoftMMU::read16(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
-        warnln("SoftMMU::read16: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::read16: No region for @ {:p}", address.offset());
         TODO();
     }
 
@@ -90,7 +91,7 @@ ValueWithShadow<u32> SoftMMU::read32(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
-        warnln("SoftMMU::read32: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::read32: No region for @ {:p}", address.offset());
         TODO();
     }
 
@@ -101,7 +102,7 @@ ValueWithShadow<u64> SoftMMU::read64(X86::LogicalAddress address)
 {
     auto* region = find_region(address);
     if (!region) {
-        warnln("SoftMMU::read64: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::read64: No region for @ {:p}", address.offset());
         TODO();
     }
 
@@ -112,7 +113,7 @@ void SoftMMU::write8(X86::LogicalAddress address, ValueWithShadow<u8> value)
 {
     auto* region = find_region(address);
     if (!region) {
-        warnln("SoftMMU::write8: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::write8: No region for @ {:p}", address.offset());
         TODO();
     }
 
@@ -123,7 +124,7 @@ void SoftMMU::write16(X86::LogicalAddress address, ValueWithShadow<u16> value)
 {
     auto* region = find_region(address);
     if (!region) {
-        warnln("SoftMMU::write16: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::write16: No region for @ {:p}", address.offset());
         TODO();
     }
 
@@ -134,7 +135,7 @@ void SoftMMU::write32(X86::LogicalAddress address, ValueWithShadow<u32> value)
 {
     auto* region = find_region(address);
     if (!region) {
-        warnln("SoftMMU::write32: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::write32: No region for @ {:p}", address.offset());
         TODO();
     }
 
@@ -145,7 +146,7 @@ void SoftMMU::write64(X86::LogicalAddress address, ValueWithShadow<u64> value)
 {
     auto* region = find_region(address);
     if (!region) {
-        warnln("SoftMMU::write64: No region for @ {:p}", address.offset());
+        reportln("SoftMMU::write64: No region for @ {:p}", address.offset());
         TODO();
     }
 
