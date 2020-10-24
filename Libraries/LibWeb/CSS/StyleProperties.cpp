@@ -116,7 +116,7 @@ void StyleProperties::load_font() const
     if (font_weight == "lighter")
         weight = "Thin";
     else if (font_weight == "normal")
-        weight = "";
+        weight = "Regular";
     else if (font_weight == "bold")
         weight = "Bold";
     else {
