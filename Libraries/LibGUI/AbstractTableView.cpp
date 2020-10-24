@@ -374,15 +374,6 @@ void AbstractTableView::layout_headers()
     }
 }
 
-void AbstractTableView::set_row_height(int height)
-{
-    if (m_row_height == height)
-        return;
-
-    m_row_height = height;
-    update_row_sizes();
-}
-
 void AbstractTableView::keydown_event(KeyEvent& event)
 {
     if (is_tab_key_navigation_enabled()) {
@@ -399,6 +390,16 @@ void AbstractTableView::keydown_event(KeyEvent& event)
     }
 
     AbstractView::keydown_event(event);
+}
+
+int AbstractTableView::horizontal_padding() const
+{
+    return font().glyph_height() / 2;
+}
+
+int AbstractTableView::row_height() const
+{
+    return font().glyph_height() + 6;
 }
 
 }

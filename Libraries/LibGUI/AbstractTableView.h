@@ -39,8 +39,7 @@ public:
 
 class AbstractTableView : public AbstractView {
 public:
-    int row_height() const { return m_row_height; }
-    void set_row_height(int);
+    int row_height() const;
 
     bool alternating_row_colors() const { return m_alternating_row_colors; }
     void set_alternating_row_colors(bool b) { m_alternating_row_colors = b; }
@@ -60,7 +59,7 @@ public:
 
     void set_column_painting_delegate(int column, OwnPtr<TableCellPaintingDelegate>);
 
-    int horizontal_padding() const { return m_horizontal_padding; }
+    int horizontal_padding() const;
 
     Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
@@ -123,8 +122,6 @@ private:
 
     bool m_alternating_row_colors { true };
     bool m_highlight_selected_rows { true };
-    int m_horizontal_padding { 5 };
-    int m_row_height { 16 };
 };
 
 }

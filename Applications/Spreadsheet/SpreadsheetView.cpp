@@ -66,8 +66,6 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view->row_header().set_visible(true);
     m_table_view->set_model(SheetModel::create(*m_sheet));
 
-    m_table_view->set_row_height(18);
-
     set_focus_proxy(m_table_view);
 
     // FIXME: This is dumb.
