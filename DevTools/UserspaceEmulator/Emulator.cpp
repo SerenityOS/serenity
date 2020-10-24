@@ -34,6 +34,8 @@
 #include <Kernel/API/Syscall.h>
 #include <LibX86/ELFSymbolProvider.h>
 #include <fcntl.h>
+#include <net/if.h>
+#include <net/route.h>
 #include <serenity.h>
 #include <stdio.h>
 #include <string.h>
@@ -964,6 +966,25 @@ int Emulator::virt$ioctl(int fd, unsigned request, FlatPtr arg)
         struct termios termios;
         mmu().copy_from_vm(&termios, arg, sizeof(termios));
         return syscall(SC_ioctl, fd, request, &termios);
+    }
+    if (request == TIOCNOTTY || request == TIOCSCTTY) {
+        return syscall(SC_ioctl, fd, request, 0);
+    }
+    if (request == FB_IOCTL_GET_SIZE_IN_BYTES) {
+        size_t size = 0;
+        auto rc = syscall(SC_ioctl, fd, request, &size);
+        mmu().copy_to_vm(arg, &size, sizeof(size));
+        return rc;
+    }
+    if (request == FB_IOCTL_SET_RESOLUTION) {
+        FBResolution user_resolution;
+        mmu().copy_from_vm(&user_resolution, arg, sizeof(user_resolution));
+        auto rc = syscall(SC_ioctl, fd, request, &user_resolution);
+        mmu().copy_to_vm(arg, &user_resolution, sizeof(user_resolution));
+        return rc;
+    }
+    if (request == FB_IOCTL_SET_BUFFER) {
+        return syscall(SC_ioctl, fd, request, arg);
     }
     reportln("Unsupported ioctl: {}", request);
     dump_backtrace();
