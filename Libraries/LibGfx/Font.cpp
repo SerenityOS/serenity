@@ -53,8 +53,10 @@ struct [[gnu::packed]] FontFileHeader
     u8 glyph_spacing;
     u8 baseline;
     u8 mean_line;
-    u8 unused[3];
-    char name[64];
+    u8 presentation_size;
+    u16 weight;
+    char name[32];
+    char family[32];
 };
 
 Font& Font::default_font()
@@ -112,7 +114,7 @@ NonnullRefPtr<Font> Font::clone() const
         memcpy(new_widths, m_glyph_widths, m_glyph_count);
     else
         memset(new_widths, m_glyph_width, m_glyph_count);
-    return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_type, m_baseline, m_mean_line));
+    return adopt(*new Font(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_type, m_baseline, m_mean_line, m_presentation_size, m_weight));
 }
 
 NonnullRefPtr<Font> Font::create(u8 glyph_height, u8 glyph_width, bool fixed, FontTypes type)
@@ -124,11 +126,12 @@ NonnullRefPtr<Font> Font::create(u8 glyph_height, u8 glyph_width, bool fixed, Fo
     memset(new_rows, 0, bytes_per_glyph * count);
     auto* new_widths = static_cast<u8*>(malloc(count));
     memset(new_widths, glyph_width, count);
-    return adopt(*new Font("Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, type, 0, 0));
+    return adopt(*new Font("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, type, 0, 0, 0, 400));
 }
 
-Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line)
+Font::Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight)
     : m_name(name)
+    , m_family(family)
     , m_type(type)
     , m_rows(rows)
     , m_glyph_widths(widths)
@@ -139,6 +142,8 @@ Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_wid
     , m_glyph_spacing(glyph_spacing)
     , m_baseline(baseline)
     , m_mean_line(mean_line)
+    , m_presentation_size(presentation_size)
+    , m_weight(weight)
     , m_fixed_width(is_fixed_width)
 {
     update_x_height();
@@ -170,8 +175,13 @@ RefPtr<Font> Font::load_from_memory(const u8* data)
         dbgprintf("header.magic != '!Fnt', instead it's '%c%c%c%c'\n", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return nullptr;
     }
-    if (header.name[63] != '\0') {
+    if (header.name[sizeof(header.name) - 1] != '\0') {
         dbgprintf("Font name not fully null-terminated\n");
+        return nullptr;
+    }
+
+    if (header.family[sizeof(header.family) - 1] != '\0') {
+        dbgprintf("Font family not fully null-terminated\n");
         return nullptr;
     }
 
@@ -190,7 +200,7 @@ RefPtr<Font> Font::load_from_memory(const u8* data)
     u8* widths = nullptr;
     if (header.is_variable_width)
         widths = (u8*)(rows) + count * bytes_per_glyph;
-    return adopt(*new Font(String(header.name), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, type, header.baseline, header.mean_line));
+    return adopt(*new Font(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, type, header.baseline, header.mean_line, header.presentation_size, header.weight));
 }
 
 size_t Font::glyph_count_by_type(FontTypes type)
@@ -231,7 +241,10 @@ bool Font::write_to_file(const StringView& path)
     header.mean_line = m_mean_line;
     header.is_variable_width = !m_fixed_width;
     header.glyph_spacing = m_glyph_spacing;
-    memcpy(header.name, m_name.characters(), min(m_name.length(), (size_t)63));
+    header.presentation_size = m_presentation_size;
+    header.weight = m_weight;
+    memcpy(header.name, m_name.characters(), min(m_name.length(), sizeof(header.name) - 1));
+    memcpy(header.family, m_family.characters(), min(m_family.length(), sizeof(header.family) - 1));
 
     size_t bytes_per_glyph = sizeof(unsigned) * m_glyph_height;
     size_t count = glyph_count_by_type(m_type);
@@ -339,32 +352,14 @@ void Font::set_type(FontTypes type)
 
 void Font::set_family_fonts()
 {
-    String typeface;
-    String weight;
-    StringBuilder size;
-
-    auto parts = this->name().split(' ');
-    if (parts.size() < 2) {
-        typeface = this->name();
-    } else {
-        typeface = parts[0];
-        weight = parts[1];
-    }
-
-    if (this->is_fixed_width()) {
-        size.appendf("%d", this->m_max_glyph_width);
-        size.append("x");
-    }
-    size.appendf("%d", this->m_glyph_height);
-
     StringBuilder path;
 
-    if (weight != "Bold") {
-        path.appendf("/res/fonts/%sBold%s.font", &typeface[0], &size.to_string()[0]);
+    if (weight() != 700) {
+        path.appendff("/res/fonts/{}Bold{}.font", family(), presentation_size());
+        auto spath = path.to_string();
         m_bold_family_font = Font::load_from_file(path.to_string());
         if (m_bold_family_font)
             set_boldface(true);
-        path.clear();
     }
 }
 

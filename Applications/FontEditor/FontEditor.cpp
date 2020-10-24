@@ -121,7 +121,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     font_metadata_group_box.set_layout<GUI::VerticalBoxLayout>();
     font_metadata_group_box.layout()->set_margins({ 5, 15, 5, 5 });
     font_metadata_group_box.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
-    font_metadata_group_box.set_preferred_size(0, 195);
+    font_metadata_group_box.set_preferred_size(0, 275);
     font_metadata_group_box.set_title("Font metadata");
 
     //// Name Row
@@ -142,6 +142,61 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
     name_textbox.on_change = [&] {
         m_edited_font->set_name(name_textbox.text());
     };
+
+    //// Family Row
+    auto& family_container = font_metadata_group_box.add<GUI::Widget>();
+    family_container.set_layout<GUI::HorizontalBoxLayout>();
+    family_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    family_container.set_preferred_size(0, 22);
+
+    auto& family_label = family_container.add<GUI::Label>();
+    family_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    family_label.set_preferred_size(100, 0);
+    family_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    family_label.set_text("Family:");
+
+    auto& family_textbox = family_container.add<GUI::TextBox>();
+    family_textbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    family_textbox.set_text(m_edited_font->family());
+    family_textbox.on_change = [&] {
+        m_edited_font->set_family(family_textbox.text());
+    };
+
+    //// Presentation size Row
+    auto& presentation_size_container = font_metadata_group_box.add<GUI::Widget>();
+    presentation_size_container.set_layout<GUI::HorizontalBoxLayout>();
+    presentation_size_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    presentation_size_container.set_preferred_size(0, 22);
+
+    auto& presentation_size_label = presentation_size_container.add<GUI::Label>();
+    presentation_size_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    presentation_size_label.set_preferred_size(100, 0);
+    presentation_size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    presentation_size_label.set_text("Presentation size:");
+
+    auto& presentation_size_spinbox = presentation_size_container.add<GUI::SpinBox>();
+    presentation_size_spinbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    presentation_size_spinbox.set_min(0);
+    presentation_size_spinbox.set_max(255);
+    presentation_size_spinbox.set_value(m_edited_font->presentation_size());
+
+    //// Weight Row
+    auto& weight_container = font_metadata_group_box.add<GUI::Widget>();
+    weight_container.set_layout<GUI::HorizontalBoxLayout>();
+    weight_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    weight_container.set_preferred_size(0, 22);
+
+    auto& weight_label = weight_container.add<GUI::Label>();
+    weight_label.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    weight_label.set_preferred_size(100, 0);
+    weight_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    weight_label.set_text("Weight:");
+
+    auto& weight_spinbox = weight_container.add<GUI::SpinBox>();
+    weight_spinbox.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fill);
+    weight_spinbox.set_min(0);
+    weight_spinbox.set_max(65535);
+    weight_spinbox.set_value(m_edited_font->weight());
 
     //// Glyph spacing Row
     auto& glyph_spacing_container = font_metadata_group_box.add<GUI::Widget>();
@@ -278,7 +333,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
         right_site_width = max(right_site_width, m_glyph_map_widget->preferred_width());
 
         m_preferred_width = m_glyph_editor_widget->width() + right_site_width + 20;
-        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 300;
+        m_preferred_height = m_glyph_map_widget->relative_rect().height() + 2 * m_edited_font->glyph_height() + 380;
     };
 
     m_glyph_editor_widget->on_glyph_altered = [this, update_demo](u8 glyph) {
@@ -313,6 +368,16 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::Font>&& edite
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
+        update_demo();
+    };
+
+    weight_spinbox.on_change = [this, update_demo](int value) {
+        m_edited_font->set_weight(value);
+        update_demo();
+    };
+
+    presentation_size_spinbox.on_change = [this, update_demo](int value) {
+        m_edited_font->set_presentation_size(value);
         update_demo();
     };
 
