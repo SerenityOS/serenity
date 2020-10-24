@@ -89,6 +89,12 @@ public:
 
     ~Font();
 
+    u8 presentation_size() const { return m_presentation_size; }
+    void set_presentation_size(u8 size) { m_presentation_size = size; }
+
+    u16 weight() const { return m_weight; }
+    void set_weight(u16 weight) { m_weight = weight; }
+
     GlyphBitmap glyph_bitmap(u32 code_point) const;
 
     u8 glyph_width(size_t ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[ch]; }
@@ -118,8 +124,8 @@ public:
     int width(const Utf8View&) const;
     int width(const Utf32View&) const;
 
-    String name() const { return m_name; }
-    void set_name(const StringView& name) { m_name = name; }
+    const String& name() const { return m_name; }
+    void set_name(String name) { m_name = move(name); }
 
     bool is_fixed_width() const { return m_fixed_width; }
     void set_fixed_width(bool b) { m_fixed_width = b; }
@@ -142,8 +148,11 @@ public:
     FontTypes type() { return m_type; }
     void set_type(FontTypes type);
 
+    const String& family() const { return m_family; }
+    void set_family(String family) { m_family = move(family); }
+
 private:
-    Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line);
+    Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight);
 
     static RefPtr<Font> load_from_memory(const u8*);
     static size_t glyph_count_by_type(FontTypes type);
@@ -154,6 +163,7 @@ private:
     RefPtr<Font> m_bold_family_font;
 
     String m_name;
+    String m_family;
     FontTypes m_type;
     size_t m_glyph_count { 256 };
 
@@ -169,6 +179,8 @@ private:
     u8 m_glyph_spacing { 0 };
     u8 m_baseline { 0 };
     u8 m_mean_line { 0 };
+    u8 m_presentation_size { 0 };
+    u16 m_weight { 0 };
 
     bool m_fixed_width { false };
     bool m_boldface { false };
