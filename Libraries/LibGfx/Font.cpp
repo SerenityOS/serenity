@@ -60,7 +60,7 @@ struct [[gnu::packed]] FontFileHeader
 Font& Font::default_font()
 {
     static Font* s_default_font;
-    static const char* default_font_path = "/res/fonts/Katica10.font";
+    static const char* default_font_path = "/res/fonts/KaticaRegular10.font";
     if (!s_default_font) {
         s_default_font = Font::load_from_file(default_font_path).leak_ref();
         ASSERT(s_default_font);
@@ -71,7 +71,7 @@ Font& Font::default_font()
 Font& Font::default_fixed_width_font()
 {
     static Font* s_default_fixed_width_font;
-    static const char* default_fixed_width_font_path = "/res/fonts/CsillaThin7x10.font";
+    static const char* default_fixed_width_font_path = "/res/fonts/CsillaRegular10.font";
     if (!s_default_fixed_width_font) {
         s_default_fixed_width_font = Font::load_from_file(default_fixed_width_font_path).leak_ref();
         ASSERT(s_default_fixed_width_font);
@@ -82,7 +82,7 @@ Font& Font::default_fixed_width_font()
 Font& Font::default_bold_fixed_width_font()
 {
     static Font* font;
-    static const char* default_bold_fixed_width_font_path = "/res/fonts/CsillaBold7x10.font";
+    static const char* default_bold_fixed_width_font_path = "/res/fonts/CsillaBold10.font";
     if (!font) {
         font = Font::load_from_file(default_bold_fixed_width_font_path).leak_ref();
         ASSERT(font);
