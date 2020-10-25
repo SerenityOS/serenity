@@ -120,19 +120,18 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
     if (auto known_host = m_etc_hosts.get(hostname); known_host.has_value()) {
         responses.append(known_host.value());
     } else if (!hostname.is_empty()) {
-        bool did_timeout;
+        bool did_get_response = false;
         int retries = 3;
         do {
-            did_timeout = false;
             if (lookup_type == 'L')
-                responses = lookup(hostname, did_timeout, T_A);
+                responses = lookup(hostname, did_get_response, T_A);
             else if (lookup_type == 'R')
-                responses = lookup(hostname, did_timeout, T_PTR);
-            if (!did_timeout)
+                responses = lookup(hostname, did_get_response, T_PTR);
+            if (did_get_response)
                 break;
         } while (--retries);
-        if (did_timeout) {
-            fprintf(stderr, "LookupServer: Out of retries :(\n");
+        if (!did_get_response) {
+            fprintf(stderr, "LookupServer: Never got a response but out of retries :(\n");
             return;
         }
     }
@@ -153,7 +152,7 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
     }
 }
 
-Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
+Vector<String> LookupServer::lookup(const String& hostname, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
 {
     if (auto it = m_lookup_cache.find(hostname); it != m_lookup_cache.end()) {
         auto& cached_lookup = it->value;
@@ -199,6 +198,8 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
     if (nrecv == 0)
         return {};
 
+    did_get_response = true;
+
     auto o_response = DNSResponse::from_raw_response(response_buffer, nrecv);
     if (!o_response.has_value())
         return {};
@@ -213,7 +214,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
     if (response.code() == DNSResponse::Code::REFUSED) {
         if (should_randomize_case == ShouldRandomizeCase::Yes) {
             // Retry with 0x20 case randomization turned off.
-            return lookup(hostname, did_timeout, record_type, ShouldRandomizeCase::No);
+            return lookup(hostname, did_get_response, record_type, ShouldRandomizeCase::No);
         }
         return {};
     }
