@@ -912,6 +912,8 @@ private:
 
 struct MatchEntry {
     NonnullRefPtrVector<Node> options;
+    Optional<Vector<String>> match_names;
+    Optional<Position> match_as_position;
     Vector<Position> pipe_positions;
     RefPtr<Node> body;
 };
