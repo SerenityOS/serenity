@@ -157,6 +157,8 @@ String Token::string_value(StringValueStatus& status) const
                 break;
             case '\n':
                 break;
+            case '\r':
+                break;
             case 'x': {
                 if (i + 2 >= m_value.length() - offset)
                     return encoding_failure(StringValueStatus::MalformedHexEscape);
@@ -207,6 +209,14 @@ String Token::string_value(StringValueStatus& status) const
                 break;
             }
             default:
+                if (i + 2 < m_value.length() - offset) {
+                    auto three_chars_view = m_value.substring_view(i, 3);
+                    if (three_chars_view == LINE_SEPARATOR || three_chars_view == PARAGRAPH_SEPARATOR) {
+                        // line continuation with LS or PS
+                        i += 2;
+                        break;
+                    }
+                }
                 if (is_template && (m_value[i] == '$' || m_value[i] == '`')) {
                     builder.append(m_value[i]);
                     break;

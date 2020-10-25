@@ -32,7 +32,7 @@ test("use strict with double quotes after statement does not yield strict mode c
 
 test("use strict interrupted by a line continuation does not yield strict mode code", () => {
     "use \
-    strict";
+strict";
     expect(isStrictMode()).toBeFalse();
 });
 
