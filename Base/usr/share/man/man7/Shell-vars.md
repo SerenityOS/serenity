@@ -15,10 +15,16 @@ Such variables can be changed or set by the user to tweak how the shell presents
 
 The value of this variable is used to join lists or split strings into lists, its default value is a newline (`\\n`).
 
+2. History
+
+`HISTFILE` (environment)
+
+The value of this variable is used as the Shell's history file path, both for reading history at startup and writing history on exit.
+Its default value is `~/.history`.
 
 ## Visual
 
-2. Prompting
+1. Prompting
 
 `PROMPT` (environment)
 
@@ -30,8 +36,6 @@ The value of this variable is used to generate a prompt, the following escape se
 
 Any other escaped character shall be ignored.
 
-
 `PROMPT_EOL_MARK` (environment)
 
 The value of this variable is used to denote the ends of partial lines (lines with no newline), its default value is '%'.
-
