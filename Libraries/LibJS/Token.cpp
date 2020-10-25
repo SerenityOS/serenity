@@ -155,6 +155,8 @@ String Token::string_value(StringValueStatus& status) const
             case '\\':
                 builder.append('\\');
                 break;
+            case '\n':
+                break;
             case 'x': {
                 if (i + 2 >= m_value.length() - offset)
                     return encoding_failure(StringValueStatus::MalformedHexEscape);
