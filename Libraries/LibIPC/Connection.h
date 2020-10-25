@@ -160,6 +160,12 @@ protected:
     bool drain_messages_from_peer()
     {
         Vector<u8> bytes;
+
+        if (!m_unprocessed_bytes.is_empty()) {
+            bytes.append(m_unprocessed_bytes.data(), m_unprocessed_bytes.size());
+            m_unprocessed_bytes.clear();
+        }
+
         while (m_socket->is_open()) {
             u8 buffer[4096];
             ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
@@ -192,7 +198,15 @@ protected:
             } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
                 m_unprocessed_messages.append(message.release_nonnull());
             } else {
-                ASSERT_NOT_REACHED();
+                // Sometimes we might receive a partial message. That's okay, just stash away
+                // the unprocessed bytes and we'll prepend them to the next incoming message
+                // in the next run of this function.
+                if (!m_unprocessed_bytes.is_empty()) {
+                    dbg() << *this << "::drain_messages_from_peer: Already have unprocessed bytes";
+                    shutdown();
+                }
+                m_unprocessed_bytes = remaining_bytes.isolated_copy();
+                break;
             }
             ASSERT(decoded_bytes);
         }
@@ -233,6 +247,7 @@ protected:
 
     RefPtr<Core::Notifier> m_notifier;
     NonnullOwnPtrVector<Message> m_unprocessed_messages;
+    ByteBuffer m_unprocessed_bytes;
     pid_t m_peer_pid { -1 };
 };
 
