@@ -51,7 +51,7 @@ describe("normal behavior", () => {
     test("callback receives array", () => {
         var callbackCalled = 0;
         var a = [1, 2, 3];
-        a.forEach((_, _, array) => {
+        a.forEach((_, __, array) => {
             callbackCalled++;
             expect(a).toEqual(array);
             a.push("test");
