@@ -130,6 +130,8 @@ bool IODevice::can_read_line() const
     if (!can_read_from_fd())
         return false;
     populate_read_buffer();
+    if (m_eof && !m_buffered_data.is_empty())
+        return true;
     return m_buffered_data.contains_slow('\n');
 }
 
