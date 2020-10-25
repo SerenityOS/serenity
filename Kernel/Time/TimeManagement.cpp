@@ -28,7 +28,9 @@
 #include <AK/Time.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Time/APICTimer.h>
 #include <Kernel/Time/HPET.h>
 #include <Kernel/Time/HPETComparator.h>
 #include <Kernel/Time/HardwareTimer.h>
@@ -48,7 +50,7 @@ TimeManagement& TimeManagement::the()
     return *s_the;
 }
 
-bool TimeManagement::is_system_timer(const HardwareTimer& timer) const
+bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
 {
     return &timer == m_system_timer.ptr();
 }
@@ -69,11 +71,36 @@ timespec TimeManagement::epoch_time() const
     return ts;
 }
 
-void TimeManagement::initialize()
+void TimeManagement::initialize(u32 cpu)
 {
-    ASSERT(!s_the.is_initialized());
-    s_the.ensure_instance();
+    if (cpu == 0) {
+        ASSERT(!s_the.is_initialized());
+        s_the.ensure_instance();
+
+        // Initialize the APIC timers after the other timers as the
+        // initialization needs to briefly enable interrupts, which then
+        // would trigger a deadlock trying to get the s_the instance while
+        // creating it.
+        if (auto* apic_timer = APIC::the().initialize_timers(*s_the->m_system_timer)) {
+            klog() << "Time: Using APIC timer as system timer";
+            s_the->set_system_timer(*apic_timer);
+        }
+    } else {
+        ASSERT(s_the.is_initialized());
+        if (auto* apic_timer = APIC::the().get_timer()) {
+            klog() << "Time: Enable APIC timer on CPU #" << cpu;
+            apic_timer->enable_local_timer();
+        }
+    }
 }
+
+void TimeManagement::set_system_timer(HardwareTimerBase& timer)
+{
+    auto original_callback = m_system_timer->set_callback(nullptr);
+    timer.set_callback(move(original_callback));
+    m_system_timer = timer;
+}
+
 time_t TimeManagement::seconds_since_boot() const
 {
     return m_seconds_since_boot;
@@ -112,11 +139,9 @@ TimeManagement::TimeManagement()
         if (!probe_and_set_non_legacy_hardware_timers())
             if (!probe_and_set_legacy_hardware_timers())
                 ASSERT_NOT_REACHED();
-        return;
+    } else if (!probe_and_set_legacy_hardware_timers()) {
+        ASSERT_NOT_REACHED();
     }
-    if (probe_and_set_legacy_hardware_timers())
-        return;
-    ASSERT_NOT_REACHED();
 }
 
 timeval TimeManagement::now_as_timeval()
@@ -127,11 +152,11 @@ timeval TimeManagement::now_as_timeval()
     return tv;
 }
 
-Vector<HardwareTimer*> TimeManagement::scan_and_initialize_periodic_timers()
+Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
 {
     bool should_enable = is_hpet_periodic_mode_allowed();
     dbg() << "Time: Scanning for periodic timers";
-    Vector<HardwareTimer*> timers;
+    Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (hardware_timer.is_periodic_capable()) {
             timers.append(&hardware_timer);
@@ -142,10 +167,10 @@ Vector<HardwareTimer*> TimeManagement::scan_and_initialize_periodic_timers()
     return timers;
 }
 
-Vector<HardwareTimer*> TimeManagement::scan_for_non_periodic_timers()
+Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodic_timers()
 {
     dbg() << "Time: Scanning for non-periodic timers";
-    Vector<HardwareTimer*> timers;
+    Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (!hardware_timer.is_periodic_capable())
             timers.append(&hardware_timer);

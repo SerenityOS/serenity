@@ -777,15 +777,19 @@ void Scheduler::timer_tick(const RegisterState& regs)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(Processor::current().in_irq());
 
-    if (Processor::current().id() > 0)
-        return;
     auto current_thread = Processor::current().current_thread();
     if (!current_thread)
         return;
 
-    ++g_uptime;
+    bool is_bsp = Processor::current().id() == 0;
+    if (!is_bsp)
+        return; // TODO: This prevents scheduling on other CPUs!
+    if (is_bsp) {
+        // TODO: We should probably move this out of the scheduler
+        ++g_uptime;
 
-    g_timeofday = TimeManagement::now_as_timeval();
+        g_timeofday = TimeManagement::now_as_timeval();
+    }
 
     if (current_thread->process().is_profiling()) {
         SmapDisabler disabler;
@@ -799,7 +803,8 @@ void Scheduler::timer_tick(const RegisterState& regs)
         }
     }
 
-    TimerQueue::the().fire();
+    if (is_bsp)
+        TimerQueue::the().fire();
 
     if (current_thread->tick())
         return;

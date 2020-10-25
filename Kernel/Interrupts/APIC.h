@@ -27,9 +27,12 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Time/HardwareTimer.h>
 #include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
+
+class APICTimer;
 
 struct LocalAPIC {
     u32 apic_id;
@@ -51,6 +54,17 @@ public:
     static u8 spurious_interrupt_vector();
     Thread* get_idle_thread(u32 cpu) const;
     u32 enabled_processor_count() const { return m_processor_enabled_cnt; }
+
+    APICTimer* initialize_timers(HardwareTimerBase&);
+    APICTimer* get_timer() const { return m_apic_timer; }
+    enum class TimerMode {
+        OneShot,
+        Periodic,
+        TSCDeadline
+    };
+    void setup_local_timer(u32, TimerMode, bool);
+    u32 get_timer_current_count();
+    u32 get_timer_divisor();
 
 private:
     class ICRReg {
@@ -102,6 +116,7 @@ private:
     AK::Atomic<u8> m_apic_ap_continue { 0 };
     u32 m_processor_cnt { 0 };
     u32 m_processor_enabled_cnt { 0 };
+    APICTimer* m_apic_timer { nullptr };
 
     static PhysicalAddress get_base();
     static void set_base(const PhysicalAddress& base);
