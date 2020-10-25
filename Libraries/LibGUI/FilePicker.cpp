@@ -178,11 +178,11 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     lower_container.set_layout<VerticalBoxLayout>();
     lower_container.layout()->set_spacing(4);
     lower_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    lower_container.set_preferred_size(0, 45);
+    lower_container.set_preferred_size(0, 48);
 
     auto& filename_container = lower_container.add<Widget>();
     filename_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    filename_container.set_preferred_size(0, 20);
+    filename_container.set_preferred_size(0, 22);
     filename_container.set_layout<HorizontalBoxLayout>();
     auto& filename_label = filename_container.add<Label>("File name:");
     filename_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -216,7 +216,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
 
     auto& button_container = lower_container.add<Widget>();
     button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container.set_preferred_size(0, 20);
+    button_container.set_preferred_size(0, 22);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->set_spacing(4);
     button_container.layout()->add_spacer();
