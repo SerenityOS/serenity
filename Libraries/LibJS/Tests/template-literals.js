@@ -53,6 +53,13 @@ test("newline literals (not characters)", () => {
     ).toBe("foo\n    bar");
 });
 
+test("line continuation in literals (not characters)", () => {
+    expect(
+        `foo\
+    bar`
+    ).toBe("foo    bar");
+});
+
 test("reference error from expressions", () => {
     expect(() => `${b}`).toThrowWithMessage(ReferenceError, "'b' is not defined");
 });

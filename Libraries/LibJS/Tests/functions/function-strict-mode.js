@@ -30,6 +30,12 @@ test("use strict with double quotes after statement does not yield strict mode c
     expect(isStrictMode()).toBeFalse();
 });
 
+test("use strict interrupted by a line continuation does not yield strict mode code", () => {
+    "use \
+    strict";
+    expect(isStrictMode()).toBeFalse();
+});
+
 test("strict mode propagates down the scope chain", () => {
     "use strict";
     expect(isStrictMode()).toBeTrue();
