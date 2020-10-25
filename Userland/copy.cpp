@@ -58,7 +58,7 @@ static Options parse_options(int argc, char* argv[])
         bool success = c_stdin->open(
             STDIN_FILENO,
             Core::IODevice::OpenMode::ReadOnly,
-            Core::File::ShouldCloseFileDescription::No);
+            Core::File::ShouldCloseFileDescriptor::No);
         ASSERT(success);
         auto buffer = c_stdin->read_all();
         dbg() << "Read size " << buffer.size();

@@ -55,11 +55,11 @@ File::File(const StringView& filename, Object* parent)
 
 File::~File()
 {
-    if (m_should_close_file_descriptor == ShouldCloseFileDescription::Yes && mode() != NotOpen)
+    if (m_should_close_file_descriptor == ShouldCloseFileDescriptor::Yes && mode() != NotOpen)
         close();
 }
 
-bool File::open(int fd, IODevice::OpenMode mode, ShouldCloseFileDescription should_close)
+bool File::open(int fd, IODevice::OpenMode mode, ShouldCloseFileDescriptor should_close)
 {
     set_fd(fd);
     set_mode(mode);
@@ -245,7 +245,7 @@ NonnullRefPtr<File> File::stdin()
 {
     if (!stdin_file) {
         stdin_file = File::construct();
-        stdin_file->open(STDIN_FILENO, IODevice::ReadOnly, ShouldCloseFileDescription::No);
+        stdin_file->open(STDIN_FILENO, IODevice::ReadOnly, ShouldCloseFileDescriptor::No);
     }
     return *stdin_file;
 }
@@ -254,7 +254,7 @@ NonnullRefPtr<File> File::stdout()
 {
     if (!stdout_file) {
         stdout_file = File::construct();
-        stdout_file->open(STDOUT_FILENO, IODevice::WriteOnly, ShouldCloseFileDescription::No);
+        stdout_file->open(STDOUT_FILENO, IODevice::WriteOnly, ShouldCloseFileDescriptor::No);
     }
     return *stdout_file;
 }
@@ -263,7 +263,7 @@ NonnullRefPtr<File> File::stderr()
 {
     if (!stderr_file) {
         stderr_file = File::construct();
-        stderr_file->open(STDERR_FILENO, IODevice::WriteOnly, ShouldCloseFileDescription::No);
+        stderr_file->open(STDERR_FILENO, IODevice::WriteOnly, ShouldCloseFileDescriptor::No);
     }
     return *stderr_file;
 }

@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         bool success = file->open(
             STDIN_FILENO,
             Core::IODevice::OpenMode::ReadOnly,
-            Core::File::ShouldCloseFileDescription::Yes);
+            Core::File::ShouldCloseFileDescriptor::Yes);
         ASSERT(success);
         buffer = file->read_all();
     } else {
