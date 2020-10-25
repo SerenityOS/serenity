@@ -143,7 +143,9 @@ public:
 
     void initialize();
 
-    void add_to_history(const String&);
+    void add_to_history(const String& line);
+    bool load_history(const String& path);
+    bool save_history(const String& path);
     const Vector<String>& history() const { return m_history; }
 
     void register_key_input_callback(const KeyBinding&);

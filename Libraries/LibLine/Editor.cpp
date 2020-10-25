@@ -34,6 +34,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <ctype.h>
 #include <signal.h>
@@ -210,6 +211,32 @@ void Editor::add_to_history(const String& line)
     if ((m_history.size() + 1) > m_history_capacity)
         m_history.take_first();
     m_history.append(line);
+}
+
+bool Editor::load_history(const String& path)
+{
+    auto history_file = Core::File::construct(path);
+    if (!history_file->open(Core::IODevice::ReadOnly))
+        return false;
+    while (history_file->can_read_line()) {
+        auto b = history_file->read_line(1024);
+        // skip the newline and terminating bytes
+        add_to_history(String(reinterpret_cast<const char*>(b.data()), b.size() - 2));
+    }
+    return true;
+}
+
+bool Editor::save_history(const String& path)
+{
+    auto file_or_error = Core::File::open(path, Core::IODevice::WriteOnly, 0600);
+    if (file_or_error.is_error())
+        return false;
+    auto& file = *file_or_error.value();
+    for (const auto& line : m_history) {
+        file.write(line);
+        file.write("\n");
+    }
+    return true;
 }
 
 void Editor::clear_line()

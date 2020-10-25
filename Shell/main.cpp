@@ -57,7 +57,7 @@ int main(int argc, char** argv)
         for (auto& it : s_shell->jobs)
             s_shell->kill_job(it.value.ptr(), SIGHUP);
 
-        s_shell->save_history();
+        s_shell->editor()->save_history(s_shell->get_history_path());
     });
 
     editor = Line::Editor::construct();
