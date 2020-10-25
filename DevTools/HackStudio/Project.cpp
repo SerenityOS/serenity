@@ -331,12 +331,11 @@ void Project::rebuild_tree()
                 continue;
             }
             struct stat st;
-            if (lstat(path.string().characters(), &st) < 0)
-                continue;
-
-            if (S_ISDIR(st.st_mode)) {
-                current = &current->find_or_create_subdirectory(part);
-                continue;
+            if (lstat(path.string().characters(), &st) == 0) {
+                if (S_ISDIR(st.st_mode)) {
+                    current = &current->find_or_create_subdirectory(part);
+                    continue;
+                }
             }
             auto file_node = adopt(*new ProjectTreeNode);
             file_node->name = part;
