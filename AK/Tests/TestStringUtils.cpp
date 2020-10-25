@@ -67,6 +67,25 @@ TEST_CASE(matches_case_insensitive)
     EXPECT(!AK::StringUtils::matches("acdcb", "a*c?b"));
 }
 
+TEST_CASE(matches_with_positions)
+{
+    Vector<AK::MaskSpan> spans;
+    EXPECT(AK::StringUtils::matches("abbb", "a*", CaseSensitivity::CaseSensitive, &spans));
+    EXPECT(spans == Vector<AK::MaskSpan>({ { 1, 3 } }));
+
+    spans.clear();
+    EXPECT(AK::StringUtils::matches("abbb", "?*", CaseSensitivity::CaseSensitive, &spans));
+    EXPECT_EQ(spans, Vector<AK::MaskSpan>({ { 0, 1 }, { 1, 3 } }));
+
+    spans.clear();
+    EXPECT(AK::StringUtils::matches("acdcxb", "a*c?b", CaseSensitivity::CaseSensitive, &spans));
+    EXPECT_EQ(spans, Vector<AK::MaskSpan>({ { 1, 2 }, { 4, 1 } }));
+
+    spans.clear();
+    EXPECT(AK::StringUtils::matches("aaaa", "A*", CaseSensitivity::CaseInsensitive, &spans));
+    EXPECT_EQ(spans, Vector<AK::MaskSpan>({ { 1, 3 } }));
+}
+
 TEST_CASE(convert_to_int)
 {
     auto value = AK::StringUtils::convert_to_int(StringView());
