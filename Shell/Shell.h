@@ -215,7 +215,7 @@ private:
     LocalFrame* find_frame_containing_local_variable(const String& name);
 
     void run_tail(RefPtr<Job>);
-    void run_tail(const AST::NodeWithAction&, int head_exit_code);
+    void run_tail(const AST::Command&, const AST::NodeWithAction&, int head_exit_code);
 
     virtual void custom_event(Core::CustomEvent&) override;
 

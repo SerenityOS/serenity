@@ -644,7 +644,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
     if (run_builtin(command, rewirings, last_return_code)) {
         for (auto& next_in_chain : command.next_chain)
-            run_tail(next_in_chain, last_return_code);
+            run_tail(command, next_in_chain, last_return_code);
         return nullptr;
     }
 
@@ -662,7 +662,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
         if (invoke_function(command, last_return_code)) {
             for (auto& next_in_chain : command.next_chain)
-                run_tail(next_in_chain, last_return_code);
+                run_tail(command, next_in_chain, last_return_code);
             return nullptr;
         }
     }
@@ -727,7 +727,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             ASSERT(command.argv.is_empty());
 
             for (auto& next_in_chain : command.next_chain)
-                run_tail(next_in_chain, 0);
+                run_tail(command, next_in_chain, 0);
 
             _exit(last_return_code);
         }
@@ -825,15 +825,17 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     return *job;
 }
 
-void Shell::run_tail(const AST::NodeWithAction& next_in_chain, int head_exit_code)
+void Shell::run_tail(const AST::Command& invoking_command, const AST::NodeWithAction& next_in_chain, int head_exit_code)
 {
     auto evaluate = [&] {
         if (next_in_chain.node->would_execute()) {
             next_in_chain.node->run(*this);
             return;
         }
-        auto commands = next_in_chain.node->to_lazy_evaluated_commands(*this);
-        run_commands(commands);
+        auto node = next_in_chain.node;
+        if (!invoking_command.should_wait)
+            node = adopt(static_cast<AST::Node&>(*new AST::Background(next_in_chain.node->position(), move(node))));
+        adopt(static_cast<AST::Node&>(*new AST::Execute(next_in_chain.node->position(), move(node))))->run(*this);
     };
     switch (next_in_chain.action) {
     case AST::NodeWithAction::And:
@@ -855,7 +857,7 @@ void Shell::run_tail(RefPtr<Job> job)
     if (auto cmd = job->command_ptr()) {
         deferred_invoke([=, this](auto&) {
             for (auto& next_in_chain : cmd->next_chain) {
-                run_tail(next_in_chain, job->exit_code());
+                run_tail(*cmd, next_in_chain, job->exit_code());
             }
         });
     }
