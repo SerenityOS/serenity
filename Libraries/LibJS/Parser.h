@@ -47,6 +47,7 @@ struct FunctionNodeParseOptions {
         AllowSuperConstructorCall = 1 << 2,
         IsGetterFunction = 1 << 3,
         IsSetterFunction = 1 << 4,
+        IsArrowFunction = 1 << 5,
     };
 };
 

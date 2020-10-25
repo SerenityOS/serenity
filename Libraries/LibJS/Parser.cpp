@@ -359,10 +359,11 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         // We have parens around the function parameters and can re-use the same parsing
         // logic used for regular functions: multiple parameters, default values, rest
         // parameter, maybe a trailing comma. If we have a new syntax error afterwards we
-        // know parsing failed and rollback the parser state.
+        // check if it's about a wrong token (something like duplicate parameter name must
+        // not abort), know parsing failed and rollback the parser state.
         auto previous_syntax_errors = m_parser_state.m_errors.size();
-        parameters = parse_function_parameters(function_length);
-        if (m_parser_state.m_errors.size() > previous_syntax_errors)
+        parameters = parse_function_parameters(function_length, FunctionNodeParseOptions::IsArrowFunction);
+        if (m_parser_state.m_errors.size() > previous_syntax_errors && m_parser_state.m_errors[previous_syntax_errors].message.starts_with("Unexpected token"))
             return nullptr;
         if (!match(TokenType::ParenClose))
             return nullptr;
@@ -1314,7 +1315,34 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
 Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_length, u8 parse_options)
 {
+    bool has_default_parameter = false;
+    bool has_rest_parameter = false;
+
     Vector<FunctionNode::Parameter> parameters;
+
+    auto consume_and_validate_identifier = [&]() -> Token {
+        auto token = consume(TokenType::Identifier);
+        auto parameter_name = token.value();
+
+        for (auto& parameter : parameters) {
+            if (parameter_name != parameter.name)
+                continue;
+            String message;
+            if (parse_options & FunctionNodeParseOptions::IsArrowFunction)
+                message = String::formatted("Duplicate parameter '{}' not allowed in arrow function", parameter_name);
+            else if (m_parser_state.m_strict_mode)
+                message = String::formatted("Duplicate parameter '{}' not allowed in strict mode", parameter_name);
+            else if (has_default_parameter || match(TokenType::Equals))
+                message = String::formatted("Duplicate parameter '{}' not allowed in function with default parameter", parameter_name);
+            else if (has_rest_parameter)
+                message = String::formatted("Duplicate parameter '{}' not allowed in function with rest parameter", parameter_name);
+            if (!message.is_empty())
+                syntax_error(message, token.line_number(), token.line_column());
+            break;
+        }
+        return token;
+    };
+
     while (match(TokenType::Identifier) || match(TokenType::TripleDot)) {
         if (parse_options & FunctionNodeParseOptions::IsGetterFunction)
             syntax_error("Getter function must have no arguments");
@@ -1322,15 +1350,17 @@ Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_
             syntax_error("Setter function must have one argument");
         if (match(TokenType::TripleDot)) {
             consume();
-            auto parameter_name = consume(TokenType::Identifier).value();
+            has_rest_parameter = true;
+            auto parameter_name = consume_and_validate_identifier().value();
             function_length = parameters.size();
             parameters.append({ parameter_name, nullptr, true });
             break;
         }
-        auto parameter_name = consume(TokenType::Identifier).value();
+        auto parameter_name = consume_and_validate_identifier().value();
         RefPtr<Expression> default_value;
         if (match(TokenType::Equals)) {
-            consume(TokenType::Equals);
+            consume();
+            has_default_parameter = true;
             function_length = parameters.size();
             default_value = parse_expression(2);
         }
