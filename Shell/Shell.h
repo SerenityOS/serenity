@@ -109,6 +109,8 @@ public:
 
     String format(const StringView&, ssize_t& cursor) const;
 
+    RefPtr<Line::Editor> editor() const { return m_editor; }
+
     struct LocalFrame {
         HashMap<String, RefPtr<AST::Value>> local_variables;
     };
@@ -154,8 +156,6 @@ public:
     void kill_job(const Job*, int sig);
 
     String get_history_path();
-    void load_history();
-    void save_history();
     void print_path(const String& path);
 
     bool read_single_line();

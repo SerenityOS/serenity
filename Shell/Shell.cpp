@@ -966,30 +966,6 @@ String Shell::get_history_path()
     return builder.to_string();
 }
 
-void Shell::load_history()
-{
-    auto history_file = Core::File::construct(get_history_path());
-    if (!history_file->open(Core::IODevice::ReadOnly))
-        return;
-    while (history_file->can_read_line()) {
-        auto b = history_file->read_line(1024);
-        // skip the newline and terminating bytes
-        m_editor->add_to_history(String(reinterpret_cast<const char*>(b.data()), b.size() - 2));
-    }
-}
-
-void Shell::save_history()
-{
-    auto file_or_error = Core::File::open(get_history_path(), Core::IODevice::WriteOnly, 0600);
-    if (file_or_error.is_error())
-        return;
-    auto& file = *file_or_error.value();
-    for (const auto& line : m_editor->history()) {
-        file.write(line);
-        file.write("\n");
-    }
-}
-
 String Shell::escape_token(const String& token)
 {
     StringBuilder builder;
@@ -1559,7 +1535,7 @@ Shell::Shell(Line::Editor& editor)
     }
 
     directory_stack.append(cwd);
-    load_history();
+    m_editor->load_history(get_history_path());
     cache_path();
 }
 
@@ -1569,7 +1545,7 @@ Shell::~Shell()
         return;
 
     stop_all_jobs();
-    save_history();
+    m_editor->save_history(get_history_path());
 }
 
 void Shell::stop_all_jobs()

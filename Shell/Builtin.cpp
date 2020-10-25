@@ -267,7 +267,7 @@ int Shell::builtin_exit(int argc, const char** argv)
         }
     }
     stop_all_jobs();
-    save_history();
+    m_editor->save_history(get_history_path());
     if (m_is_interactive)
         printf("Good-bye!\n");
     exit(exit_code);
