@@ -208,6 +208,13 @@ void Editor::add_to_history(const String& line)
 {
     if (line.is_empty())
         return;
+    String histcontrol = getenv("HISTCONTROL");
+    auto ignoredups = histcontrol == "ignoredups" || histcontrol == "ignoreboth";
+    auto ignorespace = histcontrol == "ignorespace" || histcontrol == "ignoreboth";
+    if (ignoredups && !m_history.is_empty() && line == m_history.last())
+        return;
+    if (ignorespace && line.starts_with(' '))
+        return;
     if ((m_history.size() + 1) > m_history_capacity)
         m_history.take_first();
     m_history.append(line);
