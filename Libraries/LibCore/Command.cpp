@@ -101,7 +101,7 @@ String command(const String& program, const Vector<String>& arguments, Optional<
 
     auto read_all_from_pipe = [](int pipe[2]) {
         auto result_file = Core::File::construct();
-        if (!result_file->open(pipe[0], Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescription::Yes)) {
+        if (!result_file->open(pipe[0], Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
             perror("open");
             ASSERT_NOT_REACHED();
         }
