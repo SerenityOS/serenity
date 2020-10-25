@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (flag_create && flag_delete) {
-        warn() << "-c and -d are mutually exclusive";
+        warnln("-c and -d are mutually exclusive");
         return 1;
     }
 

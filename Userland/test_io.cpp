@@ -298,7 +298,7 @@ static void test_rmdir_root()
 {
     int rc = rmdir("/");
     if (rc != -1 || errno != EBUSY) {
-        warn() << "rmdir(/) didn't fail with EBUSY";
+        warnln("rmdir(/) didn't fail with EBUSY");
         ASSERT_NOT_REACHED();
     }
 }

@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     String filepath = Core::find_executable_in_path(filename);
 
     if (filepath.is_null()) {
-        warn() << "no " << filename << " in path";
+        warnln("no {} in path", filename);
         return 1;
     }
 
