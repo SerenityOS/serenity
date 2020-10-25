@@ -108,44 +108,6 @@ TEST_CASE(no_elements)
     EXPECT_EQ(test1, nullptr);
 }
 
-TEST_CASE(huge_char_array)
-{
-    const size_t N = 2147483680;
-    Bytes span { new (std::nothrow) u8[N], N };
-    EXPECT(span.data() != nullptr);
-
-    for (size_t i = 0; i < span.size(); ++i)
-        span[i] = 'a';
-    size_t index = N - 1;
-    for (u8 c = 'z'; c > 'b'; --c)
-        span[index--] = c;
-
-    EXPECT_EQ(span[N - 1], 'z');
-
-    const u8 a = 'a';
-    auto where = binary_search(span, a, AK::integral_compare<u8>);
-    EXPECT(where != nullptr);
-    EXPECT_EQ(*where, 'a');
-
-    const u8 z = 'z';
-    where = binary_search(span, z, AK::integral_compare<u8>);
-    EXPECT(where != nullptr);
-    EXPECT_EQ(*where, 'z');
-
-    size_t near = 0;
-    const u8 tilde = '~';
-    where = binary_search(span, tilde, AK::integral_compare<u8>, &near);
-    EXPECT_EQ(where, nullptr);
-    EXPECT_EQ(near, N - 1);
-
-    const u8 b = 'b';
-    where = binary_search(span, b, AK::integral_compare<u8>, &near);
-    EXPECT_EQ(where, nullptr);
-    EXPECT_EQ(near, N - ('z' - b + 1));
-
-    delete[] span.data();
-}
-
 TEST_CASE(constexpr_array_search)
 {
     constexpr Array<int, 3> array = { 1, 17, 42 };
