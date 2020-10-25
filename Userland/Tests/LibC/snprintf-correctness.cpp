@@ -155,7 +155,7 @@ TEST_CASE(too_long)
 TEST_CASE(special_cases)
 {
     EXPECT(test_single({ LITERAL(""), "Hello Friend!", POISON, 13, LITERAL("") }));
-    EXPECT_EQ(snprintf(nullptr, 0, "Hello, friend!"), 0);
+    EXPECT_EQ(snprintf(nullptr, 0, "Hello, friend!"), 14);
     EXPECT(test_single({ LITERAL(""), "", POISON, 0, LITERAL("") }));
     EXPECT(test_single({ LITERAL("x"), "", POISON, 0, LITERAL("\0") }));
     EXPECT(test_single({ LITERAL("xx"), "", POISON, 0, LITERAL("\0x") }));
