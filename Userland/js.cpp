@@ -29,6 +29,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <LibJS/AST.h>
 #include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
@@ -68,6 +69,7 @@ private:
 static bool s_dump_ast = false;
 static bool s_print_last_result = false;
 static RefPtr<Line::Editor> s_editor;
+static String s_history_path = String::formatted("{}/.js-history", Core::StandardPaths::home_directory());
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
@@ -572,10 +574,12 @@ int main(int argc, char** argv)
         interpreter->vm().set_underscore_is_last_value(true);
 
         s_editor = Line::Editor::construct();
+        s_editor->load_history(s_history_path);
 
         signal(SIGINT, [](int) {
             if (!s_editor->is_editing())
                 sigint_handler();
+            s_editor->save_history(s_history_path);
         });
 
         s_editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
@@ -763,6 +767,7 @@ int main(int argc, char** argv)
         };
         s_editor->on_tab_complete = move(complete);
         repl(*interpreter);
+        s_editor->save_history(s_history_path);
     } else {
         interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
         ReplConsoleClient console_client(interpreter->global_object().console());
