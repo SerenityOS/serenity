@@ -330,17 +330,15 @@ int main(int argc, char** argv)
     GUI::ActionGroup font_action_group;
     font_action_group.set_exclusive(true);
     auto& font_menu = menubar->add_menu("Font");
-    GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        auto action = GUI::Action::create_checkable(font_name, [&](auto& action) {
-            terminal.set_font(GUI::FontDatabase::the().get_by_name(action.text()));
-            auto metadata = GUI::FontDatabase::the().get_metadata_by_name(action.text());
-            ASSERT(metadata.has_value());
-            config->write_entry("Text", "Font", metadata.value().path);
+    GUI::FontDatabase::the().for_each_fixed_width_font([&](const Gfx::Font& font) {
+        auto action = GUI::Action::create_checkable(font.qualified_name(), [&](auto&) {
+            terminal.set_font(font);
+            config->write_entry("Text", "Font", font.qualified_name());
             config->sync();
             terminal.force_repaint();
         });
         font_action_group.add_action(*action);
-        if (terminal.font().name() == font_name)
+        if (terminal.font().qualified_name() == font.qualified_name())
             action->set_checked(true);
         font_menu.add_action(*action);
     });

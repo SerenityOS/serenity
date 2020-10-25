@@ -363,4 +363,9 @@ void Font::set_family_fonts()
     }
 }
 
+String Font::qualified_name() const
+{
+    return String::formatted("{} {} {}", family(), presentation_size(), weight());
+}
+
 }
