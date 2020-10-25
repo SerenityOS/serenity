@@ -17,7 +17,18 @@ The value of this variable is used to join lists or split strings into lists, it
 
 2. History
 
-`HISTFILE` (environment)
+`HISTCONTROL` (environment)
+
+The value of this variable is used to determine which entries are kept in the Shell's history, both regarding the current active session and when writing the history to disk on exit.
+
+- `ignorespace`: Entries starting with one or more space characters are ignored
+- `ignoredups`: Consecutive duplicate entries are ignored
+- `ignoreboth`: The behaviour of `ignorespace` and `ignoredups` is combined
+- If the variable is unset (this is the default) or has any other value than the above, no entries will be excluded from history.
+
+Note: This variable is respected by every program using `Line::Editor`, e.g. [`js`(1)](../man1/js.md).
+
+`HISTFILE`  (environment)
 
 The value of this variable is used as the Shell's history file path, both for reading history at startup and writing history on exit.
 Its default value is `~/.history`.
