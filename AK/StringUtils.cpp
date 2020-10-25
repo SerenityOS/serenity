@@ -30,62 +30,70 @@
 #include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
+#include <AK/Vector.h>
 
 namespace AK {
 
 namespace StringUtils {
 
-bool matches(const StringView& str, const StringView& mask, CaseSensitivity case_sensitivity)
+bool matches(const StringView& str, const StringView& mask, CaseSensitivity case_sensitivity, Vector<MaskSpan>* match_spans)
 {
+    auto record_span = [&match_spans](size_t start, size_t length) {
+        if (match_spans)
+            match_spans->append({ start, length });
+    };
+
     if (str.is_null() || mask.is_null())
         return str.is_null() && mask.is_null();
+
+    if (mask == "*") {
+        record_span(0, str.length());
+        return true;
+    }
 
     if (case_sensitivity == CaseSensitivity::CaseInsensitive) {
         const String str_lower = String(str).to_lowercase();
         const String mask_lower = String(mask).to_lowercase();
-        return matches(str_lower, mask_lower, CaseSensitivity::CaseSensitive);
+        return matches(str_lower, mask_lower, CaseSensitivity::CaseSensitive, match_spans);
     }
 
     const char* string_ptr = str.characters_without_null_termination();
+    const char* string_start = str.characters_without_null_termination();
     const char* string_end = string_ptr + str.length();
     const char* mask_ptr = mask.characters_without_null_termination();
     const char* mask_end = mask_ptr + mask.length();
 
-    // Match string against mask directly unless we hit a *
-    while ((string_ptr < string_end) && (mask_ptr < mask_end) && (*mask_ptr != '*')) {
-        if ((*mask_ptr != *string_ptr) && (*mask_ptr != '?'))
-            return false;
-        mask_ptr++;
-        string_ptr++;
-    }
-
-    const char* cp = nullptr;
-    const char* mp = nullptr;
-
-    while (string_ptr < string_end) {
-        if ((mask_ptr < mask_end) && (*mask_ptr == '*')) {
-            // If we have only a * left, there is no way to not match.
-            if (++mask_ptr == mask_end)
+    auto matches_one = [](char ch, char p) {
+        if (p == '?')
+            return true;
+        return p == ch && ch != 0;
+    };
+    while (string_ptr < string_end && mask_ptr < mask_end) {
+        auto string_start_ptr = string_ptr;
+        switch (*mask_ptr) {
+        case '*':
+            if (mask_ptr[1] == 0) {
+                record_span(string_ptr - string_start, string_end - string_ptr);
                 return true;
-            mp = mask_ptr;
-            cp = string_ptr + 1;
-        } else if ((mask_ptr < mask_end) && ((*mask_ptr == *string_ptr) || (*mask_ptr == '?'))) {
-            mask_ptr++;
-            string_ptr++;
-        } else if ((cp != nullptr) && (mp != nullptr)) {
-            mask_ptr = mp;
-            string_ptr = cp++;
-        } else {
+            }
+            while (string_ptr < string_end && !matches(string_ptr, mask_ptr + 1))
+                ++string_ptr;
+            record_span(string_start_ptr - string_start, string_ptr - string_start_ptr);
+            --string_ptr;
+            break;
+        case '?':
+            record_span(string_ptr - string_start, 1);
+            break;
+        default:
+            if (!matches_one(*string_ptr, *mask_ptr))
+                return false;
             break;
         }
+        ++string_ptr;
+        ++mask_ptr;
     }
 
-    // Handle any trailing mask
-    while ((mask_ptr < mask_end) && (*mask_ptr == '*'))
-        mask_ptr++;
-
-    // If we 'ate' all of the mask and the string then we match.
-    return (mask_ptr == mask_end) && string_ptr == string_end;
+    return string_ptr == string_end && mask_ptr == mask_end;
 }
 
 Optional<int> convert_to_int(const StringView& str)

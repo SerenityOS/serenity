@@ -87,6 +87,7 @@ public:
     bool starts_with(char) const;
     bool ends_with(char) const;
     bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
     bool contains(char) const;
     bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     bool equals_ignoring_case(const StringView& other) const;

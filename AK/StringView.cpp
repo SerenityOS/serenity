@@ -164,6 +164,11 @@ bool StringView::ends_with(const StringView& str, CaseSensitivity case_sensitivi
     return StringUtils::ends_with(*this, str, case_sensitivity);
 }
 
+bool StringView::matches(const StringView& mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
+}
+
 bool StringView::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity);

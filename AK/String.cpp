@@ -270,6 +270,11 @@ String String::repeated(char ch, size_t count)
     return *impl;
 }
 
+bool String::matches(const StringView& mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
+}
+
 bool String::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity);
