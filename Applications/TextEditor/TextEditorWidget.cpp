@@ -396,12 +396,12 @@ TextEditorWidget::TextEditorWidget()
     font_actions.set_exclusive(true);
 
     auto& font_menu = view_menu.add_submenu("Font");
-    GUI::FontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        auto action = GUI::Action::create_checkable(font_name, [&](auto& action) {
-            m_editor->set_font(GUI::FontDatabase::the().get_by_name(action.text()));
+    GUI::FontDatabase::the().for_each_fixed_width_font([&](const Gfx::Font& font) {
+        auto action = GUI::Action::create_checkable(font.qualified_name(), [&](auto&) {
+            m_editor->set_font(font);
             m_editor->update();
         });
-        if (m_editor->font().name() == font_name)
+        if (m_editor->font().qualified_name() == font.qualified_name())
             action->set_checked(true);
         font_actions.add_action(*action);
         font_menu.add_action(*action);

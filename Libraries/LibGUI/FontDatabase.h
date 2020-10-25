@@ -33,30 +33,20 @@
 
 namespace GUI {
 
-struct Metadata {
-    String path;
-    bool is_fixed_width;
-    int glyph_height;
-};
-
 class FontDatabase {
 public:
     static FontDatabase& the();
 
     RefPtr<Gfx::Font> get_by_name(const StringView&);
-    void for_each_font(Function<void(const StringView&)>);
-    void for_each_fixed_width_font(Function<void(const StringView&)>);
-
-    Optional<Metadata> get_metadata_by_name(const StringView& name) const
-    {
-        return m_name_to_metadata.get(name);
-    }
+    void for_each_font(Function<void(const Gfx::Font&)>);
+    void for_each_fixed_width_font(Function<void(const Gfx::Font&)>);
 
 private:
     FontDatabase();
     ~FontDatabase();
 
-    HashMap<String, Metadata> m_name_to_metadata;
+    struct Private;
+    OwnPtr<Private> m_private;
 };
 
 }

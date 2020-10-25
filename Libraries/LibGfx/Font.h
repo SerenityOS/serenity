@@ -151,6 +151,8 @@ public:
     const String& family() const { return m_family; }
     void set_family(String family) { m_family = move(family); }
 
+    String qualified_name() const;
+
 private:
     Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight);
 

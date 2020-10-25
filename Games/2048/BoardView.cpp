@@ -61,20 +61,15 @@ void BoardView::set_board(const Game::Board* board)
 
 void BoardView::pick_font()
 {
-    constexpr static auto liza_regular = "Liza Regular";
-    String best_font_name = liza_regular;
+    String best_font_name;
     int best_font_size = -1;
     auto& font_database = GUI::FontDatabase::the();
-    font_database.for_each_font([&](const StringView& font_name) {
-        // Only consider variations of Liza Regular.
-        if (!font_name.starts_with(liza_regular))
+    font_database.for_each_font([&](const Gfx::Font& font) {
+        if (font.family() != "Liza" || font.weight() != 700)
             return;
-        auto metadata = font_database.get_metadata_by_name(font_name);
-        if (!metadata.has_value())
-            return;
-        auto size = metadata.value().glyph_height;
+        auto size = font.glyph_height();
         if (size * 2 <= m_cell_size && size > best_font_size) {
-            best_font_name = font_name;
+            best_font_name = font.qualified_name();
             best_font_size = size;
         }
     });

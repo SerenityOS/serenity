@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/FontDatabase.h>
@@ -43,7 +44,12 @@ FontDatabase& FontDatabase::the()
     return *s_the;
 }
 
+struct FontDatabase::Private {
+    HashMap<String, RefPtr<Gfx::Font>> full_name_to_font_map;
+};
+
 FontDatabase::FontDatabase()
+    : m_private(make<Private>())
 {
     Core::DirIterator di("/res/fonts", Core::DirIterator::SkipDots);
     if (di.has_error()) {
@@ -57,11 +63,7 @@ FontDatabase::FontDatabase()
 
         auto path = String::format("/res/fonts/%s", name.characters());
         if (auto font = Gfx::Font::load_from_file(path)) {
-            Metadata metadata;
-            metadata.path = path;
-            metadata.glyph_height = font->glyph_height();
-            metadata.is_fixed_width = font->is_fixed_width();
-            m_name_to_metadata.set(font->name(), move(metadata));
+            m_private->full_name_to_font_map.set(font->qualified_name(), font);
         }
     }
 }
@@ -70,36 +72,39 @@ FontDatabase::~FontDatabase()
 {
 }
 
-void FontDatabase::for_each_font(Function<void(const StringView&)> callback)
+void FontDatabase::for_each_font(Function<void(const Gfx::Font&)> callback)
 {
-    Vector<String> names;
-    names.ensure_capacity(m_name_to_metadata.size());
-    for (auto& it : m_name_to_metadata)
-        names.append(it.key);
-    quick_sort(names);
-    for (auto& name : names)
-        callback(name);
+    Vector<RefPtr<Gfx::Font>> fonts;
+    fonts.ensure_capacity(m_private->full_name_to_font_map.size());
+    for (auto& it : m_private->full_name_to_font_map)
+        fonts.append(it.value);
+    quick_sort(fonts, [](auto& a, auto& b) { return a->qualified_name() < b->qualified_name(); });
+    for (auto& font : fonts)
+        callback(*font);
 }
 
-void FontDatabase::for_each_fixed_width_font(Function<void(const StringView&)> callback)
+void FontDatabase::for_each_fixed_width_font(Function<void(const Gfx::Font&)> callback)
 {
-    Vector<String> names;
-    names.ensure_capacity(m_name_to_metadata.size());
-    for (auto& it : m_name_to_metadata) {
-        if (it.value.is_fixed_width)
-            names.append(it.key);
+    Vector<RefPtr<Gfx::Font>> fonts;
+    fonts.ensure_capacity(m_private->full_name_to_font_map.size());
+    for (auto& it : m_private->full_name_to_font_map) {
+        if (it.value->is_fixed_width())
+            fonts.append(it.value);
     }
-    quick_sort(names);
-    for (auto& name : names)
-        callback(name);
+    quick_sort(fonts, [](auto& a, auto& b) { return a->qualified_name() < b->qualified_name(); });
+    for (auto& font : fonts)
+        callback(*font);
 }
 
 RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
 {
-    auto it = m_name_to_metadata.find(name);
-    if (it == m_name_to_metadata.end())
+    auto it = m_private->full_name_to_font_map.find(name);
+    if (it == m_private->full_name_to_font_map.end()) {
+        dbgln("Font lookup failed: '{}'", name);
         return nullptr;
-    return Gfx::Font::load_from_file((*it).value.path);
+    }
+    dbgln("Font lookup succeeded: '{}'", name);
+    return it->value;
 }
 
 }
