@@ -52,7 +52,7 @@ namespace Kernel {
 
 #define BASE_FREQUENCY 1193182
 
-class PIT final : public HardwareTimer {
+class PIT final : public HardwareTimer<IRQHandler> {
 public:
     static NonnullRefPtr<PIT> initialize(Function<void(const RegisterState&)>);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::i8253; }

@@ -35,7 +35,7 @@ namespace Kernel {
 
 #define OPTIMAL_TICKS_PER_SECOND_RATE 1000
 
-class HardwareTimer;
+class HardwareTimerBase;
 
 class TimeManagement {
     AK_MAKE_ETERNAL;
@@ -43,7 +43,7 @@ class TimeManagement {
 public:
     TimeManagement();
     static bool initialized();
-    static void initialize();
+    static void initialize(u32 cpu);
     static TimeManagement& the();
 
     timespec epoch_time() const;
@@ -53,7 +53,7 @@ public:
     time_t ticks_this_second() const;
     time_t boot_time() const;
 
-    bool is_system_timer(const HardwareTimer&) const;
+    bool is_system_timer(const HardwareTimerBase&) const;
 
     static void update_time(const RegisterState&);
     void increment_time_since_boot(const RegisterState&);
@@ -65,15 +65,16 @@ public:
 private:
     bool probe_and_set_legacy_hardware_timers();
     bool probe_and_set_non_legacy_hardware_timers();
-    Vector<HardwareTimer*> scan_and_initialize_periodic_timers();
-    Vector<HardwareTimer*> scan_for_non_periodic_timers();
-    NonnullRefPtrVector<HardwareTimer> m_hardware_timers;
+    Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
+    Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
+    NonnullRefPtrVector<HardwareTimerBase> m_hardware_timers;
+    void set_system_timer(HardwareTimerBase&);
 
     u32 m_ticks_this_second { 0 };
     u32 m_seconds_since_boot { 0 };
     timespec m_epoch_time { 0, 0 };
-    RefPtr<HardwareTimer> m_system_timer;
-    RefPtr<HardwareTimer> m_time_keeper_timer;
+    RefPtr<HardwareTimerBase> m_system_timer;
+    RefPtr<HardwareTimerBase> m_time_keeper_timer;
 };
 
 }

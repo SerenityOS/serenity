@@ -169,9 +169,9 @@ set(KERNEL_SOURCES
     Tasks/SyncTask.cpp
     Thread.cpp
     ThreadTracer.cpp
+    Time/APICTimer.cpp
     Time/HPET.cpp
     Time/HPETComparator.cpp
-    Time/HardwareTimer.cpp
     Time/PIT.cpp
     Time/RTC.cpp
     Time/TimeManagement.cpp
