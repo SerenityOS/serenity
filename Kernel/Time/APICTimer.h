@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2020, the SerenityOS developers
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,35 +24,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#pragma once
+
+#include <AK/NonnullRefPtr.h>
+#include <AK/Types.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Time/HardwareTimer.h>
-#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
-HardwareTimer::HardwareTimer(u8 irq_number, Function<void(const RegisterState&)> callback)
-    : IRQHandler(irq_number)
-    , m_callback(move(callback))
-{
-}
+class APICTimer final : public HardwareTimer<GenericInterruptHandler> {
+public:
+    static APICTimer* initialize(u8, HardwareTimerBase&);
+    virtual HardwareTimerType timer_type() const override { return HardwareTimerType::LocalAPICTimer; }
+    virtual const char* model() const override { return "LocalAPIC"; }
+    virtual size_t ticks_per_second() const override;
 
-void HardwareTimer::handle_irq(const RegisterState& regs)
-{
-    if (m_callback)
-        m_callback(regs);
-}
+    virtual bool is_periodic() const override { return m_timer_mode == APIC::TimerMode::Periodic; }
+    virtual bool is_periodic_capable() const override { return true; }
+    virtual void set_periodic() override;
+    virtual void set_non_periodic() override;
 
-const char* HardwareTimer::purpose() const
-{
-    if (TimeManagement::the().is_system_timer(*this))
-        return "System Timer";
-    return model();
-}
+    virtual void reset_to_default_ticks_per_second() override;
+    virtual bool try_to_set_frequency(size_t frequency) override;
+    virtual bool is_capable_of_frequency(size_t frequency) const override;
+    virtual size_t calculate_nearest_possible_frequency(size_t frequency) const override;
 
-void HardwareTimer::set_callback(Function<void(const RegisterState&)> callback)
-{
-    disable_irq();
-    m_callback = move(callback);
-    enable_irq();
-}
+    void enable_local_timer();
+    void disable_local_timer();
+
+private:
+    explicit APICTimer(u8, Function<void(const RegisterState&)>);
+
+    bool calibrate(HardwareTimerBase&);
+
+    u32 m_timer_period { 0 };
+    APIC::TimerMode m_timer_mode { APIC::TimerMode::Periodic };
+};
 
 }

@@ -149,7 +149,7 @@ extern "C" [[noreturn]] void init()
 
     __stack_chk_guard = get_fast_random<u32>();
 
-    TimeManagement::initialize();
+    TimeManagement::initialize(0);
 
     NullDevice::initialize();
     if (!get_serial_debug())
@@ -208,6 +208,7 @@ extern "C" void init_finished(u32 cpu)
         // TODO: we can reuse the boot stack, maybe for kmalloc()?
     } else {
         APIC::the().init_finished(cpu);
+        TimeManagement::initialize(cpu);
     }
 }
 

@@ -32,7 +32,7 @@
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel {
-class HPETComparator final : public HardwareTimer {
+class HPETComparator final : public HardwareTimer<IRQHandler> {
     friend class HPET;
 
 public:
