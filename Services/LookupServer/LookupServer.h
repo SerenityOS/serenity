@@ -42,7 +42,7 @@ public:
 private:
     void load_etc_hosts();
     void service_client(RefPtr<Core::LocalSocket>);
-    Vector<String> lookup(const String& hostname, bool& did_timeout, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
+    Vector<String> lookup(const String& hostname, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     struct CachedLookup {
         DNSQuestion question;
