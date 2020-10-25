@@ -107,6 +107,7 @@ bool Splitter::get_resize_candidates_at(const Gfx::IntPoint& position, Widget*& 
             return IterationDecision::Break;
         }
 
+        previous_widget = &child_widget;
         return IterationDecision::Continue;
     });
     return found_candidates;
