@@ -228,10 +228,9 @@ RefPtr<AST::Node> Parser::parse_sequence()
         return first;
     }
     case '&': {
-        auto execute_pipe_seq = first->would_execute() ? first.release_nonnull() : static_cast<NonnullRefPtr<AST::Node>>(create<AST::Execute>(first.release_nonnull()));
         consume();
         auto pos_after_seps = save_offset();
-        auto bg = create<AST::Background>(execute_pipe_seq); // Execute Background
+        auto bg = create<AST::Background>(first.release_nonnull()); // Execute Background
         if (auto rest = parse_sequence())
             return create<AST::Sequence>(
                 move(bg),

@@ -1443,7 +1443,16 @@ void Shell::notify_child_event()
                 }
                 found_child = true;
 #ifdef ENSURE_WAITID_ONCE
-                s_waited_for_pids.set(child_pid);
+                // NOTE: This check is here to find bugs about our assumptions about waitpid(),
+                //       it does not hold in general, and it definitely does not hold in the long run.
+                // Reasons that we would call waitpid() more than once:
+                // - PID reuse/wraparound: This will simply fail the assertion, ignored here.
+                // - Non-terminating unblocks:
+                //   - Suspension: (e.g. via ^Z)
+                //   - ?
+                // - ?
+                if (job.exited())
+                    s_waited_for_pids.set(child_pid);
 #endif
             }
             if (job.should_be_disowned())
