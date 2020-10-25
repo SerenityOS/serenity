@@ -99,12 +99,15 @@ int Shell::builtin_bg(int argc, const char** argv)
     job->set_running_in_background(true);
     job->set_is_suspended(false);
 
-    dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
-    fprintf(stderr, "Resuming job %" PRIu64 " - %s\n", job->job_id(), job->cmd().characters());
+    dbgln("Resuming {} ({})", job->pid(), job->cmd());
+    warnln("Resuming job {} - {}", job->job_id(), job->cmd().characters());
 
+    // Try using the PGID, but if that fails, just use the PID.
     if (killpg(job->pgid(), SIGCONT) < 0) {
-        perror("killpg");
-        return 1;
+        if (kill(job->pid(), SIGCONT) < 0) {
+            perror("kill");
+            return 1;
+        }
     }
 
     return 0;
@@ -347,15 +350,18 @@ int Shell::builtin_fg(int argc, const char** argv)
     job->set_running_in_background(false);
     job->set_is_suspended(false);
 
-    dbg() << "Resuming " << job->pid() << " (" << job->cmd() << ")";
-    fprintf(stderr, "Resuming job %" PRIu64 " - %s\n", job->job_id(), job->cmd().characters());
+    dbgln("Resuming {} ({})", job->pid(), job->cmd());
+    warnln("Resuming job {} - {}", job->job_id(), job->cmd().characters());
 
     tcsetpgrp(STDOUT_FILENO, job->pgid());
     tcsetpgrp(STDIN_FILENO, job->pgid());
 
+    // Try using the PGID, but if that fails, just use the PID.
     if (killpg(job->pgid(), SIGCONT) < 0) {
-        perror("killpg");
-        return 1;
+        if (kill(job->pid(), SIGCONT) < 0) {
+            perror("kill");
+            return 1;
+        }
     }
 
     block_on_job(job);
