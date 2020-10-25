@@ -59,15 +59,17 @@ bool Job::print_status(PrintStatusMode mode)
     if (is_running_in_background())
         background_indicator = '+';
 
+    const AST::Command& command = *m_command;
+
     switch (mode) {
     case PrintStatusMode::Basic:
-        printf("[%" PRIu64 "] %c %s %s\n", m_job_id, background_indicator, status, m_cmd.characters());
+        outln("[{}] {} {} {}", m_job_id, background_indicator, status, command);
         break;
     case PrintStatusMode::OnlyPID:
-        printf("[%" PRIu64 "] %c %d %s %s\n", m_job_id, background_indicator, m_pid, status, m_cmd.characters());
+        outln("[{}] {} {} {} {}", m_job_id, background_indicator, m_pid, status, command);
         break;
     case PrintStatusMode::ListAll:
-        printf("[%" PRIu64 "] %c %d %d %s %s\n", m_job_id, background_indicator, m_pid, m_pgid, status, m_cmd.characters());
+        outln("[{}] {} {} {} {} {}", m_job_id, background_indicator, m_pid, m_pgid, status, command);
         break;
     }
 

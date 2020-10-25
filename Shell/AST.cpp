@@ -37,6 +37,50 @@
 
 //#define EXECUTE_DEBUG
 
+void AK::Formatter<Shell::AST::Command>::format(TypeErasedFormatParams&, FormatBuilder& builder, const Shell::AST::Command& value)
+{
+    if (m_sign_mode != FormatBuilder::SignMode::Default)
+        ASSERT_NOT_REACHED();
+    if (m_alternative_form)
+        ASSERT_NOT_REACHED();
+    if (m_zero_pad)
+        ASSERT_NOT_REACHED();
+    if (m_mode != Mode::Default && m_mode != Mode::String)
+        ASSERT_NOT_REACHED();
+    if (m_width != value_not_set && m_precision != value_not_set)
+        ASSERT_NOT_REACHED();
+
+    bool first = true;
+    for (auto& arg : value.argv) {
+        if (!first)
+            builder.put_literal(" ");
+        first = false;
+        builder.put_literal(arg);
+    }
+
+    if (!value.next_chain.is_empty()) {
+        for (auto& command : value.next_chain) {
+            switch (command.action) {
+            case Shell::AST::NodeWithAction::And:
+                builder.put_literal(" && ");
+                break;
+            case Shell::AST::NodeWithAction::Or:
+                builder.put_literal(" || ");
+                break;
+            case Shell::AST::NodeWithAction::Sequence:
+                builder.put_literal("; ");
+                break;
+            }
+
+            builder.put_literal("(");
+            builder.put_literal(command.node->class_name());
+            builder.put_literal("...)");
+        }
+    }
+    if (!value.should_wait)
+        builder.put_literal("&");
+}
+
 namespace Shell::AST {
 
 template<typename T, typename... Args>

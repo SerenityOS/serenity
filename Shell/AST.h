@@ -29,6 +29,7 @@
 #include "Forward.h"
 #include "Job.h"
 #include "NodeVisitor.h"
+#include <AK/Format.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
@@ -1253,6 +1254,21 @@ private:
     NODE(WriteRedirection);
     virtual void dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
+};
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<Shell::AST::Command> : StandardFormatter {
+    Formatter() { }
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    void format(TypeErasedFormatParams&, FormatBuilder&, const Shell::AST::Command& value);
 };
 
 }
