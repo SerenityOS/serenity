@@ -43,7 +43,7 @@ LookupServer::LookupServer()
 {
     auto config = Core::ConfigFile::get_for_system("LookupServer");
     dbgln("Using network config file at {}", config->file_name());
-    m_nameserver = config->read_entry("DNS", "Nameserver", "1.1.1.1");
+    m_nameservers = config->read_entry("DNS", "Nameservers", "1.1.1.1,1.0.0.1").split(',');
 
     load_etc_hosts();
 
@@ -113,25 +113,36 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
         return;
     }
     auto hostname = String((const char*)client_buffer + 1, nrecv - 1, Chomp);
-    dbgln("Got request for '{}' (using IP {})", hostname, m_nameserver);
+    dbgln("Got request for '{}'", hostname);
 
     Vector<String> responses;
 
     if (auto known_host = m_etc_hosts.get(hostname); known_host.has_value()) {
         responses.append(known_host.value());
     } else if (!hostname.is_empty()) {
-        bool did_get_response = false;
-        int retries = 3;
-        do {
-            if (lookup_type == 'L')
-                responses = lookup(hostname, did_get_response, T_A);
-            else if (lookup_type == 'R')
-                responses = lookup(hostname, did_get_response, T_PTR);
-            if (did_get_response)
+        for (auto& nameserver : m_nameservers) {
+            dbgln("Doing lookup using nameserver '{}'", nameserver);
+            bool did_get_response = false;
+            int retries = 3;
+            do {
+                if (lookup_type == 'L')
+                    responses = lookup(hostname, nameserver, did_get_response, T_A);
+                else if (lookup_type == 'R')
+                    responses = lookup(hostname, nameserver, did_get_response, T_PTR);
+                if (did_get_response)
+                    break;
+            } while (--retries);
+            if (!responses.is_empty()) {
                 break;
-        } while (--retries);
-        if (!did_get_response) {
-            fprintf(stderr, "LookupServer: Never got a response but out of retries :(\n");
+            } else {
+                if (!did_get_response)
+                    dbgln("Never got a response from '{}', trying next nameserver", nameserver);
+                else
+                    dbgln("Received response from '{}' but no result(s), trying next nameserver", nameserver);
+            }
+        }
+        if (responses.is_empty()) {
+            fprintf(stderr, "LookupServer: Tried all nameservers but never got a response :(\n");
             return;
         }
     }
@@ -152,7 +163,7 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
     }
 }
 
-Vector<String> LookupServer::lookup(const String& hostname, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
+Vector<String> LookupServer::lookup(const String& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
 {
     if (auto it = m_lookup_cache.find(hostname); it != m_lookup_cache.end()) {
         auto& cached_lookup = it->value;
@@ -187,7 +198,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_get_respon
         return {};
     }
 
-    if (!udp_socket->connect(m_nameserver, 53))
+    if (!udp_socket->connect(nameserver, 53))
         return {};
 
     if (!udp_socket->write(buffer))
@@ -214,7 +225,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_get_respon
     if (response.code() == DNSResponse::Code::REFUSED) {
         if (should_randomize_case == ShouldRandomizeCase::Yes) {
             // Retry with 0x20 case randomization turned off.
-            return lookup(hostname, did_get_response, record_type, ShouldRandomizeCase::No);
+            return lookup(hostname, nameserver, did_get_response, record_type, ShouldRandomizeCase::No);
         }
         return {};
     }

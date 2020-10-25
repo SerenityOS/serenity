@@ -42,7 +42,7 @@ public:
 private:
     void load_etc_hosts();
     void service_client(RefPtr<Core::LocalSocket>);
-    Vector<String> lookup(const String& hostname, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
+    Vector<String> lookup(const String& hostname, const String& nameserver, bool& did_get_response, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     struct CachedLookup {
         DNSQuestion question;
@@ -50,7 +50,7 @@ private:
     };
 
     RefPtr<Core::LocalServer> m_local_server;
-    String m_nameserver;
+    Vector<String> m_nameservers;
     HashMap<String, String> m_etc_hosts;
     HashMap<String, CachedLookup> m_lookup_cache;
 };
