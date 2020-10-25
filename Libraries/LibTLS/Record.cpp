@@ -315,6 +315,12 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
                 res += 2;
                 alert(AlertLevel::Critical, AlertDescription::CloseNotify);
                 m_context.connection_finished = true;
+                if (!m_context.cipher_spec_set) {
+                    // AWS CloudFront hits this.
+                    dbg() << "Server sent a close notify and we haven't agreed on a cipher suite. Treating it as a handshake failure.";
+                    m_context.critical_error = (u8)AlertDescription::HandshakeFailure;
+                    try_disambiguate_error();
+                }
             }
             m_context.error_code = (Error)code;
         }
