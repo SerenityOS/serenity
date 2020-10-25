@@ -46,7 +46,7 @@ static String show(const ByteBuffer& buf)
 {
     StringBuilder builder;
     for (size_t i = 0; i < buf.size(); ++i) {
-        builder.appendf("%02x", buf[i]);
+        builder.appendff("{:02x}", buf[i]);
     }
     builder.append(' ');
     builder.append('(');
@@ -66,8 +66,7 @@ static bool test_single(const Testcase& testcase)
 {
     // Preconditions:
     if (testcase.dest_n != testcase.dest_expected_n) {
-        fprintf(stderr, "dest length %zu != expected dest length %zu? Check testcase! (Probably miscounted.)\n",
-            testcase.dest_n, testcase.dest_expected_n);
+        warnln("dest length {} != expected dest length {}? Check testcase! (Probably miscounted.)", testcase.dest_n, testcase.dest_expected_n);
         return false;
     }
 
@@ -93,33 +92,29 @@ static bool test_single(const Testcase& testcase)
 
     // Evaluate gravity:
     if (buf_ok && (!canary_1_ok || !main_ok || !canary_2_ok)) {
-        fprintf(stderr, "Internal error! (%d != %d | %d | %d)\n",
-            buf_ok, canary_1_ok, main_ok, canary_2_ok);
+        warnln("Internal error! ({} != {} | {} | {})", buf_ok, canary_1_ok, main_ok, canary_2_ok);
         buf_ok = false;
     }
     if (!canary_1_ok) {
-        warn() << "Canary 1 overwritten: Expected canary "
-               << show(expected.slice_view(0, SANDBOX_CANARY_SIZE))
-               << ", got "
-               << show(actual.slice_view(0, SANDBOX_CANARY_SIZE))
-               << " instead!";
+        warnln("Canary 1 overwritten: Expected {}\n"
+               "                   instead got {}",
+            show(expected.slice_view(0, SANDBOX_CANARY_SIZE)),
+            show(actual.slice_view(0, SANDBOX_CANARY_SIZE)));
     }
     if (!main_ok) {
-        warn() << "Wrong output: Expected "
-               << show(expected.slice_view(SANDBOX_CANARY_SIZE, testcase.dest_n))
-               << "\n          instead, got " // visually align
-               << show(actual.slice_view(SANDBOX_CANARY_SIZE, testcase.dest_n));
+        warnln("Wrong output: Expected {}\n"
+               "          instead, got {}",
+            show(expected.slice_view(SANDBOX_CANARY_SIZE, testcase.dest_n)),
+            show(actual.slice_view(SANDBOX_CANARY_SIZE, testcase.dest_n)));
     }
     if (!canary_2_ok) {
-        warn() << "Canary 2 overwritten: Expected "
-               << show(expected.slice_view(SANDBOX_CANARY_SIZE + testcase.dest_n, SANDBOX_CANARY_SIZE))
-               << ", got "
-               << show(actual.slice_view(SANDBOX_CANARY_SIZE + testcase.dest_n, SANDBOX_CANARY_SIZE))
-               << " instead!";
+        warnln("Canary 2 overwritten: Expected {}\n"
+               "                  instead, got {}",
+            show(expected.slice_view(SANDBOX_CANARY_SIZE + testcase.dest_n, SANDBOX_CANARY_SIZE)),
+            show(actual.slice_view(SANDBOX_CANARY_SIZE + testcase.dest_n, SANDBOX_CANARY_SIZE)));
     }
     if (!return_ok) {
-        fprintf(stderr, "Wrong return value: Expected %d, got %d instead!\n",
-            testcase.expected_return, actual_return);
+        warnln("Wrong return value: Expected {}, got {} instead!", testcase.expected_return, actual_return);
     }
 
     return buf_ok && return_ok;

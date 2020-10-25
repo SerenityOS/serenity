@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         InputStream& gzip_input_stream = gzip_stream;
         Tar::TarStream tar_stream((gzip) ? gzip_input_stream : file_input_stream);
         if (!tar_stream.valid()) {
-            warn() << "the provided file is not a well-formatted ustar file";
+            warnln("the provided file is not a well-formatted ustar file");
             return 1;
         }
         for (; !tar_stream.finished(); tar_stream.advance()) {

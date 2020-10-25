@@ -65,13 +65,13 @@ int main()
 
     auto file_or_error = Core::File::open("/var/run/utmp", Core::IODevice::ReadOnly);
     if (file_or_error.is_error()) {
-        warn() << "Error: " << file_or_error.error();
+        warnln("Error: {}", file_or_error.error());
         return 1;
     }
     auto& file = *file_or_error.value();
     auto json = JsonValue::from_string(file.read_all());
     if (!json.has_value() || !json.value().is_object()) {
-        warn() << "Error: Could not parse /var/run/utmp";
+        warnln("Error: Could not parse /var/run/utmp");
         return 1;
     }
 

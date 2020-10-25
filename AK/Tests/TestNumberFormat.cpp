@@ -135,13 +135,13 @@ void actual_extremes_8byte();
 template<>
 void actual_extremes_8byte<4>()
 {
-    warn() << "(Skipping 8-byte-size_t test)";
+    warnln("(Skipping 8-byte-size_t test)");
 }
 
 template<>
 void actual_extremes_8byte<8>()
 {
-    warn() << "(Running true 8-byte-size_t test)";
+    warnln("(Running true 8-byte-size_t test)");
     // Your editor might show "implicit conversion" warnings here.
     // This is because your editor thinks the world is 32-bit, but it isn't.
     EXPECT_EQ(human_readable_size(0x100000000ULL), "4.0 GiB");
