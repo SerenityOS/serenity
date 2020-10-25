@@ -60,8 +60,17 @@ void Button::paint_event(PaintEvent& event)
     auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Gfx::IntPoint();
     if (m_icon && !text().is_empty())
         icon_location.set_x(content_rect.x());
+
     if (is_being_pressed() || is_checked())
         painter.translate(1, 1);
+    else if (m_icon && is_enabled() && is_hovered() && button_style() == Gfx::ButtonStyle::CoolBar) {
+        auto shadow_color = palette().threed_shadow1();
+        painter.blit_filtered(icon_location, *m_icon, m_icon->rect(), [&shadow_color](auto) {
+            return shadow_color;
+        });
+        icon_location.move_by(-1, -1);
+    }
+
     if (m_icon) {
         if (is_enabled()) {
             if (is_hovered())
