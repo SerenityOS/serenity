@@ -752,10 +752,12 @@ AST::MatchEntry Parser::parse_match_entry()
 
     NonnullRefPtrVector<AST::Node> patterns;
     Vector<AST::Position> pipe_positions;
+    Optional<Vector<String>> match_names;
+    Optional<AST::Position> match_as_position;
 
     auto pattern = parse_match_pattern();
     if (!pattern)
-        return { {}, {}, create<AST::SyntaxError>("Expected a pattern in 'match' body") };
+        return { {}, {}, {}, {}, create<AST::SyntaxError>("Expected a pattern in 'match' body") };
 
     patterns.append(pattern.release_nonnull());
 
@@ -782,6 +784,32 @@ AST::MatchEntry Parser::parse_match_entry()
 
     consume_while(is_any_of(" \t\n"));
 
+    auto as_start_position = m_offset;
+    auto as_start_line = line();
+    if (expect("as")) {
+        match_as_position = AST::Position { as_start_position, m_offset, as_start_line, line() };
+        consume_while(is_any_of(" \t\n"));
+        if (!expect('(')) {
+            if (!error)
+                error = create<AST::SyntaxError>("Expected an explicit list of identifiers after a pattern 'as'");
+        } else {
+            match_names = Vector<String>();
+            for (;;) {
+                consume_while(is_whitespace);
+                auto name = consume_while(is_word_character);
+                if (name.is_empty())
+                    break;
+                match_names.value().append(move(name));
+            }
+
+            if (!expect(')')) {
+                if (!error)
+                    error = create<AST::SyntaxError>("Expected a close paren ')' to end the identifier list of pattern 'as'");
+            }
+        }
+        consume_while(is_any_of(" \t\n"));
+    }
+
     if (!expect('{')) {
         if (!error)
             error = create<AST::SyntaxError>("Expected an open brace '{' to start a match entry body");
@@ -799,7 +827,7 @@ AST::MatchEntry Parser::parse_match_entry()
     else if (error)
         body = error;
 
-    return { move(patterns), move(pipe_positions), move(body) };
+    return { move(patterns), move(match_names), move(match_as_position), move(pipe_positions), move(body) };
 }
 
 RefPtr<AST::Node> Parser::parse_match_pattern()
