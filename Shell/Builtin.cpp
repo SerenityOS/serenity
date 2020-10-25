@@ -127,11 +127,7 @@ int Shell::builtin_cd(int argc, const char** argv)
 
     if (!arg_path) {
         new_path = home;
-        if (cd_history.is_empty() || cd_history.last() != home)
-            cd_history.enqueue(home);
     } else {
-        if (cd_history.is_empty() || cd_history.last() != arg_path)
-            cd_history.enqueue(arg_path);
         if (strcmp(arg_path, "-") == 0) {
             char* oldpwd = getenv("OLDPWD");
             if (oldpwd == nullptr)
@@ -153,6 +149,10 @@ int Shell::builtin_cd(int argc, const char** argv)
         fprintf(stderr, "Invalid path '%s'\n", new_path.characters());
         return 1;
     }
+
+    if (cd_history.is_empty() || cd_history.last() != real_path)
+        cd_history.enqueue(real_path);
+
     const char* path = real_path.characters();
 
     int rc = chdir(path);
