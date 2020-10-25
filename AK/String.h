@@ -112,6 +112,7 @@ public:
 
     static String repeated(char, size_t count);
     bool matches(const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     Optional<int> to_int() const;
     Optional<unsigned> to_uint() const;
