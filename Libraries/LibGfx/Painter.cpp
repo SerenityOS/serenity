@@ -1021,6 +1021,9 @@ void do_draw_text(const IntRect& rect, const TextType& text, const Font& font, T
     case TextAlignment::Center:
         bounding_rect.center_within(rect);
         break;
+    case TextAlignment::BottomRight:
+        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), (rect.bottom() + 1) - bounding_rect.height() });
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
