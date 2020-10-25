@@ -1358,7 +1358,7 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
 
     fputs(eol_mark.characters(), stderr);
 
-    for (auto i = 1 + eol_mark_length; i < ws.ws_col; ++i)
+    for (auto i = eol_mark_length; i < ws.ws_col; ++i)
         putc(' ', stderr);
 
     putc('\r', stderr);
