@@ -39,11 +39,14 @@ const GUI::TextDocument& ProjectFile::document() const
 {
     if (!m_document) {
         m_document = CodeDocument::create(LexicalPath(m_name));
-        auto file = Core::File::construct(m_name);
-        if (!file->open(Core::File::ReadOnly)) {
-            ASSERT_NOT_REACHED();
+        auto file_or_error = Core::File::open(m_name, Core::File::ReadOnly);
+        if (file_or_error.is_error()) {
+            warnln("Couldn't open '{}': {}", m_name, file_or_error.error());
+            // This is okay though, we'll just go with an empty document and create the file when saving.
+        } else {
+            auto& file = *file_or_error.value();
+            m_document->set_text(file.read_all());
         }
-        m_document->set_text(file->read_all());
     }
     return *m_document;
 }
