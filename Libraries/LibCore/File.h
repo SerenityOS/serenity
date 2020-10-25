@@ -52,11 +52,11 @@ public:
 
     virtual bool open(IODevice::OpenMode) override;
 
-    enum class ShouldCloseFileDescription {
+    enum class ShouldCloseFileDescriptor {
         No = 0,
         Yes
     };
-    bool open(int fd, IODevice::OpenMode, ShouldCloseFileDescription);
+    bool open(int fd, IODevice::OpenMode, ShouldCloseFileDescriptor);
 
     static NonnullRefPtr<File> stdin();
     static NonnullRefPtr<File> stdout();
@@ -72,7 +72,7 @@ private:
     bool open_impl(IODevice::OpenMode, mode_t);
 
     String m_filename;
-    ShouldCloseFileDescription m_should_close_file_descriptor { ShouldCloseFileDescription::Yes };
+    ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
 };
 
 }

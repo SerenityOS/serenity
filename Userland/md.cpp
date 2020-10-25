@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     auto file = Core::File::construct();
     bool success;
     if (file_name == nullptr) {
-        success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescription::No);
+        success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
     } else {
         file->set_filename(file_name);
         success = file->open(Core::IODevice::OpenMode::ReadOnly);

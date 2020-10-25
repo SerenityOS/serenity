@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     URL url;
     bool success;
     if (argc < 2) {
-        success = f->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescription::No);
+        success = f->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
     } else {
         url = URL::create_with_file_protocol(argv[1]);
         f->set_filename(argv[1]);
