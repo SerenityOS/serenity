@@ -960,10 +960,9 @@ void Shell::block_on_job(RefPtr<Job> job)
 
 String Shell::get_history_path()
 {
-    StringBuilder builder;
-    builder.append(home);
-    builder.append("/.history");
-    return builder.to_string();
+    if (auto histfile = getenv("HISTFILE"))
+        return { histfile };
+    return String::formatted("{}/.history", home);
 }
 
 String Shell::escape_token(const String& token)
