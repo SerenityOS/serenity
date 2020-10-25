@@ -246,6 +246,15 @@ void Menu::draw()
             } else if (item.icon()) {
                 Gfx::IntRect icon_rect { item.rect().x() + 3, 0, s_item_icon_width, s_item_icon_width };
                 icon_rect.center_vertically_within(text_rect);
+
+                if (&item == hovered_item() && item.is_enabled()) {
+                    auto shadow_color = palette.threed_shadow1();
+                    shadow_color = palette.menu_selection().darkened();
+                    painter.blit_filtered(icon_rect.location(), *item.icon(), item.icon()->rect(), [&shadow_color](auto) {
+                        return shadow_color;
+                    });
+                    icon_rect.move_by(-1, -1);
+                }
                 painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());
             }
             auto& previous_font = painter.font();
