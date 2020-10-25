@@ -185,7 +185,9 @@ subshell :: '{' toplevel '}'
 
 match_expr :: 'match' ws+ expression ws* ('as' ws+ identifier)? '{' match_entry* '}'
 
-match_entry :: match_pattern ws* '{' toplevel '}'
+match_entry :: match_pattern ws* (as identifier_list)? '{' toplevel '}'
+
+identifier_list :: '(' (identifier ws*)* ')'
 
 match_pattern :: expression (ws* '|' ws* expression)*
 

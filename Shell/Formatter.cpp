@@ -452,6 +452,17 @@ void Formatter::visit(const AST::MatchExpr* node)
             }
 
             current_builder().append(' ');
+            if (entry.match_names.has_value() && !entry.match_names.value().is_empty()) {
+                current_builder().append("as (");
+                auto first = true;
+                for (auto& name : entry.match_names.value()) {
+                    if (!first)
+                        current_builder().append(' ');
+                    first = false;
+                    current_builder().append(name);
+                }
+                current_builder().append(") ");
+            }
             in_new_block([&] {
                 if (entry.body)
                     entry.body->visit(*this);
