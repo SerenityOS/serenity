@@ -96,7 +96,7 @@ void TaskbarWindow::create_quick_launch_bar()
     auto& quick_launch_bar = main_widget()->add<GUI::Frame>();
     quick_launch_bar.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     quick_launch_bar.set_layout<GUI::HorizontalBoxLayout>();
-    quick_launch_bar.layout()->set_spacing(3);
+    quick_launch_bar.layout()->set_spacing(0);
     quick_launch_bar.layout()->set_margins({ 3, 0, 3, 0 });
     quick_launch_bar.set_frame_thickness(0);
 
@@ -118,7 +118,7 @@ void TaskbarWindow::create_quick_launch_bar()
 
         auto& button = quick_launch_bar.add<GUI::Button>();
         button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-        button.set_preferred_size(22, 22);
+        button.set_preferred_size(24, 24);
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
 
         button.set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
@@ -142,12 +142,12 @@ void TaskbarWindow::create_quick_launch_bar()
         };
 
         if (!first)
-            total_width += 3;
+            total_width += quick_launch_bar.layout()->spacing();
         first = false;
-        total_width += 22;
+        total_width += button.preferred_width();
     }
 
-    quick_launch_bar.set_preferred_size(total_width, 22);
+    quick_launch_bar.set_preferred_size(total_width, 24);
 }
 
 void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
