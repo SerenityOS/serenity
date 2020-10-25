@@ -140,7 +140,7 @@ private:
 };
 
 [[deprecated("Use AK::outln or AK::new_out instead, AK::new_out will soon be renamed to AK::out.")]] inline StdLogStream out() { return StdLogStream(STDOUT_FILENO); }
-inline StdLogStream warn() { return StdLogStream(STDERR_FILENO); }
+[[deprecated("Use AK::warnln or AK::new_warn instead, AK::new_warn will soon be renamed to AK::warn.")]] inline StdLogStream warn() { return StdLogStream(STDERR_FILENO); }
 #endif
 
 #ifdef KERNEL
