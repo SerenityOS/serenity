@@ -18,13 +18,13 @@ test("CARRIAGE RETURN is a line terminator", () => {
 
 test("LINE SEPARATOR is a line terminator", () => {
     expect(() => {
-        Function(`  @`);
+        Function("  @");
     }).toThrowWithMessage(SyntaxError, "line: 3, column: 1");
 });
 
 test("PARAGRAPH SEPARATOR is a line terminator", () => {
     expect(() => {
-        Function(`  @`);
+        Function("  @");
     }).toThrowWithMessage(SyntaxError, "line: 3, column: 1");
 });
 
@@ -48,6 +48,13 @@ test("LS/PS are allowed in string literal", () => {
 
 test("line terminators can be mixed (but please don't)", () => {
     expect(() => {
-        Function(`\r\ \r\n \n\r@`);
+        Function("\r \r\n \n\r@");
     }).toThrowWithMessage(SyntaxError, "line: 7, column: 1");
+});
+
+test("all line terminators are valid for line continuations", () => {
+    expect(Function('return "a\\\nb"')()).toBe("ab");
+    expect(Function('return "a\\\rb"')()).toBe("ab");
+    expect(Function('return "a\\ b"')()).toBe("ab");
+    expect(Function('return "a\\ b"')()).toBe("ab");
 });
