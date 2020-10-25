@@ -42,7 +42,7 @@
 LookupServer::LookupServer()
 {
     auto config = Core::ConfigFile::get_for_system("LookupServer");
-    dbg() << "Using network config file at " << config->file_name();
+    dbgln("Using network config file at {}", config->file_name());
     m_nameserver = config->read_entry("DNS", "Nameserver", "1.1.1.1");
 
     load_etc_hosts();
@@ -109,11 +109,11 @@ void LookupServer::service_client(RefPtr<Core::LocalSocket> socket)
 
     char lookup_type = client_buffer[0];
     if (lookup_type != 'L' && lookup_type != 'R') {
-        dbg() << "Invalid lookup_type " << lookup_type;
+        dbgln("Invalid lookup_type '{}'", lookup_type);
         return;
     }
     auto hostname = String((const char*)client_buffer + 1, nrecv - 1, Chomp);
-    dbg() << "Got request for '" << hostname << "' (using IP " << m_nameserver << ")";
+    dbgln("Got request for '{}' (using IP {})", hostname, m_nameserver);
 
     Vector<String> responses;
 
@@ -160,10 +160,9 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
         if (cached_lookup.question.record_type() == record_type) {
             Vector<String> responses;
             for (auto& cached_answer : cached_lookup.answers) {
-                dbg() << "Cache hit: " << hostname << " -> " << cached_answer.record_data() << ", expired: " << cached_answer.has_expired();
-                if (!cached_answer.has_expired()) {
+                dbgln("Cache hit: {} -> {}, expired: {}", hostname, cached_answer.record_data(), cached_answer.has_expired());
+                if (!cached_answer.has_expired())
                     responses.append(cached_answer.record_data());
-                }
             }
             if (!responses.is_empty())
                 return responses;
@@ -207,7 +206,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
     auto& response = o_response.value();
 
     if (response.id() != request.id()) {
-        dbgprintf("LookupServer: ID mismatch (%u vs %u) :(\n", response.id(), request.id());
+        dbgln("LookupServer: ID mismatch ({} vs {}) :(", response.id(), request.id());
         return {};
     }
 
@@ -220,7 +219,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
     }
 
     if (response.question_count() != request.question_count()) {
-        dbgprintf("LookupServer: Question count (%u vs %u) :(\n", response.question_count(), request.question_count());
+        dbgln("LookupServer: Question count ({} vs {}) :(", response.question_count(), request.question_count());
         return {};
     }
 
@@ -228,15 +227,15 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
         auto& request_question = request.questions()[i];
         auto& response_question = response.questions()[i];
         if (request_question != response_question) {
-            dbg() << "Request and response questions do not match";
-            dbg() << "   Request: {_" << request_question.name() << "_, " << request_question.record_type() << ", " << request_question.class_code() << "}";
-            dbg() << "  Response: {_" << response_question.name() << "_, " << response_question.record_type() << ", " << response_question.class_code() << "}";
+            dbgln("Request and response questions do not match");
+            dbgln("   Request: name=_{}_, type={}, class={}", request_question.name(), response_question.record_type(), response_question.class_code());
+            dbgln("  Response: name=_{}_, type={}, class={}", response_question.name(), response_question.record_type(), response_question.class_code());
             return {};
         }
     }
 
     if (response.answer_count() < 1) {
-        dbgprintf("LookupServer: Not enough answers (%u) :(\n", response.answer_count());
+        dbgln("LookupServer: Not enough answers ({}) :(", response.answer_count());
         return {};
     }
 

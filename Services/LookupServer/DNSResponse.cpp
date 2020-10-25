@@ -57,16 +57,16 @@ static_assert(sizeof(DNSRecordWithoutName) == 10);
 Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t raw_size)
 {
     if (raw_size < sizeof(DNSPacket)) {
-        dbg() << "DNS response not large enough (" << raw_size << " out of " << sizeof(DNSPacket) << ") to be a DNS packet.";
+        dbgln("DNS response not large enough ({} out of {}) to be a DNS packet.", raw_size, sizeof(DNSPacket));
         return {};
     }
 
     auto& response_header = *(const DNSPacket*)(raw_data);
-    dbgprintf("Got response (ID: %u)\n", response_header.id());
-    dbgprintf("  Question count: %u\n", response_header.question_count());
-    dbgprintf("  Answer count: %u\n", response_header.answer_count());
-    dbgprintf(" Authority count: %u\n", response_header.authority_count());
-    dbgprintf("Additional count: %u\n", response_header.additional_count());
+    dbgln("Got response (ID: {})", response_header.id());
+    dbgln("  Question count: {}", response_header.question_count());
+    dbgln("    Answer count: {}", response_header.answer_count());
+    dbgln(" Authority count: {}", response_header.authority_count());
+    dbgln("Additional count: {}", response_header.additional_count());
 
     DNSResponse response;
     response.m_id = response_header.id();
@@ -87,7 +87,7 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
         response.m_questions.empend(name, record_and_class.record_type, record_and_class.class_code);
         auto& question = response.m_questions.last();
         offset += 4;
-        dbg() << "Question #" << i << ": _" << question.name() << "_ type: " << question.record_type() << ", class: " << question.class_code();
+        dbgln("Question #{}: name=_{}_, type={}, class={}", i, question.name(), question.record_type(), question.class_code());
     }
 
     for (u16 i = 0; i < response_header.answer_count(); ++i) {
@@ -106,9 +106,9 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
             data = ipv4_address.to_string();
         } else {
             // FIXME: Parse some other record types perhaps?
-            dbg() << "  data=(unimplemented record type " << record.type() << ")";
+            dbgln("data=(unimplemented record type {})", record.type());
         }
-        dbg() << "Answer   #" << i << ": name=_" << name << "_, type=" << record.type() << ", ttl=" << record.ttl() << ", length=" << record.data_length() << ", data=_" << data << "_";
+        dbgln("Answer   #{}: name=_{}_, type={}, ttl={}, length={}, data=_{}_", i, name, record.type(), record.ttl(), record.data_length(), data);
         response.m_answers.empend(name, record.type(), record.record_class(), record.ttl(), data);
         offset += record.data_length();
     }
