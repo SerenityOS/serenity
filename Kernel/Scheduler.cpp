@@ -465,8 +465,8 @@ bool Scheduler::pick_next()
     });
 
 #ifdef SCHEDULER_RUNNABLE_DEBUG
-    dbg() << "Non-runnables:";
-    Scheduler::for_each_nonrunnable([](Thread& thread) -> IterationDecision {
+    dbg() << "Scheduler[" << Processor::current().id() << "]: Non-runnables:";
+    Scheduler::for_each_nonrunnable([&](Thread& thread) -> IterationDecision {
         if (thread.state() == Thread::Queued)
             dbg() << "  " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip) << " Reason: " << (thread.wait_reason() ? thread.wait_reason() : "none");
         else if (thread.state() == Thread::Dying)
@@ -476,7 +476,7 @@ bool Scheduler::pick_next()
         return IterationDecision::Continue;
     });
 
-    dbg() << "Runnables:";
+    dbg() << "Scheduler[" << Processor::current().id() << "]: Runnables:";
     Scheduler::for_each_runnable([](Thread& thread) -> IterationDecision {
         dbg() << "  " << String::format("%3u", thread.effective_priority()) << "/" << String::format("%2u", thread.priority()) << " " << String::format("%-12s", thread.state_string()) << " " << thread << " @ " << String::format("%w", thread.tss().cs) << ":" << String::format("%x", thread.tss().eip);
         return IterationDecision::Continue;
@@ -487,8 +487,11 @@ bool Scheduler::pick_next()
 
     Vector<Thread*, 128> sorted_runnables;
     for_each_runnable([&](auto& thread) {
-        if ((thread.affinity() & (1u << Processor::current().id())) != 0)
-            sorted_runnables.append(&thread);
+        if ((thread.affinity() & (1u << Processor::current().id())) == 0)
+            return IterationDecision::Continue;
+        if (thread.state() == Thread::Running && &thread != current_thread)
+            return IterationDecision::Continue;
+        sorted_runnables.append(&thread);
         if (&thread == scheduler_data.m_pending_beneficiary) {
             thread_to_schedule = &thread;
             return IterationDecision::Break;
