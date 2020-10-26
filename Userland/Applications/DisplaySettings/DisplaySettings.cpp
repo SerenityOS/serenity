@@ -228,7 +228,7 @@ void DisplaySettingsWidget::load_current_settings()
     m_resolution_combo->set_selected_index(index);
 
     /// Color /////////////////////////////////////////////////////////////////////////////////////
-    /// If presend read from config file. If not paint with palet color.
+    /// If presend read from config file. If not paint with palette color.
     Color palette_desktop_color = palette().desktop_background();
 
     auto background_color = ws_config->read_entry("Background", "Color", "");
