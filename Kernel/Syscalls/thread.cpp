@@ -70,7 +70,6 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     builder.appendf("[%d]", thread->tid().value());
     thread->set_name(builder.to_string());
 
-    thread->set_priority(requested_thread_priority);
     if (!is_thread_joinable)
         thread->detach();
 
@@ -83,6 +82,9 @@ int Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::S
     auto tsr_result = thread->make_thread_specific_region({});
     if (tsr_result.is_error())
         return tsr_result.error();
+
+    ScopedSpinLock lock(g_scheduler_lock);
+    thread->set_priority(requested_thread_priority);
     thread->set_state(Thread::State::Runnable);
     return thread->tid().value();
 }

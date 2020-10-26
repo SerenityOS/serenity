@@ -119,6 +119,7 @@ Thread::~Thread()
 
 void Thread::unblock()
 {
+    ASSERT(g_scheduler_lock.own_lock());
     ASSERT(m_lock.own_lock());
     m_blocker = nullptr;
     if (Thread::current() == this) {
@@ -288,14 +289,19 @@ void Thread::finalize()
     ASSERT(Thread::current() == g_finalizer);
     ASSERT(Thread::current() != this);
 
-#ifdef THREAD_DEBUG
-    dbg() << "Finalizing thread " << *this;
-#endif
-    set_state(Thread::State::Dead);
+    ASSERT(!m_lock.own_lock());
 
-    if (auto* joiner = m_joiner.exchange(nullptr, AK::memory_order_acq_rel)) {
-        // Notify joiner that we exited
-        static_cast<JoinBlocker*>(joiner->m_blocker)->joinee_exited(m_exit_value);
+    {
+        ScopedSpinLock lock(g_scheduler_lock);
+#ifdef THREAD_DEBUG
+        dbg() << "Finalizing thread " << *this;
+#endif
+        set_state(Thread::State::Dead);
+
+        if (auto* joiner = m_joiner.exchange(nullptr, AK::memory_order_acq_rel)) {
+            // Notify joiner that we exited
+            static_cast<JoinBlocker*>(joiner->m_blocker)->joinee_exited(m_exit_value);
+        }
     }
 
     if (m_dump_backtrace_on_finalization)
@@ -522,6 +528,7 @@ void Thread::resume_from_stopped()
 {
     ASSERT(is_stopped());
     ASSERT(m_stop_state != State::Invalid);
+    ASSERT(g_scheduler_lock.own_lock());
     set_state(m_stop_state);
     m_stop_state = State::Invalid;
     // make sure SemiPermanentBlocker is unblocked
@@ -788,7 +795,7 @@ RefPtr<Thread> Thread::clone(Process& process)
 
 void Thread::set_state(State new_state)
 {
-    ScopedSpinLock lock(g_scheduler_lock);
+    ASSERT(g_scheduler_lock.own_lock());
     if (new_state == m_state)
         return;
 
