@@ -505,8 +505,10 @@ Token Lexer::next()
                     is_invalid_numeric_literal = !consume_exponent();
             }
         }
-        if (is_invalid_numeric_literal)
+        if (is_invalid_numeric_literal) {
             token_type = TokenType::Invalid;
+            token_message = "Invalid numeric literal";
+        }
     } else if (m_current_char == '"' || m_current_char == '\'') {
         char stop_char = m_current_char;
         consume();
