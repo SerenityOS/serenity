@@ -743,6 +743,44 @@ int Shell::builtin_umask(int argc, const char** argv)
     return 1;
 }
 
+int Shell::builtin_wait(int argc, const char** argv)
+{
+    Vector<const char*> job_ids;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(job_ids, "Job IDs to wait for, defaults to all jobs if missing", "jobs", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    Vector<NonnullRefPtr<Job>> jobs_to_wait_for;
+
+    if (job_ids.is_empty()) {
+        for (auto it : jobs)
+            jobs_to_wait_for.append(it.value);
+    } else {
+        for (String id_s : job_ids) {
+            auto id_opt = id_s.to_uint();
+            if (id_opt.has_value()) {
+                if (auto job = find_job(id_opt.value())) {
+                    jobs_to_wait_for.append(*job);
+                    continue;
+                }
+            }
+
+            warnln("wait: invalid or nonexistent job id {}", id_s);
+            return 1;
+        }
+    }
+
+    for (auto& job : jobs_to_wait_for) {
+        job->set_running_in_background(false);
+        block_on_job(job);
+    }
+
+    return 0;
+}
+
 int Shell::builtin_unset(int argc, const char** argv)
 {
     Vector<const char*> vars;
