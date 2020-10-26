@@ -80,6 +80,9 @@ void Lock::lock(Mode mode)
 
             // Note, we may now be on a different CPU!
             Processor::current().restore_critical(prev_crit, prev_flags);
+        } else {
+            // We need to process e.g. smp messages
+            Processor::wait_check();
         }
     }
 }
