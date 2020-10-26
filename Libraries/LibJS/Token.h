@@ -181,8 +181,9 @@ enum class TokenCategory {
 
 class Token {
 public:
-    Token(TokenType type, StringView trivia, StringView value, size_t line_number, size_t line_column)
+    Token(TokenType type, String message, StringView trivia, StringView value, size_t line_number, size_t line_column)
         : m_type(type)
+        , m_message(message)
         , m_trivia(trivia)
         , m_value(value)
         , m_line_number(line_number)
@@ -196,6 +197,7 @@ public:
     const char* name() const;
     static const char* name(TokenType);
 
+    const String& message() const { return m_message; }
     const StringView& trivia() const { return m_trivia; }
     const StringView& value() const { return m_value; }
     size_t line_number() const { return m_line_number; }
@@ -217,6 +219,7 @@ public:
 
 private:
     TokenType m_type;
+    String m_message;
     StringView m_trivia;
     StringView m_value;
     size_t m_line_number;
