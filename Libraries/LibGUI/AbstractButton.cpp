@@ -155,7 +155,7 @@ void AbstractButton::leave_event(Core::Event&)
 
 void AbstractButton::keydown_event(KeyEvent& event)
 {
-    if (event.key() == KeyCode::Key_Return) {
+    if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space) {
         click(event.modifiers());
         event.accept();
         return;
