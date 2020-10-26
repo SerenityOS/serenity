@@ -571,7 +571,7 @@ void AbstractView::keydown_event(KeyEvent& event)
         }
     }
 
-    Widget::keydown_event(event);
+    ScrollableWidget::keydown_event(event);
 }
 
 void AbstractView::cancel_searching()
