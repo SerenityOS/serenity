@@ -42,7 +42,7 @@ HashMap<char, TokenType> Lexer::s_single_char_tokens;
 
 Lexer::Lexer(StringView source)
     : m_source(source)
-    , m_current_token(TokenType::Eof, StringView(nullptr), StringView(nullptr), 0, 0)
+    , m_current_token(TokenType::Eof, {}, StringView(nullptr), StringView(nullptr), 0, 0)
 {
     if (s_keywords.is_empty()) {
         s_keywords.set("await", TokenType::Await);
@@ -392,6 +392,10 @@ Token Lexer::next()
     size_t value_start_line_number = m_line_number;
     size_t value_start_column_number = m_line_column;
     auto token_type = TokenType::Invalid;
+    // This is being used to communicate info about invalid tokens to the parser, which then
+    // can turn that into more specific error messages - instead of us having to make up a
+    // bunch of Invalid* tokens (bad numeric literals, unterminated comments etc.)
+    String token_message;
 
     if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && isalpha(m_current_char)) {
         token_type = TokenType::RegexFlags;
@@ -602,6 +606,7 @@ Token Lexer::next()
 
     m_current_token = Token(
         token_type,
+        token_message,
         m_source.substring_view(trivia_start - 1, value_start - trivia_start),
         m_source.substring_view(value_start - 1, m_position - value_start),
         value_start_line_number,
