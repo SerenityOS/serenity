@@ -457,7 +457,10 @@ void IconView::paint_event(PaintEvent& event)
                 Gfx::IntRect destination = bitmap->rect();
                 destination.center_within(item_data.icon_rect);
 
-                if (m_hovered_index.is_valid() && m_hovered_index == item_data.index) {
+                if (item_data.selected) {
+                    auto tint = palette().selection().with_alpha(100);
+                    painter.blit_filtered(destination.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
+                } else if (m_hovered_index.is_valid() && m_hovered_index == item_data.index) {
                     painter.blit_brightened(destination.location(), *bitmap, bitmap->rect());
                 } else {
                     painter.blit(destination.location(), *bitmap, bitmap->rect());
