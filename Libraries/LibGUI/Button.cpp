@@ -95,7 +95,7 @@ void Button::paint_event(PaintEvent& event)
 
     if (is_focused()) {
         Gfx::IntRect focus_rect;
-        if (m_icon)
+        if (m_icon && !text().is_empty())
             focus_rect = text_rect.inflated(6, 6);
         else
             focus_rect = rect().shrunken(8, 8);
