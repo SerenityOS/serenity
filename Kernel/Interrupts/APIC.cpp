@@ -588,7 +588,6 @@ void APIC::setup_local_timer(u32 ticks, TimerMode timer_mode, bool enable)
     default:
         ASSERT_NOT_REACHED();
     }
-    config |= 3; // divide by 16
     write_register(APIC_REG_TIMER_CONFIGURATION, config);
 
     if (timer_mode == TimerMode::Periodic)
