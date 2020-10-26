@@ -96,6 +96,7 @@ private:
         Pile7,
         __Count
     };
+    static constexpr Array piles = { Pile1, Pile2, Pile3, Pile4, Pile5, Pile6, Pile7 };
 
     void mark_intersecting_stacks_dirty(Card& intersecting_card);
     void update_score(int to_add);
@@ -120,14 +121,22 @@ private:
 
     RefPtr<Core::Timer> m_timer;
     NonnullRefPtrVector<Card> m_focused_cards;
-    Animation m_animation;
-    CardStack* m_focused_stack { nullptr };
+    NonnullRefPtrVector<Card> m_new_deck;
     CardStack m_stacks[StackLocation::__Count];
+    CardStack* m_focused_stack { nullptr };
     Gfx::IntPoint m_mouse_down_location;
+
     bool m_mouse_down { false };
     bool m_repaint_all { true };
     bool m_has_to_repaint { true };
+
+    Animation m_animation;
     bool m_game_over_animation { false };
+
+    bool m_new_game_animation { false };
+    uint8_t m_new_game_animation_pile { 0 };
+    uint8_t m_new_game_animation_delay { 0 };
+
     uint32_t m_score { 0 };
     Function<void(uint32_t)> m_on_score_update;
 };
