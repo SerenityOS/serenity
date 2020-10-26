@@ -1917,7 +1917,10 @@ Token Parser::consume_and_validate_numeric_literal()
 
 void Parser::expected(const char* what)
 {
-    syntax_error(String::formatted("Unexpected token {}. Expected {}", m_parser_state.m_current_token.name(), what));
+    auto message = m_parser_state.m_current_token.message();
+    if (message.is_empty())
+        message = String::formatted("Unexpected token {}. Expected {}", m_parser_state.m_current_token.name(), what);
+    syntax_error(message);
 }
 
 void Parser::syntax_error(const String& message, size_t line, size_t column)
