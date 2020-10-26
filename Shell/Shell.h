@@ -58,7 +58,8 @@
     __ENUMERATE_SHELL_BUILTIN(jobs)    \
     __ENUMERATE_SHELL_BUILTIN(disown)  \
     __ENUMERATE_SHELL_BUILTIN(fg)      \
-    __ENUMERATE_SHELL_BUILTIN(bg)
+    __ENUMERATE_SHELL_BUILTIN(bg)      \
+    __ENUMERATE_SHELL_BUILTIN(wait)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
