@@ -79,24 +79,25 @@ pid_t Process::sys$fork(RegisterState& regs)
     dbg() << "fork: child will begin executing at " << String::format("%w", child_tss.cs) << ":" << String::format("%x", child_tss.eip) << " with stack " << String::format("%w", child_tss.ss) << ":" << String::format("%x", child_tss.esp) << ", kstack " << String::format("%w", child_tss.ss0) << ":" << String::format("%x", child_tss.esp0);
 #endif
 
-    ScopedSpinLock lock(m_lock);
-    for (auto& region : m_regions) {
-#ifdef FORK_DEBUG
-        dbg() << "fork: cloning Region{" << &region << "} '" << region.name() << "' @ " << region.vaddr();
-#endif
-        auto& child_region = child->add_region(region.clone());
-        child_region.map(child->page_directory());
-
-        if (&region == m_master_tls_region)
-            child->m_master_tls_region = child_region.make_weak_ptr();
-    }
-
     {
-        ScopedSpinLock lock(g_processes_lock);
+        ScopedSpinLock lock(m_lock);
+        for (auto& region : m_regions) {
+#ifdef FORK_DEBUG
+            dbg() << "fork: cloning Region{" << &region << "} '" << region.name() << "' @ " << region.vaddr();
+#endif
+            auto& child_region = child->add_region(region.clone());
+            child_region.map(child->page_directory());
+
+            if (&region == m_master_tls_region)
+                child->m_master_tls_region = child_region.make_weak_ptr();
+        }
+
+        ScopedSpinLock processes_lock(g_processes_lock);
         g_processes->prepend(child);
         child->ref(); // This reference will be dropped by Process::reap
     }
 
+    ScopedSpinLock lock(g_scheduler_lock);
     child_first_thread->set_affinity(Thread::current()->affinity());
     child_first_thread->set_state(Thread::State::Runnable);
     return child->pid().value();
