@@ -704,7 +704,7 @@ void TextEditor::sort_selected_lines()
 void TextEditor::keydown_event(KeyEvent& event)
 {
     if (is_single_line() && event.key() == KeyCode::Key_Tab)
-        return Widget::keydown_event(event);
+        return ScrollableWidget::keydown_event(event);
 
     if (is_single_line() && event.key() == KeyCode::Key_Return) {
         if (on_return_pressed)
@@ -1643,7 +1643,7 @@ void TextEditor::did_change_font()
     vertical_scrollbar().set_step(line_height());
     recompute_all_visual_lines();
     update();
-    Widget::did_change_font();
+    ScrollableWidget::did_change_font();
 }
 
 void TextEditor::document_did_append_line()
