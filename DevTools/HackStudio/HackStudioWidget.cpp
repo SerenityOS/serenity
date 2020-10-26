@@ -665,7 +665,7 @@ void HackStudioWidget::create_open_files_view(GUI::Widget& parent)
     auto open_files_model = GUI::ItemListModel<String>::create(m_open_files_vector);
     m_open_files_view->set_model(open_files_model);
 
-    m_open_files_view->on_activation = [this] (auto& index) {
+    m_open_files_view->on_activation = [this](auto& index) {
         open_file(index.data().to_string());
     };
 }
