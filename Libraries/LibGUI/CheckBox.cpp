@@ -70,6 +70,9 @@ void CheckBox::paint_event(PaintEvent& event)
     Gfx::StylePainter::paint_check_box(painter, box_rect, palette(), is_enabled(), is_checked(), is_being_pressed());
 
     paint_text(painter, text_rect, font(), Gfx::TextAlignment::TopLeft);
+
+    if (is_focused())
+        painter.draw_focus_rect(text_rect.inflated(6, 6), palette().focus_outline());
 }
 
 void CheckBox::click(unsigned)

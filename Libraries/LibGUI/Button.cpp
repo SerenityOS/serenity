@@ -92,6 +92,15 @@ void Button::paint_event(PaintEvent& event)
         text_rect.set_width(content_rect.width());
     text_rect.align_within(content_rect, text_alignment());
     paint_text(painter, text_rect, font, text_alignment());
+
+    if (is_focused()) {
+        Gfx::IntRect focus_rect;
+        if (m_icon)
+            focus_rect = text_rect.inflated(6, 6);
+        else
+            focus_rect = rect().shrunken(8, 8);
+        painter.draw_focus_rect(focus_rect, palette().focus_outline());
+    }
 }
 
 void Button::click(unsigned modifiers)

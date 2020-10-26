@@ -279,6 +279,37 @@ void Painter::draw_ellipse_intersecting(const IntRect& rect, Color color, int th
     }
 }
 
+template<typename RectType, typename Callback>
+static void for_each_pixel_around_rect_clockwise(const RectType& rect, Callback callback)
+{
+    if (rect.is_empty())
+        return;
+    for (auto x = rect.left(); x <= rect.right(); ++x) {
+        callback(x, rect.top());
+    }
+    for (auto y = rect.top() + 1; y <= rect.bottom(); ++y) {
+        callback(rect.right(), y);
+    }
+    for (auto x = rect.right() - 1; x >= rect.left(); --x) {
+        callback(x, rect.bottom());
+    }
+    for (auto y = rect.bottom() - 1; y > rect.top(); --y) {
+        callback(rect.left(), y);
+    }
+}
+
+void Painter::draw_focus_rect(const IntRect& rect, Color color)
+{
+    if (rect.is_empty())
+        return;
+    bool state = false;
+    for_each_pixel_around_rect_clockwise(rect, [&](auto x, auto y) {
+        if (state)
+            set_pixel(x, y, color);
+        state = !state;
+    });
+}
+
 void Painter::draw_rect(const IntRect& a_rect, Color color, bool rough)
 {
     IntRect rect = a_rect.translated(translation());

@@ -176,8 +176,6 @@ void AbstractButton::paint_text(Painter& painter, const Gfx::IntRect& rect, cons
     if (text().is_empty())
         return;
     painter.draw_text(clipped_rect, text(), font, text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right);
-    if (is_focused())
-        painter.draw_rect(clipped_rect.inflated(6, 4), palette().focus_outline());
 }
 
 void AbstractButton::change_event(Event& event)

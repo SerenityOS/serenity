@@ -58,6 +58,7 @@ public:
     void fill_rect_with_gradient(const IntRect&, Color gradient_start, Color gradient_end);
     void fill_ellipse(const IntRect&, Color);
     void draw_rect(const IntRect&, Color, bool rough = false);
+    void draw_focus_rect(const IntRect&, Color);
     void draw_bitmap(const IntPoint&, const CharacterBitmap&, Color = Color());
     void draw_bitmap(const IntPoint&, const GlyphBitmap&, Color = Color());
     void draw_scaled_bitmap(const IntRect& dst_rect, const Gfx::Bitmap&, const IntRect& src_rect, float opacity = 1.0f);
