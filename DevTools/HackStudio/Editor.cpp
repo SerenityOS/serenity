@@ -470,6 +470,8 @@ void Editor::set_document(GUI::TextDocument& doc)
     ASSERT(doc.is_code_document());
     GUI::TextEditor::set_document(doc);
 
+    set_override_cursor(Gfx::StandardCursor::IBeam);
+
     CodeDocument& code_document = static_cast<CodeDocument&>(doc);
     switch (code_document.language()) {
     case Language::Cpp:
