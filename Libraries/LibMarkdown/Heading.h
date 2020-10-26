@@ -40,6 +40,7 @@ public:
         : m_text(move(text))
         , m_level(level)
     {
+        ASSERT(m_level > 0);
     }
     virtual ~Heading() override { }
 
