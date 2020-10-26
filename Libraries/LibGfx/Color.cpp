@@ -433,3 +433,8 @@ bool IPC::decode(IPC::Decoder& decoder, Color& color)
     color = Color::from_rgba(rgba);
     return true;
 }
+
+void AK::Formatter<Gfx::Color>::format(TypeErasedFormatParams& params, FormatBuilder& builder, const Gfx::Color& value)
+{
+    Formatter<StringView>::format(params, builder, value.to_string());
+}

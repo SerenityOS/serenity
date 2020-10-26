@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
@@ -294,6 +295,13 @@ const LogStream& operator<<(const LogStream&, Color);
 }
 
 using Gfx::Color;
+
+namespace AK {
+template<>
+struct Formatter<Gfx::Color> : public Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const Gfx::Color& value);
+};
+}
 
 namespace IPC {
 bool encode(Encoder&, const Gfx::Color&);
