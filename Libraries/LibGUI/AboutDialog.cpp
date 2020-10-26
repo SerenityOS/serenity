@@ -99,12 +99,12 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
 
     auto& button_container = right_container.add<Widget>();
     button_container.set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button_container.set_preferred_size(0, 20);
+    button_container.set_preferred_size(0, 23);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->add_spacer();
     auto& ok_button = button_container.add<Button>("OK");
     ok_button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    ok_button.set_preferred_size(80, 20);
+    ok_button.set_preferred_size(80, 23);
     ok_button.on_click = [this](auto) {
         done(Dialog::ExecOK);
     };
