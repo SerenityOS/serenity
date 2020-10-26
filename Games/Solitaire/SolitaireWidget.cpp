@@ -37,19 +37,19 @@ SolitaireWidget::SolitaireWidget(GUI::Window& window, Function<void(uint32_t)>&&
 {
     set_fill_with_background_color(false);
 
-    m_stacks[Stock] = CardStack({ 10, 10 }, CardStack::Type::Stock, 2, 1, 8);
-    m_stacks[Waste] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste, 2, 1, 8);
-    m_stacks[Foundation4] = CardStack({ SolitaireWidget::width - Card::width - 10, 10 }, CardStack::Type::Foundation, 2, 1, 4);
-    m_stacks[Foundation3] = CardStack({ SolitaireWidget::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation, 2, 1, 4);
-    m_stacks[Foundation2] = CardStack({ SolitaireWidget::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation, 2, 1, 4);
-    m_stacks[Foundation1] = CardStack({ SolitaireWidget::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation, 2, 1, 4);
-    m_stacks[Pile1] = CardStack({ 10, 10 + Card::height + 10 }, CardStack::Type::Normal, 0, 15);
-    m_stacks[Pile2] = CardStack({ 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal, 0, 15);
-    m_stacks[Pile3] = CardStack({ 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal, 0, 15);
-    m_stacks[Pile4] = CardStack({ 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal, 0, 15);
-    m_stacks[Pile5] = CardStack({ 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal, 0, 15);
-    m_stacks[Pile6] = CardStack({ 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal, 0, 15);
-    m_stacks[Pile7] = CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal, 0, 15);
+    m_stacks[Stock] = CardStack({ 10, 10 }, CardStack::Type::Stock);
+    m_stacks[Waste] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste);
+    m_stacks[Foundation4] = CardStack({ SolitaireWidget::width - Card::width - 10, 10 }, CardStack::Type::Foundation);
+    m_stacks[Foundation3] = CardStack({ SolitaireWidget::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation);
+    m_stacks[Foundation2] = CardStack({ SolitaireWidget::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation);
+    m_stacks[Foundation1] = CardStack({ SolitaireWidget::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation);
+    m_stacks[Pile1] = CardStack({ 10, 10 + Card::height + 10 }, CardStack::Type::Normal);
+    m_stacks[Pile2] = CardStack({ 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal);
+    m_stacks[Pile3] = CardStack({ 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal);
+    m_stacks[Pile4] = CardStack({ 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal);
+    m_stacks[Pile5] = CardStack({ 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal);
+    m_stacks[Pile6] = CardStack({ 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal);
+    m_stacks[Pile7] = CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal);
 
     m_timer = Core::Timer::construct(1000 / 60, [&]() { tick(window); });
     m_timer->stop();
@@ -66,7 +66,7 @@ static float rand_float()
 
 static void make_pile(NonnullRefPtrVector<Card>& cards, CardStack& stack, uint8_t count)
 {
-    for (int i = 1; i < count; ++i) {
+    for (uint8_t i = 1; i < count; ++i) {
         auto card = cards.take_last();
         card->set_upside_down(true);
         stack.push(card);
@@ -81,10 +81,9 @@ void SolitaireWidget::tick(GUI::Window& window)
         return;
 
     if (m_game_over_animation) {
-        if (m_animation.card()->position().x() > SolitaireWidget::width
-            || m_animation.card()->rect().right() < 0) {
+        ASSERT(!m_animation.card().is_null());
+        if (m_animation.card()->position().x() > SolitaireWidget::width || m_animation.card()->rect().right() < 0)
             create_new_animation_card();
-        }
 
         m_animation.tick();
     }
@@ -141,7 +140,7 @@ void SolitaireWidget::setup()
     }
 
     srand(time(nullptr));
-    for (int i = 0; i < 200; ++i)
+    for (uint8_t i = 0; i < 200; ++i)
         cards.append(cards.take(rand() % cards.size()));
 
     make_pile(cards, stack(Pile1), 1);
@@ -415,7 +414,7 @@ void SolitaireWidget::paint_event(GUI::PaintEvent& event)
                 focused_card.save_old_position();
             }
         }
-    } else if (m_animation.card() != nullptr)
+    } else if (!m_animation.card().is_null())
         m_animation.card()->draw(painter);
 
     m_repaint_all = true;

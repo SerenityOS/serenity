@@ -40,7 +40,7 @@ public:
     };
 
     CardStack();
-    CardStack(const Gfx::IntPoint& position, Type type, uint8_t shift_x, uint8_t shift_y, uint8_t step = 1);
+    CardStack(const Gfx::IntPoint& position, Type type);
 
     bool is_dirty() const { return m_dirty; }
     bool is_empty() const { return m_stack.is_empty(); }
@@ -64,6 +64,28 @@ public:
     void clear();
 
 private:
+    struct StackRules {
+        uint8_t shift_x { 0 };
+        uint8_t shift_y { 0 };
+        uint8_t step { 1 };
+        uint8_t shift_y_upside_down { 0 };
+    };
+
+    constexpr StackRules rules_for_type(Type stack_type)
+    {
+        switch (stack_type) {
+        case Foundation:
+            return { 2, 1, 4, 1 };
+        case Normal:
+            return { 0, 15, 1, 3 };
+        case Stock:
+        case Waste:
+            return { 2, 1, 8, 1 };
+        default:
+            return {};
+        }
+    }
+
     void calculate_bounding_box();
 
     NonnullRefPtrVector<Card> m_stack;
@@ -71,9 +93,7 @@ private:
     Gfx::IntPoint m_position;
     Gfx::IntRect m_bounding_box;
     Type m_type { Invalid };
-    uint8_t m_shift_x { 0 };
-    uint8_t m_shift_y { 0 };
-    uint8_t m_step {};
+    StackRules m_rules;
     bool m_focused { false };
     bool m_dirty { false };
     Gfx::IntRect m_base;
