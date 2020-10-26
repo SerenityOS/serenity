@@ -85,7 +85,7 @@ void DisplaySettingsWidget::create_wallpaper_list()
     m_modes.append("simple");
     m_modes.append("tile");
     m_modes.append("center");
-    m_modes.append("scaled");
+    m_modes.append("stretch");
 }
 
 void DisplaySettingsWidget::create_frame()
