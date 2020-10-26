@@ -69,7 +69,7 @@ public:
 
     void draw(GUI::Painter&) const;
     void clear(GUI::Painter&, const Color& background_color) const;
-    void draw_complete(GUI::Painter&, const Color& background_color);
+    void clear_and_draw(GUI::Painter&, const Color& background_color);
 
 private:
     Card(Type type, uint8_t value);

@@ -166,7 +166,7 @@ void Card::save_old_position()
     m_old_position_valid = true;
 }
 
-void Card::draw_complete(GUI::Painter& painter, const Color& background_color)
+void Card::clear_and_draw(GUI::Painter& painter, const Color& background_color)
 {
     if (is_old_position_valid())
         clear(painter, background_color);
