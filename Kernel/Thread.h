@@ -422,28 +422,31 @@ public:
     {
         T t(forward<Args>(args)...);
 
-        ScopedSpinLock lock(m_lock);
-        // We should never be blocking a blocked (or otherwise non-active) thread.
-        ASSERT(state() == Thread::Running);
-        ASSERT(m_blocker == nullptr);
+        {
+            ScopedSpinLock lock(m_lock);
+            // We should never be blocking a blocked (or otherwise non-active) thread.
+            ASSERT(state() == Thread::Running);
+            ASSERT(m_blocker == nullptr);
 
-        if (t.should_unblock(*this)) {
-            // Don't block if the wake condition is already met
-            return BlockResult::NotBlocked;
+            if (t.should_unblock(*this)) {
+                // Don't block if the wake condition is already met
+                return BlockResult::NotBlocked;
+            }
+
+            m_blocker = &t;
+            m_blocker_timeout = t.override_timeout(timeout);
         }
 
-        m_blocker = &t;
-        m_blocker_timeout = t.override_timeout(timeout);
-        set_state(Thread::Blocked);
-
-        // Release our lock
-        lock.unlock();
+        {
+            ScopedSpinLock scheduler_lock(g_scheduler_lock);
+            set_state(Thread::Blocked);
+        }
 
         // Yield to the scheduler, and wait for us to resume unblocked.
         yield_without_holding_big_lock();
 
         // Acquire our lock again
-        lock.lock();
+        ScopedSpinLock lock(m_lock);
 
         // We should no longer be blocked once we woke up
         ASSERT(state() != Thread::Blocked);

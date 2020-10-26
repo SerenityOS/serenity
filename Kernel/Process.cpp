@@ -322,6 +322,7 @@ NonnullRefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thre
         process->ref();
     }
 
+    ScopedSpinLock lock(g_scheduler_lock);
     first_thread->set_affinity(affinity);
     first_thread->set_state(Thread::State::Runnable);
     return process;
@@ -781,6 +782,7 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(), u32 priority, cons
     auto& tss = thread->tss();
     tss.eip = (FlatPtr)entry;
 
+    ScopedSpinLock lock(g_scheduler_lock);
     thread->set_state(Thread::State::Runnable);
     return thread;
 }
