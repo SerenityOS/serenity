@@ -362,6 +362,7 @@ Token Lexer::next()
 {
     size_t trivia_start = m_position;
     auto in_template = !m_template_states.is_empty();
+    bool unterminated_comment = false;
 
     if (!in_template || m_template_states.last().in_expr) {
         // consume whitespace and comments
@@ -380,7 +381,11 @@ Token Lexer::next()
                 do {
                     consume();
                 } while (!is_eof() && !is_block_comment_end());
+                if (is_eof())
+                    unterminated_comment = true;
                 consume(); // consume *
+                if (is_eof())
+                    unterminated_comment = true;
                 consume(); // consume /
             } else {
                 break;
@@ -542,7 +547,12 @@ Token Lexer::next()
             consume();
         }
     } else if (m_current_char == EOF) {
-        token_type = TokenType::Eof;
+        if (unterminated_comment) {
+            token_type = TokenType::Invalid;
+            token_message = "Unterminated multi-line comment";
+        } else {
+            token_type = TokenType::Eof;
+        }
     } else {
         // There is only one four-char operator: >>>=
         bool found_four_char_token = false;
