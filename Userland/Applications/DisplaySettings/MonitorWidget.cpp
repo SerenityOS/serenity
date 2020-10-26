@@ -96,7 +96,7 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
             screen_painter.blit_offset(screen_rect.location(), *m_desktop_wallpaper_bitmap, screen_rect, offset);
         } else if (m_desktop_wallpaper_mode == "tile") {
             screen_painter.draw_tiled_bitmap(screen_bitmap->rect(), *m_desktop_wallpaper_bitmap);
-        } else if (m_desktop_wallpaper_mode == "scaled") {
+        } else if (m_desktop_wallpaper_mode == "stretch") {
             screen_painter.draw_scaled_bitmap(screen_bitmap->rect(), *m_desktop_wallpaper_bitmap, m_desktop_wallpaper_bitmap->rect());
         } else {
             ASSERT_NOT_REACHED();
