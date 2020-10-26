@@ -83,12 +83,20 @@ OwnPtr<Document> Document::parse(const StringView& str)
     auto& blocks = document->m_blocks;
     NonnullOwnPtrVector<Paragraph::Line> paragraph_lines;
 
+    auto flush_paragraph = [&] {
+        if (paragraph_lines.is_empty())
+            return;
+        auto paragraph = make<Paragraph>(move(paragraph_lines));
+        document->m_blocks.append(move(paragraph));
+        paragraph_lines.clear();
+    };
     while (true) {
         if (lines.is_end())
             break;
 
         if ((*lines).is_empty()) {
             ++lines;
+            flush_paragraph();
             continue;
         }
 
@@ -98,10 +106,8 @@ OwnPtr<Document> Document::parse(const StringView& str)
         if (any) {
             if (!paragraph_lines.is_empty()) {
                 auto last_block = document->m_blocks.take_last();
-                auto paragraph = make<Paragraph>(move(paragraph_lines));
-                document->m_blocks.append(move(paragraph));
+                flush_paragraph();
                 document->m_blocks.append(move(last_block));
-                paragraph_lines.clear();
             }
             continue;
         }
@@ -113,10 +119,8 @@ OwnPtr<Document> Document::parse(const StringView& str)
         paragraph_lines.append(line.release_nonnull());
     }
 
-    if (!paragraph_lines.is_empty()) {
-        auto paragraph = make<Paragraph>(move(paragraph_lines));
-        document->m_blocks.append(move(paragraph));
-    }
+    if (!paragraph_lines.is_empty())
+        flush_paragraph();
 
     return document;
 }
