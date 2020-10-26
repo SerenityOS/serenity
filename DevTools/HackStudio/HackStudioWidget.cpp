@@ -59,6 +59,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -97,8 +98,14 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     auto& toolbar_container = add<GUI::ToolBarContainer>();
 
     auto& outer_splitter = add<GUI::HorizontalSplitter>();
-    create_project_tree_view(outer_splitter);
+
+    auto& left_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
+    left_hand_splitter.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
+    left_hand_splitter.set_preferred_size(150, 0);
+    create_project_tree_view(left_hand_splitter);
     m_project_tree_view_context_menu = create_project_tree_view_context_menu();
+
+    create_open_files_view(left_hand_splitter);
 
     m_right_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
     m_right_hand_stack = m_right_hand_splitter->add<GUI::StackWidget>();
@@ -198,14 +205,22 @@ Vector<String> HackStudioWidget::selected_file_names() const
 void HackStudioWidget::open_file(const String& filename)
 {
     auto project_file = m_project->get_file(filename);
-    if (project_file) {
-        current_editor().set_document(const_cast<GUI::TextDocument&>(project_file->document()));
-        current_editor().set_mode(GUI::TextEditor::Editable);
-    } else {
-        auto external_file = ProjectFile::construct_with_name(filename);
-        current_editor().set_document(const_cast<GUI::TextDocument&>(external_file->document()));
-        current_editor().set_mode(GUI::TextEditor::ReadOnly);
+
+    if (!project_file) {
+        if (auto it = m_open_files.find(filename); it != m_open_files.end()) {
+            project_file = it->value;
+        } else {
+            project_file = ProjectFile::construct_with_name(filename);
+        }
     }
+
+    if (m_open_files.set(filename, *project_file) == AK::HashSetResult::InsertedNewEntry) {
+        m_open_files_vector.append(filename);
+        m_open_files_view->model()->update();
+    }
+
+    current_editor().set_document(const_cast<GUI::TextDocument&>(project_file->document()));
+    current_editor().set_mode(GUI::TextEditor::Editable);
 
     if (filename.ends_with(".frm")) {
         set_edit_mode(EditMode::Form);
@@ -625,8 +640,6 @@ void HackStudioWidget::create_project_tree_view(GUI::Widget& parent)
 {
     m_project_tree_view = parent.add<GUI::TreeView>();
     m_project_tree_view->set_model(m_project->model());
-    m_project_tree_view->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fill);
-    m_project_tree_view->set_preferred_size(140, 0);
     m_project_tree_view->toggle_index(m_project_tree_view->model()->index(0, 0));
 
     m_project_tree_view->on_context_menu_request = [this](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
@@ -643,6 +656,17 @@ void HackStudioWidget::create_project_tree_view(GUI::Widget& parent)
     m_project_tree_view->on_activation = [this](auto& index) {
         auto filename = index.data(GUI::ModelRole::Custom).to_string();
         open_file(filename);
+    };
+}
+
+void HackStudioWidget::create_open_files_view(GUI::Widget& parent)
+{
+    m_open_files_view = parent.add<GUI::ListView>();
+    auto open_files_model = GUI::ItemListModel<String>::create(m_open_files_vector);
+    m_open_files_view->set_model(open_files_model);
+
+    m_open_files_view->on_activation = [this] (auto& index) {
+        open_file(index.data().to_string());
     };
 }
 
