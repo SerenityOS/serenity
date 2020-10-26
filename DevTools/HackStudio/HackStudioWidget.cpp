@@ -853,6 +853,16 @@ void HackStudioWidget::create_edit_menubar(GUI::MenuBar& menubar)
         reveal_action_tab(*m_find_in_files_widget);
         m_find_in_files_widget->focus_textbox_and_select_all();
     }));
+
+    edit_menu.add_separator();
+
+    auto line_wrapping_action = GUI::Action::create_checkable("Line wrapping", [this](auto& action) {
+        for (auto& wrapper : m_all_editor_wrappers) {
+            wrapper.editor().set_line_wrapping_enabled(action.is_checked());
+        }
+    });
+    line_wrapping_action->set_checked(current_editor().is_line_wrapping_enabled());
+    edit_menu.add_action(line_wrapping_action);
 }
 
 void HackStudioWidget::create_build_menubar(GUI::MenuBar& menubar)
