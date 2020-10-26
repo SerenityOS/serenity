@@ -2019,9 +2019,7 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
         MM.enter_process_paging_scope(*process);
 
     Kernel::dump_backtrace();
-    asm volatile("hlt");
-    for (;;)
-        ;
+    Processor::halt();
 }
 #endif
 
