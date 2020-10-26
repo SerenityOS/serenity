@@ -115,7 +115,7 @@ bool APICTimer::calibrate(HardwareTimerBase& calibration_source)
     auto delta_apic_count = end_apic_count - start_apic_count;
     m_timer_period = (delta_apic_count * apic.get_timer_divisor()) / ticks_in_100ms;
 
-    auto apic_freq = (delta_apic_count * 16) / apic.get_timer_divisor();
+    auto apic_freq = (delta_apic_count * apic.get_timer_divisor()) / apic.get_timer_divisor();
     if (apic_freq < 1000000) {
         klog() << "APICTimer: Frequency too slow!";
         return false;
