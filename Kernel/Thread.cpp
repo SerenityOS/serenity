@@ -995,6 +995,14 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
 
     {
         ScopedCritical critical;
+
+        // Because Thread::wait_on may be called from inside a page fault
+        // handler which holds the MM lock, we need to temporarily release
+        // it before trying to acquire the scheduler lock. Otherwise we
+        // may deadlock if something holding the scheduler lock were to
+        // trigger another page fault.
+        u32 mm_lock_saved = s_mm_lock.relock_leave();
+
         // We need to be in a critical section *and* then also acquire the
         // scheduler lock. The only way acquiring the scheduler lock could
         // block us is if another core were to be holding it, in which case
@@ -1012,6 +1020,9 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
                 // regardless of how we got called
                 critical.set_interrupt_flag_on_destruction(true);
 
+                // Restore the MM lock if we had it before (we need to release the scheduler lock first!)
+                sched_lock.unlock();
+                s_mm_lock.relock_enter(mm_lock_saved);
                 return BlockResult::NotBlocked;
             }
 
@@ -1048,6 +1059,10 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
             dbg() << "Dying thread " << *current_thread << " was unblocked";
 #endif
         }
+
+        // Restore the MM lock if we had it before. Note that it's possible
+        // that we didn't actually did a context switch.
+        s_mm_lock.relock_enter(mm_lock_saved);
     }
 
     BlockResult result(BlockResult::WokeNormally);

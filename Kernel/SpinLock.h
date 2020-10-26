@@ -105,6 +105,34 @@ public:
         Processor::current().leave_critical(prev_flags);
     }
 
+    ALWAYS_INLINE u32 relock_leave()
+    {
+        // We don't want to leave the critcial section here
+        if (!own_lock())
+            return 0;
+        auto recursions = exchange(m_recursions, 0);
+        ASSERT(recursions > 0);
+        m_lock.store(0, AK::memory_order_release);
+        return recursions;
+    }
+
+    ALWAYS_INLINE void relock_enter(u32 recursions)
+    {
+        // We don't want to enter the critcial section here
+        if (recursions == 0)
+            return;
+        FlatPtr cpu = FlatPtr(&Processor::current());
+        FlatPtr expected = 0;
+        while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
+            // Special case, we should not already be holding the lock
+            ASSERT(expected != cpu);
+
+            Processor::wait_check();
+            expected = 0;
+        }
+        m_recursions = recursions;
+    }
+
     ALWAYS_INLINE bool is_locked() const
     {
         return m_lock.load(AK::memory_order_relaxed) != 0;

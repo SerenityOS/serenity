@@ -672,6 +672,12 @@ bool Scheduler::context_switch(Thread* thread)
     }
     thread->set_state(Thread::Running);
 
+    // Special case for the MM lock. Because Thread::wait_on may be called
+    // from inside page fault handlers, we need to release the lock here
+    // and re-acquire it when we get scheduled again. Such context switches
+    // are explicitly triggered only.
+    u32 mm_lock_saved = s_mm_lock.relock_leave();
+
     // Mark it as active because we are using this thread. This is similar
     // to comparing it with Processor::current_thread, but when there are
     // multiple processors there's no easy way to check whether the thread
@@ -685,6 +691,14 @@ bool Scheduler::context_switch(Thread* thread)
     // switched from, and thread reflects Thread::current()
     enter_current(*from_thread);
     ASSERT(thread == Thread::current());
+
+    // re-accuqire the MM lock if we had it before
+    if (mm_lock_saved != 0) {
+        ASSERT(!s_mm_lock.own_lock());
+        u32 scheduler_lock_saved = g_scheduler_lock.relock_leave();
+        s_mm_lock.relock_enter(mm_lock_saved);
+        g_scheduler_lock.relock_enter(scheduler_lock_saved);
+    }
 
     return true;
 }

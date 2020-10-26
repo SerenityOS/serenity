@@ -478,6 +478,12 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     LOCKER(vmobject().m_paging_lock);
     cli();
 
+    // We should have gotten our lock back. Since we may have explicitly
+    // yielded execution from within a page fault handler, the scheduler
+    // had to temporarily release the MM lock. As soon as we get scheduled
+    // again, it should have restored that lock for us.
+    ASSERT(s_mm_lock.own_lock());
+
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[first_page_index() + page_index_in_region];
 

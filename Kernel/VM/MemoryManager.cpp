@@ -382,7 +382,9 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         return PageFaultResponse::ShouldCrash;
     }
 
-    return region->handle_fault(fault);
+    auto result = region->handle_fault(fault);
+    ASSERT(s_mm_lock.own_lock());
+    return result;
 }
 
 OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
