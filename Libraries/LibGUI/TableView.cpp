@@ -121,10 +121,14 @@ void TableView::paint_event(PaintEvent& event)
                     painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
                 } else if (data.is_icon()) {
                     if (auto bitmap = data.as_icon().bitmap_for_size(16)) {
-                        if (m_hovered_index.is_valid() && cell_index.row() == m_hovered_index.row())
+                        if (is_selected_row) {
+                            auto tint = palette().selection().with_alpha(100);
+                            painter.blit_filtered(cell_rect.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
+                        } else if (m_hovered_index.is_valid() && cell_index.row() == m_hovered_index.row()) {
                             painter.blit_brightened(cell_rect.location(), *bitmap, bitmap->rect());
-                        else
+                        } else {
                             painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
+                        }
                     }
                 } else {
                     if (!is_selected_row) {

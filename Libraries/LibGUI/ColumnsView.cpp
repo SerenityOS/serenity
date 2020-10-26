@@ -130,10 +130,14 @@ void ColumnsView::paint_event(PaintEvent& event)
             icon_rect.center_vertically_within(row_rect);
             if (icon.is_icon()) {
                 if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size())) {
-                    if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row())
+                    if (is_selected_row) {
+                        auto tint = palette().selection().with_alpha(100);
+                        painter.blit_filtered(icon_rect.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
+                    } else if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row()) {
                         painter.blit_brightened(icon_rect.location(), *bitmap, bitmap->rect());
-                    else
+                    } else {
                         painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
+                    }
                 }
             }
 
