@@ -56,15 +56,14 @@ private:
         {
         }
 
-        Card* card() { return m_animation_card; }
+        RefPtr<Card> card() { return m_animation_card; }
 
         void tick()
         {
             ASSERT(!m_animation_card.is_null());
             m_y_velocity += m_gravity;
 
-            if (m_animation_card->position().y() + Card::height + m_y_velocity > SolitaireWidget::height + 1
-                && m_y_velocity > 0) {
+            if (m_animation_card->position().y() + Card::height + m_y_velocity > SolitaireWidget::height + 1 && m_y_velocity > 0) {
                 m_y_velocity = min((m_y_velocity * -m_bouncyness), -8.f);
                 m_animation_card->rect().set_y(SolitaireWidget::height - Card::height);
                 m_animation_card->rect().move_by(m_x_velocity, 0);
@@ -107,7 +106,7 @@ private:
     void check_for_game_over();
     void tick(GUI::Window&);
 
-    inline CardStack& stack(StackLocation location)
+    ALWAYS_INLINE CardStack& stack(StackLocation location)
     {
         return m_stacks[location];
     }

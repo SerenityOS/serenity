@@ -29,22 +29,17 @@
 CardStack::CardStack()
     : m_position({ 0, 0 })
     , m_type(Invalid)
-    , m_shift_x(0)
-    , m_shift_y(0)
-    , m_step(1)
     , m_base(m_position, { Card::width, Card::height })
 {
 }
 
-CardStack::CardStack(const Gfx::IntPoint& position, Type type, uint8_t shift_x, uint8_t shift_y, uint8_t step)
+CardStack::CardStack(const Gfx::IntPoint& position, Type type)
     : m_position(position)
     , m_type(type)
-    , m_shift_x(shift_x)
-    , m_shift_y(shift_y)
-    , m_step(step)
+    , m_rules(rules_for_type(type))
     , m_base(m_position, { Card::width, Card::height })
 {
-    ASSERT(step && type != Invalid);
+    ASSERT(type != Invalid);
     calculate_bounding_box();
 }
 
@@ -88,7 +83,7 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
     if (is_empty())
         return;
 
-    if (m_shift_x == 0 && m_shift_y == 0) {
+    if (m_rules.shift_x == 0 && m_rules.shift_y == 0) {
         auto& card = peek();
         card.draw(painter);
         return;
@@ -96,11 +91,12 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
 
     for (auto& card : m_stack) {
         if (!card.is_moving())
-            card.draw_complete(painter, background_color);
+            card.clear_and_draw(painter, background_color);
     }
 
     m_dirty = false;
 }
+
 void CardStack::rebound_cards()
 {
     ASSERT(m_stack_positions.size() == m_stack.size());
@@ -183,15 +179,14 @@ bool CardStack::is_allowed_to_push(const Card& card) const
 
 void CardStack::push(NonnullRefPtr<Card> card)
 {
-    int size = m_stack.size();
-    int ud_shift = (m_type == Normal) ? 3 : 1;
+    auto size = m_stack.size();
     auto top_most_position = m_stack_positions.is_empty() ? m_position : m_stack_positions.last();
 
-    if (size && size % m_step == 0) {
+    if (size && size % m_rules.step == 0) {
         if (peek().is_upside_down())
-            top_most_position.move_by(m_shift_x, ((m_shift_y == 0) ? 0 : ud_shift));
+            top_most_position.move_by(m_rules.shift_x, m_rules.shift_y_upside_down);
         else
-            top_most_position.move_by(m_shift_x, m_shift_y);
+            top_most_position.move_by(m_rules.shift_x, m_rules.shift_y);
     }
 
     if (m_type == Stock)
@@ -225,16 +220,15 @@ void CardStack::calculate_bounding_box()
 
     uint16_t width = 0;
     uint16_t height = 0;
-    int card_position = 0;
+    size_t card_position = 0;
     for (auto& card : m_stack) {
-        if (card_position % m_step == 0 && card_position) {
-            if (card.is_upside_down() && m_type != Stock) {
-                int ud_shift = (m_type == Normal) ? 3 : 1;
-                width += m_shift_x;
-                height += (m_shift_y == 0) ? 0 : ud_shift;
+        if (card_position % m_rules.step == 0 && card_position) {
+            if (card.is_upside_down()) {
+                width += m_rules.shift_x;
+                height += m_rules.shift_y_upside_down;
             } else {
-                width += m_shift_x;
-                height += m_shift_y;
+                width += m_rules.shift_x;
+                height += m_rules.shift_y;
             }
         }
         ++card_position;
