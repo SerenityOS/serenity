@@ -55,7 +55,7 @@ public:
     [[nodiscard]] bool remove_file(const String& filename);
     [[nodiscard]] bool save();
 
-    ProjectFile* get_file(const String& filename);
+    RefPtr<ProjectFile> get_file(const String& filename);
 
     ProjectType type() const { return m_type; }
     GUI::Model& model() { return *m_model; }

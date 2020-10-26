@@ -103,6 +103,7 @@ private:
     void initialize_debugger();
 
     void create_project_tree_view(GUI::Widget& parent);
+    void create_open_files_view(GUI::Widget& parent);
     void create_form_editor(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
     void create_action_tab(GUI::Widget& parent);
@@ -121,10 +122,16 @@ private:
     NonnullRefPtrVector<EditorWrapper> m_all_editor_wrappers;
     RefPtr<EditorWrapper> m_current_editor_wrapper;
 
+    // FIXME: This doesn't seem compatible with multiple split editors
     String m_currently_open_file;
+
+    HashMap<String, NonnullRefPtr<ProjectFile>> m_open_files;
+    Vector<String> m_open_files_vector; // NOTE: This contains the keys from m_open_files
+
     OwnPtr<Project> m_project;
 
     RefPtr<GUI::TreeView> m_project_tree_view;
+    RefPtr<GUI::ListView> m_open_files_view;
     RefPtr<GUI::VerticalSplitter> m_right_hand_splitter;
     RefPtr<GUI::StackWidget> m_right_hand_stack;
     RefPtr<GUI::Splitter> m_editors_splitter;

@@ -291,7 +291,7 @@ bool Project::save()
     return true;
 }
 
-ProjectFile* Project::get_file(const String& filename)
+RefPtr<ProjectFile> Project::get_file(const String& filename)
 {
     for (auto& file : m_files) {
         if (LexicalPath(file.name()).string() == LexicalPath(filename).string())
