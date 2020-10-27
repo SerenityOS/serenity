@@ -63,27 +63,28 @@ struct Position {
 
 struct FdRedirection;
 struct Rewiring : public RefCounted<Rewiring> {
-    int source_fd { -1 };
-    int dest_fd { -1 };
+    int old_fd { -1 };
+    int new_fd { -1 };
     FdRedirection* other_pipe_end { nullptr };
     enum class Close {
         None,
-        Source,
-        Destination,
-        RefreshDestination,
-        ImmediatelyCloseDestination,
+        Old,
+        New,
+        RefreshNew,
+        RefreshOld,
+        ImmediatelyCloseNew,
     } fd_action { Close::None };
 
     Rewiring(int source, int dest, Close close = Close::None)
-        : source_fd(source)
-        , dest_fd(dest)
+        : old_fd(source)
+        , new_fd(dest)
         , fd_action(close)
     {
     }
 
     Rewiring(int source, int dest, FdRedirection* other_end, Close close)
-        : source_fd(source)
-        , dest_fd(dest)
+        : old_fd(source)
+        , new_fd(dest)
         , other_pipe_end(other_end)
         , fd_action(close)
     {
@@ -143,25 +144,25 @@ private:
 
 struct FdRedirection : public Redirection {
 public:
-    static NonnullRefPtr<FdRedirection> create(int source, int dest, Rewiring::Close close)
+    static NonnullRefPtr<FdRedirection> create(int old_fd, int new_fd, Rewiring::Close close)
     {
-        return adopt(*new FdRedirection(source, dest, close));
+        return adopt(*new FdRedirection(old_fd, new_fd, close));
     }
 
-    static NonnullRefPtr<FdRedirection> create(int source, int dest, FdRedirection* pipe_end, Rewiring::Close close)
+    static NonnullRefPtr<FdRedirection> create(int old_fd, int new_fd, FdRedirection* pipe_end, Rewiring::Close close)
     {
-        return adopt(*new FdRedirection(source, dest, pipe_end, close));
+        return adopt(*new FdRedirection(old_fd, new_fd, pipe_end, close));
     }
 
     virtual ~FdRedirection();
 
     virtual Result<NonnullRefPtr<Rewiring>, String> apply() const override
     {
-        return adopt(*new Rewiring(source_fd, dest_fd, other_pipe_end, action));
+        return adopt(*new Rewiring(old_fd, new_fd, other_pipe_end, action));
     }
 
-    int source_fd { -1 };
-    int dest_fd { -1 };
+    int old_fd { -1 };
+    int new_fd { -1 };
     FdRedirection* other_pipe_end { nullptr };
     Rewiring::Close action { Rewiring::Close::None };
 
@@ -171,9 +172,9 @@ private:
     {
     }
 
-    FdRedirection(int source, int dest, FdRedirection* pipe_end, Rewiring::Close close)
-        : source_fd(source)
-        , dest_fd(dest)
+    FdRedirection(int old_fd, int new_fd, FdRedirection* pipe_end, Rewiring::Close close)
+        : old_fd(old_fd)
+        , new_fd(new_fd)
         , other_pipe_end(pipe_end)
         , action(close)
     {
@@ -748,8 +749,8 @@ public:
     virtual ~Fd2FdRedirection();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    int source_fd() const { return m_source_fd; }
-    int dest_fd() const { return m_dest_fd; }
+    int source_fd() const { return m_old_fd; }
+    int dest_fd() const { return m_new_fd; }
 
 private:
     NODE(Fd2FdRedirection);
@@ -758,8 +759,8 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual bool is_command() const override { return true; }
 
-    int m_source_fd { -1 };
-    int m_dest_fd { -1 };
+    int m_old_fd { -1 };
+    int m_new_fd { -1 };
 };
 
 class FunctionDeclaration final : public Node {
