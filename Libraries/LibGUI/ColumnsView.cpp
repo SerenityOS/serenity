@@ -147,6 +147,11 @@ void ColumnsView::paint_event(PaintEvent& event)
             };
             draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::None);
 
+            if (is_focused() && index == cursor_index()) {
+                painter.draw_rect(row_rect, palette().color(background_role()));
+                painter.draw_focus_rect(row_rect, palette().focus_outline());
+            }
+
             bool expandable = model()->row_count(index) > 0;
             if (expandable) {
                 Gfx::IntRect arrow_rect = {
