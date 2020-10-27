@@ -143,6 +143,8 @@ protected:
     virtual void add_selection(const ModelIndex&);
     virtual void remove_selection(const ModelIndex&);
     virtual void toggle_selection(const ModelIndex&);
+    virtual void did_change_hovered_index([[maybe_unused]] const ModelIndex& old_index, [[maybe_unused]] const ModelIndex& new_index) { }
+    virtual void did_change_cursor_index([[maybe_unused]] const ModelIndex& old_index, [[maybe_unused]] const ModelIndex& new_index) { }
 
     void draw_item_text(Gfx::Painter&, const ModelIndex&, bool, const Gfx::IntRect&, const StringView&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextElision);
 

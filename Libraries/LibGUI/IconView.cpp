@@ -117,7 +117,7 @@ auto IconView::get_item_data(int item_index) const -> ItemData&
         return item_data;
 
     item_data.index = model()->index(item_index, model_column());
-    item_data.data = item_data.index.data();
+    item_data.text = item_data.index.data().to_string();
     get_item_rects(item_index, item_data, font_for_index(item_data.index));
     item_data.valid = true;
     return item_data;
@@ -397,6 +397,24 @@ Gfx::IntRect IconView::content_rect(const ModelIndex& index) const
     return item_data.text_rect;
 }
 
+void IconView::did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index)
+{
+    AbstractView::did_change_hovered_index(old_index, new_index);
+    if (old_index.is_valid())
+        get_item_rects(old_index.row(), get_item_data(old_index.row()), font_for_index(old_index));
+    if (new_index.is_valid())
+        get_item_rects(new_index.row(), get_item_data(new_index.row()), font_for_index(new_index));
+}
+
+void IconView::did_change_cursor_index(const ModelIndex& old_index, const ModelIndex& new_index)
+{
+    AbstractView::did_change_cursor_index(old_index, new_index);
+    if (old_index.is_valid())
+        get_item_rects(old_index.row(), get_item_data(old_index.row()), font_for_index(old_index));
+    if (new_index.is_valid())
+        get_item_rects(new_index.row(), get_item_data(new_index.row()), font_for_index(new_index));
+}
+
 void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Font& font) const
 {
     auto item_rect = this->item_rect(item_index);
@@ -404,10 +422,45 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Fo
     item_data.icon_rect.center_within(item_rect);
     item_data.icon_offset_y = -font.glyph_height() - 6;
     item_data.icon_rect.move_by(0, item_data.icon_offset_y);
-    item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6 + 1, font.width(item_data.data.to_string()), font.glyph_height() };
-    item_data.text_rect.center_horizontally_within(item_rect);
-    item_data.text_rect.inflate(6, 4);
-    item_data.text_rect.intersect(item_rect);
+
+    int unwrapped_text_width = font.width(item_data.text);
+    int available_width = item_rect.width() - 6;
+
+    item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6 + 1, 0, font.glyph_height() };
+    item_data.wrapped_text_lines.clear();
+
+    if ((unwrapped_text_width > available_width) && (item_data.selected || m_hovered_index == item_data.index || cursor_index() == item_data.index)) {
+        int current_line_width = 0;
+        int current_line_start = 0;
+        int widest_line_width = 0;
+        Utf8View utf8_view(item_data.text);
+        auto it = utf8_view.begin();
+        for (; it != utf8_view.end(); ++it) {
+            auto codepoint = *it;
+            auto glyph_width = font.glyph_width(codepoint);
+            if ((current_line_width + glyph_width + font.glyph_spacing()) > available_width) {
+                item_data.wrapped_text_lines.append(item_data.text.substring_view(current_line_start, utf8_view.byte_offset_of(it) - current_line_start));
+                current_line_start = utf8_view.byte_offset_of(it);
+                current_line_width = glyph_width;
+            } else {
+                current_line_width += glyph_width + font.glyph_spacing();
+            }
+            widest_line_width = max(widest_line_width, current_line_width);
+        }
+        if (current_line_width > 0) {
+            item_data.wrapped_text_lines.append(item_data.text.substring_view(current_line_start, utf8_view.byte_offset_of(it) - current_line_start));
+        }
+        item_data.text_rect.set_width(widest_line_width);
+        item_data.text_rect.center_horizontally_within(item_rect);
+        item_data.text_rect.intersect(item_rect);
+        item_data.text_rect.set_height(font.glyph_height() * item_data.wrapped_text_lines.size());
+        item_data.text_rect.inflate(6, 4);
+    } else {
+        item_data.text_rect.set_width(unwrapped_text_width);
+        item_data.text_rect.inflate(6, 4);
+        item_data.text_rect.center_horizontally_within(item_rect);
+        item_data.text_rect.intersect(item_rect);
+    }
     item_data.text_offset_y = item_data.text_rect.y() - item_rect.y();
 }
 
@@ -450,7 +503,6 @@ void IconView::paint_event(PaintEvent& event)
         }
 
         auto icon = item_data.index.data(ModelRole::Icon);
-        auto item_text = item_data.index.data();
 
         if (icon.is_icon()) {
             if (auto bitmap = icon.as_icon().bitmap_for_size(item_data.icon_rect.width())) {
@@ -468,52 +520,26 @@ void IconView::paint_event(PaintEvent& event)
             }
         }
 
-        // NOTE: This counteracts the inflate(6, ...) in get_text_rects().
-        auto available_width = item_data.text_rect.width() - 3;
-
         auto font = font_for_index(item_data.index);
-        auto text_width = font->width(item_text.to_string());
-        auto text = item_text.to_string();
 
-        if ((item_data.selected || m_hovered_index == item_data.index) && item_data.index != m_edit_index && text_width > available_width) {
+        painter.fill_rect(item_data.text_rect, background_color);
+
+        if (!item_data.wrapped_text_lines.is_empty()) {
             // Item text would not fit in the item text rect, let's break it up into lines..
 
-            // FIXME: Maybe break this out into some kind of GUI::TextLayout class?
-
-            Vector<StringView, 4> lines;
-            int current_line_width = 0;
-            int current_line_start = 0;
-            Utf8View utf8_view(text);
-            auto it = utf8_view.begin();
-            for (; it != utf8_view.end(); ++it) {
-                auto codepoint = *it;
-                auto glyph_width = font->glyph_width(codepoint);
-                if (lines.size() < 1 && (current_line_width + glyph_width + font->glyph_spacing()) > available_width) {
-                    lines.append(text.substring_view(current_line_start, utf8_view.byte_offset_of(it) - current_line_start));
-                    current_line_start = utf8_view.byte_offset_of(it);
-                    current_line_width = glyph_width;
-                } else {
-                    current_line_width += glyph_width + font->glyph_spacing();
-                }
-            }
-            if (current_line_width > 0) {
-                lines.append(text.substring_view(current_line_start, utf8_view.byte_offset_of(it) - current_line_start));
-            }
-
+            const auto& lines = item_data.wrapped_text_lines;
             for (size_t line_index = 0; line_index < lines.size(); ++line_index) {
                 Gfx::IntRect line_rect;
-                line_rect.set_width(min(available_width, font->width(lines[line_index])));
-                line_rect.set_height(item_data.text_rect.height());
+                line_rect.set_width(item_data.text_rect.width());
+                line_rect.set_height(font->glyph_height());
                 line_rect.center_horizontally_within(item_data.text_rect);
-                line_rect.set_y(item_data.text_rect.y() + line_index * item_data.text_rect.height());
+                line_rect.set_y(2 + item_data.text_rect.y() + line_index * font->glyph_height());
                 line_rect.inflate(6, 0);
-                painter.fill_rect(line_rect, background_color);
+
                 draw_item_text(painter, item_data.index, item_data.selected, line_rect, lines[line_index], font, Gfx::TextAlignment::Center, Gfx::TextElision::Right);
             }
-
         } else {
-            painter.fill_rect(item_data.text_rect, background_color);
-            draw_item_text(painter, item_data.index, item_data.selected, item_data.text_rect, text, font, Gfx::TextAlignment::Center, Gfx::TextElision::Right);
+            draw_item_text(painter, item_data.index, item_data.selected, item_data.text_rect, item_data.text, font, Gfx::TextAlignment::Center, Gfx::TextElision::Right);
         }
 
         if (item_data.index == m_drop_candidate_index) {
