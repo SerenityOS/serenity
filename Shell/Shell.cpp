@@ -562,13 +562,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 {
     FileDescriptionCollector fds;
 
-    if (options.verbose) {
-        fprintf(stderr, "+ ");
-        for (auto& arg : command.argv)
-            fprintf(stderr, "%s ", escape_token(arg).characters());
-        fprintf(stderr, "\n");
-        fflush(stderr);
-    }
+    if (options.verbose)
+        warnln("+ {}", m_pid, command);
 
     // If the command is empty, store the redirections and apply them to all later commands.
     if (command.argv.is_empty() && !command.should_immediately_execute_next) {
@@ -642,7 +637,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             return nullptr;
     }
 
-    if (run_builtin(command, rewirings, last_return_code)) {
+    if (command.should_wait && run_builtin(command, rewirings, last_return_code)) {
         for (auto& next_in_chain : command.next_chain)
             run_tail(command, next_in_chain, last_return_code);
         return nullptr;
@@ -694,7 +689,6 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         m_is_subshell = true;
         m_pid = getpid();
         Core::EventLoop::notify_forked(Core::EventLoop::ForkEvent::Child);
-        jobs.clear();
 
         if (apply_rewirings() == IterationDecision::Break)
             _exit(126);
@@ -732,8 +726,14 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             _exit(last_return_code);
         }
 
+        if (run_builtin(command, {}, last_return_code))
+            _exit(last_return_code);
+
         if (invoke_function(command, last_return_code))
             _exit(last_return_code);
+
+        // We no longer need the jobs here.
+        jobs.clear();
 
         int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
         if (rc < 0) {
