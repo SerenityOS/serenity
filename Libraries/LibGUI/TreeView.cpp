@@ -434,17 +434,16 @@ void TreeView::keydown_event(KeyEvent& event)
 {
     if (!model())
         return;
-    auto cursor_index = selection().first();
 
     if (event.key() == KeyCode::Key_Space) {
-        if (model()->row_count(cursor_index))
-            toggle_index(cursor_index);
+        if (model()->row_count(cursor_index()))
+            toggle_index(cursor_index());
         return;
     }
 
     auto open_tree_node = [&](bool open, MetadataForIndex& metadata) {
         if (on_toggle)
-            on_toggle(cursor_index, open);
+            on_toggle(cursor_index(), open);
         metadata.open = open;
         update_column_sizes();
         update_content_size();
@@ -452,47 +451,46 @@ void TreeView::keydown_event(KeyEvent& event)
     };
 
     if (event.key() == KeyCode::Key_Left) {
-        if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
+        if (cursor_index().is_valid() && model()->row_count(cursor_index())) {
             if (event.ctrl()) {
-                collapse_tree(cursor_index);
+                collapse_tree(cursor_index());
                 return;
             }
 
-            auto& metadata = ensure_metadata_for_index(cursor_index);
+            auto& metadata = ensure_metadata_for_index(cursor_index());
             if (metadata.open) {
                 open_tree_node(false, metadata);
                 return;
             }
         }
-        if (cursor_index.is_valid() && cursor_index.parent().is_valid()) {
-            selection().set(cursor_index.parent());
-            scroll_into_view(selection().first(), false, true);
+        if (cursor_index().is_valid() && cursor_index().parent().is_valid()) {
+            set_cursor(cursor_index().parent(), SelectionUpdate::Set);
             return;
         }
     }
 
     if (event.key() == KeyCode::Key_Right) {
-        if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
+        if (cursor_index().is_valid() && model()->row_count(cursor_index())) {
             if (event.ctrl()) {
-                expand_tree(cursor_index);
+                expand_tree(cursor_index());
                 return;
             }
 
-            auto& metadata = ensure_metadata_for_index(cursor_index);
+            auto& metadata = ensure_metadata_for_index(cursor_index());
             if (!metadata.open) {
                 open_tree_node(true, metadata);
                 return;
             }
 
-            selection().set(model()->index(0, model()->tree_column(), cursor_index));
-            scroll_into_view(selection().first(), false, true);
+            auto new_cursor = model()->index(0, model()->tree_column(), cursor_index());
+            set_cursor(new_cursor, SelectionUpdate::Set);
             return;
         }
     }
 
     if (event.key() == KeyCode::Key_Return) {
-        if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
-            toggle_index(cursor_index);
+        if (cursor_index().is_valid() && model()->row_count(cursor_index())) {
+            toggle_index(cursor_index());
             return;
         }
     }
@@ -500,45 +498,37 @@ void TreeView::keydown_event(KeyEvent& event)
     AbstractTableView::keydown_event(event);
 }
 
-void TreeView::move_cursor(CursorMovement movement, SelectionUpdate)
+void TreeView::move_cursor(CursorMovement movement, SelectionUpdate selection_update)
 {
-    auto cursor_index = selection().first();
-
     switch (movement) {
     case CursorMovement::Up: {
         ModelIndex previous_index;
         ModelIndex found_index;
         traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int) {
-            if (index == cursor_index) {
+            if (index == cursor_index()) {
                 found_index = previous_index;
                 return IterationDecision::Break;
             }
             previous_index = index;
             return IterationDecision::Continue;
         });
-        if (found_index.is_valid()) {
-            selection().set(found_index);
-            scroll_into_view(selection().first(), false, true);
-            update();
-        }
+        if (found_index.is_valid())
+            set_cursor(found_index, selection_update);
         break;
     }
     case CursorMovement::Down: {
         ModelIndex previous_index;
         ModelIndex found_index;
         traverse_in_paint_order([&](const ModelIndex& index, const Gfx::IntRect&, const Gfx::IntRect&, int) {
-            if (previous_index == cursor_index) {
+            if (previous_index == cursor_index()) {
                 found_index = index;
                 return IterationDecision::Break;
             }
             previous_index = index;
             return IterationDecision::Continue;
         });
-        if (found_index.is_valid()) {
-            selection().set(found_index);
-            scroll_into_view(selection().first(), false, true);
-            update();
-        }
+        if (found_index.is_valid())
+            set_cursor(found_index, selection_update);
         return;
     }
 
