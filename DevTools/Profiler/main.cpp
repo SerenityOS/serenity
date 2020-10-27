@@ -92,6 +92,7 @@ int main(int argc, char** argv)
     auto& bottom_splitter = main_widget.add<GUI::VerticalSplitter>();
 
     auto& tree_view = bottom_splitter.add<GUI::TreeView>();
+    tree_view.set_should_fill_selected_rows(true);
     tree_view.set_column_headers_visible(true);
     tree_view.set_model(profile->model());
 

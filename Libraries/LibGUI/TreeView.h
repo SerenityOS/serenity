@@ -48,6 +48,9 @@ public:
 
     Function<void(const ModelIndex&, const bool)> on_toggle;
 
+    void set_should_fill_selected_rows(bool fill) { m_should_fill_selected_rows = fill; }
+    bool should_fill_selected_rows() const { return m_should_fill_selected_rows; }
+
 protected:
     TreeView();
 
@@ -84,6 +87,8 @@ private:
 
     RefPtr<Gfx::Bitmap> m_expand_bitmap;
     RefPtr<Gfx::Bitmap> m_collapse_bitmap;
+
+    bool m_should_fill_selected_rows { false };
 };
 
 }
