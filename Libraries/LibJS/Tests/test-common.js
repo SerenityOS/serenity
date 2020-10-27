@@ -287,7 +287,7 @@ class ExpectationError extends Error {
 
             let threw = false;
             try {
-                new Function(this.target)();
+                new Function(this.target);
             } catch (e) {
                 threw = true;
             }
