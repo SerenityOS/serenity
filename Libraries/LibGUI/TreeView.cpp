@@ -264,7 +264,7 @@ void TreeView::paint_event(PaintEvent& event)
         bool is_selected_row = selection().contains(index);
 
         Color text_color = palette().color(foreground_role());
-        if (is_selected_row)
+        if (is_selected_row && should_fill_selected_rows())
             text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
 
         Color background_color;
@@ -293,7 +293,9 @@ void TreeView::paint_event(PaintEvent& event)
         }
 
         Gfx::IntRect row_rect { 0, rect.y(), row_width, rect.height() };
-        painter.fill_rect(row_rect, background_color);
+
+        if (!is_selected_row || should_fill_selected_rows())
+            painter.fill_rect(row_rect, background_color);
 
         int x_offset = 0;
         for (int column_index = 0; column_index < model.column_count(); ++column_index) {
@@ -325,6 +327,13 @@ void TreeView::paint_event(PaintEvent& event)
             } else {
                 // It's the tree column!
                 Gfx::IntRect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
+                Gfx::IntRect text_rect = {
+                    icon_rect.right() + 1 + icon_spacing(), rect.y(),
+                    rect.width() - icon_size() - icon_spacing(), rect.height()
+                };
+
+                painter.fill_rect(text_rect, background_color);
+
                 auto icon = index.data(ModelRole::Icon);
                 if (icon.is_icon()) {
                     if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size())) {
@@ -334,11 +343,13 @@ void TreeView::paint_event(PaintEvent& event)
                             painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
                     }
                 }
-                Gfx::IntRect text_rect = {
-                    icon_rect.right() + 1 + icon_spacing(), rect.y(),
-                    rect.width() - icon_size() - icon_spacing(), rect.height()
-                };
                 draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::Center, Gfx::TextElision::None);
+
+                if (is_focused() && index == cursor_index()) {
+                    painter.draw_rect(text_rect, palette().color(background_role()));
+                    painter.draw_focus_rect(text_rect, palette().focus_outline());
+                }
+
                 auto index_at_indent = index;
                 for (int i = indent_level; i > 0; --i) {
                     auto parent_of_index_at_indent = index_at_indent.parent();
