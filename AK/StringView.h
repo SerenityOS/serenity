@@ -180,7 +180,17 @@ public:
     const char* begin() { return m_characters; }
     const char* end() { return m_characters + m_length; }
 
+    template<typename T, typename... Rest>
+    bool is_one_of(const T& string, Rest... rest) const
+    {
+        if (*this == string)
+            return true;
+        return is_one_of(rest...);
+    }
+
 private:
+    bool is_one_of() const { return false; }
+
     friend class String;
     const StringImpl* m_impl { nullptr };
     const char* m_characters { nullptr };
