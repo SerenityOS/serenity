@@ -1585,6 +1585,8 @@ void Shell::stop_all_jobs()
                 perror("killpg(KILL)");
             }
         }
+
+        jobs.clear();
     }
 }
 
