@@ -852,13 +852,13 @@ DynamicEvaluate::~DynamicEvaluate()
 void Fd2FdRedirection::dump(int level) const
 {
     Node::dump(level);
-    print_indented(String::format("%d -> %d", m_source_fd, m_dest_fd), level);
+    print_indented(String::format("%d -> %d", m_old_fd, m_new_fd), level);
 }
 
 RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
 {
     Command command;
-    command.redirections.append(FdRedirection::create(m_source_fd, m_dest_fd, Rewiring::Close::None));
+    command.redirections.append(FdRedirection::create(m_new_fd, m_old_fd, Rewiring::Close::None));
     return create<CommandValue>(move(command));
 }
 
@@ -869,8 +869,8 @@ void Fd2FdRedirection::highlight_in_editor(Line::Editor& editor, Shell&, Highlig
 
 Fd2FdRedirection::Fd2FdRedirection(Position position, int src, int dst)
     : Node(move(position))
-    , m_source_fd(src)
-    , m_dest_fd(dst)
+    , m_old_fd(src)
+    , m_new_fd(dst)
 {
 }
 
@@ -1120,7 +1120,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
         }
         auto& last_in_commands = commands.last();
 
-        last_in_commands.redirections.prepend(FdRedirection::create(STDOUT_FILENO, pipefd[1], Rewiring::Close::Destination));
+        last_in_commands.redirections.prepend(FdRedirection::create(pipefd[1], STDOUT_FILENO, Rewiring::Close::Old));
         last_in_commands.should_wait = false;
         last_in_commands.should_notify_if_in_background = false;
         last_in_commands.is_pipe_source = false;
@@ -1685,8 +1685,8 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
     auto last_in_left = left.take_last();
     auto first_in_right = right.take_first();
 
-    auto pipe_read_end = FdRedirection::create(STDIN_FILENO, -1, Rewiring::Close::Destination);
-    auto pipe_write_end = FdRedirection::create(STDOUT_FILENO, -1, pipe_read_end, Rewiring::Close::RefreshDestination);
+    auto pipe_read_end = FdRedirection::create(-1, STDIN_FILENO, Rewiring::Close::Old);
+    auto pipe_write_end = FdRedirection::create(-1, STDOUT_FILENO, pipe_read_end, Rewiring::Close::RefreshOld);
     first_in_right.redirections.append(pipe_read_end);
     last_in_left.redirections.append(pipe_write_end);
     last_in_left.should_wait = false;
@@ -2810,7 +2810,7 @@ Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 
 Result<NonnullRefPtr<Rewiring>, String> CloseRedirection::apply() const
 {
-    return adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseDestination));
+    return adopt(*new Rewiring(fd, fd, Rewiring::Close::ImmediatelyCloseNew));
 }
 
 CloseRedirection::~CloseRedirection()
@@ -2825,7 +2825,7 @@ Result<NonnullRefPtr<Rewiring>, String> PathRedirection::apply() const
             dbg() << "open() failed for '" << path << "' with " << error;
             return error;
         }
-        return adopt(*new Rewiring(my_fd, fd, Rewiring::Close::Destination));
+        return adopt(*new Rewiring(fd, my_fd, Rewiring::Close::Old));
     };
     switch (direction) {
     case AST::PathRedirection::WriteAppend:

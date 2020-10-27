@@ -582,17 +582,17 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         }
         auto& rewiring = rewiring_result.value();
 
-        if (rewiring->fd_action != AST::Rewiring::Close::ImmediatelyCloseDestination)
+        if (rewiring->fd_action != AST::Rewiring::Close::ImmediatelyCloseNew)
             rewirings.append(*rewiring);
 
-        if (rewiring->fd_action == AST::Rewiring::Close::Source) {
-            fds.add(rewiring->source_fd);
-        } else if (rewiring->fd_action == AST::Rewiring::Close::Destination) {
-            if (rewiring->dest_fd != -1)
-                fds.add(rewiring->dest_fd);
-        } else if (rewiring->fd_action == AST::Rewiring::Close::ImmediatelyCloseDestination) {
-            fds.add(rewiring->dest_fd);
-        } else if (rewiring->fd_action == AST::Rewiring::Close::RefreshDestination) {
+        if (rewiring->fd_action == AST::Rewiring::Close::Old) {
+            fds.add(rewiring->old_fd);
+        } else if (rewiring->fd_action == AST::Rewiring::Close::New) {
+            if (rewiring->new_fd != -1)
+                fds.add(rewiring->new_fd);
+        } else if (rewiring->fd_action == AST::Rewiring::Close::ImmediatelyCloseNew) {
+            fds.add(rewiring->new_fd);
+        } else if (rewiring->fd_action == AST::Rewiring::Close::RefreshNew) {
             ASSERT(rewiring->other_pipe_end);
 
             int pipe_fd[2];
@@ -601,8 +601,20 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
                 perror("pipe(RedirRefresh)");
                 return IterationDecision::Break;
             }
-            rewiring->dest_fd = pipe_fd[1];
-            rewiring->other_pipe_end->dest_fd = pipe_fd[0]; // This fd will be added to the collection on one of the next iterations.
+            rewiring->new_fd = pipe_fd[1];
+            rewiring->other_pipe_end->new_fd = pipe_fd[0]; // This fd will be added to the collection on one of the next iterations.
+            fds.add(pipe_fd[1]);
+        } else if (rewiring->fd_action == AST::Rewiring::Close::RefreshOld) {
+            ASSERT(rewiring->other_pipe_end);
+
+            int pipe_fd[2];
+            int rc = pipe(pipe_fd);
+            if (rc < 0) {
+                perror("pipe(RedirRefresh)");
+                return IterationDecision::Break;
+            }
+            rewiring->old_fd = pipe_fd[1];
+            rewiring->other_pipe_end->old_fd = pipe_fd[0]; // This fd will be added to the collection on one of the next iterations.
             fds.add(pipe_fd[1]);
         }
         return IterationDecision::Continue;
@@ -611,17 +623,24 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     auto apply_rewirings = [&] {
         for (auto& rewiring : rewirings) {
 #ifdef SH_DEBUG
-            dbgprintf("in %s<%d>, dup2(%d, %d)\n", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.dest_fd, rewiring.source_fd);
+            dbgprintf("in %s<%d>, dup2(%d, %d)\n", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
 #endif
-            int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
+            int rc = dup2(rewiring.old_fd, rewiring.new_fd);
             if (rc < 0) {
                 perror("dup2(run)");
                 return IterationDecision::Break;
             }
-            // dest_fd is closed via the `fds` collector, but rewiring.other_pipe_end->dest_fd
+            // {new,old}_fd is closed via the `fds` collector, but rewiring.other_pipe_end->{new,old}_fd
             // isn't yet in that collector when the first child spawns.
-            if (rewiring.other_pipe_end && close(rewiring.other_pipe_end->dest_fd) < 0)
-                perror("close other pipe end");
+            if (rewiring.other_pipe_end) {
+                if (rewiring.fd_action == AST::Rewiring::Close::RefreshNew) {
+                    if (rewiring.other_pipe_end && close(rewiring.other_pipe_end->new_fd) < 0)
+                        perror("close other pipe end");
+                } else if (rewiring.fd_action == AST::Rewiring::Close::RefreshOld) {
+                    if (rewiring.other_pipe_end && close(rewiring.other_pipe_end->old_fd) < 0)
+                        perror("close other pipe end");
+                }
+            }
         }
 
         return IterationDecision::Continue;
@@ -648,7 +667,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         SavedFileDescriptors fds { rewirings };
 
         for (auto& rewiring : rewirings) {
-            int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
+            int rc = dup2(rewiring.old_fd, rewiring.new_fd);
             if (rc < 0) {
                 perror("dup2(run)");
                 return nullptr;
@@ -878,7 +897,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
                 dbg() << "redir path " << (int)path_redir->direction << " " << path_redir->path << " <-> " << path_redir->fd;
             } else if (redir.is_fd_redirection()) {
                 auto* fdredir = (const AST::FdRedirection*)&redir;
-                dbg() << "redir fd " << fdredir->source_fd << " -> " << fdredir->dest_fd;
+                dbg() << "redir fd " << fdredir->old_fd << " -> " << fdredir->new_fd;
             } else if (redir.is_close_redirection()) {
                 auto close_redir = (const AST::CloseRedirection*)&redir;
                 dbg() << "close fd " << close_redir->fd;
@@ -1662,7 +1681,7 @@ void FileDescriptionCollector::add(int fd)
 SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>& intended_rewirings)
 {
     for (auto& rewiring : intended_rewirings) {
-        int new_fd = dup(rewiring.source_fd);
+        int new_fd = dup(rewiring.new_fd);
         if (new_fd < 0) {
             if (errno != EBADF)
                 perror("dup");
@@ -1676,7 +1695,7 @@ SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiri
         auto rc = fcntl(new_fd, F_SETFL, flags | FD_CLOEXEC);
         ASSERT(rc == 0);
 
-        m_saves.append({ rewiring.source_fd, new_fd });
+        m_saves.append({ rewiring.new_fd, new_fd });
         m_collector.add(new_fd);
     }
 }

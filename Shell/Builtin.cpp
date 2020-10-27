@@ -823,7 +823,7 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
     SavedFileDescriptors fds { rewirings };
 
     for (auto& rewiring : rewirings) {
-        int rc = dup2(rewiring.dest_fd, rewiring.source_fd);
+        int rc = dup2(rewiring.old_fd, rewiring.new_fd);
         if (rc < 0) {
             perror("dup2(run)");
             return false;
