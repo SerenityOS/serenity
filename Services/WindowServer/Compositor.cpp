@@ -461,14 +461,15 @@ void Compositor::compose()
         // TODO: render once into a backing bitmap, then just blit...
         auto render_dnd = [&]() {
             back_painter.fill_rect(dnd_rect, wm.palette().selection().with_alpha(200));
+            back_painter.draw_rect(dnd_rect, wm.palette().selection());
             if (!wm.dnd_text().is_empty()) {
                 auto text_rect = dnd_rect;
                 if (wm.dnd_bitmap())
-                    text_rect.move_by(wm.dnd_bitmap()->width(), 0);
+                    text_rect.move_by(wm.dnd_bitmap()->width() + 8, 0);
                 back_painter.draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
             }
             if (wm.dnd_bitmap()) {
-                back_painter.blit(dnd_rect.top_left(), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());
+                back_painter.blit(dnd_rect.top_left().translated(4, 4), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());
             }
         };
 
