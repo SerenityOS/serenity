@@ -242,7 +242,9 @@ void AbstractView::set_hovered_index(const ModelIndex& index)
 {
     if (m_hovered_index == index)
         return;
+    auto old_index = m_hovered_index;
     m_hovered_index = index;
+    did_change_hovered_index(old_index, index);
     update();
 }
 
@@ -445,7 +447,9 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
 
         // FIXME: Support the other SelectionUpdate types
 
+        auto old_cursor_index = m_cursor_index;
         m_cursor_index = index;
+        did_change_cursor_index(old_cursor_index, m_cursor_index);
 
         if (scroll_cursor_into_view)
             scroll_into_view(index, true, true);

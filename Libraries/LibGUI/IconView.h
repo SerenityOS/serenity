@@ -64,6 +64,8 @@ private:
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
     virtual void drag_move_event(DragEvent&) override;
+    virtual void did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
+    virtual void did_change_cursor_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
 
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
@@ -72,7 +74,8 @@ private:
         Gfx::IntRect icon_rect;
         int icon_offset_y;
         int text_offset_y;
-        Variant data;
+        String text;
+        Vector<StringView> wrapped_text_lines;
         ModelIndex index;
         bool valid { false };
         bool selected { false }; // always valid
@@ -82,7 +85,7 @@ private:
         void invalidate()
         {
             valid = false;
-            data.clear();
+            text = {};
         }
 
         bool is_intersecting(const Gfx::IntRect& rect) const
