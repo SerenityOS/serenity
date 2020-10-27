@@ -99,7 +99,9 @@ void TableView::paint_event(PaintEvent& event)
                 key_column_background_color = widget_background_color.darkened(0.9f);
             }
         }
-        painter.fill_rect(row_rect(painted_item_index), background_color);
+
+        auto row_rect = this->row_rect(painted_item_index);
+        painter.fill_rect(row_rect, background_color);
 
         int x = x_offset;
         for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
@@ -151,6 +153,12 @@ void TableView::paint_event(PaintEvent& event)
                 painter.draw_rect(cell_rect_for_fill, palette().text_cursor());
 
             x += column_width + horizontal_padding() * 2;
+        }
+
+
+        if (is_focused() && cursor_style() == CursorStyle::Row && row_index == cursor_index().row()) {
+            painter.draw_rect(row_rect, widget_background_color);
+            painter.draw_focus_rect(row_rect, palette().focus_outline());
         }
         ++painted_item_index;
     };
