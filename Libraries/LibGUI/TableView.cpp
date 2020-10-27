@@ -155,7 +155,6 @@ void TableView::paint_event(PaintEvent& event)
             x += column_width + horizontal_padding() * 2;
         }
 
-
         if (is_focused() && cursor_style() == CursorStyle::Row && row_index == cursor_index().row()) {
             painter.draw_rect(row_rect, widget_background_color);
             painter.draw_focus_rect(row_rect, palette().focus_outline());
