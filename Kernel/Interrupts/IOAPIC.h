@@ -27,6 +27,7 @@
 #pragma once
 
 #include <Kernel/Interrupts/IRQController.h>
+#include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {
 struct [[gnu::packed]] ioapic_mmio_regs
@@ -98,6 +99,7 @@ private:
     void isa_identity_map(int index);
 
     PhysicalAddress m_address;
+    mutable TypedMapping<ioapic_mmio_regs> m_regs;
     u32 m_gsi_base;
     u8 m_id;
     u8 m_version;
