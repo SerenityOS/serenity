@@ -37,6 +37,7 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 #include <math.h>
 #include <stdio.h>
@@ -1610,6 +1611,21 @@ void Painter::fill_path(Path& path, Color color, WindingRule winding_rule)
         draw_line(Point<int>(segment.from), Point<int>(segment.to), Color::from_hsv(++i / segments.size() * 360.0, 1.0, 1.0), 1);
     }
 #endif
+}
+
+void Painter::blit_disabled(const IntPoint& location, const Gfx::Bitmap& bitmap, const IntRect& rect, const Palette& palette)
+{
+    auto bright_color = palette.threed_highlight();
+    auto dark_color = palette.threed_shadow1();
+    blit_filtered(location.translated(1, 1), bitmap, rect, [&](auto) {
+        return bright_color;
+    });
+    blit_filtered(location, bitmap, rect, [&](Color src) {
+        int gray = src.to_grayscale().red();
+        if (gray > 160)
+            return bright_color;
+        return dark_color;
+    });
 }
 
 }

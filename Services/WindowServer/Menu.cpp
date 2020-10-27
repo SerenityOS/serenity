@@ -255,7 +255,10 @@ void Menu::draw()
                     });
                     icon_rect.move_by(-1, -1);
                 }
-                painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());
+                if (item.is_enabled())
+                    painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());
+                else
+                    painter.blit_disabled(icon_rect.location(), *item.icon(), item.icon()->rect(), palette);
             }
             auto& previous_font = painter.font();
             if (item.is_default())
