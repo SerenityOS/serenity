@@ -153,7 +153,7 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
         else
             painter.blit(icon_location, icon, icon.rect());
     } else {
-        painter.blit_dimmed(icon_location, icon, icon.rect());
+        painter.blit_disabled(icon_location, icon, icon.rect(), palette());
     }
 
     if (!has_progress)

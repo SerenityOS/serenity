@@ -78,7 +78,7 @@ void Button::paint_event(PaintEvent& event)
             else
                 painter.blit(icon_location, *m_icon, m_icon->rect());
         } else {
-            painter.blit_dimmed(icon_location, *m_icon, m_icon->rect());
+            painter.blit_disabled(icon_location, *m_icon, m_icon->rect(), palette());
         }
     }
     auto& font = is_checked() ? Gfx::Font::default_bold_font() : this->font();
