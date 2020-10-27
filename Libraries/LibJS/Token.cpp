@@ -86,7 +86,8 @@ double Token::double_value() const
             return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 2));
         } else if (isdigit(value_string[1])) {
             // also octal, but syntax error in strict mode
-            return static_cast<double>(strtoul(value_string.characters() + 1, nullptr, 8));
+            if (!m_value.contains('8') && !m_value.contains('9'))
+                return static_cast<double>(strtoul(value_string.characters() + 1, nullptr, 8));
         }
     }
     return strtod(value_string.characters(), nullptr);
