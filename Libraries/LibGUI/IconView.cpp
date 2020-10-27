@@ -523,6 +523,10 @@ void IconView::paint_event(PaintEvent& event)
         auto font = font_for_index(item_data.index);
 
         painter.fill_rect(item_data.text_rect, background_color);
+        if (is_focused() && item_data.index == cursor_index()) {
+            painter.draw_rect(item_data.text_rect, widget_background_color);
+            painter.draw_focus_rect(item_data.text_rect, palette().focus_outline());
+        }
 
         if (!item_data.wrapped_text_lines.is_empty()) {
             // Item text would not fit in the item text rect, let's break it up into lines..
