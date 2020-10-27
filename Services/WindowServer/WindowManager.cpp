@@ -1381,7 +1381,7 @@ Gfx::IntRect WindowManager::dnd_rect() const
     int width = font().width(m_dnd_text) + bitmap_width;
     int height = max((int)font().glyph_height(), bitmap_height);
     auto location = Compositor::the().current_cursor_rect().center().translated(8, 8);
-    return Gfx::IntRect(location, { width, height }).inflated(4, 4);
+    return Gfx::IntRect(location, { width, height }).inflated(16, 8);
 }
 
 bool WindowManager::update_theme(String theme_path, String theme_name)
