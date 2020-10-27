@@ -45,6 +45,7 @@ public:
     enum class CursorStyle {
         None,
         Item,
+        Row,
     };
 
     GridStyle grid_style() const { return m_grid_style; }
@@ -63,7 +64,7 @@ protected:
 
 private:
     GridStyle m_grid_style { GridStyle::None };
-    CursorStyle m_cursor_style { CursorStyle::None };
+    CursorStyle m_cursor_style { CursorStyle::Row };
 };
 
 }
