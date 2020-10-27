@@ -330,7 +330,7 @@ test("toThrowWithMessage", () => {
 // "eval" function
 test("toEval", () => {
     expect("let a = 1").toEval();
-    expect("a < 1").not.toEval();
+    expect("a < 1").toEval();
     expect("&&*^%#%@").not.toEval();
     expect("function foo() { return 1; }; return foo();").toEval();
 });
