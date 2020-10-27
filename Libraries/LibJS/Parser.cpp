@@ -1524,7 +1524,10 @@ NonnullRefPtr<DoWhileStatement> Parser::parse_do_while_statement()
     auto test = parse_expression(0);
 
     consume(TokenType::ParenClose);
-    consume_or_insert_semicolon();
+
+    // Since ES 2015 a missing semicolon is inserted here, despite the regular ASI rules not applying
+    if (match(TokenType::Semicolon))
+        consume();
 
     return create_ast_node<DoWhileStatement>(move(test), move(body));
 }

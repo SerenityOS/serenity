@@ -18,3 +18,7 @@ test("exception in test expression", () => {
         do {} while (foo);
     }).toThrow(ReferenceError);
 });
+
+test("automatic semicolon insertion", () => {
+    expect("do {} while (false) foo").toEval();
+});
