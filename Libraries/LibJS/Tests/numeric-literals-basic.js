@@ -10,6 +10,7 @@ test("octal literals", () => {
     expect(0o10).toBe(8);
     expect(0o10).toBe(8);
     expect(010).toBe(8);
+    expect(089).toBe(89);
 });
 
 test("binary literals", () => {
