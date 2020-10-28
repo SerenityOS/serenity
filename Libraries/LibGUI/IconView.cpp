@@ -684,7 +684,7 @@ void IconView::move_cursor(CursorMovement movement, SelectionUpdate selection_up
     auto& model = *this->model();
 
     if (!cursor_index().is_valid()) {
-        set_cursor(model.index(0, 0), SelectionUpdate::Set);
+        set_cursor(model.index(0, model_column()), SelectionUpdate::Set);
         return;
     }
 
@@ -714,10 +714,10 @@ void IconView::move_cursor(CursorMovement movement, SelectionUpdate selection_up
         break;
     }
     case CursorMovement::Home:
-        new_index = model.index(0, 0);
+        new_index = model.index(0, model_column());
         break;
     case CursorMovement::End:
-        new_index = model.index(model.row_count() - 1, 0);
+        new_index = model.index(model.row_count() - 1, model_column());
         break;
     default:
         break;
