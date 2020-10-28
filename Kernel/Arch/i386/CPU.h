@@ -724,7 +724,7 @@ class Processor {
 
     bool m_invoke_scheduler_async;
     bool m_scheduler_initialized;
-    bool m_halt_requested;
+    Atomic<bool> m_halt_requested;
 
     DeferredCallEntry* m_pending_deferred_calls; // in reverse order
     DeferredCallEntry* m_free_deferred_call_pool_entry;
