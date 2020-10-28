@@ -37,13 +37,9 @@ bool Job::print_status(PrintStatusMode mode)
 {
     int wstatus;
     auto rc = waitpid(m_pid, &wstatus, WNOHANG);
-    if (rc == -1) {
-        perror("waitpid");
-        return false;
-    }
     auto status = "running";
 
-    if (rc != 0) {
+    if (rc > 0) {
         if (WIFEXITED(wstatus))
             status = "exited";
 
@@ -51,6 +47,15 @@ bool Job::print_status(PrintStatusMode mode)
             status = "stopped";
 
         if (WIFSIGNALED(wstatus))
+            status = "signaled";
+    } else if (rc < 0) {
+        // We couldn't waitpid() it, probably because we're not the parent shell.
+        // just use the old information.
+        if (exited())
+            status = "exited";
+        else if (m_is_suspended)
+            status = "stopped";
+        else if (signaled())
             status = "signaled";
     }
 
@@ -72,6 +77,7 @@ bool Job::print_status(PrintStatusMode mode)
         outln("[{}] {} {} {} {} {}", m_job_id, background_indicator, m_pid, m_pgid, status, command);
         break;
     }
+    fflush(stdout);
 
     return true;
 }
