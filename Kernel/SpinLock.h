@@ -45,10 +45,8 @@ public:
     {
         u32 prev_flags;
         Processor::current().enter_critical(prev_flags);
-        BaseType expected = 0;
-        while (!m_lock.compare_exchange_strong(expected, 1, AK::memory_order_acq_rel)) {
+        while (m_lock.exchange(1, AK::memory_order_acquire) != 0) {
             Processor::wait_check();
-            expected = 0;
         }
         return prev_flags;
     }
@@ -62,12 +60,12 @@ public:
 
     ALWAYS_INLINE bool is_locked() const
     {
-        return m_lock.load(AK::memory_order_consume) != 0;
+        return m_lock.load(AK::memory_order_relaxed) != 0;
     }
 
     ALWAYS_INLINE void initialize()
     {
-        m_lock.store(0, AK::memory_order_release);
+        m_lock.store(0, AK::memory_order_relaxed);
     }
 
 private:
@@ -101,7 +99,7 @@ public:
     ALWAYS_INLINE void unlock(u32 prev_flags)
     {
         ASSERT(m_recursions > 0);
-        ASSERT(m_lock.load(AK::memory_order_consume) == FlatPtr(&Processor::current()));
+        ASSERT(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
         if (--m_recursions == 0)
             m_lock.store(0, AK::memory_order_release);
         Processor::current().leave_critical(prev_flags);
@@ -109,17 +107,17 @@ public:
 
     ALWAYS_INLINE bool is_locked() const
     {
-        return m_lock.load(AK::memory_order_consume) != 0;
+        return m_lock.load(AK::memory_order_relaxed) != 0;
     }
 
     ALWAYS_INLINE bool own_lock() const
     {
-        return m_lock.load(AK::memory_order_consume) == FlatPtr(&Processor::current());
+        return m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current());
     }
 
     ALWAYS_INLINE void initialize()
     {
-        m_lock.store(0, AK::memory_order_release);
+        m_lock.store(0, AK::memory_order_relaxed);
     }
 
 private:
