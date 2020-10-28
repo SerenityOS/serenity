@@ -1580,11 +1580,12 @@ Shell::~Shell()
 void Shell::stop_all_jobs()
 {
     if (!jobs.is_empty()) {
-        printf("Killing active jobs\n");
+        if (m_is_interactive && !m_is_subshell)
+            printf("Killing active jobs\n");
         for (auto& entry : jobs) {
-            if (!entry.value->is_running_in_background()) {
+            if (entry.value->is_suspended()) {
 #ifdef SH_DEBUG
-                dbg() << "Job " << entry.value->pid() << " is not running in background";
+                dbg() << "Job " << entry.value->pid() << " is suspended";
 #endif
                 kill_job(entry.value, SIGCONT);
             }
@@ -1598,11 +1599,7 @@ void Shell::stop_all_jobs()
 #ifdef SH_DEBUG
             dbg() << "Actively killing " << entry.value->pid() << "(" << entry.value->cmd() << ")";
 #endif
-            if (killpg(entry.value->pgid(), SIGKILL) < 0) {
-                if (errno == ESRCH)
-                    continue; // The process has exited all by itself.
-                perror("killpg(KILL)");
-            }
+            kill_job(entry.value, SIGKILL);
         }
 
         jobs.clear();
@@ -1633,8 +1630,11 @@ void Shell::kill_job(const Job* job, int sig)
     if (!job)
         return;
 
-    if (killpg(job->pgid(), sig) < 0)
-        perror("killpg(job)");
+    if (killpg(job->pgid(), sig) < 0) {
+        if (kill(job->pid(), sig) < 0) {
+            perror("kill");
+        }
+    }
 }
 
 void Shell::save_to(JsonObject& object)
