@@ -266,6 +266,7 @@ $ fn 1 2 3 4
 The pattern matching construct `match` shall choose from a sequence of patterns, and execute the corresponding action in a new frame.
 The choice is done by matching the result of the _matched expression_ (after expansion) against the _patterns_ (expanded down to either globs or literals).
 Multiple _patterns_ can be attributed to a single given action by delimiting them with a pipe ('|') symbol.
+A _pattern_ (or the series of) may be annotated with an extra `as (...)` clause, which allows globbed parts of the matching pattern to be named and used in the matching block.
 
 The expanded _matched expression_ can optionally be given a name using the `as name` clause after the _matched expression_, with which it may be accessible in the action clauses.
 
@@ -277,10 +278,12 @@ match "$(make_some_value)" as value {
     (say\ *) { echo "No, I will not $value" }
 }
 
-# Match the result of running 'make_some_value', cast to a string.
+# Match the result of running 'make_some_value', cast to a string
+# Note the `as (expr)` in the second pattern, which assigns whatever the `*` matches
+# to the name `expr` inside the block.
 match "$(make_some_value)" {
     hello* { echo "Hi!" }
-    say\ * { echo "No, I will not!" }
+    say\ * as (expr) { echo "No, I will not say $expr!" }
 }
 ```
 
@@ -318,6 +321,7 @@ pipe_sequence :: command '|' pipe_sequence
 control_structure :: for_expr
                    | if_expr
                    | subshell
+                   | match_expr
 
 for_expr :: 'for' ws+ (identifier ' '+ 'in' ws*)? expression ws+ '{' toplevel '}'
 
@@ -327,6 +331,14 @@ else_clause :: else '{' toplevel '}'
              | else if_expr
 
 subshell :: '{' toplevel '}'
+
+match_expr :: 'match' ws+ expression ws* ('as' ws+ identifier)? '{' match_entry* '}'
+
+match_entry :: match_pattern ws* (as identifier_list)? '{' toplevel '}'
+
+identifier_list :: '(' (identifier ws*)* ')'
+
+match_pattern :: expression (ws* '|' ws* expression)*
 
 command :: redirection command
          | list_expression command?
