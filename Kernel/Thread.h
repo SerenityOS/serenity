@@ -583,6 +583,11 @@ public:
         m_is_active.store(active, AK::memory_order_release);
     }
 
+    bool is_active() const
+    {
+        return m_is_active.load(AK::memory_order_consume);
+    }
+
     bool is_finalizable() const
     {
         // We can't finalize as long as this thread is still running

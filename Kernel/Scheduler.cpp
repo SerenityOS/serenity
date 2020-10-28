@@ -490,8 +490,20 @@ bool Scheduler::pick_next()
     for_each_runnable([&](auto& thread) {
         if ((thread.affinity() & (1u << Processor::current().id())) == 0)
             return IterationDecision::Continue;
-        if (thread.state() == Thread::Running && &thread != current_thread)
-            return IterationDecision::Continue;
+        switch (thread.state()) {
+        case Thread::Running:
+            if (&thread != current_thread)
+                return IterationDecision::Continue;
+            break;
+        case Thread::Runnable:
+            // A thread may be put into Runnable state, but if it's still
+            // executing we can't schedule it on this processor yet
+            if (&thread != current_thread && thread.is_active())
+                return IterationDecision::Continue;
+            break;
+        default:
+            break;
+        }
         sorted_runnables.append(&thread);
         if (&thread == pending_beneficiary) {
             thread_to_schedule = &thread;
@@ -546,6 +558,7 @@ bool Scheduler::pick_next()
 
     // We need to leave our first critical section before switching context,
     // but since we're still holding the scheduler lock we're still in a critical section
+    ASSERT(Processor::current().in_critical() > 1);
     critical.leave();
 
     return context_switch(thread_to_schedule);
