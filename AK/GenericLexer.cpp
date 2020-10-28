@@ -76,6 +76,13 @@ bool GenericLexer::next_is(const char* expected) const
     return true;
 }
 
+// Go back to the previous character
+void GenericLexer::retreat()
+{
+    ASSERT(m_index > 0);
+    m_index--;
+}
+
 // Consume a character and advance the parser index
 char GenericLexer::consume()
 {
