@@ -33,69 +33,72 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
-typedef u32 in_addr_t;
-
 namespace AK {
 
 class [[gnu::packed]] IPv4Address
 {
+    enum class SubnetClass : int {
+        A = 0,
+        B,
+        C,
+        D
+    };
+
 public:
-    IPv4Address() { }
-    IPv4Address(const u8 data[4])
+    using in_addr_t = u32;
+
+    constexpr IPv4Address() = default;
+
+    constexpr IPv4Address(u32 a, u32 b, u32 c, u32 d)
     {
-        m_data[0] = data[0];
-        m_data[1] = data[1];
-        m_data[2] = data[2];
-        m_data[3] = data[3];
+        m_data = (d << 24) | (c << 16) | (b << 8) | a;
     }
-    IPv4Address(u8 a, u8 b, u8 c, u8 d)
+
+    constexpr IPv4Address(const u8 data[4])
     {
-        m_data[0] = a;
-        m_data[1] = b;
-        m_data[2] = c;
-        m_data[3] = d;
+        m_data = (u32(data[3]) << 24) | (u32(data[2]) << 16) | (u32(data[1]) << 8) | u32(data[0]);
     }
-    IPv4Address(NetworkOrdered<u32> address)
-        : m_data_as_u32(address)
+
+    constexpr IPv4Address(NetworkOrdered<u32> address)
+        : m_data(address)
     {
     }
 
-    u8 operator[](int i) const
+    constexpr u8 operator[](int i) const
     {
         ASSERT(i >= 0 && i < 4);
-        return m_data[i];
+        return octet(SubnetClass(i));
     }
 
     String to_string() const
     {
-        return String::formatted("{}.{}.{}.{}", m_data[0], m_data[1], m_data[2], m_data[3]);
+        return String::formatted("{}.{}.{}.{}",
+            octet(SubnetClass::A),
+            octet(SubnetClass::B),
+            octet(SubnetClass::C),
+            octet(SubnetClass::D));
     }
 
     static Optional<IPv4Address> from_string(const StringView& string)
     {
         if (string.is_null())
             return {};
-        auto parts = string.split_view('.');
 
-        u32 a;
-        u32 b;
-        u32 c;
-        u32 d;
+        const auto parts = string.split_view('.');
+
+        u32 a {};
+        u32 b {};
+        u32 c {};
+        u32 d {};
 
         if (parts.size() == 1) {
-            a = 0;
-            b = 0;
-            c = 0;
             d = parts[0].to_uint().value_or(256);
         } else if (parts.size() == 2) {
             a = parts[0].to_uint().value_or(256);
-            b = 0;
-            c = 0;
             d = parts[1].to_uint().value_or(256);
         } else if (parts.size() == 3) {
             a = parts[0].to_uint().value_or(256);
             b = parts[1].to_uint().value_or(256);
-            c = 0;
             d = parts[2].to_uint().value_or(256);
         } else if (parts.size() == 4) {
             a = parts[0].to_uint().value_or(256);
@@ -108,32 +111,37 @@ public:
 
         if (a > 255 || b > 255 || c > 255 || d > 255)
             return {};
-        return IPv4Address((u8)a, (u8)b, (u8)c, (u8)d);
+        return IPv4Address(a, b, c, d);
     }
 
-    in_addr_t to_in_addr_t() const { return m_data_as_u32; }
-    u32 to_u32() const { return m_data_as_u32; }
+    constexpr in_addr_t to_in_addr_t() const { return m_data; }
+    constexpr u32 to_u32() const { return m_data; }
 
-    bool operator==(const IPv4Address& other) const { return m_data_as_u32 == other.m_data_as_u32; }
-    bool operator!=(const IPv4Address& other) const { return m_data_as_u32 != other.m_data_as_u32; }
+    constexpr bool operator==(const IPv4Address& other) const = default;
+    constexpr bool operator!=(const IPv4Address& other) const = default;
 
-    bool is_zero() const
+    constexpr bool is_zero() const
     {
-        return m_data_as_u32 == 0;
+        return m_data == 0u;
     }
 
 private:
-    union {
-        u8 m_data[4];
-        u32 m_data_as_u32 { 0 };
-    };
+    constexpr u32 octet(const SubnetClass subnet) const
+    {
+        NetworkOrdered<u32> address(m_data);
+        constexpr auto bits_per_byte = 8;
+        const auto bits_to_shift = bits_per_byte * int(subnet);
+        return (m_data >> bits_to_shift) & 0x0000'00FF;
+    }
+
+    u32 m_data {};
 };
 
 static_assert(sizeof(IPv4Address) == 4);
 
 template<>
 struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
-    static unsigned hash(const IPv4Address& address) { return string_hash((const char*)&address, sizeof(address)); }
+    static constexpr unsigned hash(const IPv4Address& address) { return int_hash(address.to_u32()); }
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const IPv4Address& value)
