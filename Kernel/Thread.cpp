@@ -919,7 +919,9 @@ void Thread::set_state(State new_state, u8 stop_signal)
         }
     }
 
-    if (m_state == Stopped) {
+    if (m_state == Runnable) {
+        Processor::smp_wake_n_idle_processors(1);
+    } else if (m_state == Stopped) {
         // We don't want to restore to Running state, only Runnable!
         m_stop_state = previous_state != Running ? previous_state : Runnable;
         auto& process = this->process();

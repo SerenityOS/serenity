@@ -544,13 +544,17 @@ void Scheduler::notify_finalizer()
 
 void Scheduler::idle_loop(void*)
 {
-    dbgln("Scheduler[{}]: idle loop running", Processor::id());
+    auto& proc = Processor::current();
+    dbgln("Scheduler[{}]: idle loop running", proc.get_id());
     ASSERT(are_interrupts_enabled());
 
     for (;;) {
+        proc.idle_begin();
         asm("hlt");
 
-        if (Processor::id() == 0)
+        proc.idle_end();
+        ASSERT_INTERRUPTS_ENABLED();
+        if (Processor::current().id() == 0)
             yield();
     }
 }
