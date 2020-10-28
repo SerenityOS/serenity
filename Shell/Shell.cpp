@@ -950,6 +950,17 @@ void Shell::restore_ios()
     tcsetpgrp(STDIN_FILENO, m_pid);
 }
 
+void Shell::block_on_pipeline(RefPtr<AST::Pipeline> pipeline)
+{
+    if (!pipeline)
+        return;
+
+    for (auto& it : jobs) {
+        if (auto cmd = it.value->command_ptr(); cmd->pipeline == pipeline && cmd->is_pipe_source)
+            block_on_job(it.value);
+    }
+}
+
 void Shell::block_on_job(RefPtr<Job> job)
 {
     TemporaryChange<const Job*> current_job { m_current_job, job.ptr() };
@@ -977,6 +988,10 @@ void Shell::block_on_job(RefPtr<Job> job)
         return;
 
     loop.exec();
+
+    // If the job is part of a pipeline, wait for the rest of the members too.
+    if (auto command = job->command_ptr())
+        block_on_pipeline(command->pipeline);
 }
 
 String Shell::get_history_path()

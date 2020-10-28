@@ -89,6 +89,7 @@ public:
     bool run_builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&, int& retval);
     bool has_builtin(const StringView&) const;
     void block_on_job(RefPtr<Job>);
+    void block_on_pipeline(RefPtr<AST::Pipeline>);
     String prompt() const;
 
     static String expand_tilde(const String&);
