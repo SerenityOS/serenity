@@ -428,16 +428,16 @@ void APIC::enable(u32 cpu)
         Processor::halt();
     }
 
-    u32 apic_id = (1u << cpu);
-
-    write_register(APIC_REG_LD, (read_register(APIC_REG_LD) & 0x00ffffff) | (apic_id << 24)); // TODO: only if not in x2apic mode
+    // Use the CPU# as logical apic id
+    ASSERT(cpu <= 0xff);
+    write_register(APIC_REG_LD, (read_register(APIC_REG_LD) & 0x00ffffff) | (cpu << 24)); // TODO: only if not in x2apic mode
 
     // read it back to make sure it's actually set
-    apic_id = read_register(APIC_REG_LD) >> 24;
+    auto apic_id = read_register(APIC_REG_LD) >> 24;
     Processor::current().info().set_apic_id(apic_id);
 
 #if APIC_DEBUG
-    klog() << "Enabling local APIC for cpu #" << cpu << " apic id: " << apic_id;
+    klog() << "Enabling local APIC for cpu #" << cpu << " logical apic id: " << apic_id;
 #endif
 
     if (cpu == 0) {
@@ -522,7 +522,7 @@ void APIC::send_ipi(u32 cpu)
     ASSERT(cpu != Processor::id());
     ASSERT(cpu < 8);
     wait_for_pending_icr();
-    write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand, 1u << cpu));
+    write_icr(ICRReg(IRQ_APIC_IPI + IRQ_VECTOR_BASE, ICRReg::Fixed, ICRReg::Logical, ICRReg::Assert, ICRReg::TriggerMode::Edge, ICRReg::NoShorthand, cpu));
 }
 
 APICTimer* APIC::initialize_timers(HardwareTimerBase& calibration_timer)
