@@ -129,7 +129,7 @@ DebugLogStream dbg()
 #endif
 #if defined(__serenity__) && defined(KERNEL)
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current())
-        stream << "\033[34;1m[" << *Kernel::Thread::current() << "]\033[0m: ";
+        stream << "\033[34;1m[#" << Kernel::Processor::id() << " " << *Kernel::Thread::current() << "]\033[0m: ";
     else
         stream << "\033[36;1m[Kernel]\033[0m: ";
 #endif
@@ -141,7 +141,7 @@ KernelLogStream klog()
 {
     KernelLogStream stream;
     if (Kernel::Processor::is_initialized() && Kernel::Thread::current())
-        stream << "\033[34;1m[" << *Kernel::Thread::current() << "]\033[0m: ";
+        stream << "\033[34;1m[#" << Kernel::Processor::id() << " " << *Kernel::Thread::current() << "]\033[0m: ";
     else
         stream << "\033[36;1m[Kernel]\033[0m: ";
     return stream;
