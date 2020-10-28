@@ -563,7 +563,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     FileDescriptionCollector fds;
 
     if (options.verbose)
-        warnln("+ {}", m_pid, command);
+        warnln("+ {}", command);
 
     // If the command is empty, store the redirections and apply them to all later commands.
     if (command.argv.is_empty() && !command.should_immediately_execute_next) {
