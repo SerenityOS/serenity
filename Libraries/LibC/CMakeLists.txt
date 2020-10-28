@@ -48,8 +48,8 @@ set(LIBC_SOURCES
     wchar.cpp
 )
 
-file(GLOB AK_SOURCES "../../AK/*.cpp")
-file(GLOB ELF_SOURCES "../LibELF/*.cpp")
+file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
+file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DSERENITY_LIBC_BUILD")
