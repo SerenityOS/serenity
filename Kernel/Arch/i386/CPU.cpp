@@ -1734,6 +1734,57 @@ ProcessorMessage& Processor::smp_get_from_pool()
     return *msg;
 }
 
+Atomic<u32> Processor::s_idle_cpu_mask{ 0 };
+
+u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
+{
+    ASSERT(Processor::current().in_critical());
+    ASSERT(wake_count > 0);
+    if (!s_smp_enabled)
+        return 0;
+
+    // Wake at most N - 1 processors
+    if (wake_count >= Processor::count()) {
+        wake_count = Processor::count() - 1;
+        ASSERT(wake_count > 0);
+    }
+
+    u32 current_id = Processor::current().id();
+
+    u32 did_wake_count = 0;
+    auto& apic = APIC::the();
+    while (did_wake_count < wake_count) {
+        // Try to get a set of idle CPUs and flip them to busy
+        u32 idle_mask = s_idle_cpu_mask.load(AK::MemoryOrder::memory_order_relaxed) & ~(1u << current_id);
+        u32 idle_count = __builtin_popcountl(idle_mask);
+        if (idle_count == 0)
+            break; // No (more) idle processor available
+
+        u32 found_mask = 0;
+        for (u32 i = 0; i < idle_count; i++) {
+            u32 cpu = __builtin_ffsl(idle_mask) - 1;
+            idle_mask &= ~(1u << cpu);
+            found_mask |= 1u << cpu;
+        }
+
+        idle_mask = s_idle_cpu_mask.fetch_and(~found_mask, AK::MemoryOrder::memory_order_acq_rel) & found_mask;
+        if (idle_mask == 0)
+            continue; // All of them were flipped to busy, try again
+        idle_count = __builtin_popcountl(idle_mask);
+        for (u32 i = 0; i < idle_count; i++) {
+            u32 cpu = __builtin_ffsl(idle_mask) - 1;
+            idle_mask &= ~(1u << cpu);
+
+            // Send an IPI to that CPU to wake it up. There is a possibility
+            // someone else woke it up as well, or that it woke up due to
+            // a timer interrupt. But we tried hard to avoid this...
+            apic.send_ipi(cpu);
+            did_wake_count++;
+        }
+    }
+    return did_wake_count;
+}
+
 void Processor::smp_enable()
 {
     size_t msg_pool_size = Processor::count() * 100u;

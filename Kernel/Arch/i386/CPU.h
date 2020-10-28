@@ -709,6 +709,7 @@ class Processor {
     u32 m_cpu;
     u32 m_in_irq;
     Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_in_critical;
+    static Atomic<u32> s_idle_cpu_mask;
 
     TSS32 m_tss;
     static FPUState s_clean_fpu_state;
@@ -762,6 +763,16 @@ public:
 
     void early_initialize(u32 cpu);
     void initialize(u32 cpu);
+
+    void idle_begin()
+    {
+        s_idle_cpu_mask.fetch_or(1u << m_cpu, AK::MemoryOrder::memory_order_relaxed);
+    }
+
+    void idle_end()
+    {
+        s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
+    }
 
     static u32 count()
     {
@@ -1010,6 +1021,7 @@ public:
     static void smp_unicast(u32 cpu, void (*callback)(), bool async);
     static void smp_unicast(u32 cpu, void (*callback)(void*), void* data, void (*free_data)(void*), bool async);
     static void smp_broadcast_flush_tlb(const PageDirectory*, VirtualAddress, size_t);
+    static u32 smp_wake_n_idle_processors(u32 wake_count);
 
     template<typename Callback>
     static void deferred_call_queue(Callback callback)
