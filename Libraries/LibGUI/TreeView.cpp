@@ -433,7 +433,7 @@ void TreeView::did_update_selection()
 void TreeView::keydown_event(KeyEvent& event)
 {
     if (!model())
-        return;
+        return AbstractTableView::keydown_event(event);
 
     if (event.key() == KeyCode::Key_Space) {
         if (model()->row_count(cursor_index()))

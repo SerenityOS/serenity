@@ -170,7 +170,7 @@ void TableView::paint_event(PaintEvent& event)
 void TableView::keydown_event(KeyEvent& event)
 {
     if (!model())
-        return;
+        return AbstractTableView::keydown_event(event);
 
     AbstractTableView::keydown_event(event);
 
