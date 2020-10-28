@@ -1,4 +1,4 @@
-file(GLOB CMD_SOURCES "*.cpp")
+file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
 list(APPEND SPECIAL_TARGETS "test" "install")
 
 foreach(CMD_SRC ${CMD_SOURCES})
