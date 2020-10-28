@@ -1819,11 +1819,11 @@ bool Processor::smp_process_pending_messages()
                 }
             }
 
-            if (m_halt_requested)
+            if (m_halt_requested.load(AK::MemoryOrder::memory_order_relaxed))
                 halt_this();
         }
         did_process = true;
-    } else if (m_halt_requested) {
+    } else if (m_halt_requested.load(AK::MemoryOrder::memory_order_relaxed)) {
         halt_this();
     }
 
@@ -1876,7 +1876,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg, bool async)
             // We need to check here if another processor may have requested
             // us to halt before this message could be delivered. Otherwise
             // we're just spinning the CPU because msg.refs will never drop to 0.
-            if (cur_proc.m_halt_requested)
+            if (cur_proc.m_halt_requested.load(AK::MemoryOrder::memory_order_relaxed))
                 halt_this();
         }
 
@@ -1918,7 +1918,7 @@ void Processor::smp_broadcast_halt()
     // by being out of memory and we might not be able to get a message
     for_each(
         [&](Processor& proc) -> IterationDecision {
-            proc.m_halt_requested = true;
+            proc.m_halt_requested.store(true, AK::MemoryOrder::memory_order_release);
             return IterationDecision::Continue;
         });
 
