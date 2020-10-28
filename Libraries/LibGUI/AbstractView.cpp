@@ -678,4 +678,12 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
     }
 }
 
+void AbstractView::focusin_event(FocusEvent& event)
+{
+    ScrollableWidget::focusin_event(event);
+
+    if (model() && !cursor_index().is_valid())
+        move_cursor(CursorMovement::Home, SelectionUpdate::None);
+}
+
 }
