@@ -4,6 +4,11 @@ test("hex escapes", () => {
     expect(`\x55`).toBe("U");
     expect(`\X55`).toBe("X55");
     expect("\xff").toBe(String.fromCharCode(0xff));
+    expect("'\\x'").not.toEval();
+    expect("'\\x1'").not.toEval();
+    expect("'\\xz'").not.toEval();
+    expect("'\\xzz'").not.toEval();
+    expect("'\\x🐞'").not.toEval();
 });
 
 test("unicode escapes", () => {
@@ -12,6 +17,18 @@ test("unicode escapes", () => {
     expect("\u{1f41e}").toBe("🐞");
     expect(`\u{1f41e}`).toBe("🐞");
     expect("\u00ff").toBe(String.fromCharCode(0xff));
+    expect("'\\u'").not.toEval();
+    expect("'\\u1'").not.toEval();
+    expect("'\\uf'").not.toEval();
+    expect("'\\u123'").not.toEval();
+    expect("'\\u123z'").not.toEval();
+    expect("'\\uz'").not.toEval();
+    expect("'\\uzz'").not.toEval();
+    expect("'\\uzzzz'").not.toEval();
+    expect("'\\u{'").not.toEval();
+    expect("'\\u{}'").not.toEval();
+    expect("'\\u{z}'").not.toEval();
+    expect("'\\u🐞'").not.toEval();
 });
 
 describe("octal escapes", () => {
