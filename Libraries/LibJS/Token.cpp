@@ -27,8 +27,8 @@
 
 #include "Token.h"
 #include <AK/Assertions.h>
+#include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
-#include <AK/Utf32View.h>
 #include <ctype.h>
 
 namespace JS {
@@ -103,20 +103,9 @@ static u32 hex2int(char x)
 String Token::string_value(StringValueStatus& status) const
 {
     ASSERT(type() == TokenType::StringLiteral || type() == TokenType::TemplateLiteralString);
+
     auto is_template = type() == TokenType::TemplateLiteralString;
-    auto offset = is_template ? 0 : 1;
-
-    size_t i;
-
-    auto lookahead = [&]<typename T>(T fn, size_t distance = 1) -> bool {
-        if (i + distance >= m_value.length() - offset)
-            return false;
-        return fn(m_value[i + distance]);
-    };
-
-    auto is_octal_digit = [](char c) {
-        return c >= '0' && c <= '7';
-    };
+    GenericLexer lexer(is_template ? m_value : m_value.substring_view(1, m_value.length() - 2));
 
     auto encoding_failure = [&status](StringValueStatus parse_status) -> String {
         status = parse_status;
@@ -124,144 +113,101 @@ String Token::string_value(StringValueStatus& status) const
     };
 
     StringBuilder builder;
-    for (i = offset; i < m_value.length() - offset; ++i) {
-        if (m_value[i] == '\\' && i + 1 < m_value.length() - offset) {
-            i++;
-            switch (m_value[i]) {
-            case 'b':
-                builder.append('\b');
-                break;
-            case 'f':
-                builder.append('\f');
-                break;
-            case 'n':
-                builder.append('\n');
-                break;
-            case 'r':
-                builder.append('\r');
-                break;
-            case 't':
-                builder.append('\t');
-                break;
-            case 'v':
-                builder.append('\v');
-                break;
-            case '\'':
-                builder.append('\'');
-                break;
-            case '"':
-                builder.append('"');
-                break;
-            case '\\':
-                builder.append('\\');
-                break;
-            case '\n':
-                break;
-            case '\r':
-                break;
-            case 'x': {
-                if (i + 2 >= m_value.length() - offset)
-                    return encoding_failure(StringValueStatus::MalformedHexEscape);
-
-                auto digit1 = m_value[++i];
-                auto digit2 = m_value[++i];
-                if (!isxdigit(digit1) || !isxdigit(digit2))
-                    return encoding_failure(StringValueStatus::MalformedHexEscape);
-                builder.append_code_point(hex2int(digit1) * 16 + hex2int(digit2));
-                break;
-            }
-            case 'u': {
-                if (i + 1 >= m_value.length() - offset)
-                    return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-                u32 code_point = m_value[++i];
-
-                if (code_point == '{') {
-                    code_point = 0;
-                    while (true) {
-                        if (i + 1 >= m_value.length() - offset)
-                            return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-
-                        auto ch = m_value[++i];
-                        if (ch == '}')
-                            break;
-                        if (!isxdigit(ch))
-                            return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-
-                        auto new_code_point = (code_point << 4u) | hex2int(ch);
-                        if (new_code_point < code_point)
-                            return encoding_failure(StringValueStatus::UnicodeEscapeOverflow);
-                        code_point = new_code_point;
-                    }
-                } else {
-                    if (i + 3 >= m_value.length() - offset || !isxdigit(code_point))
-                        return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-
-                    code_point = hex2int(code_point);
-                    for (int j = 0; j < 3; ++j) {
-                        auto ch = m_value[++i];
-                        if (!isxdigit(ch))
-                            return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-                        code_point = (code_point << 4u) | hex2int(ch);
-                    }
-                }
-
-                builder.append_code_point(code_point);
-                break;
-            }
-            default:
-                if (i + 2 < m_value.length() - offset) {
-                    auto three_chars_view = m_value.substring_view(i, 3);
-                    if (three_chars_view == LINE_SEPARATOR || three_chars_view == PARAGRAPH_SEPARATOR) {
-                        // line continuation with LS or PS
-                        i += 2;
-                        break;
-                    }
-                }
-                if (is_template && (m_value[i] == '$' || m_value[i] == '`')) {
-                    builder.append(m_value[i]);
-                    break;
-                }
-                if (m_value[i] == '0' && !lookahead(isdigit)) {
-                    builder.append((char)0);
-                    break;
-                }
-
-                // In non-strict mode LegacyOctalEscapeSequence is allowed in strings:
-                // https://tc39.es/ecma262/#sec-additional-syntax-string-literals
-                String octal_str;
-
-                // OctalDigit [lookahead ∉ OctalDigit]
-                if (is_octal_digit(m_value[i]) && !lookahead(is_octal_digit)) {
-                    status = StringValueStatus::LegacyOctalEscapeSequence;
-                    octal_str = String(&m_value[i], 1);
-                }
-                // ZeroToThree OctalDigit [lookahead ∉ OctalDigit]
-                else if (m_value[i] >= '0' && m_value[i] <= '3' && lookahead(is_octal_digit) && !lookahead(is_octal_digit, 2)) {
-                    status = StringValueStatus::LegacyOctalEscapeSequence;
-                    octal_str = String(m_value.substring_view(i, 2));
-                    i++;
-                }
-                // FourToSeven OctalDigit
-                else if (m_value[i] >= '4' && m_value[i] <= '7' && lookahead(is_octal_digit)) {
-                    status = StringValueStatus::LegacyOctalEscapeSequence;
-                    octal_str = String(m_value.substring_view(i, 2));
-                    i++;
-                }
-                // ZeroToThree OctalDigit OctalDigit
-                else if (m_value[i] >= '0' && m_value[i] <= '3' && lookahead(is_octal_digit) && lookahead(is_octal_digit, 2)) {
-                    status = StringValueStatus::LegacyOctalEscapeSequence;
-                    octal_str = String(m_value.substring_view(i, 3));
-                    i += 2;
-                }
-
-                if (status == StringValueStatus::LegacyOctalEscapeSequence)
-                    builder.append_code_point(strtoul(octal_str.characters(), nullptr, 8));
-                else
-                    builder.append(m_value[i]);
-            }
-        } else {
-            builder.append(m_value[i]);
+    while (!lexer.is_eof()) {
+        // No escape, consume one char and continue
+        if (!lexer.next_is('\\')) {
+            builder.append(lexer.consume());
+            continue;
         }
+
+        lexer.ignore();
+        ASSERT(!lexer.is_eof());
+
+        // Line continuation
+        if (lexer.next_is('\n') || lexer.next_is('\r')) {
+            lexer.ignore();
+            continue;
+        }
+        // Line continuation
+        if (lexer.next_is(LINE_SEPARATOR) || lexer.next_is(PARAGRAPH_SEPARATOR)) {
+            lexer.ignore(3);
+            continue;
+        }
+        // Null-byte escape
+        if (lexer.next_is('0') && !isdigit(lexer.peek(1))) {
+            lexer.ignore();
+            builder.append('\0');
+            continue;
+        }
+        // Hex escape
+        if (lexer.next_is('x')) {
+            lexer.ignore();
+            if (!isxdigit(lexer.peek()) || !isxdigit(lexer.peek(1)))
+                return encoding_failure(StringValueStatus::MalformedHexEscape);
+            auto code_point = hex2int(lexer.consume()) * 16 + hex2int(lexer.consume());
+            ASSERT(code_point <= 255);
+            builder.append_code_point(code_point);
+            continue;
+        }
+        // Unicode escape
+        if (lexer.next_is('u')) {
+            lexer.ignore();
+            u32 code_point = 0;
+            if (lexer.next_is('{')) {
+                lexer.ignore();
+                while (true) {
+                    if (!lexer.next_is(isxdigit))
+                        return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+                    auto new_code_point = (code_point << 4u) | hex2int(lexer.consume());
+                    if (new_code_point < code_point)
+                        return encoding_failure(StringValueStatus::UnicodeEscapeOverflow);
+                    code_point = new_code_point;
+                    if (lexer.next_is('}'))
+                        break;
+                }
+                lexer.ignore();
+            } else {
+                for (int j = 0; j < 4; ++j) {
+                    if (!lexer.next_is(isxdigit))
+                        return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+                    code_point = (code_point << 4u) | hex2int(lexer.consume());
+                }
+            }
+            builder.append_code_point(code_point);
+            continue;
+        }
+
+        // In non-strict mode LegacyOctalEscapeSequence is allowed in strings:
+        // https://tc39.es/ecma262/#sec-additional-syntax-string-literals
+        String octal_str;
+
+        auto is_octal_digit = [](char ch) { return ch >= '0' && ch <= '7'; };
+        auto is_zero_to_three = [](char ch) { return ch >= '0' && ch <= '3'; };
+        auto is_four_to_seven = [](char ch) { return ch >= '4' && ch <= '7'; };
+
+        // OctalDigit [lookahead ∉ OctalDigit]
+        if (is_octal_digit(lexer.peek()) && !is_octal_digit(lexer.peek(1)))
+            octal_str = lexer.consume(1);
+        // ZeroToThree OctalDigit [lookahead ∉ OctalDigit]
+        else if (is_zero_to_three(lexer.peek()) && is_octal_digit(lexer.peek(1)) && !is_octal_digit(lexer.peek(2)))
+            octal_str = lexer.consume(2);
+        // FourToSeven OctalDigit
+        else if (is_four_to_seven(lexer.peek()) && is_octal_digit(lexer.peek(1)))
+            octal_str = lexer.consume(2);
+        // ZeroToThree OctalDigit OctalDigit
+        else if (is_zero_to_three(lexer.peek()) && is_octal_digit(lexer.peek(1)) && is_octal_digit(lexer.peek(2)))
+            octal_str = lexer.consume(3);
+
+        if (!octal_str.is_null()) {
+            status = StringValueStatus::LegacyOctalEscapeSequence;
+            auto code_point = strtoul(octal_str.characters(), nullptr, 8);
+            ASSERT(code_point <= 255);
+            builder.append_code_point(code_point);
+            continue;
+        }
+
+        lexer.retreat();
+        builder.append(lexer.consume_escaped_character('\\', "b\bf\fn\nr\rt\tv\v"));
     }
     return builder.to_string();
 }
