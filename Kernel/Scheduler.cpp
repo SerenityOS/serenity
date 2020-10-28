@@ -821,8 +821,6 @@ void Scheduler::timer_tick(const RegisterState& regs)
         return;
 
     bool is_bsp = Processor::current().id() == 0;
-    if (!is_bsp)
-        return; // TODO: This prevents scheduling on other CPUs!
     if (is_bsp) {
         // TODO: We should probably move this out of the scheduler
         ++g_uptime;
