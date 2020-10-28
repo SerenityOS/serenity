@@ -866,14 +866,16 @@ void Scheduler::notify_finalizer()
 
 void Scheduler::idle_loop()
 {
-    dbg() << "Scheduler[" << Processor::current().id() << "]: idle loop running";
+    auto& proc = Processor::current();
+    dbg() << "Scheduler[" << proc.id() << "]: idle loop running";
     ASSERT(are_interrupts_enabled());
 
     for (;;) {
+        proc.idle_begin();
         asm("hlt");
 
-        if (Processor::current().id() == 0)
-            yield();
+        proc.idle_end();
+        yield();
     }
 }
 

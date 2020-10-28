@@ -91,6 +91,7 @@ void WaitQueue::wake_one(Atomic<bool>* lock)
 
     // Release the spinlock but the critcial section prevents preemption while waking processor
     queue_lock.unlock();
+    Processor::smp_wake_n_idle_processors(1);
     Scheduler::yield();
 }
 
@@ -110,7 +111,8 @@ void WaitQueue::wake_n(u32 wake_count)
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: " << wake_count;
 #endif
-    for (u32 i = 0; i < wake_count; ++i) {
+    u32 i = 0;
+    for (; i < wake_count; ++i) {
         Thread* thread = m_threads.take_first();
         if (!thread)
             break;
@@ -123,6 +125,8 @@ void WaitQueue::wake_n(u32 wake_count)
 
     // Release the spinlock but the critcial section prevents preemption while waking processor
     queue_lock.unlock();
+    if (i > 0)
+        Processor::smp_wake_n_idle_processors(i);
     Scheduler::yield();
 }
 
@@ -141,17 +145,20 @@ void WaitQueue::wake_all()
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: ";
 #endif
+    u32 wake_count = 0;
     while (!m_threads.is_empty()) {
         Thread* thread = m_threads.take_first();
 #ifdef WAITQUEUE_DEBUG
         dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: wake thread " << *thread;
 #endif
         thread->wake_from_queue();
+        wake_count++;
     }
     m_wake_requested = false;
 
     // Release the spinlock but the critcial section prevents preemption while waking processor
     queue_lock.unlock();
+    Processor::smp_wake_n_idle_processors(wake_count);
     Scheduler::yield();
 }
 
