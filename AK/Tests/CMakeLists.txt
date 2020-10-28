@@ -1,4 +1,4 @@
-file(GLOB AK_TEST_SOURCES "*.cpp")
+file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 foreach(source ${AK_TEST_SOURCES})
     get_filename_component(name ${source} NAME_WE)
