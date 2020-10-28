@@ -48,6 +48,8 @@ public:
     bool next_is(StringView) const;
     bool next_is(const char*) const;
 
+    void retreat();
+
     char consume();
     bool consume_specific(char);
     bool consume_specific(StringView);
