@@ -31,31 +31,45 @@
 
 TEST_CASE(should_default_contructor_with_0s)
 {
-    const IPv4Address addr {};
+    constexpr IPv4Address addr {};
+
+    static_assert(addr.is_zero());
 
     EXPECT(addr.is_zero());
 }
 
 TEST_CASE(should_construct_from_c_array)
 {
-    const u8 a[4] = { 1, 2, 3, 4 };
-    const IPv4Address addr(a);
+    constexpr auto addr = [] {
+        const u8 a[4] = { 1, 2, 3, 4 };
+        return IPv4Address(a);
+    }();
+
+    static_assert(!addr.is_zero());
 
     EXPECT(!addr.is_zero());
 }
 
 TEST_CASE(should_construct_from_u32)
 {
-    const NetworkOrdered<u32> a = 0x11'22'33'44;
-    const IPv4Address addr(a);
+    constexpr auto addr = [] {
+        const NetworkOrdered<u32> a = 0x11'22'33'44;
+        return IPv4Address(a);
+    }();
+
+    static_assert(!addr.is_zero());
 
     EXPECT(!addr.is_zero());
 }
 
 TEST_CASE(should_get_octets_by_byte_offset)
 {
-    const u8 a[4] = { 1, 25, 39, 42 };
-    const IPv4Address addr(a);
+    constexpr IPv4Address addr(1, 25, 39, 42);
+
+    static_assert(1 == addr[0]);
+    static_assert(25 == addr[1]);
+    static_assert(39 == addr[2]);
+    static_assert(42 == addr[3]);
 
     EXPECT_EQ(1, addr[0]);
     EXPECT_EQ(25, addr[1]);
@@ -65,8 +79,7 @@ TEST_CASE(should_get_octets_by_byte_offset)
 
 TEST_CASE(should_convert_to_string)
 {
-    const u8 a[4] = { 1, 25, 39, 42 };
-    const IPv4Address addr(a);
+    constexpr IPv4Address addr(1, 25, 39, 42);
 
     EXPECT_EQ("1.25.39.42", addr.to_string());
 }
@@ -131,26 +144,29 @@ TEST_CASE(should_fill_a_b_d_octets_from_3_parts)
 
 TEST_CASE(should_convert_to_in_addr_t)
 {
-    const u8 a[4] = { 1, 2, 3, 4 };
-    const IPv4Address addr(a);
+    constexpr IPv4Address addr(1, 2, 3, 4);
+
+    static_assert(0x04'03'02'01u == addr.to_in_addr_t());
 
     EXPECT_EQ(0x04'03'02'01u, addr.to_in_addr_t());
 }
 
 TEST_CASE(should_convert_to_u32)
 {
-    const u8 a[4] = { 1, 2, 3, 4 };
-    const IPv4Address addr(a);
+    constexpr IPv4Address addr(1, 2, 3, 4);
+
+    static_assert(0x04'03'02'01u == addr.to_in_addr_t());
 
     EXPECT_EQ(0x04'03'02'01u, addr.to_u32());
 }
 
 TEST_CASE(should_compare)
 {
-    const u8 a[4] = { 1, 2, 3, 4 };
-    const u8 b[4] = { 1, 2, 3, 5 };
-    const IPv4Address addr_a(a);
-    const IPv4Address addr_b(b);
+    constexpr IPv4Address addr_a(1, 2, 3, 4);
+    constexpr IPv4Address addr_b(1, 2, 3, 5);
+
+    static_assert(addr_a != addr_b);
+    static_assert(addr_a == addr_a);
 
     EXPECT(addr_a != addr_b);
     EXPECT(addr_a == addr_a);
