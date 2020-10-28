@@ -563,7 +563,7 @@ void AbstractView::keydown_event(KeyEvent& event)
                 event.accept();
                 return;
             }
-        } else if (!event.ctrl() && !event.alt() && event.code_point() != 0) {
+        } else if (event.key() != KeyCode::Key_Tab && !event.ctrl() && !event.alt() && event.code_point() != 0) {
             StringBuilder sb;
             sb.append(m_searching);
             sb.append_code_point(event.code_point());
