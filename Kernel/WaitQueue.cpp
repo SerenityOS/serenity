@@ -67,6 +67,7 @@ bool WaitQueue::dequeue(Thread& thread)
 
 void WaitQueue::wake_one(Atomic<bool>* lock)
 {
+    ScopedCritical critical;
     ScopedSpinLock queue_lock(m_lock);
     if (lock)
         *lock = false;
@@ -87,11 +88,15 @@ void WaitQueue::wake_one(Atomic<bool>* lock)
 #endif
     thread->wake_from_queue();
     m_wake_requested = false;
+
+    // Release the spinlock but the critcial section prevents preemption while waking processor
+    queue_lock.unlock();
     Scheduler::yield();
 }
 
 void WaitQueue::wake_n(u32 wake_count)
 {
+    ScopedCritical critical;
     ScopedSpinLock queue_lock(m_lock);
     if (m_threads.is_empty()) {
         // Save the fact that a wake was requested
@@ -115,11 +120,15 @@ void WaitQueue::wake_n(u32 wake_count)
         thread->wake_from_queue();
     }
     m_wake_requested = false;
+
+    // Release the spinlock but the critcial section prevents preemption while waking processor
+    queue_lock.unlock();
     Scheduler::yield();
 }
 
 void WaitQueue::wake_all()
 {
+    ScopedCritical critical;
     ScopedSpinLock queue_lock(m_lock);
     if (m_threads.is_empty()) {
         // Save the fact that a wake was requested
@@ -140,6 +149,9 @@ void WaitQueue::wake_all()
         thread->wake_from_queue();
     }
     m_wake_requested = false;
+
+    // Release the spinlock but the critcial section prevents preemption while waking processor
+    queue_lock.unlock();
     Scheduler::yield();
 }
 
