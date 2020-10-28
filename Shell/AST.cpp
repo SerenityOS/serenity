@@ -50,12 +50,50 @@ void AK::Formatter<Shell::AST::Command>::format(TypeErasedFormatParams&, FormatB
     if (m_width != value_not_set && m_precision != value_not_set)
         ASSERT_NOT_REACHED();
 
-    bool first = true;
-    for (auto& arg : value.argv) {
-        if (!first)
-            builder.put_literal(" ");
-        first = false;
-        builder.put_literal(arg);
+    if (value.argv.is_empty()) {
+        builder.put_literal("(ShellInternal)");
+    } else {
+        bool first = true;
+        for (auto& arg : value.argv) {
+            if (!first)
+                builder.put_literal(" ");
+            first = false;
+            builder.put_literal(arg);
+        }
+    }
+
+    for (auto& redir : value.redirections) {
+        builder.put_padding(' ', 1);
+        if (redir.is_path_redirection()) {
+            auto path_redir = (const Shell::AST::PathRedirection*)&redir;
+            builder.put_i64(path_redir->fd);
+            switch (path_redir->direction) {
+            case Shell::AST::PathRedirection::Read:
+                builder.put_literal("<");
+                break;
+            case Shell::AST::PathRedirection::Write:
+                builder.put_literal(">");
+                break;
+            case Shell::AST::PathRedirection::WriteAppend:
+                builder.put_literal(">>");
+                break;
+            case Shell::AST::PathRedirection::ReadWrite:
+                builder.put_literal("<>");
+                break;
+            }
+            builder.put_literal(path_redir->path);
+        } else if (redir.is_fd_redirection()) {
+            auto* fdredir = (const Shell::AST::FdRedirection*)&redir;
+            builder.put_i64(fdredir->new_fd);
+            builder.put_literal(">");
+            builder.put_i64(fdredir->old_fd);
+        } else if (redir.is_close_redirection()) {
+            auto close_redir = (const Shell::AST::CloseRedirection*)&redir;
+            builder.put_i64(close_redir->fd);
+            builder.put_literal(">&-");
+        } else {
+            ASSERT_NOT_REACHED();
+        }
     }
 
     if (!value.next_chain.is_empty()) {
