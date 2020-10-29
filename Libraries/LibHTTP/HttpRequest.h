@@ -67,8 +67,6 @@ public:
     String method_name() const;
     ByteBuffer to_raw_request() const;
 
-    RefPtr<Core::NetworkJob> schedule();
-
     void set_headers(const HashMap<String, String>&);
 
     static Optional<HttpRequest> from_raw_request(const ByteBuffer&);

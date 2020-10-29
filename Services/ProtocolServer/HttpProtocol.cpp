@@ -50,10 +50,10 @@ OwnPtr<Download> HttpProtocol::start_download(ClientConnection& client, const St
     request.set_url(url);
     request.set_headers(headers);
     request.set_body(request_body);
-    auto job = request.schedule();
-    if (!job)
-        return nullptr;
-    return HttpDownload::create_with_job({}, client, (HTTP::HttpJob&)*job);
+    auto job = HTTP::HttpJob::construct(request);
+    auto download = HttpDownload::create_with_job({}, client, (HTTP::HttpJob&)*job);
+    job->start();
+    return download;
 }
 
 }
