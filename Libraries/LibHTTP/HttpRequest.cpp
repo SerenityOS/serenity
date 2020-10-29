@@ -38,13 +38,6 @@ HttpRequest::~HttpRequest()
 {
 }
 
-RefPtr<Core::NetworkJob> HttpRequest::schedule()
-{
-    auto job = HttpJob::construct(*this);
-    job->start();
-    return job;
-}
-
 String HttpRequest::method_name() const
 {
     switch (m_method) {
