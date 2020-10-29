@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "Certificate.h"
 #include <AK/IPv4Address.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
@@ -188,47 +189,6 @@ enum class ConnectionStatus {
 enum ClientVerificationStaus {
     Verified,
     VerificationNeeded,
-};
-
-enum class CertificateKeyAlgorithm {
-    Unsupported = 0x00,
-    RSA_RSA = 0x01,
-    RSA_MD5 = 0x04,
-    RSA_SHA1 = 0x05,
-    RSA_SHA256 = 0x0b,
-    RSA_SHA512 = 0x0d,
-};
-
-struct Certificate {
-    u16 version;
-    CertificateKeyAlgorithm algorithm;
-    CertificateKeyAlgorithm key_algorithm;
-    CertificateKeyAlgorithm ec_algorithm;
-    ByteBuffer exponent;
-    Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> public_key;
-    Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key;
-    String issuer_country;
-    String issuer_state;
-    String issuer_location;
-    String issuer_entity;
-    String issuer_subject;
-    String not_before;
-    String not_after;
-    String country;
-    String state;
-    String location;
-    String entity;
-    String subject;
-    u8** SAN;
-    u16 SAN_length;
-    u8* ocsp;
-    Crypto::UnsignedBigInteger serial_number;
-    ByteBuffer sign_key;
-    ByteBuffer fingerprint;
-    ByteBuffer der;
-    ByteBuffer data;
-
-    bool is_valid() const;
 };
 
 struct Context {
