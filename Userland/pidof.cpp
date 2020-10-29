@@ -44,7 +44,7 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
     for (auto& it : processes) {
         if (it.value.name == process_name) {
             if (!omit_pid || it.value.pid != pid) {
-                printf("%d ", it.value.pid);
+                printf(" %d" + (displayed_at_least_one ? 0 : 1), it.value.pid);
                 displayed_at_least_one = true;
 
                 if (single_shot)
