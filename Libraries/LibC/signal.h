@@ -75,6 +75,7 @@ int sigprocmask(int how, const sigset_t* set, sigset_t* old_set);
 int sigpending(sigset_t*);
 int sigsuspend(const sigset_t*);
 int raise(int sig);
+int getsignalbyname(const char*);
 
 extern const char* sys_siglist[NSIG];
 
