@@ -64,9 +64,11 @@ Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& token
 {
     for (size_t token_index = 0; token_index < tokens.size(); ++token_index) {
         auto& token = tokens[token_index];
+        if (token.m_start.line != token.m_end.line)
+            continue;
         if (token.m_start.line != position.line())
             continue;
-        if (token.m_start.column > position.column() || token.m_end.column < position.column())
+        if (token.m_start.column + 1 > position.column() || token.m_end.column + 1 < position.column())
             continue;
         return token_index;
     }
