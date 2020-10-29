@@ -339,6 +339,8 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
                         cert.issuer_entity = String { (const char*)buffer + position, length };
                     } else if (_asn1_is_oid(oid, Constants::subject_oid)) {
                         cert.issuer_subject = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::unit_oid)) {
+                        cert.issuer_unit = String { (const char*)buffer + position, length };
                     }
                 } else if (_asn1_is_field_present(fields, Constants::owner_id)) {
                     if (_asn1_is_oid(oid, Constants::country_oid)) {
@@ -351,6 +353,8 @@ static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* 
                         cert.entity = String { (const char*)buffer + position, length };
                     } else if (_asn1_is_oid(oid, Constants::subject_oid)) {
                         cert.subject = String { (const char*)buffer + position, length };
+                    } else if (_asn1_is_oid(oid, Constants::unit_oid)) {
+                        cert.unit = String { (const char*)buffer + position, length };
                     }
                 }
                 break;
