@@ -26,15 +26,66 @@
 
 #include <AK/Optional.h>
 #include <AK/String.h>
+#include <ctype.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static void print_usage_and_exit()
 {
     printf("usage: kill [-signal] <PID>\n");
     exit(1);
+}
+
+static const char* signal_names[] = {
+    "INVAL",
+    "HUP",
+    "INT",
+    "QUIT",
+    "ILL",
+    "TRAP",
+    "ABRT",
+    "BUS",
+    "FPE",
+    "KILL",
+    "USR1",
+    "SEGV",
+    "USR2",
+    "PIPE",
+    "ALRM",
+    "TERM",
+    "STKFLT",
+    "CHLD",
+    "CONT",
+    "STOP",
+    "TSTP",
+    "TTIN",
+    "TTOU",
+    "URG",
+    "XCPU",
+    "XFSZ",
+    "VTALRM",
+    "PROF",
+    "WINCH",
+    "IO",
+    "INFO",
+    "SYS"
+};
+
+static_assert(sizeof(signal_names) == sizeof(const char*) * 32);
+
+int getsignalbyname(const char* name)
+{
+    ASSERT(name);
+    for (size_t i = 0; i < NSIG; ++i) {
+        auto* signal_name = signal_names[i];
+        if (!strcmp(signal_name, name))
+            return i;
+    }
+    errno = EINVAL;
+    return -1;
 }
 
 int main(int argc, char** argv)
@@ -52,9 +103,20 @@ int main(int argc, char** argv)
         pid_argi = 2;
         if (argv[1][0] != '-')
             print_usage_and_exit();
-        auto number = StringView(&argv[1][1]).to_uint();
+
+        Optional<unsigned> number;
+
+        if (isalpha(argv[1][1])) {
+            int value = getsignalbyname(&argv[1][1]);
+            if (value >= 0 && value < NSIG)
+                number = value;
+        }
+
+        if (!number.has_value())
+            number = StringView(&argv[1][1]).to_uint();
+
         if (!number.has_value()) {
-            printf("'%s' is not a valid signal number\n", &argv[1][1]);
+            printf("'%s' is not a valid signal name or number\n", &argv[1][1]);
             return 2;
         }
         signum = number.value();
