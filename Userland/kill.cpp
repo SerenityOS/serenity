@@ -46,6 +46,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (argc == 2 && !strcmp(argv[1], "-l")) {
+        for (size_t i = 0; i < NSIG; ++i) {
+            if (i && !(i % 5))
+                outln("");
+            new_out("{:2}) {:10}", i, getsignalname(i));
+        }
+        outln("");
+        return 0;
+    }
+
     if (argc != 2 && argc != 3)
         print_usage_and_exit();
     unsigned signum = SIGTERM;
