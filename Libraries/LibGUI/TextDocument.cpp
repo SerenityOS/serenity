@@ -699,4 +699,13 @@ TextRange TextDocument::range_for_entire_line(size_t line_index) const
     return { { line_index, 0 }, { line_index, line(line_index).length() } };
 }
 
+const TextDocumentSpan* TextDocument::span_at(const TextPosition& position) const
+{
+    for (auto& span : m_spans) {
+        if (span.range.contains(position))
+            return &span;
+    }
+    return nullptr;
+}
+
 }
