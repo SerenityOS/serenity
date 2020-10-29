@@ -52,8 +52,7 @@ void Lock::lock(Mode mode)
     }
     auto current_thread = Thread::current();
     for (;;) {
-        bool expected = false;
-        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+        if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
             do {
                 // FIXME: Do not add new readers if writers are queued.
                 bool modes_dont_conflict = !modes_conflict(m_mode, mode);
@@ -91,8 +90,7 @@ void Lock::unlock()
 {
     auto current_thread = Thread::current();
     for (;;) {
-        bool expected = false;
-        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+        if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
             ASSERT(m_times_locked);
             --m_times_locked;
 
