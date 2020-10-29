@@ -76,6 +76,7 @@ int sigpending(sigset_t*);
 int sigsuspend(const sigset_t*);
 int raise(int sig);
 int getsignalbyname(const char*);
+const char* getsignalname(int);
 
 extern const char* sys_siglist[NSIG];
 

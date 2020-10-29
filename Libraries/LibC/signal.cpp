@@ -236,4 +236,13 @@ int getsignalbyname(const char* name)
     errno = EINVAL;
     return -1;
 }
+
+const char* getsignalname(int signal)
+{
+    if (signal < 0 || signal >= NSIG) {
+        errno = EINVAL;
+        return nullptr;
+    }
+    return signal_names[signal];
+}
 }
