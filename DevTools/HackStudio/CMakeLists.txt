@@ -25,7 +25,6 @@ set(SOURCES
     HackStudioWidget.cpp
     LanguageClient.cpp
     Locator.cpp
-    ProcessStateWidget.cpp
     Project.cpp
     ProjectFile.cpp
     TerminalWrapper.cpp
