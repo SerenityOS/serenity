@@ -293,23 +293,21 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
         return;
     }
 
-    for (auto& span : document().spans()) {
-        if (span.range.contains(text_position)) {
-            if (!highlighter->is_navigatable(span.data)) {
-                GUI::TextEditor::mousedown_event(event);
-                return;
-            }
-
-            auto adjusted_range = span.range;
-            adjusted_range.end().set_column(adjusted_range.end().column() + 1);
-            auto span_text = document().text_in_range(adjusted_range);
-            auto header_path = span_text.substring(1, span_text.length() - 2);
-#ifdef EDITOR_DEBUG
-            dbgln("Ctrl+click: {} \"{}\"", adjusted_range, header_path);
-#endif
-            navigate_to_include_if_available(header_path);
+    if (auto* span = document().span_at(text_position)) {
+        if (!highlighter->is_navigatable(span->data)) {
+            GUI::TextEditor::mousedown_event(event);
             return;
         }
+
+        auto adjusted_range = span->range;
+        adjusted_range.end().set_column(adjusted_range.end().column() + 1);
+        auto span_text = document().text_in_range(adjusted_range);
+        auto header_path = span_text.substring(1, span_text.length() - 2);
+#ifdef EDITOR_DEBUG
+        dbgln("Ctrl+click: {} \"{}\"", adjusted_range, header_path);
+#endif
+        navigate_to_include_if_available(header_path);
+        return;
     }
 
     GUI::TextEditor::mousedown_event(event);
