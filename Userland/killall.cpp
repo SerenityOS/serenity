@@ -26,6 +26,7 @@
 
 #include <AK/String.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <ctype.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,9 +67,19 @@ int main(int argc, char** argv)
         if (argv[1][0] != '-')
             print_usage_and_exit();
 
-        auto number = String(&argv[1][1]).to_uint();
+        Optional<unsigned> number;
+
+        if (isalpha(argv[1][1])) {
+            int value = getsignalbyname(&argv[1][1]);
+            if (value >= 0 && value < NSIG)
+                number = value;
+        }
+
+        if (!number.has_value())
+            number = String(&argv[1][1]).to_uint();
+
         if (!number.has_value()) {
-            printf("'%s' is not a valid signal number\n", &argv[1][1]);
+            printf("'%s' is not a valid signal name or number\n", &argv[1][1]);
             return 2;
         }
         signum = number.value();
