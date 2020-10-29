@@ -43,8 +43,6 @@ public:
 
     ByteBuffer to_raw_request() const;
 
-    RefPtr<Core::NetworkJob> schedule();
-
     static Optional<GeminiRequest> from_raw_request(const ByteBuffer&);
 
 private:

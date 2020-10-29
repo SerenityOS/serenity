@@ -39,13 +39,6 @@ GeminiRequest::~GeminiRequest()
 {
 }
 
-RefPtr<Core::NetworkJob> GeminiRequest::schedule()
-{
-    auto job = GeminiJob::construct(*this);
-    job->start();
-    return job;
-}
-
 ByteBuffer GeminiRequest::to_raw_request() const
 {
     StringBuilder builder;
