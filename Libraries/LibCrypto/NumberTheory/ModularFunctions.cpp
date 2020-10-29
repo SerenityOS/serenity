@@ -134,9 +134,6 @@ UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigIn
     UnsignedBigInteger temp_remainder;
 
     while (!(ep < 1)) {
-#ifdef NT_DEBUG
-        dbg() << ep.to_base10();
-#endif
         if (ep.words()[0] % 2 == 1) {
             // exp = (exp * base) % m;
             UnsignedBigInteger::multiply_without_allocation(exp, base, temp_1, temp_2, temp_3, temp_4, temp_multiply);
