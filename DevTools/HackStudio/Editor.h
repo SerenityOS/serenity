@@ -73,7 +73,6 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
@@ -105,7 +104,6 @@ private:
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };
     bool m_hovering_link { false };
-    bool m_holding_ctrl { false };
     bool m_autocomplete_in_focus { false };
 
     OwnPtr<LanguageClient> m_language_client;

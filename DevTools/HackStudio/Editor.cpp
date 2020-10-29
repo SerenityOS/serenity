@@ -222,7 +222,7 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     if (hovering_lines_ruler && !is_in_drag_select())
         set_override_cursor(Gfx::StandardCursor::Arrow);
     else if (m_hovering_editor)
-        set_override_cursor(m_hovering_link && m_holding_ctrl ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::IBeam);
+        set_override_cursor(m_hovering_link && event.ctrl() ? Gfx::StandardCursor::Hand : Gfx::StandardCursor::IBeam);
 
     for (auto& span : document().spans()) {
         if (span.range.contains(m_previous_text_position) && !span.range.contains(text_position)) {
@@ -349,10 +349,7 @@ void Editor::keydown_event(GUI::KeyEvent& event)
         }
     };
 
-    if (event.key() == Key_Control)
-        m_holding_ctrl = true;
-
-    if (m_holding_ctrl && event.key() == Key_Space) {
+    if (event.ctrl() && event.key() == Key_Space) {
         autocomplete_action();
     }
     GUI::TextEditor::keydown_event(event);
@@ -360,13 +357,6 @@ void Editor::keydown_event(GUI::KeyEvent& event)
     if (m_autocomplete_in_focus) {
         autocomplete_action();
     }
-}
-
-void Editor::keyup_event(GUI::KeyEvent& event)
-{
-    if (event.key() == Key_Control)
-        m_holding_ctrl = false;
-    GUI::TextEditor::keyup_event(event);
 }
 
 void Editor::enter_event(Core::Event& event)
