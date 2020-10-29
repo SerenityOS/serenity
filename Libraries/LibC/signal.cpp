@@ -30,6 +30,7 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 extern "C" {
@@ -185,5 +186,54 @@ int sigsuspend(const sigset_t*)
 {
     dbgprintf("FIXME: Implement sigsuspend()\n");
     ASSERT_NOT_REACHED();
+}
+
+static const char* signal_names[] = {
+    "INVAL",
+    "HUP",
+    "INT",
+    "QUIT",
+    "ILL",
+    "TRAP",
+    "ABRT",
+    "BUS",
+    "FPE",
+    "KILL",
+    "USR1",
+    "SEGV",
+    "USR2",
+    "PIPE",
+    "ALRM",
+    "TERM",
+    "STKFLT",
+    "CHLD",
+    "CONT",
+    "STOP",
+    "TSTP",
+    "TTIN",
+    "TTOU",
+    "URG",
+    "XCPU",
+    "XFSZ",
+    "VTALRM",
+    "PROF",
+    "WINCH",
+    "IO",
+    "INFO",
+    "SYS",
+};
+
+static_assert(sizeof(signal_names) == sizeof(const char*) * 32);
+
+int getsignalbyname(const char* name)
+{
+    ASSERT(name);
+    for (size_t i = 0; i < NSIG; ++i) {
+        auto* signal_name = signal_names[i];
+        if (!strcmp(signal_name, name))
+            return i;
+    }
+    errno = EINVAL;
+    return -1;
 }
 }
