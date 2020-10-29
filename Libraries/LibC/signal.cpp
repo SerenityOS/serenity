@@ -223,7 +223,7 @@ static const char* signal_names[] = {
     "SYS",
 };
 
-static_assert(sizeof(signal_names) == sizeof(const char*) * 32);
+static_assert(sizeof(signal_names) == sizeof(const char*) * NSIG);
 
 int getsignalbyname(const char* name)
 {
