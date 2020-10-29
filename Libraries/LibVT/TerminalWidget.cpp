@@ -68,13 +68,13 @@ void TerminalWidget::set_pty_master_fd(int fd)
         u8 buffer[BUFSIZ];
         ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
         if (nread < 0) {
-            dbgprintf("Terminal read error: %s\n", strerror(errno));
+            dbgln("Terminal read error: {}", strerror(errno));
             perror("read(ptm)");
             GUI::Application::the()->quit(1);
             return;
         }
         if (nread == 0) {
-            dbgprintf("Terminal: EOF on master pty, firing on_command_exit hook.\n");
+            dbgln("TerminalWidget: EOF on master pty, firing on_command_exit hook.");
             if (on_command_exit)
                 on_command_exit();
             int rc = close(m_ptm_fd);
@@ -109,7 +109,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     };
     set_scroll_length(m_config->read_num_entry("Window", "ScrollLength", 4));
 
-    dbg() << "Load config file from " << m_config->file_name();
+    dbgln("Load config file from {}", m_config->file_name());
     m_cursor_blink_timer->set_interval(m_config->read_num_entry("Text",
         "CursorBlinkInterval",
         500));
@@ -376,7 +376,7 @@ void TerminalWidget::set_window_progress(int value, int max)
 void TerminalWidget::set_window_title(const StringView& title)
 {
     if (!Utf8View(title).validate()) {
-        dbg() << "TerminalWidget: Attempted to set window title to invalid UTF-8 string";
+        dbgln("TerminalWidget: Attempted to set window title to invalid UTF-8 string");
         return;
     }
 
@@ -571,7 +571,7 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Left) {
         auto attribute = m_terminal.attribute_at(buffer_position_at(event.position()));
         if (!m_active_href_id.is_null() && attribute.href_id == m_active_href_id) {
-            dbg() << "Open hyperlinked URL: _" << attribute.href << "_";
+            dbgln("Open hyperlinked URL: '{}'", attribute.href);
             Desktop::Launcher::open(attribute.href);
         }
         if (!m_active_href_id.is_null()) {
