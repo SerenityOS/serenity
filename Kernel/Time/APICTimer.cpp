@@ -128,6 +128,9 @@ bool APICTimer::calibrate(HardwareTimerBase& calibration_source)
     }
 #endif
 
+    // TODO: measure rather than assuming it matches?
+    m_frequency = calibration_source.ticks_per_second();
+
     enable_local_timer();
     return true;
 }
