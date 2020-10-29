@@ -93,6 +93,8 @@ public:
     const Vector<TextDocumentSpan>& spans() const { return m_spans; }
     void set_span_at_index(size_t index, TextDocumentSpan span) { m_spans[index] = move(span); }
 
+    const TextDocumentSpan* span_at(const TextPosition&) const;
+
     void append_line(NonnullOwnPtr<TextDocumentLine>);
     void remove_line(size_t line_index);
     void remove_all_lines();
