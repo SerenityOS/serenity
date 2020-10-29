@@ -32,7 +32,7 @@
 
 namespace LanguageServers::Cpp {
 
-Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, GUI::TextPosition autocomplete_position)
+Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, const GUI::TextPosition& autocomplete_position)
 {
     auto lines = code.split('\n', true);
     Lexer lexer(code);
@@ -53,12 +53,12 @@ Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, G
     return suggestions;
 }
 
-String AutoComplete::text_of_token(const Vector<String> lines, const Cpp::Token& token)
+String AutoComplete::text_of_token(const Vector<String>& lines, const Cpp::Token& token)
 {
     return lines[token.m_start.line].substring(token.m_start.column, token.m_end.column - token.m_start.column + 1);
 }
 
-Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& tokens, GUI::TextPosition position)
+Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& tokens, const GUI::TextPosition& position)
 {
     for (size_t token_index = 0; token_index < tokens.size(); ++token_index) {
         auto& token = tokens[token_index];
@@ -71,7 +71,7 @@ Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& token
     return {};
 }
 
-Vector<AutoCompleteResponse> AutoComplete::identifier_prefixes(const Vector<String> lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
+Vector<AutoCompleteResponse> AutoComplete::identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>& tokens, size_t target_token_index)
 {
     auto partial_input = text_of_token(lines, tokens[target_token_index]);
     Vector<AutoCompleteResponse> suggestions;
