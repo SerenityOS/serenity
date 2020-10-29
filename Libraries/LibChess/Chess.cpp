@@ -237,13 +237,6 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
         unsigned en_passant_rank = (colour == Colour::White) ? 4 : 3;
         unsigned promotion_rank = (colour == Colour::White) ? 7 : 0;
 
-        if (move.to.rank == promotion_rank) {
-            if (move.promote_to == Type::Pawn || move.promote_to == Type::King || move.promote_to == Type::None)
-                return false;
-        } else if (move.promote_to != Type::None) {
-            return false;
-        }
-
         if (move.to.rank == move.from.rank + dir && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
             // Regular pawn move.
             return true;
@@ -261,6 +254,13 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
             && get_piece(move.to).type == Type::None && get_piece({ move.from.rank + dir, move.from.file }).type == Type::None) {
             // 2 square pawn move from initial position.
             return true;
+        }
+
+        if (move.to.rank == promotion_rank) {
+            if (move.promote_to == Type::Pawn || move.promote_to == Type::King || move.promote_to == Type::None)
+                return false;
+        } else if (move.promote_to != Type::None) {
+            return false;
         }
 
         return false;
