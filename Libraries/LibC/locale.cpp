@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LogStream.h>
 #include <assert.h>
 #include <locale.h>
 #include <stdio.h>
@@ -66,7 +67,7 @@ static struct lconv default_locale = {
 
 char* setlocale(int category, const char* locale)
 {
-    dbgprintf("FIXME(LibC): setlocale(%d, %s)\n", category, locale);
+    dbgln("FIXME(LibC): setlocale({}, '{}')", category, locale);
     return nullptr;
 }
 
