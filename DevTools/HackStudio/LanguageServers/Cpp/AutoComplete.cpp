@@ -53,9 +53,11 @@ Vector<AutoCompleteResponse> AutoComplete::get_suggestions(const String& code, c
     return suggestions;
 }
 
-String AutoComplete::text_of_token(const Vector<String>& lines, const Cpp::Token& token)
+StringView AutoComplete::text_of_token(const Vector<String>& lines, const Cpp::Token& token)
 {
-    return lines[token.m_start.line].substring(token.m_start.column, token.m_end.column - token.m_start.column + 1);
+    ASSERT(token.m_start.line == token.m_end.line);
+    ASSERT(token.m_start.column <= token.m_end.column);
+    return lines[token.m_start.line].substring_view(token.m_start.column, token.m_end.column - token.m_start.column + 1);
 }
 
 Optional<size_t> AutoComplete::token_in_position(const Vector<Cpp::Token>& tokens, const GUI::TextPosition& position)
@@ -83,8 +85,7 @@ Vector<AutoCompleteResponse> AutoComplete::identifier_prefixes(const Vector<Stri
         if (token.m_type != Cpp::Token::Type::Identifier)
             continue;
         auto text = text_of_token(lines, token);
-        if (text.starts_with(partial_input) && !suggestions_lookup.contains(text)) {
-            suggestions_lookup.set(text);
+        if (text.starts_with(partial_input) && suggestions_lookup.set(text) == AK::HashSetResult::InsertedNewEntry) {
             suggestions.append({ text, partial_input.length(), HackStudio::CompletionKind::Identifier });
         }
     }
