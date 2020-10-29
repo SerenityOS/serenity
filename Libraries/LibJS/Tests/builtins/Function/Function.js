@@ -30,6 +30,8 @@ describe("correct behavior", () => {
         expect(new Function("return typeof Function()")()).toBe("function");
         expect(new Function("x", "return function (y) { return x + y };")(1)(2)).toBe(3);
 
+        expect(new Function("-->")()).toBeUndefined();
+
         expect(new Function().name).toBe("anonymous");
         expect(new Function().toString()).toBe("function anonymous() {\n  ???\n}");
     });
@@ -45,7 +47,7 @@ describe("errors", () => {
             // This is in line with what other engines are reporting.
             .toThrowWithMessage(
                 SyntaxError,
-                "Unexpected token CurlyClose. Expected BracketClose (line: 1, column: 26)"
+                "Unexpected token CurlyClose. Expected BracketClose (line: 4, column: 1)"
             );
     });
 });
