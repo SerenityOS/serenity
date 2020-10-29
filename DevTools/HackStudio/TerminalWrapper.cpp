@@ -25,7 +25,6 @@
  */
 
 #include "TerminalWrapper.h"
-#include "ProcessStateWidget.h"
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/BoxLayout.h>
@@ -82,7 +81,6 @@ void TerminalWrapper::run_command(const String& command)
         } else if (WIFSIGNALED(wstatus)) {
             m_terminal_widget->inject_string(String::formatted("\033[34;1m(Command signaled with {}!)\033[0m\n", strsignal(WTERMSIG(wstatus))));
         }
-        m_process_state_widget->set_tty_fd(-1);
         m_pid = -1;
 
         if (on_command_exit)
@@ -156,9 +154,6 @@ void TerminalWrapper::run_command(const String& command)
         }
         ASSERT_NOT_REACHED();
     }
-
-    // Parent process, cont'd.
-    m_process_state_widget->set_tty_fd(ptm_fd);
 }
 
 void TerminalWrapper::kill_running_command()
@@ -176,7 +171,6 @@ TerminalWrapper::TerminalWrapper(bool user_spawned)
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     m_terminal_widget = add<TerminalWidget>(-1, false, config);
-    m_process_state_widget = add<ProcessStateWidget>();
 
     if (user_spawned)
         run_command("Shell");

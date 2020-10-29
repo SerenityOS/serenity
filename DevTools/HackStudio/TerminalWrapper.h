@@ -32,8 +32,6 @@ class TerminalWidget;
 
 namespace HackStudio {
 
-class ProcessStateWidget;
-
 class TerminalWrapper final : public GUI::Widget {
     C_OBJECT(TerminalWrapper)
 public:
@@ -50,7 +48,6 @@ public:
 private:
     explicit TerminalWrapper(bool user_spawned = true);
 
-    RefPtr<ProcessStateWidget> m_process_state_widget;
     RefPtr<TerminalWidget> m_terminal_widget;
     pid_t m_pid { -1 };
     bool m_user_spawned { true };
