@@ -321,9 +321,14 @@ bool Lexer::is_identifier_middle() const
     return is_identifier_start() || isdigit(m_current_char);
 }
 
-bool Lexer::is_line_comment_start() const
+bool Lexer::is_line_comment_start(bool line_has_token_yet) const
 {
-    return match('/', '/') || match('<', '!', '-', '-') || match('-', '-', '>');
+    return match('/', '/')
+        || match('<', '!', '-', '-')
+        // "-->" is considered a line comment start if the current line is only whitespace and/or
+        // other block comment(s); or in other words: the current line does not have a token or
+        // ongoing line comment yet
+        || (match('-', '-', '>') && !line_has_token_yet);
 }
 
 bool Lexer::is_block_comment_start() const
@@ -362,16 +367,22 @@ Token Lexer::next()
 {
     size_t trivia_start = m_position;
     auto in_template = !m_template_states.is_empty();
+    bool line_has_token_yet = m_line_column > 1;
     bool unterminated_comment = false;
 
     if (!in_template || m_template_states.last().in_expr) {
         // consume whitespace and comments
         while (true) {
-            if (isspace(m_current_char) || is_line_terminator()) {
+            if (is_line_terminator()) {
+                line_has_token_yet = false;
                 do {
                     consume();
-                } while (isspace(m_current_char) || is_line_terminator());
-            } else if (is_line_comment_start()) {
+                } while (is_line_terminator());
+            } else if (isspace(m_current_char)) {
+                do {
+                    consume();
+                } while (isspace(m_current_char));
+            } else if (is_line_comment_start(line_has_token_yet)) {
                 consume();
                 do {
                     consume();

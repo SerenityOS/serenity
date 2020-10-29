@@ -50,7 +50,7 @@ private:
     bool is_line_terminator() const;
     bool is_identifier_start() const;
     bool is_identifier_middle() const;
-    bool is_line_comment_start() const;
+    bool is_line_comment_start(bool line_has_token_yet) const;
     bool is_block_comment_start() const;
     bool is_block_comment_end() const;
     bool is_numeric_literal_start() const;

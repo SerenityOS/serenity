@@ -1,25 +1,29 @@
 test("regular comments", () => {
-    const source = `var i = 0;
-
+    const source = `
+var i = 0;
 // i++;
 /* i++; */
 /*
 i++;
 */
+/**/ i++;
 return i;`;
 
-    expect(source).toEvalTo(0);
+    expect(source).toEvalTo(1);
 });
 
 test("html comments", () => {
-    const source = `var i = 0;
+    const source = `
+var i = 0;
+var j = 0;
 <!-- i++; --> i++;
 <!-- i++;
 i++;
 --> i++;
+/**/ --> i++;
+j --> i++;
 return i;`;
-
-    expect(source).toEvalTo(1);
+    expect(source).toEvalTo(2);
 });
 
 test("unterminated multi-line comment", () => {
