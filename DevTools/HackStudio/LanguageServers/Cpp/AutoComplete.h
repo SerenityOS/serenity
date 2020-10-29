@@ -45,7 +45,7 @@ public:
 
 private:
     static Optional<size_t> token_in_position(const Vector<Cpp::Token>&, const GUI::TextPosition&);
-    static String text_of_token(const Vector<String>& lines, const Cpp::Token&);
+    static StringView text_of_token(const Vector<String>& lines, const Cpp::Token&);
     static Vector<AutoCompleteResponse> identifier_prefixes(const Vector<String>& lines, const Vector<Cpp::Token>&, size_t target_token_index);
 };
 
