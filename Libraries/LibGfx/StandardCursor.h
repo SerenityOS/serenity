@@ -31,6 +31,7 @@ namespace Gfx {
 enum class StandardCursor {
     None = 0,
     Arrow,
+    Crosshair,
     IBeam,
     ResizeHorizontal,
     ResizeVertical,

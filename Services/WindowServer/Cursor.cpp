@@ -56,6 +56,8 @@ RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
         return nullptr;
     case Gfx::StandardCursor::Arrow:
         return WindowManager::the().arrow_cursor();
+    case Gfx::StandardCursor::Crosshair:
+        return WindowManager::the().crosshair_cursor();
     case Gfx::StandardCursor::IBeam:
         return WindowManager::the().i_beam_cursor();
     case Gfx::StandardCursor::ResizeHorizontal:

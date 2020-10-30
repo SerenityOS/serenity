@@ -521,6 +521,10 @@ int main(int argc, char** argv)
     radio_cursor_arrow.on_checked = [&](bool) {
         window->set_cursor(Gfx::StandardCursor::Arrow);
     };
+    auto& radio_crosshair_arrow = cursor_group_box.add<GUI::RadioButton>("Crosshair");
+    radio_crosshair_arrow.on_checked = [&](bool) {
+        window->set_cursor(Gfx::StandardCursor::Crosshair);
+    };
     auto& radio_cursor_i_beam = cursor_group_box.add<GUI::RadioButton>("IBeam");
     radio_cursor_i_beam.on_checked = [&](bool) {
         window->set_cursor(Gfx::StandardCursor::IBeam);
