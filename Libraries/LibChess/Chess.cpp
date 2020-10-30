@@ -176,12 +176,44 @@ Piece Board::set_piece(const Square& square, const Piece& piece)
     return m_board[square.rank][square.file] = piece;
 }
 
+bool Board::is_legal_promotion(const Move& move, Colour colour) const
+{
+    auto piece = get_piece(move.from);
+
+    if (move.promote_to == Type::Pawn || move.promote_to == Type::King) {
+        // attempted promotion to invalid piece
+        return false;
+    }
+
+    if (piece.type != Type::Pawn && move.promote_to != Type::None) {
+        // attempted promotion from invalid piece
+        return false;
+    }
+
+    unsigned promotion_rank = (colour == Colour::White) ? 7 : 0;
+
+    if (move.to.rank != promotion_rank && move.promote_to != Type::None) {
+        // attempted promotion from invalid rank
+        return false;
+    }
+
+    if (piece.type == Type::Pawn && move.to.rank == promotion_rank && move.promote_to == Type::None) {
+        // attempted move to promotion rank without promoting
+        return false;
+    }
+
+    return true;
+}
+
 bool Board::is_legal(const Move& move, Colour colour) const
 {
     if (colour == Colour::None)
         colour = turn();
 
     if (!is_legal_no_check(move, colour))
+        return false;
+
+    if (!is_legal_promotion(move, colour))
         return false;
 
     Board clone = *this;
@@ -218,49 +250,47 @@ bool Board::is_legal(const Move& move, Colour colour) const
 bool Board::is_legal_no_check(const Move& move, Colour colour) const
 {
     auto piece = get_piece(move.from);
+
     if (piece.colour != colour)
+        // attempted move of opponent's piece
         return false;
 
     if (move.to.rank > 7 || move.to.file > 7)
-        return false;
-
-    if (piece.type != Type::Pawn && move.promote_to != Type::None)
-        return false;
-
-    if (move.promote_to == Type::Pawn || move.promote_to == Type::King)
+        // attempted move outside of board
         return false;
 
     if (piece.type == Type::Pawn) {
         int dir = (colour == Colour::White) ? +1 : -1;
         unsigned start_rank = (colour == Colour::White) ? 1 : 6;
-        unsigned other_start_rank = (colour == Colour::White) ? 6 : 1;
-        unsigned en_passant_rank = (colour == Colour::White) ? 4 : 3;
-        unsigned promotion_rank = (colour == Colour::White) ? 7 : 0;
 
-        if (move.to.rank == promotion_rank) {
-            if (move.promote_to == Type::Pawn || move.promote_to == Type::King || move.promote_to == Type::None)
-                return false;
-        } else if (move.promote_to != Type::None) {
-            return false;
+        if (move.from.rank == start_rank && move.to.rank == move.from.rank + (2 * dir) && move.to.file == move.from.file
+            && get_piece(move.to).type == Type::None && get_piece({ move.from.rank + dir, move.from.file }).type == Type::None) {
+            // 2 square pawn move from initial position.
+            return true;
         }
 
-        if (move.to.rank == move.from.rank + dir && move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
+        if (move.to.rank != move.from.rank + dir)
+            // attempted backwards or sideways move
+            return false;
+
+        if (move.to.file == move.from.file && get_piece(move.to).type == Type::None) {
             // Regular pawn move.
             return true;
-        } else if (move.to.rank == move.from.rank + dir && (move.to.file == move.from.file + 1 || move.to.file == move.from.file - 1)) {
+        }
+
+        if (move.to.file == move.from.file + 1 || move.to.file == move.from.file - 1) {
+            unsigned other_start_rank = (colour == Colour::White) ? 6 : 1;
+            unsigned en_passant_rank = (colour == Colour::White) ? 4 : 3;
             Move en_passant_last_move = { { other_start_rank, move.to.file }, { en_passant_rank, move.to.file } };
             if (get_piece(move.to).colour == opposing_colour(colour)) {
                 // Pawn capture.
                 return true;
-            } else if (m_last_move.has_value() && move.from.rank == en_passant_rank && m_last_move.value() == en_passant_last_move
+            }
+            if (m_last_move.has_value() && move.from.rank == en_passant_rank && m_last_move.value() == en_passant_last_move
                 && get_piece(en_passant_last_move.to) == Piece(opposing_colour(colour), Type::Pawn)) {
                 // En passant.
                 return true;
             }
-        } else if (move.from.rank == start_rank && move.to.rank == move.from.rank + (2 * dir) && move.to.file == move.from.file
-            && get_piece(move.to).type == Type::None && get_piece({ move.from.rank + dir, move.from.file }).type == Type::None) {
-            // 2 square pawn move from initial position.
-            return true;
         }
 
         return false;
@@ -614,15 +644,19 @@ bool Board::is_promotion_move(const Move& move, Colour colour) const
     if (colour == Colour::None)
         colour = turn();
 
+    unsigned promotion_rank = (colour == Colour::White) ? 7 : 0;
+    if (move.to.rank != promotion_rank)
+        return false;
+
+    if (get_piece(move.from).type != Type::Pawn)
+        return false;
+
     Move queen_move = move;
     queen_move.promote_to = Type::Queen;
     if (!is_legal(queen_move, colour))
         return false;
 
-    if (get_piece(move.from).type == Type::Pawn && ((colour == Colour::Black && move.to.rank == 0) || (colour == Colour::White && move.to.rank == 7)))
-        return true;
-
-    return false;
+    return true;
 }
 
 bool Board::operator==(const Board& other) const
