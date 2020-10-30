@@ -37,8 +37,9 @@ namespace Gemini {
 class GeminiJob final : public Job {
     C_OBJECT(GeminiJob)
 public:
-    explicit GeminiJob(const GeminiRequest& request)
+    explicit GeminiJob(const GeminiRequest& request, const Vector<Certificate>* override_certificates = nullptr)
         : Job(request)
+        , m_override_ca_certificates(override_certificates)
     {
     }
 
@@ -67,6 +68,7 @@ protected:
 
 private:
     RefPtr<TLS::TLSv12> m_socket;
+    const Vector<Certificate>* m_override_ca_certificates { nullptr };
 };
 
 }

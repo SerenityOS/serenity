@@ -27,6 +27,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibIPC/ClientConnection.h>
+#include <LibTLS/Certificate.h>
 #include <ProtocolServer/ClientConnection.h>
 #include <ProtocolServer/GeminiProtocol.h>
 #include <ProtocolServer/HttpProtocol.h>
@@ -38,6 +39,10 @@ int main(int, char**)
         perror("pledge");
         return 1;
     }
+
+    // Ensure the certificates are read out here.
+    (void)DefaultRootCACertificates::the();
+
     Core::EventLoop event_loop;
     // FIXME: Establish a connection to LookupServer and then drop "unix"?
     if (pledge("stdio inet shared_buffer accept unix", nullptr) < 0) {
