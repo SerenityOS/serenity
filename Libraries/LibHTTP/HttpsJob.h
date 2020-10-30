@@ -38,8 +38,9 @@ namespace HTTP {
 class HttpsJob final : public Job {
     C_OBJECT(HttpsJob)
 public:
-    explicit HttpsJob(const HttpRequest& request)
+    explicit HttpsJob(const HttpRequest& request, const Vector<Certificate>* override_certs = nullptr)
         : Job(request)
+        , m_override_ca_certificates(override_certs)
     {
     }
 
@@ -68,6 +69,7 @@ protected:
 
 private:
     RefPtr<TLS::TLSv12> m_socket;
+    const Vector<Certificate>* m_override_ca_certificates { nullptr };
 };
 
 }

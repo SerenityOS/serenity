@@ -40,6 +40,7 @@ void HttpsJob::start()
 {
     ASSERT(!m_socket);
     m_socket = TLS::TLSv12::construct(this);
+    m_socket->set_root_certificates(m_override_ca_certificates ? *m_override_ca_certificates : DefaultRootCACertificates::the().certificates());
     m_socket->on_tls_connected = [this] {
 #ifdef HTTPSJOB_DEBUG
         dbg() << "HttpsJob: on_connected callback";
