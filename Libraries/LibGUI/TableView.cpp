@@ -209,13 +209,11 @@ void TableView::move_cursor(CursorMovement movement, SelectionUpdate selection_u
     case CursorMovement::Home: {
         auto index = model.index(0, 0);
         set_cursor(index, selection_update);
-        scroll_into_view(index, false, true);
         break;
     }
     case CursorMovement::End: {
         auto index = model.index(model.row_count() - 1, 0);
         set_cursor(index, selection_update);
-        scroll_into_view(index, false, true);
         break;
     }
     case CursorMovement::PageUp: {
