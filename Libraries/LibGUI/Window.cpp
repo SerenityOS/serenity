@@ -730,6 +730,7 @@ Vector<Widget*> Window::focusable_widgets(FocusSource source) const
     if (!m_main_widget)
         return {};
 
+    HashTable<Widget*> seen_widgets;
     Vector<Widget*> collected_widgets;
 
     Function<void(Widget&)> collect_focusable_widgets = [&](auto& widget) {
@@ -746,8 +747,11 @@ Vector<Widget*> Window::focusable_widgets(FocusSource source) const
             break;
         }
 
-        if (widget_accepts_focus)
-            collected_widgets.append(&widget);
+        if (widget_accepts_focus) {
+            auto& effective_focus_widget = widget.focus_proxy() ? *widget.focus_proxy() : widget;
+            if (seen_widgets.set(&effective_focus_widget) == AK::HashSetResult::InsertedNewEntry)
+                collected_widgets.append(&effective_focus_widget);
+        }
         widget.for_each_child_widget([&](auto& child) {
             if (!child.is_visible())
                 return IterationDecision::Continue;
