@@ -1374,26 +1374,24 @@ Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_
     return parameters;
 }
 
-NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool with_semicolon)
+NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_loop_variable_declaration)
 {
     DeclarationKind declaration_kind;
 
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::Var:
         declaration_kind = DeclarationKind::Var;
-        consume(TokenType::Var);
         break;
     case TokenType::Let:
         declaration_kind = DeclarationKind::Let;
-        consume(TokenType::Let);
         break;
     case TokenType::Const:
         declaration_kind = DeclarationKind::Const;
-        consume(TokenType::Const);
         break;
     default:
         ASSERT_NOT_REACHED();
     }
+    consume();
 
     NonnullRefPtrVector<VariableDeclarator> declarations;
     for (;;) {
@@ -1402,6 +1400,8 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool with_
         if (match(TokenType::Equals)) {
             consume();
             init = parse_expression(2);
+        } else if (!for_loop_variable_declaration && declaration_kind == DeclarationKind::Const) {
+            syntax_error("Missing initializer in 'const' variable declaration");
         }
         declarations.append(create_ast_node<VariableDeclarator>(create_ast_node<Identifier>(move(id)), move(init)));
         if (match(TokenType::Comma)) {
@@ -1410,7 +1410,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool with_
         }
         break;
     }
-    if (with_semicolon)
+    if (!for_loop_variable_declaration)
         consume_or_insert_semicolon();
 
     auto declaration = create_ast_node<VariableDeclaration>(declaration_kind, move(declarations));
@@ -1651,9 +1651,15 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
                 m_parser_state.m_let_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
                 in_scope = true;
             }
-            init = parse_variable_declaration(false);
+            init = parse_variable_declaration(true);
             if (match_for_in_of())
                 return parse_for_in_of_statement(*init);
+            if (static_cast<VariableDeclaration&>(*init).declaration_kind() == DeclarationKind::Const) {
+                for (auto& declaration : static_cast<VariableDeclaration&>(*init).declarations()) {
+                    if (!declaration.init())
+                        syntax_error("Missing initializer in 'const' variable declaration");
+                }
+            }
         } else {
             syntax_error("Unexpected token in for loop");
         }
@@ -1686,15 +1692,11 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
 NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs)
 {
     if (lhs->is_variable_declaration()) {
-        auto declarations = static_cast<VariableDeclaration*>(lhs.ptr())->declarations();
-        if (declarations.size() > 1) {
+        auto declarations = static_cast<VariableDeclaration&>(*lhs).declarations();
+        if (declarations.size() > 1)
             syntax_error("multiple declarations not allowed in for..in/of");
-            lhs = create_ast_node<ErrorExpression>();
-        }
-        if (declarations.first().init() != nullptr) {
+        if (declarations.first().init() != nullptr)
             syntax_error("variable initializer not allowed in for..in/of");
-            lhs = create_ast_node<ErrorExpression>();
-        }
     }
     auto in_or_of = consume();
     auto rhs = parse_expression(0);

@@ -66,7 +66,7 @@ public:
     NonnullRefPtr<BlockStatement> parse_block_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
-    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool with_semicolon = true);
+    NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool for_loop_variable_declaration = false);
     NonnullRefPtr<Statement> parse_for_statement();
     NonnullRefPtr<Statement> parse_for_in_of_statement(NonnullRefPtr<ASTNode> lhs);
     NonnullRefPtr<IfStatement> parse_if_statement();
