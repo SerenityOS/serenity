@@ -204,6 +204,7 @@ private:
     virtual bool is_window() const override final { return true; }
 
     void update_cursor();
+    void focus_a_widget_if_possible(FocusSource);
 
     void handle_drop_event(DropEvent&);
     void handle_mouse_event(MouseEvent&);
