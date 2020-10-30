@@ -356,6 +356,11 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
 
 void Window::handle_key_event(KeyEvent& event)
 {
+    if (!m_focused_widget && event.type() == Event::KeyDown && event.key() == Key_Tab && !event.ctrl() && !event.alt() && !event.logo()) {
+        focus_a_widget_if_possible(FocusSource::Keyboard);
+        return;
+    }
+
     if (m_focused_widget)
         return m_focused_widget->dispatch_event(event, this);
     if (m_main_widget)
@@ -864,10 +869,10 @@ void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowResizeAspectRatio>(m_window_id, m_resize_aspect_ratio);
 }
 
-void Window::did_add_widget(Badge<Widget>, Widget& widget)
+void Window::did_add_widget(Badge<Widget>, Widget&)
 {
-    if (!m_focused_widget && widget.focus_policy() != FocusPolicy::NoFocus)
-        set_focused_widget(&widget);
+    if (!m_focused_widget)
+        focus_a_widget_if_possible(FocusSource::Mouse);
 }
 
 void Window::did_remove_widget(Badge<Widget>, Widget& widget)
@@ -905,6 +910,13 @@ void Window::update_cursor()
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCustomCursor>(m_window_id, m_custom_cursor->to_shareable_bitmap(WindowServerConnection::the().server_pid()));
     else
         WindowServerConnection::the().send_sync<Messages::WindowServer::SetWindowCursor>(m_window_id, (u32)m_effective_cursor);
+}
+
+void Window::focus_a_widget_if_possible(FocusSource source)
+{
+    auto focusable_widgets = this->focusable_widgets(source);
+    if (!focusable_widgets.is_empty())
+        set_focused_widget(focusable_widgets[0], source);
 }
 
 }
