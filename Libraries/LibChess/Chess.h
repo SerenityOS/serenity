@@ -159,6 +159,7 @@ public:
 
 private:
     bool is_legal_no_check(const Move&, Colour colour) const;
+    bool is_legal_promotion(const Move&, Colour colour) const;
     bool apply_illegal_move(const Move&, Colour colour);
 
     Piece m_board[8][8];
