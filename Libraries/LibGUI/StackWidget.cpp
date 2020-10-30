@@ -26,6 +26,7 @@
 
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/StackWidget.h>
+#include <LibGUI/Window.h>
 
 namespace GUI {
 
@@ -42,7 +43,7 @@ void StackWidget::set_active_widget(Widget* widget)
     if (widget == m_active_widget)
         return;
 
-    bool active_widget_had_focus = m_active_widget && m_active_widget->is_focused();
+    bool active_widget_had_focus = m_active_widget && window() && window()->focused_widget() == m_active_widget;
 
     if (m_active_widget)
         m_active_widget->set_visible(false);
