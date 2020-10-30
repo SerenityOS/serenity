@@ -165,6 +165,9 @@ public:
     bool is_focused() const;
     void set_focus(bool, FocusSource = FocusSource::Programmatic);
 
+    // Returns true if this widget or one of its descendants is focused.
+    bool has_focus_within() const;
+
     Widget* focus_proxy() { return m_focus_proxy; }
     const Widget* focus_proxy() const { return m_focus_proxy; }
     void set_focus_proxy(Widget*);
