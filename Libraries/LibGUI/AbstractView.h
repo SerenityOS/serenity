@@ -87,7 +87,6 @@ public:
     bool is_multi_select() const { return m_multi_select; }
     void set_multi_select(bool);
 
-    virtual bool accepts_focus() const override { return true; }
     virtual void did_update_model(unsigned flags);
     virtual void did_update_selection();
 

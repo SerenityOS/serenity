@@ -74,7 +74,6 @@ protected:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual bool accepts_focus() const override { return true; }
 
 private:
     bool m_readonly { false };

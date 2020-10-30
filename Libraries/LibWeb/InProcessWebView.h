@@ -61,8 +61,6 @@ public:
 
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
-    virtual bool accepts_focus() const override { return true; }
-
     GUI::Action& select_all_action() { return *m_select_all_action; }
     GUI::Action& copy_action() { return *m_copy_action; }
 

@@ -85,8 +85,6 @@ public:
     void paste();
     void clear_including_history();
 
-    virtual bool accepts_focus() const override { return true; }
-
     Function<void(const StringView&)> on_title_change;
     Function<void()> on_command_exit;
 

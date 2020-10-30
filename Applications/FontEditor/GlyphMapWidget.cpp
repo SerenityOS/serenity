@@ -34,6 +34,7 @@ GlyphMapWidget::GlyphMapWidget(Gfx::Font& mutable_font)
 {
     m_glyph_count = mutable_font.glyph_count();
     set_relative_rect({ 0, 0, preferred_width(), preferred_height() });
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
 
 GlyphMapWidget::~GlyphMapWidget()

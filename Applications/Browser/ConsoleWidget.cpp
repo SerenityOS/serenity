@@ -109,6 +109,8 @@ ConsoleWidget::ConsoleWidget()
         print_html(JS::MarkupGenerator::html_from_value(m_interpreter->vm().last_value()));
     };
 
+    set_focus_proxy(m_input);
+
     auto& clear_button = bottom_container.add<GUI::Button>();
     clear_button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     clear_button.set_preferred_size(22, 22);
@@ -165,8 +167,4 @@ void ConsoleWidget::clear_output()
     m_output_view->update();
 }
 
-void ConsoleWidget::focusin_event(GUI::FocusEvent&)
-{
-    m_input->set_focus(true);
-}
 }

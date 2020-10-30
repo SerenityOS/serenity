@@ -49,11 +49,11 @@ SpinBox::SpinBox()
     };
 
     m_increment_button = add<ControlBoxButton>(ControlBoxButton::UpArrow);
-    m_increment_button->set_focusable(false);
+    m_increment_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_increment_button->on_click = [this](auto) { set_value(m_value + 1); };
     m_increment_button->set_auto_repeat_interval(150);
     m_decrement_button = add<ControlBoxButton>(ControlBoxButton::DownArrow);
-    m_decrement_button->set_focusable(false);
+    m_decrement_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_decrement_button->on_click = [this](auto) { set_value(m_value - 1); };
     m_decrement_button->set_auto_repeat_interval(150);
 }

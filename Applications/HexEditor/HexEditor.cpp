@@ -42,6 +42,7 @@
 
 HexEditor::HexEditor()
 {
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_scrollbars_enabled(true);
     set_font(Gfx::Font::default_fixed_width_font());
     set_background_role(ColorRole::Base);

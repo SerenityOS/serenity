@@ -88,6 +88,13 @@ private:
     Function<NonnullRefPtr<Widget>()> m_factory;
 };
 
+enum class FocusPolicy {
+    NoFocus = 0,
+    TabFocus = 0x1,
+    ClickFocus = 0x2,
+    StrongFocus = TabFocus | ClickFocus,
+};
+
 class Widget : public Core::Object {
     C_OBJECT(Widget)
 public:
@@ -155,14 +162,15 @@ public:
     void update();
     void update(const Gfx::IntRect&);
 
-    virtual bool accepts_focus() const { return false; }
-
     bool is_focused() const;
     void set_focus(bool, FocusSource = FocusSource::Programmatic);
 
     Widget* focus_proxy() { return m_focus_proxy; }
     const Widget* focus_proxy() const { return m_focus_proxy; }
     void set_focus_proxy(Widget*);
+
+    void set_focus_policy(FocusPolicy policy);
+    FocusPolicy focus_policy() const;
 
     enum class ShouldRespectGreediness { No = 0,
         Yes };
@@ -362,6 +370,7 @@ private:
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 
     WeakPtr<Widget> m_focus_proxy;
+    FocusPolicy m_focus_policy { FocusPolicy::NoFocus };
 
     Gfx::StandardCursor m_override_cursor { Gfx::StandardCursor::None };
 };
