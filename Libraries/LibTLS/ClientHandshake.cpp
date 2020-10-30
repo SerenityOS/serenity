@@ -274,7 +274,14 @@ void TLSv12::build_random(PacketBuilder& builder)
 
     m_context.premaster_key = ByteBuffer::copy(random_bytes, bytes);
 
-    const auto& certificate = m_context.certificates[0];
+    const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
+    if (!certificate_option.has_value()) {
+        dbg() << "certificate verification failed :(";
+        alert(AlertLevel::Critical, AlertDescription::BadCertificate);
+        return;
+    }
+
+    auto& certificate = m_context.certificates[certificate_option.value()];
 #ifdef TLS_DEBUG
     dbg() << "PreMaster secret";
     print_buffer(m_context.premaster_key);

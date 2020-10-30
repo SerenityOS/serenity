@@ -26,6 +26,7 @@
 
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCrypto/Authentication/HMAC.h>
@@ -48,6 +49,7 @@ static const char* secret_key = "WellHelloFreinds";
 static const char* suite = nullptr;
 static const char* filename = nullptr;
 static const char* server = nullptr;
+static const char* ca_certs_file = "/etc/ca_certs.ini";
 static int key_bits = 128;
 static bool binary = false;
 static bool interactive = false;
@@ -66,6 +68,8 @@ constexpr const char* DEFAULT_CHECKSUM_SUITE { "CRC32" };
 constexpr const char* DEFAULT_HASH_SUITE { "SHA256" };
 constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
 constexpr const char* DEFAULT_SERVER { "www.google.com" };
+
+static Vector<Certificate> s_root_ca_certificates;
 
 // listAllTests
 // Cipher
@@ -165,6 +169,7 @@ static void tls(const char* message, size_t len)
     static ByteBuffer write {};
     if (!tls) {
         tls = TLS::TLSv12::construct(nullptr);
+        tls->set_root_certificates(s_root_ca_certificates);
         tls->connect(server ?: DEFAULT_SERVER, port);
         tls->on_tls_ready_to_read = [](auto& tls) {
             auto buffer = tls.read();
@@ -313,6 +318,7 @@ auto main(int argc, char** argv) -> int
     parser.add_option(suite, "Set the suite used", "suite-name", 'n', "suite name");
     parser.add_option(server, "Set the server to talk to (only for `tls')", "server-address", 's', "server-address");
     parser.add_option(port, "Set the port to talk to (only for `tls')", "port", 'p', "port");
+    parser.add_option(ca_certs_file, "INI file to read root CA certificates from (only for `tls')", "ca-certs-file", 0, "file");
     parser.add_option(in_ci, "CI Test mode", "ci-mode", 'c');
     parser.parse(argc, argv);
 
@@ -413,6 +419,18 @@ auto main(int argc, char** argv) -> int
         return bigint_tests();
     }
     if (mode_sv == "tls") {
+        if (!Core::File::exists(ca_certs_file)) {
+            warnln("Nonexistent CA certs file '{}'", ca_certs_file);
+            return 1;
+        }
+        auto config = Core::ConfigFile::open(ca_certs_file);
+        for (auto& entity : config->groups()) {
+            Certificate cert;
+            cert.subject = entity;
+            cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
+            cert.country = config->read_entry(entity, "country");
+            s_root_ca_certificates.append(move(cert));
+        }
         if (run_tests)
             return tls_tests();
         return run(tls);
@@ -440,6 +458,18 @@ auto main(int argc, char** argv) -> int
 
         if (!in_ci) {
             // Do not run these in CI to avoid tests with variables outside our control.
+            if (!Core::File::exists(ca_certs_file)) {
+                warnln("Nonexistent CA certs file '{}'", ca_certs_file);
+                return 1;
+            }
+            auto config = Core::ConfigFile::open(ca_certs_file);
+            for (auto& entity : config->groups()) {
+                Certificate cert;
+                cert.subject = entity;
+                cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
+                cert.country = config->read_entry(entity, "country");
+                s_root_ca_certificates.append(move(cert));
+            }
             tls_tests();
         }
 
@@ -1723,6 +1753,7 @@ static void tls_test_client_hello()
     I_TEST((TLS | Connect and Data Transfer));
     Core::EventLoop loop;
     RefPtr<TLS::TLSv12> tls = TLS::TLSv12::construct(nullptr);
+    tls->set_root_certificates(s_root_ca_certificates);
     bool sent_request = false;
     ByteBuffer contents = ByteBuffer::create_uninitialized(0);
     tls->on_tls_ready_to_write = [&](TLS::TLSv12& tls) {
