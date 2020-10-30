@@ -40,6 +40,8 @@ namespace GUI {
 
 TabWidget::TabWidget()
 {
+    set_focus_policy(FocusPolicy::TabFocus);
+
     REGISTER_INT_PROPERTY("container_padding", container_padding, set_container_padding);
     REGISTER_BOOL_PROPERTY("uniform_tabs", uniform_tabs, set_uniform_tabs);
 
@@ -79,14 +81,14 @@ void TabWidget::set_active_widget(Widget* widget)
     if (widget == m_active_widget)
         return;
 
-    bool had_focus = is_focused() || (m_active_widget && m_active_widget->is_focused());
+    bool active_widget_had_focus = m_active_widget && m_active_widget->is_focused();
 
     if (m_active_widget)
         m_active_widget->set_visible(false);
     m_active_widget = widget;
     if (m_active_widget) {
         m_active_widget->set_relative_rect(child_rect_for_size(size()));
-        if (had_focus)
+        if (active_widget_had_focus)
             m_active_widget->set_focus(true);
         m_active_widget->set_visible(true);
         deferred_invoke([this](auto&) {
@@ -200,9 +202,15 @@ void TabWidget::paint_event(PaintEvent& event)
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
-        auto text_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
-        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, text_rect);
-        painter.draw_text(text_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
+        auto tab_button_content_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
+        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
+
+        Gfx::IntRect text_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
+        text_rect.inflate(6, 4);
+        text_rect.align_within(tab_button_content_rect, m_text_alignment);
+        text_rect.intersect(tab_button_content_rect);
+
+        painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::Center, palette().button_text(), Gfx::TextElision::Right);
     }
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
@@ -211,9 +219,20 @@ void TabWidget::paint_event(PaintEvent& event)
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
-        auto text_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
-        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, text_rect);
-        painter.draw_text(text_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
+        auto tab_button_content_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
+        paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
+
+        Gfx::IntRect text_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
+        text_rect.inflate(6, 4);
+        text_rect.align_within(tab_button_content_rect, m_text_alignment);
+        text_rect.intersect(tab_button_content_rect);
+
+        painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::Center, palette().button_text(), Gfx::TextElision::Right);
+
+        if (is_focused()) {
+            painter.draw_focus_rect(text_rect, palette().focus_outline());
+        }
+
         if (m_tab_position == TabPosition::Top) {
             painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), palette().button());
         } else if (m_tab_position == TabPosition::Bottom) {
@@ -394,6 +413,18 @@ void TabWidget::keydown_event(KeyEvent& event)
             activate_next_tab();
         event.accept();
         return;
+    }
+    if (is_focused()) {
+        if (!event.modifiers() && event.key() == Key_Left) {
+            activate_previous_tab();
+            event.accept();
+            return;
+        }
+        if (!event.modifiers() && event.key() == Key_Right) {
+            activate_next_tab();
+            event.accept();
+            return;
+        }
     }
     Widget::keydown_event(event);
 }
