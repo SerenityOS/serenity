@@ -88,12 +88,13 @@ void TabWidget::update_focus_policy()
         policy = FocusPolicy::NoFocus;
     set_focus_policy(policy);
 }
+
 void TabWidget::set_active_widget(Widget* widget)
 {
     if (widget == m_active_widget)
         return;
 
-    bool active_widget_had_focus = m_active_widget && window() && (window()->focused_widget() == m_active_widget || m_active_widget->is_ancestor_of(*window()->focused_widget()));
+    bool active_widget_had_focus = m_active_widget && m_active_widget->has_focus_within();
 
     if (m_active_widget)
         m_active_widget->set_visible(false);

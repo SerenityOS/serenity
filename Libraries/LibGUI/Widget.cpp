@@ -989,4 +989,16 @@ Widget* Widget::find_descendant_by_name(const String& name)
     });
     return found_widget;
 }
+
+bool Widget::has_focus_within() const
+{
+    auto* window = this->window();
+    if (!window)
+        return false;
+    if (!window->focused_widget())
+        return false;
+    auto& effective_focus_widget = focus_proxy() ? *focus_proxy() : *this;
+    return window->focused_widget() == &effective_focus_widget || is_ancestor_of(*window->focused_widget());
+}
+
 }
