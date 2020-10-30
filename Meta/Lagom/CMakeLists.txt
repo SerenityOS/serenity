@@ -94,7 +94,7 @@ if (BUILD_LAGOM)
     target_link_libraries(test-crypto_lagom stdc++)
     add_test(
         NAME Crypto
-        COMMAND test-crypto_lagom test -t -s google.com
+        COMMAND test-crypto_lagom test -t -s google.com --ca-certs-file ../../Base/etc/ca_certs.ini
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
