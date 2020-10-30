@@ -53,27 +53,36 @@ ToolBar::~ToolBar()
 {
 }
 
+class ToolBarButton final : public Button {
+    C_OBJECT(ToolBarButton);
+
+public:
+    virtual ~ToolBarButton() override { }
+
+private:
+    explicit ToolBarButton(Action& action)
+    {
+        if (action.group() && action.group()->is_exclusive())
+            set_exclusive(true);
+        set_action(action);
+        set_tooltip(action.text());
+        set_focus_policy(FocusPolicy::TabFocus);
+        if (action.icon())
+            set_icon(action.icon());
+        else
+            set_text(action.text());
+        set_button_style(Gfx::ButtonStyle::CoolBar);
+        set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    }
+};
+
 void ToolBar::add_action(Action& action)
 {
     auto item = make<Item>();
     item->type = Item::Type::Action;
     item->action = action;
 
-    auto& button = add<Button>();
-    if (action.group() && action.group()->is_exclusive())
-        button.set_exclusive(true);
-    button.set_action(*item->action);
-    button.set_tooltip(item->action->text());
-    button.set_focus_policy(FocusPolicy::TabFocus);
-    if (item->action->icon())
-        button.set_icon(item->action->icon());
-    else
-        button.set_text(item->action->text());
-
-    button.set_button_style(Gfx::ButtonStyle::CoolBar);
-    button.set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    ASSERT(button.size_policy(Orientation::Horizontal) == SizePolicy::Fixed);
-    ASSERT(button.size_policy(Orientation::Vertical) == SizePolicy::Fixed);
+    auto& button = add<ToolBarButton>(action);
     button.set_preferred_size(m_button_size + 8, m_button_size + 8);
 
     m_items.append(move(item));
