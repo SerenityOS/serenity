@@ -279,6 +279,8 @@ public:
     bool load_certificates(const ByteBuffer& pem_buffer);
     bool load_private_key(const ByteBuffer& pem_buffer);
 
+    void set_root_certificates(Vector<Certificate>);
+
     bool add_client_key(const ByteBuffer& certificate_pem_buffer, const ByteBuffer& key_pem_buffer);
     bool add_client_key(Certificate certificate)
     {
@@ -428,6 +430,8 @@ private:
     bool expand_key();
 
     bool compute_master_secret(size_t length);
+
+    Optional<size_t> verify_chain_and_get_matching_certificate(const StringView& host) const;
 
     void try_disambiguate_error() const;
 

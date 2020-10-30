@@ -25,6 +25,7 @@
  */
 
 #include <AK/Endian.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
@@ -498,8 +499,10 @@ ssize_t TLSv12::handle_certificate(const ByteBuffer& buffer)
 
             auto certificate = parse_asn1(buffer.slice_view(res_cert, certificate_size_specific), false);
             if (certificate.has_value()) {
-                m_context.certificates.append(certificate.value());
-                valid_certificate = true;
+                if (certificate.value().is_valid()) {
+                    m_context.certificates.append(certificate.value());
+                    valid_certificate = true;
+                }
             }
             res_cert += certificate_size_specific;
         } while (remaining > 0);
@@ -705,6 +708,94 @@ void TLSv12::try_disambiguate_error() const
     }
 }
 
+void TLSv12::set_root_certificates(Vector<Certificate> certificates)
+{
+    if (!m_context.root_ceritificates.is_empty())
+        dbg() << "TLS warn: resetting root certificates!";
+
+    for (auto& cert : certificates) {
+        if (!cert.is_valid())
+            dbg() << "Certificate for " << cert.subject << " by " << cert.issuer_subject << " is invalid, things may or may not work!";
+        // FIXME: Figure out what we should do when our root certs are invalid.
+    }
+    m_context.root_ceritificates = move(certificates);
+}
+
+bool Context::verify_chain() const
+{
+    const Vector<Certificate>* local_chain = nullptr;
+    if (is_server) {
+        dbg() << "Unsupported: Server mode";
+        TODO();
+    } else {
+        local_chain = &certificates;
+    }
+
+    // FIXME: Actually verify the signature, instead of just checking the name.
+    HashMap<String, String> chain;
+    HashTable<String> roots;
+    // First, walk the root certs.
+    for (auto& cert : root_ceritificates) {
+        roots.set(cert.subject);
+        chain.set(cert.subject, cert.issuer_subject);
+    }
+
+    // Then, walk the local certs.
+    for (auto& cert : *local_chain) {
+        auto& issuer_unique_name = cert.issuer_unit.is_empty() ? cert.issuer_subject : cert.issuer_unit;
+        chain.set(cert.subject, issuer_unique_name);
+    }
+
+    // Then verify the chain.
+    for (auto& it : chain) {
+        if (it.key == it.value) { // Allow self-signed certificates.
+            if (!roots.contains(it.key))
+                dbg() << "Self-signed warning: Certificate for " << it.key << " is self-signed";
+            continue;
+        }
+
+        auto ref = chain.get(it.value);
+        if (!ref.has_value()) {
+            dbg() << "Certificate for " << it.key << " is not signed by anyone we trust (" << it.value << ")";
+            return false;
+        }
+
+        if (ref.value() == it.key) // Allow (but warn about) mutually recursively signed cert A <-> B.
+            dbg() << "Co-dependency warning: Certificate for " << ref.value() << " is issued by " << it.key << ", which itself is issued by " << ref.value();
+    }
+
+    return true;
+}
+
+static bool wildcard_matches(const StringView& host, const StringView& subject)
+{
+    if (host.matches(subject))
+        return true;
+
+    if (subject.starts_with("*."))
+        return wildcard_matches(host, subject.substring_view(2));
+
+    return false;
+}
+
+Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringView& host) const
+{
+    if (m_context.certificates.is_empty() || !m_context.verify_chain())
+        return {};
+
+    if (host.is_empty())
+        return 0;
+
+    for (size_t i = 0; i < m_context.certificates.size(); ++i) {
+        auto& cert = m_context.certificates[i];
+        // FIXME: Also check against SAN (oid 2.5.29.17).
+        if (wildcard_matches(host, cert.subject))
+            return i;
+    }
+
+    return {};
+}
+
 TLSv12::TLSv12(Core::Object* parent, Version version)
     : Core::Socket(Core::Socket::Type::TCP, parent)
 {
@@ -749,6 +840,20 @@ bool TLSv12::add_client_key(const ByteBuffer& certificate_pem_buffer, const Byte
     certificate.private_key = rsa.private_key();
 
     return add_client_key(certificate);
+}
+
+AK::Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
+DefaultRootCACertificates::DefaultRootCACertificates()
+{
+    // FIXME: This might not be the best format, find a better way to represent CA certificates.
+    auto config = Core::ConfigFile::get_for_system("ca_certs");
+    for (auto& entity : config->groups()) {
+        Certificate cert;
+        cert.subject = entity;
+        cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
+        cert.country = config->read_entry(entity, "country");
+        m_ca_certificates.append(move(cert));
+    }
 }
 
 }

@@ -28,6 +28,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Forward.h>
+#include <AK/Singleton.h>
 #include <AK/Types.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/PK/RSA.h>
@@ -77,6 +78,21 @@ struct Certificate {
     bool is_valid() const;
 };
 
+class DefaultRootCACertificates {
+public:
+    DefaultRootCACertificates();
+
+    const Vector<Certificate>& certificates() const { return m_ca_certificates; }
+
+    static DefaultRootCACertificates& the() { return s_the; }
+
+private:
+    static AK::Singleton<DefaultRootCACertificates> s_the;
+
+    Vector<Certificate> m_ca_certificates;
+};
+
 }
 
 using TLS::Certificate;
+using TLS::DefaultRootCACertificates;
