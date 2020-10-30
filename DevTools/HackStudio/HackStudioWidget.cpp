@@ -27,15 +27,17 @@
  */
 
 #include "HackStudioWidget.h"
-#include "CursorTool.h"
 #include "Debugger/DebugInfoWidget.h"
 #include "Debugger/Debugger.h"
 #include "Debugger/DisassemblyWidget.h"
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
-#include "FormEditorWidget.h"
-#include "FormWidget.h"
+#include "FormEditor/CursorTool.h"
+#include "FormEditor/FormEditorWidget.h"
+#include "FormEditor/FormWidget.h"
+#include "FormEditor/WidgetTool.h"
+#include "FormEditor/WidgetTreeModel.h"
 #include "Git/DiffViewer.h"
 #include "Git/GitWidget.h"
 #include "HackStudio.h"
@@ -43,8 +45,6 @@
 #include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
-#include "WidgetTool.h"
-#include "WidgetTreeModel.h"
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>

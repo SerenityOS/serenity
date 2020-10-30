@@ -4,7 +4,6 @@ add_subdirectory(LanguageClients)
 set(SOURCES
     AutoCompleteBox.cpp
     CodeDocument.cpp
-    CursorTool.cpp
     Debugger/BacktraceModel.cpp
     Debugger/DebugInfoWidget.cpp
     Debugger/Debugger.cpp
@@ -15,8 +14,11 @@ set(SOURCES
     Editor.cpp
     EditorWrapper.cpp
     FindInFilesWidget.cpp
-    FormEditorWidget.cpp
-    FormWidget.cpp
+    FormEditor/CursorTool.cpp
+    FormEditor/FormEditorWidget.cpp
+    FormEditor/FormWidget.cpp
+    FormEditor/WidgetTool.cpp
+    FormEditor/WidgetTreeModel.cpp
     Git/DiffViewer.cpp
     Git/GitFilesModel.cpp
     Git/GitFilesView.cpp
@@ -28,8 +30,6 @@ set(SOURCES
     Project.cpp
     ProjectFile.cpp
     TerminalWrapper.cpp
-    WidgetTool.cpp
-    WidgetTreeModel.cpp
     main.cpp
 )
 

@@ -32,7 +32,7 @@
 #include "Debugger/DisassemblyWidget.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
-#include "FormEditorWidget.h"
+#include "FormEditor/FormEditorWidget.h"
 #include "Git/DiffViewer.h"
 #include "Git/GitWidget.h"
 #include "Locator.h"
