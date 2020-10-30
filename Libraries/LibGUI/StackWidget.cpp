@@ -43,7 +43,7 @@ void StackWidget::set_active_widget(Widget* widget)
     if (widget == m_active_widget)
         return;
 
-    bool active_widget_had_focus = m_active_widget && window() && window()->focused_widget() == m_active_widget;
+    bool active_widget_had_focus = m_active_widget && window() && (window()->focused_widget() == m_active_widget || m_active_widget->is_ancestor_of(*window()->focused_widget()));
 
     if (m_active_widget)
         m_active_widget->set_visible(false);
