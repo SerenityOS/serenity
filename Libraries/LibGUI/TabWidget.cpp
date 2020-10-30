@@ -41,7 +41,7 @@ namespace GUI {
 
 TabWidget::TabWidget()
 {
-    set_focus_policy(FocusPolicy::TabFocus);
+    set_focus_policy(FocusPolicy::NoFocus);
 
     REGISTER_INT_PROPERTY("container_padding", container_padding, set_container_padding);
     REGISTER_BOOL_PROPERTY("uniform_tabs", uniform_tabs, set_uniform_tabs);
@@ -67,6 +67,7 @@ void TabWidget::add_widget(const StringView& title, Widget& widget)
 {
     m_tabs.append({ title, nullptr, &widget });
     add_child(widget);
+    update_focus_policy();
 }
 
 void TabWidget::remove_widget(Widget& widget)
@@ -75,8 +76,18 @@ void TabWidget::remove_widget(Widget& widget)
         activate_next_tab();
     m_tabs.remove_first_matching([&widget](auto& entry) { return &widget == entry.widget; });
     remove_child(widget);
+    update_focus_policy();
 }
 
+void TabWidget::update_focus_policy()
+{
+    FocusPolicy policy;
+    if (is_bar_visible() && !m_tabs.is_empty())
+        policy = FocusPolicy::TabFocus;
+    else
+        policy = FocusPolicy::NoFocus;
+    set_focus_policy(policy);
+}
 void TabWidget::set_active_widget(Widget* widget)
 {
     if (widget == m_active_widget)

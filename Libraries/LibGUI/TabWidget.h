@@ -105,6 +105,7 @@ private:
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect container_rect() const;
     void update_bar();
+    void update_focus_policy();
 
     RefPtr<Widget> m_active_widget;
 
