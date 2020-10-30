@@ -68,6 +68,7 @@ InProcessWebView::InProcessWebView()
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_background_role(ColorRole::Base);
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
 
     m_copy_action = GUI::CommonActions::make_copy_action([this](auto&) {
         GUI::Clipboard::the().set_plain_text(selected_text());

@@ -543,7 +543,7 @@ void Window::set_main_widget(Widget* widget)
         set_rect(new_window_rect);
         m_main_widget->set_relative_rect({ {}, new_window_rect.size() });
         m_main_widget->set_window(this);
-        if (m_main_widget->accepts_focus())
+        if (m_main_widget->focus_policy() != FocusPolicy::NoFocus)
             m_main_widget->set_focus(true);
     }
     update();
@@ -720,7 +720,7 @@ void Window::start_wm_resize()
     WindowServerConnection::the().post_message(Messages::WindowServer::WM_StartWindowResize(WindowServerConnection::the().my_client_id(), m_window_id));
 }
 
-Vector<Widget*> Window::focusable_widgets() const
+Vector<Widget*> Window::focusable_widgets(FocusSource source) const
 {
     if (!m_main_widget)
         return {};
@@ -728,7 +728,20 @@ Vector<Widget*> Window::focusable_widgets() const
     Vector<Widget*> collected_widgets;
 
     Function<void(Widget&)> collect_focusable_widgets = [&](auto& widget) {
-        if (widget.accepts_focus())
+        bool widget_accepts_focus = false;
+        switch (source) {
+        case FocusSource::Keyboard:
+            widget_accepts_focus = ((unsigned)widget.focus_policy() & (unsigned)FocusPolicy::TabFocus);
+            break;
+        case FocusSource::Mouse:
+            widget_accepts_focus = ((unsigned)widget.focus_policy() & (unsigned)FocusPolicy::ClickFocus);
+            break;
+        case FocusSource::Programmatic:
+            widget_accepts_focus = widget.focus_policy() != FocusPolicy::NoFocus;
+            break;
+        }
+
+        if (widget_accepts_focus)
             collected_widgets.append(&widget);
         widget.for_each_child_widget([&](auto& child) {
             if (!child.is_visible())
@@ -853,7 +866,7 @@ void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
 
 void Window::did_add_widget(Badge<Widget>, Widget& widget)
 {
-    if (!m_focused_widget && widget.accepts_focus())
+    if (!m_focused_widget && widget.focus_policy() != FocusPolicy::NoFocus)
         set_focused_widget(&widget);
 }
 

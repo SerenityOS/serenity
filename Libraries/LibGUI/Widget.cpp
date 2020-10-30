@@ -326,7 +326,7 @@ void Widget::handle_mouseup_event(MouseEvent& event)
 
 void Widget::handle_mousedown_event(MouseEvent& event)
 {
-    if (accepts_focus())
+    if (((unsigned)focus_policy() & (unsigned)FocusPolicy::ClickFocus))
         set_focus(true, FocusSource::Mouse);
     mousedown_event(event);
     if (event.button() == MouseButton::Right) {
@@ -537,6 +537,20 @@ void Widget::set_focus_proxy(Widget* proxy)
         m_focus_proxy = proxy->make_weak_ptr();
     else
         m_focus_proxy = nullptr;
+}
+
+FocusPolicy Widget::focus_policy() const
+{
+    if (m_focus_proxy)
+        return m_focus_proxy->focus_policy();
+    return m_focus_policy;
+}
+
+void Widget::set_focus_policy(FocusPolicy policy)
+{
+    if (m_focus_proxy)
+        return m_focus_proxy->set_focus_policy(policy);
+    m_focus_policy = policy;
 }
 
 bool Widget::is_focused() const
@@ -750,7 +764,7 @@ void Widget::set_updates_enabled(bool enabled)
 
 void Widget::focus_previous_widget(FocusSource source)
 {
-    auto focusable_widgets = window()->focusable_widgets();
+    auto focusable_widgets = window()->focusable_widgets(source);
     for (int i = focusable_widgets.size() - 1; i >= 0; --i) {
         if (focusable_widgets[i] != this)
             continue;
@@ -763,7 +777,7 @@ void Widget::focus_previous_widget(FocusSource source)
 
 void Widget::focus_next_widget(FocusSource source)
 {
-    auto focusable_widgets = window()->focusable_widgets();
+    auto focusable_widgets = window()->focusable_widgets(source);
     for (size_t i = 0; i < focusable_widgets.size(); ++i) {
         if (focusable_widgets[i] != this)
             continue;

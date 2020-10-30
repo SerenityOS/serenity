@@ -85,7 +85,7 @@ ComboBox::ComboBox()
     };
 
     m_open_button = add<ControlBoxButton>(ControlBoxButton::DownArrow);
-    m_open_button->set_focusable(false);
+    m_open_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_open_button->on_click = [this](auto) {
         if (m_list_window->is_visible())
             close();

@@ -175,7 +175,7 @@ public:
     void apply_icon();
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
 
-    Vector<Widget*> focusable_widgets() const;
+    Vector<Widget*> focusable_widgets(FocusSource) const;
 
     void schedule_relayout();
 

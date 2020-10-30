@@ -105,7 +105,7 @@ SamplerWidget::SamplerWidget(TrackManager& track_manager)
     m_open_button = m_open_button_and_recorded_sample_name_container->add<GUI::Button>();
     m_open_button->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
     m_open_button->set_preferred_size(24, 24);
-    m_open_button->set_focusable(false);
+    m_open_button->set_focus_policy(GUI::FocusPolicy::TabFocus);
     m_open_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
     m_open_button->on_click = [this](auto) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());

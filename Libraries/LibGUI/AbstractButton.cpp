@@ -35,6 +35,7 @@ namespace GUI {
 AbstractButton::AbstractButton(const StringView& text)
     : m_text(text)
 {
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_background_role(Gfx::ColorRole::Button);
     set_foreground_role(Gfx::ColorRole::ButtonText);
 

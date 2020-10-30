@@ -53,7 +53,6 @@ public:
 
 private:
     explicit GlyphMapWidget(Gfx::Font&);
-    virtual bool accepts_focus() const override { return true; }
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;

@@ -36,6 +36,7 @@ namespace PixelPaint {
 
 ImageEditor::ImageEditor()
 {
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
 
 ImageEditor::~ImageEditor()

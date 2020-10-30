@@ -47,9 +47,6 @@ public:
 private:
     ConsoleWidget();
 
-    virtual bool accepts_focus() const override { return true; }
-    virtual void focusin_event(GUI::FocusEvent&) override;
-
     RefPtr<GUI::TextBox> m_input;
     RefPtr<Web::InProcessWebView> m_output_view;
     RefPtr<Web::DOM::Element> m_output_container;

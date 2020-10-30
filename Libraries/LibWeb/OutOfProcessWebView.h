@@ -68,7 +68,6 @@ private:
     OutOfProcessWebView();
 
     // ^Widget
-    virtual bool accepts_focus() const override { return true; }
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;

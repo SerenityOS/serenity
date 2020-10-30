@@ -64,6 +64,7 @@ void ToolBar::add_action(Action& action)
         button.set_exclusive(true);
     button.set_action(*item->action);
     button.set_tooltip(item->action->text());
+    button.set_focus_policy(FocusPolicy::TabFocus);
     if (item->action->icon())
         button.set_icon(item->action->icon());
     else

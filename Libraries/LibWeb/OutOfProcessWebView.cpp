@@ -40,6 +40,7 @@ namespace Web {
 OutOfProcessWebView::OutOfProcessWebView()
 {
     set_should_hide_unnecessary_scrollbars(true);
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
     m_client = WebContentClient::construct(*this);
     client().post_message(Messages::WebContentServer::UpdateSystemTheme(Gfx::current_system_theme_buffer_id()));
 }

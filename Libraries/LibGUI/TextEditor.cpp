@@ -56,6 +56,7 @@ TextEditor::TextEditor(Type type)
 {
     REGISTER_STRING_PROPERTY("text", text, set_text);
 
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_accepts_emoji_input(true);
     set_override_cursor(Gfx::StandardCursor::IBeam);
     set_background_role(ColorRole::Base);

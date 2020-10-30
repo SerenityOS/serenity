@@ -96,7 +96,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     , m_config(move(config))
 {
     set_override_cursor(Gfx::StandardCursor::IBeam);
-
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_accepts_emoji_input(true);
     set_pty_master_fd(ptm_fd);
     m_cursor_blink_timer = add<Core::Timer>();

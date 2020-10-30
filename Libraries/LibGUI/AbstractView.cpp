@@ -43,6 +43,7 @@ AbstractView::AbstractView()
     : m_sort_order(SortOrder::Ascending)
     , m_selection(*this)
 {
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
 
 AbstractView::~AbstractView()

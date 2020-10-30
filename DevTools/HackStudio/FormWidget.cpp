@@ -33,6 +33,7 @@ namespace HackStudio {
 
 FormWidget::FormWidget()
 {
+    set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_fill_with_background_color(true);
     set_relative_rect(5, 5, 400, 300);
 
