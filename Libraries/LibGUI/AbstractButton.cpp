@@ -68,7 +68,7 @@ void AbstractButton::set_checked(bool checked)
         return;
     m_checked = checked;
 
-    if (is_exclusive() && checked) {
+    if (is_exclusive() && checked && parent_widget()) {
         parent_widget()->for_each_child_of_type<AbstractButton>([&](auto& sibling) {
             if (!sibling.is_exclusive() || !sibling.is_checked())
                 return IterationDecision::Continue;
