@@ -33,6 +33,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/MessageBox.h>
@@ -51,6 +52,7 @@ int main(int argc, char** argv)
     srand(time(nullptr));
 
     auto app = GUI::Application::construct(argc, argv);
+    auto app_icon = GUI::Icon::default_icon("app-2048");
 
     auto window = GUI::Window::construct();
 
@@ -203,14 +205,14 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("2048", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-2048.png"), window);
+        GUI::AboutDialog::show("2048", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
 
     window->show();
 
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-2048.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();
 }

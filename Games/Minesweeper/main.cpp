@@ -31,6 +31,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
@@ -51,6 +52,8 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
+
+    auto app_icon = GUI::Icon::default_icon("app-minesweeper");
 
     auto window = GUI::Window::construct();
     window->set_resizable(false);
@@ -124,14 +127,14 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Minesweeper", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-minesweeper.png"), window);
+        GUI::AboutDialog::show("Minesweeper", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
 
     window->show();
 
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/mine.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();
 }
