@@ -29,6 +29,7 @@
 #include <AK/String.h>
 #include <AK/Traits.h>
 #include <AK/Vector.h>
+#include <Kernel/SpinLock.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
@@ -92,6 +93,7 @@ public:
 
     bool contains(const Range& range) const
     {
+        ScopedSpinLock lock(m_lock);
         return m_total_range.contains(range);
     }
 
@@ -100,6 +102,7 @@ private:
 
     Vector<Range> m_available_ranges;
     Range m_total_range;
+    mutable SpinLock<u8> m_lock;
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const Range& value)
