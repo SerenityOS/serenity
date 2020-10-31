@@ -42,10 +42,14 @@ public:
     void save(const StringView& filename);
     void load(const StringView& filename);
     void add_sheet();
+    void add_sheet(NonnullRefPtr<Sheet>&&);
 
     const String& current_filename() const { return m_workbook->current_filename(); }
     const Sheet& current_worksheet() const { return m_selected_view->sheet(); }
     void set_filename(const String& filename);
+
+    Workbook& workbook() { return *m_workbook; }
+    const Workbook& workbook() const { return *m_workbook; }
 
 private:
     explicit SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);

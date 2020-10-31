@@ -100,6 +100,8 @@ public:
     Cell*& current_evaluated_cell() { return m_current_cell_being_evaluated; }
     bool has_been_visited(Cell* cell) const { return m_visited_cells_in_update.contains(cell); }
 
+    const Workbook& workbook() const { return m_workbook; }
+
 private:
     explicit Sheet(Workbook&);
     explicit Sheet(const StringView& name, Workbook&);

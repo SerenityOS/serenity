@@ -25,9 +25,12 @@
  */
 
 #include "HelpWindow.h"
+#include "SpreadsheetWidget.h"
+#include <AK/LexicalPath.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Splitter.h>
 #include <LibMarkdown/Document.h>
@@ -97,18 +100,63 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     m_listview->set_model(HelpListModel::create());
 
     m_webview = splitter.add<Web::OutOfProcessWebView>();
+    m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
+        ASSERT(url.protocol() == "spreadsheet");
+        if (url.host() == "example") {
+            auto entry = LexicalPath(url.path()).basename();
+            auto doc_option = m_docs.get(entry);
+            if (!doc_option.is_object()) {
+                GUI::MessageBox::show_error(this, String::formatted("No documentation entry found for '{}'", url.path()));
+                return;
+            }
+            auto& doc = doc_option.as_object();
+            const auto& name = url.fragment();
+
+            auto example_data_value = doc.get_or("example_data", JsonObject {});
+            if (!example_data_value.is_object()) {
+                GUI::MessageBox::show_error(this, String::formatted("No example data found for '{}'", url.path()));
+                return;
+            }
+
+            auto& example_data = example_data_value.as_object();
+            auto value = example_data.get(name);
+            if (!value.is_object()) {
+                GUI::MessageBox::show_error(this, String::formatted("Example '{}' not found for '{}'", name, url.path()));
+                return;
+            }
+
+            auto dialog = GUI::Window::construct(this);
+            dialog->resize(size());
+            dialog->set_icon(icon());
+            dialog->set_title(String::formatted("Spreadsheet Help - Example {} for {}", name, entry));
+            auto& widget = dialog->set_main_widget<SpreadsheetWidget>(NonnullRefPtrVector<Sheet> {}, false);
+            auto sheet = Sheet::from_json(value.as_object(), widget.workbook());
+            if (!sheet) {
+                GUI::MessageBox::show_error(this, String::formatted("Corrupted example '{}' in '{}'", name, url.path()));
+                return;
+            }
+
+            widget.add_sheet(sheet.release_nonnull());
+            dialog->show();
+        } else if (url.host() == "doc") {
+            auto entry = LexicalPath(url.path()).basename();
+            m_webview->load(URL::create_with_data("text/html", render(entry)));
+        } else {
+            dbgln("Invalid spreadsheet action domain '{}'", url.host());
+        }
+    };
 
     m_listview->on_activation = [this](auto& index) {
         if (!m_webview)
             return;
 
-        m_webview->load(URL::create_with_data("text/html", render(index)));
+        auto key = static_cast<HelpListModel*>(m_listview->model())->key(index);
+        m_webview->load(URL::create_with_data("text/html", render(key)));
     };
 }
 
-String HelpWindow::render(const GUI::ModelIndex& index)
+String HelpWindow::render(const StringView& key)
 {
-    auto key = static_cast<HelpListModel*>(m_listview->model())->key(index);
     auto doc_option = m_docs.get(key);
     ASSERT(doc_option.is_object());
 
@@ -158,6 +206,7 @@ String HelpWindow::render(const GUI::ModelIndex& index)
     if (!examples.is_empty()) {
         markdown_builder.append("# EXAMPLES\n");
         examples.for_each_member([&](auto& text, auto& description_value) {
+            dbgln("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
             markdown_builder.appendff("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
         });
     }
@@ -176,5 +225,4 @@ void HelpWindow::set_docs(JsonObject&& docs)
 HelpWindow::~HelpWindow()
 {
 }
-
 }

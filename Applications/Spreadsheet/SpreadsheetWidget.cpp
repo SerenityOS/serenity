@@ -186,10 +186,18 @@ void SpreadsheetWidget::add_sheet()
     name.append("Sheet");
     name.appendff(" {}", m_workbook->sheets().size() + 1);
 
-    auto& sheet = m_workbook->add_sheet(name.string_view());
+    NonnullRefPtrVector<Sheet> new_sheets;
+    new_sheets.append(m_workbook->add_sheet(name.string_view()));
+    setup_tabs(move(new_sheets));
+}
+
+void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
+{
+    ASSERT(m_workbook == &sheet->workbook());
 
     NonnullRefPtrVector<Sheet> new_sheets;
-    new_sheets.append(sheet);
+    new_sheets.append(move(sheet));
+    m_workbook->sheets().append(new_sheets);
     setup_tabs(new_sheets);
 }
 

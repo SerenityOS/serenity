@@ -51,7 +51,7 @@ public:
 
 private:
     static RefPtr<HelpWindow> s_the;
-    String render(const GUI::ModelIndex&);
+    String render(const StringView& key);
     HelpWindow(GUI::Window* parent = nullptr);
 
     JsonObject m_docs;
