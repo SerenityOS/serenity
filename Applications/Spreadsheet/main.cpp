@@ -24,10 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "HelpWindow.h"
 #include "Spreadsheet.h"
 #include "SpreadsheetWidget.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Forward.h>
@@ -99,6 +101,9 @@ int main(int argc, char* argv[])
     app_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
         spreadsheet_widget.add_sheet();
     }));
+
+    app_menu.add_separator();
+
     app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit(0);
     }));
@@ -136,6 +141,23 @@ int main(int argc, char* argv[])
 
         if (!current_filename.is_empty())
             spreadsheet_widget.set_filename(current_filename);
+    }));
+
+    auto& help_menu = menubar->add_menu("Help");
+
+    help_menu.add_action(GUI::Action::create(
+        "Functions Help", [&](auto&) {
+            auto docs = spreadsheet_widget.current_worksheet().gather_documentation();
+            auto help_window = Spreadsheet::HelpWindow::the();
+            help_window->set_docs(move(docs));
+            help_window->show();
+        },
+        window));
+
+    app_menu.add_separator();
+
+    help_menu.add_action(GUI::Action::create("About", [&](auto&) {
+        GUI::AboutDialog::show("Spreadsheet", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-spreadsheet.png"), window);
     }));
 
     app->set_menubar(move(menubar));
