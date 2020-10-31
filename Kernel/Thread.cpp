@@ -1067,21 +1067,27 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
 
     BlockResult result(BlockResult::WokeNormally);
     {
-        // To be able to look at m_wait_queue_node we once again need the
-        // scheduler lock, which is held when we insert into the queue
-        ScopedSpinLock sched_lock(g_scheduler_lock);
+        ScopedCritical critical;
+        {
+            // To be able to look at m_wait_queue_node we once again need the
+            // scheduler lock, which is held when we insert into the queue
+            ScopedSpinLock sched_lock(g_scheduler_lock);
 
-        if (m_queue) {
-            ASSERT(m_queue == &queue);
-            // If our thread was still in the queue, we timed out
-            m_queue = nullptr;
-            if (queue.dequeue(*current_thread))
-                result = BlockResult::InterruptedByTimeout;
-        } else {
-            // Our thread was already removed from the queue. The only
-            // way this can happen if someone else is trying to kill us.
-            // In this case, the queue should not contain us anymore.
-            result = BlockResult::InterruptedByDeath;
+            if (m_queue) {
+                ASSERT(m_queue == &queue);
+                // If our thread was still in the queue, we timed out
+                m_queue = nullptr;
+                // Unlock the scheduler lock before dequeueing,
+                // but we're still in a critical section
+                sched_lock.unlock();
+                if (queue.dequeue(*current_thread))
+                    result = BlockResult::InterruptedByTimeout;
+            } else {
+                // Our thread was already removed from the queue. The only
+                // way this can happen if someone else is trying to kill us.
+                // In this case, the queue should not contain us anymore.
+                result = BlockResult::InterruptedByDeath;
+            }
         }
 
         // Make sure we cancel the timer if woke normally.
