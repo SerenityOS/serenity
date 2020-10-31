@@ -341,7 +341,7 @@ range.__documentation = JSON.stringify({
     doc:
         "Generates a list of cell names in a rectangle defined by two " +
         "_top left_ and _bottom right_ cells `start` and `end`, spaced" +
-        " `column step` columns, and `row step` rows apart.",
+        " `column step` columns, and `row step` rows apart. Short form: [`R`](spreadsheet://doc/R)",
     examples: {
         'range("A1", "C4")': "Generate a range A1:C4",
         'range("A1", "C4", 2)': "Generate a range A1:C4, skipping every other column",
@@ -355,7 +355,7 @@ R.__documentation = JSON.stringify({
     doc:
         "Generates a list of cell names in a rectangle defined by " +
         "_range specifier_, which must be two cell names " +
-        "delimited by a comma ':'. Operates the same as `range`", // TODO: Add support for hyperlinks.
+        "delimited by a comma ':'. Operates the same as [`range`](spreadsheet://doc/range)",
     examples: {
         "R`A1:C4`": "Generate the range A1:C4",
     },
@@ -455,7 +455,7 @@ numericReduce.__documentation = JSON.stringify({
         "Reduces the entries in `cells` with repeated applications of the `reduction function` to the " +
         "`accumulator`\n The `reduction function` should be a function of arity 2, taking first the " +
         "accumulator, then the current value, and returning the new accumulator value\n\nThis function, " +
-        "unlike `reduce`, casts the values to a number before passing them to the `reduction function`.",
+        "unlike [`reduce`](spreadsheet://doc/reduce), casts the values to a number before passing them to the `reduction function`.",
     examples: {
         'numericReduce((acc, x) => acc * x, 1, range("A0", "A5"))':
             "Calculate the numeric product of all values in the range A0:A5",
@@ -468,7 +468,8 @@ sum.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the sum of the values in `cells`",
     examples: {
-        'sum(range("A0", "C4"))': "Calculate the sum of the values in A0:C4",
+        'sum(range("A0", "C4"))':
+            "Calculate the sum of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -490,7 +491,8 @@ count.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Counts the number of cells in the given range",
     examples: {
-        'count(range("A0", "C4"))': "Count the number of cells in A0:C4",
+        'count(range("A0", "C4"))':
+            "Count the number of cells in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -511,7 +513,8 @@ average.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the average of the values in `cells`",
     examples: {
-        'average(range("A0", "C4"))': "Calculate the average of the values in A0:C4",
+        'average(range("A0", "C4"))':
+            "Calculate the average of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -533,7 +536,8 @@ median.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the median of the numeric values in the given range of cells",
     examples: {
-        'median(range("A0", "C4"))': "Calculate the median of the values in A0:C4",
+        'median(range("A0", "C4"))':
+            "Calculate the median of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -543,7 +547,93 @@ variance.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the variance of the numeric values in the given range of cells",
     examples: {
-        'variance(range("A0", "C4"))': "Calculate the variance of the values in A0:C4",
+        'variance(range("A0", "C4"))':
+            "Calculate the variance of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
+    },
+    example_data: {
+        simple: {
+            name: "Simple Statistics",
+            columns: ["A", "B", "C", "D", "E"],
+            rows: 6,
+            cells: {
+                E0: {
+                    kind: "Formula",
+                    source: "stddev(R`A0:C4`)",
+                    value: "5.329165",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "stddev: %f",
+                    },
+                },
+                E1: {
+                    kind: "Formula",
+                    source: "variance(R`A0:C4`)",
+                    value: "28.39999999",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "variance: %f",
+                    },
+                },
+                E2: {
+                    kind: "Formula",
+                    source: "median(R`A0:C4`)",
+                    value: "1",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "median: %f",
+                    },
+                },
+                E3: {
+                    kind: "Formula",
+                    source: "average(R`A0:C4`)",
+                    value: "1.1999999",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "average: %f",
+                    },
+                },
+                E4: {
+                    kind: "Formula",
+                    source: "count(R`A0:C4`)",
+                    value: "15",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "count: %d",
+                    },
+                },
+                E5: {
+                    kind: "Formula",
+                    source: "sum(R`A0:C4`)",
+                    value: "18",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "sum: %d",
+                    },
+                },
+                ...Array.apply(null, { length: 4 })
+                    .map((_, i) => i)
+                    .reduce((acc, i) => {
+                        return {
+                            ...acc,
+                            [`A${i}`]: {
+                                kind: "LiteralString",
+                                value: `${i}`,
+                                type: "Numeric",
+                            },
+                            [`B${i}`]: {
+                                kind: "LiteralString",
+                                value: `${i + 1}`,
+                                type: "Numeric",
+                            },
+                            [`C${i}`]: {
+                                kind: "LiteralString",
+                                value: `${i - 1}`,
+                                type: "Numeric",
+                            },
+                        };
+                    }, {}),
+            },
+        },
     },
 });
 
@@ -553,7 +643,8 @@ stddev.__documentation = JSON.stringify({
     argnames: ["cell names"],
     doc: "Calculates the standard deviation of the numeric values in the given range of cells",
     examples: {
-        'stddev(range("A0", "C4"))': "Calculate the standard deviation of the values in A0:C4",
+        'stddev(range("A0", "C4"))':
+            "Calculate the standard deviation of the values in A0:C4, [Click to view](spreadsheet://example/variance#simple)",
     },
 });
 
@@ -592,7 +683,22 @@ here.__documentation = JSON.stringify({
     examples: {
         "here().up().value()": "Get the value of the cell above this one",
         "here().up().with_column('A')":
-            "Get a Position above this one in column A, for instance, evaluates to A2 if run in B3.",
+            "Get a Position above this one in column A, for instance, evaluates to A2 if run in B3, [Click to view](spreadsheet://example/here#with_column)",
+    },
+    example_data: {
+        with_column: {
+            name: "here() With Column",
+            columns: ["A", "B"],
+            rows: 4,
+            cells: {
+                B3: {
+                    kind: "Formula",
+                    source: "here().up().with_column('A').name",
+                    value: '"A2"',
+                    type: "Identity",
+                },
+            },
+        },
     },
 });
 
@@ -620,7 +726,7 @@ lookup.__documentation = JSON.stringify({
         "lookup(F3, R`B2:B11`, R`D2:D11`)":
             "Look for the value of F3 in the range B2:B11, and return the corresponding value from the D column",
         "lookup(E2, R`C2:C5`, R`B2:B5`, 0, 'nextlargest')":
-            "Find the closest (larger) value to E2 in range C2:C5, and evaluate to 0 if no value in that range is larger",
+            "Find the closest (larger) value to E2 in range C2:C5, and evaluate to 0 if no value in that range is larger.",
     },
 });
 
@@ -644,11 +750,130 @@ reflookup.__documentation = JSON.stringify({
         "- `'exact'`: The default method. Uses strict equality to match values.\n" +
         "- `'nextlargest'`: Uses the greater-or-equal operator to match values.\n" +
         "- `'nextsmallest'`: Uses the less-than-or-equal operator to match values.\n" +
-        "\nThis function return a `Position` (see `here()`)",
+        "\nThis function return a `Position` (see [`here()`](spreadsheet://doc/here))",
     examples: {
-        "reflookup(F3, R`B2:B11`, R`D2:D11`)":
-            "Look for the value of F3 in the range B2:B11, and return the corresponding cell name from the D column",
-        "reflookup(E2, R`C2:C5`, R`B2:B5`, here(), 'nextlargest')":
-            "Find the cell with the closest (larger) value to E2 in range C2:C5, and evaluate to the current cell if no value in that range is larger",
+        "reflookup(A0, R`B1:B5`, R`C1:C5`)":
+            "Look for the value of A0 in the range B1:B5, and return the corresponding cell name from the C column," +
+            "[Click to view](spreadsheet://example/reflookup#simple)",
+        "reflookup(A0, R`C2:C5`, R`B2:B5`, here(), 'nextlargest')":
+            "Find the cell with the closest (larger) value to A0 in range C2:C5, and give the corresponding cell in range C1:C5, " +
+            "evaluating to the current cell if no value in that range is larger, [Click to view](spreadsheet://example/reflookup#nextlargest)",
+    },
+    example_data: {
+        simple: {
+            name: "Simple",
+            columns: ["A", "B", "C"],
+            rows: 6,
+            cells: {
+                B1: {
+                    kind: "LiteralString",
+                    value: "1",
+                },
+                B0: {
+                    kind: "Formula",
+                    source: "reflookup(A0, R`B1:B5`, R`C1:C5`).value()",
+                    value: '"C"',
+                    type: "Identity",
+                },
+                C3: {
+                    kind: "LiteralString",
+                    value: "C",
+                    type: "Identity",
+                },
+                C2: {
+                    kind: "LiteralString",
+                    value: "B",
+                    type: "Identity",
+                },
+                B2: {
+                    kind: "LiteralString",
+                    value: "2",
+                },
+                C4: {
+                    kind: "LiteralString",
+                    value: "D",
+                    type: "Identity",
+                },
+                A0: {
+                    kind: "LiteralString",
+                    value: "3",
+                },
+                C1: {
+                    kind: "LiteralString",
+                    value: "A",
+                    type: "Identity",
+                },
+                C5: {
+                    kind: "LiteralString",
+                    value: "E",
+                    type: "Identity",
+                },
+                B3: {
+                    kind: "LiteralString",
+                    value: "3",
+                },
+                B5: {
+                    kind: "LiteralString",
+                    value: "5",
+                },
+                B4: {
+                    kind: "LiteralString",
+                    value: "4",
+                },
+            },
+        },
+        nextlargest: {
+            name: "Next Largest",
+            columns: ["A", "B", "C"],
+            rows: 6,
+            cells: {
+                B0: {
+                    kind: "Formula",
+                    source: "reflookup(A0, R`C2:C5`, R`B2:B5`, here(), 'nextlargest').name",
+                    value: '"B2"',
+                    type: "Identity",
+                },
+                C3: {
+                    kind: "LiteralString",
+                    value: "3",
+                },
+                C2: {
+                    kind: "LiteralString",
+                    value: "2",
+                },
+                B2: {
+                    kind: "LiteralString",
+                    value: "B",
+                    type: "Identity",
+                },
+                C4: {
+                    kind: "LiteralString",
+                    value: "4",
+                },
+                A0: {
+                    kind: "LiteralString",
+                    value: "1",
+                },
+                C5: {
+                    kind: "LiteralString",
+                    value: "5",
+                },
+                B3: {
+                    kind: "LiteralString",
+                    value: "C",
+                    type: "Identity",
+                },
+                B5: {
+                    kind: "LiteralString",
+                    value: "E",
+                    type: "Identity",
+                },
+                B4: {
+                    kind: "LiteralString",
+                    value: "D",
+                    type: "Identity",
+                },
+            },
+        },
     },
 });
