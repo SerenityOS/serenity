@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/IOAccess.h>
 
@@ -57,18 +58,36 @@ Access::Access()
     s_access = this;
 }
 
-static u16 read_type(Address address)
+u8 Access::early_read8_field(Address address, u32 field)
 {
-    return (read8(address, PCI_CLASS) << 8u) | read8(address, PCI_SUBCLASS);
+    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
+    return IO::in8(PCI_VALUE_PORT + (field & 3));
+}
+
+u16 Access::early_read16_field(Address address, u32 field)
+{
+    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
+    return IO::in16(PCI_VALUE_PORT + (field & 2));
+}
+
+u32 Access::early_read32_field(Address address, u32 field)
+{
+    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
+    return IO::in32(PCI_VALUE_PORT);
+}
+
+u16 Access::early_read_type(Address address)
+{
+    return (early_read8_field(address, PCI_CLASS) << 8u) | early_read8_field(address, PCI_SUBCLASS);
 }
 
 void Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(Address, ID)>& callback)
 {
     Address address(0, bus, slot, function);
-    if (type == -1 || type == read_type(address))
-        callback(address, { read16_field(address, PCI_VENDOR_ID), read16_field(address, PCI_DEVICE_ID) });
-    if (read_type(address) == PCI_TYPE_BRIDGE) {
-        u8 secondary_bus = read8_field(address, PCI_SECONDARY_BUS);
+    if (type == -1 || type == early_read_type(address))
+        callback(address, { early_read16_field(address, PCI_VENDOR_ID), early_read16_field(address, PCI_DEVICE_ID) });
+    if (early_read_type(address) == PCI_TYPE_BRIDGE) {
+        u8 secondary_bus = early_read8_field(address, PCI_SECONDARY_BUS);
 #ifdef PCI_DEBUG
         klog() << "PCI: Found secondary bus: " << secondary_bus;
 #endif
@@ -80,14 +99,14 @@ void Access::enumerate_functions(int type, u8 bus, u8 slot, u8 function, Functio
 void Access::enumerate_slot(int type, u8 bus, u8 slot, Function<void(Address, ID)>& callback)
 {
     Address address(0, bus, slot, 0);
-    if (read16_field(address, PCI_VENDOR_ID) == PCI_NONE)
+    if (early_read16_field(address, PCI_VENDOR_ID) == PCI_NONE)
         return;
     enumerate_functions(type, bus, slot, 0, callback);
-    if (!(read8_field(address, PCI_HEADER_TYPE) & 0x80))
+    if (!(early_read8_field(address, PCI_HEADER_TYPE) & 0x80))
         return;
     for (u8 function = 1; function < 8; ++function) {
         Address address(0, bus, slot, function);
-        if (read16_field(address, PCI_VENDOR_ID) != PCI_NONE)
+        if (early_read16_field(address, PCI_VENDOR_ID) != PCI_NONE)
             enumerate_functions(type, bus, slot, function, callback);
     }
 }

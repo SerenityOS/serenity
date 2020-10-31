@@ -63,6 +63,11 @@ public:
 protected:
     virtual void enumerate_hardware(Function<void(Address, ID)>) = 0;
 
+    u8 early_read8_field(Address address, u32 field);
+    u16 early_read16_field(Address address, u32 field);
+    u32 early_read32_field(Address address, u32 field);
+    u16 early_read_type(Address address);
+
     Access();
     Vector<PhysicalID> m_physical_ids;
 };

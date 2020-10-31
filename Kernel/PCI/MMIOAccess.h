@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
@@ -38,6 +39,18 @@
 
 namespace Kernel {
 namespace PCI {
+
+class DeviceConfigurationSpaceMapping {
+public:
+    DeviceConfigurationSpaceMapping(Address, const MMIOSegment&);
+    VirtualAddress vaddr() const { return m_mapped_region->vaddr(); };
+    PhysicalAddress paddr() const { return m_mapped_region->physical_page(0)->paddr(); }
+    const Address& address() const { return m_device_address; };
+
+private:
+    Address m_device_address;
+    NonnullOwnPtr<Region> m_mapped_region;
+};
 
 class MMIOAccess final : public Access {
 public:
@@ -57,14 +70,13 @@ private:
     virtual u16 read16_field(Address address, u32) override;
     virtual u32 read32_field(Address address, u32) override;
 
-    void map_device(Address address);
+    Optional<VirtualAddress> get_device_configuration_space(Address address);
     virtual u8 segment_start_bus(u32) const override;
     virtual u8 segment_end_bus(u32) const override;
 
     PhysicalAddress m_mcfg;
     HashMap<u16, MMIOSegment> m_segments;
-    OwnPtr<Region> m_mmio_window_region;
-    ChangeableAddress m_mapped_address;
+    NonnullOwnPtrVector<DeviceConfigurationSpaceMapping> m_mapped_device_regions;
 };
 
 }
