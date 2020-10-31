@@ -1616,17 +1616,38 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
 
 NonnullRefPtr<IfStatement> Parser::parse_if_statement()
 {
+    auto parse_function_declaration_as_block_statement = [&] {
+        // https://tc39.es/ecma262/#sec-functiondeclarations-in-ifstatement-statement-clauses
+        // Code matching this production is processed as if each matching occurrence of
+        // FunctionDeclaration[?Yield, ?Await, ~Default] was the sole StatementListItem
+        // of a BlockStatement occupying that position in the source code.
+        ScopePusher scope(*this, ScopePusher::Let);
+        auto block = create_ast_node<BlockStatement>();
+        block->append(parse_declaration());
+        block->add_functions(m_parser_state.m_function_scopes.last());
+        return block;
+    };
+
     consume(TokenType::If);
     consume(TokenType::ParenOpen);
     auto predicate = parse_expression(0);
     consume(TokenType::ParenClose);
-    auto consequent = parse_statement();
+
+    RefPtr<Statement> consequent;
+    if (!m_parser_state.m_strict_mode && match(TokenType::Function))
+        consequent = parse_function_declaration_as_block_statement();
+    else
+        consequent = parse_statement();
+
     RefPtr<Statement> alternate;
     if (match(TokenType::Else)) {
-        consume(TokenType::Else);
-        alternate = parse_statement();
+        consume();
+        if (!m_parser_state.m_strict_mode && match(TokenType::Function))
+            alternate = parse_function_declaration_as_block_statement();
+        else
+            alternate = parse_statement();
     }
-    return create_ast_node<IfStatement>(move(predicate), move(consequent), move(alternate));
+    return create_ast_node<IfStatement>(move(predicate), move(*consequent), move(alternate));
 }
 
 NonnullRefPtr<Statement> Parser::parse_for_statement()
