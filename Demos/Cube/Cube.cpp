@@ -26,6 +26,7 @@
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
@@ -206,7 +207,9 @@ int main(int argc, char** argv)
     cube.set_stat_label(time);
 
     window->show();
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-cube.png"));
+
+    auto app_icon = GUI::Icon::default_icon("app-cube");
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();
 }

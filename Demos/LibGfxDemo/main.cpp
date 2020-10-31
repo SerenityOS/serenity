@@ -25,6 +25,7 @@
  */
 
 #include <LibGUI/Application.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -203,7 +204,9 @@ int main(int argc, char** argv)
     window->set_title("LibGfx Demo");
     window->set_resizable(false);
     window->resize(WIDTH, HEIGHT);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-libgfx-demo.png"));
+
+    auto app_icon = GUI::Icon::default_icon("app-libgfx-demo");
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->set_main_widget<Canvas>();
     window->show();
 
