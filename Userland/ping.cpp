@@ -114,11 +114,17 @@ int main(int argc, char** argv)
         char msg[64 - sizeof(struct icmphdr)];
     };
 
+    struct PongPacket {
+        // FIXME: IPv4 headers are not actually fixed-size, handle other sizes.
+        char ip_header[20];
+        struct icmphdr header;
+        char msg[64 - sizeof(struct icmphdr)];
+    };
+
     uint16_t seq = 1;
 
     for (;;) {
         PingPacket ping_packet;
-        PingPacket pong_packet;
         memset(&ping_packet, 0, sizeof(PingPacket));
 
         ping_packet.header.type = 8; // Echo request
@@ -142,8 +148,9 @@ int main(int argc, char** argv)
         }
 
         for (;;) {
+            PongPacket pong_packet;
             socklen_t peer_address_size = sizeof(peer_address);
-            rc = recvfrom(fd, &pong_packet, sizeof(PingPacket), 0, (struct sockaddr*)&peer_address, &peer_address_size);
+            rc = recvfrom(fd, &pong_packet, sizeof(PongPacket), 0, (struct sockaddr*)&peer_address, &peer_address_size);
             if (rc < 0) {
                 if (errno == EAGAIN) {
                     printf("Request (seq=%u) timed out.\n", ntohs(ping_packet.header.un.echo.sequence));
