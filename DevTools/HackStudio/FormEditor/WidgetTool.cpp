@@ -45,7 +45,7 @@ void WidgetTool::on_mousedown(GUI::MouseEvent& event)
 
 void WidgetTool::on_mousemove(GUI::MouseEvent& event)
 {
-    m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::Move);
+    m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::Crosshair);
 
     if (event.buttons() & GUI::MouseButton::Left) {
         m_editor.update();
