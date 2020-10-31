@@ -40,7 +40,11 @@ String Document::render_to_html() const
 
     builder.append("<!DOCTYPE html>\n");
     builder.append("<html>\n");
-    builder.append("<head></head>\n");
+    builder.append("<head>\n");
+    builder.append("<style>\n");
+    builder.append("code { white-space: pre; }\n");
+    builder.append("</style>\n");
+    builder.append("</head>\n");
     builder.append("<body>\n");
 
     for (auto& block : m_blocks) {
