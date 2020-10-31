@@ -9,4 +9,4 @@ set(SOURCES
 )
 
 serenity_lib(LibMarkdown markdown)
-target_link_libraries(LibMarkdown LibC)
+target_link_libraries(LibMarkdown LibJS)
