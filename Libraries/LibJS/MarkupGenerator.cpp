@@ -38,24 +38,11 @@ namespace JS {
 String MarkupGenerator::html_from_source(const StringView& source)
 {
     StringBuilder builder;
-    size_t source_cursor = 0;
-
     auto lexer = Lexer(source);
     for (auto token = lexer.next(); token.type() != TokenType::Eof; token = lexer.next()) {
-        auto length = token.value().length();
-        auto start = token.line_column() - 1;
-
-        if (start > source_cursor) {
-            builder.append(source.substring_view(source_cursor, start - source_cursor));
-        }
-
+        builder.append(token.trivia());
         builder.append(wrap_string_in_style(token.value(), style_type_for_token(token)));
-        source_cursor = start + length;
     }
-
-    if (source_cursor < source.length())
-        builder.append(source.substring_view(source_cursor, source.length() - source_cursor));
-
     return builder.to_string();
 }
 
