@@ -39,12 +39,12 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/DragOperation.h>
-#include <LibGUI/FontDatabase.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <errno.h>
 #include <math.h>
@@ -122,7 +122,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     if (font_entry == "default")
         set_font(Gfx::Font::default_fixed_width_font());
     else
-        set_font(GUI::FontDatabase::the().get_by_name(font_entry));
+        set_font(Gfx::FontDatabase::the().get_by_name(font_entry));
 
     m_line_height = font().glyph_height() + m_line_spacing;
 

@@ -25,9 +25,9 @@
  */
 
 #include "BoardView.h"
-#include <LibGUI/FontDatabase.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 BoardView::BoardView(const Game::Board* board)
@@ -63,7 +63,7 @@ void BoardView::pick_font()
 {
     String best_font_name;
     int best_font_size = -1;
-    auto& font_database = GUI::FontDatabase::the();
+    auto& font_database = Gfx::FontDatabase::the();
     font_database.for_each_font([&](const Gfx::Font& font) {
         if (font.family() != "Liza" || font.weight() != 700)
             return;

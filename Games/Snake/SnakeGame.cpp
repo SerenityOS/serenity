@@ -26,7 +26,6 @@
 
 #include "SnakeGame.h"
 #include <LibCore/ConfigFile.h>
-#include <LibGUI/FontDatabase.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>

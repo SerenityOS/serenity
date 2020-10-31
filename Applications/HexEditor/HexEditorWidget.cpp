@@ -33,7 +33,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/FontDatabase.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>

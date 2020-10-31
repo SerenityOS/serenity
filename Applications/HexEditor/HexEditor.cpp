@@ -28,7 +28,6 @@
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/FontDatabase.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ScrollBar.h>

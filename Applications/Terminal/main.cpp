@@ -30,7 +30,7 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/FontDatabase.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -330,7 +330,7 @@ int main(int argc, char** argv)
     GUI::ActionGroup font_action_group;
     font_action_group.set_exclusive(true);
     auto& font_menu = menubar->add_menu("Font");
-    GUI::FontDatabase::the().for_each_fixed_width_font([&](const Gfx::Font& font) {
+    Gfx::FontDatabase::the().for_each_fixed_width_font([&](const Gfx::Font& font) {
         auto action = GUI::Action::create_checkable(font.qualified_name(), [&](auto&) {
             terminal.set_font(font);
             config->write_entry("Text", "Font", font.qualified_name());
