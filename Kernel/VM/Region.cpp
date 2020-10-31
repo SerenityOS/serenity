@@ -229,6 +229,7 @@ Bitmap& Region::ensure_cow_map() const
 
 bool Region::map_individual_page_impl(size_t page_index)
 {
+    ASSERT(m_page_directory->get_lock().own_lock());
     auto page_vaddr = vaddr_from_page_index(page_index);
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     if (!pte) {
@@ -260,8 +261,9 @@ bool Region::map_individual_page_impl(size_t page_index)
 
 bool Region::remap_page(size_t page_index, bool with_flush)
 {
-    ASSERT(m_page_directory);
     ScopedSpinLock lock(s_mm_lock);
+    ASSERT(m_page_directory);
+    ScopedSpinLock page_lock(m_page_directory->get_lock());
     ASSERT(physical_page(page_index));
     bool success = map_individual_page_impl(page_index);
     if (with_flush)
@@ -273,6 +275,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 {
     ScopedSpinLock lock(s_mm_lock);
     ASSERT(m_page_directory);
+    ScopedSpinLock page_lock(m_page_directory->get_lock());
     size_t count = page_count();
     for (size_t i = 0; i < count; ++i) {
         auto vaddr = vaddr_from_page_index(i);
@@ -302,6 +305,7 @@ void Region::set_page_directory(PageDirectory& page_directory)
 bool Region::map(PageDirectory& page_directory)
 {
     ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinLock page_lock(page_directory.get_lock());
     set_page_directory(page_directory);
 #ifdef MM_DEBUG
     dbg() << "MM: Region::map() will map VMO pages " << first_page_index() << " - " << last_page_index() << " (VMO page count: " << vmobject().page_count() << ")";
