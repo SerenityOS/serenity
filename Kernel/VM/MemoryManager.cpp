@@ -87,6 +87,7 @@ MemoryManager::~MemoryManager()
 
 void MemoryManager::protect_kernel_image()
 {
+    ScopedSpinLock page_lock(kernel_page_directory().get_lock());
     // Disable writing to the kernel text and rodata segments.
     for (size_t i = (FlatPtr)&start_of_kernel_text; i < (FlatPtr)&start_of_kernel_data; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -193,10 +194,11 @@ void MemoryManager::parse_memory_map()
     ASSERT(m_user_physical_pages > 0);
 }
 
-PageTableEntry* MemoryManager::pte(const PageDirectory& page_directory, VirtualAddress vaddr)
+PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(s_mm_lock.own_lock());
+    ASSERT(page_directory.get_lock().own_lock());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -213,6 +215,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(s_mm_lock.own_lock());
+    ASSERT(page_directory.get_lock().own_lock());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
@@ -259,6 +262,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(s_mm_lock.own_lock());
+    ASSERT(page_directory.get_lock().own_lock());
     u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
