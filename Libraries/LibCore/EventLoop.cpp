@@ -584,7 +584,7 @@ retry:
             now.tv_sec = now_spec.tv_sec;
             now.tv_usec = now_spec.tv_nsec / 1000;
             timeval_sub(next_timer_expiration.value(), now, timeout);
-            if (timeout.tv_sec < 0) {
+            if (timeout.tv_sec < 0 || (timeout.tv_sec == 0 && timeout.tv_usec < 0)) {
                 timeout.tv_sec = 0;
                 timeout.tv_usec = 0;
             }
