@@ -73,6 +73,7 @@ void AbstractView::did_update_model(unsigned flags)
     stop_editing();
     m_edit_index = {};
     m_hovered_index = {};
+    m_cursor_index = {};
     if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
         clear_selection();
     } else {
