@@ -30,7 +30,6 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
@@ -40,6 +39,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibVT/TerminalWidget.h>
 #include <assert.h>
