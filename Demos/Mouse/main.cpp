@@ -29,6 +29,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Painter.h>
@@ -172,9 +173,11 @@ private:
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
+    auto app_icon = GUI::Icon::default_icon("app-mouse");
+
     auto window = GUI::Window::construct();
     window->set_title("Mouse button demo");
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-mouse.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(160, 155);
 
     auto& main_widget = window->set_main_widget<MainFrame>();
@@ -186,7 +189,7 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Mouse Demo", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-mouse.png"), window);
+        GUI::AboutDialog::show("Mouse Demo", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));

@@ -28,6 +28,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
@@ -78,9 +79,11 @@ int main(int argc, char* argv[])
         extra_columns = num_eyes % max_in_row;
     }
 
+    auto app_icon = GUI::Icon::default_icon("app-eyes");
+
     auto window = GUI::Window::construct();
     window->set_title("Eyes");
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-eyes.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(75 * (full_rows > 0 ? max_in_row : extra_columns), 100 * (full_rows + (extra_columns > 0 ? 1 : 0)));
     window->set_has_alpha_channel(true);
 
@@ -92,7 +95,7 @@ int main(int argc, char* argv[])
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Mouse Demo", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-eyes.png"), window);
+        GUI::AboutDialog::show("Eyes Demo", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));

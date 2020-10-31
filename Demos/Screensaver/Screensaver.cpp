@@ -28,6 +28,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -145,7 +146,9 @@ int main(int argc, char** argv)
     screensaver_window.update();
 
     window->show();
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-screensaver.png"));
+
+    auto app_icon = GUI::Icon::default_icon("app-screensaver");
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();
 }
