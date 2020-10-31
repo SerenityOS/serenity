@@ -306,6 +306,7 @@ Tab::Tab(Type type)
                 editor.set_ruler_visible(true);
                 window->resize(640, 480);
                 window->set_title(url);
+                window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-text.png"));
                 window->show();
                 (void)window.leak_ref();
             } else {
@@ -321,6 +322,7 @@ Tab::Tab(Type type)
                     m_dom_inspector_window = GUI::Window::construct();
                     m_dom_inspector_window->resize(300, 500);
                     m_dom_inspector_window->set_title("DOM inspector");
+                    m_dom_inspector_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
                     m_dom_inspector_window->set_main_widget<InspectorWidget>();
                 }
                 auto* inspector_widget = static_cast<InspectorWidget*>(m_dom_inspector_window->main_widget());
@@ -344,6 +346,7 @@ Tab::Tab(Type type)
                     m_console_window = GUI::Window::construct();
                     m_console_window->resize(500, 300);
                     m_console_window->set_title("JS Console");
+                    m_console_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-javascript.png"));
                     m_console_window->set_main_widget<ConsoleWidget>();
                 }
                 auto* console_widget = static_cast<ConsoleWidget*>(m_console_window->main_widget());
