@@ -30,6 +30,7 @@
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
@@ -37,6 +38,7 @@
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
+    auto app_icon = GUI::Icon::default_icon("app-chess");
 
     auto window = GUI::Window::construct();
     auto& widget = window->set_main_widget<ChessWidget>();
@@ -49,8 +51,7 @@ int main(int argc, char** argv)
     window->set_size_increment({ 8, 8 });
     window->set_resize_aspect_ratio(1, 1);
 
-    auto icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-chess.png");
-    window->set_icon(icon);
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     widget.set_piece_set(config->read_entry("Style", "PieceSet", "test"));
     widget.set_board_theme(config->read_entry("Style", "BoardTheme", "Beige"));
@@ -71,7 +72,7 @@ int main(int argc, char** argv)
     GUI::ActionGroup piece_set_action_group;
     piece_set_action_group.set_exclusive(true);
     auto& piece_set_menu = style_menu.add_submenu("Piece Set");
-    piece_set_menu.set_icon(icon);
+    piece_set_menu.set_icon(app_icon.bitmap_for_size(16));
 
     Core::DirIterator di("/res/icons/chess/sets/", Core::DirIterator::SkipParentAndBaseDir);
     while (di.has_next()) {
@@ -139,7 +140,7 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Chess", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-chess.png"), window);
+        GUI::AboutDialog::show("Chess", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
