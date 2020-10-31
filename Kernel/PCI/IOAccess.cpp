@@ -46,20 +46,17 @@ IOAccess::IOAccess()
 
 u8 IOAccess::read8_field(Address address, u32 field)
 {
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    return IO::in8(PCI_VALUE_PORT + (field & 3));
+    return Access::early_read8_field(address, field);
 }
 
 u16 IOAccess::read16_field(Address address, u32 field)
 {
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    return IO::in16(PCI_VALUE_PORT + (field & 2));
+    return Access::early_read16_field(address, field);
 }
 
 u32 IOAccess::read32_field(Address address, u32 field)
 {
-    IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
-    return IO::in32(PCI_VALUE_PORT);
+    return Access::early_read32_field(address, field);
 }
 
 void IOAccess::write8_field(Address address, u32 field, u8 value)
