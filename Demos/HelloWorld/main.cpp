@@ -27,6 +27,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -34,11 +35,12 @@
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
+    auto app_icon = GUI::Icon::default_icon("app-hello-world");
 
     auto window = GUI::Window::construct();
     window->resize(240, 160);
     window->set_title("Hello World!");
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hello-world.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
