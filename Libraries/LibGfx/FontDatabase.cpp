@@ -27,13 +27,13 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
-#include <LibGUI/FontDatabase.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-namespace GUI {
+namespace Gfx {
 
 static FontDatabase* s_the;
 

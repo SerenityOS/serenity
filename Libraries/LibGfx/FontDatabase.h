@@ -31,7 +31,7 @@
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 
-namespace GUI {
+namespace Gfx {
 
 class FontDatabase {
 public:

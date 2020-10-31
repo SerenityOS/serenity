@@ -41,7 +41,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CppSyntaxHighlighter.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/FontDatabase.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/JSSyntaxHighlighter.h>
 #include <LibGUI/Menu.h>
@@ -55,6 +54,7 @@
 #include <LibGUI/ToolBar.h>
 #include <LibGUI/ToolBarContainer.h>
 #include <LibGfx/Font.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <string.h>
@@ -396,7 +396,7 @@ TextEditorWidget::TextEditorWidget()
     font_actions.set_exclusive(true);
 
     auto& font_menu = view_menu.add_submenu("Font");
-    GUI::FontDatabase::the().for_each_fixed_width_font([&](const Gfx::Font& font) {
+    Gfx::FontDatabase::the().for_each_fixed_width_font([&](const Gfx::Font& font) {
         auto action = GUI::Action::create_checkable(font.qualified_name(), [&](auto&) {
             m_editor->set_font(font);
             m_editor->update();

@@ -35,7 +35,6 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
-#include <LibGUI/FontDatabase.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ImageWidget.h>

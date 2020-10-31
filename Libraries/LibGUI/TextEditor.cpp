@@ -30,7 +30,6 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/FontDatabase.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
