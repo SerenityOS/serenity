@@ -109,14 +109,26 @@ int main(int argc, char** argv)
 
     auto& view_menu = menubar->add_menu("View");
 
+    auto update_window_title = [&](auto title, bool is_checked) {
+        StringBuilder name;
+        name.append("Profiler");
+        if (is_checked) {
+            name.append(" - ");
+            name.append(title);
+        }
+        window->set_title(name.to_string());
+    };
+
     auto invert_action = GUI::Action::create_checkable("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
+        update_window_title("Invert tree", action.is_checked());
     });
     invert_action->set_checked(false);
     view_menu.add_action(invert_action);
 
     auto top_functions_action = GUI::Action::create_checkable("Top functions", { Mod_Ctrl, Key_T }, [&](auto& action) {
         profile->set_show_top_functions(action.is_checked());
+        update_window_title("Top functions", action.is_checked());
     });
     top_functions_action->set_checked(false);
     view_menu.add_action(top_functions_action);
@@ -125,6 +137,7 @@ int main(int argc, char** argv)
         profile->set_show_percentages(action.is_checked());
         tree_view.update();
         disassembly_view.update();
+        update_window_title("Show percentages", action.is_checked());
     });
     percent_action->set_checked(false);
     view_menu.add_action(percent_action);
