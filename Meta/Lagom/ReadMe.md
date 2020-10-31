@@ -8,6 +8,10 @@ If you want to bring the comfortable Serenity classes with you to another system
 
 *Lagom* is a Swedish word that means "just the right amount." ([Wikipedia](https://en.wikipedia.org/wiki/Lagom))
 
+## Prerequisites
+
+You'll need a compiler as capable as the one used for the toolchain - which might differ from the compiler you used *to compile* the toolchain. Check `GCC_VERSION` in [`BuildIt.sh`](../../Toolchain/BuildIt.sh).
+
 ## Fuzzing
 
 Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildling with `clang`, so it's convenient to use a different build directory for that. Run CMake like this:
