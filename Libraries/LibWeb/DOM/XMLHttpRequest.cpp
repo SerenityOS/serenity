@@ -35,6 +35,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/DOM/XMLHttpRequest.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Origin.h>
 
 namespace Web {
 
@@ -70,6 +71,22 @@ void XMLHttpRequest::open(const String& method, const String& url)
 
 void XMLHttpRequest::send()
 {
+    URL request_url = m_window->document().complete_url(m_url);
+    dbg() << "XHR send from " << m_window->document().url() << " to " << request_url;
+
+    // TODO: Add support for preflight requests to support CORS requests
+    Origin request_url_origin = Origin(request_url.protocol(), request_url.host(), request_url.port());
+
+    if (!m_window->document().origin().is_same(request_url_origin)) {
+        dbg() << "XHR failed to load: Same-Origin Policy violation: " << m_window->document().url() << " may not load " << request_url;
+        auto weak_this = make_weak_ptr();
+        if (!weak_this)
+            return;
+        const_cast<XMLHttpRequest&>(*weak_this).set_ready_state(ReadyState::Done);
+        const_cast<XMLHttpRequest&>(*weak_this).dispatch_event(DOM::Event::create("error"));
+        return;
+    }
+
     // FIXME: in order to properly set ReadyState::HeadersReceived and ReadyState::Loading,
     // we need to make ResourceLoader give us more detailed updates than just "done" and "error".
     ResourceLoader::the().load(
