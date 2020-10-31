@@ -121,14 +121,14 @@ index 000000000..2692b8e57
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
 +#undef STARTFILE_SPEC
-+#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared:crtbeginS.o%s; :crtbegin.o%s}"
++#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared|pie:crtbeginS.o%s; :crtbegin.o%s}"
 +
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
-+#define ENDFILE_SPEC "%{shared:crtendS.o%s; :crtend.o%s} crtn.o%s"
++#define ENDFILE_SPEC "%{shared|pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
 +
 +#undef LINK_SPEC
-+#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!shared: %{!static: %{rdynamic:-export-dynamic}}}"
++#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!shared: %{!static: %{rdynamic:-export-dynamic} -dynamic-linker /usr/lib/Loader.so}}"
 +
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS
@@ -182,11 +182,11 @@ index 1ff415923..38aa1c972 100644
  	;;
 +i[34567]86-*-serenity*)
 +	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
-+	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
++	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc"
 +	;;
 +x86_64-*-serenity*)
 +	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
-+	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
++	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic t-slibgcc"
 +	;;
 +arm-*-serenity*)
 +	tmake_file="${tmake_file} t-fixedpoint-gnu-prefix t-crtfm"
@@ -6208,3 +6208,23 @@ index fe1828835..2775c3646 100644
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
+diff -ru a/libgcc/config/t-slibgcc b/libgcc/config/t-slibgcc
+--- a/libgcc/config/t-slibgcc   2020-07-23 09:35:18.796400548 +0300
++++ b/libgcc/config/t-slibgcc   2020-10-17 14:29:19.936792298 +0300
+@@ -26,7 +26,6 @@
+ SHLIB_OBJS = @shlib_objs@
+ SHLIB_DIR = @multilib_dir@
+ SHLIB_SLIBDIR_QUAL = @shlib_slibdir_qual@
+-SHLIB_LC = -lc
+ SHLIB_MAKE_SOLINK = $(LN_S) $(SHLIB_SONAME) $(SHLIB_DIR)/$(SHLIB_SOLINK)
+ SHLIB_INSTALL_SOLINK = $(LN_S) $(SHLIB_SONAME) \
+        $(DESTDIR)$(slibdir)$(SHLIB_SLIBDIR_QUAL)/$(SHLIB_SOLINK)
+@@ -34,7 +33,7 @@
+ SHLIB_LINK = $(CC) $(LIBGCC2_CFLAGS) -shared -nodefaultlibs \
+        $(SHLIB_LDFLAGS) \
+        -o $(SHLIB_DIR)/$(SHLIB_SONAME).tmp @multilib_flags@ \
+-       $(SHLIB_OBJS) $(SHLIB_LC) && \
++       $(SHLIB_OBJS) && \
+        rm -f $(SHLIB_DIR)/$(SHLIB_SOLINK) && \
+        if [ -f $(SHLIB_DIR)/$(SHLIB_SONAME) ]; then \
+          mv -f $(SHLIB_DIR)/$(SHLIB_SONAME) \
