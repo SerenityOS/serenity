@@ -648,6 +648,7 @@ extern "C" PageTableEntry boot_pd3_pt1023[1024];
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
     ASSERT(s_mm_lock.own_lock());
+    auto& mm_data = get_data();
     auto& pte = boot_pd3_pt1023[4];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.as_ptr()) {
@@ -662,13 +663,21 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
         // mapping, it is sufficient to only flush on the current CPU. Other
         // CPUs trying to use this API must wait on the MM lock anyway
         flush_tlb_local(VirtualAddress(0xffe04000));
+    } else {
+        // Even though we don't allow this to be called concurrently, it's
+        // possible that this PD was mapped on a different CPU and we don't
+        // broadcast the flush. If so, we still need to flush the TLB.
+        if (mm_data.m_last_quickmap_pd != pd_paddr)
+            flush_tlb_local(VirtualAddress(0xffe04000));
     }
+    mm_data.m_last_quickmap_pd = pd_paddr;
     return (PageDirectoryEntry*)0xffe04000;
 }
 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
     ASSERT(s_mm_lock.own_lock());
+    auto& mm_data = get_data();
     auto& pte = boot_pd3_pt1023[0];
     if (pte.physical_page_base() != pt_paddr.as_ptr()) {
 #ifdef MM_DEBUG
@@ -682,7 +691,14 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
         // mapping, it is sufficient to only flush on the current CPU. Other
         // CPUs trying to use this API must wait on the MM lock anyway
         flush_tlb_local(VirtualAddress(0xffe00000));
+    } else {
+        // Even though we don't allow this to be called concurrently, it's
+        // possible that this PT was mapped on a different CPU and we don't
+        // broadcast the flush. If so, we still need to flush the TLB.
+        if (mm_data.m_last_quickmap_pt != pt_paddr)
+            flush_tlb_local(VirtualAddress(0xffe00000));
     }
+    mm_data.m_last_quickmap_pt = pt_paddr;
     return (PageTableEntry*)0xffe00000;
 }
 

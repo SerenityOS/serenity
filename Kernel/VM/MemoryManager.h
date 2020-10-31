@@ -70,6 +70,9 @@ class SynthFSInode;
 struct MemoryManagerData {
     SpinLock<u8> m_quickmap_in_use;
     u32 m_quickmap_prev_flags;
+
+    PhysicalAddress m_last_quickmap_pd;
+    PhysicalAddress m_last_quickmap_pt;
 };
 
 extern RecursiveSpinLock s_mm_lock;
