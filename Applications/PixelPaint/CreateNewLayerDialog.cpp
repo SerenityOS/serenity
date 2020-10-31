@@ -37,6 +37,7 @@ CreateNewLayerDialog::CreateNewLayerDialog(const Gfx::IntSize& suggested_size, G
     : Dialog(parent_window)
 {
     set_title("Create new layer");
+    set_icon(parent_window->icon());
     resize(200, 200);
 
     auto& main_widget = set_main_widget<GUI::Widget>();

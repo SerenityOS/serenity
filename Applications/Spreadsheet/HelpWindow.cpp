@@ -81,6 +81,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 {
     resize(530, 365);
     set_title("Spreadsheet Functions Help");
+    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"));
 
     auto& widget = set_main_widget<GUI::Widget>();
     widget.set_layout<GUI::VerticalBoxLayout>().set_margins({ 4, 4, 4, 4 });
