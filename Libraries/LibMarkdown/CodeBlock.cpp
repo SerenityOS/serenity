@@ -55,10 +55,10 @@ String CodeBlock::render_to_html() const
     if (style.emph)
         builder.append("<i>");
 
-    if (style_language.is_null())
-        builder.append("<code style=\"white-space: pre;\">");
+    if (style_language.is_empty())
+        builder.append("<code>");
     else
-        builder.appendf("<code style=\"white-space: pre;\" class=\"%s\">", style_language.characters());
+        builder.appendff("<code class=\"{}\">", style_language);
 
     builder.append(escape_html_entities(m_code));
 
