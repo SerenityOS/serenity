@@ -57,6 +57,8 @@ public:
     Process* process() { return m_process; }
     const Process* process() const { return m_process; }
 
+    RecursiveSpinLock& get_lock() { return m_lock; }
+
 private:
     PageDirectory(Process&, const RangeAllocator* parent_range_allocator);
     PageDirectory();
@@ -67,6 +69,7 @@ private:
     RefPtr<PhysicalPage> m_directory_table;
     RefPtr<PhysicalPage> m_directory_pages[4];
     HashMap<u32, RefPtr<PhysicalPage>> m_page_tables;
+    RecursiveSpinLock m_lock;
 };
 
 }
