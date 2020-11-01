@@ -58,6 +58,8 @@ public:
 
     void clear_up_to_the_last_marker();
 
+    int relative_position_of(const DOM::Element&);
+
 private:
     Vector<Entry> m_entries;
 };

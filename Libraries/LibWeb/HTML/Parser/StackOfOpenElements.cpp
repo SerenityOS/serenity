@@ -36,6 +36,11 @@ StackOfOpenElements::~StackOfOpenElements()
 {
 }
 
+void StackOfOpenElements::remove(const DOM::Element& target)
+{
+    m_elements.remove_first_matching([&](auto& element) { return element == &target; });
+}
+
 bool StackOfOpenElements::has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>& list) const
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
@@ -152,6 +157,17 @@ DOM::Element* StackOfOpenElements::element_before(const DOM::Element& target)
             found_target = true;
         } else if (found_target)
             return &element;
+    }
+    return nullptr;
+}
+
+DOM::Element* StackOfOpenElements::element_immediately_above(const DOM::Element& target)
+{
+    for (ssize_t i = m_elements.size() - 1; i > 0; --i) {
+        auto& element = m_elements[i];
+        if (&element == &target) {
+            return &m_elements[i - 1];
+        }
     }
     return nullptr;
 }

@@ -81,4 +81,11 @@ void ListOfActiveFormattingElements::clear_up_to_the_last_marker()
     }
 }
 
+int ListOfActiveFormattingElements::relative_position_of(const DOM::Element& target)
+{
+    // FIXME: Actually implement this.
+    (void)target;
+    return 0;
+}
+
 }

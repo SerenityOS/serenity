@@ -929,10 +929,13 @@ Create:
         goto Advance;
 }
 
+// See https://html.spec.whatwg.org/#adoption-agency-algorithm
 HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_adoption_agency_algorithm(HTMLToken& token)
 {
+    // 1.
     auto subject = token.tag_name();
 
+    // 2.
     // If the current node is an HTML element whose tag name is subject,
     // and the current node is not in the list of active formatting elements,
     // then pop the current node off the stack of open elements, and return.
@@ -941,18 +944,22 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
         return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
 
+    // 3.
     size_t outer_loop_counter = 0;
 
-    //OuterLoop:
+    // 4. Outer loop:
     if (outer_loop_counter >= 8)
         return AdoptionAgencyAlgorithmOutcome::DoNothing;
 
+    // 5.
     ++outer_loop_counter;
 
+    // 6.
     auto formatting_element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker(subject);
     if (!formatting_element)
         return AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps;
 
+    // 7.
     if (!m_stack_of_open_elements.contains(*formatting_element)) {
         PARSE_ERROR();
         // FIXME: If formatting element is not in the stack of open elements,
@@ -960,17 +967,21 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
         TODO();
     }
 
+    // 8.
     if (!m_stack_of_open_elements.has_in_scope(*formatting_element)) {
         PARSE_ERROR();
         return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
 
+    // 9.
     if (formatting_element != &current_node()) {
         PARSE_ERROR();
     }
 
+    // 10.
     RefPtr<DOM::Element> furthest_block = m_stack_of_open_elements.topmost_special_node_below(*formatting_element);
 
+    // 11.
     if (!furthest_block) {
         while (&current_node() != formatting_element)
             m_stack_of_open_elements.pop();
@@ -979,6 +990,76 @@ HTMLDocumentParser::AdoptionAgencyAlgorithmOutcome HTMLDocumentParser::run_the_a
         m_list_of_active_formatting_elements.remove(*formatting_element);
         return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
+
+    // 12.
+    auto common_ancestor = m_stack_of_open_elements.element_immediately_above(*formatting_element);
+    (void)common_ancestor;
+
+    // 13.
+    auto bookmark = m_list_of_active_formatting_elements.relative_position_of(*formatting_element);
+    (void)bookmark;
+
+    // 14.
+    auto node = furthest_block;
+    auto last_node = furthest_block;
+
+    // 14.1.
+    size_t inner_loop_counter = 0;
+
+    // 14.2. Inner loop:
+    ++inner_loop_counter;
+
+    // 14.3.
+    node = m_stack_of_open_elements.element_immediately_above(*node);
+
+    // 14.4.
+    if (node == formatting_element) {
+        // Goto 15.
+    }
+
+    // 14.5.
+    if (inner_loop_counter > 3 && m_list_of_active_formatting_elements.contains(*node)) {
+        m_list_of_active_formatting_elements.remove(*node);
+    }
+
+    // 14.6.
+    if (m_list_of_active_formatting_elements.contains(*node) == false) {
+        m_stack_of_open_elements.remove(*node);
+        // Goto 14.2. Inner loop
+    }
+
+    // 14.7.
+
+    // 14.8.
+    if (last_node == furthest_block) {
+    }
+
+    // 15.
+
+    // 16.
+    DOM::Element* new_element;
+    (void)new_element;
+
+    // 17.
+    furthest_block->for_each_child([&](auto& child) {
+        (void)child;
+        //new_element->append_child(child);
+    });
+    furthest_block->remove_all_children();
+
+    // 18.
+    //furthest_block->append_child(new_element);
+
+    // 19.
+    m_list_of_active_formatting_elements.remove(*formatting_element);
+    // m_list_of_active_formatting_elements.insert_at(*new_element, bookmark);
+
+    // 20.
+    m_stack_of_open_elements.remove(*formatting_element);
+    // m_stack_of_open_elements.insert_immediatly_below(*new_element, *furthest_block);
+
+    // 21.
+    // Goto 4. Outer loop:
 
     // FIXME: Implement the rest of the AAA :^)
 

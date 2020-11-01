@@ -44,6 +44,8 @@ public:
     void push(NonnullRefPtr<DOM::Element> element) { m_elements.append(move(element)); }
     NonnullRefPtr<DOM::Element> pop() { return m_elements.take_last(); }
 
+    void remove(const DOM::Element&);
+
     const DOM::Element& current_node() const { return m_elements.last(); }
     DOM::Element& current_node() { return m_elements.last(); }
 
@@ -71,6 +73,8 @@ public:
     };
     LastElementResult last_element_with_tag_name(const FlyString&);
     DOM::Element* element_before(const DOM::Element&);
+
+    DOM::Element* element_immediately_above(const DOM::Element&);
 
 private:
     bool has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>&) const;
