@@ -300,7 +300,7 @@ TextEditorWidget::TextEditorWidget()
         open_sesame(open_path.value());
     });
 
-    m_save_as_action = GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GUI::Action&) {
+    m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "txt" : m_extension);
         if (!save_path.has_value())
             return;
@@ -315,7 +315,7 @@ TextEditorWidget::TextEditorWidget()
         dbgln("Wrote document to {}", save_path.value());
     });
 
-    m_save_action = GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GUI::Action&) {
+    m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (!m_path.is_empty()) {
             if (!m_editor->write_to_file(m_path)) {
                 GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
