@@ -43,6 +43,7 @@ public:
     void stop();
     void pause();
     void seek(const int position);
+    void loop(bool);
     bool toggle_pause();
     void set_loader(OwnPtr<Audio::WavLoader>&&);
 
@@ -62,6 +63,7 @@ private:
     void remove_dead_buffers();
 
     bool m_paused { true };
+    bool m_loop = { false };
     size_t m_next_ptr { 0 };
     size_t m_last_seek { 0 };
     float m_total_length { 0 };

@@ -90,6 +90,14 @@ int main(int argc, char** argv)
         app->quit();
     }));
 
+    auto& playback_menu = menubar->add_menu("Playback");
+
+    auto loop = GUI::Action::create_checkable("Loop", { Mod_Ctrl, Key_R }, [&](auto& action) {
+        player.manager().loop(action.is_checked());
+    });
+
+    playback_menu.add_action(move(loop));
+
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
         GUI::AboutDialog::show("SoundPlayer", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-sound-player.png"), window);
