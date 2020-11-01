@@ -73,6 +73,11 @@ void PlaybackManager::play()
     set_paused(false);
 }
 
+void PlaybackManager::loop(bool loop)
+{
+    m_loop = loop;
+}
+
 void PlaybackManager::seek(const int position)
 {
     if (!m_loader)
@@ -166,7 +171,10 @@ void PlaybackManager::next_buffer()
     if (!m_next_buffer) {
         if (!m_connection->get_remaining_samples() && !m_paused) {
             dbgln("Exhausted samples :^)");
-            stop();
+            if (m_loop)
+                seek(0);
+            else
+                stop();
         }
 
         return;
