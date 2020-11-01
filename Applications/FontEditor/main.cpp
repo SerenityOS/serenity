@@ -105,11 +105,11 @@ int main(int argc, char** argv)
 
         set_edited_font(open_path.value(), move(new_font), window->position());
     }));
-    app_menu.add_action(GUI::Action::create("Save", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
+    app_menu.add_action(GUI::CommonActions::make_save_action([&](auto&) {
         FontEditorWidget* editor = static_cast<FontEditorWidget*>(window->main_widget());
         editor->save_as(editor->path());
     }));
-    app_menu.add_action(GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
+    app_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         FontEditorWidget* editor = static_cast<FontEditorWidget*>(window->main_widget());
         LexicalPath lexical_path(editor->path());
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, lexical_path.title(), lexical_path.extension());

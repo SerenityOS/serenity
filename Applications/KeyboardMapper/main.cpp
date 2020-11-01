@@ -74,15 +74,14 @@ int main(int argc, char** argv)
             keyboard_mapper_widget->save();
         });
 
-    auto save_as_action = GUI::Action::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"),
-        [&](auto&) {
-            String m_name = "Unnamed";
-            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, m_name, "json");
-            if (!save_path.has_value())
-                return;
+    auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
+        String m_name = "Unnamed";
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, m_name, "json");
+        if (!save_path.has_value())
+            return;
 
-            keyboard_mapper_widget->save_to_file(save_path.value());
-        });
+        keyboard_mapper_widget->save_to_file(save_path.value());
+    });
 
     auto quit_action = GUI::CommonActions::make_quit_action(
         [&](auto&) {
