@@ -30,7 +30,20 @@
 
 int main()
 {
+    if (pledge("stdio shared_buffer accept unix rpath cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
     Core::EventLoop loop;
+    if (pledge("stdio shared_buffer unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto engine = ChessEngine::construct(Core::File::stdin(), Core::File::stdout());
     return loop.exec();
 }
