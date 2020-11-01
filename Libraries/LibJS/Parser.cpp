@@ -33,6 +33,17 @@
 
 namespace JS {
 
+static bool statement_is_use_strict_directive(NonnullRefPtr<Statement> statement)
+{
+    if (!statement->is_expression_statement())
+        return false;
+    auto& expression_statement = static_cast<ExpressionStatement&>(*statement);
+    auto& expression = expression_statement.expression();
+    if (!expression.is_string_literal())
+        return false;
+    return static_cast<const StringLiteral&>(expression).is_use_strict_directive();
+}
+
 class ScopePusher {
 public:
     enum Type {
@@ -239,28 +250,25 @@ NonnullRefPtr<Program> Parser::parse_program()
     auto program = adopt(*new Program);
 
     bool first = true;
-    m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Looking;
     while (!done()) {
         if (match_declaration()) {
             program->append(parse_declaration());
-            if (first) {
-                first = false;
-                m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
-            }
         } else if (match_statement()) {
-            program->append(parse_statement());
-            if (first) {
-                if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Found) {
+            auto statement = parse_statement();
+            program->append(statement);
+            if (statement_is_use_strict_directive(statement)) {
+                if (first) {
                     program->set_strict_mode();
                     m_parser_state.m_strict_mode = true;
                 }
-                first = false;
-                m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
+                if (m_parser_state.m_string_legacy_octal_escape_sequence_in_scope)
+                    syntax_error("Octal escape sequence in string literal not allowed in strict mode");
             }
         } else {
             expected("statement or declaration");
             consume();
         }
+        first = false;
     }
     if (m_parser_state.m_var_scopes.size() == 1) {
         program->add_variables(m_parser_state.m_var_scopes.last());
@@ -862,26 +870,9 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token, bool in_t
             syntax_error(message, token.line_number(), token.line_column());
     }
 
-    auto is_use_strict_directive = token.value() == "'use strict'" || token.value() == "\"use strict\"";
+    auto is_use_strict_directive = !in_template_literal && (token.value() == "'use strict'" || token.value() == "\"use strict\"");
 
-    // It is possible for string literals to precede a Use Strict Directive that places the
-    // enclosing code in strict mode, and implementations must take care to not use this
-    // extended definition of EscapeSequence with such literals. For example, attempting to
-    // parse the following source text must fail:
-    //
-    // function invalid() { "\7"; "use strict"; }
-
-    if (m_parser_state.m_string_legacy_octal_escape_sequence_in_scope && is_use_strict_directive)
-        syntax_error("Octal escape sequence in string literal not allowed in strict mode");
-
-    if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Looking) {
-        if (is_use_strict_directive)
-            m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Found;
-        else
-            m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
-    }
-
-    return create_ast_node<StringLiteral>(string);
+    return create_ast_node<StringLiteral>(string, is_use_strict_directive);
 }
 
 NonnullRefPtr<TemplateLiteral> Parser::parse_template_literal(bool is_tagged)
@@ -1238,34 +1229,27 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
 
     bool first = true;
     bool initial_strict_mode_state = m_parser_state.m_strict_mode;
-    if (initial_strict_mode_state) {
-        m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
+    if (initial_strict_mode_state)
         is_strict = true;
-    } else {
-        m_parser_state.m_use_strict_directive = UseStrictDirectiveState::Looking;
-    }
 
     while (!done() && !match(TokenType::CurlyClose)) {
         if (match_declaration()) {
             block->append(parse_declaration());
-
-            if (first && !initial_strict_mode_state)
-                m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
         } else if (match_statement()) {
-            block->append(parse_statement());
-
-            if (first && !initial_strict_mode_state) {
-                if (m_parser_state.m_use_strict_directive == UseStrictDirectiveState::Found) {
+            auto statement = parse_statement();
+            block->append(statement);
+            if (statement_is_use_strict_directive(statement)) {
+                if (first && !initial_strict_mode_state) {
                     is_strict = true;
                     m_parser_state.m_strict_mode = true;
                 }
-                m_parser_state.m_use_strict_directive = UseStrictDirectiveState::None;
+                if (m_parser_state.m_string_legacy_octal_escape_sequence_in_scope)
+                    syntax_error("Octal escape sequence in string literal not allowed in strict mode");
             }
         } else {
             expected("statement or declaration");
             consume();
         }
-
         first = false;
     }
     m_parser_state.m_strict_mode = initial_strict_mode_state;

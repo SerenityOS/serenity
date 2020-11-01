@@ -45,4 +45,16 @@ test("invalid 'use strict; directive", () => {
             return isStrictMode();
         })()
     ).toBeFalse();
+    expect(
+        (() => {
+            `"use strict"`;
+            return isStrictMode();
+        })()
+    ).toBeFalse();
+    expect(
+        (() => {
+            "use strict" + 1;
+            return isStrictMode();
+        })()
+    ).toBeFalse();
 });

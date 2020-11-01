@@ -64,6 +64,8 @@ public:
     virtual bool is_call_expression() const { return false; }
     virtual bool is_new_expression() const { return false; }
     virtual bool is_super_expression() const { return false; }
+    virtual bool is_expression_statement() const { return false; };
+    virtual bool is_string_literal() const { return false; };
 
 protected:
     ASTNode() { }
@@ -99,11 +101,15 @@ public:
     {
     }
 
-    Value execute(Interpreter&, GlobalObject&) const override;
-    const char* class_name() const override { return "ExpressionStatement"; }
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual bool is_expression_statement() const override { return true; }
+
+    const Expression& expression() const { return m_expression; };
 
 private:
+    virtual const char* class_name() const override { return "ExpressionStatement"; }
+
     NonnullRefPtr<Expression> m_expression;
 };
 
@@ -590,20 +596,24 @@ private:
 
 class StringLiteral final : public Literal {
 public:
-    explicit StringLiteral(String value)
+    explicit StringLiteral(String value, bool is_use_strict_directive = false)
         : m_value(move(value))
+        , m_is_use_strict_directive(is_use_strict_directive)
     {
     }
 
-    StringView value() const { return m_value; }
-
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual bool is_string_literal() const override { return true; };
+
+    StringView value() const { return m_value; }
+    bool is_use_strict_directive() const { return m_is_use_strict_directive; };
 
 private:
     virtual const char* class_name() const override { return "StringLiteral"; }
 
     String m_value;
+    bool m_is_use_strict_directive;
 };
 
 class NullLiteral final : public Literal {
