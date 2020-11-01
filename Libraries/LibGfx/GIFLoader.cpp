@@ -355,7 +355,7 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                 int x = pixel_index % image.width + image.x;
                 int y = row + image.y;
 
-                if (!image.transparent || color != image.transparency_index) {
+                if (context.frame_buffer->rect().contains(x, y) && (!image.transparent || color != image.transparency_index)) {
                     context.frame_buffer->set_pixel(x, y, c);
                 }
 
