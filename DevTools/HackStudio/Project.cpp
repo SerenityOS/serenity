@@ -302,11 +302,32 @@ RefPtr<ProjectFile> Project::get_file(const String& filename)
 
 String Project::default_file() const
 {
-    if (m_type == ProjectType::Cpp)
-        return "main.cpp";
+    if (m_files.size() > 0) {
+        if (m_type != ProjectType::Unknown) {
+            StringView extension;
+            switch (m_type) {
+            case ProjectType::Cpp:
+                extension = ".cpp";
+                break;
+            case ProjectType::JavaScript:
+                extension = ".js";
+                break;
+            default:
+                ASSERT_NOT_REACHED();
+            }
 
-    if (m_files.size() > 0)
+            auto project_file = m_files.find([&](auto project_file) {
+                return project_file->name().ends_with(extension);
+            });
+
+            if (!project_file.is_end()) {
+                auto& file = *project_file;
+                return file->name();
+            }
+        }
+
         return m_files.first().name();
+    }
 
     ASSERT_NOT_REACHED();
 }
