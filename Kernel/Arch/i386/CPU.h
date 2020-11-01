@@ -739,6 +739,7 @@ class Processor {
     static ProcessorMessage& smp_get_from_pool();
     static void smp_cleanup_message(ProcessorMessage& msg);
     bool smp_queue_message(ProcessorMessage& msg);
+    static void smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async);
     static void smp_broadcast_message(ProcessorMessage& msg, bool async);
     static void smp_broadcast_halt();
 
@@ -965,6 +966,23 @@ public:
     }
     static void smp_broadcast(void (*callback)(), bool async);
     static void smp_broadcast(void (*callback)(void*), void* data, void (*free_data)(void*), bool async);
+    template<typename Callback>
+    static void smp_unicast(u32 cpu, Callback callback, bool async)
+    {
+        auto* data = new Callback(move(callback));
+        smp_unicast(
+            cpu,
+            [](void* data) {
+                (*reinterpret_cast<Callback*>(data))();
+            },
+            data,
+            [](void* data) {
+                delete reinterpret_cast<Callback*>(data);
+            },
+            async);
+    }
+    static void smp_unicast(u32 cpu, void (*callback)(), bool async);
+    static void smp_unicast(u32 cpu, void (*callback)(void*), void* data, void (*free_data)(void*), bool async);
     static void smp_broadcast_flush_tlb(VirtualAddress vaddr, size_t page_count);
 
     template<typename Callback>
@@ -999,7 +1017,7 @@ public:
     void switch_context(Thread*& from_thread, Thread*& to_thread);
     [[noreturn]] static void assume_context(Thread& thread, u32 flags);
     u32 init_context(Thread& thread, bool leave_crit);
-    static bool get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip);
+    static bool get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip, bool = false);
 
     void set_thread_specific(u8* data, size_t len);
 };
