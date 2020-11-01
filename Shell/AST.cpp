@@ -1033,7 +1033,7 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
         RefPtr<Value> block_value;
 
         {
-            auto frame = shell->push_frame();
+            auto frame = shell->push_frame(String::formatted("for ({})", this));
             shell->set_local_variable(m_variable_name, value);
 
             block_value = m_block->run(shell);
@@ -1585,7 +1585,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         return pattern;
     };
 
-    auto frame = shell->push_frame();
+    auto frame = shell->push_frame(String::formatted("match ({})", this));
     if (!m_expr_name.is_empty())
         shell->set_local_variable(m_expr_name, value);
 
