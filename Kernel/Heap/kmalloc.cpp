@@ -199,6 +199,8 @@ void kmalloc_init()
 
 void* kmalloc_eternal(size_t size)
 {
+    size = round_up_to_power_of_two(size, sizeof(void*));
+
     ScopedSpinLock lock(s_lock);
     void* ptr = s_next_eternal_ptr;
     s_next_eternal_ptr += size;
