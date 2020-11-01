@@ -1884,11 +1884,10 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg, bool async)
         while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
             // TODO: pause for a bit?
 
-            // We need to check here if another processor may have requested
-            // us to halt before this message could be delivered. Otherwise
-            // we're just spinning the CPU because msg.refs will never drop to 0.
-            if (cur_proc.m_halt_requested.load(AK::MemoryOrder::memory_order_relaxed))
-                halt_this();
+            // We need to process any messages that may have been sent to
+            // us while we're waiting. This also checks if another processor
+            // may have requested us to halt.
+            cur_proc.smp_process_pending_messages();
         }
 
         smp_cleanup_message(msg);
@@ -1934,11 +1933,10 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
         while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
             // TODO: pause for a bit?
 
-            // We need to check here if another processor may have requested
-            // us to halt before this message could be delivered. Otherwise
-            // we're just spinning the CPU because msg.refs will never drop to 0.
-            if (cur_proc.m_halt_requested.load(AK::MemoryOrder::memory_order_relaxed))
-                halt_this();
+            // We need to process any messages that may have been sent to
+            // us while we're waiting. This also checks if another processor
+            // may have requested us to halt.
+            cur_proc.smp_process_pending_messages();
         }
 
         smp_cleanup_message(msg);
