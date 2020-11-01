@@ -364,9 +364,12 @@ void AbstractView::doubleclick_event(MouseEvent& event)
 
     auto index = index_at_event_position(event.position());
 
-    if (!index.is_valid())
+    if (!index.is_valid()) {
         clear_selection();
-    else if (!m_selection.contains(index))
+        return;
+    }
+
+    if (!m_selection.contains(index))
         set_selection(index);
 
     if (is_editable() && edit_triggers() & EditTrigger::DoubleClicked)
