@@ -24,3 +24,13 @@ if fn 2>/dev/null {
 fn() { echo $0 }
 
 test "$(fn)" = fn || echo '$0' in function not equal to its name && exit 1
+
+# Ensure ARGV does not leak from inner frames.
+fn() {
+    fn2 1 2 3
+    echo $*
+}
+
+fn2() { }
+
+test "$(fn foobar)" = "foobar" || echo 'Frames are somehow messed up in nested functions' && exit 1

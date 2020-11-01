@@ -413,18 +413,27 @@ String Shell::local_variable_or(const String& name, const String& replacement)
     return replacement;
 }
 
-void Shell::set_local_variable(const String& name, RefPtr<AST::Value> value)
+void Shell::set_local_variable(const String& name, RefPtr<AST::Value> value, bool only_in_current_frame)
 {
-    if (auto* frame = find_frame_containing_local_variable(name))
-        frame->local_variables.set(name, move(value));
-    else
-        m_local_frames.last().local_variables.set(name, move(value));
+    if (!only_in_current_frame) {
+        if (auto* frame = find_frame_containing_local_variable(name)) {
+            frame->local_variables.set(name, move(value));
+            return;
+        }
+    }
+
+    m_local_frames.last().local_variables.set(name, move(value));
 }
 
-void Shell::unset_local_variable(const String& name)
+void Shell::unset_local_variable(const String& name, bool only_in_current_frame)
 {
-    if (auto* frame = find_frame_containing_local_variable(name))
-        frame->local_variables.remove(name);
+    if (!only_in_current_frame) {
+        if (auto* frame = find_frame_containing_local_variable(name))
+            frame->local_variables.remove(name);
+        return;
+    }
+
+    m_local_frames.last().local_variables.remove(name);
 }
 
 void Shell::define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body)
@@ -473,7 +482,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
     auto argv = command.argv;
     argv.take_first();
-    set_local_variable("ARGV", adopt(*new AST::ListValue(move(argv))));
+    set_local_variable("ARGV", adopt(*new AST::ListValue(move(argv))), true);
 
     function.body->run(*this);
 

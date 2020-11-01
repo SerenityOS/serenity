@@ -103,8 +103,8 @@ public:
     RefPtr<AST::Value> get_argument(size_t);
     RefPtr<AST::Value> lookup_local_variable(const String&);
     String local_variable_or(const String&, const String&);
-    void set_local_variable(const String&, RefPtr<AST::Value>);
-    void unset_local_variable(const String&);
+    void set_local_variable(const String&, RefPtr<AST::Value>, bool only_in_current_frame = false);
+    void unset_local_variable(const String&, bool only_in_current_frame = false);
 
     void define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body);
     bool has_function(const String&);
