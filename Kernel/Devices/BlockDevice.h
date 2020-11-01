@@ -39,8 +39,6 @@ public:
 
     bool read_block(unsigned index, UserOrKernelBuffer&) const;
     bool write_block(unsigned index, const UserOrKernelBuffer&);
-    bool read_raw(u32 offset, unsigned length, UserOrKernelBuffer&) const;
-    bool write_raw(u32 offset, unsigned length, const UserOrKernelBuffer&);
 
     virtual bool read_blocks(unsigned index, u16 count, UserOrKernelBuffer&) = 0;
     virtual bool write_blocks(unsigned index, u16 count, const UserOrKernelBuffer&) = 0;
