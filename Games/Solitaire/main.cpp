@@ -45,6 +45,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto window = GUI::Window::construct();
 
     window->set_resizable(false);
