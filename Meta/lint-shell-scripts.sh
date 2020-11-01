@@ -4,6 +4,11 @@ set -e pipefail
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path/.."
 
+if ! command -v shellcheck &>/dev/null ; then
+    echo "shellcheck is not available. Either skip this script, or install shellcheck."
+    exit 1
+fi
+
 ERRORS=()
 
 while IFS= read -r f; do
