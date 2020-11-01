@@ -405,7 +405,7 @@ bool Scheduler::pick_next()
 
     ScopedSpinLock lock(g_scheduler_lock);
 
-    if (current_thread->should_die() && current_thread->state() == Thread::Running) {
+    if (current_thread->should_die() && (current_thread->state() == Thread::Running || current_thread->state() == Thread::Runnable)) {
         // Rather than immediately killing threads, yanking the kernel stack
         // away from them (which can lead to e.g. reference leaks), we always
         // allow Thread::wait_on to return. This allows the kernel stack to
@@ -664,8 +664,16 @@ bool Scheduler::context_switch(Thread* thread)
     thread->did_schedule();
 
     auto from_thread = Thread::current();
-    if (from_thread == thread)
+    if (from_thread == thread) {
+        if (thread->state() == Thread::Runnable) {
+            // This is possible if a thread yields execution in Thread::wait_on
+            // but another processor calls Thread::wake_from_queue right
+            // before Scheduler::yield manages to get ahold of the scheduler
+            // lock
+            thread->set_state(Thread::Running);
+        }
         return false;
+    }
 
     if (from_thread) {
         // If the last process hasn't blocked (still marked as running),

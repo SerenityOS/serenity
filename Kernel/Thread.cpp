@@ -122,11 +122,11 @@ void Thread::unblock()
     ASSERT(g_scheduler_lock.own_lock());
     ASSERT(m_lock.own_lock());
     m_blocker = nullptr;
+    ASSERT(m_state == Thread::Blocked);
     if (Thread::current() == this) {
         set_state(Thread::Running);
         return;
     }
-    ASSERT(m_state != Thread::Runnable && m_state != Thread::Running);
     set_state(Thread::Runnable);
 }
 
