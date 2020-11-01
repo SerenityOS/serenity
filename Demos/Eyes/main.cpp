@@ -62,6 +62,16 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if ((grid_rows > 0) ^ (grid_columns > 0)) {
         warnln("Expected either both or none of 'grid-rows' and 'grid-cols' to be passed.");
         return 1;

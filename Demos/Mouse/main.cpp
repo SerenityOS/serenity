@@ -175,6 +175,21 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-mouse");
 
+    if (pledge("stdio rpath shared_buffer", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto window = GUI::Window::construct();
     window->set_title("Mouse button demo");
     window->set_icon(app_icon.bitmap_for_size(16));
