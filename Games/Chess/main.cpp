@@ -45,6 +45,31 @@ int main(int argc, char** argv)
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Chess");
 
+    if (pledge("stdio rpath accept wpath cpath shared_buffer proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(config->file_name().characters(), "crw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/bin/ChessEngine", "x") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto size = config->read_num_entry("Display", "size", 512);
     window->set_title("Chess");
     window->resize(size, size);

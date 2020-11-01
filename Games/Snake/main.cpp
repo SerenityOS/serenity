@@ -25,6 +25,7 @@
  */
 
 #include "SnakeGame.h"
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -47,6 +48,23 @@ int main(int argc, char** argv)
 
     if (pledge("stdio rpath wpath cpath shared_buffer accept", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    auto config = Core::ConfigFile::get_for_app("Snake");
+
+    if (unveil(config->file_name().characters(), "crw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
         return 1;
     }
 
