@@ -359,7 +359,8 @@ String Shell::resolve_path(String path) const
 
 Shell::LocalFrame* Shell::find_frame_containing_local_variable(const String& name)
 {
-    for (auto& frame : m_local_frames) {
+    for (size_t i = m_local_frames.size(); i > 0; --i) {
+        auto& frame = m_local_frames[i - 1];
         if (frame.local_variables.contains(name))
             return &frame;
     }
