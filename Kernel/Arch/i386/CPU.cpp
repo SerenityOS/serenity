@@ -1193,6 +1193,8 @@ void Processor::early_initialize(u32 cpu)
         atomic_fetch_add(&g_total_processors, 1u, AK::MemoryOrder::memory_order_acq_rel);
     }
 
+    deferred_call_pool_init();
+
     cpu_setup();
     gdt_init();
     ASSERT(&current() == this); // sanity check
@@ -1930,6 +1932,125 @@ void Processor::Processor::halt()
         smp_broadcast_halt();
 
     halt_this();
+}
+
+void Processor::deferred_call_pool_init()
+{
+    size_t pool_count = sizeof(m_deferred_call_pool) / sizeof(m_deferred_call_pool[0]);
+    for (size_t i = 0; i < pool_count; i++) {
+        auto& entry = m_deferred_call_pool[i];
+        entry.next = i < pool_count - 1 ? &m_deferred_call_pool[i + 1] : nullptr;
+        entry.was_allocated = false;
+    }
+    m_pending_deferred_calls = nullptr;
+    m_free_deferred_call_pool_entry = &m_deferred_call_pool[0];
+}
+
+void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
+{
+    ASSERT(m_in_critical);
+    ASSERT(!entry->was_allocated);
+
+    entry->next = m_free_deferred_call_pool_entry;
+    m_free_deferred_call_pool_entry = entry;
+}
+
+DeferredCallEntry* Processor::deferred_call_get_free()
+{
+    ASSERT(m_in_critical);
+
+    if (m_free_deferred_call_pool_entry) {
+        // Fast path, we have an entry in our pool
+        auto* entry = m_free_deferred_call_pool_entry;
+        m_free_deferred_call_pool_entry = entry->next;
+        ASSERT(!entry->was_allocated);
+        return entry;
+    }
+
+    auto* entry = new DeferredCallEntry;
+    entry->was_allocated = true;
+    return entry;
+}
+
+void Processor::deferred_call_execute_pending()
+{
+    ASSERT(m_in_critical);
+
+    if (!m_pending_deferred_calls)
+        return;
+    auto* pending_list = m_pending_deferred_calls;
+    m_pending_deferred_calls = nullptr;
+
+    // We pulled the stack of pending deferred calls in LIFO order, so we need to reverse the list first
+    auto reverse_list =
+        [](DeferredCallEntry* list) -> DeferredCallEntry*
+        {
+            DeferredCallEntry* rev_list = nullptr;
+            while (list) {
+                auto next = list->next;
+                list->next = rev_list;
+                rev_list = list;
+                list = next;
+            }
+            return rev_list;
+        };
+    pending_list = reverse_list(pending_list);
+
+    do {
+        // Call the appropriate callback handler
+        if (pending_list->have_data) {
+            pending_list->callback_with_data.handler(pending_list->callback_with_data.data);
+            if (pending_list->callback_with_data.free)
+                pending_list->callback_with_data.free(pending_list->callback_with_data.data);
+        } else {
+            pending_list->callback.handler();
+        }
+
+        // Return the entry back to the pool, or free it
+        auto* next = pending_list->next;
+        if (pending_list->was_allocated)
+            delete pending_list;
+        else
+            deferred_call_return_to_pool(pending_list);
+        pending_list = next;
+    } while (pending_list);
+}
+
+void Processor::deferred_call_queue_entry(DeferredCallEntry* entry)
+{
+    ASSERT(m_in_critical);
+    entry->next = m_pending_deferred_calls;
+    m_pending_deferred_calls = entry;
+}
+
+void Processor::deferred_call_queue(void (*callback)())
+{
+    // NOTE: If we are called outside of a critical section and outside
+    // of an irq handler, the function will be executed before we return!
+    ScopedCritical critical;
+    auto& cur_proc = Processor::current();
+
+    auto* entry = cur_proc.deferred_call_get_free();
+    entry->have_data = false;
+    entry->callback.handler = callback;
+
+    cur_proc.deferred_call_queue_entry(entry);
+}
+
+void Processor::deferred_call_queue(void (*callback)(void*), void* data, void (*free_data)(void*))
+{
+    // NOTE: If we are called outside of a critical section and outside
+    // of an irq handler, the function will be executed before we return!
+    ScopedCritical critical;
+    auto& cur_proc = Processor::current();
+
+    auto* entry = cur_proc.deferred_call_get_free();
+    entry->have_data = true;
+    entry->callback_with_data.handler = callback;
+    entry->callback_with_data.data = data;
+    entry->callback_with_data.free = free_data;
+
+    cur_proc.deferred_call_queue_entry(entry);
 }
 
 void Processor::gdt_init()

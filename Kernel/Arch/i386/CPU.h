@@ -677,6 +677,22 @@ struct ProcessorMessageEntry {
     ProcessorMessage* msg;
 };
 
+struct DeferredCallEntry {
+    DeferredCallEntry* next;
+    union {
+        struct {
+            void (*handler)();
+        } callback;
+        struct {
+            void* data;
+            void (*handler)(void*);
+            void (*free)(void*);
+        } callback_with_data;
+    };
+    bool have_data;
+    bool was_allocated;
+};
+
 class Processor {
     friend class ProcessorInfo;
 
@@ -710,6 +726,10 @@ class Processor {
     bool m_scheduler_initialized;
     bool m_halt_requested;
 
+    DeferredCallEntry* m_pending_deferred_calls; // in reverse order
+    DeferredCallEntry* m_free_deferred_call_pool_entry;
+    DeferredCallEntry m_deferred_call_pool[5];
+
     void gdt_init();
     void write_raw_gdt_entry(u16 selector, u32 low, u32 high);
     void write_gdt_entry(u16 selector, Descriptor& descriptor);
@@ -721,6 +741,12 @@ class Processor {
     bool smp_queue_message(ProcessorMessage& msg);
     static void smp_broadcast_message(ProcessorMessage& msg, bool async);
     static void smp_broadcast_halt();
+
+    void deferred_call_pool_init();
+    void deferred_call_execute_pending();
+    DeferredCallEntry* deferred_call_get_free();
+    void deferred_call_return_to_pool(DeferredCallEntry*);
+    void deferred_call_queue_entry(DeferredCallEntry*);
 
     void cpu_detect();
     void cpu_setup();
@@ -843,7 +869,19 @@ public:
     ALWAYS_INLINE void restore_irq(u32 prev_irq)
     {
         ASSERT(prev_irq <= m_in_irq);
-        m_in_irq = prev_irq;
+        if (!prev_irq) {
+            if (m_in_critical == 0) {
+                auto prev_critical = m_in_critical++;
+                m_in_irq = prev_irq;
+                deferred_call_execute_pending();
+                ASSERT(m_in_critical == prev_critical + 1);
+                m_in_critical = prev_critical;
+            }
+            if (!m_in_critical)
+                check_invoke_scheduler();
+        } else {
+            m_in_irq = prev_irq;
+        }
     }
 
     ALWAYS_INLINE u32& in_irq()
@@ -860,10 +898,18 @@ public:
 
     ALWAYS_INLINE void leave_critical(u32 prev_flags)
     {
+        cli(); // Need to prevent IRQs from interrupting us here!
         ASSERT(m_in_critical > 0);
-        if (--m_in_critical == 0) {
+        if (m_in_critical == 1) {
+            if (!m_in_irq) {
+                deferred_call_execute_pending();
+                ASSERT(m_in_critical == 1);
+            }
+            m_in_critical--;
             if (!m_in_irq)
                 check_invoke_scheduler();
+        } else {
+            m_in_critical--;
         }
         if (prev_flags & 0x200)
             sti();
@@ -920,6 +966,22 @@ public:
     static void smp_broadcast(void (*callback)(), bool async);
     static void smp_broadcast(void (*callback)(void*), void* data, void (*free_data)(void*), bool async);
     static void smp_broadcast_flush_tlb(VirtualAddress vaddr, size_t page_count);
+
+    template<typename Callback>
+    static void deferred_call_queue(Callback callback)
+    {
+        auto* data = new Callback(move(callback));
+        deferred_call_queue(
+            [](void* data) {
+                (*reinterpret_cast<Callback*>(data))();
+            },
+            data,
+            [](void* data) {
+                delete reinterpret_cast<Callback*>(data);
+            });
+    }
+    static void deferred_call_queue(void (*callback)());
+    static void deferred_call_queue(void (*callback)(void*), void* data, void (*free_data)(void*));
 
     ALWAYS_INLINE bool has_feature(CPUFeature f) const
     {
