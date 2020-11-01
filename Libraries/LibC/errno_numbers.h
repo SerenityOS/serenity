@@ -99,4 +99,5 @@
 #define EPROTO 71
 #define ENOTSUP 72
 #define EPFNOSUPPORT 73
-#define EMAXERRNO 74
+#define EDIRINTOSELF 74
+#define EMAXERRNO 75

@@ -522,6 +522,11 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     if (&old_parent_inode.fs() != &new_parent_inode.fs())
         return KResult(-EXDEV);
 
+    for (auto* new_ancestor = new_parent_custody.ptr(); new_ancestor; new_ancestor = new_ancestor->parent()) {
+        if (&old_inode == &new_ancestor->inode())
+            return KResult(-EDIRINTOSELF);
+    }
+
     auto current_process = Process::current();
     if (!new_parent_inode.metadata().may_write(*current_process))
         return KResult(-EACCES);

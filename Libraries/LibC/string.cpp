@@ -364,6 +364,7 @@ const char* const sys_errlist[] = {
     "Protocol error",
     "Not supported",
     "Protocol family not supported",
+    "Cannot make directory a subdirectory of itself",
     "The highest errno +1 :^)",
 };
 
