@@ -136,6 +136,21 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
 
+    if (pledge("stdio rpath shared_buffer", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
     window->set_title("Screensaver");
