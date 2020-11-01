@@ -1279,8 +1279,9 @@ const DescriptorTablePointer& Processor::get_gdtr()
     return m_gdtr;
 }
 
-bool Processor::get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip)
+bool Processor::get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip, bool from_other_processor)
 {
+    bool ret = true;
     ScopedCritical critical;
     auto& proc = Processor::current();
     if (&thread == proc.current_thread()) {
@@ -1288,6 +1289,12 @@ bool Processor::get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip)
         asm volatile("movl %%ebp, %%eax"
                      : "=g"(frame_ptr));
     } else {
+        // If this triggered from another processor, we should never
+        // hit this code path because the other processor is still holding
+        // the scheduler lock, which should prevent us from switching
+        // contexts
+        ASSERT(!from_other_processor);
+
         // Since the thread may be running on another processor, there
         // is a chance a context switch may happen while we're trying
         // to get it. It also won't be entirely accurate and merely
@@ -1295,15 +1302,19 @@ bool Processor::get_context_frame_ptr(Thread& thread, u32& frame_ptr, u32& eip)
         ScopedSpinLock lock(g_scheduler_lock);
         if (thread.state() == Thread::Running) {
             ASSERT(thread.cpu() != proc.id());
-            // TODO: If this is the case, the thread is currently running
+            // If this is the case, the thread is currently running
             // on another processor. We can't trust the kernel stack as
             // it may be changing at any time. We need to probably send
             // an IPI to that processor, have it walk the stack and wait
             // until it returns the data back to us
-            dbg() << "CPU[" << proc.id() << "] getting stack for "
-                  << thread << " on other CPU# " << thread.cpu() << " not yet implemented!";
-            frame_ptr = eip = 0; // TODO
-            return false;
+            smp_unicast(thread.cpu(),
+                [&]() {
+                    dbg() << "CPU[" << Processor::current().id() << "] getting stack for cpu #" << proc.id();
+                    // NOTE: Because we are holding the scheduler lock while
+                    // waiting for this callback to finish, the current thread
+                    // on the target processor cannot change
+                    ret = get_context_frame_ptr(thread, frame_ptr, eip, true);
+                }, false);
         } else {
             // We need to retrieve ebp from what was last pushed to the kernel
             // stack. Before switching out of that thread, it switch_context
@@ -1901,6 +1912,56 @@ void Processor::smp_broadcast(void (*callback)(), bool async)
     msg.type = ProcessorMessage::CallbackWithData;
     msg.callback.handler = callback;
     smp_broadcast_message(msg, async);
+}
+
+void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
+{
+    auto& cur_proc = Processor::current();
+    ASSERT(cpu != cur_proc.id());
+    auto& target_proc = processors()[cpu];
+    msg.async = async;
+#ifdef SMP_DEBUG
+    dbg() << "SMP[" << cur_proc.id() << "]: Send message " << VirtualAddress(&msg) << " to cpu #" << cpu << " proc: " << VirtualAddress(&target_proc);
+#endif
+    atomic_store(&msg.refs, 1u, AK::MemoryOrder::memory_order_release);
+    if (target_proc->smp_queue_message(msg)) {
+        APIC::the().send_ipi(cpu);
+    }
+
+    if (!async) {
+        // If synchronous then we must cleanup and return the message back
+        // to the pool. Otherwise, the last processor to complete it will return it
+        while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
+            // TODO: pause for a bit?
+
+            // We need to check here if another processor may have requested
+            // us to halt before this message could be delivered. Otherwise
+            // we're just spinning the CPU because msg.refs will never drop to 0.
+            if (cur_proc.m_halt_requested.load(AK::MemoryOrder::memory_order_relaxed))
+                halt_this();
+        }
+
+        smp_cleanup_message(msg);
+        smp_return_to_pool(msg);
+    }
+}
+
+void Processor::smp_unicast(u32 cpu, void (*callback)(void*), void* data, void (*free_data)(void*), bool async)
+{
+    auto& msg = smp_get_from_pool();
+    msg.type = ProcessorMessage::CallbackWithData;
+    msg.callback_with_data.handler = callback;
+    msg.callback_with_data.data = data;
+    msg.callback_with_data.free = free_data;
+    smp_unicast_message(cpu, msg, async);
+}
+
+void Processor::smp_unicast(u32 cpu, void (*callback)(), bool async)
+{
+    auto& msg = smp_get_from_pool();
+    msg.type = ProcessorMessage::CallbackWithData;
+    msg.callback.handler = callback;
+    smp_unicast_message(cpu, msg, async);
 }
 
 void Processor::smp_broadcast_flush_tlb(VirtualAddress vaddr, size_t page_count)
