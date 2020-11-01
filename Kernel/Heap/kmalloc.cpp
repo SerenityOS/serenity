@@ -50,6 +50,8 @@
 #define POOL_SIZE (2 * MiB)
 #define ETERNAL_RANGE_SIZE (2 * MiB)
 
+static RecursiveSpinLock s_lock; // needs to be recursive because of dump_backtrace()
+
 struct KmallocGlobalHeap {
     struct ExpandGlobalHeap {
         KmallocGlobalHeap& m_global_heap;
@@ -125,10 +127,26 @@ struct KmallocGlobalHeap {
             for (size_t i = 0; i < m_global_heap.m_subheap_memory.size(); i++) {
                 if (m_global_heap.m_subheap_memory[i].vaddr().as_ptr() == memory) {
                     auto region = m_global_heap.m_subheap_memory.take(i);
-                    klog() << "kmalloc(): Removing memory from heap at " << region->vaddr() << ", bytes: " << region->size();
                     if (!m_global_heap.m_backup_memory) {
                         klog() << "kmalloc(): Using removed memory as backup: " << region->vaddr() << ", bytes: " << region->size();
                         m_global_heap.m_backup_memory = move(region);
+                    } else {
+                        klog() << "kmalloc(): Queue removing memory from heap at " << region->vaddr() << ", bytes: " << region->size();
+                        Processor::deferred_call_queue([this, region = move(region)]() mutable {
+                            // We need to defer freeing the region to prevent a potential
+                            // deadlock since we are still holding the kmalloc lock
+                            // We don't really need to do anything other than holding
+                            // onto the region. Unless we already used the backup
+                            // memory, in which case we want to use the region as the
+                            // new backup.
+                            ScopedSpinLock lock(s_lock);
+                            if (!m_global_heap.m_backup_memory) {
+                                klog() << "kmalloc(): Queued memory region at " << region->vaddr() << ", bytes: " << region->size() << " will be used as new backup";
+                                m_global_heap.m_backup_memory = move(region);
+                            } else {
+                                klog() << "kmalloc(): Queued memory region at " << region->vaddr() << ", bytes: " << region->size() << " will be freed now";
+                            }
+                        });
                     }
                     return true;
                 }
@@ -178,8 +196,6 @@ bool g_dump_kmalloc_stacks;
 
 static u8* s_next_eternal_ptr;
 static u8* s_end_of_eternal_range;
-
-static RecursiveSpinLock s_lock; // needs to be recursive because of dump_backtrace()
 
 void kmalloc_enable_expand()
 {
