@@ -235,6 +235,7 @@ void AbstractView::mousedown_event(MouseEvent& event)
         set_cursor(index, SelectionUpdate::ClearIfNotSelected);
     } else {
         set_cursor(index, SelectionUpdate::Set);
+        m_might_drag = true;
     }
 
     update();
