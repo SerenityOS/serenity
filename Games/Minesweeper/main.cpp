@@ -53,6 +53,23 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    auto config = Core::ConfigFile::get_for_app("Minesweeper");
+
+    if (unveil(config->file_name().characters(), "crw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     auto app_icon = GUI::Icon::default_icon("app-minesweeper");
 
     auto window = GUI::Window::construct();
