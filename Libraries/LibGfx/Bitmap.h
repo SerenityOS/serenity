@@ -300,11 +300,13 @@ inline Color Bitmap::get_pixel(int x, int y) const
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGB32>(int x, int y, Color color)
 {
+    ASSERT(rect().contains(x, y));
     scanline(y)[x] = color.value();
 }
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGBA32>(int x, int y, Color color)
 {
+    ASSERT(rect().contains(x, y));
     scanline(y)[x] = color.value(); // drop alpha
 }
 inline void Bitmap::set_pixel(int x, int y, Color color)
