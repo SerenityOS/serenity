@@ -105,6 +105,8 @@ LexicalEnvironment* ScriptFunction::create_environment()
     auto* environment = heap().allocate<LexicalEnvironment>(global_object(), move(variables), m_parent_environment, LexicalEnvironment::EnvironmentRecordType::Function);
     environment->set_home_object(home_object());
     environment->set_current_function(*this);
+    if (m_is_arrow_function)
+        environment->set_new_target(m_parent_environment->new_target());
     return environment;
 }
 

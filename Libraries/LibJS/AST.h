@@ -1084,6 +1084,27 @@ private:
     bool m_computed { false };
 };
 
+class MetaProperty final : public Expression {
+public:
+    enum class Type {
+        NewTarget,
+        ImportMeta,
+    };
+
+    MetaProperty(Type type)
+        : m_type(type)
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "MetaProperty"; }
+
+    Type m_type;
+};
+
 class ConditionalExpression final : public Expression {
 public:
     ConditionalExpression(NonnullRefPtr<Expression> test, NonnullRefPtr<Expression> consequent, NonnullRefPtr<Expression> alternate)

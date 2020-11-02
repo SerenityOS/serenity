@@ -1655,6 +1655,28 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     return object_result->get(property_name).value_or(js_undefined());
 }
 
+void MetaProperty::dump(int indent) const
+{
+    String name;
+    if (m_type == MetaProperty::Type::NewTarget)
+        name = "new.target";
+    else if (m_type == MetaProperty::Type::ImportMeta)
+        name = "import.meta";
+    else
+        ASSERT_NOT_REACHED();
+    print_indent(indent);
+    printf("%s %s\n", class_name(), name.characters());
+}
+
+Value MetaProperty::execute(Interpreter& interpreter, GlobalObject&) const
+{
+    if (m_type == MetaProperty::Type::NewTarget)
+        return interpreter.vm().get_new_target().value_or(js_undefined());
+    if (m_type == MetaProperty::Type::ImportMeta)
+        TODO();
+    ASSERT_NOT_REACHED();
+}
+
 Value StringLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
     return js_string(interpreter.heap(), m_value);
