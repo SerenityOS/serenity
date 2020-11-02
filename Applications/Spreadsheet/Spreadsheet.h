@@ -49,6 +49,9 @@ public:
 
     static Optional<Position> parse_cell_name(const StringView&);
 
+    Cell* from_url(const URL&);
+    const Cell* from_url(const URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
+
     JsonObject to_json() const;
     static RefPtr<Sheet> from_json(const JsonObject&, Workbook&);
 

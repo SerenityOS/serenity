@@ -32,6 +32,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/TemporaryChange.h>
+#include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
@@ -200,6 +201,24 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name)
         return {};
 
     return Position { col, row.to_uint().value() };
+}
+
+Cell* Sheet::from_url(const URL& url)
+{
+    if (!url.is_valid()) {
+        dbgln("Invalid url: {}", url.to_string());
+        return nullptr;
+    }
+
+    if (url.protocol() != "spreadsheet" || url.host() != "cell") {
+        dbgln("Bad url: {}", url.to_string());
+        return nullptr;
+    }
+
+    // FIXME: Figure out a way to do this cross-process.
+    ASSERT(url.path() == String::formatted("/{}", getpid()));
+
+    return at(url.fragment());
 }
 
 RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)

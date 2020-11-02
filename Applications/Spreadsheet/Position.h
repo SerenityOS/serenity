@@ -28,6 +28,7 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/URL.h>
 
 namespace Spreadsheet {
 
@@ -43,6 +44,16 @@ struct Position {
     bool operator!=(const Position& other) const
     {
         return !(other == *this);
+    }
+
+    URL to_url() const
+    {
+        URL url;
+        url.set_protocol("spreadsheet");
+        url.set_host("cell");
+        url.set_path(String::formatted("/{}", getpid()));
+        url.set_fragment(String::formatted("{}{}", column, row));
+        return url;
     }
 };
 
