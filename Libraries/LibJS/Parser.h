@@ -100,21 +100,25 @@ public:
     NonnullRefPtr<Expression> parse_property_key();
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity);
 
-    struct Error {
-        String message;
+    struct Position {
         size_t line;
         size_t column;
+    };
+
+    struct Error {
+        String message;
+        Optional<Position> position;
 
         String to_string() const
         {
-            if (line == 0 || column == 0)
+            if (!position.has_value())
                 return message;
-            return String::formatted("{} (line: {}, column: {})", message, line, column);
+            return String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
         }
 
         String source_location_hint(const StringView& source, const char spacer = ' ', const char indicator = '^') const
         {
-            if (line == 0 || column == 0)
+            if (!position.has_value())
                 return {};
             // We need to modify the source to match what the lexer considers one line - normalizing
             // line terminators to \n is easier than splitting using all different LT characters.
@@ -124,9 +128,9 @@ public:
             source_string.replace(LINE_SEPARATOR, "\n");
             source_string.replace(PARAGRAPH_SEPARATOR, "\n");
             StringBuilder builder;
-            builder.append(source_string.split_view('\n', true)[line - 1]);
+            builder.append(source_string.split_view('\n', true)[position.value().line - 1]);
             builder.append('\n');
-            for (size_t i = 0; i < column - 1; ++i)
+            for (size_t i = 0; i < position.value().column - 1; ++i)
                 builder.append(spacer);
             builder.append(indicator);
             return builder.build();
@@ -156,13 +160,14 @@ private:
     bool match(TokenType type) const;
     bool done() const;
     void expected(const char* what);
-    void syntax_error(const String& message, size_t line = 0, size_t column = 0);
+    void syntax_error(const String& message, Optional<Position> = {});
     Token consume();
     Token consume(TokenType type);
     Token consume_and_validate_numeric_literal();
     void consume_or_insert_semicolon();
     void save_state();
     void load_state();
+    Position position() const;
 
     struct ParserState {
         Lexer m_lexer;

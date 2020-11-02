@@ -662,24 +662,22 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
     switch (m_parser_state.m_current_token.type()) {
     case TokenType::PlusPlus: {
         consume();
-        auto rhs_start_line = m_parser_state.m_current_token.line_number();
-        auto rhs_start_column = m_parser_state.m_current_token.line_column();
+        auto rhs_start = position();
         auto rhs = parse_expression(precedence, associativity);
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for ++foo()
         if (!rhs->is_identifier() && !rhs->is_member_expression())
-            syntax_error(String::formatted("Right-hand side of prefix increment operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start_line, rhs_start_column);
+            syntax_error(String::formatted("Right-hand side of prefix increment operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start);
         return create_ast_node<UpdateExpression>(UpdateOp::Increment, move(rhs), true);
     }
     case TokenType::MinusMinus: {
         consume();
-        auto rhs_start_line = m_parser_state.m_current_token.line_number();
-        auto rhs_start_column = m_parser_state.m_current_token.line_column();
+        auto rhs_start = position();
         auto rhs = parse_expression(precedence, associativity);
         // FIXME: Apparently for functions this should also not be enforced on a parser level,
         // other engines throw ReferenceError for --foo()
         if (!rhs->is_identifier() && !rhs->is_member_expression())
-            syntax_error(String::formatted("Right-hand side of prefix decrement operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start_line, rhs_start_column);
+            syntax_error(String::formatted("Right-hand side of prefix decrement operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start);
         return create_ast_node<UpdateExpression>(UpdateOp::Decrement, move(rhs), true);
     }
     case TokenType::ExclamationMark:
@@ -777,10 +775,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
         if (property_type == ObjectProperty::Type::Getter || property_type == ObjectProperty::Type::Setter) {
             if (!match(TokenType::ParenOpen)) {
-                syntax_error(
-                    "Expected '(' for object getter or setter property",
-                    m_parser_state.m_current_token.line_number(),
-                    m_parser_state.m_current_token.line_column());
+                syntax_error("Expected '(' for object getter or setter property");
                 skip_to_next_property();
                 continue;
             }
@@ -867,7 +862,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token token, bool in_t
         }
 
         if (!message.is_empty())
-            syntax_error(message, token.line_number(), token.line_column());
+            syntax_error(message, Position { token.line_number(), token.line_column() });
     }
 
     auto is_use_strict_directive = !in_template_literal && (token.value() == "'use strict'" || token.value() == "\"use strict\"");
@@ -1321,7 +1316,7 @@ Vector<FunctionNode::Parameter> Parser::parse_function_parameters(int& function_
             else if (has_rest_parameter)
                 message = String::formatted("Duplicate parameter '{}' not allowed in function with rest parameter", parameter_name);
             if (!message.is_empty())
-                syntax_error(message, token.line_number(), token.line_column());
+                syntax_error(message, Position { token.line_number(), token.line_column() });
             break;
         }
         return token;
@@ -1915,11 +1910,10 @@ Token Parser::consume_and_validate_numeric_literal()
     auto is_unprefixed_octal_number = [](const StringView& value) {
         return value.length() > 1 && value[0] == '0' && isdigit(value[1]);
     };
-    auto literal_start_line = m_parser_state.m_current_token.line_number();
-    auto literal_start_column = m_parser_state.m_current_token.line_column();
+    auto literal_start = position();
     auto token = consume(TokenType::NumericLiteral);
     if (m_parser_state.m_strict_mode && is_unprefixed_octal_number(token.value()))
-        syntax_error("Unprefixed octal number not allowed in strict mode", literal_start_line, literal_start_column);
+        syntax_error("Unprefixed octal number not allowed in strict mode", literal_start);
     if (match_identifier_name() && m_parser_state.m_current_token.trivia().is_empty())
         syntax_error("Numeric literal must not be immediately followed by identifier");
     return token;
@@ -1933,13 +1927,19 @@ void Parser::expected(const char* what)
     syntax_error(message);
 }
 
-void Parser::syntax_error(const String& message, size_t line, size_t column)
+Parser::Position Parser::position() const
 {
-    if (line == 0 || column == 0) {
-        line = m_parser_state.m_current_token.line_number();
-        column = m_parser_state.m_current_token.line_column();
-    }
-    m_parser_state.m_errors.append({ message, line, column });
+    return {
+        m_parser_state.m_current_token.line_number(),
+        m_parser_state.m_current_token.line_column()
+    };
+}
+
+void Parser::syntax_error(const String& message, Optional<Position> position)
+{
+    if (!position.has_value())
+        position = this->position();
+    m_parser_state.m_errors.append({ message, position });
 }
 
 void Parser::save_state()
