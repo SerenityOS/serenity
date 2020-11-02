@@ -84,7 +84,7 @@ RefPtr<DiskPartition> GPTPartitionTable::partition(unsigned index)
 
     GPTPartitionEntry entries[entries_per_sector];
     auto entries_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&entries);
-    this->m_device->read_blocks(lba, 1, entries_buffer);
+    this->m_device->read_block(lba, entries_buffer);
     GPTPartitionEntry& entry = entries[((index - 1) % entries_per_sector)];
 
 #ifdef GPT_DEBUG
