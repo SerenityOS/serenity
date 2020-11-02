@@ -112,6 +112,7 @@ void WindowManager::reload_config(bool set_screen)
         set_resolution(m_config->read_num_entry("Screen", "Width", 1920), m_config->read_num_entry("Screen", "Height", 1080));
     }
 
+    m_hidden_cursor = get_cursor("Hidden");
     m_arrow_cursor = get_cursor("Arrow", { 2, 2 });
     m_hand_cursor = get_cursor("Hand", { 8, 4 });
     m_help_cursor = get_cursor("Help", { 1, 1 });

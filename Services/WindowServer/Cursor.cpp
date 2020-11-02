@@ -54,6 +54,8 @@ RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
     switch (standard_cursor) {
     case Gfx::StandardCursor::None:
         return nullptr;
+    case Gfx::StandardCursor::Hidden:
+        return WindowManager::the().hidden_cursor();
     case Gfx::StandardCursor::Arrow:
         return WindowManager::the().arrow_cursor();
     case Gfx::StandardCursor::Crosshair:

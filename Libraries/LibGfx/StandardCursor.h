@@ -30,6 +30,7 @@ namespace Gfx {
 
 enum class StandardCursor {
     None = 0,
+    Hidden,
     Arrow,
     Crosshair,
     IBeam,
