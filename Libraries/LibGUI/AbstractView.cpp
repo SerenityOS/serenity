@@ -265,6 +265,10 @@ void AbstractView::mousemove_event(MouseEvent& event)
     auto hovered_index = index_at_event_position(event.position());
     set_hovered_index(hovered_index);
 
+    auto data_type = m_model->drag_data_type();
+    if (data_type.is_null())
+        return ScrollableWidget::mousemove_event(event);
+
     if (!m_might_drag)
         return ScrollableWidget::mousemove_event(event);
 
@@ -280,7 +284,6 @@ void AbstractView::mousemove_event(MouseEvent& event)
     if (distance_travelled_squared <= drag_distance_threshold)
         return ScrollableWidget::mousemove_event(event);
 
-    auto data_type = m_model->drag_data_type();
     ASSERT(!data_type.is_null());
 
     dbg() << "Initiate drag!";
