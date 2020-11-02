@@ -46,6 +46,7 @@ public:
 
     const String& current_filename() const { return m_workbook->current_filename(); }
     const Sheet& current_worksheet() const { return m_selected_view->sheet(); }
+    Sheet& current_worksheet() { return m_selected_view->sheet(); }
     void set_filename(const String& filename);
 
     Workbook& workbook() { return *m_workbook; }
