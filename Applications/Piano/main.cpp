@@ -45,7 +45,17 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio thread rpath accept cpath wpath shared_buffer unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio thread rpath accept cpath wpath shared_buffer unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();

@@ -40,6 +40,18 @@
 
 int main(int argc, char* argv[])
 {
+    if (pledge("stdio shared_buffer accept rpath unix cpath wpath fattr thread", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio thread rpath accept cpath wpath shared_buffer unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     const char* filename = nullptr;
 
     Core::ArgsParser args_parser;
@@ -52,13 +64,6 @@ int main(int argc, char* argv[])
             warnln("File does not exist or is a directory: {}", filename);
             return 1;
         }
-    }
-
-    auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio thread rpath accept cpath wpath shared_buffer unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
     }
 
     if (unveil("/tmp/portal/webcontent", "rw") < 0) {

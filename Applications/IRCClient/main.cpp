@@ -26,6 +26,7 @@
 
 #include "IRCAppWindow.h"
 #include "IRCClient.h"
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <stdio.h>
@@ -46,6 +47,36 @@ int main(int argc, char** argv)
 
     if (pledge("stdio inet dns unix shared_buffer rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/lookup", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/notify", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(Core::StandardPaths::home_directory().characters(), "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
         return 1;
     }
 
