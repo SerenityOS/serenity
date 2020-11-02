@@ -81,7 +81,6 @@ public:
     NonnullRefPtr<WhileStatement> parse_while_statement();
     NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
     NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
-
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, Vector<TokenType> forbidden = {});
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
@@ -93,12 +92,14 @@ public:
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right);
     NonnullRefPtr<CallExpression> parse_call_expression(NonnullRefPtr<Expression>);
     NonnullRefPtr<NewExpression> parse_new_expression();
-    RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
-    RefPtr<Statement> try_parse_labelled_statement();
     NonnullRefPtr<ClassDeclaration> parse_class_declaration();
     NonnullRefPtr<ClassExpression> parse_class_expression(bool expect_class_name);
     NonnullRefPtr<Expression> parse_property_key();
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity);
+
+    RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
+    RefPtr<Statement> try_parse_labelled_statement();
+    RefPtr<MetaProperty> try_parse_new_target_expression();
 
     struct Position {
         size_t line;
@@ -181,6 +182,7 @@ private:
         bool m_allow_super_property_lookup { false };
         bool m_allow_super_constructor_call { false };
         bool m_in_function_context { false };
+        bool m_in_arrow_function_context { false };
         bool m_in_break_context { false };
         bool m_in_continue_context { false };
         bool m_string_legacy_octal_escape_sequence_in_scope { false };

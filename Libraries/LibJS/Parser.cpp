@@ -401,7 +401,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     bool is_strict = false;
 
     auto function_body_result = [&]() -> RefPtr<BlockStatement> {
-        TemporaryChange change(m_parser_state.m_in_function_context, true);
+        TemporaryChange change(m_parser_state.m_in_arrow_function_context, true);
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
             return parse_block_statement(is_strict);
@@ -452,6 +452,26 @@ RefPtr<Statement> Parser::try_parse_labelled_statement()
     statement->set_label(identifier);
     state_rollback_guard.disarm();
     return statement;
+}
+
+RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
+{
+    save_state();
+    ArmedScopeGuard state_rollback_guard = [&] {
+        load_state();
+    };
+
+    consume(TokenType::New);
+    if (!match(TokenType::Period))
+        return {};
+    consume();
+    if (!match(TokenType::Identifier))
+        return {};
+    if (consume().value() != "target")
+        return {};
+
+    state_rollback_guard.disarm();
+    return create_ast_node<MetaProperty>(MetaProperty::Type::NewTarget);
 }
 
 NonnullRefPtr<ClassDeclaration> Parser::parse_class_declaration()
@@ -593,9 +613,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         consume(TokenType::ParenOpen);
         if (match(TokenType::ParenClose) || match(TokenType::Identifier) || match(TokenType::TripleDot)) {
             auto arrow_function_result = try_parse_arrow_function_expression(true);
-            if (!arrow_function_result.is_null()) {
+            if (!arrow_function_result.is_null())
                 return arrow_function_result.release_nonnull();
-            }
         }
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
@@ -613,9 +632,8 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return create_ast_node<SuperExpression>();
     case TokenType::Identifier: {
         auto arrow_function_result = try_parse_arrow_function_expression(false);
-        if (!arrow_function_result.is_null()) {
+        if (!arrow_function_result.is_null())
             return arrow_function_result.release_nonnull();
-        }
         return create_ast_node<Identifier>(consume().value());
     }
     case TokenType::NumericLiteral:
@@ -639,8 +657,16 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         return parse_regexp_literal();
     case TokenType::TemplateLiteralStart:
         return parse_template_literal(false);
-    case TokenType::New:
+    case TokenType::New: {
+        auto new_start = position();
+        auto new_target_result = try_parse_new_target_expression();
+        if (!new_target_result.is_null()) {
+            if (!m_parser_state.m_in_function_context)
+                syntax_error("'new.target' not allowed outside of a function", new_start);
+            return new_target_result.release_nonnull();
+        }
         return parse_new_expression();
+    }
     default:
         expected("primary expression");
         consume();
@@ -1191,7 +1217,7 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
 
 NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 {
-    if (!m_parser_state.m_in_function_context)
+    if (!m_parser_state.m_in_function_context && !m_parser_state.m_in_arrow_function_context)
         syntax_error("'return' not allowed outside of a function");
 
     consume(TokenType::Return);
