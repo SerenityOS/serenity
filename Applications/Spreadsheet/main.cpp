@@ -31,6 +31,7 @@
 #include <LibCore/File.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Menu.h>
@@ -142,6 +143,73 @@ int main(int argc, char* argv[])
         if (!current_filename.is_empty())
             spreadsheet_widget.set_filename(current_filename);
     }));
+
+    auto& edit_menu = menubar->add_menu("Edit");
+    edit_menu.add_action(GUI::CommonActions::make_copy_action([&](auto&) {
+        auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
+        ASSERT(!cells.is_empty());
+        StringBuilder text_builder, url_builder;
+        bool first = true;
+        for (auto& cell : cells) {
+            url_builder.append(cell.to_url().to_string());
+            url_builder.append('\n');
+
+            auto cell_data = spreadsheet_widget.current_worksheet().at(cell);
+            if (!first)
+                text_builder.append('\t');
+            if (cell_data)
+                text_builder.append(cell_data->data);
+            first = false;
+        }
+        HashMap<String, String> metadata;
+        metadata.set("text/x-spreadsheet-data", url_builder.to_string());
+
+        GUI::Clipboard::the().set_data(text_builder.string_view().bytes(), "text/plain", move(metadata));
+    },
+        window));
+    edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
+        auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
+        ASSERT(!cells.is_empty());
+        const auto& data = GUI::Clipboard::the().data_and_type();
+        if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
+            Vector<URL> urls;
+            for (auto line : spreadsheet_data.value().split_view('\n')) {
+                if (line.is_empty())
+                    continue;
+                URL url { line };
+                if (!url.is_valid())
+                    continue;
+                urls.append(move(url));
+            }
+
+            if (urls.size() == 1 && cells.size() == 1) {
+                auto& cell = *cells.begin();
+                auto& url = urls.first();
+
+                auto* source_cell = spreadsheet_widget.current_worksheet().from_url(url);
+                if (source_cell) {
+                    auto& target_cell = spreadsheet_widget.current_worksheet().ensure(cell);
+                    auto references = target_cell.referencing_cells;
+                    target_cell = *source_cell;
+                    target_cell.referencing_cells = move(references);
+                    target_cell.dirty = true;
+                    spreadsheet_widget.update();
+                }
+
+                return;
+            }
+
+            if (urls.size() != cells.size()) {
+                // FIXME: Somehow copy a bunch of cells into another bunch of cells.
+                TODO();
+            }
+        } else {
+            for (auto& cell : spreadsheet_widget.current_worksheet().selected_cells())
+                spreadsheet_widget.current_worksheet().ensure(cell).set_data(StringView { data.data.data(), data.data.size() });
+            spreadsheet_widget.update();
+        }
+    },
+        window));
 
     auto& help_menu = menubar->add_menu("Help");
 
