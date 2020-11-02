@@ -123,6 +123,7 @@ public:
     Gfx::IntRect desktop_rect() const;
 
     const Cursor& active_cursor() const;
+    const Cursor& hidden_cursor() const { return *m_hidden_cursor; }
     const Cursor& arrow_cursor() const { return *m_arrow_cursor; }
     const Cursor& crosshair_cursor() const { return *m_crosshair_cursor; }
     const Cursor& hand_cursor() const { return *m_hand_cursor; }
@@ -247,6 +248,7 @@ private:
 
     void do_move_to_front(Window&, bool, bool);
 
+    RefPtr<Cursor> m_hidden_cursor;
     RefPtr<Cursor> m_arrow_cursor;
     RefPtr<Cursor> m_hand_cursor;
     RefPtr<Cursor> m_help_cursor;
