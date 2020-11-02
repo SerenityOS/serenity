@@ -14,6 +14,7 @@ set(KERNEL_SOURCES
     CMOS.cpp
     CommandLine.cpp
     Console.cpp
+    Devices/AsyncDeviceRequest.cpp
     Devices/BXVGADevice.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp

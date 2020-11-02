@@ -54,13 +54,10 @@ public:
     static NonnullRefPtr<PATADiskDevice> create(PATAChannel&, DriveType, int major, int minor);
     virtual ~PATADiskDevice() override;
 
-    // ^DiskDevice
-    virtual bool read_blocks(unsigned index, u16 count, UserOrKernelBuffer&) override;
-    virtual bool write_blocks(unsigned index, u16 count, const UserOrKernelBuffer&) override;
-
     void set_drive_geometry(u16, u16, u16);
 
     // ^BlockDevice
+    virtual void start_request(AsyncBlockDeviceRequest&) override;
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override;
@@ -73,11 +70,6 @@ private:
     // ^DiskDevice
     virtual const char* class_name() const override;
 
-    bool wait_for_irq();
-    bool read_sectors_with_dma(u32 lba, u16 count, UserOrKernelBuffer&);
-    bool write_sectors_with_dma(u32 lba, u16 count, const UserOrKernelBuffer&);
-    bool read_sectors(u32 lba, u16 count, UserOrKernelBuffer& buffer);
-    bool write_sectors(u32 lba, u16 count, const UserOrKernelBuffer& data);
     bool is_slave() const;
 
     Lock m_lock { "IDEDiskDevice" };

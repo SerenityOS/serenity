@@ -55,22 +55,10 @@ const char* PATADiskDevice::class_name() const
     return "PATADiskDevice";
 }
 
-bool PATADiskDevice::read_blocks(unsigned index, u16 count, UserOrKernelBuffer& out)
+void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
 {
-    if (!m_channel.m_bus_master_base.is_null() && m_channel.m_dma_enabled.resource())
-        return read_sectors_with_dma(index, count, out);
-    return read_sectors(index, count, out);
-}
-
-bool PATADiskDevice::write_blocks(unsigned index, u16 count, const UserOrKernelBuffer& data)
-{
-    if (!m_channel.m_bus_master_base.is_null() && m_channel.m_dma_enabled.resource())
-        return write_sectors_with_dma(index, count, data);
-    for (unsigned i = 0; i < count; ++i) {
-        if (!write_sectors(index + i, 1, data.offset(i * 512)))
-            return false;
-    }
-    return true;
+    bool use_dma = !m_channel.m_bus_master_base.is_null() && m_channel.m_dma_enabled.resource();
+    m_channel.start_request(request, use_dma, is_slave());
 }
 
 void PATADiskDevice::set_drive_geometry(u16 cyls, u16 heads, u16 spt)
@@ -100,8 +88,19 @@ KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, UserOrKe
 #endif
 
     if (whole_blocks > 0) {
-        if (!read_blocks(index, whole_blocks, outbuf))
-            return -1;
+        auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index, whole_blocks, outbuf, whole_blocks * block_size());
+        auto result = read_request->wait();
+        if (result.wait_result().was_interrupted())
+            return KResult(-EINTR);
+        switch (result.request_result()) {
+        case AsyncDeviceRequest::Failure:
+        case AsyncDeviceRequest::Cancelled:
+            return KResult(-EIO);
+        case AsyncDeviceRequest::MemoryFault:
+            return KResult(-EFAULT);
+        default:
+            break;
+        }
     }
 
     off_t pos = whole_blocks * block_size();
@@ -109,8 +108,21 @@ KResultOr<size_t> PATADiskDevice::read(FileDescription&, size_t offset, UserOrKe
     if (remaining > 0) {
         auto data = ByteBuffer::create_uninitialized(block_size());
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
-        if (!read_blocks(index + whole_blocks, 1, data_buffer))
+        auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size());
+        auto result = read_request->wait();
+        if (result.wait_result().was_interrupted())
+            return KResult(-EINTR);
+        switch (result.request_result()) {
+        case AsyncDeviceRequest::Failure:
             return pos;
+        case AsyncDeviceRequest::Cancelled:
+            return KResult(-EIO);
+        case AsyncDeviceRequest::MemoryFault:
+            // This should never happen, we're writing to a kernel buffer!
+            ASSERT_NOT_REACHED();
+        default:
+            break;
+        }
         if (!outbuf.write(data.data(), pos, remaining))
             return KResult(-EFAULT);
     }
@@ -143,8 +155,19 @@ KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const U
 #endif
 
     if (whole_blocks > 0) {
-        if (!write_blocks(index, whole_blocks, inbuf))
-            return -1;
+        auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index, whole_blocks, inbuf, whole_blocks * block_size());
+        auto result = write_request->wait();
+        if (result.wait_result().was_interrupted())
+            return KResult(-EINTR);
+        switch (result.request_result()) {
+        case AsyncDeviceRequest::Failure:
+        case AsyncDeviceRequest::Cancelled:
+            return KResult(-EIO);
+        case AsyncDeviceRequest::MemoryFault:
+            return KResult(-EFAULT);
+        default:
+            break;
+        }
     }
 
     off_t pos = whole_blocks * block_size();
@@ -155,12 +178,45 @@ KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const U
     if (remaining > 0) {
         auto data = ByteBuffer::create_zeroed(block_size());
         auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
-        if (!read_blocks(index + whole_blocks, 1, data_buffer))
-            return pos;
+
+        {
+            auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size());
+            auto result = read_request->wait();
+            if (result.wait_result().was_interrupted())
+                return KResult(-EINTR);
+            switch (result.request_result()) {
+            case AsyncDeviceRequest::Failure:
+                return pos;
+            case AsyncDeviceRequest::Cancelled:
+                return KResult(-EIO);
+            case AsyncDeviceRequest::MemoryFault:
+                // This should never happen, we're writing to a kernel buffer!
+                ASSERT_NOT_REACHED();
+            default:
+                break;
+            }
+        }
+
         if (!inbuf.read(data.data(), pos, remaining))
             return KResult(-EFAULT);
-        if (!write_blocks(index + whole_blocks, 1, data_buffer))
-            return pos;
+
+        {
+            auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index + whole_blocks, 1, data_buffer, block_size());
+            auto result = write_request->wait();
+            if (result.wait_result().was_interrupted())
+                return KResult(-EINTR);
+            switch (result.request_result()) {
+            case AsyncDeviceRequest::Failure:
+                return pos;
+            case AsyncDeviceRequest::Cancelled:
+                return KResult(-EIO);
+            case AsyncDeviceRequest::MemoryFault:
+                // This should never happen, we're writing to a kernel buffer!
+                ASSERT_NOT_REACHED();
+            default:
+                break;
+            }
+        }
     }
 
     return pos + remaining;
@@ -169,26 +225,6 @@ KResultOr<size_t> PATADiskDevice::write(FileDescription&, size_t offset, const U
 bool PATADiskDevice::can_write(const FileDescription&, size_t offset) const
 {
     return offset < (m_cylinders * m_heads * m_sectors_per_track * block_size());
-}
-
-bool PATADiskDevice::read_sectors_with_dma(u32 lba, u16 count, UserOrKernelBuffer& outbuf)
-{
-    return m_channel.ata_read_sectors_with_dma(lba, count, outbuf, is_slave());
-}
-
-bool PATADiskDevice::read_sectors(u32 start_sector, u16 count, UserOrKernelBuffer& outbuf)
-{
-    return m_channel.ata_read_sectors(start_sector, count, outbuf, is_slave());
-}
-
-bool PATADiskDevice::write_sectors_with_dma(u32 lba, u16 count, const UserOrKernelBuffer& inbuf)
-{
-    return m_channel.ata_write_sectors_with_dma(lba, count, inbuf, is_slave());
-}
-
-bool PATADiskDevice::write_sectors(u32 start_sector, u16 count, const UserOrKernelBuffer& inbuf)
-{
-    return m_channel.ata_write_sectors(start_sector, count, inbuf, is_slave());
 }
 
 bool PATADiskDevice::is_slave() const
