@@ -64,6 +64,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto app_icon = GUI::Icon::default_icon("filetype-image");
+
     const char* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The image file to be displayed.", "file", Core::ArgsParser::Required::No);
@@ -72,7 +74,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(true);
     window->resize(300, 200);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-image.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("QuickShow");
 
     auto& root_widget = window->set_main_widget<GUI::Widget>();
@@ -247,7 +249,7 @@ int main(int argc, char** argv)
 
     auto about_action = GUI::Action::create("About",
         [&](auto&) {
-            GUI::AboutDialog::show("QuickShow", Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-image.png"), window);
+            GUI::AboutDialog::show("QuickShow", app_icon.bitmap_for_size(32), window);
         });
 
     auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {

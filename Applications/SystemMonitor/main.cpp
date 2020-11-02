@@ -41,6 +41,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/LazyWidget.h>
@@ -146,6 +147,8 @@ int main(int argc, char** argv)
     }
 
     unveil(nullptr, nullptr);
+
+    auto app_icon = GUI::Icon::default_icon("app-system-monitor");
 
     auto window = GUI::Window::construct();
     window->set_title("System Monitor");
@@ -295,7 +298,7 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("System Monitor", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-system-monitor.png"), window);
+        GUI::AboutDialog::show("System Monitor", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
@@ -332,7 +335,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-system-monitor.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();
 }

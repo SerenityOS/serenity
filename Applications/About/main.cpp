@@ -26,6 +26,7 @@
 
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <sys/utsname.h>
@@ -51,6 +52,7 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    GUI::AboutDialog::show("SerenityOS", nullptr, nullptr, Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"));
+    auto app_icon = GUI::Icon::default_icon("ladybug");
+    GUI::AboutDialog::show("SerenityOS", nullptr, nullptr, app_icon.bitmap_for_size(32));
     return app->exec();
 }

@@ -53,6 +53,8 @@ int main(int argc, char** argv)
 
     StringView preview_mode_view = preview_mode;
 
+    auto app_icon = GUI::Icon::default_icon("app-text-editor");
+
     auto window = GUI::Window::construct();
     window->set_title("Text Editor");
     window->resize(640, 400);
@@ -84,7 +86,7 @@ int main(int argc, char** argv)
         text_widget.open_sesame(file_to_edit);
 
     window->show();
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-text-editor.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();
 }

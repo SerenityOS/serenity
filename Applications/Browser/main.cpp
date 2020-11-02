@@ -38,6 +38,7 @@
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -123,6 +124,8 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
+    auto app_icon = GUI::Icon::default_icon("app-browser");
+
     auto m_config = Core::ConfigFile::get_for_app("Browser");
     Browser::g_home_url = m_config->read_entry("Preferences", "Home", "about:blank");
 
@@ -131,7 +134,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->resize(640, 480);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Browser");
 
     auto& widget = window->set_main_widget<GUI::Widget>();
@@ -221,7 +224,7 @@ int main(int argc, char** argv)
     };
 
     window_actions.on_about = [&] {
-        GUI::AboutDialog::show("Browser", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-browser.png"), window);
+        GUI::AboutDialog::show("Browser", app_icon.bitmap_for_size(32), window);
     };
 
     window_actions.on_show_bookmarks_bar = [&](auto& action) {

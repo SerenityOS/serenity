@@ -29,6 +29,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Widget.h>
@@ -50,6 +51,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto app_icon = GUI::Icon::default_icon("app-display-settings");
+
     // FIXME: Clean up this bizarre object graph
     auto instance = DisplaySettingsWidget::construct();
 
@@ -59,7 +62,7 @@ int main(int argc, char** argv)
     window->resize(360, 390);
     window->set_resizable(false);
     window->set_main_widget(instance->root_widget());
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();
 
@@ -70,7 +73,7 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Display settings", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-display-settings.png"), window);
+        GUI::AboutDialog::show("Display settings", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));

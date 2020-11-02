@@ -52,11 +52,12 @@ int main(int argc, char** argv)
 
     TrackManager track_manager;
 
+    auto app_icon = GUI::Icon::default_icon("app-piano");
     auto window = GUI::Window::construct();
     auto& main_widget = window->set_main_widget<MainWidget>(track_manager);
     window->set_title("Piano");
     window->resize(840, 600);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-piano.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->show();
 
     Audio::WavWriter wav_writer;
@@ -119,7 +120,7 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
-        GUI::AboutDialog::show("Piano", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-piano.png"), window);
+        GUI::AboutDialog::show("Piano", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
