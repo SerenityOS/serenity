@@ -26,6 +26,7 @@
 
 #include "SpreadsheetModel.h"
 #include "ConditionalFormatting.h"
+#include <AK/URL.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -66,6 +67,12 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         }
 
         return cell->typed_display();
+    }
+
+    if (role == GUI::ModelRole::DragData) {
+        // FIXME: It would be really nice if we could send out a URL *and* some extra data,
+        //        The Event already has support for this, but the user-facing API does not.
+        return Position { m_sheet->column(index.column()), (size_t)index.row() }.to_url().to_string();
     }
 
     if (role == GUI::ModelRole::TextAlignment) {

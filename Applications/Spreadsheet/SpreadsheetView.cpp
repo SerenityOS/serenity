@@ -27,6 +27,9 @@
 #include "SpreadsheetView.h"
 #include "CellTypeDialog.h"
 #include "SpreadsheetModel.h"
+#include <AK/ScopeGuard.h>
+#include <AK/URL.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Menu.h>
@@ -144,6 +147,49 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             m_table_view->update();
         }
     }));
+
+    m_table_view->on_drop = [&](const GUI::ModelIndex& index, const GUI::DropEvent& event) {
+        if (!index.is_valid())
+            return;
+
+        ScopeGuard update_after_drop { [this] { update(); } };
+
+        if (event.mime_data().has_format("text/x-spreadsheet-data")) {
+            auto data = event.mime_data().data("text/x-spreadsheet-data");
+            StringView urls { data.data(), data.size() };
+            bool first = true;
+            for (auto url : urls.lines(false)) {
+                if (!first) { // FIXME: Allow d&d from many cells to many cells, somehow.
+                    dbg() << "Ignored '" << url << "'";
+                    continue;
+                }
+
+                first = false;
+
+                auto& target_cell = m_sheet->ensure({ m_sheet->column(index.column()), (size_t)index.row() });
+                auto* source_cell = m_sheet->from_url(url);
+
+                if (!source_cell) {
+                    target_cell.set_data("");
+                    return;
+                }
+
+                auto ref_cells = target_cell.referencing_cells;
+                target_cell = *source_cell;
+                target_cell.dirty = true;
+                target_cell.referencing_cells = move(ref_cells);
+            }
+            return;
+        }
+
+        if (event.mime_data().has_text()) {
+            auto* target_cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
+            ASSERT(target_cell);
+
+            target_cell->set_data(event.text());
+            return;
+        }
+    };
 }
 
 void SpreadsheetView::hide_event(GUI::HideEvent&)

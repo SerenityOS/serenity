@@ -44,6 +44,7 @@ public:
     virtual void set_data(const GUI::ModelIndex&, const GUI::Variant&) override;
     virtual void update() override;
     virtual bool is_column_sortable(int) const override { return false; }
+    virtual StringView drag_data_type() const override { return "text/x-spreadsheet-data"; }
 
 private:
     explicit SheetModel(Sheet& sheet)
