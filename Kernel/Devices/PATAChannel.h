@@ -39,6 +39,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Lock.h>
 #include <Kernel/PCI/Access.h>
@@ -49,6 +50,8 @@
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {
+
+class AsyncBlockDeviceRequest;
 
 struct PhysicalRegionDescriptor {
     PhysicalAddress offset;
@@ -83,21 +86,21 @@ private:
     void initialize(bool force_pio);
     void detect_disks();
 
-    void wait_for_irq();
-    bool ata_read_sectors_with_dma(u32, u16, UserOrKernelBuffer&, bool);
-    bool ata_write_sectors_with_dma(u32, u16, const UserOrKernelBuffer&, bool);
-    bool ata_read_sectors(u32, u16, UserOrKernelBuffer&, bool);
-    bool ata_write_sectors(u32, u16, const UserOrKernelBuffer&, bool);
+    void start_request(AsyncBlockDeviceRequest&, bool, bool);
+    void complete_current_request(AsyncDeviceRequest::RequestResult);
 
-    inline void prepare_for_irq();
+    void ata_read_sectors_with_dma(bool);
+    void ata_read_sectors(bool);
+    bool ata_do_read_sector();
+    void ata_write_sectors_with_dma(bool);
+    void ata_write_sectors(bool);
+    void ata_do_write_sector();
 
     // Data members
     u8 m_channel_number { 0 }; // Channel number. 0 = master, 1 = slave
     IOAddress m_io_base;
     IOAddress m_control_base;
     volatile u8 m_device_error { 0 };
-
-    WaitQueue m_irq_queue;
 
     PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_page->paddr().offset(0xc0000000).as_ptr()); }
     RefPtr<PhysicalPage> m_prdt_page;
@@ -108,5 +111,11 @@ private:
 
     RefPtr<PATADiskDevice> m_master;
     RefPtr<PATADiskDevice> m_slave;
+
+    AsyncBlockDeviceRequest* m_current_request { nullptr };
+    u32 m_current_request_block_index { 0 };
+    bool m_current_request_uses_dma { false };
+    bool m_current_request_flushing_cache { false };
+    SpinLock<u8> m_request_lock;
 };
 }

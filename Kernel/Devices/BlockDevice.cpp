@@ -28,18 +28,66 @@
 
 namespace Kernel {
 
+AsyncBlockDeviceRequest::AsyncBlockDeviceRequest(Device& block_device, RequestType request_type, u32 block_index, u32 block_count, const UserOrKernelBuffer& buffer, size_t buffer_size)
+    : AsyncDeviceRequest(block_device)
+    , m_block_device(static_cast<BlockDevice&>(block_device))
+    , m_request_type(request_type)
+    , m_block_index(block_index)
+    , m_block_count(block_count)
+    , m_buffer(buffer)
+    , m_buffer_size(buffer_size)
+{
+}
+
+void AsyncBlockDeviceRequest::start()
+{
+    m_block_device.start_request(*this);
+}
+
 BlockDevice::~BlockDevice()
 {
 }
 
-bool BlockDevice::read_block(unsigned index, UserOrKernelBuffer& buffer) const
+bool BlockDevice::read_block(unsigned index, UserOrKernelBuffer& buffer)
 {
-    return const_cast<BlockDevice*>(this)->read_blocks(index, 1, buffer);
+    auto read_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index, 1, buffer, 512);
+    switch (read_request->wait().request_result()) {
+    case AsyncDeviceRequest::Success:
+        return true;
+    case AsyncDeviceRequest::Failure:
+        dbg() << "BlockDevice::read_block(" << index << ") IO error";
+        break;
+    case AsyncDeviceRequest::MemoryFault:
+        dbg() << "BlockDevice::read_block(" << index << ") EFAULT";
+        break;
+    case AsyncDeviceRequest::Cancelled:
+        dbg() << "BlockDevice::read_block(" << index << ") cancelled";
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+    return false;
 }
 
-bool BlockDevice::write_block(unsigned index, const UserOrKernelBuffer& data)
+bool BlockDevice::write_block(unsigned index, const UserOrKernelBuffer& buffer)
 {
-    return write_blocks(index, 1, data);
+    auto write_request = make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index, 1, buffer, 512);
+    switch (write_request->wait().request_result()) {
+    case AsyncDeviceRequest::Success:
+        return true;
+    case AsyncDeviceRequest::Failure:
+        dbg() << "BlockDevice::write_block(" << index << ") IO error";
+        break;
+    case AsyncDeviceRequest::MemoryFault:
+        dbg() << "BlockDevice::write_block(" << index << ") EFAULT";
+        break;
+    case AsyncDeviceRequest::Cancelled:
+        dbg() << "BlockDevice::write_block(" << index << ") cancelled";
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+    return false;
 }
 
 }
