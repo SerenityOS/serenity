@@ -108,13 +108,6 @@ namespace Kernel {
 #define PCI_Mass_Storage_Class 0x1
 #define PCI_IDE_Controller_Subclass 0x1
 
-static AK::Singleton<Lock> s_pata_lock;
-
-static Lock& s_lock()
-{
-    return *s_pata_lock;
-};
-
 OwnPtr<PATAChannel> PATAChannel::create(ChannelType type, bool force_pio)
 {
     PCI::Address pci_address;
@@ -141,17 +134,71 @@ PATAChannel::PATAChannel(PCI::Address address, ChannelType type, bool force_pio)
 
     initialize(force_pio);
     detect_disks();
-    disable_irq();
+    enable_irq();
 }
 
 PATAChannel::~PATAChannel()
 {
 }
 
-void PATAChannel::prepare_for_irq()
+void PATAChannel::start_request(AsyncBlockDeviceRequest& request, bool use_dma, bool is_slave)
 {
-    cli();
-    enable_irq();
+    ScopedSpinLock lock(m_request_lock);
+#ifdef PATA_DEBUG
+    dbg() << "PATAChannel::start_request";
+#endif
+    m_current_request = &request;
+    m_current_request_block_index = 0;
+    m_current_request_uses_dma = use_dma;
+    m_current_request_flushing_cache = false;
+
+    if (request.request_type() == AsyncBlockDeviceRequest::Read) {
+        if (use_dma)
+            ata_read_sectors_with_dma(is_slave);
+        else
+            ata_read_sectors(is_slave);
+    } else {
+        if (use_dma)
+            ata_write_sectors_with_dma(is_slave);
+        else
+            ata_write_sectors(is_slave);
+    }
+}
+
+void PATAChannel::complete_current_request(AsyncDeviceRequest::RequestResult result)
+{
+    // NOTE: this may be called from the interrupt handler!
+    ASSERT(m_current_request);
+    ASSERT(m_request_lock.is_locked());
+
+    // Now schedule reading back the buffer as soon as we leave the irq handler.
+    // This is important so that we can safely write the buffer back,
+    // which could cause page faults. Note that this may be called immediately
+    // before Processor::deferred_call_queue returns!
+    Processor::deferred_call_queue([this, result]() {
+#ifdef PATA_DEBUG
+        dbg() << "PATAChannel::complete_current_request result: " << result;
+#endif
+        ASSERT(m_current_request);
+        auto& request = *m_current_request;
+        m_current_request = nullptr;
+
+        if (m_current_request_uses_dma) {
+            if (result == AsyncDeviceRequest::Success) {
+                if (request.request_type() == AsyncBlockDeviceRequest::Read) {
+                    if (!request.write_to_buffer(request.buffer(), m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * request.block_count())) {
+                        request.complete(AsyncDeviceRequest::MemoryFault);
+                        return;
+                    }
+                }
+
+                // I read somewhere that this may trigger a cache flush so let's do it.
+                m_bus_master_base.offset(2).out<u8>(m_bus_master_base.offset(2).in<u8>() | 0x6);
+            }
+        }
+
+        request.complete(result);
+    });
 }
 
 void PATAChannel::initialize(bool force_pio)
@@ -175,12 +222,6 @@ static void print_ide_status(u8 status)
     klog() << "PATAChannel: print_ide_status: DRQ=" << ((status & ATA_SR_DRQ) != 0) << " BSY=" << ((status & ATA_SR_BSY) != 0) << " DRDY=" << ((status & ATA_SR_DRDY) != 0) << " DSC=" << ((status & ATA_SR_DSC) != 0) << " DF=" << ((status & ATA_SR_DF) != 0) << " CORR=" << ((status & ATA_SR_CORR) != 0) << " IDX=" << ((status & ATA_SR_IDX) != 0) << " ERR=" << ((status & ATA_SR_ERR) != 0);
 }
 
-void PATAChannel::wait_for_irq()
-{
-    Thread::current()->wait_on(m_irq_queue, "PATAChannel");
-    disable_irq();
-}
-
 void PATAChannel::handle_irq(const RegisterState&)
 {
     u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
@@ -196,17 +237,66 @@ void PATAChannel::handle_irq(const RegisterState&)
         return;
     }
 
+    ScopedSpinLock lock(m_request_lock);
+#ifdef PATA_DEBUG
+    klog() << "PATAChannel: interrupt: DRQ=" << ((status & ATA_SR_DRQ) != 0) << " BSY=" << ((status & ATA_SR_BSY) != 0) << " DRDY=" << ((status & ATA_SR_DRDY) != 0);
+#endif
+
+    if (!m_current_request) {
+#ifdef PATA_DEBUG
+        dbg() << "PATAChannel: IRQ but no pending request!";
+#endif
+        return;
+    }
+
+    bool received_all_irqs = m_current_request_uses_dma || m_current_request_block_index + 1 >= m_current_request->block_count();
+
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
         m_device_error = m_io_base.offset(ATA_REG_ERROR).in<u8>();
         klog() << "PATAChannel: Error " << String::format("%b", m_device_error) << "!";
-    } else {
-        m_device_error = 0;
+        complete_current_request(AsyncDeviceRequest::Failure);
+        return;
     }
-#ifdef PATA_DEBUG
-    klog() << "PATAChannel: interrupt: DRQ=" << ((status & ATA_SR_DRQ) != 0) << " BSY=" << ((status & ATA_SR_BSY) != 0) << " DRDY=" << ((status & ATA_SR_DRDY) != 0);
-#endif
-    m_irq_queue.wake_all();
+
+    m_device_error = 0;
+    if (received_all_irqs) {
+        complete_current_request(AsyncDeviceRequest::Success);
+    } else {
+        ASSERT(!m_current_request_uses_dma);
+
+        // Now schedule reading/writing the buffer as soon as we leave the irq handler.
+        // This is important so that we can safely access the buffers, which could
+        // trigger page faults
+        Processor::deferred_call_queue([this]() {
+            if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
+                dbg() << "PATAChannel: Read block " << m_current_request_block_index << "/" << m_current_request->block_count();
+                if (ata_do_read_sector()) {
+                    if (++m_current_request_block_index >= m_current_request->block_count()) {
+                        complete_current_request(AsyncDeviceRequest::Success);
+                        return;
+                    }
+                    // Wait for the next block
+                    enable_irq();
+                }
+            } else {
+                if (!m_current_request_flushing_cache) {
+                    dbg() << "PATAChannel: Wrote block " << m_current_request_block_index << "/" << m_current_request->block_count();
+                    if (++m_current_request_block_index >= m_current_request->block_count()) {
+                        // We read the last block, flush cache
+                        ASSERT(!m_current_request_flushing_cache);
+                        m_current_request_flushing_cache = true;
+                        m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_CACHE_FLUSH);
+                    } else {
+                        // Read next block
+                        ata_do_write_sector();
+                    }
+                } else {
+                    complete_current_request(AsyncDeviceRequest::Success);
+                }
+            }
+        });
+    }
 }
 
 static void io_delay()
@@ -274,15 +364,16 @@ void PATAChannel::detect_disks()
     }
 }
 
-bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, UserOrKernelBuffer& outbuf, bool slave_request)
+void PATAChannel::ata_read_sectors_with_dma(bool slave_request)
 {
-    LOCKER(s_lock());
+    auto& request = *m_current_request;
+    u32 lba = request.block_index();
 #ifdef PATA_DEBUG
-    dbg() << "PATAChannel::ata_read_sectors_with_dma (" << lba << " x" << count << ") -> " << outbuf.user_or_kernel_ptr();
+    dbg() << "PATAChannel::ata_read_sectors_with_dma (" << lba << " x" << request.block_count() << ")";
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
-    prdt().size = 512 * count;
+    prdt().size = 512 * request.block_count();
 
     ASSERT(prdt().size <= PAGE_SIZE);
 
@@ -312,7 +403,7 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, UserOrKernelBuff
     m_io_base.offset(ATA_REG_LBA1).out<u8>(0);
     m_io_base.offset(ATA_REG_LBA2).out<u8>(0);
 
-    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(count);
+    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(request.block_count());
     m_io_base.offset(ATA_REG_LBA0).out<u8>((lba & 0x000000ff) >> 0);
     m_io_base.offset(ATA_REG_LBA1).out<u8>((lba & 0x0000ff00) >> 8);
     m_io_base.offset(ATA_REG_LBA2).out<u8>((lba & 0x00ff0000) >> 16);
@@ -326,35 +417,89 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, UserOrKernelBuff
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_DMA_EXT);
     io_delay();
 
-    prepare_for_irq();
+    enable_irq();
     // Start bus master
     m_bus_master_base.out<u8>(0x9);
+}
 
-    wait_for_irq();
-
-    if (m_device_error)
+bool PATAChannel::ata_do_read_sector()
+{
+    auto& request = *m_current_request;
+    auto out_buffer = request.buffer().offset(m_current_request_block_index * 512);
+    ssize_t nwritten = request.write_to_buffer_buffered<512>(out_buffer, 512, [&](u8* buffer, size_t buffer_bytes) {
+        for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
+            *(u16*)&buffer[i] = IO::in16(m_io_base.offset(ATA_REG_DATA).get());
+        return (ssize_t)buffer_bytes;
+    });
+    if (nwritten < 0) {
+        // TODO: Do we need to abort the PATA read if this wasn't the last block?
+        complete_current_request(AsyncDeviceRequest::MemoryFault);
         return false;
-
-    if (!outbuf.write(m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * count))
-        return false; // TODO: -EFAULT
-
-    // I read somewhere that this may trigger a cache flush so let's do it.
-    m_bus_master_base.offset(2).out<u8>(m_bus_master_base.offset(2).in<u8>() | 0x6);
+    }
     return true;
 }
 
-bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const UserOrKernelBuffer& inbuf, bool slave_request)
+void PATAChannel::ata_read_sectors(bool slave_request)
 {
-    LOCKER(s_lock());
+    auto& request = *m_current_request;
+    ASSERT(request.block_count() <= 256);
 #ifdef PATA_DEBUG
-    dbg() << "PATAChannel::ata_write_sectors_with_dma (" << lba << " x" << count << ") <- " << inbuf.user_or_kernel_ptr();
+    dbg() << "PATAChannel::ata_read_sectors";
+#endif
+
+    while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
+        ;
+
+    auto lba = request.block_index();
+#ifdef PATA_DEBUG
+    klog() << "PATAChannel: Reading " << request.block_count() << " sector(s) @ LBA " << lba;
+#endif
+
+    u8 devsel = 0xe0;
+    if (slave_request)
+        devsel |= 0x10;
+
+    m_control_base.offset(ATA_CTL_CONTROL).out<u8>(0);
+    m_io_base.offset(ATA_REG_HDDEVSEL).out<u8>(devsel | (static_cast<u8>(slave_request) << 4) | 0x40);
+    io_delay();
+
+    m_io_base.offset(ATA_REG_FEATURES).out<u8>(0);
+
+    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(0);
+    m_io_base.offset(ATA_REG_LBA0).out<u8>(0);
+    m_io_base.offset(ATA_REG_LBA1).out<u8>(0);
+    m_io_base.offset(ATA_REG_LBA2).out<u8>(0);
+
+    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(request.block_count());
+    m_io_base.offset(ATA_REG_LBA0).out<u8>((lba & 0x000000ff) >> 0);
+    m_io_base.offset(ATA_REG_LBA1).out<u8>((lba & 0x0000ff00) >> 8);
+    m_io_base.offset(ATA_REG_LBA2).out<u8>((lba & 0x00ff0000) >> 16);
+
+    for (;;) {
+        auto status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
+        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
+            break;
+    }
+
+    enable_irq();
+    m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_PIO);
+}
+
+void PATAChannel::ata_write_sectors_with_dma(bool slave_request)
+{
+    auto& request = *m_current_request;
+    u32 lba = request.block_index();
+#ifdef PATA_DEBUG
+    dbg() << "PATAChannel::ata_write_sectors_with_dma (" << lba << " x" << request.block_count() << ")";
 #endif
 
     prdt().offset = m_dma_buffer_page->paddr();
-    prdt().size = 512 * count;
+    prdt().size = 512 * request.block_count();
 
-    if (!inbuf.read(m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * count))
-        return false; // TODO: -EFAULT
+    if (!request.read_from_buffer(request.buffer(), m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * request.block_count())) {
+        complete_current_request(AsyncDeviceRequest::MemoryFault);
+        return;
+    }
 
     ASSERT(prdt().size <= PAGE_SIZE);
 
@@ -381,7 +526,7 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const UserOrKer
     m_io_base.offset(ATA_REG_LBA1).out<u8>(0);
     m_io_base.offset(ATA_REG_LBA2).out<u8>(0);
 
-    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(count);
+    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(request.block_count());
     m_io_base.offset(ATA_REG_LBA0).out<u8>((lba & 0x000000ff) >> 0);
     m_io_base.offset(ATA_REG_LBA1).out<u8>((lba & 0x0000ff00) >> 8);
     m_io_base.offset(ATA_REG_LBA2).out<u8>((lba & 0x00ff0000) >> 16);
@@ -395,100 +540,42 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const UserOrKer
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_WRITE_DMA_EXT);
     io_delay();
 
-    prepare_for_irq();
+    enable_irq();
     // Start bus master
     m_bus_master_base.out<u8>(0x1);
-    wait_for_irq();
-
-    if (m_device_error)
-        return false;
-
-    // I read somewhere that this may trigger a cache flush so let's do it.
-    m_bus_master_base.offset(2).out<u8>(m_bus_master_base.offset(2).in<u8>() | 0x6);
-    return true;
 }
 
-bool PATAChannel::ata_read_sectors(u32 lba, u16 count, UserOrKernelBuffer& outbuf, bool slave_request)
+void PATAChannel::ata_do_write_sector()
 {
-    ASSERT(count <= 256);
-    LOCKER(s_lock());
-#ifdef PATA_DEBUG
-    dbg() << "PATAChannel::ata_read_sectors request (" << count << " sector(s) @ " << lba << " into " << outbuf.user_or_kernel_ptr() << ")";
-#endif
+    auto& request = *m_current_request;
 
-    while (m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY)
+    io_delay();
+    while ((m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY) || !(m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRQ))
         ;
 
+    u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
+    ASSERT(status & ATA_SR_DRQ);
+
+    auto in_buffer = request.buffer().offset(m_current_request_block_index * 512);
 #ifdef PATA_DEBUG
-    klog() << "PATAChannel: Reading " << count << " sector(s) @ LBA " << lba;
+    dbg() << "PATAChannel: Writing 512 bytes (part " << m_current_request_block_index << ") (status=" << String::format("%b", status) << ")...";
 #endif
-
-    u8 devsel = 0xe0;
-    if (slave_request)
-        devsel |= 0x10;
-
-    m_control_base.offset(ATA_CTL_CONTROL).out<u8>(0);
-    m_io_base.offset(ATA_REG_HDDEVSEL).out<u8>(devsel | (static_cast<u8>(slave_request) << 4) | 0x40);
-    io_delay();
-
-    m_io_base.offset(ATA_REG_FEATURES).out<u8>(0);
-
-    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(0);
-    m_io_base.offset(ATA_REG_LBA0).out<u8>(0);
-    m_io_base.offset(ATA_REG_LBA1).out<u8>(0);
-    m_io_base.offset(ATA_REG_LBA2).out<u8>(0);
-
-    m_io_base.offset(ATA_REG_SECCOUNT0).out<u8>(count);
-    m_io_base.offset(ATA_REG_LBA0).out<u8>((lba & 0x000000ff) >> 0);
-    m_io_base.offset(ATA_REG_LBA1).out<u8>((lba & 0x0000ff00) >> 8);
-    m_io_base.offset(ATA_REG_LBA2).out<u8>((lba & 0x00ff0000) >> 16);
-
-    for (;;) {
-        auto status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
-        if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRDY))
-            break;
-    }
-
-    prepare_for_irq();
-    m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_READ_PIO);
-
-    for (int i = 0; i < count; i++) {
-        if (i > 0)
-            prepare_for_irq();
-        wait_for_irq();
-        if (m_device_error)
-            return false;
-
-        u8 status = m_control_base.offset(ATA_CTL_ALTSTATUS).in<u8>();
-        ASSERT(!(status & ATA_SR_BSY));
-
-        auto out = outbuf.offset(i * 512);
-#ifdef PATA_DEBUG
-        dbg() << "PATAChannel: Retrieving 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), outbuf=(" << out.user_or_kernel_ptr() << ")...";
-#endif
-        prepare_for_irq();
-
-        ssize_t nwritten = out.write_buffered<512>(512, [&](u8* buffer, size_t buffer_bytes) {
-            for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
-                *(u16*)&buffer[i] = IO::in16(m_io_base.offset(ATA_REG_DATA).get());
-            return (ssize_t)buffer_bytes;
-        });
-        if (nwritten < 0) {
-            sti();
-            disable_irq();
-            return false; // TODO: -EFAULT
-        }
-    }
-
-    sti();
-    disable_irq();
-    return true;
+    ssize_t nread = request.read_from_buffer_buffered<512>(in_buffer, 512, [&](const u8* buffer, size_t buffer_bytes) {
+        for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
+            IO::out16(m_io_base.offset(ATA_REG_DATA).get(), *(const u16*)&buffer[i]);
+        return (ssize_t)buffer_bytes;
+    });
+    if (nread < 0)
+        complete_current_request(AsyncDeviceRequest::MemoryFault);
 }
 
-bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const UserOrKernelBuffer& inbuf, bool slave_request)
+void PATAChannel::ata_write_sectors(bool slave_request)
 {
-    ASSERT(count <= 256);
-    LOCKER(s_lock());
+    auto& request = *m_current_request;
+
+    ASSERT(request.block_count() <= 256);
+    u32 start_sector = request.block_index();
+    u32 count = request.block_count();
 #ifdef PATA_DEBUG
     klog() << "PATAChannel::ata_write_sectors request (" << count << " sector(s) @ " << start_sector << ")";
 #endif
@@ -516,37 +603,12 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const UserOrKer
 
     m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_WRITE_PIO);
 
-    for (int i = 0; i < count; i++) {
-        io_delay();
-        while ((m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY) || !(m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRQ))
-            ;
+    io_delay();
+    while ((m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_BSY) || !(m_io_base.offset(ATA_REG_STATUS).in<u8>() & ATA_SR_DRQ))
+        ;
 
-        u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
-        ASSERT(status & ATA_SR_DRQ);
-
-        auto in = inbuf.offset(i * 512);
-#ifdef PATA_DEBUG
-        dbg() << "PATAChannel: Writing 512 bytes (part " << i << ") (status=" << String::format("%b", status) << "), inbuf=(" << in.user_or_kernel_ptr() << ")...";
-#endif
-        prepare_for_irq();
-        ssize_t nread = in.read_buffered<512>(512, [&](const u8* buffer, size_t buffer_bytes) {
-            for (size_t i = 0; i < buffer_bytes; i += sizeof(u16))
-                IO::out16(m_io_base.offset(ATA_REG_DATA).get(), *(const u16*)&buffer[i]);
-            return (ssize_t)buffer_bytes;
-        });
-        wait_for_irq();
-        status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
-        ASSERT(!(status & ATA_SR_BSY));
-        if (nread < 0)
-            return false; // TODO: -EFAULT
-    }
-    prepare_for_irq();
-    m_io_base.offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_CACHE_FLUSH);
-    wait_for_irq();
-    u8 status = m_io_base.offset(ATA_REG_STATUS).in<u8>();
-    ASSERT(!(status & ATA_SR_BSY));
-
-    return !m_device_error;
+    enable_irq();
+    ata_do_write_sector();
 }
 
 }

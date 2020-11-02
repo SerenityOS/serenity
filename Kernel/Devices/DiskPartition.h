@@ -36,8 +36,7 @@ public:
     static NonnullRefPtr<DiskPartition> create(BlockDevice&, unsigned block_offset, unsigned block_limit);
     virtual ~DiskPartition();
 
-    virtual bool read_blocks(unsigned index, u16 count, UserOrKernelBuffer&) override;
-    virtual bool write_blocks(unsigned index, u16 count, const UserOrKernelBuffer&) override;
+    virtual void start_request(AsyncBlockDeviceRequest&) override;
 
     // ^BlockDevice
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override;
