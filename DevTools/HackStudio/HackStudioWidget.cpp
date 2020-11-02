@@ -351,7 +351,12 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             return;
 
         for (auto& file : files) {
-            if (!m_project->remove_file(file)) {
+            if (m_project->remove_file(file)) {
+                m_open_files_vector.remove_first_matching([&](auto& filename) {
+                    return filename == file;
+                });
+                m_open_files_view->model()->update();
+            } else {
                 GUI::MessageBox::show(window(),
                     String::formatted("Removing file {} from the project failed.", file),
                     "Removal failed",
