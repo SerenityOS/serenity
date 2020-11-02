@@ -247,11 +247,13 @@ private:
 
 inline u8* Bitmap::scanline_u8(int y)
 {
+    ASSERT(y >= 0 && y < height());
     return reinterpret_cast<u8*>(m_data) + (y * m_pitch);
 }
 
 inline const u8* Bitmap::scanline_u8(int y) const
 {
+    ASSERT(y >= 0 && y < height());
     return reinterpret_cast<const u8*>(m_data) + (y * m_pitch);
 }
 
@@ -268,18 +270,21 @@ inline const RGBA32* Bitmap::scanline(int y) const
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::RGB32>(int x, int y) const
 {
+    ASSERT(x >= 0 && x < width());
     return Color::from_rgb(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::RGBA32>(int x, int y) const
 {
+    ASSERT(x >= 0 && x < width());
     return Color::from_rgba(scanline(y)[x]);
 }
 
 template<>
 inline Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
 {
+    ASSERT(x >= 0 && x < width());
     return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
@@ -300,13 +305,13 @@ inline Color Bitmap::get_pixel(int x, int y) const
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGB32>(int x, int y, Color color)
 {
-    ASSERT(rect().contains(x, y));
+    ASSERT(x >= 0 && x < width());
     scanline(y)[x] = color.value();
 }
 template<>
 inline void Bitmap::set_pixel<StorageFormat::RGBA32>(int x, int y, Color color)
 {
-    ASSERT(rect().contains(x, y));
+    ASSERT(x >= 0 && x < width());
     scanline(y)[x] = color.value(); // drop alpha
 }
 inline void Bitmap::set_pixel(int x, int y, Color color)
