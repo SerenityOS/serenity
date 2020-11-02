@@ -228,6 +228,8 @@ void AbstractView::mousedown_event(MouseEvent& event)
         clear_selection();
     } else if (event.modifiers() & Mod_Ctrl) {
         set_cursor(index, SelectionUpdate::Ctrl);
+    } else if (event.modifiers() & Mod_Shift) {
+        set_cursor(index, SelectionUpdate::Shift);
     } else if (event.button() == MouseButton::Left && m_selection.contains(index) && !m_model->drag_data_type().is_null()) {
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
@@ -449,6 +451,23 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
         else if (selection_update == SelectionUpdate::ClearIfNotSelected) {
             if (!m_selection.contains(index))
                 clear_selection();
+        } else if (selection_update == SelectionUpdate::Shift) {
+            // Toggle all from cursor to new index.
+            auto min_row = min(cursor_index().row(), index.row());
+            auto max_row = max(cursor_index().row(), index.row());
+            auto min_column = min(cursor_index().column(), index.column());
+            auto max_column = max(cursor_index().column(), index.column());
+
+            for (auto row = min_row; row <= max_row; ++row) {
+                for (auto column = min_column; column <= max_column; ++column) {
+                    auto new_index = model()->index(row, column);
+                    if (new_index.is_valid())
+                        toggle_selection(new_index);
+                }
+            }
+
+            // Finally toggle the cursor index again to make it go back to its current state.
+            toggle_selection(cursor_index());
         }
 
         // FIXME: Support the other SelectionUpdate types
