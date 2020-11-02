@@ -45,6 +45,8 @@ public:
     void appendf(const char*, ...);
     void appendvf(const char*, va_list);
 
+    void append_escaped_for_json(const StringView&);
+
     template<typename... Parameters>
     void appendff(StringView fmtstr, const Parameters&... parameters)
     {

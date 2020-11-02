@@ -93,4 +93,32 @@ void KBufferBuilder::appendf(const char* fmt, ...)
     va_end(ap);
 }
 
+void KBufferBuilder::append_escaped_for_json(const StringView& string)
+{
+    for (auto ch : string) {
+        switch (ch) {
+        case '\e':
+            append("\\u001B");
+            break;
+        case '\b':
+            append("\\b");
+            break;
+        case '\n':
+            append("\\n");
+            break;
+        case '\t':
+            append("\\t");
+            break;
+        case '\"':
+            append("\\\"");
+            break;
+        case '\\':
+            append("\\\\");
+            break;
+        default:
+            append(ch);
+        }
+    }
+}
+
 }
