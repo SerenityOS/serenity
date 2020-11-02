@@ -33,6 +33,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
@@ -85,10 +86,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    auto app_icon = GUI::Icon::default_icon("app-spreadsheet");
     auto window = GUI::Window::construct();
     window->set_title("Spreadsheet");
     window->resize(640, 480);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-spreadsheet.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr);
 
@@ -157,7 +159,7 @@ int main(int argc, char* argv[])
     app_menu.add_separator();
 
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Spreadsheet", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-spreadsheet.png"), window);
+        GUI::AboutDialog::show("Spreadsheet", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));

@@ -29,6 +29,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Window.h>
 
@@ -66,6 +67,8 @@ private:
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
+
+    auto app_icon = GUI::Icon::default_icon("app-theme-editor");
 
     Gfx::Palette preview_palette = app->palette();
 
@@ -109,6 +112,6 @@ int main(int argc, char** argv)
     window->resize(480, 500);
     window->show();
     window->set_title("Theme Editor");
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-theme-editor.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
     return app->exec();
 }

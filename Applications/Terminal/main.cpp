@@ -31,6 +31,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/GroupBox.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuBar.h>
 #include <LibGUI/RadioButton.h>
@@ -266,6 +267,8 @@ int main(int argc, char** argv)
     auto* pts_name = ptsname(ptm_fd);
     utmp_update(pts_name, shell_pid, true);
 
+    auto app_icon = GUI::Icon::default_icon("app-terminal");
+
     auto window = GUI::Window::construct();
     window->set_title("Terminal");
     window->set_background_color(Color::Black);
@@ -280,7 +283,7 @@ int main(int argc, char** argv)
     };
     terminal.apply_size_increments_to_window(*window);
     window->show();
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
     terminal.set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
     RefPtr<GUI::Window> settings_window;
@@ -345,7 +348,7 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("Terminal", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-terminal.png"), window);
+        GUI::AboutDialog::show("Terminal", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
