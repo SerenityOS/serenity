@@ -61,7 +61,7 @@ public:
     {
         begin_item();
         m_builder.append('"');
-        m_builder.append(value);
+        m_builder.append_escaped_for_json(value);
         m_builder.append('"');
     }
 
@@ -69,7 +69,7 @@ public:
     {
         begin_item();
         m_builder.append('"');
-        m_builder.append(value);
+        m_builder.append_escaped_for_json(value);
         m_builder.append('"');
     }
 
@@ -77,7 +77,7 @@ public:
     {
         begin_item();
         m_builder.append('"');
-        m_builder.append(value);
+        m_builder.append_escaped_for_json(value);
         m_builder.append('"');
     }
 
