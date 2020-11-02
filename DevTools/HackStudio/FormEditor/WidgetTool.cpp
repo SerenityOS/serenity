@@ -36,10 +36,11 @@ void WidgetTool::on_mousedown(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
         m_down_event_origin = event.position();
-        m_editor.selection().for_each([this](auto& widget) {
+        m_widget.set_relative_rect({ m_down_event_origin.x(), m_down_event_origin.y(), 0, 0 });
+        /*m_editor.selection().for_each([this](auto& widget) {
             widget.set_relative_rect({ m_down_event_origin.x(), m_down_event_origin.y(), 0, 0 });
             return IterationDecision::Break;
-        });
+        });*/
     }
 }
 
@@ -50,11 +51,13 @@ void WidgetTool::on_mousemove(GUI::MouseEvent& event)
     if (event.buttons() & GUI::MouseButton::Left) {
         m_editor.update();
         auto delta = event.position() - m_down_event_origin;
-        m_editor.selection().for_each([&delta](auto& widget) {
+        m_widget.set_width(delta.x());
+        m_widget.set_height(delta.y());
+        /*m_editor.selection().for_each([&delta](auto& widget) {
             widget.set_width(delta.x());
             widget.set_height(delta.y());
             return IterationDecision::Break;
-        });
+        });*/
     }
 }
 
@@ -64,16 +67,20 @@ void WidgetTool::on_mouseup(GUI::MouseEvent& event)
         m_down_event_origin = {};
     }
 
-    m_editor.selection().for_each([](auto& widget) {
+    if (m_widget.width() < 1 && m_widget.height() < 1) {
+        m_widget.set_width(30);
+        m_widget.set_height(30);
+    }
+    /*m_editor.selection().for_each([](auto& widget) {
         // When there is no MOUSE_MOVE event, set the default width and height to 30
         if (widget.width() < 1 && widget.height() < 1) {
             widget.set_width(30);
             widget.set_height(30);
         }
         return IterationDecision::Break;
-    });
+    });*/
     m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::None);
-
+    m_editor.selection().set(m_widget);
     m_editor.activate_cursor_tool();
 }
 

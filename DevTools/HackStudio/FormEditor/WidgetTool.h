@@ -28,14 +28,16 @@
 
 #include "Tool.h"
 #include <AK/NonnullRefPtr.h>
+#include <LibGUI/Widget.h>
 #include <LibGfx/Point.h>
 
 namespace HackStudio {
 
 class WidgetTool final : public Tool {
 public:
-    explicit WidgetTool(FormEditorWidget& editor)
+    explicit WidgetTool(FormEditorWidget& editor, GUI::Widget& widget)
         : Tool(editor)
+        , m_widget(widget)
     {
     }
     virtual ~WidgetTool() override { }
@@ -48,6 +50,7 @@ private:
     virtual void on_keydown(GUI::KeyEvent&) { }
 
     Gfx::IntPoint m_down_event_origin;
+    GUI::Widget& m_widget;
 };
 
 }

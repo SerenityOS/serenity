@@ -723,9 +723,9 @@ void HackStudioWidget::create_form_editor(GUI::Widget& parent)
         auto action = GUI::Action::create_checkable(reg.class_name(), Gfx::Bitmap::load_from_file(icon_path), [&reg, this](auto&) {
             auto widget = reg.construct();
             m_form_editor_widget->form_widget().add_child(widget);
-            m_form_editor_widget->selection().set(widget);
-            m_form_editor_widget->set_tool(make<WidgetTool>(*m_form_editor_widget));
+            m_form_editor_widget->set_tool(make<WidgetTool>(*m_form_editor_widget, widget));
             m_form_editor_widget->update();
+            m_form_editor_widget->model().update();
             m_cursor_tool_action->set_checked(false);
         });
         action->set_checkable(true);

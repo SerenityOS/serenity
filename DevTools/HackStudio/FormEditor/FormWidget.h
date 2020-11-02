@@ -29,11 +29,36 @@
 #include <AK/Badge.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/Rect.h>
 
 namespace HackStudio {
 
 class CursorTool;
 class FormEditorWidget;
+
+enum class Direction {
+    None,
+    Left,
+    UpLeft,
+    Up,
+    UpRight,
+    Right,
+    DownRight,
+    Down,
+    DownLeft
+};
+template<typename Callback>
+inline void for_each_direction(Callback callback)
+{
+    callback(Direction::Left);
+    callback(Direction::UpLeft);
+    callback(Direction::Up);
+    callback(Direction::UpRight);
+    callback(Direction::Right);
+    callback(Direction::DownRight);
+    callback(Direction::Down);
+    callback(Direction::DownLeft);
+}
 
 class FormWidget final : public GUI::Widget {
     C_OBJECT(FormWidget)
@@ -45,6 +70,8 @@ public:
 
     // FIXME: This should be an app-wide preference instead.
     int grid_size() const { return m_grid_size; }
+
+    Direction grabber_at(Gfx::IntPoint);
 
     GUI::Widget* widget_at(const Gfx::IntPoint&);
 
@@ -58,6 +85,8 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+
+    Gfx::IntRect get_grabber_rect(Gfx::IntRect, Direction);
 
     FormWidget();
 

@@ -32,6 +32,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Color.h>
 
 namespace HackStudio {
 
@@ -117,14 +118,15 @@ void FormWidget::second_paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    if (!editor().selection().is_empty()) {
-        for_each_child_widget([&](auto& child) {
-            if (editor().selection().contains(child)) {
-                painter.draw_rect(child.relative_rect(), Color::Blue);
-            }
-            return IterationDecision::Continue;
-        });
-    }
+    for_each_child_widget([&](auto& child) {
+        if (editor().selection().contains(child)) {
+            for_each_direction([&](auto direction) {
+                auto grabber_rect = get_grabber_rect(child.relative_rect(), direction);
+                painter.fill_rect(grabber_rect, Gfx::Color::Black);
+            });
+        }
+        return IterationDecision::Continue;
+    });
 
     editor().tool().on_second_paint(painter, event);
 }
@@ -160,6 +162,53 @@ GUI::Widget* FormWidget::widget_at(const Gfx::IntPoint& position)
 void FormWidget::context_menu_event(GUI::ContextMenuEvent& event)
 {
     m_context_menu->popup(event.screen_position());
+}
+
+Gfx::IntRect FormWidget::get_grabber_rect(Gfx::IntRect rect, Direction direction)
+{
+    int grabber_size = 5;
+    int half_grabber_size = grabber_size / 2;
+
+    switch (direction) {
+    case Direction::Left:
+        return { rect.x() - half_grabber_size, rect.center().y() - half_grabber_size, grabber_size, grabber_size };
+    case Direction::UpLeft:
+        return { rect.x() - half_grabber_size, rect.y() - half_grabber_size, grabber_size, grabber_size };
+    case Direction::Up:
+        return { rect.center().x() - half_grabber_size, rect.y() - half_grabber_size, grabber_size, grabber_size };
+    case Direction::UpRight:
+        return { rect.right() - half_grabber_size, rect.y() - half_grabber_size, grabber_size, grabber_size };
+    case Direction::Right:
+        return { rect.right() - half_grabber_size, rect.center().y() - half_grabber_size, grabber_size, grabber_size };
+    case Direction::DownLeft:
+        return { rect.x() - half_grabber_size, rect.bottom() - half_grabber_size, grabber_size, grabber_size };
+    case Direction::Down:
+        return { rect.center().x() - half_grabber_size, rect.bottom() - half_grabber_size, grabber_size, grabber_size };
+    case Direction::DownRight:
+        return { rect.right() - half_grabber_size, rect.bottom() - half_grabber_size, grabber_size, grabber_size };
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+Direction FormWidget::grabber_at(Gfx::IntPoint position)
+{
+    Direction found_grabber = Direction::None;
+    for_each_child_widget([&](auto& child) {
+        if (editor().selection().contains(child)) {
+            for_each_direction([&](Direction direction) {
+                auto grabber_rect = get_grabber_rect(child.relative_rect(), direction);
+                if (grabber_rect.contains(position)) {
+                    found_grabber = direction;
+                }
+            });
+            if (found_grabber != Direction::None) {
+                return IterationDecision::Break;
+            }
+        }
+        return IterationDecision::Continue;
+    });
+    return found_grabber;
 }
 
 }

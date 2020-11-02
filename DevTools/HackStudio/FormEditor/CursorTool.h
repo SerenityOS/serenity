@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "FormWidget.h"
 #include "Tool.h"
 #include <AK/HashMap.h>
 #include <LibGUI/Forward.h>
@@ -52,13 +53,17 @@ private:
     void set_rubber_band_position(const Gfx::IntPoint&);
     Gfx::IntRect rubber_band_rect() const;
 
+    void set_cursor_type_from_grabber(Direction);
+    void resize_widgets(GUI::MouseEvent&);
+
     Gfx::IntPoint m_current_event_origin;
-    HashMap<GUI::Widget*, Gfx::IntPoint> m_positions_before_drag;
     bool m_dragging { false };
 
     bool m_rubber_banding { false };
     Gfx::IntPoint m_rubber_band_origin;
     Gfx::IntPoint m_rubber_band_position;
+    Direction m_resize_direction { Direction::None };
+    Direction m_mouse_direction_type { Direction::None };
 };
 
 }

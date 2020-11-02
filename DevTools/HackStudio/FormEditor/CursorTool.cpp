@@ -40,9 +40,19 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
 #ifdef DEBUG_CURSOR_TOOL
     dbgln("CursorTool::on_mousedown");
 #endif
-    auto& form_widget = m_editor.form_widget();
-    auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
 
+    if (m_resize_direction == Direction::None) {
+        auto grabber = m_editor.form_widget().grabber_at(event.position());
+        if (grabber != Direction::None) {
+            m_current_event_origin = event.position();
+            m_resize_direction = grabber;
+            return;
+        }
+    }
+
+    auto& form_widget = m_editor.form_widget();
+
+    auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
     if (event.button() == GUI::MouseButton::Left) {
         if (result.widget && result.widget != &form_widget) {
             if (event.modifiers() & Mod_Ctrl) {
@@ -56,11 +66,6 @@ void CursorTool::on_mousedown(GUI::MouseEvent& event)
                 }
 
                 m_current_event_origin = event.position();
-                m_positions_before_drag.clear();
-                m_editor.selection().for_each([&](auto& widget) {
-                    m_positions_before_drag.set(&widget, widget.relative_position());
-                    return IterationDecision::Continue;
-                });
             }
         } else {
             m_editor.selection().clear();
@@ -87,7 +92,10 @@ void CursorTool::on_mouseup(GUI::MouseEvent& event)
         m_dragging = false;
         m_rubber_banding = false;
     }
+
     m_editor.update();
+    m_resize_direction = Direction::None;
+    m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::None);
 }
 
 void CursorTool::on_mousemove(GUI::MouseEvent& event)
@@ -95,35 +103,35 @@ void CursorTool::on_mousemove(GUI::MouseEvent& event)
 #ifdef DEBUG_CURSOR_TOOL
     dbgln("CursorTool::on_mousemove");
 #endif
-    if (m_rubber_banding) {
-        set_rubber_band_position(event.position());
-        return;
-    }
-
-    auto& form_widget = m_editor.form_widget();
-    if (!m_dragging && event.buttons() & GUI::MouseButton::Left && event.position() != m_current_event_origin) {
-        auto result = form_widget.hit_test(event.position(), GUI::Widget::ShouldRespectGreediness::No);
-        if (result.widget && result.widget != &form_widget) {
-            if (!m_editor.selection().contains(*result.widget)) {
-                m_editor.selection().set(*result.widget);
-            }
+    if (event.buttons() & GUI::MouseButton::Left) {
+        if (m_resize_direction != Direction::None) {
+            resize_widgets(event);
+            m_current_event_origin = event.position();
+            return;
         }
-        m_dragging = true;
-    }
 
-    if (m_dragging) {
+        if (m_rubber_banding) {
+            set_rubber_band_position(event.position());
+            return;
+        }
+
+        m_dragging = true;
         m_editor.update();
+        m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::Drag);
+
         auto movement_delta = event.position() - m_current_event_origin;
+        m_current_event_origin = event.position();
         m_editor.selection().for_each([&](auto& widget) {
             auto new_rect = widget.relative_rect().translated(movement_delta);
             widget.set_relative_rect(new_rect);
             return IterationDecision::Continue;
         });
-        m_current_event_origin = event.position();
-        return;
-    }
 
-    form_widget.update();
+        m_editor.form_widget().update();
+    } else {
+        auto grabber = m_editor.form_widget().grabber_at(event.position());
+        set_cursor_type_from_grabber(grabber);
+    }
 }
 
 void CursorTool::on_keydown(GUI::KeyEvent& event)
@@ -140,18 +148,19 @@ void CursorTool::on_keydown(GUI::KeyEvent& event)
     };
 
     if (event.modifiers() == 0) {
+        auto grid_size = m_editor.form_widget().grid_size();
         switch (event.key()) {
         case Key_Down:
-            move_selected_widgets_by(0, m_editor.form_widget().grid_size());
+            move_selected_widgets_by(0, grid_size);
             break;
         case Key_Up:
-            move_selected_widgets_by(0, -m_editor.form_widget().grid_size());
+            move_selected_widgets_by(0, -grid_size);
             break;
         case Key_Left:
-            move_selected_widgets_by(-m_editor.form_widget().grid_size(), 0);
+            move_selected_widgets_by(-grid_size, 0);
             break;
         case Key_Right:
-            move_selected_widgets_by(m_editor.form_widget().grid_size(), 0);
+            move_selected_widgets_by(grid_size, 0);
             break;
         default:
             break;
@@ -163,11 +172,11 @@ void CursorTool::set_rubber_band_position(const Gfx::IntPoint& position)
 {
     if (m_rubber_band_position == position)
         return;
+
     m_rubber_band_position = position;
+    m_editor.selection().clear();
 
     auto rubber_band_rect = this->rubber_band_rect();
-
-    m_editor.selection().clear();
     m_editor.form_widget().for_each_child_widget([&](auto& child) {
         if (child.relative_rect().intersects(rubber_band_rect))
             m_editor.selection().add(child);
@@ -189,6 +198,96 @@ void CursorTool::on_second_paint(GUI::Painter& painter, GUI::PaintEvent&)
     auto rect = rubber_band_rect();
     painter.fill_rect(rect, m_editor.palette().rubber_band_fill());
     painter.draw_rect(rect, m_editor.palette().rubber_band_border());
+}
+
+void CursorTool::resize_widgets(GUI::MouseEvent& event)
+{
+    int diff_x = event.x() - m_current_event_origin.x();
+    int diff_y = event.y() - m_current_event_origin.y();
+
+    int change_x = 0;
+    int change_y = 0;
+    int change_w = 0;
+    int change_h = 0;
+
+    switch (m_resize_direction) {
+    case Direction::DownRight:
+        change_w = diff_x;
+        change_h = diff_y;
+        break;
+    case Direction::Right:
+        change_w = diff_x;
+        break;
+    case Direction::UpRight:
+        change_w = diff_x;
+        change_y = diff_y;
+        change_h = -diff_y;
+        break;
+    case Direction::Up:
+        change_y = diff_y;
+        change_h = -diff_y;
+        break;
+    case Direction::UpLeft:
+        change_x = diff_x;
+        change_w = -diff_x;
+        change_y = diff_y;
+        change_h = -diff_y;
+        break;
+    case Direction::Left:
+        change_x = diff_x;
+        change_w = -diff_x;
+        break;
+    case Direction::DownLeft:
+        change_x = diff_x;
+        change_w = -diff_x;
+        change_h = diff_y;
+        break;
+    case Direction::Down:
+        change_h = diff_y;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
+    m_editor.selection().for_each([&](GUI::Widget& widget) {
+        Gfx::IntSize minimum_size { 10, 10 };
+        widget.set_x(widget.x() + change_x);
+        widget.set_y(widget.y() + change_y);
+        widget.set_width(max(minimum_size.width(), widget.width() + change_w));
+        widget.set_height(max(minimum_size.height(), widget.height() + change_h));
+        return IterationDecision::Continue;
+    });
+    m_editor.form_widget().update();
+}
+
+void CursorTool::set_cursor_type_from_grabber(Direction grabber)
+{
+    if (grabber == m_mouse_direction_type)
+        return;
+
+    switch (grabber) {
+    case Direction::Up:
+    case Direction::Down:
+        m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::ResizeVertical);
+        break;
+    case Direction::Left:
+    case Direction::Right:
+        m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::ResizeHorizontal);
+        break;
+    case Direction::UpLeft:
+    case Direction::DownRight:
+        m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::ResizeDiagonalTLBR);
+        break;
+    case Direction::UpRight:
+    case Direction::DownLeft:
+        m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::ResizeDiagonalBLTR);
+        break;
+    case Direction::None:
+        m_editor.form_widget().set_override_cursor(Gfx::StandardCursor::None);
+        break;
+    }
+
+    m_mouse_direction_type = grabber;
 }
 
 }
