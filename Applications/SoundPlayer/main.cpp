@@ -58,11 +58,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto app_icon = GUI::Icon::default_icon("app-sound-player");
+
     auto window = GUI::Window::construct();
     window->set_title("SoundPlayer");
     window->set_resizable(false);
     window->resize(350, 140);
-    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("SoundPlayer");
@@ -100,7 +102,7 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::Action::create("About", [&](auto&) {
-        GUI::AboutDialog::show("SoundPlayer", Gfx::Bitmap::load_from_file("/res/icons/32x32/app-sound-player.png"), window);
+        GUI::AboutDialog::show("SoundPlayer", app_icon.bitmap_for_size(32), window);
     }));
 
     app->set_menubar(move(menubar));
