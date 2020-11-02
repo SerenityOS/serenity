@@ -41,7 +41,17 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "Keyboard character mapping file.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
+    if (pledge("stdio thread rpath accept cpath wpath shared_buffer unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio thread rpath accept cpath wpath shared_buffer", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper");
 
