@@ -63,6 +63,9 @@ int EBRPartitionTable::index_of_ebr_container() const
 
 bool EBRPartitionTable::initialize()
 {
+    auto mbr_header_request = m_device->make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read,
+        0, 1, UserOrKernelBuffer::for_kernel_buffer(m_cached_mbr_header), sizeof(m_cached_mbr_header));
+
     auto mbr_header_buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_mbr_header);
     if (!m_device->read_block(0, mbr_header_buffer)) {
         return false;
