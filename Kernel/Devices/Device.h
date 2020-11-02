@@ -34,10 +34,12 @@
 // There are two main subclasses:
 //   - BlockDevice (random access)
 //   - CharacterDevice (sequential)
+#include <AK/DoublyLinkedList.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Devices/AsyncDeviceRequest.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -61,6 +63,23 @@ public:
     static void for_each(Function<void(Device&)>);
     static Device* get_device(unsigned major, unsigned minor);
 
+    void process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest&);
+
+    template<typename AsyncRequestType, typename... Args>
+    NonnullRefPtr<AsyncRequestType> make_request(Args&&... args)
+    {
+        auto request = adopt(*new AsyncRequestType(*this, forward<Args>(args)...));
+        bool was_empty;
+        {
+            ScopedSpinLock lock(m_requests_lock);
+            was_empty = m_requests.is_empty();
+            m_requests.append(request);
+        }
+        if (was_empty)
+            request->do_start({});
+        return request;
+    }
+
 protected:
     Device(unsigned major, unsigned minor);
     void set_uid(uid_t uid) { m_uid = uid; }
@@ -73,6 +92,9 @@ private:
     unsigned m_minor { 0 };
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
+
+    SpinLock<u8> m_requests_lock;
+    DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
 };
 
 }
