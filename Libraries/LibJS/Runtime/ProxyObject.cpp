@@ -138,8 +138,8 @@ bool ProxyObject::set_prototype(Object* object)
         return false;
     }
 
-    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target), Value(object)).to_boolean();
-    if (vm().exception() || !trap_result)
+    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target), Value(object));
+    if (vm().exception() || !trap_result.to_boolean())
         return false;
     if (m_target.is_extensible())
         return true;
@@ -169,15 +169,15 @@ bool ProxyObject::is_extensible() const
         return {};
     }
 
-    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target)).to_boolean();
+    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target));
     if (vm().exception())
         return false;
-    if (trap_result != m_target.is_extensible()) {
+    if (trap_result.to_boolean() != m_target.is_extensible()) {
         if (!vm().exception())
             vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyIsExtensibleReturn);
         return false;
     }
-    return trap_result;
+    return trap_result.to_boolean();
 }
 
 bool ProxyObject::prevent_extensions()
@@ -196,15 +196,15 @@ bool ProxyObject::prevent_extensions()
         return {};
     }
 
-    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target)).to_boolean();
+    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target));
     if (vm().exception())
         return false;
-    if (trap_result && m_target.is_extensible()) {
+    if (trap_result.to_boolean() && m_target.is_extensible()) {
         if (!vm().exception())
             vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyPreventExtensionsReturn);
         return false;
     }
-    return trap_result;
+    return trap_result.to_boolean();
 }
 
 Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(const PropertyName& name) const
@@ -278,8 +278,8 @@ bool ProxyObject::define_property(const StringOrSymbol& property_name, const Obj
         return false;
     }
 
-    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target), property_name.to_value(vm()), Value(const_cast<Object*>(&descriptor))).to_boolean();
-    if (vm().exception() || !trap_result)
+    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target), property_name.to_value(vm()), Value(const_cast<Object*>(&descriptor)));
+    if (vm().exception() || !trap_result.to_boolean())
         return false;
     auto target_desc = m_target.get_own_property_descriptor(property_name);
     if (vm().exception())
@@ -329,10 +329,10 @@ bool ProxyObject::has_property(const PropertyName& name) const
         return false;
     }
 
-    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm(), name.to_string())).to_boolean();
+    auto trap_result = vm().call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm(), name.to_string()));
     if (vm().exception())
         return false;
-    if (!trap_result) {
+    if (!trap_result.to_boolean()) {
         auto target_desc = m_target.get_own_property_descriptor(name);
         if (vm().exception())
             return false;
@@ -348,7 +348,7 @@ bool ProxyObject::has_property(const PropertyName& name) const
             }
         }
     }
-    return trap_result;
+    return trap_result.to_boolean();
 }
 
 Value ProxyObject::get(const PropertyName& name, Value) const
@@ -402,8 +402,8 @@ bool ProxyObject::put(const PropertyName& name, Value value, Value)
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "set");
         return false;
     }
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string()), value, Value(const_cast<ProxyObject*>(this))).to_boolean();
-    if (vm.exception() || !trap_result)
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string()), value, Value(const_cast<ProxyObject*>(this)));
+    if (vm.exception() || !trap_result.to_boolean())
         return false;
     auto target_desc = m_target.get_own_property_descriptor(name);
     if (vm.exception())
@@ -437,10 +437,10 @@ Value ProxyObject::delete_property(const PropertyName& name)
         return {};
     }
 
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string())).to_boolean();
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string()));
     if (vm.exception())
         return {};
-    if (!trap_result)
+    if (!trap_result.to_boolean())
         return Value(false);
     auto target_desc = m_target.get_own_property_descriptor(name);
     if (vm.exception())
