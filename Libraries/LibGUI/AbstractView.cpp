@@ -710,8 +710,10 @@ void AbstractView::focusin_event(FocusEvent& event)
 {
     ScrollableWidget::focusin_event(event);
 
-    if (model() && !cursor_index().is_valid())
+    if (model() && !cursor_index().is_valid()) {
         move_cursor(CursorMovement::Home, SelectionUpdate::None);
+        clear_selection();
+    }
 }
 
 }
