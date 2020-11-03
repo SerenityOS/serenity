@@ -81,9 +81,7 @@ public:
     }
     const Line& line(size_t index) const
     {
-        if (index < m_history.size())
-            return m_history[index];
-        return m_lines[index - m_history.size()];
+        return const_cast<Terminal*>(this)->line(index);
     }
 
     Line& visible_line(size_t index)
