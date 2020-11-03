@@ -51,4 +51,24 @@ const GUI::TextDocument& ProjectFile::document() const
     return *m_document;
 }
 
+int ProjectFile::vertical_scroll_value() const
+{
+    return m_vertical_scroll_value;
+}
+
+void ProjectFile::vertical_scroll_value(int vertical_scroll_value)
+{
+    m_vertical_scroll_value = vertical_scroll_value;
+}
+
+int ProjectFile::horizontal_scroll_value() const
+{
+    return m_horizontal_scroll_value;
+}
+
+void ProjectFile::horizontal_scroll_value(int horizontal_scroll_value)
+{
+    m_horizontal_scroll_value = horizontal_scroll_value;
+}
+
 }
