@@ -25,10 +25,8 @@
  */
 
 #include <AK/Function.h>
-#include <AK/StringBuilder.h>
-#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
 
@@ -39,8 +37,36 @@ RegExpPrototype::RegExpPrototype(GlobalObject& global_object)
 {
 }
 
+void RegExpPrototype::initialize(GlobalObject& global_object)
+{
+    auto& vm = this->vm();
+    Object::initialize(global_object);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.toString, to_string, 0, attr);
+}
+
 RegExpPrototype::~RegExpPrototype()
 {
+}
+
+static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return nullptr;
+    if (!this_object->is_regexp_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp");
+        return nullptr;
+    }
+    return static_cast<RegExpObject*>(this_object);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
+{
+    auto* regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+    return js_string(vm, String::formatted("/{}/{}", regexp_object->content(), regexp_object->flags()));
 }
 
 }
