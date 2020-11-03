@@ -43,8 +43,6 @@ public:
     const String& content() const { return m_content; }
     const String& flags() const { return m_flags; }
 
-    Value to_string() const override;
-
 private:
     virtual bool is_regexp_object() const override { return true; }
 

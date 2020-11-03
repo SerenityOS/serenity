@@ -49,9 +49,4 @@ RegExpObject::~RegExpObject()
 {
 }
 
-Value RegExpObject::to_string() const
-{
-    return js_string(heap(), String::formatted("/{}/{}", content(), flags()));
-}
-
 }
