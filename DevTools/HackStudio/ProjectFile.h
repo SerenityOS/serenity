@@ -45,11 +45,18 @@ public:
 
     const GUI::TextDocument& document() const;
 
+    int vertical_scroll_value() const;
+    void vertical_scroll_value(int);
+    int horizontal_scroll_value() const;
+    void horizontal_scroll_value(int);
+
 private:
     explicit ProjectFile(const String& name);
 
     String m_name;
     mutable RefPtr<CodeDocument> m_document;
+    int m_vertical_scroll_value{ 0 };
+    int m_horizontal_scroll_value{ 0 };
 };
 
 }

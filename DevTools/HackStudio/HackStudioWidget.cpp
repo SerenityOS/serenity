@@ -204,23 +204,34 @@ Vector<String> HackStudioWidget::selected_file_names() const
 
 void HackStudioWidget::open_file(const String& filename)
 {
-    auto project_file = m_project->get_file(filename);
+    if (!currently_open_file().is_empty()) {
+        // Since the file is previously open, it should always be in m_open_files.
+        ASSERT(m_open_files.find(currently_open_file()) != m_open_files.end());
+        auto previous_open_project_file = m_open_files.get(currently_open_file()).value();
 
-    if (!project_file) {
-        if (auto it = m_open_files.find(filename); it != m_open_files.end()) {
-            project_file = it->value;
-        } else {
-            project_file = ProjectFile::construct_with_name(filename);
-        }
+        // Update the scrollbar values of the previous_open_project_file and save them to m_open_files.
+        previous_open_project_file->vertical_scroll_value(current_editor().vertical_scrollbar().value());
+        previous_open_project_file->horizontal_scroll_value(current_editor().horizontal_scrollbar().value());
+        m_open_files.set(currently_open_file(), previous_open_project_file);
     }
 
-    if (m_open_files.set(filename, *project_file) == AK::HashSetResult::InsertedNewEntry) {
+    RefPtr<ProjectFile> new_project_file = nullptr;
+    if (auto it = m_open_files.find(filename); it != m_open_files.end()) {
+        new_project_file = it->value;
+    } else {
+        new_project_file = m_project->get_file(filename);
+        if (!new_project_file) {
+            new_project_file = ProjectFile::construct_with_name(filename);
+        }
+        m_open_files.set(filename, *new_project_file);
         m_open_files_vector.append(filename);
         m_open_files_view->model()->update();
     }
 
-    current_editor().set_document(const_cast<GUI::TextDocument&>(project_file->document()));
+    current_editor().set_document(const_cast<GUI::TextDocument&>(new_project_file->document()));
     current_editor().set_mode(GUI::TextEditor::Editable);
+    current_editor().horizontal_scrollbar().set_value(new_project_file->horizontal_scroll_value());
+    current_editor().vertical_scrollbar().set_value(new_project_file->vertical_scroll_value());
 
     if (filename.ends_with(".frm")) {
         set_edit_mode(EditMode::Form);
