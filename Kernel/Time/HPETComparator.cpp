@@ -48,14 +48,14 @@ HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable)
 void HPETComparator::set_periodic()
 {
     ASSERT(m_periodic_capable);
-    HPET::the().enable_periodic_interrupt(*this);
     m_periodic = true;
+    HPET::the().enable_periodic_interrupt(*this);
 }
 void HPETComparator::set_non_periodic()
 {
     ASSERT(m_periodic_capable);
-    HPET::the().disable_periodic_interrupt(*this);
     m_periodic = false;
+    HPET::the().disable_periodic_interrupt(*this);
 }
 
 void HPETComparator::handle_irq(const RegisterState& regs)
@@ -69,7 +69,7 @@ void HPETComparator::set_new_countdown()
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(m_frequency <= HPET::the().frequency());
-    HPET::the().set_non_periodic_comparator_value(*this, HPET::the().frequency() / m_frequency);
+    HPET::the().update_non_periodic_comparator_value(*this);
 }
 
 size_t HPETComparator::ticks_per_second() const
@@ -91,20 +91,21 @@ bool HPETComparator::try_to_set_frequency(size_t frequency)
     InterruptDisabler disabler;
     if (!is_capable_of_frequency(frequency))
         return false;
-    disable_irq();
+    if (m_frequency == frequency)
+        return true;
     auto hpet_frequency = HPET::the().frequency();
     ASSERT(frequency <= hpet_frequency);
-#ifdef HPET_COMPARATOR_DEBUG
-    dbg() << "HPET Comparator: Max frequency - " << hpet_frequency << " Hz, want to set " << frequency << " Hz";
-#endif
-    if (is_periodic())
-        HPET::the().set_periodic_comparator_value(*this, hpet_frequency / frequency);
-    else {
-        HPET::the().set_non_periodic_comparator_value(*this, hpet_frequency / frequency);
-        HPET::the().enable(*this);
-    }
     m_frequency = frequency;
-    enable_irq();
+#ifdef HPET_COMPARATOR_DEBUG
+    dbg() << "HPET Comparator: Max frequency " << hpet_frequency << " Hz, want to set " << frequency << " Hz, periodic: " << is_periodic();
+#endif
+
+    if (is_periodic()) {
+        HPET::the().update_periodic_comparator_value();
+    } else {
+        HPET::the().update_non_periodic_comparator_value(*this);
+    }
+    enable_irq(); // Enable if we haven't already
     return true;
 }
 bool HPETComparator::is_capable_of_frequency(size_t frequency) const
