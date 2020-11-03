@@ -52,7 +52,9 @@ public:
     NonnullOwnPtr(AdoptTag, T& ptr)
         : m_ptr(&ptr)
     {
-        static_assert(!is_ref_counted((const T*)nullptr), "Use RefPtr<> for RefCounted types");
+        static_assert(
+            requires { requires typename T::AllowOwnPtr()(); } || !requires(T obj) { requires !typename T::AllowOwnPtr()(); obj.ref(); obj.unref(); },
+            "Use NonnullRefPtr<> for RefCounted types");
     }
     NonnullOwnPtr(NonnullOwnPtr&& other)
         : m_ptr(other.leak_ptr())
