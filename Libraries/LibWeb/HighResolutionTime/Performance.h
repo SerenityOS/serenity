@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/EventTarget.h>
@@ -37,6 +38,7 @@ class Performance final
     , public Bindings::Wrappable {
 public:
     using WrapperType = Bindings::PerformanceWrapper;
+    using AllowOwnPtr = AK::TrueType;
 
     explicit Performance(DOM::Window&);
     ~Performance();

@@ -65,6 +65,7 @@ class RefCountedBase {
 
 public:
     typedef unsigned int RefCountType;
+    using AllowOwnPtr = FalseType;
 
     ALWAYS_INLINE void ref() const
     {
