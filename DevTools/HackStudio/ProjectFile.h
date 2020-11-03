@@ -55,8 +55,8 @@ private:
 
     String m_name;
     mutable RefPtr<CodeDocument> m_document;
-    int m_vertical_scroll_value{ 0 };
-    int m_horizontal_scroll_value{ 0 };
+    int m_vertical_scroll_value { 0 };
+    int m_horizontal_scroll_value { 0 };
 };
 
 }
