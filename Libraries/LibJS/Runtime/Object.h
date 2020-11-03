@@ -140,8 +140,7 @@ public:
     virtual bool prevent_extensions();
 
     virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
-    virtual Value to_primitive(Value::PreferredType preferred_type = Value::PreferredType::Default) const;
-    virtual Value to_string() const;
+    virtual Value ordinary_to_primitive(Value::PreferredType preferred_type) const;
 
     Value get_direct(size_t index) const { return m_storage[index]; }
 

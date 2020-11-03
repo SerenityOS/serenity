@@ -168,7 +168,7 @@ String Value::to_string(GlobalObject& global_object) const
     case Type::BigInt:
         return m_value.as_bigint->big_integer().to_base10();
     case Type::Object: {
-        auto primitive_value = as_object().to_primitive(PreferredType::String);
+        auto primitive_value = to_primitive(PreferredType::String);
         if (global_object.vm().exception())
             return {};
         return primitive_value.to_string(global_object);
@@ -205,8 +205,12 @@ bool Value::to_boolean() const
 
 Value Value::to_primitive(PreferredType preferred_type) const
 {
-    if (is_object())
-        return as_object().to_primitive(preferred_type);
+    if (is_object()) {
+        // FIXME: Also support @@toPrimitive
+        if (preferred_type == PreferredType::Default)
+            preferred_type = PreferredType::Number;
+        return as_object().ordinary_to_primitive(preferred_type);
+    }
     return *this;
 }
 
@@ -277,7 +281,7 @@ Value Value::to_number(GlobalObject& global_object) const
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
         return {};
     case Type::Object: {
-        auto primitive = m_value.as_object->to_primitive(PreferredType::Number);
+        auto primitive = to_primitive(PreferredType::Number);
         if (global_object.vm().exception())
             return {};
         return primitive.to_number(global_object);
