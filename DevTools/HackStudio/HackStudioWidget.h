@@ -38,10 +38,10 @@
 #include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
+#include <LibGUI/ScrollBar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 #include <LibThread/Thread.h>
-#include <LibGUI/ScrollBar.h>
 
 namespace HackStudio {
 
