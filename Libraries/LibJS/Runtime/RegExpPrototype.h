@@ -35,7 +35,11 @@ class RegExpPrototype final : public RegExpObject {
 
 public:
     explicit RegExpPrototype(GlobalObject&);
+    virtual void initialize(GlobalObject&) override;
     virtual ~RegExpPrototype() override;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
 };
 
 }
