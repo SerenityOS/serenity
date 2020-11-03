@@ -836,48 +836,30 @@ bool Object::has_own_property(const PropertyName& property_name) const
     return shape().lookup(property_name.to_string_or_symbol()).has_value();
 }
 
-Value Object::to_primitive(Value::PreferredType preferred_type) const
+Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
 {
-    Value result = js_undefined();
+    ASSERT(preferred_type == Value::PreferredType::String || preferred_type == Value::PreferredType::Number);
 
-    switch (preferred_type) {
-    case Value::PreferredType::Default:
-    case Value::PreferredType::Number: {
-        result = value_of();
-        if (result.is_object()) {
-            result = to_string();
-        }
-        break;
-    }
-    case Value::PreferredType::String: {
-        result = to_string();
-        if (result.is_object())
-            result = value_of();
-        break;
-    }
-    }
-
-    ASSERT(!result.is_object());
-    return result;
-}
-
-Value Object::to_string() const
-{
     auto& vm = this->vm();
-    auto to_string_property = get(vm.names.toString);
-    if (to_string_property.is_function()) {
-        auto& to_string_function = to_string_property.as_function();
-        auto to_string_result = vm.call(to_string_function, const_cast<Object*>(this));
-        if (to_string_result.is_object())
-            vm.throw_exception<TypeError>(global_object(), ErrorType::Convert, "object", "string");
+
+    Vector<FlyString, 2> method_names;
+    if (preferred_type == Value::PreferredType::String)
+        method_names = { vm.names.toString, vm.names.valueOf };
+    else
+        method_names = { vm.names.valueOf, vm.names.toString };
+
+    for (auto& method_name : method_names) {
+        auto method = get(method_name);
         if (vm.exception())
             return {};
-        auto* string = to_string_result.to_primitive_string(global_object());
-        if (vm.exception())
-            return {};
-        return string;
+        if (method.is_function()) {
+            auto result = vm.call(method.as_function(), const_cast<Object*>(this));
+            if (!result.is_object())
+                return result;
+        }
     }
-    return js_string(vm, String::formatted("[object {}]", class_name()));
+    vm.throw_exception<TypeError>(global_object(), ErrorType::Convert, "object", preferred_type == Value::PreferredType::String ? "string" : "number");
+    return {};
 }
 
 Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueList> arguments)
