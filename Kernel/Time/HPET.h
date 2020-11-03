@@ -45,15 +45,14 @@ public:
     static bool check_for_exisiting_periodic_timers();
     static HPET& the();
 
-    u64 main_counter_value() const;
     u64 frequency() const;
 
     const NonnullRefPtrVector<HPETComparator>& comparators() const { return m_comparators; }
     void disable(const HPETComparator&);
     void enable(const HPETComparator&);
 
-    void set_periodic_comparator_value(const HPETComparator& comparator, u64 value);
-    void set_non_periodic_comparator_value(const HPETComparator& comparator, u64 value);
+    void update_periodic_comparator_value();
+    void update_non_periodic_comparator_value(const HPETComparator& comparator);
 
     void set_comparator_irq_vector(u8 comparator_number, u8 irq_vector);
 
@@ -64,8 +63,8 @@ public:
     Vector<unsigned> capable_interrupt_numbers(const HPETComparator&);
 
 private:
-    const volatile HPETRegistersBlock& registers() const;
-    volatile HPETRegistersBlock& registers();
+    const HPETRegistersBlock& registers() const;
+    HPETRegistersBlock& registers();
 
     void global_disable();
     void global_enable();
