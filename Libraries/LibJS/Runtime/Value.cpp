@@ -711,8 +711,10 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, has_instance_method.to_string_without_side_effects());
             return {};
         }
-
-        return Value(vm.call(has_instance_method.as_function(), rhs, lhs).to_boolean());
+        auto has_instance_result = vm.call(has_instance_method.as_function(), rhs, lhs);
+        if (vm.exception())
+            return {};
+        return Value(has_instance_result.to_boolean());
     }
 
     if (!rhs.is_function()) {
@@ -743,7 +745,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
         return {};
 
     if (!rhs_prototype.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::InstanceOfOperatorBadPrototype, rhs_prototype.to_string_without_side_effects());
+        vm.throw_exception<TypeError>(global_object, ErrorType::InstanceOfOperatorBadPrototype, rhs.to_string_without_side_effects());
         return {};
     }
     while (true) {

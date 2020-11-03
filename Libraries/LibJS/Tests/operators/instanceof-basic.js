@@ -22,3 +22,15 @@ test("derived ES5 classes", () => {
     expect(d instanceof Derived).toBeTrue();
     expect(d instanceof Base).toBeTrue();
 });
+
+test("issue #3930, instanceof on arrow function", () => {
+    function f() {}
+    const a = () => {};
+
+    expect(() => {
+        f instanceof a;
+    }).toThrow(TypeError);
+    expect(() => {
+        a instanceof a;
+    }).toThrow(TypeError);
+});
