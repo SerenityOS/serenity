@@ -225,9 +225,10 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     }
 
     m_system_timer->set_callback(Scheduler::timer_tick);
+    m_time_keeper_timer->set_callback(TimeManagement::update_time);
+
     dbg() << "Reset timers";
     m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(1024));
-    m_time_keeper_timer->set_callback(TimeManagement::update_time);
     m_time_keeper_timer->try_to_set_frequency(OPTIMAL_TICKS_PER_SECOND_RATE);
 
     return true;
