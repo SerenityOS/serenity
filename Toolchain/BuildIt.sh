@@ -19,11 +19,6 @@ MAKE="make"
 MD5SUM="md5sum"
 NPROC="nproc"
 
-# Each cache entry is 70 MB. 5 entries are 350 MiB.
-# It seems that Travis starts having trouble around a total
-# cache size of 9 GiB, so I think this is a good amount.
-KEEP_CACHE_COUNT=5
-
 if command -v ginstall &>/dev/null; then
     INSTALL=ginstall
 else
@@ -77,60 +72,41 @@ GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
 
 pushd "$DIR"
     if [ "${TRY_USE_LOCAL_TOOLCHAIN}" = "y" ] ; then
-        echo "Checking cached toolchain:"
-        # TODO: This is still overly pessimistic.
-        DEPS_CONFIG="\
-            uname=$(uname),TARGET=${TARGET},
-            BuildItHash=$($MD5SUM "$(basename "$0")"),
-            MAKE=${MAKE},MD5SUM=${MD5SUM},NPROC=${NPROC},
-            CC=${CC},CXX=${CXX},with_gmp=${with_gmp},LDFLAGS=${LDFLAGS},
-            BINUTILS_VERSION=${BINUTILS_VERSION},BINUTILS_MD5SUM=${BINUTILS_MD5SUM},
-            GCC_VERSION=${GCC_VERSION},GCC_MD5SUM=${GCC_MD5SUM}"
-        DEPS_HASH=$("$DIR/ComputeDependenciesHash.sh" "$MD5SUM" <<<"${DEPS_CONFIG}")
-        DEPS_HASH_EXIT_CODE="$?"
-        CACHED_TOOLCHAIN_ARCHIVE="Cache/ToolchainLocal_${DEPS_HASH}.tar.gz"
-        if [ "$DEPS_HASH_EXIT_CODE" -ne 0 ] ; then
-            # Make it stand out more
-            echo
-            echo
-            echo
-            echo
-            echo "Dependency hashing failed"
-            echo "Will rebuild toolchain from scratch, and NOT SAVE THE RESULT."
-            echo "Someone should look into this, but for now it'll work, albeit inefficient."
-            echo
-            echo
-            echo
-            echo
-            # Should be empty anyway, but just to make sure:
-            DEPS_HASH=""
-        elif [ -r "${CACHED_TOOLCHAIN_ARCHIVE}" ] ; then
+        # The actual logic had to be moved to .github/workflows/cmake.yml.
+        # Github Actions guarantees that Toolchain/Cache/ is empty on a cache
+        # miss, and non-empty on a cache hit.
+        # The following logic is correct *only* because of that.
+
+        mkdir -p Cache
+        echo "Cache (before):"
+        ls -l Cache
+        CACHED_TOOLCHAIN_ARCHIVE="Cache/ToolchainBinariesGithubActions.tar.gz"
+        if [ -r "${CACHED_TOOLCHAIN_ARCHIVE}" ] ; then
             echo "Cache at ${CACHED_TOOLCHAIN_ARCHIVE} exists!"
             echo "Extracting toolchain from cache:"
             if tar xzf "${CACHED_TOOLCHAIN_ARCHIVE}" ; then
                 echo "Done 'building' the toolchain."
+                echo "Cache unchanged."
                 exit 0
             else
-                echo "Could not extract cached toolchain archive, removing it and rebuilding from scratch."
+                echo
+                echo
+                echo
+                echo "Could not extract cached toolchain archive."
+                echo "This means the cache is broken and *should be removed*!"
+                echo "As Github Actions cannot update a cache, this will unnecessarily"
+                echo "slow down all future builds for this hash, until someone"
+                echo "resets the cache."
+                echo
+                echo
+                echo
                 rm -f "${CACHED_TOOLCHAIN_ARCHIVE}"
             fi
         else
             echo "Cache at ${CACHED_TOOLCHAIN_ARCHIVE} does not exist."
             echo "Will rebuild toolchain from scratch, and save the result."
-            echo "But first, getting rid of old, outdated caches. Current caches:"
-            pushd "Cache/"
-                ls -l
-                # Travis preserves timestamps. Don't ask me why, but it does.
-                # We can exploit this to get an easy approximation of recent-ness.
-                # Our purging algorithm is simple: keep only the newest X entries.
-                # Note that `find` doesn't easily support ordering by date,
-                # and we control the filenames anyway.
-                # shellcheck disable=SC2012
-                ls -t | tail "-n+${KEEP_CACHE_COUNT}" | xargs -r rm -v
-                echo "After deletion:"
-                ls -l
-            popd
         fi
+        echo "::group::Actually building Toolchain"
     fi
 popd
 
@@ -285,24 +261,20 @@ popd
 
 pushd "$DIR"
     if [ "${TRY_USE_LOCAL_TOOLCHAIN}" = "y" ] ; then
-        echo "Caching toolchain:"
+        echo "::endgroup::"
+        echo "Building cache tar:"
 
-        if [ -z "${DEPS_HASH}" ] ; then
-            echo "NOT SAVED, because hashing failed."
-            echo "It's computed in the beginning; see there for the error message."
-        elif [ -e "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" ] ; then
-            # Note: This checks for *existence*.  Initially we checked for
-            # *readability*. If Travis borks permissions, there's not much we can do.
-            echo "Cache exists but was not used?!"
-            echo "Not touching cache then."
-        else
-            mkdir -p Cache/
-            # We *most definitely* don't need debug symbols in the linker/compiler.
-            # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 190 MiB.
-            echo "Before: $(du -sh Local)"
-            find Local/ -type f -executable ! -name '*.la' ! -name '*.sh' ! -name 'mk*' -exec strip {} +
-            echo "After: $(du -sh Local)"
-            tar czf "Cache/ToolchainLocal_${DEPS_HASH}.tar.gz" Local/
-        fi
+        rm -f "${CACHED_TOOLCHAIN_ARCHIVE}"  # Just in case
+
+        # We *most definitely* don't need debug symbols in the linker/compiler.
+        # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 190 MiB.
+        echo "Stripping executables ..."
+        echo "Before: $(du -sh Local)"
+        find Local/ -type f -executable ! -name '*.la' ! -name '*.sh' ! -name 'mk*' -exec strip {} +
+        echo "After: $(du -sh Local)"
+        tar czf "${CACHED_TOOLCHAIN_ARCHIVE}" Local/
+
+        echo "Cache (after):"
+        ls -l Cache
     fi
 popd
