@@ -41,6 +41,7 @@
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 #include <LibThread/Thread.h>
+#include <LibGUI/ScrollBar.h>
 
 namespace HackStudio {
 
