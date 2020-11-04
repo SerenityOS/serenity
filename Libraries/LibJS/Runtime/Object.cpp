@@ -631,9 +631,12 @@ Value Object::delete_property(const PropertyName& property_name)
 
     if (property_name.is_number())
         return Value(m_indexed_properties.remove(property_name.as_number()));
-    int property_index = property_name.as_string().to_int().value_or(-1);
-    if (property_index >= 0)
-        return Value(m_indexed_properties.remove(property_name.as_number()));
+
+    if (property_name.is_string()) {
+        i32 property_index = property_name.as_string().to_int().value_or(-1);
+        if (property_index >= 0)
+            return Value(m_indexed_properties.remove(property_index));
+    }
 
     auto metadata = shape().lookup(property_name.to_string_or_symbol());
     if (!metadata.has_value())
