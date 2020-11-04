@@ -161,6 +161,8 @@ bool Object::prevent_extensions()
 
 Value Object::get_own_property(const Object& this_object, PropertyName property_name, Value receiver) const
 {
+    ASSERT(property_name.is_valid());
+
     Value value_here;
 
     if (property_name.is_number()) {
@@ -262,6 +264,8 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
 
 Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyName& property_name) const
 {
+    ASSERT(property_name.is_valid());
+
     Value value;
     PropertyAttributes attributes;
 
@@ -301,6 +305,8 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
 
 Value Object::get_own_property_descriptor_object(const PropertyName& property_name) const
 {
+    ASSERT(property_name.is_valid());
+
     auto& vm = this->vm();
     auto descriptor_opt = get_own_property_descriptor(property_name);
     if (!descriptor_opt.has_value())
@@ -431,8 +437,11 @@ bool Object::define_property_without_transition(const PropertyName& property_nam
 
 bool Object::define_property(const PropertyName& property_name, Value value, PropertyAttributes attributes, bool throw_exceptions)
 {
+    ASSERT(property_name.is_valid());
+
     if (property_name.is_number())
         return put_own_property_by_index(*this, property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
+
     if (property_name.is_string()) {
         i32 property_index = property_name.as_string().to_int().value_or(-1);
         if (property_index >= 0)
@@ -443,6 +452,8 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
 
 bool Object::define_accessor(const PropertyName& property_name, Function& getter_or_setter, bool is_getter, PropertyAttributes attributes, bool throw_exceptions)
 {
+    ASSERT(property_name.is_valid());
+
     Accessor* accessor { nullptr };
     auto property_metadata = shape().lookup(property_name.to_string_or_symbol());
     if (property_metadata.has_value()) {
@@ -617,6 +628,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 Value Object::delete_property(const PropertyName& property_name)
 {
     ASSERT(property_name.is_valid());
+
     if (property_name.is_number())
         return Value(m_indexed_properties.remove(property_name.as_number()));
     int property_index = property_name.as_string().to_int().value_or(-1);
@@ -673,6 +685,8 @@ Value Object::get_by_index(u32 property_index) const
 
 Value Object::get(const PropertyName& property_name, Value receiver) const
 {
+    ASSERT(property_name.is_valid());
+
     if (property_name.is_number())
         return get_by_index(property_name.as_number());
 
@@ -728,6 +742,8 @@ bool Object::put_by_index(u32 property_index, Value value)
 
 bool Object::put(const PropertyName& property_name, Value value, Value receiver)
 {
+    ASSERT(property_name.is_valid());
+
     if (property_name.is_number())
         return put_by_index(property_name.as_number(), value);
 
@@ -818,6 +834,8 @@ bool Object::has_property(const PropertyName& property_name) const
 
 bool Object::has_own_property(const PropertyName& property_name) const
 {
+    ASSERT(property_name.is_valid());
+
     auto has_indexed_property = [&](u32 index) -> bool {
         if (is_string_object())
             return index < static_cast<const StringObject*>(this)->primitive_string().string().length();
