@@ -46,6 +46,9 @@ test("deleting array indices", () => {
     expect(a.hasOwnProperty(1)).toBeFalse();
     expect(a.hasOwnProperty(2)).toBeFalse();
     expect(Object.getOwnPropertyNames(a)).toHaveLength(1);
+
+    expect(delete a["42"]).toBeTrue();
+    expect(Object.getOwnPropertyNames(a)).toHaveLength(1);
 });
 
 test("deleting non-configurable property", () => {
