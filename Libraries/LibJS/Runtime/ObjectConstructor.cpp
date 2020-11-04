@@ -66,7 +66,10 @@ ObjectConstructor::~ObjectConstructor()
 
 Value ObjectConstructor::call()
 {
-    return Object::create_empty(global_object());
+    auto value = vm().argument(0);
+    if (value.is_nullish())
+        return Object::create_empty(global_object());
+    return value.to_object(global_object());
 }
 
 Value ObjectConstructor::construct(Function&)
