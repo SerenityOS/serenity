@@ -56,10 +56,10 @@ public:
 
     void set_protocol(const String& protocol);
     void set_host(const String& host);
+    void set_port(const u16 port);
     void set_path(const String& path);
     void set_query(const String& query);
     void set_fragment(const String& fragment);
-    void set_port(u16 port) { m_port = port; }
 
     String basename() const;
     String to_string() const;
@@ -73,6 +73,8 @@ public:
     static URL create_with_url_or_path(const String& url_or_path);
     static URL create_with_file_protocol(const String& path);
     static URL create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64 = false);
+    static bool protocol_requires_port(const String& protocol);
+    static u16 default_port_for_protocol(const String& protocol);
 
     bool operator==(const URL& other) const
     {
@@ -86,7 +88,7 @@ private:
     bool compute_validity() const;
 
     bool m_valid { false };
-    u16 m_port { 80 };
+    u16 m_port { 0 };
     bool m_data_payload_is_base64 { false };
     String m_protocol;
     String m_host;
