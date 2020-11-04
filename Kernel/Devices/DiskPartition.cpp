@@ -48,12 +48,6 @@ DiskPartition::~DiskPartition()
 {
 }
 
-void DiskPartition::start_request(AsyncBlockDeviceRequest& request)
-{
-    request.add_sub_request(m_device->make_request<AsyncBlockDeviceRequest>(request.request_type(),
-        request.block_index() + m_block_offset, request.block_count(), request.buffer(), request.buffer_size()));
-}
-
 KResultOr<size_t> DiskPartition::read(FileDescription& fd, size_t offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     unsigned adjust = m_block_offset * block_size();
@@ -96,6 +90,24 @@ bool DiskPartition::can_write(const FileDescription& fd, size_t offset) const
 #endif
 
     return m_device->can_write(fd, offset + adjust);
+}
+
+bool DiskPartition::read_blocks(unsigned index, u16 count, UserOrKernelBuffer& out)
+{
+#ifdef OFFD_DEBUG
+    klog() << "DiskPartition::read_blocks " << index << " (really: " << (m_block_offset + index) << ") count=" << count;
+#endif
+
+    return m_device->read_blocks(m_block_offset + index, count, out);
+}
+
+bool DiskPartition::write_blocks(unsigned index, u16 count, const UserOrKernelBuffer& data)
+{
+#ifdef OFFD_DEBUG
+    klog() << "DiskPartition::write_blocks " << index << " (really: " << (m_block_offset + index) << ") count=" << count;
+#endif
+
+    return m_device->write_blocks(m_block_offset + index, count, data);
 }
 
 const char* DiskPartition::class_name() const

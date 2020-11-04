@@ -48,9 +48,10 @@ private:
     virtual const char* class_name() const override { return "BXVGA"; }
     virtual bool can_read(const FileDescription&, size_t) const override { return true; }
     virtual bool can_write(const FileDescription&, size_t) const override { return true; }
-    virtual void start_request(AsyncBlockDeviceRequest& request) override { request.complete(AsyncDeviceRequest::Failure); }
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override { return -EINVAL; }
     virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override { return -EINVAL; }
+    virtual bool read_blocks(unsigned, u16, UserOrKernelBuffer&) override { return false; }
+    virtual bool write_blocks(unsigned, u16, const UserOrKernelBuffer&) override { return false; }
 
     void set_safe_resolution();
 

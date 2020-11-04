@@ -49,7 +49,8 @@ private:
     virtual bool can_write(const FileDescription&, size_t) const override { return true; }
     virtual KResultOr<size_t> read(FileDescription&, size_t, UserOrKernelBuffer&, size_t) override { return -EINVAL; }
     virtual KResultOr<size_t> write(FileDescription&, size_t, const UserOrKernelBuffer&, size_t) override { return -EINVAL; }
-    virtual void start_request(AsyncBlockDeviceRequest& request) override { request.complete(AsyncDeviceRequest::Failure); }
+    virtual bool read_blocks(unsigned, u16, UserOrKernelBuffer&) override { return false; }
+    virtual bool write_blocks(unsigned, u16, const UserOrKernelBuffer&) override { return false; }
 
     size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height; }
 
