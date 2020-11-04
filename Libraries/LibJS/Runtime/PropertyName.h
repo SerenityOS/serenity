@@ -48,7 +48,10 @@ public:
             return &value.as_symbol();
         if (value.is_integer() && value.as_i32() >= 0)
             return value.as_i32();
-        return value.to_string(global_object);
+        auto string = value.to_string(global_object);
+        if (string.is_null())
+            return {};
+        return string;
     }
 
     PropertyName() { }
@@ -70,18 +73,21 @@ public:
         : m_type(Type::String)
         , m_string(FlyString(string))
     {
+        ASSERT(!string.is_null());
     }
 
     PropertyName(const FlyString& string)
         : m_type(Type::String)
         , m_string(string)
     {
+        ASSERT(!string.is_null());
     }
 
     PropertyName(Symbol* symbol)
         : m_type(Type::Symbol)
         , m_symbol(symbol)
     {
+        ASSERT(symbol);
     }
 
     PropertyName(const StringOrSymbol& string_or_symbol)
