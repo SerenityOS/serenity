@@ -115,17 +115,23 @@ TEST_CASE(some_bad_urls)
     EXPECT_EQ(URL("http:///serenityos.org").is_valid(), false);
     EXPECT_EQ(URL("serenityos.org").is_valid(), false);
     EXPECT_EQ(URL("://serenityos.org").is_valid(), false);
+    EXPECT_EQ(URL("://:80").is_valid(), false);
     EXPECT_EQ(URL("http://serenityos.org:80:80/").is_valid(), false);
     EXPECT_EQ(URL("http://serenityos.org:80:80").is_valid(), false);
     EXPECT_EQ(URL("http://serenityos.org:abc").is_valid(), false);
     EXPECT_EQ(URL("http://serenityos.org:abc:80").is_valid(), false);
     EXPECT_EQ(URL("http://serenityos.org:abc:80/").is_valid(), false);
     EXPECT_EQ(URL("http://serenityos.org:/abc/").is_valid(), false);
+    EXPECT_EQ(URL("data:").is_valid(), false);
+    EXPECT_EQ(URL("file:").is_valid(), false);
+    EXPECT_EQ(URL("about:").is_valid(), false);
 }
 
 TEST_CASE(serialization)
 {
     EXPECT_EQ(URL("http://www.serenityos.org/").to_string(), "http://www.serenityos.org/");
+    EXPECT_EQ(URL("http://www.serenityos.org:0/").to_string(), "http://www.serenityos.org/");
+    EXPECT_EQ(URL("http://www.serenityos.org:80/").to_string(), "http://www.serenityos.org/");
     EXPECT_EQ(URL("http://www.serenityos.org:81/").to_string(), "http://www.serenityos.org:81/");
     EXPECT_EQ(URL("https://www.serenityos.org:443/foo/bar.html?query#fragment").to_string(), "https://www.serenityos.org/foo/bar.html?query#fragment");
 }
@@ -143,6 +149,7 @@ TEST_CASE(file_url_without_hostname)
 {
     URL url("file:///my/file");
     EXPECT_EQ(url.is_valid(), true);
+    EXPECT_EQ(url.protocol(), "file");
     EXPECT_EQ(url.host(), "");
     EXPECT_EQ(url.path(), "/my/file");
     EXPECT_EQ(url.to_string(), "file:///my/file");
@@ -153,8 +160,29 @@ TEST_CASE(about_url)
     URL url("about:blank");
     EXPECT_EQ(url.is_valid(), true);
     EXPECT_EQ(url.protocol(), "about");
+    EXPECT_EQ(url.host(), "");
     EXPECT_EQ(url.path(), "blank");
     EXPECT_EQ(url.to_string(), "about:blank");
+}
+
+TEST_CASE(data_url)
+{
+    URL url("data:text/html,test");
+    EXPECT_EQ(url.is_valid(), true);
+    EXPECT_EQ(url.protocol(), "data");
+    EXPECT_EQ(url.host(), "");
+    EXPECT_EQ(url.data_mime_type(), "text/html");
+    EXPECT_EQ(url.to_string(), "data:text/html,test");
+}
+
+TEST_CASE(data_url_base64_encoded)
+{
+    URL url("data:text/html;base64,test");
+    EXPECT_EQ(url.is_valid(), true);
+    EXPECT_EQ(url.protocol(), "data");
+    EXPECT_EQ(url.host(), "");
+    EXPECT_EQ(url.data_mime_type(), "text/html");
+    EXPECT_EQ(url.to_string(), "data:text/html;base64,test");
 }
 
 TEST_CASE(trailing_slash_with_complete_url)
