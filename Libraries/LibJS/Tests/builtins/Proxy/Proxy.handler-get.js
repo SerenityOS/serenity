@@ -38,6 +38,7 @@ describe("[[Get]] trap normal behavior", () => {
         expect(p.baz).toBe(3);
         expect(p.qux).toBe(3);
         expect(p.test).toBeUndefined();
+        expect(p[Symbol.hasInstance]).toBeUndefined();
     });
 });
 
