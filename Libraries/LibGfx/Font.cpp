@@ -35,6 +35,7 @@
 #include <AK/Vector.h>
 #include <AK/kmalloc.h>
 #include <LibCore/FileStream.h>
+#include <LibGfx/FontDatabase.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,32 +62,29 @@ struct [[gnu::packed]] FontFileHeader
 
 Font& Font::default_font()
 {
-    static Font* s_default_font;
-    static const char* default_font_path = "/res/fonts/KaticaRegular10.font";
-    if (!s_default_font) {
-        s_default_font = Font::load_from_file(default_font_path).leak_ref();
-        ASSERT(s_default_font);
+    static Font* font;
+    if (!font) {
+        font = FontDatabase::the().get_by_name("Katica 10 400");
+        ASSERT(font);
     }
-    return *s_default_font;
+    return *font;
 }
 
 Font& Font::default_fixed_width_font()
 {
-    static Font* s_default_fixed_width_font;
-    static const char* default_fixed_width_font_path = "/res/fonts/CsillaRegular10.font";
-    if (!s_default_fixed_width_font) {
-        s_default_fixed_width_font = Font::load_from_file(default_fixed_width_font_path).leak_ref();
-        ASSERT(s_default_fixed_width_font);
+    static Font* font;
+    if (!font) {
+        font = FontDatabase::the().get_by_name("Csilla 10 400");
+        ASSERT(font);
     }
-    return *s_default_fixed_width_font;
+    return *font;
 }
 
 Font& Font::default_bold_fixed_width_font()
 {
     static Font* font;
-    static const char* default_bold_fixed_width_font_path = "/res/fonts/CsillaBold10.font";
     if (!font) {
-        font = Font::load_from_file(default_bold_fixed_width_font_path).leak_ref();
+        font = FontDatabase::the().get_by_name("Csilla 10 700");
         ASSERT(font);
     }
     return *font;
@@ -94,13 +92,12 @@ Font& Font::default_bold_fixed_width_font()
 
 Font& Font::default_bold_font()
 {
-    static Font* s_default_bold_font;
-    static const char* default_bold_font_path = "/res/fonts/KaticaBold10.font";
-    if (!s_default_bold_font) {
-        s_default_bold_font = Font::load_from_file(default_bold_font_path).leak_ref();
-        ASSERT(s_default_bold_font);
+    static Font* font;
+    if (!font) {
+        font = FontDatabase::the().get_by_name("Katica 10 700");
+        ASSERT(font);
     }
-    return *s_default_bold_font;
+    return *font;
 }
 
 NonnullRefPtr<Font> Font::clone() const
