@@ -229,7 +229,7 @@ Optional<PropertyDescriptor> ProxyObject::get_own_property_descriptor(const Prop
         return {};
     }
 
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string()));
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm));
     if (vm.exception())
         return {};
     if (!trap_result.is_object() && !trap_result.is_undefined()) {
@@ -337,7 +337,7 @@ bool ProxyObject::has_property(const PropertyName& name) const
         return false;
     }
 
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string()));
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm));
     if (vm.exception())
         return false;
     if (!trap_result.to_boolean()) {
@@ -376,7 +376,7 @@ Value ProxyObject::get(const PropertyName& name, Value) const
         return {};
     }
 
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string()), Value(const_cast<ProxyObject*>(this)));
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm), Value(const_cast<ProxyObject*>(this)));
     if (vm.exception())
         return {};
     auto target_desc = m_target.get_own_property_descriptor(name);
@@ -411,7 +411,7 @@ bool ProxyObject::put(const PropertyName& name, Value value, Value)
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "set");
         return false;
     }
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string()), value, Value(const_cast<ProxyObject*>(this)));
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm), value, Value(const_cast<ProxyObject*>(this)));
     if (vm.exception() || !trap_result.to_boolean())
         return false;
     auto target_desc = m_target.get_own_property_descriptor(name);
@@ -446,7 +446,7 @@ Value ProxyObject::delete_property(const PropertyName& name)
         return {};
     }
 
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), js_string(vm, name.to_string()));
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm));
     if (vm.exception())
         return {};
     if (!trap_result.to_boolean())
