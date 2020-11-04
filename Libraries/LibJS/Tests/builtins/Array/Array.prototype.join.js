@@ -4,6 +4,7 @@ test("length is 1", () => {
 
 test("basic functionality", () => {
     expect(["hello", "friends"].join()).toBe("hello,friends");
+    expect(["hello", "friends"].join(undefined)).toBe("hello,friends");
     expect(["hello", "friends"].join(" ")).toBe("hello friends");
     expect(["hello", "friends", "foo"].join("~", "#")).toBe("hello~friends~foo");
     expect([].join()).toBe("");

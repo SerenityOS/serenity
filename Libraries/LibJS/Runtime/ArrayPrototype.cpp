@@ -316,15 +316,15 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
+    auto length = get_length(vm, *this_object);
+    if (vm.exception())
+        return {};
     String separator = ",";
-    if (vm.argument_count()) {
+    if (!vm.argument(0).is_undefined()) {
         separator = vm.argument(0).to_string(global_object);
         if (vm.exception())
             return {};
     }
-    auto length = get_length(vm, *this_object);
-    if (vm.exception())
-        return {};
     StringBuilder builder;
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
