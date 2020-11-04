@@ -53,12 +53,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto config = Core::ConfigFile::get_for_app("Minesweeper");
+
     if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
     }
-
-    auto config = Core::ConfigFile::get_for_app("Minesweeper");
 
     if (unveil(config->file_name().characters(), "crw") < 0) {
         perror("unveil");
