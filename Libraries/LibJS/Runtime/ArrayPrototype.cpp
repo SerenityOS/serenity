@@ -27,6 +27,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/HashTable.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayIterator.h>
@@ -38,6 +39,8 @@
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
+
+static HashTable<Object*> s_array_join_seen_objects;
 
 ArrayPrototype::ArrayPrototype(GlobalObject& global_object)
     : Object(*global_object.object_prototype())
@@ -316,6 +319,13 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
+
+    // This is not part of the spec, but all major engines do some kind of circular reference checks.
+    // FWIW: engine262, a "100% spec compliant" ECMA-262 impl, aborts with "too much recursion".
+    if (s_array_join_seen_objects.contains(this_object))
+        return js_string(vm, "");
+    s_array_join_seen_objects.set(this_object);
+
     auto length = get_length(vm, *this_object);
     if (vm.exception())
         return {};
@@ -339,6 +349,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
             return {};
         builder.append(string);
     }
+
+    s_array_join_seen_objects.remove(this_object);
+
     return js_string(vm, builder.to_string());
 }
 
