@@ -193,7 +193,8 @@ namespace Kernel {
     S(recvfd)                 \
     S(sysconf)                \
     S(set_process_name)       \
-    S(disown)
+    S(disown)                 \
+    S(adjtime)
 
 namespace Syscall {
 

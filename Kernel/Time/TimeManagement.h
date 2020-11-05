@@ -62,6 +62,9 @@ public:
 
     static timeval now_as_timeval();
 
+    timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
+    void set_remaining_epoch_time_adjustment(const timespec& adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
+
 private:
     bool probe_and_set_legacy_hardware_timers();
     bool probe_and_set_non_legacy_hardware_timers();
@@ -73,6 +76,7 @@ private:
     u32 m_ticks_this_second { 0 };
     u32 m_seconds_since_boot { 0 };
     timespec m_epoch_time { 0, 0 };
+    timespec m_remaining_epoch_time_adjustment { 0, 0 };
     RefPtr<HardwareTimerBase> m_system_timer;
     RefPtr<HardwareTimerBase> m_time_keeper_timer;
 };
