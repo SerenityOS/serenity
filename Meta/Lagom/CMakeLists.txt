@@ -76,6 +76,10 @@ if (BUILD_LAGOM)
     target_link_libraries(TestJson Lagom)
     target_link_libraries(TestJson stdc++)
 
+    add_executable(adjtime_lagom ../../Userland/adjtime.cpp)
+    set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
+    target_link_libraries(adjtime_lagom Lagom)
+
     add_executable(js_lagom ../../Userland/js.cpp)
     set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
     target_link_libraries(js_lagom Lagom)
