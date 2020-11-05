@@ -178,9 +178,6 @@ public:
 
     String to_string() const;
 
-    const char* begin() { return m_characters; }
-    const char* end() { return m_characters + m_length; }
-
     template<typename T, typename... Rest>
     bool is_one_of(const T& string, Rest... rest) const
     {
