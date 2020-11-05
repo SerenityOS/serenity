@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -58,18 +59,11 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
     if (path.value().is_empty() || path.value().characters()[0] != '/')
         return -EINVAL;
 
-    auto custody_or_error = VFS::the().resolve_path_without_veil(path.value(), root_directory());
-    if (custody_or_error.is_error())
-        // FIXME Should this be EINVAL?
-        return custody_or_error.error();
-
-    auto& custody = custody_or_error.value();
-    auto new_unveiled_path = custody->absolute_path();
-
     auto permissions = copy_string_from_user(params.permissions);
     if (permissions.is_null())
         return -EFAULT;
 
+    // Let's work out permissions first...
     unsigned new_permissions = 0;
     for (const char permission : permissions) {
         switch (permission) {
@@ -88,6 +82,24 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
         default:
             return -EINVAL;
         }
+    }
+
+    // Now, let's try and resolve the path and obtain custody of the inode on the disk, and if not, bail out with
+    // the error from resolve_path_without_veil()
+    // However, if the user specified unveil() with "c" permissions, we don't set errno if ENOENT is encountered,
+    // because they most likely intend the program to create the file for them later on.
+    // If this case is encountered, the parent node of the path is returned and the custody of that inode is used instead.
+    RefPtr<Custody> parent_custody; // Parent inode in case of ENOENT
+    String new_unveiled_path;
+    auto custody_or_error = VFS::the().resolve_path_without_veil(path.value(), root_directory(), &parent_custody);
+    if (!custody_or_error.is_error()) {
+        new_unveiled_path = custody_or_error.value()->absolute_path();
+    } else if (custody_or_error.error() == -ENOENT && parent_custody && (new_permissions & UnveiledPath::Access::CreateOrRemove)) {
+        String basename = LexicalPath(path.value()).basename();
+        new_unveiled_path = String::formatted("{}/{}", parent_custody->absolute_path(), basename);
+    } else {
+        // FIXME Should this be EINVAL?
+        return custody_or_error.error();
     }
 
     for (auto& unveiled_path : m_unveiled_paths) {
