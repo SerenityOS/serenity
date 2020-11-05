@@ -52,6 +52,8 @@
 
 #    ifdef __serenity__
 
+#        include <new>
+
 inline void* operator new(size_t size)
 {
     return kmalloc(size);
@@ -82,15 +84,6 @@ inline void operator delete[](void* ptr, size_t)
     return kfree(ptr);
 }
 
-inline void* operator new(size_t, void* ptr)
-{
-    return ptr;
-}
-
-inline void* operator new[](size_t, void* ptr)
-{
-    return ptr;
-}
 #    endif
 
 #endif
