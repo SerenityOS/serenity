@@ -25,6 +25,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Time.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
@@ -59,6 +60,7 @@ void TimeManagement::set_epoch_time(timespec ts)
 {
     InterruptDisabler disabler;
     m_epoch_time = ts;
+    m_remaining_epoch_time_adjustment = { 0, 0 };
 }
 
 timespec TimeManagement::epoch_time() const
@@ -256,7 +258,21 @@ void TimeManagement::increment_time_since_boot(const RegisterState&)
 {
     ASSERT(!m_time_keeper_timer.is_null());
 
-    timespec epoch_tick = { .tv_sec = 0, .tv_nsec = 1'000'000 }; // FIXME: Don't assume that one tick is 1 ms.
+    // Compute time adjustment for adjtime. Let the clock run up to 1% fast or slow.
+    // That way, adjtime can adjust up to 36 seconds per hour, without time getting very jumpy.
+    // Once we have a smarter NTP service that also adjusts the frequency instead of just slewing time, maybe we can lower this.
+    constexpr long NanosPerTick = 1'000'000; // FIXME: Don't assume that one tick is 1 ms.
+    constexpr time_t MaxSlewNanos = NanosPerTick / 100;
+    static_assert(MaxSlewNanos < NanosPerTick);
+
+    // Clamp twice, to make sure intermediate fits into a long.
+    long slew_nanos = clamp(clamp(m_remaining_epoch_time_adjustment.tv_sec, (time_t)-1, (time_t)1) * 1'000'000'000 + m_remaining_epoch_time_adjustment.tv_nsec, -MaxSlewNanos, MaxSlewNanos);
+    timespec slew_nanos_ts;
+    timespec_sub({ 0, slew_nanos }, { 0, 0 }, slew_nanos_ts); // Normalize tv_nsec to be positive.
+    timespec_sub(m_remaining_epoch_time_adjustment, slew_nanos_ts, m_remaining_epoch_time_adjustment);
+
+    timespec epoch_tick = { .tv_sec = 0, .tv_nsec = NanosPerTick };
+    epoch_tick.tv_nsec += slew_nanos; // No need for timespec_add(), guaranteed to be in range.
     timespec_add(m_epoch_time, epoch_tick, m_epoch_time);
 
     if (++m_ticks_this_second >= m_time_keeper_timer->ticks_per_second()) {

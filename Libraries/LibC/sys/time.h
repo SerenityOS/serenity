@@ -42,6 +42,7 @@ struct timezone {
     int tz_dsttime;
 };
 
+int adjtime(const struct timeval* delta, struct timeval* old_delta);
 int gettimeofday(struct timeval* __restrict__, void* __restrict__) __attribute__((nonnull(1)));
 int settimeofday(struct timeval* __restrict__, void* __restrict__) __attribute__((nonnull(1)));
 

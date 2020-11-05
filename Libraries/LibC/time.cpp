@@ -49,6 +49,12 @@ time_t time(time_t* tloc)
     return tv.tv_sec;
 }
 
+int adjtime(const struct timeval* delta, struct timeval* old_delta)
+{
+    int rc = syscall(SC_adjtime, delta, old_delta);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int gettimeofday(struct timeval* __restrict__ tv, void* __restrict__)
 {
     int rc = syscall(SC_gettimeofday, tv);

@@ -241,6 +241,7 @@ public:
     int sys$fchdir(int fd);
     int sys$sleep(unsigned seconds);
     int sys$usleep(useconds_t usec);
+    int sys$adjtime(Userspace<const timeval*>, Userspace<timeval*>);
     int sys$gettimeofday(Userspace<timeval*>);
     int sys$clock_gettime(clockid_t, Userspace<timespec*>);
     int sys$clock_settime(clockid_t, Userspace<const timespec*>);

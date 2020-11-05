@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Time.h>
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 
@@ -117,6 +118,35 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
     default:
         return -EINVAL;
     }
+}
+
+int Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
+{
+    if (user_old_delta) {
+        timespec old_delta_ts = TimeManagement::the().remaining_epoch_time_adjustment();
+        timeval old_delta;
+        timespec_to_timeval(old_delta_ts, old_delta);
+        if (!copy_to_user(user_old_delta, &old_delta))
+            return -EFAULT;
+    }
+
+    if (user_delta) {
+        REQUIRE_PROMISE(settime);
+        if (!is_superuser())
+            return -EPERM;
+        timeval delta;
+        if (!copy_from_user(&delta, user_delta))
+            return -EFAULT;
+
+        if (delta.tv_usec < 0 || delta.tv_usec >= 1'000'000)
+            return -EINVAL;
+
+        timespec delta_ts;
+        timeval_to_timespec(delta, delta_ts);
+        TimeManagement::the().set_remaining_epoch_time_adjustment(delta_ts);
+    }
+
+    return 0;
 }
 
 int Process::sys$gettimeofday(Userspace<timeval*> user_tv)
