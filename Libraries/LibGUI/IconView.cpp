@@ -471,6 +471,7 @@ void IconView::second_paint_event(PaintEvent& event)
 
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
+    painter.add_clip_rect(widget_inner_rect());
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
