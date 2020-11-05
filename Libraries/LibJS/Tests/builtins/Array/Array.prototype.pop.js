@@ -7,6 +7,12 @@ describe("normal behavior", () => {
         var a = [1, 2, 3];
         expect(a.pop()).toBe(3);
         expect(a).toEqual([1, 2]);
+        expect(a.pop()).toBe(2);
+        expect(a).toEqual([1]);
+        expect(a.pop()).toBe(1);
+        expect(a).toEqual([]);
+        expect(a.pop()).toBeUndefined();
+        expect(a).toEqual([]);
     });
 
     test("empty array", () => {
