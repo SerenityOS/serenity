@@ -284,7 +284,7 @@ ALWAYS_INLINE int print_signed_number(PutChFunc putch, char*& bufptr, int number
     }
     if (always_sign)
         putch(bufptr, '+');
-    return print_number(putch, bufptr, number, left_pad, zero_pad, field_width);
+    return print_number(putch, bufptr, number, left_pad, zero_pad, field_width) + always_sign;
 }
 
 struct ModifierState {
