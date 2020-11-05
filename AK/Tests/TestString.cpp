@@ -242,4 +242,18 @@ TEST_CASE(builder_zero_initial_capacity)
     EXPECT_EQ(built.length(), 0u);
 }
 
+TEST_CASE(sprintf)
+{
+    char buf1[128];
+    int ret1 = sprintf(buf1, "%+d", 12);
+    EXPECT_EQ(ret1, 3);
+
+    char buf2[128];
+    int ret2 = sprintf(buf2, "%+d", -12);
+    EXPECT_EQ(ret2, 3);
+
+    EXPECT_EQ(String(buf1), String("+12"));
+    EXPECT_EQ(String(buf2), String("-12"));
+}
+
 TEST_MAIN(String)
