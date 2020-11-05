@@ -32,6 +32,17 @@
 #include <stdio.h>
 #include <string.h>
 
+static constexpr bool isnan(double __x) { return __builtin_isnan(__x); }
+
+static Optional<double> convert_to_double(const char* s)
+{
+    char* p;
+    double v = strtod(s, &p);
+    if (isnan(v) || p == s)
+        return {};
+    return v;
+}
+
 namespace Core {
 
 ArgsParser::ArgsParser()
@@ -289,6 +300,24 @@ void ArgsParser::add_option(int& value, const char* help_string, const char* lon
     add_option(move(option));
 }
 
+void ArgsParser::add_option(double& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+{
+    Option option {
+        true,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&value](const char* s) {
+            auto opt = convert_to_double(s);
+            value = opt.value_or(0.0);
+            return opt.has_value();
+        }
+    };
+    add_option(move(option));
+}
+
+
 void ArgsParser::add_positional_argument(Arg&& arg)
 {
     m_positional_args.append(move(arg));
@@ -325,8 +354,6 @@ void ArgsParser::add_positional_argument(int& value, const char* help_string, co
     add_positional_argument(move(arg));
 }
 
-static constexpr bool isnan(double __x) { return __builtin_isnan(__x); }
-
 void ArgsParser::add_positional_argument(double& value, const char* help_string, const char* name, Required required)
 {
     Arg arg {
@@ -335,13 +362,9 @@ void ArgsParser::add_positional_argument(double& value, const char* help_string,
         required == Required::Yes ? 1 : 0,
         1,
         [&value](const char* s) {
-            char* p;
-            double v = strtod(s, &p);
-            bool valid_value = !isnan(v) && p != s;
-            if (valid_value) {
-                value = v;
-            }
-            return valid_value;
+            auto opt = convert_to_double(s);
+            value = opt.value_or(0.0);
+            return opt.has_value();
         }
     };
     add_positional_argument(move(arg));
