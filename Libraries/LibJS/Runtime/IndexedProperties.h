@@ -161,8 +161,7 @@ public:
     IndexedPropertyIterator begin(bool skip_empty = true) const { return IndexedPropertyIterator(*this, 0, skip_empty); };
     IndexedPropertyIterator end() const { return IndexedPropertyIterator(*this, array_like_size(), false); };
 
-    size_t size() const { return m_storage->size(); }
-    bool is_empty() const { return size() == 0; }
+    bool is_empty() const { return array_like_size() == 0; }
     size_t array_like_size() const { return m_storage->array_like_size(); }
     void set_array_like_size(size_t);
 
