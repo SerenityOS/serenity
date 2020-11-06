@@ -28,6 +28,7 @@
 
 #include <AK/Function.h>
 #include <AK/HashTable.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayIterator.h>
@@ -288,10 +289,19 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    String separator = ","; // NOTE: This is implementation-specific.
+
+    if (s_array_join_seen_objects.contains(this_object))
+        return js_string(vm, "");
+    s_array_join_seen_objects.set(this_object);
+    ArmedScopeGuard unsee_object_guard = [&] {
+        s_array_join_seen_objects.remove(this_object);
+    };
+
     auto length = get_length(vm, *this_object);
     if (vm.exception())
         return {};
+
+    String separator = ","; // NOTE: This is implementation-specific.
     StringBuilder builder;
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
@@ -302,7 +312,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
         if (value.is_nullish())
             continue;
         auto* value_object = value.to_object(global_object);
-        ASSERT(value_object);
+        if (!value_object)
+            return {};
         auto locale_string_result = value_object->invoke("toLocaleString");
         if (vm.exception())
             return {};
@@ -322,9 +333,13 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 
     // This is not part of the spec, but all major engines do some kind of circular reference checks.
     // FWIW: engine262, a "100% spec compliant" ECMA-262 impl, aborts with "too much recursion".
+    // Same applies to Array.prototype.toLocaleString().
     if (s_array_join_seen_objects.contains(this_object))
         return js_string(vm, "");
     s_array_join_seen_objects.set(this_object);
+    ArmedScopeGuard unsee_object_guard = [&] {
+        s_array_join_seen_objects.remove(this_object);
+    };
 
     auto length = get_length(vm, *this_object);
     if (vm.exception())
@@ -349,8 +364,6 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
             return {};
         builder.append(string);
     }
-
-    s_array_join_seen_objects.remove(this_object);
 
     return js_string(vm, builder.to_string());
 }

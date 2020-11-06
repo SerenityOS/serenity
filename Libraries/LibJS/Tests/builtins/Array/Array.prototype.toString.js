@@ -55,4 +55,12 @@ describe("normal behavior", () => {
         expect([o, undefined, o, null, o].toString()).toBe("o,,o,,o");
         expect(toStringCalled).toBe(3);
     });
+
+    test("array with circular references", () => {
+        const a = ["foo", [], [1, 2, []], ["bar"]];
+        a[1] = a;
+        a[2][2] = a;
+        // [ "foo", <circular>, [ 1, 2, <circular> ], [ "bar" ] ]
+        expect(a.toString()).toBe("foo,,1,2,,bar");
+    });
 });
