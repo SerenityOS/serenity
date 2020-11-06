@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,58 +26,40 @@
  */
 
 #pragma once
+#include <AK/NonnullRefPtr.h>
+#include <AK/OwnPtr.h>
+#include <Kernel/Forward.h>
+#include <LibELF/exec_elf.h>
 
 namespace Kernel {
 
-class BlockDevice;
-class CharacterDevice;
-class CoreDump;
-class Custody;
-class Device;
-class DiskCache;
-class DoubleBuffer;
-class File;
-class FileDescription;
-class IPv4Socket;
-class Inode;
-class InodeIdentifier;
-class SharedInodeVMObject;
-class InodeWatcher;
-class KBuffer;
-class KResult;
-class LocalSocket;
-class Lock;
-class MappedROM;
-class MasterPTY;
-class PageDirectory;
-class PerformanceEventBuffer;
-class PhysicalPage;
-class PhysicalRegion;
 class Process;
-class ProcessGroup;
-class ThreadTracer;
-class Range;
-class RangeAllocator;
-class Region;
-class Scheduler;
-class SchedulerPerProcessorData;
-class SharedBuffer;
-class Socket;
-template<typename BaseType>
-class SpinLock;
-class RecursiveSpinLock;
-template<typename LockType>
-class ScopedSpinLock;
-class TCPSocket;
-class TTY;
-class Thread;
-class UDPSocket;
-class UserOrKernelBuffer;
-class VFS;
-class VMObject;
-class WaitQueue;
 
-template<typename T>
-class KResultOr;
+class CoreDump {
+public:
+    static OwnPtr<CoreDump> create(Process&);
+
+    ~CoreDump();
+    void write();
+
+    // Has to be public for OwnPtr::make
+    CoreDump(Process&, NonnullRefPtr<FileDescription>&&);
+
+private:
+    static RefPtr<FileDescription> create_target_file(const Process&);
+
+    void write_elf_header();
+    void write_program_headers(size_t notes_size);
+    void write_regions();
+    void write_notes_segment(ByteBuffer&);
+
+    ByteBuffer create_notes_segment_data() const;
+    ByteBuffer create_notes_threads_data() const;
+    ByteBuffer create_notes_regions_data() const;
+
+    Process& m_process;
+    NonnullRefPtr<FileDescription> m_fd;
+    size_t m_num_program_headers;
+};
 
 }

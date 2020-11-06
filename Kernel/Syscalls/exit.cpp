@@ -33,8 +33,10 @@ void Process::sys$exit(int status)
 {
     cli();
 
-    if (status != 0)
+    if (status != 0) {
         dump_backtrace();
+        set_dump_core(true);
+    }
 
     m_termination_status = status;
     m_termination_signal = 0;
