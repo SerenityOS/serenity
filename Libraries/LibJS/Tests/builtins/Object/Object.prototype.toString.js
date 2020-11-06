@@ -15,4 +15,6 @@ test("result for various object types", () => {
     expect(oToString(new Date())).toBe("[object Date]");
     expect(oToString(new RegExp())).toBe("[object RegExp]");
     expect(oToString({})).toBe("[object Object]");
+
+    expect(globalThis.toString()).toBe("[object Object]");
 });
