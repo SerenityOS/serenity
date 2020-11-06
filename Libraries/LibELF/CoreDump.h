@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,58 +25,34 @@
  */
 
 #pragma once
+#include <AK/Types.h>
+#include <LibC/sys/arch/i386/regs.h>
 
-namespace Kernel {
+namespace ELF::Core {
 
-class BlockDevice;
-class CharacterDevice;
-class CoreDump;
-class Custody;
-class Device;
-class DiskCache;
-class DoubleBuffer;
-class File;
-class FileDescription;
-class IPv4Socket;
-class Inode;
-class InodeIdentifier;
-class SharedInodeVMObject;
-class InodeWatcher;
-class KBuffer;
-class KResult;
-class LocalSocket;
-class Lock;
-class MappedROM;
-class MasterPTY;
-class PageDirectory;
-class PerformanceEventBuffer;
-class PhysicalPage;
-class PhysicalRegion;
-class Process;
-class ProcessGroup;
-class ThreadTracer;
-class Range;
-class RangeAllocator;
-class Region;
-class Scheduler;
-class SchedulerPerProcessorData;
-class SharedBuffer;
-class Socket;
-template<typename BaseType>
-class SpinLock;
-class RecursiveSpinLock;
-template<typename LockType>
-class ScopedSpinLock;
-class TCPSocket;
-class TTY;
-class Thread;
-class UDPSocket;
-class UserOrKernelBuffer;
-class VFS;
-class VMObject;
-class WaitQueue;
+struct [[gnu::packed]] NotesEntry
+{
+    enum Type : u8 {
+        Null = 0, // Terminates segment
+        ThreadInfo,
+        MemoryRegionInfo,
+    };
+    Type type;
+    char data[];
+};
 
-template<typename T>
-class KResultOr;
+struct [[gnu::packed]] ThreadInfo
+{
+    int tid;
+    PtraceRegisters regs;
+};
+
+struct [[gnu::packed]] MemoryRegionInfo
+{
+    uint32_t region_start {};
+    uint32_t region_end;
+    uint16_t program_header_index;
+    char file_name[];
+};
 
 }

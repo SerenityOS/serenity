@@ -234,6 +234,11 @@ public:
         __builtin_memcpy(this->data() + old_size, data, data_size);
     }
 
+    void operator+=(const ByteBuffer& other)
+    {
+        append(other.data(), other.size());
+    }
+
     void overwrite(size_t offset, const void* data, size_t data_size)
     {
         // make sure we're not told to write past the end
