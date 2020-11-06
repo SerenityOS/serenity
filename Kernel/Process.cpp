@@ -32,6 +32,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/CoreDump.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -42,6 +43,7 @@
 #include <Kernel/Module.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
+#include <Kernel/RTC.h>
 #include <Kernel/SharedBuffer.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
@@ -468,6 +470,7 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
         dump_backtrace();
     }
     m_termination_signal = signal;
+    set_dump_core(true);
     dump_regions();
     ASSERT(is_user_process());
     die();
@@ -583,6 +586,15 @@ void Process::finalize()
 #ifdef PROCESS_DEBUG
     dbg() << "Finalizing process " << *this;
 #endif
+
+    if (m_should_dump_core) {
+        dbgln("Generating coredump for pid: {}", m_pid.value());
+        auto coredump = CoreDump::create(*this);
+        if (!coredump) {
+            dbgln("Could not create coredump");
+        }
+        coredump->write();
+    }
 
     if (m_perf_event_buffer) {
         auto description_or_error = VFS::the().open(String::format("perfcore.%d", m_pid), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { m_uid, m_gid });
