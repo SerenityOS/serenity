@@ -37,11 +37,14 @@ class StringOrSymbol {
 public:
     static StringOrSymbol from_value(GlobalObject& global_object, Value value)
     {
+        if (value.is_empty())
+            return {};
         if (value.is_symbol())
             return &value.as_symbol();
-        if (!value.is_empty())
-            return value.to_string(global_object);
-        return {};
+        auto string = value.to_string(global_object);
+        if (string.is_null())
+            return {};
+        return string;
     }
 
     StringOrSymbol() = default;
