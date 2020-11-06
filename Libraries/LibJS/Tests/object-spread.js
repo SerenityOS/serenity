@@ -53,6 +53,11 @@ test("spread array in object literal", () => {
     testObjStrSpread(obj);
 });
 
+test("spread array with holes in object literal", () => {
+    const obj = { ...[, , "a", , , , "b", "c", , "d", , ,] };
+    expect(obj).toEqual({ 2: "a", 6: "b", 7: "c", 9: "d" });
+});
+
 test("spread string object in object literal", () => {
     const obj = { ...String("abcd") };
     testObjStrSpread(obj);

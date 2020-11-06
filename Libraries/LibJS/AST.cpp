@@ -1552,7 +1552,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
             if (key.is_array()) {
                 auto& array_to_spread = static_cast<Array&>(key.as_object());
                 for (auto& entry : array_to_spread.indexed_properties()) {
-                    object->indexed_properties().append(entry.value_and_attributes(&array_to_spread).value);
+                    object->indexed_properties().put(object, entry.index(), entry.value_and_attributes(&array_to_spread).value);
                     if (interpreter.exception())
                         return {};
                 }
