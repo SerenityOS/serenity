@@ -523,23 +523,32 @@ void IconView::paint_event(PaintEvent& event)
 
         auto font = font_for_index(item_data.index);
 
-        painter.fill_rect(item_data.text_rect, background_color);
+        Gfx::IntRect text_rect = item_data.text_rect;
+        auto icon_translation = translation.y() - 12;
+        text_rect.set_height(text_rect.height() > icon_translation ? icon_translation : text_rect.height());
+
+        painter.fill_rect(text_rect, background_color);
         if (is_focused() && item_data.index == cursor_index()) {
-            painter.draw_rect(item_data.text_rect, widget_background_color);
-            painter.draw_focus_rect(item_data.text_rect, palette().focus_outline());
+            painter.draw_rect(text_rect, widget_background_color);
+            painter.draw_focus_rect(text_rect, palette().focus_outline());
         }
 
         if (!item_data.wrapped_text_lines.is_empty()) {
             // Item text would not fit in the item text rect, let's break it up into lines..
 
             const auto& lines = item_data.wrapped_text_lines;
-            for (size_t line_index = 0; line_index < lines.size(); ++line_index) {
+            size_t number_of_text_lines = min((size_t)icon_translation / font->glyph_height(), lines.size());
+            for (size_t line_index = 0; line_index < number_of_text_lines; ++line_index) {
                 Gfx::IntRect line_rect;
                 line_rect.set_width(item_data.text_rect.width());
                 line_rect.set_height(font->glyph_height());
                 line_rect.center_horizontally_within(item_data.text_rect);
                 line_rect.set_y(2 + item_data.text_rect.y() + line_index * font->glyph_height());
                 line_rect.inflate(6, 0);
+
+                // Shrink the line_rect on the last line to apply elision if there are more lines.
+                if (number_of_text_lines - 1 == line_index && lines.size() > number_of_text_lines)
+                    line_rect.inflate(-(6 + 2 * font->max_glyph_width()), 0);
 
                 draw_item_text(painter, item_data.index, item_data.selected, line_rect, lines[line_index], font, Gfx::TextAlignment::Center, Gfx::TextElision::Right);
             }
