@@ -27,6 +27,7 @@
 #include "SpreadsheetModel.h"
 #include "ConditionalFormatting.h"
 #include <AK/URL.h>
+#include <LibGUI/AbstractView.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -69,11 +70,8 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
         return cell->typed_display();
     }
 
-    if (role == GUI::ModelRole::DragData) {
-        // FIXME: It would be really nice if we could send out a URL *and* some extra data,
-        //        The Event already has support for this, but the user-facing API does not.
+    if (role == GUI::ModelRole::MimeData)
         return Position { m_sheet->column(index.column()), (size_t)index.row() }.to_url().to_string();
-    }
 
     if (role == GUI::ModelRole::TextAlignment) {
         const auto* cell = m_sheet->at({ m_sheet->column(index.column()), (size_t)index.row() });
@@ -117,6 +115,30 @@ GUI::Variant SheetModel::data(const GUI::ModelIndex& index, GUI::ModelRole role)
     }
 
     return {};
+}
+
+RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selection) const
+{
+    auto mime_data = GUI::Model::mime_data(selection);
+
+    bool first = true;
+    const GUI::ModelIndex* cursor = nullptr;
+    const_cast<SheetModel*>(this)->for_each_view([&](const GUI::AbstractView& view) {
+        if (!first)
+            return;
+        cursor = &view.cursor_index();
+        first = false;
+    });
+
+    ASSERT(cursor);
+
+    Position cursor_position { m_sheet->column(cursor->column()), (size_t)cursor->row() };
+    auto new_data = String::formatted("{}\n{}",
+        cursor_position.to_url().to_string(),
+        StringView(mime_data->data("text/x-spreadsheet-data")));
+    mime_data->set_data("text/x-spreadsheet-data", new_data.to_byte_buffer());
+
+    return mime_data;
 }
 
 String SheetModel::column_name(int index) const

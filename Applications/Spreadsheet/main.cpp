@@ -27,6 +27,7 @@
 #include "HelpWindow.h"
 #include "Spreadsheet.h"
 #include "SpreadsheetWidget.h"
+#include <AK/ScopeGuard.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/AboutDialog.h>
@@ -153,11 +154,26 @@ int main(int argc, char* argv[])
 
     auto& edit_menu = menubar->add_menu("Edit");
     edit_menu.add_action(GUI::CommonActions::make_copy_action([&](auto&) {
+        /// text/x-spreadsheet-data:
+        /// - currently selected cell
+        /// - selected cell+
         auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
         ASSERT(!cells.is_empty());
         StringBuilder text_builder, url_builder;
         bool first = true;
+        auto cursor = spreadsheet_widget.current_selection_cursor();
+        if (cursor) {
+            Spreadsheet::Position position { spreadsheet_widget.current_worksheet().column(cursor->column()), (size_t)cursor->row() };
+            url_builder.append(position.to_url().to_string());
+            url_builder.append('\n');
+        }
+
         for (auto& cell : cells) {
+            if (first && !cursor) {
+                url_builder.append(cell.to_url().to_string());
+                url_builder.append('\n');
+            }
+
             url_builder.append(cell.to_url().to_string());
             url_builder.append('\n');
 
@@ -175,41 +191,30 @@ int main(int argc, char* argv[])
     },
         window));
     edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
+        ScopeGuard update_after_paste { [&] { spreadsheet_widget.current_worksheet().update(); } };
+
         auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
         ASSERT(!cells.is_empty());
         const auto& data = GUI::Clipboard::the().data_and_type();
         if (auto spreadsheet_data = data.metadata.get("text/x-spreadsheet-data"); spreadsheet_data.has_value()) {
-            Vector<URL> urls;
-            for (auto line : spreadsheet_data.value().split_view('\n')) {
-                if (line.is_empty())
-                    continue;
-                URL url { line };
-                if (!url.is_valid())
-                    continue;
-                urls.append(move(url));
+            Vector<Spreadsheet::Position> source_positions, target_positions;
+            auto& sheet = spreadsheet_widget.current_worksheet();
+
+            for (auto& line : spreadsheet_data.value().split_view('\n')) {
+                dbg() << "Paste line '" << line << "'";
+                auto position = sheet.position_from_url(line);
+                if (position.has_value())
+                    source_positions.append(position.release_value());
             }
 
-            if (urls.size() == 1 && cells.size() == 1) {
-                auto& cell = *cells.begin();
-                auto& url = urls.first();
+            for (auto& position : spreadsheet_widget.current_worksheet().selected_cells())
+                target_positions.append(position);
 
-                auto* source_cell = spreadsheet_widget.current_worksheet().from_url(url);
-                if (source_cell) {
-                    auto& target_cell = spreadsheet_widget.current_worksheet().ensure(cell);
-                    auto references = target_cell.referencing_cells;
-                    target_cell = *source_cell;
-                    target_cell.referencing_cells = move(references);
-                    target_cell.dirty = true;
-                    spreadsheet_widget.update();
-                }
-
+            if (source_positions.is_empty())
                 return;
-            }
 
-            if (urls.size() != cells.size()) {
-                // FIXME: Somehow copy a bunch of cells into another bunch of cells.
-                TODO();
-            }
+            auto first_position = source_positions.take_first();
+            sheet.copy_cells(move(source_positions), move(target_positions), first_position);
         } else {
             for (auto& cell : spreadsheet_widget.current_worksheet().selected_cells())
                 spreadsheet_widget.current_worksheet().ensure(cell).set_data(StringView { data.data.data(), data.data.size() });
