@@ -30,9 +30,15 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <math.h>
 
+#ifdef __clang__
+#    define EPSILON_VALUE pow(2, -52)
+#    define MAX_SAFE_INTEGER_VALUE pow(2, 53) - 1
+#    define MIN_SAFE_INTEGER_VALUE -(pow(2, 53) - 1)
+#else
 constexpr const double EPSILON_VALUE { __builtin_pow(2, -52) };
 constexpr const double MAX_SAFE_INTEGER_VALUE { __builtin_pow(2, 53) - 1 };
 constexpr const double MIN_SAFE_INTEGER_VALUE { -(__builtin_pow(2, 53) - 1) };
+#endif
 
 namespace JS {
 
