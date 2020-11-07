@@ -2,7 +2,7 @@
 
 Graphical Unix-like operating system for x86 computers.
 
-![Travis CI status](https://api.travis-ci.com/SerenityOS/serenity.svg?branch=master)
+[![Build status](https://github.com/SerenityOS/serenity/workflows/Build,%20lint,%20and%20test/badge.svg)](https://github.com/SerenityOS/serenity/actions?query=workflow%3A"Build%2C%20lint%2C%20and%20test")
 
 ## About
 
