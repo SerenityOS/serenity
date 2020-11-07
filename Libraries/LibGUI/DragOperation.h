@@ -44,13 +44,10 @@ public:
 
     virtual ~DragOperation() override;
 
-    void set_text(const String& text) { m_text = text; }
-    void set_bitmap(const Gfx::Bitmap* bitmap) { m_bitmap = bitmap; }
-    void set_data(const String& data_type, const String& data)
-    {
-        m_data_type = data_type;
-        m_data = data;
-    }
+    void set_mime_data(RefPtr<Core::MimeData> mime_data) { m_mime_data = move(mime_data); }
+    void set_text(const String& text);
+    void set_bitmap(const Gfx::Bitmap* bitmap);
+    void set_data(const String& data_type, const String& data);
 
     Outcome exec();
     Outcome outcome() const { return m_outcome; }
@@ -66,10 +63,7 @@ private:
 
     OwnPtr<Core::EventLoop> m_event_loop;
     Outcome m_outcome { Outcome::None };
-    String m_text;
-    String m_data_type;
-    String m_data;
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Core::MimeData> m_mime_data;
 };
 
 }

@@ -755,7 +755,7 @@ OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const
         bitmap = Gfx::Bitmap::create_with_shared_buffer(Gfx::BitmapFormat::RGBA32, *shared_buffer, message.bitmap_size());
     }
 
-    wm.start_dnd_drag(*this, message.text(), bitmap, message.data_type(), message.data());
+    wm.start_dnd_drag(*this, message.text(), bitmap, Core::MimeData::construct(message.mime_data()));
     return make<Messages::WindowServer::StartDragResponse>(true);
 }
 

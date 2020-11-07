@@ -403,7 +403,7 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
         return node.full_path();
     }
 
-    if (role == ModelRole::DragData) {
+    if (role == ModelRole::MimeData) {
         if (index.column() == Column::Name) {
             StringBuilder builder;
             builder.append("file://");

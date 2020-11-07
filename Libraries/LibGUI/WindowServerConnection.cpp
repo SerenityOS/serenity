@@ -307,8 +307,7 @@ void WindowServerConnection::handle(const Messages::WindowClient::AsyncSetWallpa
 void WindowServerConnection::handle(const Messages::WindowClient::DragDropped& message)
 {
     if (auto* window = Window::from_window_id(message.window_id())) {
-        auto mime_data = Core::MimeData::construct();
-        mime_data->set_data(message.data_type(), message.data().to_byte_buffer());
+        auto mime_data = Core::MimeData::construct(message.mime_data());
         Core::EventLoop::current().post_event(*window, make<DropEvent>(message.mouse_position(), message.text(), mime_data));
     }
 }

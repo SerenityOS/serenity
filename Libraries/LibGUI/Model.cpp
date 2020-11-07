@@ -88,4 +88,40 @@ void Model::unregister_client(ModelClient& client)
     m_clients.remove(&client);
 }
 
+RefPtr<Core::MimeData> Model::mime_data(const ModelSelection& selection) const
+{
+    auto mime_data = Core::MimeData::construct();
+    RefPtr<Gfx::Bitmap> bitmap;
+
+    StringBuilder text_builder;
+    StringBuilder data_builder;
+    bool first = true;
+    selection.for_each_index([&](auto& index) {
+        auto text_data = index.data();
+        if (!first)
+            text_builder.append(", ");
+        text_builder.append(text_data.to_string());
+
+        if (!first)
+            data_builder.append('\n');
+        auto data = index.data(ModelRole::MimeData);
+        data_builder.append(data.to_string());
+
+        first = false;
+
+        if (!bitmap) {
+            Variant icon_data = index.data(ModelRole::Icon);
+            if (icon_data.is_icon())
+                bitmap = icon_data.as_icon().bitmap_for_size(32);
+        }
+    });
+
+    mime_data->set_data(drag_data_type(), data_builder.to_byte_buffer());
+    mime_data->set_text(text_builder.to_string());
+    if (bitmap)
+        mime_data->set_data("image/x-raw-bitmap", bitmap->serialize_to_byte_buffer());
+
+    return mime_data;
+}
+
 }
