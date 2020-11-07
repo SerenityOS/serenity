@@ -522,11 +522,6 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     dbg() << "Ext2FS: Inode " << inode.identifier() << " has no more links, time to delete!";
 #endif
 
-    struct timeval now;
-    kgettimeofday(now);
-    inode.m_raw_inode.i_dtime = now.tv_sec;
-    write_ext2_inode(inode.index(), inode.m_raw_inode);
-
     auto block_list = block_list_for_inode(inode.m_raw_inode, true);
 
     for (auto block_index : block_list) {
@@ -534,6 +529,12 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
         if (block_index)
             set_block_allocation_state(block_index, false);
     }
+
+    struct timeval now;
+    kgettimeofday(now);
+    memset(&inode.m_raw_inode, 0, sizeof(ext2_inode));
+    inode.m_raw_inode.i_dtime = now.tv_sec;
+    write_ext2_inode(inode.index(), inode.m_raw_inode);
 
     set_inode_allocation_state(inode.index(), false);
 
