@@ -74,13 +74,17 @@ void HTMLIFrameElement::document_will_detach_from_frame(Frame&)
 
 void HTMLIFrameElement::load_src(const String& value)
 {
-    dbg() << "Loading iframe document from " << value;
     auto url = document().complete_url(value);
     if (!url.is_valid()) {
-        dbg() << "Actually no I'm not, because the URL is not valid :(";
+        dbg() << "iframe failed to load URL: Invalid URL: " << value;
+        return;
+    }
+    if (url.protocol() == "file" && content_origin().protocol() != "file") {
+        dbg() << "iframe failed to load URL: Security violation: " << document().url() << " may not load " << value;
         return;
     }
 
+    dbg() << "Loading iframe document from " << value;
     m_content_frame->loader().load(url, FrameLoader::Type::IFrame);
 }
 
