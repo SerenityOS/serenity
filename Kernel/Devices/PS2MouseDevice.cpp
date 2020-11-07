@@ -33,13 +33,6 @@
 namespace Kernel {
 
 #define IRQ_MOUSE 12
-#define I8042_BUFFER 0x60
-#define I8042_STATUS 0x64
-#define I8042_ACK 0xFA
-#define I8042_BUFFER_FULL 0x01
-#define I8042_WHICH_BUFFER 0x20
-#define I8042_MOUSE_BUFFER 0x20
-#define I8042_KEYBOARD_BUFFER 0x00
 
 #define PS2MOUSE_SET_RESOLUTION 0xE8
 #define PS2MOUSE_STATUS_REQUEST 0xE9
@@ -62,17 +55,12 @@ static AK::Singleton<PS2MouseDevice> s_the;
 PS2MouseDevice::PS2MouseDevice()
     : IRQHandler(IRQ_MOUSE)
     , CharacterDevice(10, 1)
+    , m_controller(I8042Controller::the())
 {
-    initialize();
 }
 
 PS2MouseDevice::~PS2MouseDevice()
 {
-}
-
-void PS2MouseDevice::create()
-{
-    s_the.ensure_instance();
 }
 
 PS2MouseDevice& PS2MouseDevice::the()
@@ -82,78 +70,69 @@ PS2MouseDevice& PS2MouseDevice::the()
 
 void PS2MouseDevice::handle_irq(const RegisterState&)
 {
-    if (auto* backdoor = VMWareBackdoor::the()) {
-        if (backdoor->vmmouse_is_absolute()) {
-            IO::in8(I8042_BUFFER);
-            auto packet = backdoor->receive_mouse_packet();
-            m_entropy_source.add_random_event(packet);
-            if (packet.has_value())
-                m_queue.enqueue(packet.value());
-            return;
-        }
-    }
-    for (;;) {
-        u8 status = IO::in8(I8042_STATUS);
-        if (!(((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) && (status & I8042_BUFFER_FULL)))
-            return;
+    // The controller will read the data and call irq_handle_byte_read
+    // for the appropriate device
+    m_controller.irq_process_input_buffer(I8042Controller::Device::Mouse);
+}
 
-        u8 data = IO::in8(I8042_BUFFER);
-        m_data[m_data_state] = data;
+void PS2MouseDevice::irq_handle_byte_read(u8 byte)
+{
+    m_data.bytes[m_data_state] = byte;
 
-        auto commit_packet = [&] {
-            m_data_state = 0;
+    auto commit_packet = [&] {
+        m_data_state = 0;
 #ifdef PS2MOUSE_DEBUG
-            dbg() << "PS2Mouse: " << m_data[1] << ", " << m_data[2] << " " << ((m_data[0] & 1) ? "Left" : "") << " " << ((m_data[0] & 2) ? "Right" : "") << " (buffered: " << m_queue.size() << ")";
+        dbg() << "PS2Mouse: " << m_data.bytes[1] << ", " << m_data.bytes[2] << " " << ((m_data.bytes[0] & 1) ? "Left" : "") << " " << ((m_data.bytes[0] & 2) ? "Right" : "") << " (buffered: " << m_queue.size() << ")";
 #endif
-            m_entropy_source.add_random_event(*(u32*)m_data);
+        m_entropy_source.add_random_event(m_data.dword);
 
-            parse_data_packet();
-        };
+        ScopedSpinLock lock(m_queue_lock);
+        m_queue.enqueue(m_data);
+    };
 
-        switch (m_data_state) {
-        case 0:
-            if (!(data & 0x08)) {
-                dbg() << "PS2Mouse: Stream out of sync.";
-                break;
-            }
-            ++m_data_state;
-            break;
-        case 1:
-            ++m_data_state;
-            break;
-        case 2:
-            if (m_has_wheel) {
-                ++m_data_state;
-                break;
-            }
-            commit_packet();
-            break;
-        case 3:
-            ASSERT(m_has_wheel);
-            commit_packet();
+    switch (m_data_state) {
+    case 0:
+        if (!(byte & 0x08)) {
+            dbg() << "PS2Mouse: Stream out of sync.";
             break;
         }
+        ++m_data_state;
+        break;
+    case 1:
+        ++m_data_state;
+        break;
+    case 2:
+        if (m_has_wheel) {
+            ++m_data_state;
+            break;
+        }
+        commit_packet();
+        break;
+    case 3:
+        ASSERT(m_has_wheel);
+        commit_packet();
+        break;
     }
 }
 
-void PS2MouseDevice::parse_data_packet()
+MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
 {
-    int x = m_data[1];
-    int y = m_data[2];
+    int x = raw_packet.bytes[1];
+    int y = raw_packet.bytes[2];
     int z = 0;
     if (m_has_wheel) {
         // FIXME: For non-Intellimouse, this is a full byte.
         //        However, for now, m_has_wheel is only set for Intellimouse.
-        z = (char)(m_data[3] & 0x0f);
+        z = (char)(raw_packet.bytes[3] & 0x0f);
 
         // -1 in 4 bits
         if (z == 15)
             z = -1;
     }
-    bool x_overflow = m_data[0] & 0x40;
-    bool y_overflow = m_data[0] & 0x80;
-    bool x_sign = m_data[0] & 0x10;
-    bool y_sign = m_data[0] & 0x20;
+    bool x_overflow = raw_packet.bytes[0] & 0x40;
+    bool y_overflow = raw_packet.bytes[0] & 0x80;
+    bool x_sign = raw_packet.bytes[0] & 0x10;
+    bool y_sign = raw_packet.bytes[0] & 0x20;
     if (x && x_sign)
         x -= 0x100;
     if (y && y_sign)
@@ -166,12 +145,12 @@ void PS2MouseDevice::parse_data_packet()
     packet.x = x;
     packet.y = y;
     packet.z = z;
-    packet.buttons = m_data[0] & 0x07;
+    packet.buttons = raw_packet.bytes[0] & 0x07;
 
     if (m_has_five_buttons) {
-        if (m_data[3] & 0x10)
+        if (raw_packet.bytes[3] & 0x10)
             packet.buttons |= MousePacket::BackButton;
-        if (m_data[3] & 0x20)
+        if (raw_packet.bytes[3] & 0x20)
             packet.buttons |= MousePacket::ForwardButton;
     }
 
@@ -180,89 +159,57 @@ void PS2MouseDevice::parse_data_packet()
     dbg() << "PS2 Relative Mouse: Buttons " << String::format("%x", packet.buttons);
     dbg() << "Mouse: X " << packet.x << ", Y " << packet.y << ", Z " << packet.z;
 #endif
-    m_queue.enqueue(packet);
-}
-
-void PS2MouseDevice::wait_then_write(u8 port, u8 data)
-{
-    prepare_for_output();
-    IO::out8(port, data);
-}
-
-u8 PS2MouseDevice::wait_then_read(u8 port)
-{
-    prepare_for_input();
-    return IO::in8(port);
-}
-
-void PS2MouseDevice::initialize()
-{
-    // Enable PS aux port
-    wait_then_write(I8042_STATUS, 0xa8);
-
-    check_device_presence();
-
-    if (m_device_present)
-        initialize_device();
-}
-
-void PS2MouseDevice::check_device_presence()
-{
-    mouse_write(PS2MOUSE_REQUEST_SINGLE_PACKET);
-    u8 maybe_ack = mouse_read();
-    if (maybe_ack == I8042_ACK) {
-        m_device_present = true;
-        klog() << "PS2MouseDevice: Device detected";
-
-        // the mouse will send a packet of data, since that's what we asked
-        // for. we don't care about the content.
-        mouse_read();
-        mouse_read();
-        mouse_read();
-    } else {
-        m_device_present = false;
-        klog() << "PS2MouseDevice: Device not detected";
-    }
+    return packet;
 }
 
 u8 PS2MouseDevice::get_device_id()
 {
-    mouse_write(PS2MOUSE_GET_DEVICE_ID);
-    expect_ack();
-    return mouse_read();
+    if (send_command(PS2MOUSE_GET_DEVICE_ID) != I8042_ACK)
+        return 0;
+    return read_from_device();
+}
+
+u8 PS2MouseDevice::read_from_device()
+{
+    return m_controller.read_from_device(I8042Controller::Device::Mouse);
+}
+
+u8 PS2MouseDevice::send_command(u8 command)
+{
+    u8 response = m_controller.send_command(I8042Controller::Device::Mouse, command);
+    if (response != I8042_ACK)
+        dbg() << "PS2MouseDevice: Command " << (int)command << " got " << (int)response << " but expected ack: " << (int)I8042_ACK;
+    return response;
+}
+
+u8 PS2MouseDevice::send_command(u8 command, u8 data)
+{
+    u8 response = m_controller.send_command(I8042Controller::Device::Mouse, command, data);
+    if (response != I8042_ACK)
+        dbg() << "PS2MouseDevice: Command " << (int)command << " got " << (int)response << " but expected ack: " << (int)I8042_ACK;
+    return response;
 }
 
 void PS2MouseDevice::set_sample_rate(u8 rate)
 {
-    mouse_write(PS2MOUSE_SET_SAMPLE_RATE);
-    expect_ack();
-    mouse_write(rate);
-    expect_ack();
+    send_command(PS2MOUSE_SET_SAMPLE_RATE, rate);
 }
 
-void PS2MouseDevice::initialize_device()
+bool PS2MouseDevice::initialize()
 {
-    if (!m_device_present)
-        return;
+    if (!m_controller.reset_device(I8042Controller::Device::Mouse)) {
+        dbg() << "PS2MouseDevice: I8042 controller failed to reset device";
+        return false;
+    }
 
-    // Enable interrupts
-    wait_then_write(I8042_STATUS, 0x20);
-
-    // Enable the PS/2 mouse IRQ (12).
-    // NOTE: The keyboard uses IRQ 1 (and is enabled by bit 0 in this register).
-    u8 status = wait_then_read(I8042_BUFFER) | 2;
-    wait_then_write(I8042_STATUS, 0x60);
-    wait_then_write(I8042_BUFFER, status);
+    u8 device_id = read_from_device();
 
     // Set default settings.
-    mouse_write(PS2MOUSE_SET_DEFAULTS);
-    expect_ack();
+    if (send_command(PS2MOUSE_SET_DEFAULTS) != I8042_ACK)
+        return false;
 
-    // Enable.
-    mouse_write(PS2MOUSE_ENABLE_PACKET_STREAMING);
-    expect_ack();
-
-    u8 device_id = get_device_id();
+    if (send_command(PS2MOUSE_ENABLE_PACKET_STREAMING) != I8042_ACK)
+        return false;
 
     if (device_id != PS2MOUSE_INTELLIMOUSE_ID) {
         // Send magical wheel initiation sequence.
@@ -271,7 +218,6 @@ void PS2MouseDevice::initialize_device()
         set_sample_rate(80);
         device_id = get_device_id();
     }
-
     if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
         m_has_wheel = true;
         klog() << "PS2MouseDevice: Mouse wheel enabled!";
@@ -291,48 +237,12 @@ void PS2MouseDevice::initialize_device()
         m_has_five_buttons = true;
         klog() << "PS2MouseDevice: 5 buttons enabled!";
     }
-
-    enable_irq();
-}
-
-void PS2MouseDevice::expect_ack()
-{
-    u8 data = mouse_read();
-    ASSERT(data == I8042_ACK);
-}
-
-void PS2MouseDevice::prepare_for_input()
-{
-    for (;;) {
-        if (IO::in8(I8042_STATUS) & 1)
-            return;
-    }
-}
-
-void PS2MouseDevice::prepare_for_output()
-{
-    for (;;) {
-        if (!(IO::in8(I8042_STATUS) & 2))
-            return;
-    }
-}
-
-void PS2MouseDevice::mouse_write(u8 data)
-{
-    prepare_for_output();
-    IO::out8(I8042_STATUS, 0xd4);
-    prepare_for_output();
-    IO::out8(I8042_BUFFER, data);
-}
-
-u8 PS2MouseDevice::mouse_read()
-{
-    prepare_for_input();
-    return IO::in8(I8042_BUFFER);
+    return true;
 }
 
 bool PS2MouseDevice::can_read(const FileDescription&, size_t) const
 {
+    ScopedSpinLock lock(m_queue_lock);
     return !m_queue.is_empty();
 }
 
@@ -341,8 +251,26 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
     ASSERT(size > 0);
     size_t nread = 0;
     size_t remaining_space_in_buffer = static_cast<size_t>(size) - nread;
+    auto* backdoor = VMWareBackdoor::the();
+    ScopedSpinLock lock(m_queue_lock);
     while (!m_queue.is_empty() && remaining_space_in_buffer) {
-        auto packet = m_queue.dequeue();
+        auto raw_packet = m_queue.dequeue();
+        lock.unlock();
+
+        MousePacket packet;
+        bool is_parsed = false;
+        if (backdoor && backdoor->vmmouse_is_absolute()) {
+            auto mouse_packet = backdoor->receive_mouse_packet();
+            m_entropy_source.add_random_event(packet);
+            if (mouse_packet.has_value()) {
+                packet = mouse_packet.value();
+                is_parsed = true;
+            }
+        }
+
+        if (!is_parsed)
+            packet = parse_data_packet(raw_packet);
+
 #ifdef PS2MOUSE_DEBUG
         dbg() << "PS2 Mouse Read: Buttons " << String::format("%x", packet.buttons);
         dbg() << "PS2 Mouse: X " << packet.x << ", Y " << packet.y << ", Z " << packet.z << " Relative " << packet.buttons;
@@ -353,6 +281,8 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
             return KResult(-EFAULT);
         nread += bytes_read_from_packet;
         remaining_space_in_buffer -= bytes_read_from_packet;
+
+        lock.lock();
     }
     return nread;
 }

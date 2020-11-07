@@ -36,13 +36,12 @@
 #include <Kernel/Devices/EBRPartitionTable.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/GPTPartitionTable.h>
-#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Devices/I8042Controller.h>
 #include <Kernel/Devices/MBRPartitionTable.h>
 #include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/Devices/PATADiskDevice.h>
-#include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
@@ -141,8 +140,7 @@ extern "C" [[noreturn]] void init()
     ACPI::initialize();
 
     VFS::initialize();
-    KeyboardDevice::initialize();
-    PS2MouseDevice::create();
+    I8042Controller::initialize();
     Console::initialize();
 
     klog() << "Starting SerenityOS...";

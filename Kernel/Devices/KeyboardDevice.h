@@ -31,6 +31,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Devices/I8042Controller.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Random.h>
 #include <LibKeyboard/CharacterMap.h>
@@ -40,16 +41,18 @@ namespace Kernel {
 class KeyboardClient;
 
 class KeyboardDevice final : public IRQHandler
-    , public CharacterDevice {
+    , public CharacterDevice
+    , public I8042Device {
     AK_MAKE_ETERNAL
 public:
     using Event = KeyEvent;
 
-    static void initialize();
     static KeyboardDevice& the();
 
     virtual ~KeyboardDevice() override;
     KeyboardDevice();
+
+    bool initialize();
 
     void set_client(KeyboardClient* client) { m_client = client; }
     void set_maps(const Keyboard::CharacterMapData& character_map, const String& character_map_name);
@@ -63,6 +66,13 @@ public:
     virtual bool can_write(const FileDescription&, size_t) const override { return true; }
 
     virtual const char* purpose() const override { return class_name(); }
+
+    // ^I8042Device
+    virtual void irq_handle_byte_read(u8 byte) override;
+    virtual void enable_interrupts() override
+    {
+        enable_irq();
+    }
 
 private:
     // ^IRQHandler
@@ -80,7 +90,9 @@ private:
             m_modifiers &= ~modifier;
     }
 
+    I8042Controller& m_controller;
     KeyboardClient* m_client { nullptr };
+    mutable SpinLock<u8> m_queue_lock;
     CircularQueue<Event, 16> m_queue;
     u8 m_modifiers { 0 };
     bool m_caps_lock_on { false };

@@ -39,13 +39,6 @@
 namespace Kernel {
 
 #define IRQ_KEYBOARD 1
-#define I8042_BUFFER 0x60
-#define I8042_STATUS 0x64
-#define I8042_ACK 0xFA
-#define I8042_BUFFER_FULL 0x01
-#define I8042_WHICH_BUFFER 0x20
-#define I8042_MOUSE_BUFFER 0x20
-#define I8042_KEYBOARD_BUFFER 0x00
 
 static const KeyCode unshifted_key_map[0x80] = {
     Key_Invalid,
@@ -273,75 +266,74 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
     if (m_client)
         m_client->on_key_pressed(event);
 
-    m_queue.enqueue(event);
+    {
+        ScopedSpinLock lock(m_queue_lock);
+        m_queue.enqueue(event);
+    }
 
     m_has_e0_prefix = false;
 }
 
 void KeyboardDevice::handle_irq(const RegisterState&)
 {
-    for (;;) {
-        u8 status = IO::in8(I8042_STATUS);
-        if (!(((status & I8042_WHICH_BUFFER) == I8042_KEYBOARD_BUFFER) && (status & I8042_BUFFER_FULL)))
-            return;
-        u8 raw = IO::in8(I8042_BUFFER);
-        u8 ch = raw & 0x7f;
-        bool pressed = !(raw & 0x80);
+    // The controller will read the data and call irq_handle_byte_read
+    // for the appropriate device
+    m_controller.irq_process_input_buffer(I8042Controller::Device::Keyboard);
+}
 
-        m_entropy_source.add_random_event(raw);
+void KeyboardDevice::irq_handle_byte_read(u8 byte)
+{
+    u8 ch = byte & 0x7f;
+    bool pressed = !(byte & 0x80);
 
-        if (raw == 0xe0) {
-            m_has_e0_prefix = true;
-            return;
-        }
+    m_entropy_source.add_random_event(byte);
+
+    if (byte == 0xe0) {
+        m_has_e0_prefix = true;
+        return;
+    }
 
 #ifdef KEYBOARD_DEBUG
-        dbg() << "Keyboard::handle_irq: " << String::format("%b", ch) << " " << (pressed ? "down" : "up");
+    dbg() << "Keyboard::irq_handle_byte_read: " << String::format("%b", ch) << " " << (pressed ? "down" : "up");
 #endif
-        switch (ch) {
-        case 0x38:
-            if (m_has_e0_prefix)
-                update_modifier(Mod_AltGr, pressed);
-            else
-                update_modifier(Mod_Alt, pressed);
-            break;
-        case 0x1d:
-            update_modifier(Mod_Ctrl, pressed);
-            break;
-        case 0x5b:
-            update_modifier(Mod_Logo, pressed);
-            break;
-        case 0x2a:
-        case 0x36:
-            update_modifier(Mod_Shift, pressed);
-            break;
-        }
-        switch (ch) {
-        case I8042_ACK:
-            break;
-        default:
-            if (m_modifiers & Mod_Alt) {
-                switch (ch) {
-                case 0x02 ... 0x07: // 1 to 6
-                    VirtualConsole::switch_to(ch - 0x02);
-                    break;
-                default:
-                    key_state_changed(ch, pressed);
-                    break;
-                }
-            } else {
+    switch (ch) {
+    case 0x38:
+        if (m_has_e0_prefix)
+            update_modifier(Mod_AltGr, pressed);
+        else
+            update_modifier(Mod_Alt, pressed);
+        break;
+    case 0x1d:
+        update_modifier(Mod_Ctrl, pressed);
+        break;
+    case 0x5b:
+        update_modifier(Mod_Logo, pressed);
+        break;
+    case 0x2a:
+    case 0x36:
+        update_modifier(Mod_Shift, pressed);
+        break;
+    }
+    switch (ch) {
+    case I8042_ACK:
+        break;
+    default:
+        if (m_modifiers & Mod_Alt) {
+            switch (ch) {
+            case 0x02 ... 0x07: // 1 to 6
+                VirtualConsole::switch_to(ch - 0x02);
+                break;
+            default:
                 key_state_changed(ch, pressed);
+                break;
             }
+        } else {
+            key_state_changed(ch, pressed);
         }
     }
 }
 
 static AK::Singleton<KeyboardDevice> s_the;
-
-void KeyboardDevice::initialize()
-{
-    s_the.ensure_instance();
-}
 
 KeyboardDevice& KeyboardDevice::the()
 {
@@ -351,17 +343,21 @@ KeyboardDevice& KeyboardDevice::the()
 KeyboardDevice::KeyboardDevice()
     : IRQHandler(IRQ_KEYBOARD)
     , CharacterDevice(85, 1)
+    , m_controller(I8042Controller::the())
 {
-    // Empty the buffer of any pending data.
-    // I don't care what you've been pressing until now!
-    while (IO::in8(I8042_STATUS) & I8042_BUFFER_FULL)
-        IO::in8(I8042_BUFFER);
-
-    enable_irq();
 }
 
 KeyboardDevice::~KeyboardDevice()
 {
+}
+
+bool KeyboardDevice::initialize()
+{
+    if (!m_controller.reset_device(I8042Controller::Device::Keyboard)) {
+        dbg() << "KeyboardDevice: I8042 controller failed to reset device";
+        return false;
+    }
+    return true;
 }
 
 bool KeyboardDevice::can_read(const FileDescription&, size_t) const
@@ -372,6 +368,7 @@ bool KeyboardDevice::can_read(const FileDescription&, size_t) const
 KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuffer& buffer, size_t size)
 {
     size_t nread = 0;
+    ScopedSpinLock lock(m_queue_lock);
     while (nread < size) {
         if (m_queue.is_empty())
             break;
@@ -379,6 +376,9 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuf
         if ((size - nread) < (ssize_t)sizeof(Event))
             break;
         auto event = m_queue.dequeue();
+
+        lock.unlock();
+
         ssize_t n = buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](u8* data, size_t data_bytes) {
             memcpy(data, &event, sizeof(Event));
             return (ssize_t)data_bytes;
@@ -387,6 +387,8 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, size_t, UserOrKernelBuf
             return KResult(n);
         ASSERT((size_t)n == sizeof(Event));
         nread += sizeof(Event);
+
+        lock.lock();
     }
     return nread;
 }
