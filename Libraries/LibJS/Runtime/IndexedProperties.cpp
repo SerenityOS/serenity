@@ -264,16 +264,13 @@ ValueAndAttributes IndexedPropertyIterator::value_and_attributes(Object* this_ob
 void IndexedPropertyIterator::skip_empty_indices()
 {
     auto indices = m_indexed_properties.indices();
-    if (indices.is_empty()) {
-        m_index = m_indexed_properties.array_like_size();
-        return;
-    }
     for (auto i : indices) {
         if (i < m_index)
             continue;
         m_index = i;
-        break;
+        return;
     }
+    m_index = m_indexed_properties.array_like_size();
 }
 
 Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 index, bool evaluate_accessors) const
