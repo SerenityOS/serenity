@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibIPC/Dictionary.h>
@@ -139,6 +140,13 @@ Encoder& Encoder::operator<<(const String& value)
         return *this << (i32)-1;
     *this << static_cast<i32>(value.length());
     return *this << value.view();
+}
+
+Encoder& Encoder::operator<<(const ByteBuffer& value)
+{
+    *this << static_cast<i32>(value.size());
+    m_buffer.append(value.data(), value.size());
+    return *this;
 }
 
 Encoder& Encoder::operator<<(const URL& value)

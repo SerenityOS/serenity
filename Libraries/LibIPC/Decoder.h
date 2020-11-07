@@ -60,8 +60,29 @@ public:
     bool decode(i64&);
     bool decode(float&);
     bool decode(String&);
+    bool decode(ByteBuffer&);
     bool decode(URL&);
     bool decode(Dictionary&);
+    template<typename K, typename V>
+    bool decode(HashMap<K, V>& hashmap)
+    {
+        u32 size;
+        if (!decode(size) || size > NumericLimits<i32>::max())
+            return false;
+
+        for (size_t i = 0; i < size; ++i) {
+            K key;
+            if (!decode(key))
+                return false;
+
+            V value;
+            if (!decode(value))
+                return false;
+
+            hashmap.set(move(key), move(value));
+        }
+        return true;
+    }
 
     template<typename T>
     bool decode(T& value)
