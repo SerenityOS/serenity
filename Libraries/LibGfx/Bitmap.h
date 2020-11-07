@@ -94,6 +94,7 @@ public:
     static RefPtr<Bitmap> load_from_file(const StringView& path);
     static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&);
     static RefPtr<Bitmap> create_with_shared_buffer(BitmapFormat, NonnullRefPtr<SharedBuffer>&&, const IntSize&, const Vector<RGBA32>& palette);
+    static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
     static bool is_path_a_supported_image_format(const StringView& path)
     {
 #define __ENUMERATE_IMAGE_FORMAT(Name, Ext) \
@@ -110,6 +111,7 @@ public:
     RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
     RefPtr<Bitmap> to_bitmap_backed_by_shared_buffer() const;
+    ByteBuffer serialize_to_byte_buffer() const;
 
     ShareableBitmap to_shareable_bitmap(pid_t peer_pid = -1) const;
 

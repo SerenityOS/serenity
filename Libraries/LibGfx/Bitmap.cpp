@@ -26,6 +26,7 @@
 
 #include <AK/Checked.h>
 #include <AK/Memory.h>
+#include <AK/MemoryStream.h>
 #include <AK/Optional.h>
 #include <AK/SharedBuffer.h>
 #include <AK/String.h>
@@ -148,23 +149,115 @@ RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRef
     return create_with_shared_buffer(format, move(shared_buffer), size, {});
 }
 
-RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
+static bool check_size(const IntSize& size, BitmapFormat format, unsigned actual_size)
 {
-    if (size_would_overflow(format, size))
-        return nullptr;
 
-    unsigned actual_size = shared_buffer->size();
     // FIXME: Code duplication of size_in_bytes() and m_pitch
-    unsigned expected_size_min = minimum_pitch(size.width(), format) * size.height();
+    unsigned expected_size_min = Bitmap::minimum_pitch(size.width(), format) * size.height();
     unsigned expected_size_max = round_up_to_power_of_two(expected_size_min, PAGE_SIZE);
     if (expected_size_min > actual_size || actual_size > expected_size_max) {
         // Getting here is most likely an error.
         dbg() << "Constructing a shared bitmap for format " << (int)format << " and size " << size << ", which demands " << expected_size_min << " bytes, which rounds up to at most " << expected_size_max << ".";
         dbg() << "However, we were given " << actual_size << " bytes, which is outside this range?! Refusing cowardly.";
-        return {};
+        return false;
     }
+    return true;
+}
+
+RefPtr<Bitmap> Bitmap::create_with_shared_buffer(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
+{
+    if (size_would_overflow(format, size))
+        return nullptr;
+
+    if (!check_size(size, format, shared_buffer->size()))
+        return {};
 
     return adopt(*new Bitmap(format, move(shared_buffer), size, palette));
+}
+
+/// Read a bitmap as described by:
+/// - actual size
+/// - width
+/// - height
+/// - format
+/// - palette count
+/// - palette data (= palette count * RGBA32)
+/// - image data (= actual size * u8)
+RefPtr<Bitmap> Bitmap::create_from_serialized_byte_buffer(ByteBuffer&& buffer)
+{
+    InputMemoryStream stream { buffer };
+    unsigned actual_size;
+    unsigned width;
+    unsigned height;
+    BitmapFormat format;
+    unsigned palette_size;
+    Vector<RGBA32> palette;
+
+    auto read = [&]<typename T>(T& value) {
+        if (stream.read({ &value, sizeof(T) }) != sizeof(T))
+            return false;
+        return true;
+    };
+
+    if (!read(actual_size) || !read(width) || !read(height) || !read(format) || !read(palette_size))
+        return nullptr;
+
+    if (format > BitmapFormat::RGBA32 || format < BitmapFormat::Indexed1)
+        return nullptr;
+
+    if (!check_size({ width, height }, format, actual_size))
+        return {};
+
+    palette.ensure_capacity(palette_size);
+    for (size_t i = 0; i < palette_size; ++i) {
+        if (!read(palette[i]))
+            return {};
+    }
+
+    if (stream.remaining() < actual_size)
+        return {};
+
+    auto data = stream.bytes().slice(stream.offset(), actual_size);
+
+    auto bitmap = Bitmap::create(format, { width, height });
+    if (!bitmap)
+        return {};
+
+    bitmap->m_palette = new RGBA32[palette_size];
+    memcpy(bitmap->m_palette, palette.data(), palette_size * sizeof(RGBA32));
+
+    data.copy_to({ bitmap->scanline(0), bitmap->size_in_bytes() });
+
+    return bitmap;
+}
+
+ByteBuffer Bitmap::serialize_to_byte_buffer() const
+{
+    auto buffer = ByteBuffer::create_uninitialized(4 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(RGBA32) * palette_size(m_format) + size_in_bytes());
+    OutputMemoryStream stream { buffer };
+
+    auto write = [&]<typename T>(T value) {
+        if (stream.write({ &value, sizeof(T) }) != sizeof(T))
+            return false;
+        return true;
+    };
+
+    auto palette = palette_to_vector();
+
+    if (!write(size_in_bytes()) || !write((unsigned)size().width()) || !write((unsigned)size().height()) || !write(m_format) || !write((unsigned)palette.size()))
+        return {};
+
+    for (auto& p : palette) {
+        if (!write(p))
+            return {};
+    }
+
+    auto size = size_in_bytes();
+    ASSERT(stream.remaining() == size);
+    if (stream.write({ scanline(0), size }) != size)
+        return {};
+
+    return buffer;
 }
 
 Bitmap::Bitmap(BitmapFormat format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const IntSize& size, const Vector<RGBA32>& palette)
