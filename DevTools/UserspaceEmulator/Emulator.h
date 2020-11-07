@@ -164,8 +164,12 @@ private:
 
     FlatPtr m_malloc_symbol_start { 0 };
     FlatPtr m_malloc_symbol_end { 0 };
+    FlatPtr m_realloc_symbol_start { 0 };
+    FlatPtr m_realloc_symbol_end { 0 };
     FlatPtr m_free_symbol_start { 0 };
     FlatPtr m_free_symbol_end { 0 };
+    FlatPtr m_malloc_size_symbol_start { 0 };
+    FlatPtr m_malloc_size_symbol_end { 0 };
 
     sigset_t m_pending_signals { 0 };
     sigset_t m_signal_mask { 0 };

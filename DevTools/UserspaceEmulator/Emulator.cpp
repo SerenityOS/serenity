@@ -153,11 +153,17 @@ bool Emulator::load_elf()
 
     auto malloc_symbol = m_elf->find_demangled_function("malloc");
     auto free_symbol = m_elf->find_demangled_function("free");
+    auto realloc_symbol = m_elf->find_demangled_function("realloc");
+    auto malloc_size_symbol = m_elf->find_demangled_function("malloc_size");
 
     m_malloc_symbol_start = malloc_symbol.value().value();
     m_malloc_symbol_end = m_malloc_symbol_start + malloc_symbol.value().size();
     m_free_symbol_start = free_symbol.value().value();
     m_free_symbol_end = m_free_symbol_start + free_symbol.value().size();
+    m_realloc_symbol_start = realloc_symbol.value().value();
+    m_realloc_symbol_end = m_realloc_symbol_start + realloc_symbol.value().size();
+    m_malloc_size_symbol_start = malloc_size_symbol.value().value();
+    m_malloc_size_symbol_end = m_malloc_size_symbol_start + malloc_size_symbol.value().size();
 
     m_debug_info = make<Debug::DebugInfo>(m_elf);
     return true;
@@ -194,7 +200,10 @@ int Emulator::exec()
 
 bool Emulator::is_in_malloc_or_free() const
 {
-    return (m_cpu.base_eip() >= m_malloc_symbol_start && m_cpu.base_eip() < m_malloc_symbol_end) || (m_cpu.base_eip() >= m_free_symbol_start && m_cpu.base_eip() < m_free_symbol_end);
+    return (m_cpu.base_eip() >= m_malloc_symbol_start && m_cpu.base_eip() < m_malloc_symbol_end)
+        || (m_cpu.base_eip() >= m_free_symbol_start && m_cpu.base_eip() < m_free_symbol_end)
+        || (m_cpu.base_eip() >= m_realloc_symbol_start && m_cpu.base_eip() < m_realloc_symbol_end)
+        || (m_cpu.base_eip() >= m_malloc_size_symbol_start && m_cpu.base_eip() < m_malloc_size_symbol_end);
 }
 
 Vector<FlatPtr> Emulator::raw_backtrace()
