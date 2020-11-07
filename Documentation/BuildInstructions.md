@@ -30,23 +30,23 @@ sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs qemu qem
 apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel patch gcc
 ```
 
-Ensure your gcc version is >= 9 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
+Ensure your gcc version is >= 10 with `gcc --version`. Otherwise, install it.
+
+On Ubuntu it's in the repositories of 20.04 (Focal) - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
 ```bash
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt-get install gcc-9 g++-9
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /usr/bin/g++ g++ /usr/bin/g++-9
 ```
 
-On Debian you can install it by switching to the Debian testing branch:
+On Debian you can use the Debian testing branch:
 ```bash
 sudo echo "deb http://http.us.debian.org/debian/ testing non-free contrib main" >> /etc/apt/sources.list
 sudo apt update
 ```
 
-Afterwards you can install gcc-9 with apt like:
+Now on Ubuntu or Debian you can install gcc-10 with apt like this:
 ```bash
-sudo apt install gcc-9 g++-9
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /usr/bin/g++ g++ /usr/bin/g++-9
+sudo apt install gcc-10 g++-10
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 900 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 ```
 
 If you don't want to stay on the testing branch you can switch back by running:
