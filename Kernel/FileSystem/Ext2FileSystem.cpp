@@ -184,7 +184,7 @@ bool Ext2FS::find_block_containing_inode(unsigned inode, unsigned& block_index, 
     return true;
 }
 
-Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks)
+Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
 {
     BlockListShape shape;
     const unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
@@ -440,6 +440,12 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
 #endif
 
     unsigned blocks_remaining = block_count;
+
+    if (include_block_list_blocks) {
+        auto shape = compute_block_list_shape(block_count);
+        blocks_remaining += shape.meta_blocks;
+    }
+
     Vector<BlockIndex> list;
 
     auto add_block = [&](BlockIndex bi) {
