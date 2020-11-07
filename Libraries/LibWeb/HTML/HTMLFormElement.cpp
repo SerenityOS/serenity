@@ -50,15 +50,36 @@ void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
     }
 
     auto effective_method = method().to_lowercase();
+
+    if (effective_method == "dialog") {
+        dbg() << "Failed to submit form: Unsupported form method '" << method() << "'";
+        return;
+    }
+
     if (effective_method != "get" && effective_method != "post") {
-        if (effective_method == "dialog") {
-            dbg() << "Unsupported form method '" << method() << "'";
-            return;
-        }
         effective_method = "get";
     }
 
     URL url(document().complete_url(action()));
+
+    if (!url.is_valid()) {
+        dbg() << "Failed to submit form: Invalid URL: " << action();
+        return;
+    }
+
+    if (url.protocol() == "file") {
+        if (document().url().protocol() != "file") {
+            dbg() << "Failed to submit form: Security violation: " << document().url() << " may not submit to " << url;
+            return;
+        }
+        if (effective_method != "get") {
+            dbg() << "Failed to submit form: Unsupported form method '" << method() << "' for URL: " << url;
+            return;
+        }
+    } else if (url.protocol() != "http" && url.protocol() != "https") {
+        dbg() << "Failed to submit form: Unsupported protocol for URL: " << url;
+        return;
+    }
 
     Vector<URLQueryParam> parameters;
 
@@ -72,8 +93,6 @@ void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
     if (effective_method == "get") {
         url.set_query(urlencode(parameters));
     }
-
-    // FIXME: We shouldn't let the form just do this willy-nilly.
 
     LoadRequest request;
     request.set_url(url);
