@@ -57,18 +57,13 @@ bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
 
 void TimeManagement::set_epoch_time(timespec ts)
 {
-    timespec ticks = { 0, (long)ticks_this_second() * (long)1'000'000 };
-    timespec_sub(ts, ticks, ts);
     InterruptDisabler disabler;
     m_epoch_time = ts;
 }
 
 timespec TimeManagement::epoch_time() const
 {
-    timespec ts = m_epoch_time;
-    timespec ticks = { 0, (long)ticks_this_second() * (long)1'000'000 };
-    timespec_add(ts, ticks, ts);
-    return ts;
+    return m_epoch_time;
 }
 
 void TimeManagement::initialize(u32 cpu)
@@ -260,10 +255,13 @@ void TimeManagement::update_time(const RegisterState& regs)
 void TimeManagement::increment_time_since_boot(const RegisterState&)
 {
     ASSERT(!m_time_keeper_timer.is_null());
+
+    timespec epoch_tick = { .tv_sec = 0, .tv_nsec = 1'000'000 }; // FIXME: Don't assume that one tick is 1 ms.
+    timespec_add(m_epoch_time, epoch_tick, m_epoch_time);
+
     if (++m_ticks_this_second >= m_time_keeper_timer->ticks_per_second()) {
         // FIXME: Synchronize with other clock somehow to prevent drifting apart.
         ++m_seconds_since_boot;
-        ++m_epoch_time.tv_sec;
         m_ticks_this_second = 0;
     }
 }
