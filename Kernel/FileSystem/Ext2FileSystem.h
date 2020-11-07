@@ -165,7 +165,7 @@ private:
         unsigned meta_blocks { 0 };
     };
 
-    BlockListShape compute_block_list_shape(unsigned blocks);
+    BlockListShape compute_block_list_shape(unsigned blocks) const;
 
     unsigned m_block_group_count { 0 };
 
