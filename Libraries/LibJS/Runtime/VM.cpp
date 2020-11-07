@@ -110,13 +110,13 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(m_last_value.as_cell());
 
     for (auto& call_frame : m_call_stack) {
-        if (call_frame.this_value.is_cell())
-            roots.set(call_frame.this_value.as_cell());
-        for (auto& argument : call_frame.arguments) {
+        if (call_frame->this_value.is_cell())
+            roots.set(call_frame->this_value.as_cell());
+        for (auto& argument : call_frame->arguments) {
             if (argument.is_cell())
                 roots.set(argument.as_cell());
         }
-        roots.set(call_frame.environment);
+        roots.set(call_frame->environment);
     }
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
@@ -194,7 +194,9 @@ Reference VM::get_reference(const FlyString& name)
 
 Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject& global_object)
 {
-    auto& call_frame = push_call_frame(function.is_strict_mode());
+    CallFrame call_frame;
+    call_frame.is_strict_mode = function.is_strict_mode();
+    push_call_frame(call_frame);
 
     ArmedScopeGuard call_frame_popper = [&] {
         pop_call_frame();
@@ -310,7 +312,8 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
 {
     ASSERT(!exception());
 
-    auto& call_frame = push_call_frame(function.is_strict_mode());
+    CallFrame call_frame;
+    call_frame.is_strict_mode = function.is_strict_mode();
     call_frame.function_name = function.name();
     call_frame.this_value = function.bound_this().value_or(this_value);
     call_frame.arguments = function.bound_arguments();
@@ -321,6 +324,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     ASSERT(call_frame.environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
     call_frame.environment->bind_this_value(function.global_object(), call_frame.this_value);
 
+    push_call_frame(call_frame);
     auto result = function.call();
     pop_call_frame();
     return result;

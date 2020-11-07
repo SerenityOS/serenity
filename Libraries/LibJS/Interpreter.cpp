@@ -76,8 +76,8 @@ Value Interpreter::run(GlobalObject& global_object, const Program& program)
     global_call_frame.is_strict_mode = program.is_strict_mode();
     if (vm().exception())
         return {};
-    vm().call_stack().append(move(global_call_frame));
 
+    vm().push_call_frame(global_call_frame);
     auto result = program.execute(*this, global_object);
     vm().pop_call_frame();
     return result;
@@ -128,7 +128,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
 
     if (!scope_variables_with_declaration_kind.is_empty()) {
         auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(global_object, move(scope_variables_with_declaration_kind), current_environment());
-        vm().call_stack().last().environment = block_lexical_environment;
+        vm().call_frame().environment = block_lexical_environment;
         pushed_lexical_environment = true;
     }
 

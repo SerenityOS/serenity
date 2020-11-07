@@ -114,19 +114,20 @@ public:
         return *m_single_ascii_character_strings[character];
     }
 
-    CallFrame& push_call_frame(bool strict_mode = false)
+    void push_call_frame(CallFrame& call_frame)
     {
-        m_call_stack.append({ {}, js_undefined(), {}, nullptr, strict_mode });
-        return m_call_stack.last();
+        m_call_stack.append(&call_frame);
     }
-    void pop_call_frame() { m_call_stack.take_last(); }
-    CallFrame& call_frame() { return m_call_stack.last(); }
-    const CallFrame& call_frame() const { return m_call_stack.last(); }
-    const Vector<CallFrame>& call_stack() const { return m_call_stack; }
-    Vector<CallFrame>& call_stack() { return m_call_stack; }
 
-    const LexicalEnvironment* current_environment() const { return m_call_stack.last().environment; }
-    LexicalEnvironment* current_environment() { return m_call_stack.last().environment; }
+    void pop_call_frame() { m_call_stack.take_last(); }
+
+    CallFrame& call_frame() { return *m_call_stack.last(); }
+    const CallFrame& call_frame() const { return *m_call_stack.last(); }
+    const Vector<CallFrame*>& call_stack() const { return m_call_stack; }
+    Vector<CallFrame*>& call_stack() { return m_call_stack; }
+
+    const LexicalEnvironment* current_environment() const { return call_frame().environment; }
+    LexicalEnvironment* current_environment() { return call_frame().environment; }
 
     bool in_strict_mode() const;
 
@@ -135,7 +136,7 @@ public:
     {
         if (m_call_stack.is_empty())
             return;
-        for (auto& value : m_call_stack.last().arguments)
+        for (auto& value : call_frame().arguments)
             callback(value);
     }
 
@@ -143,14 +144,14 @@ public:
     {
         if (m_call_stack.is_empty())
             return 0;
-        return m_call_stack.last().arguments.size();
+        return call_frame().arguments.size();
     }
 
     Value argument(size_t index) const
     {
         if (m_call_stack.is_empty())
             return {};
-        auto& arguments = m_call_stack.last().arguments;
+        auto& arguments = call_frame().arguments;
         return index < arguments.size() ? arguments[index] : js_undefined();
     }
 
@@ -158,7 +159,7 @@ public:
     {
         if (m_call_stack.is_empty())
             return &global_object;
-        return m_call_stack.last().this_value;
+        return call_frame().this_value;
     }
 
     Value last_value() const { return m_last_value; }
@@ -241,7 +242,7 @@ private:
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;
 
-    Vector<CallFrame> m_call_stack;
+    Vector<CallFrame*> m_call_stack;
 
     Value m_last_value;
     ScopeType m_unwind_until { ScopeType::None };
