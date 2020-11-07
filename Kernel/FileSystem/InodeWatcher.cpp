@@ -67,7 +67,7 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, UserOrKernelBuffe
 
     auto event = m_queue.dequeue();
 
-    if (buffer_size < sizeof(Event))
+    if (buffer_size < sizeof(InodeWatcherEvent))
         return buffer_size;
 
     size_t bytes_to_write = min(buffer_size, sizeof(event));
@@ -94,7 +94,7 @@ String InodeWatcher::absolute_path(const FileDescription&) const
     return "InodeWatcher:(gone)";
 }
 
-void InodeWatcher::notify_inode_event(Badge<Inode>, Event::Type event_type)
+void InodeWatcher::notify_inode_event(Badge<Inode>, InodeWatcherEvent::Type event_type)
 {
     LOCKER(m_lock);
     m_queue.enqueue({ event_type });
@@ -104,14 +104,14 @@ void InodeWatcher::notify_inode_event(Badge<Inode>, Event::Type event_type)
 void InodeWatcher::notify_child_added(Badge<Inode>, const InodeIdentifier& child_id)
 {
     LOCKER(m_lock);
-    m_queue.enqueue({ Event::Type::ChildAdded, child_id.index() });
+    m_queue.enqueue({ InodeWatcherEvent::Type::ChildAdded, child_id.index() });
     evaluate_block_conditions();
 }
 
 void InodeWatcher::notify_child_removed(Badge<Inode>, const InodeIdentifier& child_id)
 {
     LOCKER(m_lock);
-    m_queue.enqueue({ Event::Type::ChildRemoved, child_id.index() });
+    m_queue.enqueue({ InodeWatcherEvent::Type::ChildRemoved, child_id.index() });
     evaluate_block_conditions();
 }
 
