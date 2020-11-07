@@ -58,8 +58,19 @@ public:
     Encoder& operator<<(const char*);
     Encoder& operator<<(const StringView&);
     Encoder& operator<<(const String&);
+    Encoder& operator<<(const ByteBuffer&);
     Encoder& operator<<(const URL&);
     Encoder& operator<<(const Dictionary&);
+    template<typename K, typename V>
+    Encoder& operator<<(const HashMap<K, V>& hashmap)
+    {
+        *this << (u32)hashmap.size();
+        for (auto it : hashmap) {
+            *this << it.key;
+            *this << it.value;
+        }
+        return *this;
+    }
 
     template<typename T>
     Encoder& operator<<(const Vector<T>& vector)

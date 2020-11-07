@@ -112,6 +112,25 @@ bool Decoder::decode(String& value)
     return !m_stream.handle_any_error();
 }
 
+bool Decoder::decode(ByteBuffer& value)
+{
+    i32 length = 0;
+    m_stream >> length;
+    if (m_stream.handle_any_error())
+        return false;
+    if (length < 0) {
+        value = {};
+        return true;
+    }
+    if (length == 0) {
+        value = ByteBuffer::create_uninitialized(0);
+        return true;
+    }
+    value = ByteBuffer::create_uninitialized(length);
+    m_stream >> value.bytes();
+    return !m_stream.handle_any_error();
+}
+
 bool Decoder::decode(URL& value)
 {
     String string;
