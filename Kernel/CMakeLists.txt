@@ -22,6 +22,7 @@ set(KERNEL_SOURCES
     Devices/EBRPartitionTable.cpp
     Devices/FullDevice.cpp
     Devices/GPTPartitionTable.cpp
+    Devices/I8042Controller.cpp
     Devices/KeyboardDevice.cpp
     Devices/MBRPartitionTable.cpp
     Devices/MBVGADevice.cpp
