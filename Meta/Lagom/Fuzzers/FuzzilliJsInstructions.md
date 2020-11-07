@@ -6,3 +6,5 @@
 4. Apply the add-serenity-support-to-fuzzilli.patch patch file to the Fuzzilli root directory. ```patch -p1 < /path/to/add-serenity-support-to-fuzzilli.patch```
 5. Build Fuzzilli with ```swift build -c release```
 6. Run Fuzzilli with ```swift run -c release FuzzilliCli --profile=serenity /path/to/FuzzilliJs```. See ```swift run FuzzilliCli --help``` for options.
+
+Alternatively you can use `FuzzilliJs.dockerfile` to build & run Fuzzilli and FuzzilliJs with Docker or Podman.
