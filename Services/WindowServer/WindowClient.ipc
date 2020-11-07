@@ -32,7 +32,7 @@ endpoint WindowClient = 4
     DragAccepted() =|
     DragCancelled() =|
 
-    DragDropped(i32 window_id, Gfx::IntPoint mouse_position, [UTF8] String text, String data_type, String data) =|
+    DragDropped(i32 window_id, Gfx::IntPoint mouse_position, [UTF8] String text, HashMap<String,ByteBuffer> mime_data) =|
 
     UpdateSystemTheme(i32 system_theme_buffer_id) =|
 

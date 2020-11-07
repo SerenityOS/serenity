@@ -291,33 +291,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
     dbg() << "Initiate drag!";
     auto drag_operation = DragOperation::construct();
 
-    RefPtr<Gfx::Bitmap> bitmap;
-
-    StringBuilder text_builder;
-    StringBuilder data_builder;
-    bool first = true;
-    m_selection.for_each_index([&](auto& index) {
-        auto text_data = index.data();
-        if (!first)
-            text_builder.append(", ");
-        text_builder.append(text_data.to_string());
-
-        auto drag_data = index.data(ModelRole::DragData);
-        data_builder.append(drag_data.to_string());
-        data_builder.append('\n');
-
-        first = false;
-
-        if (!bitmap) {
-            Variant icon_data = index.data(ModelRole::Icon);
-            if (icon_data.is_icon())
-                bitmap = icon_data.as_icon().bitmap_for_size(32);
-        }
-    });
-
-    drag_operation->set_text(text_builder.to_string());
-    drag_operation->set_bitmap(bitmap);
-    drag_operation->set_data(data_type, data_builder.to_string());
+    drag_operation->set_mime_data(m_model->mime_data(m_selection));
 
     auto outcome = drag_operation->exec();
 
