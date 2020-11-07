@@ -1,0 +1,115 @@
+name: Build, lint, and test
+
+on: [push, pull_request]
+
+env:
+  # Don't mix these up!
+  # runner.workspace = /home/runner/work/serenity
+  # github.workspace = /home/runner/work/serenity/serenity
+  SERENITY_ROOT: ${{ github.workspace }}
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # === OS SETUP ===
+
+    # Do we need to update the package cache first?
+    # sudo apt-get update -qq
+
+    - name: Purge interfering packages
+      # Remove GCC 9 (installed by default)
+      run: sudo apt-get purge -y gcc-9 g++-9 libstdc++-9-dev
+    - name: Install dependencies
+      # These packages are already part of the ubuntu-20.04 image:
+      # clang-format-10 cmake gcc-10 g++-10 shellcheck libgmp-dev
+      # These aren't:
+      run: sudo apt-get install libstdc++-10-dev libmpfr-dev libmpc-dev
+      # If we ever do any qemu-emulation on Github Actions, we should re-enable this:
+      # e2fsprogs qemu-system-i386 qemu-utils
+    - name: Use GCC 10 instead
+      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+    - name: Check versions
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-10 --version
+
+    # === PREPARE FOR BUILDING ===
+
+    - name: Lint (Phase 1/2)
+      run: ${{ github.workspace }}/Meta/lint-ci.sh
+    - name: Toolchain cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/Toolchain/Cache/
+        # This assumes that *ALL* LibC headers have an impact on the Toolchain.
+        # This is wrong, and causes more Toolchain rebuilds than necessary.
+        # However, we want to avoid false cache hits at all costs.
+        key: ${{ runner.os }}-toolchain-${{ hashFiles('Libraries/LibC/**/*.h') }}
+    - name: Restore or regenerate Toolchain
+      run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
+    # TODO: ccache
+    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
+    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
+    - name: Create build environment
+      working-directory: ${{ github.workspace }}
+      # Note that this needs to run *even if* the Toolchain was built,
+      # in order to set options like BUILD_LAGOM.
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake .. -DBUILD_LAGOM=1 -DALL_THE_DEBUG_MACROS=1
+
+    # === ACTUALLY BUILD AND TEST ===
+
+    - name: Build Serenity and Tests
+      working-directory: ${{ github.workspace }}/Build
+      run: cmake --build . -j2
+    - name: Lint (Phase 2/2)
+      working-directory: ${{ github.workspace }}/Meta
+      run: ./check-symbols.sh
+    - name: Run CMake tests
+      working-directory: ${{ github.workspace }}/Build
+      run: CTEST_OUTPUT_ON_FAILURE=1 make test
+    - name: Run JS tests
+      working-directory: ${{ github.workspace }}/Build/Meta/Lagom
+      run: DISABLE_DBG_OUTPUT=1 ./test-js
+
+    # === NOTIFICATIONS ===
+    # https://github.com/rectalogic/notify-irc
+
+    - name: Dump event info
+      if: always()
+      # Usually unnecessary, but insanely useful if IRC notifications fail.
+      run: |
+        cat <<"EOF"
+        ${{ toJSON(github.event) }}
+        EOF
+
+    - name: IRC result notification (direct push)
+      uses: rectalogic/notify-irc@v1
+      if: github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master' && github.event_name == 'push' && !cancelled()
+      with:
+        channel: "#serenityos"
+        nickname: serenity-ga
+        message: |-
+          ${{ github.actor }} pushed master on ${{ github.event.compare }}: ${{ job.status }}
+          Subject: ${{ join(github.event.commits[0].message) }} (+ more, maybe)
+          Details: https://github.com/${{ github.repository }}/actions/runs/${{github.run_id}}
+        # There might be hundreds of commits in a push: Printing them all to IRC will fail.
+        # Accessing the last commit is not possible: The python-y '-1' is not understood.
+        # Counting is not available: The config-file language is not Turing complete.
+        # We could write a script just to format the IRC message, but this is getting silly.
+        # https://github.com/SerenityOS/serenity/pull/3980
+
+    - name: IRC result notification (PR)
+      uses: rectalogic/notify-irc@v1
+      if: github.event_name == 'pull_request' && !cancelled()
+      with:
+        channel: "#serenityos"
+        nickname: serenity-ga
+        message: |-
+          ${{ github.actor }} ${{ github.event.action }} PR #${{ github.event.pull_request.number }}: ${{ job.status }}
+          Subject: ${{ github.event.pull_request.title }}
+          Details: ${{ github.event.pull_request._links.html.href }}
