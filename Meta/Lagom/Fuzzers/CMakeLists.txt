@@ -25,6 +25,15 @@ target_link_libraries(FuzzJs
     PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>
     )
 
+add_executable(FuzzilliJs FuzzilliJs.cpp)
+target_compile_options(FuzzilliJs
+    PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize-coverage=trace-pc-guard>
+    )
+target_link_libraries(FuzzilliJs
+    PUBLIC Lagom
+    PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize-coverage=trace-pc-guard>
+    )
+
 add_executable(FuzzMarkdown FuzzMarkdown.cpp)
 target_compile_options(FuzzMarkdown
     PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>

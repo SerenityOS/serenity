@@ -1,0 +1,44 @@
+diff --git a/Sources/FuzzilliCli/Profiles/Profile.swift b/Sources/FuzzilliCli/Profiles/Profile.swift
+index 6d8a795..a506d41 100644
+--- a/Sources/FuzzilliCli/Profiles/Profile.swift
++++ b/Sources/FuzzilliCli/Profiles/Profile.swift
+@@ -32,6 +32,33 @@ struct Profile {
+     let additionalBuiltins: [String: Type]
+ }
+ 
++let serenityProfile = Profile(
++    processArguments: [""],
++
++    processEnv: ["UBSAN_OPTIONS":"handle_segv=0 handle_abrt=0"],
++
++    codePrefix: """
++                function main() {
++                """,
++
++    codeSuffix: """
++                }
++                main();
++                """,
++
++    ecmaVersion: ECMAScriptVersion.es6,
++
++    crashTests: ["fuzzilli('FUZZILLI_CRASH', 0)", "fuzzilli('FUZZILLI_CRASH', 1)"],
++
++    additionalCodeGenerators: WeightedList<CodeGenerator>([]),
++    
++    disabledCodeGenerators: [],
++
++    additionalBuiltins: [
++        "gc" : .function([] => .undefined)
++    ]
++)
++
+ let profiles = [
+     "qjs": qjsProfile,
+     "jsc": jscProfile,
+@@ -39,4 +66,5 @@ let profiles = [
+     "v8": v8Profile,
+     "duktape": duktapeProfile,
+     "jerryscript": jerryscriptProfile,
++    "serenity": serenityProfile,
+ ]
