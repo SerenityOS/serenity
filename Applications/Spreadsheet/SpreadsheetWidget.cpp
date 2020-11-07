@@ -114,6 +114,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                 m_cell_value_editor->on_change = [&] {
                     cell.set_data(m_cell_value_editor->text());
                     m_selected_view->sheet().update();
+                    update();
                 };
                 m_cell_value_editor->set_enabled(true);
                 return;
@@ -139,6 +140,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     for (auto* cell : cells)
                         cell->set_data(m_cell_value_editor->text());
                     m_selected_view->sheet().update();
+                    update();
                 }
             };
             m_cell_value_editor->set_enabled(true);
