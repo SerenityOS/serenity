@@ -86,30 +86,26 @@ jobs:
         cat <<"EOF"
         ${{ toJSON(github.event) }}
         EOF
-
+    - name: Generate IRC message
+      if: always()
+      id: ircmsg
+      run: |
+        ${{ github.workspace }}/Meta/mangle_event_for_irc.py <<"EOF"
+        ["${{ github.actor }}", ${{ github.run_id }}, "${{ job.status }}",
+        ${{ toJSON(github.event) }}
+        ]
+        EOF
     - name: IRC result notification (direct push)
       uses: rectalogic/notify-irc@v1
-      if: github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master' && github.event_name == 'push' && !cancelled()
+      if: github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master' && github.event_name == 'push' && !cancelled() && steps.ircmsg.outputs.has_output
       with:
         channel: "#serenityos"
         nickname: serenity-ga
-        message: |-
-          ${{ github.actor }} pushed master on ${{ github.event.compare }}: ${{ job.status }}
-          Subject: ${{ join(github.event.commits[0].message) }} (+ more, maybe)
-          Details: https://github.com/${{ github.repository }}/actions/runs/${{github.run_id}}
-        # There might be hundreds of commits in a push: Printing them all to IRC will fail.
-        # Accessing the last commit is not possible: The python-y '-1' is not understood.
-        # Counting is not available: The config-file language is not Turing complete.
-        # We could write a script just to format the IRC message, but this is getting silly.
-        # https://github.com/SerenityOS/serenity/pull/3980
-
+        message: ${{ steps.ircmsg.outputs.the_line }}
     - name: IRC result notification (PR)
       uses: rectalogic/notify-irc@v1
-      if: github.event_name == 'pull_request' && !cancelled()
+      if: github.repository == 'SerenityOS/serenity' && github.event_name == 'pull_request' && !cancelled() && steps.ircmsg.outputs.has_output
       with:
         channel: "#serenityos"
         nickname: serenity-ga
-        message: |-
-          ${{ github.actor }} ${{ github.event.action }} PR #${{ github.event.pull_request.number }}: ${{ job.status }}
-          Subject: ${{ github.event.pull_request.title }}
-          Details: ${{ github.event.pull_request._links.html.href }}
+        message: ${{ steps.ircmsg.outputs.the_line }}
