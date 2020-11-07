@@ -29,6 +29,7 @@
 #include "Spreadsheet.h"
 #include <LibGUI/AbstractTableView.h>
 #include <LibGUI/ModelEditingDelegate.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>
 #include <string.h>
 
@@ -86,6 +87,11 @@ public:
 
     const Sheet& sheet() const { return *m_sheet; }
     Sheet& sheet() { return *m_sheet; }
+
+    const GUI::ModelIndex* cursor() const
+    {
+        return &m_table_view->cursor_index();
+    }
 
     Function<void(Vector<Position>&&)> on_selection_changed;
     Function<void()> on_selection_dropped;
