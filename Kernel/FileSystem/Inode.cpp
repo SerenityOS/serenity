@@ -28,6 +28,7 @@
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
@@ -229,7 +230,7 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
         //        We don't always end up on this particular code path, for instance when writing to an ext2fs file.
         LOCKER(m_lock);
         for (auto& watcher : m_watchers) {
-            watcher->notify_inode_event({}, InodeWatcher::Event::Type::Modified);
+            watcher->notify_inode_event({}, InodeWatcherEvent::Type::Modified);
         }
     }
 }
