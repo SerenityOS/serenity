@@ -106,7 +106,6 @@ private:
     PropertyAttributes m_attributes { 0 };
     TransitionType m_transition_type : 6 { TransitionType::Invalid };
     bool m_unique : 1 { false };
-    mutable bool m_has_property_table : 1 { false };
 
     GlobalObject& m_global_object;
 
