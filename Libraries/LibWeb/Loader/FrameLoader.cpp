@@ -163,7 +163,10 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
     if (type == Type::Navigation)
         frame().page().client().page_did_start_loading(url);
 
-    if (type != Type::IFrame && url.protocol() != "file" && url.protocol() != "about") {
+    if (type == Type::IFrame)
+        return true;
+
+    if (url.protocol() == "http" || url.protocol() == "https") {
         URL favicon_url;
         favicon_url.set_protocol(url.protocol());
         favicon_url.set_host(url.host());
