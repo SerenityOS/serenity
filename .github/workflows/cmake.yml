@@ -33,7 +33,7 @@ jobs:
     - name: Use GCC 10 instead
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
     - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-10 --version
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-10 --version; python --version; python3 --version
 
     # === PREPARE FOR BUILDING ===
 
