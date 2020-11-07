@@ -31,8 +31,10 @@
 #include <AK/HashTable.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/ModelIndex.h>
 #include <LibGUI/ModelRole.h>
+#include <LibGUI/ModelSelection.h>
 #include <LibGUI/Variant.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/TextAlignment.h>
@@ -93,6 +95,7 @@ public:
     }
 
     virtual StringView drag_data_type() const { return {}; }
+    virtual RefPtr<Core::MimeData> mime_data(const ModelSelection&) const;
 
     void register_view(Badge<AbstractView>, AbstractView&);
     void unregister_view(Badge<AbstractView>, AbstractView&);

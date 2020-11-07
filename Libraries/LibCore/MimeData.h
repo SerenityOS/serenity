@@ -55,8 +55,14 @@ public:
     Vector<URL> urls() const;
     void set_urls(const Vector<URL>&);
 
+    const HashMap<String, ByteBuffer>& all_data() const { return m_data; }
+
 private:
     MimeData() { }
+    explicit MimeData(const HashMap<String, ByteBuffer>& data)
+        : m_data(data)
+    {
+    }
 
     HashMap<String, ByteBuffer> m_data;
 };

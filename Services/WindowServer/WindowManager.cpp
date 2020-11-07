@@ -705,7 +705,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
             hovered_window = &window;
             auto translated_event = event.translated(-window.position());
             translated_event.set_drag(true);
-            translated_event.set_drag_data_type(m_dnd_data_type);
+            translated_event.set_mime_data(*m_dnd_mime_data);
             deliver_mouse_event(window, translated_event);
             return IterationDecision::Break;
         });
@@ -727,7 +727,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
         m_dnd_client->post_message(Messages::WindowClient::DragAccepted());
         if (hovered_window->client()) {
             auto translated_event = event.translated(-hovered_window->position());
-            hovered_window->client()->post_message(Messages::WindowClient::DragDropped(hovered_window->window_id(), translated_event.position(), m_dnd_text, m_dnd_data_type, m_dnd_data));
+            hovered_window->client()->post_message(Messages::WindowClient::DragDropped(hovered_window->window_id(), translated_event.position(), m_dnd_text, m_dnd_mime_data->all_data()));
         }
     } else {
         m_dnd_client->post_message(Messages::WindowClient::DragCancelled());
@@ -1355,14 +1355,13 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
     return rect;
 }
 
-void WindowManager::start_dnd_drag(ClientConnection& client, const String& text, Gfx::Bitmap* bitmap, const String& data_type, const String& data)
+void WindowManager::start_dnd_drag(ClientConnection& client, const String& text, Gfx::Bitmap* bitmap, const Core::MimeData& mime_data)
 {
     ASSERT(!m_dnd_client);
     m_dnd_client = client.make_weak_ptr();
     m_dnd_text = text;
     m_dnd_bitmap = bitmap;
-    m_dnd_data_type = data_type;
-    m_dnd_data = data;
+    m_dnd_mime_data = mime_data;
     Compositor::the().invalidate_cursor();
     m_active_input_tracking_window = nullptr;
 }

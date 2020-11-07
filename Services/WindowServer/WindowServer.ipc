@@ -94,7 +94,7 @@ endpoint WindowServer = 2
     SetWindowCursor(i32 window_id, i32 cursor_type) => ()
     SetWindowCustomCursor(i32 window_id, Gfx::ShareableBitmap cursor) => ()
 
-    StartDrag([UTF8] String text, String data_type, String data, i32 bitmap_id, Gfx::IntSize bitmap_size) => (bool started)
+    StartDrag([UTF8] String text, HashMap<String,ByteBuffer> mime_data, i32 bitmap_id, Gfx::IntSize bitmap_size) => (bool started)
 
     SetSystemTheme(String theme_path, [UTF8] String theme_name) => (bool success)
     GetSystemTheme() => ([UTF8] String theme_name)

@@ -100,12 +100,11 @@ public:
 
     const ClientConnection* dnd_client() const { return m_dnd_client.ptr(); }
     const String& dnd_text() const { return m_dnd_text; }
-    const String& dnd_data_type() const { return m_dnd_data_type; }
-    const String& dnd_data() const { return m_dnd_data; }
+    const Core::MimeData& dnd_mime_data() const { return *m_dnd_mime_data; }
     const Gfx::Bitmap* dnd_bitmap() const { return m_dnd_bitmap; }
     Gfx::IntRect dnd_rect() const;
 
-    void start_dnd_drag(ClientConnection&, const String& text, Gfx::Bitmap*, const String& data_type, const String& data);
+    void start_dnd_drag(ClientConnection&, const String& text, Gfx::Bitmap*, const Core::MimeData&);
     void end_dnd_drag();
 
     Window* active_window() { return m_active_window.ptr(); }
@@ -331,8 +330,7 @@ private:
 
     WeakPtr<ClientConnection> m_dnd_client;
     String m_dnd_text;
-    String m_dnd_data_type;
-    String m_dnd_data;
+    RefPtr<Core::MimeData> m_dnd_mime_data;
     RefPtr<Gfx::Bitmap> m_dnd_bitmap;
 };
 
