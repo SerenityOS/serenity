@@ -103,7 +103,6 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
         dbgln("Font lookup failed: '{}'", name);
         return nullptr;
     }
-    dbgln("Font lookup succeeded: '{}'", name);
     return it->value;
 }
 
