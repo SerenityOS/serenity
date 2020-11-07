@@ -317,7 +317,6 @@ void ArgsParser::add_option(double& value, const char* help_string, const char* 
     add_option(move(option));
 }
 
-
 void ArgsParser::add_positional_argument(Arg&& arg)
 {
     m_positional_args.append(move(arg));
