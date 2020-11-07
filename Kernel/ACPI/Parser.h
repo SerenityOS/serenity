@@ -54,6 +54,11 @@ public:
     virtual void try_acpi_shutdown();
     virtual bool can_shutdown() { return false; }
 
+    virtual bool have_8042() const
+    {
+        return m_x86_specific_flags.keyboard_8042;
+    }
+
     const FADTFlags::HardwareFeatures& hardware_features() const { return m_hardware_flags; }
     const FADTFlags::x86_Specific_Flags& x86_specific_flags() const { return m_x86_specific_flags; }
 
