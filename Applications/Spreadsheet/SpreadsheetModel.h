@@ -40,6 +40,7 @@ public:
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_sheet->column_count(); }
     virtual String column_name(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
+    virtual RefPtr<Core::MimeData> mime_data(const GUI::ModelSelection&) const override;
     virtual bool is_editable(const GUI::ModelIndex&) const override;
     virtual void set_data(const GUI::ModelIndex&, const GUI::Variant&) override;
     virtual void update() override;

@@ -157,28 +157,24 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         if (event.mime_data().has_format("text/x-spreadsheet-data")) {
             auto data = event.mime_data().data("text/x-spreadsheet-data");
             StringView urls { data.data(), data.size() };
-            bool first = true;
-            for (auto url : urls.lines(false)) {
-                if (!first) { // FIXME: Allow d&d from many cells to many cells, somehow.
-                    dbg() << "Ignored '" << url << "'";
-                    continue;
-                }
+            Vector<Position> source_positions, target_positions;
 
-                first = false;
-
-                auto& target_cell = m_sheet->ensure({ m_sheet->column(index.column()), (size_t)index.row() });
-                auto* source_cell = m_sheet->from_url(url);
-
-                if (!source_cell) {
-                    target_cell.set_data("");
-                    return;
-                }
-
-                auto ref_cells = target_cell.referencing_cells;
-                target_cell = *source_cell;
-                target_cell.dirty = true;
-                target_cell.referencing_cells = move(ref_cells);
+            for (auto& line : urls.lines(false)) {
+                auto position = m_sheet->position_from_url(line);
+                if (position.has_value())
+                    source_positions.append(position.release_value());
             }
+
+            // Drop always has a single target.
+            Position target { m_sheet->column(index.column()), (size_t)index.row() };
+            target_positions.append(move(target));
+
+            if (source_positions.is_empty())
+                return;
+
+            auto first_position = source_positions.take_first();
+            m_sheet->copy_cells(move(source_positions), move(target_positions), first_position);
+
             return;
         }
 

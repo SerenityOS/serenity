@@ -31,12 +31,15 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
+#include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Function.h>
 #include <ctype.h>
+
+//#define COPY_DEBUG
 
 namespace Spreadsheet {
 
@@ -205,20 +208,98 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name)
 
 Cell* Sheet::from_url(const URL& url)
 {
+    auto maybe_position = position_from_url(url);
+    if (!maybe_position.has_value())
+        return nullptr;
+
+    return at(maybe_position.value());
+}
+
+Optional<Position> Sheet::position_from_url(const URL& url) const
+{
     if (!url.is_valid()) {
         dbgln("Invalid url: {}", url.to_string());
-        return nullptr;
+        return {};
     }
 
     if (url.protocol() != "spreadsheet" || url.host() != "cell") {
         dbgln("Bad url: {}", url.to_string());
-        return nullptr;
+        return {};
     }
 
     // FIXME: Figure out a way to do this cross-process.
     ASSERT(url.path() == String::formatted("/{}", getpid()));
 
-    return at(url.fragment());
+    return parse_cell_name(url.fragment());
+}
+
+Position Sheet::offset_relative_to(const Position& base, const Position& offset, const Position& offset_base) const
+{
+    auto offset_column_it = m_columns.find(offset.column);
+    auto offset_base_column_it = m_columns.find(offset_base.column);
+    auto base_column_it = m_columns.find(base.column);
+
+    if (offset_column_it.is_end()) {
+        dbg() << "Column '" << offset.column << "' does not exist!";
+        return base;
+    }
+    if (offset_base_column_it.is_end()) {
+        dbg() << "Column '" << offset_base.column << "' does not exist!";
+        return base;
+    }
+    if (base_column_it.is_end()) {
+        dbg() << "Column '" << base.column << "' does not exist!";
+        return offset;
+    }
+
+    auto new_column = column(offset_column_it.index() + base_column_it.index() - offset_base_column_it.index());
+    auto new_row = offset.row + base.row - offset_base.row;
+
+    return { move(new_column), new_row };
+}
+
+void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to)
+{
+    auto copy_to = [&](auto& source_position, Position target_position) {
+        auto& target_cell = ensure(target_position);
+        auto* source_cell = at(source_position);
+
+        if (!source_cell) {
+            target_cell.set_data("");
+            return;
+        }
+
+        auto ref_cells = target_cell.referencing_cells;
+        target_cell = *source_cell;
+        target_cell.dirty = true;
+        target_cell.referencing_cells = move(ref_cells);
+    };
+
+    if (from.size() == to.size()) {
+        auto from_it = from.begin();
+        // FIXME: Ordering.
+        for (auto& position : to)
+            copy_to(*from_it++, position);
+
+        return;
+    }
+
+    if (to.size() == 1) {
+        // Resolve each index as relative to the first index offset from the selection.
+        auto& target = to.first();
+
+        for (auto& position : from) {
+#ifdef COPY_DEBUG
+            dbg() << "Paste from '" << position.to_url() << "' to '" << target.to_url() << "'";
+#endif
+            copy_to(position, resolve_relative_to.has_value() ? offset_relative_to(target, position, resolve_relative_to.value()) : target);
+        }
+
+        return;
+    }
+
+    // Just disallow misaligned copies.
+    dbg() << "Cannot copy " << from.size() << " cells to " << to.size() << " cells";
 }
 
 RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)

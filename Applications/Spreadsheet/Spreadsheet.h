@@ -51,6 +51,11 @@ public:
 
     Cell* from_url(const URL&);
     const Cell* from_url(const URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
+    Optional<Position> position_from_url(const URL& url) const;
+
+    /// Resolve 'offset' to an absolute position assuming 'base' is at 'offset_base'.
+    /// Effectively, "Walk the distance between 'offset' and 'offset_base' away from 'base'".
+    Position offset_relative_to(const Position& base, const Position& offset, const Position& offset_base) const;
 
     JsonObject to_json() const;
     static RefPtr<Sheet> from_json(const JsonObject&, Workbook&);
@@ -87,6 +92,14 @@ public:
     size_t row_count() const { return m_rows; }
     size_t column_count() const { return m_columns.size(); }
     const Vector<String>& columns() const { return m_columns; }
+    const String& column(size_t index)
+    {
+        for (size_t i = column_count(); i < index; ++i)
+            add_column();
+
+        ASSERT(column_count() > index);
+        return m_columns[index];
+    }
     const String& column(size_t index) const
     {
         ASSERT(column_count() > index);
@@ -104,6 +117,8 @@ public:
     bool has_been_visited(Cell* cell) const { return m_visited_cells_in_update.contains(cell); }
 
     const Workbook& workbook() const { return m_workbook; }
+
+    void copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to = {});
 
 private:
     explicit Sheet(Workbook&);
