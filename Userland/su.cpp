@@ -36,6 +36,11 @@ extern "C" int main(int, char**);
 
 int main(int argc, char** argv)
 {
+    if (!isatty(STDIN_FILENO)) {
+        warnln("{}: standard in is not a terminal", argv[0]);
+        return 1;
+    }
+
     const char* user = nullptr;
 
     Core::ArgsParser args_parser;
