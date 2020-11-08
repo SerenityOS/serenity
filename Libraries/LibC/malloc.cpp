@@ -310,6 +310,7 @@ static void* malloc_impl(size_t size)
 
     --block->m_free_chunks;
     void* ptr = block->m_freelist;
+    ASSERT(ptr);
     block->m_freelist = block->m_freelist->next;
     if (block->is_full()) {
         g_malloc_stats.number_of_blocks_full++;
@@ -455,6 +456,8 @@ size_t malloc_size(void* ptr)
     auto size = header->m_size;
     if (header->m_magic == MAGIC_BIGALLOC_HEADER)
         size -= sizeof(CommonHeader);
+    else
+        ASSERT(header->m_magic == MAGIC_PAGE_HEADER);
     return size;
 }
 
