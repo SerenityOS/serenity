@@ -196,8 +196,10 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 {
     CallFrame call_frame;
     call_frame.is_strict_mode = function.is_strict_mode();
-    push_call_frame(call_frame);
 
+    push_call_frame(call_frame, function.global_object());
+    if (exception())
+        return {};
     ArmedScopeGuard call_frame_popper = [&] {
         pop_call_frame();
     };
@@ -323,8 +325,12 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
 
     ASSERT(call_frame.environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
     call_frame.environment->bind_this_value(function.global_object(), call_frame.this_value);
+    if (exception())
+        return {};
 
-    push_call_frame(call_frame);
+    push_call_frame(call_frame, function.global_object());
+    if (exception())
+        return {};
     auto result = function.call();
     pop_call_frame();
     return result;
