@@ -1301,7 +1301,30 @@ void SoftCPU::CMPXCHG_RM8_reg8(const X86::Instruction& insn)
     }
 }
 
-void SoftCPU::CPUID(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::CPUID(const X86::Instruction&)
+{
+    if (eax().value() == 0) {
+        set_eax(shadow_wrap_as_initialized<u32>(1));
+        set_ebx(shadow_wrap_as_initialized<u32>(0x6c6c6548));
+        set_edx(shadow_wrap_as_initialized<u32>(0x6972466f));
+        set_ecx(shadow_wrap_as_initialized<u32>(0x73646e65));
+        return;
+    }
+
+    if (eax().value() == 1) {
+        u32 stepping = 0;
+        u32 model = 1;
+        u32 family = 3;
+        u32 type = 0;
+        set_eax(shadow_wrap_as_initialized<u32>(stepping | (model << 4) | (family << 8) | (type << 12)));
+        set_ebx(shadow_wrap_as_initialized<u32>(0));
+        set_edx(shadow_wrap_as_initialized<u32>((1 << 15))); // Features (CMOV)
+        set_ecx(shadow_wrap_as_initialized<u32>(0));
+        return;
+    }
+
+    dbgln("Unhandled CPUID with eax={:08x}", eax().value());
+}
 
 void SoftCPU::CWD(const X86::Instruction&)
 {
