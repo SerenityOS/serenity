@@ -186,6 +186,7 @@ private:
     bool m_activates_on_selection { false };
     bool m_multi_select { true };
     bool m_tab_key_navigation_enabled { false };
+    bool m_is_dragging { false };
 };
 
 }
