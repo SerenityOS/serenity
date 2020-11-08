@@ -101,8 +101,8 @@ void ScrollableWidget::resize_event(ResizeEvent& event)
 
 Gfx::IntSize ScrollableWidget::available_size() const
 {
-    int available_width = frame_inner_rect().width() - m_size_occupied_by_fixed_elements.width() - width_occupied_by_vertical_scrollbar();
-    int available_height = frame_inner_rect().height() - m_size_occupied_by_fixed_elements.height() - height_occupied_by_horizontal_scrollbar();
+    unsigned available_width = max(frame_inner_rect().width() - m_size_occupied_by_fixed_elements.width() - width_occupied_by_vertical_scrollbar(), 0);
+    unsigned available_height = max(frame_inner_rect().height() - m_size_occupied_by_fixed_elements.height() - height_occupied_by_horizontal_scrollbar(), 0);
     return { available_width, available_height };
 }
 
