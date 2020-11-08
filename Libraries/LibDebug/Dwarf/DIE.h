@@ -43,7 +43,7 @@ public:
     DIE(const CompilationUnit&, u32 offset);
 
     struct AttributeValue {
-        enum class Type {
+        enum class Type : u8 {
             UnsignedNumber,
             SignedNumber,
             String,
