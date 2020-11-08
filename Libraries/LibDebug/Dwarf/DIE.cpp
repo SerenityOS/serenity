@@ -103,6 +103,13 @@ DIE::AttributeValue DIE::get_attribute_value(AttributeDataForm form,
         value.data.as_u32 = address;
         break;
     }
+    case AttributeDataForm::SData: {
+        ssize_t data;
+        debug_info_stream.read_LEB128_signed(data);
+        value.type = AttributeValue::Type::SignedNumber;
+        value.data.as_i32 = data;
+        break;
+    }
     case AttributeDataForm::SecOffset: {
         u32 data;
         debug_info_stream >> data;
