@@ -76,7 +76,7 @@ void AbbreviationsMap::populate_map()
             }
         } while (current_attribute_specification.attribute != Attribute::None || current_attribute_specification.form != AttributeDataForm::None);
 
-        m_entries.set((u32)abbreviation_code, abbrevation_entry);
+        m_entries.set((u32)abbreviation_code, move(abbrevation_entry));
     }
 }
 
