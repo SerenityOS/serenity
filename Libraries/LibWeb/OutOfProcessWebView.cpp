@@ -84,13 +84,17 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
     GUI::ScrollableWidget::resize_event(event);
 
+    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
+
+    if (available_size().is_empty())
+        return;
+
     m_front_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())->to_bitmap_backed_by_shared_buffer();
     m_front_bitmap->shared_buffer()->share_with(client().server_pid());
 
     m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())->to_bitmap_backed_by_shared_buffer();
     m_back_bitmap->shared_buffer()->share_with(client().server_pid());
 
-    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
     request_repaint();
 }
 
