@@ -103,13 +103,10 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-#if 0
-    // FIXME: Check for NaN once math.h has isnan().
-    if (isnan(start) || isnan(step) || isnan(end)) {
+    if (__builtin_isnan(start) || __builtin_isnan(step) || __builtin_isnan(end)) {
         fprintf(stderr, "%s: start, step, and end must not be NaN\n", argv[0]);
         return 1;
     }
-#endif
 
     int number_of_decimals = max(number_of_start_decimals, max(number_of_step_decimals, number_of_end_decimals));
 
