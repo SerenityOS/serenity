@@ -40,6 +40,7 @@ public:
 
     void target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t);
     void target_did_free(Badge<SoftCPU>, FlatPtr address);
+    void target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t);
 
     void audit_read(FlatPtr address, size_t);
     void audit_write(FlatPtr address, size_t);

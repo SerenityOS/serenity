@@ -87,6 +87,34 @@ void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
     Emulator::the().dump_backtrace();
 }
 
+void MallocTracer::target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t size)
+{
+    auto* region = Emulator::the().mmu().find_region({ 0x20, address });
+    ASSERT(region);
+    ASSERT(region->is_mmap());
+    auto& mmap_region = static_cast<MmapRegion&>(*region);
+
+    ASSERT(mmap_region.is_malloc_block());
+
+    auto* existing_mallocation = find_mallocation(address);
+    ASSERT(existing_mallocation);
+    ASSERT(!existing_mallocation->freed);
+
+    size_t old_size = existing_mallocation->size;
+
+    auto* shadow_bits = mmap_region.shadow_data() + address - mmap_region.base();
+
+    if (size > old_size) {
+        memset(shadow_bits + old_size, 1, size - old_size);
+    } else {
+        memset(shadow_bits + size, 1, old_size - size);
+    }
+
+    existing_mallocation->size = size;
+    // FIXME: Should we track malloc/realloc backtrace separately perhaps?
+    existing_mallocation->malloc_backtrace = Emulator::the().raw_backtrace();
+}
+
 MallocTracer::Mallocation* MallocTracer::find_mallocation(FlatPtr address)
 {
     for (auto& mallocation : m_mallocations) {

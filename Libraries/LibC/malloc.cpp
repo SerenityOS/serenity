@@ -57,6 +57,11 @@ ALWAYS_INLINE static void ue_notify_free(const void* ptr)
     send_secret_data_to_userspace_emulator(2, (FlatPtr)ptr, 0);
 }
 
+ALWAYS_INLINE static void ue_notify_realloc(const void* ptr, size_t size)
+{
+    send_secret_data_to_userspace_emulator(3, size, (FlatPtr)ptr);
+}
+
 static LibThread::Lock& malloc_lock()
 {
     static u32 lock_storage[sizeof(LibThread::Lock) / sizeof(u32)];
@@ -470,8 +475,11 @@ void* realloc(void* ptr, size_t size)
 
     LOCKER(malloc_lock());
     auto existing_allocation_size = malloc_size(ptr);
-    if (size <= existing_allocation_size)
+
+    if (size <= existing_allocation_size) {
+        ue_notify_realloc(ptr, size);
         return ptr;
+    }
     auto* new_ptr = malloc(size);
     if (new_ptr) {
         memcpy(new_ptr, ptr, min(existing_allocation_size, size));
