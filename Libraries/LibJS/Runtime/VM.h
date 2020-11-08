@@ -29,6 +29,7 @@
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
+#include <AK/StackInfo.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/CommonPropertyNames.h>
 #include <LibJS/Runtime/ErrorTypes.h>
@@ -165,6 +166,8 @@ public:
     Value last_value() const { return m_last_value; }
     void set_last_value(Badge<Interpreter>, Value value) { m_last_value = value; }
 
+    const StackInfo& stack_info() const { return m_stack_info; };
+
     bool underscore_is_last_value() const { return m_underscore_is_last_value; }
     void set_underscore_is_last_value(bool b) { m_underscore_is_last_value = b; }
 
@@ -247,6 +250,8 @@ private:
     Value m_last_value;
     ScopeType m_unwind_until { ScopeType::None };
     FlyString m_unwind_until_label;
+
+    StackInfo m_stack_info;
 
     bool m_underscore_is_last_value { false };
 
