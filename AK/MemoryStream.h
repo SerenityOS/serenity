@@ -96,9 +96,9 @@ public:
     bool read_LEB128_unsigned(size_t& result)
     {
         const auto backup = m_offset;
-
         result = 0;
-        size_t num_bytes = 0;
+
+        size_t shift = 0;
         while (true) {
             if (eof()) {
                 m_offset = backup;
@@ -106,12 +106,11 @@ public:
                 return false;
             }
 
-            const u8 byte = m_bytes[m_offset];
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
-            ++m_offset;
-            if (!(byte & (1 << 7)))
+            const u8 byte = m_bytes[m_offset++];
+            result |= (byte & 0x7f) << shift;
+            if (byte & 0x80)
                 break;
-            ++num_bytes;
+            shift += 7;
         }
 
         return true;
@@ -122,8 +121,10 @@ public:
         const auto backup = m_offset;
 
         result = 0;
-        size_t num_bytes = 0;
+        size_t shift = 0;
         u8 byte = 0;
+
+        size_t size = sizeof(ssize_t) * 8;
 
         do {
             if (eof()) {
@@ -132,15 +133,13 @@ public:
                 return false;
             }
 
-            byte = m_bytes[m_offset];
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
-            ++m_offset;
-            ++num_bytes;
+            byte = m_bytes[m_offset++];
+            result |= (byte & 0x7f) << shift;
         } while (byte & (1 << 7));
 
-        if (num_bytes * 7 < sizeof(size_t) * 4 && (byte & 0x40)) {
+        if (shift < size && (byte & 0x40)) {
             // sign extend
-            result |= ((size_t)(-1) << (num_bytes * 7));
+            result |= (0xffffffffu << shift);
         }
 
         return true;
