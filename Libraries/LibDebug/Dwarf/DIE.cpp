@@ -52,7 +52,7 @@ DIE::DIE(const CompilationUnit& unit, u32 offset)
         m_has_children = abbreviation_info.value().has_children;
 
         // We iterate the attributes data only to calculate this DIE's size
-        for (auto attribute_spec : abbreviation_info.value().attribute_specifications) {
+        for (auto& attribute_spec : abbreviation_info.value().attribute_specifications) {
             get_attribute_value(attribute_spec.form, stream);
         }
     }
