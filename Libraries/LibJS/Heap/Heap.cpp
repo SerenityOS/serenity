@@ -26,6 +26,7 @@
 
 #include <AK/Badge.h>
 #include <AK/HashTable.h>
+#include <AK/StackInfo.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Heap/Allocator.h>
@@ -35,17 +36,8 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
 #include <setjmp.h>
-#include <stdio.h>
 
-#ifdef __serenity__
-#    include <serenity.h>
-#elif __linux__ or __APPLE__
-#    include <pthread.h>
-#endif
-
-#ifdef __serenity__
 //#define HEAP_DEBUG
-#endif
 
 namespace JS {
 
@@ -151,39 +143,10 @@ void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
     for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); i += sizeof(FlatPtr))
         possible_pointers.set(raw_jmp_buf[i]);
 
-    FlatPtr stack_base;
-    size_t stack_size;
-
-#ifdef __serenity__
-    if (get_stack_bounds(&stack_base, &stack_size) < 0) {
-        perror("get_stack_bounds");
-        ASSERT_NOT_REACHED();
-    }
-#elif __linux__
-    pthread_attr_t attr = {};
-    if (int rc = pthread_getattr_np(pthread_self(), &attr) != 0) {
-        fprintf(stderr, "pthread_getattr_np: %s\n", strerror(-rc));
-        ASSERT_NOT_REACHED();
-    }
-    if (int rc = pthread_attr_getstack(&attr, (void**)&stack_base, &stack_size) != 0) {
-        fprintf(stderr, "pthread_attr_getstack: %s\n", strerror(-rc));
-        ASSERT_NOT_REACHED();
-    }
-    pthread_attr_destroy(&attr);
-#elif __APPLE__
-    stack_base = (FlatPtr)pthread_get_stackaddr_np(pthread_self());
-    pthread_attr_t attr = {};
-    if (int rc = pthread_attr_getstacksize(&attr, &stack_size) != 0) {
-        fprintf(stderr, "pthread_attr_getstacksize: %s\n", strerror(-rc));
-        ASSERT_NOT_REACHED();
-    }
-    pthread_attr_destroy(&attr);
-#endif
-
     FlatPtr stack_reference = reinterpret_cast<FlatPtr>(&dummy);
-    FlatPtr stack_top = stack_base + stack_size;
+    auto& stack_info = m_vm.stack_info();
 
-    for (FlatPtr stack_address = stack_reference; stack_address < stack_top; stack_address += sizeof(FlatPtr)) {
+    for (FlatPtr stack_address = stack_reference; stack_address < stack_info.top(); stack_address += sizeof(FlatPtr)) {
         auto data = *reinterpret_cast<FlatPtr*>(stack_address);
         possible_pointers.set(data);
     }
