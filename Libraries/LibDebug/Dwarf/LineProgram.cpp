@@ -212,7 +212,14 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         m_address += address_increment;
         break;
     }
+    case StandardOpcodes::SetIsa: {
+        size_t isa;
+        m_stream.read_LEB128_unsigned(isa);
+        dbgln("SetIsa: {}", isa);
+        break;
+    }
     default:
+        dbgln("Unhandled LineProgram opcode {}", opcode);
         ASSERT_NOT_REACHED();
     }
 }
