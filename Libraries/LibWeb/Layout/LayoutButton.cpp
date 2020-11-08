@@ -68,7 +68,7 @@ void LayoutButton::paint(PaintContext& context, PaintPhase phase)
         auto text_rect = enclosing_int_rect(absolute_rect());
         if (m_being_pressed)
             text_rect.move_by(1, 1);
-        context.painter().draw_text(text_rect, node().value(), specified_style().font(), Gfx::TextAlignment::Center);
+        context.painter().draw_text(text_rect, node().value(), specified_style().font(), Gfx::TextAlignment::Center, context.palette().button_text());
     }
 }
 
