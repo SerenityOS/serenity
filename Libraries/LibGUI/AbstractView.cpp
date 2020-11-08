@@ -288,6 +288,14 @@ void AbstractView::mousemove_event(MouseEvent& event)
 
     ASSERT(!data_type.is_null());
 
+    if (m_is_dragging)
+        return;
+
+    // An event might sneak in between us constructing the drag operation and the
+    // event loop exec at the end of `drag_operation->exec()' if the user is fast enough.
+    // Prevent this by just ignoring later drag initiations (until the current drag operation ends).
+    TemporaryChange dragging { m_is_dragging, true };
+
     dbg() << "Initiate drag!";
     auto drag_operation = DragOperation::construct();
 
