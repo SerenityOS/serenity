@@ -111,6 +111,9 @@ void SoftCPU::did_receive_secret_data()
     } else if (m_secret_data[0] == 2) {
         if (auto* tracer = m_emulator.malloc_tracer())
             tracer->target_did_free({}, m_secret_data[1]);
+    } else if (m_secret_data[0] == 3) {
+        if (auto* tracer = m_emulator.malloc_tracer())
+            tracer->target_did_realloc({}, m_secret_data[2], m_secret_data[1]);
     } else {
         ASSERT_NOT_REACHED();
     }
