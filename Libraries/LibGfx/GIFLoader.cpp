@@ -81,11 +81,17 @@ struct LogicalScreen {
 struct GIFLoadingContext {
     enum State {
         NotDecoded = 0,
-        Error,
         FrameDescriptorsLoaded,
         FrameComplete,
     };
     State state { NotDecoded };
+    enum ErrorState {
+        NoError = 0,
+        FailedToDecodeAllFrames,
+        FailedToDecodeAnyFrame,
+        FailedToLoadFrameDescriptors,
+    };
+    ErrorState error_state { NoError };
     const u8* data { nullptr };
     size_t data_size { 0 };
     LogicalScreen logical_screen {};
@@ -374,10 +380,10 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                 }
             }
         }
-    }
 
-    context.current_frame = frame_index;
-    context.state = GIFLoadingContext::State::FrameComplete;
+        context.current_frame = i;
+        context.state = GIFLoadingContext::State::FrameComplete;
+    }
 
     return true;
 }
@@ -624,13 +630,13 @@ GIFImageDecoderPlugin::~GIFImageDecoderPlugin() { }
 
 IntSize GIFImageDecoderPlugin::size()
 {
-    if (m_context->state == GIFLoadingContext::State::Error) {
+    if (m_context->error_state == GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors) {
         return {};
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
         if (!load_gif_frame_descriptors(*m_context)) {
-            m_context->state = GIFLoadingContext::State::Error;
+            m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return {};
         }
     }
@@ -669,9 +675,13 @@ bool GIFImageDecoderPlugin::sniff()
 
 bool GIFImageDecoderPlugin::is_animated()
 {
+    if (m_context->error_state != GIFLoadingContext::ErrorState::NoError) {
+        return false;
+    }
+
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
         if (!load_gif_frame_descriptors(*m_context)) {
-            m_context->state = GIFLoadingContext::State::Error;
+            m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return false;
         }
     }
@@ -681,9 +691,13 @@ bool GIFImageDecoderPlugin::is_animated()
 
 size_t GIFImageDecoderPlugin::loop_count()
 {
+    if (m_context->error_state != GIFLoadingContext::ErrorState::NoError) {
+        return 0;
+    }
+
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
         if (!load_gif_frame_descriptors(*m_context)) {
-            m_context->state = GIFLoadingContext::State::Error;
+            m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return 0;
         }
     }
@@ -693,9 +707,13 @@ size_t GIFImageDecoderPlugin::loop_count()
 
 size_t GIFImageDecoderPlugin::frame_count()
 {
+    if (m_context->error_state != GIFLoadingContext::ErrorState::NoError) {
+        return 1;
+    }
+
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
         if (!load_gif_frame_descriptors(*m_context)) {
-            m_context->state = GIFLoadingContext::State::Error;
+            m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return 1;
         }
     }
@@ -705,20 +723,23 @@ size_t GIFImageDecoderPlugin::frame_count()
 
 ImageFrameDescriptor GIFImageDecoderPlugin::frame(size_t i)
 {
-    if (m_context->state == GIFLoadingContext::State::Error) {
+    if (m_context->error_state >= GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame) {
         return {};
     }
 
     if (m_context->state < GIFLoadingContext::State::FrameDescriptorsLoaded) {
         if (!load_gif_frame_descriptors(*m_context)) {
-            m_context->state = GIFLoadingContext::State::Error;
+            m_context->error_state = GIFLoadingContext::ErrorState::FailedToLoadFrameDescriptors;
             return {};
         }
     }
 
-    if (!decode_frame(*m_context, i)) {
-        m_context->state = GIFLoadingContext::State::Error;
-        return {};
+    if (m_context->error_state == GIFLoadingContext::ErrorState::NoError && !decode_frame(*m_context, i)) {
+        if (m_context->state < GIFLoadingContext::State::FrameComplete || !decode_frame(*m_context, 0)) {
+            m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame;
+            return {};
+        }
+        m_context->error_state = GIFLoadingContext::ErrorState::FailedToDecodeAllFrames;
     }
 
     ImageFrameDescriptor frame {};
