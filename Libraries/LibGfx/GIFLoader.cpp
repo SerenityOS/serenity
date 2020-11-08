@@ -300,7 +300,6 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
 
     for (size_t i = start_frame; i <= frame_index; ++i) {
         auto& image = context.images.at(i);
-        printf("Image %zu: %d,%d %dx%d  %zu bytes LZW-encoded\n", i, image.x, image.y, image.width, image.height, image.lzw_encoded_bytes.size());
 
         const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : ImageDescriptor::DisposalMethod::None;
 
@@ -400,8 +399,6 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
         return false;
     }
 
-    printf("Format is %s\n", format.value() == GIFFormat::GIF89a ? "GIF89a" : "GIF87a");
-
     LittleEndian<u16> value;
 
     stream >> value;
@@ -419,31 +416,19 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     if (stream.handle_any_error())
         return false;
 
-    bool global_color_map_follows_descriptor = gcm_info & 0x80;
-    u8 bits_per_pixel = (gcm_info & 7) + 1;
-    u8 bits_of_color_resolution = (gcm_info >> 4) & 7;
-
-    printf("LogicalScreen: %dx%d\n", context.logical_screen.width, context.logical_screen.height);
-    printf("global_color_map_follows_descriptor: %u\n", global_color_map_follows_descriptor);
-    printf("bits_per_pixel: %u\n", bits_per_pixel);
-    printf("bits_of_color_resolution: %u\n", bits_of_color_resolution);
-
     stream >> context.background_color_index;
     if (stream.handle_any_error())
         return false;
-
-    printf("background_color: %u\n", context.background_color_index);
 
     u8 pixel_aspect_ratio = 0;
     stream >> pixel_aspect_ratio;
     if (stream.handle_any_error())
         return false;
 
+    u8 bits_per_pixel = (gcm_info & 7) + 1;
     int color_map_entry_count = 1;
     for (int i = 0; i < bits_per_pixel; ++i)
         color_map_entry_count *= 2;
-
-    printf("color_map_entry_count: %d\n", color_map_entry_count);
 
     for (int i = 0; i < color_map_entry_count; ++i) {
         u8 r = 0;
@@ -456,24 +441,16 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     if (stream.handle_any_error())
         return false;
 
-    for (int i = 0; i < color_map_entry_count; ++i) {
-        auto& color = context.logical_screen.color_map[i];
-        printf("[%02x]: %s\n", i, color.to_string().characters());
-    }
-
     NonnullOwnPtr<ImageDescriptor> current_image = make<ImageDescriptor>();
     for (;;) {
         u8 sentinel = 0;
         stream >> sentinel;
-        printf("Sentinel: %02x at offset %x\n", sentinel, (unsigned)stream.offset());
 
         if (sentinel == 0x21) {
             u8 extension_type = 0;
             stream >> extension_type;
             if (stream.handle_any_error())
                 return false;
-
-            printf("Extension block of type %02x\n", extension_type);
 
             u8 sub_block_length = 0;
 
@@ -575,11 +552,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 }
             }
 
-            printf("Image descriptor: %d,%d %dx%d, %02x\n", image.x, image.y, image.width, image.height, packed_fields);
-
             stream >> image.lzw_min_code_size;
-
-            printf("min code size: %u\n", image.lzw_min_code_size);
 
             u8 lzw_encoded_bytes_expected = 0;
 
@@ -608,7 +581,6 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
         }
 
         if (sentinel == 0x3b) {
-            printf("Trailer! Awesome :)\n");
             break;
         }
 
