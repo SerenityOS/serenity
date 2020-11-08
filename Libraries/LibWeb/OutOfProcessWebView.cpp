@@ -84,11 +84,22 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
     GUI::ScrollableWidget::resize_event(event);
 
-    m_front_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())->to_bitmap_backed_by_shared_buffer();
-    m_front_bitmap->shared_buffer()->share_with(client().server_pid());
+    m_front_bitmap = nullptr;
+    m_back_bitmap = nullptr;
 
-    m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())->to_bitmap_backed_by_shared_buffer();
-    m_back_bitmap->shared_buffer()->share_with(client().server_pid());
+    // FIXME: Don't create a temporary bitmap just to convert it to one backed by a shared buffer.
+    if (auto helper = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())) {
+        m_front_bitmap = helper->to_bitmap_backed_by_shared_buffer();
+        ASSERT(m_front_bitmap);
+        m_front_bitmap->shared_buffer()->share_with(client().server_pid());
+    }
+
+    // FIXME: Don't create a temporary bitmap just to convert it to one backed by a shared buffer.
+    if (auto helper = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())) {
+        m_back_bitmap = helper->to_bitmap_backed_by_shared_buffer();
+        ASSERT(m_back_bitmap);
+        m_back_bitmap->shared_buffer()->share_with(client().server_pid());
+    }
 
     client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
     request_repaint();
