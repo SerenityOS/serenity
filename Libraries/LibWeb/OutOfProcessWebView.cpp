@@ -71,6 +71,10 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 {
     GUI::ScrollableWidget::paint_event(event);
 
+    // If the available size is empty, we don't have a front or back bitmap to draw.
+    if (available_size().is_empty())
+        return;
+
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
@@ -84,8 +88,13 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
     GUI::ScrollableWidget::resize_event(event);
 
+    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
+
     m_front_bitmap = nullptr;
     m_back_bitmap = nullptr;
+
+    if (available_size().is_empty())
+        return;
 
     // FIXME: Don't create a temporary bitmap just to convert it to one backed by a shared buffer.
     if (auto helper = Gfx::Bitmap::create(Gfx::BitmapFormat::RGB32, available_size())) {
@@ -101,7 +110,6 @@ void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
         m_back_bitmap->shared_buffer()->share_with(client().server_pid());
     }
 
-    client().post_message(Messages::WebContentServer::SetViewportRect(Gfx::IntRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size())));
     request_repaint();
 }
 
