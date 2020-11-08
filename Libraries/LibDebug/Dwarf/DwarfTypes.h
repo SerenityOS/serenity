@@ -38,7 +38,7 @@ struct [[gnu::packed]] CompilationUnitHeader
     u8 address_size;
 };
 
-enum class EntryTag : u32 {
+enum class EntryTag : u16 {
     None = 0,
     ArrayType = 0x1,
     ClassType = 0x2,
@@ -113,7 +113,7 @@ enum class EntryTag : u32 {
     HiUser = 0xffff,
 };
 
-enum class Attribute : u32 {
+enum class Attribute : u16 {
     None = 0,
     Sibling = 0x1,
     Location = 0x2,
@@ -240,7 +240,7 @@ enum class Attribute : u32 {
     HiUser = 0x3fff,
 };
 
-enum class AttributeDataForm : u32 {
+enum class AttributeDataForm : u8 {
     None = 0,
     Addr = 0x1,
     Block2 = 0x3,
@@ -287,7 +287,8 @@ enum class AttributeDataForm : u32 {
     AddrX4 = 0x2c
 };
 
-struct AttributeSpecification {
+struct [[gnu::packed]] AttributeSpecification
+{
     Attribute attribute;
     AttributeDataForm form;
 };
