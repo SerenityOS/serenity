@@ -32,6 +32,7 @@
 #include <AK/StackInfo.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/CommonPropertyNames.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/MarkedValueList.h>
@@ -115,9 +116,15 @@ public:
         return *m_single_ascii_character_strings[character];
     }
 
-    void push_call_frame(CallFrame& call_frame)
+    void push_call_frame(CallFrame& call_frame, GlobalObject& global_object)
     {
-        m_call_stack.append(&call_frame);
+        ASSERT(!exception());
+        // Ensure we got some stack space left, so the next function call doesn't kill us.
+        // This value is merely a guess and might need tweaking at a later point.
+        if (m_stack_info.size_free() < 16 * KiB)
+            throw_exception<Error>(global_object, "RuntimeError", "Call stack size limit exceeded");
+        else
+            m_call_stack.append(&call_frame);
     }
 
     void pop_call_frame() { m_call_stack.take_last(); }

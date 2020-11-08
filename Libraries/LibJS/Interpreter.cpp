@@ -63,7 +63,8 @@ Interpreter::~Interpreter()
 
 Value Interpreter::run(GlobalObject& global_object, const Program& program)
 {
-    ASSERT(!vm().exception());
+    auto& vm = this->vm();
+    ASSERT(!vm.exception());
 
     VM::InterpreterExecutionScope scope(*this);
 
@@ -73,13 +74,12 @@ Value Interpreter::run(GlobalObject& global_object, const Program& program)
     global_call_frame.function_name = global_execution_context_name;
     global_call_frame.environment = heap().allocate<LexicalEnvironment>(global_object, LexicalEnvironment::EnvironmentRecordType::Global);
     global_call_frame.environment->bind_this_value(global_object, &global_object);
+    ASSERT(!vm.exception());
     global_call_frame.is_strict_mode = program.is_strict_mode();
-    if (vm().exception())
-        return {};
-
-    vm().push_call_frame(global_call_frame);
+    vm.push_call_frame(global_call_frame, global_object);
+    ASSERT(!vm.exception());
     auto result = program.execute(*this, global_object);
-    vm().pop_call_frame();
+    vm.pop_call_frame();
     return result;
 }
 
