@@ -150,14 +150,14 @@ static bool handle_breakpoint_command(const String& command)
 
 static void print_help()
 {
-    new_out("Options:\n"
-            "cont - Continue execution\n"
-            "si - step to the next instruction\n"
-            "sl - step to the next source line\n"
-            "line - show the position of the current instruction in the source code\n"
-            "regs - Print registers\n"
-            "dis [number of instructions] - Print disassembly\n"
-            "bp <address/symbol/file:line> - Insert a breakpoint\n");
+    out("Options:\n"
+        "cont - Continue execution\n"
+        "si - step to the next instruction\n"
+        "sl - step to the next source line\n"
+        "line - show the position of the current instruction in the source code\n"
+        "regs - Print registers\n"
+        "dis [number of instructions] - Print disassembly\n"
+        "bp <address/symbol/file:line> - Insert a breakpoint\n");
 }
 
 int main(int argc, char** argv)

@@ -49,7 +49,7 @@ int main(int argc, char** argv, char** envp)
             auto byte_ptr = (uint8_t*)auxvp->a_un.a_ptr;
             outln("    My Random bytes are: ");
             for (size_t i = 0; i < 16; ++i)
-                new_out("{:#02x} ", byte_ptr[i]);
+                out("{:#02x} ", byte_ptr[i]);
             outln();
         }
     }

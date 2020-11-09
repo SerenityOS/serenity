@@ -51,11 +51,11 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
         } else {
             root_indent_string = "";
         }
-        new_out("{}|-- ", root_indent_string);
+        out("{}|-- ", root_indent_string);
     }
 
     String root_dir_name = AK::LexicalPath(root_path).basename();
-    new_out("\033[34;1m{}\033[0m\n", root_dir_name);
+    out("\033[34;1m{}\033[0m\n", root_dir_name);
 
     if (depth >= max_depth) {
         return;

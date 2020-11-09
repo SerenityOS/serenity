@@ -222,7 +222,7 @@ TEST_CASE(file_descriptor)
     FILE* file = fdopen(fd, "w+");
 
     outln(file, "{}", "Hello, World!");
-    new_out(file, "foo");
+    out(file, "foo");
     outln(file, "bar");
 
     rewind(file);

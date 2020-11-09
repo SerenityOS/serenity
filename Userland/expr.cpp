@@ -47,9 +47,9 @@ Print the value of EXPRESSION to standard output.)");
 template<typename... Args>
 [[noreturn]] void fail(Args&&... args)
 {
-    new_warn("ERROR: \e[31m");
+    warn("ERROR: \e[31m");
     warnln(args...);
-    new_warn("\e[0m");
+    warn("\e[0m");
     exit(1);
 }
 

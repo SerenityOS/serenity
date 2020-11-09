@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         for (size_t i = 0; i < NSIG; ++i) {
             if (i && !(i % 5))
                 outln("");
-            new_out("{:2}) {:10}", i, getsignalname(i));
+            out("{:2}) {:10}", i, getsignalname(i));
         }
         outln("");
         return 0;

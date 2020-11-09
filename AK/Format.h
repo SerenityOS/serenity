@@ -309,27 +309,24 @@ void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams)
 #ifndef KERNEL
 void vout(FILE*, StringView fmtstr, TypeErasedFormatParams, bool newline = false);
 
-// FIXME: Rename 'new_out' to 'out' when the name becomes avaliable.
 template<typename... Parameters>
-void new_out(FILE* file, StringView fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }); }
+void out(FILE* file, StringView fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }); }
 template<typename... Parameters>
 void outln(FILE* file, StringView fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }, true); }
 template<typename... Parameters>
 void outln(FILE* file, const char* fmtstr, const Parameters&... parameters) { vout(file, fmtstr, VariadicFormatParams { parameters... }, true); }
 inline void outln(FILE* file) { fputc('\n', file); }
 
-// FIXME: Rename 'new_out' to 'out' when the name becomes avaliable.
 template<typename... Parameters>
-void new_out(StringView fmtstr, const Parameters&... parameters) { new_out(stdout, fmtstr, parameters...); }
+void out(StringView fmtstr, const Parameters&... parameters) { out(stdout, fmtstr, parameters...); }
 template<typename... Parameters>
 void outln(StringView fmtstr, const Parameters&... parameters) { outln(stdout, fmtstr, parameters...); }
 template<typename... Parameters>
 void outln(const char* fmtstr, const Parameters&... parameters) { outln(stdout, fmtstr, parameters...); }
 inline void outln() { outln(stdout); }
 
-// FIXME: Rename 'new_warn' to 'warn' when the name becomes avaliable.
 template<typename... Parameters>
-void new_warn(StringView fmtstr, const Parameters&... parameters) { new_out(stderr, fmtstr, parameters...); }
+void warn(StringView fmtstr, const Parameters&... parameters) { out(stderr, fmtstr, parameters...); }
 template<typename... Parameters>
 void warnln(StringView fmtstr, const Parameters&... parameters) { outln(stderr, fmtstr, parameters...); }
 template<typename... Parameters>
@@ -385,10 +382,10 @@ struct Formatter<FormatIfSupported<T>> : __FormatIfSupported<T, HasFormatter<T>:
 } // namespace AK
 
 #ifndef KERNEL
-using AK::new_out;
+using AK::out;
 using AK::outln;
 
-using AK::new_warn;
+using AK::warn;
 using AK::warnln;
 #endif
 

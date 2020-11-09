@@ -181,28 +181,28 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
 
 void ArgsParser::print_usage(FILE* file, const char* argv0)
 {
-    new_out(file, "Usage:\n\t\033[1m{}\033[0m", argv0);
+    out(file, "Usage:\n\t\033[1m{}\033[0m", argv0);
 
     for (auto& opt : m_options) {
         if (opt.long_name && !strcmp(opt.long_name, "help"))
             continue;
         if (opt.requires_argument)
-            new_out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
+            out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
         else
-            new_out(file, " [{}]", opt.name_for_display());
+            out(file, " [{}]", opt.name_for_display());
     }
     for (auto& arg : m_positional_args) {
         bool required = arg.min_values > 0;
         bool repeated = arg.max_values > 1;
 
         if (required && repeated)
-            new_out(file, " <{}...>", arg.name);
+            out(file, " <{}...>", arg.name);
         else if (required && !repeated)
-            new_out(file, " <{}>", arg.name);
+            out(file, " <{}>", arg.name);
         else if (!required && repeated)
-            new_out(file, " [{}...]", arg.name);
+            out(file, " [{}...]", arg.name);
         else if (!required && !repeated)
-            new_out(file, " [{}]", arg.name);
+            out(file, " [{}]", arg.name);
     }
     outln(file);
 
@@ -212,25 +212,25 @@ void ArgsParser::print_usage(FILE* file, const char* argv0)
         auto print_argument = [&]() {
             if (opt.value_name) {
                 if (opt.requires_argument)
-                    new_out(file, " {}", opt.value_name);
+                    out(file, " {}", opt.value_name);
                 else
-                    new_out(file, " [{}]", opt.value_name);
+                    out(file, " [{}]", opt.value_name);
             }
         };
-        new_out(file, "\t");
+        out(file, "\t");
         if (opt.short_name) {
-            new_out(file, "\033[1m-{}\033[0m", opt.short_name);
+            out(file, "\033[1m-{}\033[0m", opt.short_name);
             print_argument();
         }
         if (opt.short_name && opt.long_name)
-            new_out(file, ", ");
+            out(file, ", ");
         if (opt.long_name) {
-            new_out(file, "\033[1m--{}\033[0m", opt.long_name);
+            out(file, "\033[1m--{}\033[0m", opt.long_name);
             print_argument();
         }
 
         if (opt.help_string)
-            new_out(file, "\t{}", opt.help_string);
+            out(file, "\t{}", opt.help_string);
         outln(file);
     }
 
@@ -238,9 +238,9 @@ void ArgsParser::print_usage(FILE* file, const char* argv0)
         outln(file, "\nArguments:");
 
     for (auto& arg : m_positional_args) {
-        new_out(file, "\t\033[1m{}\033[0m", arg.name);
+        out(file, "\t\033[1m{}\033[0m", arg.name);
         if (arg.help_string)
-            new_out(file, "\t{}", arg.help_string);
+            out(file, "\t{}", arg.help_string);
         outln(file);
     }
 }
