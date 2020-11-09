@@ -204,10 +204,10 @@ void Game::tick()
     for (auto& brick : m_bricks) {
         if (brick.dead)
             continue;
-        if (m_ball.rect().intersects(brick.rect)) {
+        if (new_ball.rect().intersects(brick.rect)) {
             brick.dead = true;
 
-            auto overlap = m_ball.rect().intersected(brick.rect);
+            auto overlap = new_ball.rect().intersected(brick.rect);
             if (overlap.width() < overlap.height()) {
                 new_ball.x = m_ball.x;
                 new_ball.vx *= -1;
