@@ -376,6 +376,9 @@ static bool print_filesystem_object_short(const char* path, const char* name, si
         return false;
     }
 
+    if (flag_show_inode)
+        printf("%08u ", st.st_ino);
+
     *nprinted = print_name(st, name, nullptr, path);
     return true;
 }
