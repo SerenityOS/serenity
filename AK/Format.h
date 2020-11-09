@@ -157,7 +157,22 @@ public:
         char fill = ' ',
         SignMode sign_mode = SignMode::OnlyIfNeeded);
 
-    const StringBuilder& builder() const { return m_builder; }
+#ifndef KERNEL
+    void put_f64(
+        double value,
+        u8 base = 10,
+        bool upper_case = false,
+        Align align = Align::Right,
+        size_t min_width = 0,
+        size_t precision = 6,
+        char fill = ' ',
+        SignMode sign_mode = SignMode::OnlyIfNeeded);
+#endif
+
+    const StringBuilder& builder() const
+    {
+        return m_builder;
+    }
     StringBuilder& builder() { return m_builder; }
 
 private:
@@ -218,6 +233,9 @@ struct StandardFormatter {
         Character,
         String,
         Pointer,
+        Float,
+        Hexfloat,
+        HexfloatUppercase,
     };
 
     static constexpr size_t value_not_set = NumericLimits<size_t>::max();
@@ -302,6 +320,23 @@ template<>
 struct Formatter<bool> : StandardFormatter {
     void format(TypeErasedFormatParams&, FormatBuilder&, bool value);
 };
+
+#ifndef KERNEL
+template<>
+struct Formatter<float> : StandardFormatter {
+    void format(TypeErasedFormatParams&, FormatBuilder&, float value);
+};
+template<>
+struct Formatter<double> : StandardFormatter {
+    Formatter() { }
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+
+    void format(TypeErasedFormatParams&, FormatBuilder&, double value);
+};
+#endif
 
 void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams);
 void vformat(const LogStream& stream, StringView fmtstr, TypeErasedFormatParams);
