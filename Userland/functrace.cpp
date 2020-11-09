@@ -61,7 +61,7 @@ static void handle_sigint(int)
 static void print_function_call(String function_name, size_t depth)
 {
     for (size_t i = 0; i < depth; ++i) {
-        new_out("  ");
+        out("  ");
     }
     outln("=> {}", function_name);
 }
