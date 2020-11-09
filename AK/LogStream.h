@@ -125,24 +125,6 @@ private:
     static bool s_enabled;
 };
 
-#if !defined(KERNEL)
-class StdLogStream final : public LogStream {
-public:
-    StdLogStream(int fd)
-        : m_fd(fd)
-    {
-    }
-    virtual ~StdLogStream() override;
-    virtual void write(const char* characters, int length) const override;
-
-private:
-    int m_fd { -1 };
-};
-
-[[deprecated("Use AK::outln or AK::new_out instead, AK::new_out will soon be renamed to AK::out.")]] inline StdLogStream out() { return StdLogStream(STDOUT_FILENO); }
-[[deprecated("Use AK::warnln or AK::new_warn instead, AK::new_warn will soon be renamed to AK::warn.")]] inline StdLogStream warn() { return StdLogStream(STDERR_FILENO); }
-#endif
-
 #ifdef KERNEL
 class KernelLogStream final : public BufferedLogStream {
 public:
@@ -212,8 +194,3 @@ void dump_bytes(ReadonlyBytes);
 using AK::dbg;
 using AK::klog;
 using AK::LogStream;
-
-#if !defined(KERNEL)
-using AK::out;
-using AK::warn;
-#endif
