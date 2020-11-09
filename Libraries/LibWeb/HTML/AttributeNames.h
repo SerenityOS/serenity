@@ -39,8 +39,10 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(action)          \
     __ENUMERATE_HTML_ATTRIBUTE(align)           \
     __ENUMERATE_HTML_ATTRIBUTE(allow)           \
+    __ENUMERATE_HTML_ATTRIBUTE(allowfullscreen) \
     __ENUMERATE_HTML_ATTRIBUTE(alt)             \
     __ENUMERATE_HTML_ATTRIBUTE(async)           \
+    __ENUMERATE_HTML_ATTRIBUTE(autoplay)        \
     __ENUMERATE_HTML_ATTRIBUTE(behaviour)       \
     __ENUMERATE_HTML_ATTRIBUTE(bgcolor)         \
     __ENUMERATE_HTML_ATTRIBUTE(checked)         \
@@ -51,18 +53,23 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(colspan)         \
     __ENUMERATE_HTML_ATTRIBUTE(content)         \
     __ENUMERATE_HTML_ATTRIBUTE(contenteditable) \
+    __ENUMERATE_HTML_ATTRIBUTE(controls)        \
     __ENUMERATE_HTML_ATTRIBUTE(data)            \
     __ENUMERATE_HTML_ATTRIBUTE(datetime)        \
+    __ENUMERATE_HTML_ATTRIBUTE(default_)        \
+    __ENUMERATE_HTML_ATTRIBUTE(defer)           \
     __ENUMERATE_HTML_ATTRIBUTE(disabled)        \
     __ENUMERATE_HTML_ATTRIBUTE(download)        \
-    __ENUMERATE_HTML_ATTRIBUTE(defer)           \
     __ENUMERATE_HTML_ATTRIBUTE(direction)       \
     __ENUMERATE_HTML_ATTRIBUTE(dirname)         \
     __ENUMERATE_HTML_ATTRIBUTE(face)            \
     __ENUMERATE_HTML_ATTRIBUTE(for_)            \
+    __ENUMERATE_HTML_ATTRIBUTE(formnovalidate)  \
+    __ENUMERATE_HTML_ATTRIBUTE(formtarget)      \
     __ENUMERATE_HTML_ATTRIBUTE(frameborder)     \
     __ENUMERATE_HTML_ATTRIBUTE(headers)         \
     __ENUMERATE_HTML_ATTRIBUTE(height)          \
+    __ENUMERATE_HTML_ATTRIBUTE(hidden)          \
     __ENUMERATE_HTML_ATTRIBUTE(href)            \
     __ENUMERATE_HTML_ATTRIBUTE(hreflang)        \
     __ENUMERATE_HTML_ATTRIBUTE(http_equiv)      \
@@ -70,21 +77,32 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(imagesizes)      \
     __ENUMERATE_HTML_ATTRIBUTE(imagesrcset)     \
     __ENUMERATE_HTML_ATTRIBUTE(integrity)       \
+    __ENUMERATE_HTML_ATTRIBUTE(ismap)           \
     __ENUMERATE_HTML_ATTRIBUTE(label)           \
     __ENUMERATE_HTML_ATTRIBUTE(lang)            \
     __ENUMERATE_HTML_ATTRIBUTE(longdesc)        \
+    __ENUMERATE_HTML_ATTRIBUTE(loop)            \
     __ENUMERATE_HTML_ATTRIBUTE(max)             \
     __ENUMERATE_HTML_ATTRIBUTE(media)           \
     __ENUMERATE_HTML_ATTRIBUTE(method)          \
     __ENUMERATE_HTML_ATTRIBUTE(min)             \
+    __ENUMERATE_HTML_ATTRIBUTE(multiple)        \
     __ENUMERATE_HTML_ATTRIBUTE(name)            \
+    __ENUMERATE_HTML_ATTRIBUTE(nomodule)        \
+    __ENUMERATE_HTML_ATTRIBUTE(novalidate)      \
+    __ENUMERATE_HTML_ATTRIBUTE(open)            \
     __ENUMERATE_HTML_ATTRIBUTE(pattern)         \
     __ENUMERATE_HTML_ATTRIBUTE(ping)            \
     __ENUMERATE_HTML_ATTRIBUTE(placeholder)     \
+    __ENUMERATE_HTML_ATTRIBUTE(playsinline)     \
     __ENUMERATE_HTML_ATTRIBUTE(poster)          \
+    __ENUMERATE_HTML_ATTRIBUTE(readonly)        \
     __ENUMERATE_HTML_ATTRIBUTE(rel)             \
+    __ENUMERATE_HTML_ATTRIBUTE(required)        \
+    __ENUMERATE_HTML_ATTRIBUTE(reversed)        \
     __ENUMERATE_HTML_ATTRIBUTE(rows)            \
     __ENUMERATE_HTML_ATTRIBUTE(scrolling)       \
+    __ENUMERATE_HTML_ATTRIBUTE(selected)        \
     __ENUMERATE_HTML_ATTRIBUTE(size)            \
     __ENUMERATE_HTML_ATTRIBUTE(sizes)           \
     __ENUMERATE_HTML_ATTRIBUTE(src)             \

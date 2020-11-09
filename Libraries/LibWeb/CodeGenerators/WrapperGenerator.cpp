@@ -55,7 +55,7 @@ static String snake_name(const StringView& title_name)
 
 static String make_input_acceptable_cpp(const String& input)
 {
-    if (input == "class" || input == "template" || input == "for") {
+    if (input == "class" || input == "template" || input == "for" || input == "default") {
         StringBuilder builder;
         builder.append(input);
         builder.append('_');
@@ -755,9 +755,15 @@ JS_DEFINE_NATIVE_GETTER(@wrapper_class@::@attribute.getter_callback@)
         }
 
         if (attribute.extended_attributes.contains("Reflect")) {
-            attribute_generator.append(R"~~~(
+            if (attribute.type.name != "boolean") {
+                attribute_generator.append(R"~~~(
     auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
+            } else {
+                attribute_generator.append(R"~~~(
+    auto retval = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+            }
         } else {
             attribute_generator.append(R"~~~(
     auto retval = impl->@attribute.name:snakecase@();
@@ -782,9 +788,18 @@ JS_DEFINE_NATIVE_SETTER(@wrapper_class@::@attribute.setter_callback@)
             generate_to_cpp(attribute, "value", "", "cpp_value", true);
 
             if (attribute.extended_attributes.contains("Reflect")) {
-                attribute_generator.append(R"~~~(
+                if (attribute.type.name != "boolean") {
+                    attribute_generator.append(R"~~~(
     impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value);
 )~~~");
+                } else {
+                    attribute_generator.append(R"~~~(
+    if (!cpp_value)
+        impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    else
+        impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, String::empty());
+)~~~");
+                }
             } else {
                 attribute_generator.append(R"~~~(
     impl->set_@attribute.name:snakecase@(cpp_value);

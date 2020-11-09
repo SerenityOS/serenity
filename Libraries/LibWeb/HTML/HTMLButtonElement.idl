@@ -1,5 +1,8 @@
 interface HTMLButtonElement : HTMLElement {
 
+    [Reflect=formnovalidate] attribute boolean formNoValidate;
+    [Reflect=formtarget] attribute DOMString formTarget;
+    [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString value;
 
 }

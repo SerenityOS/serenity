@@ -1,5 +1,7 @@
 interface HTMLSelectElement : HTMLElement {
 
-
+    [Reflect] attribute boolean disabled;
+    [Reflect] attribute boolean multiple;
+    [Reflect] attribute boolean required;
 
 }

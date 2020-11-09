@@ -5,5 +5,6 @@ interface HTMLImageElement : HTMLElement {
     [Reflect] attribute DOMString srcset;
     [Reflect] attribute DOMString sizes;
     [Reflect=usemap] attribute DOMString useMap;
+    [Reflect=ismap] attribute boolean isMap;
 
 }
