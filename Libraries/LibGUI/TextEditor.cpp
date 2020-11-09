@@ -98,22 +98,7 @@ void TextEditor::create_actions()
                 if (InputBox::show(value, window(), "Line:", "Go to line") == InputBox::ExecOK) {
                     auto line_target = value.to_uint();
                     if (line_target.has_value()) {
-                        u_int index_max = line_count() - 1;
-                        auto line_index = line_target.value() - 1;
-                        set_cursor(line_index, 0);
-
-                        if (line_index > 1 && line_index < index_max) {
-                            int headroom = frame_inner_rect().height() / 3;
-                            do {
-                                auto line_data = m_line_visual_data[line_index];
-                                headroom -= line_data.visual_rect.height();
-                                line_index--;
-                            } while (line_index > 0 && headroom > 0);
-
-                            Gfx::IntRect rect = { 0, line_content_rect(line_index).y(),
-                                1, frame_inner_rect().height() };
-                            scroll_into_view(rect, true, true);
-                        }
+                        set_cursor_and_focus_line(line_target.value() - 1, 0);
                     }
                 }
             },
@@ -1170,6 +1155,24 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
         font().width(line.view()),
         line_height()
     };
+}
+
+void TextEditor::set_cursor_and_focus_line(size_t line, size_t column)
+{
+    u_int index_max = line_count() - 1;
+    set_cursor(line, column);
+    if (line > 1 && line < index_max) {
+        int headroom = frame_inner_rect().height() / 3;
+        do {
+            auto line_data = m_line_visual_data[line];
+            headroom -= line_data.visual_rect.height();
+            line--;
+        } while (line > 0 && headroom > 0);
+
+        Gfx::IntRect rect = { 0, line_content_rect(line).y(),
+            1, frame_inner_rect().height() };
+        scroll_into_view(rect, false, true);
+    }
 }
 
 void TextEditor::update_cursor()
