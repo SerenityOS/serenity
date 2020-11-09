@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Format.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -161,10 +162,10 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects);
 static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
 {
     bool first = true;
-    fputs("[ ", stdout);
+    out("[ ");
     for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
         if (!first)
-            fputs(", ", stdout);
+            out(", ");
         first = false;
         auto value = it.value_and_attributes(&array).value;
         // The V8 repl doesn't throw an exception here, and instead just
@@ -174,18 +175,18 @@ static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
             return;
         print_value(value, seen_objects);
     }
-    fputs(" ]", stdout);
+    out(" ]");
 }
 
 static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
-    fputs("{ ", stdout);
+    out("{{ ");
     bool first = true;
     for (auto& entry : object.indexed_properties()) {
         if (!first)
-            fputs(", ", stdout);
+            out(", ");
         first = false;
-        printf("\"\033[33;1m%d\033[0m\": ", entry.index());
+        out("\"\033[33;1m{}\033[0m\": ", entry.index());
         auto value = entry.value_and_attributes(&object).value;
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
@@ -196,51 +197,51 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
     }
 
     if (!object.indexed_properties().is_empty() && object.shape().property_count())
-        fputs(", ", stdout);
+        out(", ");
 
     size_t index = 0;
     for (auto& it : object.shape().property_table_ordered()) {
         if (it.key.is_string()) {
-            printf("\"\033[33;1m%s\033[0m\": ", it.key.to_display_string().characters());
+            out("\"\033[33;1m{}\033[0m\": ", it.key.to_display_string());
         } else {
-            printf("\033[33;1m%s\033[0m: ", it.key.to_display_string().characters());
+            out("\033[33;1m{}\033[0m: ", it.key.to_display_string());
         }
         print_value(object.get_direct(it.value.offset), seen_objects);
         if (index != object.shape().property_count() - 1)
-            fputs(", ", stdout);
+            out(", ");
         ++index;
     }
-    fputs(" }", stdout);
+    out(" }}");
 }
 
 static void print_function(const JS::Object& function, HashTable<JS::Object*>&)
 {
-    printf("\033[34;1m[%s]\033[0m", function.class_name());
+    out("\033[34;1m[{}]\033[0m", function.class_name());
 }
 
 static void print_date(const JS::Object& date, HashTable<JS::Object*>&)
 {
-    printf("\033[34;1mDate %s\033[0m", static_cast<const JS::Date&>(date).string().characters());
+    out("\033[34;1mDate {}\033[0m", static_cast<const JS::Date&>(date).string());
 }
 
 static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
 {
     auto& error = static_cast<const JS::Error&>(object);
-    printf("\033[34;1m[%s]\033[0m", error.name().characters());
+    out("\033[34;1m[{}]\033[0m", error.name());
     if (!error.message().is_empty())
-        printf(": %s", error.message().characters());
+        out(": {}", error.message());
 }
 
 static void print_regexp(const JS::Object& object, HashTable<JS::Object*>&)
 {
     auto& regexp = static_cast<const JS::RegExpObject&>(object);
-    printf("\033[34;1m/%s/%s\033[0m", regexp.content().characters(), regexp.flags().characters());
+    out("\033[34;1m/{}/{}\033[0m", regexp.content(), regexp.flags());
 }
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
 {
     if (value.is_empty()) {
-        printf("\033[34;1m<empty>\033[0m");
+        out("\033[34;1m<empty>\033[0m");
         return;
     }
 
@@ -248,7 +249,7 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         if (seen_objects.contains(&value.as_object())) {
             // FIXME: Maybe we should only do this for circular references,
             //        not for all reoccurring objects.
-            printf("<already printed Object %p>", &value.as_object());
+            out("<already printed Object {}>", &value.as_object());
             return;
         }
         seen_objects.set(&value.as_object());
@@ -271,30 +272,30 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
     }
 
     if (value.is_string())
-        printf("\033[32;1m");
+        out("\033[32;1m");
     else if (value.is_number() || value.is_bigint())
-        printf("\033[35;1m");
+        out("\033[35;1m");
     else if (value.is_boolean())
-        printf("\033[33;1m");
+        out("\033[33;1m");
     else if (value.is_null())
-        printf("\033[33;1m");
+        out("\033[33;1m");
     else if (value.is_undefined())
-        printf("\033[34;1m");
+        out("\033[34;1m");
     if (value.is_string())
-        putchar('"');
+        out("\"");
     else if (value.is_negative_zero())
-        putchar('-');
-    printf("%s", value.to_string_without_side_effects().characters());
+        out("-");
+    out("{}", value.to_string_without_side_effects());
     if (value.is_string())
-        putchar('"');
-    printf("\033[0m");
+        out("\"");
+    out("\033[0m");
 }
 
 static void print(JS::Value value)
 {
     HashTable<JS::Object*> seen_objects;
     print_value(value, seen_objects);
-    putchar('\n');
+    outln();
 }
 
 static bool file_has_shebang(AK::ByteBuffer file_contents)
@@ -352,14 +353,14 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         auto error = parser.errors()[0];
         auto hint = error.source_location_hint(source);
         if (!hint.is_empty())
-            printf("%s\n", hint.characters());
+            outln("{}", hint);
         vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
     } else {
         interpreter.run(interpreter.global_object(), *program);
     }
 
     if (vm->exception()) {
-        printf("Uncaught exception: ");
+        out("Uncaught exception: ");
         print(vm->exception()->value());
         auto trace = vm->exception()->trace();
         if (trace.size() > 1) {
@@ -433,11 +434,11 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
 {
-    printf("REPL commands:\n");
-    printf("    exit(code): exit the REPL with specified code. Defaults to 0.\n");
-    printf("    help(): display this menu\n");
-    printf("    load(files): accepts file names as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")\n");
-    printf("    save(file): accepts a file name, writes REPL input history to a file. For example: save(\"foo.txt\")\n");
+    outln("REPL commands:");
+    outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
+    outln("    help(): display this menu");
+    outln("    load(files): accepts file names as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")");
+    outln("    save(file): accepts a file name, writes REPL input history to a file. For example: save(\"foo.txt\")");
     return JS::js_undefined();
 }
 
@@ -450,7 +451,8 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
         String file_name = file.as_string().string();
         auto js_file = Core::File::construct(file_name);
         if (!js_file->open(Core::IODevice::ReadOnly)) {
-            fprintf(stderr, "Failed to open %s: %s\n", file_name.characters(), js_file->error_string());
+            warnln("Failed to open {}: {}", file_name, js_file->error_string());
+            continue;
         }
         auto file_contents = js_file->read_all();
 
@@ -491,49 +493,43 @@ public:
 
     virtual JS::Value log() override
     {
-        puts(vm().join_arguments().characters());
+        outln("{}", vm().join_arguments());
         return JS::js_undefined();
     }
     virtual JS::Value info() override
     {
-        printf("(i) %s\n", vm().join_arguments().characters());
+        outln("(i) {}", vm().join_arguments());
         return JS::js_undefined();
     }
     virtual JS::Value debug() override
     {
-        printf("\033[36;1m");
-        puts(vm().join_arguments().characters());
-        printf("\033[0m");
+        outln("\033[36;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
     virtual JS::Value warn() override
     {
-        printf("\033[33;1m");
-        puts(vm().join_arguments().characters());
-        printf("\033[0m");
+        outln("\033[33;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
     virtual JS::Value error() override
     {
-        printf("\033[31;1m");
-        puts(vm().join_arguments().characters());
-        printf("\033[0m");
+        outln("\033[31;1m{}\033[0m", vm().join_arguments());
         return JS::js_undefined();
     }
     virtual JS::Value clear() override
     {
-        printf("\033[3J\033[H\033[2J");
+        out("\033[3J\033[H\033[2J");
         fflush(stdout);
         return JS::js_undefined();
     }
     virtual JS::Value trace() override
     {
-        puts(vm().join_arguments().characters());
+        outln("{}", vm().join_arguments());
         auto trace = get_trace();
         for (auto& function_name : trace) {
             if (function_name.is_empty())
                 function_name = "<anonymous>";
-            printf(" -> %s\n", function_name.characters());
+            outln(" -> {}", function_name);
         }
         return JS::js_undefined();
     }
@@ -541,19 +537,16 @@ public:
     {
         auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
         auto counter_value = m_console.counter_increment(label);
-        printf("%s: %u\n", label.characters(), counter_value);
+        outln("{}: {}", label, counter_value);
         return JS::js_undefined();
     }
     virtual JS::Value count_reset() override
     {
         auto label = vm().argument_count() ? vm().argument(0).to_string_without_side_effects() : "default";
-        if (m_console.counter_reset(label)) {
-            printf("%s: 0\n", label.characters());
-        } else {
-            printf("\033[33;1m");
-            printf("\"%s\" doesn't have a count\n", label.characters());
-            printf("\033[0m");
-        }
+        if (m_console.counter_reset(label))
+            outln("{}: 0", label);
+        else
+            outln("\033[33;1m\"{}\" doesn't have a count\033[0m", label);
         return JS::js_undefined();
     }
 };
@@ -797,7 +790,7 @@ int main(int argc, char** argv)
 
         auto file = Core::File::construct(script_path);
         if (!file->open(Core::IODevice::ReadOnly)) {
-            fprintf(stderr, "Failed to open %s: %s\n", script_path, file->error_string());
+            warnln("Failed to open {}: {}", script_path, file->error_string());
             return 1;
         }
         auto file_contents = file->read_all();
