@@ -3,5 +3,6 @@ interface HTMLTrackElement : HTMLElement {
     [Reflect] attribute DOMString src;
     [Reflect] attribute DOMString srclang;
     [Reflect] attribute DOMString label;
+    [Reflect] attribute boolean default;
 
 }

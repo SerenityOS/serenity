@@ -3,5 +3,6 @@ interface HTMLFormElement : HTMLElement {
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString rel;
     [Reflect=accept-charset] attribute DOMString acceptCharset;
+    [Reflect=novalidate] attribute boolean noValidate;
 
 }
