@@ -373,7 +373,7 @@ void Project::rebuild_tree()
 #if 0
     Function<void(ProjectTreeNode&, int indent)> dump_tree = [&](ProjectTreeNode& node, int indent) {
         for (int i = 0; i < indent; ++i)
-            new_out(" ");
+            out(" ");
         if (node.name.is_null())
             outln("(null)");
         else
