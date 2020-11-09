@@ -186,20 +186,6 @@ bool DebugLogStream::is_enabled()
 bool DebugLogStream::s_enabled = true;
 
 #ifndef KERNEL
-StdLogStream::~StdLogStream()
-{
-    char newline = '\n';
-    write(&newline, 1);
-}
-
-void StdLogStream::write(const char* characters, int length) const
-{
-    if (::write(m_fd, characters, length) < 0) {
-        perror("StdLogStream::write");
-        ASSERT_NOT_REACHED();
-    }
-}
-
 const LogStream& operator<<(const LogStream& stream, double value)
 {
     return stream << String::format("%.4f", value);
@@ -209,7 +195,6 @@ const LogStream& operator<<(const LogStream& stream, float value)
 {
     return stream << String::format("%.4f", value);
 }
-
 #endif
 
 void dump_bytes(ReadonlyBytes bytes)
