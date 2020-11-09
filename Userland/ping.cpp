@@ -29,6 +29,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -51,14 +52,19 @@ static uint16_t internet_checksum(const void* ptr, size_t count)
     return htons(~checksum);
 }
 
+static int total_pings;
+static int successful_pings;
+static uint32_t total_ms;
+static int min_ms;
+static int max_ms;
+static const char* host;
+
 int main(int argc, char** argv)
 {
-    if (pledge("stdio id inet dns", nullptr) < 0) {
+    if (pledge("stdio id inet dns sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
-
-    const char* host = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(host, "Host to ping", "host");
@@ -75,7 +81,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio inet dns", nullptr) < 0) {
+    if (pledge("stdio inet dns sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -83,6 +89,7 @@ int main(int argc, char** argv)
     struct timeval timeout {
         1, 0
     };
+
     int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (rc < 0) {
         perror("setsockopt");
@@ -95,7 +102,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio inet", nullptr) < 0) {
+    if (pledge("stdio inet sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -123,6 +130,29 @@ int main(int argc, char** argv)
 
     uint16_t seq = 1;
 
+    sighandler_t ret = signal(SIGINT, [](int) {
+        int packet_loss = 100;
+
+        printf("\n--- %s ping statistics ---\n", host);
+
+        if (total_pings)
+            packet_loss -= 100.0f * successful_pings / total_pings;
+        printf("%d packets transmitted, %d received, %d%% packet loss\n",
+            total_pings, successful_pings, packet_loss);
+
+        int average_ms = 0;
+        if (successful_pings)
+            average_ms = total_ms / successful_pings;
+        printf("rtt min/avg/max = %d/%d/%d ms\n", min_ms, average_ms, max_ms);
+
+        exit(0);
+    });
+
+    if (ret == SIG_ERR) {
+        perror("failed to install SIGINT handler");
+        return 1;
+    }
+
     for (;;) {
         PingPacket ping_packet;
         memset(&ping_packet, 0, sizeof(PingPacket));
@@ -146,6 +176,8 @@ int main(int argc, char** argv)
             perror("sendto");
             return 1;
         }
+
+        total_pings++;
 
         for (;;) {
             PongPacket pong_packet;
@@ -174,6 +206,20 @@ int main(int argc, char** argv)
             timersub(&tv_receive, &tv_send, &tv_diff);
 
             int ms = tv_diff.tv_sec * 1000 + tv_diff.tv_usec / 1000;
+            successful_pings++;
+            int seq_dif = ntohs(ping_packet.header.un.echo.sequence) - ntohs(pong_packet.header.un.echo.sequence);
+
+            // Approximation about the timeout of the out of order packet
+            if (seq_dif)
+                ms += seq_dif * 1000 * timeout.tv_sec;
+
+            total_ms += ms;
+            if (min_ms == 0)
+                min_ms = max_ms = ms;
+            else if (ms < min_ms)
+                min_ms = ms;
+            else if (ms > max_ms)
+                max_ms = ms;
 
             char addr_buf[64];
             printf("Pong from %s: id=%u, seq=%u%s, time=%dms\n",
