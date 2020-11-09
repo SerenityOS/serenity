@@ -51,6 +51,7 @@ ENUMERATE_HTML_ATTRIBUTES
     // NOTE: Special case for the class and for attributes since they're C++ keywords.
     class_ = "class";
     for_ = "for";
+    default_ = "default";
 
     // NOTE: Special cases for attributes with dashes in them.
     accept_charset = "accept-charset";

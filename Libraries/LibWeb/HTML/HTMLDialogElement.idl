@@ -1,5 +1,5 @@
 interface HTMLDialogElement : HTMLElement {
 
-
+    [Reflect] attribute boolean open;
 
 }

@@ -12,4 +12,13 @@ interface HTMLInputElement : HTMLElement {
     [Reflect=value] attribute DOMString defaultValue;
 
     attribute boolean checked;
+
+    [Reflect] attribute boolean disabled;
+    [Reflect=checked] attribute boolean defaultChecked;
+    [Reflect=formnovalidate] attribute boolean formNoValidate;
+    [Reflect=formtarget] attribute DOMString formTarget;
+    [Reflect] attribute boolean multiple;
+    [Reflect=readonly] attribute boolean readOnly;
+    [Reflect] attribute boolean required;
+
 }

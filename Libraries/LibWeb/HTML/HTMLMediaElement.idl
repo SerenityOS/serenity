@@ -2,4 +2,9 @@ interface HTMLMediaElement : HTMLElement {
 
     [Reflect] attribute DOMString src;
 
+    [Reflect] attribute boolean autoplay;
+    [Reflect] attribute boolean loop;
+
+    [Reflect] attribute boolean controls;
+
 }

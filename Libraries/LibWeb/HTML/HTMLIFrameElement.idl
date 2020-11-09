@@ -6,6 +6,7 @@ interface HTMLIFrameElement : HTMLElement {
     [Reflect] attribute DOMString allow;
     [Reflect] attribute DOMString width;
     [Reflect] attribute DOMString height;
+    [Reflect=allowfullscreen] attribute boolean allowFullscreen;
 
     [ReturnNullIfCrossOrigin] readonly attribute Document? contentDocument;
 }
