@@ -72,3 +72,7 @@
 #define PTHREAD_STACK_MIN 65536
 
 #define SSIZE_MAX 2147483647
+
+#ifdef __USE_POSIX
+#    include <bits/posix1_lim.h>
+#endif
