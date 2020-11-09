@@ -384,6 +384,44 @@ void FormatBuilder::put_i64(
     put_u64(static_cast<size_t>(value), base, prefix, upper_case, zero_pad, align, min_width, fill, sign_mode, is_negative);
 }
 
+#ifndef KERNEL
+void FormatBuilder::put_f64(
+    double value,
+    u8 base,
+    bool upper_case,
+    Align align,
+    size_t min_width,
+    size_t precision,
+    char fill,
+    SignMode sign_mode)
+{
+    StringBuilder string_builder;
+    FormatBuilder format_builder { string_builder };
+
+    format_builder.put_i64(static_cast<i64>(value), base, false, upper_case, false, Align::Right, 0, ' ', sign_mode);
+    string_builder.append('.');
+
+    if (precision > 0) {
+        // FIXME: This is a terrible approximation but doing it properly would be a lot of work. If someone is up for that, a good
+        // place to start would be the following video from CppCon 2019:
+        // https://youtu.be/4P_kbF0EbZM (Stephan T. Lavavej “Floating-Point <charconv>: Making Your Code 10x Faster With C++17's Final Boss”)
+        value -= static_cast<i64>(value);
+
+        if (value < 0)
+            value = -value;
+
+        for (u32 i = 0; i < precision; ++i)
+            value *= 10;
+
+        format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, true, Align::Right, precision);
+
+        // FIXME: Cut off trailing zeroes by default?
+    }
+
+    put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
+}
+#endif
+
 void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams params)
 {
     FormatBuilder fmtbuilder { builder };
@@ -463,6 +501,12 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
         m_mode = Mode::String;
     else if (parser.consume_specific('p'))
         m_mode = Mode::Pointer;
+    else if (parser.consume_specific('f'))
+        m_mode = Mode::Float;
+    else if (parser.consume_specific('a'))
+        m_mode = Mode::Hexfloat;
+    else if (parser.consume_specific('A'))
+        m_mode = Mode::HexfloatUppercase;
 
     if (!parser.is_eof())
         dbgln("{} did not consume '{}'", __PRETTY_FUNCTION__, parser.remaining());
@@ -570,6 +614,35 @@ void Formatter<bool>::format(TypeErasedFormatParams& params, FormatBuilder& buil
         return formatter.format(params, builder, value ? "true" : "false");
     }
 }
+#ifndef KERNEL
+void Formatter<double>::format(TypeErasedFormatParams& params, FormatBuilder& builder, double value)
+{
+    u8 base;
+    bool upper_case;
+    if (m_mode == Mode::Default || m_mode == Mode::Float) {
+        base = 10;
+        upper_case = false;
+    } else if (m_mode == Mode::Hexfloat) {
+        base = 16;
+        upper_case = false;
+    } else if (m_mode == Mode::HexfloatUppercase) {
+        base = 16;
+        upper_case = true;
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    const auto width = params.decode(m_width);
+    const auto precision = params.decode(m_precision, 6);
+
+    builder.put_f64(value, base, upper_case, m_align, width, precision, m_fill, m_sign_mode);
+}
+void Formatter<float>::format(TypeErasedFormatParams& params, FormatBuilder& builder, float value)
+{
+    Formatter<double> formatter { *this };
+    formatter.format(params, builder, value);
+}
+#endif
 
 #ifndef KERNEL
 void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams params, bool newline)
