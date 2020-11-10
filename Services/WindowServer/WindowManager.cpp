@@ -1306,8 +1306,14 @@ const Cursor& WindowManager::active_cursor() const
         }
     }
 
-    if (m_hovered_window && m_hovered_window->cursor())
-        return *m_hovered_window->cursor();
+    if (m_hovered_window) {
+        if (auto* modal_window = const_cast<Window&>(*m_hovered_window).is_blocked_by_modal_window()) {
+            if (modal_window->cursor())
+                return *modal_window->cursor();
+        } else if (m_hovered_window->cursor()) {
+            return *m_hovered_window->cursor();
+        }
+    }
 
     return *m_arrow_cursor;
 }
