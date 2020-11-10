@@ -55,8 +55,10 @@ static bool flag_colorize = false;
 static bool flag_long = false;
 static bool flag_show_dotfiles = false;
 static bool flag_show_almost_all_dotfiles = false;
+static bool flag_ignore_backups = false;
 static bool flag_show_inode = false;
 static bool flag_print_numeric = false;
+static bool flag_hide_group = false;
 static bool flag_human_readable = false;
 static bool flag_sort_by_timestamp = false;
 static bool flag_reverse_sort = false;
@@ -99,12 +101,14 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_show_dotfiles, "Show dotfiles", "all", 'a');
     args_parser.add_option(flag_show_almost_all_dotfiles, "Do not list implied . and .. directories", nullptr, 'A');
+    args_parser.add_option(flag_ignore_backups, "Do not list implied entries ending with ~", "--ignore-backups", 'B');
     args_parser.add_option(flag_long, "Display long info", "long", 'l');
     args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't');
     args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
     args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');
     args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
     args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
+    args_parser.add_option(flag_hide_group, "In long format, do not show group information", nullptr, 'o');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
@@ -277,16 +281,19 @@ static bool print_filesystem_object(const String& path, const String& name, cons
         printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
 
     auto username = users.get(st.st_uid);
-    auto groupname = groups.get(st.st_gid);
     if (!flag_print_numeric && username.has_value()) {
         printf(" %7s", username.value().characters());
     } else {
         printf(" %7u", st.st_uid);
     }
-    if (!flag_print_numeric && groupname.has_value()) {
-        printf(" %7s", groupname.value().characters());
-    } else {
-        printf(" %7u", st.st_gid);
+
+    if (!flag_hide_group) {
+        auto groupname = groups.get(st.st_gid);
+        if (!flag_print_numeric && groupname.has_value()) {
+            printf(" %7s", groupname.value().characters());
+        } else {
+            printf(" %7u", st.st_gid);
+        }
     }
 
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode)) {
@@ -349,6 +356,9 @@ static int do_file_system_object_long(const char* path)
                     continue;
             }
         }
+
+        if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
+            continue;
 
         StringBuilder builder;
         builder.append(path);
@@ -431,6 +441,9 @@ int do_file_system_object_short(const char* path)
                     continue;
             }
         }
+
+        if (name.ends_with('~') && flag_ignore_backups && name != path)
+            continue;
 
         names.append(name);
         if (names.last().length() > longest_name)

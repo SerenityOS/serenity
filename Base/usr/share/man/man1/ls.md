@@ -19,12 +19,14 @@ If no *path* argument is provided the current working directory is used.
 * `--help`: Display this message
 * `-a`, `--all`: Show dotfiles
 * `-A`: Do not list implied . and .. directories
+* `-B`, --ignore-backups`: Do not list implied entries ending with ~
 * `-l`, `--long`: Display long info
 * `-t`: Sort files by timestamp
 * `-r`, `--reverse`: Reverse sort order
 * `-G`: Use pretty colors
 * `-i`, `--inode`: Show inode ids
 * `-n`, `--numeric-uid-gid`: In long format, display numeric UID/GID
+* `-o`, In long format, do not show group information
 * `-h`, `--human-readable`: Print human-readable sizes
 * `-K`, `--no-hyperlinks`: Disable hyperlinks
 
