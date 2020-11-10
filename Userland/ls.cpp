@@ -56,6 +56,7 @@ static bool flag_long = false;
 static bool flag_show_dotfiles = false;
 static bool flag_show_almost_all_dotfiles = false;
 static bool flag_ignore_backups = false;
+static bool flag_list_directories_only = false;
 static bool flag_show_inode = false;
 static bool flag_print_numeric = false;
 static bool flag_hide_group = false;
@@ -102,6 +103,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_show_dotfiles, "Show dotfiles", "all", 'a');
     args_parser.add_option(flag_show_almost_all_dotfiles, "Do not list implied . and .. directories", nullptr, 'A');
     args_parser.add_option(flag_ignore_backups, "Do not list implied entries ending with ~", "--ignore-backups", 'B');
+    args_parser.add_option(flag_list_directories_only, "List directories themselves, not their contents", "directory", 'd');
     args_parser.add_option(flag_long, "Display long info", "long", 'l');
     args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't');
     args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
@@ -316,7 +318,26 @@ static bool print_filesystem_object(const String& path, const String& name, cons
 
 static int do_file_system_object_long(const char* path)
 {
-    Core::DirIterator di(path, !flag_show_dotfiles ? Core::DirIterator::SkipDots : Core::DirIterator::Flags::NoFlags);
+    if (flag_list_directories_only) {
+        struct stat stat;
+        int rc = lstat(path, &stat);
+        if (rc < 0) {
+            perror("lstat");
+            memset(&stat, 0, sizeof(stat));
+        }
+        if (print_filesystem_object(path, path, stat))
+            return 0;
+        return 2;
+    }
+
+    auto flags = Core::DirIterator::SkipDots;
+    if (flag_show_dotfiles)
+        flags = Core::DirIterator::Flags::NoFlags;
+    if (flag_show_almost_all_dotfiles)
+        flags = Core::DirIterator::SkipParentAndBaseDir;
+
+    Core::DirIterator di(path, flags);
+
     if (di.has_error()) {
         if (di.error() == ENOTDIR) {
             struct stat stat;
@@ -344,18 +365,6 @@ static int do_file_system_object_long(const char* path)
         FileMetadata metadata;
         metadata.name = di.next_path();
         ASSERT(!metadata.name.is_empty());
-
-        if (metadata.name[0] == '.') {
-            if (!flag_show_dotfiles)
-                continue;
-            if (flag_show_almost_all_dotfiles) {
-                // skip '.' and '..' directories
-                if (metadata.name.length() == 1)
-                    continue;
-                if (metadata.name.length() == 2 && metadata.name[1] == '.')
-                    continue;
-            }
-        }
 
         if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
             continue;
@@ -411,7 +420,20 @@ static bool print_filesystem_object_short(const char* path, const char* name, si
 
 int do_file_system_object_short(const char* path)
 {
-    Core::DirIterator di(path, !flag_show_dotfiles ? Core::DirIterator::SkipDots : Core::DirIterator::Flags::NoFlags);
+    if (flag_list_directories_only) {
+        size_t nprinted = 0;
+        if (print_filesystem_object_short(path, path, &nprinted))
+            return 0;
+        return 2;
+    }
+
+    auto flags = Core::DirIterator::SkipDots;
+    if (flag_show_dotfiles)
+        flags = Core::DirIterator::Flags::NoFlags;
+    if (flag_show_almost_all_dotfiles)
+        flags = Core::DirIterator::SkipParentAndBaseDir;
+
+    Core::DirIterator di(path, flags);
     if (di.has_error()) {
         if (di.error() == ENOTDIR) {
             size_t nprinted = 0;
@@ -429,18 +451,6 @@ int do_file_system_object_short(const char* path)
     size_t longest_name = 0;
     while (di.has_next()) {
         String name = di.next_path();
-
-        if (name[0] == '.') {
-            if (!flag_show_dotfiles)
-                continue;
-            if (flag_show_almost_all_dotfiles) {
-                // skip '.' and '..' directories
-                if (name.length() == 1)
-                    continue;
-                if (name.length() == 2 && name[1] == '.')
-                    continue;
-            }
-        }
 
         if (name.ends_with('~') && flag_ignore_backups && name != path)
             continue;

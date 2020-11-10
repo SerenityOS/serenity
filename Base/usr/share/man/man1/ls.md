@@ -19,7 +19,8 @@ If no *path* argument is provided the current working directory is used.
 * `--help`: Display this message
 * `-a`, `--all`: Show dotfiles
 * `-A`: Do not list implied . and .. directories
-* `-B`, --ignore-backups`: Do not list implied entries ending with ~
+* `-B`, `--ignore-backups`: Do not list implied entries ending with ~
+* `-d`, `--directory`: List directories themselves, not their contents
 * `-l`, `--long`: Display long info
 * `-t`: Sort files by timestamp
 * `-r`, `--reverse`: Reverse sort order
