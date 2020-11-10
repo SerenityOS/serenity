@@ -165,7 +165,8 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
 #endif
     }
 
-    if (!action) {
+    // NOTE: Application-global shortcuts are ignored while a modal window is up.
+    if (!action && !window->is_modal()) {
         action = Application::the()->action_for_key_event(*key_event);
 #ifdef KEYBOARD_SHORTCUTS_DEBUG
         dbg() << "  > Asked application, got action: " << action;
