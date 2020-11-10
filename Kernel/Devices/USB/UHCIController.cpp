@@ -25,8 +25,10 @@
  */
 
 #include <Kernel/Devices/USB/UHCIController.h>
+#include <Kernel/StdLib.h>
+#include <Kernel/VM/MemoryManager.h>
 
-#define UHCI_ENABLED 0
+#define UHCI_ENABLED 1
 
 namespace Kernel::USB {
 
@@ -45,6 +47,11 @@ static constexpr u16 UHCI_USBSTS_PCI_BUS_ERROR = 0x0008;
 static constexpr u16 UHCI_USBSTS_RESUME_RECEIVED = 0x0004;
 static constexpr u16 UHCI_USBSTS_USB_ERROR_INTERRUPT = 0x0002;
 static constexpr u16 UHCI_USBSTS_USB_INTERRUPT = 0x0001;
+
+static constexpr u8 UHCI_USBINTR_TIMEOUT_CRC_ENABLE = 0x01;
+static constexpr u8 UHCI_USBINTR_RESUME_INTR_ENABLE = 0x02;
+static constexpr u8 UHCI_USBINTR_IOC_ENABLE = 0x04;
+static constexpr u8 UHCI_USBINTR_SHORT_PACKET_INTR_ENABLE = 0x08;
 
 void UHCIController::detect()
 {
@@ -90,6 +97,17 @@ void UHCIController::reset()
         break;
     }
 
+    // Let's allocate the physical page for the Frame List (which is 4KiB aligned)
+    m_framelist = MemoryManager::the().allocate_supervisor_physical_page()->paddr();
+    klog() << "UHCI: Allocated framelist at physical address " << m_framelist;
+    memset(reinterpret_cast<u32*>(low_physical_to_virtual(m_framelist.as_ptr())), 1, 1024); // All frames are TERMINATE frames
+
+    write_sofmod(64);                   // 1mS frame time
+    write_flbaseadd(m_framelist.get()); // Frame list (physical) address
+    write_frnum(0);                     // Set the initial frame number
+
+    // Enable all interrupt types
+    write_frnum(UHCI_USBINTR_TIMEOUT_CRC_ENABLE | UHCI_USBINTR_RESUME_INTR_ENABLE | UHCI_USBINTR_IOC_ENABLE | UHCI_USBINTR_SHORT_PACKET_INTR_ENABLE);
     klog() << "UHCI: Reset completed!";
 }
 

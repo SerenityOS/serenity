@@ -64,6 +64,7 @@ private:
     virtual void handle_irq(const RegisterState&) override;
 
     IOAddress m_io_base;
+    PhysicalAddress m_framelist;
 };
 
 }
