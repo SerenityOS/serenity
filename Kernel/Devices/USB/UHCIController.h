@@ -29,7 +29,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Device.h>
 
-namespace Kernel {
+namespace Kernel::USB {
 
 class UHCIController final : public PCI::Device {
 public:
