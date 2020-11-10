@@ -45,6 +45,8 @@ Game::~Game()
 
 void Game::reset_paddle()
 {
+    m_paddle.moving_left = false;
+    m_paddle.moving_right = false;
     m_paddle.rect = { game_width / 2 - 40, game_height - 20, 80, 16 };
 }
 
