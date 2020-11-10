@@ -26,13 +26,17 @@
 
 #include "Game.h"
 #include <LibGUI/Application.h>
+#include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Bitmap.h>
 
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
     auto window = GUI::Window::construct();
     window->resize(Breakout::Game::game_width, Breakout::Game::game_height);
+    auto app_icon = GUI::Icon::default_icon("app-breakout");
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Breakout");
     window->set_double_buffering_enabled(false);
     window->set_main_widget<Breakout::Game>();
