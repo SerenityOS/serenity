@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     }
 
     auto window = GUI::Window::construct();
-    window->set_double_buffering_enabled(true);
+    window->set_double_buffering_enabled(false);
     window->set_title("Screensaver");
     window->set_resizable(false);
     window->set_fullscreen(true);
@@ -164,6 +164,8 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-screensaver");
     window->set_icon(app_icon.bitmap_for_size(16));
+    window->set_cursor(Gfx::StandardCursor::Hidden);
+    window->update();
 
     return app->exec();
 }
