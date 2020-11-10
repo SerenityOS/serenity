@@ -113,6 +113,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    bool adjust_time = false;
     bool set_time = false;
     bool verbose = false;
     // FIXME: Change to serenityos.pool.ntp.org once https://manage.ntppool.org/manage/vendor/zone?a=km5a8h&id=vz-14154g is approved.
@@ -127,12 +128,18 @@ int main(int argc, char** argv)
     // - time.google.com , https://developers.google.com/time/smear , linear-smears over 24 hours
     const char* host = "time.google.com";
     Core::ArgsParser args_parser;
-    args_parser.add_option(set_time, "Adjust system time (requires root)", "set", 's');
+    args_parser.add_option(adjust_time, "Gradually adjust system time (requires root)", "adjust", 'a');
+    args_parser.add_option(set_time, "Immediately set system time (requires root)", "set", 's');
     args_parser.add_option(verbose, "Verbose output", "verbose", 'v');
     args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    if (!set_time) {
+    if (adjust_time && set_time) {
+        fprintf(stderr, "-a and -s are mutually exclusive\n");
+        return 1;
+    }
+
+    if (!adjust_time && !set_time) {
         if (pledge("stdio inet dns", nullptr) < 0) {
             perror("pledge");
             return 1;
@@ -145,7 +152,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge(set_time ? "stdio inet settime" : "stdio inet", nullptr) < 0) {
+    if (pledge((adjust_time || set_time) ? "stdio inet settime" : "stdio inet", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -311,4 +318,19 @@ int main(int argc, char** argv)
     if (verbose)
         printf("Delay: %f\n", delay_s);
     printf("Offset: %f\n", offset_s);
+
+    if (adjust_time) {
+        long delta_us = static_cast<long>(round(offset_s * 1'000'000));
+        timeval delta_timeval;
+        delta_timeval.tv_sec = delta_us / 1'000'000;
+        delta_timeval.tv_usec = delta_us % 1'000'000;
+        if (delta_timeval.tv_usec < 0) {
+            delta_timeval.tv_sec--;
+            delta_timeval.tv_usec += 1'000'000;
+        }
+        if (adjtime(&delta_timeval, nullptr) < 0) {
+            perror("adjtime set");
+            return 1;
+        }
+    }
 }
