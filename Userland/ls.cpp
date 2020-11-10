@@ -54,6 +54,7 @@ static int do_file_system_object_short(const char* path);
 static bool flag_colorize = false;
 static bool flag_long = false;
 static bool flag_show_dotfiles = false;
+static bool flag_show_almost_all_dotfiles = false;
 static bool flag_show_inode = false;
 static bool flag_print_numeric = false;
 static bool flag_human_readable = false;
@@ -97,6 +98,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_show_dotfiles, "Show dotfiles", "all", 'a');
+    args_parser.add_option(flag_show_almost_all_dotfiles, "Do not list implied . and .. directories", nullptr, 'A');
     args_parser.add_option(flag_long, "Display long info", "long", 'l');
     args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't');
     args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
@@ -107,6 +109,9 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    if (flag_show_almost_all_dotfiles)
+        flag_show_dotfiles = true;
 
     if (flag_long) {
         setpwent();
@@ -332,8 +337,19 @@ static int do_file_system_object_long(const char* path)
         FileMetadata metadata;
         metadata.name = di.next_path();
         ASSERT(!metadata.name.is_empty());
-        if (metadata.name[0] == '.' && !flag_show_dotfiles)
-            continue;
+
+        if (metadata.name[0] == '.') {
+            if (!flag_show_dotfiles)
+                continue;
+            if (flag_show_almost_all_dotfiles) {
+                // skip '.' and '..' directories
+                if (metadata.name.length() == 1)
+                    continue;
+                if (metadata.name.length() == 2 && metadata.name[1] == '.')
+                    continue;
+            }
+        }
+
         StringBuilder builder;
         builder.append(path);
         builder.append('/');
@@ -403,6 +419,19 @@ int do_file_system_object_short(const char* path)
     size_t longest_name = 0;
     while (di.has_next()) {
         String name = di.next_path();
+
+        if (name[0] == '.') {
+            if (!flag_show_dotfiles)
+                continue;
+            if (flag_show_almost_all_dotfiles) {
+                // skip '.' and '..' directories
+                if (name.length() == 1)
+                    continue;
+                if (name.length() == 2 && name[1] == '.')
+                    continue;
+            }
+        }
+
         names.append(name);
         if (names.last().length() > longest_name)
             longest_name = name.length();
