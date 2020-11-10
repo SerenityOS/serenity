@@ -243,7 +243,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
     m_terminal.handle_key_press(event.key(), event.code_point(), event.modifiers());
 
     if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_LeftShift && event.key() != Key_RightShift && event.key() != Key_Logo)
-        m_scrollbar->set_value(m_scrollbar->max());
+        scroll_to_bottom();
 }
 
 void TerminalWidget::keyup_event(GUI::KeyEvent& event)
@@ -884,4 +884,9 @@ void TerminalWidget::did_change_font()
 void TerminalWidget::clear_including_history()
 {
     m_terminal.clear_including_history();
+}
+
+void TerminalWidget::scroll_to_bottom()
+{
+    m_scrollbar->set_value(m_scrollbar->max());
 }
