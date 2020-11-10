@@ -246,7 +246,7 @@ void init_stage2(void*)
         }
     }
 
-    UHCIController::detect();
+    USB::UHCIController::detect();
 
     E1000NetworkAdapter::detect();
     RTL8139NetworkAdapter::detect();
