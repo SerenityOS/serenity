@@ -100,8 +100,6 @@ private:
     void mark_live_cells(const HashTable<Cell*>& live_cells);
     void sweep_dead_cells(bool print_report, const Core::ElapsedTimer&);
 
-    Cell* cell_from_possible_pointer(FlatPtr);
-
     Allocator& allocator_for_size(size_t);
 
     template<typename Callback>
