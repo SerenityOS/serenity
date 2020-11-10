@@ -34,6 +34,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->resize(Breakout::Game::game_width, Breakout::Game::game_height);
     window->set_title("Breakout");
+    window->set_double_buffering_enabled(false);
     window->set_main_widget<Breakout::Game>();
     window->show();
     return app->exec();
