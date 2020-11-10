@@ -505,10 +505,10 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_terminal_action()
     return GUI::Action::create("Add new Terminal", { Mod_Ctrl | Mod_Alt, Key_T },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"),
         [this](auto&) {
-            auto& terminal = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal");
-            reveal_action_tab(terminal);
+            auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal");
+            reveal_action_tab(terminal_wrapper);
             update_actions();
-            terminal.terminal()->set_focus(true);
+            terminal_wrapper.terminal().set_focus(true);
         });
 }
 
