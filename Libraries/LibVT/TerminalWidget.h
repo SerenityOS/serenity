@@ -73,6 +73,8 @@ public:
     VT::Position normalized_selection_start() const;
     VT::Position normalized_selection_end() const;
 
+    void scroll_to_bottom();
+
     bool is_scrollable() const;
     int scroll_length() const;
     void set_scroll_length(int);
