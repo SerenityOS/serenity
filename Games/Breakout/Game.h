@@ -57,27 +57,28 @@ private:
     void win();
 
     struct Ball {
-        int x { 0 };
-        int y { 0 };
-        int radius { 8 };
-        int vx { 0 };
-        int vy { 0 };
+        Gfx::FloatPoint position;
+        Gfx::FloatPoint velocity;
+        float radius { 8 };
 
-        Gfx::IntRect rect() const
+        float x() const { return position.x(); }
+        float y() const { return position.y(); }
+
+        Gfx::FloatRect rect() const
         {
-            return { x - radius, y - radius, radius * 2, radius * 2 };
+            return { x() - radius, y() - radius, radius * 2, radius * 2 };
         }
     };
 
     struct Paddle {
-        Gfx::IntRect rect;
-        int speed { 5 };
+        Gfx::FloatRect rect;
+        float speed { 5 };
         bool moving_left { false };
         bool moving_right { false };
     };
 
     struct Brick {
-        Gfx::IntRect rect;
+        Gfx::FloatRect rect;
         Gfx::Color color;
         bool dead { false };
     };
