@@ -25,8 +25,11 @@
  */
 
 #include "Game.h"
+#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/MenuBar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
@@ -41,5 +44,21 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
     window->set_main_widget<Breakout::Game>();
     window->show();
+
+    auto menubar = GUI::MenuBar::construct();
+
+    auto& app_menu = menubar->add_menu("Breakout");
+    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the()->quit();
+        return;
+    }));
+
+    auto& help_menu = menubar->add_menu("Help");
+    help_menu.add_action(GUI::Action::create("About", [&](const GUI::Action&) {
+        GUI::AboutDialog::show("Breakout", app_icon.bitmap_for_size(32), window);
+    }));
+
+    app->set_menubar(move(menubar));
+
     return app->exec();
 }
