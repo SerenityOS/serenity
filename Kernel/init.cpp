@@ -39,7 +39,7 @@
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
-#include <Kernel/Devices/UHCIController.h>
+#include <Kernel/Devices/USB/UHCIController.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
