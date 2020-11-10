@@ -100,13 +100,13 @@ void Game::paint_event(GUI::PaintEvent& event)
 
     painter.fill_rect(rect(), Color::Black);
 
-    painter.fill_ellipse(m_ball.rect(), Color::Red);
+    painter.fill_ellipse(enclosing_int_rect(m_ball.rect()), Color::Red);
 
-    painter.fill_rect(m_paddle.rect, Color::White);
+    painter.fill_rect(enclosing_int_rect(m_paddle.rect), Color::White);
 
     for (auto& brick : m_bricks) {
         if (!brick.dead)
-            painter.fill_rect(brick.rect, brick.color);
+            painter.fill_rect(enclosing_int_rect(brick.rect), brick.color);
     }
 }
 
@@ -143,8 +143,8 @@ void Game::keydown_event(GUI::KeyEvent& event)
 
 void Game::mousemove_event(GUI::MouseEvent& event)
 {
-    int new_paddle_x = event.x() - m_paddle.rect.width() / 2;
-    new_paddle_x = max(0, new_paddle_x);
+    float new_paddle_x = event.x() - m_paddle.rect.width() / 2;
+    new_paddle_x = max(0.0f, new_paddle_x);
     new_paddle_x = min(game_width - m_paddle.rect.width(), new_paddle_x);
     m_paddle.rect.set_x(new_paddle_x);
 }
@@ -152,10 +152,8 @@ void Game::mousemove_event(GUI::MouseEvent& event)
 void Game::reset_ball()
 {
     m_ball = {};
-    m_ball.x = 150;
-    m_ball.y = 200;
-    m_ball.vx = 3;
-    m_ball.vy = 3;
+    m_ball.position = { 150, 200 };
+    m_ball.velocity = { 3, 3 };
 }
 
 void Game::hurt()
@@ -178,27 +176,26 @@ void Game::win()
 void Game::tick()
 {
     auto new_ball = m_ball;
-    new_ball.x += new_ball.vx;
-    new_ball.y += new_ball.vy;
+    new_ball.position += new_ball.velocity;
 
-    if (new_ball.x < new_ball.radius || new_ball.x > game_width - new_ball.radius) {
-        new_ball.x = m_ball.x;
-        new_ball.vx *= -1;
+    if (new_ball.x() < new_ball.radius || new_ball.x() > game_width - new_ball.radius) {
+        new_ball.position.set_x(m_ball.x());
+        new_ball.velocity.set_x(new_ball.velocity.x() * -1);
     }
 
-    if (new_ball.y < new_ball.radius) {
-        new_ball.y = m_ball.y;
-        new_ball.vy *= -1;
+    if (new_ball.y() < new_ball.radius) {
+        new_ball.position.set_y(m_ball.y());
+        new_ball.velocity.set_y(new_ball.velocity.y() * -1);
     }
 
-    if (new_ball.y > game_height - new_ball.radius) {
+    if (new_ball.y() > game_height - new_ball.radius) {
         hurt();
         return;
     }
 
     if (new_ball.rect().intersects(m_paddle.rect)) {
-        new_ball.y = m_ball.y;
-        new_ball.vy *= -1;
+        new_ball.position.set_y(m_ball.y());
+        new_ball.velocity.set_y(new_ball.velocity.y() * -1);
     }
 
     for (auto& brick : m_bricks) {
@@ -209,11 +206,11 @@ void Game::tick()
 
             auto overlap = new_ball.rect().intersected(brick.rect);
             if (overlap.width() < overlap.height()) {
-                new_ball.x = m_ball.x;
-                new_ball.vx *= -1;
+                new_ball.position.set_x(m_ball.x());
+                new_ball.velocity.set_x(new_ball.velocity.x() * -1);
             } else {
-                new_ball.y = m_ball.y;
-                new_ball.vy *= -1;
+                new_ball.position.set_y(m_ball.y());
+                new_ball.velocity.set_y(new_ball.velocity.y() * -1);
             }
             break;
         }
@@ -233,7 +230,7 @@ void Game::tick()
     }
 
     if (m_paddle.moving_left) {
-        m_paddle.rect.set_x(max(0, m_paddle.rect.x() - m_paddle.speed));
+        m_paddle.rect.set_x(max(0.0f, m_paddle.rect.x() - m_paddle.speed));
     }
     if (m_paddle.moving_right) {
         m_paddle.rect.set_x(min(game_width - m_paddle.rect.width(), m_paddle.rect.x() + m_paddle.speed));
