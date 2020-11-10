@@ -41,7 +41,7 @@ public:
     void kill_running_command();
 
     bool user_spawned() const { return m_user_spawned; }
-    TerminalWidget* terminal() { return m_terminal_widget; }
+    TerminalWidget& terminal() { return *m_terminal_widget; }
 
     Function<void()> on_command_exit;
 
