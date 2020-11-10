@@ -151,41 +151,34 @@ void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
         possible_pointers.set(data);
     }
 
+    HashTable<HeapBlock*> all_live_heap_blocks;
+    for_each_block([&](auto& block) {
+        all_live_heap_blocks.set(&block);
+        return IterationDecision::Continue;
+    });
+
     for (auto possible_pointer : possible_pointers) {
         if (!possible_pointer)
             continue;
 #ifdef HEAP_DEBUG
         dbg() << "  ? " << (const void*)possible_pointer;
 #endif
-        if (auto* cell = cell_from_possible_pointer(possible_pointer)) {
-            if (cell->is_live()) {
+        auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(possible_pointer));
+        if (all_live_heap_blocks.contains(possible_heap_block)) {
+            if (auto* cell = possible_heap_block->cell_from_possible_pointer(possible_pointer)) {
+                if (cell->is_live()) {
 #ifdef HEAP_DEBUG
-                dbg() << "  ?-> " << (const void*)cell;
+                    dbg() << "  ?-> " << (const void*)cell;
 #endif
-                roots.set(cell);
-            } else {
+                    roots.set(cell);
+                } else {
 #ifdef HEAP_DEBUG
-                dbg() << "  #-> " << (const void*)cell;
+                    dbg() << "  #-> " << (const void*)cell;
 #endif
+                }
             }
         }
     }
-}
-
-Cell* Heap::cell_from_possible_pointer(FlatPtr pointer)
-{
-    auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(pointer));
-    bool found = false;
-    for_each_block([&](auto& block) {
-        if (&block == possible_heap_block) {
-            found = true;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    if (!found)
-        return nullptr;
-    return possible_heap_block->cell_from_possible_pointer(pointer);
 }
 
 class MarkingVisitor final : public Cell::Visitor {
