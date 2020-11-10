@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/Devices/UHCIController.h>
+#include <Kernel/Devices/USB/UHCIController.h>
 
 #define UHCI_ENABLED 0
 
