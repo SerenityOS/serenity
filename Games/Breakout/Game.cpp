@@ -198,6 +198,10 @@ void Game::tick()
     if (new_ball.rect().intersects(m_paddle.rect)) {
         new_ball.position.set_y(m_ball.y());
         new_ball.velocity.set_y(new_ball.velocity.y() * -1);
+
+        float distance_to_middle_of_paddle = new_ball.x() - m_paddle.rect.center().x();
+        float relative_impact_point = distance_to_middle_of_paddle / m_paddle.rect.width();
+        new_ball.velocity.set_x(relative_impact_point * 7);
     }
 
     for (auto& brick : m_bricks) {
