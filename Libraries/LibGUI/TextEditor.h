@@ -154,6 +154,7 @@ public:
 
     void add_custom_context_menu_action(Action&);
 
+    void set_cursor_and_focus_line(size_t line, size_t column);
     void set_cursor(size_t line, size_t column);
     void set_cursor(const TextPosition&);
 
