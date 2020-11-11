@@ -158,6 +158,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(const ByteBu
     if (url.protocol() == "http" || url.protocol() == "https" || url.protocol() == "gemini") {
         HashMap<String, String> headers;
         headers.set("User-Agent", m_user_agent);
+        headers.set("Accept-Encoding", "gzip");
 
         for (auto& it : request.headers()) {
             headers.set(it.key, it.value);
