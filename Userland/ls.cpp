@@ -51,6 +51,7 @@
 static int do_file_system_object_long(const char* path);
 static int do_file_system_object_short(const char* path);
 
+static bool flag_classify = false;
 static bool flag_colorize = false;
 static bool flag_long = false;
 static bool flag_show_dotfiles = false;
@@ -107,6 +108,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_long, "Display long info", "long", 'l');
     args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't');
     args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
+    args_parser.add_option(flag_classify, "Append a file type indicator to entries", "classify", 'F');
     args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');
     args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
     args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
@@ -230,12 +232,15 @@ static size_t print_name(const struct stat& st, const String& name, const char* 
                 nprinted += printf(" -> ") + print_escaped(link_destination.characters());
             }
         } else {
-            nprinted += printf("@");
+            if (flag_classify)
+                nprinted += printf("@");
         }
     } else if (S_ISDIR(st.st_mode)) {
-        nprinted += printf("/");
+        if (flag_classify)
+            nprinted += printf("/");
     } else if (st.st_mode & 0111) {
-        nprinted += printf("*");
+        if (flag_classify)
+            nprinted += printf("*");
     }
 
     if (!flag_disable_hyperlinks) {
