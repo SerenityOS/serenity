@@ -422,7 +422,9 @@ int do_file_system_object_short(const char* path)
 {
     if (flag_list_directories_only) {
         size_t nprinted = 0;
-        if (print_filesystem_object_short(path, path, &nprinted))
+        bool status = print_filesystem_object_short(path, path, &nprinted);
+        printf("\n");
+        if (status)
             return 0;
         return 2;
     }
