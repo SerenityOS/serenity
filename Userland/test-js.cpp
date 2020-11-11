@@ -106,6 +106,7 @@ private:
     virtual const char* class_name() const override { return "TestRunnerGlobalObject"; }
 
     JS_DECLARE_NATIVE_FUNCTION(is_strict_mode);
+    JS_DECLARE_NATIVE_FUNCTION(can_parse_source);
 };
 
 class TestRunner {
@@ -159,13 +160,25 @@ void TestRunnerGlobalObject::initialize()
     JS::GlobalObject::initialize();
     static FlyString global_property_name { "global" };
     static FlyString is_strict_mode_property_name { "isStrictMode" };
+    static FlyString can_parse_source_property_name { "canParseSource" };
     define_property(global_property_name, this, JS::Attribute::Enumerable);
     define_native_function(is_strict_mode_property_name, is_strict_mode);
+    define_native_function(can_parse_source_property_name, can_parse_source);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::is_strict_mode)
 {
     return JS::Value(vm.in_strict_mode());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::can_parse_source)
+{
+    auto source = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto parser = JS::Parser(JS::Lexer(source));
+    parser.parse_program();
+    return JS::Value(!parser.has_errors());
 }
 
 static void cleanup_and_exit()
