@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
     icon.set_fill_with_background_color(true);
     icon.on_click = [&main_window = *main_window] {
         main_window.show();
+        main_window.move_to_front();
     };
     applet_window->resize(16, 16);
     applet_window->show();
