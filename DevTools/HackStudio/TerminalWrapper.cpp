@@ -155,8 +155,10 @@ void TerminalWrapper::run_command(const String& command)
         ASSERT_NOT_REACHED();
     }
 
-    // (In parent process)
-    terminal().scroll_to_bottom();
+    if (pid > 0) {
+        // (In parent process)
+        terminal().scroll_to_bottom();
+    }
 }
 
 void TerminalWrapper::kill_running_command()
