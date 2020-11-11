@@ -110,7 +110,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
     return environment;
 }
 
-Value ScriptFunction::call()
+Value ScriptFunction::execute_function_body()
 {
     auto& vm = this->vm();
 
@@ -150,13 +150,22 @@ Value ScriptFunction::call()
     return interpreter->execute_statement(global_object(), m_body, move(arguments), ScopeType::Function);
 }
 
+Value ScriptFunction::call()
+{
+    if (m_is_class_constructor) {
+        vm().throw_exception<TypeError>(global_object(), ErrorType::ClassConstructorWithoutNew, m_name);
+        return {};
+    }
+    return execute_function_body();
+}
+
 Value ScriptFunction::construct(Function&)
 {
     if (m_is_arrow_function) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name);
         return {};
     }
-    return call();
+    return execute_function_body();
 }
 
 JS_DEFINE_NATIVE_GETTER(ScriptFunction::length_getter)
