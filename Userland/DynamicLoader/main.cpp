@@ -244,15 +244,17 @@ static void clear_temporary_objects_mappings()
 static FlatPtr loader_main(auxv_t* auxvp)
 {
     int main_program_fd = -1;
+    String main_program_name;
     for (; auxvp->a_type != AT_NULL; ++auxvp) {
         if (auxvp->a_type == AuxiliaryValue::ExecFileDescriptor) {
             main_program_fd = auxvp->a_un.a_val;
         }
+        if (auxvp->a_type == AuxiliaryValue::ExecFilename) {
+            main_program_name = (const char*)auxvp->a_un.a_ptr;
+        }
     }
     ASSERT(main_program_fd >= 0);
 
-    // TODO: Pass this in the auxiliary vector
-    const String main_program_name = "MainProgram";
     map_library(main_program_name, main_program_fd);
     map_dependencies(main_program_name);
 
