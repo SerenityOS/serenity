@@ -1,18 +1,18 @@
 test("Issue #1829, if-else without braces or semicolons", () => {
     const source = `if (1)
-    return 1;
+    foo;
 else
-    return 0;
+    bar;
 
 if (1)
-    return 1
+    foo
 else
-    return 0
+    bar
 
 if (1)
-    return 1
+    foo
 else
-    return 0;`;
+    bar;`;
 
     expect(source).toEval();
 });
