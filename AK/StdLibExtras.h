@@ -104,48 +104,48 @@ struct EnableIf {
 
 template<class T>
 struct EnableIf<true, T> {
-    typedef T Type;
+    using Type = T;
 };
 
 template<class T>
 struct AddConst {
-    typedef const T Type;
+    using Type = const T;
 };
 
 template<class T>
 struct RemoveConst {
-    typedef T Type;
+    using Type = T;
 };
 
 template<class T>
 struct RemoveConst<const T> {
-    typedef T Type;
+    using Type = T;
 };
 
 template<class T>
 struct RemoveVolatile {
-    typedef T Type;
+    using Type = T;
 };
 template<class T>
 struct RemoveVolatile<volatile T> {
-    typedef T Type;
+    using Type = T;
 };
 template<class T>
 struct RemoveCV {
-    typedef typename RemoveVolatile<typename RemoveConst<T>::Type>::Type Type;
+    using Type = typename RemoveVolatile<typename RemoveConst<T>::Type>::Type;
 };
 
 template<class T, T v>
 struct IntegralConstant {
     static constexpr T value = v;
-    typedef T ValueType;
-    typedef IntegralConstant Type;
+    using ValueType = T;
+    using Type = IntegralConstant;
     constexpr operator ValueType() const { return value; }
     constexpr ValueType operator()() const { return value; }
 };
 
-typedef IntegralConstant<bool, false> FalseType;
-typedef IntegralConstant<bool, true> TrueType;
+using FalseType = IntegralConstant<bool, false>;
+using TrueType = IntegralConstant<bool, true>;
 template<typename...>
 using VoidType = void;
 
@@ -257,23 +257,23 @@ struct IsRvalueReference<T&&> : TrueType {
 
 template<class T>
 struct RemovePointer {
-    typedef T Type;
+    using Type = T;
 };
 template<class T>
 struct RemovePointer<T*> {
-    typedef T Type;
+    using Type = T;
 };
 template<class T>
 struct RemovePointer<T* const> {
-    typedef T Type;
+    using Type = T;
 };
 template<class T>
 struct RemovePointer<T* volatile> {
-    typedef T Type;
+    using Type = T;
 };
 template<class T>
 struct RemovePointer<T* const volatile> {
-    typedef T Type;
+    using Type = T;
 };
 
 template<typename T, typename U>
@@ -292,12 +292,12 @@ struct IsSame<T, T> {
 
 template<bool condition, class TrueType, class FalseType>
 struct Conditional {
-    typedef TrueType Type;
+    using Type = TrueType;
 };
 
 template<class TrueType, class FalseType>
 struct Conditional<false, TrueType, FalseType> {
-    typedef FalseType Type;
+    using Type = FalseType;
 };
 
 template<typename T>
@@ -306,15 +306,15 @@ struct IsNullPointer : IsSame<decltype(nullptr), typename RemoveCV<T>::Type> {
 
 template<typename T>
 struct RemoveReference {
-    typedef T Type;
+    using Type = T;
 };
 template<class T>
 struct RemoveReference<T&> {
-    typedef T Type;
+    using Type = T;
 };
 template<class T>
 struct RemoveReference<T&&> {
-    typedef T Type;
+    using Type = T;
 };
 
 template<class T>
@@ -335,47 +335,47 @@ struct MakeUnsigned {
 };
 template<>
 struct MakeUnsigned<signed char> {
-    typedef unsigned char Type;
+    using Type = unsigned char;
 };
 template<>
 struct MakeUnsigned<short> {
-    typedef unsigned short Type;
+    using Type = unsigned short;
 };
 template<>
 struct MakeUnsigned<int> {
-    typedef unsigned Type;
+    using Type = unsigned int;
 };
 template<>
 struct MakeUnsigned<long> {
-    typedef unsigned long Type;
+    using Type = unsigned long;
 };
 template<>
 struct MakeUnsigned<long long> {
-    typedef unsigned long long Type;
+    using Type = unsigned long long;
 };
 template<>
 struct MakeUnsigned<unsigned char> {
-    typedef unsigned char Type;
+    using Type = unsigned char;
 };
 template<>
 struct MakeUnsigned<unsigned short> {
-    typedef unsigned short Type;
+    using Type = unsigned short;
 };
 template<>
 struct MakeUnsigned<unsigned int> {
-    typedef unsigned Type;
+    using Type = unsigned int;
 };
 template<>
 struct MakeUnsigned<unsigned long> {
-    typedef unsigned long Type;
+    using Type = unsigned long;
 };
 template<>
 struct MakeUnsigned<unsigned long long> {
-    typedef unsigned long long Type;
+    using Type = unsigned long long;
 };
 template<>
 struct MakeUnsigned<char> {
-    typedef unsigned char Type;
+    using Type = unsigned char;
 };
 
 template<typename T>
@@ -383,47 +383,47 @@ struct MakeSigned {
 };
 template<>
 struct MakeSigned<signed char> {
-    typedef signed char Type;
+    using Type = signed char;
 };
 template<>
 struct MakeSigned<short> {
-    typedef short Type;
+    using Type = short;
 };
 template<>
 struct MakeSigned<int> {
-    typedef int Type;
+    using Type = int;
 };
 template<>
 struct MakeSigned<long> {
-    typedef long Type;
+    using Type = long;
 };
 template<>
 struct MakeSigned<long long> {
-    typedef long long Type;
+    using Type = long long;
 };
 template<>
 struct MakeSigned<unsigned char> {
-    typedef char Type;
+    using Type = char;
 };
 template<>
 struct MakeSigned<unsigned short> {
-    typedef short Type;
+    using Type = short;
 };
 template<>
 struct MakeSigned<unsigned int> {
-    typedef int Type;
+    using Type = int;
 };
 template<>
 struct MakeSigned<unsigned long> {
-    typedef long Type;
+    using Type = long;
 };
 template<>
 struct MakeSigned<unsigned long long> {
-    typedef long long Type;
+    using Type = long long;
 };
 template<>
 struct MakeSigned<char> {
-    typedef signed char Type;
+    using Type = signed char;
 };
 
 template<class T>

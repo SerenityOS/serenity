@@ -61,7 +61,7 @@ private:
 
 class Utf8View {
 public:
-    typedef Utf8CodepointIterator Iterator;
+    using Iterator = Utf8CodepointIterator;
 
     Utf8View() { }
     explicit Utf8View(const String&);

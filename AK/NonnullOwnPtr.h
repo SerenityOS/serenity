@@ -45,7 +45,7 @@ class WeakPtr;
 template<typename T>
 class NonnullOwnPtr {
 public:
-    typedef T ElementType;
+    using ElementType = T;
 
     enum AdoptTag { Adopt };
 

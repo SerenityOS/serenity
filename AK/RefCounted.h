@@ -64,7 +64,7 @@ class RefCountedBase {
     AK_MAKE_NONMOVABLE(RefCountedBase);
 
 public:
-    typedef unsigned int RefCountType;
+    using RefCountType = unsigned int;
     using AllowOwnPtr = FalseType;
 
     ALWAYS_INLINE void ref() const
@@ -110,16 +110,6 @@ public:
         }
     }
 };
-
-static constexpr bool is_ref_counted(const RefCountedBase*)
-{
-    return true;
-}
-
-static constexpr bool is_ref_counted(...)
-{
-    return false;
-}
 
 }
 

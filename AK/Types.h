@@ -30,36 +30,36 @@
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 
-typedef __UINT64_TYPE__ u64;
-typedef __UINT32_TYPE__ u32;
-typedef __UINT16_TYPE__ u16;
-typedef __UINT8_TYPE__ u8;
-typedef __INT64_TYPE__ i64;
-typedef __INT32_TYPE__ i32;
-typedef __INT16_TYPE__ i16;
-typedef __INT8_TYPE__ i8;
+using u64 = __UINT64_TYPE__;
+using u32 = __UINT32_TYPE__;
+using u16 = __UINT16_TYPE__;
+using u8 = __UINT8_TYPE__;
+using i64 = __INT64_TYPE__;
+using i32 = __INT32_TYPE__;
+using i16 = __INT16_TYPE__;
+using i8 = __INT8_TYPE__;
 
 #ifdef __serenity__
 
-typedef __SIZE_TYPE__ size_t;
-typedef MakeSigned<size_t>::Type ssize_t;
+using size_t = __SIZE_TYPE__;
+using ssize_t = MakeSigned<size_t>::Type;
 
-typedef __PTRDIFF_TYPE__ ptrdiff_t;
+using ptrdiff_t = __PTRDIFF_TYPE__;
 
-typedef __INTPTR_TYPE__ intptr_t;
-typedef __UINTPTR_TYPE__ uintptr_t;
+using intptr_t = __INTPTR_TYPE__;
+using uintptr_t = __UINTPTR_TYPE__;
 
-typedef u8 uint8_t;
-typedef u16 uint16_t;
-typedef u32 uint32_t;
-typedef u64 uint64_t;
+using uint8_t = u8;
+using uint16_t = u16;
+using uint32_t = u32;
+using uint64_t = u64;
 
-typedef i8 int8_t;
-typedef i16 int16_t;
-typedef i32 int32_t;
-typedef i64 int64_t;
+using int8_t = i8;
+using int16_t = i16;
+using int32_t = i32;
+using int64_t = i64;
 
-typedef int pid_t;
+using pid_t = int;
 
 #else
 #    include <stddef.h>
@@ -67,19 +67,19 @@ typedef int pid_t;
 #    include <sys/types.h>
 
 #    ifdef __ptrdiff_t
-typedef __PTRDIFF_TYPE__ __ptrdiff_t;
+using __ptrdiff_t = __PTRDIFF_TYPE__;
 #    endif
 
 #endif
 
-typedef Conditional<sizeof(void*) == 8, u64, u32>::Type FlatPtr;
+using FlatPtr = Conditional<sizeof(void*) == 8, u64, u32>::Type;
 
 constexpr unsigned KiB = 1024;
 constexpr unsigned MiB = KiB * KiB;
 constexpr unsigned GiB = KiB * KiB * KiB;
 
 namespace std {
-typedef decltype(nullptr) nullptr_t;
+using nullptr_t = decltype(nullptr);
 }
 
 static constexpr u32 explode_byte(u8 b)

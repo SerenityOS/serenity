@@ -31,7 +31,7 @@
 
 TEST_CASE(construct)
 {
-    typedef HashMap<int, int> IntIntMap;
+    using IntIntMap = HashMap<int, int>;
     EXPECT(IntIntMap().is_empty());
     EXPECT_EQ(IntIntMap().size(), 0u);
 }
