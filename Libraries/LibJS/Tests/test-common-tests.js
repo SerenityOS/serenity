@@ -326,13 +326,11 @@ test("toThrowWithMessage", () => {
     expect(thrower).not.toThrowWithMessage(TypeError, "foo baz");
 });
 
-// FIXME: Will have to change when this matcher changes to use the
-// "eval" function
 test("toEval", () => {
     expect("let a = 1").toEval();
     expect("a < 1").toEval();
     expect("&&*^%#%@").not.toEval();
-    expect("function foo() { return 1; }; return foo();").toEval();
+    expect("function foo() { return 1; }; foo();").toEval();
 });
 
 // FIXME: Will have to change when this matcher changes to use the

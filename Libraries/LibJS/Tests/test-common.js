@@ -302,14 +302,8 @@ class ExpectationError extends Error {
         // Test for syntax errors; target must be a string
         toEval() {
             this.__expect(typeof this.target === "string");
-
-            let threw = false;
-            try {
-                new Function(this.target);
-            } catch (e) {
-                threw = true;
-            }
-            this.__expect(this.inverted ? threw : !threw);
+            const success = canParseSource(this.target)
+            this.__expect(this.inverted ? !success : success);
         }
 
         // Must compile regardless of inverted-ness

@@ -20,7 +20,6 @@ test("basic functionality", () => {
     expect(new baz().newTarget).toEqual(baz);
 });
 
-// FIXME: This does not work as expected as toEval() places the code inside a function :|
-test.skip("syntax error outside of function", () => {
+test("syntax error outside of function", () => {
     expect("new.target").not.toEval();
 });
