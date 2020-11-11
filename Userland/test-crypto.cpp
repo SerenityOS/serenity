@@ -534,7 +534,6 @@ auto main(int argc, char** argv) -> int
 
 static ByteBuffer operator""_b(const char* string, size_t length)
 {
-    dbg() << "Create byte buffer of size " << length;
     return ByteBuffer::copy(string, length);
 }
 
