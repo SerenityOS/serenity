@@ -33,6 +33,7 @@ Toolchain/Local
 .ccls-cache
 .DS_Store
 compile_commands.json
+.cache
 .clang_complete
 .clangd
 *Endpoint.h
