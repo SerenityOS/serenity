@@ -594,11 +594,12 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 )~~~");
     }
 
-    auto generate_to_cpp = [&](auto& parameter, auto& js_name, const auto& js_suffix, auto cpp_name, bool return_void = false) {
+    auto generate_to_cpp = [&](auto& parameter, auto& js_name, const auto& js_suffix, auto cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false) {
         auto scoped_generator = generator.fork();
         scoped_generator.set("cpp_name", cpp_name);
         scoped_generator.set("js_name", js_name);
         scoped_generator.set("js_suffix", js_suffix);
+        scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
         scoped_generator.set("parameter.type.name", parameter.type.name);
 
         if (return_void)
@@ -608,7 +609,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 
         if (parameter.type.name == "DOMString") {
             scoped_generator.append(R"~~~(
-    auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object);
+    auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
     if (vm.exception())
         @return_statement@
 )~~~");
@@ -785,7 +786,7 @@ JS_DEFINE_NATIVE_SETTER(@wrapper_class@::@attribute.setter_callback@)
         return;
 )~~~");
 
-            generate_to_cpp(attribute, "value", "", "cpp_value", true);
+            generate_to_cpp(attribute, "value", "", "cpp_value", true, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type.name != "boolean") {
