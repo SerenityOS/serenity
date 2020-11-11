@@ -66,7 +66,7 @@ class NonnullRefPtr {
     friend class WeakPtr;
 
 public:
-    typedef T ElementType;
+    using ElementType = T;
 
     enum AdoptTag { Adopt };
 

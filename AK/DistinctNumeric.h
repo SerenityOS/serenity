@@ -66,7 +66,7 @@ namespace AK {
  */
 template<typename T, bool Incr, bool Cmp, bool Bool, bool Flags, bool Shift, bool Arith, typename X>
 class DistinctNumeric {
-    typedef DistinctNumeric<T, Incr, Cmp, Bool, Flags, Shift, Arith, X> Self;
+    using Self = DistinctNumeric<T, Incr, Cmp, Bool, Flags, Shift, Arith, X>;
 
 public:
     DistinctNumeric(T value)
@@ -301,8 +301,8 @@ private:
 }
 
 #define TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, Incr, Cmp, Bool, Flags, Shift, Arith, NAME) \
-    typedef DistinctNumeric<T, Incr, Cmp, Bool, Flags, Shift, Arith, struct __##NAME##_tag> NAME
+    using NAME = DistinctNumeric<T, Incr, Cmp, Bool, Flags, Shift, Arith, struct __##NAME##_tag>;
 #define TYPEDEF_DISTINCT_ORDERED_ID(T, NAME) TYPEDEF_DISTINCT_NUMERIC_GENERAL(T, false, true, true, false, false, false, NAME)
-// TODO: Further typedef's?
+// TODO: Further type aliases?
 
 using AK::DistinctNumeric;
