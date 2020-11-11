@@ -41,7 +41,6 @@
 #include <LibWeb/Layout/LayoutTableCell.h>
 #include <LibWeb/Layout/LayoutTableRow.h>
 #include <LibWeb/Layout/LayoutTableRowGroup.h>
-#include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 
 namespace Web::DOM {
@@ -292,39 +291,6 @@ String Element::inner_html() const
         }
     };
     recurse(*this);
-
-    return builder.to_string();
-}
-
-void Element::set_inner_text(StringView text)
-{
-    remove_all_children();
-    append_child(document().create_text_node(text));
-
-    set_needs_style_update(true);
-    document().schedule_style_update();
-    document().invalidate_layout();
-}
-
-String Element::inner_text()
-{
-    StringBuilder builder;
-
-    // innerText for element being rendered takes visibility into account, so force a layout and then walk the layout tree.
-    document().layout();
-    if (!layout_node())
-        return text_content();
-
-    Function<void(const LayoutNode&)> recurse = [&](auto& node) {
-        for (auto* child = node.first_child(); child; child = child->next_sibling()) {
-            if (child->is_text())
-                builder.append(downcast<LayoutText>(*child).text_for_rendering());
-            if (child->is_break())
-                builder.append('\n');
-            recurse(*child);
-        }
-    };
-    recurse(*layout_node());
 
     return builder.to_string();
 }
