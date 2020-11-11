@@ -12,6 +12,8 @@ set(CMAKE_INSTALL_MESSAGE NEVER)
 
 enable_testing()
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_custom_target(run
     COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
     USES_TERMINAL
