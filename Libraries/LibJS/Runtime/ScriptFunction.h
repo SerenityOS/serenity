@@ -50,6 +50,8 @@ public:
     virtual const FlyString& name() const override { return m_name; };
     void set_name(const FlyString& name) { m_name = name; };
 
+    void set_is_class_constructor() { m_is_class_constructor = true; };
+
 protected:
     virtual bool is_strict_mode() const final { return m_is_strict; }
 
@@ -57,6 +59,8 @@ private:
     virtual bool is_script_function() const override { return true; }
     virtual LexicalEnvironment* create_environment() override;
     virtual void visit_children(Visitor&) override;
+
+    Value execute_function_body();
 
     JS_DECLARE_NATIVE_GETTER(length_getter);
     JS_DECLARE_NATIVE_GETTER(name_getter);
@@ -68,6 +72,7 @@ private:
     i32 m_function_length { 0 };
     bool m_is_strict { false };
     bool m_is_arrow_function { false };
+    bool m_is_class_constructor { false };
 };
 
 }

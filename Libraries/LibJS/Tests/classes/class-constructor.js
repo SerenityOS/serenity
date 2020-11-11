@@ -46,18 +46,18 @@ test("constructor length affects class length", () => {
     expect(B).toHaveLength(2);
 });
 
-test.skip("must be invoked with 'new'", () => {
+test("must be invoked with 'new'", () => {
     class A {
         constructor() {}
     }
 
     expect(() => {
         A();
-    }).toThrow(TypeError); // FIXME: Add message when this test works
+    }).toThrowWithMessage(TypeError, "Class constructor A must be called with 'new'");
 
     expect(() => {
         A.prototype.constructor();
-    }).toThrow(TypeError); // FIXME: Add message when this test works
+    }).toThrowWithMessage(TypeError, "Class constructor A must be called with 'new'");
 });
 
 test("implicit constructor", () => {

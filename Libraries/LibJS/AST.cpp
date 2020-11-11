@@ -715,6 +715,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
     ASSERT(class_constructor_value.is_function() && class_constructor_value.as_function().is_script_function());
     ScriptFunction* class_constructor = static_cast<ScriptFunction*>(&class_constructor_value.as_function());
+    class_constructor->set_is_class_constructor();
     Value super_constructor = js_undefined();
     if (!m_super_class.is_null()) {
         super_constructor = m_super_class->execute(interpreter, global_object);
