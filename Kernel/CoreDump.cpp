@@ -198,14 +198,12 @@ ByteBuffer CoreDump::create_notes_threads_data() const
 
     m_process.for_each_thread([&](Thread& thread) {
         ByteBuffer entry_buff;
-        ELF::Core::NotesEntry entry {};
-        entry.type = ELF::Core::NotesEntry::Type::ThreadInfo;
 
         ELF::Core::ThreadInfo info {};
+        info.header.type = ELF::Core::NotesEntryHeader::Type::ThreadInfo;
         info.tid = thread.tid().value();
         Ptrace::copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
 
-        entry_buff.append((void*)&entry, sizeof(entry));
         entry_buff.append((void*)&info, sizeof(info));
 
         threads_data += entry_buff;
@@ -219,16 +217,15 @@ ByteBuffer CoreDump::create_notes_regions_data() const
 {
     ByteBuffer regions_data;
     for (size_t region_index = 0; region_index < m_process.m_regions.size(); ++region_index) {
-        ELF::Core::NotesEntry entry {};
-        entry.type = ELF::Core::NotesEntry::Type::MemoryRegionInfo;
 
         ByteBuffer memory_region_info_buffer;
         ELF::Core::MemoryRegionInfo info {};
+        info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
         auto& region = m_process.m_regions[region_index];
         info.region_start = reinterpret_cast<uint32_t>(region.vaddr().as_ptr());
         info.region_end = reinterpret_cast<uint32_t>(region.vaddr().as_ptr() + region.size());
-        info.region_start = info.program_header_index;
+        info.program_header_index = region_index;
 
         memory_region_info_buffer.append((void*)&info, sizeof(info));
 
@@ -237,7 +234,6 @@ ByteBuffer CoreDump::create_notes_regions_data() const
             name = String::empty();
         memory_region_info_buffer.append(name.characters(), name.length() + 1);
 
-        regions_data.append((void*)&entry, sizeof(entry));
         regions_data += memory_region_info_buffer;
     }
     return regions_data;
@@ -250,8 +246,8 @@ ByteBuffer CoreDump::create_notes_segment_data() const
     notes_buffer += create_notes_threads_data();
     notes_buffer += create_notes_regions_data();
 
-    ELF::Core::NotesEntry null_entry {};
-    null_entry.type = ELF::Core::NotesEntry::Type::Null;
+    ELF::Core::NotesEntryHeader null_entry {};
+    null_entry.type = ELF::Core::NotesEntryHeader::Type::Null;
     notes_buffer.append(&null_entry, sizeof(null_entry));
 
     return notes_buffer;
