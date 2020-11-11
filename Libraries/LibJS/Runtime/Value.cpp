@@ -143,13 +143,13 @@ PrimitiveString* Value::to_primitive_string(GlobalObject& global_object)
     return js_string(global_object.heap(), string);
 }
 
-String Value::to_string(GlobalObject& global_object) const
+String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_string) const
 {
     switch (m_type) {
     case Type::Undefined:
         return "undefined";
     case Type::Null:
-        return "null";
+        return !legacy_null_to_empty_string ? "null" : String::empty();
     case Type::Boolean:
         return m_value.as_bool ? "true" : "false";
     case Type::Number:
