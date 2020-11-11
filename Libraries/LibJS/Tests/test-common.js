@@ -63,15 +63,24 @@ class ExpectationError extends Error {
 
         toBe(value) {
             this.__doMatcher(() => {
-                this.__expect(Object.is(this.target, value),
-                              () => ("toBe: expected _" + String(value) + "_, got _" + String(this.target) + "_"));
+                this.__expect(
+                    Object.is(this.target, value),
+                    () =>
+                        "toBe: expected _" + String(value) + "_, got _" + String(this.target) + "_"
+                );
             });
         }
 
         // FIXME: Take a precision argument like jest's toBeCloseTo matcher
         toBeCloseTo(value) {
-            this.__expect(typeof this.target === "number", () => "toBeCloseTo: target not of type number");
-            this.__expect(typeof value === "number", () => "toBeCloseTo: argument not of type number");
+            this.__expect(
+                typeof this.target === "number",
+                () => "toBeCloseTo: target not of type number"
+            );
+            this.__expect(
+                typeof value === "number",
+                () => "toBeCloseTo: argument not of type number"
+            );
 
             this.__doMatcher(() => {
                 this.__expect(Math.abs(this.target - value) < 0.000001);
@@ -79,7 +88,10 @@ class ExpectationError extends Error {
         }
 
         toHaveLength(length) {
-            this.__expect(typeof this.target.length === "number", () => "toHaveLength: target.length not of type number");
+            this.__expect(
+                typeof this.target.length === "number",
+                () => "toHaveLength: target.length not of type number"
+            );
 
             this.__doMatcher(() => {
                 this.__expect(Object.is(this.target.length, length));
@@ -139,13 +151,19 @@ class ExpectationError extends Error {
 
         toBeUndefined() {
             this.__doMatcher(() => {
-                this.__expect(this.target === undefined, () => "toBeUndefined: target was not undefined");
+                this.__expect(
+                    this.target === undefined,
+                    () => "toBeUndefined: target was not undefined"
+                );
             });
         }
 
         toBeNaN() {
             this.__doMatcher(() => {
-                this.__expect(isNaN(this.target), () => ("toBeNaN: target was _" + String(this.target) + "_, not NaN"));
+                this.__expect(
+                    isNaN(this.target),
+                    () => "toBeNaN: target was _" + String(this.target) + "_, not NaN"
+                );
             });
         }
 
@@ -388,10 +406,11 @@ class ExpectationError extends Error {
 
         __expect(value, details) {
             if (value !== true) {
-                if (details !== undefined)
-                     throw new ExpectationError(details());
-                else
-                     throw new ExpectationError();
+                if (details !== undefined) {
+                    throw new ExpectationError(details());
+                } else {
+                    throw new ExpectationError();
+                }
             }
         }
     }
