@@ -263,8 +263,12 @@ String Loader::symbolicate(u32 address, u32* out_offset) const
             auto demangled_name = demangle(symbol.name);
 #else
             auto& demangled_name = symbol.demangled_name;
-            if (demangled_name.is_null())
-                demangled_name = demangle(symbol.name);
+            if (demangled_name.is_null()) {
+
+                // FIXME: Temporarily disabled demangling since it is currently not supported with shared libraries
+                demangled_name = symbol.name;
+                // demangled_name = demangle(symbol.name);
+            }
 #endif
 
             if (out_offset) {
