@@ -112,8 +112,10 @@ LexicalEnvironment* ScriptFunction::create_environment()
 
 Value ScriptFunction::call()
 {
+    auto& vm = this->vm();
+
     OwnPtr<Interpreter> local_interpreter;
-    Interpreter* interpreter = vm().interpreter_if_exists();
+    Interpreter* interpreter = vm.interpreter_if_exists();
 
     if (!interpreter) {
         local_interpreter = Interpreter::create_with_existing_global_object(global_object());
@@ -122,30 +124,30 @@ Value ScriptFunction::call()
 
     VM::InterpreterExecutionScope scope(*interpreter);
 
-    auto& argument_values = vm().call_frame().arguments;
+    auto& call_frame_args = vm.call_frame().arguments;
     ArgumentVector arguments;
     for (size_t i = 0; i < m_parameters.size(); ++i) {
-        auto parameter = parameters()[i];
-        auto value = js_undefined();
+        auto parameter = m_parameters[i];
+        Value argument_value;
         if (parameter.is_rest) {
             auto* array = Array::create(global_object());
-            for (size_t rest_index = i; rest_index < argument_values.size(); ++rest_index)
-                array->indexed_properties().append(argument_values[rest_index]);
-            value = Value(array);
+            for (size_t rest_index = i; rest_index < call_frame_args.size(); ++rest_index)
+                array->indexed_properties().append(call_frame_args[rest_index]);
+            argument_value = move(array);
+        } else if (i < call_frame_args.size() && !call_frame_args[i].is_undefined()) {
+            argument_value = call_frame_args[i];
+        } else if (parameter.default_value) {
+            argument_value = parameter.default_value->execute(*interpreter, global_object());
+            if (vm.exception())
+                return {};
         } else {
-            if (i < argument_values.size() && !argument_values[i].is_undefined()) {
-                value = argument_values[i];
-            } else if (parameter.default_value) {
-                value = parameter.default_value->execute(*interpreter, global_object());
-                if (vm().exception())
-                    return {};
-            }
+            argument_value = js_undefined();
         }
-        arguments.append({ parameter.name, value });
-        vm().current_environment()->set(global_object(), parameter.name, { value, DeclarationKind::Var });
+        arguments.append({ parameter.name, argument_value });
+        vm.current_environment()->set(global_object(), parameter.name, { argument_value, DeclarationKind::Var });
     }
 
-    return interpreter->execute_statement(global_object(), m_body, arguments, ScopeType::Function);
+    return interpreter->execute_statement(global_object(), m_body, move(arguments), ScopeType::Function);
 }
 
 Value ScriptFunction::construct(Function&)
