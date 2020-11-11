@@ -114,6 +114,17 @@ Thread::Thread(NonnullRefPtr<Process> process)
 
 Thread::~Thread()
 {
+    {
+        // We need to explicitly remove ourselves from the thread list
+        // here. We may get pre-empted in the middle of destructing this
+        // thread, which causes problems if the thread list is iterated.
+        // Specifically, if this is the last thread of a process, checking
+        // block conditions would access m_process, which would be in
+        // the middle of being destroyed.
+        ScopedSpinLock lock(g_scheduler_lock);
+        g_scheduler_data->thread_list_for_state(m_state).remove(*this);
+    }
+
     ASSERT(!m_joiner);
 }
 
