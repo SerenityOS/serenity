@@ -524,7 +524,7 @@ void IconView::paint_event(PaintEvent& event)
         auto font = font_for_index(item_data.index);
 
         Gfx::IntRect text_rect = item_data.text_rect;
-        auto icon_translation = translation.y() - 12;
+        auto icon_translation = translation.y() + vertical_scrollbar().value() - 12;
         text_rect.set_height(text_rect.height() > icon_translation ? icon_translation : text_rect.height());
 
         painter.fill_rect(text_rect, background_color);
