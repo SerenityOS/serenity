@@ -24,7 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/Layout/LayoutText.h>
 
 namespace Web::HTML {
 
@@ -93,6 +96,39 @@ void HTMLElement::set_content_editable(const String& content_editable)
         return;
     }
     // FIXME: otherwise the attribute setter must throw a "SyntaxError" DOMException.
+}
+
+void HTMLElement::set_inner_text(StringView text)
+{
+    remove_all_children();
+    append_child(document().create_text_node(text));
+
+    set_needs_style_update(true);
+    document().schedule_style_update();
+    document().invalidate_layout();
+}
+
+String HTMLElement::inner_text()
+{
+    StringBuilder builder;
+
+    // innerText for element being rendered takes visibility into account, so force a layout and then walk the layout tree.
+    document().layout();
+    if (!layout_node())
+        return text_content();
+
+    Function<void(const LayoutNode&)> recurse = [&](auto& node) {
+        for (auto* child = node.first_child(); child; child = child->next_sibling()) {
+            if (child->is_text())
+                builder.append(downcast<LayoutText>(*child).text_for_rendering());
+            if (child->is_break())
+                builder.append('\n');
+            recurse(*child);
+        }
+    };
+    recurse(*layout_node());
+
+    return builder.to_string();
 }
 
 }

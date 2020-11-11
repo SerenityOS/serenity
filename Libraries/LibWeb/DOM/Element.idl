@@ -9,7 +9,6 @@ interface Element : Node {
     ArrayFromVector querySelectorAll(DOMString selectors);
 
     attribute DOMString innerHTML;
-    attribute DOMString innerText;
     [Reflect] attribute DOMString id;
     [Reflect=class] attribute DOMString className;
 

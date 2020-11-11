@@ -43,6 +43,9 @@ public:
     String content_editable() const;
     void set_content_editable(const String&);
 
+    String inner_text();
+    void set_inner_text(StringView);
+
 private:
     virtual bool is_html_element() const final { return true; }
 
