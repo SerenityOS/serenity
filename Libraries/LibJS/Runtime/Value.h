@@ -241,7 +241,7 @@ public:
     i32 as_i32() const;
     size_t as_size_t() const;
 
-    String to_string(GlobalObject&) const;
+    String to_string(GlobalObject&, bool legacy_null_to_empty_string = false) const;
     PrimitiveString* to_primitive_string(GlobalObject&);
     Value to_primitive(PreferredType preferred_type = PreferredType::Default) const;
     Object* to_object(GlobalObject&) const;
