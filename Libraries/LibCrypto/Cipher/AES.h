@@ -31,6 +31,7 @@
 #include <LibCrypto/Cipher/Cipher.h>
 #include <LibCrypto/Cipher/Mode/CBC.h>
 #include <LibCrypto/Cipher/Mode/CTR.h>
+#include <LibCrypto/Cipher/Mode/GCM.h>
 
 namespace Crypto {
 namespace Cipher {
@@ -53,6 +54,7 @@ public:
 
     virtual ByteBuffer get() const override { return m_data; };
     virtual const ByteBuffer& data() const override { return m_data; };
+    ReadonlyBytes bytes() const { return m_data; }
 
     virtual void overwrite(ReadonlyBytes) override;
     virtual void overwrite(const ByteBuffer& buffer) override { overwrite(buffer.bytes()); }
@@ -113,6 +115,7 @@ class AESCipher final : public Cipher<AESCipherKey, AESCipherBlock> {
 public:
     using CBCMode = CBC<AESCipher>;
     using CTRMode = CTR<AESCipher>;
+    using GCMMode = GCM<AESCipher>;
 
     constexpr static size_t BlockSizeInBits = BlockType::BlockSizeInBits;
 

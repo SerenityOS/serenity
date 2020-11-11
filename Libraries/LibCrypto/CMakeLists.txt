@@ -1,4 +1,5 @@
 set(SOURCES
+    Authentication/GHash.cpp
     BigInt/SignedBigInteger.cpp
     BigInt/UnsignedBigInteger.cpp
     Checksum/Adler32.cpp

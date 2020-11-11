@@ -29,6 +29,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
@@ -75,6 +76,7 @@ static Vector<Certificate> s_root_ca_certificates;
 // Cipher
 static int aes_cbc_tests();
 static int aes_ctr_tests();
+static int aes_gcm_tests();
 
 // Hash
 static int md5_tests();
@@ -87,6 +89,7 @@ static int hmac_md5_tests();
 static int hmac_sha256_tests();
 static int hmac_sha512_tests();
 static int hmac_sha1_tests();
+static int ghash_tests();
 
 // Public-Key
 static int rsa_tests();
@@ -409,6 +412,10 @@ auto main(int argc, char** argv) -> int
             if (run_tests)
                 return hmac_sha1_tests();
         }
+        if (suite_sv == "GHash") {
+            if (run_tests)
+                return ghash_tests();
+        }
         printf("unknown hash function '%s'\n", suite);
         return 1;
     }
@@ -439,10 +446,12 @@ auto main(int argc, char** argv) -> int
         encrypting = true;
         aes_cbc_tests();
         aes_ctr_tests();
+        aes_gcm_tests();
 
         encrypting = false;
         aes_cbc_tests();
         aes_ctr_tests();
+        aes_gcm_tests();
 
         md5_tests();
         sha1_tests();
@@ -453,6 +462,8 @@ auto main(int argc, char** argv) -> int
         hmac_sha256_tests();
         hmac_sha512_tests();
         hmac_sha1_tests();
+
+        ghash_tests();
 
         rsa_tests();
 
@@ -496,6 +507,12 @@ auto main(int argc, char** argv) -> int
                 return 1;
             }
             return run(aes_cbc);
+        }
+        if (StringView(suite) == "AES_GCM") {
+            if (run_tests)
+                return aes_gcm_tests();
+
+            return 1;
         } else {
             printf("Unknown cipher suite '%s'\n", suite);
             return 1;
@@ -545,6 +562,9 @@ static void aes_cbc_test_decrypt();
 static void aes_ctr_test_name();
 static void aes_ctr_test_encrypt();
 static void aes_ctr_test_decrypt();
+static void aes_gcm_test_name();
+static void aes_gcm_test_encrypt();
+static void aes_gcm_test_decrypt();
 
 static void md5_test_name();
 static void md5_test_hash();
@@ -558,6 +578,9 @@ static void sha256_test_hash();
 
 static void sha512_test_name();
 static void sha512_test_hash();
+
+static void ghash_test_name();
+static void ghash_test_process();
 
 static void hmac_md5_test_name();
 static void hmac_md5_test_process();
@@ -993,6 +1016,207 @@ static void aes_ctr_test_decrypt()
     // If encryption works, then decryption works, too.
 }
 
+static int aes_gcm_tests()
+{
+    aes_gcm_test_name();
+    if (encrypting) {
+        aes_gcm_test_encrypt();
+    } else {
+        aes_gcm_test_decrypt();
+    }
+
+    return g_some_test_failed ? 1 : 0;
+}
+
+static void aes_gcm_test_name()
+{
+    I_TEST((AES GCM class name));
+    Crypto::Cipher::AESCipher::GCMMode cipher("WellHelloFriends"_b, 128, Crypto::Cipher::Intent::Encryption);
+    if (cipher.class_name() != "AES_GCM")
+        FAIL(Invalid class name);
+    else
+        PASS;
+}
+
+static void aes_gcm_test_encrypt()
+{
+    {
+        I_TEST((AES GCM Encrypt | Empty));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 result_tag[] { 0x58, 0xe2, 0xfc, 0xce, 0xfa, 0x7e, 0x30, 0x61, 0x36, 0x7f, 0x1d, 0x57, 0xa4, 0xe7, 0x45, 0x5a };
+        Bytes out;
+        auto tag = ByteBuffer::create_uninitialized(16);
+        cipher.encrypt({}, out, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, tag);
+        if (memcmp(result_tag, tag.data(), tag.size()) != 0) {
+            FAIL(Invalid auth tag);
+            print_buffer(tag, -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((AES GCM Encrypt | Zeros));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 result_tag[] { 0xab, 0x6e, 0x47, 0xd4, 0x2c, 0xec, 0x13, 0xbd, 0xf5, 0x3a, 0x67, 0xb2, 0x12, 0x57, 0xbd, 0xdf };
+        u8 result_ct[] { 0x03, 0x88, 0xda, 0xce, 0x60, 0xb6, 0xa3, 0x92, 0xf3, 0x28, 0xc2, 0xb9, 0x71, 0xb2, 0xfe, 0x78 };
+        auto tag = ByteBuffer::create_uninitialized(16);
+        auto out = ByteBuffer::create_uninitialized(16);
+        auto out_bytes = out.bytes();
+        cipher.encrypt("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), out_bytes, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, tag);
+        if (memcmp(result_ct, out.data(), out.size()) != 0) {
+            FAIL(Invalid ciphertext);
+            print_buffer(out, -1);
+        } else if (memcmp(result_tag, tag.data(), tag.size()) != 0) {
+            FAIL(Invalid auth tag);
+            print_buffer(tag, -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((AES GCM Encrypt | Multiple Blocks With IV));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\xfe\xff\xe9\x92\x86\x65\x73\x1c\x6d\x6a\x8f\x94\x67\x30\x83\x08"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 result_tag[] { 0x4d, 0x5c, 0x2a, 0xf3, 0x27, 0xcd, 0x64, 0xa6, 0x2c, 0xf3, 0x5a, 0xbd, 0x2b, 0xa6, 0xfa, 0xb4 };
+        u8 result_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
+        auto tag = ByteBuffer::create_uninitialized(16);
+        auto out = ByteBuffer::create_uninitialized(64);
+        auto out_bytes = out.bytes();
+        cipher.encrypt(
+            "\xd9\x31\x32\x25\xf8\x84\x06\xe5\xa5\x59\x09\xc5\xaf\xf5\x26\x9a\x86\xa7\xa9\x53\x15\x34\xf7\xda\x2e\x4c\x30\x3d\x8a\x31\x8a\x72\x1c\x3c\x0c\x95\x95\x68\x09\x53\x2f\xcf\x0e\x24\x49\xa6\xb5\x25\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57\xba\x63\x7b\x39\x1a\xaf\xd2\x55"_b.bytes(),
+            out_bytes,
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
+            {},
+            tag);
+        if (memcmp(result_ct, out.data(), out.size()) != 0) {
+            FAIL(Invalid ciphertext);
+            print_buffer(out, -1);
+        } else if (memcmp(result_tag, tag.data(), tag.size()) != 0) {
+            FAIL(Invalid auth tag);
+            print_buffer(tag, -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((AES GCM Encrypt | With AAD));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\xfe\xff\xe9\x92\x86\x65\x73\x1c\x6d\x6a\x8f\x94\x67\x30\x83\x08"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 result_tag[] { 0x93, 0xae, 0x16, 0x97, 0x49, 0xa3, 0xbf, 0x39, 0x4f, 0x61, 0xb7, 0xc1, 0xb1, 0x2, 0x4f, 0x60 };
+        u8 result_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
+        auto tag = ByteBuffer::create_uninitialized(16);
+        auto out = ByteBuffer::create_uninitialized(64);
+        auto out_bytes = out.bytes();
+        cipher.encrypt(
+            "\xd9\x31\x32\x25\xf8\x84\x06\xe5\xa5\x59\x09\xc5\xaf\xf5\x26\x9a\x86\xa7\xa9\x53\x15\x34\xf7\xda\x2e\x4c\x30\x3d\x8a\x31\x8a\x72\x1c\x3c\x0c\x95\x95\x68\x09\x53\x2f\xcf\x0e\x24\x49\xa6\xb5\x25\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57\xba\x63\x7b\x39\x1a\xaf\xd2\x55"_b.bytes(),
+            out_bytes,
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
+            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b.bytes(),
+            tag);
+        if (memcmp(result_ct, out.data(), out.size()) != 0) {
+            FAIL(Invalid ciphertext);
+            print_buffer(out, -1);
+        } else if (memcmp(result_tag, tag.data(), tag.size()) != 0) {
+            FAIL(Invalid auth tag);
+            print_buffer(tag, -1);
+        } else
+            PASS;
+    }
+}
+
+static void aes_gcm_test_decrypt()
+{
+    {
+        I_TEST((AES GCM Decrypt | Empty));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 input_tag[] { 0x58, 0xe2, 0xfc, 0xce, 0xfa, 0x7e, 0x30, 0x61, 0x36, 0x7f, 0x1d, 0x57, 0xa4, 0xe7, 0x45, 0x5a };
+        Bytes out;
+        auto consistency = cipher.decrypt({}, out, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, { input_tag, 16 });
+        if (consistency != Crypto::VerificationConsistency::Consistent) {
+            FAIL(Verification reported inconsistent);
+        } else if (out.size() != 0) {
+            FAIL(Invalid plain text);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((AES GCM Decrypt | Zeros));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 input_tag[] { 0xab, 0x6e, 0x47, 0xd4, 0x2c, 0xec, 0x13, 0xbd, 0xf5, 0x3a, 0x67, 0xb2, 0x12, 0x57, 0xbd, 0xdf };
+        u8 input_ct[] { 0x03, 0x88, 0xda, 0xce, 0x60, 0xb6, 0xa3, 0x92, 0xf3, 0x28, 0xc2, 0xb9, 0x71, 0xb2, 0xfe, 0x78 };
+        u8 result_pt[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        auto out = ByteBuffer::create_uninitialized(16);
+        auto out_bytes = out.bytes();
+        auto consistency = cipher.decrypt({ input_ct, 16 }, out_bytes, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"_b.bytes(), {}, { input_tag, 16 });
+        if (consistency != Crypto::VerificationConsistency::Consistent) {
+            FAIL(Verification reported inconsistent);
+        } else if (memcmp(result_pt, out.data(), out.size()) != 0) {
+            FAIL(Invalid plaintext);
+            print_buffer(out, -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((AES GCM Decrypt | Multiple Blocks With IV));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\xfe\xff\xe9\x92\x86\x65\x73\x1c\x6d\x6a\x8f\x94\x67\x30\x83\x08"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 input_tag[] { 0x4d, 0x5c, 0x2a, 0xf3, 0x27, 0xcd, 0x64, 0xa6, 0x2c, 0xf3, 0x5a, 0xbd, 0x2b, 0xa6, 0xfa, 0xb4 };
+        u8 input_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
+        u8 result_pt[] { 0xd9, 0x31, 0x32, 0x25, 0xf8, 0x84, 0x06, 0xe5, 0xa5, 0x59, 0x09, 0xc5, 0xaf, 0xf5, 0x26, 0x9a, 0x86, 0xa7, 0xa9, 0x53, 0x15, 0x34, 0xf7, 0xda, 0x2e, 0x4c, 0x30, 0x3d, 0x8a, 0x31, 0x8a, 0x72, 0x1c, 0x3c, 0x0c, 0x95, 0x95, 0x68, 0x09, 0x53, 0x2f, 0xcf, 0x0e, 0x24, 0x49, 0xa6, 0xb5, 0x25, 0xb1, 0x6a, 0xed, 0xf5, 0xaa, 0x0d, 0xe6, 0x57, 0xba, 0x63, 0x7b, 0x39, 0x1a, 0xaf, 0xd2, 0x55 };
+        auto out = ByteBuffer::create_uninitialized(64);
+        auto out_bytes = out.bytes();
+
+        auto consistency = cipher.decrypt(
+            { input_ct, 64 },
+            out_bytes,
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
+            {},
+            { input_tag, 16 });
+        if (memcmp(result_pt, out.data(), out.size()) != 0) {
+            FAIL(Invalid plaintext);
+            print_buffer(out, -1);
+        } else if (consistency != Crypto::VerificationConsistency::Consistent) {
+            FAIL(Verification reported inconsistent);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((AES GCM Decrypt | With AAD));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\xfe\xff\xe9\x92\x86\x65\x73\x1c\x6d\x6a\x8f\x94\x67\x30\x83\x08"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 input_tag[] { 0x93, 0xae, 0x16, 0x97, 0x49, 0xa3, 0xbf, 0x39, 0x4f, 0x61, 0xb7, 0xc1, 0xb1, 0x2, 0x4f, 0x60 };
+        u8 input_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
+        u8 result_pt[] { 0xd9, 0x31, 0x32, 0x25, 0xf8, 0x84, 0x06, 0xe5, 0xa5, 0x59, 0x09, 0xc5, 0xaf, 0xf5, 0x26, 0x9a, 0x86, 0xa7, 0xa9, 0x53, 0x15, 0x34, 0xf7, 0xda, 0x2e, 0x4c, 0x30, 0x3d, 0x8a, 0x31, 0x8a, 0x72, 0x1c, 0x3c, 0x0c, 0x95, 0x95, 0x68, 0x09, 0x53, 0x2f, 0xcf, 0x0e, 0x24, 0x49, 0xa6, 0xb5, 0x25, 0xb1, 0x6a, 0xed, 0xf5, 0xaa, 0x0d, 0xe6, 0x57, 0xba, 0x63, 0x7b, 0x39, 0x1a, 0xaf, 0xd2, 0x55 };
+        auto out = ByteBuffer::create_uninitialized(64);
+        auto out_bytes = out.bytes();
+        auto consistency = cipher.decrypt(
+            { input_ct, 64 },
+            out_bytes,
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
+            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b.bytes(),
+            { input_tag, 16 });
+        if (memcmp(result_pt, out.data(), out.size()) != 0) {
+            FAIL(Invalid plaintext);
+            print_buffer(out, -1);
+        } else if (consistency != Crypto::VerificationConsistency::Consistent) {
+            FAIL(Verification reported inconsistent);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((AES GCM Decrypt | With AAD - Invalid Tag));
+        Crypto::Cipher::AESCipher::GCMMode cipher("\xfe\xff\xe9\x92\x86\x65\x73\x1c\x6d\x6a\x8f\x94\x67\x30\x83\x08"_b, 128, Crypto::Cipher::Intent::Encryption);
+        u8 input_tag[] { 0x94, 0xae, 0x16, 0x97, 0x49, 0xa3, 0xbf, 0x39, 0x4f, 0x61, 0xb7, 0xc1, 0xb1, 0x2, 0x4f, 0x60 };
+        u8 input_ct[] { 0x42, 0x83, 0x1e, 0xc2, 0x21, 0x77, 0x74, 0x24, 0x4b, 0x72, 0x21, 0xb7, 0x84, 0xd0, 0xd4, 0x9c, 0xe3, 0xaa, 0x21, 0x2f, 0x2c, 0x02, 0xa4, 0xe0, 0x35, 0xc1, 0x7e, 0x23, 0x29, 0xac, 0xa1, 0x2e, 0x21, 0xd5, 0x14, 0xb2, 0x54, 0x66, 0x93, 0x1c, 0x7d, 0x8f, 0x6a, 0x5a, 0xac, 0x84, 0xaa, 0x05, 0x1b, 0xa3, 0x0b, 0x39, 0x6a, 0x0a, 0xac, 0x97, 0x3d, 0x58, 0xe0, 0x91, 0x47, 0x3f, 0x59, 0x85 };
+        auto out = ByteBuffer::create_uninitialized(64);
+        auto out_bytes = out.bytes();
+        auto consistency = cipher.decrypt(
+            { input_ct, 64 },
+            out_bytes,
+            "\xca\xfe\xba\xbe\xfa\xce\xdb\xad\xde\xca\xf8\x88\x00\x00\x00\x00"_b.bytes(),
+            "\xde\xad\xbe\xef\xfa\xaf\x11\xcc"_b.bytes(),
+            { input_tag, 16 });
+
+        if (consistency != Crypto::VerificationConsistency::Inconsistent)
+            FAIL(Verification reported consistent);
+        else
+            PASS;
+    }
+}
+
 static int md5_tests()
 {
     md5_test_name();
@@ -1193,6 +1417,23 @@ static void hmac_md5_test_process()
     }
 }
 
+static int ghash_tests()
+{
+    ghash_test_name();
+    ghash_test_process();
+    return g_some_test_failed ? 1 : 0;
+}
+
+static void ghash_test_name()
+{
+    I_TEST((GHash class name));
+    Crypto::Authentication::GHash ghash("WellHelloFriends");
+    if (ghash.class_name() != "GHash")
+        FAIL(Invalid class name);
+    else
+        PASS;
+}
+
 static void hmac_sha1_test_name()
 {
     I_TEST((HMAC - SHA1 | Class name));
@@ -1242,6 +1483,40 @@ static void hmac_sha1_test_process()
         } else
             PASS;
     }
+}
+
+static void ghash_test_process()
+{
+    {
+        I_TEST((GHash | Galois Field Multiply));
+        u32 x[4] { 0x42831ec2, 0x21777424, 0x4b7221b7, 0x84d0d49c },
+            y[4] { 0xb83b5337, 0x08bf535d, 0x0aa6e529, 0x80d53b78 }, z[4] { 0, 0, 0, 0 };
+        static constexpr u32 result[4] { 0x59ed3f2b, 0xb1a0aaa0, 0x7c9f56c6, 0xa504647b };
+
+        Crypto::Authentication::galois_multiply(z, x, y);
+        if (memcmp(result, z, 4 * sizeof(u32)) != 0) {
+            FAIL(Invalid multiply value);
+            print_buffer({ z, 4 * sizeof(u32) }, -1);
+            print_buffer({ result, 4 * sizeof(u32) }, -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((GHash | Galois Field Multiply #2));
+        u32 x[4] { 59300558, 1622582162, 4079534777, 1907555960 },
+            y[4] { 1726565332, 4018809915, 2286746201, 3392416558 }, z[4];
+        constexpr static u32 result[4] { 1580123974, 2440061576, 746958952, 1398005431 };
+
+        Crypto::Authentication::galois_multiply(z, x, y);
+        if (memcmp(result, z, 4 * sizeof(u32)) != 0) {
+            FAIL(Invalid multiply value);
+            print_buffer({ z, 4 * sizeof(u32) }, -1);
+            print_buffer({ result, 4 * sizeof(u32) }, -1);
+        } else
+            PASS;
+    }
+    // TODO: Add some GHash tests?
+    //       Kinda hard, as there are no vectors and existing tools don't have an interface to it.
 }
 
 static int sha1_tests()
