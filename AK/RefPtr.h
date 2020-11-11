@@ -128,7 +128,7 @@ struct RefPtrTraits {
 
     static constexpr FlatPtr default_null_value = 0;
 
-    typedef std::nullptr_t NullType;
+    using NullType = std::nullptr_t;
 };
 
 template<typename T, typename PtrTraits>

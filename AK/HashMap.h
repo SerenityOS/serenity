@@ -67,9 +67,9 @@ public:
     }
     void remove_one_randomly() { m_table.remove(m_table.begin()); }
 
-    typedef HashTable<Entry, EntryTraits> HashTableType;
-    typedef typename HashTableType::Iterator IteratorType;
-    typedef typename HashTableType::ConstIterator ConstIteratorType;
+    using HashTableType = HashTable<Entry, EntryTraits>;
+    using IteratorType = typename HashTableType::Iterator;
+    using ConstIteratorType = typename HashTableType::ConstIterator;
 
     IteratorType begin() { return m_table.begin(); }
     IteratorType end() { return m_table.end(); }

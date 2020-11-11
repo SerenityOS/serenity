@@ -81,7 +81,7 @@ private:
 
 class Utf32View {
 public:
-    typedef Utf32CodepointIterator Iterator;
+    using Iterator = Utf32CodepointIterator;
 
     Utf32View() { }
     Utf32View(const u32* code_points, size_t length)
