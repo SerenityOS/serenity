@@ -93,9 +93,6 @@ public:
     String inner_html() const;
     void set_inner_html(StringView);
 
-    String inner_text();
-    void set_inner_text(StringView);
-
     bool is_focused() const;
     virtual bool is_focusable() const { return false; }
 
