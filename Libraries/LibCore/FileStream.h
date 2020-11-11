@@ -93,8 +93,6 @@ public:
     }
 
 private:
-    InputFileStream() = default;
-
     NonnullRefPtr<File> m_file;
 };
 
