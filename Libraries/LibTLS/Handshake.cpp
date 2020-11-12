@@ -73,11 +73,12 @@ ByteBuffer TLSv12::build_hello()
     }
 
     // Ciphers
-    builder.append((u16)(4 * sizeof(u16)));
+    builder.append((u16)(5 * sizeof(u16)));
     builder.append((u16)CipherSuite::RSA_WITH_AES_128_CBC_SHA256);
     builder.append((u16)CipherSuite::RSA_WITH_AES_256_CBC_SHA256);
     builder.append((u16)CipherSuite::RSA_WITH_AES_128_CBC_SHA);
     builder.append((u16)CipherSuite::RSA_WITH_AES_256_CBC_SHA);
+    builder.append((u16)CipherSuite::RSA_WITH_AES_128_GCM_SHA256);
 
     // we don't like compression
     builder.append((u8)1);

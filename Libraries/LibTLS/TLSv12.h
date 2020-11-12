@@ -218,6 +218,8 @@ struct Context {
         u8 local_mac[32];
         u8 local_iv[16];
         u8 remote_iv[16];
+        u8 local_aead_iv[4];
+        u8 remote_aead_iv[4];
     } crypto;
 
     Crypto::Hash::Manager handshake_hash;
@@ -296,7 +298,11 @@ public:
 
     bool supports_cipher(CipherSuite suite) const
     {
-        return suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA256 || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA256 || suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA;
+        return suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA256
+            || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA256
+            || suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA
+            || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA
+            || suite == CipherSuite::RSA_WITH_AES_128_GCM_SHA256;
     }
 
     bool supports_version(Version v) const
@@ -423,7 +429,22 @@ private:
         case CipherSuite::AES_256_GCM_SHA384:
         case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
         case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
-            return 12;
+            return 8; // 4 bytes of fixed IV, 8 random (nonce) bytes, 4 bytes for counter
+                      // GCM specifically asks us to transmit only the nonce, the counter is zero
+                      // and the fixed IV is derived from the premaster key.
+        }
+    }
+
+    bool is_aead() const
+    {
+        switch (m_context.cipher) {
+        case CipherSuite::AES_128_GCM_SHA256:
+        case CipherSuite::AES_256_GCM_SHA384:
+        case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
+        case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
+            return true;
+        default:
+            return false;
         }
     }
 
@@ -440,8 +461,10 @@ private:
     OwnPtr<Crypto::Authentication::HMAC<Crypto::Hash::Manager>> m_hmac_local;
     OwnPtr<Crypto::Authentication::HMAC<Crypto::Hash::Manager>> m_hmac_remote;
 
-    OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_local;
-    OwnPtr<Crypto::Cipher::AESCipher::CBCMode> m_aes_remote;
+    struct {
+        OwnPtr<Crypto::Cipher::AESCipher::CBCMode> cbc;
+        OwnPtr<Crypto::Cipher::AESCipher::GCMMode> gcm;
+    } m_aes_local, m_aes_remote;
 
     bool m_has_scheduled_write_flush { false };
     i32 m_max_wait_time_for_handshake_in_seconds { 10 };

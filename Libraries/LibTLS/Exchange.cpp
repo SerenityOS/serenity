@@ -35,6 +35,8 @@ bool TLSv12::expand_key()
     u8 key[192]; // soooooooo many constants
     auto key_buffer = ByteBuffer::wrap(key, 192);
 
+    auto is_aead = this->is_aead();
+
     if (m_context.master_key.size() == 0) {
         dbg() << "expand_key() with empty master key";
         return false;
@@ -52,10 +54,14 @@ bool TLSv12::expand_key()
         ByteBuffer::wrap(m_context.local_random, 32));
 
     size_t offset = 0;
-    memcpy(m_context.crypto.local_mac, key + offset, mac_size);
-    offset += mac_size;
-    memcpy(m_context.crypto.remote_mac, key + offset, mac_size);
-    offset += mac_size;
+    if (is_aead) {
+        iv_size = 4; // Explicit IV size.
+    } else {
+        memcpy(m_context.crypto.local_mac, key + offset, mac_size);
+        offset += mac_size;
+        memcpy(m_context.crypto.remote_mac, key + offset, mac_size);
+        offset += mac_size;
+    }
 
     auto client_key = key + offset;
     offset += key_size;
@@ -75,17 +81,27 @@ bool TLSv12::expand_key()
     print_buffer(client_iv, iv_size);
     dbg() << "server iv";
     print_buffer(server_iv, iv_size);
-    dbg() << "client mac key";
-    print_buffer(m_context.crypto.local_mac, mac_size);
-    dbg() << "server mac key";
-    print_buffer(m_context.crypto.remote_mac, mac_size);
+    if (!is_aead) {
+        dbg() << "client mac key";
+        print_buffer(m_context.crypto.local_mac, mac_size);
+        dbg() << "server mac key";
+        print_buffer(m_context.crypto.remote_mac, mac_size);
+    }
 #endif
 
-    memcpy(m_context.crypto.local_iv, client_iv, iv_size);
-    memcpy(m_context.crypto.remote_iv, server_iv, iv_size);
+    if (is_aead) {
+        memcpy(m_context.crypto.local_aead_iv, client_iv, iv_size);
+        memcpy(m_context.crypto.remote_aead_iv, server_iv, iv_size);
 
-    m_aes_local = make<Crypto::Cipher::AESCipher::CBCMode>(ByteBuffer::wrap(client_key, key_size), key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
-    m_aes_remote = make<Crypto::Cipher::AESCipher::CBCMode>(ByteBuffer::wrap(server_key, key_size), key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_aes_local.gcm = make<Crypto::Cipher::AESCipher::GCMMode>(ByteBuffer::wrap(client_key, key_size), key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_aes_remote.gcm = make<Crypto::Cipher::AESCipher::GCMMode>(ByteBuffer::wrap(server_key, key_size), key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+    } else {
+        memcpy(m_context.crypto.local_iv, client_iv, iv_size);
+        memcpy(m_context.crypto.remote_iv, server_iv, iv_size);
+
+        m_aes_local.cbc = make<Crypto::Cipher::AESCipher::CBCMode>(ByteBuffer::wrap(client_key, key_size), key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_aes_remote.cbc = make<Crypto::Cipher::AESCipher::CBCMode>(ByteBuffer::wrap(server_key, key_size), key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+    }
 
     m_context.crypto.created = 1;
 
