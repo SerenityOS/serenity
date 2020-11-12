@@ -105,7 +105,8 @@ void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
         request.set_body(body);
     }
 
-    document().frame()->page().load(request);
+    if (auto* page = document().page())
+        page->load(request);
 }
 
 }

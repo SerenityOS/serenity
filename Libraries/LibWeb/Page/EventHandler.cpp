@@ -125,7 +125,6 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     }
 
     NonnullRefPtr document = *m_frame.document();
-    auto& page_client = m_frame.page().client();
 
     auto result = layout_root()->hit_test(position, HitTestType::Exact);
     if (!result.layout_node)
@@ -148,7 +147,8 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return false;
     }
 
-    m_frame.page().set_focused_frame({}, m_frame);
+    if (auto* page = m_frame.page())
+        page->set_focused_frame({}, m_frame);
 
     auto offset = compute_mouse_event_offset(position, *result.layout_node);
     node->dispatch_event(UIEvents::MouseEvent::create("mousedown", offset.x(), offset.y()));
@@ -158,7 +158,8 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     if (button == GUI::MouseButton::Right && is<HTML::HTMLImageElement>(*node)) {
         auto& image_element = downcast<HTML::HTMLImageElement>(*node);
         auto image_url = image_element.document().complete_url(image_element.src());
-        page_client.page_did_request_image_context_menu(m_frame.to_main_frame_position(position), image_url, "", modifiers, image_element.bitmap());
+        if (auto* page = m_frame.page())
+            page->client().page_did_request_image_context_menu(m_frame.to_main_frame_position(position), image_url, "", modifiers, image_element.bitmap());
         return true;
     }
 
@@ -176,16 +177,19 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 m_frame.scroll_to_anchor(anchor);
             } else {
                 if (m_frame.is_main_frame()) {
-                    page_client.page_did_click_link(url, link->target(), modifiers);
+                    if (auto* page = m_frame.page())
+                        page->client().page_did_click_link(url, link->target(), modifiers);
                 } else {
                     // FIXME: Handle different targets!
                     m_frame.loader().load(url, FrameLoader::Type::Navigation);
                 }
             }
         } else if (button == GUI::MouseButton::Right) {
-            page_client.page_did_request_link_context_menu(m_frame.to_main_frame_position(position), url, link->target(), modifiers);
+            if (auto* page = m_frame.page())
+                page->client().page_did_request_link_context_menu(m_frame.to_main_frame_position(position), url, link->target(), modifiers);
         } else if (button == GUI::MouseButton::Middle) {
-            page_client.page_did_middle_click_link(url, link->target(), modifiers);
+            if (auto* page = m_frame.page())
+                page->client().page_did_middle_click_link(url, link->target(), modifiers);
         }
     } else {
         if (button == GUI::MouseButton::Left) {
@@ -197,7 +201,8 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 m_in_mouse_selection = true;
             }
         } else if (button == GUI::MouseButton::Right) {
-            page_client.page_did_request_context_menu(m_frame.to_main_frame_position(position));
+            if (auto* page = m_frame.page())
+                page->client().page_did_request_context_menu(m_frame.to_main_frame_position(position));
         }
     }
     return true;
@@ -214,7 +219,6 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     }
 
     auto& document = *m_frame.document();
-    auto& page_client = m_frame.page().client();
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
@@ -227,7 +231,8 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             document.set_hovered_node(result.layout_node->node());
             result.layout_node->handle_mousemove({}, position, buttons, modifiers);
             // FIXME: It feels a bit aggressive to always update the cursor like this.
-            page_client.page_did_request_cursor_change(Gfx::StandardCursor::None);
+            if (auto* page = m_frame.page())
+                page->client().page_did_request_cursor_change(Gfx::StandardCursor::None);
             return true;
         }
 
@@ -262,28 +267,31 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 layout_root()->set_selection_end({ hit.layout_node, hit.index_in_node });
             }
             dump_selection("MouseMove");
-            page_client.page_did_change_selection();
+            if (auto* page = m_frame.page())
+                page->client().page_did_change_selection();
         }
     }
 
-    if (is_hovering_link)
-        page_client.page_did_request_cursor_change(Gfx::StandardCursor::Hand);
-    else if (is_hovering_text)
-        page_client.page_did_request_cursor_change(Gfx::StandardCursor::IBeam);
-    else
-        page_client.page_did_request_cursor_change(Gfx::StandardCursor::None);
-
-    if (hovered_node_changed) {
-        RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element() : nullptr;
-        if (hovered_html_element && !hovered_html_element->title().is_null()) {
-            page_client.page_did_enter_tooltip_area(m_frame.to_main_frame_position(position), hovered_html_element->title());
-        } else {
-            page_client.page_did_leave_tooltip_area();
-        }
+    if (auto* page = m_frame.page()) {
         if (is_hovering_link)
-            page_client.page_did_hover_link(document.complete_url(hovered_link_element->href()));
+            page->client().page_did_request_cursor_change(Gfx::StandardCursor::Hand);
+        else if (is_hovering_text)
+            page->client().page_did_request_cursor_change(Gfx::StandardCursor::IBeam);
         else
-            page_client.page_did_unhover_link();
+            page->client().page_did_request_cursor_change(Gfx::StandardCursor::None);
+
+        if (hovered_node_changed) {
+            RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element() : nullptr;
+            if (hovered_html_element && !hovered_html_element->title().is_null()) {
+                page->client().page_did_enter_tooltip_area(m_frame.to_main_frame_position(position), hovered_html_element->title());
+            } else {
+                page->client().page_did_leave_tooltip_area();
+            }
+            if (is_hovering_link)
+                page->client().page_did_hover_link(document.complete_url(hovered_link_element->href()));
+            else
+                page->client().page_did_unhover_link();
+        }
     }
     return true;
 }

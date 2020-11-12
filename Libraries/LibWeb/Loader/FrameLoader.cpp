@@ -160,8 +160,10 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
 
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
-    if (type == Type::Navigation)
-        frame().page().client().page_did_start_loading(url);
+    if (type == Type::Navigation) {
+        if (auto* page = frame().page())
+            page->client().page_did_start_loading(url);
+    }
 
     if (type == Type::IFrame)
         return true;
@@ -184,7 +186,8 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
                     return;
                 }
                 dbg() << "Decoded favicon, " << bitmap->size();
-                frame().page().client().page_did_change_favicon(*bitmap);
+                if (auto* page = frame().page())
+                    page->client().page_did_change_favicon(*bitmap);
             });
     }
 

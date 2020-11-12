@@ -343,8 +343,10 @@ void Document::layout()
     m_layout_root->layout();
     m_layout_root->set_needs_display();
 
-    if (frame()->is_main_frame())
-        frame()->page().client().page_did_layout();
+    if (frame()->is_main_frame()) {
+        if (auto* page = this->page())
+            page->client().page_did_layout();
+    }
 }
 
 void Document::update_style()
@@ -446,27 +448,27 @@ Color Document::link_color() const
 {
     if (m_link_color.has_value())
         return m_link_color.value();
-    if (!frame())
+    if (!page())
         return Color::Blue;
-    return frame()->page().palette().link();
+    return page()->palette().link();
 }
 
 Color Document::active_link_color() const
 {
     if (m_active_link_color.has_value())
         return m_active_link_color.value();
-    if (!frame())
+    if (!page())
         return Color::Red;
-    return frame()->page().palette().active_link();
+    return page()->palette().active_link();
 }
 
 Color Document::visited_link_color() const
 {
     if (m_visited_link_color.has_value())
         return m_visited_link_color.value();
-    if (!frame())
+    if (!page())
         return Color::Magenta;
-    return frame()->page().palette().visited_link();
+    return page()->palette().visited_link();
 }
 
 static JS::VM& main_thread_vm()
@@ -594,6 +596,16 @@ void Document::set_ready_state(const String& ready_state)
 {
     m_ready_state = ready_state;
     dispatch_event(Event::create("readystatechange"));
+}
+
+Page* Document::page()
+{
+    return m_frame ? m_frame->page() : nullptr;
+}
+
+const Page* Document::page() const
+{
+    return m_frame ? m_frame->page() : nullptr;
 }
 
 }

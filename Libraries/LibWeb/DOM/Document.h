@@ -99,6 +99,9 @@ public:
     Frame* frame() { return m_frame.ptr(); }
     const Frame* frame() const { return m_frame.ptr(); }
 
+    Page* page();
+    const Page* page() const;
+
     Color background_color(const Gfx::Palette&) const;
     RefPtr<Gfx::Bitmap> background_image() const;
 

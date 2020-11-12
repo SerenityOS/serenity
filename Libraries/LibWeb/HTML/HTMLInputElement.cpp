@@ -62,9 +62,9 @@ void HTMLInputElement::did_click_button(Badge<LayoutButton>)
 
 RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
-    ASSERT(document().frame());
-    auto& frame = *document().frame();
-    auto& page_view = const_cast<InProcessWebView&>(static_cast<const InProcessWebView&>(frame.page().client()));
+    ASSERT(document().page());
+    auto& page = *document().page();
+    auto& page_view = const_cast<InProcessWebView&>(static_cast<const InProcessWebView&>(page.client()));
 
     if (type() == "hidden")
         return nullptr;
