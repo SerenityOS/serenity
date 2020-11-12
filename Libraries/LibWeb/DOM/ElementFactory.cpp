@@ -40,6 +40,7 @@
 #include <LibWeb/HTML/HTMLDataListElement.h>
 #include <LibWeb/HTML/HTMLDetailsElement.h>
 #include <LibWeb/HTML/HTMLDialogElement.h>
+#include <LibWeb/HTML/HTMLDirectoryElement.h>
 #include <LibWeb/HTML/HTMLDivElement.h>
 #include <LibWeb/HTML/HTMLEmbedElement.h>
 #include <LibWeb/HTML/HTMLFieldSetElement.h>
@@ -132,6 +133,8 @@ NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_n
         return adopt(*new HTML::HTMLDetailsElement(document, qualified_name));
     if (lowercase_tag_name == HTML::TagNames::dialog)
         return adopt(*new HTML::HTMLDialogElement(document, qualified_name));
+    if (lowercase_tag_name == HTML::TagNames::dir)
+        return adopt(*new HTML::HTMLDirectoryElement(document, qualified_name));
     if (lowercase_tag_name == HTML::TagNames::div)
         return adopt(*new HTML::HTMLDivElement(document, qualified_name));
     if (lowercase_tag_name == HTML::TagNames::dl)

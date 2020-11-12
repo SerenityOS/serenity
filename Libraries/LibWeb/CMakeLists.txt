@@ -65,6 +65,7 @@ set(SOURCES
     HTML/HTMLDataListElement.cpp
     HTML/HTMLDetailsElement.cpp
     HTML/HTMLDialogElement.cpp
+    HTML/HTMLDirectoryElement.cpp
     HTML/HTMLDivElement.cpp
     HTML/HTMLElement.cpp
     HTML/HTMLEmbedElement.cpp
@@ -245,11 +246,13 @@ libweb_js_wrapper(HTML/HTMLDataElement)
 libweb_js_wrapper(HTML/HTMLDataListElement)
 libweb_js_wrapper(HTML/HTMLDetailsElement)
 libweb_js_wrapper(HTML/HTMLDialogElement)
+libweb_js_wrapper(HTML/HTMLDirectoryElement)
 libweb_js_wrapper(HTML/HTMLDivElement)
 libweb_js_wrapper(HTML/HTMLDListElement)
 libweb_js_wrapper(HTML/HTMLElement)
 libweb_js_wrapper(HTML/HTMLEmbedElement)
 libweb_js_wrapper(HTML/HTMLFieldSetElement)
+libweb_js_wrapper(HTML/HTMLFontElement)
 libweb_js_wrapper(HTML/HTMLFormElement)
 libweb_js_wrapper(HTML/HTMLFrameElement)
 libweb_js_wrapper(HTML/HTMLFrameSetElement)

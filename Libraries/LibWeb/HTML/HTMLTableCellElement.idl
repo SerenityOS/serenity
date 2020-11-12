@@ -3,4 +3,16 @@ interface HTMLTableCellElement : HTMLElement {
     [Reflect] attribute DOMString headers;
     [Reflect] attribute DOMString abbr;
 
+    [Reflect] attribute DOMString align;
+    [Reflect] attribute DOMString axis;
+    [Reflect] attribute DOMString height;
+    [Reflect] attribute DOMString width;
+
+    [Reflect=char] attribute DOMString ch;
+    [Reflect=charoff] attribute DOMString chOff;
+    [Reflect=nowrap] attribute boolean noWrap;
+    [Reflect=valign] attribute DOMString vAlign;
+
+    [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
+
 }

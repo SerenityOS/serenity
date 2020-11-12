@@ -1,5 +1,14 @@
 interface HTMLTableElement : HTMLElement {
 
+    [Reflect] attribute DOMString align;
+    [Reflect] attribute DOMString border;
+    [Reflect] attribute DOMString frame;
+    [Reflect] attribute DOMString rules;
+    [Reflect] attribute DOMString summary;
+    [Reflect] attribute DOMString width;
 
+    [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
+    [LegacyNullToEmptyString, Reflect=cellpadding] attribute DOMString cellPadding;
+    [LegacyNullToEmptyString, Reflect=cellspacing] attribute DOMString cellSpacing;
 
 }

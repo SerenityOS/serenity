@@ -1,5 +1,10 @@
 interface HTMLBodyElement : HTMLElement {
 
-
+    [LegacyNullToEmptyString, Reflect] attribute DOMString text;
+    [LegacyNullToEmptyString, Reflect] attribute DOMString link;
+    [LegacyNullToEmptyString, Reflect=vlink] attribute DOMString vLink;
+    [LegacyNullToEmptyString, Reflect=alink] attribute DOMString aLink;
+    [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
+    [Reflect] attribute DOMString background;
 
 }
