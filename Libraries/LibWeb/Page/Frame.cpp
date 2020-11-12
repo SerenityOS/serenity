@@ -36,7 +36,7 @@
 namespace Web {
 
 Frame::Frame(DOM::Element& host_element, Frame& main_frame)
-    : m_page(main_frame.page())
+    : m_page(*main_frame.page())
     , m_main_frame(main_frame)
     , m_loader(*this)
     , m_event_handler({}, *this)
@@ -72,7 +72,7 @@ void Frame::setup()
 
 bool Frame::is_focused_frame() const
 {
-    return this == &page().focused_frame();
+    return m_page && &m_page->focused_frame() == this;
 }
 
 void Frame::set_document(DOM::Document* document)
@@ -89,10 +89,12 @@ void Frame::set_document(DOM::Document* document)
 
     if (m_document) {
         m_document->attach_to_frame({}, *this);
-        page().client().page_did_change_title(m_document->title());
+        if (m_page)
+            m_page->client().page_did_change_title(m_document->title());
     }
 
-    page().client().page_did_set_document_in_main_frame(m_document);
+    if (m_page)
+        m_page->client().page_did_set_document_in_main_frame(m_document);
 }
 
 void Frame::set_size(const Gfx::IntSize& size)
@@ -120,7 +122,8 @@ void Frame::set_needs_display(const Gfx::IntRect& rect)
         return;
 
     if (is_main_frame()) {
-        page().client().page_did_invalidate(to_main_frame_rect(rect));
+        if (m_page)
+            m_page->client().page_did_invalidate(to_main_frame_rect(rect));
         return;
     }
 
@@ -168,7 +171,8 @@ void Frame::scroll_to_anchor(const String& fragment)
         float_rect.move_by(-padding_box.left, -padding_box.top);
     }
 
-    page().client().page_did_request_scroll_into_view(enclosing_int_rect(float_rect));
+    if (m_page)
+        m_page->client().page_did_request_scroll_into_view(enclosing_int_rect(float_rect));
 }
 
 Gfx::IntRect Frame::to_main_frame_rect(const Gfx::IntRect& a_rect)

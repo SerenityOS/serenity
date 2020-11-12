@@ -60,7 +60,7 @@ void LayoutWidget::did_set_rect()
 void LayoutWidget::update_widget()
 {
     auto adjusted_widget_position = absolute_rect().location().to_type<int>();
-    auto& page_view = static_cast<const InProcessWebView&>(frame().page().client());
+    auto& page_view = static_cast<const InProcessWebView&>(frame().page()->client());
     adjusted_widget_position.move_by(-page_view.horizontal_scrollbar().value(), -page_view.vertical_scrollbar().value());
     widget().move_to(adjusted_widget_position);
 }

@@ -61,9 +61,8 @@ void Window::set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject& 
 
 void Window::alert(const String& message)
 {
-    if (!m_document.frame())
-        return;
-    m_document.frame()->page().client().page_did_request_alert(message);
+    if (auto* page = m_document.page())
+        page->client().page_did_request_alert(message);
 }
 
 bool Window::confirm(const String& message)

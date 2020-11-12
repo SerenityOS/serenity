@@ -172,7 +172,8 @@ Color IdentifierStyleValue::to_color(const DOM::Document& document) const
     if (id() == CSS::ValueID::VendorSpecificLink)
         return document.link_color();
 
-    auto palette = document.frame()->page().palette();
+    ASSERT(document.page());
+    auto palette = document.page()->palette();
     switch (id()) {
     case CSS::ValueID::VendorSpecificPaletteDesktopBackground:
         return palette.color(ColorRole::DesktopBackground);

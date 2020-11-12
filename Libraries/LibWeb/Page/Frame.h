@@ -55,8 +55,8 @@ public:
 
     void set_document(DOM::Document*);
 
-    Page& page() { return m_page; }
-    const Page& page() const { return m_page; }
+    Page* page() { return m_page; }
+    const Page* page() const { return m_page; }
 
     const Gfx::IntSize& size() const { return m_size; }
     void set_size(const Gfx::IntSize&);
@@ -100,7 +100,7 @@ private:
 
     void setup();
 
-    Page& m_page;
+    WeakPtr<Page> m_page;
     Frame& m_main_frame;
 
     FrameLoader m_loader;
