@@ -26,6 +26,7 @@
 
 #include <AK/Endian.h>
 
+#include <AK/MemoryStream.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -68,14 +69,23 @@ void TLSv12::update_packet(ByteBuffer& packet)
             }
         }
         if (m_context.cipher_spec_set && m_context.crypto.created) {
-            size_t length = packet.size() - header_size + mac_length();
-            auto block_size = m_aes_local->cipher().block_size();
-            // If the length is already a multiple a block_size,
-            // an entire block of padding is added.
-            // In short, we _never_ have no padding.
-            size_t padding = block_size - length % block_size;
-            length += padding;
-            size_t mac_size = mac_length();
+            size_t length = packet.size() - header_size;
+            size_t block_size, padding, mac_size;
+
+            if (!is_aead()) {
+                block_size = m_aes_local.cbc->cipher().block_size();
+                // If the length is already a multiple a block_size,
+                // an entire block of padding is added.
+                // In short, we _never_ have no padding.
+                padding = block_size - length % block_size;
+                length += padding;
+                mac_size = mac_length();
+                length += mac_size;
+            } else {
+                block_size = m_aes_local.gcm->cipher().block_size();
+                padding = 0;
+                mac_size = 0; // AEAD provides its own authentication scheme.
+            }
 
             if (m_context.crypto.created == 1) {
                 // `buffer' will continue to be encrypted
@@ -83,41 +93,93 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 size_t buffer_position = 0;
                 auto iv_size = iv_length();
 
-                // We need enough space for a header, iv_length bytes of IV and whatever the packet contains
-                auto ct = ByteBuffer::create_uninitialized(length + header_size + iv_size);
-
-                // copy the header over
-                ct.overwrite(0, packet.data(), header_size - 2);
-
                 // copy the packet, sans the header
                 buffer.overwrite(buffer_position, packet.offset_pointer(header_size), packet.size() - header_size);
                 buffer_position += packet.size() - header_size;
 
-                // get the appropricate HMAC value for the entire packet
-                auto mac = hmac_message(packet, {}, mac_size, true);
+                ByteBuffer ct;
 
-                // write the MAC
-                buffer.overwrite(buffer_position, mac.data(), mac.size());
-                buffer_position += mac.size();
+                if (is_aead()) {
+                    // We need enough space for a header, the data, a tag, and the IV
+                    ct = ByteBuffer::create_uninitialized(length + header_size + iv_size + 16);
 
-                // Apply the padding (a packet MUST always be padded)
-                memset(buffer.offset_pointer(buffer_position), padding - 1, padding);
-                buffer_position += padding;
+                    // copy the header over
+                    ct.overwrite(0, packet.data(), header_size - 2);
 
-                ASSERT(buffer_position == buffer.size());
+                    // AEAD AAD (13)
+                    // Seq. no (8)
+                    // content type (1)
+                    // version (2)
+                    // length (2)
+                    u8 aad[13];
+                    Bytes aad_bytes { aad, 13 };
+                    OutputMemoryStream aad_stream { aad_bytes };
 
-                auto iv = ByteBuffer::create_uninitialized(iv_size);
-                AK::fill_with_random(iv.data(), iv.size());
+                    u64 seq_no = AK::convert_between_host_and_network_endian(m_context.local_sequence_number);
+                    u16 len = AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size));
 
-                // write it into the ciphertext portion of the message
-                ct.overwrite(header_size, iv.data(), iv.size());
+                    aad_stream.write({ &seq_no, sizeof(seq_no) });
+                    aad_stream.write(packet.bytes().slice(0, 3)); // content-type + version
+                    aad_stream.write({ &len, sizeof(len) });      // length
+                    ASSERT(aad_stream.is_end());
 
-                ASSERT(header_size + iv_size + length == ct.size());
-                ASSERT(length % block_size == 0);
+                    // AEAD IV (12)
+                    // IV (4)
+                    // (Nonce) (8)
+                    // -- Our GCM impl takes 16 bytes
+                    // zero (4)
+                    u8 iv[16];
+                    Bytes iv_bytes { iv, 16 };
+                    Bytes { m_context.crypto.local_aead_iv, 4 }.copy_to(iv_bytes);
+                    AK::fill_with_random(iv_bytes.offset(4), 8);
+                    memset(iv_bytes.offset(12), 0, 4);
 
-                // get a block to encrypt into
-                auto view = ct.bytes().slice(header_size + iv_size, length);
-                m_aes_local->encrypt(buffer, view, iv);
+                    // write the random part of the iv out
+                    iv_bytes.slice(4, 8).copy_to(ct.bytes().slice(header_size));
+
+                    // Write the encrypted data and the tag
+                    m_aes_local.gcm->encrypt(
+                        packet.bytes().slice(header_size, length),
+                        ct.bytes().slice(header_size + 8, length),
+                        iv_bytes,
+                        aad_bytes,
+                        ct.bytes().slice(header_size + 8 + length, 16));
+
+                    ASSERT(header_size + 8 + length + 16 == ct.size());
+
+                } else {
+                    // We need enough space for a header, iv_length bytes of IV and whatever the packet contains
+                    ct = ByteBuffer::create_uninitialized(length + header_size + iv_size);
+
+                    // copy the header over
+                    ct.overwrite(0, packet.data(), header_size - 2);
+
+                    // get the appropricate HMAC value for the entire packet
+                    auto mac = hmac_message(packet, {}, mac_size, true);
+
+                    // write the MAC
+                    buffer.overwrite(buffer_position, mac.data(), mac.size());
+                    buffer_position += mac.size();
+
+                    // Apply the padding (a packet MUST always be padded)
+                    memset(buffer.offset_pointer(buffer_position), padding - 1, padding);
+                    buffer_position += padding;
+
+                    ASSERT(buffer_position == buffer.size());
+
+                    auto iv = ByteBuffer::create_uninitialized(iv_size);
+                    AK::fill_with_random(iv.data(), iv.size());
+
+                    // write it into the ciphertext portion of the message
+                    ct.overwrite(header_size, iv.data(), iv.size());
+
+                    ASSERT(header_size + iv_size + length == ct.size());
+                    ASSERT(length % block_size == 0);
+
+                    // get a block to encrypt into
+                    auto view = ct.bytes().slice(header_size + iv_size, length);
+                    m_aes_local.cbc->encrypt(buffer, view, iv);
+                }
 
                 // store the correct ciphertext length into the packet
                 u16 ct_length = (u16)ct.size() - header_size;
@@ -211,50 +273,116 @@ ssize_t TLSv12::handle_message(const ByteBuffer& buffer)
         print_buffer(buffer.slice_view(header_size, length));
 #endif
 
-        ASSERT(m_aes_remote);
-        auto iv_size = iv_length();
+        if (is_aead()) {
+            ASSERT(m_aes_remote.gcm);
 
-        auto decrypted = m_aes_remote->create_aligned_buffer(length - iv_size);
-        auto iv = buffer.slice_view(header_size, iv_size);
+            if (length < 24) {
+                dbg() << "Invalid packet length";
+                auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
+                write_packet(packet);
+                return (i8)Error::BrokenPacket;
+            }
 
-        Bytes decrypted_span = decrypted;
-        m_aes_remote->decrypt(buffer.bytes().slice(header_size + iv_size, length - iv_size), decrypted_span, iv);
+            auto packet_length = length - iv_length() - 16;
+            auto payload = plain.bytes();
+            auto decrypted = ByteBuffer::create_uninitialized(packet_length);
 
-        length = decrypted_span.size();
+            // AEAD AAD (13)
+            // Seq. no (8)
+            // content type (1)
+            // version (2)
+            // length (2)
+            u8 aad[13];
+            Bytes aad_bytes { aad, 13 };
+            OutputMemoryStream aad_stream { aad_bytes };
+
+            u64 seq_no = AK::convert_between_host_and_network_endian(m_context.remote_sequence_number);
+            u16 len = AK::convert_between_host_and_network_endian((u16)packet_length);
+
+            aad_stream.write({ &seq_no, sizeof(seq_no) });              // Sequence number
+            aad_stream.write(buffer.bytes().slice(0, header_size - 2)); // content-type + version
+            aad_stream.write({ &len, sizeof(u16) });
+            ASSERT(aad_stream.is_end());
+
+            auto nonce = payload.slice(0, iv_length());
+            payload = payload.slice(iv_length());
+
+            // AEAD IV (12)
+            // IV (4)
+            // (Nonce) (8)
+            // -- Our GCM impl takes 16 bytes
+            // zero (4)
+            u8 iv[16];
+            Bytes iv_bytes { iv, 16 };
+            Bytes { m_context.crypto.remote_aead_iv, 4 }.copy_to(iv_bytes);
+            nonce.copy_to(iv_bytes.slice(4));
+            memset(iv_bytes.offset(12), 0, 4);
+
+            auto ciphertext = payload.slice(0, payload.size() - 16);
+            auto tag = payload.slice(ciphertext.size());
+
+            auto consistency = m_aes_remote.gcm->decrypt(
+                ciphertext,
+                decrypted,
+                iv_bytes,
+                aad_bytes,
+                tag);
+
+            if (consistency != Crypto::VerificationConsistency::Consistent) {
+                dbg() << "integrity check failed (tag length " << tag.size() << ")";
+                auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
+                write_packet(packet);
+
+                return (i8)Error::IntegrityCheckFailed;
+            }
+
+            plain = decrypted;
+        } else {
+            ASSERT(m_aes_remote.cbc);
+            auto iv_size = iv_length();
+
+            auto decrypted = m_aes_remote.cbc->create_aligned_buffer(length - iv_size);
+            auto iv = buffer.slice_view(header_size, iv_size);
+
+            Bytes decrypted_span = decrypted;
+            m_aes_remote.cbc->decrypt(buffer.bytes().slice(header_size + iv_size, length - iv_size), decrypted_span, iv);
+
+            length = decrypted_span.size();
 
 #ifdef TLS_DEBUG
-        dbg() << "Decrypted: ";
-        print_buffer(decrypted);
+            dbg() << "Decrypted: ";
+            print_buffer(decrypted);
 #endif
 
-        auto mac_size = mac_length();
-        if (length < mac_size) {
-            dbg() << "broken packet";
-            auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
-            write_packet(packet);
-            return (i8)Error::BrokenPacket;
+            auto mac_size = mac_length();
+            if (length < mac_size) {
+                dbg() << "broken packet";
+                auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
+                write_packet(packet);
+                return (i8)Error::BrokenPacket;
+            }
+
+            length -= mac_size;
+
+            const u8* message_hmac = decrypted_span.offset(length);
+            u8 temp_buf[5];
+            memcpy(temp_buf, buffer.offset_pointer(0), 3);
+            *(u16*)(temp_buf + 3) = AK::convert_between_host_and_network_endian(length);
+            auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span.slice(0, length), mac_size);
+            auto message_mac = ByteBuffer::wrap(const_cast<u8*>(message_hmac), mac_size);
+            if (hmac != message_mac) {
+                dbg() << "integrity check failed (mac length " << mac_size << ")";
+                dbg() << "mac received:";
+                print_buffer(message_mac);
+                dbg() << "mac computed:";
+                print_buffer(hmac);
+                auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
+                write_packet(packet);
+
+                return (i8)Error::IntegrityCheckFailed;
+            }
+            plain = decrypted.slice(0, length);
         }
-
-        length -= mac_size;
-
-        const u8* message_hmac = decrypted_span.offset(length);
-        u8 temp_buf[5];
-        memcpy(temp_buf, buffer.offset_pointer(0), 3);
-        *(u16*)(temp_buf + 3) = AK::convert_between_host_and_network_endian(length);
-        auto hmac = hmac_message({ temp_buf, 5 }, decrypted_span.slice(0, length), mac_size);
-        auto message_mac = ByteBuffer::wrap(const_cast<u8*>(message_hmac), mac_size);
-        if (hmac != message_mac) {
-            dbg() << "integrity check failed (mac length " << mac_size << ")";
-            dbg() << "mac received:";
-            print_buffer(message_mac);
-            dbg() << "mac computed:";
-            print_buffer(hmac);
-            auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
-            write_packet(packet);
-
-            return (i8)Error::IntegrityCheckFailed;
-        }
-        plain = decrypted.slice(0, length);
     }
     m_context.remote_sequence_number++;
 
