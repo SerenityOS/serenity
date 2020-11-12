@@ -247,18 +247,17 @@ bool contains(const StringView& str, const StringView& needle, CaseSensitivity c
         return memmem(str_chars, str.length(), needle_chars, needle.length()) != nullptr;
 
     auto needle_first = to_lowercase(needle_chars[0]);
-    size_t slen = str.length() - needle.length();
-    for (size_t si = 0; si < slen; si++) {
+    for (size_t si = 0; si < str.length(); si++) {
         if (to_lowercase(str_chars[si]) != needle_first)
             continue;
-        size_t ni = 1;
-        while (ni < needle.length()) {
-            if (to_lowercase(str_chars[si + ni]) != to_lowercase(needle_chars[ni]))
+        for (size_t ni = 0; si + ni < str.length(); ni++) {
+            if (to_lowercase(str_chars[si + ni]) != to_lowercase(needle_chars[ni])) {
+                si += ni;
                 break;
-            ni++;
+            }
+            if (ni + 1 == needle.length())
+                return true;
         }
-        if (ni == needle.length())
-            return true;
     }
     return false;
 }
