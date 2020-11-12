@@ -203,6 +203,8 @@ TEST_CASE(contains)
     EXPECT(AK::StringUtils::contains(test_string, "BCX", CaseSensitivity::CaseSensitive));
     EXPECT(AK::StringUtils::contains(test_string, "BCX", CaseSensitivity::CaseInsensitive));
     EXPECT(AK::StringUtils::contains(test_string, "BcX", CaseSensitivity::CaseInsensitive));
+    EXPECT(!AK::StringUtils::contains(test_string, "xyz", CaseSensitivity::CaseSensitive));
+    EXPECT(AK::StringUtils::contains(test_string, "xyz", CaseSensitivity::CaseInsensitive));
     EXPECT(!AK::StringUtils::contains(test_string, "EFG", CaseSensitivity::CaseSensitive));
     EXPECT(!AK::StringUtils::contains(test_string, "EfG", CaseSensitivity::CaseInsensitive));
     EXPECT(AK::StringUtils::contains(test_string, "", CaseSensitivity::CaseSensitive));
