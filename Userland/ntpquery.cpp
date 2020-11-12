@@ -24,11 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _GNU_SOURCE
+#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
 #include <endian.h>
+#include <inttypes.h>
 #include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -37,6 +39,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/uio.h>
+#include <time.h>
 
 // An NtpTimestamp is a 64-bit integer that's a 32.32 binary-fixed point number.
 // The integral part in the upper 32 bits represents seconds since 1900-01-01.
@@ -99,7 +102,7 @@ static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
     gmtime_r(&t.tv_sec, &tm);
     size_t written = strftime(buffer, sizeof(buffer), "%Y-%m-%dT%T.", &tm);
     ASSERT(written == 20);
-    written += snprintf(buffer + written, sizeof(buffer) - written, "%06d", t.tv_usec);
+    written += snprintf(buffer + written, sizeof(buffer) - written, "%06d", (int)t.tv_usec);
     ASSERT(written == 26);
     buffer[written++] = 'Z';
     buffer[written] = '\0';
@@ -108,10 +111,12 @@ static String format_ntp_timestamp(NtpTimestamp ntp_timestamp)
 
 int main(int argc, char** argv)
 {
+#ifdef __serenity__
     if (pledge("stdio inet dns settime", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
+#endif
 
     bool adjust_time = false;
     bool set_time = false;
@@ -139,12 +144,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (!adjust_time && !set_time) {
         if (pledge("stdio inet dns", nullptr) < 0) {
             perror("pledge");
             return 1;
         }
     }
+#endif
 
     auto* hostent = gethostbyname(host);
     if (!hostent) {
@@ -152,11 +159,13 @@ int main(int argc, char** argv)
         return 1;
     }
 
+#ifdef __serenity__
     if (pledge((adjust_time || set_time) ? "stdio inet settime" : "stdio inet", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
     unveil(nullptr, nullptr);
+#endif
 
     int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (fd < 0) {
@@ -243,7 +252,7 @@ int main(int argc, char** argv)
         return 1;
     }
     if (packet.origin_timestamp != random_transmit_timestamp) {
-        fprintf(stderr, "expected %#016llx as origin timestamp, got %#016llx\n", random_transmit_timestamp, packet.origin_timestamp);
+        fprintf(stderr, "expected %#016" PRIx64 " as origin timestamp, got %#016" PRIx64 "\n", random_transmit_timestamp, packet.origin_timestamp);
         return 1;
     }
     if (packet.transmit_timestamp == 0) {
@@ -286,15 +295,15 @@ int main(int argc, char** argv)
         }
         printf("\n");
 
-        printf("Reference timestamp:   %#016llx (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
-        printf("Origin timestamp:      %#016llx (%s)\n", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
-        printf("Receive timestamp:     %#016llx (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
-        printf("Transmit timestamp:    %#016llx (%s)\n", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
-        printf("Destination timestamp: %#016llx (%s)\n", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
+        printf("Reference timestamp:   %#016" PRIx64 " (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
+        printf("Origin timestamp:      %#016" PRIx64 " (%s)\n", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
+        printf("Receive timestamp:     %#016" PRIx64 " (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
+        printf("Transmit timestamp:    %#016" PRIx64 " (%s)\n", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
+        printf("Destination timestamp: %#016" PRIx64 " (%s)\n", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
 
         // When the system isn't under load, user-space t and packet_t are identical. If a shell with `yes` is running, it can be as high as 30ms in this program,
         // which gets user-space time immediately after the recvmsg() call. In programs that have an event loop reading from multiple sockets, it could be higher.
-        printf("Receive latency: %lld.%06d s\n", kernel_to_userspace_latency.tv_sec, kernel_to_userspace_latency.tv_usec);
+        printf("Receive latency: %" PRId64 ".%06d s\n", kernel_to_userspace_latency.tv_sec, (int)kernel_to_userspace_latency.tv_usec);
     }
 
     // Parts of the "Clock Filter" computations, https://tools.ietf.org/html/rfc5905#section-10
