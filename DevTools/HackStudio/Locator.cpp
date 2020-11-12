@@ -176,7 +176,7 @@ void Locator::update_suggestions()
     auto typed_text = m_textbox->text();
     Vector<String> suggestions;
     project().for_each_text_file([&](auto& file) {
-        if (file.name().contains(typed_text))
+        if (file.name().contains(typed_text, CaseSensitivity::CaseInsensitive))
             suggestions.append(file.name());
     });
     dbgln("I have {} suggestion(s):", suggestions.size());
