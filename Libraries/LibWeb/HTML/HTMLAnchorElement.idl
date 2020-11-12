@@ -7,4 +7,10 @@ interface HTMLAnchorElement : HTMLElement {
     [Reflect] attribute DOMString hreflang;
     [Reflect] attribute DOMString type;
 
+    [Reflect] attribute DOMString coords;
+    [Reflect] attribute DOMString charset;
+    [Reflect] attribute DOMString name;
+    [Reflect] attribute DOMString rev;
+    [Reflect] attribute DOMString shape;
+
 }

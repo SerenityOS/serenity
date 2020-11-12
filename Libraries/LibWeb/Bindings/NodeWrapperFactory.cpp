@@ -43,10 +43,12 @@
 #include <LibWeb/Bindings/HTMLDataListElementWrapper.h>
 #include <LibWeb/Bindings/HTMLDetailsElementWrapper.h>
 #include <LibWeb/Bindings/HTMLDialogElementWrapper.h>
+#include <LibWeb/Bindings/HTMLDirectoryElementWrapper.h>
 #include <LibWeb/Bindings/HTMLDivElementWrapper.h>
 #include <LibWeb/Bindings/HTMLElementWrapper.h>
 #include <LibWeb/Bindings/HTMLEmbedElementWrapper.h>
 #include <LibWeb/Bindings/HTMLFieldSetElementWrapper.h>
+#include <LibWeb/Bindings/HTMLFontElementWrapper.h>
 #include <LibWeb/Bindings/HTMLFormElementWrapper.h>
 #include <LibWeb/Bindings/HTMLFrameElementWrapper.h>
 #include <LibWeb/Bindings/HTMLFrameSetElementWrapper.h>
@@ -118,9 +120,11 @@
 #include <LibWeb/HTML/HTMLDataListElement.h>
 #include <LibWeb/HTML/HTMLDetailsElement.h>
 #include <LibWeb/HTML/HTMLDialogElement.h>
+#include <LibWeb/HTML/HTMLDirectoryElement.h>
 #include <LibWeb/HTML/HTMLDivElement.h>
 #include <LibWeb/HTML/HTMLEmbedElement.h>
 #include <LibWeb/HTML/HTMLFieldSetElement.h>
+#include <LibWeb/HTML/HTMLFontElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLFrameElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
@@ -207,6 +211,8 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLDetailsElement>(node)));
     if (is<HTML::HTMLDialogElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLDialogElement>(node)));
+    if (is<HTML::HTMLDirectoryElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLDirectoryElement>(node)));
     if (is<HTML::HTMLDivElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLDivElement>(node)));
     if (is<HTML::HTMLDListElement>(node))
@@ -215,6 +221,8 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLEmbedElement>(node)));
     if (is<HTML::HTMLFieldSetElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLFieldSetElement>(node)));
+    if (is<HTML::HTMLFontElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLFontElement>(node)));
     if (is<HTML::HTMLFormElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, downcast<HTML::HTMLFormElement>(node)));
     if (is<HTML::HTMLFrameElement>(node))

@@ -10,4 +10,8 @@ interface HTMLLinkElement : HTMLElement {
     [Reflect=imagesizes] attribute DOMString imageSizes;
     [Reflect] attribute boolean disabled;
 
+    [Reflect] attribute DOMString charset;
+    [Reflect] attribute DOMString rev;
+    [Reflect] attribute DOMString target;
+
 }

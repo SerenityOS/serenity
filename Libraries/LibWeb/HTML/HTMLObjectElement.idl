@@ -7,4 +7,13 @@ interface HTMLObjectElement : HTMLElement {
     [Reflect] attribute DOMString width;
     [Reflect] attribute DOMString height;
 
+    [Reflect] attribute DOMString align;
+    [Reflect] attribute DOMString archive;
+    [Reflect] attribute DOMString code;
+    [Reflect] attribute boolean declare;
+    [Reflect] attribute DOMString standby;
+    [Reflect=codetype] attribute DOMString codeType;
+
+    [LegacyNullToEmptyString, Reflect] attribute DOMString border;
+
 }

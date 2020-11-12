@@ -7,4 +7,8 @@ interface HTMLImageElement : HTMLElement {
     [Reflect=usemap] attribute DOMString useMap;
     [Reflect=ismap] attribute boolean isMap;
 
+    [Reflect] attribute DOMString name;
+    [Reflect] attribute DOMString align;
+    [LegacyNullToEmptyString, Reflect] attribute DOMString border;
+
 }

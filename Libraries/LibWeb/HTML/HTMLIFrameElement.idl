@@ -9,4 +9,11 @@ interface HTMLIFrameElement : HTMLElement {
     [Reflect=allowfullscreen] attribute boolean allowFullscreen;
 
     [ReturnNullIfCrossOrigin] readonly attribute Document? contentDocument;
+
+    [Reflect] attribute DOMString align;
+    [Reflect] attribute DOMString scrolling;
+    [Reflect=frameborder] attribute DOMString frameBorder;
+
+    [LegacyNullToEmptyString, Reflect=marginheight] attribute DOMString marginHeight;
+    [LegacyNullToEmptyString, Reflect=marginwidth] attribute DOMString marginWidth;
 }

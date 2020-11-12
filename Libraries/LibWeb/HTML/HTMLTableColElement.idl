@@ -1,5 +1,9 @@
 interface HTMLTableColElement : HTMLElement {
 
-
+    [Reflect] attribute DOMString align;
+    [Reflect=char] attribute DOMString ch;
+    [Reflect=charoff] attribute DOMString chOff;
+    [Reflect=valign] attribute DOMString vAlign;
+    [Reflect] attribute DOMString width;
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, The SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,18 +30,17 @@
 
 namespace Web::HTML {
 
-class HTMLFontElement final : public HTMLElement {
+// NOTE: This element is marked as obsolete, but is still listed as required by the specification.
+class HTMLDirectoryElement final : public HTMLElement {
 public:
-    using WrapperType = Bindings::HTMLFontElementWrapper;
+    using WrapperType = Bindings::HTMLDirectoryElementWrapper;
 
-    HTMLFontElement(DOM::Document&, const QualifiedName& qualified_name);
-    virtual ~HTMLFontElement() override;
-
-    virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
+    HTMLDirectoryElement(DOM::Document&, const QualifiedName& qualified_name);
+    virtual ~HTMLDirectoryElement() override;
 };
 
 }
 
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLFontElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_element() && downcast<Web::DOM::Element>(node).local_name() == Web::HTML::TagNames::font; }
+AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLDirectoryElement)
+static bool is_type(const Web::DOM::Node& node) { return node.is_html_element() && downcast<Web::HTML::HTMLElement>(node).local_name() == Web::HTML::TagNames::dir; }
 AK_END_TYPE_TRAITS()

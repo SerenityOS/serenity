@@ -48,10 +48,11 @@ ENUMERATE_HTML_ATTRIBUTES
     ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-    // NOTE: Special case for the class and for attributes since they're C++ keywords.
+    // NOTE: Special cases for C++ keywords.
     class_ = "class";
     for_ = "for";
     default_ = "default";
+    char_ = "char";
 
     // NOTE: Special cases for attributes with dashes in them.
     accept_charset = "accept-charset";
