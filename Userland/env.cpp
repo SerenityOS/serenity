@@ -39,6 +39,12 @@ int main(int argc, char** argv)
     const char* filename = nullptr;
 
     for (int idx = 1; idx < argc; ++idx) {
+        if (idx == 1) {
+            if (StringView { argv[idx] } == "-i" || StringView { argv[idx] } == "--ignore-environment") {
+                *environ = NULL;
+                continue;
+            }
+        }
         if (StringView { argv[idx] }.contains('=')) {
             putenv(argv[idx]);
         } else {
