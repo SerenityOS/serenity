@@ -50,7 +50,7 @@ void Reference::put(GlobalObject& global_object, Value value)
     }
 
     if (!base().is_object() && vm.in_strict_mode()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_string());
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveAssignment, m_name.to_value(global_object.vm()).to_string_without_side_effects());
         return;
     }
 
