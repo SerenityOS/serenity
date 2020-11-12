@@ -21,4 +21,7 @@ interface HTMLInputElement : HTMLElement {
     [Reflect=readonly] attribute boolean readOnly;
     [Reflect] attribute boolean required;
 
+    [Reflect] attribute DOMString align;
+    [Reflect=usemap] attribute DOMString useMap;
+
 }

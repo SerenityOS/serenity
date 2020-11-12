@@ -1,5 +1,5 @@
 interface HTMLDivElement : HTMLElement {
 
-
+    [Reflect] attribute DOMString align;
 
 }

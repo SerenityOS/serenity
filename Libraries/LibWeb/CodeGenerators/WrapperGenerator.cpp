@@ -55,7 +55,7 @@ static String snake_name(const StringView& title_name)
 
 static String make_input_acceptable_cpp(const String& input)
 {
-    if (input == "class" || input == "template" || input == "for" || input == "default") {
+    if (input.is_one_of("class", "template", "for", "default", "char")) {
         StringBuilder builder;
         builder.append(input);
         builder.append('_');
@@ -227,6 +227,7 @@ static OwnPtr<Interface> parse_interface(const StringView& input)
             } else {
                 extended_attributes.set(name, {});
             }
+            lexer.consume_specific(',');
         }
         consume_whitespace();
         return extended_attributes;
