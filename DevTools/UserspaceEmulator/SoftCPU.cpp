@@ -1638,7 +1638,13 @@ void SoftCPU::FIMUL_RM32(const X86::Instruction& insn)
 
 void SoftCPU::FCMOVE(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FICOM_RM32(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FCMOVBE(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FCMOVBE(const X86::Instruction& insn)
+{
+    if (evaluate_condition(6))
+        fpu_set(0, fpu_get(insn.rm() & 7));
+}
+
 void SoftCPU::FICOMP_RM32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FCMOVU(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FISUB_RM32(const X86::Instruction&) { TODO_INSN(); }
@@ -1677,7 +1683,11 @@ void SoftCPU::FIST_RM32(const X86::Instruction& insn)
     insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(bit_cast<u32>(i32)));
 }
 
-void SoftCPU::FCMOVNBE(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FCMOVNBE(const X86::Instruction& insn)
+{
+    if (evaluate_condition(7))
+        fpu_set(0, fpu_get(insn.rm() & 7));
+}
 
 void SoftCPU::FISTP_RM32(const X86::Instruction& insn)
 {
