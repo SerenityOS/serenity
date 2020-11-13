@@ -28,6 +28,7 @@
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <string.h>
 
@@ -266,6 +267,7 @@ static bool read_max_val(PPMLoadingContext& context, Streamer& streamer)
 static bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
 {
     Vector<Gfx::Color> color_data;
+    color_data.ensure_capacity(context.width * context.height);
 
     if (context.type == PPMLoadingContext::P3_ASCII) {
         u16 red;
@@ -303,6 +305,9 @@ static bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
         }
     }
 
+    if (context.width * context.height != color_data.size())
+        return false;
+
     context.bitmap = Bitmap::create_purgeable(BitmapFormat::RGB32, { context.width, context.height });
 
     size_t index = 0;
@@ -321,6 +326,10 @@ static bool decode_ppm(PPMLoadingContext& context)
 {
     if (context.state >= PPMLoadingContext::State::Decoded)
         return true;
+
+    auto error_guard = ArmedScopeGuard([&] {
+        context.state = PPMLoadingContext::State::Error;
+    });
 
     Streamer streamer(context.data, context.data_size);
 
@@ -351,6 +360,7 @@ static bool decode_ppm(PPMLoadingContext& context)
     if (!read_image_data(context, streamer))
         return false;
 
+    error_guard.disarm();
     context.state = PPMLoadingContext::State::Decoded;
     return true;
 }
