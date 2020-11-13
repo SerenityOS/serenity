@@ -194,6 +194,9 @@ public:
 
     Window& window() { return *m_window; }
 
+    const String& content_type() const { return m_content_type; }
+    void set_content_type(const String& content_type) { m_content_type = content_type; }
+
 private:
     explicit Document(const URL&);
 
@@ -254,6 +257,7 @@ private:
     RefPtr<Document> m_associated_inert_template_document;
 
     String m_ready_state { "loading" };
+    String m_content_type;
 };
 
 }
