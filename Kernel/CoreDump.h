@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/Forward.h>
@@ -38,7 +39,7 @@ class Process;
 
 class CoreDump {
 public:
-    static OwnPtr<CoreDump> create(Process&);
+    static OwnPtr<CoreDump> create(Process&, const LexicalPath& output_path);
 
     ~CoreDump();
     void write();
@@ -47,7 +48,7 @@ public:
     CoreDump(Process&, NonnullRefPtr<FileDescription>&&);
 
 private:
-    static RefPtr<FileDescription> create_target_file(const Process&);
+    static RefPtr<FileDescription> create_target_file(const Process&, const LexicalPath& output_path);
 
     void write_elf_header();
     void write_program_headers(size_t notes_size);

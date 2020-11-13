@@ -589,7 +589,9 @@ void Process::finalize()
 
     if (m_should_dump_core) {
         dbgln("Generating coredump for pid: {}", m_pid.value());
-        auto coredump = CoreDump::create(*this);
+
+        auto coredump_path = String::format("/tmp/coredump/%s_%u", name().characters(), RTC::now());
+        auto coredump = CoreDump::create(*this, LexicalPath { coredump_path });
         if (!coredump) {
             dbgln("Could not create coredump");
         }
