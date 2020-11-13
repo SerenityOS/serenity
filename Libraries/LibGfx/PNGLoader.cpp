@@ -743,6 +743,9 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     if (context.state >= PNGLoadingContext::State::BitmapDecoded)
         return true;
 
+    ASSERT(context.width >= 0);
+    ASSERT(context.height >= 0);
+
     unsigned long srclen = context.compressed_data.size() - 6;
     unsigned long destlen = 0;
     int ret = puff(nullptr, &destlen, context.compressed_data.data() + 2, &srclen);
@@ -806,6 +809,12 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
     if (data.size() < (int)sizeof(PNG_IHDR))
         return false;
     auto& ihdr = *(const PNG_IHDR*)data.data();
+
+    if (ihdr.width > NumericLimits<i32>::max() || ihdr.height > NumericLimits<i32>::max()) {
+        dbgln("PNG has invalid geometry {}x{}", (u32)ihdr.width, (u32)ihdr.height);
+        return false;
+    }
+
     context.width = ihdr.width;
     context.height = ihdr.height;
     context.bit_depth = ihdr.bit_depth;
