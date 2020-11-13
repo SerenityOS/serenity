@@ -16,6 +16,15 @@ target_link_libraries(FuzzELF
     PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>
     )
 
+add_executable(FuzzGemini FuzzGemini.cpp)
+target_compile_options(FuzzGemini
+    PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
+    )
+target_link_libraries(FuzzGemini
+    PUBLIC Lagom
+    PRIVATE $<$<C_COMPILER_ID:Clang>:-fsanitize=fuzzer>
+    )
+
 add_executable(FuzzJs FuzzJs.cpp)
 target_compile_options(FuzzJs
     PRIVATE $<$<C_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
