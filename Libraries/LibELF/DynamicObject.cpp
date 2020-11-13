@@ -420,11 +420,6 @@ Elf32_Addr DynamicObject::patch_plt_entry(u32 relocation_offset)
     ASSERT(relocation.type() == R_386_JMP_SLOT);
 
     auto sym = relocation.symbol();
-    if (StringView { sym.name() } == "__cxa_demangle") {
-        dbgln("__cxa_demangle is currently not supported for shared objects");
-        // FIXME: Where is it defined?
-        ASSERT_NOT_REACHED();
-    }
 
     u8* relocation_address = relocation.address().as_ptr();
     auto res = lookup_symbol(sym);
