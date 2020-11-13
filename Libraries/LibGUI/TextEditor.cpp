@@ -170,8 +170,8 @@ TextPosition TextEditor::text_position_at(const Gfx::IntPoint& a_position) const
     size_t column_index = 0;
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
-        for_each_visual_line(line_index, [&](const Gfx::IntRect& rect, auto& view, size_t start_of_line) {
-            if (is_multi_line() && !rect.contains_vertically(position.y()))
+        for_each_visual_line(line_index, [&](const Gfx::IntRect& rect, auto& view, size_t start_of_line, [[maybe_unused]] bool is_last_visual_line) {
+            if (is_multi_line() && !rect.contains_vertically(position.y()) && !is_last_visual_line)
                 return IterationDecision::Continue;
             column_index = start_of_line;
             if (position.x() <= 0) {
@@ -459,7 +459,7 @@ void TextEditor::paint_event(PaintEvent& event)
         size_t selection_end_column_within_line = selection.end().line() == line_index ? selection.end().column() : line.length();
 
         size_t visual_line_index = 0;
-        for_each_visual_line(line_index, [&](const Gfx::IntRect& visual_line_rect, auto& visual_line_text, size_t start_of_visual_line) {
+        for_each_visual_line(line_index, [&](const Gfx::IntRect& visual_line_rect, auto& visual_line_text, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
                 painter.fill_rect(visual_line_rect, widget_background_color.darkened(0.9f));
 #ifdef DEBUG_TEXTEDITOR
@@ -1051,7 +1051,7 @@ int TextEditor::content_x_for_position(const TextPosition& position) const
     int x_offset = 0;
     switch (m_text_alignment) {
     case Gfx::TextAlignment::CenterLeft:
-        for_each_visual_line(position.line(), [&](const Gfx::IntRect&, auto& visual_line_view, size_t start_of_visual_line) {
+        for_each_visual_line(position.line(), [&](const Gfx::IntRect&, auto& visual_line_view, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
             size_t offset_in_visual_line = position.column() - start_of_visual_line;
             if (position.column() >= start_of_visual_line && (offset_in_visual_line <= visual_line_view.length())) {
                 if (offset_in_visual_line == 0) {
@@ -1090,7 +1090,7 @@ Gfx::IntRect TextEditor::content_rect_for_position(const TextPosition& position)
     }
 
     Gfx::IntRect rect;
-    for_each_visual_line(position.line(), [&](const Gfx::IntRect& visual_line_rect, auto& view, size_t start_of_visual_line) {
+    for_each_visual_line(position.line(), [&](const Gfx::IntRect& visual_line_rect, auto& view, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
         if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
             // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
             //       *and* included in what we get from content_x_for_position().
@@ -1566,7 +1566,7 @@ void TextEditor::ensure_cursor_is_valid()
 size_t TextEditor::visual_line_containing(size_t line_index, size_t column) const
 {
     size_t visual_line_index = 0;
-    for_each_visual_line(line_index, [&](const Gfx::IntRect&, auto& view, size_t start_of_visual_line) {
+    for_each_visual_line(line_index, [&](const Gfx::IntRect&, auto& view, size_t start_of_visual_line, [[maybe_unused]] bool is_last_visual_line) {
         if (column >= start_of_visual_line && ((column - start_of_visual_line) < view.length()))
             return IterationDecision::Break;
         ++visual_line_index;
@@ -1633,7 +1633,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
             if (m_icon)
                 visual_line_rect.move_by(icon_size() + icon_padding(), 0);
         }
-        if (callback(visual_line_rect, visual_line_view, start_of_line) == IterationDecision::Break)
+        if (callback(visual_line_rect, visual_line_view, start_of_line, visual_line_index == visual_data.visual_line_breaks.size() - 1) == IterationDecision::Break)
             break;
         start_of_line = visual_line_break;
         ++visual_line_index;
