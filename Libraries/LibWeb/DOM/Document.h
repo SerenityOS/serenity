@@ -39,6 +39,7 @@
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/CSS/StyleSheetList.h>
+#include <LibWeb/DOM/DOMImplementation.h>
 #include <LibWeb/DOM/NonElementParentNode.h>
 #include <LibWeb/DOM/ParentNode.h>
 
@@ -64,6 +65,7 @@ public:
     URL url() const { return m_url; }
 
     Origin origin() const;
+    void set_origin(const Origin& origin);
 
     bool is_scripting_enabled() const { return true; }
 
@@ -197,6 +199,8 @@ public:
     const String& content_type() const { return m_content_type; }
     void set_content_type(const String& content_type) { m_content_type = content_type; }
 
+    const NonnullRefPtr<DOMImplementation> implementation() { return m_implementation; }
+
 private:
     explicit Document(const URL&);
 
@@ -258,6 +262,8 @@ private:
 
     String m_ready_state { "loading" };
     String m_content_type;
+
+    NonnullRefPtr<DOMImplementation> m_implementation;
 };
 
 }

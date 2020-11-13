@@ -68,6 +68,7 @@ Document::Document(const URL& url)
     , m_style_sheets(CSS::StyleSheetList::create(*this))
     , m_url(url)
     , m_window(Window::create_with_document(*this))
+    , m_implementation(DOMImplementation::create(*this))
 {
     m_style_update_timer = Core::Timer::create_single_shot(0, [this] {
         update_style();
@@ -134,6 +135,13 @@ Origin Document::origin() const
     if (!m_url.is_valid())
         return {};
     return { m_url.protocol(), m_url.host(), m_url.port() };
+}
+
+void Document::set_origin(const Origin& origin)
+{
+    m_url.set_protocol(origin.protocol());
+    m_url.set_host(origin.host());
+    m_url.set_port(origin.port());
 }
 
 void Document::schedule_style_update()

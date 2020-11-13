@@ -78,6 +78,7 @@ struct Type {
 struct Parameter {
     Type type;
     String name;
+    bool optional { false };
 };
 
 struct Function {
@@ -88,8 +89,14 @@ struct Function {
 
     size_t length() const
     {
-        // FIXME: Take optional arguments into account
-        return parameters.size();
+        // FIXME: This seems to produce a length that is way over what it's supposed to be.
+        //        For example, getElementsByTagName has its length set to 20 when it should be 1.
+        size_t length = 0;
+        for (auto& parameter : parameters) {
+            if (!parameter.optional)
+                length++;
+        }
+        return length;
     }
 };
 
@@ -198,10 +205,13 @@ static OwnPtr<Interface> parse_interface(const StringView& input)
         for (;;) {
             if (lexer.consume_specific(')'))
                 break;
+            bool optional = lexer.consume_specific("optional");
+            if (optional)
+                consume_whitespace();
             auto type = parse_type();
             consume_whitespace();
             auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')'; });
-            parameters.append({ move(type), move(name) });
+            parameters.append({ move(type), move(name), optional });
             if (lexer.consume_specific(')'))
                 break;
             assert_specific(',');
@@ -496,6 +506,7 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/CommentWrapper.h>
+#include <LibWeb/Bindings/DOMImplementationWrapper.h>
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
@@ -595,7 +606,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 )~~~");
     }
 
-    auto generate_to_cpp = [&](auto& parameter, auto& js_name, const auto& js_suffix, auto cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false) {
+    auto generate_to_cpp = [&](auto& parameter, auto& js_name, const auto& js_suffix, auto cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false) {
         auto scoped_generator = generator.fork();
         scoped_generator.set("cpp_name", cpp_name);
         scoped_generator.set("js_name", js_name);
@@ -608,12 +619,24 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         else
             scoped_generator.set("return_statement", "return {};");
 
+        // FIXME: Add support for optional to all types
         if (parameter.type.name == "DOMString") {
-            scoped_generator.append(R"~~~(
+            if (!optional) {
+                scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
     if (vm.exception())
         @return_statement@
 )~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    String @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined()) {
+        @cpp_name@ = @js_name@@js_suffix@.to_string(global_object, @legacy_null_to_empty_string@);
+        if (vm.exception())
+            @return_statement@
+    }
+)~~~");
+            }
         } else if (parameter.type.name == "EventListener") {
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_function()) {
@@ -663,7 +686,8 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
             arguments_generator.append(R"~~~(
     auto arg@argument.index@ = vm.argument(@argument.index@);
 )~~~");
-            generate_to_cpp(parameter, "arg", String::number(argument_index), snake_name(parameter.name), return_void);
+            // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
+            generate_to_cpp(parameter, "arg", String::number(argument_index), snake_name(parameter.name), return_void, false, parameter.optional);
             ++argument_index;
         }
 
