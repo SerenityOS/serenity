@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <Kernel/CoreDump.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
 

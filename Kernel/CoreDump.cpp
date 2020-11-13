@@ -40,9 +40,9 @@
 
 namespace Kernel {
 
-OwnPtr<CoreDump> CoreDump::create(Process& process)
+OwnPtr<CoreDump> CoreDump::create(Process& process, const LexicalPath& output_path)
 {
-    auto fd = create_target_file(process);
+    auto fd = create_target_file(process, output_path);
     if (!fd)
         return nullptr;
     return make<CoreDump>(process, fd.release_nonnull());
@@ -59,19 +59,19 @@ CoreDump::~CoreDump()
 {
 }
 
-RefPtr<FileDescription> CoreDump::create_target_file(const Process& process)
+RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const LexicalPath& output_path)
 {
-    static constexpr const char* coredumps_directory = "/tmp/coredump";
-    if (VFS::the().open_directory(coredumps_directory, VFS::the().root_custody()).is_error()) {
-        auto res = VFS::the().mkdir(coredumps_directory, 0777, VFS::the().root_custody());
+    auto output_directory = output_path.dirname();
+    if (VFS::the().open_directory(output_directory, VFS::the().root_custody()).is_error()) {
+        auto res = VFS::the().mkdir(output_directory, 0777, VFS::the().root_custody());
         if (res.is_error())
             return nullptr;
     }
-    auto tmp_dir = VFS::the().open_directory(coredumps_directory, VFS::the().root_custody());
+    auto tmp_dir = VFS::the().open_directory(output_directory, VFS::the().root_custody());
     if (tmp_dir.is_error())
         return nullptr;
     auto fd_or_error = VFS::the().open(
-        String::format("%s_%u.core", process.name().characters(), RTC::now()),
+        output_path.basename(),
         O_CREAT | O_WRONLY | O_EXCL,
         0, // We will enable reading from userspace when we finish generating the coredump file
         *tmp_dir.value(),
