@@ -27,7 +27,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     option(ENABLE_FUZZER_SANITIZER "Enable fuzzer sanitizer testing in clang" FALSE)
     if (ENABLE_FUZZER_SANITIZER)
         add_definitions(-fsanitize=fuzzer -fno-omit-frame-pointer)
-        set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer-no-link")
+        set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer")
     endif()
 
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
