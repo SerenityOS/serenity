@@ -446,6 +446,9 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
         u8 sentinel = 0;
         stream >> sentinel;
 
+        if (stream.handle_any_error())
+            return false;
+
         if (sentinel == 0x21) {
             u8 extension_type = 0;
             stream >> extension_type;
