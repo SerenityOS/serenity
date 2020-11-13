@@ -31,6 +31,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
+#include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
@@ -96,6 +97,18 @@ private:
     NonnullRefPtrVector<Layer> m_layers;
 
     HashTable<ImageClient*> m_clients;
+};
+
+class ImageUndoCommand : public GUI::Command {
+public:
+    ImageUndoCommand(Image& image);
+
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    RefPtr<Image> m_snapshot;
+    Image& m_image;
 };
 
 }

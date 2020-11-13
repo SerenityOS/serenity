@@ -312,4 +312,20 @@ void Image::did_change()
         client->image_did_change();
 }
 
+ImageUndoCommand::ImageUndoCommand(Image& image)
+    : m_snapshot(image.take_snapshot())
+    , m_image(image)
+{
+}
+
+void ImageUndoCommand::undo()
+{
+    m_image.restore_snapshot(*m_snapshot);
+}
+
+void ImageUndoCommand::redo()
+{
+    undo();
+}
+
 }
