@@ -1,0 +1,7 @@
+interface DOMImplementation {
+
+    Document createHTMLDocument(optional DOMString title);
+
+    boolean hasFeature();
+
+}
