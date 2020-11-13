@@ -108,7 +108,7 @@ public:
 
             const u8 byte = m_bytes[m_offset++];
             result |= (byte & 0x7f) << shift;
-            if (byte & 0x80)
+            if ((byte & 0x80) == 0)
                 break;
             shift += 7;
         }
