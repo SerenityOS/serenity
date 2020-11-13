@@ -42,22 +42,24 @@ void UndoStack::undo()
     if (!can_undo())
         return;
 
-    auto& undo_container = m_stack[m_stack_index];
-    auto& undo_vector = undo_container.m_undo_vector;
+    auto pop_container_and_undo = [this]() {
+        for (;;) {
+            if (m_stack_index >= m_stack.size())
+                break;
 
-    //If we try to undo a empty vector, delete it and skip over.
-    if (undo_vector.is_empty()) {
-        m_stack.remove(m_stack_index);
-        undo();
-        return;
-    }
+            auto& container = m_stack[m_stack_index++];
+            if (container.m_undo_vector.size() == 0)
+                continue;
+            for (auto& command : container.m_undo_vector)
+                command.undo();
+            break;
+        }
+    };
 
-    for (size_t i = 0; i < undo_vector.size(); i++) {
-        auto& undo_command = undo_vector[i];
-        undo_command.undo();
-    }
-
-    m_stack_index++;
+    // If this is the first undo, finish off our current combo
+    if (m_stack_index == 0)
+        finalize_current_combo();
+    pop_container_and_undo();
 }
 
 void UndoStack::redo()
@@ -65,55 +67,37 @@ void UndoStack::redo()
     if (!can_redo())
         return;
 
-    auto& undo_container = m_stack[m_stack_index - 1];
-    auto& redo_vector = undo_container.m_undo_vector;
-
-    for (int i = static_cast<int>(redo_vector.size()) - 1; i >= 0; i--) {
-        auto& undo_command = redo_vector[i];
-        undo_command.redo();
-    }
-
-    m_stack_index--;
+    m_stack_index -= 1;
+    auto& vector = m_stack[m_stack_index].m_undo_vector;
+    for (int i = vector.size() - 1; i >= 0; i--)
+        vector[i].redo();
 }
 
 void UndoStack::push(NonnullOwnPtr<Command>&& command)
 {
-    if (m_stack.is_empty()) {
-        auto undo_commands_container = make<UndoCommandsContainer>();
-        m_stack.prepend(move(undo_commands_container));
+    if (m_stack.is_empty())
+        finalize_current_combo();
+
+    if (m_stack_index > 0) {
+        for (size_t i = 0; i < m_stack_index; i++)
+            m_stack.remove(0);
+        m_stack_index = 0;
+        finalize_current_combo();
     }
 
-    // Clear the elements of the stack before the m_undo_stack_index (Excluding our new element)
-    for (size_t i = 1; i < m_stack_index; i++)
-        m_stack.remove(1);
-
-    if (m_stack_index > 0 && !m_stack.is_empty())
-        m_stack[0].m_undo_vector.clear();
-
-    m_stack_index = 0;
-
-    m_stack[0].m_undo_vector.prepend(move(command));
+    auto& current_vector = m_stack.first().m_undo_vector;
+    current_vector.prepend(move(command));
 }
 
 void UndoStack::finalize_current_combo()
 {
-    if (m_stack.is_empty())
+    if (m_stack_index > 0)
+        return;
+    if (m_stack.size() != 0 && m_stack.first().m_undo_vector.size() == 0)
         return;
 
-    auto& undo_vector = m_stack[0].m_undo_vector;
-
-    if (undo_vector.size() == m_last_updated_undo_vector_size && !undo_vector.is_empty()) {
-        auto undo_commands_container = make<UndoCommandsContainer>();
-        m_stack.prepend(move(undo_commands_container));
-        // Note: Remove dbg() if we're 100% sure there are no bugs left.
-        dbg() << "Undo stack increased to " << m_stack.size();
-
-        // Shift the index to the left since we're adding an empty container.
-        if (m_stack_index > 0)
-            m_stack_index++;
-    }
-
-    m_last_updated_undo_vector_size = undo_vector.size();
+    auto undo_commands_container = make<UndoCommandsContainer>();
+    m_stack.prepend(move(undo_commands_container));
 }
 
 }
