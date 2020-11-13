@@ -26,9 +26,9 @@
 
 #pragma once
 
-#include "History.h"
 #include "Image.h"
 #include <LibGUI/Frame.h>
+#include <LibGUI/UndoStack.h>
 #include <LibGfx/Point.h>
 
 namespace PixelPaint {
@@ -110,7 +110,7 @@ private:
 
     RefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
-    History m_history;
+    OwnPtr<GUI::UndoStack> m_undo_stack;
 
     Tool* m_active_tool { nullptr };
 
