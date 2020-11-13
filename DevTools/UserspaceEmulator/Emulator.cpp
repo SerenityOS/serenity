@@ -252,6 +252,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$chdir(arg1, arg2);
     case SC_dup2:
         return virt$dup2(arg1, arg2);
+    case SC_get_stack_bounds:
+        return virt$get_stack_bounds(arg1, arg2);
     case SC_access:
         return virt$access(arg1, arg2, arg3);
     case SC_waitid:
@@ -547,6 +549,16 @@ int Emulator::virt$setsockopt(FlatPtr params_addr)
     }
 
     TODO();
+}
+
+int Emulator::virt$get_stack_bounds(FlatPtr base, FlatPtr size)
+{
+    auto* region = mmu().find_region({ m_cpu.ss(), m_cpu.esp().value() });
+    FlatPtr b = region->base();
+    size_t s = region->size();
+    mmu().copy_to_vm(base, &b, sizeof(b));
+    mmu().copy_to_vm(size, &s, sizeof(s));
+    return 0;
 }
 
 int Emulator::virt$accept(int sockfd, FlatPtr address, FlatPtr address_length)
