@@ -5,7 +5,6 @@ set(SOURCES
     CreateNewLayerDialog.cpp
     EllipseTool.cpp
     EraseTool.cpp
-    History.cpp
     Image.cpp
     ImageEditor.cpp
     Layer.cpp

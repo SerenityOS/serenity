@@ -28,6 +28,7 @@
 #include "Image.h"
 #include "Layer.h"
 #include "Tool.h"
+#include <LibGUI/Command.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
@@ -35,6 +36,7 @@
 namespace PixelPaint {
 
 ImageEditor::ImageEditor()
+    : m_undo_stack(make<GUI::UndoStack>())
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
@@ -52,7 +54,8 @@ void ImageEditor::set_image(RefPtr<Image> image)
 
     m_image = move(image);
     m_active_layer = nullptr;
-    m_history.reset(*m_image);
+    m_undo_stack = make<GUI::UndoStack>();
+    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
     update();
     relayout();
 
@@ -64,14 +67,16 @@ void ImageEditor::did_complete_action()
 {
     if (!m_image)
         return;
-    m_history.on_action(*m_image);
+    m_undo_stack->finalize_current_combo();
+    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
 }
 
 bool ImageEditor::undo()
 {
     if (!m_image)
         return false;
-    if (m_history.undo(*m_image)) {
+    if (m_undo_stack->can_undo()) {
+        m_undo_stack->undo();
         layers_did_change();
         return true;
     }
@@ -82,7 +87,8 @@ bool ImageEditor::redo()
 {
     if (!m_image)
         return false;
-    if (m_history.redo(*m_image)) {
+    if (m_undo_stack->can_redo()) {
+        m_undo_stack->redo();
         layers_did_change();
         return true;
     }
