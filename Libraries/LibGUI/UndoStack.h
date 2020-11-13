@@ -39,7 +39,7 @@ public:
     void push(NonnullOwnPtr<Command>&&);
 
     bool can_undo() const { return m_stack_index < m_stack.size() && !m_stack.is_empty(); }
-    bool can_redo() const { return m_stack_index > 0 && m_stack[m_stack_index - 1].m_undo_vector.size() > 0 && !m_stack.is_empty(); }
+    bool can_redo() const { return m_stack_index > 0 && !m_stack.is_empty(); }
 
     void undo();
     void redo();
@@ -53,7 +53,6 @@ private:
 
     NonnullOwnPtrVector<UndoCommandsContainer> m_stack;
     size_t m_stack_index { 0 };
-    size_t m_last_updated_undo_vector_size { 0 };
 };
 
 }
