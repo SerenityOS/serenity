@@ -1,5 +1,7 @@
 interface Document : Node {
 
+    readonly attribute DOMString contentType;
+
     Element? getElementById(DOMString id);
     Element? querySelector(DOMString selectors);
     ArrayFromVector getElementsByTagName(DOMString tagName);

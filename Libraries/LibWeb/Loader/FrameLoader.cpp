@@ -132,21 +132,26 @@ static RefPtr<DOM::Document> create_gemini_document(const ByteBuffer& data, cons
 
 RefPtr<DOM::Document> FrameLoader::create_document_from_mime_type(const ByteBuffer& data, const URL& url, const String& mime_type, const String& encoding)
 {
+    RefPtr<DOM::Document> document;
+
     if (mime_type == "text/html" || mime_type == "image/svg+xml") {
         HTML::HTMLDocumentParser parser(data, encoding);
         parser.run(url);
-        return parser.document();
+        document = parser.document();
+    } else if (mime_type.starts_with("image/")) {
+        document = create_image_document(data, url);
+    } else if (mime_type == "text/plain") {
+        document = create_text_document(data, url);
+    } else if (mime_type == "text/markdown") {
+        document = create_markdown_document(data, url);
+    } else if (mime_type == "text/gemini") {
+        document = create_gemini_document(data, url);
     }
-    if (mime_type.starts_with("image/"))
-        return create_image_document(data, url);
-    if (mime_type == "text/plain")
-        return create_text_document(data, url);
-    if (mime_type == "text/markdown")
-        return create_markdown_document(data, url);
-    if (mime_type == "text/gemini")
-        return create_gemini_document(data, url);
 
-    return nullptr;
+    if (document)
+        document->set_content_type(mime_type);
+
+    return document;
 }
 
 bool FrameLoader::load(const LoadRequest& request, Type type)
