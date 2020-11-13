@@ -58,7 +58,7 @@ class Document
 public:
     using WrapperType = Bindings::DocumentWrapper;
 
-    static NonnullRefPtr<Document> create(const URL& url = {}) { return adopt(*new Document(url)); }
+    static NonnullRefPtr<Document> create(const URL& url = "about:blank") { return adopt(*new Document(url)); }
     virtual ~Document() override;
 
     void set_url(const URL& url) { m_url = url; }
@@ -261,7 +261,7 @@ private:
     RefPtr<Document> m_associated_inert_template_document;
 
     String m_ready_state { "loading" };
-    String m_content_type;
+    String m_content_type { "application/xml" };
 
     NonnullRefPtr<DOMImplementation> m_implementation;
 };
