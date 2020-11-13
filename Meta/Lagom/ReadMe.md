@@ -10,11 +10,11 @@ If you want to bring the comfortable Serenity classes with you to another system
 
 ## Fuzzing
 
-Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildling with `clang`, so it's convenient to use a different build directory for that. Run CMake like this:
+Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildling with `clang`, so it's convenient to use a different build directory for that. Fuzzers work best with Address Sanitizer enabled. Run CMake like this:
 
     # From the root of the SerenityOS checkout:
     mkdir BuildLagom && cd BuildLagom
-    cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+    cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_CXX_COMPILER=clang++ ..
     ninja Meta/Lagom/all
     # Or as a handy rebuild-rerun line:
     ninja FuzzJs && Meta/Lagom/Fuzzers/FuzzJs
@@ -24,6 +24,11 @@ Any fuzzing results (particularly slow inputs, crashes, etc.) will be dropped in
 clang emits different warnings than gcc, so you may have to remove `-Werror` in CMakeLists.txt and Meta/Lagom/CMakeLists.txt.
 
 Fuzzers work better if you give them a fuzz corpus, e.g. `Meta/Lagom/Fuzzers/FuzzBMP ../Base/res/html/misc/bmpsuite_files/rgba32-61754.bmp` Pay attention that LLVM also likes creating new files, don't blindly commit them (yet)!
+
+To run several fuzz jobs in parallel, pass `-jobs=24 -workers=24`.
+
+To get less log output, pass `-close_fd_mask=3` -- but that but hides assertion messages. Just `1` only closes stdout.
+It's good to move overzealous log output behind `FOO_DEBUG` macros.
 
 ### Analyzing a crash
 
