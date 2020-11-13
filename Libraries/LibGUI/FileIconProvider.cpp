@@ -39,7 +39,6 @@ namespace GUI {
     F(hackstudio, ".hsp")                          \
     F(header, ".h", ".hpp", ".hxx", ".hh", ".h++") \
     F(html, ".html", ".htm")                       \
-    F(image, ".png")                               \
     F(java, ".java")                               \
     F(javascript, ".js", ".mjs")                   \
     F(library, ".so", ".a")                        \
@@ -68,6 +67,7 @@ static Icon s_file_icon;
 static Icon s_symlink_icon;
 static Icon s_socket_icon;
 static Icon s_executable_icon;
+static Icon s_filetype_image_icon;
 
 static void initialize_if_needed()
 {
@@ -84,6 +84,7 @@ static void initialize_if_needed()
     s_symlink_icon = Icon::default_icon("filetype-symlink");
     s_socket_icon = Icon::default_icon("filetype-socket");
     s_executable_icon = Icon::default_icon("filetype-executable");
+    s_filetype_image_icon = Icon::default_icon("filetype-image");
 
 #define __ENUMERATE_FILETYPE(filetype_name, ...) \
     s_filetype_##filetype_name##_icon = Icon::default_icon("filetype-" #filetype_name);
@@ -149,6 +150,9 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
         return s_socket_icon;
     if (mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return s_executable_icon;
+
+    if (Gfx::Bitmap::is_path_a_supported_image_format(path.view()))
+        return s_filetype_image_icon;
 
 #define __ENUMERATE_FILETYPE(filetype_name, filetype_extensions...)      \
     for (auto& extension : { filetype_extensions }) {                    \
