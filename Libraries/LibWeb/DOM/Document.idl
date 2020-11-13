@@ -1,5 +1,7 @@
 interface Document : Node {
 
+    readonly attribute DOMImplementation implementation;
+
     readonly attribute DOMString contentType;
 
     Element? getElementById(DOMString id);
