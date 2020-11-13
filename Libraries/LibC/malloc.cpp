@@ -75,7 +75,7 @@ static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
 static bool s_scrub_free = true;
 static bool s_profiling = false;
-static unsigned short size_classes[] = { 8, 16, 32, 64, 128, 252, 508, 1016, 2036, 4090, 8188, 16376, 32756, 0 };
+static unsigned short size_classes[] = { 8, 16, 32, 64, 128, 256, 500, 1016, 2032, 4088, 8184, 16376, 32752, 0 };
 static constexpr size_t num_size_classes = sizeof(size_classes) / sizeof(unsigned short);
 
 struct MallocStats {
@@ -144,7 +144,7 @@ struct ChunkedBlock
     ChunkedBlock* m_prev { nullptr };
     ChunkedBlock* m_next { nullptr };
     FreelistEntry* m_freelist { nullptr };
-    unsigned short m_free_chunks { 0 };
+    size_t m_free_chunks { 0 };
     [[gnu::aligned(8)]] unsigned char m_slot[0];
 
     void* chunk(size_t index)
