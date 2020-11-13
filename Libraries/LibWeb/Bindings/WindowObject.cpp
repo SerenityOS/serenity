@@ -283,7 +283,9 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::atob)
     auto decoded = decode_base64(StringView(string));
 
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
-    return JS::js_string(vm, TextCodec::decoder_for("iso-8859-1")->to_utf8(decoded));
+    auto decoder = TextCodec::decoder_for("windows-1252");
+    ASSERT(decoder);
+    return JS::js_string(vm, decoder->to_utf8(decoded));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)

@@ -27,6 +27,7 @@
 //#define PARSER_DEBUG
 
 #include <AK/Utf32View.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentType.h>
@@ -110,7 +111,7 @@ static Vector<FlyString> s_quirks_public_ids = {
 
 RefPtr<DOM::Document> parse_html_document(const StringView& data, const URL& url, const String& encoding)
 {
-    HTMLDocumentParser parser(data, encoding);
+    HTMLDocumentParser parser(data, TextCodec::get_standardized_encoding(encoding));
     parser.run(url);
     return parser.document();
 }
@@ -119,12 +120,14 @@ HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& en
     : m_tokenizer(input, encoding)
 {
     m_document = DOM::Document::create();
+    m_document->set_encoding(encoding);
 }
 
 HTMLDocumentParser::HTMLDocumentParser(const StringView& input, const String& encoding, DOM::Document& existing_document)
     : m_tokenizer(input, encoding)
     , m_document(existing_document)
 {
+    m_document->set_encoding(encoding);
 }
 
 HTMLDocumentParser::~HTMLDocumentParser()

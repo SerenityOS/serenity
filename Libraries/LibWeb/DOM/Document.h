@@ -199,6 +199,14 @@ public:
     const String& content_type() const { return m_content_type; }
     void set_content_type(const String& content_type) { m_content_type = content_type; }
 
+    const String& encoding() const { return m_encoding; }
+    void set_encoding(const String& encoding) { m_encoding = encoding; }
+
+    // NOTE: These are intended for the JS bindings
+    const String& character_set() const { return encoding(); }
+    const String& charset() const { return encoding(); }
+    const String& input_encoding() const { return encoding(); }
+
     const NonnullRefPtr<DOMImplementation> implementation() { return m_implementation; }
 
 private:
@@ -262,6 +270,7 @@ private:
 
     String m_ready_state { "loading" };
     String m_content_type { "application/xml" };
+    String m_encoding { "UTF-8" };
 
     NonnullRefPtr<DOMImplementation> m_implementation;
 };
