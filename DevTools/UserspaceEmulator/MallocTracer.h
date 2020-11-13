@@ -64,6 +64,7 @@ private:
 
     Mallocation* find_mallocation(FlatPtr);
     Mallocation* find_mallocation_before(FlatPtr);
+    Mallocation* find_mallocation_after(FlatPtr);
     bool is_reachable(const Mallocation&) const;
 
     Vector<Mallocation> m_mallocations;

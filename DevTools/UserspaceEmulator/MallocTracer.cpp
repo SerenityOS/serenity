@@ -136,6 +136,18 @@ MallocTracer::Mallocation* MallocTracer::find_mallocation_before(FlatPtr address
     return found_mallocation;
 }
 
+MallocTracer::Mallocation* MallocTracer::find_mallocation_after(FlatPtr address)
+{
+    Mallocation* found_mallocation = nullptr;
+    for (auto& mallocation : m_mallocations) {
+        if (mallocation.address <= address)
+            continue;
+        if (!found_mallocation || (mallocation.address < found_mallocation->address))
+            found_mallocation = &mallocation;
+    }
+    return found_mallocation;
+}
+
 void MallocTracer::audit_read(FlatPtr address, size_t size)
 {
     if (!m_auditing_enabled)
@@ -149,10 +161,18 @@ void MallocTracer::audit_read(FlatPtr address, size_t size)
     if (!mallocation) {
         reportln("\n=={}==  \033[31;1mHeap buffer overflow\033[0m, invalid {}-byte read at address {:p}", getpid(), size, address);
         Emulator::the().dump_backtrace();
-        if ((mallocation = find_mallocation_before(address))) {
-            size_t offset_into_mallocation = address - mallocation->address;
-            reportln("=={}==  Address is {} byte(s) after block of size {}, allocated at:", getpid(), offset_into_mallocation - mallocation->size, mallocation->size);
-            Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
+        auto* mallocation_before = find_mallocation_before(address);
+        auto* mallocation_after = find_mallocation_after(address);
+        size_t distance_to_mallocation_before = mallocation_before ? (address - mallocation_before->address - mallocation_before->size) : 0;
+        size_t distance_to_mallocation_after = mallocation_after ? (mallocation_after->address - address) : 0;
+        if (mallocation_before && (!mallocation_after || distance_to_mallocation_before < distance_to_mallocation_after)) {
+            reportln("=={}==  Address is {} byte(s) after block of size {}, identity {:p}, allocated at:", getpid(), distance_to_mallocation_before, mallocation_before->size, mallocation_before->address);
+            Emulator::the().dump_backtrace(mallocation_before->malloc_backtrace);
+            return;
+        }
+        if (mallocation_after && (!mallocation_before || distance_to_mallocation_after < distance_to_mallocation_before)) {
+            reportln("=={}==  Address is {} byte(s) before block of size {}, identity {:p}, allocated at:", getpid(), distance_to_mallocation_after, mallocation_after->size, mallocation_after->address);
+            Emulator::the().dump_backtrace(mallocation_after->malloc_backtrace);
         }
         return;
     }
@@ -182,10 +202,18 @@ void MallocTracer::audit_write(FlatPtr address, size_t size)
     if (!mallocation) {
         reportln("\n=={}==  \033[31;1mHeap buffer overflow\033[0m, invalid {}-byte write at address {:p}", getpid(), size, address);
         Emulator::the().dump_backtrace();
-        if ((mallocation = find_mallocation_before(address))) {
-            size_t offset_into_mallocation = address - mallocation->address;
-            reportln("=={}==  Address is {} byte(s) into block of size {}, allocated at:", getpid(), offset_into_mallocation, mallocation->size);
-            Emulator::the().dump_backtrace(mallocation->malloc_backtrace);
+        auto* mallocation_before = find_mallocation_before(address);
+        auto* mallocation_after = find_mallocation_after(address);
+        size_t distance_to_mallocation_before = mallocation_before ? (address - mallocation_before->address - mallocation_before->size) : 0;
+        size_t distance_to_mallocation_after = mallocation_after ? (mallocation_after->address - address) : 0;
+        if (mallocation_before && (!mallocation_after || distance_to_mallocation_before < distance_to_mallocation_after)) {
+            reportln("=={}==  Address is {} byte(s) after block of size {}, identity {:p}, allocated at:", getpid(), distance_to_mallocation_before, mallocation_before->size, mallocation_before->address);
+            Emulator::the().dump_backtrace(mallocation_before->malloc_backtrace);
+            return;
+        }
+        if (mallocation_after && (!mallocation_before || distance_to_mallocation_after < distance_to_mallocation_before)) {
+            reportln("=={}==  Address is {} byte(s) before block of size {}, identity {:p}, allocated at:", getpid(), distance_to_mallocation_after, mallocation_after->size, mallocation_after->address);
+            Emulator::the().dump_backtrace(mallocation_after->malloc_backtrace);
         }
         return;
     }
