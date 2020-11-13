@@ -135,9 +135,7 @@ RefPtr<DOM::Document> FrameLoader::create_document_from_mime_type(const ByteBuff
     RefPtr<DOM::Document> document;
 
     if (mime_type == "text/html" || mime_type == "image/svg+xml") {
-        HTML::HTMLDocumentParser parser(data, encoding);
-        parser.run(url);
-        document = parser.document();
+        document = HTML::parse_html_document(data, url, encoding);
     } else if (mime_type.starts_with("image/")) {
         document = create_image_document(data, url);
     } else if (mime_type == "text/plain") {
