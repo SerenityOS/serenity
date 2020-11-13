@@ -471,7 +471,7 @@ Icon FileSystemModel::icon_for(const Node& node) const
     if (node.full_path() == "/")
         return FileIconProvider::icon_for_path("/");
 
-    if (Gfx::Bitmap::is_path_a_supported_image_format(node.name.to_lowercase())) {
+    if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
         if (!node.thumbnail) {
             if (!const_cast<FileSystemModel*>(this)->fetch_thumbnail_for(node))
                 return FileIconProvider::filetype_image_icon();
