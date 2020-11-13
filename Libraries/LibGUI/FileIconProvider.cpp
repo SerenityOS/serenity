@@ -33,24 +33,24 @@
 
 namespace GUI {
 
-#define ENUMERATE_FILETYPES(F) \
-    F(cplusplus, ".cpp")       \
-    F(form, ".frm")            \
-    F(hackstudio, ".hsp")      \
-    F(header, ".h")            \
-    F(html, ".html")           \
-    F(image, ".png")           \
-    F(java, ".java")           \
-    F(javascript, ".js")       \
-    F(library, ".so", ".a")    \
-    F(markdown, ".md")         \
-    F(music, ".midi")          \
-    F(object, ".o", ".obj")    \
-    F(pdf, ".pdf")             \
-    F(python, ".py")           \
-    F(sound, ".wav")           \
-    F(ini, ".ini")             \
-    F(text, ".txt")            \
+#define ENUMERATE_FILETYPES(F)                     \
+    F(cplusplus, ".cpp", ".cxx", ".cc", ".c++")    \
+    F(form, ".frm")                                \
+    F(hackstudio, ".hsp")                          \
+    F(header, ".h", ".hpp", ".hxx", ".hh", ".h++") \
+    F(html, ".html", ".htm")                       \
+    F(image, ".png")                               \
+    F(java, ".java")                               \
+    F(javascript, ".js", ".mjs")                   \
+    F(library, ".so", ".a")                        \
+    F(markdown, ".md")                             \
+    F(music, ".midi")                              \
+    F(object, ".o", ".obj")                        \
+    F(pdf, ".pdf")                                 \
+    F(python, ".py")                               \
+    F(sound, ".wav")                               \
+    F(ini, ".ini")                                 \
+    F(text, ".txt")                                \
     F(spreadsheet, ".sheets")
 
 #define __ENUMERATE_FILETYPE(filetype_name, ...) \
