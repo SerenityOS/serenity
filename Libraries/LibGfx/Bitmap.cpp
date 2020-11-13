@@ -122,8 +122,8 @@ RefPtr<Bitmap> Bitmap::create_wrapper(BitmapFormat format, const IntSize& size, 
 
 RefPtr<Bitmap> Bitmap::load_from_file(const StringView& path)
 {
-#define __ENUMERATE_IMAGE_FORMAT(Name, Ext) \
-    if (path.ends_with(Ext))                \
+#define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \
+    if (path.ends_with(Ext, CaseSensitivity::CaseInsensitive)) \
         return load_##Name(path);
     ENUMERATE_IMAGE_FORMATS
 #undef __ENUMERATE_IMAGE_FORMAT
