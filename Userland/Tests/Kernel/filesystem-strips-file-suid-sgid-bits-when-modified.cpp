@@ -35,11 +35,11 @@
 
 static void test_change_file_contents()
 {
-    const char* path = "suid";
-
-    int fd = open(path, O_CREAT | O_RDWR, 06755);
+    char path[] = "/tmp/suid.XXXXXX";
+    auto fd = mkstemp(path);
     assert(fd != -1);
     ftruncate(fd, 0);
+    assert(fchmod(fd, 06755) != -1);
 
     char buffer[8];
     memset(&buffer, 0, sizeof(buffer));
@@ -57,11 +57,11 @@ static void test_change_file_contents()
 
 static void test_change_file_ownership()
 {
-    const char* path = "suid";
-
-    int fd = open(path, O_CREAT | O_RDWR, 06755);
+    char path[] = "/tmp/suid.XXXXXX";
+    auto fd = mkstemp(path);
     assert(fd != -1);
     ftruncate(fd, 0);
+    assert(fchmod(fd, 06755) != -1);
 
     fchown(fd, getuid(), getgid());
 
@@ -77,11 +77,11 @@ static void test_change_file_ownership()
 
 static void test_change_file_permissions()
 {
-    const char* path = "suid";
-
-    int fd = open(path, O_CREAT | O_RDWR, 06755);
+    char path[] = "/tmp/suid.XXXXXX";
+    auto fd = mkstemp(path);
     assert(fd != -1);
     ftruncate(fd, 0);
+    assert(fchmod(fd, 06755) != -1);
 
     fchmod(fd, 0755);
 

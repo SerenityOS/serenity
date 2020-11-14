@@ -137,9 +137,10 @@ static void test_write_to_file()
     u8 glyph_width = 1;
     auto font = Gfx::Font::create(glyph_height, glyph_width, true, Gfx::FontTypes::Default);
 
-    const char* font_path = "/tmp/new.font";
-    assert(font->write_to_file(font_path));
-    unlink(font_path);
+    char path[] = "/tmp/new.font.XXXXXX";
+    assert(mkstemp(path) != -1);
+    assert(font->write_to_file(path));
+    unlink(path);
 }
 
 int main(int, char**)
