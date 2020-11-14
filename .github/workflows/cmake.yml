@@ -97,7 +97,7 @@ jobs:
         EOF
     - name: IRC result notification (direct push)
       uses: rectalogic/notify-irc@v1
-      if: github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master' && github.event_name == 'push' && !cancelled() && steps.ircmsg.outputs.has_output
+      if: github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master' && github.event_name == 'push' && !cancelled() && steps.ircmsg.outputs.has_output == 'True'
       with:
         channel: "#serenityos"
         nickname: serenity-ga
