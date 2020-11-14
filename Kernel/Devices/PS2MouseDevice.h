@@ -85,7 +85,7 @@ private:
 
     I8042Controller& m_controller;
     mutable SpinLock<u8> m_queue_lock;
-    CircularQueue<RawPacket, 100> m_queue;
+    CircularQueue<MousePacket, 100> m_queue;
     u8 m_data_state { 0 };
     RawPacket m_data;
     bool m_has_wheel { false };
