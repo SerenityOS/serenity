@@ -149,13 +149,15 @@ void I8042Controller::irq_process_input_buffer(Device)
 {
     ASSERT(Processor::current().in_irq());
 
-    u8 status = IO::in8(I8042_STATUS);
-    if (!(status & I8042_BUFFER_FULL))
-        return;
-    Device data_for_device = ((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) ? Device::Mouse : Device::Keyboard;
-    u8 byte = IO::in8(I8042_BUFFER);
-    if (auto* device = m_devices[data_for_device == Device::Keyboard ? 0 : 1].device)
-        device->irq_handle_byte_read(byte);
+    for (;;) {
+        u8 status = IO::in8(I8042_STATUS);
+        if (!(status & I8042_BUFFER_FULL))
+            return;
+        Device data_for_device = ((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) ? Device::Mouse : Device::Keyboard;
+        u8 byte = IO::in8(I8042_BUFFER);
+        if (auto* device = m_devices[data_for_device == Device::Keyboard ? 0 : 1].device)
+            device->irq_handle_byte_read(byte);
+    }
 }
 
 void I8042Controller::do_drain()
