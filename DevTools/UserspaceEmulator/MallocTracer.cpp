@@ -29,6 +29,7 @@
 #include "MmapRegion.h"
 #include <AK/LogStream.h>
 #include <AK/TemporaryChange.h>
+#include <mallocdefs.h>
 #include <string.h>
 
 //#define REACHABLE_DEBUG
@@ -60,7 +61,29 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
         existing_mallocation->free_backtrace.clear();
         return;
     }
-    m_mallocations.append({ address, size, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() });
+
+    if (size <= size_classes[num_size_classes - 1]) {
+        FlatPtr chunked_block_address = address & ChunkedBlock::block_mask;
+        // FIXME: Don't do a double hash lookup here.
+        auto tracked_chunked_block = m_chunked_blocks.get(chunked_block_address);
+        if (!tracked_chunked_block.has_value()) {
+            m_chunked_blocks.set(chunked_block_address, make<TrackedChunkedBlock>());
+            tracked_chunked_block = m_chunked_blocks.get(chunked_block_address);
+            auto& block = const_cast<TrackedChunkedBlock&>(*tracked_chunked_block.value());
+            block.address = chunked_block_address;
+            block.chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
+            auto chunk_count = (ChunkedBlock::block_size - sizeof(ChunkedBlock)) / block.chunk_size;
+            block.mallocations.resize(chunk_count);
+            dbgln("Tracking ChunkedBlock @ {:p} with chunk_size={}, chunk_count={}", block.address, block.chunk_size, chunk_count);
+        }
+        ASSERT(tracked_chunked_block.has_value());
+        auto& block = const_cast<TrackedChunkedBlock&>(*tracked_chunked_block.value());
+        auto chunk_offset = address - (block.address + sizeof(ChunkedBlock));
+        auto chunk_index = chunk_offset / block.chunk_size;
+        block.mallocations[chunk_index] = { address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() };
+    } else {
+        m_big_mallocations.append({ address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() });
+    }
 }
 
 void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
@@ -68,18 +91,16 @@ void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
     if (!address)
         return;
 
-    for (auto& mallocation : m_mallocations) {
-        if (mallocation.address == address) {
-            if (mallocation.freed) {
-                reportln("\n=={}==  \033[31;1mDouble free()\033[0m, {:p}", getpid(), address);
-                reportln("=={}==  Address {} has already been passed to free()", getpid(), address);
-                Emulator::the().dump_backtrace();
-            } else {
-                mallocation.freed = true;
-                mallocation.free_backtrace = Emulator::the().raw_backtrace();
-            }
-            return;
+    if (auto* mallocation = find_mallocation(address)) {
+        if (mallocation->freed) {
+            reportln("\n=={}==  \033[31;1mDouble free()\033[0m, {:p}", getpid(), address);
+            reportln("=={}==  Address {} has already been passed to free()", getpid(), address);
+            Emulator::the().dump_backtrace();
+        } else {
+            mallocation->freed = true;
+            mallocation->free_backtrace = Emulator::the().raw_backtrace();
         }
+        return;
     }
 
     reportln("\n=={}==  \033[31;1mInvalid free()\033[0m, {:p}", getpid(), address);
@@ -117,34 +138,52 @@ void MallocTracer::target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t si
 
 MallocTracer::Mallocation* MallocTracer::find_mallocation(FlatPtr address)
 {
-    for (auto& mallocation : m_mallocations) {
+    FlatPtr possible_chunked_block = address & ChunkedBlock::block_mask;
+
+    auto chunked_block = m_chunked_blocks.get(possible_chunked_block);
+    if (chunked_block.has_value()) {
+        auto& block = *chunked_block.value();
+        auto chunk_offset = address - (block.address + sizeof(ChunkedBlock));
+        auto chunk_index = chunk_offset / block.chunk_size;
+        auto& mallocation = block.mallocations[chunk_index];
+        if (mallocation.used) {
+            ASSERT(mallocation.contains(address));
+            return const_cast<Mallocation*>(&mallocation);
+        }
+        return nullptr;
+    }
+
+    for (auto& mallocation : m_big_mallocations) {
         if (mallocation.contains(address))
             return &mallocation;
     }
+
     return nullptr;
 }
 
 MallocTracer::Mallocation* MallocTracer::find_mallocation_before(FlatPtr address)
 {
     Mallocation* found_mallocation = nullptr;
-    for (auto& mallocation : m_mallocations) {
+    for_each_mallocation([&](auto& mallocation) {
         if (mallocation.address >= address)
-            continue;
+            return IterationDecision::Continue;
         if (!found_mallocation || (mallocation.address > found_mallocation->address))
-            found_mallocation = &mallocation;
-    }
+            found_mallocation = const_cast<Mallocation*>(&mallocation);
+        return IterationDecision::Continue;
+    });
     return found_mallocation;
 }
 
 MallocTracer::Mallocation* MallocTracer::find_mallocation_after(FlatPtr address)
 {
     Mallocation* found_mallocation = nullptr;
-    for (auto& mallocation : m_mallocations) {
+    for_each_mallocation([&](auto& mallocation) {
         if (mallocation.address <= address)
-            continue;
+            return IterationDecision::Continue;
         if (!found_mallocation || (mallocation.address < found_mallocation->address))
-            found_mallocation = &mallocation;
-    }
+            found_mallocation = const_cast<Mallocation*>(&mallocation);
+        return IterationDecision::Continue;
+    });
     return found_mallocation;
 }
 
@@ -235,12 +274,14 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
 {
     ASSERT(!mallocation.freed);
 
+    bool reachable = false;
+
     // 1. Search in active (non-freed) mallocations for pointers to this mallocation
-    for (auto& other_mallocation : m_mallocations) {
+    for_each_mallocation([&](auto& other_mallocation) {
         if (&mallocation == &other_mallocation)
-            continue;
+            return IterationDecision::Continue;
         if (other_mallocation.freed)
-            continue;
+            return IterationDecision::Continue;
         size_t pointers_in_mallocation = other_mallocation.size / sizeof(u32);
         for (size_t i = 0; i < pointers_in_mallocation; ++i) {
             auto value = Emulator::the().mmu().read32({ 0x20, other_mallocation.address + i * sizeof(u32) });
@@ -248,12 +289,15 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
 #ifdef REACHABLE_DEBUG
                 reportln("mallocation {:p} is reachable from other mallocation {:p}", mallocation.address, other_mallocation.address);
 #endif
-                return true;
+                reachable = true;
+                return IterationDecision::Break;
             }
         }
-    }
+        return IterationDecision::Continue;
+    });
 
-    bool reachable = false;
+    if (reachable)
+        return true;
 
     // 2. Search in other memory regions for pointers to this mallocation
     Emulator::the().mmu().for_each_region([&](auto& region) {
@@ -288,16 +332,17 @@ void MallocTracer::dump_leak_report()
 
     size_t bytes_leaked = 0;
     size_t leaks_found = 0;
-    for (auto& mallocation : m_mallocations) {
+    for_each_mallocation([&](auto& mallocation) {
         if (mallocation.freed)
-            continue;
+            return IterationDecision::Continue;
         if (is_reachable(mallocation))
-            continue;
+            return IterationDecision::Continue;
         ++leaks_found;
         bytes_leaked += mallocation.size;
         reportln("\n=={}==  \033[31;1mLeak\033[0m, {}-byte allocation at address {:p}", getpid(), mallocation.size, mallocation.address);
         Emulator::the().dump_backtrace(mallocation.malloc_backtrace);
-    }
+        return IterationDecision::Continue;
+    });
 
     if (!leaks_found)
         reportln("\n=={}==  \033[32;1mNo leaks found!\033[0m", getpid());

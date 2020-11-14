@@ -27,6 +27,8 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/HashMap.h>
+#include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -56,18 +58,42 @@ private:
 
         FlatPtr address { 0 };
         size_t size { 0 };
+        bool used { false };
         bool freed { false };
 
         Vector<FlatPtr> malloc_backtrace;
         Vector<FlatPtr> free_backtrace;
     };
 
+    struct TrackedChunkedBlock {
+        FlatPtr address { 0 };
+        size_t chunk_size { 0 };
+
+        Vector<Mallocation> mallocations;
+    };
+
+    template<typename Callback>
+    void for_each_mallocation(Callback callback) const
+    {
+        for (auto& it : m_chunked_blocks) {
+            for (auto& mallocation : it.value->mallocations) {
+                if (mallocation.used && callback(mallocation) == IterationDecision::Break)
+                    return;
+            }
+        }
+        for (auto& big_mallocation : m_big_mallocations) {
+            if (callback(big_mallocation) == IterationDecision::Break)
+                return;
+        }
+    }
+
     Mallocation* find_mallocation(FlatPtr);
     Mallocation* find_mallocation_before(FlatPtr);
     Mallocation* find_mallocation_after(FlatPtr);
     bool is_reachable(const Mallocation&) const;
 
-    Vector<Mallocation> m_mallocations;
+    HashMap<FlatPtr, NonnullOwnPtr<TrackedChunkedBlock>> m_chunked_blocks;
+    Vector<Mallocation> m_big_mallocations;
 
     bool m_auditing_enabled { true };
 };
