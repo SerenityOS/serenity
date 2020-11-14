@@ -69,6 +69,9 @@ private:
         FlatPtr address { 0 };
         size_t chunk_size { 0 };
 
+        size_t chunk_index_for_address(FlatPtr) const;
+        Mallocation& mallocation_for_address(FlatPtr) const;
+
         Vector<Mallocation> mallocations;
     };
 
