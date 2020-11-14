@@ -25,6 +25,7 @@
  */
 
 #include <AK/String.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
@@ -32,30 +33,6 @@
 #include <sys/stat.h>
 
 namespace GUI {
-
-#define ENUMERATE_FILETYPES(F)                     \
-    F(cplusplus, ".cpp", ".cxx", ".cc", ".c++")    \
-    F(form, ".frm")                                \
-    F(hackstudio, ".hsp")                          \
-    F(header, ".h", ".hpp", ".hxx", ".hh", ".h++") \
-    F(html, ".html", ".htm")                       \
-    F(java, ".java")                               \
-    F(javascript, ".js", ".mjs")                   \
-    F(library, ".so", ".a")                        \
-    F(markdown, ".md")                             \
-    F(music, ".midi")                              \
-    F(object, ".o", ".obj")                        \
-    F(pdf, ".pdf")                                 \
-    F(python, ".py")                               \
-    F(sound, ".wav")                               \
-    F(ini, ".ini")                                 \
-    F(text, ".txt")                                \
-    F(spreadsheet, ".sheets")
-
-#define __ENUMERATE_FILETYPE(filetype_name, ...) \
-    static Icon s_filetype_##filetype_name##_icon;
-ENUMERATE_FILETYPES(__ENUMERATE_FILETYPE)
-#undef __ENUMERATE_FILETYPE
 
 static Icon s_hard_disk_icon;
 static Icon s_directory_icon;
@@ -69,11 +46,17 @@ static Icon s_socket_icon;
 static Icon s_executable_icon;
 static Icon s_filetype_image_icon;
 
+static HashMap<String, Icon> s_filetype_icons;
+static HashMap<String, Vector<String>> s_filetype_patterns;
+
 static void initialize_if_needed()
 {
     static bool s_initialized = false;
     if (s_initialized)
         return;
+
+    auto config = Core::ConfigFile::open("/etc/FileIconProvider.ini");
+
     s_hard_disk_icon = Icon::default_icon("hard-disk");
     s_directory_icon = Icon::default_icon("filetype-folder");
     s_directory_open_icon = Icon::default_icon("filetype-folder-open");
@@ -84,12 +67,11 @@ static void initialize_if_needed()
     s_symlink_icon = Icon::default_icon("filetype-symlink");
     s_socket_icon = Icon::default_icon("filetype-socket");
     s_executable_icon = Icon::default_icon("filetype-executable");
-    s_filetype_image_icon = Icon::default_icon("filetype-image");
 
-#define __ENUMERATE_FILETYPE(filetype_name, ...) \
-    s_filetype_##filetype_name##_icon = Icon::default_icon("filetype-" #filetype_name);
-    ENUMERATE_FILETYPES(__ENUMERATE_FILETYPE)
-#undef __ENUMERATE_FILETYPE
+    for (auto& filetype : config->keys("Icons")) {
+        s_filetype_icons.set(filetype, Icon::default_icon(String::formatted("filetype-{}", filetype)));
+        s_filetype_patterns.set(filetype, config->read_entry("Icons", filetype).split(','));
+    }
 
     s_initialized = true;
 }
@@ -154,13 +136,13 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
     if (Gfx::Bitmap::is_path_a_supported_image_format(path.view()))
         return s_filetype_image_icon;
 
-#define __ENUMERATE_FILETYPE(filetype_name, filetype_extensions...)      \
-    for (auto& extension : { filetype_extensions }) {                    \
-        if (path.ends_with(extension, CaseSensitivity::CaseInsensitive)) \
-            return s_filetype_##filetype_name##_icon;                    \
+    for (auto& filetype : s_filetype_icons.keys()) {
+        auto patterns = s_filetype_patterns.get(filetype).value();
+        for (auto& pattern : patterns) {
+            if (path.matches(pattern, CaseSensitivity::CaseInsensitive))
+                return s_filetype_icons.get(filetype).value();
+        }
     }
-    ENUMERATE_FILETYPES(__ENUMERATE_FILETYPE)
-#undef __ENUMERATE_FILETYPE
 
     return s_file_icon;
 }
