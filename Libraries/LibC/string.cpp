@@ -372,7 +372,7 @@ int sys_nerr = EMAXERRNO;
 
 char* strerror(int errnum)
 {
-    if (errnum >= EMAXERRNO) {
+    if (errnum < 0 || errnum >= EMAXERRNO) {
         printf("strerror() missing string for errnum=%d\n", errnum);
         return const_cast<char*>("Unknown error");
     }
