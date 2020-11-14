@@ -64,20 +64,22 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
 
     if (size <= size_classes[num_size_classes - 1]) {
         FlatPtr chunked_block_address = address & ChunkedBlock::block_mask;
-        // FIXME: Don't do a double hash lookup here.
+        TrackedChunkedBlock* block = nullptr;
         auto tracked_chunked_block = m_chunked_blocks.get(chunked_block_address);
         if (!tracked_chunked_block.has_value()) {
-            m_chunked_blocks.set(chunked_block_address, make<TrackedChunkedBlock>());
+            auto new_block = make<TrackedChunkedBlock>();
+            block = new_block.ptr();
+            m_chunked_blocks.set(chunked_block_address, move(new_block));
             tracked_chunked_block = m_chunked_blocks.get(chunked_block_address);
             auto& block = const_cast<TrackedChunkedBlock&>(*tracked_chunked_block.value());
             block.address = chunked_block_address;
             block.chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
             block.mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / block.chunk_size);
             dbgln("Tracking ChunkedBlock @ {:p} with chunk_size={}, chunk_count={}", block.address, block.chunk_size, block.mallocations.size());
+        } else {
+            block = const_cast<TrackedChunkedBlock*>(tracked_chunked_block.value());
         }
-        ASSERT(tracked_chunked_block.has_value());
-        auto& block = const_cast<TrackedChunkedBlock&>(*tracked_chunked_block.value());
-        block.mallocation_for_address(address) = { address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() };
+        block->mallocation_for_address(address) = { address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() };
     } else {
         m_big_mallocations.append({ address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() });
     }
