@@ -1657,7 +1657,20 @@ void SoftCPU::FCMOVBE(const X86::Instruction& insn)
 
 void SoftCPU::FICOMP_RM32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FCMOVU(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::FISUB_RM32(const X86::Instruction&) { TODO_INSN(); }
+
+void SoftCPU::FISUB_RM32(const X86::Instruction& insn)
+{
+    if (insn.modrm().is_register()) {
+        fpu_set(0, fpu_get(insn.modrm().register_index()) - fpu_get(0));
+    } else {
+        auto new_f32 = insn.modrm().read32(*this, insn);
+        // FIXME: Respect shadow values
+        auto f32 = bit_cast<float>(new_f32.value());
+        auto f64 = (double)f32;
+        fpu_set(0, fpu_get(0) - f64);
+    }
+}
+
 void SoftCPU::FISUBR_RM32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FUCOMPP(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FIDIV_RM32(const X86::Instruction&) { TODO_INSN(); }
