@@ -77,18 +77,37 @@ void PS2MouseDevice::handle_irq(const RegisterState&)
 
 void PS2MouseDevice::irq_handle_byte_read(u8 byte)
 {
-    m_data.bytes[m_data_state] = byte;
+    auto* backdoor = VMWareBackdoor::the();
+
+    if (backdoor && backdoor->vmmouse_is_absolute()) {
+        // We won't receive complete packets with the backdoor enabled,
+        // we will only get one byte for each event, which we'll just
+        // discard. If we were to wait until we *think* that we got a
+        // full PS/2 packet then we would create a backlog in the VM
+        // because we wouldn't read the appropriate number of mouse
+        // packets from VMWareBackdoor.
+        auto mouse_packet = backdoor->receive_mouse_packet();
+        if (mouse_packet.has_value()) {
+            m_entropy_source.add_random_event(mouse_packet.value());
+            ScopedSpinLock lock(m_queue_lock);
+            m_queue.enqueue(mouse_packet.value());
+        }
+        return;
+    }
 
     auto commit_packet = [&] {
         m_data_state = 0;
 #ifdef PS2MOUSE_DEBUG
-        dbg() << "PS2Mouse: " << m_data.bytes[1] << ", " << m_data.bytes[2] << " " << ((m_data.bytes[0] & 1) ? "Left" : "") << " " << ((m_data.bytes[0] & 2) ? "Right" : "") << " (buffered: " << m_queue.size() << ")";
+        dbg() << "PS2Mouse: " << m_data.bytes[1] << ", " << m_data.bytes[2] << " " << ((m_data.bytes[0] & 1) ? "Left" : "") << " " << ((m_data.bytes[0] & 2) ? "Right" : "");
 #endif
         m_entropy_source.add_random_event(m_data.dword);
 
         ScopedSpinLock lock(m_queue_lock);
-        m_queue.enqueue(m_data);
+        m_queue.enqueue(parse_data_packet(m_data));
     };
+
+    ASSERT(m_data_state < sizeof(m_data.bytes) / sizeof(m_data.bytes[0]));
+    m_data.bytes[m_data_state] = byte;
 
     switch (m_data_state) {
     case 0:
@@ -251,25 +270,10 @@ KResultOr<size_t> PS2MouseDevice::read(FileDescription&, size_t, UserOrKernelBuf
     ASSERT(size > 0);
     size_t nread = 0;
     size_t remaining_space_in_buffer = static_cast<size_t>(size) - nread;
-    auto* backdoor = VMWareBackdoor::the();
     ScopedSpinLock lock(m_queue_lock);
     while (!m_queue.is_empty() && remaining_space_in_buffer) {
-        auto raw_packet = m_queue.dequeue();
+        auto packet = m_queue.dequeue();
         lock.unlock();
-
-        MousePacket packet;
-        bool is_parsed = false;
-        if (backdoor && backdoor->vmmouse_is_absolute()) {
-            auto mouse_packet = backdoor->receive_mouse_packet();
-            m_entropy_source.add_random_event(packet);
-            if (mouse_packet.has_value()) {
-                packet = mouse_packet.value();
-                is_parsed = true;
-            }
-        }
-
-        if (!is_parsed)
-            packet = parse_data_packet(raw_packet);
 
 #ifdef PS2MOUSE_DEBUG
         dbg() << "PS2 Mouse Read: Buttons " << String::format("%x", packet.buttons);
