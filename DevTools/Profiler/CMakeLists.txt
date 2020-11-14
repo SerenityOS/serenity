@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_bin(Profiler)
-target_link_libraries(Profiler LibGUI LibX86)
+target_link_libraries(Profiler LibGUI LibX86 LibCoreDump)

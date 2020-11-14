@@ -198,5 +198,9 @@ bool generate_profile(pid_t pid)
     if (!prompt_to_stop_profiling())
         return false;
 
+    if (profiling_disable(pid) < 0) {
+        return false;
+    }
+
     return true;
 }
