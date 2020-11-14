@@ -114,6 +114,10 @@ NonnullRefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata metadata, 
 NonnullRefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
+    auto now = kgettimeofday();
+    metadata.atime = now.tv_sec;
+    metadata.ctime = now.tv_sec;
+    metadata.mtime = now.tv_sec;
     metadata.mode = S_IFDIR | S_ISVTX | 0777;
     return create(fs, metadata, { fs.fsid(), 1 });
 }
