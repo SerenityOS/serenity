@@ -1781,7 +1781,6 @@ void SoftCPU::FSUBR_RM64(const X86::Instruction& insn)
     // FIXME: Respect shadow values
     auto f64 = bit_cast<double>(new_f64.value());
     fpu_set(0, f64 - fpu_get(0));
-    dbg() << "fsub.64: " << (double)fpu_get(0);
 }
 
 void SoftCPU::FDIV_RM64(const X86::Instruction& insn)
@@ -1957,7 +1956,6 @@ void SoftCPU::FCOMIP(const X86::Instruction& insn)
 void SoftCPU::FISTP_RM64(const X86::Instruction& insn)
 {
     ASSERT(!insn.modrm().is_register());
-    dbg() << "fistp64";
     auto f = fpu_pop();
     // FIXME: Respect rounding mode in m_fpu_cw.
     auto i64 = static_cast<int64_t>(f);
