@@ -68,7 +68,8 @@ int main(int argc, char** argv, char** env)
         environment.append(env[i]);
     }
 
-    UserspaceEmulator::Emulator emulator(arguments, environment, move(elf));
+    // FIXME: It might be nice to tear down the emulator properly.
+    auto& emulator = *new UserspaceEmulator::Emulator(arguments, environment, move(elf));
     if (!emulator.load_elf())
         return 1;
 
