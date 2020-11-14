@@ -32,8 +32,10 @@
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <LibCore/File.h>
+#include <LibCoreDump/CoreDumpReader.h>
 #include <LibELF/Loader.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
 {
@@ -43,6 +45,71 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
 
     for (auto& child : nodes)
         child->sort_children();
+}
+
+static String object_name(StringView memory_region_name)
+{
+    if (memory_region_name.contains("Loader.so"))
+        return "Loader.so";
+    if (!memory_region_name.contains(":"))
+        return {};
+    return memory_region_name.substring_view(0, memory_region_name.find_first_of(":").value()).to_string();
+}
+
+struct CachedLibData {
+    OwnPtr<MappedFile> file;
+    NonnullRefPtr<ELF::Loader> lib_elf;
+};
+
+static String symbolicate(FlatPtr eip, const ELF::Core::MemoryRegionInfo* region, u32& offset)
+{
+
+    static HashMap<String, OwnPtr<CachedLibData>> cached_libs;
+
+    StringView region_name { region->region_name };
+
+    auto name = object_name(region_name);
+
+    String path;
+    if (name.contains(".so"))
+        path = String::format("/usr/lib/%s", name.characters());
+    else {
+        path = name;
+    }
+
+    struct stat st;
+    if (stat(path.characters(), &st)) {
+        return {};
+    }
+
+    if (!cached_libs.contains(path)) {
+        auto lib_file = make<MappedFile>(path);
+        if (!lib_file->is_valid())
+            return {};
+        auto loader = ELF::Loader::create((const u8*)lib_file->data(), lib_file->size());
+        cached_libs.set(path, make<CachedLibData>(move(lib_file), loader));
+    }
+
+    auto lib_data = cached_libs.get(path).value();
+
+    return String::format("[%s] %s", name.characters(), lib_data->lib_elf->symbolicate(eip - region->region_start, &offset).characters());
+}
+
+static String symbolicate_from_coredump(CoreDumpReader& coredump, u32 ptr, u32& offset)
+{
+    (void)offset;
+    auto* region = coredump.region_containing((FlatPtr)ptr);
+    if (!region) {
+        dbgln("did not find region for eip: {:p}", ptr);
+        return "??";
+    }
+
+    auto name = symbolicate((FlatPtr)ptr, region, offset);
+    if (name.is_null()) {
+        dbgln("could not symbolicate: {:p}", ptr);
+        return "??";
+    }
+    return name;
 }
 
 Profile::Profile(String executable_path, Vector<Event> events)
@@ -215,13 +282,11 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
     auto& object = json.value().as_object();
     auto executable_path = object.get("executable").to_string();
 
-    MappedFile elf_file(executable_path);
-    if (!elf_file.is_valid()) {
-        warnln("Unable to open executable '{}' for symbolication.", executable_path);
+    auto coredump = CoreDumpReader::create(String::format("/tmp/profiler_coredumps/%d", object.get("pid").as_u32()));
+    if (!coredump) {
+        warnln("Could not open coredump");
         return nullptr;
     }
-
-    auto elf_loader = ELF::Loader::create(static_cast<const u8*>(elf_file.data()), elf_file.size());
 
     MappedFile kernel_elf_file("/boot/Kernel");
     RefPtr<ELF::Loader> kernel_elf_loader;
@@ -267,7 +332,7 @@ OwnPtr<Profile> Profile::load_from_perfcore_file(const StringView& path)
                     symbol = "??";
                 }
             } else {
-                symbol = elf_loader->symbolicate(ptr, &offset);
+                symbol = symbolicate_from_coredump(*coredump, ptr, offset);
             }
 
             event.frames.append({ symbol, ptr, offset });
