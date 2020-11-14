@@ -72,18 +72,26 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
             auto& block = const_cast<TrackedChunkedBlock&>(*tracked_chunked_block.value());
             block.address = chunked_block_address;
             block.chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
-            auto chunk_count = (ChunkedBlock::block_size - sizeof(ChunkedBlock)) / block.chunk_size;
-            block.mallocations.resize(chunk_count);
-            dbgln("Tracking ChunkedBlock @ {:p} with chunk_size={}, chunk_count={}", block.address, block.chunk_size, chunk_count);
+            block.mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / block.chunk_size);
+            dbgln("Tracking ChunkedBlock @ {:p} with chunk_size={}, chunk_count={}", block.address, block.chunk_size, block.mallocations.size());
         }
         ASSERT(tracked_chunked_block.has_value());
         auto& block = const_cast<TrackedChunkedBlock&>(*tracked_chunked_block.value());
-        auto chunk_offset = address - (block.address + sizeof(ChunkedBlock));
-        auto chunk_index = chunk_offset / block.chunk_size;
-        block.mallocations[chunk_index] = { address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() };
+        block.mallocation_for_address(address) = { address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() };
     } else {
         m_big_mallocations.append({ address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() });
     }
+}
+
+ALWAYS_INLINE MallocTracer::Mallocation& MallocTracer::TrackedChunkedBlock::mallocation_for_address(FlatPtr address) const
+{
+    return const_cast<Mallocation&>(this->mallocations[chunk_index_for_address(address)]);
+}
+
+ALWAYS_INLINE size_t MallocTracer::TrackedChunkedBlock::chunk_index_for_address(FlatPtr address) const
+{
+    auto chunk_offset = address - (this->address + sizeof(ChunkedBlock));
+    return chunk_offset / this->chunk_size;
 }
 
 void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
@@ -143,9 +151,7 @@ MallocTracer::Mallocation* MallocTracer::find_mallocation(FlatPtr address)
     auto chunked_block = m_chunked_blocks.get(possible_chunked_block);
     if (chunked_block.has_value()) {
         auto& block = *chunked_block.value();
-        auto chunk_offset = address - (block.address + sizeof(ChunkedBlock));
-        auto chunk_index = chunk_offset / block.chunk_size;
-        auto& mallocation = block.mallocations[chunk_index];
+        auto& mallocation = block.mallocation_for_address(address);
         if (mallocation.used) {
             ASSERT(mallocation.contains(address));
             return const_cast<Mallocation*>(&mallocation);
