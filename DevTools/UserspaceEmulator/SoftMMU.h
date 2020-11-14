@@ -69,6 +69,10 @@ public:
         bool is_text() const { return m_text; }
         void set_text(bool b) { m_text = b; }
 
+        virtual bool is_readable() const { return true; }
+        virtual bool is_writable() const { return true; }
+        virtual bool is_executable() const { return true; }
+
     protected:
         Region(u32 base, u32 size)
             : m_base(base)

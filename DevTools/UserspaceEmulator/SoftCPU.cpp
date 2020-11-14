@@ -134,6 +134,12 @@ void SoftCPU::update_code_cache()
     auto* region = m_emulator.mmu().find_region({ cs(), eip() });
     ASSERT(region);
 
+    if (!region->is_executable()) {
+        reportln("SoftCPU::update_code_cache: Non-readable region @ {:p}", eip());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
+
     m_cached_code_ptr = region->cacheable_ptr(eip() - region->base());
     m_cached_code_end = region->cacheable_ptr(region->size());
 }

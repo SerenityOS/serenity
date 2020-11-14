@@ -75,6 +75,12 @@ ValueWithShadow<u8> SoftMMU::read8(X86::LogicalAddress address)
         TODO();
     }
 
+    if (!region->is_readable()) {
+        reportln("SoftMMU::read8: Non-readable region @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
+
     return region->read8(address.offset() - region->base());
 }
 
@@ -83,6 +89,12 @@ ValueWithShadow<u16> SoftMMU::read16(X86::LogicalAddress address)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::read16: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
+
+    if (!region->is_readable()) {
+        reportln("SoftMMU::read16: Non-readable region @ {:p}", address.offset());
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -99,6 +111,12 @@ ValueWithShadow<u32> SoftMMU::read32(X86::LogicalAddress address)
         TODO();
     }
 
+    if (!region->is_readable()) {
+        reportln("SoftMMU::read32: Non-readable region @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
+
     return region->read32(address.offset() - region->base());
 }
 
@@ -107,6 +125,12 @@ ValueWithShadow<u64> SoftMMU::read64(X86::LogicalAddress address)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::read64: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
+
+    if (!region->is_readable()) {
+        reportln("SoftMMU::read64: Non-readable region @ {:p}", address.offset());
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -123,6 +147,11 @@ void SoftMMU::write8(X86::LogicalAddress address, ValueWithShadow<u8> value)
         TODO();
     }
 
+    if (!region->is_writable()) {
+        reportln("SoftMMU::write8: Non-writable region @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
     region->write8(address.offset() - region->base(), value);
 }
 
@@ -131,6 +160,12 @@ void SoftMMU::write16(X86::LogicalAddress address, ValueWithShadow<u16> value)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::write16: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
+
+    if (!region->is_writable()) {
+        reportln("SoftMMU::write16: Non-writable region @ {:p}", address.offset());
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -147,6 +182,12 @@ void SoftMMU::write32(X86::LogicalAddress address, ValueWithShadow<u32> value)
         TODO();
     }
 
+    if (!region->is_writable()) {
+        reportln("SoftMMU::write32: Non-writable region @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
+
     region->write32(address.offset() - region->base(), value);
 }
 
@@ -155,6 +196,12 @@ void SoftMMU::write64(X86::LogicalAddress address, ValueWithShadow<u64> value)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::write64: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
+        TODO();
+    }
+
+    if (!region->is_writable()) {
+        reportln("SoftMMU::write64: Non-writable region @ {:p}", address.offset());
         Emulator::the().dump_backtrace();
         TODO();
     }
