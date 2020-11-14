@@ -1573,7 +1573,11 @@ void SoftCPU::FCHS(const X86::Instruction&)
     fpu_set(0, -fpu_get(0));
 }
 
-void SoftCPU::FABS(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FABS(const X86::Instruction&)
+{
+    fpu_set(0, __builtin_fabs(fpu_get(0)));
+}
+
 void SoftCPU::FTST(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FXAM(const X86::Instruction&) { TODO_INSN(); }
 
