@@ -1709,24 +1709,32 @@ void SoftCPU::FNINIT(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FNSETPM(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FLD_RM80(const X86::Instruction&) { TODO_INSN(); }
 
-void SoftCPU::FUCOMI(const X86::Instruction&)
+void SoftCPU::FUCOMI(const X86::Instruction& insn)
 {
+    auto i = insn.rm() & 7;
     // FIXME: Unordered comparison checks.
     // FIXME: QNaN / exception handling.
     // FIXME: Set C0, C2, C3 in FPU status word.
-    set_zf(fpu_get(0) == fpu_get(1));
-    set_pf(false);
-    set_cf(fpu_get(0) < fpu_get(1));
-    set_of(false);
+    if (__builtin_isnan(fpu_get(0)) || __builtin_isnan(fpu_get(i))) {
+        set_zf(true);
+        set_pf(true);
+        set_cf(true);
+    } else {
+        set_zf(fpu_get(0) == fpu_get(i));
+        set_pf(false);
+        set_cf(fpu_get(0) < fpu_get(i));
+        set_of(false);
+    }
 }
 
-void SoftCPU::FCOMI(const X86::Instruction&)
+void SoftCPU::FCOMI(const X86::Instruction& insn)
 {
+    auto i = insn.rm() & 7;
     // FIXME: QNaN / exception handling.
     // FIXME: Set C0, C2, C3 in FPU status word.
-    set_zf(fpu_get(0) == fpu_get(1));
+    set_zf(fpu_get(0) == fpu_get(i));
     set_pf(false);
-    set_cf(fpu_get(0) < fpu_get(1));
+    set_cf(fpu_get(0) < fpu_get(i));
     set_of(false);
 }
 
