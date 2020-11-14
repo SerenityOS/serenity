@@ -457,7 +457,11 @@ char* strtok_r(char* str, const char* delim, char** saved_str)
         return &str[token_start];
     }
 
-    *saved_str = &str[token_end + 1];
+    if (str[token_end] == '\0')
+        *saved_str = &str[token_end];
+    else
+        *saved_str = &str[token_end + 1];
+
     str[token_end] = '\0';
     return &str[token_start];
 }
