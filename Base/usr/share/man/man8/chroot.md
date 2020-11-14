@@ -24,6 +24,12 @@ Mount options can be given in the same format as for [`mount`(8)](mount.md).
 /
 ```
 
+```sh
+# chroot -u 200:200 /var/chroot
+$ id
+uid=200(nona) gid=200(n/a)
+```
+
 ## See also
 
 * [`chroot`(2)](../man2/chroot.md)
