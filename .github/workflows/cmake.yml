@@ -77,7 +77,6 @@ jobs:
       run: DISABLE_DBG_OUTPUT=1 ./test-js
 
     # === NOTIFICATIONS ===
-    # https://github.com/rectalogic/notify-irc
 
     - name: Dump event info
       if: always()
@@ -87,25 +86,11 @@ jobs:
         ${{ toJSON(github.event) }}
         EOF
     - name: Generate IRC message
-      if: always()
-      id: ircmsg
+      # I really dislike putting so much logic here, but I can't come up with something better.
+      if: github.repository == 'SerenityOS/serenity' && !cancelled() && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
       run: |
-        ${{ github.workspace }}/Meta/mangle_event_for_irc.py <<"EOF"
+        ${{ github.workspace }}/Meta/notify_irc.py <<"EOF"
         ["${{ github.actor }}", ${{ github.run_id }}, "${{ job.status }}",
         ${{ toJSON(github.event) }}
         ]
         EOF
-    - name: IRC result notification (direct push)
-      uses: rectalogic/notify-irc@v1
-      if: github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master' && github.event_name == 'push' && !cancelled() && steps.ircmsg.outputs.has_output == 'True'
-      with:
-        channel: "#serenityos"
-        nickname: serenity-ga
-        message: ${{ steps.ircmsg.outputs.the_line }}
-    - name: IRC result notification (PR)
-      uses: rectalogic/notify-irc@v1
-      if: github.repository == 'SerenityOS/serenity' && github.event_name == 'pull_request' && !cancelled() && steps.ircmsg.outputs.has_output
-      with:
-        channel: "#serenityos"
-        nickname: serenity-ga
-        message: ${{ steps.ircmsg.outputs.the_line }}
