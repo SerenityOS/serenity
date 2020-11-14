@@ -1742,6 +1742,9 @@ void SoftCPU::FUCOMI(const X86::Instruction& insn)
         set_cf(fpu_get(0) < fpu_get(i));
         set_of(false);
     }
+
+    // FIXME: Taint should be based on ST(0) and ST(i)
+    m_flags_tainted = false;
 }
 
 void SoftCPU::FCOMI(const X86::Instruction& insn)
@@ -1753,6 +1756,9 @@ void SoftCPU::FCOMI(const X86::Instruction& insn)
     set_pf(false);
     set_cf(fpu_get(0) < fpu_get(i));
     set_of(false);
+
+    // FIXME: Taint should be based on ST(0) and ST(i)
+    m_flags_tainted = false;
 }
 
 void SoftCPU::FSTP_RM80(const X86::Instruction&) { TODO_INSN(); }
