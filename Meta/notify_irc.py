@@ -11,6 +11,8 @@ TEMPLATE_PUSH = '''\
 TEMPLATE_PR = '''\
 {title} ({actor} {action}: {status}) {link} https://github.com/SerenityOS/serenity/actions/runs/{run_id}\
 '''
+SERENITY_BOT = 'http://94.130.182.143:8080'
+
 
 def compute_lines(wrapper):
     actor, run_id, raw_status, event = wrapper
@@ -77,15 +79,21 @@ def compute_lines(wrapper):
         return False
 
 
+def send_notification(line):
+    print('> ' + line)
+    try:
+        response = requests.post(SERENITY_BOT, data={'msg': line})
+    except BaseException as e:
+        print('Notification failed: {}: {}'.format(type(e), e))
+    else:
+        print('Notification result: HTTP {}'.format(response.status_code))
+
+
 def run_on(json_string):
     wrapper = json.loads(json_string)
     line = compute_lines(wrapper)
-    has_output = bool(line)
-    print('::set-output name=has_output::{}'.format(has_output))
-    print('> ::set-output name=has_output::{}'.format(has_output))
-    if has_output:
-        print('::set-output name=the_line::{}'.format(line))
-        print('> ::set-output name=the_line::{}'.format(line))
+    if line:
+        send_notification(line)
 
 
 def run():
