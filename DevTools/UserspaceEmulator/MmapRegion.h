@@ -50,12 +50,14 @@ public:
     u8* data() { return m_data; }
     u8* shadow_data() { return m_shadow_data; }
 
-    bool is_readable() const { return m_prot & PROT_READ; }
-    bool is_writable() const { return m_prot & PROT_WRITE; }
-    bool is_executable() const { return m_prot & PROT_EXEC; }
+    virtual bool is_readable() const override { return m_prot & PROT_READ; }
+    virtual bool is_writable() const override { return m_prot & PROT_WRITE; }
+    virtual bool is_executable() const override { return m_prot & PROT_EXEC; }
 
     bool is_malloc_block() const { return m_malloc; }
     void set_malloc(bool b) { m_malloc = b; }
+
+    void set_prot(int prot) { m_prot = prot; }
 
 private:
     MmapRegion(u32 base, u32 size, int prot);

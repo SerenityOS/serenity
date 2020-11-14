@@ -920,9 +920,17 @@ u32 Emulator::virt$unveil(u32)
     return 0;
 }
 
-u32 Emulator::virt$mprotect(FlatPtr, size_t, int)
+u32 Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
 {
-    return 0;
+    if (auto* region = mmu().find_region({ m_cpu.ds(), base })) {
+        if (!region->is_mmap())
+            return -EINVAL;
+        ASSERT(region->size() == size);
+        auto& mmap_region = *(MmapRegion*)region;
+        mmap_region.set_prot(prot);
+        return 0;
+    }
+    return -EINVAL;
 }
 
 u32 Emulator::virt$madvise(FlatPtr, size_t, int)
