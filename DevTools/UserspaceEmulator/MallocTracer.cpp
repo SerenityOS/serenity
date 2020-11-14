@@ -40,6 +40,14 @@ MallocTracer::MallocTracer()
 {
 }
 
+void MallocTracer::notify_malloc_block_was_released(Badge<MmapRegion>, MmapRegion& region)
+{
+    // FIXME: It's sad that we may lose a bunch of free() backtraces here,
+    //        but if the address is reused for a new ChunkedBlock, things will
+    //        get extremely confused.
+    m_chunked_blocks.remove(region.base());
+}
+
 void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t size)
 {
     auto* region = Emulator::the().mmu().find_region({ 0x20, address });
