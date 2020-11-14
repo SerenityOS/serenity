@@ -72,8 +72,8 @@ public:
         return SimpleIterator { m_container, m_index + 1 };
     }
 
-    constexpr const ValueType& operator*() const { return m_container[m_index]; }
-    constexpr ValueType& operator*() { return m_container[m_index]; }
+    ALWAYS_INLINE constexpr const ValueType& operator*() const { return m_container[m_index]; }
+    ALWAYS_INLINE constexpr ValueType& operator*() { return m_container[m_index]; }
 
     constexpr const ValueType* operator->() const { return &m_container[m_index]; }
     constexpr ValueType* operator->() { return &m_container[m_index]; }
