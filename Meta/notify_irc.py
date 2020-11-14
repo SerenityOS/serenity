@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import requests
 import sys
 
 # Must be exactly three lines each!
