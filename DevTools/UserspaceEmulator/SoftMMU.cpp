@@ -25,6 +25,7 @@
  */
 
 #include "SoftMMU.h"
+#include "Emulator.h"
 #include "Report.h"
 #include "SharedBufferRegion.h"
 #include <AK/ByteBuffer.h>
@@ -70,6 +71,7 @@ ValueWithShadow<u8> SoftMMU::read8(X86::LogicalAddress address)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::read8: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
         TODO();
     }
 
@@ -81,6 +83,7 @@ ValueWithShadow<u16> SoftMMU::read16(X86::LogicalAddress address)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::read16: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
         TODO();
     }
 
@@ -92,6 +95,7 @@ ValueWithShadow<u32> SoftMMU::read32(X86::LogicalAddress address)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::read32: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
         TODO();
     }
 
@@ -103,6 +107,7 @@ ValueWithShadow<u64> SoftMMU::read64(X86::LogicalAddress address)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::read64: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
         TODO();
     }
 
@@ -114,6 +119,7 @@ void SoftMMU::write8(X86::LogicalAddress address, ValueWithShadow<u8> value)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::write8: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
         TODO();
     }
 
@@ -125,6 +131,7 @@ void SoftMMU::write16(X86::LogicalAddress address, ValueWithShadow<u16> value)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::write16: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
         TODO();
     }
 
@@ -136,6 +143,7 @@ void SoftMMU::write32(X86::LogicalAddress address, ValueWithShadow<u32> value)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::write32: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
         TODO();
     }
 
@@ -147,6 +155,7 @@ void SoftMMU::write64(X86::LogicalAddress address, ValueWithShadow<u64> value)
     auto* region = find_region(address);
     if (!region) {
         reportln("SoftMMU::write64: No region for @ {:p}", address.offset());
+        Emulator::the().dump_backtrace();
         TODO();
     }
 
