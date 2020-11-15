@@ -1672,11 +1672,17 @@ void SoftCPU::FISUB_RM32(const X86::Instruction& insn)
     ASSERT(!insn.modrm().is_register());
     auto m32int = (i32)insn.modrm().read32(*this, insn).value();
     // FIXME: Respect shadow values
-    auto f64 = (long double)m32int;
-    fpu_set(0, fpu_get(0) - f64);
+    fpu_set(0, fpu_get(0) - (long double)m32int);
 }
 
-void SoftCPU::FISUBR_RM32(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::FISUBR_RM32(const X86::Instruction& insn)
+{
+    ASSERT(!insn.modrm().is_register());
+    auto m32int = (i32)insn.modrm().read32(*this, insn).value();
+    // FIXME: Respect shadow values
+    fpu_set(0, (long double)m32int - fpu_get(0));
+}
+
 void SoftCPU::FUCOMPP(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FIDIV_RM32(const X86::Instruction&) { TODO_INSN(); }
 
