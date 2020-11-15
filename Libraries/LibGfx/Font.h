@@ -154,7 +154,7 @@ public:
     String qualified_name() const;
 
 private:
-    Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight);
+    Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, bool owns_arrays = false);
 
     static RefPtr<Font> load_from_memory(const u8*);
     static size_t glyph_count_by_type(FontTypes type);
@@ -186,6 +186,7 @@ private:
 
     bool m_fixed_width { false };
     bool m_boldface { false };
+    bool m_owns_arrays { false };
 };
 
 }
