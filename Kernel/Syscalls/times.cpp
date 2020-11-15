@@ -40,7 +40,7 @@ clock_t Process::sys$times(Userspace<tms*> user_times)
     if (!copy_to_user(user_times, &times))
         return -EFAULT;
 
-    return g_uptime & 0x7fffffff;
+    return TimeManagement::the().uptime_ms() & 0x7fffffff;
 }
 
 }
