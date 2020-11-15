@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>

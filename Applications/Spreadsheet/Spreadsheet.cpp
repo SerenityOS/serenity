@@ -27,6 +27,7 @@
 #include "Spreadsheet.h"
 #include "JSIntegration.h"
 #include "Workbook.h"
+#include <AK/ByteBuffer.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
