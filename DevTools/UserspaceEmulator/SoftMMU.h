@@ -125,6 +125,8 @@ public:
     }
 
 private:
+    Region* m_page_to_region_map[786432];
+
     OwnPtr<Region> m_tls_region;
     NonnullOwnPtrVector<Region> m_regions;
     HashMap<int, Region*> m_shbuf_regions;

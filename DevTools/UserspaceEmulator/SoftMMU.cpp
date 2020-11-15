@@ -37,24 +37,33 @@ SoftMMU::Region* SoftMMU::find_region(X86::LogicalAddress address)
     if (address.selector() == 0x28)
         return m_tls_region.ptr();
 
-    for (auto& region : m_regions) {
-        if (region.contains(address.offset()))
-            return &region;
-    }
-    return nullptr;
+    size_t page_index = (address.offset() & ~(PAGE_SIZE - 1)) / PAGE_SIZE;
+    return m_page_to_region_map[page_index];
 }
 
 void SoftMMU::add_region(NonnullOwnPtr<Region> region)
 {
     ASSERT(!find_region({ 0x20, region->base() }));
+
     // FIXME: More sanity checks pls
     if (region->is_shared_buffer())
         m_shbuf_regions.set(static_cast<SharedBufferRegion*>(region.ptr())->shbuf_id(), region.ptr());
+
+    size_t first_page_in_region = region->base() / PAGE_SIZE;
+    for (size_t i = 0; i < ceil_div(region->size(), PAGE_SIZE); ++i) {
+        m_page_to_region_map[first_page_in_region + i] = region.ptr();
+    }
+
     m_regions.append(move(region));
 }
 
 void SoftMMU::remove_region(Region& region)
 {
+    size_t first_page_in_region = region.base() / PAGE_SIZE;
+    for (size_t i = 0; i < ceil_div(region.size(), PAGE_SIZE); ++i) {
+        m_page_to_region_map[first_page_in_region + i] = nullptr;
+    }
+
     if (region.is_shared_buffer())
         m_shbuf_regions.remove(static_cast<SharedBufferRegion&>(region).shbuf_id());
     m_regions.remove_first_matching([&](auto& entry) { return entry.ptr() == &region; });
