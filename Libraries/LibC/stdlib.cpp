@@ -186,7 +186,7 @@ __attribute__((warn_unused_result)) int __generate_unique_filename(char* pattern
 
     for (int attempt = 0; attempt < 100; ++attempt) {
         for (int i = 0; i < 6; ++i)
-            pattern[start + i] = random_characters[(rand() % sizeof(random_characters))];
+            pattern[start + i] = random_characters[(rand() % (sizeof(random_characters) - 1))];
         struct stat st;
         int rc = lstat(pattern, &st);
         if (rc < 0 && errno == ENOENT)
