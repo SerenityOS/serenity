@@ -327,4 +327,71 @@ TEST_CASE(resize_initializes)
         EXPECT(ints[idx].initialized);
 }
 
+TEST_CASE(should_compare_vectors_of_same_type)
+{
+    Vector<int> a {};
+    Vector<int> b {};
+
+    EXPECT(a == b);
+    EXPECT(!(a != b));
+
+    a.append(1);
+    EXPECT(!(a == b));
+    EXPECT(a != b);
+
+    b.append(1);
+    EXPECT(a == b);
+    EXPECT(!(a != b));
+
+    a.append(42);
+    b.append(17);
+    EXPECT(!(a == b));
+    EXPECT(a != b);
+}
+
+TEST_CASE(should_compare_vectors_of_different_inline_capacity)
+{
+    Vector<int, 1> a {};
+    Vector<int, 64> b {};
+
+    EXPECT(a == b);
+    EXPECT(!(a != b));
+
+    a.append(1);
+    EXPECT(!(a == b));
+    EXPECT(a != b);
+
+    b.append(1);
+    EXPECT(a == b);
+    EXPECT(!(a != b));
+
+    a.append(42);
+    b.append(17);
+    EXPECT(!(a == b));
+    EXPECT(a != b);
+}
+
+TEST_CASE(should_compare_vectors_of_different_sizes)
+{
+    Vector<int, 0> a {};
+    Vector<int, 0> b {};
+
+    EXPECT(a == b);
+    EXPECT(!(a != b));
+
+    // A is longer
+    a.append(1);
+    EXPECT(!(a == b));
+    EXPECT(a != b);
+
+    b.append(1);
+    EXPECT(a == b);
+    EXPECT(!(a != b));
+
+    // B is longer
+    b.append(42);
+    EXPECT(!(a == b));
+    EXPECT(a != b);
+}
+
 TEST_MAIN(Vector)
