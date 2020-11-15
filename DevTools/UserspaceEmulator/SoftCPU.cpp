@@ -3072,6 +3072,22 @@ void SoftCPU::STOSB(const X86::Instruction& insn)
 
 void SoftCPU::STOSD(const X86::Instruction& insn)
 {
+    if (insn.has_rep_prefix() && !df()) {
+        // Fast path for 32-bit forward memory fill.
+        if (m_emulator.mmu().fast_fill_memory32({ es(), destination_index(insn.a32()).value() }, ecx().value(), eax())) {
+            if (insn.a32()) {
+                // FIXME: Should an uninitialized ECX taint EDI here?
+                set_edi({ (u32)(edi().value() + (ecx().value() * sizeof(u32))), edi().shadow() });
+                set_ecx(shadow_wrap_as_initialized<u32>(0));
+            } else {
+                // FIXME: Should an uninitialized CX taint DI here?
+                set_di({ (u16)(di().value() + (cx().value() * sizeof(u32))), di().shadow() });
+                set_cx(shadow_wrap_as_initialized<u16>(0));
+            }
+            return;
+        }
+    }
+
     do_once_or_repeat<false>(insn, [&] {
         write_memory32({ es(), destination_index(insn.a32()).value() }, eax());
         step_destination_index(insn.a32(), 4);
