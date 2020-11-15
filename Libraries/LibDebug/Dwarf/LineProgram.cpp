@@ -25,8 +25,8 @@
  */
 
 #include "LineProgram.h"
-
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 
 //#define DWARF_DEBUG
 
@@ -100,8 +100,12 @@ void LineProgram::append_to_line_info()
         return;
 
     String directory = m_source_directories[m_source_files[m_file_index].directory_index];
-    String full_path = String::format("%s/%s", directory.characters(), m_source_files[m_file_index].name.characters());
-    m_lines.append({ m_address, full_path, m_line });
+
+    StringBuilder full_path(directory.length() + m_source_files[m_file_index].name.length());
+    full_path.append(directory);
+    full_path.append(m_source_files[m_file_index].name);
+
+    m_lines.append({ m_address, full_path.to_string(), m_line });
 }
 
 void LineProgram::reset_registers()
