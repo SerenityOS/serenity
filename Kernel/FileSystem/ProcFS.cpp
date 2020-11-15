@@ -431,7 +431,7 @@ static Optional<KBuffer> procfs$devices(InodeIdentifier)
 static Optional<KBuffer> procfs$uptime(InodeIdentifier)
 {
     KBufferBuilder builder;
-    builder.appendf("%u\n", (g_uptime / 1000));
+    builder.appendf("%llu\n", TimeManagement::the().uptime_ms() / 1000);
     return builder.build();
 }
 

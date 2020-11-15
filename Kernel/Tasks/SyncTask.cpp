@@ -38,7 +38,7 @@ void SyncTask::spawn()
         dbg() << "SyncTask is running";
         for (;;) {
             VFS::the().sync();
-            Thread::current()->sleep(1 * TimeManagement::the().ticks_per_second());
+            Thread::current()->sleep({ 1, 0 });
         }
     });
 }

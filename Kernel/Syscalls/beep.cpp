@@ -32,9 +32,9 @@ namespace Kernel {
 int Process::sys$beep()
 {
     PCSpeaker::tone_on(440);
-    u64 wakeup_time = Thread::current()->sleep(100);
+    auto result = Thread::current()->sleep({ 0, 200 });
     PCSpeaker::tone_off();
-    if (wakeup_time > g_uptime)
+    if (result.was_interrupted())
         return -EINTR;
     return 0;
 }

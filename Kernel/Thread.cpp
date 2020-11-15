@@ -26,6 +26,7 @@
 
 #include <AK/Demangle.h>
 #include <AK/StringBuilder.h>
+#include <AK/Time.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KSyms.h>
@@ -247,15 +248,16 @@ void Thread::relock_process(bool did_unlock)
     Processor::current().restore_critical(prev_crit, prev_flags);
 }
 
-u64 Thread::sleep(u64 ticks)
+auto Thread::sleep(const timespec& duration, timespec* remaining_time) -> BlockResult
 {
     ASSERT(state() == Thread::Running);
-    u64 wakeup_time = g_uptime + ticks;
-    auto ret = Thread::current()->block<Thread::SleepBlocker>(nullptr, wakeup_time);
-    if (wakeup_time > g_uptime) {
-        ASSERT(ret.was_interrupted());
-    }
-    return wakeup_time;
+    return Thread::current()->block<Thread::SleepBlocker>(nullptr, Thread::BlockTimeout(false, &duration), remaining_time);
+}
+
+auto Thread::sleep_until(const timespec& deadline) -> BlockResult
+{
+    ASSERT(state() == Thread::Running);
+    return Thread::current()->block<Thread::SleepBlocker>(nullptr, Thread::BlockTimeout(true, &deadline));
 }
 
 const char* Thread::state_string() const
@@ -989,10 +991,12 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
     return stream << value.process().name() << "(" << value.pid().value() << ":" << value.tid().value() << ")";
 }
 
-Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeval* timeout, Atomic<bool>* lock, RefPtr<Thread> beneficiary)
+Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, const BlockTimeout& timeout, Atomic<bool>* lock, RefPtr<Thread> beneficiary)
 {
     auto* current_thread = Thread::current();
-    TimerId timer_id {};
+    RefPtr<Timer> timer;
+    bool block_finished = false;
+    bool did_timeout = false;
     bool did_unlock;
 
     {
@@ -1003,6 +1007,25 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // we need to wait until the scheduler lock is released again
         {
             ScopedSpinLock sched_lock(g_scheduler_lock);
+            if (!timeout.is_infinite()) {
+                timer = TimerQueue::the().add_timer_without_id(timeout.absolute_time(), [&]() {
+                    // NOTE: this may execute on the same or any other processor!
+                    ScopedSpinLock lock(g_scheduler_lock);
+                    if (!block_finished) {
+                        did_timeout = true;
+                        wake_from_queue();
+                    }
+                });
+                if (!timer) {
+                    dbg() << "wait_on timed out before blocking";
+                    // We timed out already, don't block
+                    // The API contract guarantees we return with interrupts enabled,
+                    // regardless of how we got called
+                    critical.set_interrupt_flag_on_destruction(true);
+                    return BlockResult::InterruptedByTimeout;
+                }
+            }
+
             // m_queue can only be accessed safely if g_scheduler_lock is held!
             m_queue = &queue;
             if (!queue.enqueue(*current_thread)) {
@@ -1013,7 +1036,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
                 // The API contract guarantees we return with interrupts enabled,
                 // regardless of how we got called
                 critical.set_interrupt_flag_on_destruction(true);
-
                 return BlockResult::NotBlocked;
             }
 
@@ -1022,12 +1044,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
                 *lock = false;
             set_state(State::Queued);
             m_wait_reason = reason;
-
-            if (timeout) {
-                timer_id = TimerQueue::the().add_timer(*timeout, [&]() {
-                    wake_from_queue();
-                });
-            }
 
             // Yield and wait for the queue to wake us up again.
             if (beneficiary)
@@ -1057,6 +1073,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
         // To be able to look at m_wait_queue_node we once again need the
         // scheduler lock, which is held when we insert into the queue
         ScopedSpinLock sched_lock(g_scheduler_lock);
+        block_finished = true;
 
         if (m_queue) {
             ASSERT(m_queue == &queue);
@@ -1070,10 +1087,13 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, timeva
             // In this case, the queue should not contain us anymore.
             result = BlockResult::InterruptedByDeath;
         }
+    }
 
-        // Make sure we cancel the timer if woke normally.
-        if (timeout && !result.was_interrupted())
-            TimerQueue::the().cancel_timer(timer_id);
+    if (timer && !did_timeout) {
+        // Cancel the timer while not holding any locks. This allows
+        // the timer function to complete before we remove it
+        // (e.g. if it's on another processor)
+        TimerQueue::the().cancel_timer(timer.release_nonnull());
     }
 
     // The API contract guarantees we return with interrupts enabled,

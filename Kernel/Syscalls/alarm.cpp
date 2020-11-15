@@ -33,14 +33,15 @@ unsigned Process::sys$alarm(unsigned seconds)
 {
     REQUIRE_PROMISE(stdio);
     unsigned previous_alarm_remaining = 0;
-    if (m_alarm_deadline && m_alarm_deadline > g_uptime) {
-        previous_alarm_remaining = (m_alarm_deadline - g_uptime) / TimeManagement::the().ticks_per_second();
+    auto uptime = TimeManagement::the().uptime_ms();
+    if (m_alarm_deadline && m_alarm_deadline > uptime) {
+        previous_alarm_remaining = m_alarm_deadline - uptime;
     }
     if (!seconds) {
         m_alarm_deadline = 0;
         return previous_alarm_remaining;
     }
-    m_alarm_deadline = g_uptime + seconds * TimeManagement::the().ticks_per_second();
+    m_alarm_deadline = uptime + seconds * 1000;
     return previous_alarm_remaining;
 }
 
