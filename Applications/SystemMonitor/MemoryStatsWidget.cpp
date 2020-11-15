@@ -26,6 +26,7 @@
 
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
+#include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>

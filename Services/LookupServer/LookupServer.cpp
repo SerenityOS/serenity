@@ -27,6 +27,7 @@
 #include "LookupServer.h"
 #include "DNSRequest.h"
 #include "DNSResponse.h"
+#include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>

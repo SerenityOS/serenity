@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/CircularQueue.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ArgsParser.h>

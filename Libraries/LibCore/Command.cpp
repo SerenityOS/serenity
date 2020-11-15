@@ -25,6 +25,7 @@
  */
 
 #include "Command.h"
+#include <AK/ByteBuffer.h>
 #include <AK/LogStream.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/File.h>
