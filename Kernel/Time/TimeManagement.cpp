@@ -38,6 +38,7 @@
 #include <Kernel/Time/PIT.h>
 #include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>
+#include <Kernel/TimerQueue.h>
 #include <Kernel/VM/MemoryManager.h>
 
 //#define TIME_DEBUG
@@ -56,6 +57,22 @@ bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
     return &timer == m_system_timer.ptr();
 }
 
+timespec TimeManagement::ticks_to_time(u64 ticks, time_t ticks_per_second)
+{
+    timespec tspec;
+    tspec.tv_sec = ticks / ticks_per_second;
+    tspec.tv_nsec = (ticks % ticks_per_second) * (1'000'000'000 / ticks_per_second);
+    ASSERT(tspec.tv_nsec <= 1'000'000'000);
+    return tspec;
+}
+
+u64 TimeManagement::time_to_ticks(const timespec& tspec, time_t ticks_per_second)
+{
+    u64 ticks = (u64)tspec.tv_sec * ticks_per_second;
+    ticks += ((u64)tspec.tv_nsec * ticks_per_second) / 1'000'000'000;
+    return ticks;
+}
+
 void TimeManagement::set_epoch_time(timespec ts)
 {
     InterruptDisabler disabler;
@@ -63,9 +80,42 @@ void TimeManagement::set_epoch_time(timespec ts)
     m_remaining_epoch_time_adjustment = { 0, 0 };
 }
 
+u64 TimeManagement::monotonic_ticks() const
+{
+    long seconds;
+    u64 ticks;
+
+    u32 update_iteration;
+    do {
+        update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
+        seconds = m_seconds_since_boot;
+        ticks = m_ticks_this_second;
+    } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
+    return ticks + (u64)seconds * (u64)ticks_per_second();
+}
+
+timespec TimeManagement::monotonic_time() const
+{
+    return ticks_to_time(monotonic_ticks(), ticks_per_second());
+}
+
 timespec TimeManagement::epoch_time() const
 {
-    return m_epoch_time;
+    timespec ts;
+    u32 update_iteration;
+    do {
+        update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
+        ts = m_epoch_time;
+    } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
+    return ts;
+}
+
+u64 TimeManagement::uptime_ms() const
+{
+    auto mtime = monotonic_time();
+    u64 ms = mtime.tv_sec * 1000ull;
+    ms += mtime.tv_nsec / 1000000;
+    return ms;
 }
 
 void TimeManagement::initialize(u32 cpu)
@@ -98,18 +148,9 @@ void TimeManagement::set_system_timer(HardwareTimerBase& timer)
     m_system_timer = timer;
 }
 
-time_t TimeManagement::seconds_since_boot() const
-{
-    return m_seconds_since_boot;
-}
 time_t TimeManagement::ticks_per_second() const
 {
-    return m_system_timer->ticks_per_second();
-}
-
-time_t TimeManagement::ticks_this_second() const
-{
-    return m_ticks_this_second;
+    return m_time_keeper_timer->ticks_per_second();
 }
 
 time_t TimeManagement::boot_time() const
@@ -221,7 +262,7 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
         }
     }
 
-    m_system_timer->set_callback(Scheduler::timer_tick);
+    m_system_timer->set_callback(TimeManagement::timer_tick);
     m_time_keeper_timer->set_callback(TimeManagement::update_time);
 
     dbg() << "Reset timers";
@@ -243,7 +284,7 @@ bool TimeManagement::probe_and_set_legacy_hardware_timers()
     }
 
     m_hardware_timers.append(PIT::initialize(TimeManagement::update_time));
-    m_hardware_timers.append(RealTimeClock::create(Scheduler::timer_tick));
+    m_hardware_timers.append(RealTimeClock::create(TimeManagement::timer_tick));
     m_time_keeper_timer = m_hardware_timers[0];
     m_system_timer = m_hardware_timers[1];
     return true;
@@ -265,6 +306,8 @@ void TimeManagement::increment_time_since_boot(const RegisterState&)
     constexpr time_t MaxSlewNanos = NanosPerTick / 100;
     static_assert(MaxSlewNanos < NanosPerTick);
 
+    u32 update_iteration = m_update1.fetch_add(1, AK::MemoryOrder::memory_order_relaxed);
+
     // Clamp twice, to make sure intermediate fits into a long.
     long slew_nanos = clamp(clamp(m_remaining_epoch_time_adjustment.tv_sec, (time_t)-1, (time_t)1) * 1'000'000'000 + m_remaining_epoch_time_adjustment.tv_nsec, -MaxSlewNanos, MaxSlewNanos);
     timespec slew_nanos_ts;
@@ -280,6 +323,16 @@ void TimeManagement::increment_time_since_boot(const RegisterState&)
         ++m_seconds_since_boot;
         m_ticks_this_second = 0;
     }
+    m_update2.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+}
+
+void TimeManagement::timer_tick(const RegisterState& regs)
+{
+    if (Processor::current().in_irq() <= 1) {
+        // Don't expire timers while handling IRQs
+        TimerQueue::the().fire();
+    }
+    Scheduler::timer_tick(regs);
 }
 
 }

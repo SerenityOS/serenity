@@ -519,7 +519,7 @@ int Process::alloc_fd(int first_candidate_fd)
 
 timeval kgettimeofday()
 {
-    return g_timeofday;
+    return TimeManagement::now_as_timeval();
 }
 
 void kgettimeofday(timeval& tv)

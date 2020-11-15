@@ -29,19 +29,6 @@
 
 namespace Kernel {
 
-static void compute_relative_timeout_from_absolute(const timeval& absolute_time, timeval& relative_time)
-{
-    // Convert absolute time to relative time of day.
-    timeval_sub(absolute_time, kgettimeofday(), relative_time);
-}
-
-static void compute_relative_timeout_from_absolute(const timespec& absolute_time, timeval& relative_time)
-{
-    timeval tv_absolute_time;
-    timespec_to_timeval(absolute_time, tv_absolute_time);
-    compute_relative_timeout_from_absolute(tv_absolute_time, relative_time);
-}
-
 WaitQueue& Process::futex_queue(Userspace<const i32*> userspace_address)
 {
     auto& queue = m_futex_queues.ensure(userspace_address.ptr());
@@ -66,20 +53,17 @@ int Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
         if (user_value != params.val)
             return -EAGAIN;
 
-        timespec ts_abstimeout { 0, 0 };
-        if (params.timeout && !copy_from_user(&ts_abstimeout, params.timeout))
-            return -EFAULT;
-
-        timeval* optional_timeout = nullptr;
-        timeval relative_timeout { 0, 0 };
+        Thread::BlockTimeout timeout;
         if (params.timeout) {
-            compute_relative_timeout_from_absolute(ts_abstimeout, relative_timeout);
-            optional_timeout = &relative_timeout;
+            timespec ts_abstimeout { 0, 0 };
+            if (!copy_from_user(&ts_abstimeout, params.timeout))
+                return -EFAULT;
+            timeout = Thread::BlockTimeout(true, &ts_abstimeout);
         }
 
         // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
         WaitQueue& wait_queue = futex_queue((FlatPtr)params.userspace_address);
-        Thread::BlockResult result = Thread::current()->wait_on(wait_queue, "Futex", optional_timeout);
+        Thread::BlockResult result = Thread::current()->wait_on(wait_queue, "Futex", timeout);
         if (result == Thread::BlockResult::InterruptedByTimeout) {
             return -ETIMEDOUT;
         }
