@@ -857,14 +857,12 @@ FlatPtr Emulator::allocate_vm(size_t size, size_t alignment)
 
     FlatPtr final_address;
 
-    if (alignment) {
-        // FIXME: What if alignment is not a power of 2?
-        final_address = round_up_to_power_of_two(next_address, alignment);
-    } else {
-        final_address = next_address;
-    }
+    if (!alignment)
+        alignment = PAGE_SIZE;
 
-    next_address = final_address + size;
+    // FIXME: What if alignment is not a power of 2?
+    final_address = round_up_to_power_of_two(next_address, alignment);
+    next_address = round_up_to_power_of_two(final_address + size, PAGE_SIZE);
     return final_address;
 }
 
