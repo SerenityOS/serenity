@@ -26,9 +26,11 @@
 
 #include "SoftMMU.h"
 #include "Emulator.h"
+#include "MmapRegion.h"
 #include "Report.h"
 #include "SharedBufferRegion.h"
 #include <AK/ByteBuffer.h>
+#include <AK/Memory.h>
 
 namespace UserspaceEmulator {
 
@@ -242,6 +244,31 @@ ByteBuffer SoftMMU::copy_buffer_from_vm(const FlatPtr source, size_t size)
 SharedBufferRegion* SoftMMU::shbuf_region(int shbuf_id)
 {
     return (SharedBufferRegion*)m_shbuf_regions.get(shbuf_id).value_or(nullptr);
+}
+
+bool SoftMMU::fast_fill_memory8(X86::LogicalAddress address, size_t size, ValueWithShadow<u8> value)
+{
+    if (!size)
+        return true;
+    auto* region = find_region(address);
+    if (!region)
+        return false;
+    if (!region->contains(address.offset() + size - 1))
+        return false;
+
+    if (region->is_mmap() && static_cast<const MmapRegion&>(*region).is_malloc_block()) {
+        if (auto* tracer = Emulator::the().malloc_tracer()) {
+            // FIXME: Add a way to audit an entire range of memory instead of looping here!
+            for (size_t i = 0; i < size; i += sizeof(u8)) {
+                tracer->audit_write(address.offset() + (i * sizeof(u8)), sizeof(u8));
+            }
+        }
+    }
+
+    size_t offset_in_region = address.offset() - region->base();
+    memset(region->data() + offset_in_region, value.value(), size);
+    memset(region->shadow_data() + offset_in_region, value.shadow(), size);
+    return true;
 }
 
 }

@@ -108,6 +108,8 @@ public:
 
     void set_tls_region(NonnullOwnPtr<Region>);
 
+    bool fast_fill_memory8(X86::LogicalAddress, size_t size, ValueWithShadow<u8>);
+
     void copy_to_vm(FlatPtr destination, const void* source, size_t);
     void copy_from_vm(void* destination, const FlatPtr source, size_t);
     ByteBuffer copy_buffer_from_vm(const FlatPtr source, size_t);
