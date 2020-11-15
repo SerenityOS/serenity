@@ -103,30 +103,28 @@ Font& Font::default_bold_font()
 NonnullRefPtr<Font> Font::clone() const
 {
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
-    // FIXME: This is leaked!
-    auto* new_rows = static_cast<unsigned*>(kmalloc(bytes_per_glyph * m_glyph_count));
+    auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * m_glyph_count));
     memcpy(new_rows, m_rows, bytes_per_glyph * m_glyph_count);
-    auto* new_widths = static_cast<u8*>(kmalloc(m_glyph_count));
+    auto* new_widths = static_cast<u8*>(malloc(m_glyph_count));
     if (m_glyph_widths)
         memcpy(new_widths, m_glyph_widths, m_glyph_count);
     else
         memset(new_widths, m_glyph_width, m_glyph_count);
-    return adopt(*new Font(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_type, m_baseline, m_mean_line, m_presentation_size, m_weight));
+    return adopt(*new Font(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_type, m_baseline, m_mean_line, m_presentation_size, m_weight, true));
 }
 
 NonnullRefPtr<Font> Font::create(u8 glyph_height, u8 glyph_width, bool fixed, FontTypes type)
 {
     size_t bytes_per_glyph = sizeof(u32) * glyph_height;
-    // FIXME: This is leaked!
     size_t count = glyph_count_by_type(type);
     auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * count));
     memset(new_rows, 0, bytes_per_glyph * count);
     auto* new_widths = static_cast<u8*>(malloc(count));
     memset(new_widths, glyph_width, count);
-    return adopt(*new Font("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, type, 0, 0, 0, 400));
+    return adopt(*new Font("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, type, 0, 0, 0, 400, true));
 }
 
-Font::Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight)
+Font::Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, bool owns_arrays)
     : m_name(name)
     , m_family(family)
     , m_type(type)
@@ -142,6 +140,7 @@ Font::Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed
     , m_presentation_size(presentation_size)
     , m_weight(weight)
     , m_fixed_width(is_fixed_width)
+    , m_owns_arrays(owns_arrays)
 {
     update_x_height();
 
@@ -163,6 +162,10 @@ Font::Font(String name, String family, unsigned* rows, u8* widths, bool is_fixed
 
 Font::~Font()
 {
+    if (m_owns_arrays) {
+        free(m_glyph_widths);
+        free(m_rows);
+    }
 }
 
 RefPtr<Font> Font::load_from_memory(const u8* data)
