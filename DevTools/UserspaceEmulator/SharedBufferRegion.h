@@ -46,7 +46,8 @@ public:
     virtual void write32(u32 offset, ValueWithShadow<u32>) override;
     virtual void write64(u32 offset, ValueWithShadow<u64>) override;
 
-    u8* data() { return m_data; }
+    virtual u8* data() override { return m_data; }
+    virtual u8* shadow_data() override { return m_shadow_data; }
 
     bool is_shared_buffer() const override { return true; }
 

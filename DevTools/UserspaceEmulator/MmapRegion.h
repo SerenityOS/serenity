@@ -47,8 +47,8 @@ public:
     virtual void write32(u32 offset, ValueWithShadow<u32>) override;
     virtual void write64(u32 offset, ValueWithShadow<u64>) override;
 
-    u8* data() { return m_data; }
-    u8* shadow_data() { return m_shadow_data; }
+    virtual u8* data() override { return m_data; }
+    virtual u8* shadow_data() override { return m_shadow_data; }
 
     virtual bool is_readable() const override { return m_prot & PROT_READ; }
     virtual bool is_writable() const override { return m_prot & PROT_WRITE; }

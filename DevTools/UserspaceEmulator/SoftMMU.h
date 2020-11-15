@@ -73,6 +73,9 @@ public:
         virtual bool is_writable() const { return true; }
         virtual bool is_executable() const { return true; }
 
+        virtual u8* data() = 0;
+        virtual u8* shadow_data() = 0;
+
     protected:
         Region(u32 base, u32 size)
             : m_base(base)
