@@ -46,18 +46,12 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
     if (params.nfds < 0)
         return -EINVAL;
 
-    timespec computed_timeout;
-    bool select_has_timeout = false;
+    Thread::BlockTimeout timeout;
     if (params.timeout) {
         timespec timeout_copy;
         if (!copy_from_user(&timeout_copy, params.timeout))
             return -EFAULT;
-        if (timeout_copy.tv_sec || timeout_copy.tv_nsec) {
-            timespec ts_since_boot;
-            timeval_to_timespec(Scheduler::time_since_boot(), ts_since_boot);
-            timespec_add(ts_since_boot, timeout_copy, computed_timeout);
-            select_has_timeout = true;
-        }
+        timeout = Thread::BlockTimeout(false, &timeout_copy);
     }
 
     auto current_thread = Thread::current();
@@ -107,8 +101,8 @@ int Process::sys$select(const Syscall::SC_select_params* user_params)
     dbg() << "selecting on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << params.timeout;
 #endif
 
-    if (!params.timeout || select_has_timeout) {
-        if (current_thread->block<Thread::SelectBlocker>(select_has_timeout ? &computed_timeout : nullptr, rfds, wfds, efds).was_interrupted())
+    if (timeout.should_block()) {
+        if (current_thread->block<Thread::SelectBlocker>(timeout, rfds, wfds, efds).was_interrupted())
             return -EINTR;
     }
 
@@ -148,9 +142,13 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 
     SmapDisabler disabler;
 
-    timespec timeout = {};
-    if (params.timeout && !copy_from_user(&timeout, params.timeout))
-        return -EFAULT;
+    Thread::BlockTimeout timeout;
+    if (params.timeout) {
+        timespec timeout_copy;
+        if (!copy_from_user(&timeout_copy, params.timeout))
+            return -EFAULT;
+        timeout = Thread::BlockTimeout(false, &timeout_copy);
+    }
 
     sigset_t sigmask = {};
     if (params.sigmask && !copy_from_user(&sigmask, params.sigmask))
@@ -178,15 +176,6 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
             wfds.append(pfd.fd);
     }
 
-    timespec actual_timeout;
-    bool has_timeout = false;
-    if (params.timeout && (timeout.tv_sec || timeout.tv_nsec)) {
-        timespec ts_since_boot;
-        timeval_to_timespec(Scheduler::time_since_boot(), ts_since_boot);
-        timespec_add(ts_since_boot, timeout, actual_timeout);
-        has_timeout = true;
-    }
-
     auto current_thread = Thread::current();
 
     u32 previous_signal_mask = 0;
@@ -198,11 +187,11 @@ int Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
     });
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbg() << "polling on (read:" << rfds.size() << ", write:" << wfds.size() << "), timeout=" << timeout.tv_sec << "s" << timeout.tv_nsec << "ns";
+    dbg() << "polling on (read:" << rfds.size() << ", write:" << wfds.size() << ")";
 #endif
 
-    if (!params.timeout || has_timeout) {
-        if (current_thread->block<Thread::SelectBlocker>(has_timeout ? &actual_timeout : nullptr, rfds, wfds, Thread::SelectBlocker::FDVector()).was_interrupted())
+    if (timeout.should_block()) {
+        if (current_thread->block<Thread::SelectBlocker>(timeout, rfds, wfds, Thread::SelectBlocker::FDVector()).was_interrupted())
             return -EINTR;
     }
 

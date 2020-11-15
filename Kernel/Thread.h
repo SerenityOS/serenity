@@ -31,6 +31,7 @@
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
@@ -39,6 +40,7 @@
 #include <Kernel/KResult.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/ThreadTracer.h>
+#include <Kernel/TimerQueue.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/fd_set.h>
 #include <LibELF/AuxiliaryVector.h>
@@ -178,33 +180,129 @@ public:
         Queued,
     };
 
+    class BlockResult {
+    public:
+        enum Type {
+            WokeNormally,
+            NotBlocked,
+            InterruptedBySignal,
+            InterruptedByDeath,
+            InterruptedByTimeout,
+        };
+
+        BlockResult() = delete;
+
+        BlockResult(Type type)
+            : m_type(type)
+        {
+        }
+
+        bool operator==(Type type) const
+        {
+            return m_type == type;
+        }
+        bool operator!=(Type type) const
+        {
+            return m_type != type;
+        }
+
+        bool was_interrupted() const
+        {
+            switch (m_type) {
+            case InterruptedBySignal:
+            case InterruptedByDeath:
+                return true;
+            default:
+                return false;
+            }
+        }
+
+        bool timed_out() const
+        {
+            return m_type == InterruptedByTimeout;
+        }
+
+    private:
+        Type m_type;
+    };
+
+    class BlockTimeout {
+    public:
+        BlockTimeout()
+            : m_infinite(true)
+        {
+        }
+        BlockTimeout(std::nullptr_t)
+            : m_infinite(true)
+        {
+        }
+        explicit BlockTimeout(bool is_absolute, const timeval* time, const timespec* start_time = nullptr)
+            : m_infinite(!time)
+        {
+            if (!m_infinite) {
+                if (time->tv_sec > 0 || time->tv_usec > 0) {
+                    timeval_to_timespec(*time, m_time);
+                    m_should_block = true;
+                }
+                m_start_time = start_time ? *start_time : TimeManagement::the().monotonic_time();
+                if (!is_absolute)
+                    timespec_add(m_time, m_start_time, m_time);
+            }
+        }
+        explicit BlockTimeout(bool is_absolute, const timespec* time, const timespec* start_time = nullptr)
+            : m_infinite(!time)
+        {
+            if (!m_infinite) {
+                if (time->tv_sec > 0 || time->tv_nsec > 0) {
+                    m_time = *time;
+                    m_should_block = true;
+                }
+                m_start_time = start_time ? *start_time : TimeManagement::the().monotonic_time();
+                if (!is_absolute)
+                    timespec_add(m_time, m_start_time, m_time);
+            }
+        }
+
+        const timespec& absolute_time() const { return m_time; }
+        const timespec* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
+        bool is_infinite() const { return m_infinite; }
+        bool should_block() const { return m_infinite || m_should_block; };
+
+    private:
+        timespec m_time { 0, 0 };
+        timespec m_start_time { 0, 0 };
+        bool m_infinite { false };
+        bool m_should_block { false };
+    };
+
     class Blocker {
     public:
         virtual ~Blocker() { }
         virtual bool should_unblock(Thread&) = 0;
         virtual const char* state_string() const = 0;
         virtual bool is_reason_signal() const { return false; }
-        virtual timespec* override_timeout(timespec* timeout) { return timeout; }
+        virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
         virtual void was_unblocked() { }
         void set_interrupted_by_death()
         {
             ScopedSpinLock lock(m_lock);
             m_was_interrupted_by_death = true;
         }
-        bool was_interrupted_by_death() const
-        {
-            ScopedSpinLock lock(m_lock);
-            return m_was_interrupted_by_death;
-        }
         void set_interrupted_by_signal()
         {
             ScopedSpinLock lock(m_lock);
             m_was_interrupted_while_blocked = true;
         }
-        bool was_interrupted_by_signal() const
+        virtual Thread::BlockResult block_result(bool did_timeout)
         {
             ScopedSpinLock lock(m_lock);
-            return m_was_interrupted_while_blocked;
+            if (m_was_interrupted_by_death)
+                return Thread::BlockResult::InterruptedByDeath;
+            if (m_was_interrupted_while_blocked)
+                return Thread::BlockResult::InterruptedBySignal;
+            if (did_timeout)
+                return Thread::BlockResult::InterruptedByTimeout;
+            return Thread::BlockResult::WokeNormally;
         }
 
     protected:
@@ -260,10 +358,10 @@ public:
         explicit WriteBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&) override;
         virtual const char* state_string() const override { return "Writing"; }
-        virtual timespec* override_timeout(timespec*) override;
+        virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
 
     private:
-        timespec m_deadline;
+        BlockTimeout m_timeout;
     };
 
     class ReadBlocker final : public FileDescriptionBlocker {
@@ -271,10 +369,10 @@ public:
         explicit ReadBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&) override;
         virtual const char* state_string() const override { return "Reading"; }
-        virtual timespec* override_timeout(timespec*) override;
+        virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
 
     private:
-        timespec m_deadline;
+        BlockTimeout m_timeout;
     };
 
     class ConditionBlocker final : public Blocker {
@@ -290,12 +388,16 @@ public:
 
     class SleepBlocker final : public Blocker {
     public:
-        explicit SleepBlocker(u64 wakeup_time);
-        virtual bool should_unblock(Thread&) override;
+        explicit SleepBlocker(const BlockTimeout&, timespec* = nullptr);
+        virtual bool should_unblock(Thread&) override { return false; }
         virtual const char* state_string() const override { return "Sleeping"; }
+        virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
+        virtual void was_unblocked() override;
+        virtual Thread::BlockResult block_result(bool) override;
 
     private:
-        u64 m_wakeup_time { 0 };
+        BlockTimeout m_deadline;
+        timespec* m_remaining;
     };
 
     class SelectBlocker final : public Blocker {
@@ -376,95 +478,79 @@ public:
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
     size_t thread_specific_region_size() const { return m_thread_specific_region_size; }
 
-    u64 sleep(u64 ticks);
-
-    class BlockResult {
-    public:
-        enum Type {
-            WokeNormally,
-            NotBlocked,
-            InterruptedBySignal,
-            InterruptedByDeath,
-            InterruptedByTimeout,
-        };
-
-        BlockResult() = delete;
-
-        BlockResult(Type type)
-            : m_type(type)
-        {
-        }
-
-        bool operator==(Type type) const
-        {
-            return m_type == type;
-        }
-
-        bool was_interrupted() const
-        {
-            switch (m_type) {
-            case InterruptedBySignal:
-            case InterruptedByDeath:
-            case InterruptedByTimeout:
-                return true;
-            default:
-                return false;
-            }
-        }
-
-    private:
-        Type m_type;
-    };
-
     template<typename T, class... Args>
-    [[nodiscard]] BlockResult block(timespec* timeout, Args&&... args)
+    [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
         T t(forward<Args>(args)...);
 
+        bool did_timeout = false;
+        RefPtr<Timer> timer;
         {
+            ScopedSpinLock scheduler_lock(g_scheduler_lock);
             ScopedSpinLock lock(m_lock);
             // We should never be blocking a blocked (or otherwise non-active) thread.
             ASSERT(state() == Thread::Running);
             ASSERT(m_blocker == nullptr);
 
+            m_blocker = &t;
             if (t.should_unblock(*this)) {
                 // Don't block if the wake condition is already met
+                t.was_unblocked();
+                m_blocker = nullptr;
                 return BlockResult::NotBlocked;
             }
 
-            m_blocker = &t;
-            m_blocker_timeout = t.override_timeout(timeout);
-        }
+            auto& block_timeout = t.override_timeout(timeout);
+            if (!block_timeout.is_infinite()) {
+                m_blocker_timeout = timer = TimerQueue::the().add_timer_without_id(block_timeout.absolute_time(), [&]() {
+                    // NOTE: this may execute on the same or any other processor!
+                    ScopedSpinLock scheduler_lock(g_scheduler_lock);
+                    ScopedSpinLock lock(m_lock);
+                    if (m_blocker) {
+                        m_blocker_timeout = nullptr;
+                        unblock();
+                    }
+                });
+                if (!m_blocker_timeout) {
+                    // Timeout is already in the past
+                    t.was_unblocked();
+                    m_blocker = nullptr;
+                    return BlockResult::InterruptedByTimeout;
+                }
+            } else {
+                m_blocker_timeout = nullptr;
+            }
 
-        {
-            ScopedSpinLock scheduler_lock(g_scheduler_lock);
             set_state(Thread::Blocked);
         }
 
         // Yield to the scheduler, and wait for us to resume unblocked.
         yield_without_holding_big_lock();
 
-        // Acquire our lock again
-        ScopedSpinLock lock(m_lock);
+        {
+            ScopedSpinLock scheduler_lock(g_scheduler_lock);
+            ScopedSpinLock lock(m_lock);
 
-        // We should no longer be blocked once we woke up
-        ASSERT(state() != Thread::Blocked);
+            // We should no longer be blocked once we woke up
+            ASSERT(state() != Thread::Blocked);
 
-        // Remove ourselves...
-        m_blocker = nullptr;
-        m_blocker_timeout = nullptr;
+            // Remove ourselves...
+            m_blocker = nullptr;
+            if (timer && !m_blocker_timeout)
+                did_timeout = true;
+        }
+
+        if (timer && !did_timeout) {
+            // Cancel the timer while not holding any locks. This allows
+            // the timer function to complete before we remove it
+            // (e.g. if it's on another processor)
+            TimerQueue::the().cancel_timer(timer.release_nonnull());
+        }
 
         // Notify the blocker that we are no longer blocking. It may need
         // to clean up now while we're still holding m_lock
         t.was_unblocked();
-
-        if (t.was_interrupted_by_death())
-            return BlockResult::InterruptedByDeath;
-
-        if (t.was_interrupted_by_signal())
-            return BlockResult::InterruptedBySignal;
-
-        return BlockResult::WokeNormally;
+        return t.block_result(did_timeout);
     }
 
     [[nodiscard]] BlockResult block_until(const char* state_string, Function<bool()>&& condition)
@@ -472,10 +558,13 @@ public:
         return block<ConditionBlocker>(nullptr, state_string, move(condition));
     }
 
-    BlockResult wait_on(WaitQueue& queue, const char* reason, timeval* timeout = nullptr, Atomic<bool>* lock = nullptr, RefPtr<Thread> beneficiary = {});
+    BlockResult wait_on(WaitQueue& queue, const char* reason, const BlockTimeout& = nullptr, Atomic<bool>* lock = nullptr, RefPtr<Thread> beneficiary = {});
     void wake_from_queue();
 
     void unblock();
+
+    BlockResult sleep(const timespec&, timespec* = nullptr);
+    BlockResult sleep_until(const timespec&);
 
     // Tell this thread to unblock if needed,
     // gracefully unwind the stack and die.
@@ -497,7 +586,7 @@ public:
 
     void send_urgent_signal_to_self(u8 signal);
     void send_signal(u8 signal, Process* sender);
-    void consider_unblock(time_t now_sec, long now_usec);
+    void consider_unblock();
 
     u32 update_signal_mask(u32 signal_mask);
     u32 signal_mask_block(sigset_t signal_set, bool block);
@@ -652,7 +741,7 @@ private:
     size_t m_thread_specific_region_size { 0 };
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
-    timespec* m_blocker_timeout { nullptr };
+    RefPtr<Timer> m_blocker_timeout;
     const char* m_wait_reason { nullptr };
     WaitQueue* m_queue { nullptr };
 

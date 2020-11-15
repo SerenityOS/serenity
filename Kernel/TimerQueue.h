@@ -27,8 +27,9 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
+#include <AK/RefCounted.h>
 #include <AK/SinglyLinkedList.h>
 #include <Kernel/Time/TimeManagement.h>
 
@@ -36,7 +37,7 @@ namespace Kernel {
 
 typedef u64 TimerId;
 
-struct Timer {
+struct Timer : public RefCounted<Timer> {
     TimerId id;
     u64 expires;
     Function<void()> callback;
@@ -52,6 +53,12 @@ struct Timer {
     {
         return id == rhs.id;
     }
+
+    Timer(u64 expires, Function<void()>&& callback)
+        : expires(expires)
+        , callback(move(callback))
+    {
+    }
 };
 
 class TimerQueue {
@@ -59,21 +66,24 @@ public:
     TimerQueue();
     static TimerQueue& the();
 
-    TimerId add_timer(NonnullOwnPtr<Timer>&&);
+    TimerId add_timer(NonnullRefPtr<Timer>&&);
+    RefPtr<Timer> add_timer_without_id(const timespec& timeout, Function<void()>&& callback);
     TimerId add_timer(timeval& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
+    bool cancel_timer(const NonnullRefPtr<Timer>&);
     void fire();
 
 private:
     void update_next_timer_due();
+    void add_timer_locked(NonnullRefPtr<Timer>);
 
-    u64 microseconds_to_ticks(u64 micro_seconds) { return micro_seconds * (m_ticks_per_second / 1'000'000); }
-    u64 seconds_to_ticks(u64 seconds) { return seconds * m_ticks_per_second; }
+    timespec ticks_to_time(u64 ticks) const;
+    u64 time_to_ticks(const timespec&) const;
 
     u64 m_next_timer_due { 0 };
     u64 m_timer_id_count { 0 };
     u64 m_ticks_per_second { 0 };
-    SinglyLinkedList<NonnullOwnPtr<Timer>> m_timer_queue;
+    SinglyLinkedList<NonnullRefPtr<Timer>> m_timer_queue;
 };
 
 }

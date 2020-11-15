@@ -81,7 +81,7 @@ KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2)
         dbg() << "    " << (void*)event.stack[i];
 #endif
 
-    event.timestamp = g_uptime;
+    event.timestamp = TimeManagement::the().uptime_ms();
     at(m_count++) = event;
     return KSuccess;
 }

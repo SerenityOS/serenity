@@ -46,11 +46,13 @@ public:
     static void initialize(u32 cpu);
     static TimeManagement& the();
 
+    static timespec ticks_to_time(u64 ticks, time_t ticks_per_second);
+    static u64 time_to_ticks(const timespec& tspec, time_t ticks_per_second);
+
+    timespec monotonic_time() const;
     timespec epoch_time() const;
     void set_epoch_time(timespec);
-    time_t seconds_since_boot() const;
     time_t ticks_per_second() const;
-    time_t ticks_this_second() const;
     time_t boot_time() const;
 
     bool is_system_timer(const HardwareTimerBase&) const;
@@ -60,6 +62,8 @@ public:
 
     static bool is_hpet_periodic_mode_allowed();
 
+    u64 uptime_ms() const;
+    u64 monotonic_ticks() const;
     static timeval now_as_timeval();
 
     timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
@@ -72,11 +76,16 @@ private:
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
     NonnullRefPtrVector<HardwareTimerBase> m_hardware_timers;
     void set_system_timer(HardwareTimerBase&);
+    static void timer_tick(const RegisterState&);
 
+    // Variables between m_update1 and m_update2 are synchronized
+    Atomic<u32> m_update1 { 0 };
     u32 m_ticks_this_second { 0 };
     u32 m_seconds_since_boot { 0 };
     timespec m_epoch_time { 0, 0 };
     timespec m_remaining_epoch_time_adjustment { 0, 0 };
+    Atomic<u32> m_update2 { 0 };
+
     RefPtr<HardwareTimerBase> m_system_timer;
     RefPtr<HardwareTimerBase> m_time_keeper_timer;
 };

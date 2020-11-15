@@ -28,6 +28,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Singleton.h>
+#include <AK/Time.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
@@ -35,6 +36,7 @@
 namespace Kernel {
 
 static AK::Singleton<TimerQueue> s_the;
+static SpinLock<u8> g_timerqueue_lock;
 
 TimerQueue& TimerQueue::the()
 {
@@ -46,12 +48,38 @@ TimerQueue::TimerQueue()
     m_ticks_per_second = TimeManagement::the().ticks_per_second();
 }
 
-TimerId TimerQueue::add_timer(NonnullOwnPtr<Timer>&& timer)
+RefPtr<Timer> TimerQueue::add_timer_without_id(const timespec& deadline, Function<void()>&& callback)
 {
-    u64 timer_expiration = timer->expires;
-    ASSERT(timer_expiration >= g_uptime);
+    if (deadline <= TimeManagement::the().monotonic_time())
+        return {};
+
+    // Because timer handlers can execute on any processor and there is
+    // a race between executing a timer handler and cancel_timer() this
+    // *must* be a RefPtr<Timer>. Otherwise calling cancel_timer() could
+    // inadvertently cancel another timer that has been created between
+    // returning from the timer handler and a call to cancel_timer().
+    auto timer = adopt(*new Timer(time_to_ticks(deadline), move(callback)));
+
+    ScopedSpinLock lock(g_timerqueue_lock);
+    timer->id = 0; // Don't generate a timer id
+    add_timer_locked(timer);
+    return timer;
+}
+
+TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
+{
+    ScopedSpinLock lock(g_timerqueue_lock);
 
     timer->id = ++m_timer_id_count;
+    ASSERT(timer->id != 0); // wrapped
+    add_timer_locked(move(timer));
+    return m_timer_id_count;
+}
+
+void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
+{
+    u64 timer_expiration = timer->expires;
+    ASSERT(timer_expiration >= time_to_ticks(TimeManagement::the().monotonic_time()));
 
     if (m_timer_queue.is_empty()) {
         m_timer_queue.append(move(timer));
@@ -69,21 +97,51 @@ TimerId TimerQueue::add_timer(NonnullOwnPtr<Timer>&& timer)
                 m_next_timer_due = timer_expiration;
         }
     }
-
-    return m_timer_id_count;
 }
 
 TimerId TimerQueue::add_timer(timeval& deadline, Function<void()>&& callback)
 {
-    NonnullOwnPtr timer = make<Timer>();
-    timer->expires = g_uptime + seconds_to_ticks(deadline.tv_sec) + microseconds_to_ticks(deadline.tv_usec);
-    timer->callback = move(callback);
-    return add_timer(move(timer));
+    auto expires = TimeManagement::the().monotonic_time();
+    timespec_add_timeval(expires, deadline, expires);
+    return add_timer(adopt(*new Timer(time_to_ticks(expires), move(callback))));
+}
+
+timespec TimerQueue::ticks_to_time(u64 ticks) const
+{
+    timespec tspec;
+    tspec.tv_sec = ticks / m_ticks_per_second;
+    tspec.tv_nsec = (ticks % m_ticks_per_second) * (1'000'000'000 / m_ticks_per_second);
+    ASSERT(tspec.tv_nsec <= 1'000'000'000);
+    return tspec;
+}
+
+u64 TimerQueue::time_to_ticks(const timespec& tspec) const
+{
+    u64 ticks = (u64)tspec.tv_sec * m_ticks_per_second;
+    ticks += ((u64)tspec.tv_nsec * m_ticks_per_second) / 1'000'000'000;
+    return ticks;
 }
 
 bool TimerQueue::cancel_timer(TimerId id)
 {
+    ScopedSpinLock lock(g_timerqueue_lock);
     auto it = m_timer_queue.find([id](auto& timer) { return timer->id == id; });
+    if (it.is_end())
+        return false;
+
+    auto was_next_timer = it.is_begin();
+    m_timer_queue.remove(it);
+
+    if (was_next_timer)
+        update_next_timer_due();
+
+    return true;
+}
+
+bool TimerQueue::cancel_timer(const NonnullRefPtr<Timer>& timer)
+{
+    ScopedSpinLock lock(g_timerqueue_lock);
+    auto it = m_timer_queue.find([timer](auto& t) { return t.ptr() == timer.ptr(); });
     if (it.is_end())
         return false;
 
@@ -98,21 +156,27 @@ bool TimerQueue::cancel_timer(TimerId id)
 
 void TimerQueue::fire()
 {
+    ScopedSpinLock lock(g_timerqueue_lock);
     if (m_timer_queue.is_empty())
         return;
 
     ASSERT(m_next_timer_due == m_timer_queue.first()->expires);
 
-    while (!m_timer_queue.is_empty() && g_uptime > m_timer_queue.first()->expires) {
+    while (!m_timer_queue.is_empty() && TimeManagement::the().monotonic_ticks() > m_timer_queue.first()->expires) {
         auto timer = m_timer_queue.take_first();
-        timer->callback();
-    }
 
-    update_next_timer_due();
+        update_next_timer_due();
+
+        lock.unlock();
+        timer->callback();
+        lock.lock();
+    }
 }
 
 void TimerQueue::update_next_timer_due()
 {
+    ASSERT(g_timerqueue_lock.is_locked());
+
     if (m_timer_queue.is_empty())
         m_next_timer_due = 0;
     else

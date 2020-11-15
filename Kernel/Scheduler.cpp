@@ -56,7 +56,6 @@ public:
 };
 
 SchedulerData* g_scheduler_data;
-timeval g_timeofday;
 RecursiveSpinLock g_scheduler_lock;
 
 void Scheduler::init_thread(Thread& thread)
@@ -73,16 +72,10 @@ static u32 time_slice_for(const Thread& thread)
     return 10;
 }
 
-timeval Scheduler::time_since_boot()
-{
-    return { TimeManagement::the().seconds_since_boot(), (suseconds_t)TimeManagement::the().ticks_this_second() * 1000 };
-}
-
 Thread* g_finalizer;
 WaitQueue* g_finalizer_wait_queue;
 Atomic<bool> g_finalizer_has_work { false };
 static Process* s_colonel_process;
-u64 g_uptime;
 
 Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*& joinee_exit_value)
     : m_joinee(&joinee)
@@ -179,16 +172,15 @@ Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
 {
 }
 
-timespec* Thread::WriteBlocker::override_timeout(timespec* timeout)
+auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
 {
     auto& description = blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            timeval_to_timespec(Scheduler::time_since_boot(), m_deadline);
-            timespec_add_timeval(m_deadline, socket.send_timeout(), m_deadline);
-            if (!timeout || m_deadline < *timeout)
-                return &m_deadline;
+            m_timeout = BlockTimeout(false, &socket.send_timeout(), timeout.start_time());
+            if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
+                return m_timeout;
         }
     }
     return timeout;
@@ -204,16 +196,15 @@ Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
 {
 }
 
-timespec* Thread::ReadBlocker::override_timeout(timespec* timeout)
+auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
 {
     auto& description = blocked_description();
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            timeval_to_timespec(Scheduler::time_since_boot(), m_deadline);
-            timespec_add_timeval(m_deadline, socket.receive_timeout(), m_deadline);
-            if (!timeout || m_deadline < *timeout)
-                return &m_deadline;
+            m_timeout = BlockTimeout(false, &socket.receive_timeout(), timeout.start_time());
+            if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
+                return m_timeout;
         }
     }
     return timeout;
@@ -236,14 +227,36 @@ bool Thread::ConditionBlocker::should_unblock(Thread&)
     return m_block_until_condition();
 }
 
-Thread::SleepBlocker::SleepBlocker(u64 wakeup_time)
-    : m_wakeup_time(wakeup_time)
+Thread::SleepBlocker::SleepBlocker(const BlockTimeout& deadline, timespec* remaining)
+    : m_deadline(deadline)
+    , m_remaining(remaining)
 {
 }
 
-bool Thread::SleepBlocker::should_unblock(Thread&)
+auto Thread::SleepBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
 {
-    return m_wakeup_time <= g_uptime;
+    ASSERT(timeout.is_infinite()); // A timeout should not be provided
+    // To simplify things only use the sleep deadline.
+    return m_deadline;
+}
+
+void Thread::SleepBlocker::was_unblocked()
+{
+    if (!m_remaining)
+        return;
+    auto time_now = TimeManagement::the().monotonic_time();
+    if (time_now < m_deadline.absolute_time())
+        timespec_sub(m_deadline.absolute_time(), time_now, *m_remaining);
+    else
+        *m_remaining = {};
+}
+
+Thread::BlockResult Thread::SleepBlocker::block_result(bool did_timeout)
+{
+    auto result = Blocker::block_result(did_timeout);
+    if (result == Thread::BlockResult::InterruptedByTimeout)
+        return Thread::BlockResult::WokeNormally;
+    return result;
 }
 
 Thread::SelectBlocker::SelectBlocker(const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
@@ -328,7 +341,7 @@ bool Thread::SemiPermanentBlocker::should_unblock(Thread&)
 
 // Called by the scheduler on threads that are blocked for some reason.
 // Make a decision as to whether to unblock them or not.
-void Thread::consider_unblock(time_t now_sec, long now_usec)
+void Thread::consider_unblock()
 {
     ScopedSpinLock lock(m_lock);
     switch (state()) {
@@ -343,11 +356,7 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         return;
     case Thread::Blocked: {
         ASSERT(m_blocker != nullptr);
-        timespec now;
-        now.tv_sec = now_sec,
-        now.tv_nsec = now_usec * 1000ull;
-        bool timed_out = m_blocker_timeout && now >= *m_blocker_timeout;
-        if (timed_out || m_blocker->should_unblock(*this))
+        if (m_blocker->should_unblock(*this))
             unblock();
         return;
     }
@@ -383,10 +392,6 @@ bool Scheduler::pick_next()
     ASSERT_INTERRUPTS_DISABLED();
 
     auto current_thread = Thread::current();
-    auto now = time_since_boot();
-
-    auto now_sec = now.tv_sec;
-    auto now_usec = now.tv_usec;
 
     // Set the m_in_scheduler flag before acquiring the spinlock. This
     // prevents a recursive call into Scheduler::invoke_async upon
@@ -422,7 +427,7 @@ bool Scheduler::pick_next()
 
     // Check and unblock threads whose wait conditions have been met.
     Scheduler::for_each_nonrunnable([&](Thread& thread) {
-        thread.consider_unblock(now_sec, now_usec);
+        thread.consider_unblock();
         return IterationDecision::Continue;
     });
 
@@ -436,7 +441,7 @@ bool Scheduler::pick_next()
             }
             return IterationDecision::Continue;
         }
-        if (process.m_alarm_deadline && g_uptime > process.m_alarm_deadline) {
+        if (process.m_alarm_deadline && TimeManagement::the().uptime_ms() > process.m_alarm_deadline) {
             process.m_alarm_deadline = 0;
             // FIXME: Should we observe this signal somehow?
             (void)process.send_signal(SIGALRM, nullptr);
@@ -788,27 +793,17 @@ void Scheduler::timer_tick(const RegisterState& regs)
     bool is_bsp = Processor::current().id() == 0;
     if (!is_bsp)
         return; // TODO: This prevents scheduling on other CPUs!
-    if (is_bsp) {
-        // TODO: We should probably move this out of the scheduler
-        ++g_uptime;
-
-        g_timeofday = TimeManagement::now_as_timeval();
-    }
-
     if (current_thread->process().is_profiling()) {
         SmapDisabler disabler;
         auto backtrace = current_thread->raw_backtrace(regs.ebp, regs.eip);
         auto& sample = Profiling::next_sample_slot();
         sample.pid = current_thread->process().pid();
         sample.tid = current_thread->tid();
-        sample.timestamp = g_uptime;
+        sample.timestamp = TimeManagement::the().uptime_ms();
         for (size_t i = 0; i < min(backtrace.size(), Profiling::max_stack_frame_count); ++i) {
             sample.frames[i] = backtrace[i];
         }
     }
-
-    if (is_bsp)
-        TimerQueue::the().fire();
 
     if (current_thread->tick())
         return;

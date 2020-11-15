@@ -31,6 +31,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <Kernel/SpinLock.h>
+#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -44,9 +45,7 @@ struct SchedulerData;
 extern Thread* g_finalizer;
 extern WaitQueue* g_finalizer_wait_queue;
 extern Atomic<bool> g_finalizer_has_work;
-extern u64 g_uptime;
 extern SchedulerData* g_scheduler_data;
-extern timeval g_timeofday;
 extern RecursiveSpinLock g_scheduler_lock;
 
 class Scheduler {
@@ -57,7 +56,6 @@ public:
     static void timer_tick(const RegisterState&);
     [[noreturn]] static void start();
     static bool pick_next();
-    static timeval time_since_boot();
     static bool yield();
     static bool donate_to_and_switch(Thread*, const char* reason);
     static bool donate_to(RefPtr<Thread>&, const char* reason);
