@@ -52,6 +52,8 @@ namespace AK {
 template<typename T, size_t inline_capacity>
 class Vector {
 public:
+    using value_type = T;
+
     Vector()
         : m_capacity(inline_capacity)
     {
@@ -147,16 +149,12 @@ public:
         m_size = 0;
     }
 
-    bool operator==(const Vector& other) const
+    template<typename V>
+    bool operator==(const V& other) const
     {
-        if (m_size != other.m_size)
+        if (m_size != other.size())
             return false;
         return TypedTransfer<T>::compare(data(), other.data(), size());
-    }
-
-    bool operator!=(const Vector& other) const
-    {
-        return !(*this == other);
     }
 
     operator Span<T>() { return span(); }
