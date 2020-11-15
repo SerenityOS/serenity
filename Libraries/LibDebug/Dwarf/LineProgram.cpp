@@ -101,8 +101,9 @@ void LineProgram::append_to_line_info()
 
     String directory = m_source_directories[m_source_files[m_file_index].directory_index];
 
-    StringBuilder full_path(directory.length() + m_source_files[m_file_index].name.length());
+    StringBuilder full_path(directory.length() + m_source_files[m_file_index].name.length() + 1);
     full_path.append(directory);
+    full_path.append('/');
     full_path.append(m_source_files[m_file_index].name);
 
     m_lines.append({ m_address, full_path.to_string(), m_line });
