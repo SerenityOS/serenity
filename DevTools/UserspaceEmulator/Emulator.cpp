@@ -208,7 +208,7 @@ bool Emulator::is_in_malloc_or_free() const
 
 Vector<FlatPtr> Emulator::raw_backtrace()
 {
-    Vector<FlatPtr> backtrace;
+    Vector<FlatPtr, 128> backtrace;
     backtrace.append(m_cpu.base_eip());
 
     // FIXME: Maybe do something if the backtrace has uninitialized data in the frame chain.
