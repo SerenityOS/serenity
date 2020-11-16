@@ -89,13 +89,9 @@ void ClipboardHistoryModel::update()
 
 void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 {
-    for (size_t i = 0; i < m_history_items.size(); i++) {
-        auto& existing = m_history_items.at(i);
-        if (existing.data == item.data && existing.mime_type == item.mime_type) {
-            m_history_items.remove(i);
-            break;
-        }
-    }
+    m_history_items.remove_first_matching([&](GUI::Clipboard::DataAndType& existing) {
+        return existing.data == item.data && existing.mime_type == item.mime_type;
+    });
 
     if (m_history_items.size() == m_history_limit)
         m_history_items.take_last();
