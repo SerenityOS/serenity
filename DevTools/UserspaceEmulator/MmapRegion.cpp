@@ -75,7 +75,7 @@ ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
 
     if (is_malloc_block()) {
         if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->audit_read(base() + offset, 1);
+            tracer->audit_read(*this, base() + offset, 1);
     }
 
     ASSERT(offset < size());
@@ -92,7 +92,7 @@ ValueWithShadow<u16> MmapRegion::read16(u32 offset)
 
     if (is_malloc_block()) {
         if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->audit_read(base() + offset, 2);
+            tracer->audit_read(*this, base() + offset, 2);
     }
 
     ASSERT(offset + 1 < size());
@@ -109,7 +109,7 @@ ValueWithShadow<u32> MmapRegion::read32(u32 offset)
 
     if (is_malloc_block()) {
         if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->audit_read(base() + offset, 4);
+            tracer->audit_read(*this, base() + offset, 4);
     }
 
     ASSERT(offset + 3 < size());
@@ -126,7 +126,7 @@ ValueWithShadow<u64> MmapRegion::read64(u32 offset)
 
     if (is_malloc_block()) {
         if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->audit_read(base() + offset, 8);
+            tracer->audit_read(*this, base() + offset, 8);
     }
 
     ASSERT(offset + 7 < size());
@@ -143,7 +143,7 @@ void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
 
     if (is_malloc_block()) {
         if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->audit_write(base() + offset, 1);
+            tracer->audit_write(*this, base() + offset, 1);
     }
 
     ASSERT(offset < size());
@@ -161,7 +161,7 @@ void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)
 
     if (is_malloc_block()) {
         if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->audit_write(base() + offset, 2);
+            tracer->audit_write(*this, base() + offset, 2);
     }
 
     ASSERT(offset + 1 < size());
@@ -179,7 +179,7 @@ void MmapRegion::write32(u32 offset, ValueWithShadow<u32> value)
 
     if (is_malloc_block()) {
         if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->audit_write(base() + offset, 4);
+            tracer->audit_write(*this, base() + offset, 4);
     }
 
     ASSERT(offset + 3 < size());
@@ -198,7 +198,7 @@ void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
 
     if (is_malloc_block()) {
         if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->audit_write(base() + offset, 8);
+            tracer->audit_write(*this, base() + offset, 8);
     }
 
     ASSERT(offset + 7 < size());

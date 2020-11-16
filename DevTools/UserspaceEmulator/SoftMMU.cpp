@@ -260,7 +260,7 @@ bool SoftMMU::fast_fill_memory8(X86::LogicalAddress address, size_t size, ValueW
         if (auto* tracer = Emulator::the().malloc_tracer()) {
             // FIXME: Add a way to audit an entire range of memory instead of looping here!
             for (size_t i = 0; i < size; ++i) {
-                tracer->audit_write(address.offset() + (i * sizeof(u8)), sizeof(u8));
+                tracer->audit_write(*region, address.offset() + (i * sizeof(u8)), sizeof(u8));
             }
         }
     }
@@ -285,7 +285,7 @@ bool SoftMMU::fast_fill_memory32(X86::LogicalAddress address, size_t count, Valu
         if (auto* tracer = Emulator::the().malloc_tracer()) {
             // FIXME: Add a way to audit an entire range of memory instead of looping here!
             for (size_t i = 0; i < count; ++i) {
-                tracer->audit_write(address.offset() + (i * sizeof(u32)), sizeof(u32));
+                tracer->audit_write(*region, address.offset() + (i * sizeof(u32)), sizeof(u32));
             }
         }
     }
