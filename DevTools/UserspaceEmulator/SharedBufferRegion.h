@@ -31,7 +31,7 @@
 
 namespace UserspaceEmulator {
 
-class SharedBufferRegion final : public SoftMMU::Region {
+class SharedBufferRegion final : public Region {
 public:
     static NonnullOwnPtr<SharedBufferRegion> create_with_shbuf_id(u32 base, u32 size, int shbuf_id, u8* shbuf_data);
     virtual ~SharedBufferRegion() override;
