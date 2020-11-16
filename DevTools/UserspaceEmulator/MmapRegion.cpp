@@ -69,12 +69,12 @@ ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
 {
     if (!is_readable()) {
         reportln("8-bit read from unreadable MmapRegion @ {:p}", base() + offset);
-        Emulator::the().dump_backtrace();
+        emulator().dump_backtrace();
         TODO();
     }
 
     if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
+        if (auto* tracer = emulator().malloc_tracer())
             tracer->audit_read(*this, base() + offset, 1);
     }
 
@@ -86,12 +86,12 @@ ValueWithShadow<u16> MmapRegion::read16(u32 offset)
 {
     if (!is_readable()) {
         reportln("16-bit read from unreadable MmapRegion @ {:p}", base() + offset);
-        Emulator::the().dump_backtrace();
+        emulator().dump_backtrace();
         TODO();
     }
 
     if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
+        if (auto* tracer = emulator().malloc_tracer())
             tracer->audit_read(*this, base() + offset, 2);
     }
 
@@ -103,12 +103,12 @@ ValueWithShadow<u32> MmapRegion::read32(u32 offset)
 {
     if (!is_readable()) {
         reportln("32-bit read from unreadable MmapRegion @ {:p}", base() + offset);
-        Emulator::the().dump_backtrace();
+        emulator().dump_backtrace();
         TODO();
     }
 
     if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
+        if (auto* tracer = emulator().malloc_tracer())
             tracer->audit_read(*this, base() + offset, 4);
     }
 
@@ -120,12 +120,12 @@ ValueWithShadow<u64> MmapRegion::read64(u32 offset)
 {
     if (!is_readable()) {
         reportln("64-bit read from unreadable MmapRegion @ {:p}", base() + offset);
-        Emulator::the().dump_backtrace();
+        emulator().dump_backtrace();
         TODO();
     }
 
     if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
+        if (auto* tracer = emulator().malloc_tracer())
             tracer->audit_read(*this, base() + offset, 8);
     }
 
@@ -137,12 +137,12 @@ void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     if (!is_writable()) {
         reportln("8-bit write from unwritable MmapRegion @ {:p}", base() + offset);
-        Emulator::the().dump_backtrace();
+        emulator().dump_backtrace();
         TODO();
     }
 
     if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
+        if (auto* tracer = emulator().malloc_tracer())
             tracer->audit_write(*this, base() + offset, 1);
     }
 
@@ -155,12 +155,12 @@ void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)
 {
     if (!is_writable()) {
         reportln("16-bit write from unwritable MmapRegion @ {:p}", base() + offset);
-        Emulator::the().dump_backtrace();
+        emulator().dump_backtrace();
         TODO();
     }
 
     if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
+        if (auto* tracer = emulator().malloc_tracer())
             tracer->audit_write(*this, base() + offset, 2);
     }
 
@@ -173,12 +173,12 @@ void MmapRegion::write32(u32 offset, ValueWithShadow<u32> value)
 {
     if (!is_writable()) {
         reportln("32-bit write from unwritable MmapRegion @ {:p}", base() + offset);
-        Emulator::the().dump_backtrace();
+        emulator().dump_backtrace();
         TODO();
     }
 
     if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
+        if (auto* tracer = emulator().malloc_tracer())
             tracer->audit_write(*this, base() + offset, 4);
     }
 
@@ -192,12 +192,12 @@ void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
 {
     if (!is_writable()) {
         reportln("64-bit write from unwritable MmapRegion @ {:p}", base() + offset);
-        Emulator::the().dump_backtrace();
+        emulator().dump_backtrace();
         TODO();
     }
 
     if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
+        if (auto* tracer = emulator().malloc_tracer())
             tracer->audit_write(*this, base() + offset, 8);
     }
 

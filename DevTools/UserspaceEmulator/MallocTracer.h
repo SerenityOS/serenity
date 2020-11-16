@@ -35,7 +35,7 @@
 
 namespace UserspaceEmulator {
 
-class MmapRegion;
+class Emulator;
 class SoftCPU;
 
 struct Mallocation {
@@ -66,7 +66,7 @@ public:
 
 class MallocTracer {
 public:
-    MallocTracer();
+    explicit MallocTracer(Emulator&);
 
     void target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t);
     void target_did_free(Badge<SoftCPU>, FlatPtr address);
@@ -86,6 +86,8 @@ private:
     Mallocation* find_mallocation_before(FlatPtr);
     Mallocation* find_mallocation_after(FlatPtr);
     bool is_reachable(const Mallocation&) const;
+
+    Emulator& m_emulator;
 
     bool m_auditing_enabled { true };
 };
