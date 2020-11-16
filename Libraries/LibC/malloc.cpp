@@ -377,8 +377,8 @@ static void free_impl(void* ptr)
 {
     if (s_profiling)
         perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
-    free_impl(ptr);
     ue_notify_free(ptr);
+    free_impl(ptr);
 }
 
 void* calloc(size_t count, size_t size)
