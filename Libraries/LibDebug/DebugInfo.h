@@ -43,7 +43,7 @@ public:
     explicit DebugInfo(NonnullRefPtr<const ELF::Loader> elf);
 
     struct SourcePosition {
-        String file_path;
+        FlyString file_path;
         size_t line_number { 0 };
         u32 address_of_first_statement { 0 };
 
@@ -96,7 +96,7 @@ public:
     template<typename Callback>
     void for_each_source_position(Callback callback) const
     {
-        String previous_file = "";
+        FlyString previous_file = "";
         size_t previous_line = 0;
         for (const auto& line_info : m_sorted_lines) {
             if (line_info.file == previous_file && line_info.line == previous_line)

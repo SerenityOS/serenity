@@ -26,8 +26,8 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/MemoryStream.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace Debug::Dwarf {
@@ -38,7 +38,7 @@ public:
 
     struct LineInfo {
         u32 address { 0 };
-        String file;
+        FlyString file;
         size_t line { 0 };
     };
 
@@ -93,7 +93,7 @@ private:
     };
 
     struct FileEntry {
-        String name;
+        FlyString name;
         size_t directory_index { 0 };
     };
 
