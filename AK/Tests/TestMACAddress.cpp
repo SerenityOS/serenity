@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,63 +24,56 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/TestSuite.h>
 
-#include <AK/Assertions.h>
-#include <AK/String.h>
+#include <AK/MACAddress.h>
 #include <AK/Types.h>
 
-class [[gnu::packed]] MACAddress
+TEST_CASE(should_default_construct)
 {
-public:
-    MACAddress() { }
-    MACAddress(const u8 data[6])
-    {
-        __builtin_memcpy(m_data, data, 6);
-    }
-    MACAddress(u8 a, u8 b, u8 c, u8 d, u8 e, u8 f)
-    {
-        m_data[0] = a;
-        m_data[1] = b;
-        m_data[2] = c;
-        m_data[3] = d;
-        m_data[4] = e;
-        m_data[5] = f;
-    }
-    ~MACAddress() { }
-
-    u8 operator[](int i) const
-    {
-        ASSERT(i >= 0 && i < 6);
-        return m_data[i];
-    }
-
-    bool operator==(const MACAddress& other) const
-    {
-        return !__builtin_memcmp(m_data, other.m_data, sizeof(m_data));
-    }
-
-    String to_string() const
-    {
-        return String::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
-    }
-
-    bool is_zero() const
-    {
-        return m_data[0] == 0 && m_data[1] == 0 && m_data[2] == 0 && m_data[3] == 0 && m_data[4] == 0 && m_data[5] == 0;
-    }
-
-private:
-    u8 m_data[6] {};
-};
-
-static_assert(sizeof(MACAddress) == 6);
-
-namespace AK {
-
-template<>
-struct Traits<MACAddress> : public GenericTraits<MACAddress> {
-    static unsigned hash(const MACAddress& address) { return string_hash((const char*)&address, sizeof(address)); }
-};
-
+    MACAddress sut {};
+    EXPECT(sut.is_zero());
 }
+
+TEST_CASE(should_braces_construct)
+{
+    MACAddress sut { 1, 2, 3, 4, 5, 6 };
+    EXPECT(!sut.is_zero());
+}
+
+TEST_CASE(should_construct_from_c_array)
+{
+    u8 addr[6] = { 1, 2, 3, 4, 5, 6 };
+    MACAddress sut(addr);
+    EXPECT(!sut.is_zero());
+}
+
+TEST_CASE(should_construct_from_6_octets)
+{
+    MACAddress sut(1, 2, 3, 4, 5, 6);
+    EXPECT(!sut.is_zero());
+}
+
+TEST_CASE(should_provide_access_to_octet_by_index)
+{
+    MACAddress sut(1, 2, 3, 4, 5, 6);
+    for (auto i = 0u; i < sizeof(MACAddress); ++i) {
+        EXPECT_EQ(i + 1, sut[i]);
+    }
+}
+
+TEST_CASE(should_equality_compare)
+{
+    MACAddress a(1, 2, 3, 4, 5, 6);
+    MACAddress b(1, 2, 3, 42, 5, 6);
+    EXPECT(a == a);
+    EXPECT(a != b);
+}
+
+TEST_CASE(should_string_format)
+{
+    MACAddress sut(1, 2, 3, 4, 5, 6);
+    EXPECT_EQ("01:02:03:04:05:06", sut.to_string());
+}
+
+TEST_MAIN(MACAddress)
