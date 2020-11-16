@@ -115,12 +115,14 @@ void DebugInfo::prepare_lines()
         all_lines.append(program.lines());
     }
 
+    String serenity_slash("serenity/");
+
     for (auto& line_info : all_lines) {
         String file_path = line_info.file;
         if (file_path.contains("Toolchain/") || file_path.contains("libgcc"))
             continue;
-        if (file_path.contains("serenity/")) {
-            auto start_index = file_path.index_of("serenity/").value() + String("serenity/").length();
+        if (file_path.contains(serenity_slash)) {
+            auto start_index = file_path.index_of(serenity_slash).value() + serenity_slash.length();
             file_path = file_path.substring(start_index, file_path.length() - start_index);
         }
         m_sorted_lines.append({ line_info.address, file_path, line_info.line });
