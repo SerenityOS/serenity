@@ -69,6 +69,8 @@ int main(int argc, char* argv[])
     };
 
     table_view.on_activation = [&](const GUI::ModelIndex& index) {
+        if (!index.is_valid())
+            return;
         auto& data_and_type = model->item_at(index.row());
         GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
     };
