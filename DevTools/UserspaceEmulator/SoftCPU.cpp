@@ -140,8 +140,9 @@ void SoftCPU::update_code_cache()
         TODO();
     }
 
-    m_cached_code_ptr = region->cacheable_ptr(eip() - region->base());
-    m_cached_code_end = region->cacheable_ptr(region->size());
+    // FIXME: This cache needs to be invalidated if the code region is ever unmapped.
+    m_cached_code_region = region;
+    m_cached_code_base_ptr = region->data();
 }
 
 ValueWithShadow<u8> SoftCPU::read_memory8(X86::LogicalAddress address)
