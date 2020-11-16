@@ -37,6 +37,32 @@ namespace UserspaceEmulator {
 class MmapRegion;
 class SoftCPU;
 
+struct Mallocation {
+    bool contains(FlatPtr a) const
+    {
+        return a >= address && a < (address + size);
+    }
+
+    FlatPtr address { 0 };
+    size_t size { 0 };
+    bool used { false };
+    bool freed { false };
+
+    Vector<FlatPtr> malloc_backtrace;
+    Vector<FlatPtr> free_backtrace;
+};
+
+class MallocRegionMetadata {
+public:
+    FlatPtr address { 0 };
+    size_t chunk_size { 0 };
+
+    size_t chunk_index_for_address(FlatPtr) const;
+    Mallocation& mallocation_for_address(FlatPtr) const;
+
+    Vector<Mallocation> mallocations;
+};
+
 class MallocTracer {
 public:
     MallocTracer();
@@ -45,60 +71,20 @@ public:
     void target_did_free(Badge<SoftCPU>, FlatPtr address);
     void target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t);
 
-    void notify_malloc_block_was_released(Badge<MmapRegion>, MmapRegion&);
-
     void audit_read(FlatPtr address, size_t);
     void audit_write(FlatPtr address, size_t);
 
     void dump_leak_report();
 
 private:
-    struct Mallocation {
-        bool contains(FlatPtr a) const
-        {
-            return a >= address && a < (address + size);
-        }
-
-        FlatPtr address { 0 };
-        size_t size { 0 };
-        bool used { false };
-        bool freed { false };
-
-        Vector<FlatPtr> malloc_backtrace;
-        Vector<FlatPtr> free_backtrace;
-    };
-
-    struct TrackedChunkedBlock {
-        FlatPtr address { 0 };
-        size_t chunk_size { 0 };
-
-        size_t chunk_index_for_address(FlatPtr) const;
-        Mallocation& mallocation_for_address(FlatPtr) const;
-
-        Vector<Mallocation> mallocations;
-    };
-
     template<typename Callback>
-    void for_each_mallocation(Callback callback) const
-    {
-        for (auto& it : m_chunked_blocks) {
-            for (auto& mallocation : it.value->mallocations) {
-                if (mallocation.used && callback(mallocation) == IterationDecision::Break)
-                    return;
-            }
-        }
-        for (auto& big_mallocation : m_big_mallocations) {
-            if (callback(big_mallocation) == IterationDecision::Break)
-                return;
-        }
-    }
+    void for_each_mallocation(Callback callback) const;
 
     Mallocation* find_mallocation(FlatPtr);
     Mallocation* find_mallocation_before(FlatPtr);
     Mallocation* find_mallocation_after(FlatPtr);
     bool is_reachable(const Mallocation&) const;
 
-    HashMap<FlatPtr, NonnullOwnPtr<TrackedChunkedBlock>> m_chunked_blocks;
     Vector<Mallocation> m_big_mallocations;
 
     bool m_auditing_enabled { true };

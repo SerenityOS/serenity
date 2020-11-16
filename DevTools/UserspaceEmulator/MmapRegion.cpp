@@ -58,11 +58,6 @@ MmapRegion::MmapRegion(u32 base, u32 size, int prot)
 
 MmapRegion::~MmapRegion()
 {
-    if (is_malloc_block()) {
-        if (auto* tracer = Emulator::the().malloc_tracer())
-            tracer->notify_malloc_block_was_released({}, *this);
-    }
-
     free(m_shadow_data);
     if (m_file_backed)
         munmap(m_data, size());

@@ -31,6 +31,9 @@
 
 namespace UserspaceEmulator {
 
+class MallocRegionMetadata;
+class MallocTracer;
+
 class MmapRegion final : public SoftMMU::Region {
 public:
     static NonnullOwnPtr<MmapRegion> create_anonymous(u32 base, u32 size, u32 prot);
@@ -59,6 +62,9 @@ public:
 
     void set_prot(int prot) { m_prot = prot; }
 
+    MallocRegionMetadata* malloc_metadata() { return m_malloc_metadata; }
+    void set_malloc_metadata(Badge<MallocTracer>, NonnullOwnPtr<MallocRegionMetadata> metadata) { m_malloc_metadata = move(metadata); }
+
 private:
     MmapRegion(u32 base, u32 size, int prot);
     virtual bool is_mmap() const override { return true; }
@@ -68,6 +74,8 @@ private:
     int m_prot { 0 };
     bool m_file_backed { false };
     bool m_malloc { false };
+
+    OwnPtr<MallocRegionMetadata> m_malloc_metadata;
 };
 
 }
