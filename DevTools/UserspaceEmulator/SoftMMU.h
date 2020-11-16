@@ -36,10 +36,13 @@
 
 namespace UserspaceEmulator {
 
+class Emulator;
 class SharedBufferRegion;
 
 class SoftMMU {
 public:
+    explicit SoftMMU(Emulator&);
+
     ValueWithShadow<u8> read8(X86::LogicalAddress);
     ValueWithShadow<u16> read16(X86::LogicalAddress);
     ValueWithShadow<u32> read32(X86::LogicalAddress);
@@ -80,6 +83,8 @@ public:
     }
 
 private:
+    Emulator& m_emulator;
+
     Region* m_page_to_region_map[786432];
 
     OwnPtr<Region> m_tls_region;

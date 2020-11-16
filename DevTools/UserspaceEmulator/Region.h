@@ -31,6 +31,8 @@
 
 namespace UserspaceEmulator {
 
+class Emulator;
+
 class Region {
 public:
     virtual ~Region() { }
@@ -72,14 +74,15 @@ public:
     virtual u8* data() = 0;
     virtual u8* shadow_data() = 0;
 
+    Emulator& emulator() { return m_emulator; }
+    const Emulator& emulator() const { return m_emulator; }
+
 protected:
-    Region(u32 base, u32 size)
-        : m_base(base)
-        , m_size(size)
-    {
-    }
+    Region(u32 base, u32 size);
 
 private:
+    Emulator& m_emulator;
+
     u32 m_base { 0 };
     u32 m_size { 0 };
 

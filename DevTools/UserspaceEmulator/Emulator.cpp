@@ -72,9 +72,10 @@ Emulator& Emulator::the()
 
 Emulator::Emulator(const Vector<String>& arguments, const Vector<String>& environment, NonnullRefPtr<ELF::Loader> elf)
     : m_elf(move(elf))
+    , m_mmu(*this)
     , m_cpu(*this)
 {
-    m_malloc_tracer = make<MallocTracer>();
+    m_malloc_tracer = make<MallocTracer>(*this);
     ASSERT(!s_the);
     s_the = this;
     setup_stack(arguments, environment);
