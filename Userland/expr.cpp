@@ -31,6 +31,7 @@
 #include <AK/Queue.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibRegex/Regex.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -381,16 +382,13 @@ private:
     virtual bool truth() const override { return integer() != 0; }
     virtual int integer() const override
     {
-        if (m_op == StringOperation::Substring) {
+        if (m_op == StringOperation::Substring || m_op == StringOperation::Match) {
             auto substr = string();
             if (auto integer = substr.to_int(); integer.has_value())
                 return integer.value();
             else
                 fail("Not an integer: '{}'", substr);
         }
-
-        if (m_op == StringOperation::Match)
-            fail("Unimplemented operation 'match'");
 
         if (m_op == StringOperation::Index) {
             if (auto idx = m_str->string().index_of(m_pos_or_chars->string()); idx.has_value())
@@ -417,18 +415,60 @@ private:
         if (m_op == StringOperation::Substring)
             return safe_substring(m_str->string(), m_pos_or_chars->integer(), m_length->integer());
 
+        if (m_op == StringOperation::Match) {
+            auto match = m_compiled_regex->match(m_str->string(), PosixFlags::Global);
+            if (m_compiled_regex->parser_result.capture_groups_count == 0) {
+                if (!match.success)
+                    return "0";
+
+                size_t count = 0;
+                for (auto& m : match.matches)
+                    count += m.view.length();
+
+                return String::number(count);
+            } else {
+                if (!match.success)
+                    return "";
+
+                StringBuilder result;
+                for (auto& m : match.capture_group_matches) {
+                    for (auto& e : m)
+                        result.append(e.view.to_string());
+                }
+
+                return result.build();
+            }
+        }
+
         return String::number(integer());
     }
     virtual Type type() const override
     {
         if (m_op == StringOperation::Substring)
             return Type::String;
+        if (m_op == StringOperation::Match) {
+            if (!m_pos_or_chars)
+                fail("'match' expects a string pattern");
+
+            ensure_regex();
+            if (m_compiled_regex->parser_result.capture_groups_count == 0)
+                return Type::Integer;
+
+            return Type::String;
+        }
         return Type::Integer;
+    }
+
+    void ensure_regex() const
+    {
+        if (!m_compiled_regex)
+            m_compiled_regex = make<regex::Regex<PosixExtended>>(m_pos_or_chars->string());
     }
 
     StringOperation m_op { StringOperation::Substring };
     NonnullOwnPtr<Expression> m_str;
     OwnPtr<Expression> m_pos_or_chars, m_length;
+    mutable OwnPtr<regex::Regex<PosixExtended>> m_compiled_regex;
 };
 
 NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence prec)
