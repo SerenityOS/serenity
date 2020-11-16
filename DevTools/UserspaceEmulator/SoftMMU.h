@@ -69,9 +69,13 @@ public:
         bool is_text() const { return m_text; }
         void set_text(bool b) { m_text = b; }
 
-        virtual bool is_readable() const { return true; }
-        virtual bool is_writable() const { return true; }
-        virtual bool is_executable() const { return true; }
+        bool is_readable() const { return m_readable; }
+        bool is_writable() const { return m_writable; }
+        bool is_executable() const { return m_executable; }
+
+        void set_readable(bool b) { m_readable = b; }
+        void set_writable(bool b) { m_writable = b; }
+        void set_executable(bool b) { m_executable = b; }
 
         virtual u8* data() = 0;
         virtual u8* shadow_data() = 0;
@@ -89,6 +93,9 @@ public:
 
         bool m_stack { false };
         bool m_text { false };
+        bool m_readable { true };
+        bool m_writable { true };
+        bool m_executable { true };
     };
 
     ValueWithShadow<u8> read8(X86::LogicalAddress);

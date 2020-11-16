@@ -50,8 +50,8 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32
 
 MmapRegion::MmapRegion(u32 base, u32 size, int prot)
     : Region(base, size)
-    , m_prot(prot)
 {
+    set_prot(prot);
     m_shadow_data = (u8*)malloc(size);
     memset(m_shadow_data, 1, size);
 }

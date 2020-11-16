@@ -53,14 +53,15 @@ public:
     virtual u8* data() override { return m_data; }
     virtual u8* shadow_data() override { return m_shadow_data; }
 
-    virtual bool is_readable() const override { return m_prot & PROT_READ; }
-    virtual bool is_writable() const override { return m_prot & PROT_WRITE; }
-    virtual bool is_executable() const override { return m_prot & PROT_EXEC; }
-
     bool is_malloc_block() const { return m_malloc; }
     void set_malloc(bool b) { m_malloc = b; }
 
-    void set_prot(int prot) { m_prot = prot; }
+    void set_prot(int prot)
+    {
+        set_readable(prot & PROT_READ);
+        set_writable(prot & PROT_WRITE);
+        set_executable(prot & PROT_EXEC);
+    }
 
     MallocRegionMetadata* malloc_metadata() { return m_malloc_metadata; }
     void set_malloc_metadata(Badge<MallocTracer>, NonnullOwnPtr<MallocRegionMetadata> metadata) { m_malloc_metadata = move(metadata); }
@@ -71,7 +72,6 @@ private:
 
     u8* m_data { nullptr };
     u8* m_shadow_data { nullptr };
-    int m_prot { 0 };
     bool m_file_backed { false };
     bool m_malloc { false };
 
