@@ -185,7 +185,7 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
     } else {
         buffer = m_unused_packet_buffers.take_first();
         --m_unused_packet_buffers_count;
-        if (payload.size() <= buffer.value().size()) {
+        if (payload.size() <= buffer.value().capacity()) {
             memcpy(buffer.value().data(), payload.data(), payload.size());
             buffer.value().set_size(payload.size());
         } else {
