@@ -31,7 +31,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
 #include <ctype.h>
 
 namespace Shell {
@@ -111,7 +110,6 @@ private:
         bool in_double_quotes { false };
     } m_options;
 
-    size_t m_current_line_length { 0 };
     size_t m_current_indent { 0 };
 
     StringBuilder m_builder;
