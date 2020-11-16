@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "SoftMMU.h"
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
@@ -71,8 +72,8 @@ public:
     void target_did_free(Badge<SoftCPU>, FlatPtr address);
     void target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t);
 
-    void audit_read(FlatPtr address, size_t);
-    void audit_write(FlatPtr address, size_t);
+    void audit_read(const Region&, FlatPtr address, size_t);
+    void audit_write(const Region&, FlatPtr address, size_t);
 
     void dump_leak_report();
 
@@ -80,12 +81,11 @@ private:
     template<typename Callback>
     void for_each_mallocation(Callback callback) const;
 
+    Mallocation* find_mallocation(const Region&, FlatPtr);
     Mallocation* find_mallocation(FlatPtr);
     Mallocation* find_mallocation_before(FlatPtr);
     Mallocation* find_mallocation_after(FlatPtr);
     bool is_reachable(const Mallocation&) const;
-
-    Vector<Mallocation> m_big_mallocations;
 
     bool m_auditing_enabled { true };
 };
