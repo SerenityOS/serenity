@@ -221,22 +221,26 @@ public:
         return true;
     }
 
+    // FIXME: Does not read across chunk boundaries
+    //        Perhaps implement AK::memmem() for iterators?
     Optional<size_t> offset_of(ReadonlyBytes value) const
     {
         if (value.size() > size())
             return {};
 
         // First, find which chunk we're in.
-        auto chunk_index = (m_read_offset - m_base_offset) / chunk_size;
+        auto chunk_index = min((m_read_offset - m_base_offset) / chunk_size, m_chunks.size() - 1);
         auto last_written_chunk_index = (m_write_offset - m_base_offset) / chunk_size;
         auto first_chunk_index = chunk_index;
         auto last_written_chunk_offset = m_write_offset % chunk_size;
         auto first_chunk_offset = m_read_offset % chunk_size;
         size_t last_chunk_offset = 0;
         auto found_value = false;
+        auto chunk_index_max_bound = last_written_chunk_offset > 0 ? last_written_chunk_index + 1 : last_written_chunk_index;
 
-        for (; chunk_index <= last_written_chunk_index; ++chunk_index) {
-            auto chunk_bytes = m_chunks[chunk_index].bytes();
+        for (; chunk_index < chunk_index_max_bound; ++chunk_index) {
+            auto& chunk = m_chunks[chunk_index];
+            auto chunk_bytes = chunk.bytes();
             size_t chunk_offset = 0;
             if (chunk_index == last_written_chunk_index) {
                 chunk_bytes = chunk_bytes.slice(0, last_written_chunk_offset);
