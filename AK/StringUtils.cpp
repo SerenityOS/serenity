@@ -98,22 +98,23 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
 
 Optional<int> convert_to_int(const StringView& str)
 {
-    if (str.is_empty())
+    auto str_trimmed = str.trim_whitespace();
+    if (str_trimmed.is_empty())
         return {};
 
     bool negative = false;
     size_t i = 0;
-    const auto characters = str.characters_without_null_termination();
+    const auto characters = str_trimmed.characters_without_null_termination();
 
     if (characters[0] == '-' || characters[0] == '+') {
-        if (str.length() == 1)
+        if (str_trimmed.length() == 1)
             return {};
         i++;
         negative = (characters[0] == '-');
     }
 
     int value = 0;
-    for (; i < str.length(); i++) {
+    for (; i < str_trimmed.length(); i++) {
         if (characters[i] < '0' || characters[i] > '9')
             return {};
         value = value * 10;
@@ -124,13 +125,14 @@ Optional<int> convert_to_int(const StringView& str)
 
 Optional<unsigned> convert_to_uint(const StringView& str)
 {
-    if (str.is_empty())
+    auto str_trimmed = str.trim_whitespace();
+    if (str_trimmed.is_empty())
         return {};
 
     unsigned value = 0;
-    const auto characters = str.characters_without_null_termination();
+    const auto characters = str_trimmed.characters_without_null_termination();
 
-    for (size_t i = 0; i < str.length(); i++) {
+    for (size_t i = 0; i < str_trimmed.length(); i++) {
         if (characters[i] < '0' || characters[i] > '9')
             return {};
 
@@ -142,14 +144,15 @@ Optional<unsigned> convert_to_uint(const StringView& str)
 
 Optional<unsigned> convert_to_uint_from_hex(const StringView& str)
 {
-    if (str.is_empty())
+    auto str_trimmed = str.trim_whitespace();
+    if (str_trimmed.is_empty())
         return {};
 
     unsigned value = 0;
-    const auto count = str.length();
+    const auto count = str_trimmed.length();
 
     for (size_t i = 0; i < count; i++) {
-        char digit = str[i];
+        char digit = str_trimmed[i];
         u8 digit_val;
 
         if (digit >= '0' && digit <= '9') {
