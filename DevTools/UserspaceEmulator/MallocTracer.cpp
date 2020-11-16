@@ -40,12 +40,23 @@ MallocTracer::MallocTracer()
 {
 }
 
-void MallocTracer::notify_malloc_block_was_released(Badge<MmapRegion>, MmapRegion& region)
+template<typename Callback>
+inline void MallocTracer::for_each_mallocation(Callback callback) const
 {
-    // FIXME: It's sad that we may lose a bunch of free() backtraces here,
-    //        but if the address is reused for a new ChunkedBlock, things will
-    //        get extremely confused.
-    m_chunked_blocks.remove(region.base());
+    Emulator::the().mmu().for_each_region([&](auto& region) {
+        if (region.is_mmap() && static_cast<const MmapRegion&>(region).is_malloc_block()) {
+            auto* malloc_data = static_cast<MmapRegion&>(region).malloc_metadata();
+            for (auto& mallocation : malloc_data->mallocations) {
+                if (mallocation.used && callback(mallocation) == IterationDecision::Break)
+                    return IterationDecision::Break;
+            }
+        }
+        return IterationDecision::Continue;
+    });
+    for (auto& big_mallocation : m_big_mallocations) {
+        if (callback(big_mallocation) == IterationDecision::Break)
+            return;
+    }
 }
 
 void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t size)
@@ -70,35 +81,30 @@ void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t siz
         return;
     }
 
-    if (size <= size_classes[num_size_classes - 1]) {
-        FlatPtr chunked_block_address = address & ChunkedBlock::block_mask;
-        TrackedChunkedBlock* block = nullptr;
-        auto tracked_chunked_block = m_chunked_blocks.get(chunked_block_address);
-        if (!tracked_chunked_block.has_value()) {
-            auto new_block = make<TrackedChunkedBlock>();
-            block = new_block.ptr();
-            m_chunked_blocks.set(chunked_block_address, move(new_block));
-            tracked_chunked_block = m_chunked_blocks.get(chunked_block_address);
-            auto& block = const_cast<TrackedChunkedBlock&>(*tracked_chunked_block.value());
-            block.address = chunked_block_address;
-            block.chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
-            block.mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / block.chunk_size);
-            dbgln("Tracking ChunkedBlock @ {:p} with chunk_size={}, chunk_count={}", block.address, block.chunk_size, block.mallocations.size());
-        } else {
-            block = const_cast<TrackedChunkedBlock*>(tracked_chunked_block.value());
+    bool is_chunked_allocation = size <= size_classes[num_size_classes - 1];
+    if (is_chunked_allocation) {
+        MallocRegionMetadata* malloc_data = static_cast<MmapRegion&>(*region).malloc_metadata();
+        if (!malloc_data) {
+            auto new_malloc_data = make<MallocRegionMetadata>();
+            malloc_data = new_malloc_data.ptr();
+            static_cast<MmapRegion&>(*region).set_malloc_metadata({}, move(new_malloc_data));
+            malloc_data->address = region->base();
+            malloc_data->chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
+            malloc_data->mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / malloc_data->chunk_size);
+            dbgln("Tracking ChunkedBlock @ {:p} with chunk_size={}, chunk_count={}", malloc_data->address, malloc_data->chunk_size, malloc_data->mallocations.size());
         }
-        block->mallocation_for_address(address) = { address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() };
+        malloc_data->mallocation_for_address(address) = { address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() };
     } else {
         m_big_mallocations.append({ address, size, true, false, Emulator::the().raw_backtrace(), Vector<FlatPtr>() });
     }
 }
 
-ALWAYS_INLINE MallocTracer::Mallocation& MallocTracer::TrackedChunkedBlock::mallocation_for_address(FlatPtr address) const
+ALWAYS_INLINE Mallocation& MallocRegionMetadata::mallocation_for_address(FlatPtr address) const
 {
     return const_cast<Mallocation&>(this->mallocations[chunk_index_for_address(address)]);
 }
 
-ALWAYS_INLINE size_t MallocTracer::TrackedChunkedBlock::chunk_index_for_address(FlatPtr address) const
+ALWAYS_INLINE size_t MallocRegionMetadata::chunk_index_for_address(FlatPtr address) const
 {
     auto chunk_offset = address - (this->address + sizeof(ChunkedBlock));
     return chunk_offset / this->chunk_size;
@@ -154,19 +160,18 @@ void MallocTracer::target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t si
     existing_mallocation->malloc_backtrace = Emulator::the().raw_backtrace();
 }
 
-MallocTracer::Mallocation* MallocTracer::find_mallocation(FlatPtr address)
+Mallocation* MallocTracer::find_mallocation(FlatPtr address)
 {
-    FlatPtr possible_chunked_block = address & ChunkedBlock::block_mask;
-
-    auto chunked_block = m_chunked_blocks.get(possible_chunked_block);
-    if (chunked_block.has_value()) {
-        auto& block = *chunked_block.value();
-        auto& mallocation = block.mallocation_for_address(address);
-        if (mallocation.used) {
-            ASSERT(mallocation.contains(address));
-            return const_cast<Mallocation*>(&mallocation);
+    if (auto* region = Emulator::the().mmu().find_region({ 0x23, address })) {
+        if (region->is_mmap() && static_cast<MmapRegion&>(*region).malloc_metadata()) {
+            auto& malloc_data = *static_cast<MmapRegion&>(*region).malloc_metadata();
+            auto& mallocation = malloc_data.mallocation_for_address(address);
+            if (mallocation.used) {
+                ASSERT(mallocation.contains(address));
+                return &mallocation;
+            }
+            return nullptr;
         }
-        return nullptr;
     }
 
     for (auto& mallocation : m_big_mallocations) {
@@ -177,7 +182,7 @@ MallocTracer::Mallocation* MallocTracer::find_mallocation(FlatPtr address)
     return nullptr;
 }
 
-MallocTracer::Mallocation* MallocTracer::find_mallocation_before(FlatPtr address)
+Mallocation* MallocTracer::find_mallocation_before(FlatPtr address)
 {
     Mallocation* found_mallocation = nullptr;
     for_each_mallocation([&](auto& mallocation) {
@@ -190,7 +195,7 @@ MallocTracer::Mallocation* MallocTracer::find_mallocation_before(FlatPtr address
     return found_mallocation;
 }
 
-MallocTracer::Mallocation* MallocTracer::find_mallocation_after(FlatPtr address)
+Mallocation* MallocTracer::find_mallocation_after(FlatPtr address)
 {
     Mallocation* found_mallocation = nullptr;
     for_each_mallocation([&](auto& mallocation) {
