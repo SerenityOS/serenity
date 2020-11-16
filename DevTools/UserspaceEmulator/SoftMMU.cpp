@@ -34,7 +34,7 @@
 
 namespace UserspaceEmulator {
 
-SoftMMU::Region* SoftMMU::find_region(X86::LogicalAddress address)
+Region* SoftMMU::find_region(X86::LogicalAddress address)
 {
     if (address.selector() == 0x28)
         return m_tls_region.ptr();

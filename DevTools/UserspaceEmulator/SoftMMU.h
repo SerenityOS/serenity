@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "Region.h"
 #include "ValueWithShadow.h"
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
@@ -39,65 +40,6 @@ class SharedBufferRegion;
 
 class SoftMMU {
 public:
-    class Region {
-    public:
-        virtual ~Region() { }
-
-        u32 base() const { return m_base; }
-        u32 size() const { return m_size; }
-        u32 end() const { return m_base + m_size; }
-
-        bool contains(u32 address) const { return address >= base() && address < end(); }
-
-        virtual void write8(u32 offset, ValueWithShadow<u8>) = 0;
-        virtual void write16(u32 offset, ValueWithShadow<u16>) = 0;
-        virtual void write32(u32 offset, ValueWithShadow<u32>) = 0;
-        virtual void write64(u32 offset, ValueWithShadow<u64>) = 0;
-
-        virtual ValueWithShadow<u8> read8(u32 offset) = 0;
-        virtual ValueWithShadow<u16> read16(u32 offset) = 0;
-        virtual ValueWithShadow<u32> read32(u32 offset) = 0;
-        virtual ValueWithShadow<u64> read64(u32 offset) = 0;
-
-        virtual u8* cacheable_ptr([[maybe_unused]] u32 offset) { return nullptr; }
-        virtual bool is_shared_buffer() const { return false; }
-        virtual bool is_mmap() const { return false; }
-
-        bool is_stack() const { return m_stack; }
-        void set_stack(bool b) { m_stack = b; }
-
-        bool is_text() const { return m_text; }
-        void set_text(bool b) { m_text = b; }
-
-        bool is_readable() const { return m_readable; }
-        bool is_writable() const { return m_writable; }
-        bool is_executable() const { return m_executable; }
-
-        void set_readable(bool b) { m_readable = b; }
-        void set_writable(bool b) { m_writable = b; }
-        void set_executable(bool b) { m_executable = b; }
-
-        virtual u8* data() = 0;
-        virtual u8* shadow_data() = 0;
-
-    protected:
-        Region(u32 base, u32 size)
-            : m_base(base)
-            , m_size(size)
-        {
-        }
-
-    private:
-        u32 m_base { 0 };
-        u32 m_size { 0 };
-
-        bool m_stack { false };
-        bool m_text { false };
-        bool m_readable { true };
-        bool m_writable { true };
-        bool m_executable { true };
-    };
-
     ValueWithShadow<u8> read8(X86::LogicalAddress);
     ValueWithShadow<u16> read16(X86::LogicalAddress);
     ValueWithShadow<u32> read32(X86::LogicalAddress);
