@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "Region.h"
 #include "ValueWithShadow.h"
 #include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
@@ -33,6 +34,7 @@
 namespace UserspaceEmulator {
 
 class Emulator;
+class Region;
 
 union PartAddressableRegister {
     struct {
@@ -68,8 +70,6 @@ public:
     void set_eip(u32 eip)
     {
         m_eip = eip;
-        m_cached_code_ptr = nullptr;
-        m_cached_code_end = nullptr;
     }
 
     struct Flags {
@@ -1151,8 +1151,8 @@ private:
     // FIXME: Or just something like m_flags_tainted?
     ValueWithShadow<u16> m_fpu_cw { 0, 0 };
 
-    const u8* m_cached_code_ptr { nullptr };
-    const u8* m_cached_code_end { nullptr };
+    Region* m_cached_code_region { nullptr };
+    u8* m_cached_code_base_ptr { nullptr };
 
     u32 m_secret_handshake_state { 0 };
     u32 m_secret_data[3];
@@ -1160,44 +1160,40 @@ private:
 
 ALWAYS_INLINE u8 SoftCPU::read8()
 {
-    if (!m_cached_code_ptr || m_cached_code_ptr >= m_cached_code_end)
+    if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
 
-    u8 value = *m_cached_code_ptr;
-    m_cached_code_ptr += 1;
+    u8 value = m_cached_code_base_ptr[m_eip - m_cached_code_region->base()];
     m_eip += 1;
     return value;
 }
 
 ALWAYS_INLINE u16 SoftCPU::read16()
 {
-    if (!m_cached_code_ptr || (m_cached_code_ptr + 1) >= m_cached_code_end)
+    if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
 
-    u16 value = *reinterpret_cast<const u16*>(m_cached_code_ptr);
-    m_cached_code_ptr += 2;
+    u16 value = *reinterpret_cast<const u16*>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()]);
     m_eip += 2;
     return value;
 }
 
 ALWAYS_INLINE u32 SoftCPU::read32()
 {
-    if (!m_cached_code_ptr || (m_cached_code_ptr + 3) >= m_cached_code_end)
+    if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
 
-    u32 value = *reinterpret_cast<const u32*>(m_cached_code_ptr);
-    m_cached_code_ptr += 4;
+    u32 value = *reinterpret_cast<const u32*>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()]);
     m_eip += 4;
     return value;
 }
 
 ALWAYS_INLINE u64 SoftCPU::read64()
 {
-    if (!m_cached_code_ptr || (m_cached_code_ptr + 7) >= m_cached_code_end)
+    if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
 
-    u64 value = *reinterpret_cast<const u64*>(m_cached_code_ptr);
-    m_cached_code_ptr += 8;
+    auto value = *reinterpret_cast<const u64*>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()]);
     m_eip += 8;
     return value;
 }
