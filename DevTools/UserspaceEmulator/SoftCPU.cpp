@@ -135,7 +135,7 @@ void SoftCPU::update_code_cache()
     ASSERT(region);
 
     if (!region->is_executable()) {
-        reportln("SoftCPU::update_code_cache: Non-readable region @ {:p}", eip());
+        reportln("SoftCPU::update_code_cache: Non-executable region @ {:p}", eip());
         Emulator::the().dump_backtrace();
         TODO();
     }
