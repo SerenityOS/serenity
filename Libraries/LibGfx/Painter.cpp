@@ -28,6 +28,7 @@
 #include "Bitmap.h"
 #include "Emoji.h"
 #include "Font.h"
+#include "Gamma.h"
 #include <AK/Assertions.h>
 #include <AK/Function.h>
 #include <AK/Memory.h>
@@ -200,24 +201,13 @@ void Painter::fill_rect_with_gradient(Orientation orientation, const IntRect& a_
     RGBA32* dst = m_target->scanline(clipped_rect.top()) + clipped_rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    float increment = (1.0 / ((rect.primary_size_for_orientation(orientation)) / 255.0));
-
-    int r2 = gradient_start.red();
-    int g2 = gradient_start.green();
-    int b2 = gradient_start.blue();
-    int r1 = gradient_end.red();
-    int g1 = gradient_end.green();
-    int b1 = gradient_end.blue();
+    float increment = (1.0 / ((rect.primary_size_for_orientation(orientation))));
 
     if (orientation == Orientation::Horizontal) {
         for (int i = clipped_rect.height() - 1; i >= 0; --i) {
             float c = offset * increment;
             for (int j = 0; j < clipped_rect.width(); ++j) {
-                dst[j] = Color(
-                    r1 / 255.0 * c + r2 / 255.0 * (255 - c),
-                    g1 / 255.0 * c + g2 / 255.0 * (255 - c),
-                    b1 / 255.0 * c + b2 / 255.0 * (255 - c))
-                             .value();
+                dst[j] = gamma_accurate_blend(gradient_start, gradient_end, c).value();
                 c += increment;
             }
             dst += dst_skip;
@@ -225,10 +215,7 @@ void Painter::fill_rect_with_gradient(Orientation orientation, const IntRect& a_
     } else {
         float c = offset * increment;
         for (int i = clipped_rect.height() - 1; i >= 0; --i) {
-            Color color(
-                r1 / 255.0 * c + r2 / 255.0 * (255 - c),
-                g1 / 255.0 * c + g2 / 255.0 * (255 - c),
-                b1 / 255.0 * c + b2 / 255.0 * (255 - c));
+            auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
             for (int j = 0; j < clipped_rect.width(); ++j) {
                 dst[j] = color.value();
             }
