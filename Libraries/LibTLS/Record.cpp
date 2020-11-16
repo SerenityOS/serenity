@@ -77,10 +77,10 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 // If the length is already a multiple a block_size,
                 // an entire block of padding is added.
                 // In short, we _never_ have no padding.
-                padding = block_size - length % block_size;
-                length += padding;
                 mac_size = mac_length();
                 length += mac_size;
+                padding = block_size - length % block_size;
+                length += padding;
             } else {
                 block_size = m_aes_local.gcm->cipher().block_size();
                 padding = 0;
