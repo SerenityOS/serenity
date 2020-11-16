@@ -194,4 +194,18 @@ TEST_CASE(new_output_memory_stream)
     EXPECT_EQ(stream.bytes().size(), 2u);
 }
 
+TEST_CASE(offset_of_out_of_bounds)
+{
+    Array<u8, 4> target { 0xff, 0xff, 0xff, 0xff };
+
+    Array<u8, DuplexMemoryStream::chunk_size> whole_chunk;
+    whole_chunk.span().fill(0);
+
+    DuplexMemoryStream stream;
+
+    stream << whole_chunk;
+
+    EXPECT(!stream.offset_of(target).has_value());
+}
+
 TEST_MAIN(MemoryStream)
