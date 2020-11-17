@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/MACAddress.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Thread.h>
@@ -258,7 +259,7 @@ u32 E1000NetworkAdapter::read_eeprom(u8 address)
 void E1000NetworkAdapter::read_mac_address()
 {
     if (m_has_eeprom) {
-        u8 mac[6];
+        MACAddress mac {};
         u32 tmp = read_eeprom(0);
         mac[0] = tmp & 0xff;
         mac[1] = tmp >> 8;

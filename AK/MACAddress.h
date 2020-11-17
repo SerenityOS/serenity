@@ -26,21 +26,17 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 
 class [[gnu::packed]] MACAddress
 {
+    static constexpr size_t s_mac_address_length = 6u;
+
 public:
     constexpr MACAddress() = default;
-
-    constexpr MACAddress(const u8 data[6])
-    {
-        for (auto i = 0u; i < sizeof(m_data); ++i) {
-            m_data[i] = data[i];
-        }
-    }
 
     constexpr MACAddress(u8 a, u8 b, u8 c, u8 d, u8 e, u8 f)
     {
@@ -54,15 +50,26 @@ public:
 
     constexpr ~MACAddress() = default;
 
-    constexpr u8 operator[](int i) const
+    constexpr const u8& operator[](unsigned i) const
     {
-        ASSERT(i >= 0 && i < 6);
+        ASSERT(i < s_mac_address_length);
+        return m_data[i];
+    }
+
+    constexpr u8& operator[](unsigned i)
+    {
+        ASSERT(i < s_mac_address_length);
         return m_data[i];
     }
 
     constexpr bool operator==(const MACAddress& other) const
     {
-        return !__builtin_memcmp(m_data, other.m_data, sizeof(m_data));
+        for (auto i = 0u; i < m_data.size(); ++i) {
+            if (m_data[i] != other.m_data[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     String to_string() const
@@ -76,10 +83,10 @@ public:
     }
 
 private:
-    u8 m_data[6] {};
+    AK::Array<u8, s_mac_address_length> m_data {};
 };
 
-static_assert(sizeof(MACAddress) == 6);
+static_assert(sizeof(MACAddress) == 6u);
 
 namespace AK {
 
