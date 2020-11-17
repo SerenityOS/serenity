@@ -31,32 +31,48 @@
 
 TEST_CASE(should_default_construct)
 {
-    MACAddress sut {};
+    constexpr MACAddress sut {};
+    static_assert(sut.is_zero());
     EXPECT(sut.is_zero());
 }
 
 TEST_CASE(should_braces_construct)
 {
-    MACAddress sut { 1, 2, 3, 4, 5, 6 };
+    constexpr MACAddress sut { 1, 2, 3, 4, 5, 6 };
+    static_assert(!sut.is_zero());
     EXPECT(!sut.is_zero());
 }
 
 TEST_CASE(should_construct_from_c_array)
 {
-    u8 addr[6] = { 1, 2, 3, 4, 5, 6 };
-    MACAddress sut(addr);
+    constexpr u8 addr[6] = { 1, 2, 3, 4, 5, 6 };
+    constexpr MACAddress sut(addr);
+    static_assert(!sut.is_zero());
     EXPECT(!sut.is_zero());
 }
 
 TEST_CASE(should_construct_from_6_octets)
 {
-    MACAddress sut(1, 2, 3, 4, 5, 6);
+    constexpr MACAddress sut(1, 2, 3, 4, 5, 6);
+    static_assert(!sut.is_zero());
     EXPECT(!sut.is_zero());
 }
 
 TEST_CASE(should_provide_access_to_octet_by_index)
 {
-    MACAddress sut(1, 2, 3, 4, 5, 6);
+    constexpr auto is_all_expected = [](auto& sut) {
+        for (auto i = 0u; i < sizeof(MACAddress); ++i) {
+            if (sut[i] != i + 1) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    constexpr MACAddress sut(1, 2, 3, 4, 5, 6);
+
+    static_assert(is_all_expected(sut));
+
     for (auto i = 0u; i < sizeof(MACAddress); ++i) {
         EXPECT_EQ(i + 1, sut[i]);
     }
@@ -64,8 +80,12 @@ TEST_CASE(should_provide_access_to_octet_by_index)
 
 TEST_CASE(should_equality_compare)
 {
-    MACAddress a(1, 2, 3, 4, 5, 6);
-    MACAddress b(1, 2, 3, 42, 5, 6);
+    constexpr MACAddress a(1, 2, 3, 4, 5, 6);
+    constexpr MACAddress b(1, 2, 3, 42, 5, 6);
+
+    static_assert(a == a);
+    static_assert(a != b);
+
     EXPECT(a == a);
     EXPECT(a != b);
 }

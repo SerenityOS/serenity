@@ -33,12 +33,16 @@
 class [[gnu::packed]] MACAddress
 {
 public:
-    MACAddress() { }
-    MACAddress(const u8 data[6])
+    constexpr MACAddress() = default;
+
+    constexpr MACAddress(const u8 data[6])
     {
-        __builtin_memcpy(m_data, data, 6);
+        for (auto i = 0u; i < sizeof(m_data); ++i) {
+            m_data[i] = data[i];
+        }
     }
-    MACAddress(u8 a, u8 b, u8 c, u8 d, u8 e, u8 f)
+
+    constexpr MACAddress(u8 a, u8 b, u8 c, u8 d, u8 e, u8 f)
     {
         m_data[0] = a;
         m_data[1] = b;
@@ -47,15 +51,16 @@ public:
         m_data[4] = e;
         m_data[5] = f;
     }
-    ~MACAddress() { }
 
-    u8 operator[](int i) const
+    constexpr ~MACAddress() = default;
+
+    constexpr u8 operator[](int i) const
     {
         ASSERT(i >= 0 && i < 6);
         return m_data[i];
     }
 
-    bool operator==(const MACAddress& other) const
+    constexpr bool operator==(const MACAddress& other) const
     {
         return !__builtin_memcmp(m_data, other.m_data, sizeof(m_data));
     }
@@ -65,7 +70,7 @@ public:
         return String::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
     }
 
-    bool is_zero() const
+    constexpr bool is_zero() const
     {
         return m_data[0] == 0 && m_data[1] == 0 && m_data[2] == 0 && m_data[3] == 0 && m_data[4] == 0 && m_data[5] == 0;
     }
