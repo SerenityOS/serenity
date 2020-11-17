@@ -48,11 +48,13 @@ int main(int argc, char** argv)
     }
 
     bool recursion_allowed = false;
+    bool verbose = false;
     Vector<const char*> sources;
     const char* destination = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'r');
+    args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_positional_argument(sources, "Source file path", "source");
     args_parser.add_positional_argument(destination, "Destination file path", "destination");
     args_parser.parse(argc, argv);
@@ -61,6 +63,8 @@ int main(int argc, char** argv)
         bool ok = copy_file_or_directory(source, destination, recursion_allowed);
         if (!ok)
             return 1;
+        if (verbose)
+            printf("'%s' -> '%s'\n", source, destination);
     }
     return 0;
 }
