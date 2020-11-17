@@ -572,6 +572,8 @@ public:
     bool should_die() const { return m_should_die; }
     void die_if_needed();
 
+    void exit(void* = nullptr);
+
     bool tick();
     void set_ticks_left(u32 t) { m_ticks_left = t; }
     u32 ticks_left() const { return m_ticks_left; }

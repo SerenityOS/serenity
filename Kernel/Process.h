@@ -126,14 +126,35 @@ public:
         return current_thread ? &current_thread->process() : nullptr;
     }
 
-    static NonnullRefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(), u32 affinity = THREAD_AFFINITY_DEFAULT);
+    template<typename EntryFunction>
+    static NonnullRefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT)
+    {
+        auto* entry_func = new EntryFunction(move(entry));
+        return create_kernel_process(first_thread, move(name), [](void* data) {
+            EntryFunction* func = reinterpret_cast<EntryFunction*>(data);
+            (*func)();
+            delete func;
+        }, entry_func, affinity);
+    }
+
+    static NonnullRefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT);
     static RefPtr<Process> create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t, gid_t, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
     static Vector<ProcessID> all_pids();
     static AK::NonnullRefPtrVector<Process> all_processes();
 
-    RefPtr<Thread> create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
+    template<typename EntryFunction>
+    RefPtr<Thread> create_kernel_thread(EntryFunction entry, u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true)
+    {
+        auto* entry_func = new EntryFunction(move(entry));
+        return create_kernel_thread([](void* data) {
+            EntryFunction* func = reinterpret_cast<EntryFunction*>(data);
+            (*func)();
+            delete func;
+        }, priority, name, affinity, joinable);
+    }
+    RefPtr<Thread> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }
@@ -688,6 +709,7 @@ inline bool InodeMetadata::may_write(const Process& process) const
 {
     return may_write(process.euid(), process.egid(), process.extra_gids());
 }
+
 
 inline bool InodeMetadata::may_execute(const Process& process) const
 {

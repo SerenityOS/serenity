@@ -66,7 +66,7 @@ public:
     static void prepare_for_idle_loop();
     static Process* colonel();
     static void beep();
-    static void idle_loop();
+    static void idle_loop(void*);
     static void invoke_async();
     static void notify_finalizer();
 

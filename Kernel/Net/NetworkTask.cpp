@@ -57,15 +57,15 @@ static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&, const tim
 static void handle_udp(const IPv4Packet&, const timeval& packet_timestamp);
 static void handle_tcp(const IPv4Packet&, const timeval& packet_timestamp);
 
-[[noreturn]] static void NetworkTask_main();
+[[noreturn]] static void NetworkTask_main(void*);
 
 void NetworkTask::spawn()
 {
     RefPtr<Thread> thread;
-    Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main);
+    Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main, nullptr);
 }
 
-void NetworkTask_main()
+void NetworkTask_main(void*)
 {
     WaitQueue packet_wait_queue;
     u8 octet = 15;

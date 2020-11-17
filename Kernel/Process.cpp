@@ -311,10 +311,11 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     return process;
 }
 
-NonnullRefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*e)(), u32 affinity)
+NonnullRefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void *entry_data, u32 affinity)
 {
     auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
-    first_thread->tss().eip = (FlatPtr)e;
+    first_thread->tss().eip = (FlatPtr)entry;
+    first_thread->tss().esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
 
     if (process->pid() != 0) {
         ScopedSpinLock lock(g_processes_lock);
@@ -765,7 +766,7 @@ KResult Process::send_signal(u8 signal, Process* sender)
     return KResult(-ESRCH);
 }
 
-RefPtr<Thread> Process::create_kernel_thread(void (*entry)(), u32 priority, const String& name, u32 affinity, bool joinable)
+RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity, bool joinable)
 {
     ASSERT((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
@@ -781,6 +782,7 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(), u32 priority, cons
 
     auto& tss = thread->tss();
     tss.eip = (FlatPtr)entry;
+    tss.esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
 
     ScopedSpinLock lock(g_scheduler_lock);
     thread->set_state(Thread::State::Runnable);

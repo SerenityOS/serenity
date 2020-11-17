@@ -215,6 +215,15 @@ void Thread::die_if_needed()
     ASSERT_NOT_REACHED();
 }
 
+void Thread::exit(void* exit_value)
+{
+    ASSERT(Thread::current() == this);
+    m_exit_value = exit_value;
+    set_should_die();
+    unlock_process_if_locked();
+    die_if_needed();
+}
+
 void Thread::yield_without_holding_big_lock()
 {
     bool did_unlock = unlock_process_if_locked();
