@@ -86,7 +86,7 @@ u32 __stack_chk_guard;
 
 namespace Kernel {
 
-[[noreturn]] static void init_stage2();
+[[noreturn]] static void init_stage2(void*);
 static void setup_serial_debug();
 
 // boot.S expects these functions precisely this this. We declare them here
@@ -168,7 +168,7 @@ extern "C" [[noreturn]] void init()
 
     {
         RefPtr<Thread> init_stage2_thread;
-        Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
+        Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2, nullptr);
         // We need to make sure we drop the reference for init_stage2_thread
         // before calling into Scheduler::start, otherwise we will have a
         // dangling Thread that never gets cleaned up
@@ -210,7 +210,7 @@ extern "C" void init_finished(u32 cpu)
     }
 }
 
-void init_stage2()
+void init_stage2(void*)
 {
     if (APIC::initialized() && APIC::the().enabled_processor_count() > 1) {
         // We can't start the APs until we have a scheduler up and running.
