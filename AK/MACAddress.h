@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/AllOf.h>
 #include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/String.h>
@@ -79,7 +80,7 @@ public:
 
     constexpr bool is_zero() const
     {
-        return m_data[0] == 0 && m_data[1] == 0 && m_data[2] == 0 && m_data[3] == 0 && m_data[4] == 0 && m_data[5] == 0;
+        return AK::all_of(m_data.begin(), m_data.end(), [](const auto octet) { return octet == 0; });
     }
 
 private:
