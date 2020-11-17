@@ -1209,8 +1209,8 @@ static String relative_address(u32 origin, bool x32, i32 imm)
 String Instruction::to_string(u32 origin, const SymbolProvider* symbol_provider, bool x32) const
 {
     StringBuilder builder;
-    if (m_segment_prefix.has_value())
-        builder.appendf("%s: ", register_name(m_segment_prefix.value()));
+    if (has_segment_prefix())
+        builder.appendf("%s: ", register_name(segment_prefix().value()));
     if (has_address_size_override_prefix())
         builder.append(m_a32 ? "a32 " : "a16 ");
     if (has_operand_size_override_prefix())
