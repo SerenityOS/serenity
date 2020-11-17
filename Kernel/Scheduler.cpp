@@ -754,7 +754,7 @@ void Scheduler::initialize()
     g_finalizer_wait_queue = new WaitQueue;
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
-    s_colonel_process = &Process::create_kernel_process(idle_thread, "colonel", idle_loop, 1).leak_ref();
+    s_colonel_process = &Process::create_kernel_process(idle_thread, "colonel", idle_loop, nullptr, 1).leak_ref();
     ASSERT(s_colonel_process);
     ASSERT(idle_thread);
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
@@ -776,7 +776,7 @@ Thread* Scheduler::create_ap_idle_thread(u32 cpu)
     ASSERT(Processor::current().id() == 0);
 
     ASSERT(s_colonel_process);
-    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), 1 << cpu, false);
+    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), 1 << cpu, false);
     ASSERT(idle_thread);
     return idle_thread;
 }
@@ -832,7 +832,7 @@ void Scheduler::notify_finalizer()
         g_finalizer_wait_queue->wake_all();
 }
 
-void Scheduler::idle_loop()
+void Scheduler::idle_loop(void*)
 {
     dbg() << "Scheduler[" << Processor::current().id() << "]: idle loop running";
     ASSERT(are_interrupts_enabled());

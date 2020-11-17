@@ -63,6 +63,7 @@ static GenericInterruptHandler* s_interrupt_handler[GENERIC_INTERRUPT_HANDLERS_C
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread);
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap);
 extern "C" u32 do_init_context(Thread* thread, u32 flags);
+extern "C" void exit_kernel_thread(void);
 extern "C" void pre_init_finished(void);
 extern "C" void post_init_finished(void);
 extern "C" void handle_interrupt(TrapFrame*);
@@ -1457,6 +1458,11 @@ asm(
 "    jmp common_trap_exit \n"
 );
 
+void exit_kernel_thread(void)
+{
+    Thread::current()->exit();
+}
+
 u32 Processor::init_context(Thread& thread, bool leave_crit)
 {
     ASSERT(is_kernel_mode());
@@ -1468,7 +1474,7 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
         ASSERT(in_critical() == 1);
     }
 
-    const u32 kernel_stack_top = thread.kernel_stack_top();
+    u32 kernel_stack_top = thread.kernel_stack_top();
     u32 stack_top = kernel_stack_top;
 
     // TODO: handle NT?
@@ -1482,13 +1488,20 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
         // userspace_esp and userspace_ss are not popped off by iret
         // unless we're switching back to user mode
         stack_top -= sizeof(RegisterState) - 2 * sizeof(u32);
+
+        // For kernel threads we'll push the thread function argument
+        // which should be in tss.esp and exit_kernel_thread as return
+        // address.
+        stack_top -= 2 * sizeof(u32);
+        *reinterpret_cast<u32*>(kernel_stack_top - 2 * sizeof(u32)) = tss.esp;
+        *reinterpret_cast<u32*>(kernel_stack_top - 3 * sizeof(u32)) = FlatPtr(&exit_kernel_thread);
     } else {
         stack_top -= sizeof(RegisterState);
     }
 
     // we want to end up 16-byte aligned, %esp + 4 should be aligned
     stack_top -= sizeof(u32);
-    *reinterpret_cast<u32*>(kernel_stack_top - 4) = 0;
+    *reinterpret_cast<u32*>(kernel_stack_top - sizeof(u32)) = 0;
 
     // set up the stack so that after returning from thread_context_first_enter()
     // we will end up either in kernel mode or user mode, depending on how the thread is set up
