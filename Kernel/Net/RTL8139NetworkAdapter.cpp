@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/MACAddress.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 
@@ -284,7 +285,7 @@ void RTL8139NetworkAdapter::reset()
 
 void RTL8139NetworkAdapter::read_mac_address()
 {
-    u8 mac[6];
+    MACAddress mac {};
     for (int i = 0; i < 6; i++)
         mac[i] = in8(REG_MAC + i);
     set_mac_address(mac);
