@@ -50,6 +50,19 @@ __BEGIN_DECLS
 #define M_SQRT2 1.4142135623730951
 #define M_SQRT1_2 0.7071067811865475
 
+#define FP_NAN 0
+#define FP_INFINITE 1
+#define FP_ZERO 2
+#define FP_SUBNORMAL 3
+#define FP_NORMAL 4
+#define fpclassify(x) __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_ZERO, FP_SUBNORMAL, FP_ZERO, x)
+
+#define signbit(x) __builtin_signbit(x)
+#define isnan(x) __builtin_isnan(x)
+#define isinf(x) __builtin_isinf_sign(x)
+#define isfinite(x) __builtin_isfinite(x)
+#define isnormal(x) __builtin_isnormal(x)
+
 #define DOUBLE_MAX ((double)0b0111111111101111111111111111111111111111111111111111111111111111)
 #define DOUBLE_MIN ((double)0b0000000000010000000000000000000000000000000000000000000000000000)
 
