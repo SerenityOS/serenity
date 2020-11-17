@@ -82,17 +82,21 @@ int main(int argc, char** argv)
 
     bool recursive = false;
     bool force = false;
+    bool verbose = false;
     Vector<const char*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Delete directories recursively", "recursive", 'r');
     args_parser.add_option(force, "Force", "force", 'f');
+    args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_positional_argument(paths, "Path(s) to remove", "path");
     args_parser.parse(argc, argv);
 
     int rc = 0;
     for (auto& path : paths) {
         rc |= remove(recursive, force, path);
+        if (verbose && rc == 0)
+            printf("removed '%s'\n", path);
     }
     return rc;
 }
