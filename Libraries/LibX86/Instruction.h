@@ -378,7 +378,7 @@ public:
     String to_string_fpu80(const Instruction&) const;
     String to_string_mm(const Instruction&) const;
 
-    bool is_register() const { return m_register_index != 0xffffffff; }
+    bool is_register() const { return m_register_index != 0x7f; }
 
     unsigned register_index() const { return m_register_index; }
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
@@ -420,7 +420,6 @@ private:
     void decode16(InstructionStreamType&);
     template<typename InstructionStreamType>
     void decode32(InstructionStreamType&);
-
     template<typename CPU>
     LogicalAddress resolve16(const CPU&, Optional<SegmentRegister>);
     template<typename CPU>
@@ -429,22 +428,16 @@ private:
     template<typename CPU>
     u32 evaluate_sib(const CPU&, SegmentRegister& default_segment) const;
 
-    unsigned m_register_index { 0xffffffff };
-    union {
-        u32 m_offset32 { 0 };
-        u16 m_offset16;
-    };
-
-    u8 m_rm { 0 };
-    u8 m_sib { 0 };
-    u8 m_displacement_bytes { 0 };
-
     union {
         u32 m_displacement32 { 0 };
         u16 m_displacement16;
     };
 
-    bool m_has_sib { false };
+    u8 m_rm { 0 };
+    u8 m_sib { 0 };
+    u8 m_displacement_bytes { 0 };
+    u8 m_register_index : 7 { 0x7f };
+    bool m_has_sib : 1 { false };
 };
 
 class Instruction {
@@ -453,16 +446,17 @@ public:
     static Instruction from_stream(InstructionStreamType&, bool o32, bool a32);
     ~Instruction() { }
 
-    ALWAYS_INLINE MemoryOrRegisterReference& modrm() const
-    {
-        ASSERT(has_rm());
-        return m_modrm;
-    }
+    ALWAYS_INLINE MemoryOrRegisterReference& modrm() const { return m_modrm; }
 
     ALWAYS_INLINE InstructionHandler handler() const { return m_descriptor->handler; }
 
-    bool has_segment_prefix() const { return m_segment_prefix.has_value(); }
-    Optional<SegmentRegister> segment_prefix() const { return m_segment_prefix; }
+    bool has_segment_prefix() const { return m_segment_prefix != 0xff; }
+    ALWAYS_INLINE Optional<SegmentRegister> segment_prefix() const
+    {
+        if (has_segment_prefix())
+            return static_cast<SegmentRegister>(m_segment_prefix);
+        return {};
+    }
 
     bool has_address_size_override_prefix() const { return m_has_address_size_override_prefix; }
     bool has_operand_size_override_prefix() const { return m_has_operand_size_override_prefix; }
@@ -477,13 +471,8 @@ public:
     String mnemonic() const;
 
     u8 op() const { return m_op; }
-    u8 sub_op() const { return m_sub_op; }
     u8 rm() const { return m_modrm.m_rm; }
-    u8 slash() const
-    {
-        ASSERT(has_rm());
-        return (rm() >> 3) & 7;
-    }
+    u8 slash() const { return (rm() >> 3) & 7; }
 
     u8 imm8() const { return m_imm1; }
     u16 imm16() const { return m_imm1; }
@@ -499,7 +488,6 @@ public:
     LogicalAddress imm_address16_16() const { return LogicalAddress(imm16_1(), imm16_2()); }
     LogicalAddress imm_address16_32() const { return LogicalAddress(imm16_1(), imm32_2()); }
 
-    bool has_rm() const { return m_has_rm; }
     bool has_sub_op() const
     {
         return m_op == 0x0f;
@@ -528,27 +516,21 @@ private:
     const char* reg16_name() const;
     const char* reg32_name() const;
 
-    u8 m_op { 0 };
-    u8 m_sub_op { 0 };
+    InstructionDescriptor* m_descriptor { nullptr };
+    mutable MemoryOrRegisterReference m_modrm;
     u32 m_imm1 { 0 };
     u32 m_imm2 { 0 };
-    u8 m_register_index { 0 };
-    bool m_a32 { false };
-    bool m_o32 { false };
-    bool m_has_lock_prefix { false };
-
-    bool m_has_rm { false };
-
+    u8 m_segment_prefix { 0xff };
+    u8 m_register_index { 0xff };
+    u8 m_op { 0 };
+    u8 m_sub_op { 0 };
     u8 m_extra_bytes { 0 };
-
-    Optional<SegmentRegister> m_segment_prefix;
-    bool m_has_operand_size_override_prefix { false };
-    bool m_has_address_size_override_prefix { false };
     u8 m_rep_prefix { 0 };
-
-    mutable MemoryOrRegisterReference m_modrm;
-
-    InstructionDescriptor* m_descriptor { nullptr };
+    bool m_a32 : 1 { false };
+    bool m_o32 : 1 { false };
+    bool m_has_lock_prefix : 1 { false };
+    bool m_has_operand_size_override_prefix : 1 { false };
+    bool m_has_address_size_override_prefix : 1 { false };
 };
 
 template<typename CPU>
@@ -602,26 +584,12 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
     u32 offset = 0;
 
     switch (m_rm & 0x07) {
-    case 0:
-        offset = cpu.eax().value() + m_displacement32;
-        break;
-    case 1:
-        offset = cpu.ecx().value() + m_displacement32;
-        break;
-    case 2:
-        offset = cpu.edx().value() + m_displacement32;
-        break;
-    case 3:
-        offset = cpu.ebx().value() + m_displacement32;
+    case 0 ... 3:
+    case 6 ... 7:
+        offset = cpu.const_gpr32((RegisterIndex32)(m_rm & 0x07)).value() + m_displacement32;
         break;
     case 4:
         offset = evaluate_sib(cpu, default_segment);
-        break;
-    case 6:
-        offset = cpu.esi().value() + m_displacement32;
-        break;
-    case 7:
-        offset = cpu.edi().value() + m_displacement32;
         break;
     default: // 5
         if ((m_rm & 0xc0) == 0x00) {
@@ -641,72 +609,27 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
 template<typename CPU>
 ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegister& default_segment) const
 {
-    u32 scale = 0;
-    switch (m_sib & 0xc0) {
-    case 0x00:
-        scale = 1;
-        break;
-    case 0x40:
-        scale = 2;
-        break;
-    case 0x80:
-        scale = 4;
-        break;
-    case 0xc0:
-        scale = 8;
-        break;
-    }
+    u32 scale_shift = m_sib >> 6;
     u32 index = 0;
     switch ((m_sib >> 3) & 0x07) {
-    case 0:
-        index = cpu.eax().value();
-        break;
-    case 1:
-        index = cpu.ecx().value();
-        break;
-    case 2:
-        index = cpu.edx().value();
-        break;
-    case 3:
-        index = cpu.ebx().value();
+    case 0 ... 3:
+    case 5 ... 7:
+        index = cpu.const_gpr32((RegisterIndex32)((m_sib >> 3) & 0x07)).value();
         break;
     case 4:
         index = 0;
-        break;
-    case 5:
-        index = cpu.ebp().value();
-        break;
-    case 6:
-        index = cpu.esi().value();
-        break;
-    case 7:
-        index = cpu.edi().value();
         break;
     }
 
     u32 base = m_displacement32;
     switch (m_sib & 0x07) {
-    case 0:
-        base += cpu.eax().value();
-        break;
-    case 1:
-        base += cpu.ecx().value();
-        break;
-    case 2:
-        base += cpu.edx().value();
-        break;
-    case 3:
-        base += cpu.ebx().value();
+    case 0 ... 3:
+    case 6 ... 7:
+        base += cpu.const_gpr32((RegisterIndex32)(m_sib & 0x07)).value();
         break;
     case 4:
         default_segment = SegmentRegister::SS;
         base += cpu.esp().value();
-        break;
-    case 6:
-        base += cpu.esi().value();
-        break;
-    case 7:
-        base += cpu.edi().value();
         break;
     default: // 5
         switch ((m_rm >> 6) & 3) {
@@ -724,7 +647,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
         break;
     }
 
-    return (scale * index) + base;
+    return (index << scale_shift) + base;
 }
 
 template<typename CPU, typename T>
@@ -820,7 +743,7 @@ ALWAYS_INLINE unsigned Instruction::length() const
     unsigned len = 1;
     if (has_sub_op())
         ++len;
-    if (m_has_rm) {
+    if (m_descriptor->has_rm) {
         ++len;
         if (m_modrm.m_has_sib)
             ++len;
@@ -878,7 +801,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         }
         auto segment_prefix = to_segment_prefix(opbyte);
         if (segment_prefix.has_value()) {
-            m_segment_prefix = segment_prefix;
+            m_segment_prefix = (u8)segment_prefix.value();
             continue;
         }
         m_op = opbyte;
@@ -892,8 +815,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         m_descriptor = m_o32 ? &s_table32[m_op] : &s_table16[m_op];
     }
 
-    m_has_rm = m_descriptor->has_rm;
-    if (m_has_rm) {
+    if (m_descriptor->has_rm) {
         // Consume ModR/M (may include SIB and displacement.)
         m_modrm.decode(stream, m_a32);
         m_register_index = (m_modrm.m_rm >> 3) & 7;
@@ -1050,15 +972,12 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& st
         if ((m_sib & 0x07) == 5) {
             switch ((m_rm >> 6) & 0x03) {
             case 0:
-                ASSERT(!m_displacement_bytes || m_displacement_bytes == 4);
                 m_displacement_bytes = 4;
                 break;
             case 1:
-                ASSERT(!m_displacement_bytes || m_displacement_bytes == 1);
                 m_displacement_bytes = 1;
                 break;
             case 2:
-                ASSERT(!m_displacement_bytes || m_displacement_bytes == 4);
                 m_displacement_bytes = 4;
                 break;
             default:
