@@ -261,6 +261,7 @@ public:
 struct MatchInput {
     RegexStringView view { nullptr };
     AllOptions regex_options {};
+    size_t start_offset { 0 }; // For Stateful matches, saved and restored from Regex::start_offset.
 
     size_t match_index { 0 };
     size_t line { 0 };
