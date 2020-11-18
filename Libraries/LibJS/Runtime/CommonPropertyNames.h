@@ -86,6 +86,7 @@ namespace JS {
     P(deleteProperty)                        \
     P(description)                           \
     P(done)                                  \
+    P(dotAll)                                \
     P(entries)                               \
     P(enumerable)                            \
     P(error)                                 \
@@ -96,6 +97,7 @@ namespace JS {
     P(filter)                                \
     P(find)                                  \
     P(findIndex)                             \
+    P(flags)                                 \
     P(floor)                                 \
     P(forEach)                               \
     P(from)                                  \
@@ -122,9 +124,11 @@ namespace JS {
     P(getUTCMinutes)                         \
     P(getUTCMonth)                           \
     P(getUTCSeconds)                         \
+    P(global)                                \
     P(globalThis)                            \
     P(has)                                   \
     P(hasOwnProperty)                        \
+    P(ignoreCase)                            \
     P(includes)                              \
     P(indexOf)                               \
     P(info)                                  \
@@ -138,6 +142,7 @@ namespace JS {
     P(join)                                  \
     P(keyFor)                                \
     P(keys)                                  \
+    P(lastIndex)                             \
     P(lastIndexOf)                           \
     P(length)                                \
     P(log)                                   \
@@ -146,6 +151,7 @@ namespace JS {
     P(max)                                   \
     P(message)                               \
     P(min)                                   \
+    P(multiline)                             \
     P(name)                                  \
     P(next)                                  \
     P(now)                                   \
@@ -174,12 +180,15 @@ namespace JS {
     P(sin)                                   \
     P(slice)                                 \
     P(some)                                  \
+    P(source)                                \
     P(splice)                                \
     P(sqrt)                                  \
     P(startsWith)                            \
     P(stringify)                             \
+    P(sticky)                                \
     P(substring)                             \
     P(tan)                                   \
+    P(test)                                  \
     P(toDateString)                          \
     P(toISOString)                           \
     P(toJSON)                                \
@@ -196,6 +205,7 @@ namespace JS {
     P(trimStart)                             \
     P(trunc)                                 \
     P(undefined)                             \
+    P(unicode)                               \
     P(unshift)                               \
     P(value)                                 \
     P(valueOf)                               \

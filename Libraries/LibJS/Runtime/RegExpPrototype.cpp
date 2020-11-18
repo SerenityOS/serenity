@@ -43,6 +43,17 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.test, test, 1, attr);
+
+    u8 readable_attr = Attribute::Configurable;
+    define_native_property(vm.names.dotAll, dot_all, nullptr, readable_attr);
+    define_native_property(vm.names.flags, flags, nullptr, readable_attr);
+    define_native_property(vm.names.global, global, nullptr, readable_attr);
+    define_native_property(vm.names.ignoreCase, ignore_case, nullptr, readable_attr);
+    define_native_property(vm.names.multiline, multiline, nullptr, readable_attr);
+    define_native_property(vm.names.source, source, nullptr, readable_attr);
+    define_native_property(vm.names.sticky, sticky, nullptr, readable_attr);
+    define_native_property(vm.names.unicode, unicode, nullptr, readable_attr);
 }
 
 RegExpPrototype::~RegExpPrototype()
@@ -59,6 +70,124 @@ static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
         return nullptr;
     }
     return static_cast<RegExpObject*>(this_object);
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpPrototype::dot_all)
+{
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::SingleLine));
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
+{
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    auto flags = regexp_object->declared_options();
+    StringBuilder builder(8);
+
+    if (flags.has_flag_set(ECMAScriptFlags::Global))
+        builder.append('g');
+    if (flags.has_flag_set(ECMAScriptFlags::Insensitive))
+        builder.append('i');
+    if (flags.has_flag_set(ECMAScriptFlags::Multiline))
+        builder.append('m');
+    if (flags.has_flag_set(ECMAScriptFlags::SingleLine))
+        builder.append('s');
+    if (flags.has_flag_set(ECMAScriptFlags::Unicode))
+        builder.append('u');
+    if (flags.has_flag_set(ECMAScriptFlags::Sticky))
+        builder.append('y');
+
+    return js_string(vm, builder.to_string());
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpPrototype::global)
+{
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Global)); // Note that this "Global" is actually "Global | Stateful"
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpPrototype::ignore_case)
+{
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Insensitive));
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpPrototype::multiline)
+{
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Multiline));
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
+{
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    return js_string(vm, regexp_object->pattern());
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpPrototype::sticky)
+{
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Sticky));
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpPrototype::unicode)
+{
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Unicode));
+}
+
+RegexResult RegExpPrototype::do_match(const Regex<ECMA262>& re, const StringView& subject)
+{
+    auto result = re.match(subject);
+    // The 'lastIndex' property is reset on failing tests (if 'global')
+    if (!result.success && re.options().has_flag_set(ECMAScriptFlags::Global))
+        re.start_offset = 0;
+
+    return result;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
+{
+    // FIXME: This should try using dynamic properties for 'exec' first,
+    //        before falling back to builtin_exec.
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    auto str = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // RegExps without "global" and "sticky" always start at offset 0.
+    if (!regexp_object->regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful))
+        regexp_object->regex().start_offset = 0;
+
+    auto result = do_match(regexp_object->regex(), str);
+    return Value(result.success);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)

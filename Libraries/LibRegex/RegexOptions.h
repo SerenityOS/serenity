@@ -53,7 +53,8 @@ enum class AllFlags {
     Sticky = __Regex_Sticky,                             // Force the pattern to only match consecutive matches from where the previous match ended.
     Multiline = __Regex_Multiline,                       // Handle newline characters. Match each line, one by one.
     SkipTrimEmptyMatches = __Regex_SkipTrimEmptyMatches, // Do not remove empty capture group results.
-    Last = SkipTrimEmptyMatches
+    Internal_Stateful = __Regex_Internal_Stateful,       // Make global matches match one result at a time, and further match() calls on the same instance continue where the previous one left off.
+    Last = Internal_Stateful,
 };
 
 enum class PosixFlags : FlagsUnderlyingType {
@@ -72,7 +73,7 @@ enum class PosixFlags : FlagsUnderlyingType {
 };
 
 enum class ECMAScriptFlags : FlagsUnderlyingType {
-    Global = (FlagsUnderlyingType)AllFlags::Global,
+    Global = (FlagsUnderlyingType)AllFlags::Global | (FlagsUnderlyingType)AllFlags::Internal_Stateful, // Note: ECMAScript "Global" creates a stateful regex.
     Insensitive = (FlagsUnderlyingType)AllFlags::Insensitive,
     Ungreedy = (FlagsUnderlyingType)AllFlags::Ungreedy,
     Unicode = (FlagsUnderlyingType)AllFlags::Unicode,
@@ -123,7 +124,7 @@ public:
     void reset_flags() { m_flags = (T)0; }
     void reset_flag(T flag) { m_flags = (T)((FlagsUnderlyingType)m_flags & ~(FlagsUnderlyingType)flag); }
     void set_flag(T flag) { *this |= flag; }
-    bool has_flag_set(T flag) const { return *this & flag; }
+    bool has_flag_set(T flag) const { return (FlagsUnderlyingType)flag == ((FlagsUnderlyingType)m_flags & (FlagsUnderlyingType)flag); }
     T value() const { return m_flags; }
 
 private:

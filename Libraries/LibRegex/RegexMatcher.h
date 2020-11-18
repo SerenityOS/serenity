@@ -73,6 +73,11 @@ public:
     RegexResult match(const RegexStringView&, Optional<typename ParserTraits<Parser>::OptionsType> = {}) const;
     RegexResult match(const Vector<RegexStringView>, Optional<typename ParserTraits<Parser>::OptionsType> = {}) const;
 
+    typename ParserTraits<Parser>::OptionsType options() const
+    {
+        return m_regex_options;
+    }
+
 private:
     Optional<bool> execute(const MatchInput& input, MatchState& state, MatchOutput& output, size_t recursion_level) const;
     ALWAYS_INLINE Optional<bool> execute_low_prio_forks(const MatchInput& input, MatchState& original_state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level) const;
@@ -87,10 +92,12 @@ public:
     String pattern_value;
     regex::Parser::Result parser_result;
     OwnPtr<Matcher<Parser>> matcher { nullptr };
+    mutable size_t start_offset { 0 };
 
     explicit Regex(StringView pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
     ~Regex() = default;
 
+    typename ParserTraits<Parser>::OptionsType options() const;
     void print_bytecode(FILE* f = stdout) const;
     String error_string(Optional<String> message = {}) const;
 

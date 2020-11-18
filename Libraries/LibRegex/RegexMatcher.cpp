@@ -53,6 +53,15 @@ Regex<Parser>::Regex(StringView pattern, typename ParserTraits<Parser>::OptionsT
 }
 
 template<class Parser>
+typename ParserTraits<Parser>::OptionsType Regex<Parser>::options() const
+{
+    if (parser_result.error != Error::NoError)
+        return {};
+
+    return matcher->options();
+}
+
+template<class Parser>
 String Regex<Parser>::error_string(Optional<String> message) const
 {
     StringBuilder eb;
@@ -81,6 +90,10 @@ RegexResult Matcher<Parser>::match(const RegexStringView& view, Optional<typenam
 template<typename Parser>
 RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
 {
+    // If the pattern *itself* isn't stateful, reset any changes to start_offset.
+    if (!((AllFlags)m_regex_options.value() & AllFlags::Internal_Stateful))
+        m_pattern.start_offset = 0;
+
     size_t match_count { 0 };
 
     MatchInput input;
@@ -88,7 +101,11 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     MatchOutput output;
 
     input.regex_options = m_regex_options | regex_options.value_or({}).value();
+    input.start_offset = m_pattern.start_offset;
     output.operations = 0;
+
+    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
+        ASSERT(views.size() == 1);
 
     if (c_match_preallocation_count) {
         output.matches.ensure_capacity(c_match_preallocation_count);
@@ -115,7 +132,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
             output.matches.empend();
 
         ASSERT(start_position + state.string_position - start_position <= input.view.length());
-        if (input.regex_options & AllFlags::StringCopyMatches) {
+        if (input.regex_options.has_flag_set(AllFlags::StringCopyMatches)) {
             output.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_string(), input.line, start_position, input.global_offset + start_position };
         } else { // let the view point to the original string ...
             output.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position), input.line, start_position, input.global_offset + start_position };
@@ -126,7 +143,9 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     s_regex_dbg.print_header();
 #endif
 
-    bool continue_search = (input.regex_options & AllFlags::Global) || (input.regex_options & AllFlags::Multiline);
+    bool continue_search = input.regex_options.has_flag_set(AllFlags::Global) || input.regex_options.has_flag_set(AllFlags::Multiline);
+    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
+        continue_search = false;
 
     for (auto& view : views) {
         input.view = view;
@@ -135,7 +154,9 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 #endif
 
         auto view_length = view.length();
-        for (size_t view_index = 0; view_index < view_length; ++view_index) {
+        size_t view_index = m_pattern.start_offset;
+        state.string_position = view_index;
+        for (; view_index < view_length; ++view_index) {
             auto& match_length_minimum = m_pattern.parser_result.match_length_minimum;
             // FIXME: More performant would be to know the remaining minimum string
             //        length needed to match from the current position onwards within
@@ -158,12 +179,12 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
             if (success.value()) {
 
-                if ((input.regex_options & AllFlags::MatchNotEndOfLine) && state.string_position == input.view.length()) {
+                if (input.regex_options.has_flag_set(AllFlags::MatchNotEndOfLine) && state.string_position == input.view.length()) {
                     if (!continue_search)
                         break;
                     continue;
                 }
-                if ((input.regex_options & AllFlags::MatchNotBeginOfLine) && view_index == 0) {
+                if (input.regex_options.has_flag_set(AllFlags::MatchNotBeginOfLine) && view_index == 0) {
                     if (!continue_search)
                         break;
                     continue;
@@ -182,26 +203,34 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                     view_index = state.string_position - (has_zero_length ? 0 : 1);
                     continue;
 
-                } else if (!continue_search && state.string_position < view_length)
+                } else if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
+                    append_match(input, state, output, view_index);
+                    break;
+
+                } else if (state.string_position < view_length) {
                     return { false, 0, {}, {}, {}, output.operations };
+                }
 
                 append_match(input, state, output, view_index);
                 break;
             }
 
-            if (!continue_search)
+            if (!continue_search && !input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
                 break;
         }
 
         ++input.line;
         input.global_offset += view.length() + 1; // +1 includes the line break character
+
+        if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
+            m_pattern.start_offset = state.string_position;
     }
 
     MatchOutput output_copy;
     if (match_count) {
         auto capture_groups_count = min(output.capture_group_matches.size(), output.matches.size());
         for (size_t i = 0; i < capture_groups_count; ++i) {
-            if (input.regex_options & AllFlags::SkipTrimEmptyMatches) {
+            if (input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
                 output_copy.capture_group_matches.append(output.capture_group_matches.at(i));
             } else {
                 Vector<Match> capture_group_matches;

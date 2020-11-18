@@ -97,6 +97,7 @@ enum __RegexAllFlags {
     __Regex_Sticky = __Regex_Global << 11,               // Force the pattern to only match consecutive matches from where the previous match ended.
     __Regex_Multiline = __Regex_Global << 12,            // Handle newline characters. Match each line, one by one.
     __Regex_SkipTrimEmptyMatches = __Regex_Global << 13, // Do not remove empty capture group results.
+    __Regex_Internal_Stateful = __Regex_Global << 14,    // Internal flag; enables stateful matches.
     __Regex_Last = __Regex_SkipTrimEmptyMatches
 };
 
