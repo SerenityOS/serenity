@@ -32,6 +32,8 @@
 #include <AK/StringBuilder.h>
 #include <string.h>
 
+//#define PPM_DEBUG
+
 namespace Gfx {
 
 struct PPMLoadingContext {
@@ -168,14 +170,18 @@ static bool read_magic_number(PPMLoadingContext& context, Streamer& streamer)
 
     if (!context.data || context.data_size < 2) {
         context.state = PPMLoadingContext::State::Error;
-        dbg() << "There is no enough data.";
+#ifdef PPM_DEBUG
+        dbg() << "There is not enough data.";
+#endif
         return false;
     }
 
     u8 magic_number[2];
     if (!streamer.read_bytes(magic_number, 2)) {
         context.state = PPMLoadingContext::State::Error;
+#ifdef PPM_DEBUG
         dbg() << "We can't read magic number.";
+#endif
         return false;
     }
 
@@ -192,7 +198,9 @@ static bool read_magic_number(PPMLoadingContext& context, Streamer& streamer)
     }
 
     context.state = PPMLoadingContext::State::Error;
+#ifdef PPM_DEBUG
     dbg() << "Magic number is not valid." << (char)magic_number[0] << (char)magic_number[1];
+#endif
     return false;
 }
 
@@ -255,7 +263,9 @@ static bool read_max_val(PPMLoadingContext& context, Streamer& streamer)
     }
 
     if (context.max_val > 255) {
-        dbg() << "We can't pars 2 byte color.";
+#ifdef PPM_DEBUG
+        dbg() << "We can't parse 2 byte color.";
+#endif
         context.state = PPMLoadingContext::Error;
         return false;
     }
