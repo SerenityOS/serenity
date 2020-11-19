@@ -242,18 +242,6 @@ void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_ho
     ScrollableWidget::scroll_into_view(content_rect(index), scroll_horizontally, scroll_vertically);
 }
 
-void AbstractTableView::doubleclick_event(MouseEvent& event)
-{
-    if (!model())
-        return;
-    if (event.button() == MouseButton::Left) {
-        if (is_editable() && edit_triggers() & EditTrigger::DoubleClicked)
-            begin_editing(cursor_index());
-        else
-            activate(cursor_index());
-    }
-}
-
 void AbstractTableView::context_menu_event(ContextMenuEvent& event)
 {
     if (!model())
