@@ -629,6 +629,8 @@ static bool read_reset_marker(InputMemoryStream& stream, JPGLoadingContext& cont
         return false;
     }
     context.dc_reset_interval = read_be_word(stream);
+    if (stream.handle_any_error())
+        return false;
     return true;
 }
 
@@ -667,6 +669,8 @@ static bool huffman_table_reset_helper(HuffmanTableSpec& src, JPGLoadingContext&
 static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = read_be_word(stream);
+    if (stream.handle_any_error())
+        return false;
     if (!bounds_okay(stream.offset(), bytes_to_read, context.data_size))
         return false;
     bytes_to_read -= 2;
@@ -711,6 +715,8 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
         for (u32 i = 0; i < total_codes; i++) {
             u8 symbol = 0;
             stream >> symbol;
+            if (stream.handle_any_error())
+                return false;
             table.symbols.append(symbol);
         }
 
@@ -777,6 +783,8 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
         return false;
 
     stream >> context.frame.precision;
+    if (stream.handle_any_error())
+        return false;
     if (context.frame.precision != 8) {
 #ifdef JPG_DEBUG
         dbg() << stream.offset() << ": SOF precision != 8!";
@@ -785,7 +793,11 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
     }
 
     context.frame.height = read_be_word(stream);
+    if (stream.handle_any_error())
+        return false;
     context.frame.width = read_be_word(stream);
+    if (stream.handle_any_error())
+        return false;
     if (!context.frame.width || !context.frame.height) {
 #ifdef JPG_DEBUG
         dbg() << stream.offset() << ": ERROR! Image height: " << context.frame.height << ", Image width: "
@@ -796,6 +808,8 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
     set_macroblock_metadata(context);
 
     stream >> context.component_count;
+    if (stream.handle_any_error())
+        return false;
     if (context.component_count != 1 && context.component_count != 3) {
 #ifdef JPG_DEBUG
         dbg() << stream.offset() << ": Unsupported number of components in SOF: "
@@ -808,6 +822,8 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
         ComponentSpec& component = context.components[i];
 
         stream >> component.id;
+        if (stream.handle_any_error())
+            return false;
         if (i == 0)
             context.has_zero_based_ids = component.id == 0;
         component.id += context.has_zero_based_ids ? 1 : 0;
@@ -840,6 +856,8 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
         }
 
         stream >> component.qtable_id;
+        if (stream.handle_any_error())
+            return false;
         if (component.qtable_id > 1) {
 #ifdef JPG_DEBUG
             dbg() << stream.offset() << ": Unsupported quantization table id: "
@@ -884,9 +902,14 @@ static bool read_quantization_table(InputMemoryStream& stream, JPGLoadingContext
             if (element_unit_hint == 0) {
                 u8 tmp = 0;
                 stream >> tmp;
+                if (stream.handle_any_error())
+                    return false;
                 table[zigzag_map[i]] = tmp;
-            } else
+            } else {
                 table[zigzag_map[i]] = read_be_word(stream);
+                if (stream.handle_any_error())
+                    return false;
+            }
         }
         if (stream.handle_any_error())
             return false;
@@ -1165,6 +1188,8 @@ static bool parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
     }
     for (;;) {
         marker = read_marker_at_cursor(stream);
+        if (stream.handle_any_error())
+            return false;
 
         // Set frame type if the marker marks a new frame.
         if (marker >= 0xFFC0 && marker <= 0xFFCF) {
@@ -1246,6 +1271,8 @@ static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& co
                 continue;
             if (current_byte == 0x00) {
                 stream >> current_byte;
+                if (stream.handle_any_error())
+                    return false;
                 context.huffman_stream.stream.append(last_byte);
                 continue;
             }
@@ -1255,6 +1282,8 @@ static bool scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& co
             if (marker >= JPG_RST0 && marker <= JPG_RST7) {
                 context.huffman_stream.stream.append(marker);
                 stream >> current_byte;
+                if (stream.handle_any_error())
+                    return false;
                 continue;
             }
 #ifdef JPG_DEBUG
