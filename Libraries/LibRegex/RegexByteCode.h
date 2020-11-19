@@ -39,7 +39,7 @@
 
 namespace regex {
 
-using ByteCodeValueType = size_t;
+using ByteCodeValueType = u64;
 
 #define ENUMERATE_OPCODES                          \
     __ENUMERATE_OPCODE(Compare)                    \
@@ -102,22 +102,22 @@ enum class CharClass : ByteCodeValueType {
 };
 
 struct CharRange {
-    const char from;
-    const char to;
+    const u32 from;
+    const u32 to;
 
-    CharRange(size_t value)
-        : from(value >> 8)
-        , to(value & 0xFF)
+    CharRange(u64 value)
+        : from(value >> 32)
+        , to(value & 0xffffffff)
     {
     }
 
-    CharRange(char from, char to)
+    CharRange(u32 from, u32 to)
         : from(from)
         , to(to)
     {
     }
 
-    operator ByteCodeValueType() const { return (from << 8) | to; }
+    operator ByteCodeValueType() const { return ((u64)from << 32) | to; }
 };
 
 struct CompareTypeAndValuePair {
@@ -568,8 +568,8 @@ public:
 private:
     ALWAYS_INLINE static void compare_char(const MatchInput& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static bool compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length);
-    ALWAYS_INLINE static void compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, char ch, bool inverse, bool& inverse_matched);
-    ALWAYS_INLINE static void compare_character_range(const MatchInput& input, MatchState& state, char from, char to, char ch, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static void compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static void compare_character_range(const MatchInput& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched);
 };
 
 template<typename T>
