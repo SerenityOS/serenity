@@ -202,23 +202,23 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
     } else if (match(TokenType::Plus)) {
         consume();
 
-        bool greedy = match(TokenType::Questionmark);
-        if (greedy)
+        bool nongreedy = match(TokenType::Questionmark);
+        if (nongreedy)
             consume();
 
         // Note: dont touch match_length_minimum, it's already correct
-        bytecode_to_repeat.insert_bytecode_repetition_min_one(bytecode_to_repeat, greedy);
+        bytecode_to_repeat.insert_bytecode_repetition_min_one(bytecode_to_repeat, !nongreedy);
         return !has_error();
 
     } else if (match(TokenType::Asterisk)) {
         consume();
         match_length_minimum = 0;
 
-        bool greedy = match(TokenType::Questionmark);
-        if (greedy)
+        bool nongreedy = match(TokenType::Questionmark);
+        if (nongreedy)
             consume();
 
-        bytecode_to_repeat.insert_bytecode_repetition_any(bytecode_to_repeat, greedy);
+        bytecode_to_repeat.insert_bytecode_repetition_any(bytecode_to_repeat, !nongreedy);
 
         return !has_error();
 
@@ -226,11 +226,11 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         consume();
         match_length_minimum = 0;
 
-        bool greedy = match(TokenType::Questionmark);
-        if (greedy)
+        bool nongreedy = match(TokenType::Questionmark);
+        if (nongreedy)
             consume();
 
-        bytecode_to_repeat.insert_bytecode_repetition_zero_or_one(bytecode_to_repeat, greedy);
+        bytecode_to_repeat.insert_bytecode_repetition_zero_or_one(bytecode_to_repeat, !nongreedy);
         return !has_error();
     }
 

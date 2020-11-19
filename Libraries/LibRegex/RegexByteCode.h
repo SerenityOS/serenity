@@ -204,7 +204,7 @@ public:
     void insert_bytecode_alternation(ByteCode&& left, ByteCode&& right)
     {
 
-        // FORKSTAY _ALT
+        // FORKJUMP _ALT
         // REGEXP ALT1
         // JUMP  _END
         // LABEL _ALT
@@ -266,12 +266,12 @@ public:
     {
         // LABEL _START = -bytecode_to_repeat.size()
         // REGEXP
-        // FORKJUMP _START  (FORKSTAY -> Greedy)
+        // FORKSTAY _START  (FORKJUMP -> Greedy)
 
         if (greedy)
-            bytecode_to_repeat.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkStay));
-        else
             bytecode_to_repeat.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
+        else
+            bytecode_to_repeat.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkStay));
 
         bytecode_to_repeat.empend(-(bytecode_to_repeat.size() + 1)); // Jump to the _START label
     }
@@ -279,7 +279,7 @@ public:
     void insert_bytecode_repetition_any(ByteCode& bytecode_to_repeat, bool greedy)
     {
         // LABEL _START
-        // FORKSTAY _END  (FORKJUMP -> Greedy)
+        // FORKJUMP _END  (FORKSTAY -> Greedy)
         // REGEXP
         // JUMP  _START
         // LABEL _END
@@ -288,9 +288,9 @@ public:
         ByteCode bytecode;
 
         if (greedy)
-            bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
-        else
             bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkStay));
+        else
+            bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
 
         bytecode.empend(bytecode_to_repeat.size() + 2); // Jump to the _END label
 
@@ -306,15 +306,15 @@ public:
 
     void insert_bytecode_repetition_zero_or_one(ByteCode& bytecode_to_repeat, bool greedy)
     {
-        // FORKSTAY _END (FORKJUMP -> Greedy)
+        // FORKJUMP _END (FORKSTAY -> Greedy)
         // REGEXP
         // LABEL _END
         ByteCode bytecode;
 
         if (greedy)
-            bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
-        else
             bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkStay));
+        else
+            bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::ForkJump));
 
         bytecode.empend(bytecode_to_repeat.size()); // Jump to the _END label
 

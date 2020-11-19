@@ -188,26 +188,26 @@ ALWAYS_INLINE ExecutionResult OpCode_ForkStay::execute(const MatchInput&, MatchS
 ALWAYS_INLINE ExecutionResult OpCode_CheckBegin::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
 {
     if (0 == state.string_position && (input.regex_options & AllFlags::MatchNotBeginOfLine))
-        return ExecutionResult::Failed;
+        return ExecutionResult::Failed_ExecuteLowPrioForks;
 
     if ((0 == state.string_position && !(input.regex_options & AllFlags::MatchNotBeginOfLine))
         || (0 != state.string_position && (input.regex_options & AllFlags::MatchNotBeginOfLine))
         || (0 == state.string_position && (input.regex_options & AllFlags::Global)))
         return ExecutionResult::Continue;
 
-    return ExecutionResult::Failed;
+    return ExecutionResult::Failed_ExecuteLowPrioForks;
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
 {
     if (state.string_position == input.view.length() && (input.regex_options & AllFlags::MatchNotEndOfLine))
-        return ExecutionResult::Failed;
+        return ExecutionResult::Failed_ExecuteLowPrioForks;
 
     if ((state.string_position == input.view.length() && !(input.regex_options & AllFlags::MatchNotEndOfLine))
         || (state.string_position != input.view.length() && (input.regex_options & AllFlags::MatchNotEndOfLine || input.regex_options & AllFlags::MatchNotBeginOfLine)))
-        return ExecutionResult::Succeeded;
+        return ExecutionResult::Continue;
 
-    return ExecutionResult::Failed;
+    return ExecutionResult::Failed_ExecuteLowPrioForks;
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_SaveLeftCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
