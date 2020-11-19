@@ -250,12 +250,8 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             if (node->is_text())
                 is_hovering_text = true;
             hovered_link_element = node->enclosing_link_element();
-            if (hovered_link_element) {
-#ifdef HTML_DEBUG
-                dbg() << "InProcessWebView: hovering over a link to " << hovered_link_element->href();
-#endif
+            if (hovered_link_element)
                 is_hovering_link = true;
-            }
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
             node->dispatch_event(UIEvents::MouseEvent::create("mousemove", offset.x(), offset.y()));
             if (!layout_root())

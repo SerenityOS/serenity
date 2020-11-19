@@ -159,17 +159,11 @@ void StyleProperties::load_font() const
         if (file_name.is_null())
             continue;
 
-#ifdef HTML_DEBUG
-        dbg() << "Found font " << file_name << " for family " << font_family << " weight " << font_weight;
-#endif
         m_font = Gfx::Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
         FontCache::the().set({ font_name, font_weight }, *m_font);
         return;
     }
 
-#ifdef HTML_DEBUG
-    dbg() << "Failed to find a font for family " << font_family << " weight " << font_weight;
-#endif
     if (font_weight == "bold")
         m_font = Gfx::Font::default_bold_font();
     else
