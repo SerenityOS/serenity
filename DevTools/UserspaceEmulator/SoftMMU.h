@@ -53,7 +53,14 @@ public:
     void write32(X86::LogicalAddress, ValueWithShadow<u32>);
     void write64(X86::LogicalAddress, ValueWithShadow<u64>);
 
-    Region* find_region(X86::LogicalAddress);
+    ALWAYS_INLINE Region* find_region(X86::LogicalAddress address)
+    {
+        if (address.selector() == 0x28)
+            return m_tls_region.ptr();
+
+        size_t page_index = (address.offset() & ~(PAGE_SIZE - 1)) / PAGE_SIZE;
+        return m_page_to_region_map[page_index];
+    }
 
     void add_region(NonnullOwnPtr<Region>);
     void remove_region(Region&);
