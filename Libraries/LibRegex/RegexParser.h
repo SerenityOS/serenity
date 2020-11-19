@@ -121,9 +121,15 @@ protected:
 class PosixExtendedParser final : public Parser {
 public:
     explicit PosixExtendedParser(Lexer& lexer)
-        : Parser(lexer) {};
+        : Parser(lexer)
+    {
+    }
+
     PosixExtendedParser(Lexer& lexer, Optional<typename ParserTraits<PosixExtendedParser>::OptionsType> regex_options)
-        : Parser(lexer, regex_options.value_or({})) {};
+        : Parser(lexer, regex_options.value_or({}))
+    {
+    }
+
     ~PosixExtendedParser() = default;
 
 private:

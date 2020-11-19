@@ -334,6 +334,16 @@ TEST_CASE(match_all_character_class)
     EXPECT(&result.matches.at(0).view.characters_without_null_termination()[0] != &str.view().characters_without_null_termination()[1]);
 }
 
+TEST_CASE(match_character_class_with_assertion)
+{
+    Regex<PosixExtended> re("[[:alpha:]]+$");
+    String str = "abcdef";
+    RegexResult result = match(str, re);
+
+    EXPECT_EQ(result.success, true);
+    EXPECT_EQ(result.count, 1u);
+}
+
 TEST_CASE(example_for_git_commit)
 {
     Regex<PosixExtended> re("^.*$");
