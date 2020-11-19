@@ -35,10 +35,7 @@
 #include <LibGfx/JPGLoader.h>
 #include <math.h>
 
-#define JPG_DBG 0
-#define jpg_dbg(x) \
-    if (JPG_DBG)   \
-    dbg() << x
+//#define JPG_DEBUG
 
 #define JPG_INVALID 0X0000
 
@@ -378,10 +375,12 @@ static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& con
     Vector<Macroblock> macroblocks;
     macroblocks.resize(context.mblock_meta.padded_total);
 
-    jpg_dbg("Image width: " << context.frame.width);
-    jpg_dbg("Image height: " << context.frame.height);
-    jpg_dbg("Macroblocks in a row: " << context.mblock_meta.hpadded_count);
-    jpg_dbg("Macroblocks in a column: " << context.mblock_meta.vpadded_count);
+#ifdef JPG_DEBUG
+    dbg() << "Image width: " << context.frame.width;
+    dbg() << "Image height: " << context.frame.height;
+    dbg() << "Macroblocks in a row: " << context.mblock_meta.hpadded_count;
+    dbg() << "Macroblocks in a column: " << context.mblock_meta.vpadded_count;
+#endif
 
     // Compute huffman codes for DC and AC tables.
     for (auto& dc_table : context.dc_tables)
@@ -698,8 +697,10 @@ static inline bool validate_luma_and_modify_context(const ComponentSpec& luma, J
         // For easy reference to relevant sample factors.
         context.hsample_factor = luma.hsample_factor;
         context.vsample_factor = luma.vsample_factor;
-        jpg_dbg(String::format("Horizontal Subsampling Factor: %i", luma.hsample_factor));
-        jpg_dbg(String::format("Vertical Subsampling Factor: %i", luma.vsample_factor));
+#ifdef JPG_DEBUG
+        dbg() << String::format("Horizontal Subsampling Factor: %i", luma.hsample_factor);
+        dbg() << String::format("Vertical Subsampling Factor: %i", luma.vsample_factor);
+#endif
         return true;
     }
     return false;
