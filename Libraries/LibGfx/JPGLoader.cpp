@@ -296,6 +296,12 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
 {
     for (u32 cindex = 0; cindex < context.component_count; cindex++) {
         auto& component = context.components[cindex];
+
+        if (component.dc_destination_id >= context.dc_tables.size())
+            return false;
+        if (component.ac_destination_id >= context.ac_tables.size())
+            return false;
+
         for (u8 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
             for (u8 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
                 u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
