@@ -199,14 +199,6 @@ int Emulator::exec()
     return m_exit_status;
 }
 
-bool Emulator::is_in_malloc_or_free() const
-{
-    return (m_cpu.base_eip() >= m_malloc_symbol_start && m_cpu.base_eip() < m_malloc_symbol_end)
-        || (m_cpu.base_eip() >= m_free_symbol_start && m_cpu.base_eip() < m_free_symbol_end)
-        || (m_cpu.base_eip() >= m_realloc_symbol_start && m_cpu.base_eip() < m_realloc_symbol_end)
-        || (m_cpu.base_eip() >= m_malloc_size_symbol_start && m_cpu.base_eip() < m_malloc_size_symbol_end);
-}
-
 Vector<FlatPtr> Emulator::raw_backtrace()
 {
     Vector<FlatPtr, 128> backtrace;

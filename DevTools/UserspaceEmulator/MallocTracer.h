@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "MmapRegion.h"
 #include "SoftMMU.h"
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
@@ -91,5 +92,21 @@ private:
 
     bool m_auditing_enabled { true };
 };
+
+ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(const Region& region, FlatPtr address)
+{
+    if (!region.is_mmap())
+        return nullptr;
+    if (!static_cast<const MmapRegion&>(region).is_malloc_block())
+        return nullptr;
+    auto* malloc_data = static_cast<MmapRegion&>(const_cast<Region&>(region)).malloc_metadata();
+    if (!malloc_data)
+        return nullptr;
+    auto& mallocation = malloc_data->mallocation_for_address(address);
+    if (!mallocation.used)
+        return nullptr;
+    ASSERT(mallocation.contains(address));
+    return &mallocation;
+}
 
 }

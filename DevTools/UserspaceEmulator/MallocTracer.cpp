@@ -162,22 +162,6 @@ void MallocTracer::target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t si
     existing_mallocation->malloc_backtrace = m_emulator.raw_backtrace();
 }
 
-Mallocation* MallocTracer::find_mallocation(const Region& region, FlatPtr address)
-{
-    if (!region.is_mmap())
-        return nullptr;
-    if (!static_cast<const MmapRegion&>(region).is_malloc_block())
-        return nullptr;
-    auto* malloc_data = static_cast<MmapRegion&>(const_cast<Region&>(region)).malloc_metadata();
-    if (!malloc_data)
-        return nullptr;
-    auto& mallocation = malloc_data->mallocation_for_address(address);
-    if (!mallocation.used)
-        return nullptr;
-    ASSERT(mallocation.contains(address));
-    return &mallocation;
-}
-
 Mallocation* MallocTracer::find_mallocation(FlatPtr address)
 {
     auto* region = m_emulator.mmu().find_region({ 0x23, address });
