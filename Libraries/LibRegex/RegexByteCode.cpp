@@ -275,7 +275,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const M
         auto& map = output.named_capture_group_matches.at(input.match_index);
 
 #ifdef REGEX_DEBUG
-        ASSERT(start_position + length < input.view.length());
+        ASSERT(start_position + length <= input.view.length());
         dbg() << "Save named capture group with name=" << capture_group_name << " and content: " << input.view.substring_view(start_position, length).to_string();
 #endif
 
@@ -415,7 +415,7 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, Match
     return false;
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, char ch, bool inverse, bool& inverse_matched)
+ALWAYS_INLINE void OpCode_Compare::compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched)
 {
     switch (character_class) {
     case CharClass::Alnum:
@@ -513,7 +513,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(const MatchInput& inp
     }
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_character_range(const MatchInput& input, MatchState& state, char from, char to, char ch, bool inverse, bool& inverse_matched)
+ALWAYS_INLINE void OpCode_Compare::compare_character_range(const MatchInput& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched)
 {
     if (input.regex_options & AllFlags::Insensitive) {
         from = tolower(from);
@@ -553,7 +553,7 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
         } else if (compare_type == CharacterCompareType::String) {
             char* str = reinterpret_cast<char*>(m_bytecode->at(offset++));
             auto& length = m_bytecode->at(offset++);
-            result.empend(String::format("value=\"%s\"", String { str, length }.characters()));
+            result.empend(String::format("value=\"%.*s\"", length, str));
             if (!view.is_null())
                 result.empend(String::format("compare against: \"%s\"", input.value().view.substring_view(state().string_position, state().string_position + length > view.length() ? 0 : length).to_string().characters()));
         } else if (compare_type == CharacterCompareType::CharClass) {

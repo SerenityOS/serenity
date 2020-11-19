@@ -131,7 +131,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     for (auto& view : views) {
         input.view = view;
 #ifdef REGEX_DEBUG
-        dbg() << "[match] Starting match with view (" << view.length() << "): _" << view << "_";
+        dbg() << "[match] Starting match with view (" << view.length() << "): _" << view.to_string() << "_";
 #endif
 
         auto view_length = view.length();
@@ -171,7 +171,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
 #ifdef REGEX_DEBUG
                 dbg() << "state.string_position: " << state.string_position << " view_index: " << view_index;
-                dbg() << "[match] Found a match (length = " << state.string_position - view_index << "): " << input.view.substring_view(view_index, state.string_position - view_index);
+                dbg() << "[match] Found a match (length = " << state.string_position - view_index << "): " << input.view.substring_view(view_index, state.string_position - view_index).to_string();
 #endif
                 ++match_count;
 

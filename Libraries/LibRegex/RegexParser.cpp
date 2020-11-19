@@ -365,7 +365,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack
             values.take_last(); // RangeExpressionDummy
             auto value1 = values.take_last();
 
-            values.append({ CharacterCompareType::CharRange, static_cast<ByteCodeValueType>(CharRange { (char)value1.value, (char)value2.value }) });
+            values.append({ CharacterCompareType::CharRange, static_cast<ByteCodeValueType>(CharRange { (u32)value1.value, (u32)value2.value }) });
         }
     }
 
