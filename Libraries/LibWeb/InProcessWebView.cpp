@@ -249,11 +249,6 @@ void InProcessWebView::layout_and_sync_size()
     }
 
     page().main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
-
-#ifdef HTML_DEBUG
-    dbgprintf("\033[33;1mLayout tree after layout:\033[0m\n");
-    ::dump_tree(*layout_root());
-#endif
 }
 
 void InProcessWebView::resize_event(GUI::ResizeEvent& event)

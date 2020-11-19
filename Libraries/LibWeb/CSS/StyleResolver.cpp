@@ -100,13 +100,6 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
         ++style_sheet_index;
     });
 
-#ifdef HTML_DEBUG
-    dbgprintf("Rules matching Element{%p}\n", &element);
-    for (auto& rule : matching_rules) {
-        dump_rule(rule);
-    }
-#endif
-
     return matching_rules;
 }
 

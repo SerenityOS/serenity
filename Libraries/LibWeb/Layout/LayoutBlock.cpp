@@ -450,10 +450,6 @@ void LayoutBlock::compute_width()
             total_px += value.to_px(*this);
         }
 
-#ifdef HTML_DEBUG
-        dbg() << "Total: " << total_px;
-#endif
-
         if (!is_replaced() && !is_inline()) {
             // 10.3.3 Block-level, non-replaced elements in normal flow
             // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.

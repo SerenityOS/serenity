@@ -36,6 +36,4 @@ void dump_sheet(const CSS::StyleSheet&);
 void dump_rule(const CSS::StyleRule&);
 void dump_selector(const CSS::Selector&);
 
-#undef HTML_DEBUG
-
 }
