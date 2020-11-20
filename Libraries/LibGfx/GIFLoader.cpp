@@ -36,6 +36,8 @@
 #include <stdio.h>
 #include <string.h>
 
+//#define GIF_DEBUG
+
 namespace Gfx {
 
 // Row strides and offsets for each interlace pass.
@@ -211,8 +213,10 @@ public:
         }
 
         if (m_current_code > m_code_table.size()) {
+#ifdef GIF_DEBUG
             dbg() << "Corrupted LZW stream, invalid code: " << m_current_code << " at bit index: "
                   << m_current_bit_index << ", code table size: " << m_code_table.size();
+#endif
             return {};
         }
 
@@ -341,7 +345,9 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
         while (true) {
             Optional<u16> code = decoder.next_code();
             if (!code.has_value()) {
+#ifdef GIF_DEBUG
                 dbg() << "Unexpectedly reached end of gif frame data";
+#endif
                 return false;
             }
 
@@ -479,7 +485,9 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
             if (extension_type == 0xF9) {
                 if (sub_block.size() != 4) {
+#ifdef GIF_DEBUG
                     dbg() << "Unexpected graphic control size";
+#endif
                     continue;
                 }
 
@@ -500,12 +508,16 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
 
             if (extension_type == 0xFF) {
                 if (sub_block.size() != 14) {
+#ifdef GIF_DEBUG
                     dbg() << "Unexpected application extension size: " << sub_block.size();
+#endif
                     continue;
                 }
 
                 if (sub_block[11] != 1) {
+#ifdef GIF_DEBUG
                     dbg() << "Unexpected application extension format";
+#endif
                     continue;
                 }
 
