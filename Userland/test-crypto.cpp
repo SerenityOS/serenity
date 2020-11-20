@@ -2060,14 +2060,6 @@ static void tls_test_client_hello()
     };
     tls->on_tls_finished = [&] {
         PASS;
-        auto file = Core::File::open("foo.response", Core::IODevice::WriteOnly);
-        if (file.is_error()) {
-            printf("Can't write there, %s\n", file.error().characters());
-            loop.quit(2);
-            return;
-        }
-        file.value()->write(contents);
-        file.value()->close();
         loop.quit(0);
     };
     tls->on_tls_error = [&](TLS::AlertDescription) {
