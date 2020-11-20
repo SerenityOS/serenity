@@ -455,7 +455,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
         if (stream.handle_any_error())
             return false;
 
-        if (sentinel == 0x21) {
+        if (sentinel == '!') {
             u8 extension_type = 0;
             stream >> extension_type;
             if (stream.handle_any_error())
@@ -528,7 +528,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             continue;
         }
 
-        if (sentinel == 0x2c) {
+        if (sentinel == ',') {
             context.images.append(move(current_image));
             auto& image = context.images.last();
 
@@ -595,7 +595,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             continue;
         }
 
-        if (sentinel == 0x3b) {
+        if (sentinel == ';') {
             break;
         }
 
