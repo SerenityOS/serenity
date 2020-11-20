@@ -64,25 +64,25 @@ constexpr v4sf gamma_to_linear4(v4sf x)
     return (0.8f + 0.2f * x) * x * x;
 }
 
-constexpr v4sf linear_to_gamma4(v4sf x)
+inline v4sf linear_to_gamma4(v4sf x)
 {
     // Source for approximation: https://mimosa-pudica.net/fast-gamma/
     constexpr float a = 0.00279491f;
     constexpr float b = 1.15907984f;
-    constexpr float c = (b / sqrt(1 + a)) - 1;
+    float c = (b / sqrt(1 + a)) - 1;
     return ((b * __builtin_ia32_rsqrtps(x + a)) - c) * x;
 }
 
 // Linearize v1 and v2, lerp them by mix factor, then convert back.
 // The output is entirely v1 when mix = 0 and entirely v2 when mix = 1
-constexpr v4sf gamma_accurate_lerp4(v4sf v1, v4sf v2, float mix)
+inline v4sf gamma_accurate_lerp4(v4sf v1, v4sf v2, float mix)
 {
     return linear_to_gamma4(gamma_to_linear4(v1) * (1 - mix) + gamma_to_linear4(v2) * mix);
 }
 
 // Convert a and b to linear space, blend them by mix factor, then convert back using sse1.
 // The output is entirely a when mix = 0 and entirely b when mix = 1
-constexpr Color gamma_accurate_blend4(Color a, Color b, float mix)
+inline Color gamma_accurate_blend4(Color a, Color b, float mix)
 {
     v4sf ac = {
         (float)a.red(),
@@ -116,7 +116,7 @@ constexpr float gamma_to_linear(float x)
 
 // Transform scalar from linear space to gamma2.2 space
 // Assumes x is in range [0, 1]
-constexpr float linear_to_gamma(float x)
+inline float linear_to_gamma(float x)
 {
 #    ifdef ACCURATE_GAMMA_ADJUSTMENT
     // Slower, but more accurate
@@ -125,21 +125,21 @@ constexpr float linear_to_gamma(float x)
     // Source for approximation: https://mimosa-pudica.net/fast-gamma/
     constexpr float a = 0.00279491;
     constexpr float b = 1.15907984;
-    constexpr float c = (b / sqrt(1 + a)) - 1;
+    float c = (b / sqrt(1 + a)) - 1;
     return ((b / __builtin_sqrt(x + a)) - c) * x;
 #    endif
 }
 
 // Linearize v1 and v2, lerp them by mix factor, then convert back.
 // The output is entirely v1 when mix = 0 and entirely v2 when mix = 1
-constexpr float gamma_accurate_lerp(float v1, float v2, float mix)
+inline float gamma_accurate_lerp(float v1, float v2, float mix)
 {
     return linear_to_gamma(gamma_to_linear(v1) * (1 - mix) + gamma_to_linear(v2) * mix);
 }
 
 // Convert a and b to linear space, blend them by mix factor, then convert back.
 // The output is entirely a when mix = 0 and entirely b when mix = 1
-constexpr Color gamma_accurate_blend(Color a, Color b, float mix)
+inline Color gamma_accurate_blend(Color a, Color b, float mix)
 {
 #    ifdef __SSE__
     return gamma_accurate_blend4(a, b, mix);
