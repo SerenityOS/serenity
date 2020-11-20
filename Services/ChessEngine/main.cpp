@@ -44,6 +44,6 @@ int main()
         return 1;
     }
 
-    auto engine = ChessEngine::construct(Core::File::stdin(), Core::File::stdout());
+    auto engine = ChessEngine::construct(Core::File::standard_input(), Core::File::standard_output());
     return loop.exec();
 }

@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     }
 
     if (list || extract) {
-        auto file = Core::File::stdin();
+        auto file = Core::File::standard_input();
 
         if (archive_file) {
             auto maybe_file = Core::File::open(archive_file, Core::IODevice::OpenMode::ReadOnly);
