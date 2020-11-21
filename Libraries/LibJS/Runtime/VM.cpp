@@ -268,7 +268,7 @@ void VM::throw_exception(Exception* exception)
         dbgln("Throwing JavaScript Error: {}, {}", error.name(), error.message());
 
         for (ssize_t i = m_call_stack.size() - 1; i >= 0; --i) {
-            auto function_name = m_call_stack[i].function_name;
+            auto function_name = m_call_stack[i]->function_name;
             if (function_name.is_empty())
                 function_name = "<anonymous>";
             dbgln("  {}", function_name);
