@@ -41,13 +41,29 @@ EventTarget::~EventTarget()
 
 void EventTarget::add_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
 {
+    auto existing_listener = m_listeners.first_matching([&](auto& entry) {
+        return entry.listener->type() == event_name && &entry.listener->function() == &listener->function() && entry.listener->capture() == listener->capture();
+    });
+    if (existing_listener.has_value())
+        return;
+    listener->set_type(event_name);
     m_listeners.append({ event_name, move(listener) });
 }
 
 void EventTarget::remove_event_listener(const FlyString& event_name, NonnullRefPtr<EventListener> listener)
 {
     m_listeners.remove_first_matching([&](auto& entry) {
-        return entry.event_name == event_name && &entry.listener->function() == &listener->function();
+        auto matches = entry.event_name == event_name && &entry.listener->function() == &listener->function() && entry.listener->capture() == listener->capture();
+        if (matches)
+            entry.listener->set_removed(true);
+        return matches;
+    });
+}
+
+void EventTarget::remove_from_event_listener_list(NonnullRefPtr<EventListener> listener)
+{
+    m_listeners.remove_first_matching([&](auto& entry) {
+        return entry.listener->type() == listener->type() && &entry.listener->function() == &listener->function() && entry.listener->capture() == listener->capture();
     });
 }
 

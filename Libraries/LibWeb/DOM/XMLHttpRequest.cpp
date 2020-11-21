@@ -107,9 +107,9 @@ void XMLHttpRequest::send()
         });
 }
 
-void XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
+bool XMLHttpRequest::dispatch_event(NonnullRefPtr<DOM::Event> event)
 {
-    DOM::EventDispatcher::dispatch(*this, move(event));
+    return DOM::EventDispatcher::dispatch(*this, move(event));
 }
 
 Bindings::EventTargetWrapper* XMLHttpRequest::create_wrapper(JS::GlobalObject& global_object)

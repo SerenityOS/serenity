@@ -90,6 +90,7 @@ public:
     const CSS::StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
     NonnullRefPtr<CSS::StyleProperties> computed_style();
 
+    // FIXME: innerHTML also appears on shadow roots. https://w3c.github.io/DOM-Parsing/#dom-innerhtml
     String inner_html() const;
     void set_inner_html(StringView);
 

@@ -180,18 +180,22 @@ void HTMLDocumentParser::run(const URL& url)
         script.execute_script();
     }
 
-    m_document->dispatch_event(DOM::Event::create("DOMContentLoaded"));
-
-    // FIXME: These are not in the right place, they should only fire once subresources are ready.
-    m_document->dispatch_event(DOM::Event::create("load"));
-    m_document->window().dispatch_event(DOM::Event::create("load"));
+    auto content_loaded_event = DOM::Event::create("DOMContentLoaded");
+    content_loaded_event->set_bubbles(true);
+    m_document->dispatch_event(content_loaded_event);
 
     auto scripts_to_execute_as_soon_as_possible = m_document->take_scripts_to_execute_as_soon_as_possible({});
     for (auto& script : scripts_to_execute_as_soon_as_possible) {
         script.execute_script();
     }
 
+    // FIXME: Spin the event loop until there is nothing that delays the load event in the Document.
+
     m_document->set_ready_state("complete");
+    m_document->window().dispatch_event(DOM::Event::create("load"));
+
+    m_document->set_ready_for_post_load_tasks(true);
+    m_document->completely_finish_loading();
 }
 
 void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& token)

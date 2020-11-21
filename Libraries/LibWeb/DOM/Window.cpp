@@ -159,9 +159,9 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     frame->loader().load(document().url(), FrameLoader::Type::Reload);
 }
 
-void Window::dispatch_event(NonnullRefPtr<Event> event)
+bool Window::dispatch_event(NonnullRefPtr<Event> event)
 {
-    EventDispatcher::dispatch(*this, event);
+    return EventDispatcher::dispatch(*this, event, true);
 }
 
 Bindings::EventTargetWrapper* Window::create_wrapper(JS::GlobalObject&)

@@ -8,7 +8,7 @@ interface Element : Node {
     Element? querySelector(DOMString selectors);
     ArrayFromVector querySelectorAll(DOMString selectors);
 
-    attribute DOMString innerHTML;
+    [LegacyNullToEmptyString] attribute DOMString innerHTML;
     [Reflect] attribute DOMString id;
     [Reflect=class] attribute DOMString className;
 

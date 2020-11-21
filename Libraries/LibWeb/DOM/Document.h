@@ -207,7 +207,14 @@ public:
     const String& charset() const { return encoding(); }
     const String& input_encoding() const { return encoding(); }
 
-    const NonnullRefPtr<DOMImplementation> implementation() { return m_implementation; }
+    bool ready_for_post_load_tasks() const { return m_ready_for_post_load_tasks; }
+    void set_ready_for_post_load_tasks(bool ready) { m_ready_for_post_load_tasks = ready; }
+
+    void completely_finish_loading();
+
+    const NonnullRefPtr<DOMImplementation> implementation() const { return m_implementation; }
+
+    virtual EventTarget* get_parent(const Event&) override;
 
 private:
     explicit Document(const URL&);
@@ -271,6 +278,8 @@ private:
     String m_ready_state { "loading" };
     String m_content_type { "application/xml" };
     String m_encoding { "UTF-8" };
+
+    bool m_ready_for_post_load_tasks { false };
 
     NonnullRefPtr<DOMImplementation> m_implementation;
 };

@@ -44,8 +44,8 @@ public:
 
     virtual FlyString node_name() const override { return "#document-fragment"; }
 
-    Element& host() { return *m_host; }
-    const Element& host() const { return *m_host; }
+    RefPtr<Element> host() { return m_host; }
+    const RefPtr<Element> host() const { return m_host; }
 
     void set_host(Element& host) { m_host = host; }
 

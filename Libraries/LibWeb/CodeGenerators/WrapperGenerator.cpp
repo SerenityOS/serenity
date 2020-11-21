@@ -354,8 +354,6 @@ static bool should_emit_wrapper_factory(const IDL::Interface& interface)
         return false;
     if (interface.name.ends_with("Element"))
         return false;
-    if (interface.name.ends_with("Event"))
-        return false;
     return true;
 }
 
@@ -510,6 +508,7 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/DocumentFragmentWrapper.h>
 #include <LibWeb/Bindings/DocumentTypeWrapper.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
@@ -733,7 +732,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 
     return new_array;
 )~~~");
-        } else if (return_type.name == "long" || return_type.name == "double" || return_type.name == "boolean") {
+        } else if (return_type.name == "long" || return_type.name == "double" || return_type.name == "boolean" || return_type.name == "short") {
             scoped_generator.append(R"~~~(
     return JS::Value(retval);
 )~~~");

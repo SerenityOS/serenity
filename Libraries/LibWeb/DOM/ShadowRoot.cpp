@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,49 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/RefCounted.h>
-#include <LibJS/Heap/Handle.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 
 namespace Web::DOM {
 
-class EventListener
-    : public RefCounted<EventListener>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::EventListenerWrapper;
+ShadowRoot::ShadowRoot(Document& document, Element& host)
+    : DocumentFragment(document)
+{
+    set_host(host);
+}
 
-    explicit EventListener(JS::Handle<JS::Function> function)
-        : m_function(move(function))
-    {
+EventTarget* ShadowRoot::get_parent(const Event& event)
+{
+    if (!event.composed()) {
+        auto& events_first_invocation_target = downcast<Node>(*event.path().first().invocation_target);
+        if (events_first_invocation_target.root() == this)
+            return nullptr;
     }
 
-    JS::Function& function();
-
-    const FlyString& type() const { return m_type; }
-    void set_type(const FlyString& type) { m_type = type; }
-
-    bool capture() const { return m_capture; }
-    void set_capture(bool capture) { m_capture = capture; }
-
-    bool passive() const { return m_passive; }
-    void set_passive(bool passive) { m_capture = passive; }
-
-    bool once() const { return m_once; }
-    void set_once(bool once) { m_once = once; }
-
-    bool removed() const { return m_removed; }
-    void set_removed(bool removed) { m_removed = removed; }
-
-private:
-    FlyString m_type;
-    JS::Handle<JS::Function> m_function;
-    bool m_capture { false };
-    bool m_passive { false };
-    bool m_once { false };
-    bool m_removed { false };
-};
+    return host();
+}
 
 }
