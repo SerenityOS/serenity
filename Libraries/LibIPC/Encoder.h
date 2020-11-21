@@ -61,6 +61,7 @@ public:
     Encoder& operator<<(const ByteBuffer&);
     Encoder& operator<<(const URL&);
     Encoder& operator<<(const Dictionary&);
+    Encoder& operator<<(const File&);
     template<typename K, typename V>
     Encoder& operator<<(const HashMap<K, V>& hashmap)
     {

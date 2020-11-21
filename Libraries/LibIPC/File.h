@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,10 +28,22 @@
 
 namespace IPC {
 
-class Decoder;
-class Dictionary;
-class Encoder;
-class Message;
-class File;
+class File {
+public:
+    // Must have a default constructor, because LibIPC
+    // default-constructs arguments prior to decoding them.
+    File() { }
+
+    // Intentionally not `explicit`.
+    File(int fd)
+        : m_fd(fd)
+    {
+    }
+
+    int fd() const { return m_fd; }
+
+private:
+    int m_fd { -1 };
+};
 
 }

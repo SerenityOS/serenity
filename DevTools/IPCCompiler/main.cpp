@@ -217,6 +217,7 @@ int main(int argc, char** argv)
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
 #include <LibIPC/Endpoint.h>
+#include <LibIPC/File.h>
 #include <LibIPC/Message.h>
 )~~~");
 
@@ -318,9 +319,9 @@ public:
     static i32 static_message_id() { return (int)MessageID::@message.name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.name@"; }
 
-    static OwnPtr<@message.name@> decode(InputMemoryStream& stream)
+    static OwnPtr<@message.name@> decode(InputMemoryStream& stream, int sockfd)
     {
-        IPC::Decoder decoder { stream };
+        IPC::Decoder decoder { stream, sockfd };
 )~~~");
 
             for (auto& parameter : parameters) {
@@ -436,7 +437,7 @@ public:
     static String static_name() { return "@endpoint.name@"; }
     virtual String name() const override { return "@endpoint.name@"; }
 
-    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer)
+    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer, int sockfd)
     {
         InputMemoryStream stream { buffer };
         i32 message_endpoint_magic = 0;
@@ -488,7 +489,7 @@ public:
 
                 message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.name@:
-            message = Messages::@endpoint.name@::@message.name@::decode(stream);
+            message = Messages::@endpoint.name@::@message.name@::decode(stream, sockfd);
             break;
 )~~~");
             };

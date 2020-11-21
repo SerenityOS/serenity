@@ -30,7 +30,10 @@
 
 namespace IPC {
 
-typedef Vector<u8, 1024> MessageBuffer;
+struct MessageBuffer {
+    Vector<u8, 1024> data;
+    Vector<int> fds;
+};
 
 class Message {
 public:
