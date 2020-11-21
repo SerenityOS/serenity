@@ -273,6 +273,7 @@ class MouseEventWrapper;
 class NodeWrapper;
 class PerformanceWrapper;
 class ScriptExecutionContext;
+class SubmitEventWrapper;
 class SVGElementWrapper;
 class SVGGeometryElementWrapper;
 class SVGGraphicsElementWrapper;

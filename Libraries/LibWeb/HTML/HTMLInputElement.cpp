@@ -55,8 +55,7 @@ void HTMLInputElement::did_click_button(Badge<LayoutButton>)
 
     if (type().equals_ignoring_case("submit")) {
         if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
-            // FIXME: Remove this const_cast once we have a non-const first_ancestor_of_type.
-            form->submit(this);
+            form->submit_form(this);
         }
         return;
     }

@@ -41,7 +41,13 @@ public:
     String action() const { return attribute(HTML::AttributeNames::action); }
     String method() const { return attribute(HTML::AttributeNames::method); }
 
-    void submit(RefPtr<HTMLInputElement> submitter);
+    void submit_form(RefPtr<HTMLElement> submitter, bool from_submit_binding = false);
+
+    // NOTE: This is for the JS bindings. Use submit_form instead.
+    void submit();
+
+private:
+    bool m_firing_submission_events { false };
 };
 
 }

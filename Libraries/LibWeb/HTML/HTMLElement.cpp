@@ -26,6 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Layout/LayoutText.h>
 
@@ -129,6 +130,12 @@ String HTMLElement::inner_text()
     recurse(*layout_node());
 
     return builder.to_string();
+}
+
+bool HTMLElement::cannot_navigate() const
+{
+    // FIXME: Return true if element's node document is not fully active
+    return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
 }

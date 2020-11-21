@@ -25,8 +25,10 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/SubmitEvent.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/URLEncoder.h>
@@ -42,8 +44,11 @@ HTMLFormElement::~HTMLFormElement()
 {
 }
 
-void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
+void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submit_binding)
 {
+    if (cannot_navigate())
+        return;
+
     if (action().is_null()) {
         dbg() << "Unsupported form action ''";
         return;
@@ -58,6 +63,35 @@ void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
 
     if (effective_method != "get" && effective_method != "post") {
         effective_method = "get";
+    }
+
+    if (!from_submit_binding) {
+        if (m_firing_submission_events)
+            return;
+
+        m_firing_submission_events = true;
+
+        // FIXME: If the submitter element's no-validate state is false...
+
+        RefPtr<HTMLElement> submitter_button;
+
+        if (submitter != this)
+            submitter_button = submitter;
+
+        auto submit_event = SubmitEvent::create(EventNames::submit, submitter_button);
+        submit_event->set_bubbles(true);
+        submit_event->set_cancelable(true);
+        bool continue_ = dispatch_event(submit_event);
+
+        m_firing_submission_events = false;
+
+        if (!continue_)
+            return;
+
+        // This is checked again because arbitrary JS may have run when handling submit,
+        // which may have changed the result.
+        if (cannot_navigate())
+            return;
     }
 
     URL url(document().complete_url(action()));
@@ -107,6 +141,11 @@ void HTMLFormElement::submit(RefPtr<HTMLInputElement> submitter)
 
     if (auto* page = document().page())
         page->load(request);
+}
+
+void HTMLFormElement::submit()
+{
+    submit_form(this, true);
 }
 
 }
