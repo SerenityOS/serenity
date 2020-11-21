@@ -825,7 +825,13 @@ const UnveiledPath* VFS::find_matching_unveiled_path(StringView path)
     for (auto& unveiled_path : Process::current()->unveiled_paths()) {
         if (path == unveiled_path.path)
             return &unveiled_path;
-        if (path.starts_with(unveiled_path.path) && path.length() > unveiled_path.path.length() && path[unveiled_path.path.length()] == '/')
+        if (!path.starts_with(unveiled_path.path))
+            continue;
+        // /foo/ and /foo/bar
+        if (unveiled_path.path.ends_with('/'))
+            return &unveiled_path;
+        // /foo and /foo/bar
+        if (path.length() > unveiled_path.path.length() && path[unveiled_path.path.length()] == '/')
             return &unveiled_path;
     }
     return nullptr;
@@ -863,10 +869,18 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
         return KSuccess;
     }
     if (options & O_RDONLY) {
-        if (!(unveiled_path->permissions & UnveiledPath::Access::Read)) {
-            dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
-            dump_backtrace();
-            return KResult(-EACCES);
+        if (options & O_DIRECTORY) {
+            if (!(unveiled_path->permissions & (UnveiledPath::Access::Read | UnveiledPath::Access::Browse))) {
+                dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'r' or 'b' permissions.";
+                dump_backtrace();
+                return KResult(-EACCES);
+            }
+        } else {
+            if (!(unveiled_path->permissions & UnveiledPath::Access::Read)) {
+                dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
+                dump_backtrace();
+                return KResult(-EACCES);
+            }
         }
     }
     if (options & O_WRONLY) {

@@ -644,6 +644,8 @@ static Optional<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
             permissions_builder.append('x');
         if (unveiled_path.permissions & UnveiledPath::Access::CreateOrRemove)
             permissions_builder.append('c');
+        if (unveiled_path.permissions & UnveiledPath::Access::Browse)
+            permissions_builder.append('b');
         obj.add("permissions", permissions_builder.to_string());
     }
     array.finish();

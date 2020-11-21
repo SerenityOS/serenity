@@ -49,7 +49,7 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
     if (!params.path.characters || !params.permissions.characters)
         return -EINVAL;
 
-    if (params.permissions.length > 4)
+    if (params.permissions.length > 5)
         return -EINVAL;
 
     auto path = get_syscall_path_argument(params.path);
@@ -78,6 +78,9 @@ int Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
             break;
         case 'c':
             new_permissions |= UnveiledPath::Access::CreateOrRemove;
+            break;
+        case 'b':
+            new_permissions |= UnveiledPath::Access::Browse;
             break;
         default:
             return -EINVAL;
