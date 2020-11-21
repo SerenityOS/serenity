@@ -28,6 +28,7 @@ include the following characters:
 * `w`: May write to a file at this path
 * `x`: May execute a program image at this path
 * `c`: May create or remove a file at this path
+* `b`: May browse directories at this path
 
 A single `unveil()` call may specify multiple permission characters at once.
 Subsequent `unveil()` calls may take away permissions from the ones allowed
@@ -77,6 +78,9 @@ unveil("/etc/WindowServer/WindowServer.ini", "rwc");
 
 // Allow the process to execute Calendar:
 unveil("/bin/Calendar", "x");
+
+// Allow the process to browse files from /usr/share:
+unveil("/usr/share", "b");
 
 // Disallow any further veil manipulation:
 unveil(nullptr, nullptr);
