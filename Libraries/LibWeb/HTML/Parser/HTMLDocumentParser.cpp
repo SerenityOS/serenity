@@ -35,6 +35,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
@@ -180,7 +181,7 @@ void HTMLDocumentParser::run(const URL& url)
         script.execute_script();
     }
 
-    auto content_loaded_event = DOM::Event::create("DOMContentLoaded");
+    auto content_loaded_event = DOM::Event::create(HTML::EventNames::DOMContentLoaded);
     content_loaded_event->set_bubbles(true);
     m_document->dispatch_event(content_loaded_event);
 
@@ -192,7 +193,7 @@ void HTMLDocumentParser::run(const URL& url)
     // FIXME: Spin the event loop until there is nothing that delays the load event in the Document.
 
     m_document->set_ready_state("complete");
-    m_document->window().dispatch_event(DOM::Event::create("load"));
+    m_document->window().dispatch_event(DOM::Event::create(HTML::EventNames::load));
 
     m_document->set_ready_for_post_load_tasks(true);
     m_document->completely_finish_loading();

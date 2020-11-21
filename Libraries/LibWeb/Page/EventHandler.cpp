@@ -36,6 +36,7 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Frame.h>
+#include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web {
@@ -103,7 +104,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
             return false;
         }
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
-        node->dispatch_event(UIEvents::MouseEvent::create("mouseup", offset.x(), offset.y()));
+        node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mouseup, offset.x(), offset.y()));
         handled_event = true;
     }
 
@@ -151,7 +152,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         page->set_focused_frame({}, m_frame);
 
     auto offset = compute_mouse_event_offset(position, *result.layout_node);
-    node->dispatch_event(UIEvents::MouseEvent::create("mousedown", offset.x(), offset.y()));
+    node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousedown, offset.x(), offset.y()));
     if (!layout_root())
         return true;
 
@@ -253,7 +254,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             if (hovered_link_element)
                 is_hovering_link = true;
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
-            node->dispatch_event(UIEvents::MouseEvent::create("mousemove", offset.x(), offset.y()));
+            node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousemove, offset.x(), offset.y()));
             if (!layout_root())
                 return true;
         }

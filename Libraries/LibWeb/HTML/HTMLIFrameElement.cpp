@@ -31,6 +31,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
@@ -106,7 +107,7 @@ const DOM::Document* HTMLIFrameElement::content_document() const
 
 void HTMLIFrameElement::content_frame_did_load(Badge<FrameLoader>)
 {
-    dispatch_event(DOM::Event::create("load"));
+    dispatch_event(DOM::Event::create(EventNames::load));
 }
 
 }
