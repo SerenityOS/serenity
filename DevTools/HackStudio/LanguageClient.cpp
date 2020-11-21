@@ -36,9 +36,9 @@ void ServerConnection::handle(const Messages::LanguageClient::AutoCompleteSugges
         m_language_client->provide_autocomplete_suggestions(message.suggestions());
 }
 
-void LanguageClient::open_file(const String& path)
+void LanguageClient::open_file(const String& path, int fd)
 {
-    m_connection.post_message(Messages::LanguageServer::FileOpened(path));
+    m_connection.post_message(Messages::LanguageServer::FileOpened(path, fd));
 }
 
 void LanguageClient::set_file_content(const String& path, const String& content)

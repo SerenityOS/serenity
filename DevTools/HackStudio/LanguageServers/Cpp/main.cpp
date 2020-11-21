@@ -36,15 +36,19 @@
 int main(int, char**)
 {
     Core::EventLoop event_loop;
-    if (pledge("stdio unix rpath", nullptr) < 0) {
+    if (pledge("stdio unix recvfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto socket = Core::LocalSocket::take_over_accepted_socket_from_system_server();
     IPC::new_client_connection<LanguageServers::Cpp::ClientConnection>(socket.release_nonnull(), 1);
-    if (pledge("stdio rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
         return 1;
     }
     return event_loop.exec();

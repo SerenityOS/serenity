@@ -58,7 +58,6 @@ private:
 
     RefPtr<GUI::TextDocument> document_for(const String& file_name);
 
-    LexicalPath m_project_root;
     HashMap<String, NonnullRefPtr<GUI::TextDocument>> m_open_files;
 };
 

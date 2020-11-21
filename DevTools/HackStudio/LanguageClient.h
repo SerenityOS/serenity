@@ -43,9 +43,8 @@ class ServerConnection
     : public IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>
     , public LanguageClientEndpoint {
 public:
-    ServerConnection(const StringView& socket, const StringView& project_path)
+    ServerConnection(const StringView& socket)
         : IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, socket)
-        , m_project_path(project_path)
     {
     }
 
@@ -61,7 +60,7 @@ public:
 
     virtual void handshake() override
     {
-        auto response = send_sync<Messages::LanguageServer::Greet>(m_project_path.string());
+        auto response = send_sync<Messages::LanguageServer::Greet>();
         set_my_client_id(response->client_id());
     }
 
@@ -73,7 +72,7 @@ public:
         if (auto instance = s_instances_for_projects.get(key); instance.has_value())
             return *instance.value();
 
-        auto connection = ConcreteType::construct(project_path);
+        auto connection = ConcreteType::construct();
         connection->handshake();
         s_instances_for_projects.set(key, *connection);
         return *connection;
@@ -83,7 +82,6 @@ protected:
     virtual void handle(const Messages::LanguageClient::AutoCompleteSuggestions&) override;
 
     LanguageClient* m_language_client { nullptr };
-    LexicalPath m_project_path;
 };
 
 class LanguageClient {
@@ -100,7 +98,7 @@ public:
         m_connection.detach();
     }
 
-    virtual void open_file(const String& path);
+    virtual void open_file(const String& path, int fd);
     virtual void set_file_content(const String& path, const String& content);
     virtual void insert_text(const String& path, const String& text, size_t line, size_t column);
     virtual void remove_text(const String& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column);
