@@ -318,9 +318,9 @@ public:
     static i32 static_message_id() { return (int)MessageID::@message.name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.name@"; }
 
-    static OwnPtr<@message.name@> decode(InputMemoryStream& stream, size_t& size_in_bytes)
+    static OwnPtr<@message.name@> decode(InputMemoryStream& stream)
     {
-        IPC::Decoder decoder {stream};
+        IPC::Decoder decoder { stream };
 )~~~");
 
             for (auto& parameter : parameters) {
@@ -359,7 +359,6 @@ public:
             message_generator.set("message.constructor_call_parameters", builder.build());
 
             message_generator.append(R"~~~(
-        size_in_bytes = stream.offset();
         return make<@message.name@>(@message.constructor_call_parameters@);
     }
 )~~~");
@@ -437,7 +436,7 @@ public:
     static String static_name() { return "@endpoint.name@"; }
     virtual String name() const override { return "@endpoint.name@"; }
 
-    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer, size_t& size_in_bytes)
+    static OwnPtr<IPC::Message> decode_message(const ByteBuffer& buffer)
     {
         InputMemoryStream stream { buffer };
         i32 message_endpoint_magic = 0;
@@ -489,7 +488,7 @@ public:
 
                 message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.name@:
-            message = Messages::@endpoint.name@::@message.name@::decode(stream, size_in_bytes);
+            message = Messages::@endpoint.name@::@message.name@::decode(stream);
             break;
 )~~~");
             };
