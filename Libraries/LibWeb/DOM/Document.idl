@@ -8,8 +8,12 @@ interface Document : Node {
     readonly attribute DOMString contentType;
 
     Element? getElementById(DOMString id);
-    Element? querySelector(DOMString selectors);
     ArrayFromVector getElementsByTagName(DOMString tagName);
+
+    readonly attribute Element? firstElementChild;
+    readonly attribute Element? lastElementChild;
+
+    Element? querySelector(DOMString selectors);
     ArrayFromVector querySelectorAll(DOMString selectors);
 
     Element createElement(DOMString tagName);
