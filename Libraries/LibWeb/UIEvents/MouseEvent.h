@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/TypeCasts.h>
 #include <LibWeb/UIEvents/UIEvent.h>
 
 namespace Web::UIEvents {
@@ -39,24 +40,25 @@ public:
         return adopt(*new MouseEvent(event_name, offset_x, offset_y));
     }
 
-    virtual ~MouseEvent() override { }
+    virtual ~MouseEvent() override;
 
     i32 offset_x() const { return m_offset_x; }
     i32 offset_y() const { return m_offset_y; }
 
 protected:
-    MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y)
-        : UIEvent(event_name)
-        , m_offset_x(offset_x)
-        , m_offset_y(offset_y)
-    {
-    }
+    MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y);
 
 private:
     virtual bool is_mouse_event() const override { return true; }
+
+    void set_event_characteristics();
 
     i32 m_offset_x { 0 };
     i32 m_offset_y { 0 };
 };
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::UIEvents::MouseEvent)
+static bool is_type(const Web::DOM::Event& event) { return event.is_mouse_event(); }
+AK_END_TYPE_TRAITS()

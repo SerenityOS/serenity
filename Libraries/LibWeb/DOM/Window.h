@@ -32,6 +32,7 @@
 #include <AK/RefPtr.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventTarget.h>
 
 namespace Web::DOM {
@@ -48,7 +49,7 @@ public:
 
     virtual void ref_event_target() override { RefCounted::ref(); }
     virtual void unref_event_target() override { RefCounted::unref(); }
-    virtual void dispatch_event(NonnullRefPtr<Event>) override;
+    virtual bool dispatch_event(NonnullRefPtr<Event>) override;
     virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) override;
 
     const Document& document() const { return m_document; }
@@ -77,6 +78,11 @@ public:
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
 
+    virtual bool is_window() const override { return true; }
+
+    const Event* current_event() const { return m_current_event; }
+    void set_current_event(Event* event) { m_current_event = event; }
+
 private:
     explicit Window(Document&);
 
@@ -87,6 +93,11 @@ private:
     HashMap<int, NonnullRefPtr<Timer>> m_timers;
 
     NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
+    RefPtr<Event> m_current_event;
 };
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::DOM::Window)
+static bool is_type(const Web::DOM::EventTarget& event_target) { return event_target.is_window(); }
+AK_END_TYPE_TRAITS()

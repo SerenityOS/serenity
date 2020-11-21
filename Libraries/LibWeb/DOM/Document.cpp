@@ -621,4 +621,18 @@ const Page* Document::page() const
     return m_frame ? m_frame->page() : nullptr;
 }
 
+EventTarget* Document::get_parent(const Event& event)
+{
+    if (event.type() == "load")
+        return nullptr;
+
+    return &window();
+}
+
+void Document::completely_finish_loading()
+{
+    // FIXME: This needs to handle iframes.
+    dispatch_event(DOM::Event::create("load"));
+}
+
 }

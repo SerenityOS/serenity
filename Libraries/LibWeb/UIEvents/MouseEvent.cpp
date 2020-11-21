@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,49 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <LibWeb/UIEvents/MouseEvent.h>
 
-#include <AK/RefCounted.h>
-#include <LibJS/Heap/Handle.h>
-#include <LibWeb/Bindings/Wrappable.h>
+namespace Web::UIEvents {
 
-namespace Web::DOM {
+MouseEvent::MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y)
+    : UIEvent(event_name)
+    , m_offset_x(offset_x)
+    , m_offset_y(offset_y)
+{
+    set_event_characteristics();
+}
 
-class EventListener
-    : public RefCounted<EventListener>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::EventListenerWrapper;
+MouseEvent::~MouseEvent()
+{
+}
 
-    explicit EventListener(JS::Handle<JS::Function> function)
-        : m_function(move(function))
-    {
+void MouseEvent::set_event_characteristics()
+{
+    if (type() == "mousedown" || type() == "mousemove" || type() == "mouseout" || type() == "mouseover" || type() == "mouseup" || type() == "click") {
+        set_bubbles(true);
+        set_cancelable(true);
+        set_composed(true);
     }
-
-    JS::Function& function();
-
-    const FlyString& type() const { return m_type; }
-    void set_type(const FlyString& type) { m_type = type; }
-
-    bool capture() const { return m_capture; }
-    void set_capture(bool capture) { m_capture = capture; }
-
-    bool passive() const { return m_passive; }
-    void set_passive(bool passive) { m_capture = passive; }
-
-    bool once() const { return m_once; }
-    void set_once(bool once) { m_once = once; }
-
-    bool removed() const { return m_removed; }
-    void set_removed(bool removed) { m_removed = removed; }
-
-private:
-    FlyString m_type;
-    JS::Handle<JS::Function> m_function;
-    bool m_capture { false };
-    bool m_passive { false };
-    bool m_once { false };
-    bool m_removed { false };
-};
+}
 
 }

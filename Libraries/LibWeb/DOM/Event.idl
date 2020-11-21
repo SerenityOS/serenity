@@ -1,5 +1,23 @@
 interface Event {
 
     readonly attribute DOMString type;
+    readonly attribute EventTarget? target;
+    readonly attribute EventTarget? srcTarget;
+    readonly attribute EventTarget? currentTarget;
+
+    readonly attribute unsigned short eventPhase;
+
+    void stopPropagation();
+    attribute boolean cancelBubble;
+    void stopImmediatePropagation();
+
+    readonly attribute boolean bubbles;
+    readonly attribute boolean cancelable;
+    attribute boolean returnValue;
+    void preventDefault();
+    readonly attribute boolean defaultPrevented;
+    readonly attribute boolean composed;
+
+    readonly attribute boolean isTrusted;
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,49 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include <AK/RefCounted.h>
-#include <LibJS/Heap/Handle.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <AK/Assertions.h>
+#include <AK/TypeCasts.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/Node.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 
 namespace Web::DOM {
 
-class EventListener
-    : public RefCounted<EventListener>
-    , public Bindings::Wrappable {
-public:
-    using WrapperType = Bindings::EventListenerWrapper;
+void Event::append_to_path(EventTarget& invocation_target, RefPtr<EventTarget> shadow_adjusted_target, RefPtr<EventTarget> related_target, TouchTargetList& touch_targets, bool slot_in_closed_tree)
+{
+    bool invocation_target_in_shadow_tree = false;
+    bool root_of_closed_tree = false;
 
-    explicit EventListener(JS::Handle<JS::Function> function)
-        : m_function(move(function))
-    {
+    if (is<Node>(invocation_target)) {
+        auto& invocation_target_node = downcast<Node>(invocation_target);
+        if (invocation_target_node.root()->is_shadow_root())
+            invocation_target_in_shadow_tree = true;
+        if (is<ShadowRoot>(invocation_target_node)) {
+            auto& invocation_target_shadow_root = downcast<ShadowRoot>(invocation_target_node);
+            root_of_closed_tree = invocation_target_shadow_root.closed();
+        }
     }
 
-    JS::Function& function();
+    m_path.append({ invocation_target, invocation_target_in_shadow_tree, shadow_adjusted_target, related_target, touch_targets, root_of_closed_tree, slot_in_closed_tree, m_path.size() });
+}
 
-    const FlyString& type() const { return m_type; }
-    void set_type(const FlyString& type) { m_type = type; }
-
-    bool capture() const { return m_capture; }
-    void set_capture(bool capture) { m_capture = capture; }
-
-    bool passive() const { return m_passive; }
-    void set_passive(bool passive) { m_capture = passive; }
-
-    bool once() const { return m_once; }
-    void set_once(bool once) { m_once = once; }
-
-    bool removed() const { return m_removed; }
-    void set_removed(bool removed) { m_removed = removed; }
-
-private:
-    FlyString m_type;
-    JS::Handle<JS::Function> m_function;
-    bool m_capture { false };
-    bool m_passive { false };
-    bool m_once { false };
-    bool m_removed { false };
-};
+void Event::set_cancelled_flag()
+{
+    if (m_cancelable && !m_in_passive_listener)
+        m_cancelled = true;
+}
 
 }
