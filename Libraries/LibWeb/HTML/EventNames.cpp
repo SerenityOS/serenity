@@ -25,30 +25,28 @@
  */
 
 #include <LibWeb/HTML/EventNames.h>
-#include <LibWeb/UIEvents/EventNames.h>
-#include <LibWeb/UIEvents/MouseEvent.h>
 
-namespace Web::UIEvents {
+namespace Web::HTML::EventNames {
 
-MouseEvent::MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y)
-    : UIEvent(event_name)
-    , m_offset_x(offset_x)
-    , m_offset_y(offset_y)
+#define __ENUMERATE_HTML_EVENT(name) FlyString name;
+ENUMERATE_HTML_EVENTS
+#undef __ENUMERATE_HTML_EVENT
+
+    // clang-format off
+// FIXME: clang-format gets confused here. Why?
+[[gnu::constructor]] static void initialize()
+// clang-format on
 {
-    set_event_characteristics();
-}
+    static bool s_initialized = false;
+    if (s_initialized)
+        return;
 
-MouseEvent::~MouseEvent()
-{
-}
+#define __ENUMERATE_HTML_EVENT(name) \
+    name = #name;
+    ENUMERATE_HTML_EVENTS
+#undef __ENUMERATE_HTML_EVENT
 
-void MouseEvent::set_event_characteristics()
-{
-    if (type().is_one_of(EventNames::mousedown, EventNames::mousemove, EventNames::mouseout, EventNames::mouseover, EventNames::mouseup, HTML::EventNames::click)) {
-        set_bubbles(true);
-        set_cancelable(true);
-        set_composed(true);
-    }
+    s_initialized = true;
 }
 
 }

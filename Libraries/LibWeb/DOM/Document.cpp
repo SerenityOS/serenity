@@ -46,6 +46,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
@@ -608,7 +609,7 @@ void Document::set_focused_element(Element* element)
 void Document::set_ready_state(const String& ready_state)
 {
     m_ready_state = ready_state;
-    dispatch_event(Event::create("readystatechange"));
+    dispatch_event(Event::create(HTML::EventNames::readystatechange));
 }
 
 Page* Document::page()
@@ -623,7 +624,7 @@ const Page* Document::page() const
 
 EventTarget* Document::get_parent(const Event& event)
 {
-    if (event.type() == "load")
+    if (event.type() == HTML::EventNames::load)
         return nullptr;
 
     return &window();
@@ -632,7 +633,7 @@ EventTarget* Document::get_parent(const Event& event)
 void Document::completely_finish_loading()
 {
     // FIXME: This needs to handle iframes.
-    dispatch_event(DOM::Event::create("load"));
+    dispatch_event(DOM::Event::create(HTML::EventNames::load));
 }
 
 }

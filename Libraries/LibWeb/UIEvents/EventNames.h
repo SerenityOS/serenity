@@ -24,31 +24,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/HTML/EventNames.h>
-#include <LibWeb/UIEvents/EventNames.h>
-#include <LibWeb/UIEvents/MouseEvent.h>
+#pragma once
 
-namespace Web::UIEvents {
+#include <AK/FlyString.h>
 
-MouseEvent::MouseEvent(const FlyString& event_name, i32 offset_x, i32 offset_y)
-    : UIEvent(event_name)
-    , m_offset_x(offset_x)
-    , m_offset_y(offset_y)
-{
-    set_event_characteristics();
-}
+namespace Web::UIEvents::EventNames {
 
-MouseEvent::~MouseEvent()
-{
-}
+// FIXME: This is not all of the events
 
-void MouseEvent::set_event_characteristics()
-{
-    if (type().is_one_of(EventNames::mousedown, EventNames::mousemove, EventNames::mouseout, EventNames::mouseover, EventNames::mouseup, HTML::EventNames::click)) {
-        set_bubbles(true);
-        set_cancelable(true);
-        set_composed(true);
-    }
-}
+#define ENUMERATE_UI_EVENTS          \
+    __ENUMERATE_UI_EVENT(click)      \
+    __ENUMERATE_UI_EVENT(mousedown)  \
+    __ENUMERATE_UI_EVENT(mouseenter) \
+    __ENUMERATE_UI_EVENT(mouseleave) \
+    __ENUMERATE_UI_EVENT(mousemove)  \
+    __ENUMERATE_UI_EVENT(mouseout)   \
+    __ENUMERATE_UI_EVENT(mouseover)  \
+    __ENUMERATE_UI_EVENT(mouseup)
+
+#define __ENUMERATE_UI_EVENT(name) extern FlyString name;
+ENUMERATE_UI_EVENTS
+#undef __ENUMERATE_UI_EVENT
 
 }
