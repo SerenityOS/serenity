@@ -38,6 +38,9 @@ public:
     template<typename F>
     void for_each_child(F);
 
+    RefPtr<Element> first_element_child();
+    RefPtr<Element> last_element_child();
+
     RefPtr<Element> query_selector(const StringView&);
     NonnullRefPtrVector<Element> query_selector_all(const StringView&);
 
