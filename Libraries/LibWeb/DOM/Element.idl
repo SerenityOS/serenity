@@ -5,6 +5,9 @@ interface Element : Node {
     DOMString? getAttribute(DOMString qualifiedName);
     void setAttribute(DOMString qualifiedName, DOMString value);
 
+    readonly attribute Element? firstElementChild;
+    readonly attribute Element? lastElementChild;
+
     Element? querySelector(DOMString selectors);
     ArrayFromVector querySelectorAll(DOMString selectors);
 

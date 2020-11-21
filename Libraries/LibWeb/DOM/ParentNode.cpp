@@ -70,4 +70,14 @@ NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& se
     return elements;
 }
 
+RefPtr<Element> ParentNode::first_element_child()
+{
+    return first_child_of_type<Element>();
+}
+
+RefPtr<Element> ParentNode::last_element_child()
+{
+    return last_child_of_type<Element>();
+}
+
 }

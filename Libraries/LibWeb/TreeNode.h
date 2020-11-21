@@ -256,9 +256,25 @@ public:
     }
 
     template<typename U>
+    const U* last_child_of_type() const
+    {
+        return const_cast<TreeNode*>(this)->template last_child_of_type<U>();
+    }
+
+    template<typename U>
     U* first_child_of_type()
     {
         for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (is<U>(*child))
+                return &downcast<U>(*child);
+        }
+        return nullptr;
+    }
+
+    template<typename U>
+    U* last_child_of_type()
+    {
+        for (auto* child = last_child(); child; child = child->previous_sibling()) {
             if (is<U>(*child))
                 return &downcast<U>(*child);
         }
