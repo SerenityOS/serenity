@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,47 +26,40 @@
 
 #pragma once
 
-#include <AK/RefCounted.h>
-#include <LibJS/Heap/Handle.h>
-#include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/DocumentFragment.h>
 
 namespace Web::DOM {
 
-class EventListener
-    : public RefCounted<EventListener>
-    , public Bindings::Wrappable {
+class ShadowRoot final : public DocumentFragment {
 public:
-    using WrapperType = Bindings::EventListenerWrapper;
+    ShadowRoot(Document&, Element&);
 
-    explicit EventListener(JS::Handle<JS::Function> function)
-        : m_function(move(function))
-    {
-    }
+    bool closed() const { return m_closed; }
 
-    JS::Function& function();
+    bool delegates_focus() const { return m_delegates_focus; }
+    void set_delegates_focus(bool delegates_focus) { m_delegates_focus = delegates_focus; }
 
-    const FlyString& type() const { return m_type; }
-    void set_type(const FlyString& type) { m_type = type; }
+    bool available_to_element_internals() const { return m_available_to_element_internals; }
+    void set_available_to_element_internals(bool available_to_element_internals) { m_available_to_element_internals = available_to_element_internals; }
 
-    bool capture() const { return m_capture; }
-    void set_capture(bool capture) { m_capture = capture; }
+    // ^Node
+    virtual bool is_shadow_root() const override { return true; }
 
-    bool passive() const { return m_passive; }
-    void set_passive(bool passive) { m_capture = passive; }
+    // ^EventTarget
+    virtual EventTarget* get_parent(const Event&) override;
 
-    bool once() const { return m_once; }
-    void set_once(bool once) { m_once = once; }
-
-    bool removed() const { return m_removed; }
-    void set_removed(bool removed) { m_removed = removed; }
+    // NOTE: This is intended for the JS bindings.
+    String mode() const { return m_closed ? "closed" : "open"; }
 
 private:
-    FlyString m_type;
-    JS::Handle<JS::Function> m_function;
-    bool m_capture { false };
-    bool m_passive { false };
-    bool m_once { false };
-    bool m_removed { false };
+    // NOTE: The specification doesn't seem to specify a default value for closed. Assuming false for now.
+    bool m_closed { false };
+    bool m_delegates_focus { false };
+    bool m_available_to_element_internals { false };
 };
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::DOM::ShadowRoot)
+static bool is_type(const Web::DOM::Node& node) { return node.is_shadow_root(); }
+AK_END_TYPE_TRAITS()

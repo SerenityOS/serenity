@@ -38,6 +38,7 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/Layout/LayoutBlock.h>
 #include <LibWeb/Layout/LayoutDocument.h>
@@ -124,12 +125,9 @@ bool Node::is_link() const
     return enclosing_link_element();
 }
 
-void Node::dispatch_event(NonnullRefPtr<Event> event)
+bool Node::dispatch_event(NonnullRefPtr<Event> event)
 {
-    EventDispatcher::dispatch(*this, event);
-    // FIXME: This is a hack. We should follow the real rules of event bubbling.
-    if (parent())
-        parent()->dispatch_event(move(event));
+    return EventDispatcher::dispatch(*this, event);
 }
 
 String Node::child_text_content() const
@@ -145,17 +143,25 @@ String Node::child_text_content() const
     return builder.build();
 }
 
-const Node* Node::root() const
+Node* Node::root()
 {
-    const Node* root = this;
+    Node* root = this;
     while (root->parent())
         root = root->parent();
     return root;
 }
 
+Node* Node::shadow_including_root()
+{
+    auto node_root = root();
+    if (is<ShadowRoot>(node_root))
+        return downcast<ShadowRoot>(node_root)->host()->shadow_including_root();
+    return node_root;
+}
+
 bool Node::is_connected() const
 {
-    return root() && root()->is_document();
+    return shadow_including_root() && shadow_including_root()->is_document();
 }
 
 Element* Node::parent_element()
@@ -236,6 +242,12 @@ void Node::set_layout_node(Badge<LayoutNode>, LayoutNode* layout_node) const
         m_layout_node = layout_node->make_weak_ptr();
     else
         m_layout_node = nullptr;
+}
+
+EventTarget* Node::get_parent(const Event&)
+{
+    // FIXME: returns the node’s assigned slot, if node is assigned, and node’s parent otherwise.
+    return parent();
 }
 
 }

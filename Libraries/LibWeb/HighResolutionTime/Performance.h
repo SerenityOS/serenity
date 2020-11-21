@@ -49,7 +49,7 @@ public:
     virtual void ref_event_target() override;
     virtual void unref_event_target() override;
 
-    virtual void dispatch_event(NonnullRefPtr<DOM::Event>) override;
+    virtual bool dispatch_event(NonnullRefPtr<DOM::Event>) override;
     virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) override;
 
 private:

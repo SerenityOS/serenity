@@ -35,6 +35,7 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
+#include <LibWeb/Bindings/EventWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
@@ -43,6 +44,7 @@
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestPrototype.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Origin.h>
 
@@ -74,6 +76,9 @@ void WindowObject::initialize()
     define_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
     define_native_function("atob", atob, 1);
     define_native_function("btoa", btoa, 1);
+
+    // Legacy
+    define_native_property("event", event_getter, nullptr, JS::Attribute::Enumerable);
 
     define_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -335,6 +340,16 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)
     if (!impl)
         return {};
     return wrap(global_object, impl->performance());
+}
+
+JS_DEFINE_NATIVE_GETTER(WindowObject::event_getter)
+{
+    auto* impl = impl_from(vm, global_object);
+    if (!impl)
+        return {};
+    if (!impl->current_event())
+        return JS::js_undefined();
+    return wrap(global_object, const_cast<DOM::Event&>(*impl->current_event()));
 }
 
 }

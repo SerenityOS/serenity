@@ -60,7 +60,7 @@ public:
     // ^EventTarget
     virtual void ref_event_target() final { ref(); }
     virtual void unref_event_target() final { unref(); }
-    virtual void dispatch_event(NonnullRefPtr<Event>) final;
+    virtual bool dispatch_event(NonnullRefPtr<Event>) final;
     virtual Bindings::EventTargetWrapper* create_wrapper(JS::GlobalObject&) override;
 
     virtual ~Node();
@@ -76,7 +76,11 @@ public:
     bool is_character_data() const { return type() == NodeType::TEXT_NODE || type() == NodeType::COMMENT_NODE; }
     bool is_document_fragment() const { return type() == NodeType::DOCUMENT_FRAGMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
+    bool is_slottable() const { return is_element() || is_text(); }
     virtual bool is_svg_element() const { return false; }
+    virtual bool is_shadow_root() const { return false; }
+
+    virtual bool is_node() const final { return true; }
 
     virtual bool is_editable() const;
 
@@ -102,7 +106,18 @@ public:
     virtual bool is_html_element() const { return false; }
     virtual bool is_unknown_html_element() const { return false; }
 
-    const Node* root() const;
+    Node* root();
+    const Node* root() const
+    {
+        return const_cast<Node*>(this)->root();
+    }
+
+    Node* shadow_including_root();
+    const Node* shadow_including_root() const
+    {
+        return const_cast<Node*>(this)->shadow_including_root();
+    }
+
     bool is_connected() const;
 
     Node* parent_node() { return parent(); }
@@ -134,6 +149,8 @@ public:
 
     void set_document(Badge<Document>, Document&);
 
+    virtual EventTarget* get_parent(const Event&) override;
+
 protected:
     Node(Document&, NodeType);
 
@@ -144,3 +161,7 @@ protected:
 };
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::DOM::Node)
+static bool is_type(const Web::DOM::EventTarget& event_target) { return event_target.is_node(); }
+AK_END_TYPE_TRAITS()

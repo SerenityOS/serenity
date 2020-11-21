@@ -35,12 +35,14 @@ set(SOURCES
     DOM/DOMImplementation.cpp
     DOM/Element.cpp
     DOM/ElementFactory.cpp
+    DOM/Event.cpp
     DOM/EventDispatcher.cpp
     DOM/EventListener.cpp
     DOM/EventTarget.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
     DOM/Position.cpp
+    DOM/ShadowRoot.cpp
     DOM/TagNames.cpp
     DOM/Text.cpp
     DOM/Text.idl
@@ -185,6 +187,7 @@ set(SOURCES
     SVG/SVGSVGElement.cpp
     SVG/TagNames.cpp
     StylePropertiesModel.cpp
+    UIEvents/MouseEvent.cpp
     URLEncoder.cpp
     WebContentClient.cpp
 )
@@ -237,6 +240,7 @@ libweb_js_wrapper(DOM/DOMImplementation)
 libweb_js_wrapper(DOM/Element)
 libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
+libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Node)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)

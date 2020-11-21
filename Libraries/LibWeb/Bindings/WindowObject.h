@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Forward.h>
@@ -58,6 +59,8 @@ private:
 
     JS_DECLARE_NATIVE_GETTER(performance_getter);
 
+    JS_DECLARE_NATIVE_GETTER(event_getter);
+
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
     JS_DECLARE_NATIVE_FUNCTION(set_interval);
@@ -77,3 +80,7 @@ private:
 
 }
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::Bindings::WindowObject)
+static bool is_type(const JS::GlobalObject& global) { return String(global.class_name()) == "WindowObject"; }
+AK_END_TYPE_TRAITS()

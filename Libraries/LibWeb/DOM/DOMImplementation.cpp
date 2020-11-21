@@ -44,6 +44,7 @@ const NonnullRefPtr<Document> DOMImplementation::create_htmldocument(const Strin
     auto html_document = Document::create();
 
     html_document->set_content_type("text/html");
+    html_document->set_ready_for_post_load_tasks(true);
 
     auto doctype = adopt(*new DocumentType(html_document));
     doctype->set_name("html");
