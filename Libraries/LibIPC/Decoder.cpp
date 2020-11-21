@@ -28,6 +28,9 @@
 #include <AK/URL.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
+#include <LibIPC/File.h>
+#include <string.h>
+#include <sys/socket.h>
 
 namespace IPC {
 
@@ -161,6 +164,23 @@ bool Decoder::decode(Dictionary& dictionary)
     }
 
     return true;
+}
+
+bool Decoder::decode(File& file)
+{
+#ifdef __serenity__
+    int fd = recvfd(m_sockfd);
+    if (fd < 0) {
+        dbgln("recvfd: {}", strerror(errno));
+        return false;
+    }
+    file = File(fd);
+    return true;
+#else
+    (void)file;
+    warnln("fd passing is not supported on this platform, sorry :(");
+    return false;
+#endif
 }
 
 }

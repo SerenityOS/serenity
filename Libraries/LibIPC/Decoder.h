@@ -44,8 +44,9 @@ inline bool decode(Decoder&, T&)
 
 class Decoder {
 public:
-    explicit Decoder(InputMemoryStream& stream)
+    Decoder(InputMemoryStream& stream, int sockfd)
         : m_stream(stream)
+        , m_sockfd(sockfd)
     {
     }
 
@@ -63,6 +64,7 @@ public:
     bool decode(ByteBuffer&);
     bool decode(URL&);
     bool decode(Dictionary&);
+    bool decode(File&);
     template<typename K, typename V>
     bool decode(HashMap<K, V>& hashmap)
     {
@@ -124,6 +126,7 @@ public:
 
 private:
     InputMemoryStream& m_stream;
+    int m_sockfd { -1 };
 };
 
 }
