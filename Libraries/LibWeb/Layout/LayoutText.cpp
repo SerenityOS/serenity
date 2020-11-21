@@ -231,7 +231,7 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
         bool is_break { false };
         bool is_all_whitespace { false };
     };
-    Vector<Chunk> chunks;
+    Vector<Chunk, 128> chunks;
 
     for_each_chunk(
         [&](const Utf8View& view, int start, int length, bool is_break, bool is_all_whitespace) {
