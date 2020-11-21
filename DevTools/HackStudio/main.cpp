@@ -59,14 +59,14 @@ static void open_default_project_file(const String& project_path);
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec unix fattr thread unix", nullptr) < 0) {
+    if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec unix fattr thread unix sendfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec fattr thread unix", nullptr) < 0) {
+    if (pledge("stdio tty accept rpath cpath wpath shared_buffer proc exec fattr thread unix sendfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
