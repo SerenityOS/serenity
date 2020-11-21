@@ -447,6 +447,16 @@ public:
         m_size += other_size;
     }
 
+    void prepend(const T* values, size_t count)
+    {
+        if (!count)
+            return;
+        grow_capacity(size() + count);
+        TypedTransfer<T>::move(slot(count), slot(0), m_size);
+        TypedTransfer<T>::copy(slot(0), values, count);
+        m_size += count;
+    }
+
     void append(const T* values, size_t count)
     {
         if (!count)
