@@ -29,6 +29,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
@@ -58,7 +59,7 @@ void HTMLScriptElement::execute_script()
     document().run_javascript(m_script_source);
 
     if (has_attribute(HTML::AttributeNames::src))
-        dispatch_event(DOM::Event::create("load"));
+        dispatch_event(DOM::Event::create(EventNames::load));
 }
 
 void HTMLScriptElement::prepare_script(Badge<HTMLDocumentParser>)

@@ -28,6 +28,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/InProcessWebView.h>
@@ -49,7 +50,8 @@ HTMLInputElement::~HTMLInputElement()
 
 void HTMLInputElement::did_click_button(Badge<LayoutButton>)
 {
-    dispatch_event(DOM::Event::create("click"));
+    // FIXME: This should be a PointerEvent.
+    dispatch_event(DOM::Event::create(EventNames::click));
 
     if (type().equals_ignoring_case("submit")) {
         if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
@@ -104,7 +106,7 @@ void HTMLInputElement::set_checked(bool checked)
     if (layout_node())
         layout_node()->set_needs_display();
 
-    dispatch_event(DOM::Event::create("change"));
+    dispatch_event(DOM::Event::create(EventNames::change));
 }
 
 bool HTMLInputElement::enabled() const

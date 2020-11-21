@@ -30,6 +30,7 @@
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/LayoutImage.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -41,13 +42,13 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, const QualifiedName&
 {
     m_image_loader.on_load = [this] {
         this->document().update_layout();
-        dispatch_event(DOM::Event::create("load"));
+        dispatch_event(DOM::Event::create(EventNames::load));
     };
 
     m_image_loader.on_fail = [this] {
         dbg() << "HTMLImageElement: Resource did fail: " << this->src();
         this->document().update_layout();
-        dispatch_event(DOM::Event::create("error"));
+        dispatch_event(DOM::Event::create(EventNames::error));
     };
 
     m_image_loader.on_animate = [this] {

@@ -54,6 +54,7 @@ set(SOURCES
     FontCache.cpp
     HTML/AttributeNames.cpp
     HTML/CanvasRenderingContext2D.cpp
+    HTML/EventNames.cpp
     HTML/HTMLAnchorElement.cpp
     HTML/HTMLAreaElement.cpp
     HTML/HTMLAudioElement.cpp
@@ -187,6 +188,7 @@ set(SOURCES
     SVG/SVGSVGElement.cpp
     SVG/TagNames.cpp
     StylePropertiesModel.cpp
+    UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
     URLEncoder.cpp
     WebContentClient.cpp

@@ -41,6 +41,7 @@
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::DOM {
@@ -199,7 +200,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
 
         event->append_to_path(*target, target_override, related_target, touch_targets, false);
 
-        bool is_activation_event = is<UIEvents::MouseEvent>(*event) && event->type() == "click";
+        bool is_activation_event = is<UIEvents::MouseEvent>(*event) && event->type() == HTML::EventNames::click;
 
         if (is_activation_event && target->activation_behaviour)
             activation_target = target;
