@@ -38,14 +38,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath thread unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio shared_buffer accept rpath unix", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath thread unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
 
-    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
