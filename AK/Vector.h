@@ -337,6 +337,28 @@ public:
     }
 
     template<typename Callback>
+    Optional<T> first_matching(Callback callback)
+    {
+        for (size_t i = 0; i < size(); ++i) {
+            if (callback(at(i))) {
+                return at(i);
+            }
+        }
+        return {};
+    }
+
+    template<typename Callback>
+    Optional<T> last_matching(Callback callback)
+    {
+        for (ssize_t i = size() - 1; i >= 0; --i) {
+            if (callback(at(i))) {
+                return at(i);
+            }
+        }
+        return {};
+    }
+
+    template<typename Callback>
     bool remove_first_matching(Callback callback)
     {
         for (size_t i = 0; i < size(); ++i) {
