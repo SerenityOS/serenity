@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,41 +26,29 @@
 
 #pragma once
 
-#include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/Event.h>
 
 namespace Web::HTML {
 
-class HTMLElement : public DOM::Element {
+class SubmitEvent final : public DOM::Event {
 public:
-    using WrapperType = Bindings::HTMLElementWrapper;
+    using WrapperType = Bindings::SubmitEventWrapper;
 
-    HTMLElement(DOM::Document&, const QualifiedName& qualified_name);
-    virtual ~HTMLElement() override;
+    static NonnullRefPtr<SubmitEvent> create(const FlyString& event_name, RefPtr<HTMLElement> submitter)
+    {
+        return adopt(*new SubmitEvent(event_name, submitter));
+    }
 
-    String title() const { return attribute(HTML::AttributeNames::title); }
-
-    virtual bool is_editable() const final;
-    String content_editable() const;
-    void set_content_editable(const String&);
-
-    String inner_text();
-    void set_inner_text(StringView);
-
-    bool cannot_navigate() const;
+    const RefPtr<HTMLElement> submitter() const { return m_submitter; }
 
 private:
-    virtual bool is_html_element() const final { return true; }
+    SubmitEvent(const FlyString& event_name, RefPtr<HTMLElement> submitter)
+        : DOM::Event(event_name)
+        , m_submitter(submitter)
+    {
+    }
 
-    enum class ContentEditableState {
-        True,
-        False,
-        Inherit,
-    };
-    ContentEditableState content_editable_state() const;
+    RefPtr<HTMLElement> m_submitter;
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::HTML::HTMLElement)
-static bool is_type(const Web::DOM::Node& node) { return node.is_html_element(); }
-AK_END_TYPE_TRAITS()
