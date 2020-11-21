@@ -101,6 +101,7 @@ struct UnveiledPath {
         Write = 2,
         Execute = 4,
         CreateOrRemove = 8,
+        Browse = 16,
     };
 
     String path;
