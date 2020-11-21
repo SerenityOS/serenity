@@ -48,6 +48,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/OutOfProcessWebView.h>
+#include <fcntl.h>
 
 // #define EDITOR_DEBUG
 
@@ -480,8 +481,17 @@ void Editor::set_document(GUI::TextDocument& doc)
         set_syntax_highlighter(nullptr);
     }
 
-    if (m_language_client)
-        m_language_client->open_file(code_document.file_path().string());
+    if (m_language_client) {
+        auto full_file_path = String::formatted("{}/{}", project().root_directory(), code_document.file_path());
+        dbg() << "Opening " << full_file_path;
+        int fd = open(full_file_path.characters(), O_RDONLY | O_NOCTTY);
+        if (fd < 0) {
+            perror("open");
+            return;
+        }
+        m_language_client->open_file(code_document.file_path().string(), fd);
+        close(fd);
+    }
 }
 
 Optional<Editor::AutoCompleteRequestData> Editor::get_autocomplete_request_data()

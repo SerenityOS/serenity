@@ -53,12 +53,8 @@ void ClientConnection::die()
     exit(0);
 }
 
-OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const Messages::LanguageServer::Greet& message)
+OwnPtr<Messages::LanguageServer::GreetResponse> ClientConnection::handle(const Messages::LanguageServer::Greet&)
 {
-    m_project_root = LexicalPath(message.project_root());
-#ifdef DEBUG_SH_LANGUAGE_SERVER
-    dbgln("project_root: {}", m_project_root);
-#endif
     return make<Messages::LanguageServer::GreetResponse>(client_id());
 }
 
@@ -81,16 +77,11 @@ static DefaultDocumentClient s_default_document_client;
 
 void ClientConnection::handle(const Messages::LanguageServer::FileOpened& message)
 {
-    LexicalPath file_path(String::formatted("{}/{}", m_project_root, message.file_name()));
-#ifdef DEBUG_SH_LANGUAGE_SERVER
-    dbgln("FileOpened: {}", file_path);
-#endif
-
-    auto file = Core::File::construct(file_path.string());
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    auto file = Core::File::construct(this);
+    if (!file->open(message.file().fd(), Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
         errno = file->error();
         perror("open");
-        dbgln("Failed to open project file: {}", file_path);
+        dbgln("Failed to open project file");
         return;
     }
     auto content = file->read_all();
