@@ -155,6 +155,7 @@ private:
     int virt$sched_getparam(pid_t, FlatPtr);
     int virt$set_thread_name(pid_t, FlatPtr, size_t);
     pid_t virt$setsid();
+    int virt$watch_file(FlatPtr, size_t);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
 
