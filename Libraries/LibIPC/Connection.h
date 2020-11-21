@@ -77,12 +77,25 @@ public:
 
         auto buffer = message.encode();
         // Prepend the message size.
-        uint32_t message_size = buffer.size();
-        buffer.prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size));
+        uint32_t message_size = buffer.data.size();
+        buffer.data.prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size));
+
+#ifdef __serenity__
+        for (int fd : buffer.fds) {
+            auto rc = sendfd(m_socket->fd(), fd);
+            if (rc < 0) {
+                perror("sendfd");
+                shutdown();
+            }
+        }
+#else
+        if (!buffer.fds.is_empty())
+            warnln("fd passing is not supported on this platform, sorry :(");
+#endif
 
         size_t total_nwritten = 0;
-        while (total_nwritten < buffer.size()) {
-            auto nwritten = write(m_socket->fd(), buffer.data() + total_nwritten, buffer.size() - total_nwritten);
+        while (total_nwritten < buffer.data.size()) {
+            auto nwritten = write(m_socket->fd(), buffer.data.data() + total_nwritten, buffer.data.size() - total_nwritten);
             if (nwritten < 0) {
                 switch (errno) {
                 case EPIPE:
@@ -202,9 +215,9 @@ protected:
                 break;
             index += sizeof(message_size);
             auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
-            if (auto message = LocalEndpoint::decode_message(remaining_bytes)) {
+            if (auto message = LocalEndpoint::decode_message(remaining_bytes, m_socket->fd())) {
                 m_unprocessed_messages.append(message.release_nonnull());
-            } else if (auto message = PeerEndpoint::decode_message(remaining_bytes)) {
+            } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, m_socket->fd())) {
                 m_unprocessed_messages.append(message.release_nonnull());
             } else {
                 dbgln("Failed to parse a message");

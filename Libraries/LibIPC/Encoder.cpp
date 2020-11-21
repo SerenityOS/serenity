@@ -29,6 +29,7 @@
 #include <AK/URL.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/Encoder.h>
+#include <LibIPC/File.h>
 
 namespace IPC {
 
@@ -39,77 +40,77 @@ Encoder& Encoder::operator<<(bool value)
 
 Encoder& Encoder::operator<<(u8 value)
 {
-    m_buffer.append(value);
+    m_buffer.data.append(value);
     return *this;
 }
 
 Encoder& Encoder::operator<<(u16 value)
 {
-    m_buffer.ensure_capacity(m_buffer.size() + 2);
-    m_buffer.unchecked_append((u8)value);
-    m_buffer.unchecked_append((u8)(value >> 8));
+    m_buffer.data.ensure_capacity(m_buffer.data.size() + 2);
+    m_buffer.data.unchecked_append((u8)value);
+    m_buffer.data.unchecked_append((u8)(value >> 8));
     return *this;
 }
 
 Encoder& Encoder::operator<<(u32 value)
 {
-    m_buffer.ensure_capacity(m_buffer.size() + 4);
-    m_buffer.unchecked_append((u8)value);
-    m_buffer.unchecked_append((u8)(value >> 8));
-    m_buffer.unchecked_append((u8)(value >> 16));
-    m_buffer.unchecked_append((u8)(value >> 24));
+    m_buffer.data.ensure_capacity(m_buffer.data.size() + 4);
+    m_buffer.data.unchecked_append((u8)value);
+    m_buffer.data.unchecked_append((u8)(value >> 8));
+    m_buffer.data.unchecked_append((u8)(value >> 16));
+    m_buffer.data.unchecked_append((u8)(value >> 24));
     return *this;
 }
 
 Encoder& Encoder::operator<<(u64 value)
 {
-    m_buffer.ensure_capacity(m_buffer.size() + 8);
-    m_buffer.unchecked_append((u8)value);
-    m_buffer.unchecked_append((u8)(value >> 8));
-    m_buffer.unchecked_append((u8)(value >> 16));
-    m_buffer.unchecked_append((u8)(value >> 24));
-    m_buffer.unchecked_append((u8)(value >> 32));
-    m_buffer.unchecked_append((u8)(value >> 40));
-    m_buffer.unchecked_append((u8)(value >> 48));
-    m_buffer.unchecked_append((u8)(value >> 56));
+    m_buffer.data.ensure_capacity(m_buffer.data.size() + 8);
+    m_buffer.data.unchecked_append((u8)value);
+    m_buffer.data.unchecked_append((u8)(value >> 8));
+    m_buffer.data.unchecked_append((u8)(value >> 16));
+    m_buffer.data.unchecked_append((u8)(value >> 24));
+    m_buffer.data.unchecked_append((u8)(value >> 32));
+    m_buffer.data.unchecked_append((u8)(value >> 40));
+    m_buffer.data.unchecked_append((u8)(value >> 48));
+    m_buffer.data.unchecked_append((u8)(value >> 56));
     return *this;
 }
 
 Encoder& Encoder::operator<<(i8 value)
 {
-    m_buffer.append((u8)value);
+    m_buffer.data.append((u8)value);
     return *this;
 }
 
 Encoder& Encoder::operator<<(i16 value)
 {
-    m_buffer.ensure_capacity(m_buffer.size() + 2);
-    m_buffer.unchecked_append((u8)value);
-    m_buffer.unchecked_append((u8)(value >> 8));
+    m_buffer.data.ensure_capacity(m_buffer.data.size() + 2);
+    m_buffer.data.unchecked_append((u8)value);
+    m_buffer.data.unchecked_append((u8)(value >> 8));
     return *this;
 }
 
 Encoder& Encoder::operator<<(i32 value)
 {
-    m_buffer.ensure_capacity(m_buffer.size() + 4);
-    m_buffer.unchecked_append((u8)value);
-    m_buffer.unchecked_append((u8)(value >> 8));
-    m_buffer.unchecked_append((u8)(value >> 16));
-    m_buffer.unchecked_append((u8)(value >> 24));
+    m_buffer.data.ensure_capacity(m_buffer.data.size() + 4);
+    m_buffer.data.unchecked_append((u8)value);
+    m_buffer.data.unchecked_append((u8)(value >> 8));
+    m_buffer.data.unchecked_append((u8)(value >> 16));
+    m_buffer.data.unchecked_append((u8)(value >> 24));
     return *this;
 }
 
 Encoder& Encoder::operator<<(i64 value)
 {
-    m_buffer.ensure_capacity(m_buffer.size() + 8);
-    m_buffer.unchecked_append((u8)value);
-    m_buffer.unchecked_append((u8)(value >> 8));
-    m_buffer.unchecked_append((u8)(value >> 16));
-    m_buffer.unchecked_append((u8)(value >> 24));
-    m_buffer.unchecked_append((u8)(value >> 32));
-    m_buffer.unchecked_append((u8)(value >> 40));
-    m_buffer.unchecked_append((u8)(value >> 48));
-    m_buffer.unchecked_append((u8)(value >> 56));
+    m_buffer.data.ensure_capacity(m_buffer.data.size() + 8);
+    m_buffer.data.unchecked_append((u8)value);
+    m_buffer.data.unchecked_append((u8)(value >> 8));
+    m_buffer.data.unchecked_append((u8)(value >> 16));
+    m_buffer.data.unchecked_append((u8)(value >> 24));
+    m_buffer.data.unchecked_append((u8)(value >> 32));
+    m_buffer.data.unchecked_append((u8)(value >> 40));
+    m_buffer.data.unchecked_append((u8)(value >> 48));
+    m_buffer.data.unchecked_append((u8)(value >> 56));
     return *this;
 }
 
@@ -130,7 +131,7 @@ Encoder& Encoder::operator<<(const char* value)
 
 Encoder& Encoder::operator<<(const StringView& value)
 {
-    m_buffer.append((const u8*)value.characters_without_null_termination(), value.length());
+    m_buffer.data.append((const u8*)value.characters_without_null_termination(), value.length());
     return *this;
 }
 
@@ -145,7 +146,7 @@ Encoder& Encoder::operator<<(const String& value)
 Encoder& Encoder::operator<<(const ByteBuffer& value)
 {
     *this << static_cast<i32>(value.size());
-    m_buffer.append(value.data(), value.size());
+    m_buffer.data.append(value.data(), value.size());
     return *this;
 }
 
@@ -160,6 +161,12 @@ Encoder& Encoder::operator<<(const Dictionary& dictionary)
     dictionary.for_each_entry([this](auto& key, auto& value) {
         *this << key << value;
     });
+    return *this;
+}
+
+Encoder& Encoder::operator<<(const File& file)
+{
+    m_buffer.fds.append(file.fd());
     return *this;
 }
 
