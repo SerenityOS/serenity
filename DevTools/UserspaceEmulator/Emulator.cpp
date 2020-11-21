@@ -400,6 +400,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$set_thread_name(arg1, arg2, arg3);
     case SC_setsid:
         return virt$setsid();
+    case SC_watch_file:
+        return virt$watch_file(arg1, arg2);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1491,6 +1493,12 @@ int Emulator::virt$set_thread_name(pid_t pid, FlatPtr name_addr, size_t name_len
 pid_t Emulator::virt$setsid()
 {
     return syscall(SC_setsid);
+}
+
+int Emulator::virt$watch_file(FlatPtr user_path_addr, size_t path_length)
+{
+    auto user_path = mmu().copy_buffer_from_vm(user_path_addr, path_length);
+    return syscall(SC_watch_file, user_path.data(), user_path.size());
 }
 
 }
