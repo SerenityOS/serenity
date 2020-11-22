@@ -50,6 +50,7 @@ private:
     JS_DECLARE_NATIVE_GETTER(sticky);
     JS_DECLARE_NATIVE_GETTER(unicode);
 
+    JS_DECLARE_NATIVE_FUNCTION(exec);
     JS_DECLARE_NATIVE_FUNCTION(test);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
 };

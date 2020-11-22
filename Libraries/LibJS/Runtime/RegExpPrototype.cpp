@@ -25,6 +25,7 @@
  */
 
 #include <AK/Function.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
@@ -44,6 +45,7 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.test, test, 1, attr);
+    define_native_function(vm.names.exec, exec, 1, attr);
 
     u8 readable_attr = Attribute::Configurable;
     define_native_property(vm.names.dotAll, dot_all, nullptr, readable_attr);
@@ -168,6 +170,55 @@ RegexResult RegExpPrototype::do_match(const Regex<ECMA262>& re, const StringView
         re.start_offset = 0;
 
     return result;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
+{
+    // FIXME: This should try using dynamic properties for 'lastIndex',
+    //        and internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    auto str = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    StringView str_to_match = str;
+
+    // RegExps without "global" and "sticky" always start at offset 0.
+    if (!regexp_object->regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful))
+        regexp_object->regex().start_offset = 0;
+
+    auto result = do_match(regexp_object->regex(), str_to_match);
+    if (!result.success)
+        return js_null();
+
+    auto& match = result.matches[0];
+
+    // FIXME: Do code point index correction if the Unicode flag is set.
+    auto* array = Array::create(global_object);
+    array->indexed_properties().set_array_like_size(result.n_capture_groups + 1);
+    array->define_property(vm.names.index, Value((i32)match.column));
+    array->define_property(vm.names.input, js_string(vm, str));
+    array->indexed_properties().put(array, 0, js_string(vm, match.view.to_string()));
+
+    for (size_t i = 0; i < result.n_capture_groups; ++i) {
+        auto& capture = result.capture_group_matches[0][i];
+        array->indexed_properties().put(array, i + 1, js_string(vm, capture.view.to_string()));
+    }
+
+    Value groups = js_undefined();
+    if (result.n_named_capture_groups > 0) {
+        auto groups_object = create_empty(global_object);
+        for (auto& entry : result.named_capture_group_matches[0])
+            groups_object->define_property(entry.key, js_string(vm, entry.value.view.to_string()));
+        groups = move(groups_object);
+    }
+
+    array->define_property(vm.names.groups, groups);
+
+    return array;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
