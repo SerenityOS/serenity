@@ -178,11 +178,10 @@ Value Object::get_own_property(const Object& this_object, PropertyName property_
     }
 
     ASSERT(!value_here.is_empty());
-    if (value_here.is_accessor()) {
+    if (value_here.is_accessor())
         return value_here.as_accessor().call_getter(receiver);
-    }
     if (value_here.is_native_property())
-        return call_native_property_getter(const_cast<Object*>(&this_object), value_here);
+        return call_native_property_getter(const_cast<Object*>(&this_object), value_here.as_native_property());
     return value_here;
 }
 
@@ -288,7 +287,7 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
 
     PropertyDescriptor descriptor { attributes, {}, nullptr, nullptr };
     if (value.is_native_property()) {
-        auto result = call_native_property_getter(const_cast<Object*>(this), value);
+        auto result = call_native_property_getter(const_cast<Object*>(this), value.as_native_property());
         descriptor.value = result.value_or(js_undefined());
     } else if (value.is_accessor()) {
         auto& pair = value.as_accessor();
@@ -564,7 +563,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         return true;
 
     if (value_here.is_native_property()) {
-        call_native_property_setter(const_cast<Object*>(&this_object), value_here, value);
+        call_native_property_setter(const_cast<Object*>(&this_object), value_here.as_native_property(), value);
     } else {
         m_storage[metadata.value().offset] = value;
     }
@@ -618,7 +617,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
         return true;
 
     if (value_here.is_native_property()) {
-        call_native_property_setter(const_cast<Object*>(&this_object), value_here, value);
+        call_native_property_setter(const_cast<Object*>(&this_object), value_here.as_native_property(), value);
     } else {
         m_indexed_properties.put(&this_object, property_index, value, attributes, mode == PutOwnPropertyMode::Put);
     }
@@ -732,7 +731,7 @@ bool Object::put_by_index(u32 property_index, Value value)
                 return true;
             }
             if (value_here.value.is_native_property()) {
-                call_native_property_setter(const_cast<Object*>(this), value_here.value, value);
+                call_native_property_setter(const_cast<Object*>(this), value_here.value.as_native_property(), value);
                 return true;
             }
         }
@@ -775,7 +774,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
                 return true;
             }
             if (value_here.is_native_property()) {
-                call_native_property_setter(const_cast<Object*>(this), value_here, value);
+                call_native_property_setter(const_cast<Object*>(this), value_here.as_native_property(), value);
                 return true;
             }
         }
@@ -896,9 +895,8 @@ Value Object::invoke(const StringOrSymbol& property_name, Optional<MarkedValueLi
     return vm.call(property.as_function(), this, move(arguments));
 }
 
-Value Object::call_native_property_getter(Object* this_object, Value property) const
+Value Object::call_native_property_getter(Object* this_object, NativeProperty& property) const
 {
-    ASSERT(property.is_native_property());
     auto& vm = this->vm();
     CallFrame call_frame;
     call_frame.is_strict_mode = vm.in_strict_mode();
@@ -906,14 +904,13 @@ Value Object::call_native_property_getter(Object* this_object, Value property) c
     vm.push_call_frame(call_frame, global_object());
     if (vm.exception())
         return {};
-    auto result = property.as_native_property().get(vm, global_object());
+    auto result = property.get(vm, global_object());
     vm.pop_call_frame();
     return result;
 }
 
-void Object::call_native_property_setter(Object* this_object, Value property, Value value) const
+void Object::call_native_property_setter(Object* this_object, NativeProperty& property, Value value) const
 {
-    ASSERT(property.is_native_property());
     auto& vm = this->vm();
     CallFrame call_frame;
     call_frame.is_strict_mode = vm.in_strict_mode();
@@ -921,7 +918,7 @@ void Object::call_native_property_setter(Object* this_object, Value property, Va
     vm.push_call_frame(call_frame, global_object());
     if (vm.exception())
         return;
-    property.as_native_property().set(vm, global_object(), value);
+    property.set(vm, global_object(), value);
     vm.pop_call_frame();
 }
 
