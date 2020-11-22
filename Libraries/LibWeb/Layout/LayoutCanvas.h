@@ -39,7 +39,7 @@ public:
     virtual void prepare_for_replaced_layout() override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    const HTML::HTMLCanvasElement& node() const { return static_cast<const HTML::HTMLCanvasElement&>(LayoutReplaced::node()); }
+    const HTML::HTMLCanvasElement& dom_node() const { return static_cast<const HTML::HTMLCanvasElement&>(LayoutReplaced::dom_node()); }
 
 private:
     virtual const char* class_name() const override { return "LayoutCanvas"; }

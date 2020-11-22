@@ -39,7 +39,7 @@ public:
     virtual void prepare_for_replaced_layout() override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    const DOM::Element& node() const { return static_cast<const DOM::Element&>(LayoutReplaced::node()); }
+    const DOM::Element& dom_node() const { return static_cast<const DOM::Element&>(LayoutReplaced::dom_node()); }
 
     bool renders_as_alt_text() const;
 

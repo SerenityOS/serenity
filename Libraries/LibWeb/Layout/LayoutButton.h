@@ -39,8 +39,8 @@ public:
     virtual void prepare_for_replaced_layout() override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    const HTML::HTMLInputElement& node() const { return static_cast<const HTML::HTMLInputElement&>(LayoutReplaced::node()); }
-    HTML::HTMLInputElement& node() { return static_cast<HTML::HTMLInputElement&>(LayoutReplaced::node()); }
+    const HTML::HTMLInputElement& dom_node() const { return static_cast<const HTML::HTMLInputElement&>(LayoutReplaced::dom_node()); }
+    HTML::HTMLInputElement& dom_node() { return static_cast<HTML::HTMLInputElement&>(LayoutReplaced::dom_node()); }
 
 private:
     virtual const char* class_name() const override { return "LayoutButton"; }

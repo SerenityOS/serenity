@@ -36,7 +36,7 @@ public:
     LayoutSVGSVG(DOM::Document&, SVG::SVGSVGElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutSVGSVG() override = default;
 
-    SVG::SVGSVGElement& node() { return downcast<SVG::SVGSVGElement>(LayoutSVGGraphics::node()); }
+    SVG::SVGSVGElement& dom_node() { return downcast<SVG::SVGSVGElement>(LayoutSVGGraphics::dom_node()); }
 
     virtual void prepare_for_replaced_layout() override;
 

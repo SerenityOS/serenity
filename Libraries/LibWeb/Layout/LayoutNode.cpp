@@ -37,16 +37,16 @@ namespace Web {
 
 LayoutNode::LayoutNode(DOM::Document& document, DOM::Node* node)
     : m_document(document)
-    , m_node(node)
+    , m_dom_node(node)
 {
-    if (m_node)
-        m_node->set_layout_node({}, this);
+    if (m_dom_node)
+        m_dom_node->set_layout_node({}, this);
 }
 
 LayoutNode::~LayoutNode()
 {
-    if (m_node && m_node->layout_node() == this)
-        m_node->set_layout_node({}, nullptr);
+    if (m_dom_node && m_dom_node->layout_node() == this)
+        m_dom_node->set_layout_node({}, nullptr);
 }
 
 bool LayoutNode::can_contain_boxes_with_position_absolute() const

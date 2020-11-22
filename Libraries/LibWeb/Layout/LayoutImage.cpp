@@ -44,12 +44,12 @@ LayoutImage::~LayoutImage()
 
 int LayoutImage::preferred_width() const
 {
-    return node().attribute(HTML::AttributeNames::width).to_int().value_or(m_image_loader.width());
+    return dom_node().attribute(HTML::AttributeNames::width).to_int().value_or(m_image_loader.width());
 }
 
 int LayoutImage::preferred_height() const
 {
-    return node().attribute(HTML::AttributeNames::height).to_int().value_or(m_image_loader.height());
+    return dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(m_image_loader.height());
 }
 
 void LayoutImage::prepare_for_replaced_layout()
@@ -78,7 +78,7 @@ void LayoutImage::prepare_for_replaced_layout()
     }
 
     if (renders_as_alt_text()) {
-        auto& image_element = downcast<HTML::HTMLImageElement>(node());
+        auto& image_element = downcast<HTML::HTMLImageElement>(dom_node());
         auto& font = Gfx::Font::default_font();
         auto alt = image_element.alt();
         if (alt.is_empty())
@@ -106,7 +106,7 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Foreground) {
         if (renders_as_alt_text()) {
-            auto& image_element = downcast<HTML::HTMLImageElement>(node());
+            auto& image_element = downcast<HTML::HTMLImageElement>(dom_node());
             context.painter().set_font(Gfx::Font::default_font());
             Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
             auto alt = image_element.alt();
@@ -121,7 +121,7 @@ void LayoutImage::paint(PaintContext& context, PaintPhase phase)
 
 bool LayoutImage::renders_as_alt_text() const
 {
-    if (is<HTML::HTMLImageElement>(node()))
+    if (is<HTML::HTMLImageElement>(dom_node()))
         return !m_image_loader.has_image();
     return false;
 }

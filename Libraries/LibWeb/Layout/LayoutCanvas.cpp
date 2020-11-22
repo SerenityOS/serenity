@@ -44,8 +44,8 @@ void LayoutCanvas::prepare_for_replaced_layout()
 {
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
-    set_intrinsic_width(node().width());
-    set_intrinsic_height(node().height());
+    set_intrinsic_width(dom_node().width());
+    set_intrinsic_height(dom_node().height());
 }
 
 void LayoutCanvas::paint(PaintContext& context, PaintPhase phase)
@@ -60,8 +60,8 @@ void LayoutCanvas::paint(PaintContext& context, PaintPhase phase)
         if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
             return;
 
-        if (node().bitmap())
-            context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *node().bitmap(), node().bitmap()->rect());
+        if (dom_node().bitmap())
+            context.painter().draw_scaled_bitmap(enclosing_int_rect(absolute_rect()), *dom_node().bitmap(), dom_node().bitmap()->rect());
     }
 }
 

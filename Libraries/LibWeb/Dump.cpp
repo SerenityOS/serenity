@@ -89,18 +89,18 @@ void dump_tree(const LayoutNode& layout_node)
     FlyString tag_name;
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)";
-    else if (is<DOM::Text>(layout_node.node()))
+    else if (is<DOM::Text>(layout_node.dom_node()))
         tag_name = "#text";
-    else if (is<DOM::Document>(layout_node.node()))
+    else if (is<DOM::Document>(layout_node.dom_node()))
         tag_name = "#document";
-    else if (is<DOM::Element>(layout_node.node()))
-        tag_name = downcast<DOM::Element>(*layout_node.node()).local_name();
+    else if (is<DOM::Element>(layout_node.dom_node()))
+        tag_name = downcast<DOM::Element>(*layout_node.dom_node()).local_name();
     else
         tag_name = "???";
 
     String identifier = "";
-    if (layout_node.node() && is<DOM::Element>(*layout_node.node())) {
-        auto& element = downcast<DOM::Element>(*layout_node.node());
+    if (layout_node.dom_node() && is<DOM::Element>(*layout_node.dom_node())) {
+        auto& element = downcast<DOM::Element>(*layout_node.dom_node());
         StringBuilder builder;
         auto id = element.attribute(HTML::AttributeNames::id);
         if (!id.is_empty()) {

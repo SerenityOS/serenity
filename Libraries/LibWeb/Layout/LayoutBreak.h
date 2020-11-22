@@ -36,7 +36,7 @@ public:
     LayoutBreak(DOM::Document&, HTML::HTMLBRElement&);
     virtual ~LayoutBreak() override;
 
-    const HTML::HTMLBRElement& node() const { return downcast<HTML::HTMLBRElement>(*LayoutNode::node()); }
+    const HTML::HTMLBRElement& dom_node() const { return downcast<HTML::HTMLBRElement>(*LayoutNode::dom_node()); }
 
 private:
     virtual bool is_break() const override { return true; }

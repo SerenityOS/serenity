@@ -35,7 +35,7 @@ public:
     LayoutSVGPath(DOM::Document&, SVG::SVGPathElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutSVGPath() override = default;
 
-    SVG::SVGPathElement& node() { return downcast<SVG::SVGPathElement>(LayoutSVGGraphics::node()); }
+    SVG::SVGPathElement& dom_node() { return downcast<SVG::SVGPathElement>(LayoutSVGGraphics::dom_node()); }
 
     virtual void prepare_for_replaced_layout() override;
     virtual void paint(PaintContext& context, PaintPhase phase) override;

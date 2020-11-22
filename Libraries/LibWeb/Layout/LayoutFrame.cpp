@@ -50,13 +50,13 @@ LayoutFrame::~LayoutFrame()
 
 void LayoutFrame::prepare_for_replaced_layout()
 {
-    ASSERT(node().content_frame());
+    ASSERT(dom_node().content_frame());
 
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     // FIXME: Do proper error checking, etc.
-    set_intrinsic_width(node().attribute(HTML::AttributeNames::width).to_int().value_or(300));
-    set_intrinsic_height(node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
+    set_intrinsic_width(dom_node().attribute(HTML::AttributeNames::width).to_int().value_or(300));
+    set_intrinsic_height(dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
 }
 
 void LayoutFrame::paint(PaintContext& context, PaintPhase phase)
@@ -64,7 +64,7 @@ void LayoutFrame::paint(PaintContext& context, PaintPhase phase)
     LayoutReplaced::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        auto* hosted_document = node().content_document();
+        auto* hosted_document = dom_node().content_document();
         if (!hosted_document)
             return;
         auto* hosted_layout_tree = hosted_document->layout_node();
@@ -77,7 +77,7 @@ void LayoutFrame::paint(PaintContext& context, PaintPhase phase)
         context.painter().add_clip_rect(enclosing_int_rect(absolute_rect()));
         context.painter().translate(absolute_x(), absolute_y());
 
-        context.set_viewport_rect({ {}, node().content_frame()->size() });
+        context.set_viewport_rect({ {}, dom_node().content_frame()->size() });
         const_cast<LayoutDocument*>(hosted_layout_tree)->paint_all_phases(context);
 
         context.set_viewport_rect(old_viewport_rect);
@@ -95,8 +95,8 @@ void LayoutFrame::did_set_rect()
 {
     LayoutReplaced::did_set_rect();
 
-    ASSERT(node().content_frame());
-    node().content_frame()->set_size(size().to_type<int>());
+    ASSERT(dom_node().content_frame());
+    dom_node().content_frame()->set_size(size().to_type<int>());
 }
 
 }

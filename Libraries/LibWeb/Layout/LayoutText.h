@@ -38,7 +38,7 @@ public:
     LayoutText(DOM::Document&, DOM::Text&);
     virtual ~LayoutText() override;
 
-    const DOM::Text& node() const { return static_cast<const DOM::Text&>(*LayoutNode::node()); }
+    const DOM::Text& dom_node() const { return static_cast<const DOM::Text&>(*LayoutNode::dom_node()); }
 
     const String& text_for_style(const CSS::StyleProperties&) const;
     const String& text_for_rendering() const { return m_text_for_rendering; }

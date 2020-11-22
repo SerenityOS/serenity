@@ -208,7 +208,7 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
 
     LayoutNodeWithStyleAndBoxModelMetrics::paint(context, phase);
 
-    if (phase == PaintPhase::Overlay && node() && document().inspected_node() == node()) {
+    if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
         auto content_rect = absolute_rect();
 
         auto margin_box = box_model().margin_box(*this);
@@ -223,7 +223,7 @@ void LayoutBox::paint(PaintContext& context, PaintPhase phase)
         context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
     }
 
-    if (phase == PaintPhase::FocusOutline && node() && node()->is_element() && downcast<DOM::Element>(*node()).is_focused()) {
+    if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && downcast<DOM::Element>(*dom_node()).is_focused()) {
         context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
     }
 }
@@ -256,7 +256,7 @@ void LayoutBox::set_needs_display()
 
 bool LayoutBox::is_body() const
 {
-    return node() && node() == document().body();
+    return dom_node() && dom_node() == document().body();
 }
 
 void LayoutBox::set_offset(const Gfx::FloatPoint& offset)
@@ -315,7 +315,7 @@ bool LayoutBox::establishes_stacking_context() const
 {
     if (!has_style())
         return false;
-    if (node() == document().root())
+    if (dom_node() == document().root())
         return true;
     auto position = style().position();
     auto z_index = style().z_index();

@@ -39,7 +39,7 @@ void LayoutSVGGraphics::before_children_paint(PaintContext& context, LayoutNode:
     if (phase != LayoutNode::PaintPhase::Foreground)
         return;
 
-    auto& graphics_element = downcast<SVG::SVGGraphicsElement>(node());
+    auto& graphics_element = downcast<SVG::SVGGraphicsElement>(dom_node());
 
     if (graphics_element.fill_color().has_value())
         context.svg_context().set_fill_color(graphics_element.fill_color().value());

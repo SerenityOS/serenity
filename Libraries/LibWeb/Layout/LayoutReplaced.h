@@ -36,8 +36,8 @@ public:
     LayoutReplaced(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutReplaced() override;
 
-    const DOM::Element& node() const { return downcast<DOM::Element>(*LayoutNode::node()); }
-    DOM::Element& node() { return downcast<DOM::Element>(*LayoutNode::node()); }
+    const DOM::Element& dom_node() const { return downcast<DOM::Element>(*LayoutNode::dom_node()); }
+    DOM::Element& dom_node() { return downcast<DOM::Element>(*LayoutNode::dom_node()); }
 
     virtual bool is_replaced() const final { return true; }
 
