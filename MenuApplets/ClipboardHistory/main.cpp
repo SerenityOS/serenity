@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
         GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
     };
 
-    auto delete_action = GUI::Action::create("Delete", { Mod_None, Key_Delete }, Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"), [&](const GUI::Action&) {
+    auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action&) {
         model->remove_item(table_view.selection().first().row());
     });
 
