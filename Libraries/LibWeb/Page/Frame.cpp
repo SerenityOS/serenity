@@ -27,10 +27,10 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/LayoutBreak.h>
-#include <LibWeb/Layout/LayoutDocument.h>
-#include <LibWeb/Layout/LayoutText.h>
-#include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Layout/BreakNode.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Layout/WidgetBox.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web {
@@ -137,7 +137,7 @@ void Frame::did_scroll(Badge<InProcessWebView>)
         return;
     if (!m_document->layout_node())
         return;
-    m_document->layout_node()->for_each_in_subtree_of_type<LayoutWidget>([&](auto& layout_widget) {
+    m_document->layout_node()->for_each_in_subtree_of_type<Layout::WidgetBox>([&](auto& layout_widget) {
         layout_widget.update_widget();
         return IterationDecision::Continue;
     });
@@ -165,8 +165,8 @@ void Frame::scroll_to_anchor(const String& fragment)
     auto& layout_node = *element->layout_node();
 
     Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)viewport_rect().width(), (float)viewport_rect().height() } };
-    if (is<LayoutBox>(layout_node)) {
-        auto& layout_box = downcast<LayoutBox>(layout_node);
+    if (is<Layout::Box>(layout_node)) {
+        auto& layout_box = downcast<Layout::Box>(layout_node);
         auto padding_box = layout_box.box_model().padding_box(layout_box);
         float_rect.move_by(-padding_box.left, -padding_box.top);
     }
@@ -227,24 +227,24 @@ String Frame::selected_text() const
     auto selection = layout_root->selection().normalized();
 
     if (selection.start().layout_node == selection.end().layout_node) {
-        if (!is<LayoutText>(*selection.start().layout_node))
+        if (!is<Layout::TextNode>(*selection.start().layout_node))
             return "";
-        return downcast<LayoutText>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node);
+        return downcast<Layout::TextNode>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node);
     }
 
     // Start node
     auto layout_node = selection.start().layout_node;
-    if (is<LayoutText>(*layout_node)) {
-        auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
+    if (is<Layout::TextNode>(*layout_node)) {
+        auto& text = downcast<Layout::TextNode>(*layout_node).text_for_rendering();
         builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
     }
 
     // Middle nodes
     layout_node = layout_node->next_in_pre_order();
     while (layout_node && layout_node != selection.end().layout_node) {
-        if (is<LayoutText>(*layout_node))
-            builder.append(downcast<LayoutText>(*layout_node).text_for_rendering());
-        else if (is<LayoutBreak>(*layout_node) || is<LayoutBlock>(*layout_node))
+        if (is<Layout::TextNode>(*layout_node))
+            builder.append(downcast<Layout::TextNode>(*layout_node).text_for_rendering());
+        else if (is<Layout::BreakNode>(*layout_node) || is<Layout::BlockBox>(*layout_node))
             builder.append('\n');
 
         layout_node = layout_node->next_in_pre_order();
@@ -252,8 +252,8 @@ String Frame::selected_text() const
 
     // End node
     ASSERT(layout_node == selection.end().layout_node);
-    if (is<LayoutText>(*layout_node)) {
-        auto& text = downcast<LayoutText>(*layout_node).text_for_rendering();
+    if (is<Layout::TextNode>(*layout_node)) {
+        auto& text = downcast<Layout::TextNode>(*layout_node).text_for_rendering();
         builder.append(text.substring(0, selection.end().index_in_node));
     }
 

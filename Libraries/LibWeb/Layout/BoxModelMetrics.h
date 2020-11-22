@@ -29,7 +29,7 @@
 #include <LibGfx/Size.h>
 #include <LibWeb/CSS/LengthBox.h>
 
-namespace Web {
+namespace Web::Layout {
 
 struct PixelBox {
     float top;
@@ -45,9 +45,9 @@ public:
     CSS::LengthBox border;
     CSS::LengthBox offset;
 
-    PixelBox margin_box(const LayoutNode&) const;
-    PixelBox padding_box(const LayoutNode&) const;
-    PixelBox border_box(const LayoutNode&) const;
+    PixelBox margin_box(const Node&) const;
+    PixelBox padding_box(const Node&) const;
+    PixelBox border_box(const Node&) const;
 };
 
 }

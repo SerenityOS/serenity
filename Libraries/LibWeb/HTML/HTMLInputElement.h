@@ -37,7 +37,7 @@ public:
     HTMLInputElement(DOM::Document&, const QualifiedName& qualified_name);
     virtual ~HTMLInputElement() override;
 
-    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
     String type() const { return attribute(HTML::AttributeNames::type); }
     String value() const { return attribute(HTML::AttributeNames::value); }
@@ -48,7 +48,7 @@ public:
 
     bool enabled() const;
 
-    void did_click_button(Badge<LayoutButton>);
+    void did_click_button(Badge<Layout::ButtonBox>);
 
 private:
     bool m_checked { false };

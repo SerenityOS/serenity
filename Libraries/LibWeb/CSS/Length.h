@@ -68,7 +68,7 @@ public:
     static Length make_auto() { return Length(0, Type::Auto); }
     static Length make_px(float value) { return Length(value, Type::Px); }
 
-    Length resolved(const Length& fallback_for_undefined, const LayoutNode& layout_node, float reference_for_percent) const
+    Length resolved(const Length& fallback_for_undefined, const Layout::Node& layout_node, float reference_for_percent) const
     {
         if (is_undefined())
             return fallback_for_undefined;
@@ -79,12 +79,12 @@ public:
         return *this;
     }
 
-    Length resolved_or_auto(const LayoutNode& layout_node, float reference_for_percent) const
+    Length resolved_or_auto(const Layout::Node& layout_node, float reference_for_percent) const
     {
         return resolved(make_auto(), layout_node, reference_for_percent);
     }
 
-    Length resolved_or_zero(const LayoutNode& layout_node, float reference_for_percent) const
+    Length resolved_or_zero(const Layout::Node& layout_node, float reference_for_percent) const
     {
         return resolved(make_px(0), layout_node, reference_for_percent);
     }
@@ -117,7 +117,7 @@ public:
     }
 
     float raw_value() const { return m_value; }
-    ALWAYS_INLINE float to_px(const LayoutNode& layout_node) const
+    ALWAYS_INLINE float to_px(const Layout::Node& layout_node) const
     {
         if (is_relative())
             return relative_length_to_px(layout_node);
@@ -155,7 +155,7 @@ public:
     }
 
 private:
-    float relative_length_to_px(const LayoutNode&) const;
+    float relative_length_to_px(const Layout::Node&) const;
 
     const char* unit_name() const;
 

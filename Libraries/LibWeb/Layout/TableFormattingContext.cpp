@@ -26,19 +26,19 @@
 
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/LayoutBlock.h>
-#include <LibWeb/Layout/LayoutBox.h>
-#include <LibWeb/Layout/LayoutTable.h>
-#include <LibWeb/Layout/LayoutTableCell.h>
-#include <LibWeb/Layout/LayoutTableRow.h>
-#include <LibWeb/Layout/LayoutTableRowGroup.h>
+#include <LibWeb/Layout/TableBox.h>
+#include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
+#include <LibWeb/Layout/TableRowBox.h>
+#include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::Layout {
 
-TableFormattingContext::TableFormattingContext(LayoutBox& context_box)
+TableFormattingContext::TableFormattingContext(Box& context_box)
     : BlockFormattingContext(context_box)
 {
 }
@@ -51,19 +51,19 @@ void TableFormattingContext::run(LayoutMode)
 {
     compute_width(context_box());
 
-    context_box().for_each_child_of_type<LayoutTableRowGroup>([&](auto& box) {
+    context_box().for_each_child_of_type<TableRowGroupBox>([&](auto& box) {
         compute_width(box);
         auto column_count = box.column_count();
         Vector<float> column_widths;
         column_widths.resize(column_count);
 
-        box.template for_each_child_of_type<LayoutTableRow>([&](auto& row) {
+        box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             calculate_column_widths(row, column_widths);
         });
 
         float content_height = 0;
 
-        box.template for_each_child_of_type<LayoutTableRow>([&](auto& row) {
+        box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             row.set_offset(0, content_height);
             layout_row(row, column_widths);
             content_height += row.height();
@@ -75,12 +75,12 @@ void TableFormattingContext::run(LayoutMode)
     compute_height(context_box());
 }
 
-void TableFormattingContext::calculate_column_widths(LayoutBox& row, Vector<float>& column_widths)
+void TableFormattingContext::calculate_column_widths(Box& row, Vector<float>& column_widths)
 {
     size_t column_index = 0;
-    auto* table = row.first_ancestor_of_type<LayoutTable>();
+    auto* table = row.first_ancestor_of_type<TableBox>();
     bool use_auto_layout = !table || table->style().width().is_undefined_or_auto();
-    row.for_each_child_of_type<LayoutTableCell>([&](auto& cell) {
+    row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         compute_width(cell);
         if (use_auto_layout) {
             layout_inside(cell, LayoutMode::OnlyRequiredLineBreaks);
@@ -92,15 +92,15 @@ void TableFormattingContext::calculate_column_widths(LayoutBox& row, Vector<floa
     });
 }
 
-void TableFormattingContext::layout_row(LayoutBox& row, Vector<float>& column_widths)
+void TableFormattingContext::layout_row(Box& row, Vector<float>& column_widths)
 {
     size_t column_index = 0;
     float tallest_cell_height = 0;
     float content_width = 0;
-    auto* table = row.first_ancestor_of_type<LayoutTable>();
+    auto* table = row.first_ancestor_of_type<TableBox>();
     bool use_auto_layout = !table || table->style().width().is_undefined_or_auto();
 
-    row.for_each_child_of_type<LayoutTableCell>([&](auto& cell) {
+    row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         cell.set_offset(row.effective_offset().translated(content_width, 0));
 
         // Layout the cell contents a second time, now that we know its final width.

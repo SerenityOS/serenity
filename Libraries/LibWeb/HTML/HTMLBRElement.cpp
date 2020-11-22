@@ -25,7 +25,7 @@
  */
 
 #include <LibWeb/HTML/HTMLBRElement.h>
-#include <LibWeb/Layout/LayoutBreak.h>
+#include <LibWeb/Layout/BreakNode.h>
 
 namespace Web::HTML {
 
@@ -38,9 +38,9 @@ HTMLBRElement::~HTMLBRElement()
 {
 }
 
-RefPtr<LayoutNode> HTMLBRElement::create_layout_node(const CSS::StyleProperties*)
+RefPtr<Layout::Node> HTMLBRElement::create_layout_node(const CSS::StyleProperties*)
 {
-    return adopt(*new LayoutBreak(document(), *this));
+    return adopt(*new Layout::BreakNode(document(), *this));
 }
 
 }

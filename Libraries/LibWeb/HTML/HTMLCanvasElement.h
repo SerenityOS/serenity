@@ -32,8 +32,6 @@
 
 namespace Web::HTML {
 
-class LayoutDocument;
-
 class HTMLCanvasElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLCanvasElementWrapper;
@@ -51,7 +49,7 @@ public:
     unsigned height() const;
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
     RefPtr<Gfx::Bitmap> m_bitmap;
     RefPtr<CanvasRenderingContext2D> m_context;

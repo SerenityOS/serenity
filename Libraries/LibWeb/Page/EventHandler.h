@@ -48,14 +48,14 @@ public:
 
     bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
 
-    void set_mouse_event_tracking_layout_node(LayoutNode*);
+    void set_mouse_event_tracking_layout_node(Layout::Node*);
 
 private:
     bool focus_next_element();
     bool focus_previous_element();
 
-    LayoutDocument* layout_root();
-    const LayoutDocument* layout_root() const;
+    Layout::InitialContainingBlockBox* layout_root();
+    const Layout::InitialContainingBlockBox* layout_root() const;
 
     void dump_selection(const char* event_name) const;
 
@@ -63,7 +63,7 @@ private:
 
     bool m_in_mouse_selection { false };
 
-    WeakPtr<LayoutNode> m_mouse_event_tracking_layout_node;
+    WeakPtr<Layout::Node> m_mouse_event_tracking_layout_node;
 };
 
 }

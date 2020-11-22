@@ -29,7 +29,7 @@
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/Layout/LayoutSVGPath.h>
+#include <LibWeb/Layout/SVGPathBox.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <ctype.h>
 
@@ -430,12 +430,12 @@ SVGPathElement::SVGPathElement(DOM::Document& document, const QualifiedName& qua
 {
 }
 
-RefPtr<LayoutNode> SVGPathElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> SVGPathElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new LayoutSVGPath(document(), *this, move(style)));
+    return adopt(*new Layout::SVGPathBox(document(), *this, move(style)));
 }
 
 void SVGPathElement::parse_attribute(const FlyString& name, const String& value)

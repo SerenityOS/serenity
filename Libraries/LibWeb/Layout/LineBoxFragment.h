@@ -31,13 +31,13 @@
 #include <LibGfx/Rect.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::Layout {
 
 class LineBoxFragment : public Weakable<LineBoxFragment> {
     friend class LineBox;
 
 public:
-    LineBoxFragment(const LayoutNode& layout_node, int start, int length, const Gfx::FloatPoint& offset, const Gfx::FloatSize& size)
+    LineBoxFragment(const Node& layout_node, int start, int length, const Gfx::FloatPoint& offset, const Gfx::FloatSize& size)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -46,7 +46,7 @@ public:
     {
     }
 
-    const LayoutNode& layout_node() const { return m_layout_node; }
+    const Node& layout_node() const { return m_layout_node; }
     int start() const { return m_start; }
     int length() const { return m_length; }
     const Gfx::FloatRect absolute_rect() const;
@@ -72,7 +72,7 @@ public:
     Gfx::FloatRect selection_rect(const Gfx::Font&) const;
 
 private:
-    const LayoutNode& m_layout_node;
+    const Node& m_layout_node;
     int m_start { 0 };
     int m_length { 0 };
     Gfx::FloatPoint m_offset;

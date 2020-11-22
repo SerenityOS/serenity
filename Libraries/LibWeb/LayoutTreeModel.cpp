@@ -29,7 +29,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/TextNode.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -51,7 +51,7 @@ GUI::ModelIndex LayoutTreeModel::index(int row, int column, const GUI::ModelInde
 {
     if (!parent.is_valid())
         return create_index(row, column, m_document->layout_node());
-    auto& parent_node = *static_cast<LayoutNode*>(parent.internal_data());
+    auto& parent_node = *static_cast<Layout::Node*>(parent.internal_data());
     return create_index(row, column, parent_node.child_at_index(row));
 }
 
@@ -59,7 +59,7 @@ GUI::ModelIndex LayoutTreeModel::parent_index(const GUI::ModelIndex& index) cons
 {
     if (!index.is_valid())
         return {};
-    auto& node = *static_cast<LayoutNode*>(index.internal_data());
+    auto& node = *static_cast<Layout::Node*>(index.internal_data());
     if (!node.parent())
         return {};
 
@@ -85,7 +85,7 @@ int LayoutTreeModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return 1;
-    auto& node = *static_cast<LayoutNode*>(index.internal_data());
+    auto& node = *static_cast<Layout::Node*>(index.internal_data());
     return node.child_count();
 }
 
@@ -117,7 +117,7 @@ static String with_whitespace_collapsed(const StringView& string)
 
 GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto& node = *static_cast<LayoutNode*>(index.internal_data());
+    auto& node = *static_cast<Layout::Node*>(index.internal_data());
     if (role == GUI::ModelRole::Icon) {
         if (node.is_root())
             return m_document_icon;
@@ -127,7 +127,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
     }
     if (role == GUI::ModelRole::Display) {
         if (node.is_text())
-            return String::format("LayoutText: %s", with_whitespace_collapsed(downcast<LayoutText>(node).text_for_rendering()).characters());
+            return String::format("TextNode: %s", with_whitespace_collapsed(downcast<Layout::TextNode>(node).text_for_rendering()).characters());
         StringBuilder builder;
         builder.append(node.class_name());
         builder.append(' ');

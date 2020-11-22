@@ -28,12 +28,12 @@
 
 #include <AK/RefPtr.h>
 
-namespace Web {
+namespace Web::Layout {
 
-class LayoutNode;
+class Node;
 
 struct LayoutPosition {
-    RefPtr<LayoutNode> layout_node;
+    RefPtr<Node> layout_node;
     int index_in_node { 0 };
 };
 

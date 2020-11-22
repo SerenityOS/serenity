@@ -27,15 +27,15 @@
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/LayoutBlock.h>
-#include <LibWeb/Layout/LayoutBox.h>
-#include <LibWeb/Layout/LayoutInline.h>
-#include <LibWeb/Layout/LayoutReplaced.h>
+#include <LibWeb/Layout/InlineNode.h>
+#include <LibWeb/Layout/ReplacedBox.h>
 
 namespace Web::Layout {
 
-InlineFormattingContext::InlineFormattingContext(LayoutBox& containing_block)
+InlineFormattingContext::InlineFormattingContext(Box& containing_block)
     : FormattingContext(containing_block)
 {
 }
@@ -46,7 +46,7 @@ InlineFormattingContext::~InlineFormattingContext()
 
 void InlineFormattingContext::run(LayoutMode layout_mode)
 {
-    auto& containing_block = downcast<LayoutBlock>(context_box());
+    auto& containing_block = downcast<BlockBox>(context_box());
 
     ASSERT(containing_block.children_are_inline());
     containing_block.line_boxes().clear();
@@ -129,7 +129,7 @@ void InlineFormattingContext::run(LayoutMode layout_mode)
             }
 
             if (fragment.layout_node().is_box())
-                dimension_box_on_line(const_cast<LayoutBox&>(downcast<LayoutBox>(fragment.layout_node())), layout_mode);
+                dimension_box_on_line(const_cast<Box&>(downcast<Box>(fragment.layout_node())), layout_mode);
 
             float final_line_box_width = 0;
             for (auto& fragment : line_box.fragments())
@@ -149,19 +149,19 @@ void InlineFormattingContext::run(LayoutMode layout_mode)
     containing_block.set_height(content_height);
 }
 
-void InlineFormattingContext::dimension_box_on_line(LayoutBox& box, LayoutMode layout_mode)
+void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_mode)
 {
-    auto& containing_block = downcast<LayoutBlock>(context_box());
+    auto& containing_block = downcast<BlockBox>(context_box());
 
     if (box.is_replaced()) {
-        auto& replaced = const_cast<LayoutReplaced&>(downcast<LayoutReplaced>(box));
+        auto& replaced = const_cast<ReplacedBox&>(downcast<ReplacedBox>(box));
         replaced.set_width(replaced.calculate_width());
         replaced.set_height(replaced.calculate_height());
         return;
     }
 
     if (box.is_inline_block()) {
-        auto& inline_block = const_cast<LayoutBlock&>(downcast<LayoutBlock>(box));
+        auto& inline_block = const_cast<BlockBox&>(downcast<BlockBox>(box));
 
         if (inline_block.style().width().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);

@@ -26,13 +26,13 @@
 
 #include <AK/Utf8View.h>
 #include <LibGUI/Painter.h>
-#include <LibWeb/Layout/LayoutDocument.h>
-#include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
+#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <ctype.h>
 
-namespace Web {
+namespace Web::Layout {
 
 void LineBoxFragment::paint(PaintContext& context)
 {
@@ -41,9 +41,8 @@ void LineBoxFragment::paint(PaintContext& context)
             return;
     }
 
-    if (is<LayoutText>(layout_node())) {
-        downcast<LayoutText>(layout_node()).paint_fragment(context, *this);
-    }
+    if (is<TextNode>(layout_node()))
+        downcast<TextNode>(layout_node()).paint_fragment(context, *this);
 }
 
 bool LineBoxFragment::ends_in_whitespace() const
@@ -61,9 +60,9 @@ bool LineBoxFragment::is_justifiable_whitespace() const
 
 StringView LineBoxFragment::text() const
 {
-    if (!is<LayoutText>(layout_node()))
+    if (!is<TextNode>(layout_node()))
         return {};
-    return downcast<LayoutText>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
+    return downcast<TextNode>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
 }
 
 const Gfx::FloatRect LineBoxFragment::absolute_rect() const
@@ -78,7 +77,7 @@ int LineBoxFragment::text_index_at(float x) const
 {
     if (!layout_node().is_text())
         return 0;
-    auto& layout_text = downcast<LayoutText>(layout_node());
+    auto& layout_text = downcast<TextNode>(layout_node());
     auto& font = layout_text.specified_style().font();
     Utf8View view(text());
 
@@ -100,10 +99,10 @@ int LineBoxFragment::text_index_at(float x) const
 
 Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 {
-    if (layout_node().selection_state() == LayoutNode::SelectionState::None)
+    if (layout_node().selection_state() == Node::SelectionState::None)
         return {};
 
-    if (layout_node().selection_state() == LayoutNode::SelectionState::Full)
+    if (layout_node().selection_state() == Node::SelectionState::Full)
         return absolute_rect();
 
     auto selection = layout_node().root().selection().normalized();
@@ -116,7 +115,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
     const auto end_index = m_start + m_length;
     auto text = this->text();
 
-    if (layout_node().selection_state() == LayoutNode::SelectionState::StartAndEnd) {
+    if (layout_node().selection_state() == Node::SelectionState::StartAndEnd) {
         // we are in the start/end node (both the same)
         if (start_index > selection.end().index_in_node)
             return {};
@@ -137,7 +136,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 
         return rect;
     }
-    if (layout_node().selection_state() == LayoutNode::SelectionState::Start) {
+    if (layout_node().selection_state() == Node::SelectionState::Start) {
         // we are in the start node
         if (end_index < selection.start().index_in_node)
             return {};
@@ -153,7 +152,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
 
         return rect;
     }
-    if (layout_node().selection_state() == LayoutNode::SelectionState::End) {
+    if (layout_node().selection_state() == Node::SelectionState::End) {
         // we are in the end node
         if (start_index > selection.end().index_in_node)
             return {};

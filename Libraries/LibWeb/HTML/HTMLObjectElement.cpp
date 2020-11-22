@@ -30,7 +30,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLObjectElement.h>
-#include <LibWeb/Layout/LayoutImage.h>
+#include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web::HTML {
@@ -61,7 +61,7 @@ void HTMLObjectElement::parse_attribute(const FlyString& name, const String& val
         m_image_loader.load(document().complete_url(value));
 }
 
-RefPtr<LayoutNode> HTMLObjectElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> HTMLObjectElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     if (m_should_show_fallback_content)
         return HTMLElement::create_layout_node(parent_style);
@@ -70,7 +70,7 @@ RefPtr<LayoutNode> HTMLObjectElement::create_layout_node(const CSS::StylePropert
     if (style->display() == CSS::Display::None)
         return nullptr;
     if (m_image_loader.has_image())
-        return adopt(*new LayoutImage(document(), *this, move(style), m_image_loader));
+        return adopt(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
     return nullptr;
 }
 

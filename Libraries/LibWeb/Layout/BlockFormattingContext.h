@@ -33,7 +33,7 @@ namespace Web::Layout {
 
 class BlockFormattingContext : public FormattingContext {
 public:
-    explicit BlockFormattingContext(LayoutBox& containing_block);
+    explicit BlockFormattingContext(Box& containing_block);
     ~BlockFormattingContext();
 
     virtual void run(LayoutMode) override;
@@ -41,21 +41,21 @@ public:
     bool is_initial() const;
 
 protected:
-    void compute_width(LayoutBox&);
-    void compute_height(LayoutBox&);
+    void compute_width(Box&);
+    void compute_height(Box&);
 
 private:
-    void compute_width_for_absolutely_positioned_block(LayoutBox&);
+    void compute_width_for_absolutely_positioned_block(Box&);
 
     void layout_initial_containing_block(LayoutMode);
     void layout_block_level_children(LayoutMode);
     void layout_inline_children(LayoutMode);
     void layout_absolutely_positioned_descendants();
 
-    void place_block_level_replaced_element_in_normal_flow(LayoutBox&);
-    void place_block_level_non_replaced_element_in_normal_flow(LayoutBox&);
+    void place_block_level_replaced_element_in_normal_flow(Box&);
+    void place_block_level_non_replaced_element_in_normal_flow(Box&);
 
-    void layout_absolutely_positioned_descendant(LayoutBox&);
+    void layout_absolutely_positioned_descendant(Box&);
 };
 
 }

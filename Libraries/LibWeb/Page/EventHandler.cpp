@@ -33,14 +33,14 @@
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web {
 
-static Gfx::IntPoint compute_mouse_event_offset(const Gfx::IntPoint& position, const LayoutNode& layout_node)
+static Gfx::IntPoint compute_mouse_event_offset(const Gfx::IntPoint& position, const Layout::Node& layout_node)
 {
     auto top_left_of_layout_node = layout_node.box_type_agnostic_position();
     return {
@@ -58,14 +58,14 @@ EventHandler::~EventHandler()
 {
 }
 
-const LayoutDocument* EventHandler::layout_root() const
+const Layout::InitialContainingBlockBox* EventHandler::layout_root() const
 {
     if (!m_frame.document())
         return nullptr;
     return m_frame.document()->layout_node();
 }
 
-LayoutDocument* EventHandler::layout_root()
+Layout::InitialContainingBlockBox* EventHandler::layout_root()
 {
     if (!m_frame.document())
         return nullptr;
@@ -84,15 +84,15 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 
     bool handled_event = false;
 
-    auto result = layout_root()->hit_test(position, HitTestType::Exact);
+    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
 
     if (result.layout_node && result.layout_node->wants_mouse_events()) {
         result.layout_node->handle_mouseup({}, position, button, modifiers);
 
-        // Things may have changed as a consequence of LayoutNode::handle_mouseup(). Hit test again.
+        // Things may have changed as a consequence of Layout::Node::handle_mouseup(). Hit test again.
         if (!layout_root())
             return true;
-        result = layout_root()->hit_test(position, HitTestType::Exact);
+        result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
     }
 
     if (result.layout_node && result.layout_node->dom_node()) {
@@ -126,7 +126,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
     NonnullRefPtr document = *m_frame.document();
 
-    auto result = layout_root()->hit_test(position, HitTestType::Exact);
+    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
     if (!result.layout_node)
         return false;
 
@@ -193,7 +193,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         }
     } else {
         if (button == GUI::MouseButton::Left) {
-            auto result = layout_root()->hit_test(position, HitTestType::TextCursor);
+            auto result = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (result.layout_node && result.layout_node->dom_node()) {
                 m_frame.set_cursor_position(DOM::Position(*node, result.index_in_node));
                 layout_root()->set_selection({ { result.layout_node, result.index_in_node }, {} });
@@ -223,7 +223,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
     bool is_hovering_text = false;
-    auto result = layout_root()->hit_test(position, HitTestType::Exact);
+    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
 
@@ -258,7 +258,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 return true;
         }
         if (m_in_mouse_selection) {
-            auto hit = layout_root()->hit_test(position, HitTestType::TextCursor);
+            auto hit = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
             if (hit.layout_node && hit.layout_node->dom_node()) {
                 layout_root()->set_selection_end({ hit.layout_node, hit.index_in_node });
             }
@@ -368,7 +368,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     return false;
 }
 
-void EventHandler::set_mouse_event_tracking_layout_node(LayoutNode* layout_node)
+void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)
 {
     if (layout_node)
         m_mouse_event_tracking_layout_node = layout_node->make_weak_ptr();

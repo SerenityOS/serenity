@@ -27,26 +27,24 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/Node.h>
 
-namespace Web {
-
-class LayoutBox;
+namespace Web::Layout {
 
 class StackingContext {
 public:
-    StackingContext(LayoutBox&, StackingContext* parent);
+    StackingContext(Box&, StackingContext* parent);
 
     StackingContext* parent() { return m_parent; }
     const StackingContext* parent() const { return m_parent; }
 
-    void paint(PaintContext&, LayoutNode::PaintPhase);
+    void paint(PaintContext&, Layout::Node::PaintPhase);
     HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const;
 
     void dump(int indent = 0) const;
 
 private:
-    LayoutBox& m_box;
+    Box& m_box;
     StackingContext* const m_parent { nullptr };
     Vector<StackingContext*> m_children;
 };

@@ -37,9 +37,9 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
-#include <LibWeb/Layout/LayoutBlock.h>
-#include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TextNode.h>
 #include <stdio.h>
 
 namespace Web {
@@ -80,7 +80,7 @@ void dump_tree(const DOM::Node& node)
     --indent;
 }
 
-void dump_tree(const LayoutNode& layout_node)
+void dump_tree(const Layout::Node& layout_node)
 {
     static size_t indent = 0;
     for (size_t i = 0; i < indent; ++i)
@@ -117,7 +117,7 @@ void dump_tree(const LayoutNode& layout_node)
     if (!layout_node.is_box()) {
         dbgprintf("%s {\033[33m%s\033[0m%s}\n", layout_node.class_name(), tag_name.characters(), identifier.characters());
     } else {
-        auto& layout_box = downcast<LayoutBox>(layout_node);
+        auto& layout_box = downcast<Layout::Box>(layout_node);
         dbgprintf("%s {\033[34m%s\033[0m%s} at (%g,%g) size %gx%g",
             layout_box.class_name(),
             tag_name.characters(),
@@ -150,8 +150,8 @@ void dump_tree(const LayoutNode& layout_node)
         dbgprintf("\n");
     }
 
-    if (layout_node.is_block() && static_cast<const LayoutBlock&>(layout_node).children_are_inline()) {
-        auto& block = static_cast<const LayoutBlock&>(layout_node);
+    if (layout_node.is_block() && static_cast<const Layout::BlockBox&>(layout_node).children_are_inline()) {
+        auto& block = static_cast<const Layout::BlockBox&>(layout_node);
         for (size_t i = 0; i < indent; ++i)
             dbgprintf("    ");
         dbgprintf("  Line boxes (%d):\n", block.line_boxes().size());
@@ -174,7 +174,7 @@ void dump_tree(const LayoutNode& layout_node)
                 if (fragment.layout_node().is_text()) {
                     for (size_t i = 0; i < indent; ++i)
                         dbgprintf("    ");
-                    auto& layout_text = static_cast<const LayoutText&>(fragment.layout_node());
+                    auto& layout_text = static_cast<const Layout::TextNode&>(fragment.layout_node());
                     auto fragment_text = layout_text.text_for_rendering().substring(fragment.start(), fragment.length());
                     dbgprintf("        text: \"%s\"\n", fragment_text.characters());
                 }

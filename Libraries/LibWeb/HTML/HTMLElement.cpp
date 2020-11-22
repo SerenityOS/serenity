@@ -27,7 +27,7 @@
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLElement.h>
-#include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/TextNode.h>
 
 namespace Web::HTML {
 
@@ -117,10 +117,10 @@ String HTMLElement::inner_text()
     if (!layout_node())
         return text_content();
 
-    Function<void(const LayoutNode&)> recurse = [&](auto& node) {
+    Function<void(const Layout::Node&)> recurse = [&](auto& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             if (child->is_text())
-                builder.append(downcast<LayoutText>(*child).text_for_rendering());
+                builder.append(downcast<Layout::TextNode>(*child).text_for_rendering());
             if (child->is_break())
                 builder.append('\n');
             recurse(*child);

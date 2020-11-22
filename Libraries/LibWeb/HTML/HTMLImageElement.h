@@ -53,7 +53,7 @@ private:
 
     void animate();
 
-    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
     ImageLoader m_image_loader;
 };

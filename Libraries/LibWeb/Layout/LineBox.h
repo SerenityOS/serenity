@@ -30,7 +30,7 @@
 #include <AK/Vector.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 
-namespace Web {
+namespace Web::Layout {
 
 class LineBox {
 public:
@@ -38,7 +38,7 @@ public:
 
     float width() const { return m_width; }
 
-    void add_fragment(const LayoutNode& layout_node, int start, int length, int width, int height);
+    void add_fragment(const Node& layout_node, int start, int length, int width, int height);
 
     const NonnullOwnPtrVector<LineBoxFragment>& fragments() const { return m_fragments; }
     NonnullOwnPtrVector<LineBoxFragment>& fragments() { return m_fragments; }
@@ -48,8 +48,8 @@ public:
     bool ends_in_whitespace() const;
 
 private:
-    friend class LayoutBlock;
-    friend class Layout::InlineFormattingContext;
+    friend class BlockBox;
+    friend class InlineFormattingContext;
     NonnullOwnPtrVector<LineBoxFragment> m_fragments;
     float m_width { 0 };
 };

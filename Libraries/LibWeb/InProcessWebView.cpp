@@ -46,10 +46,10 @@
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/LayoutBreak.h>
-#include <LibWeb/Layout/LayoutDocument.h>
-#include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/BreakNode.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Frame.h>
@@ -89,21 +89,21 @@ void InProcessWebView::select_all()
     if (!layout_root)
         return;
 
-    const LayoutNode* first_layout_node = layout_root;
+    const Layout::Node* first_layout_node = layout_root;
 
     for (;;) {
         auto* next = first_layout_node->next_in_pre_order();
         if (!next)
             break;
         first_layout_node = next;
-        if (is<LayoutText>(*first_layout_node))
+        if (is<Layout::TextNode>(*first_layout_node))
             break;
     }
 
-    const LayoutNode* last_layout_node = first_layout_node;
+    const Layout::Node* last_layout_node = first_layout_node;
 
-    for (const LayoutNode* layout_node = first_layout_node; layout_node; layout_node = layout_node->next_in_pre_order()) {
-        if (is<LayoutText>(*layout_node))
+    for (const Layout::Node* layout_node = first_layout_node; layout_node; layout_node = layout_node->next_in_pre_order()) {
+        if (is<Layout::TextNode>(*layout_node))
             last_layout_node = layout_node;
     }
 
@@ -111,8 +111,8 @@ void InProcessWebView::select_all()
     ASSERT(last_layout_node);
 
     int last_layout_node_index_in_node = 0;
-    if (is<LayoutText>(*last_layout_node))
-        last_layout_node_index_in_node = downcast<LayoutText>(*last_layout_node).text_for_rendering().length() - 1;
+    if (is<Layout::TextNode>(*last_layout_node))
+        last_layout_node_index_in_node = downcast<Layout::TextNode>(*last_layout_node).text_for_rendering().length() - 1;
 
     layout_root->set_selection({ { first_layout_node, 0 }, { last_layout_node, last_layout_node_index_in_node } });
     update();
@@ -369,16 +369,16 @@ bool InProcessWebView::load(const URL& url)
     return page().main_frame().loader().load(url, FrameLoader::Type::Navigation);
 }
 
-const LayoutDocument* InProcessWebView::layout_root() const
+const Layout::InitialContainingBlockBox* InProcessWebView::layout_root() const
 {
     return document() ? document()->layout_node() : nullptr;
 }
 
-LayoutDocument* InProcessWebView::layout_root()
+Layout::InitialContainingBlockBox* InProcessWebView::layout_root()
 {
     if (!document())
         return nullptr;
-    return const_cast<LayoutDocument*>(document()->layout_node());
+    return const_cast<Layout::InitialContainingBlockBox*>(document()->layout_node());
 }
 
 void InProcessWebView::page_did_request_scroll_into_view(const Gfx::IntRect& rect)

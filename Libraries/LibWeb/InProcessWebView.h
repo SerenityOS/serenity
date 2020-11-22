@@ -51,8 +51,8 @@ public:
 
     void set_document(DOM::Document*);
 
-    const LayoutDocument* layout_root() const;
-    LayoutDocument* layout_root();
+    const Layout::InitialContainingBlockBox* layout_root() const;
+    Layout::InitialContainingBlockBox* layout_root();
 
     void reload();
     bool load(const URL&);

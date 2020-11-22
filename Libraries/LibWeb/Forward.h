@@ -26,10 +26,6 @@
 
 #pragma once
 
-namespace Web {
-enum class LayoutMode;
-}
-
 namespace Web::CSS {
 class Selector;
 class StyleProperties;
@@ -151,9 +147,18 @@ class SVGSVGElement;
 }
 
 namespace Web::Layout {
+enum class LayoutMode;
+class BlockBox;
 class BlockFormattingContext;
+class Box;
+class ButtonBox;
+class CheckBox;
+class InitialContainingBlockBox;
 class FormattingContext;
 class InlineFormattingContext;
+class Node;
+class NodeWithStyle;
+class ReplacedBox;
 }
 
 namespace Web {
@@ -161,14 +166,6 @@ class EventHandler;
 class Frame;
 class FrameLoader;
 class InProcessWebView;
-class LayoutBlock;
-class LayoutBox;
-class LayoutButton;
-class LayoutCheckBox;
-class LayoutDocument;
-class LayoutNode;
-class LayoutNodeWithStyle;
-class LayoutReplaced;
 class LineBox;
 class LineBoxFragment;
 class LoadRequest;

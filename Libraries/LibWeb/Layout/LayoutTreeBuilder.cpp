@@ -26,18 +26,18 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ParentNode.h>
-#include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Layout/LayoutTable.h>
-#include <LibWeb/Layout/LayoutText.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
+#include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TableBox.h>
+#include <LibWeb/Layout/TextNode.h>
 
-namespace Web {
+namespace Web::Layout {
 
 LayoutTreeBuilder::LayoutTreeBuilder()
 {
 }
 
-static RefPtr<LayoutNode> create_layout_tree(DOM::Node& node, const CSS::StyleProperties* parent_style)
+static RefPtr<Node> create_layout_tree(DOM::Node& node, const CSS::StyleProperties* parent_style)
 {
     auto layout_node = node.create_layout_node(parent_style);
     if (!layout_node)
@@ -46,7 +46,7 @@ static RefPtr<LayoutNode> create_layout_tree(DOM::Node& node, const CSS::StylePr
     if (!node.has_children())
         return layout_node;
 
-    NonnullRefPtrVector<LayoutNode> layout_children;
+    NonnullRefPtrVector<Node> layout_children;
     bool have_inline_children = false;
     bool have_noninline_children = false;
 
@@ -63,7 +63,7 @@ static RefPtr<LayoutNode> create_layout_tree(DOM::Node& node, const CSS::StylePr
 
     for (auto& layout_child : layout_children) {
         if (have_noninline_children && have_inline_children && layout_child.is_inline()) {
-            if (is<LayoutText>(layout_child) && downcast<LayoutText>(layout_child).text_for_style(*parent_style) == " ")
+            if (is<TextNode>(layout_child) && downcast<TextNode>(layout_child).text_for_style(*parent_style) == " ")
                 continue;
             layout_node->inline_wrapper().append_child(layout_child);
         } else {
@@ -77,7 +77,7 @@ static RefPtr<LayoutNode> create_layout_tree(DOM::Node& node, const CSS::StylePr
     return layout_node;
 }
 
-RefPtr<LayoutNode> LayoutTreeBuilder::build(DOM::Node& node)
+RefPtr<Node> LayoutTreeBuilder::build(DOM::Node& node)
 {
     if (!is<DOM::Document>(node) && node.has_children()) {
         dbg() << "FIXME: Support building partial layout trees.";

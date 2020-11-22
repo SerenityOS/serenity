@@ -28,7 +28,7 @@
 #include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/Layout/LayoutSVGSVG.h>
+#include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 #include <ctype.h>
@@ -40,12 +40,12 @@ SVGSVGElement::SVGSVGElement(DOM::Document& document, const QualifiedName& quali
 {
 }
 
-RefPtr<LayoutNode> SVGSVGElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> SVGSVGElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new LayoutSVGSVG(document(), *this, move(style)));
+    return adopt(*new Layout::SVGSVGBox(document(), *this, move(style)));
 }
 
 unsigned SVGSVGElement::width() const

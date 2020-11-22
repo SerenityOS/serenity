@@ -34,7 +34,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/Splitter.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/OutOfProcessWebView.h>
 
 namespace Spreadsheet {

@@ -24,10 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/Layout/LayoutNode.h>
 #include <LibWeb/Layout/LayoutPosition.h>
+#include <LibWeb/Layout/Node.h>
 
-namespace Web {
+namespace Web::Layout {
 
 LayoutRange LayoutRange::normalized() const
 {

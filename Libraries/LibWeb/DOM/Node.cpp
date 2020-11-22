@@ -39,11 +39,11 @@
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
-#include <LibWeb/Layout/LayoutBlock.h>
-#include <LibWeb/Layout/LayoutDocument.h>
-#include <LibWeb/Layout/LayoutInline.h>
-#include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InlineNode.h>
+#include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TextNode.h>
 
 //#define EVENT_DEBUG
 
@@ -105,7 +105,7 @@ void Node::set_text_content(const String& content)
     document().invalidate_layout();
 }
 
-RefPtr<LayoutNode> Node::create_layout_node(const CSS::StyleProperties*)
+RefPtr<Layout::Node> Node::create_layout_node(const CSS::StyleProperties*)
 {
     return nullptr;
 }
@@ -230,7 +230,7 @@ void Node::removed_last_ref()
     delete this;
 }
 
-void Node::set_layout_node(Badge<LayoutNode>, LayoutNode* layout_node) const
+void Node::set_layout_node(Badge<Layout::Node>, Layout::Node* layout_node) const
 {
     if (layout_node)
         m_layout_node = layout_node->make_weak_ptr();
