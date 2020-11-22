@@ -125,8 +125,8 @@ public:
 
     virtual bool is_child_allowed(const Node&) const override;
 
-    const LayoutDocument* layout_node() const;
-    LayoutDocument* layout_node();
+    const Layout::InitialContainingBlockBox* layout_node() const;
+    Layout::InitialContainingBlockBox* layout_node();
 
     void schedule_style_update();
 
@@ -212,7 +212,7 @@ public:
 private:
     explicit Document(const URL&);
 
-    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
     void tear_down_layout_tree();
 
@@ -244,7 +244,7 @@ private:
 
     RefPtr<Window> m_window;
 
-    RefPtr<LayoutDocument> m_layout_root;
+    RefPtr<Layout::InitialContainingBlockBox> m_layout_root;
 
     Optional<Color> m_link_color;
     Optional<Color> m_active_link_color;

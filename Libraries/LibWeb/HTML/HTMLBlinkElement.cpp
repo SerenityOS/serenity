@@ -28,7 +28,7 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/HTML/HTMLBlinkElement.h>
-#include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/Node.h>
 
 namespace Web::HTML {
 

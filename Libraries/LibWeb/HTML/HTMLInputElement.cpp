@@ -31,9 +31,9 @@
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/LayoutButton.h>
-#include <LibWeb/Layout/LayoutCheckBox.h>
-#include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Layout/ButtonBox.h>
+#include <LibWeb/Layout/CheckBox.h>
+#include <LibWeb/Layout/WidgetBox.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::HTML {
@@ -47,7 +47,7 @@ HTMLInputElement::~HTMLInputElement()
 {
 }
 
-void HTMLInputElement::did_click_button(Badge<LayoutButton>)
+void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
 {
     dispatch_event(DOM::Event::create("click"));
 
@@ -60,7 +60,7 @@ void HTMLInputElement::did_click_button(Badge<LayoutButton>)
     }
 }
 
-RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> HTMLInputElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     ASSERT(document().page());
     auto& page = *document().page();
@@ -74,15 +74,15 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperti
         return nullptr;
 
     if (type().equals_ignoring_case("submit") || type().equals_ignoring_case("button"))
-        return adopt(*new LayoutButton(document(), *this, move(style)));
+        return adopt(*new Layout::ButtonBox(document(), *this, move(style)));
 
     if (type() == "checkbox")
-        return adopt(*new LayoutCheckBox(document(), *this, move(style)));
+        return adopt(*new Layout::CheckBox(document(), *this, move(style)));
 
     auto& text_box = page_view.add<GUI::TextBox>();
     text_box.set_text(value());
     text_box.on_change = [this] {
-        auto& widget = downcast<LayoutWidget>(layout_node())->widget();
+        auto& widget = downcast<Layout::WidgetBox>(layout_node())->widget();
         const_cast<HTMLInputElement*>(this)->set_attribute(HTML::AttributeNames::value, static_cast<const GUI::TextBox&>(widget).text());
     };
     int text_width = Gfx::Font::default_font().width(value());
@@ -93,7 +93,7 @@ RefPtr<LayoutNode> HTMLInputElement::create_layout_node(const CSS::StyleProperti
             text_width = Gfx::Font::default_font().glyph_width('x') * size.value();
     }
     text_box.set_relative_rect(0, 0, text_width + 20, 20);
-    return adopt(*new LayoutWidget(document(), *this, text_box));
+    return adopt(*new Layout::WidgetBox(document(), *this, text_box));
 }
 
 void HTMLInputElement::set_checked(bool checked)

@@ -33,13 +33,13 @@ namespace Web::Layout {
 
 class InlineFormattingContext final : public FormattingContext {
 public:
-    InlineFormattingContext(LayoutBox& containing_block);
+    InlineFormattingContext(Box& containing_block);
     ~InlineFormattingContext();
 
     virtual void run(LayoutMode) override;
 
 private:
-    void dimension_box_on_line(LayoutBox&, LayoutMode);
+    void dimension_box_on_line(Box&, LayoutMode);
 };
 
 }

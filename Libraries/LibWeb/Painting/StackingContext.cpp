@@ -26,13 +26,13 @@
 
 #include <AK/QuickSort.h>
 #include <LibWeb/DOM/Node.h>
-#include <LibWeb/Layout/LayoutBox.h>
-#include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Layout/Box.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Painting/StackingContext.h>
 
-namespace Web {
+namespace Web::Layout {
 
-StackingContext::StackingContext(LayoutBox& box, StackingContext* parent)
+StackingContext::StackingContext(Box& box, StackingContext* parent)
     : m_box(box)
     , m_parent(parent)
 {
@@ -47,14 +47,14 @@ StackingContext::StackingContext(LayoutBox& box, StackingContext* parent)
     }
 }
 
-void StackingContext::paint(PaintContext& context, LayoutNode::PaintPhase phase)
+void StackingContext::paint(PaintContext& context, Node::PaintPhase phase)
 {
     if (!m_box.is_root()) {
         m_box.paint(context, phase);
     } else {
-        // NOTE: LayoutDocument::paint() merely calls StackingContext::paint()
+        // NOTE: InitialContainingBlockBox::paint() merely calls StackingContext::paint()
         //       so we call its base class instead.
-        downcast<LayoutDocument>(m_box).LayoutBlock::paint(context, phase);
+        downcast<InitialContainingBlockBox>(m_box).BlockBox::paint(context, phase);
     }
     for (auto* child : m_children) {
         child->paint(context, phase);
@@ -67,9 +67,9 @@ HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestTy
     if (!m_box.is_root()) {
         result = m_box.hit_test(position, type);
     } else {
-        // NOTE: LayoutDocument::hit_test() merely calls StackingContext::hit_test()
+        // NOTE: InitialContainingBlockBox::hit_test() merely calls StackingContext::hit_test()
         //       so we call its base class instead.
-        result = downcast<LayoutDocument>(m_box).LayoutBlock::hit_test(position, type);
+        result = downcast<InitialContainingBlockBox>(m_box).BlockBox::hit_test(position, type);
     }
 
     for (auto* child : m_children) {

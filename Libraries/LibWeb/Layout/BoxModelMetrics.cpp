@@ -26,9 +26,9 @@
 
 #include <LibWeb/Layout/BoxModelMetrics.h>
 
-namespace Web {
+namespace Web::Layout {
 
-PixelBox BoxModelMetrics::margin_box(const LayoutNode& layout_node) const
+PixelBox BoxModelMetrics::margin_box(const Node& layout_node) const
 {
     return {
         margin.top.to_px(layout_node) + border.top.to_px(layout_node) + padding.top.to_px(layout_node),
@@ -38,7 +38,7 @@ PixelBox BoxModelMetrics::margin_box(const LayoutNode& layout_node) const
     };
 }
 
-PixelBox BoxModelMetrics::padding_box(const LayoutNode& layout_node) const
+PixelBox BoxModelMetrics::padding_box(const Node& layout_node) const
 {
     return {
         padding.top.to_px(layout_node),
@@ -48,7 +48,7 @@ PixelBox BoxModelMetrics::padding_box(const LayoutNode& layout_node) const
     };
 }
 
-PixelBox BoxModelMetrics::border_box(const LayoutNode& layout_node) const
+PixelBox BoxModelMetrics::border_box(const Node& layout_node) const
 {
     return {
         border.top.to_px(layout_node) + padding.top.to_px(layout_node),

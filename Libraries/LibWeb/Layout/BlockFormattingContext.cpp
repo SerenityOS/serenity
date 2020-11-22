@@ -26,18 +26,18 @@
 
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
+#include <LibWeb/Layout/Box.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/LayoutBlock.h>
-#include <LibWeb/Layout/LayoutBox.h>
-#include <LibWeb/Layout/LayoutDocument.h>
-#include <LibWeb/Layout/LayoutListItem.h>
-#include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Layout/ListItemBox.h>
+#include <LibWeb/Layout/WidgetBox.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web::Layout {
 
-BlockFormattingContext::BlockFormattingContext(LayoutBox& context_box)
+BlockFormattingContext::BlockFormattingContext(Box& context_box)
     : FormattingContext(context_box)
 {
 }
@@ -79,11 +79,11 @@ void BlockFormattingContext::run(LayoutMode layout_mode)
         layout_absolutely_positioned_descendants();
 }
 
-void BlockFormattingContext::compute_width(LayoutBox& box)
+void BlockFormattingContext::compute_width(Box& box)
 {
     if (box.is_replaced()) {
-        // FIXME: This should not be done *by* LayoutReplaced
-        auto& replaced = downcast<LayoutReplaced>(box);
+        // FIXME: This should not be done *by* ReplacedBox
+        auto& replaced = downcast<ReplacedBox>(box);
         replaced.prepare_for_replaced_layout();
         auto width = replaced.calculate_width();
         replaced.set_width(width);
@@ -214,7 +214,7 @@ void BlockFormattingContext::compute_width(LayoutBox& box)
     box.box_model().padding.right = padding_right;
 }
 
-void BlockFormattingContext::compute_width_for_absolutely_positioned_block(LayoutBox& box)
+void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& box)
 {
     auto& containing_block = context_box();
     auto& style = box.style();
@@ -354,11 +354,11 @@ void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Layou
     box.box_model().padding.right = padding_right;
 }
 
-void BlockFormattingContext::compute_height(LayoutBox& box)
+void BlockFormattingContext::compute_height(Box& box)
 {
     if (box.is_replaced()) {
-        // FIXME: This should not be done *by* LayoutReplaced
-        auto height = downcast<LayoutReplaced>(box).calculate_height();
+        // FIXME: This should not be done *by* ReplacedBox
+        auto height = downcast<ReplacedBox>(box).calculate_height();
         box.set_height(height);
         return;
     }
@@ -402,7 +402,7 @@ void BlockFormattingContext::layout_block_level_children(LayoutMode layout_mode)
     float content_height = 0;
     float content_width = 0;
 
-    context_box().for_each_in_subtree_of_type<LayoutBox>([&](auto& box) {
+    context_box().for_each_in_subtree_of_type<Box>([&](auto& box) {
         if (box.is_absolutely_positioned() || box.containing_block() != &context_box())
             return IterationDecision::Continue;
 
@@ -415,15 +415,15 @@ void BlockFormattingContext::layout_block_level_children(LayoutMode layout_mode)
         else if (box.is_block())
             place_block_level_non_replaced_element_in_normal_flow(box);
         else
-            dbgln("FIXME: LayoutBlock::layout_contained_boxes doesn't know how to place a {}", box.class_name());
+            dbgln("FIXME: Layout::BlockBox::layout_contained_boxes doesn't know how to place a {}", box.class_name());
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
-        if (is<LayoutListItem>(box))
-            downcast<LayoutListItem>(box).layout_marker();
+        if (is<ListItemBox>(box))
+            downcast<ListItemBox>(box).layout_marker();
 
         content_height = max(content_height, box.effective_offset().y() + box.height() + box.box_model().margin_box(box).bottom);
-        content_width = max(content_width, downcast<LayoutBox>(box).width());
+        content_width = max(content_width, downcast<Box>(box).width());
         return IterationDecision::Continue;
     });
 
@@ -436,7 +436,7 @@ void BlockFormattingContext::layout_block_level_children(LayoutMode layout_mode)
     context_box().set_height(content_height);
 }
 
-void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(LayoutBox& box)
+void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& box)
 {
     auto& containing_block = context_box();
     ASSERT(!containing_block.is_absolutely_positioned());
@@ -459,7 +459,7 @@ void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(L
     box.set_offset(x, y);
 }
 
-void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(LayoutBox& box)
+void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& box)
 {
     auto zero_value = CSS::Length::make_px(0);
     auto& containing_block = context_box();
@@ -488,7 +488,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     // NOTE: Empty (0-height) preceding siblings have their margins collapsed with *their* preceding sibling, etc.
     float collapsed_bottom_margin_of_preceding_siblings = 0;
 
-    auto* relevant_sibling = box.previous_sibling_of_type<LayoutBlock>();
+    auto* relevant_sibling = box.previous_sibling_of_type<Layout::BlockBox>();
     while (relevant_sibling != nullptr) {
         if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
             collapsed_bottom_margin_of_preceding_siblings = max(collapsed_bottom_margin_of_preceding_siblings, relevant_sibling->box_model().margin.bottom.to_px(*relevant_sibling));
@@ -523,7 +523,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 {
     auto viewport_rect = context_box().frame().viewport_rect();
 
-    auto& icb = downcast<LayoutDocument>(context_box());
+    auto& icb = downcast<Layout::InitialContainingBlockBox>(context_box());
     icb.build_stacking_context_tree();
 
     icb.set_width(viewport_rect.width());
@@ -535,7 +535,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     // FIXME: The ICB should have the height of the viewport.
     //        Instead of auto-sizing the ICB, we should spill into overflow.
     float lowest_bottom = 0;
-    icb.for_each_child_of_type<LayoutBox>([&](auto& child) {
+    icb.for_each_child_of_type<Box>([&](auto& child) {
         lowest_bottom = max(lowest_bottom, child.absolute_rect().bottom());
     });
     icb.set_height(lowest_bottom);
@@ -546,7 +546,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     // FIXME: This is a total hack. Make sure any GUI::Widgets are moved into place after layout.
     //        We should stop embedding GUI::Widgets entirely, since that won't work out-of-process.
-    icb.for_each_in_subtree_of_type<LayoutWidget>([&](auto& widget) {
+    icb.for_each_in_subtree_of_type<Layout::WidgetBox>([&](auto& widget) {
         widget.update_widget();
         return IterationDecision::Continue;
     });
@@ -554,7 +554,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
 void BlockFormattingContext::layout_absolutely_positioned_descendants()
 {
-    context_box().for_each_in_subtree_of_type<LayoutBox>([&](auto& box) {
+    context_box().for_each_in_subtree_of_type<Box>([&](auto& box) {
         if (box.is_absolutely_positioned() && box.containing_block() == &context_box()) {
             layout_absolutely_positioned_descendant(box);
         }
@@ -562,7 +562,7 @@ void BlockFormattingContext::layout_absolutely_positioned_descendants()
     });
 }
 
-void BlockFormattingContext::layout_absolutely_positioned_descendant(LayoutBox& box)
+void BlockFormattingContext::layout_absolutely_positioned_descendant(Box& box)
 {
     auto& containing_block = context_box();
     auto& box_model = box.box_model();

@@ -173,7 +173,7 @@ void StyleProperties::load_font() const
     FontCache::the().set({ font_family, font_weight }, *m_font);
 }
 
-float StyleProperties::line_height(const LayoutNode& layout_node) const
+float StyleProperties::line_height(const Layout::Node& layout_node) const
 {
     auto line_height_length = length_or_fallback(CSS::PropertyID::LineHeight, Length::make_auto());
     if (line_height_length.is_absolute())

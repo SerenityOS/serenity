@@ -84,7 +84,7 @@ public:
     RefPtr<Node> insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool notify = true);
     void remove_all_children();
 
-    virtual RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style);
+    virtual RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style);
 
     virtual FlyString node_name() const = 0;
 
@@ -115,10 +115,10 @@ public:
     virtual void removed_from(Node&) { }
     virtual void children_changed() { }
 
-    const LayoutNode* layout_node() const { return m_layout_node; }
-    LayoutNode* layout_node() { return m_layout_node; }
+    const Layout::Node* layout_node() const { return m_layout_node; }
+    Layout::Node* layout_node() { return m_layout_node; }
 
-    void set_layout_node(Badge<LayoutNode>, LayoutNode*) const;
+    void set_layout_node(Badge<Layout::Node>, Layout::Node*) const;
 
     virtual bool is_child_allowed(const Node&) const { return true; }
 
@@ -138,7 +138,7 @@ protected:
     Node(Document&, NodeType);
 
     Document* m_document { nullptr };
-    mutable WeakPtr<LayoutNode> m_layout_node;
+    mutable WeakPtr<Layout::Node> m_layout_node;
     NodeType m_type { NodeType::INVALID };
     bool m_needs_style_update { true };
 };

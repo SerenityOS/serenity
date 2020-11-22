@@ -133,39 +133,39 @@ set(SOURCES
     HTML/Parser/StackOfOpenElements.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
+    Layout/BlockBox.cpp
     Layout/BlockFormattingContext.cpp
+    Layout/Box.cpp
     Layout/BoxModelMetrics.cpp
+    Layout/BreakNode.cpp
+    Layout/ButtonBox.cpp
+    Layout/CanvasBox.cpp
+    Layout/CheckBox.cpp
     Layout/FormattingContext.cpp
+    Layout/FrameBox.cpp
+    Layout/ImageBox.cpp
+    Layout/InitialContainingBlockBox.cpp
     Layout/InlineFormattingContext.cpp
-    Layout/LayoutBlock.cpp
-    Layout/LayoutBox.cpp
-    Layout/LayoutBreak.cpp
-    Layout/LayoutButton.cpp
-    Layout/LayoutCanvas.cpp
-    Layout/LayoutCheckBox.cpp
-    Layout/LayoutDocument.cpp
-    Layout/LayoutFrame.cpp
-    Layout/LayoutImage.cpp
-    Layout/LayoutInline.cpp
-    Layout/LayoutListItem.cpp
-    Layout/LayoutListItemMarker.cpp
-    Layout/LayoutNode.cpp
+    Layout/InlineNode.cpp
     Layout/LayoutPosition.cpp
-    Layout/LayoutReplaced.cpp
-    Layout/LayoutSVG.cpp
-    Layout/LayoutSVGGraphics.cpp
-    Layout/LayoutSVGPath.cpp
-    Layout/LayoutSVGSVG.cpp
-    Layout/LayoutTable.cpp
-    Layout/LayoutTableCell.cpp
-    Layout/LayoutTableRow.cpp
-    Layout/LayoutTableRowGroup.cpp
-    Layout/LayoutText.cpp
     Layout/LayoutTreeBuilder.cpp
-    Layout/LayoutWidget.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
+    Layout/ListItemBox.cpp
+    Layout/ListItemMarkerBox.cpp
+    Layout/Node.cpp
+    Layout/ReplacedBox.cpp
+    Layout/SVGBox.cpp
+    Layout/SVGGraphicsBox.cpp
+    Layout/SVGPathBox.cpp
+    Layout/SVGSVGBox.cpp
+    Layout/TableBox.cpp
+    Layout/TableCellBox.cpp
     Layout/TableFormattingContext.cpp
+    Layout/TableRowBox.cpp
+    Layout/TableRowGroupBox.cpp
+    Layout/TextNode.cpp
+    Layout/WidgetBox.cpp
     LayoutTreeModel.cpp
     Loader/FrameLoader.cpp
     Loader/ImageLoader.cpp

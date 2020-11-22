@@ -34,23 +34,23 @@ class FormattingContext {
 public:
     virtual void run(LayoutMode) = 0;
 
-    LayoutBox& context_box() { return m_context_box; }
-    const LayoutBox& context_box() const { return m_context_box; }
+    Box& context_box() { return m_context_box; }
+    const Box& context_box() const { return m_context_box; }
 
 protected:
-    FormattingContext(LayoutBox&);
+    FormattingContext(Box&);
     virtual ~FormattingContext();
 
-    static void layout_inside(LayoutBox&, LayoutMode);
+    static void layout_inside(Box&, LayoutMode);
 
     struct ShrinkToFitResult {
         float preferred_width { 0 };
         float preferred_minimum_width { 0 };
     };
 
-    ShrinkToFitResult calculate_shrink_to_fit_widths(LayoutBox&);
+    ShrinkToFitResult calculate_shrink_to_fit_widths(Box&);
 
-    LayoutBox& m_context_box;
+    Box& m_context_box;
 };
 
 }

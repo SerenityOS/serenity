@@ -54,7 +54,7 @@
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
-#include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Origin.h>
@@ -271,7 +271,7 @@ void Document::tear_down_layout_tree()
     // Gather up all the layout nodes in a vector and detach them from parents
     // while the vector keeps them alive.
 
-    NonnullRefPtrVector<LayoutNode> layout_nodes;
+    NonnullRefPtrVector<Layout::Node> layout_nodes;
 
     m_layout_root->for_each_in_subtree([&](auto& layout_node) {
         layout_nodes.append(layout_node);
@@ -347,12 +347,12 @@ void Document::layout()
         return;
 
     if (!m_layout_root) {
-        LayoutTreeBuilder tree_builder;
-        m_layout_root = static_ptr_cast<LayoutDocument>(tree_builder.build(*this));
+        Layout::LayoutTreeBuilder tree_builder;
+        m_layout_root = static_ptr_cast<Layout::InitialContainingBlockBox>(tree_builder.build(*this));
     }
 
     Layout::BlockFormattingContext root_formatting_context(*m_layout_root);
-    root_formatting_context.run(LayoutMode::Default);
+    root_formatting_context.run(Layout::LayoutMode::Default);
 
     m_layout_root->set_needs_display();
 
@@ -380,9 +380,9 @@ void Document::update_layout()
     layout();
 }
 
-RefPtr<LayoutNode> Document::create_layout_node(const CSS::StyleProperties*)
+RefPtr<Layout::Node> Document::create_layout_node(const CSS::StyleProperties*)
 {
-    return adopt(*new LayoutDocument(*this, CSS::StyleProperties::create()));
+    return adopt(*new Layout::InitialContainingBlockBox(*this, CSS::StyleProperties::create()));
 }
 
 void Document::set_link_color(Color color)
@@ -400,14 +400,14 @@ void Document::set_visited_link_color(Color color)
     m_visited_link_color = color;
 }
 
-const LayoutDocument* Document::layout_node() const
+const Layout::InitialContainingBlockBox* Document::layout_node() const
 {
-    return static_cast<const LayoutDocument*>(Node::layout_node());
+    return static_cast<const Layout::InitialContainingBlockBox*>(Node::layout_node());
 }
 
-LayoutDocument* Document::layout_node()
+Layout::InitialContainingBlockBox* Document::layout_node()
 {
-    return static_cast<LayoutDocument*>(Node::layout_node());
+    return static_cast<Layout::InitialContainingBlockBox*>(Node::layout_node());
 }
 
 void Document::set_inspected_node(Node* node)

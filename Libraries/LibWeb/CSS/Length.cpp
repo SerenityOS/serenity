@@ -31,7 +31,7 @@
 
 namespace Web::CSS {
 
-float Length::relative_length_to_px(const LayoutNode& layout_node) const
+float Length::relative_length_to_px(const Layout::Node& layout_node) const
 {
     switch (m_type) {
     case Type::Ex:

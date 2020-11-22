@@ -52,10 +52,10 @@
 #include <LibWeb/DOMTreeModel.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/LayoutBlock.h>
-#include <LibWeb/Layout/LayoutDocument.h>
-#include <LibWeb/Layout/LayoutInline.h>
-#include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InlineNode.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <LibWeb/Page/Frame.h>

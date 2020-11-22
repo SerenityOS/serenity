@@ -29,13 +29,13 @@
 #include <AK/RefPtr.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::Layout {
 
 class LayoutTreeBuilder {
 public:
     LayoutTreeBuilder();
 
-    RefPtr<LayoutNode> build(DOM::Node&);
+    RefPtr<Node> build(DOM::Node&);
 };
 
 }

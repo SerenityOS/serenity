@@ -34,14 +34,14 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
-#include <LibWeb/Layout/LayoutBlock.h>
-#include <LibWeb/Layout/LayoutInline.h>
-#include <LibWeb/Layout/LayoutListItem.h>
-#include <LibWeb/Layout/LayoutTable.h>
-#include <LibWeb/Layout/LayoutTableCell.h>
-#include <LibWeb/Layout/LayoutTableRow.h>
-#include <LibWeb/Layout/LayoutTableRowGroup.h>
+#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
+#include <LibWeb/Layout/ListItemBox.h>
+#include <LibWeb/Layout/TableBox.h>
+#include <LibWeb/Layout/TableCellBox.h>
+#include <LibWeb/Layout/TableRowBox.h>
+#include <LibWeb/Layout/TableRowGroupBox.h>
 
 namespace Web::DOM {
 
@@ -112,7 +112,7 @@ bool Element::has_class(const FlyString& class_name) const
     return false;
 }
 
-RefPtr<LayoutNode> Element::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> Element::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     const_cast<Element&>(*this).m_resolved_style = style;
@@ -125,26 +125,26 @@ RefPtr<LayoutNode> Element::create_layout_node(const CSS::StyleProperties* paren
         return nullptr;
 
     if (display == CSS::Display::Block)
-        return adopt(*new LayoutBlock(document(), this, move(style)));
+        return adopt(*new Layout::BlockBox(document(), this, move(style)));
 
     if (display == CSS::Display::Inline) {
         if (style->float_().value_or(CSS::Float::None) != CSS::Float::None)
-            return adopt(*new LayoutBlock(document(), this, move(style)));
-        return adopt(*new LayoutInline(document(), *this, move(style)));
+            return adopt(*new Layout::BlockBox(document(), this, move(style)));
+        return adopt(*new Layout::InlineNode(document(), *this, move(style)));
     }
 
     if (display == CSS::Display::ListItem)
-        return adopt(*new LayoutListItem(document(), *this, move(style)));
+        return adopt(*new Layout::ListItemBox(document(), *this, move(style)));
     if (display == CSS::Display::Table)
-        return adopt(*new LayoutTable(document(), *this, move(style)));
+        return adopt(*new Layout::TableBox(document(), *this, move(style)));
     if (display == CSS::Display::TableRow)
-        return adopt(*new LayoutTableRow(document(), *this, move(style)));
+        return adopt(*new Layout::TableRowBox(document(), *this, move(style)));
     if (display == CSS::Display::TableCell)
-        return adopt(*new LayoutTableCell(document(), *this, move(style)));
+        return adopt(*new Layout::TableCellBox(document(), *this, move(style)));
     if (display == CSS::Display::TableRowGroup || display == CSS::Display::TableHeaderGroup || display == CSS::Display::TableFooterGroup)
-        return adopt(*new LayoutTableRowGroup(document(), *this, move(style)));
+        return adopt(*new Layout::TableRowGroupBox(document(), *this, move(style)));
     if (display == CSS::Display::InlineBlock) {
-        auto inline_block = adopt(*new LayoutBlock(document(), this, move(style)));
+        auto inline_block = adopt(*new Layout::BlockBox(document(), this, move(style)));
         inline_block->set_inline(true);
         return inline_block;
     }
@@ -206,7 +206,7 @@ void Element::recompute_style()
         if (style->display() == CSS::Display::None)
             return;
         // We need a new layout tree here!
-        LayoutTreeBuilder tree_builder;
+        Layout::LayoutTreeBuilder tree_builder;
         tree_builder.build(*this);
         return;
     }

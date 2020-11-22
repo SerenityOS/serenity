@@ -25,20 +25,20 @@
  */
 
 #include <AK/Utf8View.h>
-#include <LibWeb/Layout/LayoutBox.h>
-#include <LibWeb/Layout/LayoutNode.h>
-#include <LibWeb/Layout/LayoutText.h>
+#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
+#include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TextNode.h>
 #include <ctype.h>
 
-namespace Web {
+namespace Web::Layout {
 
-void LineBox::add_fragment(const LayoutNode& layout_node, int start, int length, int width, int height)
+void LineBox::add_fragment(const Node& layout_node, int start, int length, int width, int height)
 {
     bool text_align_is_justify = layout_node.style().text_align() == CSS::TextAlign::Justify;
     if (!text_align_is_justify && !m_fragments.is_empty() && &m_fragments.last().layout_node() == &layout_node) {
-        // The fragment we're adding is from the last LayoutNode on the line.
-        // Expand the last fragment instead of adding a new one with the same LayoutNode.
+        // The fragment we're adding is from the last Layout::Node on the line.
+        // Expand the last fragment instead of adding a new one with the same Layout::Node.
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
         m_fragments.last().set_width(m_fragments.last().width() + width);
     } else {
@@ -46,8 +46,8 @@ void LineBox::add_fragment(const LayoutNode& layout_node, int start, int length,
     }
     m_width += width;
 
-    if (is<LayoutBox>(layout_node))
-        const_cast<LayoutBox&>(downcast<LayoutBox>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
+    if (is<Box>(layout_node))
+        const_cast<Box&>(downcast<Box>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
 }
 
 void LineBox::trim_trailing_whitespace()

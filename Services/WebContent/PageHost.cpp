@@ -29,7 +29,7 @@
 #include <AK/SharedBuffer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/SystemTheme.h>
-#include <LibWeb/Layout/LayoutDocument.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Page/Frame.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
@@ -66,7 +66,7 @@ void PageHost::set_palette_impl(const Gfx::PaletteImpl& impl)
     m_palette_impl = impl;
 }
 
-Web::LayoutDocument* PageHost::layout_root()
+Web::Layout::InitialContainingBlockBox* PageHost::layout_root()
 {
     auto* document = page().main_frame().document();
     if (!document)

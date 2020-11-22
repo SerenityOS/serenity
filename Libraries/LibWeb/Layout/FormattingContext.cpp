@@ -25,14 +25,14 @@
  */
 
 #include <LibWeb/Layout/BlockFormattingContext.h>
+#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/LayoutBox.h>
 #include <LibWeb/Layout/TableFormattingContext.h>
 
 namespace Web::Layout {
 
-FormattingContext::FormattingContext(LayoutBox& context_box)
+FormattingContext::FormattingContext(Box& context_box)
     : m_context_box(context_box)
 {
 }
@@ -41,7 +41,7 @@ FormattingContext::~FormattingContext()
 {
 }
 
-void FormattingContext::layout_inside(LayoutBox& box, LayoutMode layout_mode)
+void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
 {
     if (box.is_table()) {
         TableFormattingContext context(box);
@@ -55,7 +55,7 @@ void FormattingContext::layout_inside(LayoutBox& box, LayoutMode layout_mode)
     }
 }
 
-static float greatest_child_width(const LayoutBox& box)
+static float greatest_child_width(const Box& box)
 {
     float max_width = 0;
     if (box.children_are_inline()) {
@@ -63,14 +63,14 @@ static float greatest_child_width(const LayoutBox& box)
             max_width = max(max_width, child.width());
         }
     } else {
-        box.for_each_child_of_type<LayoutBox>([&](auto& child) {
+        box.for_each_child_of_type<Box>([&](auto& child) {
             max_width = max(max_width, child.width());
         });
     }
     return max_width;
 }
 
-FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_widths(LayoutBox& box)
+FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_widths(Box& box)
 {
     // Calculate the preferred width by formatting the content without breaking lines
     // other than where explicit line breaks occur.

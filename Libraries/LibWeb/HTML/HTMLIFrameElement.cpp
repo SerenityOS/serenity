@@ -35,8 +35,7 @@
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Layout/LayoutFrame.h>
-#include <LibWeb/Layout/LayoutWidget.h>
+#include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Frame.h>
@@ -52,10 +51,10 @@ HTMLIFrameElement::~HTMLIFrameElement()
 {
 }
 
-RefPtr<LayoutNode> HTMLIFrameElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
-    return adopt(*new LayoutFrame(document(), *this, move(style)));
+    return adopt(*new Layout::FrameBox(document(), *this, move(style)));
 }
 
 void HTMLIFrameElement::document_did_attach_to_frame(Frame& frame)

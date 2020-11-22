@@ -33,7 +33,7 @@
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/TagNames.h>
 #include <LibWeb/HTML/AttributeNames.h>
-#include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/QualifiedName.h>
 
 namespace Web::DOM {
@@ -82,8 +82,8 @@ public:
 
     void recompute_style();
 
-    LayoutNodeWithStyle* layout_node() { return static_cast<LayoutNodeWithStyle*>(Node::layout_node()); }
-    const LayoutNodeWithStyle* layout_node() const { return static_cast<const LayoutNodeWithStyle*>(Node::layout_node()); }
+    Layout::NodeWithStyle* layout_node() { return static_cast<Layout::NodeWithStyle*>(Node::layout_node()); }
+    const Layout::NodeWithStyle* layout_node() const { return static_cast<const Layout::NodeWithStyle*>(Node::layout_node()); }
 
     String name() const { return attribute(HTML::AttributeNames::name); }
 
@@ -97,7 +97,7 @@ public:
     virtual bool is_focusable() const { return false; }
 
 protected:
-    RefPtr<LayoutNode> create_layout_node(const CSS::StyleProperties* parent_style) override;
+    RefPtr<Layout::Node> create_layout_node(const CSS::StyleProperties* parent_style) override;
 
 private:
     Attribute* find_attribute(const FlyString& name);

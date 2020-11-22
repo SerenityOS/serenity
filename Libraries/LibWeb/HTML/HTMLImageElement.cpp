@@ -31,7 +31,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
-#include <LibWeb/Layout/LayoutImage.h>
+#include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web::HTML {
@@ -83,12 +83,12 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
         m_image_loader.load(document().complete_url(value));
 }
 
-RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const CSS::StyleProperties* parent_style)
+RefPtr<Layout::Node> HTMLImageElement::create_layout_node(const CSS::StyleProperties* parent_style)
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new LayoutImage(document(), *this, move(style), m_image_loader));
+    return adopt(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
 }
 
 const Gfx::Bitmap* HTMLImageElement::bitmap() const

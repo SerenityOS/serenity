@@ -72,7 +72,7 @@ public:
         return *m_font;
     }
 
-    float line_height(const LayoutNode&) const;
+    float line_height(const Layout::Node&) const;
 
     bool operator==(const StyleProperties&) const;
     bool operator!=(const StyleProperties& other) const { return !(*this == other); }
