@@ -33,13 +33,12 @@ LayoutSVGSVG::LayoutSVGSVG(DOM::Document& document, SVG::SVGSVGElement& element,
 {
 }
 
-void LayoutSVGSVG::layout(LayoutMode layout_mode)
+void LayoutSVGSVG::prepare_for_replaced_layout()
 {
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     set_intrinsic_width(node().width());
     set_intrinsic_height(node().height());
-    LayoutSVGGraphics::layout(layout_mode);
 }
 
 void LayoutSVGSVG::before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase)

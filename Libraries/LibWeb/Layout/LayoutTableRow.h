@@ -37,11 +37,7 @@ public:
     LayoutTableRow(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutTableRow() override;
 
-    void layout_row(const Vector<float>& column_widths);
-    void calculate_column_widths(Vector<float>& column_widths);
-
 private:
-    virtual void layout(LayoutMode) override;
     virtual bool is_table_row() const override { return true; }
     virtual const char* class_name() const override { return "LayoutTableRow"; }
 };

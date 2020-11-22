@@ -26,28 +26,20 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLCanvasElement.h>
-#include <LibWeb/Layout/LayoutReplaced.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/Layout/FormattingContext.h>
 
-namespace Web {
+namespace Web::Layout {
 
-class LayoutCanvas : public LayoutReplaced {
+class InlineFormattingContext final : public FormattingContext {
 public:
-    LayoutCanvas(DOM::Document&, HTML::HTMLCanvasElement&, NonnullRefPtr<CSS::StyleProperties>);
-    virtual ~LayoutCanvas() override;
+    InlineFormattingContext(LayoutBox& containing_block);
+    ~InlineFormattingContext();
 
-    virtual void prepare_for_replaced_layout() override;
-    virtual void paint(PaintContext&, PaintPhase) override;
-
-    const HTML::HTMLCanvasElement& node() const { return static_cast<const HTML::HTMLCanvasElement&>(LayoutReplaced::node()); }
+    virtual void run(LayoutMode) override;
 
 private:
-    virtual const char* class_name() const override { return "LayoutCanvas"; }
-    virtual bool is_canvas() const override { return true; }
+    void dimension_box_on_line(LayoutBox&, LayoutMode);
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::LayoutCanvas)
-static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_canvas(); }
-AK_END_TYPE_TRAITS()

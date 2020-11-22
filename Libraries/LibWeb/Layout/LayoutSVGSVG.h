@@ -34,14 +34,14 @@ namespace Web {
 class LayoutSVGSVG final : public LayoutSVGGraphics {
 public:
     LayoutSVGSVG(DOM::Document&, SVG::SVGSVGElement&, NonnullRefPtr<CSS::StyleProperties>);
-    ~LayoutSVGSVG() override = default;
+    virtual ~LayoutSVGSVG() override = default;
 
     SVG::SVGSVGElement& node() { return downcast<SVG::SVGSVGElement>(LayoutSVGGraphics::node()); }
 
-    void layout(LayoutMode = LayoutMode::Default) override;
+    virtual void prepare_for_replaced_layout() override;
 
-    void before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase) override;
-    void after_children_paint(PaintContext& context, PaintPhase phase) override;
+    virtual void before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase) override;
+    virtual void after_children_paint(PaintContext& context, PaintPhase phase) override;
 
 private:
     const char* class_name() const override { return "LayoutSVGSVG"; }

@@ -63,34 +63,6 @@ void LayoutDocument::build_stacking_context_tree()
     });
 }
 
-void LayoutDocument::layout(LayoutMode layout_mode)
-{
-    build_stacking_context_tree();
-
-    set_width(frame().size().width());
-
-    LayoutNode::layout(layout_mode);
-
-    ASSERT(!children_are_inline());
-
-    float lowest_bottom = 0;
-    for_each_child([&](auto& child) {
-        ASSERT(is<LayoutBlock>(child));
-        auto& child_block = downcast<LayoutBlock>(child);
-        lowest_bottom = max(lowest_bottom, child_block.absolute_rect().bottom());
-    });
-    set_height(lowest_bottom);
-
-    layout_absolutely_positioned_descendants();
-
-    // FIXME: This is a total hack. Make sure any GUI::Widgets are moved into place after layout.
-    //        We should stop embedding GUI::Widgets entirely, since that won't work out-of-process.
-    for_each_in_subtree_of_type<LayoutWidget>([&](auto& widget) {
-        widget.update_widget();
-        return IterationDecision::Continue;
-    });
-}
-
 void LayoutDocument::did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect& a_viewport_rect)
 {
     Gfx::FloatRect viewport_rect(a_viewport_rect.x(), a_viewport_rect.y(), a_viewport_rect.width(), a_viewport_rect.height());

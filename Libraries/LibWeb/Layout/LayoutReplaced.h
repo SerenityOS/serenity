@@ -57,14 +57,15 @@ public:
     void set_intrinsic_height(float height) { m_intrinsic_height = height; }
     void set_intrinsic_ratio(float ratio) { m_intrinsic_ratio = ratio; }
 
-protected:
-    virtual void layout(LayoutMode) override;
-    virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
-
-private:
     float calculate_width() const;
     float calculate_height() const;
 
+    virtual void prepare_for_replaced_layout() { }
+
+protected:
+    virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
+
+private:
     virtual const char* class_name() const override { return "LayoutReplaced"; }
 
     bool m_has_intrinsic_width { false };

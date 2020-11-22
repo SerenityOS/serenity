@@ -48,7 +48,7 @@ LayoutFrame::~LayoutFrame()
 {
 }
 
-void LayoutFrame::layout(LayoutMode layout_mode)
+void LayoutFrame::prepare_for_replaced_layout()
 {
     ASSERT(node().content_frame());
 
@@ -57,8 +57,6 @@ void LayoutFrame::layout(LayoutMode layout_mode)
     // FIXME: Do proper error checking, etc.
     set_intrinsic_width(node().attribute(HTML::AttributeNames::width).to_int().value_or(300));
     set_intrinsic_height(node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
-
-    LayoutReplaced::layout(layout_mode);
 }
 
 void LayoutFrame::paint(PaintContext& context, PaintPhase phase)

@@ -328,4 +328,24 @@ bool LayoutBox::establishes_stacking_context() const
     return false;
 }
 
+LineBox& LayoutBox::ensure_last_line_box()
+{
+    if (m_line_boxes.is_empty())
+        return add_line_box();
+    return m_line_boxes.last();
+}
+
+LineBox& LayoutBox::add_line_box()
+{
+    m_line_boxes.append(LineBox());
+    return m_line_boxes.last();
+}
+
+float LayoutBox::width_of_logical_containing_block() const
+{
+    auto* containing_block = this->containing_block();
+    ASSERT(containing_block);
+    return containing_block->width();
+}
+
 }

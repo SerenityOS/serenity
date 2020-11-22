@@ -44,6 +44,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOM/Window.h>
+#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
@@ -52,6 +53,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/LayoutDocument.h>
 #include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Namespace.h>
@@ -348,7 +350,10 @@ void Document::layout()
         LayoutTreeBuilder tree_builder;
         m_layout_root = static_ptr_cast<LayoutDocument>(tree_builder.build(*this));
     }
-    m_layout_root->layout();
+
+    Layout::BlockFormattingContext root_formatting_context(*m_layout_root);
+    root_formatting_context.run(LayoutMode::Default);
+
     m_layout_root->set_needs_display();
 
     if (frame()->is_main_frame()) {

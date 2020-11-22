@@ -38,16 +38,9 @@ public:
 
     virtual const char* class_name() const override { return "LayoutBlock"; }
 
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
     virtual LayoutNode& inline_wrapper() override;
-
-    Vector<LineBox>& line_boxes() { return m_line_boxes; }
-    const Vector<LineBox>& line_boxes() const { return m_line_boxes; }
-
-    LineBox& ensure_last_line_box();
-    LineBox& add_line_box();
 
     virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 
@@ -63,36 +56,10 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container, LayoutMode) override;
 
-    void layout_inside(LayoutMode);
-
-protected:
-    void compute_width();
-    void compute_height();
-    void layout_absolutely_positioned_descendants();
-
-    virtual float width_of_logical_containing_block() const;
-
 private:
     virtual bool is_block() const override { return true; }
 
-    struct ShrinkToFitResult {
-        float preferred_width { 0 };
-        float preferred_minimum_width { 0 };
-    };
-    ShrinkToFitResult calculate_shrink_to_fit_width();
-
-    void compute_width_for_absolutely_positioned_block();
-
-    void place_block_level_non_replaced_element_in_normal_flow(LayoutBlock&);
-    void place_block_level_replaced_element_in_normal_flow(LayoutReplaced&);
-    void layout_absolutely_positioned_descendant(LayoutBox&);
-
     NonnullRefPtr<CSS::StyleProperties> style_for_anonymous_block() const;
-
-    void layout_inline_children(LayoutMode);
-    void layout_contained_boxes(LayoutMode);
-
-    Vector<LineBox> m_line_boxes;
 };
 
 template<typename Callback>

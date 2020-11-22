@@ -38,12 +38,17 @@ public:
     LayoutListItem(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutListItem() override;
 
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
+    void layout_marker();
 
 private:
     virtual const char* class_name() const override { return "LayoutListItem"; }
+    virtual bool is_list_item() const override { return true; }
 
     RefPtr<LayoutListItemMarker> m_marker;
 };
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::LayoutListItem)
+static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_list_item(); }
+AK_END_TYPE_TRAITS()

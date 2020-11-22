@@ -49,13 +49,6 @@ LayoutNode::~LayoutNode()
         m_node->set_layout_node({}, nullptr);
 }
 
-void LayoutNode::layout(LayoutMode layout_mode)
-{
-    for_each_child([&](auto& child) {
-        child.layout(layout_mode);
-    });
-}
-
 bool LayoutNode::can_contain_boxes_with_position_absolute() const
 {
     return style().position() != CSS::Position::Static || is_root();

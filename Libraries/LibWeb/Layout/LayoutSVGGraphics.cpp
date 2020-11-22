@@ -49,11 +49,4 @@ void LayoutSVGGraphics::before_children_paint(PaintContext& context, LayoutNode:
         context.svg_context().set_stroke_width(graphics_element.stroke_width().value());
 }
 
-void LayoutSVGGraphics::layout(LayoutNode::LayoutMode mode)
-{
-    LayoutReplaced::layout(mode);
-
-    for_each_child([&](auto& child) { child.layout(mode); });
-}
-
 }

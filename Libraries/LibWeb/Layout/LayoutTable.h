@@ -35,8 +35,6 @@ public:
     LayoutTable(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutTable() override;
 
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
-
 private:
     virtual bool is_table() const override { return true; }
     virtual const char* class_name() const override { return "LayoutTable"; }

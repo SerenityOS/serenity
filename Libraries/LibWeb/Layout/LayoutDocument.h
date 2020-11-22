@@ -38,7 +38,6 @@ public:
 
     const DOM::Document& node() const { return static_cast<const DOM::Document&>(*LayoutNode::node()); }
     virtual const char* class_name() const override { return "LayoutDocument"; }
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
 
     void paint_all_phases(PaintContext&);
     virtual void paint(PaintContext&, PaintPhase) override;

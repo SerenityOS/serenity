@@ -43,7 +43,7 @@ LayoutButton::~LayoutButton()
 {
 }
 
-void LayoutButton::layout(LayoutMode layout_mode)
+void LayoutButton::prepare_for_replaced_layout()
 {
     auto& font = specified_style().font();
     set_intrinsic_width(font.width(node().value()) + 20);
@@ -51,7 +51,6 @@ void LayoutButton::layout(LayoutMode layout_mode)
 
     set_intrinsic_height(20);
     set_has_intrinsic_height(true);
-    LayoutReplaced::layout(layout_mode);
 }
 
 void LayoutButton::paint(PaintContext& context, PaintPhase phase)

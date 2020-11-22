@@ -36,7 +36,6 @@ public:
     LayoutCheckBox(DOM::Document&, HTML::HTMLInputElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutCheckBox() override;
 
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
     const HTML::HTMLInputElement& node() const { return static_cast<const HTML::HTMLInputElement&>(LayoutReplaced::node()); }
