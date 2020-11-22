@@ -35,15 +35,16 @@ LayoutSVGPath::LayoutSVGPath(DOM::Document& document, SVG::SVGPathElement& eleme
 {
 }
 
-void LayoutSVGPath::layout(LayoutNode::LayoutMode mode)
+void LayoutSVGPath::prepare_for_replaced_layout()
 {
     auto& bounding_box = node().get_path().bounding_box();
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     set_intrinsic_width(bounding_box.width());
     set_intrinsic_height(bounding_box.height());
+
+    // FIXME: This does not belong here! Someone at a higher level should place this box.
     set_offset(bounding_box.top_left());
-    LayoutSVGGraphics::layout(mode);
 }
 
 void LayoutSVGPath::paint(PaintContext& context, LayoutNode::PaintPhase phase)

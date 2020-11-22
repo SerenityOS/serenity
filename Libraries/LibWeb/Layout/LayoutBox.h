@@ -29,6 +29,7 @@
 #include <AK/OwnPtr.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Layout/LayoutNode.h>
+#include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web {
@@ -70,6 +71,14 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) override;
 
+    Vector<LineBox>& line_boxes() { return m_line_boxes; }
+    const Vector<LineBox>& line_boxes() const { return m_line_boxes; }
+
+    LineBox& ensure_last_line_box();
+    LineBox& add_line_box();
+
+    virtual float width_of_logical_containing_block() const;
+
 protected:
     LayoutBox(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
         : LayoutNodeWithStyleAndBoxModelMetrics(document, node, move(style))
@@ -77,6 +86,8 @@ protected:
     }
 
     virtual void did_set_rect() { }
+
+    Vector<LineBox> m_line_boxes;
 
 private:
     virtual bool is_box() const final { return true; }

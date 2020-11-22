@@ -37,8 +37,8 @@ public:
 
     SVG::SVGPathElement& node() { return downcast<SVG::SVGPathElement>(LayoutSVGGraphics::node()); }
 
-    void layout(LayoutMode mode) override;
-    void paint(PaintContext& context, PaintPhase phase) override;
+    virtual void prepare_for_replaced_layout() override;
+    virtual void paint(PaintContext& context, PaintPhase phase) override;
 
 private:
     virtual const char* class_name() const override { return "LayoutSVGPath"; }

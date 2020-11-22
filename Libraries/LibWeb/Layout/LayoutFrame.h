@@ -37,7 +37,7 @@ public:
     virtual ~LayoutFrame() override;
 
     virtual void paint(PaintContext&, PaintPhase) override;
-    virtual void layout(LayoutMode) override;
+    virtual void prepare_for_replaced_layout() override;
 
     const HTML::HTMLIFrameElement& node() const { return downcast<HTML::HTMLIFrameElement>(LayoutReplaced::node()); }
     HTML::HTMLIFrameElement& node() { return downcast<HTML::HTMLIFrameElement>(LayoutReplaced::node()); }

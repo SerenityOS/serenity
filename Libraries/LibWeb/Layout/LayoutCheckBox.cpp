@@ -36,19 +36,14 @@ namespace Web {
 LayoutCheckBox::LayoutCheckBox(DOM::Document& document, HTML::HTMLInputElement& element, NonnullRefPtr<CSS::StyleProperties> style)
     : LayoutReplaced(document, element, move(style))
 {
-}
-
-LayoutCheckBox::~LayoutCheckBox()
-{
-}
-
-void LayoutCheckBox::layout(LayoutMode layout_mode)
-{
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     set_intrinsic_width(13);
     set_intrinsic_height(13);
-    LayoutReplaced::layout(layout_mode);
+}
+
+LayoutCheckBox::~LayoutCheckBox()
+{
 }
 
 void LayoutCheckBox::paint(PaintContext& context, PaintPhase phase)

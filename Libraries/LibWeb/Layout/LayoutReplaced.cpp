@@ -117,20 +117,18 @@ float LayoutReplaced::calculate_height() const
     return used_height;
 }
 
-void LayoutReplaced::layout(LayoutMode)
+void LayoutReplaced::split_into_lines(LayoutBlock& container, LayoutMode)
 {
-    set_width(calculate_width());
-    set_height(calculate_height());
-}
-
-void LayoutReplaced::split_into_lines(LayoutBlock& container, LayoutMode layout_mode)
-{
-    layout(layout_mode);
+    // FIXME: This feels out of place. It would be nice if someone at a higher level
+    //        made sure we had usable geometry by the time we start splitting.
+    prepare_for_replaced_layout();
+    auto width = calculate_width();
+    auto height = calculate_height();
 
     auto* line_box = &container.ensure_last_line_box();
-    if (line_box->width() > 0 && line_box->width() + width() > container.width())
+    if (line_box->width() > 0 && line_box->width() + width > container.width())
         line_box = &container.add_line_box();
-    line_box->add_fragment(*this, 0, 0, width(), height());
+    line_box->add_fragment(*this, 0, 0, width, height);
 }
 
 }

@@ -52,7 +52,7 @@ int LayoutImage::preferred_height() const
     return node().attribute(HTML::AttributeNames::height).to_int().value_or(m_image_loader.height());
 }
 
-void LayoutImage::layout(LayoutMode layout_mode)
+void LayoutImage::prepare_for_replaced_layout()
 {
     if (!m_image_loader.has_loaded_or_failed()) {
         set_has_intrinsic_width(true);
@@ -91,8 +91,6 @@ void LayoutImage::layout(LayoutMode layout_mode)
         set_width(16);
         set_height(16);
     }
-
-    LayoutReplaced::layout(layout_mode);
 }
 
 void LayoutImage::paint(PaintContext& context, PaintPhase phase)

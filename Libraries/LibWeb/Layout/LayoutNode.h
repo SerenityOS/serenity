@@ -40,6 +40,12 @@
 
 namespace Web {
 
+enum class LayoutMode {
+    Default,
+    AllPossibleLineBreaks,
+    OnlyRequiredLineBreaks,
+};
+
 struct HitTestResult {
     RefPtr<LayoutNode> layout_node;
     int index_in_node { 0 };
@@ -94,6 +100,7 @@ public:
     virtual bool is_break() const { return false; }
     virtual bool is_check_box() const { return false; }
     virtual bool is_button() const { return false; }
+    virtual bool is_list_item() const { return false; }
     bool has_style() const { return m_has_style; }
 
     bool is_inline() const { return m_inline; }
@@ -106,14 +113,6 @@ public:
     virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
-
-    enum class LayoutMode {
-        Default,
-        AllPossibleLineBreaks,
-        OnlyRequiredLineBreaks,
-    };
-
-    virtual void layout(LayoutMode);
 
     enum class PaintPhase {
         Background,

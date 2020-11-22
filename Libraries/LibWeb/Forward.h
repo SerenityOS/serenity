@@ -26,6 +26,10 @@
 
 #pragma once
 
+namespace Web {
+enum class LayoutMode;
+}
+
 namespace Web::CSS {
 class Selector;
 class StyleProperties;
@@ -146,12 +150,19 @@ class SVGPathElement;
 class SVGSVGElement;
 }
 
+namespace Web::Layout {
+class BlockFormattingContext;
+class FormattingContext;
+class InlineFormattingContext;
+}
+
 namespace Web {
 class EventHandler;
 class Frame;
 class FrameLoader;
 class InProcessWebView;
 class LayoutBlock;
+class LayoutBox;
 class LayoutButton;
 class LayoutCheckBox;
 class LayoutDocument;

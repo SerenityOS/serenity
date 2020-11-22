@@ -26,28 +26,36 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLCanvasElement.h>
-#include <LibWeb/Layout/LayoutReplaced.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/Layout/FormattingContext.h>
 
-namespace Web {
+namespace Web::Layout {
 
-class LayoutCanvas : public LayoutReplaced {
+class BlockFormattingContext : public FormattingContext {
 public:
-    LayoutCanvas(DOM::Document&, HTML::HTMLCanvasElement&, NonnullRefPtr<CSS::StyleProperties>);
-    virtual ~LayoutCanvas() override;
+    explicit BlockFormattingContext(LayoutBox& containing_block);
+    ~BlockFormattingContext();
 
-    virtual void prepare_for_replaced_layout() override;
-    virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void run(LayoutMode) override;
 
-    const HTML::HTMLCanvasElement& node() const { return static_cast<const HTML::HTMLCanvasElement&>(LayoutReplaced::node()); }
+    bool is_initial() const;
+
+protected:
+    void compute_width(LayoutBox&);
+    void compute_height(LayoutBox&);
 
 private:
-    virtual const char* class_name() const override { return "LayoutCanvas"; }
-    virtual bool is_canvas() const override { return true; }
+    void compute_width_for_absolutely_positioned_block(LayoutBox&);
+
+    void layout_initial_containing_block(LayoutMode);
+    void layout_block_level_children(LayoutMode);
+    void layout_inline_children(LayoutMode);
+    void layout_absolutely_positioned_descendants();
+
+    void place_block_level_replaced_element_in_normal_flow(LayoutBox&);
+    void place_block_level_non_replaced_element_in_normal_flow(LayoutBox&);
+
+    void layout_absolutely_positioned_descendant(LayoutBox&);
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::LayoutCanvas)
-static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_canvas(); }
-AK_END_TYPE_TRAITS()

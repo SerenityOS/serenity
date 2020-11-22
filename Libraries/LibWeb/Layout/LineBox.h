@@ -49,6 +49,7 @@ public:
 
 private:
     friend class LayoutBlock;
+    friend class Layout::InlineFormattingContext;
     NonnullOwnPtrVector<LineBoxFragment> m_fragments;
     float m_width { 0 };
 };

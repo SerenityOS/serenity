@@ -37,7 +37,6 @@ public:
     LayoutSVGGraphics(DOM::Document&, SVG::SVGGraphicsElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutSVGGraphics() override = default;
 
-    virtual void layout(LayoutMode mode) override;
     virtual void before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase) override;
 
 private:

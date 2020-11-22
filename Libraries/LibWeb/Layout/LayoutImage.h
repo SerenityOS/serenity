@@ -36,7 +36,7 @@ public:
     LayoutImage(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>, const ImageLoader&);
     virtual ~LayoutImage() override;
 
-    virtual void layout(LayoutMode = LayoutMode::Default) override;
+    virtual void prepare_for_replaced_layout() override;
     virtual void paint(PaintContext&, PaintPhase) override;
 
     const DOM::Element& node() const { return static_cast<const DOM::Element&>(LayoutReplaced::node()); }

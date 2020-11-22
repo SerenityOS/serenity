@@ -39,9 +39,4 @@ LayoutTable::~LayoutTable()
 {
 }
 
-void LayoutTable::layout(LayoutMode layout_mode)
-{
-    LayoutBlock::layout(layout_mode);
-}
-
 }

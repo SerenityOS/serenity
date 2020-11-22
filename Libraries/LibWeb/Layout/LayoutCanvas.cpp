@@ -40,13 +40,12 @@ LayoutCanvas::~LayoutCanvas()
 {
 }
 
-void LayoutCanvas::layout(LayoutMode layout_mode)
+void LayoutCanvas::prepare_for_replaced_layout()
 {
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     set_intrinsic_width(node().width());
     set_intrinsic_height(node().height());
-    LayoutReplaced::layout(layout_mode);
 }
 
 void LayoutCanvas::paint(PaintContext& context, PaintPhase phase)

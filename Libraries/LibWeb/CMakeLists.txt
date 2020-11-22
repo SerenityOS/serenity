@@ -133,7 +133,10 @@ set(SOURCES
     HTML/Parser/StackOfOpenElements.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
+    Layout/BlockFormattingContext.cpp
     Layout/BoxModelMetrics.cpp
+    Layout/FormattingContext.cpp
+    Layout/InlineFormattingContext.cpp
     Layout/LayoutBlock.cpp
     Layout/LayoutBox.cpp
     Layout/LayoutBreak.cpp
@@ -162,6 +165,7 @@ set(SOURCES
     Layout/LayoutWidget.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
+    Layout/TableFormattingContext.cpp
     LayoutTreeModel.cpp
     Loader/FrameLoader.cpp
     Loader/ImageLoader.cpp

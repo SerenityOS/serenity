@@ -26,28 +26,32 @@
 
 #pragma once
 
-#include <LibWeb/HTML/HTMLCanvasElement.h>
-#include <LibWeb/Layout/LayoutReplaced.h>
+#include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::Layout {
 
-class LayoutCanvas : public LayoutReplaced {
+class FormattingContext {
 public:
-    LayoutCanvas(DOM::Document&, HTML::HTMLCanvasElement&, NonnullRefPtr<CSS::StyleProperties>);
-    virtual ~LayoutCanvas() override;
+    virtual void run(LayoutMode) = 0;
 
-    virtual void prepare_for_replaced_layout() override;
-    virtual void paint(PaintContext&, PaintPhase) override;
+    LayoutBox& context_box() { return m_context_box; }
+    const LayoutBox& context_box() const { return m_context_box; }
 
-    const HTML::HTMLCanvasElement& node() const { return static_cast<const HTML::HTMLCanvasElement&>(LayoutReplaced::node()); }
 
-private:
-    virtual const char* class_name() const override { return "LayoutCanvas"; }
-    virtual bool is_canvas() const override { return true; }
+protected:
+    FormattingContext(LayoutBox&);
+    virtual ~FormattingContext();
+
+    static void layout_inside(LayoutBox&, LayoutMode);
+
+    struct ShrinkToFitResult {
+        float preferred_width { 0 };
+        float preferred_minimum_width { 0 };
+    };
+
+    ShrinkToFitResult calculate_shrink_to_fit_widths(LayoutBox&);
+
+    LayoutBox& m_context_box;
 };
 
 }
-
-AK_BEGIN_TYPE_TRAITS(Web::LayoutCanvas)
-static bool is_type(const Web::LayoutNode& layout_node) { return layout_node.is_canvas(); }
-AK_END_TYPE_TRAITS()
