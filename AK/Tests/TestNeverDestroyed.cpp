@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,40 +24,72 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include <AK/TestSuite.h>
 
-#include <AK/Noncopyable.h>
-#include <AK/Types.h>
+#include <AK/NeverDestroyed.h>
+#include <AK/StdLibExtras.h>
 
-namespace AK {
+struct Counter {
+    Counter() = default;
 
-template<typename T>
-class NeverDestroyed {
-    AK_MAKE_NONCOPYABLE(NeverDestroyed);
-    AK_MAKE_NONMOVABLE(NeverDestroyed);
+    ~Counter() { ++num_destroys; }
 
-public:
-    template<typename... Args>
-    NeverDestroyed(Args&&... args)
+    Counter(const Counter&)
     {
-        new (storage) T(forward<Args>(args)...);
+        ++num_copies;
     }
 
-    ~NeverDestroyed() = default;
+    Counter(Counter&&) { ++num_moves; }
 
-    T* operator->() { return &get(); }
-    const T* operator->() const { return &get(); }
-
-    T& operator*() { return get(); }
-    const T& operator*() const { return get(); }
-
-    T& get() { return reinterpret_cast<T&>(storage); }
-    const T& get() const { return reinterpret_cast<T&>(storage); }
-
-private:
-    alignas(T) u8 storage[sizeof(T)];
+    int num_copies {};
+    int num_moves {};
+    int num_destroys {};
 };
 
+TEST_CASE(should_construct_by_copy)
+{
+    Counter c {};
+    AK::NeverDestroyed<Counter> n { c };
+
+    EXPECT_EQ(1, n->num_copies);
+    EXPECT_EQ(0, n->num_moves);
 }
 
-using AK::NeverDestroyed;
+TEST_CASE(should_construct_by_move)
+{
+    Counter c {};
+    AK::NeverDestroyed<Counter> n { AK::move(c) };
+
+    EXPECT_EQ(0, n->num_copies);
+    EXPECT_EQ(1, n->num_moves);
+}
+
+TEST_CASE(should_not_destroy)
+{
+    Counter* c = nullptr;
+    {
+        AK::NeverDestroyed<Counter> n {};
+        c = &n.get();
+    }
+    EXPECT_EQ(0, c->num_destroys);
+}
+
+TEST_CASE(should_provide_dereference_operator)
+{
+    AK::NeverDestroyed<Counter> n {};
+    EXPECT_EQ(0, n->num_destroys);
+}
+
+TEST_CASE(should_provide_indirection_operator)
+{
+    AK::NeverDestroyed<Counter> n {};
+    EXPECT_EQ(0, (*n).num_destroys);
+}
+
+TEST_CASE(should_provide_basic_getter)
+{
+    AK::NeverDestroyed<Counter> n {};
+    EXPECT_EQ(0, n.get().num_destroys);
+}
+
+TEST_MAIN(NeverDestroyed)
