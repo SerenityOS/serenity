@@ -27,6 +27,7 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
+#include <Kernel/SharedBuffer.h>
 #include <Kernel/VM/Region.h>
 
 //#define FORK_DEBUG
@@ -78,6 +79,8 @@ pid_t Process::sys$fork(RegisterState& regs)
 #ifdef FORK_DEBUG
     dbg() << "fork: child will begin executing at " << String::format("%w", child_tss.cs) << ":" << String::format("%x", child_tss.eip) << " with stack " << String::format("%w", child_tss.ss) << ":" << String::format("%x", child_tss.esp) << ", kstack " << String::format("%w", child_tss.ss0) << ":" << String::format("%x", child_tss.esp0);
 #endif
+
+    SharedBuffer::share_all_shared_buffers(*this, *child);
 
     {
         ScopedSpinLock lock(m_lock);

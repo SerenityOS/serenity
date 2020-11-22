@@ -121,6 +121,22 @@ void SharedBuffer::share_with(ProcessID peer_pid)
     sanity_check("share_with (new ref)");
 }
 
+void SharedBuffer::share_all_shared_buffers(Process& from_process, Process& with_process)
+{
+    LOCKER(shared_buffers().lock());
+    for (auto& shbuf : shared_buffers().resource()) {
+        auto& shared_buffer = *shbuf.value;
+        if (shared_buffer.m_global)
+            continue;
+        for (auto& ref : shared_buffer.m_refs) {
+            if (ref.pid == from_process.pid()) {
+                shared_buffer.share_with(with_process.pid());
+                break;
+            }
+        }
+    }
+}
+
 void SharedBuffer::deref_for_process(Process& process)
 {
     LOCKER(shared_buffers().lock());
