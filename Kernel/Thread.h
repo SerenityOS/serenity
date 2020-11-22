@@ -377,7 +377,6 @@ public:
     size_t thread_specific_region_size() const { return m_thread_specific_region_size; }
 
     u64 sleep(u64 ticks);
-    u64 sleep_until(u64 wakeup_time);
 
     class BlockResult {
     public:
