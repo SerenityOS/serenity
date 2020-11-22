@@ -27,6 +27,7 @@
 #include "ClipboardHistoryModel.h"
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
+#include <LibGUI/Action.h>
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()
 {
@@ -98,4 +99,9 @@ void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 
     m_history_items.prepend(item);
     update();
+}
+
+void ClipboardHistoryModel::remove_item(int index)
+{
+    m_history_items.remove(index);
 }
