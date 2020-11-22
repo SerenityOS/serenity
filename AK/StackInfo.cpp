@@ -30,7 +30,7 @@
 
 #ifdef __serenity__
 #    include <serenity.h>
-#elif __linux__ or __APPLE__
+#elif defined(__linux__) or defined(__APPLE__)
 #    include <pthread.h>
 #endif
 

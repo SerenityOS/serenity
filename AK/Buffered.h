@@ -26,7 +26,12 @@
 
 #pragma once
 
+#include <AK/Noncopyable.h>
+#include <AK/Span.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Stream.h>
+#include <AK/Types.h>
+#include <AK/kmalloc.h>
 
 namespace AK {
 

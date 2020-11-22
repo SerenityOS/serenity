@@ -96,12 +96,12 @@ public:
         return List::contains_slow(value);
     }
 
-    using Iterator = List::Iterator;
+    using Iterator = typename List::Iterator;
     friend Iterator;
     Iterator begin() { return List::begin(); }
     Iterator end() { return List::end(); }
 
-    using ConstIterator = List::ConstIterator;
+    using ConstIterator = typename List::ConstIterator;
     friend ConstIterator;
     ConstIterator begin() const { return List::begin(); }
     ConstIterator end() const { return List::end(); }

@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
+#include <AK/Noncopyable.h>
 #include <AK/kmalloc.h>
 #ifdef KERNEL
 #    include <Kernel/Arch/i386/CPU.h>
