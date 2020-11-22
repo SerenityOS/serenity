@@ -91,6 +91,7 @@ namespace JS {
     P(enumerable)                            \
     P(error)                                 \
     P(every)                                 \
+    P(exec)                                  \
     P(exp)                                   \
     P(expm1)                                 \
     P(fill)                                  \
@@ -126,12 +127,15 @@ namespace JS {
     P(getUTCSeconds)                         \
     P(global)                                \
     P(globalThis)                            \
+    P(groups)                                \
     P(has)                                   \
     P(hasOwnProperty)                        \
     P(ignoreCase)                            \
     P(includes)                              \
+    P(index)                                 \
     P(indexOf)                               \
     P(info)                                  \
+    P(input)                                 \
     P(is)                                    \
     P(isArray)                               \
     P(isExtensible)                          \
