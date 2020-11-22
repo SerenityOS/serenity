@@ -93,4 +93,10 @@ describe("normal behavior", () => {
         expect(foo.setPropCalled).toBeTrue();
         expect(bar.setPropCalled).toBeTrue();
     });
+
+    test("native setter function", () => {
+        const e = new Error();
+        Reflect.set(Error.prototype, "name", "Foo", e);
+        expect(e.name).toBe("Foo");
+    });
 });

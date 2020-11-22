@@ -60,4 +60,8 @@ describe("normal behavior", () => {
         expect(foo.getPropCalled).toBeTrue();
         expect(bar.getPropCalled).toBeTrue();
     });
+
+    test("native getter function", () => {
+        expect(Reflect.get(String.prototype, "length", "foo")).toBe(3);
+    });
 });
