@@ -75,14 +75,22 @@ int main(int argc, char* argv[])
         GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
     };
 
+<<<<<<< HEAD
     auto delete_action = GUI::Action::create("Delete", { Mod_None, Key_Delete }, Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"), [&](const GUI::Action&) {
+=======
+    auto delete_action = GUI::Action::create("Delete", {Mod_None, Key_Delete}, Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"), [&](const GUI::Action&) {
+>>>>>>> cf36c1d4ca70e5010c90d5e21c21fb822807fb20
         model->remove_item(table_view.selection().first().row());
     });
 
     auto entry_context_menu = GUI::Menu::construct();
     entry_context_menu->add_action(delete_action);
     table_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+<<<<<<< HEAD
         (void)index;
+=======
+        (void) index;
+>>>>>>> cf36c1d4ca70e5010c90d5e21c21fb822807fb20
         entry_context_menu->popup(event.screen_position());
     };
 
