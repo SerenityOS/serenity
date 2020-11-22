@@ -37,7 +37,6 @@ public:
     LayoutBox& context_box() { return m_context_box; }
     const LayoutBox& context_box() const { return m_context_box; }
 
-
 protected:
     FormattingContext(LayoutBox&);
     virtual ~FormattingContext();
