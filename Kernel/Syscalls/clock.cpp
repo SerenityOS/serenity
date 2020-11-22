@@ -37,10 +37,13 @@ int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
     timespec ts = {};
 
     switch (clock_id) {
-    case CLOCK_MONOTONIC:
-        ts.tv_sec = TimeManagement::the().seconds_since_boot();
-        ts.tv_nsec = TimeManagement::the().ticks_this_second() * 1000000;
+    case CLOCK_MONOTONIC: {
+        auto ticks_per_second = TimeManagement::the().ticks_per_second();
+        auto uptime = g_uptime;
+        ts.tv_sec = uptime / ticks_per_second;
+        ts.tv_nsec = (1000000000 * (uptime % ticks_per_second)) / ticks_per_second;
         break;
+    }
     case CLOCK_REALTIME:
         ts = TimeManagement::the().epoch_time();
         break;
@@ -88,26 +91,24 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
 
     bool is_absolute = params.flags & TIMER_ABSTIME;
 
+    auto ticks_per_second = TimeManagement::the().ticks_per_second();
+
     switch (params.clock_id) {
     case CLOCK_MONOTONIC: {
-        u64 wakeup_time;
-        if (is_absolute) {
-            u64 time_to_wake = (requested_sleep.tv_sec * 1000 + requested_sleep.tv_nsec / 1000000);
-            wakeup_time = Thread::current()->sleep_until(time_to_wake);
-        } else {
-            u64 ticks_to_sleep = requested_sleep.tv_sec * TimeManagement::the().ticks_per_second();
-            ticks_to_sleep += requested_sleep.tv_nsec * TimeManagement::the().ticks_per_second() / 1000000000;
-            if (!ticks_to_sleep)
-                return 0;
-            wakeup_time = Thread::current()->sleep(ticks_to_sleep);
-        }
+        u64 ticks_to_sleep = requested_sleep.tv_sec * ticks_per_second;
+        ticks_to_sleep += (requested_sleep.tv_nsec * ticks_per_second) / 1000000000;
+        if (is_absolute)
+            ticks_to_sleep -= g_uptime;
+        if (!ticks_to_sleep)
+            return 0;
+        u64 wakeup_time = Thread::current()->sleep(ticks_to_sleep);
         if (wakeup_time > g_uptime) {
             u64 ticks_left = wakeup_time - g_uptime;
             if (!is_absolute && params.remaining_sleep) {
                 timespec remaining_sleep = {};
-                remaining_sleep.tv_sec = ticks_left / TimeManagement::the().ticks_per_second();
-                ticks_left -= remaining_sleep.tv_sec * TimeManagement::the().ticks_per_second();
-                remaining_sleep.tv_nsec = ticks_left * 1000000000 / TimeManagement::the().ticks_per_second();
+                remaining_sleep.tv_sec = ticks_left / ticks_per_second;
+                ticks_left -= remaining_sleep.tv_sec * ticks_per_second;
+                remaining_sleep.tv_nsec = (ticks_left * 1000000000) / ticks_per_second;
                 if (!copy_to_user(params.remaining_sleep, &remaining_sleep))
                     return -EFAULT;
             }
