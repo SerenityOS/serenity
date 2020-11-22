@@ -84,7 +84,7 @@ void FrameBox::paint(PaintContext& context, PaintPhase phase)
         context.painter().restore();
 
 #ifdef DEBUG_HIGHLIGHT_FOCUSED_FRAME
-        if (node().content_frame()->is_focused_frame()) {
+        if (dom_node().content_frame()->is_focused_frame()) {
             context.painter().draw_rect(absolute_rect().to<int>(), Color::Cyan);
         }
 #endif
