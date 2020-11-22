@@ -133,10 +133,10 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
         builder.append(' ');
         if (node.is_anonymous()) {
             builder.append("[anonymous]");
-        } else if (!node.node()->is_element()) {
-            builder.append(node.node()->node_name());
+        } else if (!node.dom_node()->is_element()) {
+            builder.append(node.dom_node()->node_name());
         } else {
-            auto& element = downcast<DOM::Element>(*node.node());
+            auto& element = downcast<DOM::Element>(*node.dom_node());
             builder.append('<');
             builder.append(element.local_name());
             element.for_each_attribute([&](auto& name, auto& value) {

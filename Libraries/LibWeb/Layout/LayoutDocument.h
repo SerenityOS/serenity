@@ -36,7 +36,7 @@ public:
     explicit LayoutDocument(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~LayoutDocument() override;
 
-    const DOM::Document& node() const { return static_cast<const DOM::Document&>(*LayoutNode::node()); }
+    const DOM::Document& dom_node() const { return static_cast<const DOM::Document&>(*LayoutNode::dom_node()); }
     virtual const char* class_name() const override { return "LayoutDocument"; }
 
     void paint_all_phases(PaintContext&);

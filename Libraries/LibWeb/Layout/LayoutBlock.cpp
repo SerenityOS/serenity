@@ -49,7 +49,7 @@ LayoutBlock::~LayoutBlock()
 
 LayoutNode& LayoutBlock::inline_wrapper()
 {
-    if (!last_child() || !last_child()->is_block() || last_child()->node() != nullptr) {
+    if (!last_child() || !last_child()->is_block() || last_child()->dom_node() != nullptr) {
         append_child(adopt(*new LayoutBlock(document(), nullptr, style_for_anonymous_block())));
         last_child()->set_children_are_inline(true);
     }
@@ -80,7 +80,7 @@ void LayoutBlock::paint(PaintContext& context, PaintPhase phase)
         if (children_are_inline()) {
             for (auto& line_box : m_line_boxes) {
                 for (auto& fragment : line_box.fragments()) {
-                    auto* node = fragment.layout_node().node();
+                    auto* node = fragment.layout_node().dom_node();
                     if (!node)
                         continue;
                     auto* parent = node->parent_element();

@@ -37,8 +37,8 @@ void LayoutSVGSVG::prepare_for_replaced_layout()
 {
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
-    set_intrinsic_width(node().width());
-    set_intrinsic_height(node().height());
+    set_intrinsic_width(dom_node().width());
+    set_intrinsic_height(dom_node().height());
 }
 
 void LayoutSVGSVG::before_children_paint(PaintContext& context, LayoutNode::PaintPhase phase)

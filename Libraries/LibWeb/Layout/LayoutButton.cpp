@@ -46,7 +46,7 @@ LayoutButton::~LayoutButton()
 void LayoutButton::prepare_for_replaced_layout()
 {
     auto& font = specified_style().font();
-    set_intrinsic_width(font.width(node().value()) + 20);
+    set_intrinsic_width(font.width(dom_node().value()) + 20);
     set_has_intrinsic_width(true);
 
     set_intrinsic_height(20);
@@ -61,19 +61,19 @@ void LayoutButton::paint(PaintContext& context, PaintPhase phase)
     LayoutReplaced::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        bool hovered = document().hovered_node() == &node();
-        Gfx::StylePainter::paint_button(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::ButtonStyle::Normal, m_being_pressed, hovered, node().checked(), node().enabled());
+        bool hovered = document().hovered_node() == &dom_node();
+        Gfx::StylePainter::paint_button(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::ButtonStyle::Normal, m_being_pressed, hovered, dom_node().checked(), dom_node().enabled());
 
         auto text_rect = enclosing_int_rect(absolute_rect());
         if (m_being_pressed)
             text_rect.move_by(1, 1);
-        context.painter().draw_text(text_rect, node().value(), specified_style().font(), Gfx::TextAlignment::Center, context.palette().button_text());
+        context.painter().draw_text(text_rect, dom_node().value(), specified_style().font(), Gfx::TextAlignment::Center, context.palette().button_text());
     }
 }
 
 void LayoutButton::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
 {
-    if (button != GUI::MouseButton::Left || !node().enabled())
+    if (button != GUI::MouseButton::Left || !dom_node().enabled())
         return;
 
     m_being_pressed = true;
@@ -85,7 +85,7 @@ void LayoutButton::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, u
 
 void LayoutButton::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
 {
-    if (!m_tracking_mouse || button != GUI::MouseButton::Left || !node().enabled())
+    if (!m_tracking_mouse || button != GUI::MouseButton::Left || !dom_node().enabled())
         return;
 
     // NOTE: Handling the click may run arbitrary JS, which could disappear this node.
@@ -94,7 +94,7 @@ void LayoutButton::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& posi
 
     bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
     if (is_inside)
-        node().did_click_button({});
+        dom_node().did_click_button({});
 
     m_being_pressed = false;
     m_tracking_mouse = false;
@@ -104,7 +104,7 @@ void LayoutButton::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& posi
 
 void LayoutButton::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned, unsigned)
 {
-    if (!m_tracking_mouse || !node().enabled())
+    if (!m_tracking_mouse || !dom_node().enabled())
         return;
 
     bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);

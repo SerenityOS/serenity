@@ -84,7 +84,7 @@ void StackingContext::dump(int indent) const
 {
     for (int i = 0; i < indent; ++i)
         dbgprintf(" ");
-    dbgprintf("SC for %s{%s} %s [children: %zu]\n", m_box.class_name(), m_box.node() ? m_box.node()->node_name().characters() : "(anonymous)", m_box.absolute_rect().to_string().characters(), m_children.size());
+    dbgprintf("SC for %s{%s} %s [children: %zu]\n", m_box.class_name(), m_box.dom_node() ? m_box.dom_node()->node_name().characters() : "(anonymous)", m_box.absolute_rect().to_string().characters(), m_children.size());
     for (auto& child : m_children)
         child->dump(indent + 1);
 }

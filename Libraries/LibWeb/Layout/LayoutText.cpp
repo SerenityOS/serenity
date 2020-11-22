@@ -59,11 +59,11 @@ static bool is_all_whitespace(const StringView& string)
 const String& LayoutText::text_for_style(const CSS::StyleProperties& style) const
 {
     static String one_space = " ";
-    if (is_all_whitespace(node().data())) {
+    if (is_all_whitespace(dom_node().data())) {
         if (style.white_space().value_or(CSS::WhiteSpace::Normal) == CSS::WhiteSpace::Normal)
             return one_space;
     }
-    return node().data();
+    return dom_node().data();
 }
 
 void LayoutText::paint_fragment(PaintContext& context, const LineBoxFragment& fragment) const
@@ -78,7 +78,7 @@ void LayoutText::paint_fragment(PaintContext& context, const LineBoxFragment& fr
     auto color = specified_style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
     auto text_decoration = specified_style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
 
-    if (document().inspected_node() == &node())
+    if (document().inspected_node() == &dom_node())
         context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
 
     bool is_underline = text_decoration == "underline";
@@ -114,13 +114,13 @@ void LayoutText::paint_cursor_if_needed(PaintContext& context, const LineBoxFrag
     if (!frame().cursor_blink_state())
         return;
 
-    if (frame().cursor_position().node() != &node())
+    if (frame().cursor_position().node() != &dom_node())
         return;
 
     if (!(frame().cursor_position().offset() >= (unsigned)fragment.start() && frame().cursor_position().offset() < (unsigned)(fragment.start() + fragment.length())))
         return;
 
-    if (!fragment.layout_node().node() || !fragment.layout_node().node()->is_editable())
+    if (!fragment.layout_node().dom_node() || !fragment.layout_node().dom_node()->is_editable())
         return;
 
     auto fragment_rect = fragment.absolute_rect();
@@ -196,8 +196,8 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
 
     // Collapse whitespace into single spaces
     if (do_collapse) {
-        auto utf8_view = Utf8View(node().data());
-        StringBuilder builder(node().data().length());
+        auto utf8_view = Utf8View(dom_node().data());
+        StringBuilder builder(dom_node().data().length());
         auto it = utf8_view.begin();
         auto skip_over_whitespace = [&] {
             auto prev = it;
@@ -219,7 +219,7 @@ void LayoutText::split_into_lines_by_rules(LayoutBlock& container, LayoutMode la
         }
         m_text_for_rendering = builder.to_string();
     } else {
-        m_text_for_rendering = node().data();
+        m_text_for_rendering = dom_node().data();
     }
 
     // do_wrap_lines  => chunks_are_words

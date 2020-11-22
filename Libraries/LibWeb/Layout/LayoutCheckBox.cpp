@@ -54,13 +54,13 @@ void LayoutCheckBox::paint(PaintContext& context, PaintPhase phase)
     LayoutReplaced::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        Gfx::StylePainter::paint_check_box(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), node().enabled(), node().checked(), m_being_pressed);
+        Gfx::StylePainter::paint_check_box(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), dom_node().enabled(), dom_node().checked(), m_being_pressed);
     }
 }
 
 void LayoutCheckBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
 {
-    if (button != GUI::MouseButton::Left || !node().enabled())
+    if (button != GUI::MouseButton::Left || !dom_node().enabled())
         return;
 
     m_being_pressed = true;
@@ -72,7 +72,7 @@ void LayoutCheckBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&,
 
 void LayoutCheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
 {
-    if (!m_tracking_mouse || button != GUI::MouseButton::Left || !node().enabled())
+    if (!m_tracking_mouse || button != GUI::MouseButton::Left || !dom_node().enabled())
         return;
 
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
@@ -80,7 +80,7 @@ void LayoutCheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& po
 
     bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);
     if (is_inside)
-        node().set_checked(!node().checked());
+        dom_node().set_checked(!dom_node().checked());
 
     m_being_pressed = false;
     m_tracking_mouse = false;
@@ -89,7 +89,7 @@ void LayoutCheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& po
 
 void LayoutCheckBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned, unsigned)
 {
-    if (!m_tracking_mouse || !node().enabled())
+    if (!m_tracking_mouse || !dom_node().enabled())
         return;
 
     bool is_inside = enclosing_int_rect(absolute_rect()).contains(position);

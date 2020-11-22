@@ -37,7 +37,7 @@ LayoutSVGPath::LayoutSVGPath(DOM::Document& document, SVG::SVGPathElement& eleme
 
 void LayoutSVGPath::prepare_for_replaced_layout()
 {
-    auto& bounding_box = node().get_path().bounding_box();
+    auto& bounding_box = dom_node().get_path().bounding_box();
     set_has_intrinsic_width(true);
     set_has_intrinsic_height(true);
     set_intrinsic_width(bounding_box.width());
@@ -57,7 +57,7 @@ void LayoutSVGPath::paint(PaintContext& context, LayoutNode::PaintPhase phase)
     if (phase != LayoutNode::PaintPhase::Foreground)
         return;
 
-    auto& path_element = node();
+    auto& path_element = dom_node();
     auto& path = path_element.get_path();
 
     // We need to fill the path before applying the stroke, however the filled

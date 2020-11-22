@@ -70,9 +70,9 @@ public:
 
     virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const;
 
-    bool is_anonymous() const { return !m_node; }
-    const DOM::Node* node() const { return m_node; }
-    DOM::Node* node() { return m_node; }
+    bool is_anonymous() const { return !m_dom_node; }
+    const DOM::Node* dom_node() const { return m_dom_node; }
+    DOM::Node* dom_node() { return m_dom_node; }
 
     DOM::Document& document() { return m_document; }
     const DOM::Document& document() const { return m_document; }
@@ -178,7 +178,7 @@ private:
     friend class LayoutNodeWithStyle;
 
     NonnullRefPtr<DOM::Document> m_document;
-    RefPtr<DOM::Node> m_node;
+    RefPtr<DOM::Node> m_dom_node;
 
     bool m_inline { false };
     bool m_has_style { false };
