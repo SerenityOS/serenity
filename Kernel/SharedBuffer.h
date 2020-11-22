@@ -70,6 +70,7 @@ public:
     void share_globally() { m_global = true; }
     void deref_for_process(Process& process);
     void disown(ProcessID pid);
+    static void share_all_shared_buffers(Process& from_process, Process& with_process);
     size_t size() const { return m_vmobject->size(); }
     void destroy_if_unused();
     void seal();
