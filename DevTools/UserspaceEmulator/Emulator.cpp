@@ -402,6 +402,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$setsid();
     case SC_watch_file:
         return virt$watch_file(arg1, arg2);
+    case SC_clock_nanosleep:
+        return virt$clock_nanosleep(arg1);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1499,6 +1501,26 @@ int Emulator::virt$watch_file(FlatPtr user_path_addr, size_t path_length)
 {
     auto user_path = mmu().copy_buffer_from_vm(user_path_addr, path_length);
     return syscall(SC_watch_file, user_path.data(), user_path.size());
+}
+
+int Emulator::virt$clock_nanosleep(FlatPtr params_addr)
+{
+    Syscall::SC_clock_nanosleep_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    timespec requested_sleep;
+    mmu().copy_from_vm(&requested_sleep, (FlatPtr)params.requested_sleep, sizeof(timespec));
+    params.requested_sleep = &requested_sleep;
+
+    auto remaining_vm_addr = params.remaining_sleep;
+    auto remaining = ByteBuffer::create_zeroed(sizeof(timespec));
+    params.remaining_sleep = (timespec*)remaining.data();
+
+    int rc = syscall(SC_clock_nanosleep, &params);
+    if (remaining_vm_addr)
+        mmu().copy_to_vm((FlatPtr)remaining_vm_addr, remaining.data(), sizeof(timespec));
+
+    return rc;
 }
 
 }

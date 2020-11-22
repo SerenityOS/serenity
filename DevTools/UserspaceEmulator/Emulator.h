@@ -118,6 +118,7 @@ private:
     int virt$set_process_icon(int);
     int virt$gettimeofday(FlatPtr);
     int virt$clock_gettime(int, FlatPtr);
+    int virt$clock_nanosleep(FlatPtr);
     int virt$dbgputstr(FlatPtr characters, int length);
     int virt$dbgputch(char);
     int virt$chmod(FlatPtr, size_t, mode_t);
