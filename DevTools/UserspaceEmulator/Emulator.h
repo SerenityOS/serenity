@@ -32,6 +32,7 @@
 #include "SoftMMU.h"
 #include <AK/Types.h>
 #include <LibDebug/DebugInfo.h>
+#include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Loader.h>
 #include <LibX86/Instruction.h>
 #include <signal.h>
@@ -45,7 +46,7 @@ class Emulator {
 public:
     static Emulator& the();
 
-    Emulator(const Vector<String>& arguments, const Vector<String>& environment, NonnullRefPtr<ELF::Loader>);
+    Emulator(const String& executable_path, const Vector<String>& arguments, const Vector<String>& environment);
 
     bool load_elf();
     void dump_backtrace();
@@ -60,19 +61,22 @@ public:
     MallocTracer* malloc_tracer() { return m_malloc_tracer; }
 
     bool is_in_malloc_or_free() const;
+    bool is_in_loader_code() const;
 
     void did_receive_signal(int signum) { m_pending_signals |= (1 << signum); }
 
 private:
-    NonnullRefPtr<ELF::Loader> m_elf;
-    OwnPtr<Debug::DebugInfo> m_debug_info;
+    const String m_executable_path;
+    const Vector<String> m_arguments;
+    const Vector<String> m_environment;
 
     SoftMMU m_mmu;
     SoftCPU m_cpu;
 
     OwnPtr<MallocTracer> m_malloc_tracer;
 
-    void setup_stack(const Vector<String>& arguments, const Vector<String>& environment);
+    void setup_stack(Vector<AuxiliaryValue>);
+    Vector<AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, String executable_path, int executable_fd) const;
     void register_signal_handlers();
     void setup_signal_trampoline();
 
@@ -158,10 +162,14 @@ private:
     pid_t virt$setsid();
     int virt$watch_file(FlatPtr, size_t);
     int virt$readlink(FlatPtr);
+    u32 virt$allocate_tls(size_t);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
+    bool find_malloc_symbols(const MmapRegion& libc_text);
 
     void dispatch_one_pending_signal();
+    const MmapRegion* find_text_region(FlatPtr address);
+    String create_backtrace_line(FlatPtr address);
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
@@ -186,6 +194,8 @@ private:
     SignalHandlerInfo m_signal_handler[NSIG];
 
     FlatPtr m_signal_trampoline { 0 };
+    Optional<FlatPtr> m_loader_text_base;
+    Optional<size_t> m_loader_text_size;
 };
 
 ALWAYS_INLINE bool Emulator::is_in_malloc_or_free() const
@@ -194,6 +204,13 @@ ALWAYS_INLINE bool Emulator::is_in_malloc_or_free() const
         || (m_cpu.base_eip() >= m_free_symbol_start && m_cpu.base_eip() < m_free_symbol_end)
         || (m_cpu.base_eip() >= m_realloc_symbol_start && m_cpu.base_eip() < m_realloc_symbol_end)
         || (m_cpu.base_eip() >= m_malloc_size_symbol_start && m_cpu.base_eip() < m_malloc_size_symbol_end);
+}
+
+ALWAYS_INLINE bool Emulator::is_in_loader_code() const
+{
+    if (!m_loader_text_base.has_value() || !m_loader_text_size.has_value())
+        return false;
+    return (m_cpu.base_eip() >= m_loader_text_base.value() && m_cpu.base_eip() < m_loader_text_base.value() + m_loader_text_size.value());
 }
 
 }

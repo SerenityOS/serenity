@@ -254,6 +254,8 @@ static FlatPtr loader_main(auxv_t* auxvp)
         }
     }
     ASSERT(main_program_fd >= 0);
+    ASSERT(!main_program_name.is_null());
+    dbgln("loading: {}", main_program_name);
 
     map_library(main_program_name, main_program_fd);
     map_dependencies(main_program_name);
