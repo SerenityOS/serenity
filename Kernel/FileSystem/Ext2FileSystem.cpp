@@ -38,6 +38,7 @@
 #include <LibC/errno_numbers.h>
 
 //#define EXT2_DEBUG
+//#define EXT2_VERY_DEBUG
 
 namespace Kernel {
 
@@ -728,7 +729,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer&
     ssize_t nread = 0;
     size_t remaining_count = min((off_t)count, (off_t)size() - offset);
 
-#ifdef EXT2_DEBUG
+#ifdef EXT2_VERY_DEBUG
     dbg() << "Ext2FS: Reading up to " << count << " bytes " << offset << " bytes into inode " << identifier() << " to " << buffer.user_or_kernel_ptr();
 #endif
 
@@ -855,14 +856,14 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
     ssize_t nwritten = 0;
     size_t remaining_count = min((off_t)count, (off_t)new_size - offset);
 
-#ifdef EXT2_DEBUG
+#ifdef EXT2_VERY_DEBUG
     dbg() << "Ext2FS: Writing " << count << " bytes " << offset << " bytes into inode " << identifier() << " from " << data.user_or_kernel_ptr();
 #endif
 
     for (size_t bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
         size_t offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         size_t num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
-#ifdef EXT2_DEBUG
+#ifdef EXT2_VERY_DEBUG
         dbg() << "Ext2FS: Writing block " << m_block_list[bi] << " (offset_into_block: " << offset_into_block << ")";
 #endif
         int err = fs().write_block(m_block_list[bi], data.offset(nwritten), num_bytes_to_copy, offset_into_block, allow_cache);
@@ -875,7 +876,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernel
         nwritten += num_bytes_to_copy;
     }
 
-#ifdef EXT2_DEBUG
+#ifdef EXT2_VERY_DEBUG
     dbg() << "Ext2FS: After write, i_size=" << m_raw_inode.i_size << ", i_blocks=" << m_raw_inode.i_blocks << " (" << m_block_list.size() << " blocks in list)";
 #endif
 
@@ -912,7 +913,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
     LOCKER(m_lock);
     ASSERT(is_directory());
 
-#ifdef EXT2_DEBUG
+#ifdef EXT2_VERY_DEBUG
     dbg() << "Ext2FS: Traversing as directory: " << identifier();
 #endif
 
@@ -926,7 +927,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
 
     while (entry < buffer.end_pointer()) {
         if (entry->inode != 0) {
-#ifdef EXT2_DEBUG
+#ifdef EXT2_VERY_DEBUG
             dbg() << "Ext2Inode::traverse_as_directory: " << entry->inode << ", name_len: " << entry->name_len << ", rec_len: " << entry->rec_len << ", file_type: " << entry->file_type << ", name: " << String(entry->name, entry->name_len);
 #endif
             if (!callback({ { entry->name, entry->name_len }, { fsid(), entry->inode }, entry->file_type }))
