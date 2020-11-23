@@ -120,6 +120,8 @@ public:
     Inode* m_next { nullptr };
     Inode* m_prev { nullptr };
 
+    static SpinLock<u32>& all_inodes_lock();
+
 protected:
     Inode(FS& fs, unsigned index);
     void set_metadata_dirty(bool);

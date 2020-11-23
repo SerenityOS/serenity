@@ -41,6 +41,11 @@ namespace Kernel {
 static SpinLock s_all_inodes_lock;
 static AK::Singleton<InlineLinkedList<Inode>> s_list;
 
+SpinLock<u32>& Inode::all_inodes_lock()
+{
+    return s_all_inodes_lock;
+}
+
 InlineLinkedList<Inode>& Inode::all_with_lock()
 {
     ASSERT(s_all_inodes_lock.is_locked());
