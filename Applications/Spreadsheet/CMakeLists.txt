@@ -15,6 +15,7 @@ set(SOURCES
     CondFormattingViewUI.h
     HelpWindow.cpp
     JSIntegration.cpp
+    Readers/XSV.cpp
     Spreadsheet.cpp
     SpreadsheetModel.cpp
     SpreadsheetView.cpp
