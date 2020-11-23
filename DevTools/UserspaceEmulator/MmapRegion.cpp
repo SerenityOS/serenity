@@ -207,4 +207,14 @@ void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
     *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
 }
 
+void MmapRegion::set_prot(int prot)
+{
+    set_readable(prot & PROT_READ);
+    set_writable(prot & PROT_WRITE);
+    set_executable(prot & PROT_EXEC);
+    if (m_file_backed) {
+        mprotect(m_data, size(), prot);
+    }
+}
+
 }
