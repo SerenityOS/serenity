@@ -817,7 +817,8 @@ void Thread::set_state(State new_state)
     }
 
     if (new_state == Stopped) {
-        m_stop_state = m_state;
+        // We don't want to restore to Running state, only Runnable!
+        m_stop_state = m_state != Running ? m_state : Runnable;
     }
 
     m_state = new_state;
