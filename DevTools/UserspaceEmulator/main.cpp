@@ -50,14 +50,6 @@ int main(int argc, char** argv, char** env)
 
     auto executable_path = Core::find_executable_in_path(command[0]);
 
-    MappedFile mapped_file(executable_path);
-    if (!mapped_file.is_valid()) {
-        reportln("Unable to map {}", executable_path);
-        return 1;
-    }
-
-    auto elf = ELF::Loader::create((const u8*)mapped_file.data(), mapped_file.size());
-
     Vector<String> arguments;
     for (auto arg : command) {
         arguments.append(arg);
@@ -69,7 +61,7 @@ int main(int argc, char** argv, char** env)
     }
 
     // FIXME: It might be nice to tear down the emulator properly.
-    auto& emulator = *new UserspaceEmulator::Emulator(arguments, environment, move(elf));
+    auto& emulator = *new UserspaceEmulator::Emulator(executable_path, arguments, environment);
     if (!emulator.load_elf())
         return 1;
 

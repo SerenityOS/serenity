@@ -58,6 +58,8 @@ inline void MallocTracer::for_each_mallocation(Callback callback) const
 
 void MallocTracer::target_did_malloc(Badge<SoftCPU>, FlatPtr address, size_t size)
 {
+    if (m_emulator.is_in_loader_code())
+        return;
     auto* region = m_emulator.mmu().find_region({ 0x20, address });
     ASSERT(region);
     ASSERT(region->is_mmap());
@@ -109,12 +111,15 @@ ALWAYS_INLINE size_t MallocRegionMetadata::chunk_index_for_address(FlatPtr addre
         return 0;
     }
     auto chunk_offset = address - (this->address + sizeof(ChunkedBlock));
+    ASSERT(this->chunk_size);
     return chunk_offset / this->chunk_size;
 }
 
 void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
 {
     if (!address)
+        return;
+    if (m_emulator.is_in_loader_code())
         return;
 
     if (auto* mallocation = find_mallocation(address)) {
@@ -136,6 +141,8 @@ void MallocTracer::target_did_free(Badge<SoftCPU>, FlatPtr address)
 
 void MallocTracer::target_did_realloc(Badge<SoftCPU>, FlatPtr address, size_t size)
 {
+    if (m_emulator.is_in_loader_code())
+        return;
     auto* region = m_emulator.mmu().find_region({ 0x20, address });
     ASSERT(region);
     ASSERT(region->is_mmap());
@@ -201,8 +208,13 @@ void MallocTracer::audit_read(const Region& region, FlatPtr address, size_t size
     if (!m_auditing_enabled)
         return;
 
-    if (m_emulator.is_in_malloc_or_free())
+    if (m_emulator.is_in_malloc_or_free()) {
         return;
+    }
+
+    if (m_emulator.is_in_loader_code()) {
+        return;
+    }
 
     auto* mallocation = find_mallocation(region, address);
 
@@ -245,6 +257,10 @@ void MallocTracer::audit_write(const Region& region, FlatPtr address, size_t siz
 
     if (m_emulator.is_in_malloc_or_free())
         return;
+
+    if (m_emulator.is_in_loader_code()) {
+        return;
+    }
 
     auto* mallocation = find_mallocation(region, address);
     if (!mallocation) {
@@ -314,6 +330,8 @@ bool MallocTracer::is_reachable(const Mallocation& mallocation) const
         if (region.is_stack())
             return IterationDecision::Continue;
         if (region.is_text())
+            return IterationDecision::Continue;
+        if (!region.is_readable())
             return IterationDecision::Continue;
         // Skip malloc blocks
         if (region.is_mmap() && static_cast<const MmapRegion&>(region).is_malloc_block())

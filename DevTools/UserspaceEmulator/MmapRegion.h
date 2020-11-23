@@ -61,6 +61,8 @@ public:
     MallocRegionMetadata* malloc_metadata() { return m_malloc_metadata; }
     void set_malloc_metadata(Badge<MallocTracer>, NonnullOwnPtr<MallocRegionMetadata> metadata) { m_malloc_metadata = move(metadata); }
 
+    const String& name() const { return m_name; }
+
 private:
     MmapRegion(u32 base, u32 size, int prot);
     virtual bool is_mmap() const override { return true; }
