@@ -486,6 +486,52 @@ JsonObject Sheet::to_json() const
     return object;
 }
 
+Vector<Vector<String>> Sheet::to_xsv() const
+{
+    Vector<Vector<String>> data;
+
+    // First row = headers.
+    data.append(m_columns);
+
+    for (size_t i = 0; i < m_rows; ++i) {
+        Vector<String> row;
+        row.resize(m_columns.size());
+        for (size_t j = 0; j < m_columns.size(); ++j) {
+            auto cell = at({ m_columns[j], i });
+            if (cell)
+                row[j] = cell->typed_display();
+        }
+
+        data.append(move(row));
+    }
+
+    return data;
+}
+
+RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
+{
+    auto cols = xsv.headers();
+    auto rows = xsv.size();
+
+    auto sheet = adopt(*new Sheet(workbook));
+    sheet->m_columns = cols;
+    for (size_t i = 0; i < rows; ++i)
+        sheet->add_row();
+
+    for (auto row : xsv) {
+        for (size_t i = 0; i < cols.size(); ++i) {
+            auto str = row[i];
+            if (str.is_empty())
+                continue;
+            Position position { cols[i], row.index() };
+            auto cell = make<Cell>(str, position, *sheet);
+            sheet->m_cells.set(position, move(cell));
+        }
+    }
+
+    return sheet;
+}
+
 JsonObject Sheet::gather_documentation() const
 {
     JsonObject object;
