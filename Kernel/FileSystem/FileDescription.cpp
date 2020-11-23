@@ -123,7 +123,6 @@ KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count
     new_offset += count;
     if (new_offset.has_overflow())
         return -EOVERFLOW;
-    SmapDisabler disabler;
     auto nread_or_error = m_file->read(*this, offset(), buffer, count);
     if (!nread_or_error.is_error() && m_file->is_seekable())
         m_current_offset += nread_or_error.value();
@@ -137,7 +136,6 @@ KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t 
     new_offset += size;
     if (new_offset.has_overflow())
         return -EOVERFLOW;
-    SmapDisabler disabler;
     auto nwritten_or_error = m_file->write(*this, offset(), data, size);
     if (!nwritten_or_error.is_error() && m_file->is_seekable())
         m_current_offset += nwritten_or_error.value();
