@@ -299,6 +299,18 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         return;
     }
 
+    if (from.size() == 1) {
+        // Fill the target selection with the single cell.
+        auto& source = from.first();
+        for (auto& position : to) {
+#ifdef COPY_DEBUG
+            dbg() << "Paste from '" << source.to_url() << "' to '" << position.to_url() << "'";
+#endif
+            copy_to(source, resolve_relative_to.has_value() ? offset_relative_to(position, source, resolve_relative_to.value()) : position);
+        }
+        return;
+    }
+
     // Just disallow misaligned copies.
     dbg() << "Cannot copy " << from.size() << " cells to " << to.size() << " cells";
 }
