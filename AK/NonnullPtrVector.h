@@ -54,23 +54,23 @@ public:
     using ConstIterator = SimpleIterator<const NonnullPtrVector, const T>;
     using Iterator = SimpleIterator<NonnullPtrVector, T>;
 
-    constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
-    constexpr Iterator begin() { return Iterator::begin(*this); }
+    ALWAYS_INLINE constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    ALWAYS_INLINE constexpr Iterator begin() { return Iterator::begin(*this); }
 
-    constexpr ConstIterator end() const { return ConstIterator::end(*this); }
-    constexpr Iterator end() { return Iterator::end(*this); }
+    ALWAYS_INLINE constexpr ConstIterator end() const { return ConstIterator::end(*this); }
+    ALWAYS_INLINE constexpr Iterator end() { return Iterator::end(*this); }
 
-    PtrType& ptr_at(int index) { return Base::at(index); }
-    const PtrType& ptr_at(int index) const { return Base::at(index); }
+    ALWAYS_INLINE PtrType& ptr_at(int index) { return Base::at(index); }
+    ALWAYS_INLINE const PtrType& ptr_at(int index) const { return Base::at(index); }
 
-    T& at(int index) { return *Base::at(index); }
-    const T& at(int index) const { return *Base::at(index); }
-    T& operator[](int index) { return at(index); }
-    const T& operator[](int index) const { return at(index); }
-    T& first() { return at(0); }
-    const T& first() const { return at(0); }
-    T& last() { return at(size() - 1); }
-    const T& last() const { return at(size() - 1); }
+    ALWAYS_INLINE T& at(int index) { return *Base::at(index); }
+    ALWAYS_INLINE const T& at(int index) const { return *Base::at(index); }
+    ALWAYS_INLINE T& operator[](int index) { return at(index); }
+    ALWAYS_INLINE const T& operator[](int index) const { return at(index); }
+    ALWAYS_INLINE T& first() { return at(0); }
+    ALWAYS_INLINE const T& first() const { return at(0); }
+    ALWAYS_INLINE T& last() { return at(size() - 1); }
+    ALWAYS_INLINE const T& last() const { return at(size() - 1); }
 
 private:
     // NOTE: You can't use resize() on a NonnullFooPtrVector since making the vector
