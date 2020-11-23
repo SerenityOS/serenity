@@ -56,12 +56,7 @@ public:
     bool is_malloc_block() const { return m_malloc; }
     void set_malloc(bool b) { m_malloc = b; }
 
-    void set_prot(int prot)
-    {
-        set_readable(prot & PROT_READ);
-        set_writable(prot & PROT_WRITE);
-        set_executable(prot & PROT_EXEC);
-    }
+    void set_prot(int prot);
 
     MallocRegionMetadata* malloc_metadata() { return m_malloc_metadata; }
     void set_malloc_metadata(Badge<MallocTracer>, NonnullOwnPtr<MallocRegionMetadata> metadata) { m_malloc_metadata = move(metadata); }
