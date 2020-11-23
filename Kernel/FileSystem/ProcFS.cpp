@@ -914,6 +914,7 @@ static Optional<KBuffer> procfs$inodes(InodeIdentifier)
 {
     KBufferBuilder builder;
     InterruptDisabler disabler;
+    ScopedSpinLock all_inodes_lock(Inode::all_inodes_lock());
     for (auto& inode : Inode::all_with_lock()) {
         builder.appendf("Inode{K%x} %02u:%08u (%u)\n", &inode, inode.fsid(), inode.index(), inode.ref_count());
     }
