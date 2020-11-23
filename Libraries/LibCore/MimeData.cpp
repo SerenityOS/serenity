@@ -94,6 +94,8 @@ String guess_mime_type_based_on_filename(const StringView& path)
         return "text/html";
     if (path.ends_with("/", CaseSensitivity::CaseInsensitive))
         return "text/html";
+    if (path.ends_with(".csv", CaseSensitivity::CaseInsensitive))
+        return "text/csv";
     return "text/plain";
 }
 
