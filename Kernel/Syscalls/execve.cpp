@@ -486,7 +486,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     auto result = VFS::the().open(path, O_EXEC, 0, current_directory());
     if (result.is_error())
         return result.error();
-    auto description = result.value();
+    auto description = result.release_value();
     auto metadata = description->metadata();
 
     // Always gonna need at least 3 bytes. these are for #!X
