@@ -227,6 +227,13 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
 {
     LOCKER(m_lock);
 
+    if (blocks.is_empty()) {
+        e2inode.i_blocks = 0;
+        memset(e2inode.i_block, 0, sizeof(e2inode.i_block));
+        write_ext2_inode(inode_index, e2inode);
+        return true;
+    }
+
     // NOTE: There is a mismatch between i_blocks and blocks.size() since i_blocks includes meta blocks and blocks.size() does not.
     auto old_block_count = ceil_div(static_cast<size_t>(e2inode.i_size), block_size());
 
