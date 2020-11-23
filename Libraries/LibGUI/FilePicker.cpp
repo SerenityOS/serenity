@@ -85,12 +85,15 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
     switch (m_mode) {
     case Mode::Open:
         set_title("Open File");
+        set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
         break;
     case Mode::OpenMultiple:
         set_title("Open Files");
+        set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
         break;
     case Mode::Save:
         set_title("Save File");
+        set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"));
         break;
     }
     set_title(m_mode == Mode::Open ? "Open File" : "Save File");
