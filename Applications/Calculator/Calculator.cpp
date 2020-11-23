@@ -139,4 +139,5 @@ void Calculator::clear_operation()
 {
     m_operation_in_progress = Operation::None;
     m_saved_argument = 0.0;
+    clear_error();
 }

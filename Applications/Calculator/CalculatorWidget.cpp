@@ -95,7 +95,7 @@ CalculatorWidget::CalculatorWidget()
     m_clear_error_button = add<GUI::Button>();
     m_clear_error_button->set_text("CE");
     m_clear_error_button->on_click = [this](auto) {
-        m_calculator.clear_error();
+        m_keypad.set_value(0.0);
         update_display();
     };
     add_button(*m_clear_error_button, Color::Red);
