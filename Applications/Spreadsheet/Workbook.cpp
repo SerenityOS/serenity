@@ -26,12 +26,17 @@
 
 #include "Workbook.h"
 #include "JSIntegration.h"
+#include "Readers/CSV.h"
+#include "Writers/CSV.h"
 #include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonParser.h>
+#include <AK/Stream.h>
 #include <LibCore/File.h>
+#include <LibCore/FileStream.h>
+#include <LibCore/MimeData.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <string.h>
@@ -77,42 +82,57 @@ Result<bool, String> Workbook::load(const StringView& filename)
         return sb.to_string();
     }
 
-    auto json_value_option = JsonParser(file_or_error.value()->read_all()).parse();
-    if (!json_value_option.has_value()) {
-        StringBuilder sb;
-        sb.append("Failed to parse ");
-        sb.append(filename);
+    auto mime = Core::guess_mime_type_based_on_filename(filename);
 
-        return sb.to_string();
-    }
+    if (mime == "text/csv") {
+        // FIXME: Prompt the user for settings.
+        NonnullRefPtrVector<Sheet> sheets;
 
-    auto& json_value = json_value_option.value();
-    if (!json_value.is_array()) {
-        StringBuilder sb;
-        sb.append("Did not find a spreadsheet in ");
-        sb.append(filename);
+        auto sheet = Sheet::from_xsv(Reader::CSV(file_or_error.value()->read_all(), Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders), *this);
+        if (sheet)
+            sheets.append(sheet.release_nonnull());
 
-        return sb.to_string();
-    }
+        m_sheets.clear();
+        m_sheets = move(sheets);
+    } else {
+        // Assume JSON.
+        auto json_value_option = JsonParser(file_or_error.value()->read_all()).parse();
+        if (!json_value_option.has_value()) {
+            StringBuilder sb;
+            sb.append("Failed to parse ");
+            sb.append(filename);
 
-    NonnullRefPtrVector<Sheet> sheets;
+            return sb.to_string();
+        }
 
-    auto& json_array = json_value.as_array();
-    json_array.for_each([&](auto& sheet_json) {
-        if (!sheet_json.is_object())
+        auto& json_value = json_value_option.value();
+        if (!json_value.is_array()) {
+            StringBuilder sb;
+            sb.append("Did not find a spreadsheet in ");
+            sb.append(filename);
+
+            return sb.to_string();
+        }
+
+        NonnullRefPtrVector<Sheet> sheets;
+
+        auto& json_array = json_value.as_array();
+        json_array.for_each([&](auto& sheet_json) {
+            if (!sheet_json.is_object())
+                return IterationDecision::Continue;
+
+            auto sheet = Sheet::from_json(sheet_json.as_object(), *this);
+            if (!sheet)
+                return IterationDecision::Continue;
+
+            sheets.append(sheet.release_nonnull());
+
             return IterationDecision::Continue;
+        });
 
-        auto sheet = Sheet::from_json(sheet_json.as_object(), *this);
-        if (!sheet)
-            return IterationDecision::Continue;
-
-        sheets.append(sheet.release_nonnull());
-
-        return IterationDecision::Continue;
-    });
-
-    m_sheets.clear();
-    m_sheets = move(sheets);
+        m_sheets.clear();
+        m_sheets = move(sheets);
+    }
 
     set_filename(filename);
 
@@ -121,13 +141,7 @@ Result<bool, String> Workbook::load(const StringView& filename)
 
 Result<bool, String> Workbook::save(const StringView& filename)
 {
-    JsonArray array;
-
-    for (auto& sheet : m_sheets)
-        array.append(sheet.to_json());
-
-    auto file_content = array.to_string();
-
+    auto mime = Core::guess_mime_type_based_on_filename(filename);
     auto file = Core::File::construct(filename);
     file->open(Core::IODevice::WriteOnly);
     if (!file->is_open()) {
@@ -140,14 +154,32 @@ Result<bool, String> Workbook::save(const StringView& filename)
         return sb.to_string();
     }
 
-    bool result = file->write(file_content);
-    if (!result) {
-        int error_number = errno;
-        StringBuilder sb;
-        sb.append("Unable to save file. Error: ");
-        sb.append(strerror(error_number));
+    if (mime == "text/csv") {
+        // FIXME: Prompt the user for settings and which sheet to export.
+        Core::OutputFileStream stream { file };
+        auto data = m_sheets[0].to_xsv();
+        auto header_string = data.take_first();
+        Vector<StringView> headers;
+        for (auto& str : header_string)
+            headers.append(str);
+        Writer::CSV csv { stream, data, headers };
+        if (csv.has_error())
+            return String::formatted("Unable to save file, CSV writer error: {}", csv.error_string());
+    } else {
+        JsonArray array;
+        for (auto& sheet : m_sheets)
+            array.append(sheet.to_json());
 
-        return sb.to_string();
+        auto file_content = array.to_string();
+        bool result = file->write(file_content);
+        if (!result) {
+            int error_number = errno;
+            StringBuilder sb;
+            sb.append("Unable to save file. Error: ");
+            sb.append(strerror(error_number));
+
+            return sb.to_string();
+        }
     }
 
     set_filename(filename);

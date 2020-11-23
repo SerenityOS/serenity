@@ -28,6 +28,7 @@
 
 #include "Cell.h"
 #include "Forward.h"
+#include "Readers/XSV.h"
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/String.h>
@@ -59,6 +60,9 @@ public:
 
     JsonObject to_json() const;
     static RefPtr<Sheet> from_json(const JsonObject&, Workbook&);
+
+    Vector<Vector<String>> to_xsv() const;
+    static RefPtr<Sheet> from_xsv(const Reader::XSV&, Workbook&);
 
     const String& name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }
