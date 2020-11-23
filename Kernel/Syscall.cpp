@@ -109,12 +109,12 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
         return process.sys$sigreturn(regs);
 
     if (function >= Function::__Count) {
-        dbg() << process << ": Unknown syscall %u requested (" << arg1 << ", " << arg2 << ", " << arg3 << ")";
+        dbgln("Unknown syscall {} requested ({:08x}, {:08x}, {:08x})", function, arg1, arg2, arg3);
         return -ENOSYS;
     }
 
     if (s_syscall_table[function] == nullptr) {
-        dbg() << process << ": Null syscall " << function << " requested: \"" << to_string((Function)function) << "\", you probably need to rebuild this program.";
+        dbgln("Null syscall {} requested, you probably need to rebuild this program!", function);
         return -ENOSYS;
     }
     return (process.*(s_syscall_table[function]))(arg1, arg2, arg3);
@@ -153,20 +153,20 @@ void syscall_handler(TrapFrame* trap)
 
     auto& process = current_thread->process();
     if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
-        dbg() << "Invalid stack pointer: " << String::format("%p", regs.userspace_esp);
+        dbgln("Invalid stack pointer: {:p}", regs.userspace_esp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
         ASSERT_NOT_REACHED();
     }
 
     auto* calling_region = MM.find_region_from_vaddr(process, VirtualAddress(regs.eip));
     if (!calling_region) {
-        dbg() << "Syscall from " << String::format("%p", regs.eip) << " which has no region";
+        dbgln("Syscall from {:p} which has no associated region", regs.eip);
         handle_crash(regs, "Syscall from unknown region", SIGSEGV);
         ASSERT_NOT_REACHED();
     }
 
     if (calling_region->is_writable()) {
-        dbg() << "Syscall from writable memory at " << String::format("%p", regs.eip);
+        dbgln("Syscall from writable memory at {:p}", regs.eip);
         handle_crash(regs, "Syscall from writable memory", SIGSEGV);
         ASSERT_NOT_REACHED();
     }
