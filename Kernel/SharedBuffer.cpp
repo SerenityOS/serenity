@@ -126,11 +126,14 @@ void SharedBuffer::share_all_shared_buffers(Process& from_process, Process& with
     LOCKER(shared_buffers().lock());
     for (auto& shbuf : shared_buffers().resource()) {
         auto& shared_buffer = *shbuf.value;
-        if (shared_buffer.m_global)
-            continue;
+        // We need to clone all references (including for global shared buffers),
+        // and the reference counts as well.
         for (auto& ref : shared_buffer.m_refs) {
             if (ref.pid == from_process.pid()) {
-                shared_buffer.share_with(with_process.pid());
+                auto ref_count = ref.count;
+                shared_buffer.m_refs.append(Reference(with_process.pid(), ref_count));
+                // NOTE: ref may become invalid after we appended!
+                shared_buffer.m_total_refs += ref_count;
                 break;
             }
         }
@@ -143,7 +146,9 @@ void SharedBuffer::deref_for_process(Process& process)
     for (size_t i = 0; i < m_refs.size(); ++i) {
         auto& ref = m_refs[i];
         if (ref.pid == process.pid()) {
+            ASSERT(ref.count > 0);
             ref.count--;
+            ASSERT(m_total_refs > 0);
             m_total_refs--;
             if (ref.count == 0) {
 #ifdef SHARED_BUFFER_DEBUG
@@ -164,7 +169,7 @@ void SharedBuffer::deref_for_process(Process& process)
     ASSERT_NOT_REACHED();
 }
 
-void SharedBuffer::disown(ProcessID pid)
+bool SharedBuffer::disown(ProcessID pid)
 {
     LOCKER(shared_buffers().lock());
     for (size_t i = 0; i < m_refs.size(); ++i) {
@@ -173,15 +178,18 @@ void SharedBuffer::disown(ProcessID pid)
 #ifdef SHARED_BUFFER_DEBUG
             dbg() << "Disowning shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid.value();
 #endif
+            ASSERT(m_total_refs >= ref.count);
             m_total_refs -= ref.count;
             m_refs.unstable_take(i);
 #ifdef SHARED_BUFFER_DEBUG
             dbg() << "Disowned shared buffer " << m_shbuf_id << " of size " << size() << " by PID " << pid.value();
 #endif
             destroy_if_unused();
-            return;
+            break;
         }
     }
+
+    return m_total_refs == 0;
 }
 
 void SharedBuffer::destroy_if_unused()
