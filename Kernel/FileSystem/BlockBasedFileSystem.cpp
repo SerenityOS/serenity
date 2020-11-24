@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/IntrusiveList.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/Process.h>
 
@@ -32,12 +33,10 @@
 namespace Kernel {
 
 struct CacheEntry {
-    time_t timestamp { 0 };
+    IntrusiveListNode list_node;
     u32 block_index { 0 };
     u8* data { nullptr };
     bool has_data { false };
-    bool is_dirty { false };
-    bool is_used { false };
 };
 
 class DiskCache {
@@ -49,6 +48,7 @@ public:
     {
         for (size_t i = 0; i < m_entry_count; ++i) {
             entries()[i].data = m_cached_block_data.data() + i * m_fs.block_size();
+            m_clean_list.append(entries()[i]);
         }
     }
 
@@ -57,29 +57,33 @@ public:
     bool is_dirty() const { return m_dirty; }
     void set_dirty(bool b) { m_dirty = b; }
 
+    void mark_all_clean()
+    {
+        while (auto* entry = m_dirty_list.first())
+            m_clean_list.prepend(*entry);
+        m_dirty = false;
+    }
+
+    void mark_dirty(CacheEntry& entry)
+    {
+        m_dirty_list.prepend(entry);
+        m_dirty = true;
+    }
+
+    void mark_clean(CacheEntry& entry)
+    {
+        m_clean_list.prepend(entry);
+    }
+
     CacheEntry& get(u32 block_index) const
     {
-        auto now = kgettimeofday().tv_sec;
-
-        if (auto it = m_map.find(block_index); it != m_map.end()) {
-            auto& entry = const_cast<CacheEntry&>(entries()[it->value]);
+        if (auto it = m_hash.find(block_index); it != m_hash.end()) {
+            auto& entry = const_cast<CacheEntry&>(*it->value);
             ASSERT(entry.block_index == block_index);
-            entry.timestamp = now;
             return entry;
         }
 
-        Optional<size_t> oldest_clean_index;
-        for (size_t i = 0; i < m_entry_count; ++i) {
-            auto& entry = const_cast<CacheEntry&>(entries()[i]);
-            ASSERT(!entry.is_used || entry.block_index != block_index);
-            if (!entry.is_dirty) {
-                if (!oldest_clean_index.has_value())
-                    oldest_clean_index = i;
-                else if (entry.timestamp < entries()[oldest_clean_index.value()].timestamp)
-                    oldest_clean_index = i;
-            }
-        }
-        if (!oldest_clean_index.has_value()) {
+        if (m_clean_list.is_empty()) {
             // Not a single clean entry! Flush writes and try again.
             // NOTE: We want to make sure we only call FileBackedFS flush here,
             //       not some FileBackedFS subclass flush!
@@ -87,21 +91,16 @@ public:
             return get(block_index);
         }
 
-        // Replace the oldest clean entry.
-        auto& new_entry = const_cast<CacheEntry&>(entries()[oldest_clean_index.value()]);
+        ASSERT(m_clean_list.last());
+        auto& new_entry = *m_clean_list.last();
+        m_clean_list.prepend(new_entry);
 
-        // If this entry was occupied, remove the previous mapping from the fast lookup table.
-        if (new_entry.block_index)
-            m_map.remove(new_entry.block_index);
+        m_hash.remove(new_entry.block_index);
+        m_hash.set(block_index, &new_entry);
 
-        // Create a fast lookup mapping from the block index to this entry.
-        m_map.set(block_index, oldest_clean_index.value());
-
-        new_entry.timestamp = now;
         new_entry.block_index = block_index;
         new_entry.has_data = false;
-        new_entry.is_dirty = false;
-        new_entry.is_used = true;
+
         return new_entry;
     }
 
@@ -109,16 +108,25 @@ public:
     CacheEntry* entries() { return (CacheEntry*)m_entries.data(); }
 
     template<typename Callback>
-    void for_each_entry(Callback callback)
+    void for_each_clean_entry(Callback callback)
     {
-        for (size_t i = 0; i < m_entry_count; ++i)
-            callback(entries()[i]);
+        for (auto& entry : m_clean_list)
+            callback(entry);
+    }
+
+    template<typename Callback>
+    void for_each_dirty_entry(Callback callback)
+    {
+        for (auto& entry : m_dirty_list)
+            callback(entry);
     }
 
 private:
     BlockBasedFS& m_fs;
-    mutable HashMap<u32, u32> m_map;
     size_t m_entry_count { 10000 };
+    mutable HashMap<u32, CacheEntry*> m_hash;
+    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_clean_list;
+    mutable IntrusiveList<CacheEntry, &CacheEntry::list_node> m_dirty_list;
     KBuffer m_cached_block_data;
     KBuffer m_entries;
     bool m_dirty { false };
@@ -160,10 +168,9 @@ int BlockBasedFS::write_block(unsigned index, const UserOrKernelBuffer& data, si
     }
     if (!data.read(entry.data + offset, count))
         return -EFAULT;
-    entry.is_dirty = true;
-    entry.has_data = true;
 
-    cache().set_dirty(true);
+    cache().mark_dirty(entry);
+    entry.has_data = true;
     return 0;
 }
 
@@ -276,16 +283,21 @@ void BlockBasedFS::flush_specific_block_if_needed(unsigned index)
     LOCKER(m_lock);
     if (!cache().is_dirty())
         return;
-    cache().for_each_entry([&](CacheEntry& entry) {
-        if (entry.is_dirty && entry.block_index == index) {
+    Vector<CacheEntry*, 32> cleaned_entries;
+    cache().for_each_dirty_entry([&](CacheEntry& entry) {
+        if (entry.block_index != index) {
             u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
             file_description().seek(base_offset, SEEK_SET);
             // FIXME: Should this error path be surfaced somehow?
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
             (void)file_description().write(entry_data_buffer, block_size());
-            entry.is_dirty = false;
+            cleaned_entries.append(&entry);
         }
     });
+    // NOTE: We make a separate pass to mark entries clean since marking them clean
+    //       moves them out of the dirty list which would disturb the iteration above.
+    for (auto* entry : cleaned_entries)
+        cache().mark_clean(*entry);
 }
 
 void BlockBasedFS::flush_writes_impl()
@@ -294,18 +306,15 @@ void BlockBasedFS::flush_writes_impl()
     if (!cache().is_dirty())
         return;
     u32 count = 0;
-    cache().for_each_entry([&](CacheEntry& entry) {
-        if (!entry.is_dirty)
-            return;
+    cache().for_each_dirty_entry([&](CacheEntry& entry) {
         u32 base_offset = static_cast<u32>(entry.block_index) * static_cast<u32>(block_size());
         file_description().seek(base_offset, SEEK_SET);
         // FIXME: Should this error path be surfaced somehow?
         auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry.data);
         (void)file_description().write(entry_data_buffer, block_size());
         ++count;
-        entry.is_dirty = false;
     });
-    cache().set_dirty(false);
+    cache().mark_all_clean();
     dbg() << class_name() << ": Flushed " << count << " blocks to disk";
 }
 
