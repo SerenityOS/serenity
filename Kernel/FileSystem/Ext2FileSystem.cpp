@@ -772,7 +772,12 @@ KResult Ext2FSInode::resize(u64 new_size)
             return KResult(-ENOSPC);
     }
 
-    auto block_list = fs().block_list_for_inode(m_raw_inode);
+    Vector<Ext2FS::BlockIndex> block_list;
+    if (!m_block_list.is_empty())
+        block_list = m_block_list;
+    else
+        fs().block_list_for_inode(m_raw_inode);
+
     if (blocks_needed_after > blocks_needed_before) {
         auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
         block_list.append(move(new_blocks));
