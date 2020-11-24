@@ -25,6 +25,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Checked.h>
 #include <AK/Memory.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/StdLibExtras.h>
@@ -37,13 +38,26 @@ namespace AK {
 
 inline void StringBuilder::will_append(size_t size)
 {
-    if ((m_length + size) > m_buffer.size())
-        m_buffer.grow(max(static_cast<size_t>(16), m_buffer.size() * 2 + size));
+    Checked<size_t> needed_capacity = m_length;
+    needed_capacity += size;
+    ASSERT(!needed_capacity.has_overflow());
+    if (needed_capacity < inline_capacity)
+        return;
+    Checked<size_t> expanded_capacity = needed_capacity;
+    expanded_capacity *= 2;
+    ASSERT(!expanded_capacity.has_overflow());
+    if (m_buffer.is_null()) {
+        m_buffer.grow(expanded_capacity.value());
+        memcpy(m_buffer.data(), m_inline_buffer, m_length);
+    } else if (needed_capacity.value() > m_buffer.size()) {
+        m_buffer.grow(expanded_capacity.value());
+    }
 }
 
 StringBuilder::StringBuilder(size_t initial_capacity)
 {
-    m_buffer.grow((int)initial_capacity);
+    if (initial_capacity > inline_capacity)
+        m_buffer.grow(initial_capacity);
 }
 
 void StringBuilder::append(const StringView& str)
@@ -51,7 +65,7 @@ void StringBuilder::append(const StringView& str)
     if (str.is_empty())
         return;
     will_append(str.length());
-    memcpy(m_buffer.data() + m_length, str.characters_without_null_termination(), str.length());
+    memcpy(data() + m_length, str.characters_without_null_termination(), str.length());
     m_length += str.length();
 }
 
@@ -63,7 +77,7 @@ void StringBuilder::append(const char* characters, size_t length)
 void StringBuilder::append(char ch)
 {
     will_append(1);
-    m_buffer.data()[m_length] = ch;
+    data()[m_length] = ch;
     m_length += 1;
 }
 
@@ -86,16 +100,14 @@ void StringBuilder::appendf(const char* fmt, ...)
 
 ByteBuffer StringBuilder::to_byte_buffer() const
 {
-    ByteBuffer buffer_copy = m_buffer.isolated_copy();
-    buffer_copy.trim(m_length);
-    return buffer_copy;
+    return ByteBuffer::copy(data(), length());
 }
 
 String StringBuilder::to_string() const
 {
     if (is_empty())
         return String::empty();
-    return String((const char*)m_buffer.data(), m_length);
+    return String((const char*)data(), length());
 }
 
 String StringBuilder::build() const
@@ -105,12 +117,13 @@ String StringBuilder::build() const
 
 StringView StringBuilder::string_view() const
 {
-    return StringView { (const char*)m_buffer.data(), m_length };
+    return StringView { data(), m_length };
 }
 
 void StringBuilder::clear()
 {
     m_buffer.clear();
+    m_inline_buffer[0] = '\0';
     m_length = 0;
 }
 
