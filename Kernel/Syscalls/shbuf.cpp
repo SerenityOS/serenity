@@ -37,8 +37,12 @@ void Process::disown_all_shared_buffers()
     Vector<SharedBuffer*, 32> buffers_to_disown;
     for (auto& it : shared_buffers().resource())
         buffers_to_disown.append(it.value.ptr());
-    for (auto* shared_buffer : buffers_to_disown)
-        shared_buffer->disown(m_pid);
+    for (auto* shared_buffer : buffers_to_disown) {
+        if (shared_buffer->disown(m_pid)) {
+            shared_buffers().resource().remove(shared_buffer->id());
+            delete shared_buffer;
+        }
+    }
 }
 
 int Process::sys$shbuf_create(int size, void** buffer)
