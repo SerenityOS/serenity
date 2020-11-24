@@ -64,6 +64,11 @@ void LibThread::Thread::start()
     dbg() << "Started a thread, tid = " << m_tid;
 }
 
+void LibThread::Thread::join()
+{
+    pthread_join(m_tid, nullptr);
+}
+
 void LibThread::Thread::quit(void* code)
 {
     ASSERT(m_tid == pthread_self());

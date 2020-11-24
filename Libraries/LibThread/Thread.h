@@ -41,6 +41,7 @@ public:
     virtual ~Thread();
 
     void start();
+    void join();
     void quit(void* code = 0);
     pthread_t tid() const { return m_tid; }
 
