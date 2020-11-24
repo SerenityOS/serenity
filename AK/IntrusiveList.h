@@ -56,6 +56,7 @@ public:
     T* last() const;
 
     T* take_first();
+    T* take_last();
 
     class Iterator {
     public:
@@ -227,6 +228,16 @@ template<class T, IntrusiveListNode T::*member>
 inline T* IntrusiveList<T, member>::take_first()
 {
     if (auto* ptr = first()) {
+        remove(*ptr);
+        return ptr;
+    }
+    return nullptr;
+}
+
+template<class T, IntrusiveListNode T::*member>
+inline T* IntrusiveList<T, member>::take_last()
+{
+    if (auto* ptr = last()) {
         remove(*ptr);
         return ptr;
     }
