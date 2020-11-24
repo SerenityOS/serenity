@@ -37,6 +37,7 @@ struct CacheEntry {
     u8* data { nullptr };
     bool has_data { false };
     bool is_dirty { false };
+    bool is_used { false };
 };
 
 class DiskCache {
@@ -60,21 +61,25 @@ public:
     {
         auto now = kgettimeofday().tv_sec;
 
-        CacheEntry* oldest_clean_entry = nullptr;
+        if (auto it = m_map.find(block_index); it != m_map.end()) {
+            auto& entry = const_cast<CacheEntry&>(entries()[it->value]);
+            ASSERT(entry.block_index == block_index);
+            entry.timestamp = now;
+            return entry;
+        }
+
+        Optional<size_t> oldest_clean_index;
         for (size_t i = 0; i < m_entry_count; ++i) {
             auto& entry = const_cast<CacheEntry&>(entries()[i]);
-            if (entry.block_index == block_index) {
-                entry.timestamp = now;
-                return entry;
-            }
+            ASSERT(!entry.is_used || entry.block_index != block_index);
             if (!entry.is_dirty) {
-                if (!oldest_clean_entry)
-                    oldest_clean_entry = &entry;
-                else if (entry.timestamp < oldest_clean_entry->timestamp)
-                    oldest_clean_entry = &entry;
+                if (!oldest_clean_index.has_value())
+                    oldest_clean_index = i;
+                else if (entry.timestamp < entries()[oldest_clean_index.value()].timestamp)
+                    oldest_clean_index = i;
             }
         }
-        if (!oldest_clean_entry) {
+        if (!oldest_clean_index.has_value()) {
             // Not a single clean entry! Flush writes and try again.
             // NOTE: We want to make sure we only call FileBackedFS flush here,
             //       not some FileBackedFS subclass flush!
@@ -83,11 +88,20 @@ public:
         }
 
         // Replace the oldest clean entry.
-        auto& new_entry = *oldest_clean_entry;
+        auto& new_entry = const_cast<CacheEntry&>(entries()[oldest_clean_index.value()]);
+
+        // If this entry was occupied, remove the previous mapping from the fast lookup table.
+        if (new_entry.block_index)
+            m_map.remove(new_entry.block_index);
+
+        // Create a fast lookup mapping from the block index to this entry.
+        m_map.set(block_index, oldest_clean_index.value());
+
         new_entry.timestamp = now;
         new_entry.block_index = block_index;
         new_entry.has_data = false;
         new_entry.is_dirty = false;
+        new_entry.is_used = true;
         return new_entry;
     }
 
@@ -103,6 +117,7 @@ public:
 
 private:
     BlockBasedFS& m_fs;
+    mutable HashMap<u32, u32> m_map;
     size_t m_entry_count { 10000 };
     KBuffer m_cached_block_data;
     KBuffer m_entries;
