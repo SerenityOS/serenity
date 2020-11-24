@@ -78,7 +78,7 @@ struct utimbuf {
 
 typedef int pthread_t;
 typedef int pthread_key_t;
-typedef void* pthread_once_t;
+typedef int32_t pthread_once_t;
 
 typedef struct __pthread_mutex_t {
     uint32_t lock;
