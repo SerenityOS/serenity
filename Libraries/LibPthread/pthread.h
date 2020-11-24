@@ -67,7 +67,7 @@ int pthread_attr_setstack(pthread_attr_t* attr, void*, size_t);
 int pthread_attr_getstacksize(const pthread_attr_t*, size_t*);
 int pthread_attr_setstacksize(pthread_attr_t*, size_t);
 
-int pthread_once(pthread_once_t*, void (*)());
+int pthread_once(pthread_once_t*, void (*)(void));
 #define PTHREAD_ONCE_INIT 0
 void* pthread_getspecific(pthread_key_t key);
 int pthread_setspecific(pthread_key_t key, const void* value);

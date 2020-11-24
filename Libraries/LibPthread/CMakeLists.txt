@@ -1,5 +1,6 @@
 set(SOURCES
     pthread.cpp
+    pthread_once.cpp
 )
 
 serenity_libc(LibPthread pthread)
