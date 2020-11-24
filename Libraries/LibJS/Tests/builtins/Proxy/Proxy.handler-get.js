@@ -40,6 +40,16 @@ describe("[[Get]] trap normal behavior", () => {
         expect(p.test).toBeUndefined();
         expect(p[Symbol.hasInstance]).toBeUndefined();
     });
+
+    test("custom receiver value", () => {
+        let p = new Proxy({}, {
+            get(target, property, receiver) {
+                return receiver;
+            },
+        });
+
+        expect(Reflect.get(p, "foo", 42)).toBe(42);
+    });
 });
 
 describe("[[Get]] invariants", () => {
