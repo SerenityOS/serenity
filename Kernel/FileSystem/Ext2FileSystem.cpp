@@ -484,13 +484,10 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode_impl(const ext2_inode& e
     auto process_block_array = [&](unsigned array_block_index, auto&& callback) {
         if (include_block_list_blocks)
             add_block(array_block_index);
-        unsigned count = min(blocks_remaining, entries_per_block);
-        size_t read_size = count * sizeof(__u32);
-        auto array_block = ByteBuffer::create_uninitialized(read_size);
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(array_block.data());
-        read_block(array_block_index, &buffer, read_size, 0);
-        ASSERT(array_block);
-        auto* array = reinterpret_cast<const __u32*>(array_block.data());
+        auto count = min(blocks_remaining, entries_per_block);
+        u32 array[count];
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
+        read_block(array_block_index, &buffer, sizeof(array), 0);
         for (BlockIndex i = 0; i < count; ++i)
             callback(array[i]);
     };
