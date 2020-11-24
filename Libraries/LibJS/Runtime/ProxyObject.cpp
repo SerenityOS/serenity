@@ -359,24 +359,26 @@ bool ProxyObject::has_property(const PropertyName& name) const
     return trap_result.to_boolean();
 }
 
-Value ProxyObject::get(const PropertyName& name, Value) const
+Value ProxyObject::get(const PropertyName& name, Value receiver) const
 {
     auto& vm = this->vm();
     if (m_is_revoked) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return {};
     }
+    if (receiver.is_empty())
+        receiver = Value(const_cast<ProxyObject*>(this));
     auto trap = m_handler.get(vm.names.get);
     if (vm.exception())
         return {};
     if (trap.is_empty() || trap.is_nullish())
-        return m_target.get(name);
+        return m_target.get(name, receiver);
     if (!trap.is_function()) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "get");
         return {};
     }
 
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm), Value(const_cast<ProxyObject*>(this)));
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm), receiver);
     if (vm.exception())
         return {};
     auto target_desc = m_target.get_own_property_descriptor(name);
@@ -395,23 +397,25 @@ Value ProxyObject::get(const PropertyName& name, Value) const
     return trap_result;
 }
 
-bool ProxyObject::put(const PropertyName& name, Value value, Value)
+bool ProxyObject::put(const PropertyName& name, Value value, Value receiver)
 {
     auto& vm = this->vm();
     if (m_is_revoked) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyRevoked);
         return false;
     }
+    if (receiver.is_empty())
+        receiver = Value(const_cast<ProxyObject*>(this));
     auto trap = m_handler.get(vm.names.set);
     if (vm.exception())
         return false;
     if (trap.is_empty() || trap.is_nullish())
-        return m_target.put(name, value);
+        return m_target.put(name, value, receiver);
     if (!trap.is_function()) {
         vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyInvalidTrap, "set");
         return false;
     }
-    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm), value, Value(const_cast<ProxyObject*>(this)));
+    auto trap_result = vm.call(trap.as_function(), Value(&m_handler), Value(&m_target), name.to_value(vm), value, receiver);
     if (vm.exception() || !trap_result.to_boolean())
         return false;
     auto target_desc = m_target.get_own_property_descriptor(name);
