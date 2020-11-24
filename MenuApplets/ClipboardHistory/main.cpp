@@ -25,8 +25,10 @@
  */
 
 #include "ClipboardHistoryModel.h"
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ImageWidget.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
@@ -71,6 +73,16 @@ int main(int argc, char* argv[])
     table_view.on_activation = [&](const GUI::ModelIndex& index) {
         auto& data_and_type = model->item_at(index.row());
         GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
+    };
+
+    auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action&) {
+        model->remove_item(table_view.selection().first().row());
+    });
+
+    auto entry_context_menu = GUI::Menu::construct();
+    entry_context_menu->add_action(delete_action);
+    table_view.on_context_menu_request = [&](const GUI::ModelIndex&, const GUI::ContextMenuEvent& event) {
+        entry_context_menu->popup(event.screen_position());
     };
 
     auto applet_window = GUI::Window::construct();
