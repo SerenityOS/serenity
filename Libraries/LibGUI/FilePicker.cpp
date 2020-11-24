@@ -96,7 +96,6 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, Options options, const 
         set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"));
         break;
     }
-    set_title(m_mode == Mode::Open ? "Open File" : "Save File");
     set_rect(200, 200, 700, 400);
     auto& horizontal_container = set_main_widget<Widget>();
     horizontal_container.set_layout<HorizontalBoxLayout>();
