@@ -151,7 +151,6 @@ set(SOURCES
     Layout/InlineFormattingContext.cpp
     Layout/InlineNode.cpp
     Layout/LayoutPosition.cpp
-    Layout/LayoutTreeBuilder.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
     Layout/ListItemBox.cpp
@@ -168,6 +167,7 @@ set(SOURCES
     Layout/TableRowBox.cpp
     Layout/TableRowGroupBox.cpp
     Layout/TextNode.cpp
+    Layout/TreeBuilder.cpp
     Layout/WidgetBox.cpp
     LayoutTreeModel.cpp
     Loader/FrameLoader.cpp

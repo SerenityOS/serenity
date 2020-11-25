@@ -36,12 +36,12 @@
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineNode.h>
-#include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableRowGroupBox.h>
+#include <LibWeb/Layout/TreeBuilder.h>
 
 namespace Web::DOM {
 
@@ -206,7 +206,7 @@ void Element::recompute_style()
         if (style->display() == CSS::Display::None)
             return;
         // We need a new layout tree here!
-        Layout::LayoutTreeBuilder tree_builder;
+        Layout::TreeBuilder tree_builder;
         tree_builder.build(*this);
         return;
     }

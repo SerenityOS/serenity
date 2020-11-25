@@ -31,9 +31,9 @@
 
 namespace Web::Layout {
 
-class LayoutTreeBuilder {
+class TreeBuilder {
 public:
-    LayoutTreeBuilder();
+    TreeBuilder();
 
     RefPtr<Node> build(DOM::Node&);
 };
