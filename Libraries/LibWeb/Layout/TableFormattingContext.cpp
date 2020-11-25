@@ -38,8 +38,8 @@
 
 namespace Web::Layout {
 
-TableFormattingContext::TableFormattingContext(Box& context_box)
-    : BlockFormattingContext(context_box)
+TableFormattingContext::TableFormattingContext(Box& context_box, FormattingContext* parent)
+    : BlockFormattingContext(context_box, parent)
 {
 }
 

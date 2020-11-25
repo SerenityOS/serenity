@@ -37,8 +37,8 @@
 
 namespace Web::Layout {
 
-BlockFormattingContext::BlockFormattingContext(Box& context_box)
-    : FormattingContext(context_box)
+BlockFormattingContext::BlockFormattingContext(Box& context_box, FormattingContext* parent)
+    : FormattingContext(context_box, parent)
 {
 }
 
@@ -393,7 +393,7 @@ void BlockFormattingContext::compute_height(Box& box)
 
 void BlockFormattingContext::layout_inline_children(LayoutMode layout_mode)
 {
-    InlineFormattingContext context(context_box());
+    InlineFormattingContext context(context_box(), this);
     context.run(layout_mode);
 }
 

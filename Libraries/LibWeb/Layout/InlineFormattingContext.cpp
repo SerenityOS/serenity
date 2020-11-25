@@ -28,6 +28,7 @@
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -35,8 +36,8 @@
 
 namespace Web::Layout {
 
-InlineFormattingContext::InlineFormattingContext(Box& containing_block)
-    : FormattingContext(containing_block)
+InlineFormattingContext::InlineFormattingContext(Box& containing_block, FormattingContext* parent)
+    : FormattingContext(containing_block, parent)
 {
 }
 
@@ -178,7 +179,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             inline_block.set_width(inline_block.style().width().to_px(inline_block));
         }
 
-        FormattingContext::layout_inside(inline_block, layout_mode);
+        layout_inside(inline_block, layout_mode);
 
         if (inline_block.style().height().is_undefined_or_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.

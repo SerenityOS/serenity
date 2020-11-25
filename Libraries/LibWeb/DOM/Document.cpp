@@ -352,7 +352,7 @@ void Document::layout()
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlockBox>(tree_builder.build(*this));
     }
 
-    Layout::BlockFormattingContext root_formatting_context(*m_layout_root);
+    Layout::BlockFormattingContext root_formatting_context(*m_layout_root, nullptr);
     root_formatting_context.run(Layout::LayoutMode::Default);
 
     m_layout_root->set_needs_display();

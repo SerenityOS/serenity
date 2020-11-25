@@ -32,8 +32,9 @@
 
 namespace Web::Layout {
 
-FormattingContext::FormattingContext(Box& context_box)
-    : m_context_box(context_box)
+FormattingContext::FormattingContext(Box& context_box, FormattingContext* parent)
+    : m_parent(parent)
+    , m_context_box(context_box)
 {
 }
 
@@ -44,13 +45,13 @@ FormattingContext::~FormattingContext()
 void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
 {
     if (box.is_table()) {
-        TableFormattingContext context(box);
+        TableFormattingContext context(box, this);
         context.run(layout_mode);
     } else if (box.children_are_inline()) {
-        InlineFormattingContext context(box);
+        InlineFormattingContext context(box, this);
         context.run(layout_mode);
     } else {
-        BlockFormattingContext context(box);
+        BlockFormattingContext context(box, this);
         context.run(layout_mode);
     }
 }

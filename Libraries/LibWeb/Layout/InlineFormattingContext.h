@@ -33,7 +33,7 @@ namespace Web::Layout {
 
 class InlineFormattingContext final : public FormattingContext {
 public:
-    InlineFormattingContext(Box& containing_block);
+    InlineFormattingContext(Box& containing_block, FormattingContext* parent);
     ~InlineFormattingContext();
 
     virtual void run(LayoutMode) override;
