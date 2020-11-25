@@ -178,6 +178,7 @@ bool Decoder::decode(File& file)
     return true;
 #else
     (void)file;
+    (void)m_sockfd;
     warnln("fd passing is not supported on this platform, sorry :(");
     return false;
 #endif
