@@ -26,13 +26,13 @@
 
 #pragma once
 
-#include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 
 namespace Gfx {
 
 RefPtr<Gfx::Bitmap> load_bmp(const StringView& path);
+RefPtr<Gfx::Bitmap> load_bmp_from_memory(const u8*, size_t);
 
 struct BMPLoadingContext;
 
