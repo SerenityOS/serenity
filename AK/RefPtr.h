@@ -361,7 +361,7 @@ public:
     ALWAYS_INLINE operator const T*() const { return as_ptr(); }
     ALWAYS_INLINE operator T*() { return as_ptr(); }
 
-    operator bool() { return !is_null(); }
+    ALWAYS_INLINE operator bool() { return !is_null(); }
 
     bool operator==(std::nullptr_t) const { return is_null(); }
     bool operator!=(std::nullptr_t) const { return !is_null(); }
@@ -378,7 +378,7 @@ public:
     bool operator==(T* other) { return as_ptr() == other; }
     bool operator!=(T* other) { return as_ptr() != other; }
 
-    bool is_null() const { return PtrTraits::is_null(m_bits.load(AK::MemoryOrder::memory_order_relaxed)); }
+    ALWAYS_INLINE bool is_null() const { return PtrTraits::is_null(m_bits.load(AK::MemoryOrder::memory_order_relaxed)); }
 
     template<typename U = T, typename EnableIf<IsSame<U, T>::value && !IsNullPointer<typename PtrTraits::NullType>::value>::Type* = nullptr>
     typename PtrTraits::NullType null_value() const
