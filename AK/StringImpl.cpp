@@ -103,9 +103,6 @@ RefPtr<StringImpl> StringImpl::create(const char* cstring, size_t length, Should
     if (!cstring)
         return nullptr;
 
-    if (!length || !*cstring)
-        return the_empty_stringimpl();
-
     if (should_chomp) {
         while (length) {
             char last_ch = cstring[length - 1];
