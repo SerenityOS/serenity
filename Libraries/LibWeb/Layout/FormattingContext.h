@@ -37,11 +37,14 @@ public:
     Box& context_box() { return m_context_box; }
     const Box& context_box() const { return m_context_box; }
 
+    FormattingContext* parent() { return m_parent; }
+    const FormattingContext* parent() const { return m_parent; }
+
 protected:
-    FormattingContext(Box&);
+    FormattingContext(Box&, FormattingContext* parent = nullptr);
     virtual ~FormattingContext();
 
-    static void layout_inside(Box&, LayoutMode);
+    void layout_inside(Box&, LayoutMode);
 
     struct ShrinkToFitResult {
         float preferred_width { 0 };
@@ -50,6 +53,7 @@ protected:
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box&);
 
+    FormattingContext* m_parent { nullptr };
     Box& m_context_box;
 };
 
