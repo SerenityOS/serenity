@@ -9,7 +9,7 @@ function(add_simple_fuzzer name)
       )
 endfunction()
 
-add_simple_fuzzer(FuzzBMP)
+add_simple_fuzzer(FuzzBMPLoader)
 add_simple_fuzzer(FuzzELF)
 add_simple_fuzzer(FuzzGemini)
 add_simple_fuzzer(FuzzGIFLoader)
