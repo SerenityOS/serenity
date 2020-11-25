@@ -29,13 +29,6 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    Gfx::BMPImageDecoderPlugin loader { data, size };
-    auto bitmap = loader.bitmap();
-    if (!bitmap)
-        return 1;
-    if (bitmap->width() >= 100000 || bitmap->height() >= 100000) {
-        fprintf(stderr, "Silly bitmap: %dx%d pixels?!\n", bitmap->width(), bitmap->height());
-        ASSERT_NOT_REACHED();
-    }
+    Gfx::load_bmp_from_memory(data, size);
     return 0;
 }

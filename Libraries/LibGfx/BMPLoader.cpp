@@ -186,6 +186,14 @@ RefPtr<Gfx::Bitmap> load_bmp(const StringView& path)
     return bitmap;
 }
 
+RefPtr<Gfx::Bitmap> load_bmp_from_memory(const u8* data, size_t length)
+{
+    auto bitmap = load_bmp_impl(data, length);
+    if (bitmap)
+        bitmap->set_mmap_name(String::format("Gfx::Bitmap [%dx%d] - Decoded BMP: <memory>", bitmap->width(), bitmap->height()));
+    return bitmap;
+}
+
 static const LogStream& operator<<(const LogStream& out, Endpoint<i32> ep)
 {
     return out << "(" << ep.x << ", " << ep.y << ", " << ep.z << ")";
