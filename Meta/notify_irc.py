@@ -58,9 +58,11 @@ def compute_lines(wrapper):
         if raw_action == 'opened':
             action = 'opened'
         elif raw_action == 'reopened':
-            action = 'reopened'
+            # Reduce spam, don't notify about reopened PRs
+            return False
         elif raw_action == 'synchronize':
-            action = 'updated'
+            # Reduce spam, don't notify about PR updates
+            return False
         else:
             action = '{}(?)'.format(raw_action)
         if event['pull_request'].get('draft', True):
