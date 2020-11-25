@@ -56,7 +56,7 @@
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
-#include <LibWeb/Layout/LayoutTreeBuilder.h>
+#include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Frame.h>
@@ -348,7 +348,7 @@ void Document::layout()
         return;
 
     if (!m_layout_root) {
-        Layout::LayoutTreeBuilder tree_builder;
+        Layout::TreeBuilder tree_builder;
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlockBox>(tree_builder.build(*this));
     }
 

@@ -26,14 +26,14 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ParentNode.h>
-#include <LibWeb/Layout/LayoutTreeBuilder.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Layout/TreeBuilder.h>
 
 namespace Web::Layout {
 
-LayoutTreeBuilder::LayoutTreeBuilder()
+TreeBuilder::TreeBuilder()
 {
 }
 
@@ -77,7 +77,7 @@ static RefPtr<Node> create_layout_tree(DOM::Node& node, const CSS::StyleProperti
     return layout_node;
 }
 
-RefPtr<Node> LayoutTreeBuilder::build(DOM::Node& node)
+RefPtr<Node> TreeBuilder::build(DOM::Node& node)
 {
     if (!is<DOM::Document>(node) && node.has_children()) {
         dbg() << "FIXME: Support building partial layout trees.";
