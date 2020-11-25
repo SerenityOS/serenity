@@ -36,13 +36,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     auto lexer = JS::Lexer(js);
     auto parser = JS::Parser(lexer);
     parser.parse_program();
-    if (parser.has_errors()) {
-        for (auto& error : parser.errors()) {
-            if (error.line >= 100000 || error.column >= 100000) {
-                fprintf(stderr, "%s\n", error.to_string().characters());
-                ASSERT_NOT_REACHED();
-            }
-        }
-    }
     return 0;
 }
