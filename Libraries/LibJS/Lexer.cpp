@@ -304,7 +304,7 @@ bool Lexer::is_line_terminator() const
 {
     if (m_current_char == '\n' || m_current_char == '\r')
         return true;
-    if (m_position + 1 < m_source.length()) {
+    if (m_position > 0 && m_position + 1 < m_source.length()) {
         auto three_chars_view = m_source.substring_view(m_position - 1, 3);
         return (three_chars_view == LINE_SEPARATOR) || (three_chars_view == PARAGRAPH_SEPARATOR);
     }
