@@ -79,6 +79,15 @@ private:
     }
 };
 
+class InfinitelyScrollableTableView : public GUI::TableView {
+    C_OBJECT(InfinitelyScrollableTableView)
+public:
+    Function<void()> on_reaching_vertical_end;
+
+private:
+    virtual void did_scroll() override;
+};
+
 class SpreadsheetView final : public GUI::Widget {
     C_OBJECT(SpreadsheetView);
 
@@ -99,6 +108,8 @@ public:
 private:
     virtual void hide_event(GUI::HideEvent&) override;
     virtual void show_event(GUI::ShowEvent&) override;
+
+    void update_with_model();
 
     SpreadsheetView(Sheet&);
 
@@ -143,7 +154,7 @@ private:
     };
 
     NonnullRefPtr<Sheet> m_sheet;
-    RefPtr<GUI::TableView> m_table_view;
+    RefPtr<InfinitelyScrollableTableView> m_table_view;
     RefPtr<GUI::Menu> m_cell_range_context_menu;
 };
 

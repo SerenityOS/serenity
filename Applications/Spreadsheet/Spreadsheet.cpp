@@ -49,10 +49,10 @@ Sheet::Sheet(const StringView& name, Workbook& workbook)
 {
     m_name = name;
 
-    for (size_t i = 0; i < 20; ++i)
+    for (size_t i = 0; i < default_row_count; ++i)
         add_row();
 
-    for (size_t i = 0; i < 16; ++i)
+    for (size_t i = 0; i < default_column_count; ++i)
         add_column();
 }
 
@@ -318,7 +318,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
 RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
 {
     auto sheet = adopt(*new Sheet(workbook));
-    auto rows = object.get("rows").to_u32(20);
+    auto rows = object.get("rows").to_u32(default_row_count);
     auto columns = object.get("columns");
     if (!columns.is_array())
         return nullptr;
@@ -326,7 +326,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
 
     sheet->set_name(name);
 
-    for (size_t i = 0; i < rows; ++i)
+    for (size_t i = 0; i < max(rows, (unsigned)Sheet::default_row_count); ++i)
         sheet->add_row();
 
     // FIXME: Better error checking.
@@ -421,6 +421,19 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     return sheet;
 }
 
+Position Sheet::written_data_bounds() const
+{
+    Position bound;
+    for (auto& entry : m_cells) {
+        if (entry.key.row > bound.row)
+            bound.row = entry.key.row;
+        if (entry.key.column > bound.column)
+            bound.column = entry.key.column;
+    }
+
+    return bound;
+}
+
 JsonObject Sheet::to_json() const
 {
     JsonObject object;
@@ -433,12 +446,14 @@ JsonObject Sheet::to_json() const
             obj.set("background_color", format.background_color.value().to_string());
     };
 
+    auto bottom_right = written_data_bounds();
+
     auto columns = JsonArray();
     for (auto& column : m_columns)
         columns.append(column);
     object.set("columns", move(columns));
 
-    object.set("rows", m_rows);
+    object.set("rows", bottom_right.row);
 
     JsonObject cells;
     for (auto& it : m_cells) {
@@ -502,10 +517,12 @@ Vector<Vector<String>> Sheet::to_xsv() const
 {
     Vector<Vector<String>> data;
 
+    auto bottom_right = written_data_bounds();
+
     // First row = headers.
     data.append(m_columns);
 
-    for (size_t i = 0; i < m_rows; ++i) {
+    for (size_t i = 0; i <= bottom_right.row; ++i) {
         Vector<String> row;
         row.resize(m_columns.size());
         for (size_t j = 0; j < m_columns.size(); ++j) {
@@ -527,7 +544,7 @@ RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
 
     auto sheet = adopt(*new Sheet(workbook));
     sheet->m_columns = cols;
-    for (size_t i = 0; i < rows; ++i)
+    for (size_t i = 0; i < max(rows, Sheet::default_row_count); ++i)
         sheet->add_row();
 
     for (auto row : xsv) {
