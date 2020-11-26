@@ -37,53 +37,116 @@ TreeBuilder::TreeBuilder()
 {
 }
 
-static RefPtr<Node> create_layout_tree(DOM::Node& node, const CSS::StyleProperties* parent_style)
+static NonnullRefPtr<CSS::StyleProperties> style_for_anonymous_block(Node& parent_box)
 {
-    auto layout_node = node.create_layout_node(parent_style);
-    if (!layout_node)
-        return nullptr;
+    auto new_style = CSS::StyleProperties::create();
 
-    if (!node.has_children())
-        return layout_node;
-
-    NonnullRefPtrVector<Node> layout_children;
-    bool have_inline_children = false;
-    bool have_noninline_children = false;
-
-    downcast<DOM::ParentNode>(node).for_each_child([&](DOM::Node& child) {
-        auto layout_child = create_layout_tree(child, &layout_node->specified_style());
-        if (!layout_child)
-            return;
-        if (layout_child->is_inline())
-            have_inline_children = true;
-        else
-            have_noninline_children = true;
-        layout_children.append(layout_child.release_nonnull());
+    parent_box.specified_style().for_each_property([&](auto property_id, auto& value) {
+        if (CSS::StyleResolver::is_inherited_property(property_id))
+            new_style->set_property(property_id, value);
     });
 
-    for (auto& layout_child : layout_children) {
-        if (have_noninline_children && have_inline_children && layout_child.is_inline()) {
-            if (is<TextNode>(layout_child) && downcast<TextNode>(layout_child).text_for_style(*parent_style) == " ")
-                continue;
-            layout_node->inline_wrapper().append_child(layout_child);
+    return new_style;
+}
+
+static Layout::Node& insertion_parent_for_inline_node(Layout::Node& layout_parent, Layout::Node& layout_node)
+{
+    if (layout_parent.is_inline())
+        return layout_parent;
+
+    if (!layout_parent.has_children() || layout_parent.children_are_inline())
+        return layout_parent;
+
+    // layout_parent has block children, insert into an anonymous wrapper block (and create it first if needed)
+    if (!layout_parent.last_child()->is_anonymous() || !layout_parent.last_child()->children_are_inline()) {
+        layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
+    }
+    return *layout_parent.last_child();
+}
+
+static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent, Layout::Node& layout_node)
+{
+    if (!layout_parent.has_children() || !layout_parent.children_are_inline())
+        return layout_parent;
+
+    // layout_parent has inline children, first move them into an anonymous wrapper block
+    if (layout_parent.children_are_inline()) {
+        NonnullRefPtrVector<Layout::Node> children;
+        while (RefPtr<Layout::Node> child = layout_parent.first_child()) {
+            layout_parent.remove_child(*child);
+            children.append(child.release_nonnull());
+        }
+        layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
+        layout_parent.set_children_are_inline(false);
+        for (auto& child : children) {
+            layout_parent.last_child()->append_child(child);
+        }
+        layout_parent.last_child()->set_children_are_inline(true);
+    }
+
+    if (!layout_parent.last_child()->is_anonymous() || layout_parent.last_child()->children_are_inline()) {
+        layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, style_for_anonymous_block(layout_parent))));
+    }
+    return *layout_parent.last_child();
+}
+
+void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
+{
+    // If the parent doesn't have a layout node, we don't need one either.
+    if (dom_node.parent() && !dom_node.parent()->layout_node())
+        return;
+
+    const CSS::StyleProperties* parent_style = m_parent_stack.is_empty() ? nullptr : &m_parent_stack.last()->specified_style();
+
+    auto layout_node = dom_node.create_layout_node(parent_style);
+    if (!layout_node)
+        return;
+
+    // Discard empty whitespace nodes. This might not be ideal for correctness, but it does make the tree nicer.
+    if (is<TextNode>(*layout_node) && downcast<TextNode>(*layout_node).text_for_style(*parent_style) == " ")
+        return;
+
+    if (!dom_node.parent()) {
+        m_layout_root = layout_node;
+    } else {
+        if (layout_node->is_inline()) {
+            // Inlines can be inserted into the nearest ancestor.
+            auto& insertion_point = insertion_parent_for_inline_node(*m_parent_stack.last(), *layout_node);
+            insertion_point.append_child(*layout_node);
+            insertion_point.set_children_are_inline(true);
         } else {
-            layout_node->append_child(layout_child);
+            // Blocks can't be inserted into an inline parent, so find the nearest block ancestor.
+            auto& nearest_block_ancestor = [&]() -> Layout::Node& {
+                for (ssize_t i = m_parent_stack.size() - 1; i >= 0; --i) {
+                    if (m_parent_stack[i]->is_block())
+                        return *m_parent_stack[i];
+                }
+                ASSERT_NOT_REACHED();
+            }();
+            auto& insertion_point = insertion_parent_for_block_node(nearest_block_ancestor, *layout_node);
+            insertion_point.append_child(*layout_node);
+            insertion_point.set_children_are_inline(false);
         }
     }
 
-    if (have_inline_children && !have_noninline_children)
-        layout_node->set_children_are_inline(true);
-
-    return layout_node;
+    if (dom_node.has_children()) {
+        push_parent(*layout_node);
+        downcast<DOM::ParentNode>(dom_node).for_each_child([&](auto& dom_child) {
+            create_layout_tree(dom_child);
+        });
+        pop_parent();
+    }
 }
 
-RefPtr<Node> TreeBuilder::build(DOM::Node& node)
+RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
 {
-    if (!is<DOM::Document>(node) && node.has_children()) {
+    if (!is<DOM::Document>(dom_node) && dom_node.has_children()) {
         dbg() << "FIXME: Support building partial layout trees.";
         return nullptr;
     }
-    return create_layout_tree(node, nullptr);
+
+    create_layout_tree(dom_node);
+    return move(m_layout_root);
 }
 
 }

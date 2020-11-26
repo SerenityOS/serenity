@@ -47,15 +47,6 @@ BlockBox::~BlockBox()
 {
 }
 
-Node& BlockBox::inline_wrapper()
-{
-    if (!last_child() || !last_child()->is_block() || last_child()->dom_node() != nullptr) {
-        append_child(adopt(*new BlockBox(document(), nullptr, style_for_anonymous_block())));
-        last_child()->set_children_are_inline(true);
-    }
-    return *last_child();
-}
-
 void BlockBox::paint(PaintContext& context, PaintPhase phase)
 {
     if (!is_visible())
@@ -117,18 +108,6 @@ HitTestResult BlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type
     if (type == HitTestType::TextCursor && last_good_candidate.layout_node)
         return last_good_candidate;
     return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
-}
-
-NonnullRefPtr<CSS::StyleProperties> BlockBox::style_for_anonymous_block() const
-{
-    auto new_style = CSS::StyleProperties::create();
-
-    specified_style().for_each_property([&](auto property_id, auto& value) {
-        if (CSS::StyleResolver::is_inherited_property(property_id))
-            new_style->set_property(property_id, value);
-    });
-
-    return new_style;
 }
 
 void BlockBox::split_into_lines(BlockBox& container, LayoutMode layout_mode)

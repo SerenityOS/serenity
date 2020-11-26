@@ -134,8 +134,6 @@ public:
 
     bool can_contain_boxes_with_position_absolute() const;
 
-    virtual Node& inline_wrapper() { return *this; }
-
     const CSS::StyleProperties& specified_style() const;
     const ImmutableLayoutStyle& style() const;
 
