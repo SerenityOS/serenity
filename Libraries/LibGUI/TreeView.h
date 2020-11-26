@@ -59,7 +59,7 @@ protected:
     virtual void keydown_event(KeyEvent&) override;
 
     virtual void did_update_selection() override;
-    virtual void did_update_model(unsigned flags) override;
+    virtual void model_did_update(unsigned flags) override;
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
 private:

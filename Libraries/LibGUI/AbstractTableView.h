@@ -89,6 +89,8 @@ public:
     HeaderView& row_header() { return *m_row_header; }
     const HeaderView& row_header() const { return *m_row_header; }
 
+    virtual void model_did_update(unsigned flags) override;
+
 protected:
     virtual ~AbstractTableView() override;
     AbstractTableView();
@@ -98,7 +100,6 @@ protected:
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 
-    virtual void did_update_model(unsigned flags) override;
     virtual void toggle_index(const ModelIndex&) { }
 
     void update_content_size();

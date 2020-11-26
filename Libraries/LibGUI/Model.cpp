@@ -40,11 +40,13 @@ Model::~Model()
 void Model::register_view(Badge<AbstractView>, AbstractView& view)
 {
     m_views.set(&view);
+    m_clients.set(&view);
 }
 
 void Model::unregister_view(Badge<AbstractView>, AbstractView& view)
 {
     m_views.remove(&view);
+    m_clients.remove(&view);
 }
 
 void Model::for_each_view(Function<void(AbstractView&)> callback)
@@ -57,10 +59,6 @@ void Model::did_update(unsigned flags)
 {
     for (auto* client : m_clients)
         client->model_did_update(flags);
-
-    for_each_view([&](auto& view) {
-        view.did_update_model(flags);
-    });
 }
 
 ModelIndex Model::create_index(int row, int column, const void* data) const
