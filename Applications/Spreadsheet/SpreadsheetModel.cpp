@@ -170,6 +170,7 @@ void SheetModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& valu
 void SheetModel::update()
 {
     m_sheet->update();
+    did_update(UpdateFlag::DontInvalidateIndexes);
 }
 
 }

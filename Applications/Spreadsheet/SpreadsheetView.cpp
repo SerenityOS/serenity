@@ -35,6 +35,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/ScrollBar.h>
 #include <LibGUI/TableView.h>
 #include <LibGfx/Palette.h>
 
@@ -57,17 +58,40 @@ void SpreadsheetView::EditingDelegate::set_value(const GUI::Variant& value)
     StringModelEditingDelegate::set_value("");
 }
 
+void InfinitelyScrollableTableView::did_scroll()
+{
+    TableView::did_scroll();
+    auto& vscrollbar = vertical_scrollbar();
+    if (vscrollbar.is_visible() && vscrollbar.value() == vscrollbar.max()) {
+        if (on_reaching_vertical_end)
+            on_reaching_vertical_end();
+    }
+}
+
+void SpreadsheetView::update_with_model()
+{
+    m_table_view->model()->update();
+    m_table_view->update();
+}
+
 SpreadsheetView::SpreadsheetView(Sheet& sheet)
     : m_sheet(sheet)
 {
     set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
-    m_table_view = add<GUI::TableView>();
+    m_table_view = add<InfinitelyScrollableTableView>();
     m_table_view->set_grid_style(GUI::TableView::GridStyle::Both);
     m_table_view->set_cursor_style(GUI::TableView::CursorStyle::Item);
     m_table_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed | GUI::AbstractView::AnyKeyPressed | GUI::AbstractView::DoubleClicked);
     m_table_view->set_tab_key_navigation_enabled(true);
     m_table_view->row_header().set_visible(true);
     m_table_view->set_model(SheetModel::create(*m_sheet));
+    m_table_view->on_reaching_vertical_end = [&]() {
+        for (size_t i = 0; i < 100; ++i) {
+            auto index = m_sheet->add_row();
+            m_table_view->set_column_painting_delegate(index, make<TableCellPainter>(*m_table_view));
+        };
+        update_with_model();
+    };
 
     set_focus_proxy(m_table_view);
 
@@ -107,8 +131,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
 
         if (on_selection_changed) {
             on_selection_changed(move(selected_positions));
-            m_table_view->model()->update();
-            m_table_view->update();
+            update_with_model();
         };
     };
 

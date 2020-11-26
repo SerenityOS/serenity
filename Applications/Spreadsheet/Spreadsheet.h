@@ -46,6 +46,9 @@ class Sheet : public Core::Object {
     C_OBJECT(Sheet);
 
 public:
+    constexpr static size_t default_row_count = 100;
+    constexpr static size_t default_column_count = 26;
+
     ~Sheet();
 
     static Optional<Position> parse_cell_name(const StringView&);
@@ -123,6 +126,9 @@ public:
     const Workbook& workbook() const { return m_workbook; }
 
     void copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to = {});
+
+    /// Gives the bottom-right corner of the smallest bounding box containing all the written data.
+    Position written_data_bounds() const;
 
 private:
     explicit Sheet(Workbook&);
