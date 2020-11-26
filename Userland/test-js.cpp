@@ -705,13 +705,13 @@ int main(int argc, char** argv)
 
     bool print_times = false;
     bool test262_parser_tests = false;
-    const char* test_root = nullptr;
+    const char* specified_test_root = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
     args_parser.add_option(collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
     args_parser.add_option(test262_parser_tests, "Run test262 parser tests", "test262-parser-tests", 0);
-    args_parser.add_positional_argument(test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (test262_parser_tests) {
@@ -719,7 +719,7 @@ int main(int argc, char** argv)
             fprintf(stderr, "--collect-often and --test262-parser-tests options must not be used together\n");
             return 1;
         }
-        if (!test_root) {
+        if (!specified_test_root) {
             fprintf(stderr, "Test root is required with --test262-parser-tests\n");
             return 1;
         }
@@ -729,7 +729,9 @@ int main(int argc, char** argv)
         DebugLogStream::set_enabled(false);
     }
 
-    if (!test_root) {
+    String test_root;
+
+    if (!specified_test_root) {
 #ifdef __serenity__
         test_root = "/home/anon/js-tests";
 #else
@@ -738,11 +740,11 @@ int main(int argc, char** argv)
             printf("No test root given, test-js requires the SERENITY_ROOT environment variable to be set");
             return 1;
         }
-        test_root = String::formatted("{}/Libraries/LibJS/Tests", serenity_root).characters();
+        test_root = String::formatted("{}/Libraries/LibJS/Tests", serenity_root);
 #endif
     }
     if (!Core::File::is_directory(test_root)) {
-        fprintf(stderr, "Test root is not a directory: %s\n", test_root);
+        warnln("Test root is not a directory: {}", test_root);
         return 1;
     }
 
