@@ -265,6 +265,7 @@ void init_stage2()
     new RandomDevice;
     PTYMultiplexer::initialize();
     new SB16;
+    VMWareBackdoor::the(); // don't wait until first mouse packet
 
     bool force_pio = kernel_command_line().contains("force_pio");
 
