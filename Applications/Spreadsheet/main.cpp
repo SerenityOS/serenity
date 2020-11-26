@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
     },
         window));
     edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
-        ScopeGuard update_after_paste { [&] { spreadsheet_widget.current_worksheet().update(); } };
+        ScopeGuard update_after_paste { [&] { spreadsheet_widget.update(); } };
 
         auto& cells = spreadsheet_widget.current_worksheet().selected_cells();
         ASSERT(!cells.is_empty());
