@@ -27,13 +27,17 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>
 #include <LibGUI/ScrollableWidget.h>
 #include <LibGfx/TextElision.h>
 
 namespace GUI {
 
-class AbstractView : public ScrollableWidget {
+class AbstractView
+    : public ScrollableWidget
+    , public ModelClient {
+
     C_OBJECT_ABSTRACT(AbstractView);
 
 public:
@@ -87,7 +91,7 @@ public:
     bool is_multi_select() const { return m_multi_select; }
     void set_multi_select(bool);
 
-    virtual void did_update_model(unsigned flags);
+    virtual void model_did_update(unsigned flags) override;
     virtual void did_update_selection();
 
     virtual Gfx::IntRect content_rect(const ModelIndex&) const { return {}; }

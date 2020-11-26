@@ -56,7 +56,7 @@ public:
 private:
     IconView();
 
-    virtual void did_update_model(unsigned flags) override;
+    virtual void model_did_update(unsigned flags) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void second_paint_event(PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
