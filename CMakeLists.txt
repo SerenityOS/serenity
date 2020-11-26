@@ -12,6 +12,10 @@ set(CMAKE_INSTALL_MESSAGE NEVER)
 
 enable_testing()
 
+if (ENABLE_OSS_FUZZ)
+    add_compile_options(__oss_fuzz__=1)
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_custom_target(run
