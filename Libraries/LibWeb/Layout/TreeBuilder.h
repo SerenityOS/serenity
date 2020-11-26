@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <LibWeb/Forward.h>
 
@@ -35,7 +36,16 @@ class TreeBuilder {
 public:
     TreeBuilder();
 
-    RefPtr<Node> build(DOM::Node&);
+    RefPtr<Layout::Node> build(DOM::Node&);
+
+private:
+    void create_layout_tree(DOM::Node&);
+
+    void push_parent(Layout::Node& node) { m_parent_stack.append(&node); }
+    void pop_parent() { m_parent_stack.take_last(); }
+
+    RefPtr<Layout::Node> m_layout_root;
+    Vector<Layout::Node*> m_parent_stack;
 };
 
 }

@@ -40,8 +40,6 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) override;
 
-    virtual Node& inline_wrapper() override;
-
     virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 
     BlockBox* previous_sibling() { return downcast<BlockBox>(Node::previous_sibling()); }
@@ -58,8 +56,6 @@ public:
 
 private:
     virtual bool is_block() const override { return true; }
-
-    NonnullRefPtr<CSS::StyleProperties> style_for_anonymous_block() const;
 };
 
 template<typename Callback>
