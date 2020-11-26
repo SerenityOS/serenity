@@ -130,14 +130,14 @@ int detached_test()
     pthread_attr_t attributes;
     int rc = pthread_attr_init(&attributes);
     if (rc != 0) {
-        printf("pthread_attr_setdetachstate: %s\n", strerror(rc));
+        printf("pthread_attr_init: %s\n", strerror(rc));
         return 1;
     }
 
     int detach_state = 99; // clearly invalid
     rc = pthread_attr_getdetachstate(&attributes, &detach_state);
     if (rc != 0) {
-        printf("pthread_attr_setdetachstate: %s\n", strerror(rc));
+        printf("pthread_attr_getdetachstate: %s\n", strerror(rc));
         return 2;
     }
     printf("Default detach state: %s\n", detach_state == PTHREAD_CREATE_JOINABLE ? "joinable" : "detached");
@@ -181,7 +181,7 @@ int detached_test()
 
     rc = pthread_attr_destroy(&attributes);
     if (rc != 0) {
-        printf("pthread_attr_setdetachstate: %s\n", strerror(rc));
+        printf("pthread_attr_destroy: %s\n", strerror(rc));
         return 7;
     }
 
