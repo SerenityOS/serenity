@@ -320,6 +320,16 @@ void WindowManager::tell_wm_listener_about_window_icon(Window& listener, Window&
     listener.client()->post_message(Messages::WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client_id(), window.window_id(), window.icon().shbuf_id(), window.icon().size()));
 }
 
+void WindowManager::tell_wm_listener_about_window_pin(Window& listener, Window& window)
+{
+    if (!(listener.wm_event_mask() & WMEventMask::WindowPins))
+        return;
+    if (window.is_internal())
+        return;
+
+    listener.client()->post_message(Messages::WindowClient::WM_WindowRequestedPin(listener.window_id(), window.client_id(), window.window_id()));
+}
+
 void WindowManager::tell_wm_listeners_window_state_changed(Window& window)
 {
     for_each_window_listening_to_wm_events([&](Window& listener) {
@@ -340,6 +350,14 @@ void WindowManager::tell_wm_listeners_window_rect_changed(Window& window)
 {
     for_each_window_listening_to_wm_events([&](Window& listener) {
         tell_wm_listener_about_window_rect(listener, window);
+        return IterationDecision::Continue;
+    });
+}
+
+void WindowManager::tell_wm_listeners_window_pinned(Window& window)
+{
+    for_each_window_listening_to_wm_events([&](Window& listener) {
+        tell_wm_listener_about_window_pin(listener, window);
         return IterationDecision::Continue;
     });
 }

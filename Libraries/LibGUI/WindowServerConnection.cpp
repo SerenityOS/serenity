@@ -289,6 +289,12 @@ void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowIconB
         Core::EventLoop::current().post_event(*window, make<WMWindowIconBitmapChangedEvent>(message.client_id(), message.window_id(), message.icon_buffer_id(), message.icon_size()));
 }
 
+void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRequestedPin& message)
+{
+    if (auto* window = Window::from_window_id(message.wm_id()))
+        Core::EventLoop::current().post_event(*window, make<WMWindowRequestedPinEvent>(message.client_id(), message.window_id(), message.af_path()));
+}
+
 void WindowServerConnection::handle(const Messages::WindowClient::WM_WindowRemoved& message)
 {
     if (auto* window = Window::from_window_id(message.wm_id()))

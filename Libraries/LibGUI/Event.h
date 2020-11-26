@@ -74,6 +74,7 @@ public:
         WM_WindowStateChanged,
         WM_WindowRectChanged,
         WM_WindowIconBitmapChanged,
+        WM_WindowRequestedPin,
         __End_WM_Events,
     };
 
@@ -183,6 +184,20 @@ public:
 private:
     int m_icon_buffer_id;
     Gfx::IntSize m_icon_size;
+};
+
+class WMWindowRequestedPinEvent : public WMEvent {
+public:
+    WMWindowRequestedPinEvent(int client_id, int window_id, const StringView& af_path)
+        : WMEvent(Event::Type::WM_WindowRequestedPin, client_id, window_id)
+        , m_af_path(af_path)
+    {
+    }
+
+    const String& af_path() const { return m_af_path; }
+
+private:
+    String m_af_path;
 };
 
 class MultiPaintEvent final : public Event {

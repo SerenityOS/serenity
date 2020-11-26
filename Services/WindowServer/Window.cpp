@@ -108,7 +108,7 @@ Window::Window(ClientConnection& client, WindowType window_type, int window_id, 
 {
     // FIXME: This should not be hard-coded here.
     if (m_type == WindowType::Taskbar) {
-        m_wm_event_mask = WMEventMask::WindowStateChanges | WMEventMask::WindowRemovals | WMEventMask::WindowIconChanges;
+        m_wm_event_mask = WMEventMask::WindowStateChanges | WMEventMask::WindowRemovals | WMEventMask::WindowIconChanges | WMEventMask::WindowPins;
         m_listens_to_wm_events = true;
     }
 
@@ -515,9 +515,12 @@ void Window::ensure_window_menu()
         m_window_menu_maximize_item = maximize_item.ptr();
         m_window_menu->add_item(move(maximize_item));
 
+        auto pin_item = make<MenuItem>(*m_window_menu, 3, "Pin To Taskbar");
+        m_window_menu->add_item(move(pin_item));
+
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
-        auto close_item = make<MenuItem>(*m_window_menu, 3, "Close");
+        auto close_item = make<MenuItem>(*m_window_menu, 4, "Close");
         m_window_menu_close_item = close_item.ptr();
         m_window_menu_close_item->set_icon(&close_icon());
         m_window_menu_close_item->set_default(true);
@@ -538,6 +541,9 @@ void Window::ensure_window_menu()
                 WindowManager::the().move_to_front_and_make_active(*this);
                 break;
             case 3:
+                WindowManager::the().tell_wm_listeners_window_pinned(*this);
+                break;
+            case 4:
                 request_close();
                 break;
             }

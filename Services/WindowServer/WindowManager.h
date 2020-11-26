@@ -160,6 +160,7 @@ public:
     void tell_wm_listeners_window_state_changed(Window&);
     void tell_wm_listeners_window_icon_changed(Window&);
     void tell_wm_listeners_window_rect_changed(Window&);
+    void tell_wm_listeners_window_pinned(Window&);
 
     bool is_active_window_or_accessory(Window&) const;
 
@@ -243,6 +244,7 @@ private:
     void tell_wm_listener_about_window(Window& listener, Window&);
     void tell_wm_listener_about_window_icon(Window& listener, Window&);
     void tell_wm_listener_about_window_rect(Window& listener, Window&);
+    void tell_wm_listener_about_window_pin(Window& listener, Window&);
     bool pick_new_active_window(Window*);
 
     void do_move_to_front(Window&, bool, bool);

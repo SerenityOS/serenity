@@ -49,6 +49,7 @@ enum WMEventMask {
     WindowStateChanges = 1 << 1,
     WindowIconChanges = 1 << 2,
     WindowRemovals = 1 << 3,
+    WindowPins = 1 << 4,
 };
 
 enum class WindowTileType {
@@ -60,6 +61,7 @@ enum class WindowTileType {
 enum class PopupMenuItem {
     Minimize = 0,
     Maximize,
+    PinToTaskBar,
 };
 
 enum class WindowMenuDefaultAction {
