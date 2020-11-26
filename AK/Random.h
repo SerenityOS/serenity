@@ -47,7 +47,7 @@ inline void fill_with_random(void* buffer, size_t length)
 {
 #if defined(__serenity__)
     arc4random_buf(buffer, length);
-#elif defined (__oss_fuzz__)
+#elif defined (OSS_FUZZ)
     // Ugly hack to get OSS-Fuzz environment working, where we dont have the
     // getentropy call. We use the conditional because we need buffer and
     // length to be used.
