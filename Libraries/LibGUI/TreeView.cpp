@@ -399,10 +399,10 @@ void TreeView::scroll_into_view(const ModelIndex& a_index, bool scroll_horizonta
     ScrollableWidget::scroll_into_view(found_rect, scroll_horizontally, scroll_vertically);
 }
 
-void TreeView::did_update_model(unsigned flags)
+void TreeView::model_did_update(unsigned flags)
 {
     m_view_metadata.clear();
-    AbstractTableView::did_update_model(flags);
+    AbstractTableView::model_did_update(flags);
 }
 
 void TreeView::did_update_selection()

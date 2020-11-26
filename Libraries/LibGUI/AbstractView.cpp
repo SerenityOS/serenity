@@ -63,11 +63,11 @@ void AbstractView::set_model(RefPtr<Model> model)
     m_model = move(model);
     if (m_model)
         m_model->register_view({}, *this);
-    did_update_model(GUI::Model::InvalidateAllIndexes);
+    model_did_update(GUI::Model::InvalidateAllIndexes);
     scroll_to_top();
 }
 
-void AbstractView::did_update_model(unsigned flags)
+void AbstractView::model_did_update(unsigned int flags)
 {
     // FIXME: It's unfortunate that we lose so much view state when the model updates in any way.
     stop_editing();

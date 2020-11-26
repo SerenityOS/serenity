@@ -135,9 +135,9 @@ auto IconView::item_data_from_content_position(const Gfx::IntPoint& content_posi
     return &get_item_data(item_index);
 }
 
-void IconView::did_update_model(unsigned flags)
+void IconView::model_did_update(unsigned flags)
 {
-    AbstractView::did_update_model(flags);
+    AbstractView::model_did_update(flags);
     if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
         m_item_data_cache.clear();
         AbstractView::clear_selection();

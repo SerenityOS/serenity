@@ -51,7 +51,7 @@ private:
     int icon_spacing() const { return 2; }
     int text_padding() const { return 2; }
 
-    virtual void did_update_model(unsigned flags) override;
+    virtual void model_did_update(unsigned flags) override;
     virtual void paint_event(PaintEvent&) override;
     virtual void mousedown_event(MouseEvent& event) override;
 
