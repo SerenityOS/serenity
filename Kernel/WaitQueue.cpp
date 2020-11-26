@@ -67,79 +67,117 @@ bool WaitQueue::dequeue(Thread& thread)
 
 void WaitQueue::wake_one(Atomic<bool>* lock)
 {
-    ScopedSpinLock queue_lock(m_lock);
-    if (lock)
+    if (lock) {
         *lock = false;
-    if (m_threads.is_empty()) {
-        // Save the fact that a wake was requested
-        m_wake_requested = true;
-#ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one: nobody to wake, mark as pending";
-#endif
-        return;
     }
+
+    Thread* thread = nullptr;
+    {
+        ScopedSpinLock queue_lock(m_lock);
+        if (m_threads.is_empty()) {
+            // Save the fact that a wake was requested.
+            m_wake_requested = true;
 #ifdef WAITQUEUE_DEBUG
-    dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one:";
+            dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one: nobody to wake, mark as pending";
 #endif
-    auto* thread = m_threads.take_first();
+
+            return;
+        }
+
+        thread = m_threads.take_first();
+        m_wake_requested = false;
+    }
+
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_one: wake thread " << *thread;
 #endif
+
+    // Avoid nesting spinlocks, take special care to
+    // signal and yield outside the queues lock.
     thread->wake_from_queue();
-    m_wake_requested = false;
+
     Scheduler::yield();
 }
 
 void WaitQueue::wake_n(u32 wake_count)
 {
-    ScopedSpinLock queue_lock(m_lock);
-    if (m_threads.is_empty()) {
-        // Save the fact that a wake was requested
-        m_wake_requested = true;
+    ThreadList wake_queue;
+
+    {
+        ScopedSpinLock queue_lock(m_lock);
+
+        if (m_threads.is_empty()) {
+            // Save the fact that a wake was requested
+            m_wake_requested = true;
 #ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: nobody to wake, mark as pending";
+            dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: nobody to wake, mark as pending";
 #endif
-        return;
+            return;
+        }
+
+        for (u32 i = 0; i < wake_count; ++i) {
+            Thread* thread = m_threads.take_first();
+            if (!thread)
+                break;
+            wake_queue.append(*thread);
+        }
+        m_wake_requested = false;
     }
 
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: " << wake_count;
 #endif
-    for (u32 i = 0; i < wake_count; ++i) {
-        Thread* thread = m_threads.take_first();
-        if (!thread)
-            break;
+
+    // Avoid nesting spinlocks, take special care to
+    // signal and yield outside the queues lock.
+    while (!wake_queue.is_empty()) {
+        Thread* thread = wake_queue.take_first();
 #ifdef WAITQUEUE_DEBUG
         dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_n: wake thread " << *thread;
 #endif
         thread->wake_from_queue();
     }
-    m_wake_requested = false;
+
     Scheduler::yield();
 }
 
 void WaitQueue::wake_all()
 {
-    ScopedSpinLock queue_lock(m_lock);
-    if (m_threads.is_empty()) {
-        // Save the fact that a wake was requested
-        m_wake_requested = true;
+    ThreadList wake_queue;
+
+    {
+        ScopedSpinLock queue_lock(m_lock);
+        if (m_threads.is_empty()) {
+            // Save the fact that a wake was requested
+            m_wake_requested = true;
 #ifdef WAITQUEUE_DEBUG
-        dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: nobody to wake, mark as pending";
+            dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: nobody to wake, mark as pending";
 #endif
-        return;
+            return;
+        }
+
+        while (!m_threads.is_empty()) {
+            Thread* thread = m_threads.take_first();
+            wake_queue.append(*thread);
+        }
+
+        m_wake_requested = false;
     }
+
 #ifdef WAITQUEUE_DEBUG
     dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: ";
 #endif
-    while (!m_threads.is_empty()) {
-        Thread* thread = m_threads.take_first();
+
+    // Avoid nesting spinlocks, take special care to
+    // signal and yield outside the queues lock.
+    while (!wake_queue.is_empty()) {
+        Thread* thread = wake_queue.take_first();
 #ifdef WAITQUEUE_DEBUG
         dbg() << "WaitQueue " << VirtualAddress(this) << ": wake_all: wake thread " << *thread;
 #endif
         thread->wake_from_queue();
     }
-    m_wake_requested = false;
+
     Scheduler::yield();
 }
 
