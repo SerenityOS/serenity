@@ -62,6 +62,16 @@ RegExpPrototype::~RegExpPrototype()
 {
 }
 
+static Object* this_object_from(VM& vm, GlobalObject& global_object)
+{
+    auto this_value = vm.this_value(global_object);
+    if (!this_value.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
+        return {};
+    }
+    return &this_value.as_object();
+}
+
 static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -85,25 +95,20 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::dot_all)
 
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 {
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
+    auto this_object = this_object_from(vm, global_object);
+    if (!this_object)
         return {};
 
-    auto flags = regexp_object->declared_options();
     StringBuilder builder(8);
 
-    if (flags.has_flag_set(ECMAScriptFlags::Global))
-        builder.append('g');
-    if (flags.has_flag_set(ECMAScriptFlags::Insensitive))
-        builder.append('i');
-    if (flags.has_flag_set(ECMAScriptFlags::Multiline))
-        builder.append('m');
-    if (flags.has_flag_set(ECMAScriptFlags::SingleLine))
-        builder.append('s');
-    if (flags.has_flag_set(ECMAScriptFlags::Unicode))
-        builder.append('u');
-    if (flags.has_flag_set(ECMAScriptFlags::Sticky))
-        builder.append('y');
+#define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName)                \
+    auto flag_##flag_name = this_object->get(vm.names.flagName).value_or(js_undefined()); \
+    if (vm.exception())                                                                   \
+        return {};                                                                        \
+    if (flag_##flag_name.to_boolean())                                                    \
+        builder.append(#flag_char);
+    JS_ENUMERATE_REGEXP_FLAGS
+#undef __JS_ENUMERATE
 
     return js_string(vm, builder.to_string());
 }
