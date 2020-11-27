@@ -28,7 +28,7 @@
 #include "RegexDebug.h"
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <cstdio>
+#include <AK/StringUtils.h>
 
 namespace regex {
 
@@ -85,6 +85,26 @@ ALWAYS_INLINE bool Parser::consume(const String& str)
         consume(TokenType::Char, Error::NoError);
         ++potentially_go_back;
     }
+    return true;
+}
+
+ALWAYS_INLINE bool Parser::try_skip(StringView str)
+{
+    if (str.starts_with(m_parser_state.current_token.value()))
+        str = str.substring_view(m_parser_state.current_token.value().length(), str.length() - m_parser_state.current_token.value().length());
+    else
+        return false;
+
+    size_t potentially_go_back { 0 };
+    for (auto ch : str) {
+        if (!m_parser_state.lexer.try_skip(ch)) {
+            m_parser_state.lexer.back(potentially_go_back);
+            return false;
+        }
+        ++potentially_go_back;
+    }
+
+    m_parser_state.current_token = m_parser_state.lexer.next();
     return true;
 }
 
@@ -595,4 +615,762 @@ bool PosixExtendedParser::parse_root(ByteCode& stack, size_t& match_length_minim
     return !has_error();
 }
 
+// =============================
+// ECMA262 Parser
+// =============================
+
+bool ECMA262Parser::parse_internal(ByteCode& stack, size_t& match_length_minimum)
+{
+    if (m_parser_state.regex_options & AllFlags::Unicode) {
+        return parse_pattern(stack, match_length_minimum, true, true);
+    } else {
+        ByteCode new_stack;
+        size_t new_match_length = 0;
+        auto res = parse_pattern(new_stack, new_match_length, false, false);
+        if (m_parser_state.named_capture_groups_count > 0) {
+            reset();
+            return parse_pattern(stack, match_length_minimum, false, true);
+        }
+
+        if (!res)
+            return false;
+
+        stack.append(new_stack);
+        match_length_minimum = new_match_length;
+        return res;
+    }
+}
+
+bool ECMA262Parser::parse_pattern(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
+{
+    return parse_disjunction(stack, match_length_minimum, unicode, named);
+}
+
+bool ECMA262Parser::parse_disjunction(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
+{
+    ByteCode left_alternative_stack;
+    size_t left_alternative_min_length = 0;
+    auto alt_ok = parse_alternative(left_alternative_stack, left_alternative_min_length, unicode, named);
+    if (!alt_ok)
+        return false;
+
+    if (!match(TokenType::Pipe)) {
+        stack.append(left_alternative_stack);
+        match_length_minimum = left_alternative_min_length;
+        return alt_ok;
+    }
+
+    consume();
+    ByteCode right_alternative_stack;
+    size_t right_alternative_min_length = 0;
+    auto continuation_ok = parse_disjunction(right_alternative_stack, right_alternative_min_length, unicode, named);
+    if (!continuation_ok)
+        return false;
+
+    stack.insert_bytecode_alternation(move(left_alternative_stack), move(right_alternative_stack));
+    match_length_minimum = min(left_alternative_min_length, right_alternative_min_length);
+    return continuation_ok;
+}
+
+bool ECMA262Parser::parse_alternative(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
+{
+    for (;;) {
+        if (match(TokenType::Eof))
+            return true;
+
+        if (parse_term(stack, match_length_minimum, unicode, named))
+            continue;
+
+        return !has_error();
+    }
+}
+
+bool ECMA262Parser::parse_term(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
+{
+    if (parse_assertion(stack, match_length_minimum, unicode, named))
+        return true;
+
+    ByteCode atom_stack;
+    size_t minimum_atom_length = 0;
+    if (!parse_atom(atom_stack, minimum_atom_length, unicode, named))
+        return false;
+
+    if (!parse_quantifier(atom_stack, minimum_atom_length, unicode, named))
+        return false;
+
+    stack.append(move(atom_stack));
+    match_length_minimum += minimum_atom_length;
+    return true;
+}
+
+bool ECMA262Parser::parse_assertion(ByteCode& stack, [[maybe_unused]] size_t& match_length_minimum, bool unicode, bool named)
+{
+    if (match(TokenType::Circumflex)) {
+        consume();
+        stack.empend((ByteCodeValueType)OpCodeId::CheckBegin);
+        return true;
+    }
+
+    if (match(TokenType::Dollar)) {
+        consume();
+        stack.empend((ByteCodeValueType)OpCodeId::CheckEnd);
+        return true;
+    }
+
+    if (try_skip("\\b")) {
+        stack.insert_bytecode_check_boundary(BoundaryCheckType::Word);
+        return true;
+    }
+
+    if (try_skip("\\B")) {
+        stack.insert_bytecode_check_boundary(BoundaryCheckType::NonWord);
+        return true;
+    }
+
+    if (match(TokenType::LeftParen)) {
+        if (!try_skip("(?"))
+            return false;
+
+        ByteCode assertion_stack;
+        size_t length_dummy = 0;
+
+        auto parse_inner_disjunction = [&] {
+            auto disjunction_ok = parse_disjunction(assertion_stack, length_dummy, unicode, named);
+            if (!disjunction_ok)
+                return false;
+            consume(TokenType::RightParen, Error::MismatchingParen);
+            return true;
+        };
+
+        if (try_skip("=")) {
+            if (!parse_inner_disjunction())
+                return false;
+            stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::LookAhead);
+            return true;
+        }
+        if (try_skip("!")) {
+            if (!parse_inner_disjunction())
+                return false;
+            stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::NegatedLookAhead);
+            return true;
+        }
+        if (try_skip("<=")) {
+            if (!parse_inner_disjunction())
+                return false;
+            // FIXME: Somehow ensure that this assertion regexp has a fixed length.
+            stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::LookBehind, length_dummy);
+            return true;
+        }
+        if (try_skip("<!")) {
+            if (!parse_inner_disjunction())
+                return false;
+            stack.insert_bytecode_lookaround(move(assertion_stack), ByteCode::LookAroundType::NegatedLookBehind, length_dummy);
+            return true;
+        }
+
+        // If none of these matched, put the '(?' back.
+        m_parser_state.lexer.back(3);
+        m_parser_state.current_token = m_parser_state.lexer.next();
+        return false;
+    }
+
+    return false;
+}
+
+Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZeroState initial_zero, ECMA262Parser::ReadDigitFollowPolicy follow_policy, bool hex, int max_count)
+{
+    if (!match(TokenType::Char))
+        return {};
+
+    if (initial_zero != ReadDigitsInitialZeroState::Allow) {
+        auto has_initial_zero = m_parser_state.current_token.value() == "0";
+        if (initial_zero == ReadDigitsInitialZeroState::Disallow && has_initial_zero)
+            return {};
+
+        if (initial_zero == ReadDigitsInitialZeroState::Require && !has_initial_zero)
+            return {};
+    }
+
+    int count = 0;
+    size_t offset = 0;
+    while (match(TokenType::Char)) {
+        auto c = m_parser_state.current_token.value();
+        if (follow_policy == ReadDigitFollowPolicy::DisallowDigit) {
+            if (hex && AK::StringUtils::convert_to_uint_from_hex(c).has_value())
+                break;
+            if (!hex && c.to_uint().has_value())
+                break;
+        }
+
+        if (follow_policy == ReadDigitFollowPolicy::DisallowNonDigit) {
+            if (hex && !AK::StringUtils::convert_to_uint_from_hex(c).has_value())
+                break;
+            if (!hex && !c.to_uint().has_value())
+                break;
+        }
+
+        if (max_count > 0 && count >= max_count)
+            break;
+
+        offset += consume().value().length();
+        ++count;
+    }
+
+    auto str = m_parser_state.lexer.slice_back(offset);
+    if (hex)
+        return AK::StringUtils::convert_to_uint_from_hex(str);
+
+    return str.to_uint();
+}
+
+bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minimum, bool, bool)
+{
+    enum class Repetition {
+        OneOrMore,
+        ZeroOrMore,
+        Optional,
+        Explicit,
+        None,
+    } repetition_mark { Repetition::None };
+
+    bool ungreedy = false;
+    Optional<size_t> repeat_min, repeat_max;
+
+    if (match(TokenType::Asterisk)) {
+        consume();
+        repetition_mark = Repetition::ZeroOrMore;
+    } else if (match(TokenType::Plus)) {
+        consume();
+        repetition_mark = Repetition::OneOrMore;
+    } else if (match(TokenType::Questionmark)) {
+        consume();
+        repetition_mark = Repetition::Optional;
+    } else if (match(TokenType::LeftCurly)) {
+        consume();
+        repetition_mark = Repetition::Explicit;
+
+        auto low_bound = read_digits();
+
+        if (!low_bound.has_value()) {
+            set_error(Error::InvalidBraceContent);
+            return false;
+        }
+
+        repeat_min = low_bound.value();
+
+        if (match(TokenType::Comma)) {
+            consume();
+            auto high_bound = read_digits();
+            if (!high_bound.has_value()) {
+                set_error(Error::InvalidBraceContent);
+                return false;
+            }
+
+            repeat_max = high_bound.value();
+        }
+
+        if (!match(TokenType::RightCurly)) {
+            set_error(Error::MismatchingBrace);
+            return false;
+        }
+        consume();
+
+        if (repeat_max.has_value()) {
+            if (repeat_min.value() > repeat_max.value())
+                set_error(Error::InvalidBraceContent);
+        }
+    } else {
+        return true;
+    }
+
+    if (match(TokenType::Questionmark)) {
+        if (repetition_mark == Repetition::Explicit) {
+            set_error(Error::InvalidRepetitionMarker);
+            return false;
+        }
+        consume();
+        ungreedy = true;
+    }
+
+    ByteCode new_bytecode;
+    switch (repetition_mark) {
+    case Repetition::OneOrMore:
+        new_bytecode.insert_bytecode_repetition_min_one(stack, !ungreedy);
+        break;
+    case Repetition::ZeroOrMore:
+        new_bytecode.insert_bytecode_repetition_any(stack, !ungreedy);
+        match_length_minimum = 0;
+        break;
+    case Repetition::Optional:
+        new_bytecode.insert_bytecode_repetition_zero_or_one(stack, !ungreedy);
+        match_length_minimum = 0;
+        break;
+    case Repetition::Explicit:
+        new_bytecode.insert_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max);
+        match_length_minimum *= repeat_min.value();
+        break;
+    case Repetition::None:
+        ASSERT_NOT_REACHED();
+    }
+
+    return true;
+}
+
+bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
+{
+    if (try_skip("\\")) {
+        // AtomEscape.
+        return parse_atom_escape(stack, match_length_minimum, unicode, named);
+    }
+
+    if (match(TokenType::LeftBracket)) {
+        // Character class.
+        return parse_character_class(stack, match_length_minimum, unicode, named);
+    }
+
+    if (match(TokenType::LeftParen)) {
+        // Non-capturing group, or a capture group.
+        return parse_capture_group(stack, match_length_minimum, unicode, named);
+    }
+
+    if (match(TokenType::Period)) {
+        consume();
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::AnyChar, 0 } });
+        return true;
+    }
+
+    if (match(TokenType::Circumflex) || match(TokenType::Dollar) || match(TokenType::RightBracket)
+        || match(TokenType::RightCurly) || match(TokenType::RightParen) || match(TokenType::Pipe)
+        || match(TokenType::Plus) || match(TokenType::Asterisk) || match(TokenType::Questionmark)) {
+
+        return false;
+    }
+
+    if (match(TokenType::Char)) {
+        auto token = consume().value();
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token[0] } });
+        return true;
+    }
+
+    set_error(Error::InvalidPattern);
+    return false;
+}
+
+bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
+{
+    if (auto escape = read_digits(ReadDigitsInitialZeroState::Disallow, ReadDigitFollowPolicy::DisallowNonDigit); escape.has_value()) {
+        auto maybe_length = m_parser_state.capture_group_minimum_lengths.get(escape.value());
+        if (!maybe_length.has_value()) {
+            set_error(Error::InvalidNumber);
+            return false;
+        }
+        match_length_minimum += maybe_length.value();
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Reference, (ByteCodeValueType)escape.value() } });
+        return true;
+    }
+
+    // CharacterEscape > ControlEscape
+    if (try_skip("f")) {
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\f' } });
+        return true;
+    }
+
+    if (try_skip("n")) {
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\n' } });
+        return true;
+    }
+
+    if (try_skip("r")) {
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\r' } });
+        return true;
+    }
+
+    if (try_skip("t")) {
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\t' } });
+        return true;
+    }
+
+    if (try_skip("v")) {
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\v' } });
+        return true;
+    }
+
+    // CharacterEscape > ControlLetter
+    if (try_skip("c")) {
+        for (auto c = 'A'; c <= 'z'; ++c) {
+            if (try_skip({ &c, 1 })) {
+                match_length_minimum += 1;
+                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)(c & 0x3f) } });
+                return true;
+            }
+        }
+    }
+
+    // '\0'
+    if (read_digits(ReadDigitsInitialZeroState::Require, ReadDigitFollowPolicy::DisallowDigit).has_value()) {
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)0 } });
+        return true;
+    }
+
+    // HexEscape
+    if (try_skip("x")) {
+        if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 2); hex_escape.has_value()) {
+            match_length_minimum += 1;
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)hex_escape.value() } });
+            return true;
+        }
+    }
+
+    if (try_skip("u")) {
+        // FIXME: Implement this path, unicode escape sequence.
+        TODO();
+    }
+
+    // IdentityEscape
+    if (match(TokenType::EscapeSequence)) {
+        match_length_minimum += 1;
+        auto token = consume().value();
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token[token.length() - 1] } });
+        return true;
+    }
+
+    if (named && try_skip("k")) {
+        auto name = read_capture_group_specifier(true);
+        if (name.is_empty()) {
+            set_error(Error::InvalidNameForCaptureGroup);
+            return false;
+        }
+        auto maybe_length = m_parser_state.named_capture_group_minimum_lengths.get(name);
+        if (!maybe_length.has_value()) {
+            set_error(Error::InvalidNameForCaptureGroup);
+            return false;
+        }
+        match_length_minimum += maybe_length.value();
+
+        stack.insert_bytecode_compare_named_reference(name, name.length());
+        return true;
+    }
+
+    if (unicode) {
+        if (try_skip("p{")) {
+            // FIXME: Implement this path, Unicode property match.
+            TODO();
+        }
+        if (try_skip("P{")) {
+            // FIXME: Implement this path, Unicode property match.
+            TODO();
+        }
+    }
+
+    bool negate = false;
+    auto ch = parse_character_class_escape(negate);
+    if (!ch.has_value()) {
+        set_error(Error::InvalidCharacterClass);
+        return false;
+    }
+
+    Vector<CompareTypeAndValuePair> compares;
+    if (negate)
+        compares.empend(CharacterCompareType::Inverse, 0);
+    compares.empend(CharacterCompareType::CharClass, (ByteCodeValueType)ch.value());
+    match_length_minimum += 1;
+    stack.insert_bytecode_compare_values(move(compares));
+    return true;
+}
+
+Optional<CharClass> ECMA262Parser::parse_character_class_escape(bool& negate, bool expect_backslash)
+{
+    if (expect_backslash && !try_skip("\\"))
+        return {};
+
+    // CharacterClassEscape
+    CharClass ch_class;
+    if (try_skip("d")) {
+        ch_class = CharClass::Digit;
+    } else if (try_skip("D")) {
+        ch_class = CharClass::Digit;
+        negate = true;
+    } else if (try_skip("s")) {
+        ch_class = CharClass::Space;
+    } else if (try_skip("S")) {
+        ch_class = CharClass::Space;
+        negate = true;
+    } else if (try_skip("w")) {
+        ch_class = CharClass::Word;
+    } else if (try_skip("W")) {
+        ch_class = CharClass::Word;
+        negate = true;
+    } else {
+        return {};
+    }
+
+    return ch_class;
+}
+
+bool ECMA262Parser::parse_character_class(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool)
+{
+    consume(TokenType::LeftBracket, Error::InvalidPattern);
+
+    Vector<CompareTypeAndValuePair> compares;
+
+    if (match(TokenType::Circumflex)) {
+        // Negated charclass
+        consume();
+        compares.empend(CharacterCompareType::Inverse, 0);
+    }
+
+    if (match(TokenType::RightBracket)) {
+        consume();
+        return true;
+    }
+
+    if (!parse_nonempty_class_ranges(compares, unicode))
+        return false;
+
+    match_length_minimum += 1;
+    stack.insert_bytecode_compare_values(move(compares));
+    return true;
+}
+
+struct CharClassRangeElement {
+    union {
+        CharClass character_class;
+        u32 code_point { 0 };
+    };
+
+    bool is_negated { false };
+    bool is_character_class { false };
+};
+
+bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>& ranges, bool unicode)
+{
+    auto read_class_atom_no_dash = [&]() -> Optional<CharClassRangeElement> {
+        if (match(TokenType::EscapeSequence)) {
+            auto token = consume().value();
+            return { { .code_point = (u32)token[1], .is_character_class = false } };
+        }
+
+        if (try_skip("\\")) {
+            if (try_skip("f"))
+                return { { .code_point = '\f', .is_character_class = false } };
+            if (try_skip("n"))
+                return { { .code_point = '\n', .is_character_class = false } };
+            if (try_skip("r"))
+                return { { .code_point = '\r', .is_character_class = false } };
+            if (try_skip("t"))
+                return { { .code_point = '\t', .is_character_class = false } };
+            if (try_skip("v"))
+                return { { .code_point = '\v', .is_character_class = false } };
+            if (try_skip("b"))
+                return { { .code_point = '\b', .is_character_class = false } };
+
+            // CharacterEscape > ControlLetter
+            if (try_skip("c")) {
+                for (auto c = 'A'; c <= 'z'; ++c) {
+                    if (try_skip({ &c, 1 }))
+                        return { { .code_point = (u32)(c & 0x3f), .is_character_class = false } };
+                }
+            }
+
+            // '\0'
+            if (read_digits(ReadDigitsInitialZeroState::Require, ReadDigitFollowPolicy::DisallowDigit).has_value())
+                return { { .code_point = 0, .is_character_class = false } };
+
+            // HexEscape
+            if (try_skip("x")) {
+                if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 2); hex_escape.has_value())
+                    return { { .code_point = hex_escape.value(), .is_character_class = false } };
+            }
+
+            if (try_skip("u")) {
+                // FIXME: Implement this path, unicode escape sequence.
+                TODO();
+            }
+
+            if (unicode) {
+                if (try_skip("-"))
+                    return { { .code_point = '-', .is_character_class = false } };
+            }
+
+            if (try_skip("p{") || try_skip("P{")) {
+                // FIXME: Implement these; unicode properties.
+                TODO();
+            }
+
+            if (try_skip("d"))
+                return { { .character_class = CharClass::Digit, .is_character_class = true } };
+            if (try_skip("s"))
+                return { { .character_class = CharClass::Space, .is_character_class = true } };
+            if (try_skip("w"))
+                return { { .character_class = CharClass::Word, .is_character_class = true } };
+            if (try_skip("D"))
+                return { { .character_class = CharClass::Digit, .is_negated = true, .is_character_class = true } };
+            if (try_skip("S"))
+                return { { .character_class = CharClass::Space, .is_negated = true, .is_character_class = true } };
+            if (try_skip("W"))
+                return { { .character_class = CharClass::Word, .is_negated = true, .is_character_class = true } };
+        }
+
+        if (match(TokenType::RightBracket) || match(TokenType::HyphenMinus))
+            return {};
+
+        auto token = consume(TokenType::Char, Error::InvalidCharacterClass);
+
+        return { { .code_point = (u32)token.value()[0], .is_character_class = false } };
+    };
+    auto read_class_atom = [&]() -> Optional<CharClassRangeElement> {
+        if (match(TokenType::HyphenMinus)) {
+            consume();
+            return { { .code_point = '-', .is_character_class = false } };
+        }
+
+        return read_class_atom_no_dash();
+    };
+
+    while (!match(TokenType::RightBracket)) {
+        auto first_atom = read_class_atom();
+        if (!first_atom.has_value())
+            return false;
+
+        if (match(TokenType::HyphenMinus)) {
+            consume();
+            auto second_atom = read_class_atom();
+            if (!second_atom.has_value())
+                return false;
+
+            if (first_atom.value().is_character_class || second_atom.value().is_character_class) {
+                set_error(Error::InvalidRange);
+                return false;
+            }
+
+            if (first_atom.value().code_point > second_atom.value().code_point) {
+                set_error(Error::InvalidRange);
+                return false;
+            }
+
+            ASSERT(!first_atom.value().is_negated);
+            ASSERT(!second_atom.value().is_negated);
+
+            ranges.empend(CharacterCompareType::CharRange, CharRange { first_atom.value().code_point, second_atom.value().code_point });
+            continue;
+        }
+
+        auto atom = first_atom.value();
+
+        if (atom.is_character_class) {
+            if (atom.is_negated)
+                ranges.empend(CharacterCompareType::TemporaryInverse, 0);
+            ranges.empend(CharacterCompareType::CharClass, (ByteCodeValueType)first_atom.value().character_class);
+        } else {
+            ASSERT(!atom.is_negated);
+            ranges.empend(CharacterCompareType::Char, first_atom.value().code_point);
+        }
+    }
+
+    consume(TokenType::RightBracket, Error::MismatchingBracket);
+
+    return true;
+}
+
+StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
+{
+    if (take_starting_angle_bracket && !consume("<"))
+        return {};
+
+    size_t offset = 0;
+    while (match(TokenType::Char)) {
+        auto c = m_parser_state.current_token.value();
+        if (c == ">")
+            break;
+        offset += consume().value().length();
+    }
+
+    auto name = m_parser_state.lexer.slice_back(offset);
+    if (!consume(">") || name.is_empty())
+        set_error(Error::InvalidNameForCaptureGroup);
+
+    return name;
+}
+
+bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
+{
+    consume(TokenType::LeftParen, Error::InvalidPattern);
+
+    if (match(TokenType::Questionmark)) {
+        // Non-capturing group or group with specifier.
+        consume();
+
+        if (match(TokenType::Colon)) {
+            consume();
+            ByteCode noncapture_group_bytecode;
+            size_t length = 0;
+            if (!parse_disjunction(noncapture_group_bytecode, length, unicode, named))
+                return set_error(Error::InvalidPattern);
+
+            consume(TokenType::RightParen, Error::MismatchingParen);
+
+            stack.append(move(noncapture_group_bytecode));
+            match_length_minimum += length;
+            return true;
+        }
+
+        if (consume("<")) {
+            ++m_parser_state.named_capture_groups_count;
+            auto name = read_capture_group_specifier();
+
+            if (name.is_empty()) {
+                set_error(Error::InvalidNameForCaptureGroup);
+                return false;
+            }
+
+            ByteCode capture_group_bytecode;
+            size_t length = 0;
+            if (!parse_disjunction(capture_group_bytecode, length, unicode, named))
+                return set_error(Error::InvalidPattern);
+
+            consume(TokenType::RightParen, Error::MismatchingParen);
+
+            stack.insert_bytecode_group_capture_left(name);
+            stack.append(move(capture_group_bytecode));
+            stack.insert_bytecode_group_capture_right(name);
+
+            match_length_minimum += length;
+
+            m_parser_state.named_capture_group_minimum_lengths.set(name, length);
+            return true;
+        }
+
+        set_error(Error::InvalidCaptureGroup);
+        return false;
+    }
+
+    auto group_index = ++m_parser_state.capture_groups_count;
+    stack.insert_bytecode_group_capture_left(group_index);
+
+    ByteCode capture_group_bytecode;
+    size_t length = 0;
+
+    if (!parse_disjunction(capture_group_bytecode, length, unicode, named))
+        return set_error(Error::InvalidPattern);
+
+    stack.append(move(capture_group_bytecode));
+
+    m_parser_state.capture_group_minimum_lengths.set(group_index, length);
+
+    consume(TokenType::RightParen, Error::MismatchingParen);
+
+    stack.insert_bytecode_group_capture_right(group_index);
+
+    match_length_minimum += length;
+
+    return true;
+}
 }

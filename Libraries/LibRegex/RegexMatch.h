@@ -267,6 +267,9 @@ struct MatchInput {
     size_t column { 0 };
 
     size_t global_offset { 0 }; // For multiline matching, knowing the offset from start could be important
+
+    mutable size_t fail_counter { 0 };
+    mutable Vector<size_t> saved_positions;
 };
 
 struct MatchState {
