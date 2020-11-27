@@ -1,7 +1,12 @@
 cmake_minimum_required (VERSION 3.0)
 project (Lagom)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -O2 -Wall -Wextra -Werror -std=c++2a -fPIC -g -Wno-deprecated-copy")
+if (NOT ENABLE_OSS_FUZZ)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -O2 -Wall -Wextra -Werror -std=c++2a -fPIC -g -Wno-deprecated-copy")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -fPIC -g -Wno-deprecated-copy")
+endif()
+
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconsumed -Wno-overloaded-virtual")
@@ -68,67 +73,71 @@ include_directories (../../)
 include_directories (../../Libraries/)
 add_library(LagomCore ${LAGOM_CORE_SOURCES})
 
+
+
 if (BUILD_LAGOM)
     add_library(Lagom $<TARGET_OBJECTS:LagomCore> ${LAGOM_MORE_SOURCES})
+    
+    if (NOT ENABLE_OSS_FUZZ) 
+        add_executable(TestApp TestApp.cpp)
+        target_link_libraries(TestApp Lagom)
+        target_link_libraries(TestApp stdc++)
 
-    add_executable(TestApp TestApp.cpp)
-    target_link_libraries(TestApp Lagom)
-    target_link_libraries(TestApp stdc++)
+        add_executable(TestJson TestJson.cpp)
+        target_link_libraries(TestJson Lagom)
+        target_link_libraries(TestJson stdc++)
 
-    add_executable(TestJson TestJson.cpp)
-    target_link_libraries(TestJson Lagom)
-    target_link_libraries(TestJson stdc++)
+        add_executable(adjtime_lagom ../../Userland/adjtime.cpp)
+        set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
+        target_link_libraries(adjtime_lagom Lagom)
 
-    add_executable(adjtime_lagom ../../Userland/adjtime.cpp)
-    set_target_properties(adjtime_lagom PROPERTIES OUTPUT_NAME adjtime)
-    target_link_libraries(adjtime_lagom Lagom)
+        add_executable(js_lagom ../../Userland/js.cpp)
+        set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
+        target_link_libraries(js_lagom Lagom)
+        target_link_libraries(js_lagom stdc++)
+        target_link_libraries(js_lagom pthread)
 
-    add_executable(js_lagom ../../Userland/js.cpp)
-    set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
-    target_link_libraries(js_lagom Lagom)
-    target_link_libraries(js_lagom stdc++)
-    target_link_libraries(js_lagom pthread)
+        add_executable(ntpquery_lagom ../../Userland/ntpquery.cpp)
+        set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
+        target_link_libraries(ntpquery_lagom Lagom)
 
-    add_executable(ntpquery_lagom ../../Userland/ntpquery.cpp)
-    set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
-    target_link_libraries(ntpquery_lagom Lagom)
+        add_executable(test-js_lagom ../../Userland/test-js.cpp)
+        set_target_properties(test-js_lagom PROPERTIES OUTPUT_NAME test-js)
+        target_link_libraries(test-js_lagom Lagom)
+        target_link_libraries(test-js_lagom stdc++)
+        target_link_libraries(test-js_lagom pthread)
 
-    add_executable(test-js_lagom ../../Userland/test-js.cpp)
-    set_target_properties(test-js_lagom PROPERTIES OUTPUT_NAME test-js)
-    target_link_libraries(test-js_lagom Lagom)
-    target_link_libraries(test-js_lagom stdc++)
-    target_link_libraries(test-js_lagom pthread)
-
-    add_executable(test-crypto_lagom ../../Userland/test-crypto.cpp)
-    set_target_properties(test-crypto_lagom PROPERTIES OUTPUT_NAME test-crypto)
-    target_link_libraries(test-crypto_lagom Lagom)
-    target_link_libraries(test-crypto_lagom stdc++)
-    add_test(
-        NAME Crypto
-        COMMAND test-crypto_lagom test -t -s google.com --ca-certs-file ../../Base/etc/ca_certs.ini
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-
-    add_executable(disasm_lagom ../../Userland/disasm.cpp)
-    set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
-    target_link_libraries(disasm_lagom Lagom)
-    target_link_libraries(disasm_lagom stdc++)
-
-    add_executable(shell_lagom ${SHELL_SOURCES})
-    set_target_properties(shell_lagom PROPERTIES OUTPUT_NAME shell)
-    target_link_libraries(shell_lagom Lagom)
-    target_link_libraries(shell_lagom stdc++)
-    target_link_libraries(shell_lagom pthread)
-    foreach(TEST_PATH ${SHELL_TESTS})
-        get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
+        add_executable(test-crypto_lagom ../../Userland/test-crypto.cpp)
+        set_target_properties(test-crypto_lagom PROPERTIES OUTPUT_NAME test-crypto)
+        target_link_libraries(test-crypto_lagom Lagom)
+        target_link_libraries(test-crypto_lagom stdc++)
         add_test(
-            NAME "Shell-${TEST_NAME}"
-            COMMAND shell_lagom "${TEST_PATH}"
+            NAME Crypto
+            COMMAND test-crypto_lagom test -t -s google.com --ca-certs-file ../../Base/etc/ca_certs.ini
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
-    endforeach()
+
+        add_executable(disasm_lagom ../../Userland/disasm.cpp)
+        set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)
+        target_link_libraries(disasm_lagom Lagom)
+        target_link_libraries(disasm_lagom stdc++)
+
+        add_executable(shell_lagom ${SHELL_SOURCES})
+        set_target_properties(shell_lagom PROPERTIES OUTPUT_NAME shell)
+        target_link_libraries(shell_lagom Lagom)
+        target_link_libraries(shell_lagom stdc++)
+        target_link_libraries(shell_lagom pthread)
+        foreach(TEST_PATH ${SHELL_TESTS})
+            get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
+            add_test(
+                NAME "Shell-${TEST_NAME}"
+                COMMAND shell_lagom "${TEST_PATH}"
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endforeach()
+    endif()
 endif()
 
-if (ENABLE_FUZZER_SANITIZER)
+if (ENABLE_FUZZER_SANITIZER OR ENABLE_OSS_FUZZ)
     add_subdirectory(Fuzzers)
 endif()
