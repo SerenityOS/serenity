@@ -380,6 +380,12 @@ inline void TreeNode<T>::insert_before(NonnullRefPtr<T> node, RefPtr<T> child, b
     node->m_previous_sibling = child->m_previous_sibling;
     node->m_next_sibling = child;
 
+    if (child->m_previous_sibling)
+        child->m_previous_sibling->m_next_sibling = node;
+
+    if (m_first_child == child)
+        m_first_child = node;
+
     child->m_previous_sibling = node;
 
     if (m_first_child == child)
