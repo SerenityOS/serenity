@@ -35,18 +35,18 @@ class RegExpObject : public Object {
     JS_OBJECT(RegExpObject, Object);
 
 public:
-    static RegExpObject* create(GlobalObject&, String content, String flags);
+    static RegExpObject* create(GlobalObject&, String pattern, String flags);
 
-    RegExpObject(String content, String flags, Object& prototype);
+    RegExpObject(String pattern, String flags, Object& prototype);
     virtual ~RegExpObject() override;
 
-    const String& content() const { return m_content; }
+    const String& pattern() const { return m_pattern; }
     const String& flags() const { return m_flags; }
 
 private:
     virtual bool is_regexp_object() const override { return true; }
 
-    String m_content;
+    String m_pattern;
     String m_flags;
 };
 
