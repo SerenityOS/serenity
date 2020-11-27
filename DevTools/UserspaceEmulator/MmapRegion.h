@@ -37,7 +37,7 @@ class MallocTracer;
 class MmapRegion final : public Region {
 public:
     static NonnullOwnPtr<MmapRegion> create_anonymous(u32 base, u32 size, u32 prot);
-    static NonnullOwnPtr<MmapRegion> create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset);
+    static NonnullOwnPtr<MmapRegion> create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, String name = {});
     virtual ~MmapRegion() override;
 
     virtual ValueWithShadow<u8> read8(u32 offset) override;
@@ -71,6 +71,7 @@ private:
     bool m_malloc { false };
 
     OwnPtr<MallocRegionMetadata> m_malloc_metadata;
+    String m_name;
 };
 
 }
