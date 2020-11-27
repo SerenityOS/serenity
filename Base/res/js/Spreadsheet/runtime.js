@@ -27,20 +27,20 @@ class Position {
 
     left(how_many) {
         how_many = how_many ?? 1;
-        const column = Math.min(
-            "Z".charCodeAt(0),
-            Math.max("A".charCodeAt(0), this.column.charCodeAt(0) - how_many)
+        return new Position(
+            this.sheet.column_arithmetic(this.column, -how_many),
+            this.row,
+            this.sheet
         );
-        return new Position(String.fromCharCode(column), this.row, this.sheet);
     }
 
     right(how_many) {
         how_many = how_many ?? 1;
-        const column = Math.min(
-            "Z".charCodeAt(0),
-            Math.max("A".charCodeAt(0), this.column.charCodeAt(0) + how_many)
+        return new Position(
+            this.sheet.column_arithmetic(this.column, how_many),
+            this.row,
+            this.sheet
         );
-        return new Position(String.fromCharCode(column), this.row, this.sheet);
     }
 
     with_column(value) {
@@ -78,22 +78,21 @@ function range(start, end, columnStep, rowStep) {
         end = parse_cell_name(end) ?? start;
     }
 
-    if (end.column.length > 1 || start.column.length > 1)
-        throw new TypeError("Only single-letter column names are allowed (TODO)");
-
     const cells = [];
 
-    for (
-        let col = Math.min(start.column.charCodeAt(0), end.column.charCodeAt(0));
-        col <= Math.max(start.column.charCodeAt(0), end.column.charCodeAt(0));
-        col += columnStep
-    ) {
+    const start_column_index = column_index(start.column);
+    const end_column_index = column_index(end.column);
+    const start_column = start_column_index > end_column_index ? end.column : start.column;
+    const distance = Math.abs(start_column_index - end_column_index);
+
+    for (let col = 0; col <= distance; col += columnStep) {
+        const column = column_arithmetic(start_column, col);
         for (
             let row = Math.min(start.row, end.row);
             row <= Math.max(start.row, end.row);
             row += rowStep
         ) {
-            cells.push(String.fromCharCode(col) + row);
+            cells.push(column + row);
         }
     }
 
@@ -345,6 +344,7 @@ range.__documentation = JSON.stringify({
     examples: {
         'range("A1", "C4")': "Generate a range A1:C4",
         'range("A1", "C4", 2)': "Generate a range A1:C4, skipping every other column",
+        'range("AA1", "AC4", 2)': "Generate a range AA1:AC4, skipping every other column",
     },
 });
 

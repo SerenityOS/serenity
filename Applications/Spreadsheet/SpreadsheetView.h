@@ -83,6 +83,7 @@ class InfinitelyScrollableTableView : public GUI::TableView {
     C_OBJECT(InfinitelyScrollableTableView)
 public:
     Function<void()> on_reaching_vertical_end;
+    Function<void()> on_reaching_horizontal_end;
 
 private:
     virtual void did_scroll() override;

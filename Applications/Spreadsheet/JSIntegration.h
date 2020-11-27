@@ -46,6 +46,8 @@ public:
 
     JS_DECLARE_NATIVE_FUNCTION(parse_cell_name);
     JS_DECLARE_NATIVE_FUNCTION(current_cell_position);
+    JS_DECLARE_NATIVE_FUNCTION(column_index);
+    JS_DECLARE_NATIVE_FUNCTION(column_arithmetic);
 
 private:
     Sheet& m_sheet;

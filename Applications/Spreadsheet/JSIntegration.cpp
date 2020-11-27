@@ -83,6 +83,8 @@ void SheetGlobalObject::initialize()
     GlobalObject::initialize();
     define_native_function("parse_cell_name", parse_cell_name, 1);
     define_native_function("current_cell_position", current_cell_position, 0);
+    define_native_function("column_arithmetic", column_arithmetic, 2);
+    define_native_function("column_index", column_index, 1);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
@@ -135,6 +137,82 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
     object->put("row", JS::Value((unsigned)position.row));
 
     return object;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
+{
+    if (vm.argument_count() != 2) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected exactly one argument to column_index()");
+        return {};
+    }
+
+    auto column_name = vm.argument(0);
+    if (!column_name.is_string()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "String");
+        return {};
+    }
+
+    auto& column_name_str = column_name.as_string().string();
+
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return JS::js_null();
+
+    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
+        return {};
+    }
+
+    auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
+    auto& sheet = sheet_object->m_sheet;
+    auto column_index = sheet.column_index(column_name_str);
+    if (!column_index.has_value()) {
+        vm.throw_exception(global_object, JS::TypeError::create(global_object, String::formatted("'{}' is not a valid column", column_name_str)));
+        return {};
+    }
+
+    return JS::Value((i32)column_index.value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
+{
+    if (vm.argument_count() != 2) {
+        vm.throw_exception<JS::TypeError>(global_object, "Expected exactly two arguments to column_arithmetic()");
+        return {};
+    }
+
+    auto column_name = vm.argument(0);
+    if (!column_name.is_string()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "String");
+        return {};
+    }
+
+    auto& column_name_str = column_name.as_string().string();
+
+    auto offset = vm.argument(1).to_number(global_object);
+    if (!offset.is_number())
+        return {};
+
+    auto offset_number = offset.as_i32();
+
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return JS::js_null();
+
+    if (StringView("SheetGlobalObject") != this_object->class_name()) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "SheetGlobalObject");
+        return {};
+    }
+
+    auto sheet_object = static_cast<SheetGlobalObject*>(this_object);
+    auto& sheet = sheet_object->m_sheet;
+    auto new_column = sheet.column_arithmetic(column_name_str, offset_number);
+    if (!new_column.has_value()) {
+        vm.throw_exception(global_object, JS::TypeError::create(global_object, String::formatted("'{}' is not a valid column", column_name_str)));
+        return {};
+    }
+
+    return JS::js_string(vm, new_column.release_value());
 }
 
 WorkbookObject::WorkbookObject(Workbook& workbook)
