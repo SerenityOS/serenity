@@ -62,9 +62,14 @@ void InfinitelyScrollableTableView::did_scroll()
 {
     TableView::did_scroll();
     auto& vscrollbar = vertical_scrollbar();
+    auto& hscrollbar = horizontal_scrollbar();
     if (vscrollbar.is_visible() && vscrollbar.value() == vscrollbar.max()) {
         if (on_reaching_vertical_end)
             on_reaching_vertical_end();
+    }
+    if (hscrollbar.is_visible() && hscrollbar.value() == hscrollbar.max()) {
+        if (on_reaching_horizontal_end)
+            on_reaching_horizontal_end();
     }
 }
 
@@ -90,6 +95,15 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             auto index = m_sheet->add_row();
             m_table_view->set_column_painting_delegate(index, make<TableCellPainter>(*m_table_view));
         };
+        update_with_model();
+    };
+    m_table_view->on_reaching_horizontal_end = [&]() {
+        for (size_t i = 0; i < 10; ++i) {
+            m_sheet->add_column();
+            auto last_column_index = m_sheet->column_count() - 1;
+            m_table_view->set_column_width(last_column_index, 50);
+            m_table_view->set_column_header_alignment(last_column_index, Gfx::TextAlignment::Center);
+        }
         update_with_model();
     };
 

@@ -52,6 +52,8 @@ public:
     ~Sheet();
 
     static Optional<Position> parse_cell_name(const StringView&);
+    Optional<size_t> column_index(const StringView& column_name) const;
+    Optional<String> column_arithmetic(const StringView& column_name, int offset);
 
     Cell* from_url(const URL&);
     const Cell* from_url(const URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
@@ -130,6 +132,8 @@ public:
     /// Gives the bottom-right corner of the smallest bounding box containing all the written data.
     Position written_data_bounds() const;
 
+    bool columns_are_standard() const;
+
 private:
     explicit Sheet(Workbook&);
     explicit Sheet(const StringView& name, Workbook&);
@@ -144,8 +148,6 @@ private:
     mutable SheetGlobalObject* m_global_object;
 
     Cell* m_current_cell_being_evaluated { nullptr };
-
-    size_t m_current_column_name_length { 0 };
 
     HashTable<Cell*> m_visited_cells_in_update;
 };
