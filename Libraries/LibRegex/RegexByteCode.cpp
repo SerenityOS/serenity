@@ -704,7 +704,7 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             char ch = m_bytecode->at(offset++);
             result.empend(String::format("value='%c'", ch));
             if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
+                result.empend(String::format("compare against: '%s'", view.substring_view(state().string_position - 1, state().string_position > view.length() ? 0 : 1).to_string().characters()));
         } else if (compare_type == CharacterCompareType::NamedReference) {
             auto ptr = (const char*)m_bytecode->at(offset++);
             auto length = m_bytecode->at(offset++);
@@ -717,17 +717,17 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             auto& length = m_bytecode->at(offset++);
             result.empend(String::format("value=\"%.*s\"", length, str));
             if (!view.is_null())
-                result.empend(String::format("compare against: \"%s\"", input.value().view.substring_view(state().string_position, state().string_position + length > view.length() ? 0 : length).to_string().characters()));
+                result.empend(String::format("compare against: \"%s\"", input.value().view.substring_view(state().string_position - 1, state().string_position + length - 1 > view.length() ? 0 : length).to_string().characters()));
         } else if (compare_type == CharacterCompareType::CharClass) {
             auto character_class = (CharClass)m_bytecode->at(offset++);
             result.empend(String::format("ch_class=%lu [%s]", (size_t)character_class, character_class_name(character_class)));
             if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
+                result.empend(String::format("compare against: '%s'", input.value().view.substring_view(state().string_position - 1, state().string_position > view.length() ? 0 : 1).to_string().characters()));
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
             result.empend(String::format("ch_range='%c'-'%c'", value.from, value.to));
             if (!view.is_null())
-                result.empend(String::format("compare against: '%s'", input.value().view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
+                result.empend(String::format("compare against: '%s'", input.value().view.substring_view(state().string_position - 1, state().string_position > view.length() ? 0 : 1).to_string().characters()));
         }
     }
     return result;
