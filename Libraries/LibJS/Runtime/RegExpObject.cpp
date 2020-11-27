@@ -33,14 +33,14 @@
 
 namespace JS {
 
-RegExpObject* RegExpObject::create(GlobalObject& global_object, String content, String flags)
+RegExpObject* RegExpObject::create(GlobalObject& global_object, String pattern, String flags)
 {
-    return global_object.heap().allocate<RegExpObject>(global_object, content, flags, *global_object.regexp_prototype());
+    return global_object.heap().allocate<RegExpObject>(global_object, pattern, flags, *global_object.regexp_prototype());
 }
 
-RegExpObject::RegExpObject(String content, String flags, Object& prototype)
+RegExpObject::RegExpObject(String pattern, String flags, Object& prototype)
     : Object(prototype)
-    , m_content(content)
+    , m_pattern(pattern)
     , m_flags(flags)
 {
 }
