@@ -47,6 +47,9 @@ inline void fill_with_random(void* buffer, size_t length)
 {
 #if defined(__serenity__)
     arc4random_buf(buffer, length);
+#elif defined(OSS_FUZZ)
+    (void)buffer;
+    (void)length;
 #elif defined(__unix__) or defined(__APPLE__)
     int rc = getentropy(buffer, length);
     (void)rc;
