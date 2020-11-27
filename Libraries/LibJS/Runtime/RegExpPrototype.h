@@ -41,18 +41,17 @@ public:
 private:
     static RegexResult do_match(const Regex<ECMA262>&, const StringView&);
 
-    JS_DECLARE_NATIVE_GETTER(dot_all);
     JS_DECLARE_NATIVE_GETTER(flags);
-    JS_DECLARE_NATIVE_GETTER(global);
-    JS_DECLARE_NATIVE_GETTER(ignore_case);
-    JS_DECLARE_NATIVE_GETTER(multiline);
     JS_DECLARE_NATIVE_GETTER(source);
-    JS_DECLARE_NATIVE_GETTER(sticky);
-    JS_DECLARE_NATIVE_GETTER(unicode);
 
     JS_DECLARE_NATIVE_FUNCTION(exec);
     JS_DECLARE_NATIVE_FUNCTION(test);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
+
+#define __JS_ENUMERATE(_, flag_name, ...) \
+    JS_DECLARE_NATIVE_GETTER(flag_name);
+    JS_ENUMERATE_REGEXP_FLAGS
+#undef __JS_ENUMERATE
 };
 
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -49,14 +50,13 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.exec, exec, 1, attr);
 
     u8 readable_attr = Attribute::Configurable;
-    define_native_property(vm.names.dotAll, dot_all, nullptr, readable_attr);
     define_native_property(vm.names.flags, flags, nullptr, readable_attr);
-    define_native_property(vm.names.global, global, nullptr, readable_attr);
-    define_native_property(vm.names.ignoreCase, ignore_case, nullptr, readable_attr);
-    define_native_property(vm.names.multiline, multiline, nullptr, readable_attr);
     define_native_property(vm.names.source, source, nullptr, readable_attr);
-    define_native_property(vm.names.sticky, sticky, nullptr, readable_attr);
-    define_native_property(vm.names.unicode, unicode, nullptr, readable_attr);
+
+#define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName) \
+    define_native_property(vm.names.flagName, flag_name, nullptr, readable_attr);
+    JS_ENUMERATE_REGEXP_FLAGS
+#undef __JS_ENUMERATE
 }
 
 RegExpPrototype::~RegExpPrototype()
@@ -99,14 +99,17 @@ static String escape_regexp_pattern(const RegExpObject& regexp_object)
     return pattern;
 }
 
-JS_DEFINE_NATIVE_GETTER(RegExpPrototype::dot_all)
-{
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
-        return {};
-
-    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::SingleLine));
-}
+#define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName)                                 \
+    JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                                                    \
+    {                                                                                                      \
+        auto regexp_object = regexp_object_from(vm, global_object);                                        \
+        if (!regexp_object)                                                                                \
+            return {};                                                                                     \
+                                                                                                           \
+        return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::ECMAScriptFlagName)); \
+    }
+JS_ENUMERATE_REGEXP_FLAGS
+#undef __JS_ENUMERATE
 
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 {
@@ -128,33 +131,6 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
     return js_string(vm, builder.to_string());
 }
 
-JS_DEFINE_NATIVE_GETTER(RegExpPrototype::global)
-{
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
-        return {};
-
-    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Global)); // Note that this "Global" is actually "Global | Stateful"
-}
-
-JS_DEFINE_NATIVE_GETTER(RegExpPrototype::ignore_case)
-{
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
-        return {};
-
-    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Insensitive));
-}
-
-JS_DEFINE_NATIVE_GETTER(RegExpPrototype::multiline)
-{
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
-        return {};
-
-    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Multiline));
-}
-
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
 {
     auto this_object = this_object_from(vm, global_object);
@@ -171,24 +147,6 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
         return {};
 
     return js_string(vm, escape_regexp_pattern(*regexp_object));
-}
-
-JS_DEFINE_NATIVE_GETTER(RegExpPrototype::sticky)
-{
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
-        return {};
-
-    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Sticky));
-}
-
-JS_DEFINE_NATIVE_GETTER(RegExpPrototype::unicode)
-{
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
-        return {};
-
-    return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::Unicode));
 }
 
 RegexResult RegExpPrototype::do_match(const Regex<ECMA262>& re, const StringView& subject)
