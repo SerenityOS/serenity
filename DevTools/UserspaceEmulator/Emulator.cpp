@@ -874,11 +874,27 @@ u32 Emulator::virt$mmap(u32 params_addr)
 
     u32 final_size = round_up_to_power_of_two(params.size, PAGE_SIZE);
     u32 final_address = allocate_vm(final_size, params.alignment);
+    if (params.addr != 0) {
+        // NOTE: We currently do not support allocating VM at a requeted address in the emulator.
+        // The loader needs this functionality to load .data just after .text.
+        // Luckily, since the loader calls mmap for .data right after it calls mmap for .text,
+        // the emulator will allocate a chunk of memory that is just after what we allocated for .text
+        // becuase of the way we currently allocate VM.
+        ASSERT(params.addr == final_address);
+    }
 
     if (params.flags & MAP_ANONYMOUS)
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot));
-    else
-        mmu().add_region(MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset));
+    else {
+        dbgln("chars: {:p}, len: {}", params.name.characters, params.name.length);
+        String name_str;
+        if (params.name.characters) {
+            auto name = ByteBuffer::create_uninitialized(params.name.length);
+            mmu().copy_from_vm(name.data(), (FlatPtr)params.name.characters, params.name.length);
+            name_str = { name.data(), name.size() };
+        }
+        mmu().add_region(MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset, name_str));
+    }
 
     return final_address;
 }

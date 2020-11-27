@@ -39,11 +39,16 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 p
     return region;
 }
 
-NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset)
+NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, String name)
 {
     auto region = adopt_own(*new MmapRegion(base, size, prot));
     region->m_file_backed = true;
-    region->m_data = (u8*)mmap(nullptr, size, prot, flags, fd, offset);
+    if (!name.is_empty()) {
+        dbgln("name is not empty");
+        name = String::format("%s (Emulated)", name.characters());
+        region->m_name = name;
+    }
+    region->m_data = (u8*)mmap_with_name(nullptr, size, prot, flags, fd, offset, name.is_empty() ? nullptr : name.characters());
     ASSERT(region->m_data != MAP_FAILED);
     return region;
 }
