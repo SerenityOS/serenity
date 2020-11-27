@@ -59,7 +59,13 @@ typedef float v4sf __attribute__((vector_size(16)));
 
 // Transform v4sf from gamma2.2 space to linear space
 // Assumes x is in range [0, 1]
+// FIXME: Remove this hack once clang-11 is available as the default in Github Actions.
+//        This is apparently sometime mid-December. https://github.com/actions/virtual-environments/issues/2130
+#        if !defined(__clang__) || __clang_major__ >= 11
 constexpr v4sf gamma_to_linear4(v4sf x)
+#        else
+inline v4sf gamma_to_linear4(v4sf x)
+#        endif
 {
     return (0.8f + 0.2f * x) * x * x;
 }
