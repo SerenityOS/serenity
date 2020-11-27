@@ -248,10 +248,25 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 {
-    auto* regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
+    auto this_object = this_object_from(vm, global_object);
+    if (!this_object)
         return {};
-    return js_string(vm, String::formatted("/{}/{}", regexp_object->pattern(), regexp_object->flags()));
+
+    auto source_attr = this_object->get(vm.names.source).value_or(js_undefined());
+    if (vm.exception())
+        return {};
+    auto pattern = source_attr.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    auto flags_attr = this_object->get(vm.names.flags).value_or(js_undefined());
+    if (vm.exception())
+        return {};
+    auto flags = flags_attr.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    return js_string(vm, String::formatted("/{}/{}", pattern, flags));
 }
 
 }
