@@ -39,6 +39,7 @@
 namespace regex {
 
 class PosixExtendedParser;
+class ECMA262Parser;
 
 template<typename T>
 struct GenericParserTraits {
@@ -51,6 +52,10 @@ struct ParserTraits : public GenericParserTraits<T> {
 
 template<>
 struct ParserTraits<PosixExtendedParser> : public GenericParserTraits<PosixOptions> {
+};
+
+template<>
+struct ParserTraits<ECMA262Parser> : public GenericParserTraits<ECMAScriptOptions> {
 };
 
 class Parser {
@@ -88,6 +93,7 @@ protected:
     ALWAYS_INLINE Token consume();
     ALWAYS_INLINE Token consume(TokenType type, Error error);
     ALWAYS_INLINE bool consume(const String&);
+    ALWAYS_INLINE bool try_skip(StringView);
     ALWAYS_INLINE void reset();
     ALWAYS_INLINE bool done() const;
     ALWAYS_INLINE bool set_error(Error error);
@@ -102,6 +108,10 @@ protected:
         size_t named_capture_groups_count { 0 };
         size_t match_length_minimum { 0 };
         AllOptions regex_options;
+        HashMap<int, size_t> capture_group_minimum_lengths;
+        HashMap<FlyString, size_t> named_capture_group_minimum_lengths;
+        HashMap<size_t, FlyString> named_capture_groups;
+
         explicit ParserState(Lexer& lexer)
             : lexer(lexer)
             , current_token(lexer.next())
@@ -144,8 +154,54 @@ private:
     ALWAYS_INLINE bool parse_repetition_symbol(ByteCode&, size_t&);
 };
 
+class ECMA262Parser final : public Parser {
+public:
+    explicit ECMA262Parser(Lexer& lexer)
+        : Parser(lexer)
+    {
+    }
+
+    ECMA262Parser(Lexer& lexer, Optional<typename ParserTraits<ECMA262Parser>::OptionsType> regex_options)
+        : Parser(lexer, regex_options.value_or({}))
+    {
+    }
+
+    ~ECMA262Parser() = default;
+
+private:
+    bool parse_internal(ByteCode&, size_t&) override;
+
+    enum class ReadDigitsInitialZeroState {
+        Allow,
+        Disallow,
+        Require,
+    };
+    enum class ReadDigitFollowPolicy {
+        Any,
+        DisallowDigit,
+        DisallowNonDigit,
+    };
+    Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy follow_policy = ReadDigitFollowPolicy::Any, bool hex = false, int max_count = -1);
+    StringView read_capture_group_specifier(bool take_starting_angle_bracket = false);
+
+    bool parse_pattern(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_disjunction(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_alternative(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_term(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_assertion(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_atom(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_quantifier(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_atom_escape(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_character_class(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_capture_group(ByteCode&, size_t&, bool unicode, bool named);
+    Optional<CharClass> parse_character_class_escape(bool& out_inverse, bool expect_backslash = false);
+    bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, bool unicode);
+};
+
 using PosixExtended = PosixExtendedParser;
+using ECMA262 = ECMA262Parser;
 
 }
 
+using regex::ECMA262;
 using regex::PosixExtended;

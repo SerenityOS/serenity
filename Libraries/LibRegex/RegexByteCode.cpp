@@ -65,6 +65,20 @@ const char* execution_result_name(ExecutionResult result)
     }
 }
 
+const char* boundary_check_type_name(BoundaryCheckType ty)
+{
+    switch (ty) {
+#define __ENUMERATE_BOUNDARY_CHECK_TYPE(x) \
+    case BoundaryCheckType::x:             \
+        return #x;
+        ENUMERATE_BOUNDARY_CHECK_TYPES
+#undef __ENUMERATE_BOUNDARY_CHECK_TYPE
+    default:
+        ASSERT_NOT_REACHED();
+        return "<Unknown>";
+    }
+}
+
 const char* character_compare_type_name(CharacterCompareType ch_compare_type)
 {
     switch (ch_compare_type) {
@@ -112,11 +126,26 @@ ALWAYS_INLINE OpCode* ByteCode::get_opcode_by_id(OpCodeId id) const
             case OpCodeId::CheckEnd:
                 s_opcodes.set(i, make<OpCode_CheckEnd>(*const_cast<ByteCode*>(this)));
                 break;
+            case OpCodeId::CheckBoundary:
+                s_opcodes.set(i, make<OpCode_CheckBoundary>(*const_cast<ByteCode*>(this)));
+                break;
             case OpCodeId::ForkJump:
                 s_opcodes.set(i, make<OpCode_ForkJump>(*const_cast<ByteCode*>(this)));
                 break;
             case OpCodeId::ForkStay:
                 s_opcodes.set(i, make<OpCode_ForkStay>(*const_cast<ByteCode*>(this)));
+                break;
+            case OpCodeId::FailForks:
+                s_opcodes.set(i, make<OpCode_FailForks>(*const_cast<ByteCode*>(this)));
+                break;
+            case OpCodeId::Save:
+                s_opcodes.set(i, make<OpCode_Save>(*const_cast<ByteCode*>(this)));
+                break;
+            case OpCodeId::Restore:
+                s_opcodes.set(i, make<OpCode_Restore>(*const_cast<ByteCode*>(this)));
+                break;
+            case OpCodeId::GoBack:
+                s_opcodes.set(i, make<OpCode_GoBack>(*const_cast<ByteCode*>(this)));
                 break;
             case OpCodeId::CheckBegin:
                 s_opcodes.set(i, make<OpCode_CheckBegin>(*const_cast<ByteCode*>(this)));
@@ -166,6 +195,38 @@ ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(const MatchInput& input, Matc
     return ExecutionResult::Failed;
 }
 
+ALWAYS_INLINE ExecutionResult OpCode_Save::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+{
+    input.saved_positions.append(state.string_position);
+    return ExecutionResult::Continue;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_Restore::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+{
+    if (input.saved_positions.is_empty())
+        return ExecutionResult::Failed;
+
+    state.string_position = input.saved_positions.take_last();
+    return ExecutionResult::Continue;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_GoBack::execute(const MatchInput&, MatchState& state, MatchOutput&) const
+{
+    if (count() > state.string_position)
+        return ExecutionResult::Failed_ExecuteLowPrioForks;
+
+    state.string_position -= count();
+    return ExecutionResult::Continue;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_FailForks::execute(const MatchInput& input, MatchState&, MatchOutput&) const
+{
+    ASSERT(count() > 0);
+
+    input.fail_counter += count() - 1;
+    return ExecutionResult::Failed_ExecuteLowPrioForks;
+}
+
 ALWAYS_INLINE ExecutionResult OpCode_Jump::execute(const MatchInput&, MatchState& state, MatchOutput&) const
 {
 
@@ -196,6 +257,40 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBegin::execute(const MatchInput& input
         return ExecutionResult::Continue;
 
     return ExecutionResult::Failed_ExecuteLowPrioForks;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+{
+    auto isword = [](auto ch) { return isalnum(ch) || ch == '_'; };
+    auto is_word_boundary = [&] {
+        if (state.string_position == input.view.length()) {
+            if (state.string_position > 0 && isword(input.view[state.string_position - 1]))
+                return true;
+            return false;
+        }
+
+        if (state.string_position == 0) {
+            if (isword(input.view[0]))
+                return true;
+
+            return false;
+        }
+
+        return !!(isword(input.view[state.string_position]) ^ isword(input.view[state.string_position - 1]));
+    };
+    switch (type()) {
+    case BoundaryCheckType::Word: {
+        if (is_word_boundary())
+            return ExecutionResult::Continue;
+        return ExecutionResult::Failed_ExecuteLowPrioForks;
+    }
+    case BoundaryCheckType::NonWord: {
+        if (!is_word_boundary())
+            return ExecutionResult::Continue;
+        return ExecutionResult::Failed_ExecuteLowPrioForks;
+    }
+    }
+    ASSERT_NOT_REACHED();
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
@@ -293,9 +388,13 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const M
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, MatchState& state, MatchOutput& output) const
 {
     bool inverse { false };
+    bool temporary_inverse { false };
+    bool reset_temp_inverse { false };
+
+    auto current_inversion_state = [&]() -> bool { return temporary_inverse ^ inverse; };
 
     size_t string_position = state.string_position;
     bool inverse_matched { false };
@@ -305,30 +404,45 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
         if (state.string_position > string_position)
             break;
 
+        if (reset_temp_inverse) {
+            reset_temp_inverse = false;
+            temporary_inverse = false;
+        } else {
+            reset_temp_inverse = true;
+        }
+
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
 
         if (compare_type == CharacterCompareType::Inverse)
             inverse = true;
 
-        else if (compare_type == CharacterCompareType::Char) {
-            char ch = m_bytecode->at(offset++);
+        else if (compare_type == CharacterCompareType::TemporaryInverse) {
+            // If "TemporaryInverse" is given, negate the current inversion state only for the next opcode.
+            // it follows that this cannot be the last compare element.
+            ASSERT(i != arguments_count() - 1);
+
+            temporary_inverse = true;
+            reset_temp_inverse = false;
+
+        } else if (compare_type == CharacterCompareType::Char) {
+            u32 ch = m_bytecode->at(offset++);
 
             // We want to compare a string that is longer or equal in length to the available string
             if (input.view.length() - state.string_position < 1)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            compare_char(input, state, ch, inverse, inverse_matched);
+            compare_char(input, state, ch, current_inversion_state(), inverse_matched);
 
         } else if (compare_type == CharacterCompareType::AnyChar) {
             // We want to compare a string that is definitely longer than the available string
             if (input.view.length() - state.string_position < 1)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            ASSERT(!inverse);
+            ASSERT(!current_inversion_state());
             ++state.string_position;
 
         } else if (compare_type == CharacterCompareType::String) {
-            ASSERT(!inverse);
+            ASSERT(!current_inversion_state());
 
             char* str = reinterpret_cast<char*>(m_bytecode->at(offset++));
             auto& length = m_bytecode->at(offset++);
@@ -348,7 +462,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
             auto character_class = (CharClass)m_bytecode->at(offset++);
             auto ch = input.view[state.string_position];
 
-            compare_character_class(input, state, character_class, ch, inverse, inverse_matched);
+            compare_character_class(input, state, character_class, ch, current_inversion_state(), inverse_matched);
 
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
@@ -357,7 +471,40 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
             auto to = value.to;
             auto ch = input.view[state.string_position];
 
-            compare_character_range(input, state, from, to, ch, inverse, inverse_matched);
+            compare_character_range(input, state, from, to, ch, current_inversion_state(), inverse_matched);
+
+        } else if (compare_type == CharacterCompareType::Reference) {
+            auto reference_number = (size_t)m_bytecode->at(offset++);
+            auto& groups = output.capture_group_matches.at(input.match_index);
+            if (groups.size() <= reference_number)
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
+
+            auto str = groups.at(reference_number).view;
+
+            // We want to compare a string that is definitely longer than the available string
+            if (input.view.length() - state.string_position < str.length())
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
+
+            if (!compare_string(input, state, str.characters_without_null_termination(), str.length()))
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
+
+        } else if (compare_type == CharacterCompareType::NamedReference) {
+            auto ptr = (const char*)m_bytecode->at(offset++);
+            auto length = (size_t)m_bytecode->at(offset++);
+            StringView name { ptr, length };
+
+            auto group = output.named_capture_group_matches.at(input.match_index).get(name);
+            if (!group.has_value())
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
+
+            auto str = group.value().view;
+
+            // We want to compare a string that is definitely longer than the available string
+            if (input.view.length() - state.string_position < str.length())
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
+
+            if (!compare_string(input, state, str.characters_without_null_termination(), str.length()))
+                return ExecutionResult::Failed_ExecuteLowPrioForks;
 
         } else {
             fprintf(stderr, "Undefined comparison: %i\n", (int)compare_type);
@@ -366,7 +513,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
         }
     }
 
-    if (inverse && !inverse_matched)
+    if (current_inversion_state() && !inverse_matched)
         ++state.string_position;
 
     if (string_position == state.string_position || state.string_position > input.view.length())
@@ -502,6 +649,14 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(const MatchInput& inp
                 ++state.string_position;
         }
         break;
+    case CharClass::Word:
+        if (isalnum(ch) || ch == '_') {
+            if (inverse)
+                inverse_matched = true;
+            else
+                ++state.string_position;
+        }
+        break;
     case CharClass::Xdigit:
         if (isxdigit(ch)) {
             if (inverse)
@@ -550,6 +705,13 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             result.empend(String::format("value='%c'", ch));
             if (!view.is_null())
                 result.empend(String::format("compare against: '%s'", view.substring_view(state().string_position, state().string_position + 1 > view.length() ? 0 : 1).to_string().characters()));
+        } else if (compare_type == CharacterCompareType::NamedReference) {
+            auto ptr = (const char*)m_bytecode->at(offset++);
+            auto length = m_bytecode->at(offset++);
+            result.empend(String::format("name='%.*s'", length, ptr));
+        } else if (compare_type == CharacterCompareType::Reference) {
+            auto ref = m_bytecode->at(offset++);
+            result.empend(String::format("number=%lu", ref));
         } else if (compare_type == CharacterCompareType::String) {
             char* str = reinterpret_cast<char*>(m_bytecode->at(offset++));
             auto& length = m_bytecode->at(offset++);

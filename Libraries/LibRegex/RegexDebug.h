@@ -102,6 +102,7 @@ public:
     {
         StringBuilder builder;
         builder.append(execution_result_name(result));
+        builder.appendff(", fc: {}, ss: {}", input.fail_counter, input.saved_positions.size());
         if (result == ExecutionResult::Succeeded) {
             builder.appendf(", ip: %lu/%lu, sp: %lu/%lu", state.instruction_position, bytecode.size() - 1, state.string_position, input.view.length() - 1);
         } else if (result == ExecutionResult::Fork_PrioHigh) {

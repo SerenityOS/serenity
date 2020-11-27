@@ -91,6 +91,9 @@ public:
     void reset();
     void back(size_t offset);
     void set_source(const StringView source) { m_source = source; }
+    bool try_skip(char);
+
+    StringView slice_back(size_t offset) const { return m_source.substring_view(m_position - offset - 1, offset); }
 
 private:
     ALWAYS_INLINE char peek(size_t offset = 0) const;

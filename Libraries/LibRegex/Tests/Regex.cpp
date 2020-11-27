@@ -472,4 +472,79 @@ TEST_CASE(simple_period_end_benchmark)
     EXPECT_EQ(re.search("hello?", m), true);
 }
 
+TEST_CASE(ECMA262_parse)
+{
+    constexpr const char* patterns[] {
+        "^hello.$",
+        "^(hello.)$",
+        "^h{0,1}ello.$",
+        "^hello\\W$",
+        "^hell\\w.$",
+        "^hell\\x6f1$", // ^hello1$
+        "^hel(?:l\\w).$",
+        "^hel(?<LO>l\\w).$",
+        "^[-a-zA-Z\\w\\s]+$",
+        "\\bhello\\B",
+    };
+
+    for (auto& pattern : patterns) {
+        Regex<ECMA262> re(pattern);
+        EXPECT_EQ(re.parser_result.error, Error::NoError);
+#ifdef REGEX_DEBUG
+        dbg() << "\n";
+        RegexDebug regex_dbg(stderr);
+        regex_dbg.print_raw_bytecode(re);
+        regex_dbg.print_header();
+        regex_dbg.print_bytecode(re);
+        dbg() << "\n";
+#endif
+    }
+}
+
+TEST_CASE(ECMA262_match)
+{
+    struct _test {
+        const char* pattern;
+        const char* subject;
+        bool matches { true };
+        ECMAScriptFlags options {};
+    };
+
+    constexpr _test tests[] {
+        { "^hello.$", "hello1" },
+        { "^(hello.)$", "hello1" },
+        { "^h{0,1}ello.$", "ello1" },
+        { "^hello\\W$", "hello!" },
+        { "^hell\\w.$", "hellx!" },
+        { "^hell\\x6f1$", "hello1" },
+        { "^hel(?<LO>l.)1$", "hello1" },
+        { "^hel(?<LO>l.)1*\\k<LO>.$", "hello1lo1" },
+        { "^[-a-z1-3\\s]+$", "hell2 o1" },
+        { .pattern = "\\bhello\\B", .subject = "hello1", .options = ECMAScriptFlags::Global },
+        { "\\b.*\\b", "hello1" },
+        { "[^\\D\\S]{2}", "1 " },
+        { "bar(?=f.)foo", "barfoo" },
+        { "bar(?=foo)bar", "barbar", false },
+        { "bar(?!foo)bar", "barbar", true },
+        { "bar(?!bar)bar", "barbar", false },
+        { "bar.*(?<=foo)", "barbar", false },
+        { "bar.*(?<!foo)", "barbar", true },
+        { "((...)X)+", "fooXbarXbazX", true },
+    };
+
+    for (auto& test : tests) {
+        Regex<ECMA262> re(test.pattern, test.options);
+#ifdef REGEX_DEBUG
+        dbg() << "\n";
+        RegexDebug regex_dbg(stderr);
+        regex_dbg.print_raw_bytecode(re);
+        regex_dbg.print_header();
+        regex_dbg.print_bytecode(re);
+        dbg() << "\n";
+#endif
+        EXPECT_EQ(re.parser_result.error, Error::NoError);
+        EXPECT_EQ(re.match(test.subject).success, test.matches);
+    }
+}
+
 TEST_MAIN(Regex)

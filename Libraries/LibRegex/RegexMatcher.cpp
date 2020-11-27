@@ -264,7 +264,13 @@ Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& sta
         s_regex_dbg.print_opcode("VM", *opcode, state, recursion_level, false);
 #endif
 
-        auto result = opcode->execute(input, state, output);
+        ExecutionResult result;
+        if (input.fail_counter > 0) {
+            --input.fail_counter;
+            result = ExecutionResult::Failed_ExecuteLowPrioForks;
+        } else {
+            result = opcode->execute(input, state, output);
+        }
 
 #ifdef REGEX_DEBUG
         s_regex_dbg.print_result(*opcode, bytecode, input, state, result);
@@ -330,4 +336,7 @@ ALWAYS_INLINE Optional<bool> Matcher<Parser>::execute_low_prio_forks(const Match
 
 template class Matcher<PosixExtendedParser>;
 template class Regex<PosixExtendedParser>;
+
+template class Matcher<ECMA262Parser>;
+template class Regex<ECMA262Parser>;
 }

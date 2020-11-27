@@ -32,6 +32,7 @@ namespace regex {
 enum class Error : u8;
 class Lexer;
 class PosixExtendedParser;
+class ECMA262Parser;
 
 class ByteCode;
 class OpCode;
@@ -50,6 +51,7 @@ class OpCode_Compare;
 class RegexStringView;
 }
 
+using regex::ECMA262Parser;
 using regex::Error;
 using regex::Lexer;
 using regex::PosixExtendedParser;

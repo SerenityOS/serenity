@@ -29,6 +29,7 @@
 #include "RegexMatch.h"
 #include "RegexOptions.h"
 
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
@@ -46,33 +47,41 @@ using ByteCodeValueType = u64;
     __ENUMERATE_OPCODE(Jump)                       \
     __ENUMERATE_OPCODE(ForkJump)                   \
     __ENUMERATE_OPCODE(ForkStay)                   \
+    __ENUMERATE_OPCODE(FailForks)                  \
     __ENUMERATE_OPCODE(SaveLeftCaptureGroup)       \
     __ENUMERATE_OPCODE(SaveRightCaptureGroup)      \
     __ENUMERATE_OPCODE(SaveLeftNamedCaptureGroup)  \
     __ENUMERATE_OPCODE(SaveRightNamedCaptureGroup) \
     __ENUMERATE_OPCODE(CheckBegin)                 \
     __ENUMERATE_OPCODE(CheckEnd)                   \
+    __ENUMERATE_OPCODE(CheckBoundary)              \
+    __ENUMERATE_OPCODE(Save)                       \
+    __ENUMERATE_OPCODE(Restore)                    \
+    __ENUMERATE_OPCODE(GoBack)                     \
     __ENUMERATE_OPCODE(Exit)
 
+// clang-format off
 enum class OpCodeId : ByteCodeValueType {
 #define __ENUMERATE_OPCODE(x) x,
     ENUMERATE_OPCODES
 #undef __ENUMERATE_OPCODE
 
-        First
-    = Compare,
-    Last
-    = Exit,
+    First = Compare,
+    Last = Exit,
 };
+// clang-format on
 
-#define ENUMERATE_CHARACTER_COMPARE_TYPES         \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Undefined) \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Inverse)   \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(AnyChar)   \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(Char)      \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(String)    \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(CharClass) \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(CharRange) \
+#define ENUMERATE_CHARACTER_COMPARE_TYPES                \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Undefined)        \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Inverse)          \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(TemporaryInverse) \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(AnyChar)          \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Char)             \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(String)           \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(CharClass)        \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(CharRange)        \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(Reference)        \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(NamedReference)   \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(RangeExpressionDummy)
 
 enum class CharacterCompareType : ByteCodeValueType {
@@ -93,12 +102,23 @@ enum class CharacterCompareType : ByteCodeValueType {
     __ENUMERATE_CHARACTER_CLASS(Blank) \
     __ENUMERATE_CHARACTER_CLASS(Graph) \
     __ENUMERATE_CHARACTER_CLASS(Punct) \
+    __ENUMERATE_CHARACTER_CLASS(Word)  \
     __ENUMERATE_CHARACTER_CLASS(Xdigit)
 
 enum class CharClass : ByteCodeValueType {
 #define __ENUMERATE_CHARACTER_CLASS(x) x,
     ENUMERATE_CHARACTER_CLASSES
 #undef __ENUMERATE_CHARACTER_CLASS
+};
+
+#define ENUMERATE_BOUNDARY_CHECK_TYPES    \
+    __ENUMERATE_BOUNDARY_CHECK_TYPE(Word) \
+    __ENUMERATE_BOUNDARY_CHECK_TYPE(NonWord)
+
+enum class BoundaryCheckType : ByteCodeValueType {
+#define __ENUMERATE_BOUNDARY_CHECK_TYPE(x) x,
+    ENUMERATE_BOUNDARY_CHECK_TYPES
+#undef __ENUMERATE_BOUNDARY_CHECK_TYPE
 };
 
 struct CharRange {
@@ -144,14 +164,24 @@ public:
             ASSERT(value.type != CharacterCompareType::RangeExpressionDummy);
             ASSERT(value.type != CharacterCompareType::Undefined);
             ASSERT(value.type != CharacterCompareType::String);
+            ASSERT(value.type != CharacterCompareType::NamedReference);
 
             arguments.append((ByteCodeValueType)value.type);
-            if (value.type != CharacterCompareType::Inverse && value.type != CharacterCompareType::AnyChar)
+            if (value.type != CharacterCompareType::Inverse && value.type != CharacterCompareType::AnyChar && value.type != CharacterCompareType::TemporaryInverse)
                 arguments.append(move(value.value));
         }
 
         bytecode.empend(arguments.size()); // size of arguments
         bytecode.append(move(arguments));
+
+        append(move(bytecode));
+    }
+
+    void insert_bytecode_check_boundary(BoundaryCheckType type)
+    {
+        ByteCode bytecode;
+        bytecode.empend((ByteCodeValueType)OpCodeId::CheckBoundary);
+        bytecode.empend((ByteCodeValueType)type);
 
         append(move(bytecode));
     }
@@ -167,6 +197,25 @@ public:
 
         arguments.empend(static_cast<ByteCodeValueType>(CharacterCompareType::String));
         arguments.empend(reinterpret_cast<ByteCodeValueType>(view.characters_without_null_termination()));
+        arguments.empend(length);
+
+        bytecode.empend(arguments.size()); // size of arguments
+        bytecode.append(move(arguments));
+
+        append(move(bytecode));
+    }
+
+    void insert_bytecode_compare_named_reference(StringView name, size_t length)
+    {
+        ByteCode bytecode;
+
+        bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
+        bytecode.empend(1); // number of arguments
+
+        ByteCode arguments;
+
+        arguments.empend(static_cast<ByteCodeValueType>(CharacterCompareType::NamedReference));
+        arguments.empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
         arguments.empend(length);
 
         bytecode.empend(arguments.size()); // size of arguments
@@ -199,6 +248,87 @@ public:
         empend(static_cast<ByteCodeValueType>(OpCodeId::SaveRightNamedCaptureGroup));
         empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
         empend(name.length());
+    }
+
+    enum class LookAroundType {
+        LookAhead,
+        LookBehind,
+        NegatedLookAhead,
+        NegatedLookBehind,
+    };
+    void insert_bytecode_lookaround(ByteCode&& lookaround_body, LookAroundType type, size_t match_length = 0)
+    {
+        // FIXME: The save stack will grow infinitely with repeated failures
+        //        as we do not discard that on failure (we don't necessarily know how many to pop with the current architecture).
+        switch (type) {
+        case LookAroundType::LookAhead: {
+            // SAVE
+            // REGEXP BODY
+            // RESTORE
+            empend((ByteCodeValueType)OpCodeId::Save);
+            append(move(lookaround_body));
+            empend((ByteCodeValueType)OpCodeId::Restore);
+            return;
+        }
+        case LookAroundType::NegatedLookAhead: {
+            // JUMP _A
+            // LABEL _L
+            // REGEXP BODY
+            // FAIL 2
+            // LABEL _A
+            // SAVE
+            // FORKJUMP _L
+            // RESTORE
+            auto body_length = lookaround_body.size();
+            empend((ByteCodeValueType)OpCodeId::Jump);
+            empend((ByteCodeValueType)body_length + 2); // JUMP to label _A
+            append(move(lookaround_body));
+            empend((ByteCodeValueType)OpCodeId::FailForks);
+            empend((ByteCodeValueType)2); // Fail two forks
+            empend((ByteCodeValueType)OpCodeId::Save);
+            empend((ByteCodeValueType)OpCodeId::ForkJump);
+            empend((ByteCodeValueType) - (body_length + 5)); // JUMP to lavel _L
+            empend((ByteCodeValueType)OpCodeId::Restore);
+            return;
+        }
+        case LookAroundType::LookBehind:
+            // SAVE
+            // GOBACK match_length(BODY)
+            // REGEXP BODY
+            // RESTORE
+            empend((ByteCodeValueType)OpCodeId::Save);
+            empend((ByteCodeValueType)OpCodeId::GoBack);
+            empend((ByteCodeValueType)match_length);
+            append(move(lookaround_body));
+            empend((ByteCodeValueType)OpCodeId::Restore);
+            return;
+        case LookAroundType::NegatedLookBehind: {
+            // JUMP _A
+            // LABEL _L
+            // GOBACK match_length(BODY)
+            // REGEXP BODY
+            // FAIL 2
+            // LABEL _A
+            // SAVE
+            // FORKJUMP _L
+            // RESTORE
+            auto body_length = lookaround_body.size();
+            empend((ByteCodeValueType)OpCodeId::Jump);
+            empend((ByteCodeValueType)body_length + 4); // JUMP to label _A
+            empend((ByteCodeValueType)OpCodeId::GoBack);
+            empend((ByteCodeValueType)match_length);
+            append(move(lookaround_body));
+            empend((ByteCodeValueType)OpCodeId::FailForks);
+            empend((ByteCodeValueType)2); // Fail two forks
+            empend((ByteCodeValueType)OpCodeId::Save);
+            empend((ByteCodeValueType)OpCodeId::ForkJump);
+            empend((ByteCodeValueType) - (body_length + 7)); // JUMP to lavel _L
+            empend((ByteCodeValueType)OpCodeId::Restore);
+            return;
+        }
+        }
+
+        ASSERT_NOT_REACHED();
     }
 
     void insert_bytecode_alternation(ByteCode&& left, ByteCode&& right)
@@ -348,6 +478,7 @@ enum class ExecutionResult : u8 {
 
 const char* execution_result_name(ExecutionResult result);
 const char* opcode_id_name(OpCodeId opcode_id);
+const char* boundary_check_type_name(BoundaryCheckType);
 const char* character_compare_type_name(CharacterCompareType result);
 const char* execution_result_name(ExecutionResult result);
 
@@ -417,6 +548,56 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Exit; }
     ALWAYS_INLINE size_t size() const override { return 1; }
     const String arguments_string() const override { return ""; }
+};
+
+class OpCode_FailForks final : public OpCode {
+public:
+    OpCode_FailForks(ByteCode& bytecode)
+        : OpCode(bytecode)
+    {
+    }
+    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::FailForks; }
+    ALWAYS_INLINE size_t size() const override { return 2; }
+    ALWAYS_INLINE size_t count() const { return argument(0); }
+    const String arguments_string() const override { return String::formatted("count={}", count()); }
+};
+
+class OpCode_Save final : public OpCode {
+public:
+    OpCode_Save(ByteCode& bytecode)
+        : OpCode(bytecode)
+    {
+    }
+    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Save; }
+    ALWAYS_INLINE size_t size() const override { return 1; }
+    const String arguments_string() const override { return ""; }
+};
+
+class OpCode_Restore final : public OpCode {
+public:
+    OpCode_Restore(ByteCode& bytecode)
+        : OpCode(bytecode)
+    {
+    }
+    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Restore; }
+    ALWAYS_INLINE size_t size() const override { return 1; }
+    const String arguments_string() const override { return ""; }
+};
+
+class OpCode_GoBack final : public OpCode {
+public:
+    OpCode_GoBack(ByteCode& bytecode)
+        : OpCode(bytecode)
+    {
+    }
+    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::GoBack; }
+    ALWAYS_INLINE size_t size() const override { return 2; }
+    ALWAYS_INLINE size_t count() const { return argument(0); }
+    const String arguments_string() const override { return String::formatted("count={}", count()); }
 };
 
 class OpCode_Jump final : public OpCode {
@@ -489,6 +670,20 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckEnd; }
     ALWAYS_INLINE size_t size() const override { return 1; }
     const String arguments_string() const override { return ""; }
+};
+
+class OpCode_CheckBoundary final : public OpCode {
+public:
+    OpCode_CheckBoundary(ByteCode& bytecode)
+        : OpCode(bytecode)
+    {
+    }
+    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckBoundary; }
+    ALWAYS_INLINE size_t size() const override { return 2; }
+    ALWAYS_INLINE size_t arguments_count() const { return 1; }
+    ALWAYS_INLINE BoundaryCheckType type() const { return static_cast<BoundaryCheckType>(argument(0)); }
+    const String arguments_string() const override { return String::format("kind=%lu (%s)", argument(0), boundary_check_type_name(type())); }
 };
 
 class OpCode_SaveLeftCaptureGroup final : public OpCode {

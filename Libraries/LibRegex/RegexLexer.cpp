@@ -26,6 +26,7 @@
 
 #include "RegexLexer.h"
 #include <AK/Assertions.h>
+#include <AK/LogStream.h>
 #include <stdio.h>
 
 namespace regex {
@@ -89,6 +90,15 @@ void Lexer::reset()
     m_previous_position = 0;
 }
 
+bool Lexer::try_skip(char c)
+{
+    if (peek() != c)
+        return false;
+
+    consume();
+    return true;
+}
+
 Token Lexer::next()
 {
     size_t token_start_position;
@@ -127,7 +137,9 @@ Token Lexer::next()
         case '\\':
             return 2;
         default:
-            fprintf(stderr, "[LEXER] Found invalid escape sequence: \\%c\n", peek(1));
+#ifdef REGEX_DEBUG
+            fprintf(stderr, "[LEXER] Found invalid escape sequence: \\%c (the parser will have to deal with this!)\n", peek(1));
+#endif
             return 0;
         }
     };
