@@ -66,7 +66,7 @@ public:
         // FIXME: More than 2^20 bytes cannot be generated without refreshing the key.
         ASSERT(n < (1 << 20));
 
-        typename CipherType::CTRMode cipher(m_key, KeySize);
+        typename CipherType::CTRMode cipher(m_key, KeySize, Crypto::Cipher::Intent::Encryption);
 
         Bytes buffer_span { buffer, n };
         auto counter_span = m_counter.bytes();
