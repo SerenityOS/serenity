@@ -43,6 +43,7 @@ target_link_libraries(test-js LibJS LibLine LibCore)
 target_link_libraries(test-pthread LibThread)
 target_link_libraries(test-web LibWeb)
 target_link_libraries(tt LibPthread)
+target_link_libraries(grep LibRegex)
 target_link_libraries(gunzip LibCompress)
 
 add_subdirectory(Tests)
