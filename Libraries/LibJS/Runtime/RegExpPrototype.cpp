@@ -30,6 +30,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
+#include <LibJS/Token.h>
 
 namespace JS {
 
@@ -82,6 +83,20 @@ static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
         return nullptr;
     }
     return static_cast<RegExpObject*>(this_object);
+}
+
+static String escape_regexp_pattern(const RegExpObject& regexp_object)
+{
+    auto pattern = regexp_object.pattern();
+    if (pattern.is_empty())
+        return "(?:)";
+    // FIXME: Check u flag and escape accordingly
+    pattern.replace("\n", "\\n", true);
+    pattern.replace("\r", "\\r", true);
+    pattern.replace(LINE_SEPARATOR, "\\u2028", true);
+    pattern.replace(PARAGRAPH_SEPARATOR, "\\u2029", true);
+    pattern.replace("/", "\\/", true);
+    return pattern;
 }
 
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::dot_all)
@@ -142,11 +157,20 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::multiline)
 
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
 {
+    auto this_object = this_object_from(vm, global_object);
+    if (!this_object)
+        return {};
+
+    // FIXME: This is obnoxious - we should have an easier way of looking up %RegExp.prototype%.
+    auto& regexp_prototype = global_object.get(vm.names.RegExp).as_object().get(vm.names.prototype).as_object();
+    if (this_object == &regexp_prototype)
+        return js_string(vm, "(?:)");
+
     auto regexp_object = regexp_object_from(vm, global_object);
     if (!regexp_object)
         return {};
 
-    return js_string(vm, regexp_object->pattern());
+    return js_string(vm, escape_regexp_pattern(*regexp_object));
 }
 
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::sticky)
