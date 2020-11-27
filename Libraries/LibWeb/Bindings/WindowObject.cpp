@@ -36,6 +36,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
 #include <LibWeb/Bindings/EventWrapper.h>
+#include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>

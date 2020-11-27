@@ -342,6 +342,8 @@ int main(int argc, char** argv)
 static bool should_emit_wrapper_factory(const IDL::Interface& interface)
 {
     // FIXME: This is very hackish.
+    if (interface.name == "Event")
+        return false;
     if (interface.name == "EventTarget")
         return false;
     if (interface.name == "Node")
