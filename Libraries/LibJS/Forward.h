@@ -92,6 +92,14 @@
     __JS_ENUMERATE(toPrimitive, to_primitive)                \
     __JS_ENUMERATE(toStringTag, to_string_tag)
 
+#define JS_ENUMERATE_REGEXP_FLAGS                           \
+    __JS_ENUMERATE(global, global, g, Global)               \
+    __JS_ENUMERATE(ignoreCase, ignore_case, i, Insensitive) \
+    __JS_ENUMERATE(multiline, multiline, m, Multiline)      \
+    __JS_ENUMERATE(dotAll, dot_all, s, SingleLine)          \
+    __JS_ENUMERATE(unicode, unicode, u, Unicode)            \
+    __JS_ENUMERATE(sticky, sticky, y, Sticky)
+
 namespace JS {
 
 class ASTNode;
