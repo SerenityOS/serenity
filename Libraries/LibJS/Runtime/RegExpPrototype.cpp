@@ -66,7 +66,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
     auto* regexp_object = regexp_object_from(vm, global_object);
     if (!regexp_object)
         return {};
-    return js_string(vm, String::formatted("/{}/{}", regexp_object->content(), regexp_object->flags()));
+    return js_string(vm, String::formatted("/{}/{}", regexp_object->pattern(), regexp_object->flags()));
 }
 
 }

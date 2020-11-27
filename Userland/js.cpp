@@ -235,7 +235,7 @@ static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
 static void print_regexp(const JS::Object& object, HashTable<JS::Object*>&)
 {
     auto& regexp = static_cast<const JS::RegExpObject&>(object);
-    out("\033[34;1m/{}/{}\033[0m", regexp.content(), regexp.flags());
+    out("\033[34;1m/{}/{}\033[0m", regexp.pattern(), regexp.flags());
 }
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)

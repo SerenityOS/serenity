@@ -58,13 +58,13 @@ Value RegExpConstructor::construct(Function&)
     auto& vm = this->vm();
     if (!vm.argument_count())
         return RegExpObject::create(global_object(), "(?:)", "");
-    auto contents = vm.argument(0).to_string(global_object());
+    auto pattern = vm.argument(0).to_string(global_object());
     if (vm.exception())
         return {};
     auto flags = vm.argument_count() > 1 ? vm.argument(1).to_string(global_object()) : "";
     if (vm.exception())
         return {};
-    return RegExpObject::create(global_object(), contents, flags);
+    return RegExpObject::create(global_object(), pattern, flags);
 }
 
 }
