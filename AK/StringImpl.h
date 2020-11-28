@@ -141,5 +141,6 @@ struct Formatter<StringImpl> : Formatter<StringView> {
 }
 
 using AK::Chomp;
+using AK::NoChomp;
 using AK::string_hash;
 using AK::StringImpl;
