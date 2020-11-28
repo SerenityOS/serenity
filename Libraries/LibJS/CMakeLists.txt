@@ -76,6 +76,7 @@ set(SOURCES
     Runtime/Uint8ClampedArray.cpp
     Runtime/VM.cpp
     Runtime/Value.cpp
+    Runtime/WithScope.cpp
     Token.cpp
 )
 

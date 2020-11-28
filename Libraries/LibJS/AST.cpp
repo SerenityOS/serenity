@@ -29,6 +29,7 @@
 #include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <AK/TemporaryChange.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
@@ -46,6 +47,7 @@
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/WithScope.h>
 #include <stdio.h>
 
 namespace JS {
@@ -255,9 +257,22 @@ Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object
     return js_undefined();
 }
 
-Value WithStatement::execute(Interpreter&, GlobalObject&) const
+Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    ASSERT_NOT_REACHED();
+    auto object_value = m_object->execute(interpreter, global_object);
+    if (interpreter.exception())
+        return {};
+
+    auto* object = object_value.to_object(global_object);
+    if (interpreter.exception())
+        return {};
+
+    ASSERT(object);
+
+    auto* with_scope = interpreter.heap().allocate<WithScope>(global_object, *object, interpreter.vm().call_frame().scope);
+    TemporaryChange<ScopeObject*> scope_change(interpreter.vm().call_frame().scope, with_scope);
+    interpreter.execute_statement(global_object, m_body);
+    return {};
 }
 
 Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
