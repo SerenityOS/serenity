@@ -115,7 +115,6 @@ ALWAYS_INLINE void Parser::reset()
     m_parser_state.current_token = m_parser_state.lexer.next();
     m_parser_state.error = Error::NoError;
     m_parser_state.error_token = { TokenType::Eof, 0, StringView(nullptr) };
-    m_parser_state.regex_options = {};
 }
 
 Parser::Result Parser::parse(Optional<AllOptions> regex_options)
@@ -621,7 +620,7 @@ bool PosixExtendedParser::parse_root(ByteCode& stack, size_t& match_length_minim
 
 bool ECMA262Parser::parse_internal(ByteCode& stack, size_t& match_length_minimum)
 {
-    if (m_parser_state.regex_options & AllFlags::Unicode) {
+    if (m_parser_state.regex_options.has_flag_set(AllFlags::Unicode)) {
         return parse_pattern(stack, match_length_minimum, true, true);
     } else {
         ByteCode new_stack;
@@ -918,6 +917,13 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
 
 bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
 {
+    if (match(TokenType::EscapeSequence)) {
+        // Also part of AtomEscape.
+        auto token = consume();
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token.value()[0] } });
+        return true;
+    }
     if (try_skip("\\")) {
         // AtomEscape.
         return parse_atom_escape(stack, match_length_minimum, unicode, named);
@@ -1035,11 +1041,20 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     // IdentityEscape
-    if (match(TokenType::EscapeSequence)) {
-        match_length_minimum += 1;
-        auto token = consume().value();
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token[token.length() - 1] } });
-        return true;
+    for (auto ch : StringView { "^$\\.*+?()[]{}|" }) {
+        if (try_skip({ &ch, 1 })) {
+            match_length_minimum += 1;
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)ch } });
+            return true;
+        }
+    }
+
+    if (unicode) {
+        if (try_skip("/")) {
+            match_length_minimum += 1;
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'/' } });
+            return true;
+        }
     }
 
     if (named && try_skip("k")) {
@@ -1171,6 +1186,8 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 return { { .code_point = '\v', .is_character_class = false } };
             if (try_skip("b"))
                 return { { .code_point = '\b', .is_character_class = false } };
+            if (try_skip("/"))
+                return { { .code_point = '/', .is_character_class = false } };
 
             // CharacterEscape > ControlLetter
             if (try_skip("c")) {
