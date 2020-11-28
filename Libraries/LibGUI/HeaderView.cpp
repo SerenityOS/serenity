@@ -321,11 +321,14 @@ Menu& HeaderView::ensure_context_menu()
         ASSERT(model());
         m_context_menu = Menu::construct();
 
+        if (m_orientation == Gfx::Orientation::Vertical) {
+            dbgln("FIXME: Support context menus for vertical GUI::HeaderView");
+            return *m_context_menu;
+        }
+
         int section_count = this->section_count();
         for (int section = 0; section < section_count; ++section) {
             auto& column_data = this->section_data(section);
-            // FIXME: Vertical support
-            ASSERT(m_orientation == Gfx::Orientation::Horizontal);
             auto name = model()->column_name(section);
             column_data.visibility_action = Action::create_checkable(name, [this, section](auto& action) {
                 set_section_visible(section, action.is_checked());
