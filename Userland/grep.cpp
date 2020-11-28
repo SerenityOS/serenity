@@ -35,6 +35,21 @@
 #include <stdio.h>
 #include <unistd.h>
 
+enum class BinaryFileMode {
+    Binary,
+    Text,
+    Skip,
+};
+
+template<typename... Ts>
+void fail(StringView format, Ts... args)
+{
+    fprintf(stderr, "\x1b[31m");
+    warnln(format, forward<Ts>(args)...);
+    fprintf(stderr, "\x1b[0m");
+    abort();
+}
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio rpath", nullptr) < 0) {
@@ -47,11 +62,50 @@ int main(int argc, char** argv)
     bool recursive { false };
     bool use_ere { true };
     const char* pattern = nullptr;
+    BinaryFileMode binary_mode { BinaryFileMode::Binary };
+    bool case_insensitive = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Recursively scan files starting in working directory", "recursive", 'r');
     args_parser.add_option(use_ere, "Extended regular expressions (default)", "extended-regexp", 'E');
     args_parser.add_option(pattern, "Pattern", "regexp", 'e', "Pattern");
+    args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Action to take for binary files ([binary], text, skip)",
+        .long_name = "binary-mode",
+        .accept_value = [&](auto* str) {
+            if (StringView { "text" } == str)
+                binary_mode = BinaryFileMode::Text;
+            else if (StringView { "binary" } == str)
+                binary_mode = BinaryFileMode::Binary;
+            else if (StringView { "skip" } == str)
+                binary_mode = BinaryFileMode::Skip;
+            else
+                return false;
+            return true;
+        },
+    });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = false,
+        .help_string = "Treat binary files as text (same as --binary-mode text)",
+        .long_name = "text",
+        .short_name = 'a',
+        .accept_value = [&](auto) {
+            binary_mode = BinaryFileMode::Text;
+            return true;
+        },
+    });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = false,
+        .help_string = "Ignore binary files (same as --binary-mode skip)",
+        .long_name = nullptr,
+        .short_name = 'I',
+        .accept_value = [&](auto) {
+            binary_mode = BinaryFileMode::Skip;
+            return true;
+        },
+    });
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -62,60 +116,59 @@ int main(int argc, char** argv)
     if (pattern == nullptr && files.size())
         pattern = files.take_first();
 
-    Regex<PosixExtended> re(pattern);
+    PosixOptions options {};
+    if (case_insensitive)
+        options |= PosixFlags::Insensitive;
+
+    Regex<PosixExtended> re(pattern, options);
     if (re.parser_result.error != Error::NoError) {
         return 1;
     }
 
-    auto match = [&](const char* str, const char* filename = "", bool print_filename = false) {
+    auto matches = [&](StringView str, StringView filename = "", bool print_filename = false, bool is_binary = false) {
         size_t last_printed_char_pos { 0 };
+        if (is_binary && binary_mode == BinaryFileMode::Skip)
+            return false;
+
         auto result = re.match(str, PosixFlags::Global);
         if (result.success) {
-            if (result.matches.size() && print_filename) {
-                printf("\x1B[34m%s:\x1B[0m", filename);
+            if (is_binary && binary_mode == BinaryFileMode::Binary) {
+                outln("binary file \x1B[34m{}\x1B[0m matches", filename);
+            } else {
+                if (result.matches.size() && print_filename) {
+                    out("\x1B[34m{}:\x1B[0m", filename);
+                }
+
+                for (auto& match : result.matches) {
+
+                    out("{}\x1B[32m{}\x1B[0m",
+                        StringView(&str[last_printed_char_pos], match.global_offset - last_printed_char_pos),
+                        match.view.to_string());
+                    last_printed_char_pos = match.global_offset + match.view.length();
+                }
+                out("{}", StringView(&str[last_printed_char_pos], str.length() - last_printed_char_pos));
             }
 
-            for (auto& match : result.matches) {
-
-                printf("%s\x1B[32m%s\x1B[0m",
-                    String(&str[last_printed_char_pos], match.global_offset - last_printed_char_pos).characters(),
-                    match.view.to_string().characters());
-                last_printed_char_pos = match.global_offset + match.view.length();
-            }
-            printf("%s", String(&str[last_printed_char_pos], strlen(str) - last_printed_char_pos).characters());
-        }
-    };
-
-    auto find_nul = [](const u8* str, size_t length) {
-        for (size_t i = 0; i < length - 1; ++i)
-            if (str[i] == 0) {
-                return true;
-            }
-
-        return false;
-    };
-    auto handle_file = [&match, &find_nul](const char* filename, bool print_filename) -> bool {
-        auto file = Core::File::construct(filename);
-        if (!file->open(Core::IODevice::ReadOnly)) {
-            fprintf(stderr, "Failed to open %s: %s\n", filename, file->error_string());
-            return false;
-        }
-
-        u8 check_buf[1024];
-        size_t bytes = file->read(check_buf, 1024);
-        Utf8View view { StringView { check_buf, bytes } };
-
-        if (!view.validate() || find_nul(check_buf, bytes)) {
-            printf("Skipping binary file (%s)\n", filename);
             return true;
         }
 
-        file->seek(0, Core::IODevice::SeekMode::SetPosition);
+        return false;
+    };
+
+    auto handle_file = [&matches, binary_mode](StringView filename, bool print_filename) -> bool {
+        auto file = Core::File::construct(filename);
+        if (!file->open(Core::IODevice::ReadOnly)) {
+            warnln("Failed to open {}: {}", filename, file->error_string());
+            return false;
+        }
 
         while (file->can_read_line()) {
             auto line = file->read_line(1024);
-            auto str = String { reinterpret_cast<const char*>(line.data()), line.size() };
-            match(str.characters(), filename, print_filename);
+            auto is_binary = memchr(line.data(), 0, line.size()) != nullptr;
+
+            StringView str { reinterpret_cast<const char*>(line.data()), line.size() };
+            if (matches(str, filename, print_filename, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
+                return true;
         }
         return true;
     };
@@ -125,8 +178,8 @@ int main(int argc, char** argv)
         while (it.has_next()) {
             auto path = it.next_full_path();
             if (!Core::File::is_directory(path)) {
-                auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
-                handle_file(key.characters(), true);
+                auto key = path.substring_view(base.length() + 1, path.length() - base.length() - 1);
+                handle_file(key, true);
             } else {
                 handle_directory(base, path, handle_directory);
             }
@@ -134,22 +187,17 @@ int main(int argc, char** argv)
     };
 
     if (!files.size() && !recursive) {
-        bool first = { true };
+        auto stdin_file = Core::File::stdin();
         for (;;) {
-            char buf[4096];
-            auto* str = fgets(buf, sizeof(buf), stdin);
+            auto line = stdin_file->read_line(4096);
+            StringView str { line.data(), line.size() };
+            bool is_binary = str.bytes().contains_slow(0);
 
-            if (first && strstr(str, "\0"))
-                printf("Skipping binary file (stdin)\n");
-            else
-                match(str);
+            if (is_binary && binary_mode == BinaryFileMode::Skip)
+                return 1;
 
-            first = false;
-
-            if (feof(stdin))
+            if (matches(str, "stdin", false, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
                 return 0;
-
-            ASSERT(str);
         }
     } else {
         if (recursive) {
