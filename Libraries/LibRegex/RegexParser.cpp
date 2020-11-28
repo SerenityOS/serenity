@@ -297,9 +297,6 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack
                 return set_error(Error::InvalidRange);
             }
 
-        } else if (match(TokenType::Char) || match(TokenType::Period) || match(TokenType::Asterisk) || match(TokenType::EscapeSequence) || match(TokenType::Plus)) {
-            values.append({ CharacterCompareType::Char, (ByteCodeValueType)*consume().value().characters_without_null_termination() });
-
         } else if (match(TokenType::Circumflex)) {
             auto t = consume();
 
@@ -385,9 +382,9 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack
                 // closing bracket expression
                 break;
             }
-        } else
-            // nothing matched, this is a failure, as at least the closing bracket must match...
-            return set_error(Error::MismatchingBracket);
+        } else {
+            values.append({ CharacterCompareType::Char, (ByteCodeValueType)skip() });
+        }
 
         // check if range expression has to be completed...
         if (values.size() >= 3 && values.at(values.size() - 2).type == CharacterCompareType::RangeExpressionDummy) {
