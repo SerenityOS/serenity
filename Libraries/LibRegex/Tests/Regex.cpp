@@ -485,6 +485,10 @@ TEST_CASE(ECMA262_parse)
         "^hel(?<LO>l\\w).$",
         "^[-a-zA-Z\\w\\s]+$",
         "\\bhello\\B",
+        "^[\\w+/_-]+[=]{0,2}$",                        // #4189
+        "^(?:[^<]*(<[\\w\\W]+>)[^>]*$|#([\\w\\-]*)$)", // #4189
+        "\\/",                                         // #4189
+        "\\x",                                         // Even invalid escapes are allowed if ~unicode.
     };
 
     for (auto& pattern : patterns) {
