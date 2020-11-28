@@ -120,40 +120,40 @@ public:
         m_value.as_double = value;
     }
 
-    Value(Object* object)
+    Value(const Object* object)
         : m_type(object ? Type::Object : Type::Null)
     {
-        m_value.as_object = object;
+        m_value.as_object = const_cast<Object*>(object);
     }
 
-    Value(PrimitiveString* string)
+    Value(const PrimitiveString* string)
         : m_type(Type::String)
     {
-        m_value.as_string = string;
+        m_value.as_string = const_cast<PrimitiveString*>(string);
     }
 
-    Value(Symbol* symbol)
+    Value(const Symbol* symbol)
         : m_type(Type::Symbol)
     {
-        m_value.as_symbol = symbol;
+        m_value.as_symbol = const_cast<Symbol*>(symbol);
     }
 
-    Value(Accessor* accessor)
+    Value(const Accessor* accessor)
         : m_type(Type::Accessor)
     {
-        m_value.as_accessor = accessor;
+        m_value.as_accessor = const_cast<Accessor*>(accessor);
     }
 
-    Value(BigInt* bigint)
+    Value(const BigInt* bigint)
         : m_type(Type::BigInt)
     {
-        m_value.as_bigint = bigint;
+        m_value.as_bigint = const_cast<BigInt*>(bigint);
     }
 
-    Value(NativeProperty* native_property)
+    Value(const NativeProperty* native_property)
         : m_type(Type::NativeProperty)
     {
-        m_value.as_native_property = native_property;
+        m_value.as_native_property = const_cast<NativeProperty*>(native_property);
     }
 
     explicit Value(Type type)
