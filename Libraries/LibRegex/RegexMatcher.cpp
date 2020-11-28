@@ -45,11 +45,8 @@ Regex<Parser>::Regex(StringView pattern, typename ParserTraits<Parser>::OptionsT
     Parser parser(lexer, regex_options);
     parser_result = parser.parse();
 
-    if (parser_result.error == regex::Error::NoError) {
+    if (parser_result.error == regex::Error::NoError)
         matcher = make<Matcher<Parser>>(*this, regex_options);
-    } else {
-        fprintf(stderr, "%s\n", error_string().characters());
-    }
 }
 
 template<class Parser>
