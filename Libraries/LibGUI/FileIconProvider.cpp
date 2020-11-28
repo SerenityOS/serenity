@@ -67,6 +67,7 @@ static void initialize_if_needed()
     s_symlink_icon = Icon::default_icon("filetype-symlink");
     s_socket_icon = Icon::default_icon("filetype-socket");
     s_executable_icon = Icon::default_icon("filetype-executable");
+    s_filetype_image_icon = Icon::default_icon("filetype-image");
 
     for (auto& filetype : config->keys("Icons")) {
         s_filetype_icons.set(filetype, Icon::default_icon(String::formatted("filetype-{}", filetype)));
