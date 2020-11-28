@@ -29,7 +29,9 @@
 #include <AK/MappedFile.h>
 #include <LibGfx/BMPLoader.h>
 
-#define BMP_DEBUG 0
+#ifndef BMP_DEBUG
+#    define BMP_DEBUG 0
+#endif
 
 #define IF_BMP_DEBUG(x) \
     if (BMP_DEBUG)      \
