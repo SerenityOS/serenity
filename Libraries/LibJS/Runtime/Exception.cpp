@@ -46,9 +46,9 @@ Exception::~Exception()
 {
 }
 
-void Exception::visit_children(Visitor& visitor)
+void Exception::visit_edges(Visitor& visitor)
 {
-    Cell::visit_children(visitor);
+    Cell::visit_edges(visitor);
     visitor.visit(m_value);
 }
 

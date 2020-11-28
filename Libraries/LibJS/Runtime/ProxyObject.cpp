@@ -467,9 +467,9 @@ Value ProxyObject::delete_property(const PropertyName& name)
     return Value(true);
 }
 
-void ProxyObject::visit_children(Cell::Visitor& visitor)
+void ProxyObject::visit_edges(Cell::Visitor& visitor)
 {
-    Function::visit_children(visitor);
+    Function::visit_edges(visitor);
     visitor.visit(&m_target);
     visitor.visit(&m_handler);
 }

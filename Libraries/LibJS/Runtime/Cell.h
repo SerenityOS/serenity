@@ -57,7 +57,7 @@ public:
         virtual void visit_impl(Cell*) = 0;
     };
 
-    virtual void visit_children(Visitor&) { }
+    virtual void visit_edges(Visitor&) { }
 
     Heap& heap() const;
     VM& vm() const;

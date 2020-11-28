@@ -94,9 +94,9 @@ WindowObject::~WindowObject()
 {
 }
 
-void WindowObject::visit_children(Visitor& visitor)
+void WindowObject::visit_edges(Visitor& visitor)
 {
-    GlobalObject::visit_children(visitor);
+    GlobalObject::visit_edges(visitor);
     visitor.visit(m_xhr_constructor);
     visitor.visit(m_xhr_prototype);
 }

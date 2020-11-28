@@ -48,7 +48,7 @@ public:
     virtual const FlyString& name() const = 0;
     virtual LexicalEnvironment* create_environment() = 0;
 
-    virtual void visit_children(Visitor&) override;
+    virtual void visit_edges(Visitor&) override;
 
     virtual bool is_script_function() const { return false; }
 

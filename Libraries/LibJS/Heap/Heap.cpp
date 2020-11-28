@@ -193,7 +193,7 @@ public:
         dbg() << "  ! " << cell;
 #endif
         cell->set_marked(true);
-        cell->visit_children(*this);
+        cell->visit_edges(*this);
     }
 };
 

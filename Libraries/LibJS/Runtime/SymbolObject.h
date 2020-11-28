@@ -52,7 +52,7 @@ public:
     }
 
 private:
-    virtual void visit_children(Visitor&) override;
+    virtual void visit_edges(Visitor&) override;
     virtual bool is_symbol_object() const override { return true; }
 
     Symbol& m_symbol;
