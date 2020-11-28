@@ -327,6 +327,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         return parse_do_while_statement();
     case TokenType::While:
         return parse_while_statement();
+    case TokenType::With:
+        return parse_with_statement();
     case TokenType::Debugger:
         return parse_debugger_statement();
     case TokenType::Semicolon:
@@ -1580,6 +1582,19 @@ NonnullRefPtr<SwitchStatement> Parser::parse_switch_statement()
     return create_ast_node<SwitchStatement>(move(determinant), move(cases));
 }
 
+NonnullRefPtr<WithStatement> Parser::parse_with_statement()
+{
+    consume(TokenType::With);
+    consume(TokenType::ParenOpen);
+
+    auto object = parse_expression(0);
+
+    consume(TokenType::ParenClose);
+
+    auto body = parse_statement();
+    return create_ast_node<WithStatement>(move(object), move(body));
+}
+
 NonnullRefPtr<SwitchCase> Parser::parse_switch_case()
 {
     RefPtr<Expression> test;
@@ -1847,6 +1862,7 @@ bool Parser::match_statement() const
         || type == TokenType::Throw
         || type == TokenType::Try
         || type == TokenType::While
+        || type == TokenType::With
         || type == TokenType::For
         || type == TokenType::CurlyOpen
         || type == TokenType::Switch

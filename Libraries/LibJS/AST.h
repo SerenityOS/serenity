@@ -351,6 +351,27 @@ private:
     NonnullRefPtr<Statement> m_body;
 };
 
+class WithStatement final : public Statement {
+public:
+    WithStatement(NonnullRefPtr<Expression> object, NonnullRefPtr<Statement> body)
+        : m_object(move(object))
+        , m_body(move(body))
+    {
+    }
+
+    const Expression& object() const { return *m_object; }
+    const Statement& body() const { return *m_body; }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    virtual const char* class_name() const override { return "WithStatement"; }
+
+    NonnullRefPtr<Expression> m_object;
+    NonnullRefPtr<Statement> m_body;
+};
+
 class ForStatement final : public Statement {
 public:
     ForStatement(RefPtr<ASTNode> init, RefPtr<Expression> test, RefPtr<Expression> update, NonnullRefPtr<Statement> body)

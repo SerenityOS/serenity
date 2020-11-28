@@ -255,6 +255,11 @@ Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object
     return js_undefined();
 }
 
+Value WithStatement::execute(Interpreter&, GlobalObject&) const
+{
+    ASSERT_NOT_REACHED();
+}
+
 Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     Value last_value = js_undefined();
@@ -1140,6 +1145,18 @@ void WhileStatement::dump(int indent) const
     printf("While\n");
     test().dump(indent + 1);
     body().dump(indent + 1);
+}
+
+void WithStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+
+    print_indent(indent + 1);
+    printf("Object\n");
+    object().dump(indent + 2);
+    print_indent(indent + 1);
+    printf("Body\n");
+    body().dump(indent + 2);
 }
 
 void DoWhileStatement::dump(int indent) const
