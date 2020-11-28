@@ -220,7 +220,7 @@ Optional<Text> Text::parse(const StringView& str)
         bool is_special_character = false;
         is_special_character |= ch == '`';
         if (!current_style.code)
-            is_special_character |= ch == '*' || ch == '_' || ch == '[' || ch == ']' || ch == '!';
+            is_special_character |= ch == '*' || ch == '_' || ch == '[' || ch == ']' || (ch == '!' && offset + 1 < str.length() && str[offset + 1] == '[');
         if (!is_special_character)
             continue;
 
@@ -240,8 +240,6 @@ Optional<Text> Text::parse(const StringView& str)
             }
             break;
         case '!':
-            if (offset + 1 >= str.length() || str[offset + 1] != '[')
-                continue;
             current_link_is_actually_img = true;
             break;
         case '[':
