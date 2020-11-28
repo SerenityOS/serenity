@@ -144,25 +144,6 @@ bool Loader::layout()
     return !failed;
 }
 
-Optional<Image::Symbol> Loader::find_demangled_function(const String& name) const
-{
-    Optional<Image::Symbol> found;
-    m_image.for_each_symbol([&](const Image::Symbol symbol) {
-        if (symbol.type() != STT_FUNC)
-            return IterationDecision::Continue;
-        auto demangled = demangle(symbol.name());
-        auto index_of_paren = demangled.index_of("(");
-        if (index_of_paren.has_value()) {
-            demangled = demangled.substring(0, index_of_paren.value());
-        }
-        if (demangled != name)
-            return IterationDecision::Continue;
-        found = symbol;
-        return IterationDecision::Break;
-    });
-    return found;
-}
-
 #ifndef KERNEL
 Optional<Image::Symbol> Loader::find_symbol(u32 address, u32* out_offset) const
 {

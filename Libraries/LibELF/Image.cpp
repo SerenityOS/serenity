@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Demangle.h>
 #include <AK/Memory.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -299,6 +300,25 @@ StringView Image::Symbol::raw_data() const
 {
     auto& section = this->section();
     return { section.raw_data() + (value() - section.address()), size() };
+}
+
+Optional<Image::Symbol> Image::find_demangled_function(const String& name) const
+{
+    Optional<Image::Symbol> found;
+    for_each_symbol([&](const Image::Symbol symbol) {
+        if (symbol.type() != STT_FUNC)
+            return IterationDecision::Continue;
+        auto demangled = demangle(symbol.name());
+        auto index_of_paren = demangled.index_of("(");
+        if (index_of_paren.has_value()) {
+            demangled = demangled.substring(0, index_of_paren.value());
+        }
+        if (demangled != name)
+            return IterationDecision::Continue;
+        found = symbol;
+        return IterationDecision::Break;
+    });
+    return found;
 }
 
 } // end namespace ELF
