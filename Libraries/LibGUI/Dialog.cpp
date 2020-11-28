@@ -34,6 +34,7 @@ Dialog::Dialog(Window* parent_window)
     : Window(parent_window)
 {
     set_modal(true);
+    set_minimizable(false);
 }
 
 Dialog::~Dialog()
