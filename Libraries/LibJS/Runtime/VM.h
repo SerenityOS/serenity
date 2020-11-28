@@ -59,7 +59,7 @@ struct CallFrame {
     FlyString function_name;
     Value this_value;
     Vector<Value> arguments;
-    LexicalEnvironment* environment { nullptr };
+    ScopeObject* scope { nullptr };
     bool is_strict_mode { false };
 };
 
@@ -134,8 +134,8 @@ public:
     const Vector<CallFrame*>& call_stack() const { return m_call_stack; }
     Vector<CallFrame*>& call_stack() { return m_call_stack; }
 
-    const LexicalEnvironment* current_environment() const { return call_frame().environment; }
-    LexicalEnvironment* current_environment() { return call_frame().environment; }
+    const ScopeObject* current_scope() const { return call_frame().scope; }
+    ScopeObject* current_scope() { return call_frame().scope; }
 
     bool in_strict_mode() const;
 
@@ -222,7 +222,7 @@ public:
     String join_arguments() const;
 
     Value resolve_this_binding(GlobalObject&) const;
-    const LexicalEnvironment* get_this_environment() const;
+    const ScopeObject* find_this_scope() const;
     Value get_new_target() const;
 
     template<typename... Args>
@@ -241,6 +241,8 @@ public:
     }
 
     CommonPropertyNames names;
+
+    Shape& scope_object_shape() { return *m_scope_object_shape; }
 
 private:
     VM();
@@ -271,6 +273,8 @@ private:
     Symbol* m_well_known_symbol_##snake_name { nullptr };
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
+
+    Shape* m_scope_object_shape { nullptr };
 };
 
 template<>

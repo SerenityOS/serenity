@@ -27,19 +27,24 @@
 #pragma once
 
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/ScopeObject.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
-class GlobalObject : public Object {
-    JS_OBJECT(GlobalObject, Object);
+class GlobalObject : public ScopeObject {
+    JS_OBJECT(GlobalObject, ScopeObject);
 
 public:
     explicit GlobalObject();
     virtual void initialize();
 
     virtual ~GlobalObject() override;
+
+    virtual Optional<Variable> get_from_scope(const FlyString&) const override;
+    virtual void put_to_scope(const FlyString&, Variable) override;
+    virtual bool has_this_binding() const override;
+    virtual Value get_this_binding(GlobalObject&) const override;
 
     Console& console() { return *m_console; }
 
@@ -66,6 +71,8 @@ protected:
     void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);
 
 private:
+    virtual bool is_global_object() const final { return true; }
+
     JS_DECLARE_NATIVE_FUNCTION(gc);
     JS_DECLARE_NATIVE_FUNCTION(is_nan);
     JS_DECLARE_NATIVE_FUNCTION(is_finite);

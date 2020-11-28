@@ -28,17 +28,14 @@
 
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
-#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Runtime/ScopeObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-struct Variable {
-    Value value;
-    DeclarationKind declaration_kind;
-};
+class LexicalEnvironment final : public ScopeObject {
+    JS_OBJECT(LexicalEnvironment, ScopeObject);
 
-class LexicalEnvironment final : public Cell {
 public:
     enum class ThisBindingStatus {
         Lexical,
@@ -49,21 +46,21 @@ public:
     enum class EnvironmentRecordType {
         Declarative,
         Function,
-        Global,
         Object,
         Module,
     };
 
     LexicalEnvironment();
     LexicalEnvironment(EnvironmentRecordType);
-    LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent);
-    LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent, EnvironmentRecordType);
+    LexicalEnvironment(HashMap<FlyString, Variable> variables, ScopeObject* parent_scope);
+    LexicalEnvironment(HashMap<FlyString, Variable> variables, ScopeObject* parent_scope, EnvironmentRecordType);
     virtual ~LexicalEnvironment() override;
 
-    LexicalEnvironment* parent() const { return m_parent; }
-
-    Optional<Variable> get(const FlyString&) const;
-    void set(GlobalObject&, const FlyString&, Variable);
+    // ^ScopeObject
+    virtual Optional<Variable> get_from_scope(const FlyString&) const override;
+    virtual void put_to_scope(const FlyString&, Variable) override;
+    virtual bool has_this_binding() const override;
+    virtual Value get_this_binding(GlobalObject&) const override;
 
     void clear();
 
@@ -73,9 +70,7 @@ public:
     bool has_super_binding() const;
     Value get_super_base();
 
-    bool has_this_binding() const;
     ThisBindingStatus this_binding_status() const { return m_this_binding_status; }
-    Value get_this_binding(GlobalObject&) const;
     void bind_this_value(GlobalObject&, Value this_value);
 
     // Not a standard operation.
@@ -90,12 +85,11 @@ public:
     EnvironmentRecordType type() const { return m_environment_record_type; }
 
 private:
-    virtual const char* class_name() const override { return "LexicalEnvironment"; }
+    virtual bool is_lexical_environment() const final { return true; }
     virtual void visit_edges(Visitor&) override;
 
     EnvironmentRecordType m_environment_record_type : 8 { EnvironmentRecordType::Declarative };
     ThisBindingStatus m_this_binding_status : 8 { ThisBindingStatus::Uninitialized };
-    LexicalEnvironment* m_parent { nullptr };
     HashMap<FlyString, Variable> m_variables;
     Value m_home_object;
     Value m_this_value;

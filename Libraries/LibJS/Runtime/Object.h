@@ -127,6 +127,8 @@ public:
     virtual bool is_bigint_object() const { return false; }
     virtual bool is_string_iterator_object() const { return false; }
     virtual bool is_array_iterator_object() const { return false; }
+    virtual bool is_lexical_environment() const { return false; }
+    virtual bool is_global_object() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_edges(Cell::Visitor&) override;

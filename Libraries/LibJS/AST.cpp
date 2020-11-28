@@ -101,7 +101,7 @@ Value FunctionDeclaration::execute(Interpreter&, GlobalObject&) const
 
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_environment(), is_strict_mode() || interpreter.vm().in_strict_mode(), m_is_arrow_function);
+    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), is_strict_mode() || interpreter.vm().in_strict_mode(), m_is_arrow_function);
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -128,7 +128,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     if (m_callee->is_member_expression()) {
         auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
         bool is_super_property_lookup = member_expression.object().is_super_expression();
-        auto lookup_target = is_super_property_lookup ? vm.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
+        auto lookup_target = is_super_property_lookup ? interpreter.current_environment()->get_super_base() : member_expression.object().execute(interpreter, global_object);
         if (vm.exception())
             return {};
         if (is_super_property_lookup && lookup_target.is_nullish()) {
@@ -205,7 +205,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (result.is_object())
             new_object = &result.as_object();
     } else if (m_callee->is_super_expression()) {
-        auto* super_constructor = vm.current_environment()->current_function()->prototype();
+        auto* super_constructor = interpreter.current_environment()->current_function()->prototype();
         // FIXME: Functions should track their constructor kind.
         if (!super_constructor || !super_constructor->is_function()) {
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
@@ -215,7 +215,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (vm.exception())
             return {};
 
-        vm.current_environment()->bind_this_value(global_object, result);
+        interpreter.current_environment()->bind_this_value(global_object, result);
     } else {
         result = vm.call(function, this_value, move(arguments));
     }
@@ -801,7 +801,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
 
-    interpreter.current_environment()->set(global_object, m_class_expression->name(), { class_constructor, DeclarationKind::Let });
+    interpreter.current_scope()->put_to_scope(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
 
     return js_undefined();
 }

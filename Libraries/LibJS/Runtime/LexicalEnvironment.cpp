@@ -34,23 +34,25 @@
 namespace JS {
 
 LexicalEnvironment::LexicalEnvironment()
+    : ScopeObject(nullptr)
 {
 }
 
 LexicalEnvironment::LexicalEnvironment(EnvironmentRecordType environment_record_type)
-    : m_environment_record_type(environment_record_type)
+    : ScopeObject(nullptr)
+    , m_environment_record_type(environment_record_type)
 {
 }
 
-LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent)
-    : m_parent(parent)
+LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, ScopeObject* parent_scope)
+    : ScopeObject(parent_scope)
     , m_variables(move(variables))
 {
 }
 
-LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, LexicalEnvironment* parent, EnvironmentRecordType environment_record_type)
-    : m_environment_record_type(environment_record_type)
-    , m_parent(parent)
+LexicalEnvironment::LexicalEnvironment(HashMap<FlyString, Variable> variables, ScopeObject* parent_scope, EnvironmentRecordType environment_record_type)
+    : ScopeObject(parent_scope)
+    , m_environment_record_type(environment_record_type)
     , m_variables(move(variables))
 {
 }
@@ -62,7 +64,6 @@ LexicalEnvironment::~LexicalEnvironment()
 void LexicalEnvironment::visit_edges(Visitor& visitor)
 {
     Cell::visit_edges(visitor);
-    visitor.visit(m_parent);
     visitor.visit(m_this_value);
     visitor.visit(m_home_object);
     visitor.visit(m_new_target);
@@ -71,18 +72,14 @@ void LexicalEnvironment::visit_edges(Visitor& visitor)
         visitor.visit(it.value.value);
 }
 
-Optional<Variable> LexicalEnvironment::get(const FlyString& name) const
+Optional<Variable> LexicalEnvironment::get_from_scope(const FlyString& name) const
 {
-    ASSERT(type() != EnvironmentRecordType::Global);
     return m_variables.get(name);
 }
 
-void LexicalEnvironment::set(GlobalObject& global_object, const FlyString& name, Variable variable)
+void LexicalEnvironment::put_to_scope(const FlyString& name, Variable variable)
 {
-    if (type() == EnvironmentRecordType::Global)
-        global_object.put(name, variable.value);
-    else
-        m_variables.set(name, variable);
+    m_variables.set(name, variable);
 }
 
 bool LexicalEnvironment::has_super_binding() const
@@ -108,7 +105,6 @@ bool LexicalEnvironment::has_this_binding() const
     case EnvironmentRecordType::Function:
         return this_binding_status() != ThisBindingStatus::Lexical;
     case EnvironmentRecordType::Module:
-    case EnvironmentRecordType::Global:
         return true;
     }
     ASSERT_NOT_REACHED();

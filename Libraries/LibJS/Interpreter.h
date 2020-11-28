@@ -71,7 +71,8 @@ public:
     Heap& heap() { return vm().heap(); }
     Exception* exception() { return vm().exception(); }
 
-    LexicalEnvironment* current_environment() { return vm().current_environment(); }
+    ScopeObject* current_scope() { return vm().current_scope(); }
+    LexicalEnvironment* current_environment();
 
     void enter_scope(const ScopeNode&, ArgumentVector, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
