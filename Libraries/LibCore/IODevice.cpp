@@ -200,8 +200,7 @@ ByteBuffer IODevice::read_line(size_t max_size)
             Vector<u8> new_buffered_data;
             new_buffered_data.append(m_buffered_data.data() + line_index, m_buffered_data.size() - line_index);
             m_buffered_data = move(new_buffered_data);
-            line[line_index] = '\0';
-            line.trim(line_index + 1);
+            line.trim(line_index);
             return line;
         }
     }
