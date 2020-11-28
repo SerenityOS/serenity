@@ -27,6 +27,8 @@ add_simple_fuzzer(FuzzPGMLoader)
 add_simple_fuzzer(FuzzPPMLoader)
 add_simple_fuzzer(FuzzJs)
 add_simple_fuzzer(FuzzMarkdown)
+add_simple_fuzzer(FuzzRegexECMA262)
+add_simple_fuzzer(FuzzRegexPosixExtended)
 
 if (NOT ENABLE_OSS_FUZZ)
 add_executable(FuzzilliJs FuzzilliJs.cpp)
