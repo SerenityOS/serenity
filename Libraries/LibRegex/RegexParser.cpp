@@ -1134,8 +1134,8 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
 
     Vector<CompareTypeAndValuePair> compares;
     if (negate)
-        compares.empend(CharacterCompareType::Inverse, 0);
-    compares.empend(CharacterCompareType::CharClass, (ByteCodeValueType)ch.value());
+        compares.empend(CompareTypeAndValuePair { CharacterCompareType::Inverse, 0 });
+    compares.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)ch.value() });
     match_length_minimum += 1;
     stack.insert_bytecode_compare_values(move(compares));
     return true;
@@ -1179,7 +1179,7 @@ bool ECMA262Parser::parse_character_class(ByteCode& stack, size_t& match_length_
     if (match(TokenType::Circumflex)) {
         // Negated charclass
         consume();
-        compares.empend(CharacterCompareType::Inverse, 0);
+        compares.empend(CompareTypeAndValuePair { CharacterCompareType::Inverse, 0 });
     }
 
     if (match(TokenType::RightBracket)) {
@@ -1338,7 +1338,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             ASSERT(!first_atom.value().is_negated);
             ASSERT(!second_atom.value().is_negated);
 
-            ranges.empend(CharacterCompareType::CharRange, CharRange { first_atom.value().code_point, second_atom.value().code_point });
+            ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharRange, CharRange { first_atom.value().code_point, second_atom.value().code_point } });
             continue;
         }
 
@@ -1348,11 +1348,11 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
 
         if (atom.is_character_class) {
             if (atom.is_negated)
-                ranges.empend(CharacterCompareType::TemporaryInverse, 0);
-            ranges.empend(CharacterCompareType::CharClass, (ByteCodeValueType)first_atom.value().character_class);
+                ranges.empend(CompareTypeAndValuePair { CharacterCompareType::TemporaryInverse, 0 });
+            ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)first_atom.value().character_class });
         } else {
             ASSERT(!atom.is_negated);
-            ranges.empend(CharacterCompareType::Char, first_atom.value().code_point);
+            ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Char, first_atom.value().code_point });
         }
     }
 
