@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
@@ -212,6 +213,25 @@ private:
     bool m_is_bytes { false };
 };
 
+class NameCommand : public Command {
+public:
+    NameCommand(const char* pattern, CaseSensitivity case_sensitivity)
+        : m_pattern(pattern)
+        , m_case_sensitivity(case_sensitivity)
+    {
+    }
+
+private:
+    virtual bool evaluate(const char* file_path) const override
+    {
+        LexicalPath path { file_path };
+        return path.basename().matches(m_pattern, m_case_sensitivity);
+    }
+
+    StringView m_pattern;
+    CaseSensitivity m_case_sensitivity { CaseSensitivity::CaseSensitive };
+};
+
 class PrintCommand final : public Command {
 public:
     PrintCommand(char terminator = '\n')
@@ -335,6 +355,10 @@ static OwnPtr<Command> parse_simple_command(char* argv[])
         return make<GroupCommand>(argv[++optind]);
     } else if (arg == "-size") {
         return make<SizeCommand>(argv[++optind]);
+    } else if (arg == "-name") {
+        return make<NameCommand>(argv[++optind], CaseSensitivity::CaseSensitive);
+    } else if (arg == "-iname") {
+        return make<NameCommand>(argv[++optind], CaseSensitivity::CaseInsensitive);
     } else if (arg == "-print") {
         g_have_seen_action_command = true;
         return make<PrintCommand>();
