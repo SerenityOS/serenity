@@ -88,7 +88,7 @@ public:
     Shape& shape() { return *m_shape; }
     const Shape& shape() const { return *m_shape; }
 
-    GlobalObject& global_object() const { return shape().global_object(); }
+    GlobalObject& global_object() const { return *shape().global_object(); }
 
     virtual Value get(const PropertyName&, Value receiver = {}) const;
 
