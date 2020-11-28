@@ -96,7 +96,7 @@ static bool mount_all()
     bool all_ok = true;
     while (fstab->can_read_line()) {
         ByteBuffer buffer = fstab->read_line(1024);
-        StringView line_view = (const char*)buffer.data();
+        StringView line_view { buffer.data(), buffer.size() };
 
         // Trim the trailing newline, if any.
         if (line_view.length() > 0 && line_view[line_view.length() - 1] == '\n')
