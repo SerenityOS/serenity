@@ -1315,6 +1315,12 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
 
         if (match(TokenType::HyphenMinus)) {
             consume();
+            if (match(TokenType::RightBracket)) {
+                //  Allow '-' as the last element in a charclass, even after an atom.
+                m_parser_state.lexer.back(2); // -]
+                m_parser_state.current_token = m_parser_state.lexer.next();
+                goto read_as_single_atom;
+            }
             auto second_atom = read_class_atom();
             if (!second_atom.has_value())
                 return false;
@@ -1335,6 +1341,8 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             ranges.empend(CharacterCompareType::CharRange, CharRange { first_atom.value().code_point, second_atom.value().code_point });
             continue;
         }
+
+    read_as_single_atom:;
 
         auto atom = first_atom.value();
 
