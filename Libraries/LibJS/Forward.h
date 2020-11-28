@@ -124,6 +124,7 @@ class NativeProperty;
 class PrimitiveString;
 class Reference;
 class ScopeNode;
+class ScopeObject;
 class Shape;
 class Statement;
 class Symbol;

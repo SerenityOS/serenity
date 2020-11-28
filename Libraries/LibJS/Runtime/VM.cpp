@@ -51,6 +51,8 @@ VM::VM()
         m_single_ascii_character_strings[i] = m_heap.allocate_without_global_object<PrimitiveString>(String::format("%c", i));
     }
 
+    m_scope_object_shape = m_heap.allocate_without_global_object<Shape>(Shape::ShapeWithoutGlobalObjectTag::Tag);
+
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
@@ -103,6 +105,8 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     for (auto* string : m_single_ascii_character_strings)
         roots.set(string);
 
+    roots.set(m_scope_object_shape);
+
     if (m_exception)
         roots.set(m_exception);
 
@@ -116,7 +120,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
             if (argument.is_cell())
                 roots.set(argument.as_cell());
         }
-        roots.set(call_frame->environment);
+        roots.set(call_frame->scope);
     }
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
@@ -142,17 +146,15 @@ Symbol* VM::get_global_symbol(const String& description)
 void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_object, bool first_assignment)
 {
     if (m_call_stack.size()) {
-        for (auto* environment = current_environment(); environment; environment = environment->parent()) {
-            if (environment->type() == LexicalEnvironment::EnvironmentRecordType::Global)
-                break;
-            auto possible_match = environment->get(name);
+        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
+            auto possible_match = scope->get_from_scope(name);
             if (possible_match.has_value()) {
                 if (!first_assignment && possible_match.value().declaration_kind == DeclarationKind::Const) {
                     throw_exception<TypeError>(global_object, ErrorType::InvalidAssignToConst);
                     return;
                 }
 
-                environment->set(global_object, name, { value, possible_match.value().declaration_kind });
+                scope->put_to_scope(name, { value, possible_match.value().declaration_kind });
                 return;
             }
         }
@@ -164,10 +166,8 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
 Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 {
     if (m_call_stack.size()) {
-        for (auto* environment = current_environment(); environment; environment = environment->parent()) {
-            if (environment->type() == LexicalEnvironment::EnvironmentRecordType::Global)
-                break;
-            auto possible_match = environment->get(name);
+        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
+            auto possible_match = scope->get_from_scope(name);
             if (possible_match.has_value())
                 return possible_match.value().value;
         }
@@ -181,10 +181,10 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 Reference VM::get_reference(const FlyString& name)
 {
     if (m_call_stack.size()) {
-        for (auto* environment = current_environment(); environment; environment = environment->parent()) {
-            if (environment->type() == LexicalEnvironment::EnvironmentRecordType::Global)
+        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
+            if (scope->is_global_object())
                 break;
-            auto possible_match = environment->get(name);
+            auto possible_match = scope->get_from_scope(name);
             if (possible_match.has_value())
                 return { Reference::LocalVariable, name };
         }
@@ -208,13 +208,14 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
         call_frame.arguments.append(arguments.value().values());
-    call_frame.environment = function.create_environment();
-    call_frame.environment->set_new_target(&new_target);
+    auto* environment = function.create_environment();
+    call_frame.scope = environment;
+    environment->set_new_target(&new_target);
 
     Object* new_object = nullptr;
     if (function.constructor_kind() == Function::ConstructorKind::Base) {
         new_object = Object::create_empty(global_object);
-        call_frame.environment->bind_this_value(global_object, new_object);
+        environment->bind_this_value(global_object, new_object);
         if (exception())
             return {};
         auto prototype = new_target.get(names.prototype);
@@ -232,14 +233,15 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     call_frame.this_value = this_value;
     auto result = function.construct(new_target);
 
-    this_value = call_frame.environment->get_this_binding(global_object);
+    this_value = call_frame.scope->get_this_binding(global_object);
     pop_call_frame();
     call_frame_popper.disarm();
 
     // If we are constructing an instance of a derived class,
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
-        current_environment()->replace_this_binding(result);
+        ASSERT(current_scope()->is_lexical_environment());
+        static_cast<LexicalEnvironment*>(current_scope())->replace_this_binding(result);
         auto prototype = new_target.get(names.prototype);
         if (exception())
             return {};
@@ -292,22 +294,23 @@ String VM::join_arguments() const
 
 Value VM::resolve_this_binding(GlobalObject& global_object) const
 {
-    return get_this_environment()->get_this_binding(global_object);
+    return find_this_scope()->get_this_binding(global_object);
 }
 
-const LexicalEnvironment* VM::get_this_environment() const
+const ScopeObject* VM::find_this_scope() const
 {
     // We will always return because the Global environment will always be reached, which has a |this| binding.
-    for (const LexicalEnvironment* environment = current_environment(); environment; environment = environment->parent()) {
-        if (environment->has_this_binding())
-            return environment;
+    for (auto* scope = current_scope(); scope; scope = scope->parent()) {
+        if (scope->has_this_binding())
+            return scope;
     }
     ASSERT_NOT_REACHED();
 }
 
 Value VM::get_new_target() const
 {
-    return get_this_environment()->new_target();
+    ASSERT(find_this_scope()->is_lexical_environment());
+    return static_cast<const LexicalEnvironment*>(find_this_scope())->new_target();
 }
 
 Value VM::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
@@ -321,10 +324,11 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
         call_frame.arguments.append(move(arguments.release_value().values()));
-    call_frame.environment = function.create_environment();
+    auto* environment = function.create_environment();
+    call_frame.scope = environment;
 
-    ASSERT(call_frame.environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
-    call_frame.environment->bind_this_value(function.global_object(), call_frame.this_value);
+    ASSERT(environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
+    environment->bind_this_value(function.global_object(), call_frame.this_value);
     if (exception())
         return {};
 

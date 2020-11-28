@@ -72,8 +72,7 @@ Value Interpreter::run(GlobalObject& global_object, const Program& program)
     global_call_frame.this_value = &global_object;
     static FlyString global_execution_context_name = "(global execution context)";
     global_call_frame.function_name = global_execution_context_name;
-    global_call_frame.environment = heap().allocate<LexicalEnvironment>(global_object, LexicalEnvironment::EnvironmentRecordType::Global);
-    global_call_frame.environment->bind_this_value(global_object, &global_object);
+    global_call_frame.scope = &global_object;
     ASSERT(!vm.exception());
     global_call_frame.is_strict_mode = program.is_strict_mode();
     vm.push_call_frame(global_call_frame, global_object);
@@ -96,7 +95,7 @@ const GlobalObject& Interpreter::global_object() const
 void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector arguments, ScopeType scope_type, GlobalObject& global_object)
 {
     for (auto& declaration : scope_node.functions()) {
-        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment(), declaration.is_strict_mode());
+        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.is_strict_mode());
         vm().set_variable(declaration.name(), function, global_object);
     }
 
@@ -127,8 +126,8 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ArgumentVector argume
     bool pushed_lexical_environment = false;
 
     if (!scope_variables_with_declaration_kind.is_empty()) {
-        auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(global_object, move(scope_variables_with_declaration_kind), current_environment());
-        vm().call_frame().environment = block_lexical_environment;
+        auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(global_object, move(scope_variables_with_declaration_kind), current_scope());
+        vm().call_frame().scope = block_lexical_environment;
         pushed_lexical_environment = true;
     }
 
@@ -140,7 +139,7 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
     while (!m_scope_stack.is_empty()) {
         auto popped_scope = m_scope_stack.take_last();
         if (popped_scope.pushed_environment)
-            vm().call_frame().environment = vm().call_frame().environment->parent();
+            vm().call_frame().scope = vm().call_frame().scope->parent();
         if (popped_scope.scope_node.ptr() == &scope_node)
             break;
     }
@@ -183,6 +182,12 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     exit_scope(block);
 
     return did_return ? vm().last_value() : js_undefined();
+}
+
+LexicalEnvironment* Interpreter::current_environment()
+{
+    ASSERT(vm().call_frame().scope->is_lexical_environment());
+    return static_cast<LexicalEnvironment*>(vm().call_frame().scope);
 }
 
 }

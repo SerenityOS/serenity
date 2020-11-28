@@ -68,7 +68,7 @@
 namespace JS {
 
 GlobalObject::GlobalObject()
-    : Object(GlobalObjectTag::Tag)
+    : ScopeObject(GlobalObjectTag::Tag)
     , m_console(make<Console>(*this))
 {
 }
@@ -149,7 +149,7 @@ GlobalObject::~GlobalObject()
 
 void GlobalObject::visit_edges(Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
 
     visitor.visit(m_empty_object_shape);
     visitor.visit(m_new_object_shape);
@@ -203,6 +203,29 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
             return number;
     }
     return js_nan();
+}
+
+Optional<Variable> GlobalObject::get_from_scope(const FlyString& name) const
+{
+    auto value = get(name);
+    if (value.is_empty())
+        return {};
+    return Variable { value, DeclarationKind::Var };
+}
+
+void GlobalObject::put_to_scope(const FlyString& name, Variable variable)
+{
+    put(name, variable.value);
+}
+
+bool GlobalObject::has_this_binding() const
+{
+    return true;
+}
+
+Value GlobalObject::get_this_binding(GlobalObject&) const
+{
+    return Value(this);
 }
 
 }

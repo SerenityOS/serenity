@@ -47,17 +47,17 @@ static ScriptFunction* typed_this(VM& vm, GlobalObject& global_object)
     return static_cast<ScriptFunction*>(this_object);
 }
 
-ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, bool is_strict, bool is_arrow_function)
+ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, bool is_strict, bool is_arrow_function)
 {
-    return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_environment, *global_object.function_prototype(), is_strict, is_arrow_function);
+    return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *global_object.function_prototype(), is_strict, is_arrow_function);
 }
 
-ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, LexicalEnvironment* parent_environment, Object& prototype, bool is_strict, bool is_arrow_function)
+ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, bool is_strict, bool is_arrow_function)
     : Function(prototype, is_arrow_function ? vm().this_value(global_object) : Value(), {})
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
-    , m_parent_environment(parent_environment)
+    , m_parent_scope(parent_scope)
     , m_function_length(m_function_length)
     , m_is_strict(is_strict)
     , m_is_arrow_function(is_arrow_function)
@@ -84,7 +84,7 @@ ScriptFunction::~ScriptFunction()
 void ScriptFunction::visit_edges(Visitor& visitor)
 {
     Function::visit_edges(visitor);
-    visitor.visit(m_parent_environment);
+    visitor.visit(m_parent_scope);
 }
 
 LexicalEnvironment* ScriptFunction::create_environment()
@@ -102,11 +102,13 @@ LexicalEnvironment* ScriptFunction::create_environment()
         }
     }
 
-    auto* environment = heap().allocate<LexicalEnvironment>(global_object(), move(variables), m_parent_environment, LexicalEnvironment::EnvironmentRecordType::Function);
+    auto* environment = heap().allocate<LexicalEnvironment>(global_object(), move(variables), m_parent_scope, LexicalEnvironment::EnvironmentRecordType::Function);
     environment->set_home_object(home_object());
     environment->set_current_function(*this);
-    if (m_is_arrow_function)
-        environment->set_new_target(m_parent_environment->new_target());
+    if (m_is_arrow_function) {
+        if (m_parent_scope->is_lexical_environment())
+            environment->set_new_target(static_cast<LexicalEnvironment*>(m_parent_scope)->new_target());
+    }
     return environment;
 }
 
@@ -144,7 +146,7 @@ Value ScriptFunction::execute_function_body()
             argument_value = js_undefined();
         }
         arguments.append({ parameter.name, argument_value });
-        vm.current_environment()->set(global_object(), parameter.name, { argument_value, DeclarationKind::Var });
+        vm.current_scope()->put_to_scope(parameter.name, { argument_value, DeclarationKind::Var });
     }
 
     return interpreter->execute_statement(global_object(), m_body, move(arguments), ScopeType::Function);
