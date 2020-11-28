@@ -99,7 +99,7 @@ void Parser::init_fadt()
     auto sdt = map_typed<Structures::FADT>(m_fadt);
 
 #ifdef ACPI_DEBUG
-    dbg() << "ACPI: FADT @ V " << sdt << ", P " << (void*)m_fadt.as_ptr();
+    dbg() << "ACPI: FADT @ V " << &sdt << ", P " << (void*)m_fadt.as_ptr();
 #endif
     klog() << "ACPI: Fixed ACPI data, Revision " << sdt->h.revision << ", Length " << sdt->h.length << " bytes";
     klog() << "ACPI: DSDT " << PhysicalAddress(sdt->dsdt_ptr);
@@ -272,7 +272,7 @@ void Parser::initialize_main_system_description_table()
         klog() << "ACPI: Using XSDT, Enumerating tables @ " << m_main_system_description_table;
         klog() << "ACPI: XSDT Revision " << revision << ", Total length - " << length;
 #ifdef ACPI_DEBUG
-        dbg() << "ACPI: XSDT pointer @ V " << xsdt;
+        dbg() << "ACPI: XSDT pointer @ V " << &xsdt;
 #endif
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
 #ifdef ACPI_DEBUG
@@ -285,7 +285,7 @@ void Parser::initialize_main_system_description_table()
         klog() << "ACPI: Using RSDT, Enumerating tables @ " << m_main_system_description_table;
         klog() << "ACPI: RSDT Revision " << revision << ", Total length - " << length;
 #ifdef ACPI_DEBUG
-        dbg() << "ACPI: RSDT pointer @ V " << rsdt;
+        dbg() << "ACPI: RSDT pointer @ V " << &rsdt;
 #endif
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
 #ifdef ACPI_DEBUG
