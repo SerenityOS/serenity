@@ -94,6 +94,7 @@ protected:
     ALWAYS_INLINE Token consume(TokenType type, Error error);
     ALWAYS_INLINE bool consume(const String&);
     ALWAYS_INLINE bool try_skip(StringView);
+    ALWAYS_INLINE char skip();
     ALWAYS_INLINE void reset();
     ALWAYS_INLINE bool done() const;
     ALWAYS_INLINE bool set_error(Error error);
