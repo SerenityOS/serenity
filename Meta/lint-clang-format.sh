@@ -29,7 +29,7 @@ else
     exit 1
 fi
 
-echo "Running ${CLANG_FORMAT} ..."
+echo "Using ${CLANG_FORMAT}"
 
 {
     git ls-files -- \
