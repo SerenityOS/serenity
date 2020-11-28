@@ -67,7 +67,7 @@ String Regex<Parser>::error_string(Optional<String> message) const
     for (size_t i = 0; i < parser_result.error_token.position(); ++i)
         eb.append(" ");
 
-    eb.appendf("^---- %s\n", message.value_or(get_error_string(parser_result.error)).characters());
+    eb.appendf("^---- %s", message.value_or(get_error_string(parser_result.error)).characters());
     return eb.build();
 }
 

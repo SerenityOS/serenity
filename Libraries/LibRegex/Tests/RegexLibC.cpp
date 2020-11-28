@@ -1079,7 +1079,7 @@ TEST_CASE(error_message)
     char buf[1024];
     size_t buflen = 1024;
     auto len = regerror(0, &regex, buf, buflen);
-    String expected = "Error during parsing of regular expression:\n    ^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$\n             ^---- [ ] imbalance.\n";
+    String expected = "Error during parsing of regular expression:\n    ^[A-Z0-9[a-z._%+-]{1,64}@[A-Za-z0-9-]{1,63}\\.{1,125}[A-Za-z]{2,63}$\n             ^---- [ ] imbalance.";
     for (size_t i = 0; i < len; ++i) {
         EXPECT_EQ(buf[i], expected[i]);
     }
