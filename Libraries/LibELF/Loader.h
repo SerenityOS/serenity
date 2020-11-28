@@ -59,7 +59,10 @@ public:
         return m_image.entry();
     }
     const Image& image() const { return m_image; }
-    Optional<Image::Symbol> find_demangled_function(const String& name) const;
+    Optional<Image::Symbol> find_demangled_function(const String& name) const
+    {
+        return m_image.find_demangled_function(name);
+    }
 
     bool has_symbols() const { return m_symbol_count; }
 
