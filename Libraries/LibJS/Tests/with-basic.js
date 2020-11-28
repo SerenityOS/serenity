@@ -18,3 +18,7 @@ test("basic with statement functionality", () => {
 
     expect(bar).toBe(99);
 });
+
+test("syntax error in strict mode", () => {
+    expect("'use strict'; with (foo) {}").not.toEval();
+});
