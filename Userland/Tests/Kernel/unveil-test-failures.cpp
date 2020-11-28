@@ -31,7 +31,7 @@ int main()
 {
     int res = unveil("/etc", "r");
     if (res < 0) {
-        perror("unveil");
+        fprintf(stderr, "FAIL, unveil read only failed\n");
         return 1;
     }
 
@@ -59,13 +59,37 @@ int main()
         return 1;
     }
 
+    res = unveil("/home", "b");
+    if (res < 0) {
+        fprintf(stderr, "FAIL, unveil browse failed\n");
+        return 1;
+    }
+
+    res = unveil("/home", "w");
+    if (res >= 0) {
+        fprintf(stderr, "FAIL, unveil write permitted after unveil browse only\n");
+        return 1;
+    }
+
+    res = unveil("/home", "x");
+    if (res >= 0) {
+        fprintf(stderr, "FAIL, unveil execute permitted after unveil browse only\n");
+        return 1;
+    }
+
+    res = unveil("/home", "c");
+    if (res >= 0) {
+        fprintf(stderr, "FAIL, unveil create permitted after unveil browse only\n");
+        return 1;
+    }
+
     res = unveil(nullptr, nullptr);
     if (res < 0) {
         fprintf(stderr, "FAIL, unveil state lock failed\n");
         return 1;
     }
 
-    res = unveil("/home", "w");
+    res = unveil("/bin", "w");
     if (res >= 0) {
         fprintf(stderr, "FAIL, unveil permitted after unveil state locked\n");
         return 1;
