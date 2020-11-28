@@ -108,6 +108,20 @@ ALWAYS_INLINE bool Parser::try_skip(StringView str)
     return true;
 }
 
+ALWAYS_INLINE char Parser::skip()
+{
+    char ch;
+    if (m_parser_state.current_token.value().length() == 1) {
+        ch = m_parser_state.current_token.value()[0];
+    } else {
+        m_parser_state.lexer.back(m_parser_state.current_token.value().length());
+        ch = m_parser_state.lexer.skip();
+    }
+
+    m_parser_state.current_token = m_parser_state.lexer.next();
+    return ch;
+}
+
 ALWAYS_INLINE void Parser::reset()
 {
     m_parser_state.bytecode.clear();
@@ -1017,6 +1031,16 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
                 return true;
             }
         }
+
+        if (unicode) {
+            set_error(Error::InvalidPattern);
+            return false;
+        }
+
+        // Allow '\c' in non-unicode mode, just matches 'c'.
+        match_length_minimum += 1;
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'c' } });
+        return true;
     }
 
     // '\0'
@@ -1032,6 +1056,14 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)hex_escape.value() } });
             return true;
+        } else if (!unicode) {
+            // '\x' is allowed in non-unicode mode, just matches 'x'.
+            match_length_minimum += 1;
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'x' } });
+            return true;
+        } else {
+            set_error(Error::InvalidPattern);
+            return false;
         }
     }
 
@@ -1088,6 +1120,14 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     bool negate = false;
     auto ch = parse_character_class_escape(negate);
     if (!ch.has_value()) {
+        if (!unicode) {
+            // Allow all SourceCharacter's as escapes here.
+            auto token = consume();
+            match_length_minimum += 1;
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token.value()[0] } });
+            return true;
+        }
+
         set_error(Error::InvalidCharacterClass);
         return false;
     }
@@ -1203,8 +1243,15 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
 
             // HexEscape
             if (try_skip("x")) {
-                if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 2); hex_escape.has_value())
+                if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 2); hex_escape.has_value()) {
                     return { { .code_point = hex_escape.value(), .is_character_class = false } };
+                } else if (!unicode) {
+                    // '\x' is allowed in non-unicode mode, just matches 'x'.
+                    return { { .code_point = 'x', .is_character_class = false } };
+                } else {
+                    set_error(Error::InvalidPattern);
+                    return {};
+                }
             }
 
             if (try_skip("u")) {
@@ -1234,14 +1281,18 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 return { { .character_class = CharClass::Space, .is_negated = true, .is_character_class = true } };
             if (try_skip("W"))
                 return { { .character_class = CharClass::Word, .is_negated = true, .is_character_class = true } };
+
+            if (!unicode) {
+                // Any unrecognised escape is allowed in non-unicode mode.
+                return { { .code_point = (u32)skip(), .is_character_class = false } };
+            }
         }
 
         if (match(TokenType::RightBracket) || match(TokenType::HyphenMinus))
             return {};
 
-        auto token = consume(TokenType::Char, Error::InvalidCharacterClass);
-
-        return { { .code_point = (u32)token.value()[0], .is_character_class = false } };
+        // Allow any (other) SourceCharacter.
+        return { { .code_point = (u32)skip(), .is_character_class = false } };
     };
     auto read_class_atom = [&]() -> Optional<CharClassRangeElement> {
         if (match(TokenType::HyphenMinus)) {

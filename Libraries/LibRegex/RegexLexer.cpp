@@ -99,6 +99,13 @@ bool Lexer::try_skip(char c)
     return true;
 }
 
+char Lexer::skip()
+{
+    auto c = peek();
+    consume();
+    return c;
+}
+
 Token Lexer::next()
 {
     size_t token_start_position;
