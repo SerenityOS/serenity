@@ -35,6 +35,10 @@ specified commands, a `-print` command is implicitly appended.
 * `-size number[c]`: Checks if the file has the given size in 512-byte blocks,
   rounded up. If the size is followed by the `c` character, checks if the file
   has the given size in bytes.
+* `-name pattern`: Checks if the file name matches the given global-style
+  pattern (case sensitive).
+* `-iname pattern`: Checks if the file name matches the given global-style
+  pattern (case insensitive).
 * `-print`: Outputs the file path, followed by a newline. Always evaluates to
   true.
 * `-print0`: Outputs the file path, followed by a zero byte. Always evaluates to
@@ -62,6 +66,8 @@ $ find -type d
 $ find /tmp "(" -type s -o -user anon ")" -exec rm "{}" ";"
 # Concatenate files with weird characters in their names:
 $ find -type f -print0 | xargs -0 cat
+# Find files with the word "config" in their name:
+$ find -name \*config\*
 ```
 
 ## See also
