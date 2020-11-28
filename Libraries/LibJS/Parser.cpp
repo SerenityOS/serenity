@@ -328,6 +328,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     case TokenType::While:
         return parse_while_statement();
     case TokenType::With:
+        if (m_parser_state.m_strict_mode)
+            syntax_error("'with' statement not allowed in strict mode");
         return parse_with_statement();
     case TokenType::Debugger:
         return parse_debugger_statement();
