@@ -46,6 +46,7 @@ struct AppMetadata {
     String name;
     String icon_path;
     String category;
+    String af_path;
 };
 Vector<AppMetadata> g_apps;
 
@@ -112,7 +113,7 @@ Vector<String> discover_apps_and_categories()
         auto app_executable = af->read_entry("App", "Executable");
         auto app_category = af->read_entry("App", "Category");
         auto app_icon_path = af->read_entry("Icons", "16x16");
-        g_apps.append({ app_executable, app_name, app_icon_path, app_category });
+        g_apps.append({ app_executable, app_name, app_icon_path, app_category, af_path });
         seen_app_categories.set(app_category);
     }
     quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
@@ -164,7 +165,10 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             const auto& bin = g_apps[app_identifier].executable;
             pid_t child_pid;
             const char* argv[] = { bin.characters(), nullptr };
-            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
+
+            auto af_key = String::formatted("AF_PATH={}", g_apps[app_identifier].af_path);
+            const char* env[] = { af_key.characters(), nullptr };
+            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), const_cast<char**>(env)))) {
                 perror("posix_spawn");
             } else {
                 if (disown(child_pid) < 0)

@@ -480,9 +480,11 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
     window->set_base_size(message.base_size());
     window->set_resize_aspect_ratio(message.resize_aspect_ratio());
     window->invalidate();
+    window->set_af_path(message.af_path());
     if (window->type() == WindowType::MenuApplet)
         AppletManager::the().add_applet(*window);
     m_windows.set(window_id, move(window));
+
     return make<Messages::WindowServer::CreateWindowResponse>(window_id);
 }
 

@@ -46,7 +46,8 @@ endpoint WindowServer = 2
         Optional<Gfx::IntSize> resize_aspect_ratio,
         i32 type,
         [UTF8] String title,
-        i32 parent_window_id) => (i32 window_id)
+        i32 parent_window_id,
+        [UTF8] String af_path) => (i32 window_id)
 
     DestroyWindow(i32 window_id) => (Vector<i32> destroyed_window_ids)
 

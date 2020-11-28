@@ -287,6 +287,9 @@ public:
     Gfx::DisjointRectSet& transparency_rects() { return m_transparency_rects; }
     Gfx::DisjointRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
 
+    const String& af_path() const { return m_af_path; }
+    void set_af_path(const StringView& af_path) { m_af_path = af_path; }
+
 private:
     void handle_mouse_event(const MouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
@@ -354,6 +357,7 @@ private:
     MenuItem* m_window_menu_close_item { nullptr };
     int m_minimize_animation_step { -1 };
     int m_progress { -1 };
+    String m_af_path;
 };
 
 }

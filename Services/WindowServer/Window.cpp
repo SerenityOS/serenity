@@ -515,8 +515,10 @@ void Window::ensure_window_menu()
         m_window_menu_maximize_item = maximize_item.ptr();
         m_window_menu->add_item(move(maximize_item));
 
-        auto pin_item = make<MenuItem>(*m_window_menu, 3, "Pin To Taskbar");
-        m_window_menu->add_item(move(pin_item));
+        if (!af_path().is_empty()) {
+            auto pin_item = make<MenuItem>(*m_window_menu, 3, "Pin To Taskbar");
+            m_window_menu->add_item(move(pin_item));
+        }
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 

@@ -327,7 +327,7 @@ void WindowManager::tell_wm_listener_about_window_pin(Window& listener, Window& 
     if (window.is_internal())
         return;
 
-    listener.client()->post_message(Messages::WindowClient::WM_WindowRequestedPin(listener.window_id(), window.client_id(), window.window_id()));
+    listener.client()->post_message(Messages::WindowClient::WM_WindowRequestedPin(listener.window_id(), window.client_id(), window.window_id(), window.af_path()));
 }
 
 void WindowManager::tell_wm_listeners_window_state_changed(Window& window)

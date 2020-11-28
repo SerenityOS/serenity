@@ -27,6 +27,7 @@
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
+#include <AK/Optional.h>
 #include <AK/SharedBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
@@ -110,6 +111,7 @@ void Window::show()
         return;
 
     auto* parent_window = find_parent_window();
+    auto af_path = getenv("AF_PATH");
 
     m_cursor = Gfx::StandardCursor::None;
     auto response = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateWindow>(
@@ -128,7 +130,8 @@ void Window::show()
         m_resize_aspect_ratio,
         (i32)m_window_type,
         m_title_when_windowless,
-        parent_window ? parent_window->window_id() : 0);
+        parent_window ? parent_window->window_id() : 0,
+        (af_path) ? af_path : "");
     m_window_id = response->window_id();
     m_visible = true;
 
