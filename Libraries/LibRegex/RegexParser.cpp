@@ -1236,6 +1236,11 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
     };
 
     while (!match(TokenType::RightBracket)) {
+        if (match(TokenType::Eof)) {
+            set_error(Error::MismatchingBracket);
+            return false;
+        }
+
         auto first_atom = read_class_atom();
         if (!first_atom.has_value())
             return false;
