@@ -208,6 +208,8 @@ public:
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
     size_t size() const { return m_size; }
 
+    Optional<Symbol> find_demangled_function(const String& name) const;
+
 private:
     const char* raw_data(unsigned offset) const;
     const Elf32_Ehdr& header() const;
