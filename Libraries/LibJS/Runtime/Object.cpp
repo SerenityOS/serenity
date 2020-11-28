@@ -813,9 +813,9 @@ bool Object::define_native_property(const StringOrSymbol& property_name, AK::Fun
     return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
 
-void Object::visit_children(Cell::Visitor& visitor)
+void Object::visit_edges(Cell::Visitor& visitor)
 {
-    Cell::visit_children(visitor);
+    Cell::visit_edges(visitor);
     visitor.visit(m_shape);
 
     for (auto& value : m_storage)

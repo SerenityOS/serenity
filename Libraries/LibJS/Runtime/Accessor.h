@@ -66,7 +66,7 @@ public:
         (void)vm().call(*m_setter, this_value, setter_value);
     }
 
-    void visit_children(Cell::Visitor& visitor) override
+    void visit_edges(Cell::Visitor& visitor) override
     {
         visitor.visit(m_getter);
         visitor.visit(m_setter);

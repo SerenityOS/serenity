@@ -91,7 +91,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "LexicalEnvironment"; }
-    virtual void visit_children(Visitor&) override;
+    virtual void visit_edges(Visitor&) override;
 
     EnvironmentRecordType m_environment_record_type : 8 { EnvironmentRecordType::Declarative };
     ThisBindingStatus m_this_binding_status : 8 { ThisBindingStatus::Uninitialized };

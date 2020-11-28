@@ -48,9 +48,9 @@ StringObject::~StringObject()
 {
 }
 
-void StringObject::visit_children(Cell::Visitor& visitor)
+void StringObject::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_children(visitor);
+    Object::visit_edges(visitor);
     visitor.visit(&m_string);
 }
 

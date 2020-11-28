@@ -48,9 +48,9 @@ SymbolObject::~SymbolObject()
 {
 }
 
-void SymbolObject::visit_children(Cell::Visitor& visitor)
+void SymbolObject::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_children(visitor);
+    Object::visit_edges(visitor);
     visitor.visit(&m_symbol);
 }
 

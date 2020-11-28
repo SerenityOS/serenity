@@ -126,7 +126,7 @@ public:
         return {};
     }
 
-    void visit_children(Cell::Visitor& visitor)
+    void visit_edges(Cell::Visitor& visitor)
     {
         if (is_symbol())
             visitor.visit(const_cast<Symbol*>(as_symbol()));

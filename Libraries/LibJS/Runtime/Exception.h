@@ -42,7 +42,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "Exception"; }
-    virtual void visit_children(Visitor&) override;
+    virtual void visit_edges(Visitor&) override;
 
     Value m_value;
     Vector<String> m_trace;

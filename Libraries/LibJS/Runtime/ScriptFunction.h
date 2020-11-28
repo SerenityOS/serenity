@@ -58,7 +58,7 @@ protected:
 private:
     virtual bool is_script_function() const override { return true; }
     virtual LexicalEnvironment* create_environment() override;
-    virtual void visit_children(Visitor&) override;
+    virtual void visit_edges(Visitor&) override;
 
     Value execute_function_body();
 

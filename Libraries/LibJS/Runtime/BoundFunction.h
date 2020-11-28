@@ -44,7 +44,7 @@ public:
 
     virtual LexicalEnvironment* create_environment() override;
 
-    virtual void visit_children(Visitor&) override;
+    virtual void visit_edges(Visitor&) override;
 
     virtual const FlyString& name() const override
     {

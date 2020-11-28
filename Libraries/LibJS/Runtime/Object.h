@@ -129,7 +129,7 @@ public:
     virtual bool is_array_iterator_object() const { return false; }
 
     virtual const char* class_name() const override { return "Object"; }
-    virtual void visit_children(Cell::Visitor&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
     virtual Object* prototype();
     virtual const Object* prototype() const;

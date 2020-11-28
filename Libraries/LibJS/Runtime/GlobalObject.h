@@ -60,7 +60,7 @@ public:
 #undef __JS_ENUMERATE
 
 protected:
-    virtual void visit_children(Visitor&) override;
+    virtual void visit_edges(Visitor&) override;
 
     template<typename ConstructorType>
     void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);

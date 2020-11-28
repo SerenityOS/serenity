@@ -147,9 +147,9 @@ GlobalObject::~GlobalObject()
 {
 }
 
-void GlobalObject::visit_children(Visitor& visitor)
+void GlobalObject::visit_edges(Visitor& visitor)
 {
-    Object::visit_children(visitor);
+    Object::visit_edges(visitor);
 
     visitor.visit(m_empty_object_shape);
     visitor.visit(m_new_object_shape);

@@ -102,7 +102,7 @@ public:
 
 private:
     virtual const char* class_name() const override { return "Shape"; }
-    virtual void visit_children(Visitor&) override;
+    virtual void visit_edges(Visitor&) override;
 
     void ensure_property_table() const;
 

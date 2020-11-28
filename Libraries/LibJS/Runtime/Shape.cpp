@@ -101,19 +101,19 @@ Shape::~Shape()
 {
 }
 
-void Shape::visit_children(Cell::Visitor& visitor)
+void Shape::visit_edges(Cell::Visitor& visitor)
 {
-    Cell::visit_children(visitor);
+    Cell::visit_edges(visitor);
     visitor.visit(m_global_object);
     visitor.visit(m_prototype);
     visitor.visit(m_previous);
-    m_property_name.visit_children(visitor);
+    m_property_name.visit_edges(visitor);
     for (auto& it : m_forward_transitions)
         visitor.visit(it.value);
 
     if (m_property_table) {
         for (auto& it : *m_property_table)
-            it.key.visit_children(visitor);
+            it.key.visit_edges(visitor);
     }
 }
 

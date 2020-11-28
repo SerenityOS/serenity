@@ -69,9 +69,9 @@ LexicalEnvironment* BoundFunction::create_environment()
     return m_target_function->create_environment();
 }
 
-void BoundFunction::visit_children(Visitor& visitor)
+void BoundFunction::visit_edges(Visitor& visitor)
 {
-    Function::visit_children(visitor);
+    Function::visit_edges(visitor);
     visitor.visit(m_target_function);
     visitor.visit(m_constructor_prototype);
 }

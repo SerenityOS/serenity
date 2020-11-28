@@ -45,9 +45,9 @@ BigIntObject::~BigIntObject()
 {
 }
 
-void BigIntObject::visit_children(Cell::Visitor& visitor)
+void BigIntObject::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_children(visitor);
+    Object::visit_edges(visitor);
     visitor.visit(&m_bigint);
 }
 

@@ -86,9 +86,9 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
     return heap().allocate<BoundFunction>(global_object(), global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length, constructor_prototype);
 }
 
-void Function::visit_children(Visitor& visitor)
+void Function::visit_edges(Visitor& visitor)
 {
-    Object::visit_children(visitor);
+    Object::visit_edges(visitor);
 
     visitor.visit(m_bound_this);
 

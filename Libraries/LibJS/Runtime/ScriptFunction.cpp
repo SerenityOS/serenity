@@ -81,9 +81,9 @@ ScriptFunction::~ScriptFunction()
 {
 }
 
-void ScriptFunction::visit_children(Visitor& visitor)
+void ScriptFunction::visit_edges(Visitor& visitor)
 {
-    Function::visit_children(visitor);
+    Function::visit_edges(visitor);
     visitor.visit(m_parent_environment);
 }
 
