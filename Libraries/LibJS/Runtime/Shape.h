@@ -62,6 +62,9 @@ public:
         Prototype,
     };
 
+    enum class ShapeWithoutGlobalObjectTag { Tag };
+
+    explicit Shape(ShapeWithoutGlobalObjectTag);
     explicit Shape(GlobalObject&);
     Shape(Shape& previous_shape, const StringOrSymbol& property_name, PropertyAttributes attributes, TransitionType);
     Shape(Shape& previous_shape, Object* new_prototype);
@@ -75,7 +78,7 @@ public:
     bool is_unique() const { return m_unique; }
     Shape* create_unique_clone() const;
 
-    GlobalObject& global_object() const { return m_global_object; }
+    GlobalObject* global_object() const { return m_global_object; }
 
     Object* prototype() { return m_prototype; }
     const Object* prototype() const { return m_prototype; }
@@ -107,7 +110,7 @@ private:
     TransitionType m_transition_type : 6 { TransitionType::Invalid };
     bool m_unique : 1 { false };
 
-    GlobalObject& m_global_object;
+    GlobalObject* m_global_object { nullptr };
 
     mutable OwnPtr<HashMap<StringOrSymbol, PropertyMetadata>> m_property_table;
 

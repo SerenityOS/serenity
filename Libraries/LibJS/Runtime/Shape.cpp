@@ -32,7 +32,8 @@ namespace JS {
 
 Shape* Shape::create_unique_clone() const
 {
-    auto* new_shape = heap().allocate_without_global_object<Shape>(m_global_object);
+    ASSERT(m_global_object);
+    auto* new_shape = heap().allocate_without_global_object<Shape>(*m_global_object);
     new_shape->m_unique = true;
     new_shape->m_prototype = m_prototype;
     ensure_property_table();
@@ -67,8 +68,12 @@ Shape* Shape::create_prototype_transition(Object* new_prototype)
     return heap().allocate_without_global_object<Shape>(*this, new_prototype);
 }
 
+Shape::Shape(ShapeWithoutGlobalObjectTag)
+{
+}
+
 Shape::Shape(GlobalObject& global_object)
-    : m_global_object(global_object)
+    : m_global_object(&global_object)
 {
 }
 
@@ -99,7 +104,7 @@ Shape::~Shape()
 void Shape::visit_children(Cell::Visitor& visitor)
 {
     Cell::visit_children(visitor);
-    visitor.visit(&m_global_object);
+    visitor.visit(m_global_object);
     visitor.visit(m_prototype);
     visitor.visit(m_previous);
     m_property_name.visit_children(visitor);
