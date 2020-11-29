@@ -535,6 +535,7 @@ TEST_CASE(ECMA262_match)
         { "bar.*(?<=foo)", "barbar", false },
         { "bar.*(?<!foo)", "barbar", true },
         { "((...)X)+", "fooXbarXbazX", true },
+        { "(?:)", "", true },
     };
 
     for (auto& test : tests) {

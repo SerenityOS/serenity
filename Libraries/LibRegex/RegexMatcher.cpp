@@ -27,6 +27,7 @@
 #include "RegexMatcher.h"
 #include "RegexDebug.h"
 #include "RegexParser.h"
+#include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 
@@ -153,6 +154,33 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         auto view_length = view.length();
         size_t view_index = m_pattern.start_offset;
         state.string_position = view_index;
+
+        if (view_index == view_length && m_pattern.parser_result.match_length_minimum == 0) {
+            // Run the code until it tries to consume something.
+            // This allows non-consuming code to run on empty strings, for instance
+            // e.g. "Exit"
+            MatchOutput temp_output { output };
+
+            input.column = match_count;
+            input.match_index = match_count;
+
+            state.string_position = view_index;
+            state.instruction_position = 0;
+
+            auto success = execute(input, state, temp_output, 0);
+            // This success is acceptable only if it doesn't read anything from the input (input length is 0).
+            if (state.string_position <= view_index) {
+                if (success.value()) {
+                    output = move(temp_output);
+                    if (!match_count) {
+                        // Nothing was *actually* matched, so append an empty match.
+                        append_match(input, state, output, view_index);
+                        ++match_count;
+                    }
+                }
+            }
+        }
+
         for (; view_index < view_length; ++view_index) {
             auto& match_length_minimum = m_pattern.parser_result.match_length_minimum;
             // FIXME: More performant would be to know the remaining minimum string
