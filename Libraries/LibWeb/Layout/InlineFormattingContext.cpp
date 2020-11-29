@@ -167,11 +167,21 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
         if (inline_block.style().width().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);
 
-            // FIXME: (10.3.5) find the available width: in this case, this is the width of the containing
-            //        block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
-            //        'padding-right', 'border-right-width', 'margin-right', and the widths of any
-            //        relevant scroll bars.
-            auto available_width = containing_block.width();
+            auto margin_left = inline_block.style().margin().left.resolved(CSS::Length::make_px(0), containing_block, containing_block.width()).to_px(inline_block);
+            auto border_left_width = inline_block.style().border_left().width;
+            auto padding_left = inline_block.style().padding().left.resolved(CSS::Length::make_px(0), containing_block, containing_block.width()).to_px(inline_block);
+
+            auto margin_right = inline_block.style().margin().right.resolved(CSS::Length::make_px(0), containing_block, containing_block.width()).to_px(inline_block);
+            auto border_right_width = inline_block.style().border_right().width;
+            auto padding_right = inline_block.style().padding().right.resolved(CSS::Length::make_px(0), containing_block, containing_block.width()).to_px(inline_block);
+
+            auto available_width = containing_block.width()
+                - margin_left
+                - border_left_width
+                - padding_left
+                - padding_right
+                - border_right_width
+                - margin_right;
 
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
             inline_block.set_width(width);
