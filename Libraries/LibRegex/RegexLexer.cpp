@@ -64,8 +64,11 @@ ALWAYS_INLINE char Lexer::peek(size_t offset) const
 
 void Lexer::back(size_t offset)
 {
+    ASSERT(offset <= m_position);
+    if (!offset)
+        return;
     m_position -= offset;
-    m_previous_position = m_position - 1;
+    m_previous_position = (m_position > 0) ? m_position - 1 : 0;
     m_current_char = m_source[m_position];
 }
 
