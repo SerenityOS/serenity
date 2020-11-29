@@ -35,6 +35,7 @@ namespace Ptrace {
 
 KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, Process& caller)
 {
+    ScopedSpinLock scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
         if (Thread::current()->tracer())
             return KResult(-EBUSY);
@@ -50,11 +51,7 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     if (params.tid == caller.pid().value())
         return KResult(-EINVAL);
 
-    Thread* peer = nullptr;
-    {
-        InterruptDisabler disabler;
-        peer = Thread::from_tid(params.tid);
-    }
+    auto peer = Thread::from_tid(params.tid);
     if (!peer)
         return KResult(-ESRCH);
 
@@ -67,10 +64,9 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
             return KResult(-EBUSY);
         }
         peer->start_tracing_from(caller.pid());
+        ScopedSpinLock lock(peer->get_lock());
         if (peer->state() != Thread::State::Stopped) {
-            ScopedSpinLock lock(peer->get_lock());
-            if (!(peer->has_blocker() && peer->blocker().is_reason_signal()))
-                peer->send_signal(SIGSTOP, &caller);
+            peer->send_signal(SIGSTOP, &caller);
         }
         return KSuccess;
     }
@@ -104,7 +100,6 @@ KResultOr<u32> handle_syscall(const Kernel::Syscall::SC_ptrace_params& params, P
     case PT_GETREGS: {
         if (!tracer->has_regs())
             return KResult(-EINVAL);
-
         auto* regs = reinterpret_cast<PtraceRegisters*>(params.addr);
         if (!copy_to_user(regs, &tracer->regs()))
             return KResult(-EFAULT);

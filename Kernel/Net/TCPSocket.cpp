@@ -52,6 +52,9 @@ void TCPSocket::set_state(State new_state)
     dbg() << "TCPSocket{" << this << "} state moving from " << to_string(m_state) << " to " << to_string(new_state);
 #endif
 
+    auto was_disconnected = protocol_is_disconnected();
+    auto previous_role = m_role;
+
     m_state = new_state;
 
     if (new_state == State::Established && m_direction == Direction::Outgoing)
@@ -61,6 +64,9 @@ void TCPSocket::set_state(State new_state)
         LOCKER(closing_sockets().lock());
         closing_sockets().resource().remove(tuple());
     }
+
+    if (previous_role != m_role || was_disconnected != protocol_is_disconnected())
+        evaluate_block_conditions();
 }
 
 static AK::Singleton<Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
@@ -389,13 +395,16 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_role = Role::Connecting;
     m_direction = Direction::Outgoing;
 
+    evaluate_block_conditions();
+
     if (should_block == ShouldBlock::Yes) {
         locker.unlock();
-        if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description).was_interrupted())
+        auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+        if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description, unblock_flags).was_interrupted())
             return KResult(-EINTR);
         locker.lock();
         ASSERT(setup_state() == SetupState::Completed);
-        if (has_error()) {
+        if (has_error()) { // TODO: check unblock_flags
             m_role = Role::None;
             return KResult(-ECONNREFUSED);
         }

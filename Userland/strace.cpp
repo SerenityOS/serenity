@@ -53,7 +53,6 @@ static void handle_sigint(int)
 int main(int argc, char** argv)
 {
     Vector<const char*> child_argv;
-    bool spawned_new_process = false;
 
     Core::ArgsParser parser;
     parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid");
@@ -61,6 +60,7 @@ int main(int argc, char** argv)
 
     parser.parse(argc, argv);
 
+    int status;
     if (g_pid == -1) {
         if (child_argv.is_empty()) {
             fprintf(stderr, "strace: Expected either a pid or some arguments\n");
@@ -68,7 +68,6 @@ int main(int argc, char** argv)
         }
 
         child_argv.append(nullptr);
-        spawned_new_process = true;
         int pid = fork();
         if (pid < 0) {
             perror("fork");
@@ -89,7 +88,7 @@ int main(int argc, char** argv)
         }
 
         g_pid = pid;
-        if (waitpid(pid, nullptr, WSTOPPED) != pid) {
+        if (waitpid(pid, &status, WSTOPPED | WEXITED) != pid || !WIFSTOPPED(status)) {
             perror("waitpid");
             return 1;
         }
@@ -104,66 +103,42 @@ int main(int argc, char** argv)
         perror("attach");
         return 1;
     }
-
-    if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
+    if (waitpid(g_pid, &status, WSTOPPED | WEXITED) != g_pid || !WIFSTOPPED(status)) {
         perror("waitpid");
         return 1;
     }
 
-    if (spawned_new_process) {
-
-        if (ptrace(PT_CONTINUE, g_pid, 0, 0) < 0) {
-            perror("continue");
-            return 1;
-        }
-        if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
-            perror("wait_pid");
-            return 1;
-        }
-    }
-
     for (;;) {
         if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
-            if (errno == ESRCH)
-                return 0;
             perror("syscall");
             return 1;
         }
-        if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
+        if (waitpid(g_pid, &status, WSTOPPED | WEXITED) != g_pid || !WIFSTOPPED(status)) {
             perror("wait_pid");
             return 1;
         }
-
         PtraceRegisters regs = {};
         if (ptrace(PT_GETREGS, g_pid, &regs, 0) == -1) {
             perror("getregs");
             return 1;
         }
-
         u32 syscall_index = regs.eax;
         u32 arg1 = regs.edx;
         u32 arg2 = regs.ecx;
         u32 arg3 = regs.ebx;
 
-        // skip syscall exit
         if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
-            if (errno == ESRCH)
-                return 0;
             perror("syscall");
             return 1;
         }
-        if (waitpid(g_pid, nullptr, WSTOPPED) != g_pid) {
+        if (waitpid(g_pid, &status, WSTOPPED | WEXITED) != g_pid || !WIFSTOPPED(status)) {
             perror("wait_pid");
             return 1;
         }
 
         if (ptrace(PT_GETREGS, g_pid, &regs, 0) == -1) {
-            if (errno == ESRCH && syscall_index == SC_exit) {
-                regs.eax = 0;
-            } else {
-                perror("getregs");
-                return 1;
-            }
+            perror("getregs");
+            return 1;
         }
 
         u32 res = regs.eax;

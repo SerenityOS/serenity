@@ -36,9 +36,103 @@ namespace Kernel {
 
 static AK::Singleton<Lockable<HashMap<IPv4Address, MACAddress>>> s_arp_table;
 
+class ARPTableBlocker : public Thread::Blocker {
+public:
+    ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr);
+
+    virtual const char* state_string() const override { return "Routing (ARP)"; }
+    virtual Type blocker_type() const override { return Type::Routing; }
+    virtual bool should_block() override { return m_should_block; }
+
+    virtual void not_blocking(bool) override;
+
+    bool unblock(bool from_add_blocker, const IPv4Address& ip_addr, const MACAddress& addr)
+    {
+        if (m_ip_addr != ip_addr)
+            return false;
+
+        {
+            ScopedSpinLock lock(m_lock);
+            if (m_did_unblock)
+                return false;
+            m_did_unblock = true;
+            m_addr = addr;
+        }
+
+        if (!from_add_blocker)
+            unblock_from_blocker();
+        return true;
+    }
+
+    const IPv4Address& ip_addr() const { return m_ip_addr; }
+
+private:
+    const IPv4Address m_ip_addr;
+    Optional<MACAddress>& m_addr;
+    bool m_did_unblock { false };
+    bool m_should_block { true };
+};
+
+class ARPTableBlockCondition : public Thread::BlockCondition {
+public:
+    void unblock(const IPv4Address& ip_addr, const MACAddress& addr)
+    {
+        unblock_all([&](auto& b, void*) {
+            ASSERT(b.blocker_type() == Thread::Blocker::Type::Routing);
+            auto& blocker = static_cast<ARPTableBlocker&>(b);
+            return blocker.unblock(false, ip_addr, addr);
+        });
+    }
+
+protected:
+    virtual bool should_add_blocker(Thread::Blocker& b, void*) override
+    {
+        ASSERT(b.blocker_type() == Thread::Blocker::Type::Routing);
+        auto& blocker = static_cast<ARPTableBlocker&>(b);
+        auto val = s_arp_table->resource().get(blocker.ip_addr());
+        if (!val.has_value())
+            return true;
+        return blocker.unblock(true, blocker.ip_addr(), val.value());
+    }
+};
+
+static AK::Singleton<ARPTableBlockCondition> s_arp_table_block_condition;
+
+ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr)
+    : m_ip_addr(ip_addr)
+    , m_addr(addr)
+{
+    if (!set_block_condition(*s_arp_table_block_condition))
+        m_should_block = false;
+}
+
+void ARPTableBlocker::not_blocking(bool timeout_in_past)
+{
+    ASSERT(timeout_in_past || !m_should_block);
+    auto addr = s_arp_table->resource().get(ip_addr());
+
+    ScopedSpinLock lock(m_lock);
+    if (!m_did_unblock) {
+        m_did_unblock = true;
+        m_addr = move(addr);
+    }
+}
+
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
     return *s_arp_table;
+}
+
+void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr)
+{
+    LOCKER(arp_table().lock());
+    arp_table().resource().set(ip_addr, addr);
+    s_arp_table_block_condition->unblock(ip_addr, addr);
+
+    klog() << "ARP table (" << arp_table().resource().size() << " entries):";
+    for (auto& it : arp_table().resource()) {
+        klog() << it.value.to_string().characters() << " :: " << it.key.to_string().characters();
+    }
 }
 
 bool RoutingDecision::is_zero() const
@@ -135,13 +229,8 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     request.set_sender_protocol_address(adapter->ipv4_address());
     adapter->send({ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }, request);
 
-    (void)Thread::current()->block_until("Routing (ARP)", [next_hop_ip] {
-        return arp_table().resource().get(next_hop_ip).has_value();
-    });
-
-    {
-        LOCKER(arp_table().lock());
-        auto addr = arp_table().resource().get(next_hop_ip);
+    Optional<MACAddress> addr;
+    if (!Thread::current()->block<ARPTableBlocker>(nullptr, next_hop_ip, addr).was_interrupted()) {
         if (addr.has_value()) {
 #ifdef ROUTING_DEBUG
             klog() << "Routing: Got ARP response using adapter " << adapter->name().characters() << " for " << next_hop_ip.to_string().characters() << " (" << addr.value().to_string().characters() << ")";

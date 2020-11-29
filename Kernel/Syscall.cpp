@@ -93,6 +93,13 @@ int handle(RegisterState& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
     if (function == SC_exit || function == SC_exit_thread) {
         // These syscalls need special handling since they never return to the caller.
+
+        if (auto* tracer = current_thread->tracer(); tracer && tracer->is_tracing_syscalls()) {
+            regs.eax = 0;
+            tracer->set_trace_syscalls(false);
+            current_thread->tracer_trap(regs); // this triggers SIGTRAP and stops the thread!
+        }
+
         cli();
         if (function == SC_exit)
             process.sys$exit((int)arg1);
@@ -131,9 +138,9 @@ void syscall_handler(TrapFrame* trap)
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
 
-    if (current_thread->tracer() && current_thread->tracer()->is_tracing_syscalls()) {
-        current_thread->tracer()->set_trace_syscalls(false);
-        current_thread->tracer_trap(regs);
+    if (auto* tracer = current_thread->tracer(); tracer && tracer->is_tracing_syscalls()) {
+        tracer->set_trace_syscalls(false);
+        current_thread->tracer_trap(regs); // this triggers SIGTRAP and stops the thread!
     }
 
     // Make sure SMAP protection is enabled on syscall entry.
@@ -176,11 +183,11 @@ void syscall_handler(TrapFrame* trap)
     u32 arg1 = regs.edx;
     u32 arg2 = regs.ecx;
     u32 arg3 = regs.ebx;
-    regs.eax = (u32)Syscall::handle(regs, function, arg1, arg2, arg3);
+    regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
 
-    if (current_thread->tracer() && current_thread->tracer()->is_tracing_syscalls()) {
-        current_thread->tracer()->set_trace_syscalls(false);
-        current_thread->tracer_trap(regs);
+    if (auto* tracer = current_thread->tracer(); tracer && tracer->is_tracing_syscalls()) {
+        tracer->set_trace_syscalls(false);
+        current_thread->tracer_trap(regs); // this triggers SIGTRAP and stops the thread!
     }
 
     process.big_lock().unlock();
@@ -188,8 +195,7 @@ void syscall_handler(TrapFrame* trap)
     // Check if we're supposed to return to userspace or just die.
     current_thread->die_if_needed();
 
-    if (current_thread->has_unmasked_pending_signals())
-        (void)current_thread->block<Thread::SemiPermanentBlocker>(nullptr, Thread::SemiPermanentBlocker::Reason::Signal);
+    ASSERT(!g_scheduler_lock.own_lock());
 }
 
 }

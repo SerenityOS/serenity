@@ -170,6 +170,7 @@ set(KERNEL_SOURCES
     Tasks/FinalizerTask.cpp
     Tasks/SyncTask.cpp
     Thread.cpp
+    ThreadBlockers.cpp
     ThreadTracer.cpp
     Time/APICTimer.cpp
     Time/HPET.cpp

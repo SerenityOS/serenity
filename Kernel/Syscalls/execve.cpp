@@ -568,9 +568,6 @@ int Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return -E2BIG;
 
-    if (wait_for_tracer_at_next_execve())
-        Thread::current()->send_urgent_signal_to_self(SIGSTOP);
-
     String path;
     {
         auto path_arg = get_syscall_path_argument(params.path);

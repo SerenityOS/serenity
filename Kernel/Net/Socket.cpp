@@ -70,6 +70,7 @@ void Socket::set_setup_state(SetupState new_setup_state)
 #endif
 
     m_setup_state = new_setup_state;
+    evaluate_block_conditions();
 }
 
 RefPtr<Socket> Socket::accept()
@@ -86,6 +87,8 @@ RefPtr<Socket> Socket::accept()
     client->m_acceptor = { process.pid().value(), process.uid(), process.gid() };
     client->m_connected = true;
     client->m_role = Role::Accepted;
+    if (!m_pending.is_empty())
+        evaluate_block_conditions();
     return client;
 }
 
@@ -98,6 +101,7 @@ KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
     if (m_pending.size() >= m_backlog)
         return KResult(-ECONNREFUSED);
     m_pending.append(peer);
+    evaluate_block_conditions();
     return KSuccess;
 }
 

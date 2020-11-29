@@ -56,12 +56,22 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
         id = waitee;
     }
 
+    // To be able to detect if a child was found when WNOHANG is set,
+    // we need to clear si_pid, which will only be set if it was found.
+    siginfo.si_pid = 0;
     int rc = waitid(idtype, id, &siginfo, options | WEXITED);
 
     if (rc < 0)
         return rc;
 
     if (wstatus) {
+        if ((options & WNOHANG) && siginfo.si_pid == 0) {
+            // No child in a waitable state was found. All other fields
+            // in siginfo are undefined
+            *wstatus = 0;
+            return 0;
+        }
+
         switch (siginfo.si_code) {
         case CLD_EXITED:
             *wstatus = siginfo.si_status << 8;

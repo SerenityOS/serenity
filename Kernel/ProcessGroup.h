@@ -50,7 +50,7 @@ public:
 
     static NonnullRefPtr<ProcessGroup> create(ProcessGroupID);
     static NonnullRefPtr<ProcessGroup> find_or_create(ProcessGroupID);
-    static ProcessGroup* from_pgid(ProcessGroupID);
+    static RefPtr<ProcessGroup> from_pgid(ProcessGroupID);
 
     const ProcessGroupID& pgid() const { return m_pgid; }
 

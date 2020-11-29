@@ -47,8 +47,10 @@ InodeFile::~InodeFile()
 KResultOr<size_t> InodeFile::read(FileDescription& description, size_t offset, UserOrKernelBuffer& buffer, size_t count)
 {
     ssize_t nread = m_inode->read_bytes(offset, count, buffer, &description);
-    if (nread > 0)
+    if (nread > 0) {
         Thread::current()->did_file_read(nread);
+        evaluate_block_conditions();
+    }
     if (nread < 0)
         return KResult(nread);
     return nread;
@@ -60,6 +62,7 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, size_t offset, 
     if (nwritten > 0) {
         m_inode->set_mtime(kgettimeofday().tv_sec);
         Thread::current()->did_file_write(nwritten);
+        evaluate_block_conditions();
     }
     if (nwritten < 0)
         return KResult(nwritten);

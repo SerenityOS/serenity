@@ -112,7 +112,8 @@ int Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_addre
 
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
-            if (Thread::current()->block<Thread::AcceptBlocker>(nullptr, *accepting_socket_description).was_interrupted())
+            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+            if (Thread::current()->block<Thread::AcceptBlocker>(nullptr, *accepting_socket_description, unblock_flags).was_interrupted())
                 return -EINTR;
         } else {
             return -EAGAIN;

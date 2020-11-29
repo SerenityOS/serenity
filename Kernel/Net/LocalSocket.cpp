@@ -68,6 +68,13 @@ LocalSocket::LocalSocket(int type)
     m_prebind_gid = current_process->gid();
     m_prebind_mode = 0666;
 
+    m_for_client.set_unblock_callback([this]() {
+        evaluate_block_conditions();
+    });
+    m_for_server.set_unblock_callback([this]() {
+        evaluate_block_conditions();
+    });
+
 #ifdef DEBUG_LOCAL_SOCKET
     dbg() << "LocalSocket{" << this << "} created with type=" << type;
 #endif
@@ -170,22 +177,23 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
     memcpy(m_address.sun_path, safe_address, sizeof(m_address.sun_path));
 
     ASSERT(m_connect_side_fd == &description);
-    m_connect_side_role = Role::Connecting;
+    set_connect_side_role(Role::Connecting);
 
     auto peer = m_file->inode()->socket();
     auto result = peer->queue_connection_from(*this);
     if (result.is_error()) {
-        m_connect_side_role = Role::None;
+        set_connect_side_role(Role::None);
         return result;
     }
 
     if (is_connected()) {
-        m_connect_side_role = Role::Connected;
+        set_connect_side_role(Role::Connected);
         return KSuccess;
     }
 
-    if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description).was_interrupted()) {
-        m_connect_side_role = Role::None;
+    auto unblock_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
+    if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description, unblock_flags).was_interrupted()) {
+        set_connect_side_role(Role::None);
         return KResult(-EINTR);
     }
 
@@ -193,11 +201,11 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
     dbg() << "LocalSocket{" << this << "} connect(" << safe_address << ") status is " << to_string(setup_state());
 #endif
 
-    if (!is_connected()) {
-        m_connect_side_role = Role::None;
+    if (!((u32)unblock_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Connect)) {
+        set_connect_side_role(Role::None);
         return KResult(-ECONNREFUSED);
     }
-    m_connect_side_role = Role::Connected;
+    set_connect_side_role(Role::Connected);
     return KSuccess;
 }
 
@@ -207,7 +215,9 @@ KResult LocalSocket::listen(size_t backlog)
     if (type() != SOCK_STREAM)
         return KResult(-EOPNOTSUPP);
     set_backlog(backlog);
-    m_connect_side_role = m_role = Role::Listener;
+    auto previous_role = m_role;
+    m_role = Role::Listener;
+    set_connect_side_role(Role::Listener, previous_role != m_role);
 #ifdef DEBUG_LOCAL_SOCKET
     dbg() << "LocalSocket{" << this << "} listening with backlog=" << backlog;
 #endif
@@ -224,6 +234,8 @@ void LocalSocket::attach(FileDescription& description)
         ASSERT(m_connect_side_fd != &description);
         m_accept_side_fd_open = true;
     }
+
+    evaluate_block_conditions();
 }
 
 void LocalSocket::detach(FileDescription& description)
@@ -234,6 +246,8 @@ void LocalSocket::detach(FileDescription& description)
         ASSERT(m_accept_side_fd_open);
         m_accept_side_fd_open = false;
     }
+
+    evaluate_block_conditions();
 }
 
 bool LocalSocket::can_read(const FileDescription& description, size_t) const
@@ -308,7 +322,8 @@ KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKern
             return KResult(-EAGAIN);
         }
     } else if (!can_read(description, 0)) {
-        if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description).was_interrupted())
+        auto unblock_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
+        if (Thread::current()->block<Thread::ReadBlocker>(nullptr, description, unblock_flags).was_interrupted())
             return KResult(-EINTR);
     }
     if (!has_attached_peer(description) && buffer_for_me.is_empty())

@@ -51,6 +51,7 @@ class PerformanceEventBuffer;
 class PhysicalPage;
 class PhysicalRegion;
 class Process;
+class ProcessGroup;
 class ThreadTracer;
 class Range;
 class RangeAllocator;

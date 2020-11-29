@@ -311,7 +311,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     return process;
 }
 
-NonnullRefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void *entry_data, u32 affinity)
+NonnullRefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity)
 {
     auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
     first_thread->tss().eip = (FlatPtr)entry;
@@ -343,6 +343,7 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     , m_cwd(move(cwd))
     , m_tty(tty)
     , m_ppid(ppid)
+    , m_wait_block_condition(*this)
 {
 #ifdef PROCESS_DEBUG
     dbg() << "Created new process " << m_name << "(" << m_pid.value() << ")";
@@ -365,8 +366,13 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
 
 Process::~Process()
 {
-    ASSERT(!m_next && !m_prev);  // should have been reaped
     ASSERT(thread_count() == 0); // all threads should have been finalized
+
+    {
+        ScopedSpinLock processses_lock(g_processes_lock);
+        if (prev() || next())
+            g_processes->remove(this);
+    }
 }
 
 void Process::dump_regions()
@@ -528,38 +534,21 @@ void kgettimeofday(timeval& tv)
     tv = kgettimeofday();
 }
 
-siginfo_t Process::reap(Process& process)
+siginfo_t Process::wait_info()
 {
     siginfo_t siginfo;
     memset(&siginfo, 0, sizeof(siginfo));
     siginfo.si_signo = SIGCHLD;
-    siginfo.si_pid = process.pid().value();
-    siginfo.si_uid = process.uid();
+    siginfo.si_pid = pid().value();
+    siginfo.si_uid = uid();
 
-    if (process.m_termination_signal) {
-        siginfo.si_status = process.m_termination_signal;
+    if (m_termination_signal) {
+        siginfo.si_status = m_termination_signal;
         siginfo.si_code = CLD_KILLED;
     } else {
-        siginfo.si_status = process.m_termination_status;
+        siginfo.si_status = m_termination_status;
         siginfo.si_code = CLD_EXITED;
     }
-
-    ASSERT(g_processes_lock.is_locked());
-
-    if (!!process.ppid()) {
-        auto parent = Process::from_pid(process.ppid());
-        if (parent) {
-            parent->m_ticks_in_user_for_dead_children += process.m_ticks_in_user + process.m_ticks_in_user_for_dead_children;
-            parent->m_ticks_in_kernel_for_dead_children += process.m_ticks_in_kernel + process.m_ticks_in_kernel_for_dead_children;
-        }
-    }
-
-#ifdef PROCESS_DEBUG
-    dbg() << "Reaping process " << process;
-#endif
-    ASSERT(process.is_dead());
-    g_processes->remove(&process);
-    process.unref();
     return siginfo;
 }
 
@@ -587,7 +576,7 @@ KResultOr<String> Process::get_syscall_path_argument(const Syscall::StringArgume
     return get_syscall_path_argument(path.characters, path.length);
 }
 
-void Process::finalize()
+void Process::finalize(Thread& last_thread)
 {
     ASSERT(Thread::current() == g_finalizer);
 #ifdef PROCESS_DEBUG
@@ -614,26 +603,46 @@ void Process::finalize()
     m_root_directory = nullptr;
     m_root_directory_relative_to_global_root = nullptr;
 
+    m_dead = true;
+
     disown_all_shared_buffers();
     {
-        InterruptDisabler disabler;
         // FIXME: PID/TID BUG
         if (auto parent_thread = Thread::from_tid(m_ppid.value())) {
-            if (parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
-                // NOTE: If the parent doesn't care about this process, let it go.
-                m_ppid = 0;
-            } else {
+            if (!(parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT))
                 parent_thread->send_signal(SIGCHLD, this);
+        }
+    }
+
+    {
+        ScopedSpinLock processses_lock(g_processes_lock);
+        if (!!ppid()) {
+            if (auto parent = Process::from_pid(ppid())) {
+                parent->m_ticks_in_user_for_dead_children += m_ticks_in_user + m_ticks_in_user_for_dead_children;
+                parent->m_ticks_in_kernel_for_dead_children += m_ticks_in_kernel + m_ticks_in_kernel_for_dead_children;
             }
         }
     }
+
+    unblock_waiters(last_thread, Thread::WaitBlocker::UnblockFlags::Terminated);
 
     {
         ScopedSpinLock lock(m_lock);
         m_regions.clear();
     }
 
-    m_dead = true;
+    ASSERT(ref_count() > 0);
+    // WaitBlockCondition::finalize will be in charge of dropping the last
+    // reference if there are still waiters around, or whenever the last
+    // waitable states are consumed. Unless there is no parent around
+    // anymore, in which case we'll just drop it right away.
+    m_wait_block_condition.finalize();
+}
+
+void Process::unblock_waiters(Thread& thread, Thread::WaitBlocker::UnblockFlags flags, u8 signal)
+{
+    if (auto parent = Process::from_pid(ppid()))
+        parent->m_wait_block_condition.unblock(thread, flags, signal);
 }
 
 void Process::die()
@@ -746,10 +755,8 @@ void Process::terminate_due_to_signal(u8 signal)
 
 KResult Process::send_signal(u8 signal, Process* sender)
 {
-    InterruptDisabler disabler;
-    Thread* receiver_thread;
     // Try to send it to the "obvious" main thread:
-    receiver_thread = Thread::from_tid(m_pid.value());
+    auto receiver_thread = Thread::from_tid(m_pid.value());
     // If the main thread has died, there may still be other threads:
     if (!receiver_thread) {
         // The first one should be good enough.

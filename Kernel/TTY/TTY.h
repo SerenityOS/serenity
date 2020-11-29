@@ -72,7 +72,7 @@ protected:
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);
-    void emit(u8);
+    void emit(u8, bool do_evaluate_block_conditions = false);
     virtual void echo(u8) = 0;
 
     bool can_do_backspace() const;

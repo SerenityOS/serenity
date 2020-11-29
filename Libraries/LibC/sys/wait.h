@@ -44,6 +44,7 @@ __BEGIN_DECLS
 #define WSTOPPED WUNTRACED
 #define WEXITED 4
 #define WCONTINUED 8
+#define WNOWAIT 0x1000000
 
 typedef enum {
     P_ALL = 1,

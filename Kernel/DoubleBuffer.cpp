@@ -70,6 +70,8 @@ ssize_t DoubleBuffer::write(const UserOrKernelBuffer& data, size_t size)
     compute_lockfree_metadata();
     if (!data.read(write_ptr, bytes_to_write))
         return -EFAULT;
+    if (m_unblock_callback && !m_empty)
+        m_unblock_callback();
     return (ssize_t)bytes_to_write;
 }
 
@@ -88,6 +90,8 @@ ssize_t DoubleBuffer::read(UserOrKernelBuffer& data, size_t size)
         return -EFAULT;
     m_read_buffer_index += nread;
     compute_lockfree_metadata();
+    if (m_unblock_callback && m_space_for_writing > 0)
+        m_unblock_callback();
     return (ssize_t)nread;
 }
 

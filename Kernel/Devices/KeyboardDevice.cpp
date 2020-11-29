@@ -272,6 +272,8 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
     }
 
     m_has_e0_prefix = false;
+
+    evaluate_block_conditions();
 }
 
 void KeyboardDevice::handle_irq(const RegisterState&)

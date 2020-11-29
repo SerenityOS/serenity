@@ -39,6 +39,36 @@
 
 namespace Kernel {
 
+class File;
+
+class FileBlockCondition : public Thread::BlockCondition {
+public:
+    FileBlockCondition(File& file)
+        : m_file(file)
+    {
+    }
+
+    virtual bool should_add_blocker(Thread::Blocker& b, void* data) override
+    {
+        ASSERT(b.blocker_type() == Thread::Blocker::Type::File);
+        auto& blocker = static_cast<Thread::FileBlocker&>(b);
+        return !blocker.unblock(true, data);
+    }
+
+    void unblock()
+    {
+        ScopedSpinLock lock(m_lock);
+        do_unblock([&](auto& b, void* data) {
+            ASSERT(b.blocker_type() == Thread::Blocker::Type::File);
+            auto& blocker = static_cast<Thread::FileBlocker&>(b);
+            return blocker.unblock(false, data);
+        });
+    }
+
+private:
+    File& m_file;
+};
+
 // File is the base class for anything that can be referenced by a FileDescription.
 //
 // The most important functions in File are:
@@ -103,8 +133,27 @@ public:
     virtual bool is_character_device() const { return false; }
     virtual bool is_socket() const { return false; }
 
+    virtual FileBlockCondition& block_condition() { return m_block_condition; }
+
 protected:
     File();
+
+    void evaluate_block_conditions()
+    {
+        if (Processor::current().in_irq()) {
+            // If called from an IRQ handler we need to delay evaluation
+            // and unblocking of waiting threads
+            Processor::deferred_call_queue([this]() {
+                ASSERT(!Processor::current().in_irq());
+                evaluate_block_conditions();
+            });
+        } else {
+            block_condition().unblock();
+        }
+    }
+
+private:
+    FileBlockCondition m_block_condition;
 };
 
 }

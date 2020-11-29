@@ -111,10 +111,8 @@ KResult Process::do_killself(int signal)
         return KSuccess;
 
     auto current_thread = Thread::current();
-    if (!current_thread->should_ignore_signal(signal)) {
+    if (!current_thread->should_ignore_signal(signal))
         current_thread->send_signal(signal, this);
-        (void)current_thread->block<Thread::SemiPermanentBlocker>(nullptr, Thread::SemiPermanentBlocker::Reason::Signal);
-    }
 
     return KSuccess;
 }
