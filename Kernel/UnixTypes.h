@@ -71,6 +71,7 @@ enum {
 #define WSTOPPED WUNTRACED
 #define WEXITED 4
 #define WCONTINUED 8
+#define WNOWAIT 0x1000000
 
 #define R_OK 4
 #define W_OK 2
@@ -427,11 +428,12 @@ struct stat {
 };
 
 #define POLLIN (1u << 0)
-#define POLLPRI (1u << 2)
-#define POLLOUT (1u << 3)
-#define POLLERR (1u << 4)
-#define POLLHUP (1u << 5)
-#define POLLNVAL (1u << 6)
+#define POLLPRI (1u << 1)
+#define POLLOUT (1u << 2)
+#define POLLERR (1u << 3)
+#define POLLHUP (1u << 4)
+#define POLLNVAL (1u << 5)
+#define POLLRDHUP (1u << 13)
 
 struct pollfd {
     int fd;

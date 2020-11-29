@@ -96,10 +96,12 @@ ssize_t Process::do_write(FileDescription& description, const UserOrKernelBuffer
                 ASSERT(total_nwritten > 0);
                 return total_nwritten;
             }
-            if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description).was_interrupted()) {
+            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+            if (Thread::current()->block<Thread::WriteBlocker>(nullptr, description, unblock_flags).was_interrupted()) {
                 if (total_nwritten == 0)
                     return -EINTR;
             }
+            // TODO: handle exceptions in unblock_flags
         }
         auto nwritten_or_error = description.write(data.offset(total_nwritten), data_size - total_nwritten);
         if (nwritten_or_error.is_error()) {

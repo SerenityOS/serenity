@@ -50,13 +50,15 @@ NonnullRefPtr<ProcessGroup> ProcessGroup::create(ProcessGroupID pgid)
 
 NonnullRefPtr<ProcessGroup> ProcessGroup::find_or_create(ProcessGroupID pgid)
 {
+    ScopedSpinLock lock(g_process_groups_lock);
+
     if (auto existing = from_pgid(pgid))
-        return *existing;
+        return existing.release_nonnull();
 
     return create(pgid);
 }
 
-ProcessGroup* ProcessGroup::from_pgid(ProcessGroupID pgid)
+RefPtr<ProcessGroup> ProcessGroup::from_pgid(ProcessGroupID pgid)
 {
     ScopedSpinLock lock(g_process_groups_lock);
 

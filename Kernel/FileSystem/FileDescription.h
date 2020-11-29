@@ -45,6 +45,8 @@ public:
     static NonnullRefPtr<FileDescription> create(File&);
     ~FileDescription();
 
+    Thread::FileBlocker::BlockFlags should_unblock(Thread::FileBlocker::BlockFlags) const;
+
     bool is_readable() const { return m_readable; }
     bool is_writable() const { return m_writable; }
 
@@ -130,10 +132,17 @@ public:
 
     KResult chown(uid_t, gid_t);
 
+    FileBlockCondition& block_condition();
+
 private:
     friend class VFS;
     explicit FileDescription(File&);
     FileDescription(FIFO&, FIFO::Direction);
+
+    void evaluate_block_conditions()
+    {
+        block_condition().unblock();
+    }
 
     RefPtr<Custody> m_custody;
     RefPtr<Inode> m_inode;

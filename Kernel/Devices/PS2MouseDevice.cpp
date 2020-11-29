@@ -89,8 +89,11 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
         auto mouse_packet = backdoor->receive_mouse_packet();
         if (mouse_packet.has_value()) {
             m_entropy_source.add_random_event(mouse_packet.value());
-            ScopedSpinLock lock(m_queue_lock);
-            m_queue.enqueue(mouse_packet.value());
+            {
+                ScopedSpinLock lock(m_queue_lock);
+                m_queue.enqueue(mouse_packet.value());
+            }
+            evaluate_block_conditions();
         }
         return;
     }
@@ -102,8 +105,11 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
 #endif
         m_entropy_source.add_random_event(m_data.dword);
 
-        ScopedSpinLock lock(m_queue_lock);
-        m_queue.enqueue(parse_data_packet(m_data));
+        {
+            ScopedSpinLock lock(m_queue_lock);
+            m_queue.enqueue(parse_data_packet(m_data));
+        }
+        evaluate_block_conditions();
     };
 
     ASSERT(m_data_state < sizeof(m_data.bytes) / sizeof(m_data.bytes[0]));

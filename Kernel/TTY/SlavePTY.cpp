@@ -71,10 +71,11 @@ void SlavePTY::on_master_write(const UserOrKernelBuffer& buffer, ssize_t size)
 {
     ssize_t nread = buffer.read_buffered<128>(size, [&](const u8* data, size_t data_size) {
         for (size_t i = 0; i < data_size; ++i)
-            emit(data[i]);
+            emit(data[i], false);
         return (ssize_t)data_size;
     });
-    (void)nread;
+    if (nread > 0)
+        evaluate_block_conditions();
 }
 
 ssize_t SlavePTY::on_tty_write(const UserOrKernelBuffer& data, ssize_t size)
@@ -106,6 +107,11 @@ KResult SlavePTY::close()
 {
     m_master->notify_slave_closed({});
     return KSuccess;
+}
+
+FileBlockCondition& SlavePTY::block_condition()
+{
+    return m_master->block_condition();
 }
 
 }

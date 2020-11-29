@@ -28,8 +28,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
-#include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
@@ -76,292 +74,6 @@ Thread* g_finalizer;
 WaitQueue* g_finalizer_wait_queue;
 Atomic<bool> g_finalizer_has_work { false };
 static Process* s_colonel_process;
-
-Thread::JoinBlocker::JoinBlocker(Thread& joinee, KResult& try_join_result, void*& joinee_exit_value)
-    : m_joinee(&joinee)
-    , m_joinee_exit_value(joinee_exit_value)
-{
-    auto* current_thread = Thread::current();
-    // We need to hold our lock to avoid a race where try_join succeeds
-    // but the joinee is joining immediately
-    ScopedSpinLock lock(m_lock);
-    try_join_result = joinee.try_join(*current_thread);
-    m_join_error = try_join_result.is_error();
-}
-
-void Thread::JoinBlocker::was_unblocked()
-{
-    ScopedSpinLock lock(m_lock);
-    if (!m_join_error && m_joinee) {
-        // If the joinee hasn't exited yet, remove ourselves now
-        ASSERT(m_joinee != Thread::current());
-        m_joinee->join_done();
-        m_joinee = nullptr;
-    }
-}
-
-bool Thread::JoinBlocker::should_unblock(Thread&)
-{
-    // We need to acquire our lock as the joinee could call joinee_exited
-    // at any moment
-    ScopedSpinLock lock(m_lock);
-
-    if (m_join_error) {
-        // Thread::block calls should_unblock before actually blocking.
-        // If detected that we can't really block due to an error, we'll
-        // return true here, which will cause Thread::block to return
-        // with BlockResult::NotBlocked. Technically, because m_join_error
-        // will only be set in the constructor, we don't need any lock
-        // to check for it, but at the same time there should not be
-        // any contention, either...
-        return true;
-    }
-
-    return m_joinee == nullptr;
-}
-
-void Thread::JoinBlocker::joinee_exited(void* value)
-{
-    ScopedSpinLock lock(m_lock);
-    if (!m_joinee) {
-        // m_joinee can be nullptr if the joiner timed out and the
-        // joinee waits on m_lock while the joiner holds it but has
-        // not yet called join_done.
-        return;
-    }
-
-    m_joinee_exit_value = value;
-    m_joinee = nullptr;
-    set_interrupted_by_death();
-}
-
-Thread::FileDescriptionBlocker::FileDescriptionBlocker(const FileDescription& description)
-    : m_blocked_description(description)
-{
-}
-
-const FileDescription& Thread::FileDescriptionBlocker::blocked_description() const
-{
-    return m_blocked_description;
-}
-
-Thread::AcceptBlocker::AcceptBlocker(const FileDescription& description)
-    : FileDescriptionBlocker(description)
-{
-}
-
-bool Thread::AcceptBlocker::should_unblock(Thread&)
-{
-    auto& socket = *blocked_description().socket();
-    return socket.can_accept();
-}
-
-Thread::ConnectBlocker::ConnectBlocker(const FileDescription& description)
-    : FileDescriptionBlocker(description)
-{
-}
-
-bool Thread::ConnectBlocker::should_unblock(Thread&)
-{
-    auto& socket = *blocked_description().socket();
-    return socket.setup_state() == Socket::SetupState::Completed;
-}
-
-Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
-    : FileDescriptionBlocker(description)
-{
-}
-
-auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
-{
-    auto& description = blocked_description();
-    if (description.is_socket()) {
-        auto& socket = *description.socket();
-        if (socket.has_send_timeout()) {
-            m_timeout = BlockTimeout(false, &socket.send_timeout(), timeout.start_time());
-            if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
-                return m_timeout;
-        }
-    }
-    return timeout;
-}
-
-bool Thread::WriteBlocker::should_unblock(Thread&)
-{
-    return blocked_description().can_write();
-}
-
-Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
-    : FileDescriptionBlocker(description)
-{
-}
-
-auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
-{
-    auto& description = blocked_description();
-    if (description.is_socket()) {
-        auto& socket = *description.socket();
-        if (socket.has_receive_timeout()) {
-            m_timeout = BlockTimeout(false, &socket.receive_timeout(), timeout.start_time());
-            if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
-                return m_timeout;
-        }
-    }
-    return timeout;
-}
-
-bool Thread::ReadBlocker::should_unblock(Thread&)
-{
-    return blocked_description().can_read();
-}
-
-Thread::ConditionBlocker::ConditionBlocker(const char* state_string, Function<bool()>&& condition)
-    : m_block_until_condition(move(condition))
-    , m_state_string(state_string)
-{
-    ASSERT(m_block_until_condition);
-}
-
-bool Thread::ConditionBlocker::should_unblock(Thread&)
-{
-    return m_block_until_condition();
-}
-
-Thread::SleepBlocker::SleepBlocker(const BlockTimeout& deadline, timespec* remaining)
-    : m_deadline(deadline)
-    , m_remaining(remaining)
-{
-}
-
-auto Thread::SleepBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
-{
-    ASSERT(timeout.is_infinite()); // A timeout should not be provided
-    // To simplify things only use the sleep deadline.
-    return m_deadline;
-}
-
-void Thread::SleepBlocker::was_unblocked()
-{
-    if (!m_remaining)
-        return;
-    auto time_now = TimeManagement::the().monotonic_time();
-    if (time_now < m_deadline.absolute_time())
-        timespec_sub(m_deadline.absolute_time(), time_now, *m_remaining);
-    else
-        *m_remaining = {};
-}
-
-Thread::BlockResult Thread::SleepBlocker::block_result(bool did_timeout)
-{
-    auto result = Blocker::block_result(did_timeout);
-    if (result == Thread::BlockResult::InterruptedByTimeout)
-        return Thread::BlockResult::WokeNormally;
-    return result;
-}
-
-Thread::SelectBlocker::SelectBlocker(const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
-    : m_select_read_fds(read_fds)
-    , m_select_write_fds(write_fds)
-    , m_select_exceptional_fds(except_fds)
-{
-}
-
-bool Thread::SelectBlocker::should_unblock(Thread& thread)
-{
-    auto& process = thread.process();
-    for (int fd : m_select_read_fds) {
-        if (!process.m_fds[fd])
-            continue;
-        if (process.m_fds[fd].description()->can_read())
-            return true;
-    }
-    for (int fd : m_select_write_fds) {
-        if (!process.m_fds[fd])
-            continue;
-        if (process.m_fds[fd].description()->can_write())
-            return true;
-    }
-
-    return false;
-}
-
-Thread::WaitBlocker::WaitBlocker(int wait_options, ProcessID& waitee_pid)
-    : m_wait_options(wait_options)
-    , m_waitee_pid(waitee_pid)
-{
-}
-
-bool Thread::WaitBlocker::should_unblock(Thread& thread)
-{
-    bool should_unblock = m_wait_options & WNOHANG;
-    if (m_waitee_pid != -1) {
-        auto peer = Process::from_pid(m_waitee_pid);
-        if (!peer)
-            return true;
-    }
-    thread.process().for_each_child([&](Process& child) {
-        if (m_waitee_pid != -1 && m_waitee_pid != child.pid())
-            return IterationDecision::Continue;
-
-        bool child_exited = child.is_dead();
-        bool child_stopped = false;
-        if (child.thread_count()) {
-            child.for_each_thread([&](auto& child_thread) {
-                if (child_thread.state() == Thread::State::Stopped && !child_thread.has_pending_signal(SIGCONT)) {
-                    child_stopped = true;
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
-            });
-        }
-
-        bool fits_the_spec = ((m_wait_options & WEXITED) && child_exited)
-            || ((m_wait_options & WSTOPPED) && child_stopped);
-
-        if (!fits_the_spec)
-            return IterationDecision::Continue;
-
-        m_waitee_pid = child.pid();
-        should_unblock = true;
-        return IterationDecision::Break;
-    });
-    return should_unblock;
-}
-
-Thread::SemiPermanentBlocker::SemiPermanentBlocker(Reason reason)
-    : m_reason(reason)
-{
-}
-
-bool Thread::SemiPermanentBlocker::should_unblock(Thread&)
-{
-    // someone else has to unblock us
-    return false;
-}
-
-// Called by the scheduler on threads that are blocked for some reason.
-// Make a decision as to whether to unblock them or not.
-void Thread::consider_unblock()
-{
-    ScopedSpinLock lock(m_lock);
-    switch (state()) {
-    case Thread::Invalid:
-    case Thread::Runnable:
-    case Thread::Running:
-    case Thread::Dead:
-    case Thread::Stopped:
-    case Thread::Queued:
-    case Thread::Dying:
-        /* don't know, don't care */
-        return;
-    case Thread::Blocked: {
-        ASSERT(m_blocker != nullptr);
-        if (m_blocker->should_unblock(*this))
-            unblock();
-        return;
-    }
-    }
-}
 
 void Scheduler::start()
 {
@@ -425,46 +137,11 @@ bool Scheduler::pick_next()
         current_thread->set_state(Thread::Dying);
     }
 
-    // Check and unblock threads whose wait conditions have been met.
-    Scheduler::for_each_nonrunnable([&](Thread& thread) {
-        thread.consider_unblock();
-        return IterationDecision::Continue;
-    });
-
     Process::for_each([&](Process& process) {
-        if (process.is_dead()) {
-            if (current_thread->process().pid() != process.pid() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
-                auto name = process.name();
-                auto pid = process.pid();
-                auto exit_status = Process::reap(process);
-                dbg() << "Scheduler[" << Processor::current().id() << "]: Reaped unparented process " << name << "(" << pid.value() << "), exit status: " << exit_status.si_status;
-            }
-            return IterationDecision::Continue;
-        }
         if (process.m_alarm_deadline && TimeManagement::the().uptime_ms() > process.m_alarm_deadline) {
             process.m_alarm_deadline = 0;
             // FIXME: Should we observe this signal somehow?
             (void)process.send_signal(SIGALRM, nullptr);
-        }
-        return IterationDecision::Continue;
-    });
-
-    // Dispatch any pending signals.
-    Thread::for_each_living([&](Thread& thread) -> IterationDecision {
-        ScopedSpinLock lock(thread.get_lock());
-        if (!thread.has_unmasked_pending_signals())
-            return IterationDecision::Continue;
-        // NOTE: dispatch_one_pending_signal() may unblock the process.
-        bool was_blocked = thread.is_blocked();
-        if (thread.dispatch_one_pending_signal() == ShouldUnblockThread::No)
-            return IterationDecision::Continue;
-        if (was_blocked) {
-#ifdef SCHEDULER_DEBUG
-            dbg() << "Scheduler[" << Processor::current().id() << "]:Unblock " << thread << " due to signal";
-#endif
-            ASSERT(thread.m_blocker != nullptr);
-            thread.m_blocker->set_interrupted_by_signal();
-            thread.unblock();
         }
         return IterationDecision::Continue;
     });
@@ -656,6 +333,14 @@ bool Scheduler::context_switch(Thread* thread)
     thread->did_schedule();
 
     auto from_thread = Thread::current();
+
+    // Check if we have any signals we should deliver (even if we don't
+    // end up switching to another thread)
+    if (from_thread && from_thread->state() == Thread::Running && from_thread->pending_signals_for_state()) {
+        ScopedSpinLock lock(from_thread->get_lock());
+        from_thread->dispatch_one_pending_signal();
+    }
+
     if (from_thread == thread)
         return false;
 

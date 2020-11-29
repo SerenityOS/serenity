@@ -95,6 +95,8 @@ void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncD
 
     if (next_request)
         next_request->start();
+
+    evaluate_block_conditions();
 }
 
 }

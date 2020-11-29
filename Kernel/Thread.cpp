@@ -51,7 +51,7 @@ Thread::Thread(NonnullRefPtr<Process> process)
     : m_process(move(process))
     , m_name(m_process->name())
 {
-    if (m_process->m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel) == 0) {
+    if (m_process->m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0) {
         // First thread gets TID == PID
         m_tid = m_process->pid().value();
     } else {
@@ -125,14 +125,27 @@ Thread::~Thread()
         ScopedSpinLock lock(g_scheduler_lock);
         g_scheduler_data->thread_list_for_state(m_state).remove(*this);
     }
-
-    ASSERT(!m_joiner);
 }
 
-void Thread::unblock()
+void Thread::unblock_from_blocker(Blocker& blocker)
+{
+    ScopedSpinLock scheduler_lock(g_scheduler_lock);
+    ScopedSpinLock lock(m_lock);
+    if (m_blocker != &blocker)
+        return;
+    if (!is_stopped())
+        unblock();
+}
+
+void Thread::unblock(u8 signal)
 {
     ASSERT(g_scheduler_lock.own_lock());
     ASSERT(m_lock.own_lock());
+    if (m_state != Thread::Blocked)
+        return;
+    ASSERT(m_blocker);
+    if (signal != 0)
+        m_blocker->set_interrupted_by_signal(signal);
     m_blocker = nullptr;
     if (Thread::current() == this) {
         set_state(Thread::Running);
@@ -218,7 +231,7 @@ void Thread::die_if_needed()
 void Thread::exit(void* exit_value)
 {
     ASSERT(Thread::current() == this);
-    m_exit_value = exit_value;
+    m_join_condition.thread_did_exit(exit_value);
     set_should_die();
     unlock_process_if_locked();
     die_if_needed();
@@ -226,6 +239,7 @@ void Thread::exit(void* exit_value)
 
 void Thread::yield_without_holding_big_lock()
 {
+    ASSERT(!g_scheduler_lock.own_lock());
     bool did_unlock = unlock_process_if_locked();
     // NOTE: Even though we call Scheduler::yield here, unless we happen
     // to be outside of a critical section, the yield will be postponed
@@ -310,11 +324,7 @@ void Thread::finalize()
         dbg() << "Finalizing thread " << *this;
 #endif
         set_state(Thread::State::Dead);
-
-        if (auto* joiner = m_joiner.exchange(nullptr, AK::memory_order_acq_rel)) {
-            // Notify joiner that we exited
-            static_cast<JoinBlocker*>(joiner->m_blocker)->joinee_exited(m_exit_value);
-        }
+        m_join_condition.thread_finalizing();
     }
 
     if (m_dump_backtrace_on_finalization)
@@ -323,9 +333,12 @@ void Thread::finalize()
     kfree_aligned(m_fpu_state);
 
     auto thread_cnt_before = m_process->m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+
     ASSERT(thread_cnt_before != 0);
     if (thread_cnt_before == 1)
-        process().finalize();
+        process().finalize(*this);
+    else
+        process().unblock_waiters(*this, Thread::WaitBlocker::UnblockFlags::Terminated);
 }
 
 void Thread::finalize_dying_threads()
@@ -363,19 +376,26 @@ bool Thread::tick()
 bool Thread::has_pending_signal(u8 signal) const
 {
     ScopedSpinLock lock(g_scheduler_lock);
-    return m_pending_signals & (1 << (signal - 1));
+    return pending_signals_for_state() & (1 << (signal - 1));
 }
 
 u32 Thread::pending_signals() const
 {
     ScopedSpinLock lock(g_scheduler_lock);
-    return m_pending_signals;
+    return pending_signals_for_state();
+}
+
+u32 Thread::pending_signals_for_state() const
+{
+    ASSERT(g_scheduler_lock.own_lock());
+    constexpr u32 stopped_signal_mask = (1 << (SIGCONT - 1)) | (1 << (SIGKILL - 1)) | (1 << (SIGTRAP - 1));
+    return m_state != Stopped ? m_pending_signals : m_pending_signals & stopped_signal_mask;
 }
 
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
     ASSERT(signal < 32);
-    ScopedSpinLock lock(g_scheduler_lock);
+    ScopedSpinLock scheduler_lock(g_scheduler_lock);
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
     if (should_ignore_signal(signal)) {
@@ -393,7 +413,15 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 #endif
 
     m_pending_signals |= 1 << (signal - 1);
-    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
+
+    ScopedSpinLock lock(m_lock);
+    if (m_state == Stopped) {
+        if (pending_signals_for_state())
+            resume_from_stopped();
+    } else {
+        unblock(signal);
+    }
 }
 
 u32 Thread::update_signal_mask(u32 signal_mask)
@@ -401,7 +429,7 @@ u32 Thread::update_signal_mask(u32 signal_mask)
     ScopedSpinLock lock(g_scheduler_lock);
     auto previous_signal_mask = m_signal_mask;
     m_signal_mask = signal_mask;
-    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
     return previous_signal_mask;
 }
 
@@ -419,7 +447,7 @@ u32 Thread::signal_mask_block(sigset_t signal_set, bool block)
         m_signal_mask &= ~signal_set;
     else
         m_signal_mask |= signal_set;
-    m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
+    m_have_any_unmasked_pending_signals.store(pending_signals_for_state() & ~m_signal_mask, AK::memory_order_release);
     return previous_signal_mask;
 }
 
@@ -440,15 +468,19 @@ void Thread::clear_signals()
 void Thread::send_urgent_signal_to_self(u8 signal)
 {
     ASSERT(Thread::current() == this);
-    ScopedSpinLock lock(g_scheduler_lock);
-    if (dispatch_signal(signal) == ShouldUnblockThread::No)
-        Scheduler::yield();
+    DispatchSignalResult result;
+    {
+        ScopedSpinLock lock(g_scheduler_lock);
+        result = dispatch_signal(signal);
+    }
+    if (result == DispatchSignalResult::Yield)
+        yield_without_holding_big_lock();
 }
 
-ShouldUnblockThread Thread::dispatch_one_pending_signal()
+DispatchSignalResult Thread::dispatch_one_pending_signal()
 {
     ASSERT(m_lock.own_lock());
-    u32 signal_candidates = m_pending_signals & ~m_signal_mask;
+    u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
     ASSERT(signal_candidates);
 
     u8 signal = 1;
@@ -457,6 +489,17 @@ ShouldUnblockThread Thread::dispatch_one_pending_signal()
             break;
         }
     }
+    return dispatch_signal(signal);
+}
+
+DispatchSignalResult Thread::try_dispatch_one_pending_signal(u8 signal)
+{
+    ASSERT(signal != 0);
+    ScopedSpinLock scheduler_lock(g_scheduler_lock);
+    ScopedSpinLock lock(m_lock);
+    u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
+    if (!(signal_candidates & (1 << (signal - 1))))
+        return DispatchSignalResult::Continue;
     return dispatch_signal(signal);
 }
 
@@ -542,22 +585,16 @@ void Thread::resume_from_stopped()
     ASSERT(is_stopped());
     ASSERT(m_stop_state != State::Invalid);
     ASSERT(g_scheduler_lock.own_lock());
-    set_state(m_stop_state);
-    m_stop_state = State::Invalid;
-    // make sure SemiPermanentBlocker is unblocked
-    if (m_state != Thread::Runnable && m_state != Thread::Running) {
-        ScopedSpinLock lock(m_lock);
-        if (m_blocker && m_blocker->is_reason_signal())
-            unblock();
-    }
+    set_state(m_stop_state != Blocked ? m_stop_state : Runnable);
 }
 
-ShouldUnblockThread Thread::dispatch_signal(u8 signal)
+DispatchSignalResult Thread::dispatch_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(g_scheduler_lock.own_lock());
     ASSERT(signal > 0 && signal <= 32);
     ASSERT(process().is_user_process());
+    ASSERT(this == Thread::current());
 
 #ifdef SIGNAL_DEBUG
     klog() << "signal: dispatch signal " << signal << " to " << *this;
@@ -568,7 +605,14 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         // at least in Runnable state and is_initialized() returns true,
         // which indicates that it is fully set up an we actually have
         // a register state on the stack that we can modify
-        return ShouldUnblockThread::No;
+        return DispatchSignalResult::Deferred;
+    }
+
+    if (is_stopped() && signal != SIGCONT && signal != SIGKILL && signal != SIGTRAP) {
+#ifdef SIGNAL_DEBUG
+        klog() << "signal: " << *this << " is stopped, will handle signal " << signal << " when resumed";
+#endif
+        return DispatchSignalResult::Deferred;
     }
 
     auto& action = m_signal_action_data[signal];
@@ -579,30 +623,35 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     m_pending_signals &= ~(1 << (signal - 1));
     m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
 
-    if (signal == SIGSTOP) {
+    auto* thread_tracer = tracer();
+    if (signal == SIGSTOP || (thread_tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
         if (!is_stopped()) {
-            m_stop_signal = SIGSTOP;
+#ifdef SIGNAL_DEBUG
+            dbg() << "signal: signal " << signal << " stopping thread " << *this;
+#endif
+            m_stop_signal = signal;
             set_state(State::Stopped);
         }
-        return ShouldUnblockThread::No;
+        return DispatchSignalResult::Yield;
     }
 
     if (signal == SIGCONT && is_stopped()) {
+#ifdef SIGNAL_DEBUG
+        dbg() << "signal: SIGCONT resuming " << *this << " from stopped";
+#endif
         resume_from_stopped();
     } else {
-        auto* thread_tracer = tracer();
         if (thread_tracer != nullptr) {
             // when a thread is traced, it should be stopped whenever it receives a signal
             // the tracer is notified of this by using waitpid()
             // only "pending signals" from the tracer are sent to the tracee
             if (!thread_tracer->has_pending_signal(signal)) {
                 m_stop_signal = signal;
-                // make sure SemiPermanentBlocker is unblocked
-                ScopedSpinLock lock(m_lock);
-                if (m_blocker && m_blocker->is_reason_signal())
-                    unblock();
+#ifdef SIGNAL_DEBUG
+                dbg() << "signal: " << signal << " stopping " << *this << " for tracer";
+#endif
                 set_state(Stopped);
-                return ShouldUnblockThread::No;
+                return DispatchSignalResult::Yield;
             }
             thread_tracer->unset_signal(signal);
         }
@@ -614,7 +663,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         case DefaultSignalAction::Stop:
             m_stop_signal = signal;
             set_state(Stopped);
-            return ShouldUnblockThread::No;
+            return DispatchSignalResult::Yield;
         case DefaultSignalAction::DumpCore:
             process().for_each_thread([](auto& thread) {
                 thread.set_dump_backtrace_on_finalization();
@@ -623,11 +672,11 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
             [[fallthrough]];
         case DefaultSignalAction::Terminate:
             m_process->terminate_due_to_signal(signal);
-            return ShouldUnblockThread::No;
+            return DispatchSignalResult::Terminate;
         case DefaultSignalAction::Ignore:
             ASSERT_NOT_REACHED();
         case DefaultSignalAction::Continue:
-            return ShouldUnblockThread::Yes;
+            return DispatchSignalResult::Continue;
         }
         ASSERT_NOT_REACHED();
     }
@@ -636,7 +685,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 #ifdef SIGNAL_DEBUG
         klog() << "signal: " << *this << " ignored signal " << signal;
 #endif
-        return ShouldUnblockThread::Yes;
+        return DispatchSignalResult::Continue;
     }
 
     ProcessPagingScope paging_scope(m_process);
@@ -700,7 +749,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 #ifdef SIGNAL_DEBUG
     klog() << "signal: Okay, " << *this << " {" << state_string() << "} has been primed with signal handler " << String::format("%w", m_tss.cs) << ":" << String::format("%x", m_tss.eip) << " to deliver " << signal;
 #endif
-    return ShouldUnblockThread::Yes;
+    return DispatchSignalResult::Continue;
 }
 
 void Thread::set_default_signal_dispositions()
@@ -827,11 +876,6 @@ void Thread::set_state(State new_state)
         }
     }
 
-    if (new_state == Stopped) {
-        // We don't want to restore to Running state, only Runnable!
-        m_stop_state = m_state != Running ? m_state : Runnable;
-    }
-
     m_state = new_state;
 #ifdef THREAD_DEBUG
     dbg() << "Set Thread " << *this << " state to " << state_string();
@@ -842,7 +886,16 @@ void Thread::set_state(State new_state)
         ASSERT(g_scheduler_data->has_thread(*this));
     }
 
-    if (m_state == Dying) {
+    if (previous_state == Stopped) {
+        m_stop_state = State::Invalid;
+        process().unblock_waiters(*this, Thread::WaitBlocker::UnblockFlags::Continued);
+    }
+
+    if (m_state == Stopped) {
+        // We don't want to restore to Running state, only Runnable!
+        m_stop_state = previous_state != Running ? m_state : Runnable;
+        process().unblock_waiters(*this, Thread::WaitBlocker::UnblockFlags::Stopped, m_stop_signal);
+    } else if (m_state == Dying) {
         ASSERT(previous_state != Queued);
         if (this != Thread::current() && is_finalizable()) {
             // Some other thread set this thread to Dying, notify the
@@ -1027,7 +1080,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, const 
                     }
                 });
                 if (!timer) {
-                    dbg() << "wait_on timed out before blocking";
                     // We timed out already, don't block
                     // The API contract guarantees we return with interrupts enabled,
                     // regardless of how we got called
