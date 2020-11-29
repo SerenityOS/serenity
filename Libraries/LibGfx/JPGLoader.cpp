@@ -36,7 +36,7 @@
 #include <LibGfx/JPGLoader.h>
 #include <math.h>
 
-#define JPG_DEBUG
+//#define JPG_DEBUG
 
 #define JPG_INVALID 0X0000
 
@@ -209,7 +209,6 @@ struct JPGLoadingContext {
     u8 vsample_factor { 0 };
     u8 component_count { 0 };
     HashMap<u8, ComponentSpec> components;
-    // ComponentSpec components[3];
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_reset_interval { 0 };
     Vector<HuffmanTableSpec> dc_tables;
