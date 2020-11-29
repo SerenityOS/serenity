@@ -847,22 +847,32 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
 
     switch (context.color_type) {
     case 0: // Each pixel is a grayscale sample.
+        if (context.bit_depth != 1 && context.bit_depth != 2 && context.bit_depth != 4 && context.bit_depth != 8 && context.bit_depth != 16)
+            return false;
         context.channels = 1;
         break;
     case 4: // Each pixel is a grayscale sample, followed by an alpha sample.
+        if (context.bit_depth != 8 && context.bit_depth != 16)
+            return false;
         context.channels = 2;
         break;
     case 2: // Each pixel is an RGB sample
+        if (context.bit_depth != 8 && context.bit_depth != 16)
+            return false;
         context.channels = 3;
         break;
     case 3: // Each pixel is a palette index; a PLTE chunk must appear.
+        if (context.bit_depth != 1 && context.bit_depth != 2 && context.bit_depth != 4 && context.bit_depth != 8)
+            return false;
         context.channels = 1;
         break;
     case 6: // Each pixel is an RGB sample, followed by an alpha sample.
+        if (context.bit_depth != 8 && context.bit_depth != 16)
+            return false;
         context.channels = 4;
         break;
     default:
-        ASSERT_NOT_REACHED();
+        return false;
     }
     return true;
 }
