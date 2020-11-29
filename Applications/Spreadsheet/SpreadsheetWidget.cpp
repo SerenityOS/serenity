@@ -175,6 +175,11 @@ void SpreadsheetWidget::load(const StringView& filename)
         GUI::MessageBox::show_error(window(), result.error());
         return;
     }
+
+    m_tab_widget->on_change = nullptr;
+    m_cell_value_editor->on_change = nullptr;
+    m_current_cell_label->set_text("");
+    m_should_change_selected_cells = false;
     while (auto* widget = m_tab_widget->active_widget()) {
         m_tab_widget->remove_tab(*widget);
     }
