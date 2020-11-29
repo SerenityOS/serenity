@@ -39,7 +39,7 @@ Parser::SavedOffset Parser::save_offset() const
 
 char Parser::peek()
 {
-    if (m_offset == m_input.length())
+    if (at_end())
         return 0;
 
     ASSERT(m_offset < m_input.length());
@@ -57,6 +57,9 @@ char Parser::peek()
 
 char Parser::consume()
 {
+    if (at_end())
+        return 0;
+
     auto ch = peek();
     ++m_offset;
 
@@ -142,7 +145,8 @@ RefPtr<AST::Node> Parser::parse()
     if (m_offset < m_input.length()) {
         // Parsing stopped midway, this is a syntax error.
         auto error_start = push_start();
-        consume_while([](auto) { return true; });
+        while (!at_end())
+            consume();
         auto syntax_error_node = create<AST::SyntaxError>("Unexpected tokens past the end");
         if (!toplevel)
             toplevel = move(syntax_error_node);
@@ -844,8 +848,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
         pipe_fd = -1;
     } else {
         auto fd = number.to_int();
-        ASSERT(fd.has_value());
-        pipe_fd = fd.value();
+        pipe_fd = fd.value_or(-1);
     }
 
     switch (peek()) {
@@ -1379,8 +1382,12 @@ RefPtr<AST::Node> Parser::parse_glob()
             } else if (glob_after->is_bareword()) {
                 auto bareword = static_cast<AST::BarewordLiteral*>(glob_after.ptr());
                 textbuilder.append(bareword->text());
+            } else if (glob_after->is_tilde()) {
+                auto bareword = static_cast<AST::Tilde*>(glob_after.ptr());
+                textbuilder.append("~");
+                textbuilder.append(bareword->text());
             } else {
-                ASSERT_NOT_REACHED();
+                return create<AST::SyntaxError>(String::formatted("Invalid node '{}' in glob position, escape shell special characters", glob_after->class_name()));
             }
         }
 
@@ -1447,6 +1454,9 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
 
 StringView Parser::consume_while(Function<bool(char)> condition)
 {
+    if (at_end())
+        return {};
+
     auto start_offset = m_offset;
 
     while (!at_end() && condition(peek()))
