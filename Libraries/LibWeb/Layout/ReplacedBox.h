@@ -62,6 +62,8 @@ public:
 
     virtual void prepare_for_replaced_layout() { }
 
+    virtual bool can_have_children() const override { return false; }
+
 protected:
     virtual void split_into_lines(Layout::BlockBox& container, LayoutMode) override;
 
