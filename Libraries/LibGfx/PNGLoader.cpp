@@ -599,7 +599,9 @@ static bool decode_png_bitmap_simple(PNGLoadingContext& context)
         }
 
         if (filter > 4) {
+#ifdef PNG_DEBUG
             dbg() << "Invalid PNG filter: " << filter;
+#endif
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -695,7 +697,9 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
         }
 
         if (filter > 4) {
+#ifdef PNG_DEBUG
             dbg() << "Invalid PNG filter: " << filter;
+#endif
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
@@ -832,7 +836,9 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
 #endif
 
     if (context.interlace_method != PngInterlaceMethod::Null && context.interlace_method != PngInterlaceMethod::Adam7) {
+#ifdef PNG_DEBUG
         dbgprintf("PNGLoader::process_IHDR: unknown interlace method: %d\n", context.interlace_method);
+#endif
         return false;
     }
 
@@ -884,23 +890,31 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
     if (!streamer.read(chunk_size)) {
+#ifdef PNG_DEBUG
         printf("Bail at chunk_size\n");
+#endif
         return false;
     }
     u8 chunk_type[5];
     chunk_type[4] = '\0';
     if (!streamer.read_bytes(chunk_type, 4)) {
+#ifdef PNG_DEBUG
         printf("Bail at chunk_type\n");
+#endif
         return false;
     }
     ByteBuffer chunk_data;
     if (!streamer.wrap_bytes(chunk_data, chunk_size)) {
+#ifdef PNG_DEBUG
         printf("Bail at chunk_data\n");
+#endif
         return false;
     }
     u32 chunk_crc;
     if (!streamer.read(chunk_crc)) {
+#ifdef PNG_DEBUG
         printf("Bail at chunk_crc\n");
+#endif
         return false;
     }
 #ifdef PNG_DEBUG
