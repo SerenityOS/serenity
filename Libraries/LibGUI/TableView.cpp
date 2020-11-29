@@ -177,11 +177,12 @@ void TableView::keydown_event(KeyEvent& event)
     if (event.is_accepted())
         return;
 
-    if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && !event.text().is_empty()) {
+    auto is_delete = event.key() == Key_Delete || event.key() == Key_Backspace;
+    if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && (event.code_point() != 0 || is_delete)) {
         begin_editing(cursor_index());
         if (m_editing_delegate) {
-            if (event.key() == KeyCode::Key_Delete || event.key() == KeyCode::Key_Backspace)
-                m_editing_delegate->set_value(String::empty());
+            if (is_delete)
+                m_editing_delegate->set_value(event.key() == Key_Delete ? String {} : String::empty());
             else
                 m_editing_delegate->set_value(event.text());
         }
