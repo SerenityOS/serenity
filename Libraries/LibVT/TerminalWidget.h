@@ -79,6 +79,9 @@ public:
     int scroll_length() const;
     void set_scroll_length(int);
 
+    size_t max_history_size() const { return m_terminal.max_history_size(); }
+    void set_max_history_size(size_t value) { m_terminal.set_max_history_size(value); }
+
     GUI::Action& copy_action() { return *m_copy_action; }
     GUI::Action& paste_action() { return *m_paste_action; }
     GUI::Action& clear_including_history_action() { return *m_clear_including_history_action; }
