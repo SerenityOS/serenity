@@ -75,6 +75,9 @@ public:
     static NonnullRefPtr<VM> create();
     ~VM();
 
+    bool should_log_exceptions() const { return m_should_log_exceptions; }
+    void set_should_log_exceptions(bool b) { m_should_log_exceptions = b; }
+
     Heap& heap() { return m_heap; }
     const Heap& heap() const { return m_heap; }
 
@@ -275,6 +278,8 @@ private:
 #undef __JS_ENUMERATE
 
     Shape* m_scope_object_shape { nullptr };
+
+    bool m_should_log_exceptions { false };
 };
 
 template<>

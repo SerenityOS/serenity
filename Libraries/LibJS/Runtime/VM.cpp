@@ -264,8 +264,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
 void VM::throw_exception(Exception* exception)
 {
-#ifdef VM_DEBUG
-    if (exception->value().is_object() && exception->value().as_object().is_error()) {
+    if (should_log_exceptions() && exception->value().is_object() && exception->value().as_object().is_error()) {
         auto& error = static_cast<Error&>(exception->value().as_object());
         dbgln("Throwing JavaScript Error: {}, {}", error.name(), error.message());
 
@@ -276,7 +275,7 @@ void VM::throw_exception(Exception* exception)
             dbgln("  {}", function_name);
         }
     }
-#endif
+
     m_exception = exception;
     unwind(ScopeType::Try);
 }
