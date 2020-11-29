@@ -126,34 +126,39 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     }
 
     NonnullRefPtr document = *m_frame.document();
+    RefPtr<DOM::Node> node;
 
-    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
-    if (!result.layout_node)
-        return false;
+    {
+        auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
+        if (!result.layout_node)
+            return false;
 
-    RefPtr<DOM::Node> node = result.layout_node->dom_node();
-    document->set_hovered_node(node);
+        node = result.layout_node->dom_node();
+        document->set_hovered_node(node);
 
-    if (result.layout_node->wants_mouse_events()) {
-        result.layout_node->handle_mousedown({}, position, button, modifiers);
-        return true;
+        if (result.layout_node->wants_mouse_events()) {
+            result.layout_node->handle_mousedown({}, position, button, modifiers);
+            return true;
+        }
+
+        if (!node)
+            return false;
+
+        if (is<HTML::HTMLIFrameElement>(*node)) {
+            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).content_frame())
+                return subframe->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
+            return false;
+        }
+
+        if (auto* page = m_frame.page())
+            page->set_focused_frame({}, m_frame);
+
+        auto offset = compute_mouse_event_offset(position, *result.layout_node);
+        node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousedown, offset.x(), offset.y()));
     }
 
-    if (!node)
-        return false;
-
-    if (is<HTML::HTMLIFrameElement>(*node)) {
-        if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).content_frame())
-            return subframe->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
-        return false;
-    }
-
-    if (auto* page = m_frame.page())
-        page->set_focused_frame({}, m_frame);
-
-    auto offset = compute_mouse_event_offset(position, *result.layout_node);
-    node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousedown, offset.x(), offset.y()));
-    if (!layout_root())
+    // NOTE: Dispatching an event may have disturbed the world.
+    if (!layout_root() || layout_root() != node->document().layout_node())
         return true;
 
     if (button == GUI::MouseButton::Right && is<HTML::HTMLImageElement>(*node)) {
@@ -255,7 +260,8 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 is_hovering_link = true;
             auto offset = compute_mouse_event_offset(position, *result.layout_node);
             node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousemove, offset.x(), offset.y()));
-            if (!layout_root())
+            // NOTE: Dispatching an event may have disturbed the world.
+            if (!layout_root() || layout_root() != node->document().layout_node())
                 return true;
         }
         if (m_in_mouse_selection) {
