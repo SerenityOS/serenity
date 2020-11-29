@@ -55,6 +55,12 @@ struct Traits<unsigned> : public GenericTraits<unsigned> {
 };
 
 template<>
+struct Traits<u8> : public GenericTraits<u8> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(u8 u) { return int_hash(u); }
+};
+
+template<>
 struct Traits<u16> : public GenericTraits<u16> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(u16 u) { return int_hash(u); }
