@@ -54,7 +54,9 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
         return data[current++];
     };
 
+#ifdef DEBUG_GZIP
     dbg() << "get_gzip_payload: Skipping over gzip header.";
+#endif
 
     // Magic Header
     if (read_byte() != 0x1F || read_byte() != 0x8B) {
@@ -102,7 +104,9 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
     }
 
     auto new_size = data.size() - current;
+#ifdef DEBUG_GZIP
     dbg() << "get_gzip_payload: Returning slice from " << current << " with size " << new_size;
+#endif
     return data.slice(current, new_size);
 }
 
@@ -110,7 +114,9 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
 {
     ASSERT(is_compressed(data));
 
+#ifdef DEBUG_GZIP
     dbg() << "Gzip::decompress: Decompressing gzip compressed data. Size = " << data.size();
+#endif
     auto optional_payload = get_gzip_payload(data);
     if (!optional_payload.has_value()) {
         return Optional<ByteBuffer>();
@@ -135,14 +141,18 @@ Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
             source.data(), &source_len);
 
         if (puff_ret == 0) {
+#ifdef DEBUG_GZIP
             dbg() << "Gzip::decompress: Decompression success.";
+#endif
             destination.trim(destination_len);
             break;
         }
 
         if (puff_ret == 1) {
             // FIXME: Find a better way of decompressing without needing to try over and over again.
+#ifdef DEBUG_GZIP
             dbg() << "Gzip::decompress: Output buffer exhausted. Growing.";
+#endif
             destination.grow(destination.size() * 2);
         } else {
             dbg() << "Gzip::decompress: Error. puff() returned: " << puff_ret;
