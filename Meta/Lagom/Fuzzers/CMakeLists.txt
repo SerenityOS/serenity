@@ -29,6 +29,7 @@ add_simple_fuzzer(FuzzJs)
 add_simple_fuzzer(FuzzMarkdown)
 add_simple_fuzzer(FuzzRegexECMA262)
 add_simple_fuzzer(FuzzRegexPosixExtended)
+add_simple_fuzzer(FuzzShell)
 
 if (NOT ENABLE_OSS_FUZZ)
 add_executable(FuzzilliJs FuzzilliJs.cpp)
