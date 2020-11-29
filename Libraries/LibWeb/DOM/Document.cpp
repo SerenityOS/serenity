@@ -488,8 +488,10 @@ Color Document::visited_link_color() const
 static JS::VM& main_thread_vm()
 {
     static RefPtr<JS::VM> vm;
-    if (!vm)
+    if (!vm) {
         vm = JS::VM::create();
+        vm->set_should_log_exceptions(true);
+    }
     return *vm;
 }
 
