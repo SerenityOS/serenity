@@ -105,3 +105,31 @@ jobs:
         ${{ toJSON(github.event) }}
         ]
         EOF
+  build_lagom_with_fuzzers:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # === OS SETUP ===
+
+    - name: Check versions
+      run: set +e; clang --version; clang++ --version
+
+    # === PREPARE FOR BUILDING ===
+
+    # TODO: ccache
+    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
+    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
+    - name: Create build environment
+      working-directory: ${{ github.workspace }}/Meta/Lagom
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+
+    # === ACTUALLY BUILD ===
+
+    - name: Build Lagom with Fuzzers
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+      run: cmake --build . -j2
