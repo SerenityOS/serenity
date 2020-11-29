@@ -186,7 +186,9 @@ OwnPtr<Table> Table::parse(Vector<StringView>::ConstIterator& lines)
         size_t relative_width = delimiter.length();
         for (auto ch : delimiter) {
             if (ch != '-') {
+#ifdef DEBUG_MARKDOWN
                 dbg() << "Invalid character _" << ch << "_ in table heading delimiter (ignored)";
+#endif
                 --relative_width;
             }
         }
