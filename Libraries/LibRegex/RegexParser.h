@@ -90,6 +90,7 @@ protected:
 
     ALWAYS_INLINE bool match(TokenType type) const;
     ALWAYS_INLINE bool match(char ch) const;
+    ALWAYS_INLINE bool match_ordinary_characters();
     ALWAYS_INLINE Token consume();
     ALWAYS_INLINE Token consume(TokenType type, Error error);
     ALWAYS_INLINE bool consume(const String&);
@@ -145,7 +146,6 @@ public:
 
 private:
     ALWAYS_INLINE bool match_repetition_symbol();
-    ALWAYS_INLINE bool match_ordinary_characters();
 
     bool parse_internal(ByteCode&, size_t&) override;
 
