@@ -29,6 +29,7 @@
 #include <AK/SharedBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
+#include <LibDesktop/App.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
@@ -107,38 +108,21 @@ void TaskbarWindow::create_quick_launch_bar()
     constexpr const char* quick_launch = "QuickLaunch";
 
     // FIXME: Core::ConfigFile does not keep the order of the entries.
-    for (auto& name : config->keys(quick_launch)) {
-        auto af_name = config->read_entry(quick_launch, name);
-        ASSERT(!af_name.is_null());
-        auto af_path = String::format("/res/apps/%s", af_name.characters());
-        auto af = Core::ConfigFile::open(af_path);
-        auto app_executable = af->read_entry("App", "Executable");
-        auto app_name = af->read_entry("App", "Name");
-        auto app_icon_path = af->read_entry("Icons", "16x16");
+    for (auto& name : m_config->keys(quick_launch)) {
+        auto af_path = m_config->read_entry(quick_launch, name);
+        ASSERT(!af_path.is_null());
+        auto app = Desktop::App(af_path);
 
         auto& button = quick_launch_bar.add<GUI::Button>();
         button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         button.set_preferred_size(24, 24);
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
 
-        button.set_icon(Gfx::Bitmap::load_from_file(app_icon_path));
-        button.set_tooltip(app_name);
-        button.on_click = [app_executable](auto) {
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-            } else if (pid == 0) {
-                if (chdir(Core::StandardPaths::home_directory().characters()) < 0) {
-                    perror("chdir");
-                    exit(1);
-                }
-                execl(app_executable.characters(), app_executable.characters(), nullptr);
-                perror("execl");
-                ASSERT_NOT_REACHED();
-            } else {
-                if (disown(pid) < 0)
-                    perror("disown");
-            }
+        button.set_icon(Gfx::Bitmap::load_from_file(app.icon16x16()));
+        button.set_tooltip(app.name());
+        button.on_click = [app](auto) {
+            if ((errno = app.launch()))
+                perror("Desktop::App::launch");
         };
 
         if (!first)

@@ -30,6 +30,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/StandardPaths.h>
+#include <LibDesktop/App.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -41,14 +42,7 @@
 
 //#define SYSTEM_MENU_DEBUG
 
-struct AppMetadata {
-    String executable;
-    String name;
-    String icon_path;
-    String category;
-    String af_path;
-};
-Vector<AppMetadata> g_apps;
+Vector<Desktop::App> g_apps;
 
 struct ThemeMetadata {
     String name;
@@ -106,17 +100,15 @@ Vector<String> discover_apps_and_categories()
     while (dt.has_next()) {
         auto af_name = dt.next_path();
         auto af_path = String::format("/res/apps/%s", af_name.characters());
-        auto af = Core::ConfigFile::open(af_path);
-        if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
+        auto app = Desktop::App(af_path);
+
+        if (!app.is_well_formed())
             continue;
-        auto app_name = af->read_entry("App", "Name");
-        auto app_executable = af->read_entry("App", "Executable");
-        auto app_category = af->read_entry("App", "Category");
-        auto app_icon_path = af->read_entry("Icons", "16x16");
-        g_apps.append({ app_executable, app_name, app_icon_path, app_category, af_path });
-        seen_app_categories.set(app_category);
+
+        g_apps.append(app);
+        seen_app_categories.set(app.category());
     }
-    quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
+    quick_sort(g_apps, [](auto& a, auto& b) { return a.name() < b.name(); });
 
     Vector<String> sorted_app_categories;
     for (auto& category : seen_app_categories) {
@@ -151,29 +143,18 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     int app_identifier = 0;
     for (const auto& app : g_apps) {
         RefPtr<Gfx::Bitmap> icon;
-        if (!app.icon_path.is_empty())
-            icon = Gfx::Bitmap::load_from_file(app.icon_path);
+        if (!app.icon16x16().is_empty())
+            icon = Gfx::Bitmap::load_from_file(app.icon16x16());
 
 #ifdef SYSTEM_MENU_DEBUG
         if (icon)
-            dbg() << "App " << app.name << " has icon with size " << icon->size();
+            dbg() << "App " << app.name() << " has icon with size " << icon->size();
 #endif
 
-        auto parent_menu = app_category_menus.get(app.category).value_or(*system_menu);
-        parent_menu->add_action(GUI::Action::create(app.name, icon.ptr(), [app_identifier](auto&) {
+        auto parent_menu = app_category_menus.get(app.category()).value_or(*system_menu);
+        parent_menu->add_action(GUI::Action::create(app.name(), icon.ptr(), [app_identifier, app](auto&) {
             dbg() << "Activated app with ID " << app_identifier;
-            const auto& bin = g_apps[app_identifier].executable;
-            pid_t child_pid;
-            const char* argv[] = { bin.characters(), nullptr };
-
-            auto af_key = String::formatted("AF_PATH={}", g_apps[app_identifier].af_path);
-            const char* env[] = { af_key.characters(), nullptr };
-            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), const_cast<char**>(env)))) {
-                perror("posix_spawn");
-            } else {
-                if (disown(child_pid) < 0)
-                    perror("disown");
-            }
+            app.launch(false);
         }));
         ++app_identifier;
     }

@@ -1,5 +1,6 @@
 set(SOURCES
     Launcher.cpp
+    App.cpp
 )
 
 set(GENERATED_SOURCES
