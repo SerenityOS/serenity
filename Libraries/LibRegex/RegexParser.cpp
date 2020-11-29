@@ -154,6 +154,19 @@ Parser::Result Parser::parse(Optional<AllOptions> regex_options)
     };
 }
 
+ALWAYS_INLINE bool Parser::match_ordinary_characters()
+{
+    // NOTE: This method must not be called during bracket and repetition parsing!
+    // FIXME: Add assertion for that?
+    auto type = m_parser_state.current_token.type();
+    return (type == TokenType::Char
+        || type == TokenType::Comma
+        || type == TokenType::Slash
+        || type == TokenType::EqualSign
+        || type == TokenType::HyphenMinus
+        || type == TokenType::Colon);
+}
+
 // =============================
 // PosixExtended Parser
 // =============================
@@ -170,19 +183,6 @@ ALWAYS_INLINE bool PosixExtendedParser::match_repetition_symbol()
         || type == TokenType::Plus
         || type == TokenType::Questionmark
         || type == TokenType::LeftCurly);
-}
-
-ALWAYS_INLINE bool PosixExtendedParser::match_ordinary_characters()
-{
-    // NOTE: This method must not be called during bracket and repetition parsing!
-    // FIXME: Add assertion for that?
-    auto type = m_parser_state.current_token.type();
-    return (type == TokenType::Char
-        || type == TokenType::Comma
-        || type == TokenType::Slash
-        || type == TokenType::EqualSign
-        || type == TokenType::HyphenMinus
-        || type == TokenType::Colon);
 }
 
 ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& bytecode_to_repeat, size_t& match_length_minimum)
@@ -964,7 +964,7 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
         return false;
     }
 
-    if (match(TokenType::Char)) {
+    if (match_ordinary_characters()) {
         auto token = consume().value();
         match_length_minimum += 1;
         stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)token[0] } });
