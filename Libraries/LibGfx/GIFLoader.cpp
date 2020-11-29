@@ -569,6 +569,8 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
             }
 
             stream >> image.lzw_min_code_size;
+            if (stream.handle_any_error())
+                return false;
 
             u8 lzw_encoded_bytes_expected = 0;
 
