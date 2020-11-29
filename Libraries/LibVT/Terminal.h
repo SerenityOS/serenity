@@ -93,7 +93,31 @@ public:
         return m_lines[index];
     }
 
-    size_t max_history_size() const { return 500; }
+    size_t max_history_size() const { return m_max_history_lines; }
+    void set_max_history_size(size_t value)
+    {
+        if (value == 0) {
+            m_max_history_lines = 0;
+            m_history_start = 0;
+            m_history.clear();
+            m_client.terminal_history_changed();
+            return;
+        }
+
+        if (m_max_history_lines > value) {
+            NonnullOwnPtrVector<Line> new_history;
+            new_history.ensure_capacity(value);
+            auto existing_line_count = min(m_history.size(), value);
+            for (size_t i = m_history.size() - existing_line_count; i < m_history.size(); ++i) {
+                auto j = (m_history_start + i) % m_history.size();
+                new_history.unchecked_append(move(static_cast<Vector<NonnullOwnPtr<Line>>&>(m_history).at(j)));
+            }
+            m_history = move(new_history);
+            m_history_start = 0;
+            m_client.terminal_history_changed();
+        }
+        m_max_history_lines = value;
+    }
     size_t history_size() const { return m_history.size(); }
 
     void inject_string(const StringView&);
@@ -156,6 +180,9 @@ private:
     NonnullOwnPtrVector<Line> m_history;
     void add_line_to_history(NonnullOwnPtr<Line>&& line)
     {
+        if (max_history_size() == 0)
+            return;
+
         if (m_history.size() < max_history_size()) {
             ASSERT(m_history_start == 0);
             m_history.append(move(line));
@@ -210,6 +237,7 @@ private:
     Vector<bool> m_horizontal_tabs;
     u8 m_final { 0 };
     u32 m_last_code_point { 0 };
+    size_t m_max_history_lines { 1024 };
 };
 
 }
