@@ -176,7 +176,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
             auto width = min(max(result.preferred_minimum_width, available_width), result.preferred_width);
             inline_block.set_width(width);
         } else {
-            inline_block.set_width(inline_block.style().width().to_px(inline_block));
+            inline_block.set_width(inline_block.style().width().resolved(CSS::Length::make_px(0), containing_block, containing_block.width()).to_px(inline_block));
         }
 
         layout_inside(inline_block, layout_mode);
@@ -184,7 +184,7 @@ void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_
         if (inline_block.style().height().is_undefined_or_auto()) {
             // FIXME: (10.6.6) If 'height' is 'auto', the height depends on the element's descendants per 10.6.7.
         } else {
-            inline_block.set_height(inline_block.style().height().to_px(inline_block));
+            inline_block.set_height(inline_block.style().height().resolved(CSS::Length::make_px(0), containing_block, containing_block.height()).to_px(inline_block));
         }
         return;
     }
