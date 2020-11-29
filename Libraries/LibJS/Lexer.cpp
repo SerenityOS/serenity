@@ -451,8 +451,10 @@ Token Lexer::next()
                     consume();
                 consume();
             }
-
-            token_type = TokenType::TemplateLiteralString;
+            if (is_eof() && !m_template_states.is_empty())
+                token_type = TokenType::UnterminatedTemplateLiteral;
+            else
+                token_type = TokenType::TemplateLiteralString;
         }
     } else if (is_identifier_start()) {
         // identifier or keyword
