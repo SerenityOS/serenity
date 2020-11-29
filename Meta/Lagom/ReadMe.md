@@ -10,6 +10,10 @@ If you want to bring the comfortable Serenity classes with you to another system
 
 ## Fuzzing
 
+Lagom can be used to fuzz parts of SerenityOS's code base. Fuzzers can be run locally, and they also run continuously on OSS-Fuzz.
+
+### Fuzzing locally
+
 Lagom can be used to fuzz parts of SerenityOS's code base. This requires buildling with `clang`, so it's convenient to use a different build directory for that. Fuzzers work best with Address Sanitizer enabled. Run CMake like this:
 
     # From the root of the SerenityOS checkout:
@@ -29,6 +33,32 @@ To run several fuzz jobs in parallel, pass `-jobs=24 -workers=24`.
 
 To get less log output, pass `-close_fd_mask=3` -- but that but hides assertion messages. Just `1` only closes stdout.
 It's good to move overzealous log output behind `FOO_DEBUG` macros.
+
+### Fuzzing on OSS-Fuzz
+
+https://oss-fuzz.com/ automatically runs all fuzzers in the Fuzzers/ subdirectory whose name starts with "Fuzz" and which are added to the build in `Fuzzers/CMakeLists.txt` if `ENABLE_OSS_FUZZ` is set. Looking for "serenity" on oss-fuzz.com finds interesting links, in particular:
+
+* [known open bugs found by fuzzers](https://oss-fuzz.com/testcases?project=serenity&open=yes)
+  * [oss-fuzz bug tracker for these](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:serenity)
+* [coverage report](https://oss-fuzz.com/coverage-report/job/libfuzzer_asan_serenity/latest)
+* [build logs](https://oss-fuzz-build-logs.storage.googleapis.com/index.html#serenity)
+
+Here's [Serenity's OSS-Fuzz Config](https://github.com/google/oss-fuzz/tree/master/projects/serenity).
+
+To run the oss-fuzz build locally:
+
+```
+git clone https://github.com/google/oss-fuzz/
+cd oss-fuzz
+python3 infra/helper.py build_image serenity
+python3 infra/helper.py build_fuzzers serenity
+```
+
+These commands will put the fuzzers in `build/out/serenity` in the oss-fuzz repo. You can run the binaries in there individually, or simply type:
+
+```
+python3 infra/helper.py run_fuzzer serenity FUZZER_NAME
+```
 
 ### Analyzing a crash
 
