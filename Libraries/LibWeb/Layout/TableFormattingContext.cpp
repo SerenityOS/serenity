@@ -51,6 +51,8 @@ void TableFormattingContext::run(LayoutMode)
 {
     compute_width(context_box());
 
+    float total_content_height = 0;
+
     context_box().for_each_child_of_type<TableRowGroupBox>([&](auto& box) {
         compute_width(box);
         auto column_count = box.column_count();
@@ -70,9 +72,12 @@ void TableFormattingContext::run(LayoutMode)
         });
 
         box.set_height(content_height);
+
+        total_content_height += content_height;
     });
 
-    compute_height(context_box());
+    // FIXME: This is a total hack, we should respect the 'height' property.
+    context_box().set_height(total_content_height);
 }
 
 void TableFormattingContext::calculate_column_widths(Box& row, Vector<float>& column_widths)
