@@ -78,6 +78,7 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, size_t, UserOrKernelBuffe
     });
     if (nwritten < 0)
         return KResult(nwritten);
+    evaluate_block_conditions();
     return bytes_to_write;
 }
 
@@ -97,18 +98,21 @@ void InodeWatcher::notify_inode_event(Badge<Inode>, Event::Type event_type)
 {
     LOCKER(m_lock);
     m_queue.enqueue({ event_type });
+    evaluate_block_conditions();
 }
 
 void InodeWatcher::notify_child_added(Badge<Inode>, const InodeIdentifier& child_id)
 {
     LOCKER(m_lock);
     m_queue.enqueue({ Event::Type::ChildAdded, child_id.index() });
+    evaluate_block_conditions();
 }
 
 void InodeWatcher::notify_child_removed(Badge<Inode>, const InodeIdentifier& child_id)
 {
     LOCKER(m_lock);
     m_queue.enqueue({ Event::Type::ChildRemoved, child_id.index() });
+    evaluate_block_conditions();
 }
 
 }

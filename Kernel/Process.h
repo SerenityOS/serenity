@@ -130,11 +130,13 @@ public:
     static NonnullRefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT)
     {
         auto* entry_func = new EntryFunction(move(entry));
-        return create_kernel_process(first_thread, move(name), [](void* data) {
-            EntryFunction* func = reinterpret_cast<EntryFunction*>(data);
-            (*func)();
-            delete func;
-        }, entry_func, affinity);
+        return create_kernel_process(
+            first_thread, move(name), [](void* data) {
+                EntryFunction* func = reinterpret_cast<EntryFunction*>(data);
+                (*func)();
+                delete func;
+            },
+            entry_func, affinity);
     }
 
     static NonnullRefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT);
@@ -152,7 +154,8 @@ public:
             EntryFunction* func = reinterpret_cast<EntryFunction*>(data);
             (*func)();
             delete func;
-        }, priority, name, affinity, joinable);
+        },
+            priority, name, affinity, joinable);
     }
     RefPtr<Thread> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
@@ -206,7 +209,7 @@ public:
     void for_each_thread(Callback) const;
 
     void die();
-    void finalize();
+    void finalize(Thread&);
 
     ALWAYS_INLINE SpinLock<u32>& get_lock() const { return m_lock; }
 
@@ -366,7 +369,8 @@ public:
     static void initialize();
 
     [[noreturn]] void crash(int signal, u32 eip, bool out_of_memory = false);
-    [[nodiscard]] static siginfo_t reap(Process&);
+    static void reap(Process&);
+    [[nodiscard]] siginfo_t wait_info();
 
     const TTY* tty() const { return m_tty; }
     void set_tty(TTY*);
@@ -426,7 +430,7 @@ public:
 
     u16 thread_count() const
     {
-        return m_thread_count.load(AK::MemoryOrder::memory_order_consume);
+        return m_thread_count.load(AK::MemoryOrder::memory_order_relaxed);
     }
 
     Lock& big_lock()
@@ -483,6 +487,9 @@ public:
 
     KResultOr<u32> peek_user_data(Userspace<const u32*> address);
     KResult poke_user_data(Userspace<u32*> address, u32 data);
+
+    void unblock_waiters(Thread&, Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
+    Thread::WaitBlockCondition& wait_block_condition() { return m_wait_block_condition; }
 
 private:
     friend class MemoryManager;
@@ -625,6 +632,8 @@ private:
     // If it is set to true, the process will stop at the next execve syscall
     // and wait for a tracer to attach.
     bool m_wait_for_tracer_at_next_execve { false };
+
+    Thread::WaitBlockCondition m_wait_block_condition;
 };
 
 extern InlineLinkedList<Process>* g_processes;
@@ -709,7 +718,6 @@ inline bool InodeMetadata::may_write(const Process& process) const
 {
     return may_write(process.euid(), process.egid(), process.extra_gids());
 }
-
 
 inline bool InodeMetadata::may_execute(const Process& process) const
 {

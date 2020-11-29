@@ -29,6 +29,7 @@
 #include <AK/Types.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Lock.h>
+#include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
@@ -53,6 +54,12 @@ public:
 
     size_t space_for_writing() const { return m_space_for_writing; }
 
+    void set_unblock_callback(Function<void()> callback)
+    {
+        ASSERT(!m_unblock_callback);
+        m_unblock_callback = move(callback);
+    }
+
 private:
     void flip();
     void compute_lockfree_metadata();
@@ -68,6 +75,7 @@ private:
     InnerBuffer m_buffer2;
 
     KBuffer m_storage;
+    Function<void()> m_unblock_callback;
     size_t m_capacity { 0 };
     size_t m_read_buffer_index { 0 };
     size_t m_space_for_writing { 0 };

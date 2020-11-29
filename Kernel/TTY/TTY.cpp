@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/ScopeGuard.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
 #include <LibC/errno_numbers.h>
@@ -64,6 +65,7 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
         size = m_input_buffer.size();
 
     ssize_t nwritten;
+    bool need_evaluate_block_conditions = false;
     if (in_canonical_mode()) {
         nwritten = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
             size_t i = 0;
@@ -73,6 +75,7 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
                     //Here we handle a ^D line, so we don't add the
                     //character to the output.
                     m_available_lines--;
+                    need_evaluate_block_conditions = true;
                     break;
                 } else if (ch == '\n' || is_eol(ch)) {
                     data[i] = ch;
@@ -93,6 +96,8 @@ KResultOr<size_t> TTY::read(FileDescription&, size_t, UserOrKernelBuffer& buffer
     }
     if (nwritten < 0)
         return KResult(nwritten);
+    if (nwritten > 0 || need_evaluate_block_conditions)
+        evaluate_block_conditions();
     return (size_t)nwritten;
 }
 
@@ -145,7 +150,7 @@ bool TTY::is_werase(u8 ch) const
     return ch == m_termios.c_cc[VWERASE];
 }
 
-void TTY::emit(u8 ch)
+void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 {
     if (should_generate_signals()) {
         if (ch == m_termios.c_cc[VINFO]) {
@@ -172,6 +177,11 @@ void TTY::emit(u8 ch)
             return;
         }
     }
+
+    ScopeGuard guard([&]() {
+        if (do_evaluate_block_conditions)
+            evaluate_block_conditions();
+    });
 
     if (in_canonical_mode()) {
         if (is_eof(ch)) {
@@ -218,6 +228,8 @@ void TTY::do_backspace()
         echo(8);
         echo(' ');
         echo(8);
+
+        evaluate_block_conditions();
     }
 }
 
@@ -231,6 +243,7 @@ void TTY::erase_word()
     //Note: if we have leading whitespace before the word
     //we want to delete we have to also delete that.
     bool first_char = false;
+    bool did_dequeue = false;
     while (can_do_backspace()) {
         u8 ch = m_input_buffer.last();
         if (ch == ' ' && first_char)
@@ -238,16 +251,23 @@ void TTY::erase_word()
         if (ch != ' ')
             first_char = true;
         m_input_buffer.dequeue_end();
+        did_dequeue = true;
         erase_character();
     }
+    if (did_dequeue)
+        evaluate_block_conditions();
 }
 
 void TTY::kill_line()
 {
+    bool did_dequeue = false;
     while (can_do_backspace()) {
         m_input_buffer.dequeue_end();
+        did_dequeue = true;
         erase_character();
     }
+    if (did_dequeue)
+        evaluate_block_conditions();
 }
 
 void TTY::erase_character()
@@ -277,6 +297,7 @@ void TTY::flush_input()
 {
     m_available_lines = 0;
     m_input_buffer.clear();
+    evaluate_block_conditions();
 }
 
 void TTY::set_termios(const termios& t)
@@ -330,7 +351,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             return -EPERM;
         if (process && pgid != process->pgid())
             return -EPERM;
-        m_pg = *process_group;
+        m_pg = process_group;
 
         if (process) {
             if (auto parent = Process::from_pid(process->ppid())) {

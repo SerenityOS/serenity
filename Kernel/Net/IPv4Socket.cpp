@@ -138,6 +138,7 @@ KResult IPv4Socket::listen(size_t backlog)
 
     set_backlog(backlog);
     m_role = Role::Listener;
+    evaluate_block_conditions();
 
 #ifdef IPV4_SOCKET_DEBUG
     dbg() << "IPv4Socket{" << this << "} listening with backlog=" << backlog;
@@ -262,10 +263,11 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
             return KResult(-EAGAIN);
 
         locker.unlock();
-        auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description);
+        auto unblocked_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
+        auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description, unblocked_flags);
         locker.lock();
 
-        if (!m_can_read) {
+        if (!((u32)unblocked_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Read)) {
             if (res.was_interrupted())
                 return KResult(-EINTR);
 
@@ -279,7 +281,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
     if (nreceived > 0)
         Thread::current()->did_ipv4_socket_read((size_t)nreceived);
 
-    m_can_read = !m_receive_buffer.is_empty();
+    set_can_read(!m_receive_buffer.is_empty());
     return nreceived;
 }
 
@@ -299,7 +301,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
 
         if (!m_receive_queue.is_empty()) {
             packet = m_receive_queue.take_first();
-            m_can_read = !m_receive_queue.is_empty();
+            set_can_read(!m_receive_queue.is_empty());
 #ifdef IPV4_SOCKET_DEBUG
             dbg() << "IPv4Socket(" << this << "): recvfrom without blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size();
 #endif
@@ -312,10 +314,11 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         }
 
         locker.unlock();
-        auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description);
+        auto unblocked_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
+        auto res = Thread::current()->block<Thread::ReadBlocker>(nullptr, description, unblocked_flags);
         locker.lock();
 
-        if (!m_can_read) {
+        if (!((u32)unblocked_flags & (u32)Thread::FileDescriptionBlocker::BlockFlags::Read)) {
             if (res.was_interrupted())
                 return KResult(-EINTR);
 
@@ -325,7 +328,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         ASSERT(m_can_read);
         ASSERT(!m_receive_queue.is_empty());
         packet = m_receive_queue.take_first();
-        m_can_read = !m_receive_queue.is_empty();
+        set_can_read(!m_receive_queue.is_empty());
 #ifdef IPV4_SOCKET_DEBUG
         dbg() << "IPv4Socket(" << this << "): recvfrom with blocking " << packet.data.value().size() << " bytes, packets in queue: " << m_receive_queue.size();
 #endif
@@ -411,14 +414,14 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
         ssize_t nwritten = m_receive_buffer.write(scratch_buffer, nreceived_or_error.value());
         if (nwritten < 0)
             return false;
-        m_can_read = !m_receive_buffer.is_empty();
+        set_can_read(!m_receive_buffer.is_empty());
     } else {
         if (m_receive_queue.size() > 2000) {
             dbg() << "IPv4Socket(" << this << "): did_receive refusing packet since queue is full.";
             return false;
         }
         m_receive_queue.append({ source_address, source_port, packet_timestamp, move(packet) });
-        m_can_read = true;
+        set_can_read(true);
     }
     m_bytes_received += packet_size;
 #ifdef IPV4_SOCKET_DEBUG
@@ -625,7 +628,14 @@ KResult IPv4Socket::close()
 void IPv4Socket::shut_down_for_reading()
 {
     Socket::shut_down_for_reading();
-    m_can_read = true;
+    set_can_read(true);
+}
+
+void IPv4Socket::set_can_read(bool value)
+{
+    m_can_read = value;
+    if (value)
+        evaluate_block_conditions();
 }
 
 }

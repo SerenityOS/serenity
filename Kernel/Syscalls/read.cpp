@@ -50,10 +50,12 @@ ssize_t Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
         return -EISDIR;
     if (description->is_blocking()) {
         if (!description->can_read()) {
-            if (Thread::current()->block<Thread::ReadBlocker>(nullptr, *description).was_interrupted())
+            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+            if (Thread::current()->block<Thread::ReadBlocker>(nullptr, *description, unblock_flags).was_interrupted())
                 return -EINTR;
-            if (!description->can_read())
+            if (!((u32)unblock_flags & (u32)Thread::FileBlocker::BlockFlags::Read))
                 return -EAGAIN;
+            // TODO: handle exceptions in unblock_flags
         }
     }
     auto user_buffer = UserOrKernelBuffer::for_user_buffer(buffer, size);

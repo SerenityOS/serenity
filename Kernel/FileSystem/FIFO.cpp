@@ -95,6 +95,11 @@ FIFO::FIFO(uid_t uid)
     LOCKER(all_fifos().lock());
     all_fifos().resource().set(this);
     m_fifo_id = ++s_next_fifo_id;
+
+    // Use the same block condition for read and write
+    m_buffer.set_unblock_callback([this]() {
+        evaluate_block_conditions();
+    });
 }
 
 FIFO::~FIFO()
@@ -116,6 +121,8 @@ void FIFO::attach(Direction direction)
         klog() << "open writer (" << m_writers << ")";
 #endif
     }
+
+    evaluate_block_conditions();
 }
 
 void FIFO::detach(Direction direction)
@@ -133,6 +140,8 @@ void FIFO::detach(Direction direction)
         ASSERT(m_writers);
         --m_writers;
     }
+
+    evaluate_block_conditions();
 }
 
 bool FIFO::can_read(const FileDescription&, size_t) const

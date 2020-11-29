@@ -75,6 +75,26 @@ FileDescription::~FileDescription()
     m_inode = nullptr;
 }
 
+Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBlocker::BlockFlags block_flags) const
+{
+    u32 unblock_flags = (u32)Thread::FileBlocker::BlockFlags::None;
+    if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Read) && can_read())
+        unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Read;
+    if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Write) && can_write())
+        unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Write;
+    // TODO: Implement Thread::FileBlocker::BlockFlags::Exception
+
+    if ((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::SocketFlags) {
+        auto* sock = socket();
+        ASSERT(sock);
+        if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Accept) && sock->can_accept())
+            unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Accept;
+        if (((u32)block_flags & (u32)Thread::FileBlocker::BlockFlags::Connect) && sock->setup_state() == Socket::SetupState::Completed)
+            unblock_flags |= (u32)Thread::FileBlocker::BlockFlags::Connect;
+    }
+    return (Thread::FileBlocker::BlockFlags)unblock_flags;
+}
+
 KResult FileDescription::stat(::stat& buffer)
 {
     LOCKER(m_lock);
@@ -113,6 +133,7 @@ off_t FileDescription::seek(off_t offset, int whence)
     // FIXME: Return -EINVAL if attempting to seek past the end of a seekable device.
 
     m_current_offset = new_offset;
+    evaluate_block_conditions();
     return m_current_offset;
 }
 
@@ -124,8 +145,11 @@ KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count
     if (new_offset.has_overflow())
         return -EOVERFLOW;
     auto nread_or_error = m_file->read(*this, offset(), buffer, count);
-    if (!nread_or_error.is_error() && m_file->is_seekable())
-        m_current_offset += nread_or_error.value();
+    if (!nread_or_error.is_error()) {
+        if (m_file->is_seekable())
+            m_current_offset += nread_or_error.value();
+        evaluate_block_conditions();
+    }
     return nread_or_error;
 }
 
@@ -137,8 +161,11 @@ KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t 
     if (new_offset.has_overflow())
         return -EOVERFLOW;
     auto nwritten_or_error = m_file->write(*this, offset(), data, size);
-    if (!nwritten_or_error.is_error() && m_file->is_seekable())
-        m_current_offset += nwritten_or_error.value();
+    if (!nwritten_or_error.is_error()) {
+        if (m_file->is_seekable())
+            m_current_offset += nwritten_or_error.value();
+        evaluate_block_conditions();
+    }
     return nwritten_or_error;
 }
 
@@ -338,6 +365,11 @@ KResult FileDescription::chown(uid_t uid, gid_t gid)
 {
     LOCKER(m_lock);
     return m_file->chown(*this, uid, gid);
+}
+
+FileBlockCondition& FileDescription::block_condition()
+{
+    return m_file->block_condition();
 }
 
 }

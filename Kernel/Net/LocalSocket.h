@@ -77,6 +77,14 @@ private:
     NonnullRefPtrVector<FileDescription>& sendfd_queue_for(const FileDescription&);
     NonnullRefPtrVector<FileDescription>& recvfd_queue_for(const FileDescription&);
 
+    void set_connect_side_role(Role connect_side_role, bool force_evaluate_block_conditions = false)
+    {
+        auto previous = m_connect_side_role;
+        m_connect_side_role = connect_side_role;
+        if (previous != m_connect_side_role || force_evaluate_block_conditions)
+            evaluate_block_conditions();
+    }
+
     // An open socket file on the filesystem.
     RefPtr<FileDescription> m_file;
 

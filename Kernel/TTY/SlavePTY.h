@@ -42,6 +42,8 @@ public:
 
     time_t time_of_last_write() const { return m_time_of_last_write; }
 
+    virtual FileBlockCondition& block_condition() override;
+
 private:
     // ^TTY
     virtual String tty_name() const override;

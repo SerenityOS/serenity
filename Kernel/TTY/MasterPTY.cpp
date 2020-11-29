@@ -45,6 +45,11 @@ MasterPTY::MasterPTY(unsigned index)
     auto process = Process::current();
     set_uid(process->uid());
     set_gid(process->gid());
+
+    m_buffer.set_unblock_callback([this]() {
+        if (m_slave)
+            evaluate_block_conditions();
+    });
 }
 
 MasterPTY::~MasterPTY()
