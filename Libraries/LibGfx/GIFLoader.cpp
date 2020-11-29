@@ -354,12 +354,13 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
             if (code.value() == clear_code) {
                 decoder.reset();
                 continue;
-            } else if (code.value() == end_of_information_code) {
-                break;
             }
+            if (code.value() == end_of_information_code)
+                break;
+            if (!image.width)
+                continue;
 
             auto colors = decoder.get_output();
-
             for (const auto& color : colors) {
                 auto c = color_map[color];
 
