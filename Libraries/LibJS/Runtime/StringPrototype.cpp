@@ -85,6 +85,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.trimStart, trim_start, 0, attr);
     define_native_function(vm.names.trimEnd, trim_end, 0, attr);
     define_native_function(vm.names.concat, concat, 1, attr);
+    define_native_function(vm.names.substr, substr, 2, attr);
     define_native_function(vm.names.substring, substring, 2, attr);
     define_native_function(vm.names.includes, includes, 1, attr);
     define_native_function(vm.names.slice, slice, 2, attr);
@@ -352,6 +353,40 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 
     auto part_length = index_end - index_start;
     auto string_part = string.substring(index_start, part_length);
+    return js_string(vm, string_part);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
+{
+    auto string = ak_string_from(vm, global_object);
+    if (string.is_null())
+        return {};
+    if (vm.argument_count() == 0)
+        return js_string(vm, string);
+
+    // FIXME: this should index a UTF-16 code_point view of the string.
+    auto string_length = (i32)string.length();
+
+    auto start_argument = vm.argument(0).to_i32(global_object);
+    if (vm.exception())
+        return {};
+
+    auto start = start_argument < 0 ? (string_length - -start_argument) : start_argument;
+
+    auto length = string_length - start;
+    if (vm.argument_count() >= 2) {
+        auto length_argument = vm.argument(1).to_i32(global_object);
+        if (vm.exception())
+            return {};
+        length = max(0, min(length_argument, length));
+        if (vm.exception())
+            return {};
+    }
+
+    if (length == 0)
+        return js_string(vm, String(""));
+
+    auto string_part = string.substring(start, length);
     return js_string(vm, string_part);
 }
 

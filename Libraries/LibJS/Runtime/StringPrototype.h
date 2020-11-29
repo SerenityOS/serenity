@@ -50,6 +50,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(pad_start);
     JS_DECLARE_NATIVE_FUNCTION(pad_end);
     JS_DECLARE_NATIVE_FUNCTION(substring);
+    JS_DECLARE_NATIVE_FUNCTION(substr);
 
     JS_DECLARE_NATIVE_GETTER(length_getter);
 

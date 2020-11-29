@@ -188,8 +188,9 @@ namespace JS {
     P(splice)                                \
     P(sqrt)                                  \
     P(startsWith)                            \
-    P(stringify)                             \
     P(sticky)                                \
+    P(stringify)                             \
+    P(substr)                                \
     P(substring)                             \
     P(tan)                                   \
     P(test)                                  \
