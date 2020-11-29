@@ -82,7 +82,7 @@ add_library(LagomCore ${LAGOM_CORE_SOURCES})
 if (BUILD_LAGOM)
     add_library(Lagom $<TARGET_OBJECTS:LagomCore> ${LAGOM_MORE_SOURCES})
 
-    if (NOT ENABLE_OSS_FUZZ)
+    if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
         add_executable(TestApp TestApp.cpp)
         target_link_libraries(TestApp Lagom)
         target_link_libraries(TestApp stdc++)
