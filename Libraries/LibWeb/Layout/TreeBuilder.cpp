@@ -129,11 +129,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
         }
     }
 
-    // Ignore fallback content inside replaced elements.
-    if (layout_node->is_replaced())
-        return;
-
-    if (dom_node.has_children()) {
+    if (dom_node.has_children() && layout_node->can_have_children()) {
         push_parent(*layout_node);
         downcast<DOM::ParentNode>(dom_node).for_each_child([&](auto& dom_child) {
             create_layout_tree(dom_child);

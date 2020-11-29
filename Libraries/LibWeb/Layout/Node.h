@@ -103,6 +103,8 @@ public:
     virtual bool is_list_item() const { return false; }
     bool has_style() const { return m_has_style; }
 
+    virtual bool can_have_children() const { return true; }
+
     bool is_inline() const { return m_inline; }
     void set_inline(bool b) { m_inline = b; }
 
