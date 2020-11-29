@@ -47,6 +47,12 @@ SpreadsheetView::~SpreadsheetView()
 
 void SpreadsheetView::EditingDelegate::set_value(const GUI::Variant& value)
 {
+    if (value.as_string().is_null()) {
+        StringModelEditingDelegate::set_value("");
+        commit();
+        return;
+    }
+
     if (m_has_set_initial_value)
         return StringModelEditingDelegate::set_value(value);
 
