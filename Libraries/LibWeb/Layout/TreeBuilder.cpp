@@ -118,7 +118,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
             // Non-inlines can't be inserted into an inline parent, so find the nearest non-inline ancestor.
             auto& nearest_non_inline_ancestor = [&]() -> Layout::Node& {
                 for (ssize_t i = m_parent_stack.size() - 1; i >= 0; --i) {
-                    if (!m_parent_stack[i]->is_inline())
+                    if (!m_parent_stack[i]->is_inline() || m_parent_stack[i]->is_inline_block())
                         return *m_parent_stack[i];
                 }
                 ASSERT_NOT_REACHED();
