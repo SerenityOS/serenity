@@ -131,7 +131,10 @@ void Mixer::mix()
 
 void Mixer::set_main_volume(int volume)
 {
-    m_main_volume = volume;
+    if (volume > 100)
+        m_main_volume = 100;
+    else
+        m_main_volume = volume;
     ClientConnection::for_each([volume](ClientConnection& client) {
         client.did_change_main_mix_volume({}, volume);
     });
