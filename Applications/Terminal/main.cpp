@@ -157,7 +157,7 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     auto window = GUI::Window::construct();
     window->set_title("Terminal Settings");
     window->set_resizable(false);
-    window->resize(200, 185);
+    window->resize(200, 230);
     window->set_modal(true);
 
     auto& settings = window->set_main_widget<GUI::Widget>();
@@ -205,6 +205,19 @@ static RefPtr<GUI::Window> create_settings_window(TerminalWidget& terminal)
     spinbox.set_value(terminal.scroll_length());
     spinbox.on_change = [&terminal](int value) {
         terminal.set_scroll_length(value);
+    };
+
+    auto& history_size_spinbox_container = settings.add<GUI::GroupBox>("Maximum scrollback history lines");
+    history_size_spinbox_container.set_layout<GUI::VerticalBoxLayout>();
+    history_size_spinbox_container.layout()->set_margins({ 6, 16, 6, 6 });
+    history_size_spinbox_container.set_size_policy(GUI::SizePolicy::Fill, GUI::SizePolicy::Fixed);
+    history_size_spinbox_container.set_preferred_size(100, 46);
+
+    auto& history_size_spinbox = history_size_spinbox_container.add<GUI::SpinBox>();
+    history_size_spinbox.set_range(0, 40960);
+    history_size_spinbox.set_value(terminal.max_history_size());
+    history_size_spinbox.on_change = [&terminal](int value) {
+        terminal.set_max_history_size(value);
     };
 
     return window;
@@ -291,6 +304,9 @@ int main(int argc, char** argv)
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
     terminal.set_opacity(new_opacity);
     window->set_has_alpha_channel(new_opacity < 255);
+
+    auto new_scrollback_size = config->read_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
+    terminal.set_max_history_size(new_scrollback_size);
 
     auto menubar = GUI::MenuBar::construct();
 
