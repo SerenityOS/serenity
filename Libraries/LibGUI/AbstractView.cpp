@@ -69,14 +69,23 @@ void AbstractView::set_model(RefPtr<Model> model)
 
 void AbstractView::model_did_update(unsigned int flags)
 {
-    // FIXME: It's unfortunate that we lose so much view state when the model updates in any way.
-    stop_editing();
-    m_edit_index = {};
-    m_hovered_index = {};
-    m_cursor_index = {};
     if (!model() || (flags & GUI::Model::InvalidateAllIndexes)) {
+        stop_editing();
+        m_edit_index = {};
+        m_hovered_index = {};
+        m_cursor_index = {};
         clear_selection();
     } else {
+        // FIXME: These may no longer point to whatever they did before,
+        //        but let's be optimistic until we can be sure about it.
+        if (!model()->is_valid(m_edit_index)) {
+            stop_editing();
+            m_edit_index = {};
+        }
+        if (!model()->is_valid(m_hovered_index))
+            m_hovered_index = {};
+        if (!model()->is_valid(m_cursor_index))
+            m_cursor_index = {};
         selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
     }
 }
