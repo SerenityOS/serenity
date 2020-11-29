@@ -140,9 +140,10 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
 
 RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
 {
-    if (!is<DOM::Document>(dom_node) && dom_node.has_children()) {
-        dbg() << "FIXME: Support building partial layout trees.";
-        return nullptr;
+    if (dom_node.parent()) {
+        // We're building a partial layout tree, so start by building up the stack of parent layout nodes.
+        for (auto* ancestor = dom_node.parent()->layout_node(); ancestor; ancestor = ancestor->parent())
+            m_parent_stack.prepend(ancestor);
     }
 
     create_layout_tree(dom_node);
