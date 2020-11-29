@@ -747,8 +747,11 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     if (context.state >= PNGLoadingContext::State::BitmapDecoded)
         return true;
 
-    ASSERT(context.width >= 0);
-    ASSERT(context.height >= 0);
+    if (context.width == -1 || context.height == -1)
+        return false; // Didn't see an IHDR chunk.
+
+    if (context.color_type == 3 && context.palette_data.size() < (1u << context.bit_depth))
+        return false; // Didn't see an PLTE chunk for a palettized image, or not enough entries.
 
     unsigned long srclen = context.compressed_data.size() - 6;
     unsigned long destlen = 0;
