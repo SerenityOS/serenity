@@ -311,7 +311,7 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
     ASSERT(!proc.in_irq());
 
     if (proc.in_critical() > 1) {
-        scheduler_data.m_pending_beneficiary = *beneficiary; // Save the beneficiary
+        scheduler_data.m_pending_beneficiary = beneficiary; // Save the beneficiary
         scheduler_data.m_pending_donate_reason = reason;
         proc.invoke_scheduler_async();
         return false;
