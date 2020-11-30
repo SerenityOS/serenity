@@ -44,6 +44,7 @@
 #define JS_DEFINE_NATIVE_SETTER(name) \
     void name([[maybe_unused]] JS::VM& vm, [[maybe_unused]] JS::GlobalObject& global_object, JS::Value value)
 
+// NOTE: Proxy is not included here as it doesn't have a prototype - m_proxy_constructor is initialized separately.
 #define JS_ENUMERATE_NATIVE_OBJECTS                                              \
     __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor)               \
     __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor)     \
@@ -53,7 +54,6 @@
     __JS_ENUMERATE(Function, function, FunctionPrototype, FunctionConstructor)   \
     __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor)     \
     __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor)           \
-    __JS_ENUMERATE(ProxyObject, proxy, ProxyPrototype, ProxyConstructor)         \
     __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor)     \
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor)     \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor)
@@ -133,6 +133,10 @@ class Uint8ClampedArray;
 class VM;
 class Value;
 enum class DeclarationKind;
+
+// Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
+class ProxyObject;
+class ProxyConstructor;
 
 #define __JS_ENUMERATE(ClassName, snake_name, ConstructorName, PrototypeName) \
     class ClassName;                                                          \
