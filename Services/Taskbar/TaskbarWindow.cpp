@@ -34,10 +34,12 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Frame.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
+#include <libgen.h>
 #include <serenity.h>
 #include <stdio.h>
 
@@ -69,7 +71,31 @@ private:
     }
 };
 
+class ContextButton final : public GUI::Button {
+    C_OBJECT(ContextButton);
+
+public:
+    virtual ~ContextButton() override { }
+
+    virtual void context_menu_event(GUI::ContextMenuEvent& event) override
+    {
+        if (m_context_menu)
+            m_context_menu->popup(event.screen_position());
+    }
+
+    void set_context_menu(RefPtr<GUI::Menu> menu)
+    {
+        m_context_menu = menu;
+    }
+
+private:
+    ContextButton() { }
+
+    RefPtr<GUI::Menu> m_context_menu { nullptr };
+};
+
 TaskbarWindow::TaskbarWindow()
+    : m_config(Core::ConfigFile::get_for_app("Taskbar"))
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
@@ -84,28 +110,31 @@ TaskbarWindow::TaskbarWindow()
     widget.layout()->set_spacing(3);
 
     m_default_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
-
-    create_quick_launch_bar();
+    rebuild_quick_launch_bar();
 }
 
 TaskbarWindow::~TaskbarWindow()
 {
 }
 
-void TaskbarWindow::create_quick_launch_bar()
+static constexpr const char* quick_launch = "QuickLaunch";
+
+static NonnullRefPtrVector<Core::Object> deleted_children;
+void TaskbarWindow::rebuild_quick_launch_bar()
 {
-    auto& quick_launch_bar = main_widget()->add<GUI::Frame>();
-    quick_launch_bar.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
-    quick_launch_bar.set_layout<GUI::HorizontalBoxLayout>();
-    quick_launch_bar.layout()->set_spacing(0);
-    quick_launch_bar.layout()->set_margins({ 3, 0, 3, 0 });
-    quick_launch_bar.set_frame_thickness(0);
+    if (m_quick_launch_bar) {
+        m_quick_launch_bar->remove_all_children();
+    } else {
+        m_quick_launch_bar = &main_widget()->add<GUI::Frame>();
+        m_quick_launch_bar->set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
+        m_quick_launch_bar->set_layout<GUI::HorizontalBoxLayout>();
+        m_quick_launch_bar->layout()->set_spacing(0);
+        m_quick_launch_bar->layout()->set_margins({ 3, 0, 3, 0 });
+        m_quick_launch_bar->set_frame_thickness(0);
+    }
 
     int total_width = 6;
     bool first = true;
-
-    auto config = Core::ConfigFile::get_for_app("Taskbar");
-    constexpr const char* quick_launch = "QuickLaunch";
 
     // FIXME: Core::ConfigFile does not keep the order of the entries.
     for (auto& name : m_config->keys(quick_launch)) {
@@ -113,7 +142,7 @@ void TaskbarWindow::create_quick_launch_bar()
         ASSERT(!af_path.is_null());
         auto app = Desktop::App(af_path);
 
-        auto& button = quick_launch_bar.add<GUI::Button>();
+        auto& button = m_quick_launch_bar->add<ContextButton>();
         button.set_size_policy(GUI::SizePolicy::Fixed, GUI::SizePolicy::Fixed);
         button.set_preferred_size(24, 24);
         button.set_button_style(Gfx::ButtonStyle::CoolBar);
@@ -125,13 +154,46 @@ void TaskbarWindow::create_quick_launch_bar()
                 perror("Desktop::App::launch");
         };
 
+        auto menu = GUI::Menu::construct();
+        menu->add_action(GUI::Action::create("Unpin", [af_path, this](GUI::Action& action) {
+            (void)action;
+
+            // FIXME: Clear saved child when it is no longer being used.
+            // Save the last-deleted children so they will outlast this event handler.
+            // I wish I knew of any better solution.
+            deleted_children = m_quick_launch_bar->children();
+            unpin_app(af_path);
+        }));
+
+        button.set_context_menu(menu);
+
         if (!first)
-            total_width += quick_launch_bar.layout()->spacing();
+            total_width += m_quick_launch_bar->layout()->spacing();
         first = false;
         total_width += button.preferred_width();
     }
 
-    quick_launch_bar.set_preferred_size(total_width, 24);
+    m_quick_launch_bar->set_preferred_size(total_width, 24);
+}
+
+static String config_key(const StringView& af_path)
+{
+    auto split = String(af_path).split('/');
+    return split[split.size() - 1].split('.')[0];
+}
+
+void TaskbarWindow::pin_app(const StringView& af_path)
+{
+    m_config->write_entry(quick_launch, config_key(af_path), af_path);
+    rebuild_quick_launch_bar();
+    m_config->sync();
+}
+
+void TaskbarWindow::unpin_app(const StringView& af_path)
+{
+    m_config->remove_entry(quick_launch, config_key(af_path));
+    rebuild_quick_launch_bar();
+    m_config->sync();
 }
 
 void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
@@ -298,6 +360,11 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             ASSERT(window.is_modal());
             update_window_button(*window_owner, window.is_active());
         }
+        break;
+    }
+    case GUI::Event::WM_WindowRequestedPin: {
+        auto& pinned_event = static_cast<GUI::WMWindowRequestedPinEvent&>(event);
+        pin_app(pinned_event.af_path());
         break;
     }
     default:

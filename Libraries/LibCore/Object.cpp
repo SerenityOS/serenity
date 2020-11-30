@@ -130,6 +130,19 @@ void Object::remove_child(Object& object)
     ASSERT_NOT_REACHED();
 }
 
+void Object::remove_all_children()
+{
+    for (size_t i = 0; i < m_children.size(); ++i) {
+        // NOTE: We protect the child so it survives the handling of ChildRemoved.
+        auto& object = *m_children.ptr_at(i).ptr();
+        NonnullRefPtr<Object> protector = object;
+        object.m_parent = nullptr;
+        Core::ChildEvent child_event(Core::Event::ChildRemoved, object);
+        event(child_event);
+    }
+    m_children.clear();
+}
+
 void Object::timer_event(Core::TimerEvent&)
 {
 }

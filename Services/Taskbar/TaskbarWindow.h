@@ -27,6 +27,7 @@
 #pragma once
 
 #include "WindowList.h"
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 
@@ -39,7 +40,9 @@ public:
     int taskbar_height() const { return 28; }
 
 private:
-    void create_quick_launch_bar();
+    void rebuild_quick_launch_bar();
+    void pin_app(const StringView& af_path);
+    void unpin_app(const StringView& af_path);
     void on_screen_rect_change(const Gfx::IntRect&);
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
     void add_window_button(::Window&, const WindowIdentifier&);
@@ -50,4 +53,6 @@ private:
     virtual void wm_event(GUI::WMEvent&) override;
 
     RefPtr<Gfx::Bitmap> m_default_icon;
+    NonnullRefPtr<Core::ConfigFile> m_config;
+    GUI::Frame* m_quick_launch_bar { nullptr };
 };
