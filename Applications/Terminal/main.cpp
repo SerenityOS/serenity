@@ -55,6 +55,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/select.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 static void utmp_update(const char* tty, pid_t pid, bool create)
@@ -66,10 +67,28 @@ static void utmp_update(const char* tty, pid_t pid, bool create)
         perror("fork");
         return;
     }
-    if (utmpupdate_pid)
-        return;
-    const auto shell_pid_string = String::formatted("{}", pid);
-    execl("/bin/utmpupdate", "/bin/utmpupdate", "-f", "Terminal", "-p", shell_pid_string.characters(), (create ? "-c" : "-d"), tty, nullptr);
+    if (utmpupdate_pid == 0) {
+        // Be careful here! Because fork() only clones one thread it's
+        // possible that we deadlock on anything involving a mutex,
+        // including the heap! So resort to low-level APIs
+        char pid_str[32];
+        snprintf(pid_str, sizeof(pid_str), "%d", pid);
+        execl("/bin/utmpupdate", "/bin/utmpupdate", "-f", "Terminal", "-p", pid_str, (create ? "-c" : "-d"), tty, nullptr);
+    } else {
+    wait_again:
+        int status = 0;
+        if (waitpid(utmpupdate_pid, &status, 0) < 0) {
+            int err = errno;
+            if (err == EINTR)
+                goto wait_again;
+            perror("waitpid");
+            return;
+        }
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+            dbgln("Terminal: utmpupdate exited with status {}", WEXITSTATUS(status));
+        else if (WIFSIGNALED(status))
+            dbgln("Terminal: utmpupdate exited due to unhandled signal {}", WTERMSIG(status));
+    }
 }
 
 static pid_t run_command(int ptm_fd, String command)
