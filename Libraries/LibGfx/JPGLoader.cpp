@@ -211,8 +211,8 @@ struct JPGLoadingContext {
     HashMap<u8, ComponentSpec> components;
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_reset_interval { 0 };
-    Vector<HuffmanTableSpec> dc_tables;
-    Vector<HuffmanTableSpec> ac_tables;
+    HashMap<u8, HuffmanTableSpec> dc_tables;
+    HashMap<u8, HuffmanTableSpec> ac_tables;
     HuffmanStreamState huffman_stream;
     i32 previous_dc_values[3] = { 0 };
     MacroblockMeta mblock_meta;
@@ -308,8 +308,8 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
                 u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                 Macroblock& block = macroblocks[mb_index];
 
-                auto& dc_table = context.dc_tables[component.dc_destination_id];
-                auto& ac_table = context.ac_tables[component.ac_destination_id];
+                auto& dc_table = context.dc_tables.find(component.dc_destination_id)->value;
+                auto& ac_table = context.ac_tables.find(component.ac_destination_id)->value;
 
                 auto symbol_or_error = get_next_symbol(context.huffman_stream, dc_table);
                 if (!symbol_or_error.has_value())
@@ -399,15 +399,15 @@ static Optional<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& con
     dbg() << "Image height: " << context.frame.height;
     dbg() << "Macroblocks in a row: " << context.mblock_meta.hpadded_count;
     dbg() << "Macroblocks in a column: " << context.mblock_meta.vpadded_count;
-    dbg() << "Mblock meta padded total: " << context.mblock_meta.padded_total;
+    dbg() << "Macroblock meta padded total: " << context.mblock_meta.padded_total;
 #endif
 
     // Compute huffman codes for DC and AC tables.
-    for (auto& dc_table : context.dc_tables)
-        generate_huffman_codes(dc_table);
+    for (auto it = context.dc_tables.begin(); it != context.dc_tables.end(); ++it)
+        generate_huffman_codes(it->value);
 
-    for (auto& ac_table : context.ac_tables)
-        generate_huffman_codes(ac_table);
+    for (auto it = context.ac_tables.begin(); it != context.ac_tables.end(); ++it)
+        generate_huffman_codes(it->value);
 
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
@@ -575,23 +575,16 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
             return false;
         }
 
-        bool dc_table_exists = false;
-        bool ac_table_exists = false;
-        for (unsigned t = 0; t < context.dc_tables.size(); t++) {
-            dc_table_exists = dc_table_exists || (context.dc_tables[t].destination_id == component->dc_destination_id);
-            ac_table_exists = ac_table_exists || (context.ac_tables[t].destination_id == component->ac_destination_id);
-        }
-
-        if (!dc_table_exists) {
+        if (!context.dc_tables.contains(component->dc_destination_id)) {
 #ifdef JPG_DEBUG
-            dbg() << stream.offset() << ": Invalid DC huffman table destination id: " << component->dc_destination_id;
+            dbgln("DC table (id: {}) does not exist!", component->dc_destination_id);
 #endif
             return false;
         }
 
-        if (!ac_table_exists) {
+        if (!context.ac_tables.contains(component->ac_destination_id)) {
 #ifdef JPG_DEBUG
-            dbg() << stream.offset() << ": Invalid AC huffman table destination id: " << component->ac_destination_id;
+            dbgln("AC table (id: {}) does not exist!", component->ac_destination_id);
 #endif
             return false;
         }
@@ -639,38 +632,6 @@ static bool read_reset_marker(InputMemoryStream& stream, JPGLoadingContext& cont
     return true;
 }
 
-static bool huffman_table_reset_helper(HuffmanTableSpec& src, JPGLoadingContext& context)
-{
-    auto& table = src.type == 0 ? context.dc_tables : context.ac_tables;
-    if (src.destination_id == 0) {
-        if (table.is_empty())
-            table.append(move(src));
-        else
-            table[0] = move(src);
-        return true;
-    }
-
-    if (src.destination_id == 1) {
-        if (table.size() < 1) {
-            String table_str = src.type == 0 ? "DC" : "AC";
-#ifdef JPG_DEBUG
-            dbg() << table_str << "[1] showed up before " << table_str << "[0]!";
-#endif
-            return false;
-        }
-        if (table.size() == 1)
-            table.append(move(src));
-        else
-            table[1] = move(src);
-        return true;
-    }
-
-#ifdef JPG_DEBUG
-    dbg() << "Unsupported huffman table destination id: " << src.destination_id;
-#endif
-    return false;
-}
-
 static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = read_be_word(stream);
@@ -700,6 +661,7 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
 #endif
             return false;
         }
+
         table.type = table_type;
         table.destination_id = table_destination_id;
         u32 total_codes = 0;
@@ -728,8 +690,9 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
         if (stream.handle_any_error())
             return false;
 
-        if (!huffman_table_reset_helper(table, context))
-            return false;
+        auto& huffman_table = table.type == 0 ? context.dc_tables : context.ac_tables;
+        huffman_table.set(table.destination_id, table);
+        ASSERT(huffman_table.size() <= 2);
 
         bytes_to_read -= 1 + 16 + total_codes;
     }
