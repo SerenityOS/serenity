@@ -72,7 +72,7 @@ private:
     // the lock is unlocked, it just means we don't know which threads hold it.
     // When locked exclusively, this is always the one thread that holds the
     // lock.
-    Thread* m_holder { nullptr };
+    RefPtr<Thread> m_holder;
 };
 
 class Locker {
