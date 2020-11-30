@@ -474,27 +474,33 @@ TEST_CASE(simple_period_end_benchmark)
 
 TEST_CASE(ECMA262_parse)
 {
-    constexpr const char* patterns[] {
-        "^hello.$",
-        "^(hello.)$",
-        "^h{0,1}ello.$",
-        "^hello\\W$",
-        "^hell\\w.$",
-        "^hell\\x6f1$", // ^hello1$
-        "^hel(?:l\\w).$",
-        "^hel(?<LO>l\\w).$",
-        "^[-a-zA-Z\\w\\s]+$",
-        "\\bhello\\B",
-        "^[\\w+/_-]+[=]{0,2}$",                        // #4189
-        "^(?:[^<]*(<[\\w\\W]+>)[^>]*$|#([\\w\\-]*)$)", // #4189
-        "\\/",                                         // #4189
-        ",/=-:",                                       // #4243
-        "\\x",                                         // Even invalid escapes are allowed if ~unicode.
+    struct _test {
+        const char* pattern;
+        regex::Error expected_error { regex::Error::NoError };
     };
 
-    for (auto& pattern : patterns) {
-        Regex<ECMA262> re(pattern);
-        EXPECT_EQ(re.parser_result.error, Error::NoError);
+    constexpr _test tests[] {
+        { "^hello.$" },
+        { "^(hello.)$" },
+        { "^h{0,1}ello.$" },
+        { "^hello\\W$" },
+        { "^hell\\w.$" },
+        { "^hell\\x6f1$" }, // ^hello1$
+        { "^hel(?:l\\w).$" },
+        { "^hel(?<LO>l\\w).$" },
+        { "^[-a-zA-Z\\w\\s]+$" },
+        { "\\bhello\\B" },
+        { "^[\\w+/_-]+[=]{0,2}$" },                        // #4189
+        { "^(?:[^<]*(<[\\w\\W]+>)[^>]*$|#([\\w\\-]*)$)" }, // #4189
+        { "\\/" },                                         // #4189
+        { ",/=-:" },                                       // #4243
+        { "\\x" },                                         // Even invalid escapes are allowed if ~unicode.
+        { "\\", regex::Error::InvalidTrailingEscape },
+    };
+
+    for (auto& test : tests) {
+        Regex<ECMA262> re(test.pattern);
+        EXPECT_EQ(re.parser_result.error, test.expected_error);
 #ifdef REGEX_DEBUG
         dbg() << "\n";
         RegexDebug regex_dbg(stderr);
