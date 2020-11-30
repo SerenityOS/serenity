@@ -84,24 +84,30 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
     if (auto model = this->model()) {
         auto index = index_at_event_position(event.position());
         if (!index.is_valid())
-            return;
+            return TableView::mousemove_event(event);
 
         auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Left);
         auto rect = content_rect(index);
         auto distance = rect.center().absolute_relative_distance_to(event.position());
-        if (distance.x() > rect.width() / 2 || distance.y() > rect.height() / 2) {
+        if (distance.x() >= rect.width() / 2 - 5 && distance.y() >= rect.height() / 2 - 5) {
             set_override_cursor(Gfx::StandardCursor::Crosshair);
+            m_should_intercept_drag = false;
+            if (holding_left_button) {
+                m_has_committed_to_dragging = true;
+                // Force a drag to happen by moving the mousedown position to the center of the cell.
+                m_left_mousedown_position = rect.center();
+            }
+        } else if (!m_should_intercept_drag) {
+            set_override_cursor(Gfx::StandardCursor::Arrow);
             if (!holding_left_button) {
                 m_starting_selection_index = index;
             } else {
                 m_should_intercept_drag = true;
                 m_might_drag = false;
             }
-        } else if (!m_should_intercept_drag) {
-            set_override_cursor(Gfx::StandardCursor::Arrow);
         }
 
-        if (holding_left_button && m_should_intercept_drag) {
+        if (holding_left_button && m_should_intercept_drag && !m_has_committed_to_dragging) {
             if (!m_starting_selection_index.is_valid())
                 m_starting_selection_index = index;
 
@@ -126,6 +132,7 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
 void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 {
     m_should_intercept_drag = false;
+    m_has_committed_to_dragging = false;
     TableView::mouseup_event(event);
 }
 
