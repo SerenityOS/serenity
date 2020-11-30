@@ -54,6 +54,7 @@ Timer::Timer(Window& window, Type type, int milliseconds, JS::Function& callback
 
 Timer::~Timer()
 {
+    m_window.deallocate_timer_id({}, m_id);
 }
 
 }
