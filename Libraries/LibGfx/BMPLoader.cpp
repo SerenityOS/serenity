@@ -401,8 +401,28 @@ static bool check_for_invalid_bitmask_combinations(BMPLoadingContext& context)
             return false;
         break;
     case DIBType::Info:
-        if ((compression == Compression::BITFIELDS || compression == Compression::ALPHABITFIELDS) && bpp != 16 && bpp != 32)
+        switch (compression) {
+        case Compression::BITFIELDS:
+        case Compression::ALPHABITFIELDS:
+            if (bpp != 16 && bpp != 32)
+                return false;
+            break;
+        case Compression::RGB:
+            break;
+        case Compression::RLE8:
+            if (bpp > 8)
+                return false;
+            break;
+        case Compression::RLE4:
+            // TODO: This is a guess
+            if (bpp > 4)
+                return false;
+            break;
+        default:
+            // Other compressions are not officially supported.
+            // Technically, we could even drop ALPHABITFIELDS.
             return false;
+        }
         break;
     case DIBType::OSV2Short:
     case DIBType::OSV2:
