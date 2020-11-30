@@ -1114,6 +1114,9 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
         }
     }
 
+    if (done())
+        return set_error(Error::InvalidTrailingEscape);
+
     bool negate = false;
     auto ch = parse_character_class_escape(negate);
     if (!ch.has_value()) {
@@ -1211,6 +1214,11 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
         }
 
         if (try_skip("\\")) {
+            if (done()) {
+                set_error(Error::InvalidTrailingEscape);
+                return {};
+            }
+
             if (try_skip("f"))
                 return { { .code_point = '\f', .is_character_class = false } };
             if (try_skip("n"))
