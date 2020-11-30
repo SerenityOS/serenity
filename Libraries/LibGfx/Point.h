@@ -208,6 +208,11 @@ public:
         return sqrtf(powf(m_x - other.m_x, 2.0f) + powf(m_y - other.m_y, 2.0f));
     }
 
+    Point absolute_relative_distance_to(const Point& other) const
+    {
+        return { abs(dx_relative_to(other)), abs(dy_relative_to(other)) };
+    }
+
     template<typename U>
     Point<U> to_type() const
     {
