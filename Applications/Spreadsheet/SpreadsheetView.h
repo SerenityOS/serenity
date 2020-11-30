@@ -91,6 +91,7 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
 
     bool m_should_intercept_drag { false };
+    bool m_has_committed_to_dragging { false };
     GUI::ModelIndex m_starting_selection_index;
 };
 
