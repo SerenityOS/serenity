@@ -959,6 +959,9 @@ RefPtr<AST::Node> Parser::parse_list_expression()
 RefPtr<AST::Node> Parser::parse_expression()
 {
     auto rule_start = push_start();
+    if (m_rule_start_offsets.size() > max_allowed_nested_rule_depth)
+        return create<AST::SyntaxError>(String::formatted("Expression nested too deep (max allowed is {})", max_allowed_nested_rule_depth));
+
     auto starting_char = peek();
 
     auto read_concat = [&](auto&& expr) -> NonnullRefPtr<AST::Node> {

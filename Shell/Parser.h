@@ -51,6 +51,7 @@ public:
     SavedOffset save_offset() const;
 
 private:
+    constexpr static size_t max_allowed_nested_rule_depth = 2048;
     RefPtr<AST::Node> parse_toplevel();
     RefPtr<AST::Node> parse_sequence();
     RefPtr<AST::Node> parse_function_decl();
