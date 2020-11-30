@@ -59,6 +59,7 @@ public:
 
     void set(const ModelIndex&);
     void add(const ModelIndex&);
+    void add_all(const Vector<ModelIndex>&);
     void toggle(const ModelIndex&);
     bool remove(const ModelIndex&);
     void clear();
