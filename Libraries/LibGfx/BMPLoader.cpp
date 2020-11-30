@@ -543,7 +543,6 @@ static bool decode_bmp_core_dib(BMPLoadingContext& context, Streamer& streamer)
     }
 
     core.bpp = streamer.read_u16();
-
     switch (core.bpp) {
     case 1:
     case 2:
@@ -592,6 +591,19 @@ static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, 
     }
 
     core.bpp = streamer.read_u16();
+    switch (core.bpp) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+    case 24:
+        break;
+    default:
+        // OS/2 didn't expect 16- or 32-bpp to be popular.
+        IF_BMP_DEBUG(dbg() << "BMP has an invalid bpp: " << core.bpp);
+        context.state = BMPLoadingContext::State::Error;
+        return false;
+    }
 
     IF_BMP_DEBUG(dbg() << "BMP width: " << core.width);
     IF_BMP_DEBUG(dbg() << "BMP height: " << core.height);
