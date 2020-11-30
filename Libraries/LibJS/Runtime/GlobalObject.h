@@ -53,6 +53,9 @@ public:
     Shape* new_object_shape() { return m_new_object_shape; }
     Shape* new_script_function_prototype_object_shape() { return m_new_script_function_prototype_object_shape; }
 
+    // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
+    ProxyConstructor* proxy_constructor() { return m_proxy_constructor; }
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)            \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
     Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
@@ -68,7 +71,7 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
     template<typename ConstructorType>
-    void add_constructor(const FlyString& property_name, ConstructorType*&, Object& prototype);
+    void add_constructor(const FlyString& property_name, ConstructorType*&, Object* prototype);
 
 private:
     virtual bool is_global_object() const final { return true; }
@@ -84,6 +87,9 @@ private:
     Shape* m_new_object_shape { nullptr };
     Shape* m_new_script_function_prototype_object_shape { nullptr };
 
+    // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
+    ProxyConstructor* m_proxy_constructor { nullptr };
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                \
     Object* m_##snake_name##_prototype { nullptr };
@@ -97,16 +103,18 @@ private:
 };
 
 template<typename ConstructorType>
-inline void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object& prototype)
+inline void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object* prototype)
 {
     auto& vm = this->vm();
     constructor = heap().allocate<ConstructorType>(*this, *this);
     constructor->define_property(vm.names.name, js_string(heap(), property_name), Attribute::Configurable);
     if (vm.exception())
         return;
-    prototype.define_property(vm.names.constructor, constructor, Attribute::Writable | Attribute::Configurable);
-    if (vm.exception())
-        return;
+    if (prototype) {
+        prototype->define_property(vm.names.constructor, constructor, Attribute::Writable | Attribute::Configurable);
+        if (vm.exception())
+            return;
+    }
     define_property(property_name, constructor, Attribute::Writable | Attribute::Configurable);
 }
 

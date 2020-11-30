@@ -55,7 +55,6 @@ set(SOURCES
     Runtime/PropertyAttributes.cpp
     Runtime/ProxyConstructor.cpp
     Runtime/ProxyObject.cpp
-    Runtime/ProxyPrototype.cpp
     Runtime/Reference.cpp
     Runtime/ReflectObject.cpp
     Runtime/RegExpConstructor.cpp

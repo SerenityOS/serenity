@@ -41,7 +41,6 @@ void ProxyConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property(vm.names.prototype, global_object.proxy_prototype(), 0);
     define_property(vm.names.length, Value(2), Attribute::Configurable);
 }
 
