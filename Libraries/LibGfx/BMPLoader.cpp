@@ -319,6 +319,8 @@ static u8 get_scaled_color(u32 data, u8 mask_size, i8 mask_shift)
 //   to scale the values in order to reach the proper value of 255.
 static u32 int_to_scaled_rgb(BMPLoadingContext& context, u32 data)
 {
+    IF_BMP_DEBUG(dbg() << "DIB info sizes before access: #masks=" << context.dib.info.masks.size() << ", #mask_sizes=" << context.dib.info.mask_sizes.size() << ", #mask_shifts=" << context.dib.info.mask_shifts.size());
+
     u8 r = get_scaled_color(data & context.dib.info.masks[0], context.dib.info.mask_sizes[0], context.dib.info.mask_shifts[0]);
     u8 g = get_scaled_color(data & context.dib.info.masks[1], context.dib.info.mask_sizes[1], context.dib.info.mask_shifts[1]);
     u8 b = get_scaled_color(data & context.dib.info.masks[2], context.dib.info.mask_sizes[2], context.dib.info.mask_shifts[2]);
@@ -544,6 +546,13 @@ static bool decode_bmp_core_dib(BMPLoadingContext& context, Streamer& streamer)
     return true;
 }
 
+ALWAYS_INLINE static bool is_supported_compression_format(BMPLoadingContext& context, u32 compression)
+{
+    return compression == Compression::RGB || compression == Compression::BITFIELDS
+        || compression == Compression::ALPHABITFIELDS || compression == Compression::RLE8
+        || compression == Compression::RLE4 || (compression == Compression::RLE24 && context.dib_type <= DIBType::OSV2);
+}
+
 static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, bool short_variant = false)
 {
     auto& core = context.dib.core;
@@ -581,6 +590,11 @@ static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, 
     info.number_of_palette_colors = streamer.read_u32();
     info.number_of_important_palette_colors = streamer.read_u32();
 
+    if (!is_supported_compression_format(context, info.compression)) {
+        IF_BMP_DEBUG(dbg() << "BMP has unsupported compression value: " << info.compression);
+        return false;
+    }
+
     if (info.number_of_palette_colors > color_palette_limit || info.number_of_important_palette_colors > color_palette_limit) {
         IF_BMP_DEBUG(dbg() << "BMP header indicates too many palette colors: " << info.number_of_palette_colors);
         return false;
@@ -605,13 +619,6 @@ static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, 
     IF_BMP_DEBUG(dbg() << "BMP important colors: " << info.number_of_important_palette_colors);
 
     return true;
-}
-
-ALWAYS_INLINE static bool is_supported_compression_format(BMPLoadingContext& context, u8 compression)
-{
-    return compression == Compression::RGB || compression == Compression::BITFIELDS
-        || compression == Compression::ALPHABITFIELDS || compression == Compression::RLE8
-        || compression == Compression::RLE4 || (compression == Compression::RLE24 && context.dib_type <= DIBType::OSV2);
 }
 
 static bool decode_bmp_info_dib(BMPLoadingContext& context, Streamer& streamer)
