@@ -64,6 +64,18 @@ void ModelSelection::add(const ModelIndex& index)
     notify_selection_changed();
 }
 
+void ModelSelection::add_all(const Vector<ModelIndex>& indices)
+{
+    {
+        TemporaryChange notify_change { m_disable_notify, true };
+        for (auto& index : indices)
+            add(index);
+    }
+
+    if (m_notify_pending)
+        notify_selection_changed();
+}
+
 void ModelSelection::toggle(const ModelIndex& index)
 {
     ASSERT(index.is_valid());
