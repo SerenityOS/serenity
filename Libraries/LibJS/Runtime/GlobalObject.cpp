@@ -53,7 +53,6 @@
 #include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/ProxyConstructor.h>
-#include <LibJS/Runtime/ProxyPrototype.h>
 #include <LibJS/Runtime/ReflectObject.h>
 #include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
@@ -124,21 +123,21 @@ void GlobalObject::initialize()
     define_property(vm.names.JSON, heap().allocate<JSONObject>(*this, *this), attr);
     define_property(vm.names.Reflect, heap().allocate<ReflectObject>(*this, *this), attr);
 
-    add_constructor(vm.names.Array, m_array_constructor, *m_array_prototype);
-    add_constructor(vm.names.BigInt, m_bigint_constructor, *m_bigint_prototype);
-    add_constructor(vm.names.Boolean, m_boolean_constructor, *m_boolean_prototype);
-    add_constructor(vm.names.Date, m_date_constructor, *m_date_prototype);
-    add_constructor(vm.names.Error, m_error_constructor, *m_error_prototype);
-    add_constructor(vm.names.Function, m_function_constructor, *m_function_prototype);
-    add_constructor(vm.names.Number, m_number_constructor, *m_number_prototype);
-    add_constructor(vm.names.Object, m_object_constructor, *m_object_prototype);
-    add_constructor(vm.names.Proxy, m_proxy_constructor, *m_proxy_prototype);
-    add_constructor(vm.names.RegExp, m_regexp_constructor, *m_regexp_prototype);
-    add_constructor(vm.names.String, m_string_constructor, *m_string_prototype);
-    add_constructor(vm.names.Symbol, m_symbol_constructor, *m_symbol_prototype);
+    add_constructor(vm.names.Array, m_array_constructor, m_array_prototype);
+    add_constructor(vm.names.BigInt, m_bigint_constructor, m_bigint_prototype);
+    add_constructor(vm.names.Boolean, m_boolean_constructor, m_boolean_prototype);
+    add_constructor(vm.names.Date, m_date_constructor, m_date_prototype);
+    add_constructor(vm.names.Error, m_error_constructor, m_error_prototype);
+    add_constructor(vm.names.Function, m_function_constructor, m_function_prototype);
+    add_constructor(vm.names.Number, m_number_constructor, m_number_prototype);
+    add_constructor(vm.names.Object, m_object_constructor, m_object_prototype);
+    add_constructor(vm.names.Proxy, m_proxy_constructor, nullptr);
+    add_constructor(vm.names.RegExp, m_regexp_constructor, m_regexp_prototype);
+    add_constructor(vm.names.String, m_string_constructor, m_string_prototype);
+    add_constructor(vm.names.Symbol, m_symbol_constructor, m_symbol_prototype);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    add_constructor(vm.names.ClassName, m_##snake_name##_constructor, *m_##snake_name##_prototype);
+    add_constructor(vm.names.ClassName, m_##snake_name##_constructor, m_##snake_name##_prototype);
     JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE
 }
