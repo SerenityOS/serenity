@@ -87,6 +87,11 @@ public:
 
 private:
     virtual void did_scroll() override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+
+    bool m_should_intercept_drag { false };
+    GUI::ModelIndex m_starting_selection_index;
 };
 
 class SpreadsheetView final : public GUI::Widget {

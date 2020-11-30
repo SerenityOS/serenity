@@ -79,6 +79,56 @@ void InfinitelyScrollableTableView::did_scroll()
     }
 }
 
+void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
+{
+    if (auto model = this->model()) {
+        auto index = index_at_event_position(event.position());
+        if (!index.is_valid())
+            return;
+
+        auto holding_left_button = !!(event.buttons() & GUI::MouseButton::Left);
+        auto rect = content_rect(index);
+        auto distance = rect.center().absolute_relative_distance_to(event.position());
+        if (distance.x() > rect.width() / 2 || distance.y() > rect.height() / 2) {
+            set_override_cursor(Gfx::StandardCursor::Crosshair);
+            if (!holding_left_button) {
+                m_starting_selection_index = index;
+            } else {
+                m_should_intercept_drag = true;
+                m_might_drag = false;
+            }
+        } else if (!m_should_intercept_drag) {
+            set_override_cursor(Gfx::StandardCursor::Arrow);
+        }
+
+        if (holding_left_button && m_should_intercept_drag) {
+            if (!m_starting_selection_index.is_valid())
+                m_starting_selection_index = index;
+
+            Vector<GUI::ModelIndex> new_selection;
+            for (auto i = min(m_starting_selection_index.row(), index.row()), imax = max(m_starting_selection_index.row(), index.row()); i <= imax; ++i) {
+                for (auto j = min(m_starting_selection_index.column(), index.column()), jmax = max(m_starting_selection_index.column(), index.column()); j <= jmax; ++j) {
+                    auto index = model->index(i, j);
+                    if (index.is_valid())
+                        new_selection.append(move(index));
+                }
+            }
+
+            if (!event.ctrl())
+                selection().clear();
+            selection().add_all(new_selection);
+        }
+    }
+
+    TableView::mousemove_event(event);
+}
+
+void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
+{
+    m_should_intercept_drag = false;
+    TableView::mouseup_event(event);
+}
+
 void SpreadsheetView::update_with_model()
 {
     m_table_view->model()->update();
