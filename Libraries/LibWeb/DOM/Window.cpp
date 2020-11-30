@@ -108,6 +108,11 @@ i32 Window::allocate_timer_id(Badge<Timer>)
     return m_timer_id_allocator.allocate();
 }
 
+void Window::deallocate_timer_id(Badge<Timer>, i32 id)
+{
+    m_timer_id_allocator.deallocate(id);
+}
+
 void Window::clear_timeout(i32 timer_id)
 {
     m_timers.remove(timer_id);

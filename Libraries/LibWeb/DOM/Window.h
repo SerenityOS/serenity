@@ -74,6 +74,7 @@ public:
     void set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject&);
 
     i32 allocate_timer_id(Badge<Timer>);
+    void deallocate_timer_id(Badge<Timer>, i32);
     void timer_did_fire(Badge<Timer>, Timer&);
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
