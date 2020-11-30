@@ -57,7 +57,7 @@ String urldecode(const StringView& input)
             builder.append(consume());
             continue;
         }
-        if (!is_ascii_hex_digit(peek(1)) && !is_ascii_hex_digit(peek(2))) {
+        if (!is_ascii_hex_digit(peek(1)) || !is_ascii_hex_digit(peek(2))) {
             builder.append(consume());
             continue;
         }

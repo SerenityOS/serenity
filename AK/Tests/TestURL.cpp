@@ -172,7 +172,20 @@ TEST_CASE(data_url)
     EXPECT_EQ(url.protocol(), "data");
     EXPECT_EQ(url.host(), "");
     EXPECT_EQ(url.data_mime_type(), "text/html");
+    EXPECT_EQ(url.data_payload(), "test");
     EXPECT_EQ(url.to_string(), "data:text/html,test");
+}
+
+TEST_CASE(data_url_encoded)
+{
+    URL url("data:text/html,Hello%20friends%2C%0X%X0");
+    EXPECT_EQ(url.is_valid(), true);
+    EXPECT_EQ(url.protocol(), "data");
+    EXPECT_EQ(url.host(), "");
+    EXPECT_EQ(url.data_mime_type(), "text/html");
+    EXPECT_EQ(url.data_payload(), "Hello friends,%0X%X0");
+    // FIXME: Surely this should be URL-encoded again?!
+    EXPECT_EQ(url.to_string(), "data:text/html,Hello friends,%0X%X0");
 }
 
 TEST_CASE(data_url_base64_encoded)
@@ -182,6 +195,7 @@ TEST_CASE(data_url_base64_encoded)
     EXPECT_EQ(url.protocol(), "data");
     EXPECT_EQ(url.host(), "");
     EXPECT_EQ(url.data_mime_type(), "text/html");
+    EXPECT_EQ(url.data_payload(), "test");
     EXPECT_EQ(url.to_string(), "data:text/html;base64,test");
 }
 
