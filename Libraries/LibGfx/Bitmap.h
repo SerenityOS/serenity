@@ -143,7 +143,7 @@ public:
             || format == BitmapFormat::Indexed2 || format == BitmapFormat::Indexed1;
     }
 
-    size_t palette_size(BitmapFormat format) const
+    static size_t palette_size(BitmapFormat format)
     {
         switch (format) {
         case BitmapFormat::Indexed1:
