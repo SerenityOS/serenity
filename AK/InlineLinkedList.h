@@ -120,6 +120,8 @@ public:
     void append(T*);
     void remove(T*);
     void append(InlineLinkedList<T>&);
+    void insert_before(T*, T*);
+    void insert_after(T*, T*);
 
     bool contains_slow(T* value) const
     {
@@ -128,6 +130,17 @@ public:
                 return true;
         }
         return false;
+    }
+
+    template<typename F>
+    IterationDecision for_each(F func) const
+    {
+        for (T* node = m_head; node; node = node->next()) {
+            IterationDecision decision = func(*node);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
     }
 
     using Iterator = InlineLinkedListIterator<T>;
@@ -197,6 +210,50 @@ inline void InlineLinkedList<T>::append(T* node)
     node->set_prev(m_tail);
     node->set_next(0);
     m_tail = node;
+}
+
+template<typename T>
+inline void InlineLinkedList<T>::insert_before(T* before_node, T* node)
+{
+    ASSERT(before_node);
+    ASSERT(node);
+    ASSERT(before_node != node);
+    ASSERT(!is_empty());
+    if (m_head == before_node) {
+        ASSERT(!before_node->prev());
+        m_head = node;
+        node->set_prev(0);
+        node->set_next(before_node);
+        before_node->set_prev(node);
+    } else {
+        ASSERT(before_node->prev());
+        node->set_prev(before_node->prev());
+        before_node->prev()->set_next(node);
+        node->set_next(before_node);
+        before_node->set_prev(node);
+    }
+}
+
+template<typename T>
+inline void InlineLinkedList<T>::insert_after(T* after_node, T* node)
+{
+    ASSERT(after_node);
+    ASSERT(node);
+    ASSERT(after_node != node);
+    ASSERT(!is_empty());
+    if (m_tail == after_node) {
+        ASSERT(!after_node->next());
+        m_tail = node;
+        node->set_prev(after_node);
+        node->set_next(0);
+        after_node->set_next(node);
+    } else {
+        ASSERT(after_node->next());
+        node->set_prev(after_node);
+        node->set_next(after_node->next());
+        after_node->next()->set_prev(node);
+        after_node->set_next(node);
+    }
 }
 
 template<typename T>
