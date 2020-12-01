@@ -172,13 +172,14 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
     return true;
 }
 
-bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8* buffer, size_t buffer_size, String& interpreter_path)
+bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, const u8* buffer, size_t buffer_size, String* interpreter_path, bool verbose)
 {
     // Can we actually parse all the program headers in the given buffer?
     size_t end_of_last_program_header = elf_header.e_phoff + (elf_header.e_phnum * elf_header.e_phentsize);
     if (end_of_last_program_header > buffer_size) {
-        dbgprintf("Unable to parse program headers from buffer, buffer too small! Buffer size: %zu, End of program headers %zu\n",
-            buffer_size, end_of_last_program_header);
+        if (verbose)
+            dbgprintf("Unable to parse program headers from buffer, buffer too small! Buffer size: %zu, End of program headers %zu\n",
+                buffer_size, end_of_last_program_header);
         return false;
     }
 
@@ -195,15 +196,18 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8
         switch (program_header.p_type) {
         case PT_INTERP:
             if (ET_DYN != elf_header.e_type) {
-                dbgprintf("Found PT_INTERP header (%zu) in non-DYN ELF object! What? We can't handle this!\n", header_index);
+                if (verbose)
+                    dbgprintf("Found PT_INTERP header (%zu) in non-DYN ELF object! What? We can't handle this!\n", header_index);
                 return false;
             }
             // We checked above that file_size was >= buffer size. We only care about buffer size anyway, we're trying to read this!
             if (program_header.p_offset + program_header.p_filesz > buffer_size) {
-                dbgprintf("Found PT_INTERP header (%zu), but the .interp section was not within our buffer :( Your program will not be loaded today.\n", header_index);
+                if (verbose)
+                    dbgprintf("Found PT_INTERP header (%zu), but the .interp section was not within our buffer :( Your program will not be loaded today.\n", header_index);
                 return false;
             }
-            interpreter_path = String((const char*)&buffer[program_header.p_offset], program_header.p_filesz - 1);
+            if (interpreter_path)
+                *interpreter_path = String((const char*)&buffer[program_header.p_offset], program_header.p_filesz - 1);
             break;
         case PT_LOAD:
         case PT_DYNAMIC:
@@ -211,28 +215,33 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8
         case PT_PHDR:
         case PT_TLS:
             if (program_header.p_offset + program_header.p_filesz > file_size) {
-                dbgprintf("SHENANIGANS! Program header %zu segment leaks beyond end of file!\n", header_index);
+                if (verbose)
+                    dbgprintf("SHENANIGANS! Program header %zu segment leaks beyond end of file!\n", header_index);
                 return false;
             }
             if ((program_header.p_flags & PF_X) && (program_header.p_flags & PF_W)) {
-                dbgprintf("SHENANIGANS! Program header %zu segment is marked write and execute\n", header_index);
+                if (verbose)
+                    dbgprintf("SHENANIGANS! Program header %zu segment is marked write and execute\n", header_index);
                 return false;
             }
             break;
         case PT_GNU_STACK:
             if (program_header.p_flags & PF_X) {
-                dbgprintf("Possible shenanigans! Validating an ELF with executable stack.\n");
+                if (verbose)
+                    dbgprintf("Possible shenanigans! Validating an ELF with executable stack.\n");
             }
             break;
         case PT_GNU_RELRO:
             if ((program_header.p_flags & PF_X) && (program_header.p_flags & PF_W)) {
-                dbgprintf("SHENANIGANS! Program header %zu segment is marked write and execute\n", header_index);
+                if (verbose)
+                    dbgprintf("SHENANIGANS! Program header %zu segment is marked write and execute\n", header_index);
                 return false;
             }
             break;
         default:
             // Not handling other program header types in other code so... let's not surprise them
-            dbgprintf("Found program header (%zu) of unrecognized type %x!\n", header_index, program_header.p_type);
+            if (verbose)
+                dbgprintf("Found program header (%zu) of unrecognized type %x!\n", header_index, program_header.p_type);
             return false;
         }
     }
