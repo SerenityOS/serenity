@@ -327,6 +327,23 @@ int Shell::builtin_export(int argc, const char** argv)
     return 0;
 }
 
+int Shell::builtin_glob(int argc, const char** argv)
+{
+    Vector<const char*> globs;
+    Core::ArgsParser parser;
+    parser.add_positional_argument(globs, "Globs to resolve", "glob");
+
+    if (!parser.parse(argc, const_cast<char**>(argv), false))
+        return 1;
+
+    for (auto& glob : globs) {
+        for (auto& expanded : expand_globs(glob, cwd))
+            outln("{}", expanded);
+    }
+
+    return 0;
+}
+
 int Shell::builtin_fg(int argc, const char** argv)
 {
     int job_id = -1;
