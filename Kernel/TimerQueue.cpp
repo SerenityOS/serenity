@@ -42,7 +42,12 @@ timespec Timer::remaining() const
 {
     if (m_remaining == 0)
         return {};
-    return TimerQueue::the().ticks_to_time(m_remaining);
+    return TimerQueue::the().ticks_to_time(m_clock_id, m_remaining);
+}
+
+u64 Timer::now() const
+{
+    return TimerQueue::the().time_to_ticks(m_clock_id, TimeManagement::the().current_time(m_clock_id).value());
 }
 
 TimerQueue& TimerQueue::the()
@@ -55,9 +60,9 @@ TimerQueue::TimerQueue()
     m_ticks_per_second = TimeManagement::the().ticks_per_second();
 }
 
-RefPtr<Timer> TimerQueue::add_timer_without_id(const timespec& deadline, Function<void()>&& callback)
+RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const timespec& deadline, Function<void()>&& callback)
 {
-    if (deadline <= TimeManagement::the().monotonic_time())
+    if (deadline <= TimeManagement::the().current_time(clock_id).value())
         return {};
 
     // Because timer handlers can execute on any processor and there is
@@ -65,7 +70,7 @@ RefPtr<Timer> TimerQueue::add_timer_without_id(const timespec& deadline, Functio
     // *must* be a RefPtr<Timer>. Otherwise calling cancel_timer() could
     // inadvertently cancel another timer that has been created between
     // returning from the timer handler and a call to cancel_timer().
-    auto timer = adopt(*new Timer(time_to_ticks(deadline), move(callback)));
+    auto timer = adopt(*new Timer(clock_id, time_to_ticks(clock_id, deadline), move(callback)));
 
     ScopedSpinLock lock(g_timerqueue_lock);
     timer->m_id = 0; // Don't generate a timer id
@@ -86,16 +91,17 @@ TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
 void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 {
     u64 timer_expiration = timer->m_expires;
-    ASSERT(timer_expiration >= time_to_ticks(TimeManagement::the().monotonic_time()));
+    ASSERT(timer_expiration >= time_to_ticks(timer->m_clock_id, TimeManagement::the().current_time(timer->m_clock_id).value()));
 
     ASSERT(!timer->is_queued());
 
-    if (m_timer_queue.is_empty()) {
-        m_timer_queue.append(&timer.leak_ref());
-        m_next_timer_due = timer_expiration;
+    auto& queue = queue_for_timer(*timer);
+    if (queue.list.is_empty()) {
+        queue.list.append(&timer.leak_ref());
+        queue.next_timer_due = timer_expiration;
     } else {
         Timer* following_timer = nullptr;
-        m_timer_queue.for_each([&](Timer& t) {
+        queue.list.for_each([&](Timer& t) {
             if (t.m_expires > timer_expiration) {
                 following_timer = &t;
                 return IterationDecision::Break;
@@ -103,51 +109,85 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
             return IterationDecision::Continue;
         });
         if (following_timer) {
-            bool next_timer_needs_update = m_timer_queue.head() == following_timer;
-            m_timer_queue.insert_before(following_timer, &timer.leak_ref());
+            bool next_timer_needs_update = queue.list.head() == following_timer;
+            queue.list.insert_before(following_timer, &timer.leak_ref());
             if (next_timer_needs_update)
-                m_next_timer_due = timer_expiration;
+                queue.next_timer_due = timer_expiration;
         } else {
-            m_timer_queue.append(&timer.leak_ref());
+            queue.list.append(&timer.leak_ref());
         }
     }
 }
 
-TimerId TimerQueue::add_timer(timeval& deadline, Function<void()>&& callback)
+TimerId TimerQueue::add_timer(clockid_t clock_id, timeval& deadline, Function<void()>&& callback)
 {
-    auto expires = TimeManagement::the().monotonic_time();
+    auto expires = TimeManagement::the().current_time(clock_id).value();
     timespec_add_timeval(expires, deadline, expires);
-    return add_timer(adopt(*new Timer(time_to_ticks(expires), move(callback))));
+    return add_timer(adopt(*new Timer(clock_id, time_to_ticks(clock_id, expires), move(callback))));
 }
 
-timespec TimerQueue::ticks_to_time(u64 ticks) const
+timespec TimerQueue::ticks_to_time(clockid_t clock_id, u64 ticks) const
 {
     timespec tspec;
-    tspec.tv_sec = ticks / m_ticks_per_second;
-    tspec.tv_nsec = (ticks % m_ticks_per_second) * (1'000'000'000 / m_ticks_per_second);
+    switch (clock_id) {
+    case CLOCK_MONOTONIC:
+        tspec.tv_sec = ticks / m_ticks_per_second;
+        tspec.tv_nsec = (ticks % m_ticks_per_second) * (1'000'000'000 / m_ticks_per_second);
+        break;
+    case CLOCK_REALTIME:
+        tspec.tv_sec = ticks / 1'000'000'000;
+        tspec.tv_nsec = ticks % 1'000'000'000;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
     ASSERT(tspec.tv_nsec <= 1'000'000'000);
     return tspec;
 }
 
-u64 TimerQueue::time_to_ticks(const timespec& tspec) const
+u64 TimerQueue::time_to_ticks(clockid_t clock_id, const timespec& tspec) const
 {
-    u64 ticks = (u64)tspec.tv_sec * m_ticks_per_second;
-    ticks += ((u64)tspec.tv_nsec * m_ticks_per_second) / 1'000'000'000;
+    u64 ticks;
+    switch (clock_id) {
+    case CLOCK_MONOTONIC:
+        ticks = (u64)tspec.tv_sec * m_ticks_per_second;
+        ticks += ((u64)tspec.tv_nsec * m_ticks_per_second) / 1'000'000'000;
+        break;
+    case CLOCK_REALTIME:
+        ticks = (u64)tspec.tv_sec * 1'000'000'000 + tspec.tv_nsec;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
     return ticks;
 }
 
 bool TimerQueue::cancel_timer(TimerId id)
 {
-    ScopedSpinLock lock(g_timerqueue_lock);
     Timer* found_timer = nullptr;
-    if (m_timer_queue.for_each([&](Timer& timer) {
+    Queue* timer_queue = nullptr;
+
+    ScopedSpinLock lock(g_timerqueue_lock);
+    if (m_timer_queue_monotonic.list.for_each([&](Timer& timer) {
             if (timer.m_id == id) {
                 found_timer = &timer;
+                timer_queue = &m_timer_queue_monotonic;
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;
         })
         != IterationDecision::Break) {
+        m_timer_queue_realtime.list.for_each([&](Timer& timer) {
+            if (timer.m_id == id) {
+                found_timer = &timer;
+                timer_queue = &m_timer_queue_realtime;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+    }
+
+    if (!found_timer) {
         // The timer may be executing right now, if it is then it should
         // be in m_timers_executing. If it is then release the lock
         // briefly to allow it to finish by removing itself
@@ -171,7 +211,8 @@ bool TimerQueue::cancel_timer(TimerId id)
     }
 
     ASSERT(found_timer);
-    remove_timer_locked(*found_timer);
+    ASSERT(timer_queue);
+    remove_timer_locked(*timer_queue, *found_timer);
     lock.unlock();
     found_timer->unref();
     return true;
@@ -179,8 +220,9 @@ bool TimerQueue::cancel_timer(TimerId id)
 
 bool TimerQueue::cancel_timer(Timer& timer)
 {
+    auto& timer_queue = queue_for_timer(timer);
     ScopedSpinLock lock(g_timerqueue_lock);
-    if (!m_timer_queue.contains_slow(&timer)) {
+    if (!timer_queue.list.contains_slow(&timer)) {
         // The timer may be executing right now, if it is then it should
         // be in m_timers_executing. If it is then release the lock
         // briefly to allow it to finish by removing itself
@@ -199,58 +241,64 @@ bool TimerQueue::cancel_timer(Timer& timer)
         return false;
     }
 
-    remove_timer_locked(timer);
+    remove_timer_locked(timer_queue, timer);
     return true;
 }
 
-void TimerQueue::remove_timer_locked(Timer& timer)
+void TimerQueue::remove_timer_locked(Queue& queue, Timer& timer)
 {
-    bool was_next_timer = (m_timer_queue.head() == &timer);
-    m_timer_queue.remove(&timer);
+    bool was_next_timer = (queue.list.head() == &timer);
+    queue.list.remove(&timer);
     timer.set_queued(false);
-    auto now = TimeManagement::the().monotonic_ticks();
+    auto now = timer.now();
     if (timer.m_expires > now)
         timer.m_remaining = timer.m_expires - now;
 
     if (was_next_timer)
-        update_next_timer_due();
+        update_next_timer_due(queue);
 }
 
 void TimerQueue::fire()
 {
     ScopedSpinLock lock(g_timerqueue_lock);
-    auto* timer = m_timer_queue.head();
-    if (!timer)
-        return;
 
-    ASSERT(m_next_timer_due == timer->m_expires);
+    auto fire_timers = [&](Queue& queue) {
+        auto* timer = queue.list.head();
+        ASSERT(timer);
+        ASSERT(queue.next_timer_due == timer->m_expires);
 
-    while (timer && TimeManagement::the().monotonic_ticks() > timer->m_expires) {
-        m_timer_queue.remove(timer);
-        m_timers_executing.append(timer);
+        while (timer && timer->now() > timer->m_expires) {
+            queue.list.remove(timer);
+            m_timers_executing.append(timer);
 
-        update_next_timer_due();
+            update_next_timer_due(queue);
 
-        lock.unlock();
-        timer->m_callback();
-        lock.lock();
+            lock.unlock();
+            timer->m_callback();
+            lock.lock();
 
-        m_timers_executing.remove(timer);
-        timer->set_queued(false);
-        timer->unref();
+            m_timers_executing.remove(timer);
+            timer->set_queued(false);
+            timer->unref();
 
-        timer = m_timer_queue.head();
-    }
+            timer = queue.list.head();
+        }
+    };
+
+    if (!m_timer_queue_monotonic.list.is_empty())
+        fire_timers(m_timer_queue_monotonic);
+    if (!m_timer_queue_realtime.list.is_empty())
+        fire_timers(m_timer_queue_realtime);
 }
 
-void TimerQueue::update_next_timer_due()
+void TimerQueue::update_next_timer_due(Queue& queue)
 {
     ASSERT(g_timerqueue_lock.is_locked());
 
-    if (auto* next_timer = m_timer_queue.head())
-        m_next_timer_due = next_timer->m_expires;
+    if (auto* next_timer = queue.list.head())
+        queue.next_timer_due = next_timer->m_expires;
     else
-        m_next_timer_due = 0;
+        queue.next_timer_due = 0;
 }
 
 }
