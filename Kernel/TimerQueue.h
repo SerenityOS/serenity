@@ -53,9 +53,12 @@ public:
         ASSERT(!is_queued());
     }
 
+    timespec remaining() const;
+
 private:
     TimerId m_id;
     u64 m_expires;
+    u64 m_remaining { 0 };
     Function<void()> m_callback;
     Timer* m_next { nullptr };
     Timer* m_prev { nullptr };
@@ -88,6 +91,7 @@ public:
     RefPtr<Timer> add_timer_without_id(const timespec& timeout, Function<void()>&& callback);
     TimerId add_timer(timeval& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
+    bool cancel_timer(Timer&);
     bool cancel_timer(NonnullRefPtr<Timer>&& timer)
     {
         return cancel_timer(timer.leak_ref());
@@ -95,7 +99,7 @@ public:
     void fire();
 
 private:
-    bool cancel_timer(Timer&);
+    void remove_timer_locked(Timer&);
     void update_next_timer_due();
     void add_timer_locked(NonnullRefPtr<Timer>);
 

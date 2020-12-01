@@ -611,7 +611,7 @@ private:
     Lock m_big_lock { "Process" };
     mutable SpinLock<u32> m_lock;
 
-    u64 m_alarm_deadline { 0 };
+    RefPtr<Timer> m_alarm_timer;
 
     int m_icon_id { -1 };
 
