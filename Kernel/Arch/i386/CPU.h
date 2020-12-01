@@ -1052,14 +1052,6 @@ public:
         return *this;
     }
 
-    void set_interrupt_flag_on_destruction(bool flag)
-    {
-        if (flag)
-            m_prev_flags |= 0x200;
-        else
-            m_prev_flags &= ~0x200;
-    }
-
     void leave()
     {
         ASSERT(m_valid);

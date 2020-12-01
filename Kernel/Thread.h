@@ -45,6 +45,8 @@
 #include <LibC/fd_set.h>
 #include <LibELF/AuxiliaryVector.h>
 
+//#define LOCK_DEBUG
+
 namespace Kernel {
 
 enum class DispatchSignalResult {
@@ -961,6 +963,44 @@ public:
 
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
+#ifdef LOCK_DEBUG
+    void holding_lock(Lock& lock, bool holding, const char* file = nullptr, int line = 0)
+    {
+        m_holding_locks.fetch_add(holding ? 1 : -1, AK::MemoryOrder::memory_order_relaxed);
+        ScopedSpinLock list_lock(m_holding_locks_lock);
+        if (holding) {
+            bool have_existing = false;
+            for (size_t i = 0; i < m_holding_locks_list.size(); i++) {
+                auto& info = m_holding_locks_list[i];
+                if (info.lock == &lock) {
+                    have_existing = true;
+                    info.count++;
+                    break;
+                }
+            }
+            if (!have_existing)
+                m_holding_locks_list.append({ &lock, file ? file : "unknown", line, 1 });
+        } else {
+            bool found = false;
+            for (size_t i = 0; i < m_holding_locks_list.size(); i++) {
+                auto& info = m_holding_locks_list[i];
+                if (info.lock == &lock) {
+                    ASSERT(info.count > 0);
+                    if (--info.count == 0)
+                        m_holding_locks_list.remove(i);
+                    found = true;
+                    break;
+                }
+            }
+            ASSERT(found);
+        }
+    }
+    u32 lock_count() const
+    {
+        return m_holding_locks.load(AK::MemoryOrder::memory_order_relaxed);
+    }
+#endif
+
 private:
     IntrusiveListNode m_runnable_list_node;
     IntrusiveListNode m_wait_queue_node;
@@ -1004,9 +1044,11 @@ private:
             auto& blocker = static_cast<JoinBlocker&>(b);
 
             // NOTE: m_lock is held already!
-            if (m_thread_did_exit)
+            if (m_thread_did_exit) {
                 blocker.unblock(exit_value(), true);
-            return m_thread_did_exit;
+                return false;
+            }
+            return true;
         }
 
     private:
@@ -1049,6 +1091,18 @@ private:
     RefPtr<Timer> m_blocker_timeout;
     const char* m_wait_reason { nullptr };
     WaitQueue* m_queue { nullptr };
+
+#ifdef LOCK_DEBUG
+    struct HoldingLockInfo {
+        Lock* lock;
+        const char* file;
+        int line;
+        unsigned count;
+    };
+    Atomic<u32> m_holding_locks { 0 };
+    SpinLock<u8> m_holding_locks_lock;
+    Vector<HoldingLockInfo> m_holding_locks_list;
+#endif
 
     JoinBlockCondition m_join_condition;
     Atomic<bool> m_is_active { false };

@@ -511,6 +511,21 @@ void Scheduler::invoke_async()
         pick_next();
 }
 
+void Scheduler::yield_from_critical()
+{
+    auto& proc = Processor::current();
+    ASSERT(proc.in_critical());
+    ASSERT(!proc.in_irq());
+
+    yield(); // Flag a context switch
+
+    u32 prev_flags;
+    u32 prev_crit = Processor::current().clear_critical(prev_flags, false);
+
+    // Note, we may now be on a different CPU!
+    Processor::current().restore_critical(prev_crit, prev_flags);
+}
+
 void Scheduler::notify_finalizer()
 {
     if (g_finalizer_has_work.exchange(true, AK::MemoryOrder::memory_order_acq_rel) == false)

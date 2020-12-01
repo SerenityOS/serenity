@@ -474,10 +474,9 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(vmobject().is_inode());
 
-    sti();
     LOCKER(vmobject().m_paging_lock);
-    cli();
 
+    ASSERT_INTERRUPTS_DISABLED();
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[first_page_index() + page_index_in_region];
 
@@ -501,7 +500,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 #ifdef MM_DEBUG
     dbg() << "MM: page_in_from_inode ready to read from inode";
 #endif
-    sti();
+
     u8 page_buffer[PAGE_SIZE];
     auto& inode = inode_vmobject.inode();
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
@@ -514,7 +513,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);
     }
-    cli();
+
     vmobject_physical_page_entry = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
     if (vmobject_physical_page_entry.is_null()) {
         klog() << "MM: handle_inode_fault was unable to allocate a physical page";

@@ -27,78 +27,87 @@
 #include <AK/TemporaryChange.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Lock.h>
-#include <Kernel/Thread.h>
 
 namespace Kernel {
 
-static bool modes_conflict(Lock::Mode mode1, Lock::Mode mode2)
-{
-    if (mode1 == Lock::Mode::Unlocked || mode2 == Lock::Mode::Unlocked)
-        return false;
-
-    if (mode1 == Lock::Mode::Shared && mode2 == Lock::Mode::Shared)
-        return false;
-
-    return true;
-}
-
+#ifdef LOCK_DEBUG
 void Lock::lock(Mode mode)
 {
+    lock("unknown", 0, mode);
+}
+
+void Lock::lock(const char* file, int line, Mode mode)
+#else
+void Lock::lock(Mode mode)
+#endif
+{
+    // NOTE: This may be called from an interrupt handler (not an IRQ handler)
+    // and also from within critical sections!
+    ASSERT(!Processor::current().in_irq());
     ASSERT(mode != Mode::Unlocked);
-    if (!are_interrupts_enabled()) {
-        klog() << "Interrupts disabled when trying to take Lock{" << m_name << "}";
-        dump_backtrace();
-        Processor::halt();
-    }
     auto current_thread = Thread::current();
+    ScopedCritical critical;
     for (;;) {
         if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
             do {
                 // FIXME: Do not add new readers if writers are queued.
-                bool modes_dont_conflict = !modes_conflict(m_mode, mode);
-                bool already_hold_exclusive_lock = m_mode == Mode::Exclusive && m_holder == current_thread;
-                if (modes_dont_conflict || already_hold_exclusive_lock) {
+                bool can_lock;
+                switch (m_mode) {
+                case Lock::Mode::Unlocked:
+                    can_lock = true;
+                    break;
+                case Lock::Mode::Shared:
+                    can_lock = (mode == Lock::Mode::Shared);
+                    break;
+                case Lock::Mode::Exclusive:
+                    can_lock = (m_holder == current_thread);
+                    break;
+                }
+                if (can_lock) {
                     // We got the lock!
-                    if (!already_hold_exclusive_lock)
+                    if (m_mode == Lock::Mode::Unlocked) {
                         m_mode = mode;
-                    m_holder = current_thread;
+                        ASSERT(m_times_locked == 0);
+                        if (mode == Mode::Exclusive)
+                            m_holder = current_thread;
+                    }
+#ifdef LOCK_DEBUG
+                    current_thread->holding_lock(*this, true, file, line);
+#endif
                     m_times_locked++;
                     m_lock.store(false, AK::memory_order_release);
                     return;
                 }
             } while (current_thread->wait_on(m_queue, m_name, nullptr, &m_lock, m_holder) == Thread::BlockResult::NotBlocked);
-        } else if (Processor::current().in_critical()) {
-            // If we're in a critical section and trying to lock, no context
-            // switch will happen, so yield.
-            // The assumption is that if we call this from a critical section
-            // that we DO want to temporarily leave it
-            u32 prev_flags;
-            u32 prev_crit = Processor::current().clear_critical(prev_flags, !Processor::current().in_irq());
-
-            Scheduler::yield();
-
-            // Note, we may now be on a different CPU!
-            Processor::current().restore_critical(prev_crit, prev_flags);
         } else {
-            // We need to process e.g. smp messages
-            Processor::wait_check();
+            // I don't know *who* is using "m_lock", so just yield.
+            Scheduler::yield_from_critical();
         }
     }
 }
 
 void Lock::unlock()
 {
+    // NOTE: This may be called from an interrupt handler (not an IRQ handler)
+    // and also from within critical sections!
+    ASSERT(!Processor::current().in_irq());
     auto current_thread = Thread::current();
+    ScopedCritical critical;
     for (;;) {
         if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
             ASSERT(m_times_locked);
             --m_times_locked;
 
             ASSERT(m_mode != Mode::Unlocked);
-            if (m_mode == Mode::Exclusive)
+
+            if (m_mode == Mode::Exclusive) {
                 ASSERT(m_holder == current_thread);
-            if (m_holder == current_thread && (m_mode == Mode::Shared || m_times_locked == 0))
-                m_holder = nullptr;
+                if (m_times_locked == 0)
+                    m_holder = nullptr;
+            }
+#ifdef LOCK_DEBUG
+            current_thread->holding_lock(*this, false);
+#endif
 
             if (m_times_locked > 0) {
                 m_lock.store(false, AK::memory_order_release);
@@ -109,29 +118,36 @@ void Lock::unlock()
             return;
         }
         // I don't know *who* is using "m_lock", so just yield.
-        // The assumption is that if we call this from a critical section
-        // that we DO want to temporarily leave it
-        u32 prev_flags;
-        u32 prev_crit = Processor::current().clear_critical(prev_flags, false);
-
-        Scheduler::yield();
-
-        // Note, we may now be on a different CPU!
-        Processor::current().restore_critical(prev_crit, prev_flags);
+        Scheduler::yield_from_critical();
     }
 }
 
 bool Lock::force_unlock_if_locked()
 {
-    ASSERT(m_mode != Mode::Shared);
+    // NOTE: This may be called from an interrupt handler (not an IRQ handler)
+    // and also from within critical sections!
+    ASSERT(!Processor::current().in_irq());
     ScopedCritical critical;
-    if (m_holder != Thread::current())
-        return false;
-    ASSERT(m_times_locked == 1);
-    m_holder = nullptr;
-    m_mode = Mode::Unlocked;
-    m_times_locked = 0;
-    m_queue.wake_one();
+    for (;;) {
+        if (m_lock.exchange(true, AK::memory_order_acq_rel) == false) {
+            if (m_holder != Thread::current()) {
+                m_lock.store(false, AK::MemoryOrder::memory_order_release);
+                return false;
+            }
+            ASSERT(m_mode != Mode::Shared);
+            ASSERT(m_times_locked == 1);
+#ifdef LOCK_DEBUG
+            m_holder->holding_lock(*this, false);
+#endif
+            m_holder = nullptr;
+            m_mode = Mode::Unlocked;
+            m_times_locked = 0;
+            m_queue.wake_one(&m_lock);
+            break;
+        }
+        // I don't know *who* is using "m_lock", so just yield.
+        Scheduler::yield_from_critical();
+    }
     return true;
 }
 

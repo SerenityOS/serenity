@@ -44,6 +44,7 @@ class InodeWatcher;
 class KBuffer;
 class KResult;
 class LocalSocket;
+class Lock;
 class MappedROM;
 class MasterPTY;
 class PageDirectory;
