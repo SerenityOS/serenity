@@ -62,6 +62,38 @@ private:
     unsigned m_offset { 0 };
 };
 
+class Range {
+public:
+    Range() = default;
+    Range(const Position& start, const Position& end)
+        : m_start(start)
+        , m_end(end)
+    {
+    }
+
+    bool is_valid() const { return m_start.is_valid() && m_end.is_valid(); }
+
+    void set(const Position& start, const Position& end)
+    {
+        m_start = start;
+        m_end = end;
+    }
+
+    void set_start(const Position& start) { m_start = start; }
+    void set_end(const Position& end) { m_end = end; }
+
+    const Position& start() const { return m_start; }
+    Position& start() { return m_start; }
+
+    const Position& end() const { return m_end; }
+    Position& end() { return m_end; }
+
+    Range normalized() const;
+
+private:
+    Position m_start, m_end;
+};
+
 const LogStream& operator<<(const LogStream&, const Position&);
 
 }

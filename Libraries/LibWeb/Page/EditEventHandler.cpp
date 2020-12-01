@@ -30,9 +30,31 @@
 #include <LibWeb/Layout/LayoutPosition.h>
 #include <LibWeb/Page/Frame.h>
 
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
+
 #include "EditEventHandler.h"
 
 namespace Web {
+
+void EditEventHandler::handle_delete(DOM::Range range)
+{
+    if (range.start().node() != range.end().node())
+        TODO();
+
+    if (is<DOM::Text>(*range.start().node())) {
+        auto& node = downcast<DOM::Text>(*range.start().node());
+
+        StringBuilder builder;
+
+        builder.append(node.data().substring_view(0, range.start().offset()));
+        builder.append(node.data().substring_view(range.end().offset()));
+        node.set_data(builder.to_string());
+
+        m_frame.document()->layout_node()->set_selection({});
+        node.invalidate_style();
+    }
+}
 
 void EditEventHandler::handle_delete(DOM::Position position)
 {
@@ -41,6 +63,7 @@ void EditEventHandler::handle_delete(DOM::Position position)
 
     if (is<DOM::Text>(*position.node())) {
         auto& node = downcast<DOM::Text>(*position.node());
+
         StringBuilder builder;
         builder.append(node.data().substring_view(0, position.offset() - 1));
         builder.append(node.data().substring_view(position.offset()));
@@ -53,10 +76,9 @@ void EditEventHandler::handle_delete(DOM::Position position)
 
 void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
 {
-    // FIXME: Unicode fiasco.
-
     if (is<DOM::Text>(*position.node())) {
         auto& node = downcast<DOM::Text>(*position.node());
+
         StringBuilder builder;
         builder.append(node.data().substring_view(0, position.offset()));
         builder.append_code_point(code_point);

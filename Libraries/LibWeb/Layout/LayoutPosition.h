@@ -68,6 +68,8 @@ public:
 
     LayoutRange normalized() const;
 
+    DOM::Range to_dom_range() const;
+
 private:
     LayoutPosition m_start;
     LayoutPosition m_end;
