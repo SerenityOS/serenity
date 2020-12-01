@@ -483,7 +483,7 @@ void DirectoryView::handle_selection_change()
     m_force_delete_action->set_enabled(can_delete);
 
     if (on_selection_change)
-        on_selection_change(*m_table_view);
+        on_selection_change(current_view());
 }
 
 void DirectoryView::setup_actions()
