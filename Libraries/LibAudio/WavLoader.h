@@ -31,33 +31,38 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibAudio/Buffer.h>
+#include <LibAudio/Loader.h>
 #include <LibCore/File.h>
 
 namespace Audio {
 class Buffer;
 
 // Parses a WAV file and produces an Audio::Buffer.
-class WavLoader {
+class WavLoaderPlugin : public LoaderPlugin {
 public:
-    explicit WavLoader(const StringView& path);
+    explicit WavLoaderPlugin(const StringView& path);
 
-    bool has_error() const { return !m_error_string.is_null(); }
-    const char* error_string() { return m_error_string.characters(); }
+    virtual bool sniff() override;
 
-    RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB);
+    virtual bool has_error() override { return !m_error_string.is_null(); }
+    virtual const char* error_string() override { return m_error_string.characters(); }
 
-    void reset();
-    void seek(const int position);
+    virtual RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 
-    int loaded_samples() const { return m_loaded_samples; }
-    int total_samples() const { return m_total_samples; }
-    u32 sample_rate() const { return m_sample_rate; }
-    u16 num_channels() const { return m_num_channels; }
-    u16 bits_per_sample() const { return m_bits_per_sample; }
-    RefPtr<Core::File> file() const { return m_file; }
+    virtual void reset() override;
+    virtual void seek(const int position) override;
+
+    virtual int loaded_samples() override { return m_loaded_samples; }
+    virtual int total_samples() override { return m_total_samples; }
+    virtual u32 sample_rate() override { return m_sample_rate; }
+    virtual u16 num_channels() override { return m_num_channels; }
+    virtual u16 bits_per_sample() override { return m_bits_per_sample; }
+    virtual RefPtr<Core::File> file() override { return m_file; }
 
 private:
     bool parse_header();
+
+    bool valid { false };
     RefPtr<Core::File> m_file;
     String m_error_string;
     OwnPtr<ResampleHelper> m_resampler;

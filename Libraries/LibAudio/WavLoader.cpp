@@ -33,7 +33,7 @@
 
 namespace Audio {
 
-WavLoader::WavLoader(const StringView& path)
+WavLoaderPlugin::WavLoaderPlugin(const StringView& path)
     : m_file(Core::File::construct(path))
 {
     if (!m_file->open(Core::IODevice::ReadOnly)) {
@@ -41,13 +41,19 @@ WavLoader::WavLoader(const StringView& path)
         return;
     }
 
-    if (!parse_header())
+    valid = parse_header();
+    if (!valid)
         return;
 
     m_resampler = make<ResampleHelper>(m_sample_rate, 44100);
 }
 
-RefPtr<Buffer> WavLoader::get_more_samples(size_t max_bytes_to_read_from_input)
+bool WavLoaderPlugin::sniff()
+{
+    return valid;
+}
+
+RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
 {
 #ifdef AWAVLOADER_DEBUG
     dbgln("Read WAV of format PCM with num_channels {} sample rate {}, bits per sample {}", m_num_channels, m_sample_rate, m_bits_per_sample);
@@ -64,7 +70,7 @@ RefPtr<Buffer> WavLoader::get_more_samples(size_t max_bytes_to_read_from_input)
     return buffer;
 }
 
-void WavLoader::seek(const int position)
+void WavLoaderPlugin::seek(const int position)
 {
     if (position < 0 || position > m_total_samples)
         return;
@@ -73,12 +79,12 @@ void WavLoader::seek(const int position)
     m_file->seek(position * m_num_channels * (m_bits_per_sample / 8));
 }
 
-void WavLoader::reset()
+void WavLoaderPlugin::reset()
 {
     seek(0);
 }
 
-bool WavLoader::parse_header()
+bool WavLoaderPlugin::parse_header()
 {
     Core::IODeviceStreamReader stream(*m_file);
 
