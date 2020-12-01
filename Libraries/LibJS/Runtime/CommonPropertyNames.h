@@ -223,7 +223,7 @@ struct CommonPropertyNames {
 #define __ENUMERATE(x) FlyString x { #x };
     ENUMERATE_STANDARD_PROPERTY_NAMES(__ENUMERATE)
 #undef __ENUMERATE
-#define __JS_ENUMERATE(x, a, b, c) FlyString x { #x };
+#define __JS_ENUMERATE(x, a, b, c, t) FlyString x { #x };
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 #define __JS_ENUMERATE(x, a) FlyString x { #x };
