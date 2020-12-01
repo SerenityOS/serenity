@@ -28,6 +28,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Uint8ClampedArray.h>
+#include <string.h>
 
 namespace JS {
 
@@ -42,13 +43,13 @@ Uint8ClampedArray::Uint8ClampedArray(u32 length, Object& prototype)
 {
     auto& vm = this->vm();
     define_native_property(vm.names.length, length_getter, nullptr);
-    m_data = new u8[m_length];
+    m_data = (u8*)calloc(m_length, 1);
 }
 
 Uint8ClampedArray::~Uint8ClampedArray()
 {
     ASSERT(m_data);
-    delete[] m_data;
+    free(m_data);
     m_data = nullptr;
 }
 
