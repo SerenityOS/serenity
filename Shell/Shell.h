@@ -244,7 +244,6 @@ private:
 #undef __ENUMERATE_SHELL_BUILTIN
     };
 
-    StringBuilder m_complete_line_builder;
     bool m_should_ignore_jobs_on_next_exit { false };
     pid_t m_pid { 0 };
 
@@ -267,6 +266,8 @@ private:
     RefPtr<Line::Editor> m_editor;
 
     bool m_default_constructed { false };
+
+    mutable bool m_last_continuation_state { false }; // false == not needed.
 };
 
 static constexpr bool is_word_character(char c)

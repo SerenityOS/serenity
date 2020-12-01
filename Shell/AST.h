@@ -418,8 +418,10 @@ public:
     const Position& position() const { return m_position; }
     void set_is_syntax_error(const SyntaxError& error_node)
     {
-        m_is_syntax_error = true;
-        m_syntax_error_node = error_node;
+        if (!m_is_syntax_error) {
+            m_is_syntax_error = true;
+            m_syntax_error_node = error_node;
+        }
     }
     virtual const SyntaxError& syntax_error_node() const
     {
@@ -1174,11 +1176,12 @@ private:
 
 class SyntaxError final : public Node {
 public:
-    SyntaxError(Position, String);
+    SyntaxError(Position, String, bool is_continuable = false);
     virtual ~SyntaxError();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const String& error_text() const { return m_syntax_error_text; }
+    bool is_continuable() const { return m_is_continuable; }
 
 private:
     NODE(SyntaxError);
@@ -1190,6 +1193,7 @@ private:
     virtual const SyntaxError& syntax_error_node() const override;
 
     String m_syntax_error_text;
+    bool m_is_continuable { false };
 };
 
 class Tilde final : public Node {

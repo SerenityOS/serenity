@@ -150,7 +150,7 @@ RefPtr<AST::Node> Parser::parse()
         auto syntax_error_node = create<AST::SyntaxError>("Unexpected tokens past the end");
         if (!toplevel)
             toplevel = move(syntax_error_node);
-        else
+        else if (!toplevel->is_syntax_error())
             toplevel->set_is_syntax_error(*syntax_error_node);
     }
 
@@ -276,7 +276,7 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
             if (!command)
                 restore_to(*start);
             else if (!expect(')'))
-                command->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating close paren"));
+                command->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating close paren", true));
             expression = command;
         }
     }
@@ -350,7 +350,7 @@ RefPtr<AST::Node> Parser::parse_function_decl()
         RefPtr<AST::Node> syntax_error;
         {
             auto obrace_error_start = push_start();
-            syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a function body");
+            syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a function body", true);
         }
         if (!expect('{')) {
             return create<AST::FunctionDeclaration>(
@@ -368,7 +368,7 @@ RefPtr<AST::Node> Parser::parse_function_decl()
         RefPtr<AST::SyntaxError> syntax_error;
         {
             auto cbrace_error_start = push_start();
-            syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a function body");
+            syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a function body", true);
         }
         if (!expect('}')) {
             if (body)
@@ -409,7 +409,7 @@ RefPtr<AST::Node> Parser::parse_or_logical_sequence()
 
     auto right_and_sequence = parse_and_logical_sequence();
     if (!right_and_sequence)
-        right_and_sequence = create<AST::SyntaxError>("Expected an expression after '||'");
+        right_and_sequence = create<AST::SyntaxError>("Expected an expression after '||'", true);
 
     return create<AST::Or>(
         and_sequence.release_nonnull(),
@@ -433,7 +433,7 @@ RefPtr<AST::Node> Parser::parse_and_logical_sequence()
 
     auto right_and_sequence = parse_and_logical_sequence();
     if (!right_and_sequence)
-        right_and_sequence = create<AST::SyntaxError>("Expected an expression after '&&'");
+        right_and_sequence = create<AST::SyntaxError>("Expected an expression after '&&'", true);
 
     return create<AST::And>(
         pipe_sequence.release_nonnull(),
@@ -533,7 +533,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         consume_while(is_whitespace);
         auto in_error_start = push_start();
         if (!expect("in")) {
-            auto syntax_error = create<AST::SyntaxError>("Expected 'in' after a variable name in a 'for' loop");
+            auto syntax_error = create<AST::SyntaxError>("Expected 'in' after a variable name in a 'for' loop", true);
             return create<AST::ForLoop>(move(variable_name), move(syntax_error), nullptr); // ForLoop Var Iterated Block
         }
         in_start_position = AST::Position { in_error_start->offset, m_offset, in_error_start->line, line() };
@@ -545,7 +545,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         auto iter_error_start = push_start();
         iterated_expression = parse_expression();
         if (!iterated_expression) {
-            auto syntax_error = create<AST::SyntaxError>("Expected an expression in 'for' loop");
+            auto syntax_error = create<AST::SyntaxError>("Expected an expression in 'for' loop", true);
             return create<AST::ForLoop>(move(variable_name), move(syntax_error), nullptr, move(in_start_position)); // ForLoop Var Iterated Block
         }
     }
@@ -554,7 +554,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
     {
         auto obrace_error_start = push_start();
         if (!expect('{')) {
-            auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a 'for' loop body");
+            auto syntax_error = create<AST::SyntaxError>("Expected an open brace '{' to start a 'for' loop body", true);
             return create<AST::ForLoop>(move(variable_name), iterated_expression.release_nonnull(), move(syntax_error), move(in_start_position)); // ForLoop Var Iterated Block
         }
     }
@@ -565,7 +565,7 @@ RefPtr<AST::Node> Parser::parse_for_loop()
         auto cbrace_error_start = push_start();
         if (!expect('}')) {
             auto error_start = push_start();
-            auto syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a 'for' loop body");
+            auto syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a 'for' loop body", true);
             if (body)
                 body->set_is_syntax_error(*syntax_error);
             else
@@ -592,7 +592,7 @@ RefPtr<AST::Node> Parser::parse_if_expr()
         auto cond_error_start = push_start();
         condition = parse_or_logical_sequence();
         if (!condition)
-            condition = create<AST::SyntaxError>("Expected a logical sequence after 'if'");
+            condition = create<AST::SyntaxError>("Expected a logical sequence after 'if'", true);
     }
 
     auto parse_braced_toplevel = [&]() -> RefPtr<AST::Node> {
@@ -600,7 +600,7 @@ RefPtr<AST::Node> Parser::parse_if_expr()
         {
             auto obrace_error_start = push_start();
             if (!expect('{')) {
-                body = create<AST::SyntaxError>("Expected an open brace '{' to start an 'if' true branch");
+                body = create<AST::SyntaxError>("Expected an open brace '{' to start an 'if' true branch", true);
             }
         }
 
@@ -611,7 +611,7 @@ RefPtr<AST::Node> Parser::parse_if_expr()
             auto cbrace_error_start = push_start();
             if (!expect('}')) {
                 auto error_start = push_start();
-                RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end an 'if' true branch");
+                RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end an 'if' true branch", true);
                 if (body)
                     body->set_is_syntax_error(*syntax_error);
                 else
@@ -659,7 +659,7 @@ RefPtr<AST::Node> Parser::parse_subshell()
         auto cbrace_error_start = push_start();
         if (!expect('}')) {
             auto error_start = push_start();
-            RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a subshell");
+            RefPtr<AST::SyntaxError> syntax_error = create<AST::SyntaxError>("Expected a close brace '}' to end a subshell", true);
             if (body)
                 body->set_is_syntax_error(*syntax_error);
             else
@@ -684,7 +684,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
     auto match_expression = parse_expression();
     if (!match_expression) {
         return create<AST::MatchExpr>(
-            create<AST::SyntaxError>("Expected an expression after 'match'"),
+            create<AST::SyntaxError>("Expected an expression after 'match'", true),
             String {}, Optional<AST::Position> {}, Vector<AST::MatchEntry> {});
     }
 
@@ -701,7 +701,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
             auto node = create<AST::MatchExpr>(
                 match_expression.release_nonnull(),
                 String {}, move(as_position), Vector<AST::MatchEntry> {});
-            node->set_is_syntax_error(create<AST::SyntaxError>("Expected whitespace after 'as' in 'match'"));
+            node->set_is_syntax_error(create<AST::SyntaxError>("Expected whitespace after 'as' in 'match'", true));
             return node;
         }
 
@@ -710,7 +710,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
             auto node = create<AST::MatchExpr>(
                 match_expression.release_nonnull(),
                 String {}, move(as_position), Vector<AST::MatchEntry> {});
-            node->set_is_syntax_error(create<AST::SyntaxError>("Expected an identifier after 'as' in 'match'"));
+            node->set_is_syntax_error(create<AST::SyntaxError>("Expected an identifier after 'as' in 'match'", true));
             return node;
         }
     }
@@ -721,7 +721,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
         auto node = create<AST::MatchExpr>(
             match_expression.release_nonnull(),
             move(match_name), move(as_position), Vector<AST::MatchEntry> {});
-        node->set_is_syntax_error(create<AST::SyntaxError>("Expected an open brace '{' to start a 'match' entry list"));
+        node->set_is_syntax_error(create<AST::SyntaxError>("Expected an open brace '{' to start a 'match' entry list", true));
         return node;
     }
 
@@ -743,7 +743,7 @@ RefPtr<AST::Node> Parser::parse_match_expr()
         auto node = create<AST::MatchExpr>(
             match_expression.release_nonnull(),
             move(match_name), move(as_position), move(entries));
-        node->set_is_syntax_error(create<AST::SyntaxError>("Expected a close brace '}' to end a 'match' entry list"));
+        node->set_is_syntax_error(create<AST::SyntaxError>("Expected a close brace '}' to end a 'match' entry list", true));
         return node;
     }
 
@@ -761,7 +761,7 @@ AST::MatchEntry Parser::parse_match_entry()
 
     auto pattern = parse_match_pattern();
     if (!pattern)
-        return { {}, {}, {}, {}, create<AST::SyntaxError>("Expected a pattern in 'match' body") };
+        return { {}, {}, {}, {}, create<AST::SyntaxError>("Expected a pattern in 'match' body", true) };
 
     patterns.append(pattern.release_nonnull());
 
@@ -775,7 +775,7 @@ AST::MatchEntry Parser::parse_match_entry()
         consume_while(is_any_of(" \t\n"));
         auto pattern = parse_match_pattern();
         if (!pattern) {
-            error = create<AST::SyntaxError>("Expected a pattern to follow '|' in 'match' body");
+            error = create<AST::SyntaxError>("Expected a pattern to follow '|' in 'match' body", true);
             break;
         }
         consume_while(is_any_of(" \t\n"));
@@ -808,7 +808,7 @@ AST::MatchEntry Parser::parse_match_entry()
 
             if (!expect(')')) {
                 if (!error)
-                    error = create<AST::SyntaxError>("Expected a close paren ')' to end the identifier list of pattern 'as'");
+                    error = create<AST::SyntaxError>("Expected a close paren ')' to end the identifier list of pattern 'as'", true);
             }
         }
         consume_while(is_any_of(" \t\n"));
@@ -816,14 +816,14 @@ AST::MatchEntry Parser::parse_match_entry()
 
     if (!expect('{')) {
         if (!error)
-            error = create<AST::SyntaxError>("Expected an open brace '{' to start a match entry body");
+            error = create<AST::SyntaxError>("Expected an open brace '{' to start a match entry body", true);
     }
 
     auto body = parse_toplevel();
 
     if (!expect('}')) {
         if (!error)
-            error = create<AST::SyntaxError>("Expected a close brace '}' to end a match entry body");
+            error = create<AST::SyntaxError>("Expected a close brace '}' to end a match entry body", true);
     }
 
     if (body && error)
@@ -864,7 +864,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
                     // Eat a character and hope the problem goes away
                     consume();
                 }
-                path = create<AST::SyntaxError>("Expected a path after redirection");
+                path = create<AST::SyntaxError>("Expected a path after redirection", true);
             }
             return create<AST::WriteAppendRedirection>(pipe_fd, path.release_nonnull()); // Redirection WriteAppend
         }
@@ -898,7 +898,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
                 // Eat a character and hope the problem goes away
                 consume();
             }
-            path = create<AST::SyntaxError>("Expected a path after redirection");
+            path = create<AST::SyntaxError>("Expected a path after redirection", true);
         }
         return create<AST::WriteRedirection>(pipe_fd, path.release_nonnull()); // Redirection Write
     }
@@ -922,7 +922,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
                 // Eat a character and hope the problem goes away
                 consume();
             }
-            path = create<AST::SyntaxError>("Expected a path after redirection");
+            path = create<AST::SyntaxError>("Expected a path after redirection", true);
         }
         if (mode == Read)
             return create<AST::ReadRedirection>(pipe_fd, path.release_nonnull()); // Redirection Read
@@ -1075,10 +1075,10 @@ RefPtr<AST::Node> Parser::parse_string()
         consume();
         auto inner = parse_doublequoted_string_inner();
         if (!inner)
-            inner = create<AST::SyntaxError>("Unexpected EOF in string");
+            inner = create<AST::SyntaxError>("Unexpected EOF in string", true);
         if (!expect('"')) {
             inner = create<AST::DoubleQuotedString>(move(inner));
-            inner->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating double quote"));
+            inner->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating double quote", true));
             return inner;
         }
         return create<AST::DoubleQuotedString>(move(inner)); // Double Quoted String
@@ -1092,7 +1092,7 @@ RefPtr<AST::Node> Parser::parse_string()
             is_error = true;
         auto result = create<AST::StringLiteral>(move(text)); // String Literal
         if (is_error)
-            result->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating single quote"));
+            result->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating single quote", true));
         return move(result);
     }
 
@@ -1229,16 +1229,16 @@ RefPtr<AST::Node> Parser::parse_evaluate()
         consume();
         auto inner = parse_pipe_sequence();
         if (!inner)
-            inner = create<AST::SyntaxError>("Unexpected EOF in list");
+            inner = create<AST::SyntaxError>("Unexpected EOF in list", true);
         if (!expect(')'))
-            inner->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating close paren"));
+            inner->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating close paren", true));
 
         return create<AST::Execute>(inner.release_nonnull(), true);
     }
     auto inner = parse_expression();
 
     if (!inner) {
-        inner = create<AST::SyntaxError>("Expected a command");
+        inner = create<AST::SyntaxError>("Expected a command", true);
     } else {
         if (inner->is_list()) {
             auto execute_inner = create<AST::Execute>(inner.release_nonnull(), true);
@@ -1408,7 +1408,7 @@ RefPtr<AST::Node> Parser::parse_brace_expansion()
 
     if (auto spec = parse_brace_expansion_spec()) {
         if (!expect('}'))
-            spec->set_is_syntax_error(create<AST::SyntaxError>("Expected a close brace '}' to end a brace expansion"));
+            spec->set_is_syntax_error(create<AST::SyntaxError>("Expected a close brace '}' to end a brace expansion", true));
 
         return spec;
     }
@@ -1431,7 +1431,7 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
                 return create<AST::Range>(start_expr.release_nonnull(), end_expr.release_nonnull());
             }
 
-            return create<AST::Range>(start_expr.release_nonnull(), create<AST::SyntaxError>("Expected an expression to end range brace expansion with"));
+            return create<AST::Range>(start_expr.release_nonnull(), create<AST::SyntaxError>("Expected an expression to end range brace expansion with", true));
         }
     }
 
