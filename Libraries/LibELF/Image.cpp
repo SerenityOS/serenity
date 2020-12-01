@@ -151,6 +151,12 @@ bool Image::parse()
         return m_valid = false;
     }
 
+    if (!validate_program_headers(header(), m_size, m_buffer, m_size, nullptr, m_verbose_logging)) {
+        if (m_verbose_logging)
+            dbgputstr("Image::parse(): ELF Program Headers not valid\n");
+        return m_valid = false;
+    }
+
     m_valid = true;
 
     // First locate the string tables.
