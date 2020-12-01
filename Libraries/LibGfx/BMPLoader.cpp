@@ -343,10 +343,10 @@ static void populate_dib_mask_info(BMPLoadingContext& context)
         return;
 
     // Mask shift is the number of right shifts needed to align the MSb of the
-    //   mask to the MSb of the LSB.
+    // mask to the MSb of the LSB. Note that this can be a negative number.
     // Mask size is the number of set bits in the mask. This is required for
-    //   color scaling (for example, ensuring that a 4-bit color value spans the
-    //   entire 256 value color spectrum.
+    // color scaling (for example, ensuring that a 4-bit color value spans the
+    // entire 256 value color spectrum.
     auto& masks = context.dib.info.masks;
     auto& mask_shifts = context.dib.info.mask_shifts;
     auto& mask_sizes = context.dib.info.mask_sizes;
@@ -361,29 +361,15 @@ static void populate_dib_mask_info(BMPLoadingContext& context)
 
     for (size_t i = 0; i < masks.size(); ++i) {
         u32 mask = masks[i];
-        u8 shift = 0;
-        u8 size = 0;
-        bool found_set_bit = false;
-
-        while (shift <= 32) {
-            u8 bit = (mask >> shift) & 0x1;
-            if (found_set_bit)
-                size++;
-            if (!found_set_bit && bit) {
-                found_set_bit = true;
-            } else if (found_set_bit && !bit) {
-                break;
-            }
-            shift++;
-        }
-
-        if (shift > 32) {
+        if (!mask) {
             mask_shifts.append(0);
             mask_sizes.append(0);
-        } else {
-            mask_shifts.append(shift - 8);
-            mask_sizes.append(size);
+            continue;
         }
+        int trailing_zeros = count_trailing_zeroes_32(mask);
+        int size = count_trailing_zeroes_32(~(mask >> trailing_zeros));
+        mask_shifts.append(trailing_zeros - 8);
+        mask_sizes.append(size);
     }
 }
 
