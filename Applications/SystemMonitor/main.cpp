@@ -26,6 +26,7 @@
 
 #include "DevicesModel.h"
 #include "GraphWidget.h"
+#include "InterruptsWidget.h"
 #include "MemoryStatsWidget.h"
 #include "NetworkStatisticsWidget.h"
 #include "ProcessFileDescriptorMapWidget.h"
@@ -178,6 +179,9 @@ int main(int argc, char** argv)
     tabwidget.add_widget("Network", network_stats_widget);
 
     tabwidget.add_widget("Processors", build_processors_tab());
+
+    auto interrupts_widget = InterruptsWidget::construct();
+    tabwidget.add_widget("Interrupts", interrupts_widget);
 
     process_table_container.set_layout<GUI::VerticalBoxLayout>();
     process_table_container.layout()->set_spacing(0);
