@@ -710,6 +710,7 @@ public:
     template<typename T, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
+        ScopedSpinLock scheduler_lock(g_scheduler_lock);
         ScopedSpinLock lock(m_lock);
         // We need to hold m_lock so that nobody can unblock a blocker as soon
         // as it is constructed and registered elsewhere
@@ -718,7 +719,6 @@ public:
         bool did_timeout = false;
         RefPtr<Timer> timer;
         {
-            ScopedSpinLock scheduler_lock(g_scheduler_lock);
             // We should never be blocking a blocked (or otherwise non-active) thread.
             ASSERT(state() == Thread::Running);
             ASSERT(m_blocker == nullptr);
@@ -762,15 +762,16 @@ public:
         }
 
         lock.unlock();
+        scheduler_lock.unlock();
 
         // Yield to the scheduler, and wait for us to resume unblocked.
         yield_without_holding_big_lock();
 
+        scheduler_lock.lock();
         lock.lock();
 
         bool is_stopped = false;
         {
-            ScopedSpinLock scheduler_lock(g_scheduler_lock);
             if (t.was_interrupted_by_signal())
                 dispatch_one_pending_signal();
 
@@ -787,16 +788,20 @@ public:
                 did_timeout = true;
         }
 
+        // Notify the blocker that we are no longer blocking. It may need
+        // to clean up now while we're still holding m_lock
+        auto result = t.end_blocking({}, did_timeout); // calls was_unblocked internally
+
         if (timer && !did_timeout) {
             // Cancel the timer while not holding any locks. This allows
             // the timer function to complete before we remove it
             // (e.g. if it's on another processor)
+            lock.unlock();
+            scheduler_lock.unlock();
             TimerQueue::the().cancel_timer(timer.release_nonnull());
+        } else {
+            scheduler_lock.unlock();
         }
-
-        // Notify the blocker that we are no longer blocking. It may need
-        // to clean up now while we're still holding m_lock
-        auto result = t.end_blocking({}, did_timeout); // calls was_unblocked internally
 
         if (is_stopped) {
             // If we're stopped we need to yield
