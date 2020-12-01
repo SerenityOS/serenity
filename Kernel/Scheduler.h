@@ -57,6 +57,7 @@ public:
     [[noreturn]] static void start();
     static bool pick_next();
     static bool yield();
+    static void yield_from_critical();
     static bool donate_to_and_switch(Thread*, const char* reason);
     static bool donate_to(RefPtr<Thread>&, const char* reason);
     static bool context_switch(Thread*);

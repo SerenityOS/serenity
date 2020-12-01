@@ -31,6 +31,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Thread.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {
@@ -50,6 +51,9 @@ public:
     };
 
     void lock(Mode = Mode::Exclusive);
+#ifdef LOCK_DEBUG
+    void lock(const char* file, int line, Mode mode = Mode::Exclusive);
+#endif
     void unlock();
     bool force_unlock_if_locked();
     bool is_locked() const { return m_holder; }
@@ -77,6 +81,13 @@ private:
 
 class Locker {
 public:
+#ifdef LOCK_DEBUG
+    ALWAYS_INLINE explicit Locker(const char* file, int line, Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
+        : m_lock(l)
+    {
+        m_lock.lock(file, line, mode);
+    }
+#endif
     ALWAYS_INLINE explicit Locker(Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
         : m_lock(l)
     {
@@ -90,7 +101,11 @@ private:
     Lock& m_lock;
 };
 
-#define LOCKER(...) Locker locker(__VA_ARGS__)
+#ifdef LOCK_DEBUG
+#    define LOCKER(...) Locker locker(__FILE__, __LINE__, __VA_ARGS__)
+#else
+#    define LOCKER(...) Locker locker(__VA_ARGS__)
+#endif
 
 template<typename T>
 class Lockable {

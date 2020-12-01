@@ -316,7 +316,16 @@ void Thread::finalize()
     ASSERT(Thread::current() == g_finalizer);
     ASSERT(Thread::current() != this);
 
+#ifdef LOCK_DEBUG
     ASSERT(!m_lock.own_lock());
+    if (lock_count() > 0) {
+        dbg() << "Thread " << *this << " leaking " << lock_count() << " Locks!";
+        ScopedSpinLock list_lock(m_holding_locks_lock);
+        for (auto& info : m_holding_locks_list)
+            dbg() << " - " << info.lock->name() << " @ " << info.lock << " locked at " << info.file << ":" << info.line << " count: " << info.count;
+        ASSERT_NOT_REACHED();
+    }
+#endif
 
     {
         ScopedSpinLock lock(g_scheduler_lock);
@@ -1080,10 +1089,9 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, const 
                     }
                 });
                 if (!timer) {
+                    if (lock)
+                        *lock = false;
                     // We timed out already, don't block
-                    // The API contract guarantees we return with interrupts enabled,
-                    // regardless of how we got called
-                    critical.set_interrupt_flag_on_destruction(true);
                     return BlockResult::InterruptedByTimeout;
                 }
             }
@@ -1094,16 +1102,13 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, const 
                 // The WaitQueue was already requested to wake someone when
                 // nobody was waiting. So return right away as we shouldn't
                 // be waiting
-
-                // The API contract guarantees we return with interrupts enabled,
-                // regardless of how we got called
-                critical.set_interrupt_flag_on_destruction(true);
+                // NOTE: Do not set lock to false in this case!
                 return BlockResult::NotBlocked;
             }
 
-            did_unlock = unlock_process_if_locked();
             if (lock)
                 *lock = false;
+            did_unlock = unlock_process_if_locked();
             set_state(State::Queued);
             m_wait_reason = reason;
 
@@ -1158,9 +1163,6 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, const 
         TimerQueue::the().cancel_timer(timer.release_nonnull());
     }
 
-    // The API contract guarantees we return with interrupts enabled,
-    // regardless of how we got called
-    sti();
     return result;
 }
 
