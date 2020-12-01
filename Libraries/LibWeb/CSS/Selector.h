@@ -57,6 +57,13 @@ public:
         };
         PseudoClass pseudo_class { PseudoClass::None };
 
+        enum class PseudoElement {
+            None,
+            Before,
+            After,
+        };
+        PseudoElement pseudo_element { PseudoElement::None };
+
         FlyString value;
 
         enum class AttributeMatchType {

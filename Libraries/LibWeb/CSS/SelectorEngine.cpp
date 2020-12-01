@@ -44,6 +44,14 @@ static bool matches_hover_pseudo_class(const DOM::Element& element)
 
 static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::Element& element)
 {
+    switch (component.pseudo_element) {
+    case CSS::Selector::SimpleSelector::PseudoElement::None:
+        break;
+    default:
+        // FIXME: Implement pseudo-elements.
+        return false;
+    }
+
     switch (component.pseudo_class) {
     case CSS::Selector::SimpleSelector::PseudoClass::None:
         break;
