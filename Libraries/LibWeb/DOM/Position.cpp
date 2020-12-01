@@ -39,6 +39,24 @@ Position::~Position()
 {
 }
 
+Range Range::normalized() const
+{
+    if (!is_valid())
+        return {};
+
+    if (m_start.node() == m_end.node()) {
+        if (m_start.offset() <= m_end.offset())
+            return *this;
+
+        return { m_end, m_start };
+    }
+
+    if (m_start.node()->is_before(*m_end.node()))
+        return *this;
+
+    return { m_end, m_start };
+}
+
 const LogStream& operator<<(const LogStream& stream, const Position& position)
 {
     if (!position.node())

@@ -53,4 +53,12 @@ LayoutRange LayoutRange::normalized() const
     return { m_end, m_start };
 }
 
+DOM::Range LayoutRange::to_dom_range() const
+{
+    if (!is_valid())
+        return {};
+
+    return { m_start.to_dom_position(), m_end.to_dom_position() };
+}
+
 }
