@@ -52,6 +52,18 @@ TimeManagement& TimeManagement::the()
     return *s_the;
 }
 
+KResultOr<timespec> TimeManagement::current_time(clockid_t clock_id) const
+{
+    switch (clock_id) {
+    case CLOCK_MONOTONIC:
+        return monotonic_time();
+    case CLOCK_REALTIME:
+        return epoch_time();
+    default:
+        return KResult(EINVAL);
+    }
+}
+
 bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
 {
     return &timer == m_system_timer.ptr();

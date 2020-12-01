@@ -211,28 +211,30 @@ public:
             : m_infinite(true)
         {
         }
-        explicit BlockTimeout(bool is_absolute, const timeval* time, const timespec* start_time = nullptr)
-            : m_infinite(!time)
+        explicit BlockTimeout(bool is_absolute, const timeval* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC)
+            : m_clock_id(clock_id)
+            , m_infinite(!time)
         {
             if (!m_infinite) {
                 if (time->tv_sec > 0 || time->tv_usec > 0) {
                     timeval_to_timespec(*time, m_time);
                     m_should_block = true;
                 }
-                m_start_time = start_time ? *start_time : TimeManagement::the().monotonic_time();
+                m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
                 if (!is_absolute)
                     timespec_add(m_time, m_start_time, m_time);
             }
         }
-        explicit BlockTimeout(bool is_absolute, const timespec* time, const timespec* start_time = nullptr)
-            : m_infinite(!time)
+        explicit BlockTimeout(bool is_absolute, const timespec* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC)
+            : m_clock_id(clock_id)
+            , m_infinite(!time)
         {
             if (!m_infinite) {
                 if (time->tv_sec > 0 || time->tv_nsec > 0) {
                     m_time = *time;
                     m_should_block = true;
                 }
-                m_start_time = start_time ? *start_time : TimeManagement::the().monotonic_time();
+                m_start_time = start_time ? *start_time : TimeManagement::the().current_time(clock_id).value();
                 if (!is_absolute)
                     timespec_add(m_time, m_start_time, m_time);
             }
@@ -240,12 +242,14 @@ public:
 
         const timespec& absolute_time() const { return m_time; }
         const timespec* start_time() const { return !m_infinite ? &m_start_time : nullptr; }
+        clockid_t clock_id() const { return m_clock_id; }
         bool is_infinite() const { return m_infinite; }
         bool should_block() const { return m_infinite || m_should_block; };
 
     private:
         timespec m_time { 0, 0 };
         timespec m_start_time { 0, 0 };
+        clockid_t m_clock_id { CLOCK_MONOTONIC };
         bool m_infinite { false };
         bool m_should_block { false };
     };
@@ -733,7 +737,7 @@ public:
 
             auto& block_timeout = t.override_timeout(timeout);
             if (!block_timeout.is_infinite()) {
-                m_blocker_timeout = timer = TimerQueue::the().add_timer_without_id(block_timeout.absolute_time(), [&]() {
+                m_blocker_timeout = timer = TimerQueue::the().add_timer_without_id(block_timeout.clock_id(), block_timeout.absolute_time(), [&]() {
                     // NOTE: this may execute on the same or any other processor!
                     ScopedSpinLock scheduler_lock(g_scheduler_lock);
                     ScopedSpinLock lock(m_lock);
@@ -816,8 +820,16 @@ public:
     void unblock_from_blocker(Blocker&);
     void unblock(u8 signal = 0);
 
-    BlockResult sleep(const timespec&, timespec* = nullptr);
-    BlockResult sleep_until(const timespec&);
+    BlockResult sleep(clockid_t, const timespec&, timespec* = nullptr);
+    BlockResult sleep(const timespec& duration, timespec* remaining_time = nullptr)
+    {
+        return sleep(CLOCK_MONOTONIC, duration, remaining_time);
+    }
+    BlockResult sleep_until(clockid_t, const timespec&);
+    BlockResult sleep_until(const timespec& duration)
+    {
+        return sleep_until(CLOCK_MONOTONIC, duration);
+    }
 
     // Tell this thread to unblock if needed,
     // gracefully unwind the stack and die.
