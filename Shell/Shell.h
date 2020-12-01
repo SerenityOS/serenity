@@ -47,6 +47,7 @@
     __ENUMERATE_SHELL_BUILTIN(pwd)     \
     __ENUMERATE_SHELL_BUILTIN(exit)    \
     __ENUMERATE_SHELL_BUILTIN(export)  \
+    __ENUMERATE_SHELL_BUILTIN(glob)    \
     __ENUMERATE_SHELL_BUILTIN(unset)   \
     __ENUMERATE_SHELL_BUILTIN(history) \
     __ENUMERATE_SHELL_BUILTIN(umask)   \
