@@ -29,6 +29,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
+#include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -49,6 +50,7 @@ public:
     static timespec ticks_to_time(u64 ticks, time_t ticks_per_second);
     static u64 time_to_ticks(const timespec& tspec, time_t ticks_per_second);
 
+    KResultOr<timespec> current_time(clockid_t clock_id) const;
     timespec monotonic_time() const;
     timespec epoch_time() const;
     void set_epoch_time(timespec);

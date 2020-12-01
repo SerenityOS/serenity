@@ -197,7 +197,7 @@ auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> cons
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_send_timeout()) {
-            m_timeout = BlockTimeout(false, &socket.send_timeout(), timeout.start_time());
+            m_timeout = BlockTimeout(false, &socket.send_timeout(), timeout.start_time(), timeout.clock_id());
             if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
                 return m_timeout;
         }
@@ -216,7 +216,7 @@ auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const
     if (description.is_socket()) {
         auto& socket = *description.socket();
         if (socket.has_receive_timeout()) {
-            m_timeout = BlockTimeout(false, &socket.receive_timeout(), timeout.start_time());
+            m_timeout = BlockTimeout(false, &socket.receive_timeout(), timeout.start_time(), timeout.clock_id());
             if (timeout.is_infinite() || (!m_timeout.is_infinite() && m_timeout.absolute_time() < timeout.absolute_time()))
                 return m_timeout;
         }
@@ -256,7 +256,7 @@ void Thread::SleepBlocker::calculate_remaining()
 {
     if (!m_remaining)
         return;
-    auto time_now = TimeManagement::the().monotonic_time();
+    auto time_now = TimeManagement::the().current_time(m_deadline.clock_id()).value();
     if (time_now < m_deadline.absolute_time())
         timespec_sub(m_deadline.absolute_time(), time_now, *m_remaining);
     else

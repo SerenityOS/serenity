@@ -271,16 +271,16 @@ void Thread::relock_process(bool did_unlock)
     Processor::current().restore_critical(prev_crit, prev_flags);
 }
 
-auto Thread::sleep(const timespec& duration, timespec* remaining_time) -> BlockResult
+auto Thread::sleep(clockid_t clock_id, const timespec& duration, timespec* remaining_time) -> BlockResult
 {
     ASSERT(state() == Thread::Running);
-    return Thread::current()->block<Thread::SleepBlocker>(nullptr, Thread::BlockTimeout(false, &duration), remaining_time);
+    return Thread::current()->block<Thread::SleepBlocker>(nullptr, Thread::BlockTimeout(false, &duration, nullptr, clock_id), remaining_time);
 }
 
-auto Thread::sleep_until(const timespec& deadline) -> BlockResult
+auto Thread::sleep_until(clockid_t clock_id, const timespec& deadline) -> BlockResult
 {
     ASSERT(state() == Thread::Running);
-    return Thread::current()->block<Thread::SleepBlocker>(nullptr, Thread::BlockTimeout(true, &deadline));
+    return Thread::current()->block<Thread::SleepBlocker>(nullptr, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
 }
 
 const char* Thread::state_string() const
@@ -1081,7 +1081,7 @@ Thread::BlockResult Thread::wait_on(WaitQueue& queue, const char* reason, const 
         {
             ScopedSpinLock sched_lock(g_scheduler_lock);
             if (!timeout.is_infinite()) {
-                timer = TimerQueue::the().add_timer_without_id(timeout.absolute_time(), [&]() {
+                timer = TimerQueue::the().add_timer_without_id(timeout.clock_id(), timeout.absolute_time(), [&]() {
                     // NOTE: this may execute on the same or any other processor!
                     ScopedSpinLock lock(g_scheduler_lock);
                     if (!block_finished) {

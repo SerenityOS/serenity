@@ -34,20 +34,11 @@ int Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
     REQUIRE_PROMISE(stdio);
 
-    timespec ts = {};
+    auto ts = TimeManagement::the().current_time(clock_id);
+    if (ts.is_error())
+        return ts.error();
 
-    switch (clock_id) {
-    case CLOCK_MONOTONIC:
-        ts = TimeManagement::the().monotonic_time();
-        break;
-    case CLOCK_REALTIME:
-        ts = TimeManagement::the().epoch_time();
-        break;
-    default:
-        return -EINVAL;
-    }
-
-    if (!copy_to_user(user_ts, &ts))
+    if (!copy_to_user(user_ts, &ts.value()))
         return -EFAULT;
     return 0;
 }
@@ -88,13 +79,14 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
     bool is_absolute = params.flags & TIMER_ABSTIME;
 
     switch (params.clock_id) {
-    case CLOCK_MONOTONIC: {
+    case CLOCK_MONOTONIC:
+    case CLOCK_REALTIME: {
         bool was_interrupted;
         if (is_absolute) {
-            was_interrupted = Thread::current()->sleep_until(requested_sleep).was_interrupted();
+            was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep).was_interrupted();
         } else {
             timespec remaining_sleep;
-            was_interrupted = Thread::current()->sleep(requested_sleep, &remaining_sleep).was_interrupted();
+            was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep).was_interrupted();
             if (was_interrupted && params.remaining_sleep && !copy_to_user(params.remaining_sleep, &remaining_sleep))
                 return -EFAULT;
         }
