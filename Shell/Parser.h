@@ -80,6 +80,9 @@ private:
     RefPtr<AST::Node> parse_glob();
     RefPtr<AST::Node> parse_brace_expansion();
     RefPtr<AST::Node> parse_brace_expansion_spec();
+    RefPtr<AST::Node> parse_immediate_brace_expression();
+    RefPtr<AST::Node> parse_immediate_expression();
+    NonnullRefPtrVector<AST::Node> parse_immediate_expression_sequence();
 
     template<typename A, typename... Args>
     NonnullRefPtr<A> create(Args... args);
@@ -203,6 +206,7 @@ redirection :: number? '>'{1,2} ' '* string_composite
 list_expression :: ' '* expression (' '+ list_expression)?
 
 expression :: evaluate expression?
+            | immediate_brace_expression expression?
             | string_composite expression?
             | comment expression?
             | '(' list_expression ')' expression?
@@ -210,8 +214,16 @@ expression :: evaluate expression?
 evaluate :: '$' '(' pipe_sequence ')'
           | '$' expression          {eval / dynamic resolve}
 
+immediate_brace_expression :: '$' '{' immediate_expression '}'
+
+immediate_expression :: identifier immediate_expression_sequence
+
+immediate_expression_sequence ::
+                               | expression immediate_expression_sequence?
+
 string_composite :: string string_composite?
                   | variable string_composite?
+                  | immediate_brace_expression string_compose?
                   | bareword string_composite?
                   | glob string_composite?
                   | brace_expansion string_composite?
@@ -221,6 +233,7 @@ string :: '"' dquoted_string_inner '"'
 
 dquoted_string_inner :: '\' . dquoted_string_inner?       {concat}
                       | variable dquoted_string_inner?    {compose}
+                      | immediate_brace_expression dquoted_string_inner?
                       | . dquoted_string_inner?
                       | '\' 'x' digit digit dquoted_string_inner?
                       | '\' [abefrn] dquoted_string_inner?

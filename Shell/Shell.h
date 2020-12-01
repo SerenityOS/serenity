@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "ImmediateFunctions.h"
 #include "Job.h"
 #include "Parser.h"
 #include <AK/CircularQueue.h>
@@ -69,7 +70,6 @@
 namespace Shell {
 
 class Shell;
-
 class Shell : public Core::Object {
     C_OBJECT(Shell);
 
@@ -154,6 +154,7 @@ public:
     Vector<Line::CompletionSuggestion> complete();
     Vector<Line::CompletionSuggestion> complete_path(const String& base, const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_program_name(const String&, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_immediate_function_name(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_variable(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(const String&, size_t offset);
     Vector<Line::CompletionSuggestion> complete_option(const String&, const String&, size_t offset);

@@ -61,6 +61,12 @@ void NodeVisitor::visit(const AST::BraceExpansion* node)
         entry.visit(*this);
 }
 
+void NodeVisitor::visit(const AST::BracedImmediateExpression* node)
+{
+    for (auto& entry : node->arguments())
+        entry.visit(*this);
+}
+
 void NodeVisitor::visit(const AST::CastToCommand* node)
 {
     node->inner()->visit(*this);

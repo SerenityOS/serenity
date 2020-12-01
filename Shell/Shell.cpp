@@ -1285,6 +1285,25 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
     return suggestions;
 }
 
+Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(const String& name, size_t offset)
+{
+    Vector<Line::CompletionSuggestion> suggestions;
+
+    auto lookup_name = name.substring_view(0, offset);
+    if (m_editor)
+        m_editor->suggest(offset);
+
+#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name)  \
+    if (StringView(#name).starts_with(lookup_name)) \
+        suggestions.append({ #name, " " });
+
+    ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()
+
+#undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
+
+    return suggestions;
+}
+
 Vector<Line::CompletionSuggestion> Shell::complete_variable(const String& name, size_t offset)
 {
     Vector<Line::CompletionSuggestion> suggestions;
@@ -1620,7 +1639,7 @@ Shell::Shell(Line::Editor& editor)
     m_editor->load_history(get_history_path());
     cache_path();
 
-    m_editor->register_key_input_callback('\n', [](Line::Editor& editor) {
+    m_editor->register_key_input_callback('\n', [&](Line::Editor& editor) {
         auto ast = Parser(editor.line()).parse();
         if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
             return true;
@@ -1770,5 +1789,4 @@ SavedFileDescriptors::~SavedFileDescriptors()
         }
     }
 }
-
 }

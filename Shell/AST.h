@@ -27,6 +27,7 @@
 #pragma once
 
 #include "Forward.h"
+#include "ImmediateFunctions.h"
 #include "Job.h"
 #include "NodeVisitor.h"
 #include <AK/Format.h>
@@ -40,6 +41,18 @@
 #include <LibLine/Editor.h>
 
 namespace Shell::AST {
+
+template<typename T, typename... Args>
+static inline NonnullRefPtr<T> create(Args... args)
+{
+    return adopt(*new T(args...));
+}
+
+template<typename T>
+static inline NonnullRefPtr<T> create(std::initializer_list<NonnullRefPtr<Value>> arg)
+{
+    return adopt(*new T(arg));
+}
 
 struct HighlightMetadata {
     bool is_first_in_list { true };
@@ -442,6 +455,7 @@ public:
         Background,
         BarewordLiteral,
         BraceExpansion,
+        BracedImmediateExpression,
         CastToCommand,
         CastToList,
         CloseFdRedirection,
@@ -470,6 +484,7 @@ public:
         StringLiteral,
         StringPartCompose,
         SyntaxError,
+        SyntheticNode,
         Tilde,
         VariableDeclarations,
         WriteAppendRedirection,
@@ -602,6 +617,29 @@ private:
     virtual HitTestResult hit_test_position(size_t) override;
 
     NonnullRefPtrVector<Node> m_entries;
+};
+
+class BracedImmediateExpression final : public Node {
+public:
+    BracedImmediateExpression(Position, String function, NonnullRefPtrVector<Node>);
+    virtual ~BracedImmediateExpression();
+    virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
+
+    const String& function() const { return m_function_name; }
+    const NonnullRefPtrVector<Node>& arguments() const { return m_arguments; }
+
+private:
+    NODE(BracedImmediateExpression);
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override;
+    virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
+    virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
+    virtual HitTestResult hit_test_position(size_t) override;
+
+    String m_function_name;
+    ImmediateFunction m_fn { ImmediateFunction::Invalid };
+    NonnullRefPtrVector<Node> m_arguments;
 };
 
 class CastToCommand final : public Node {
@@ -1193,6 +1231,27 @@ private:
 
     String m_syntax_error_text;
     bool m_is_continuable { false };
+};
+
+class SyntheticNode final : public Node {
+public:
+    SyntheticNode(Position position, NonnullRefPtr<Value> value)
+        : Node(position)
+        , m_value(move(value))
+    {
+    }
+
+    virtual ~SyntheticNode();
+    virtual void visit(NodeVisitor&) override { }
+
+private:
+    NODE(SyntheticNode);
+    virtual void dump(int level) const override;
+    virtual RefPtr<Value> run(RefPtr<Shell>) override { return m_value; }
+    virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override { }
+    virtual HitTestResult hit_test_position(size_t) override { return { nullptr, nullptr, nullptr }; }
+
+    NonnullRefPtr<Value> m_value;
 };
 
 class Tilde final : public Node {

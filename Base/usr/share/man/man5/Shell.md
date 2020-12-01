@@ -173,6 +173,44 @@ test -f foo.txt || touch foo.txt
 rm test && echo "deleted!" || echo "failed with $?"
 ```
 
+### Immediate Functions
+A series of functions provided by the shell that can operate on AST nodes (as opposed to string arguments).
+Such functions are only available in an _immediate function_ context, i.e. inside `${...}`.
+
+Functions in this context are only allowed to be named as barewords, no escaping or string parts are allowed in such function names.
+
+The following functions are currently implemented:
+| Name          | Effect |
+| :-            | :----- |
+| `count`       | Returns the counts of its input arguments (as lists) in a list |
+| `length`      | Returns the length of its input arguments (as strings) in a list |
+| `nth`         | Returns the nth elements of its input arguments (n = first argument) |
+| `substring`   | Returns the substrings starting at arg0 with length arg1 of its inputs (as strings) |
+| `slice`       | Returns the list slice starting at arg0 with length arg1 of its inputs (as lists) |
+| `remove_prefix`| Returns its input arguments, without the given prefix (arg0) - (i.e. strips the given prefix) |
+| `remove_suffix`| Similar to `remove_prefix`, but strips suffixes instead |
+| `regex_replace`  | Replaces all substrings matching the first arg using the second arg |
+| `filter_glob`  | Returns the items matching the given glob (arg0) |
+
+##### Examples
+
+```sh
+x=(1 2 3 4 5)
+# Get the count of elements in a list
+echo ${count $x}
+# => 5
+
+# Get the string length of the third element in the list
+echo ${length ${nth 2 $x}}
+# => 1
+
+# Rename .sh files to .txt files
+for *.sh {
+    mv $it ${removeSuffix .sh $it}.txt
+}
+```
+
+
 #### Control Structures
 
 ##### Conditionals
@@ -351,6 +389,7 @@ redirection :: number? '>'{1,2} ' '* string_composite
 list_expression :: ' '* expression (' '+ list_expression)?
 
 expression :: evaluate expression?
+            | immediate_brace_expression expression?
             | string_composite expression?
             | comment expression?
             | '(' list_expression ')' expression?
@@ -358,17 +397,26 @@ expression :: evaluate expression?
 evaluate :: '$' '(' pipe_sequence ')'
           | '$' expression          {eval / dynamic resolve}
 
+immediate_brace_expression :: '$' '{' immediate_expression '}'
+
+immediate_expression :: identifier immediate_expression_sequence
+
+immediate_expression_sequence ::
+                               | expression immediate_expression_sequence?
+
 string_composite :: string string_composite?
                   | variable string_composite?
+                  | immediate_brace_expression string_compose?
                   | bareword string_composite?
                   | glob string_composite?
-                  | brace string_composite?
+                  | brace_expansion string_composite?
 
 string :: '"' dquoted_string_inner '"'
         | "'" [^']* "'"
 
 dquoted_string_inner :: '\' . dquoted_string_inner?       {concat}
                       | variable dquoted_string_inner?    {compose}
+                      | immediate_brace_expression dquoted_string_inner?
                       | . dquoted_string_inner?
                       | '\' 'x' digit digit dquoted_string_inner?
                       | '\' [abefrn] dquoted_string_inner?

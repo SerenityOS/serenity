@@ -121,18 +121,6 @@ void AK::Formatter<Shell::AST::Command>::format(TypeErasedFormatParams&, FormatB
 
 namespace Shell::AST {
 
-template<typename T, typename... Args>
-static inline NonnullRefPtr<T> create(Args... args)
-{
-    return adopt(*new T(args...));
-}
-
-template<typename T>
-static inline NonnullRefPtr<T> create(std::initializer_list<NonnullRefPtr<Value>> arg)
-{
-    return adopt(*new T(arg));
-}
-
 static inline void print_indented(const String& str, int indent)
 {
     for (auto i = 0; i < indent; ++i)
@@ -585,6 +573,108 @@ BraceExpansion::BraceExpansion(Position position, NonnullRefPtrVector<Node> entr
 }
 
 BraceExpansion::~BraceExpansion()
+{
+}
+
+void BracedImmediateExpression::dump(int level) const
+{
+    Node::dump(level);
+    print_indented("(Name)", level + 1);
+    print_indented(m_function_name, level + 2);
+    print_indented("(Arguments)", level + 1);
+    for (auto& entry : m_arguments)
+        entry.dump(level + 2);
+}
+
+RefPtr<Value> BracedImmediateExpression::run(RefPtr<Shell> shell)
+{
+    if (auto fn = immediate_function(m_fn)) {
+        NonnullRefPtrVector<AST::Node> nodes;
+        fn->operator()(*shell, arguments(), [&](NonnullRefPtr<Node> node) {
+            nodes.append(move(node));
+            return IterationDecision::Continue;
+        });
+        auto list = create<ListConcatenate>(position(), move(nodes));
+        auto& node = static_cast<AST::Node&>(*list);
+        return node.run(shell);
+    } else {
+        // FIXME: Raise error.
+        dbgln("run() on nonexistent immediate function '{}'", function());
+        return create<ListValue>({});
+    }
+}
+
+void BracedImmediateExpression::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
+{
+    if (auto fn = immediate_function(m_fn)) {
+        NonnullRefPtrVector<AST::Node> nodes;
+        fn->operator()(*shell, arguments(), [&](NonnullRefPtr<Node> node) {
+            callback(node->run(shell).release_nonnull());
+            return IterationDecision::Continue;
+        });
+    } else {
+        dbgln("for_each_entry() on nonexistent immediate function '{}'", function());
+    }
+}
+
+HitTestResult BracedImmediateExpression::hit_test_position(size_t offset)
+{
+    if (!position().contains(offset))
+        return {};
+
+    if (position().start_offset <= offset && position().start_offset + m_function_name.length() >= offset)
+        return { this, this, this };
+
+    for (auto& entry : m_arguments) {
+        auto result = entry.hit_test_position(offset);
+        if (result.matching_node) {
+            if (!result.closest_command_node)
+                result.closest_command_node = &entry;
+            return result;
+        }
+    }
+
+    return {};
+}
+
+void BracedImmediateExpression::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
+{
+    editor.stylize({ m_position.start_offset, m_position.start_offset + m_function_name.length() }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
+    for (auto& entry : m_arguments) {
+        entry.highlight_in_editor(editor, shell, metadata);
+        metadata.is_first_in_list = false;
+    }
+}
+
+Vector<Line::CompletionSuggestion> BracedImmediateExpression::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+{
+    auto matching_node = hit_test_result.matching_node;
+    if (matching_node != this)
+        return {};
+
+    auto corrected_offset = offset - matching_node->position().start_offset;
+
+    if (corrected_offset > position().start_offset + function().length())
+        return {};
+
+    return shell.complete_immediate_function_name(function(), corrected_offset);
+}
+
+BracedImmediateExpression::BracedImmediateExpression(Position position, String function, NonnullRefPtrVector<Node> arguments)
+    : Node(move(position))
+    , m_function_name(move(function))
+    , m_fn(immediate_function_by_name(m_function_name))
+    , m_arguments(move(arguments))
+{
+    for (auto& arg : m_arguments) {
+        if (arg.is_syntax_error()) {
+            set_is_syntax_error(arg.syntax_error_node());
+            break;
+        }
+    }
+}
+
+BracedImmediateExpression::~BracedImmediateExpression()
 {
 }
 
@@ -2497,6 +2587,15 @@ const SyntaxError& SyntaxError::syntax_error_node() const
 }
 
 SyntaxError::~SyntaxError()
+{
+}
+
+void SyntheticNode::dump(int level) const
+{
+    Node::dump(level);
+}
+
+SyntheticNode::~SyntheticNode()
 {
 }
 

@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <AK/Forward.h>
+
 namespace Shell::AST {
 
 struct Command;
@@ -42,6 +44,7 @@ class ListConcatenate;
 class Background;
 class BarewordLiteral;
 class BraceExpansion;
+class BracedImmediateExpression;
 class CastToCommand;
 class CastToList;
 class CloseFdRedirection;
@@ -70,6 +73,7 @@ class Juxtaposition;
 class StringLiteral;
 class StringPartCompose;
 class SyntaxError;
+class SyntheticNode;
 class Tilde;
 class VariableDeclarations;
 class WriteAppendRedirection;
@@ -80,5 +84,4 @@ class WriteRedirection;
 namespace Shell {
 
 class Shell;
-
 }

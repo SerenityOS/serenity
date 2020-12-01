@@ -27,6 +27,7 @@
 #include "Formatter.h"
 #include "AST.h"
 #include "Parser.h"
+#include "Shell.h"
 #include <AK/TemporaryChange.h>
 
 namespace Shell {
@@ -203,6 +204,24 @@ void Formatter::visit(const AST::BraceExpansion* node)
             current_builder().append(',');
         first = false;
         entry.visit(*this);
+    }
+
+    current_builder().append('}');
+    visited(node);
+}
+
+void Formatter::visit(const AST::BracedImmediateExpression* node)
+{
+    will_visit(node);
+    test_and_update_output_cursor(node);
+    current_builder().append("${");
+
+    TemporaryChange<const AST::Node*> parent { m_parent_node, node };
+    current_builder().append(node->function());
+
+    for (auto& argument : node->arguments()) {
+        current_builder().append(' ');
+        argument.visit(*this);
     }
 
     current_builder().append('}');

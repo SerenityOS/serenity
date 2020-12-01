@@ -38,6 +38,7 @@ public:
     virtual void visit(const AST::Background*);
     virtual void visit(const AST::BarewordLiteral*);
     virtual void visit(const AST::BraceExpansion*);
+    virtual void visit(const AST::BracedImmediateExpression*);
     virtual void visit(const AST::CastToCommand*);
     virtual void visit(const AST::CastToList*);
     virtual void visit(const AST::CloseFdRedirection*);

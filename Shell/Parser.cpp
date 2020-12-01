@@ -25,6 +25,7 @@
  */
 
 #include "Parser.h"
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/TemporaryChange.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -994,6 +995,9 @@ RefPtr<AST::Node> Parser::parse_expression()
         if (auto variable = parse_variable())
             return read_concat(variable.release_nonnull());
 
+        if (auto immediate = parse_immediate_brace_expression())
+            return read_concat(immediate.release_nonnull());
+
         if (auto inline_exec = parse_evaluate())
             return read_concat(inline_exec.release_nonnull());
     }
@@ -1032,6 +1036,13 @@ RefPtr<AST::Node> Parser::parse_string_composite()
             return create<AST::Juxtaposition>(variable.release_nonnull(), next_part.release_nonnull()); // Concatenate Variable StringComposite
 
         return variable;
+    }
+
+    if (auto expression = parse_immediate_brace_expression()) {
+        if (auto next_part = parse_string_composite())
+            return create<AST::Juxtaposition>(expression.release_nonnull(), next_part.release_nonnull()); // Concatenate Variable StringComposite
+
+        return expression;
     }
 
     if (auto glob = parse_glob()) {
@@ -1158,6 +1169,18 @@ RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
                 auto inner = create<AST::StringPartCompose>(
                     move(string_literal),
                     variable.release_nonnull()); // Compose String Variable
+
+                if (auto string = parse_doublequoted_string_inner()) {
+                    return create<AST::StringPartCompose>(move(inner), string.release_nonnull()); // Compose Composition Composition
+                }
+
+                return inner;
+            }
+
+            if (auto expression = parse_immediate_brace_expression()) {
+                auto inner = create<AST::StringPartCompose>(
+                    move(string_literal),
+                    expression.release_nonnull()); // Compose String Variable
 
                 if (auto string = parse_doublequoted_string_inner()) {
                     return create<AST::StringPartCompose>(move(inner), string.release_nonnull()); // Compose Composition Composition
@@ -1452,6 +1475,54 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
         return nullptr;
 
     return create<AST::BraceExpansion>(move(subexpressions));
+}
+
+RefPtr<AST::Node> Parser::parse_immediate_brace_expression()
+{
+    auto rule_start = push_start();
+    if (!expect("${"))
+        return nullptr;
+
+    auto expr = parse_immediate_expression();
+    if (!expr)
+        expr = create<AST::SyntaxError>("Expected an immediate expression to follow '${'", true);
+
+    if (!expect('}'))
+        expr->set_is_syntax_error(create<AST::SyntaxError>("Expected a close brace '}' to end an immediate expression", true));
+
+    return expr;
+}
+
+RefPtr<AST::Node> Parser::parse_immediate_expression()
+{
+    auto rule_start = push_start();
+
+    auto fn = consume_while(is_word_character);
+    if (fn.is_empty())
+        return create<AST::SyntaxError>("Expected an immediate function name", true);
+
+    auto args = parse_immediate_expression_sequence();
+    auto node = create<AST::BracedImmediateExpression>(move(fn), move(args));
+
+    if (immediate_function_by_name(node->function()) == ImmediateFunction::Invalid)
+        node->set_is_syntax_error(create<AST::SyntaxError>("Invalid immediate function"));
+
+    return node;
+}
+
+NonnullRefPtrVector<AST::Node> Parser::parse_immediate_expression_sequence()
+{
+    auto rule_start = push_start();
+    NonnullRefPtrVector<AST::Node> nodes;
+
+    while (!consume_while(is_whitespace).is_empty()) {
+        auto expr = parse_expression();
+        if (!expr)
+            break;
+        nodes.append(expr.release_nonnull());
+    }
+
+    return nodes;
 }
 
 StringView Parser::consume_while(Function<bool(char)> condition)

@@ -59,6 +59,7 @@ private:
     virtual void visit(const AST::Background*) override;
     virtual void visit(const AST::BarewordLiteral*) override;
     virtual void visit(const AST::BraceExpansion*) override;
+    virtual void visit(const AST::BracedImmediateExpression*) override;
     virtual void visit(const AST::CastToCommand*) override;
     virtual void visit(const AST::CastToList*) override;
     virtual void visit(const AST::CloseFdRedirection*) override;

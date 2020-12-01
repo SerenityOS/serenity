@@ -31,6 +31,7 @@
 #include <LibGfx/Palette.h>
 #include <Shell/NodeVisitor.h>
 #include <Shell/Parser.h>
+#include <Shell/Shell.h>
 
 namespace GUI {
 
