@@ -67,8 +67,8 @@ JS_DEFINE_NATIVE_GETTER(Uint8ClampedArray::length_getter)
 
 bool Uint8ClampedArray::put_by_index(u32 property_index, Value value)
 {
-    // FIXME: Use attributes
-    ASSERT(property_index < m_length);
+    if (property_index >= m_length)
+        return Base::put_by_index(property_index, value);
     auto number = value.to_i32(global_object());
     if (vm().exception())
         return {};
@@ -78,7 +78,8 @@ bool Uint8ClampedArray::put_by_index(u32 property_index, Value value)
 
 Value Uint8ClampedArray::get_by_index(u32 property_index) const
 {
-    ASSERT(property_index < m_length);
+    if (property_index >= m_length)
+        return Base::get_by_index(property_index);
     return Value((i32)m_data[property_index]);
 }
 
