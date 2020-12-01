@@ -63,7 +63,7 @@ private:
         virtual ~ClassName() override;                                                \
     };
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     DECLARE_ERROR_SUBCLASS(ClassName, snake_name, PrototypeName, ConstructorName)
 JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE

@@ -127,11 +127,11 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     return js_string(vm, String::formatted("{}: {}", name, message));
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    PrototypeName::PrototypeName(GlobalObject& global_object)                 \
-        : Object(*global_object.error_prototype())                            \
-    {                                                                         \
-    }                                                                         \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    PrototypeName::PrototypeName(GlobalObject& global_object)                            \
+        : Object(*global_object.error_prototype())                                       \
+    {                                                                                    \
+    }                                                                                    \
     PrototypeName::~PrototypeName() { }
 
 JS_ENUMERATE_ERROR_SUBCLASSES

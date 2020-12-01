@@ -62,6 +62,7 @@
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SymbolConstructor.h>
 #include <LibJS/Runtime/SymbolPrototype.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -95,8 +96,8 @@ void GlobalObject::initialize()
 
     set_prototype(m_object_prototype);
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    if (!m_##snake_name##_prototype)                                          \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    if (!m_##snake_name##_prototype)                                                     \
         m_##snake_name##_prototype = heap().allocate<PrototypeName>(*this, *this);
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
@@ -136,9 +137,10 @@ void GlobalObject::initialize()
     add_constructor(vm.names.String, m_string_constructor, m_string_prototype);
     add_constructor(vm.names.Symbol, m_symbol_constructor, m_symbol_prototype);
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     add_constructor(vm.names.ClassName, m_##snake_name##_constructor, m_##snake_name##_prototype);
     JS_ENUMERATE_ERROR_SUBCLASSES
+    JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 }
 
@@ -154,7 +156,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_object_shape);
     visitor.visit(m_new_script_function_prototype_object_shape);
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);
     JS_ENUMERATE_ERROR_SUBCLASSES
 #undef __JS_ENUMERATE

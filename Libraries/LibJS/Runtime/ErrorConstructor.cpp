@@ -64,7 +64,7 @@ Value ErrorConstructor::construct(Function&)
     return Error::create(global_object(), vm.names.Error, message);
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                            \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                 \
     ConstructorName::ConstructorName(GlobalObject& global_object)                                        \
         : NativeFunction(*global_object.function_prototype())                                            \
     {                                                                                                    \

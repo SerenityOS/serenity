@@ -72,6 +72,7 @@ set(SOURCES
     Runtime/SymbolConstructor.cpp
     Runtime/SymbolObject.cpp
     Runtime/SymbolPrototype.cpp
+    Runtime/TypedArray.cpp
     Runtime/Uint8ClampedArray.cpp
     Runtime/VM.cpp
     Runtime/Value.cpp

@@ -45,7 +45,7 @@ Error::~Error()
 {
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                             \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                  \
     ClassName* ClassName::create(GlobalObject& global_object, const String& message)                                      \
     {                                                                                                                     \
         return global_object.heap().allocate<ClassName>(global_object, message, *global_object.snake_name##_prototype()); \
