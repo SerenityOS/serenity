@@ -140,8 +140,8 @@ struct BMPLoadingContext {
     };
     State state { State::NotDecoded };
 
-    const u8* data { nullptr };
-    size_t data_size { 0 };
+    const u8* file_bytes { nullptr };
+    size_t file_size { 0 };
     u32 data_offset { 0 };
 
     DIB dib;
@@ -480,13 +480,13 @@ static bool decode_bmp_header(BMPLoadingContext& context)
     if (context.state >= BMPLoadingContext::State::HeaderDecoded)
         return true;
 
-    if (!context.data || context.data_size < bmp_header_size) {
+    if (!context.file_bytes || context.file_size < bmp_header_size) {
         IF_BMP_DEBUG(dbg() << "Missing BMP header");
         context.state = BMPLoadingContext::State::Error;
         return false;
     }
 
-    Streamer streamer(context.data, bmp_header_size);
+    Streamer streamer(context.file_bytes, bmp_header_size);
 
     u16 header = streamer.read_u16();
     if (header != 0x4d42) {
@@ -506,10 +506,10 @@ static bool decode_bmp_header(BMPLoadingContext& context)
     streamer.drop_bytes(4);
     context.data_offset = streamer.read_u32();
 
-    IF_BMP_DEBUG(dbg() << "BMP data size: " << context.data_size);
+    IF_BMP_DEBUG(dbg() << "BMP file size: " << context.file_size);
     IF_BMP_DEBUG(dbg() << "BMP data offset: " << context.data_offset);
 
-    if (context.data_offset >= context.data_size) {
+    if (context.data_offset >= context.file_size) {
         IF_BMP_DEBUG(dbg() << "BMP data offset is beyond file end?!");
         return false;
     }
@@ -781,13 +781,13 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
     if (context.state < BMPLoadingContext::State::HeaderDecoded && !decode_bmp_header(context))
         return false;
 
-    if (context.data_size < bmp_header_size + 4)
+    if (context.file_size < bmp_header_size + 4)
         return false;
 
-    Streamer streamer(context.data + bmp_header_size, 4);
+    Streamer streamer(context.file_bytes + bmp_header_size, 4);
     u32 dib_size = streamer.read_u32();
 
-    if (context.data_size < bmp_header_size + dib_size)
+    if (context.file_size < bmp_header_size + dib_size)
         return false;
     if (context.data_offset < bmp_header_size + dib_size) {
         IF_BMP_DEBUG(dbg() << "Shenanigans! BMP pixel data and header usually don't overlap.");
@@ -897,7 +897,7 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
         }
     }
 
-    Streamer streamer(context.data + bmp_header_size + context.dib_size(), size_of_color_table);
+    Streamer streamer(context.file_bytes + bmp_header_size + context.dib_size(), size_of_color_table);
     for (u32 i = 0; !streamer.at_end() && i < max_colors; ++i) {
         if (bytes_per_color == 4) {
             if (!streamer.has_u32())
@@ -931,7 +931,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
         return false;
     }
 
-    Streamer streamer(context.data + context.data_offset, context.data_size);
+    Streamer streamer(context.file_bytes + context.data_offset, context.file_size);
 
     auto compression = context.dib.info.compression;
 
@@ -1200,7 +1200,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
         return false;
     }
 
-    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.data + context.data_offset), context.data_size);
+    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.file_bytes + context.data_offset), context.file_size);
 
     if (context.dib.info.compression == Compression::RLE4 || context.dib.info.compression == Compression::RLE8
         || context.dib.info.compression == Compression::RLE24) {
@@ -1322,8 +1322,8 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
 static RefPtr<Bitmap> load_bmp_impl(const u8* data, size_t data_size)
 {
     BMPLoadingContext context;
-    context.data = data;
-    context.data_size = data_size;
+    context.file_bytes = data;
+    context.file_size = data_size;
 
     // Forces a decode of the header, dib, and color table as well
     if (!decode_bmp_pixel_data(context)) {
@@ -1337,8 +1337,8 @@ static RefPtr<Bitmap> load_bmp_impl(const u8* data, size_t data_size)
 BMPImageDecoderPlugin::BMPImageDecoderPlugin(const u8* data, size_t data_size)
 {
     m_context = make<BMPLoadingContext>();
-    m_context->data = data;
-    m_context->data_size = data_size;
+    m_context->file_bytes = data;
+    m_context->file_size = data_size;
 }
 
 BMPImageDecoderPlugin::~BMPImageDecoderPlugin()
