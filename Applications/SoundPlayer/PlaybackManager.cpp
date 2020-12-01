@@ -41,10 +41,10 @@ PlaybackManager::~PlaybackManager()
 {
 }
 
-void PlaybackManager::set_loader(OwnPtr<Audio::WavLoader>&& loader)
+void PlaybackManager::set_loader(NonnullRefPtr<Audio::Loader>&& loader)
 {
     stop();
-    m_loader = move(loader);
+    m_loader = loader;
     if (m_loader) {
         m_total_length = m_loader->total_samples() / static_cast<float>(m_loader->sample_rate());
         m_timer->start();
