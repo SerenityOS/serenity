@@ -75,9 +75,9 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (ET_EXEC != elf_header.e_type && ET_DYN != elf_header.e_type && ET_REL != elf_header.e_type) {
+    if (ET_EXEC != elf_header.e_type && ET_DYN != elf_header.e_type && ET_REL != elf_header.e_type && ET_CORE != elf_header.e_type) {
         if (verbose)
-            dbgprintf("File has unloadable ELF type (%d), expected REL (1), EXEC (2) or DYN (3)!\n", elf_header.e_type);
+            dbgprintf("File has unloadable ELF type (%d), expected REL (1), EXEC (2), DYN (3) or CORE(4)!\n", elf_header.e_type);
         return false;
     }
 
@@ -93,11 +93,25 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
+    if (elf_header.e_phoff < elf_header.e_ehsize || elf_header.e_shoff < elf_header.e_ehsize) {
+        if (verbose) {
+            dbgprintf("SHENANIGANS! program header offset (%d) or section header offset (%d) overlap with ELF header!\n",
+                elf_header.e_phoff, elf_header.e_shoff);
+        }
+        return false;
+    }
+
     if (elf_header.e_phoff > file_size || elf_header.e_shoff > file_size) {
         if (verbose) {
             dbgprintf("SHENANIGANS! program header offset (%d) or section header offset (%d) are past the end of the file!\n",
                 elf_header.e_phoff, elf_header.e_shoff);
         }
+        return false;
+    }
+
+    if (elf_header.e_phnum == 0 && elf_header.e_phoff != 0) {
+        if (verbose)
+            dbgputstr("SHENANIGANS! File has no program headers, but it does have a program header offset (%d)!\n", elf_header.e_phoff);
         return false;
     }
 
@@ -131,6 +145,14 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
     if (end_of_last_program_header > file_size) {
         if (verbose)
             dbgprintf("SHENANIGANS! End of last program header (%zu) is past the end of the file!\n", end_of_last_program_header);
+        return false;
+    }
+
+    if (end_of_last_program_header < elf_header.e_shoff) {
+        if (verbose) {
+            dbgprintf("SHENANIGANS! Section header table begins at file offset %d, which is within program headers [ %d - %zu ]!\n",
+                elf_header.e_shoff, elf_header.e_phoff, end_of_last_program_header);
+        }
         return false;
     }
 
