@@ -458,6 +458,17 @@ NonnullRefPtrVector<Element> Document::get_elements_by_tag_name(const FlyString&
     return elements;
 }
 
+NonnullRefPtrVector<Element> Document::get_elements_by_class_name(const FlyString& class_name) const
+{
+    NonnullRefPtrVector<Element> elements;
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (element.has_class(class_name))
+            elements.append(element);
+        return IterationDecision::Continue;
+    });
+    return elements;
+}
+
 Color Document::link_color() const
 {
     if (m_link_color.has_value())
