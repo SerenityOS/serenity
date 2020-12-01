@@ -27,41 +27,59 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/InlineLinkedList.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/SinglyLinkedList.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
 typedef u64 TimerId;
 
-struct Timer : public RefCounted<Timer> {
-    TimerId id;
-    u64 expires;
-    Function<void()> callback;
+class Timer : public RefCounted<Timer>
+    , public InlineLinkedListNode<Timer> {
+    friend class TimerQueue;
+    friend class InlineLinkedListNode<Timer>;
+
+public:
+    Timer(u64 expires, Function<void()>&& callback)
+        : m_expires(expires)
+        , m_callback(move(callback))
+    {
+    }
+    ~Timer()
+    {
+        ASSERT(!is_queued());
+    }
+
+private:
+    TimerId m_id;
+    u64 m_expires;
+    Function<void()> m_callback;
+    Timer* m_next { nullptr };
+    Timer* m_prev { nullptr };
+    Atomic<bool> m_queued { false };
+
     bool operator<(const Timer& rhs) const
     {
-        return expires < rhs.expires;
+        return m_expires < rhs.m_expires;
     }
     bool operator>(const Timer& rhs) const
     {
-        return expires > rhs.expires;
+        return m_expires > rhs.m_expires;
     }
     bool operator==(const Timer& rhs) const
     {
-        return id == rhs.id;
+        return m_id == rhs.m_id;
     }
-
-    Timer(u64 expires, Function<void()>&& callback)
-        : expires(expires)
-        , callback(move(callback))
-    {
-    }
+    bool is_queued() const { return m_queued.load(AK::MemoryOrder::memory_order_relaxed); }
+    void set_queued(bool queued) { m_queued.store(queued, AK::MemoryOrder::memory_order_relaxed); }
 };
 
 class TimerQueue {
+    friend class Timer;
+
 public:
     TimerQueue();
     static TimerQueue& the();
@@ -70,10 +88,14 @@ public:
     RefPtr<Timer> add_timer_without_id(const timespec& timeout, Function<void()>&& callback);
     TimerId add_timer(timeval& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
-    bool cancel_timer(const NonnullRefPtr<Timer>&);
+    bool cancel_timer(NonnullRefPtr<Timer>&& timer)
+    {
+        return cancel_timer(timer.leak_ref());
+    }
     void fire();
 
 private:
+    bool cancel_timer(Timer&);
     void update_next_timer_due();
     void add_timer_locked(NonnullRefPtr<Timer>);
 
@@ -83,7 +105,8 @@ private:
     u64 m_next_timer_due { 0 };
     u64 m_timer_id_count { 0 };
     u64 m_ticks_per_second { 0 };
-    SinglyLinkedList<NonnullRefPtr<Timer>> m_timer_queue;
+    InlineLinkedList<Timer> m_timer_queue;
+    InlineLinkedList<Timer> m_timers_executing;
 };
 
 }
