@@ -33,15 +33,25 @@ unsigned Process::sys$alarm(unsigned seconds)
 {
     REQUIRE_PROMISE(stdio);
     unsigned previous_alarm_remaining = 0;
-    auto uptime = TimeManagement::the().uptime_ms();
-    if (m_alarm_deadline && m_alarm_deadline > uptime) {
-        previous_alarm_remaining = m_alarm_deadline - uptime;
+    if (auto alarm_timer = move(m_alarm_timer)) {
+        if (TimerQueue::the().cancel_timer(*alarm_timer)) {
+            // The timer hasn't fired. Round up the remaining time (if any)
+            timespec remaining;
+            timespec_add(alarm_timer->remaining(), { 0, 1000000000 - 1 }, remaining);
+            previous_alarm_remaining = remaining.tv_sec;
+        }
+        // We had an existing alarm, must return a non-zero value here!
+        if (previous_alarm_remaining == 0)
+            previous_alarm_remaining = 1;
     }
-    if (!seconds) {
-        m_alarm_deadline = 0;
-        return previous_alarm_remaining;
+
+    if (seconds > 0) {
+        auto deadline = TimeManagement::the().monotonic_time(); // TODO: should be using CLOCK_REALTIME
+        timespec_add(deadline, { seconds, 0 }, deadline);
+        m_alarm_timer = TimerQueue::the().add_timer_without_id(deadline, [this]() {
+            (void)send_signal(SIGALRM, nullptr);
+        });
     }
-    m_alarm_deadline = uptime + seconds * 1000;
     return previous_alarm_remaining;
 }
 

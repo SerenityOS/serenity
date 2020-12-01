@@ -367,6 +367,7 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
 Process::~Process()
 {
     ASSERT(thread_count() == 0); // all threads should have been finalized
+    ASSERT(!m_alarm_timer);
 
     {
         ScopedSpinLock processses_lock(g_processes_lock);
@@ -596,6 +597,8 @@ void Process::finalize(Thread& last_thread)
         }
     }
 
+    if (m_alarm_timer)
+        TimerQueue::the().cancel_timer(m_alarm_timer.release_nonnull());
     m_fds.clear();
     m_tty = nullptr;
     m_executable = nullptr;

@@ -38,6 +38,13 @@ namespace Kernel {
 static AK::Singleton<TimerQueue> s_the;
 static SpinLock<u8> g_timerqueue_lock;
 
+timespec Timer::remaining() const
+{
+    if (m_remaining == 0)
+        return {};
+    return TimerQueue::the().ticks_to_time(m_remaining);
+}
+
 TimerQueue& TimerQueue::the()
 {
     return *s_the;
@@ -164,14 +171,7 @@ bool TimerQueue::cancel_timer(TimerId id)
     }
 
     ASSERT(found_timer);
-    bool was_next_timer = (m_timer_queue.head() == found_timer);
-
-    m_timer_queue.remove(found_timer);
-    found_timer->set_queued(false);
-
-    if (was_next_timer)
-        update_next_timer_due();
-
+    remove_timer_locked(*found_timer);
     lock.unlock();
     found_timer->unref();
     return true;
@@ -199,13 +199,21 @@ bool TimerQueue::cancel_timer(Timer& timer)
         return false;
     }
 
+    remove_timer_locked(timer);
+    return true;
+}
+
+void TimerQueue::remove_timer_locked(Timer& timer)
+{
     bool was_next_timer = (m_timer_queue.head() == &timer);
     m_timer_queue.remove(&timer);
     timer.set_queued(false);
+    auto now = TimeManagement::the().monotonic_ticks();
+    if (timer.m_expires > now)
+        timer.m_remaining = timer.m_expires - now;
 
     if (was_next_timer)
         update_next_timer_due();
-    return true;
 }
 
 void TimerQueue::fire()
