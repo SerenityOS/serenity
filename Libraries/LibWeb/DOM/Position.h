@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <LibWeb/DOM/Node.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {
@@ -44,6 +45,7 @@ public:
     const Node* node() const { return m_node; }
 
     unsigned offset() const { return m_offset; }
+    void set_offset(unsigned value) { m_offset = value; }
 
     bool operator==(const Position& other) const
     {
