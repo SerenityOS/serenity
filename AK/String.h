@@ -138,6 +138,7 @@ public:
 
     Vector<StringView> split_view(char separator, bool keep_empty = false) const;
     StringView substring_view(size_t start, size_t length) const;
+    StringView substring_view(size_t start) const;
 
     bool is_null() const { return !m_impl; }
     ALWAYS_INLINE bool is_empty() const { return length() == 0; }
