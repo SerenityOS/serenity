@@ -1200,7 +1200,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
         return false;
     }
 
-    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.file_bytes + context.data_offset), context.file_size);
+    auto buffer = ByteBuffer::wrap(const_cast<u8*>(context.file_bytes + context.data_offset), context.file_size - context.data_offset);
 
     if (context.dib.info.compression == Compression::RLE4 || context.dib.info.compression == Compression::RLE8
         || context.dib.info.compression == Compression::RLE24) {
