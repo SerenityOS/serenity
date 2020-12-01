@@ -490,7 +490,8 @@ DispatchSignalResult Thread::dispatch_one_pending_signal()
 {
     ASSERT(m_lock.own_lock());
     u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
-    ASSERT(signal_candidates);
+    if (signal_candidates == 0)
+        return DispatchSignalResult::Continue;
 
     u8 signal = 1;
     for (; signal < 32; ++signal) {
