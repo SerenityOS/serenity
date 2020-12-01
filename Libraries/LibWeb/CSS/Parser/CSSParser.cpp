@@ -909,6 +909,11 @@ public:
 
     RefPtr<CSS::StyleSheet> parse_sheet()
     {
+        if (peek(0) == (char)0xef && peek(1) == (char)0xbb && peek(2) == (char)0xbf) {
+            // HACK: Skip UTF-8 BOM.
+            index += 3;
+        }
+
         while (index < css.length()) {
             parse_rule();
         }
