@@ -256,7 +256,6 @@ public:
     bool has_u32() const { return m_size_remaining >= 4; }
 
     size_t remaining() const { return m_size_remaining; }
-    void set_remaining(size_t remaining) { m_size_remaining = remaining; }
 
 private:
     const u8* m_data_ptr { nullptr };
@@ -445,10 +444,12 @@ static bool set_dib_bitmasks(BMPLoadingContext& context, Streamer& streamer)
     } else if (type == DIBType::Info && (compression == Compression::BITFIELDS || compression == Compression::ALPHABITFIELDS)) {
         // Consume the extra BITFIELDS bytes
         auto number_of_mask_fields = compression == Compression::ALPHABITFIELDS ? 4 : 3;
-        streamer.set_remaining(number_of_mask_fields * 4);
 
-        for (auto i = 0; i < number_of_mask_fields; i++)
+        for (auto i = 0; i < number_of_mask_fields; i++) {
+            if (!streamer.has_u32())
+                return false;
             context.dib.info.masks.append(streamer.read_u32());
+        }
 
         populate_dib_mask_info(context);
     } else if (type >= DIBType::V2 && compression == Compression::BITFIELDS) {
@@ -780,7 +781,7 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
         return false;
     }
 
-    streamer.set_remaining(dib_size - 4);
+    streamer = Streamer(context.file_bytes + bmp_header_size + 4, context.data_offset - bmp_header_size - 4);
 
     IF_BMP_DEBUG(dbg() << "BMP dib size: " << dib_size);
 
