@@ -942,11 +942,20 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
     auto currently_consuming = RLEState::PixelCount;
     i16 pixel_count = 0;
 
+    // ByteBuffer asserts that allocating the memory never fails.
+    // FIXME: ByteBuffer should return either RefPtr<> or Optional<>.
+    // Decoding the RLE data on-the-fly might actually be faster, and avoids this topic entirely.
+    u32 buffer_size;
     if (compression == Compression::RLE24) {
-        buffer = ByteBuffer::create_zeroed(total_rows * round_up_to_power_of_two(total_columns, 4) * 4);
+        buffer_size = total_rows * round_up_to_power_of_two(total_columns, 4) * 4;
     } else {
-        buffer = ByteBuffer::create_zeroed(total_rows * round_up_to_power_of_two(total_columns, 4));
+        buffer_size = total_rows * round_up_to_power_of_two(total_columns, 4);
     }
+    if (buffer_size > 300 * MiB) {
+        IF_BMP_DEBUG(dbg() << "Suspiciously large amount of RLE data");
+        return false;
+    }
+    buffer = ByteBuffer::create_zeroed(buffer_size);
 
     // Avoid as many if statements as possible by pulling out
     // compression-dependent actions into separate lambdas
