@@ -61,6 +61,7 @@ int main(int argc, char** argv)
     });
 
     editor = Line::Editor::construct();
+    editor->initialize();
 
     auto shell = Shell::Shell::construct(*editor);
     s_shell = shell.ptr();
@@ -81,7 +82,6 @@ int main(int argc, char** argv)
     }
 #endif
 
-    editor->initialize();
     shell->termios = editor->termios();
     shell->default_termios = editor->default_termios();
 

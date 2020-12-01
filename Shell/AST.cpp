@@ -2481,6 +2481,10 @@ StringPartCompose::~StringPartCompose()
 void SyntaxError::dump(int level) const
 {
     Node::dump(level);
+    print_indented("(Error text)", level + 1);
+    print_indented(m_syntax_error_text, level + 2);
+    print_indented("(Can be recovered from)", level + 1);
+    print_indented(String::formatted("{}", m_is_continuable), level + 2);
 }
 
 RefPtr<Value> SyntaxError::run(RefPtr<Shell>)
@@ -2494,9 +2498,10 @@ void SyntaxError::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMet
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Bold });
 }
 
-SyntaxError::SyntaxError(Position position, String error)
+SyntaxError::SyntaxError(Position position, String error, bool is_continuable)
     : Node(move(position))
     , m_syntax_error_text(move(error))
+    , m_is_continuable(is_continuable)
 {
     m_is_syntax_error = true;
 }

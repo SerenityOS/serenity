@@ -1402,11 +1402,9 @@ bool Shell::read_single_line()
     if (line_result.is_error()) {
         if (line_result.error() == Line::Editor::Error::Eof || line_result.error() == Line::Editor::Error::Empty) {
             // Pretend the user tried to execute builtin_exit()
-            m_complete_line_builder.clear();
             run_command("exit");
             return read_single_line();
         } else {
-            m_complete_line_builder.clear();
             Core::EventLoop::current().quit(1);
             return false;
         }
@@ -1417,14 +1415,9 @@ bool Shell::read_single_line()
     if (line.is_empty())
         return true;
 
-    if (!m_complete_line_builder.is_empty())
-        m_complete_line_builder.append("\n");
-    m_complete_line_builder.append(line);
+    run_command(line);
 
-    run_command(m_complete_line_builder.string_view());
-
-    m_editor->add_to_history(m_complete_line_builder.build());
-    m_complete_line_builder.clear();
+    m_editor->add_to_history(line);
     return true;
 }
 
@@ -1599,6 +1592,14 @@ Shell::Shell(Line::Editor& editor)
     directory_stack.append(cwd);
     m_editor->load_history(get_history_path());
     cache_path();
+
+    m_editor->register_key_input_callback('\n', [](Line::Editor& editor) {
+        auto ast = Parser(editor.line()).parse();
+        if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
+            return true;
+
+        return EDITOR_INTERNAL_FUNCTION(finish)(editor);
+    });
 }
 
 Shell::~Shell()
