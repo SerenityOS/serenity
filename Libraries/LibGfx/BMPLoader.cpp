@@ -931,7 +931,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
         return false;
     }
 
-    Streamer streamer(context.file_bytes + context.data_offset, context.file_size);
+    Streamer streamer(context.file_bytes + context.data_offset, context.file_size - context.data_offset);
 
     auto compression = context.dib.info.compression;
 
