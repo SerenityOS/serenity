@@ -52,6 +52,7 @@ static Gfx::IntPoint compute_mouse_event_offset(const Gfx::IntPoint& position, c
 
 EventHandler::EventHandler(Badge<Frame>, Frame& frame)
     : m_frame(frame)
+    , m_edit_event_handler(make<EditEventHandler>(frame))
 {
 }
 
@@ -344,34 +345,18 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             return focus_next_element();
     }
 
-    if (m_frame.cursor_position().node() && m_frame.cursor_position().node()->is_editable()) {
-        // FIXME: Support backspacing across DOM node boundaries.
-        if (key == KeyCode::Key_Backspace && m_frame.cursor_position().offset() > 0) {
-            auto& text_node = downcast<DOM::Text>(*m_frame.cursor_position().node());
-            StringBuilder builder;
-            builder.append(text_node.data().substring_view(0, m_frame.cursor_position().offset() - 1));
-            builder.append(text_node.data().substring_view(m_frame.cursor_position().offset(), text_node.data().length() - m_frame.cursor_position().offset()));
-            text_node.set_data(builder.to_string());
-            m_frame.set_cursor_position({ *m_frame.cursor_position().node(), m_frame.cursor_position().offset() - 1 });
-            // FIXME: This should definitely use incremental layout invalidation instead!
-            text_node.document().force_layout();
+    if (m_frame.cursor_position().is_valid() && m_frame.cursor_position().node()->is_editable()) {
+        if (key == KeyCode::Key_Backspace) {
+            m_edit_event_handler->handle_delete(m_frame.cursor_position());
             return true;
         }
 
-        if (code_point && m_frame.cursor_position().is_valid() && is<DOM::Text>(*m_frame.cursor_position().node())) {
-            auto& text_node = downcast<DOM::Text>(*m_frame.cursor_position().node());
-            StringBuilder builder;
-            builder.append(text_node.data().substring_view(0, m_frame.cursor_position().offset()));
-            builder.append_code_point(code_point);
-            builder.append(text_node.data().substring_view(m_frame.cursor_position().offset(), text_node.data().length() - m_frame.cursor_position().offset()));
-            text_node.set_data(builder.to_string());
-            // FIXME: This will advance the cursor incorrectly when inserting multiple whitespaces (DOM vs layout whitespace collapse difference.)
-            m_frame.set_cursor_position({ *m_frame.cursor_position().node(), m_frame.cursor_position().offset() + 1 });
-            // FIXME: This should definitely use incremental layout invalidation instead!
-            text_node.document().force_layout();
+        if (code_point) {
+            m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
             return true;
         }
     }
+
     return false;
 }
 

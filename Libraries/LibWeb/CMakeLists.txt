@@ -178,6 +178,7 @@ set(SOURCES
     Namespace.cpp
     OutOfProcessWebView.cpp
     Page/EventHandler.cpp
+    Page/EditEventHandler.cpp
     Page/Frame.cpp
     Page/Page.cpp
     Painting/BorderPainting.cpp

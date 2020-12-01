@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,33 +24,48 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Position.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/Layout/LayoutPosition.h>
-#include <LibWeb/Layout/Node.h>
+#include <LibWeb/Page/Frame.h>
 
-namespace Web::Layout {
+#include "EditEventHandler.h"
 
-DOM::Position LayoutPosition::to_dom_position() const
+namespace Web {
+
+void EditEventHandler::handle_delete(DOM::Position position)
 {
-    if (!layout_node)
-        return {};
+    if (position.offset() == 0)
+        TODO();
 
-    // FIXME: Verify that there are no shenanigans going on.
-    return { const_cast<DOM::Node&>(*layout_node->dom_node()), (unsigned)index_in_node };
+    if (is<DOM::Text>(*position.node())) {
+        auto& node = downcast<DOM::Text>(*position.node());
+        StringBuilder builder;
+        builder.append(node.data().substring_view(0, position.offset() - 1));
+        builder.append(node.data().substring_view(position.offset()));
+        node.set_data(builder.to_string());
+
+        m_frame.cursor_position().set_offset(m_frame.cursor_position().offset() - 1);
+        node.invalidate_style();
+    }
 }
 
-LayoutRange LayoutRange::normalized() const
+void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
 {
-    if (!is_valid())
-        return {};
-    if (m_start.layout_node == m_end.layout_node) {
-        if (m_start.index_in_node < m_end.index_in_node)
-            return *this;
-        return { m_end, m_start };
+    // FIXME: Unicode fiasco.
+
+    if (is<DOM::Text>(*position.node())) {
+        auto& node = downcast<DOM::Text>(*position.node());
+        StringBuilder builder;
+        builder.append(node.data().substring_view(0, position.offset()));
+        builder.append_code_point(code_point);
+        builder.append(node.data().substring_view(position.offset()));
+        node.set_data(builder.to_string());
+
+        m_frame.cursor_position().set_offset(m_frame.cursor_position().offset() + 1);
+        node.invalidate_style();
     }
-    if (m_start.layout_node->is_before(*m_end.layout_node))
-        return *this;
-    return { m_end, m_start };
 }
 
 }
