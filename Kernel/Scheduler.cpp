@@ -137,15 +137,6 @@ bool Scheduler::pick_next()
         current_thread->set_state(Thread::Dying);
     }
 
-    Process::for_each([&](Process& process) {
-        if (process.m_alarm_deadline && TimeManagement::the().uptime_ms() > process.m_alarm_deadline) {
-            process.m_alarm_deadline = 0;
-            // FIXME: Should we observe this signal somehow?
-            (void)process.send_signal(SIGALRM, nullptr);
-        }
-        return IterationDecision::Continue;
-    });
-
 #ifdef SCHEDULER_RUNNABLE_DEBUG
     dbg() << "Scheduler[" << Processor::current().id() << "]: Non-runnables:";
     Scheduler::for_each_nonrunnable([&](Thread& thread) -> IterationDecision {
