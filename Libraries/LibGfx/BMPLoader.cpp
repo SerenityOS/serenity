@@ -798,6 +798,22 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
         error = true;
     }
 
+    switch (context.dib.info.compression) {
+    case Compression::RGB:
+    case Compression::RLE8:
+    case Compression::RLE4:
+    case Compression::BITFIELDS:
+    case Compression::RLE24:
+    case Compression::PNG:
+    case Compression::ALPHABITFIELDS:
+    case Compression::CMYK:
+    case Compression::CMYKRLE8:
+    case Compression::CMYKRLE4:
+        break;
+    default:
+        error = true;
+    }
+
     if (!error && !set_dib_bitmasks(context, streamer))
         error = true;
 
@@ -925,7 +941,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
                 row++;
             }
             auto index = get_buffer_index();
-            if (index >= buffer.size()) {
+            if (index + 3 >= buffer.size()) {
                 IF_BMP_DEBUG(dbg() << "BMP has badly-formatted RLE data");
                 return false;
             }
@@ -1031,7 +1047,11 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
             if (byte == 1)
                 return true;
             if (byte == 2) {
+                if (!streamer.has_u8())
+                    return false;
                 u8 offset_x = streamer.read_u8();
+                if (!streamer.has_u8())
+                    return false;
                 u8 offset_y = streamer.read_u8();
                 column += offset_x;
                 if (column >= total_columns) {
@@ -1062,10 +1082,14 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
             // Optionally consume a padding byte
             if (compression != Compression::RLE4) {
                 if (pixel_count % 2) {
+                    if (!streamer.has_u8())
+                        return false;
                     byte = streamer.read_u8();
                 }
             } else {
                 if (((pixel_count + 1) / 2) % 2) {
+                    if (!streamer.has_u8())
+                        return false;
                     byte = streamer.read_u8();
                 }
             }
