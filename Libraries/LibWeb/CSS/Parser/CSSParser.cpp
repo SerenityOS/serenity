@@ -502,6 +502,7 @@ public:
             return CSS::Selector::SimpleSelector {
                 type,
                 CSS::Selector::SimpleSelector::PseudoClass::None,
+                CSS::Selector::SimpleSelector::PseudoElement::None,
                 String(),
                 CSS::Selector::SimpleSelector::AttributeMatchType::None,
                 String(),
@@ -537,6 +538,7 @@ public:
         CSS::Selector::SimpleSelector simple_selector {
             type,
             CSS::Selector::SimpleSelector::PseudoClass::None,
+            CSS::Selector::SimpleSelector::PseudoElement::None,
             value,
             CSS::Selector::SimpleSelector::AttributeMatchType::None,
             String(),
@@ -639,6 +641,10 @@ public:
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Empty;
             else if (pseudo_name.equals_ignoring_case("root"))
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Root;
+            else if (pseudo_name.equals_ignoring_case("before"))
+                simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
+            else if (pseudo_name.equals_ignoring_case("after"))
+                simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::After;
         }
 
         if (index == index_at_start) {
