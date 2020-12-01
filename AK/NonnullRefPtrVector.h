@@ -31,7 +31,7 @@
 
 namespace AK {
 
-template<typename T, int inline_capacity = 0>
+template<typename T, int inline_capacity>
 class NonnullRefPtrVector : public NonnullPtrVector<NonnullRefPtr<T>, inline_capacity> {
 };
 

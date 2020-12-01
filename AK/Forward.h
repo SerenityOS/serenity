@@ -109,6 +109,12 @@ class NonnullRefPtr;
 template<typename T>
 class NonnullOwnPtr;
 
+template<typename T, int inline_capacity = 0>
+class NonnullRefPtrVector;
+
+template<typename T, int inline_capacity = 0>
+class NonnullOwnPtrVector;
+
 template<typename T>
 class Optional;
 
@@ -154,7 +160,9 @@ using AK::JsonObject;
 using AK::JsonValue;
 using AK::LogStream;
 using AK::NonnullOwnPtr;
+using AK::NonnullOwnPtrVector;
 using AK::NonnullRefPtr;
+using AK::NonnullRefPtrVector;
 using AK::Optional;
 using AK::OutputMemoryStream;
 using AK::OutputStream;
