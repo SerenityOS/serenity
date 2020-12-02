@@ -348,6 +348,9 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     if (layout_root()->selection().is_valid()) {
         auto range = layout_root()->selection().to_dom_range();
 
+        m_frame.document()->layout_node()->set_selection({});
+        m_frame.set_cursor_position(range.start());
+
         if (key == KeyCode::Key_Backspace) {
             if (range.start().node()->is_editable()) {
                 m_edit_event_handler->handle_delete(range);
@@ -355,17 +358,54 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             }
         } else {
             m_edit_event_handler->handle_delete(range);
+
             m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
+            m_frame.cursor_position().set_offset(m_frame.cursor_position().offset() + 1);
             return true;
         }
     }
 
     if (m_frame.cursor_position().is_valid() && m_frame.cursor_position().node()->is_editable()) {
         if (key == KeyCode::Key_Backspace) {
-            m_edit_event_handler->handle_delete(m_frame.cursor_position());
+            auto position = m_frame.cursor_position();
+
+            if (position.offset() == 0)
+                TODO();
+
+            m_frame.cursor_position().set_offset(position.offset() - 1);
+            m_edit_event_handler->handle_delete({ { *position.node(), position.offset() - 1 }, position });
+
+            return true;
+        } else if (key == KeyCode::Key_Delete) {
+            auto position = m_frame.cursor_position();
+
+            if (position.offset() >= downcast<DOM::Text>(position.node())->data().length())
+                TODO();
+
+            m_edit_event_handler->handle_delete({ position, { *position.node(), position.offset() + 1 } });
+
+            return true;
+        } else if (key == KeyCode::Key_Right) {
+            auto position = m_frame.cursor_position();
+
+            if (position.offset() >= downcast<DOM::Text>(position.node())->data().length())
+                TODO();
+
+            m_frame.cursor_position().set_offset(position.offset() + 1);
+
+            return true;
+        } else if (key == KeyCode::Key_Left) {
+            auto position = m_frame.cursor_position();
+
+            if (position.offset() == 0)
+                TODO();
+
+            m_frame.cursor_position().set_offset(position.offset() - 1);
+
             return true;
         } else {
             m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
+            m_frame.cursor_position().set_offset(m_frame.cursor_position().offset() + 1);
             return true;
         }
     }
@@ -380,5 +420,4 @@ void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_nod
     else
         m_mouse_event_tracking_layout_node = nullptr;
 }
-
 }

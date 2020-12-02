@@ -40,13 +40,13 @@ namespace Web {
 
 void EditEventHandler::handle_delete(DOM::Range range)
 {
-    // FIXME: Find a better way of updating the selection and cursor position.
+    // FIXME: Deleting nodes seems to mess up the layout tree. Not sure if this is not entirely
+    //        my fault or not my fault at all.
+
+    dump_tree(*m_frame.document());
 
     if (range.start().node() != range.end().node()) {
         if (range.start().node()->parent() == range.end().node()->parent()) {
-            m_frame.document()->layout_node()->set_selection({});
-            m_frame.cursor_position().set_offset(range.start().offset());
-
             // Remove all intermediate nodes.
             auto* current = range.start().node()->next_sibling();
             while (current != range.end().node()) {
@@ -54,9 +54,6 @@ void EditEventHandler::handle_delete(DOM::Range range)
                 current->parent()->remove_child(*current);
                 current = next;
             }
-
-            if (!is<DOM::Text>(*range.start().node()) || !is<DOM::Text>(*range.end().node()))
-                TODO();
 
             // Join remaining text together.
             StringBuilder builder;
@@ -73,7 +70,6 @@ void EditEventHandler::handle_delete(DOM::Range range)
     } else {
         if (is<DOM::Text>(*range.start().node())) {
             m_frame.document()->layout_node()->set_selection({});
-            m_frame.cursor_position().set_offset(range.start().offset());
 
             auto& node = downcast<DOM::Text>(*range.start().node());
 
@@ -89,24 +85,8 @@ void EditEventHandler::handle_delete(DOM::Range range)
     // FIXME: We need to remove stale layout nodes when nodes are removed from the DOM. Currently,
     //        this is the only way to get these to disappear.
     m_frame.document()->force_layout();
-}
 
-void EditEventHandler::handle_delete(DOM::Position position)
-{
-    if (position.offset() == 0)
-        TODO();
-
-    if (is<DOM::Text>(*position.node())) {
-        auto& node = downcast<DOM::Text>(*position.node());
-
-        StringBuilder builder;
-        builder.append(node.data().substring_view(0, position.offset() - 1));
-        builder.append(node.data().substring_view(position.offset()));
-        node.set_data(builder.to_string());
-
-        m_frame.cursor_position().set_offset(m_frame.cursor_position().offset() - 1);
-        node.invalidate_style();
-    }
+    dump_tree(*m_frame.document());
 }
 
 void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
@@ -120,9 +100,12 @@ void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
         builder.append(node.data().substring_view(position.offset()));
         node.set_data(builder.to_string());
 
-        m_frame.cursor_position().set_offset(m_frame.cursor_position().offset() + 1);
         node.invalidate_style();
     }
+
+    // FIXME: We need to remove stale layout nodes when nodes are removed from the DOM. Currently,
+    //        this is the only way to get these to disappear.
+    m_frame.document()->force_layout();
 }
 
 }
