@@ -10,6 +10,9 @@ set(SOURCES
     MarkupGenerator.cpp
     Parser.cpp
     Runtime/Array.cpp
+    Runtime/ArrayBuffer.cpp
+    Runtime/ArrayBufferConstructor.cpp
+    Runtime/ArrayBufferPrototype.cpp
     Runtime/ArrayConstructor.cpp
     Runtime/ArrayIterator.cpp
     Runtime/ArrayIteratorPrototype.cpp

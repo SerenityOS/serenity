@@ -28,6 +28,8 @@
 #include <AK/LogStream.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
+#include <LibJS/Runtime/ArrayBufferConstructor.h>
+#include <LibJS/Runtime/ArrayBufferPrototype.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayIteratorPrototype.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
@@ -127,6 +129,7 @@ void GlobalObject::initialize()
     define_property(vm.names.Reflect, heap().allocate<ReflectObject>(*this, *this), attr);
 
     add_constructor(vm.names.Array, m_array_constructor, m_array_prototype);
+    add_constructor(vm.names.ArrayBuffer, m_array_buffer_constructor, m_array_buffer_prototype);
     add_constructor(vm.names.BigInt, m_bigint_constructor, m_bigint_prototype);
     add_constructor(vm.names.Boolean, m_boolean_constructor, m_boolean_prototype);
     add_constructor(vm.names.Date, m_date_constructor, m_date_prototype);
