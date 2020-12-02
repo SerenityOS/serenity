@@ -64,7 +64,7 @@ JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::length_getter)
     auto typed_array = typed_array_from(vm, global_object);
     if (!typed_array)
         return {};
-    return Value(typed_array->length());
+    return Value(typed_array->array_length());
 }
 
 }
