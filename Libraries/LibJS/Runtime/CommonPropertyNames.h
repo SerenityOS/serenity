@@ -32,6 +32,7 @@
 namespace JS {
 
 #define ENUMERATE_STANDARD_PROPERTY_NAMES(P) \
+    P(BYTES_PER_ELEMENT)                     \
     P(BigInt)                                \
     P(Boolean)                               \
     P(E)                                     \
