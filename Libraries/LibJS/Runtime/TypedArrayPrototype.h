@@ -37,6 +37,9 @@ public:
     explicit TypedArrayPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~TypedArrayPrototype() override;
+
+private:
+    JS_DECLARE_NATIVE_GETTER(length_getter);
 };
 
 }
