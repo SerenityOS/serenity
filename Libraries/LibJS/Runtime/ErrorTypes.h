@@ -27,7 +27,6 @@
 #pragma once
 
 #define JS_ENUMERATE_ERROR_TYPES(M)                                                                                                     \
-    M(ArrayInvalidLength, "Invalid array length")                                                                                       \
     M(ArrayMaxSize, "Maximum array size exceeded")                                                                                      \
     M(ArrayPrototypeOneArg, "Array.prototype.{}() requires at least one argument")                                                      \
     M(AccessorBadField, "Accessor descriptor's '{}' field must be a function or undefined")                                             \
@@ -48,6 +47,7 @@
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
     M(InvalidAssignToConst, "Invalid assignment to const variable")                                                                     \
     M(InvalidLeftHandAssignment, "Invalid left-hand side in assignment")                                                                \
+    M(InvalidLength, "Invalid {} length")                                                                                               \
     M(InvalidRadix, "Radix must be an integer no less than 2, and no greater than 36")                                                  \
     M(IsNotA, "{} is not a {}")                                                                                                         \
     M(IsNotAEvaluatedFrom, "{} is not a {} (evaluated from '{}')")                                                                      \
