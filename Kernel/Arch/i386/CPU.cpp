@@ -1709,9 +1709,10 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 
 void Processor::flush_tlb(VirtualAddress vaddr, size_t page_count)
 {
-    flush_tlb_local(vaddr, page_count);
     if (s_smp_enabled)
         smp_broadcast_flush_tlb(vaddr, page_count);
+    else
+        flush_tlb_local(vaddr, page_count);
 }
 
 static volatile ProcessorMessage* s_message_pool;
@@ -1869,61 +1870,70 @@ bool Processor::smp_queue_message(ProcessorMessage& msg)
     return next == nullptr;
 }
 
-void Processor::smp_broadcast_message(ProcessorMessage& msg, bool async)
+void Processor::smp_broadcast_message(ProcessorMessage& msg)
 {
     auto& cur_proc = Processor::current();
-    msg.async = async;
 #ifdef SMP_DEBUG
     dbg() << "SMP[" << cur_proc.id() << "]: Broadcast message " << VirtualAddress(&msg) << " to cpus: " << (count()) << " proc: " << VirtualAddress(&cur_proc);
 #endif
     atomic_store(&msg.refs, count() - 1, AK::MemoryOrder::memory_order_release);
     ASSERT(msg.refs > 0);
+    bool need_broadcast = false;
     for_each(
         [&](Processor& proc) -> IterationDecision {
             if (&proc != &cur_proc) {
-                if (proc.smp_queue_message(msg)) {
-                    // TODO: only send IPI to that CPU if we queued the first
-                }
+                if (proc.smp_queue_message(msg))
+                    need_broadcast = true;
             }
             return IterationDecision::Continue;
         });
 
-    // Now trigger an IPI on all other APs
-    APIC::the().broadcast_ipi();
+    // Now trigger an IPI on all other APs (unless all targets already had messages queued)
+    if (need_broadcast)
+        APIC::the().broadcast_ipi();
+}
 
-    if (!async) {
-        // If synchronous then we must cleanup and return the message back
-        // to the pool. Otherwise, the last processor to complete it will return it
-        while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
-            // TODO: pause for a bit?
+void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
+{
+    auto& cur_proc = Processor::current();
+    ASSERT(!msg.async);
+    // If synchronous then we must cleanup and return the message back
+    // to the pool. Otherwise, the last processor to complete it will return it
+    while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
+        // TODO: pause for a bit?
 
-            // We need to process any messages that may have been sent to
-            // us while we're waiting. This also checks if another processor
-            // may have requested us to halt.
-            cur_proc.smp_process_pending_messages();
-        }
-
-        smp_cleanup_message(msg);
-        smp_return_to_pool(msg);
+        // We need to process any messages that may have been sent to
+        // us while we're waiting. This also checks if another processor
+        // may have requested us to halt.
+        cur_proc.smp_process_pending_messages();
     }
+
+    smp_cleanup_message(msg);
+    smp_return_to_pool(msg);
 }
 
 void Processor::smp_broadcast(void (*callback)(void*), void* data, void (*free_data)(void*), bool async)
 {
     auto& msg = smp_get_from_pool();
+    msg.async = async;
     msg.type = ProcessorMessage::CallbackWithData;
     msg.callback_with_data.handler = callback;
     msg.callback_with_data.data = data;
     msg.callback_with_data.free = free_data;
-    smp_broadcast_message(msg, async);
+    smp_broadcast_message(msg);
+    if (!async)
+        smp_broadcast_wait_sync(msg);
 }
 
 void Processor::smp_broadcast(void (*callback)(), bool async)
 {
     auto& msg = smp_get_from_pool();
+    msg.async = async;
     msg.type = ProcessorMessage::CallbackWithData;
     msg.callback.handler = callback;
-    smp_broadcast_message(msg, async);
+    smp_broadcast_message(msg);
+    if (!async)
+        smp_broadcast_wait_sync(msg);
 }
 
 void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
@@ -1978,10 +1988,15 @@ void Processor::smp_unicast(u32 cpu, void (*callback)(), bool async)
 void Processor::smp_broadcast_flush_tlb(VirtualAddress vaddr, size_t page_count)
 {
     auto& msg = smp_get_from_pool();
+    msg.async = false;
     msg.type = ProcessorMessage::FlushTlb;
     msg.flush_tlb.ptr = vaddr.as_ptr();
     msg.flush_tlb.page_count = page_count;
-    smp_broadcast_message(msg, false);
+    smp_broadcast_message(msg);
+    // While the other processors handle this request, we'll flush ours
+    flush_tlb_local(vaddr, page_count);
+    // Now wait until everybody is done as well
+    smp_broadcast_wait_sync(msg);
 }
 
 void Processor::smp_broadcast_halt()
