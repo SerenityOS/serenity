@@ -27,13 +27,13 @@ jobs:
       # These packages are already part of the ubuntu-20.04 image:
       # clang-format-10 cmake gcc-10 g++-10 shellcheck libgmp-dev
       # These aren't:
-      run: sudo apt-get install libstdc++-10-dev libmpfr-dev libmpc-dev
+      run: sudo apt-get install libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build
       # If we ever do any qemu-emulation on Github Actions, we should re-enable this:
       # e2fsprogs qemu-system-i386 qemu-utils
     - name: Use GCC 10 instead
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
     - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-10 --version; python --version; python3 --version
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-10 --version; python --version; python3 --version; ninja --version
 
     # === PREPARE FOR BUILDING ===
 
@@ -60,7 +60,7 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake .. -DBUILD_LAGOM=1 -DALL_THE_DEBUG_MACROS=1
+        cmake .. -GNinja -DBUILD_LAGOM=1 -DALL_THE_DEBUG_MACROS=1
 
     # === ACTUALLY BUILD AND TEST ===
 
@@ -72,13 +72,13 @@ jobs:
 
     - name: Build Serenity and Tests
       working-directory: ${{ github.workspace }}/Build
-      run: cmake --build . -j2
+      run: cmake --build .
     - name: Lint (Phase 2/2)
       working-directory: ${{ github.workspace }}/Meta
       run: ./check-symbols.sh
     - name: Run CMake tests
       working-directory: ${{ github.workspace }}/Build
-      run: CTEST_OUTPUT_ON_FAILURE=1 make test
+      run: CTEST_OUTPUT_ON_FAILURE=1 ninja test
     - name: Run JS tests
       working-directory: ${{ github.workspace }}/Build/Meta/Lagom
       run: DISABLE_DBG_OUTPUT=1 ./test-js
@@ -112,9 +112,11 @@ jobs:
     - uses: actions/checkout@v2
 
     # === OS SETUP ===
-
+    #
+    - name: Install dependencies
+      run: sudo apt-get install ninja-build
     - name: Check versions
-      run: set +e; clang --version; clang++ --version
+      run: set +e; clang --version; clang++ --version; ninja --version
 
     # === PREPARE FOR BUILDING ===
 
@@ -126,10 +128,10 @@ jobs:
       run: |
         mkdir -p Build
         cd Build
-        cmake -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
 
     # === ACTUALLY BUILD ===
 
     - name: Build Lagom with Fuzzers
       working-directory: ${{ github.workspace }}/Meta/Lagom/Build
-      run: cmake --build . -j2
+      run: cmake --build .
