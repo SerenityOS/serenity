@@ -120,9 +120,12 @@ bool WavLoaderPlugin::parse_header()
         u8 value;
         if (m_file) {
             *file_stream >> value;
-            if (file_stream->handle_read_failure()) {
+            if (file_stream->handle_read_failure())
                 ok = false;
-            }
+        } else {
+            *m_stream >> value;
+            if (m_stream->has_any_error())
+                ok = false;
         }
         return value;
     };
@@ -131,9 +134,12 @@ bool WavLoaderPlugin::parse_header()
         u16 value;
         if (m_file) {
             *file_stream >> value;
-            if (file_stream->handle_read_failure()) {
+            if (file_stream->handle_read_failure())
                 ok = false;
-            }
+        } else {
+            *m_stream >> value;
+            if (m_stream->has_any_error())
+                ok = false;
         }
         return value;
     };
@@ -142,9 +148,12 @@ bool WavLoaderPlugin::parse_header()
         u32 value;
         if (m_file) {
             *file_stream >> value;
-            if (file_stream->handle_read_failure()) {
+            if (file_stream->handle_read_failure())
                 ok = false;
-            }
+        } else {
+            *m_stream >> value;
+            if (m_stream->has_any_error())
+                ok = false;
         }
         return value;
     };
