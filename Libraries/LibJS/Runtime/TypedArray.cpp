@@ -77,13 +77,14 @@ namespace JS {
             /* FIXME: Initialize from TypedArray, ArrayBuffer, Iterable or Array-like object */                          \
             TODO();                                                                                                      \
         }                                                                                                                \
-        /* FIXME: Use ToIndex() abstract operation */                                                                    \
-        auto array_length_value = vm.argument(0);                                                                        \
-        if (!array_length_value.is_integer() || array_length_value.as_i32() < 0) {                                       \
-            vm.throw_exception<TypeError>(global_object(), ErrorType::ArrayInvalidLength);                               \
+        auto array_length = vm.argument(0).to_index(global_object());                                                    \
+        if (vm.exception()) {                                                                                            \
+            /* Re-throw more specific RangeError */                                                                      \
+            vm.clear_exception();                                                                                        \
+            vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                    \
             return {};                                                                                                   \
         }                                                                                                                \
-        auto* array = ClassName::create(global_object(), array_length_value.as_i32());                                   \
+        auto* array = ClassName::create(global_object(), array_length);                                                  \
         return array;                                                                                                    \
     }
 
