@@ -353,25 +353,21 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
                 m_edit_event_handler->handle_delete(range);
                 return true;
             }
+        } else {
+            m_edit_event_handler->handle_delete(range);
+            m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
+            return true;
         }
-
-        // FIXME: Check if this code point is in the printable character range.
-
-        m_edit_event_handler->handle_delete(range);
-        m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
-        return true;
     }
 
     if (m_frame.cursor_position().is_valid() && m_frame.cursor_position().node()->is_editable()) {
         if (key == KeyCode::Key_Backspace) {
             m_edit_event_handler->handle_delete(m_frame.cursor_position());
             return true;
+        } else {
+            m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
+            return true;
         }
-
-        // FIXME: Check if this code point is in the printable character range.
-
-        m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
-        return true;
     }
 
     return false;
