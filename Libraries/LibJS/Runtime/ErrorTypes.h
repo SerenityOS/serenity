@@ -39,6 +39,7 @@
     M(ClassConstructorWithoutNew, "Class constructor {} must be called with 'new'")                                                     \
     M(ClassIsAbstract, "Abstract class {} cannot be constructed directly")                                                              \
     M(ClassDoesNotExtendAConstructorOrNull, "Class extends value {} is not a constructor or null")                                      \
+    M(ConstructorWithoutNew, "{} constructor must be called with 'new'")                                                                \
     M(Convert, "Cannot convert {} to {}")                                                                                               \
     M(ConvertUndefinedToObject, "Cannot convert undefined to object")                                                                   \
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '{}'")                                          \
@@ -73,7 +74,6 @@
     M(ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess,                                                                              \
         "Object prototype must not be {} on a super property access")                                                                   \
     M(ObjectPrototypeWrongType, "Prototype must be an object or null")                                                                  \
-    M(ProxyCallWithNew, "Proxy must be called with the 'new' operator")                                                                 \
     M(ProxyConstructBadReturnType, "Proxy handler's construct trap violates invariant: must return "                                    \
                                    "an object")                                                                                         \
     M(ProxyConstructorBadType, "Expected {} argument of Proxy constructor to be object, got {}")                                        \
