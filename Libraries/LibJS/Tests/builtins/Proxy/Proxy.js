@@ -33,5 +33,5 @@ test("constructor requires objects", () => {
 test("constructor must be invoked with 'new'", () => {
     expect(() => {
         Proxy({}, {});
-    }).toThrowWithMessage(TypeError, "Proxy must be called with the 'new' operator");
+    }).toThrowWithMessage(TypeError, "Proxy constructor must be called with 'new'");
 });
