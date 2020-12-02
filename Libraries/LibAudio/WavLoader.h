@@ -26,6 +26,8 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
+#include <AK/MemoryStream.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
@@ -40,7 +42,8 @@ class Buffer;
 // Parses a WAV file and produces an Audio::Buffer.
 class WavLoaderPlugin : public LoaderPlugin {
 public:
-    explicit WavLoaderPlugin(const StringView& path);
+    WavLoaderPlugin(const StringView& path);
+    WavLoaderPlugin(const ByteBuffer& buffer);
 
     virtual bool sniff() override;
 
@@ -64,6 +67,7 @@ private:
 
     bool valid { false };
     RefPtr<Core::File> m_file;
+    OwnPtr<InputMemoryStream> m_stream;
     String m_error_string;
     OwnPtr<ResampleHelper> m_resampler;
 

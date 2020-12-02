@@ -97,14 +97,14 @@ static double read_norm_sample_8(InputMemoryStream& stream)
     stream >> sample;
     return double(sample) / NumericLimits<u8>::max();
 }
-    
+
 RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, int bits_per_sample)
 {
     InputMemoryStream stream { data };
     return from_pcm_stream(stream, resampler, num_channels, bits_per_sample, data.size() / (bits_per_sample / 8));
 }
 
-RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream &stream, ResampleHelper& resampler, int num_channels, int bits_per_sample, int num_samples)
+RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, int bits_per_sample, int num_samples)
 {
     Vector<Sample> fdata;
     fdata.ensure_capacity(num_samples);
