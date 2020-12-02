@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
@@ -58,6 +59,7 @@ public:
 class Loader : public RefCounted<Loader> {
 public:
     static NonnullRefPtr<Loader> create(const StringView& path) { return adopt(*new Loader(path)); }
+    static NonnullRefPtr<Loader> create(const ByteBuffer& buffer) { return adopt(*new Loader(buffer)); }
 
     bool has_error() const { return m_plugin ? m_plugin->has_error() : true; }
     const char* error_string() const { return m_plugin ? m_plugin->error_string() : "No loader plugin available"; }
@@ -84,6 +86,7 @@ public:
 
 private:
     Loader(const StringView& path);
+    Loader(const ByteBuffer& buffer);
 
     mutable OwnPtr<LoaderPlugin> m_plugin;
 };
