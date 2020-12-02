@@ -77,7 +77,7 @@ JS_DEFINE_NATIVE_SETTER(Array::length_setter)
     if (vm.exception())
         return;
     if (length.is_nan() || length.is_infinity() || length.as_double() < 0) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::ArrayInvalidLength);
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "array");
         return;
     }
     array->indexed_properties().set_array_like_size(length.as_double());
