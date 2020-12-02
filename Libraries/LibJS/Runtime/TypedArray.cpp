@@ -31,7 +31,6 @@
 namespace JS {
 
 #define JS_DEFINE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                               \
-    ClassName::~ClassName() { }                                                                                          \
     ClassName* ClassName::create(GlobalObject& global_object, u32 length)                                                \
     {                                                                                                                    \
         return global_object.heap().allocate<ClassName>(global_object, length, *global_object.snake_name##_prototype()); \
@@ -41,6 +40,7 @@ namespace JS {
         : TypedArray(length, prototype)                                                                                  \
     {                                                                                                                    \
     }                                                                                                                    \
+    ClassName::~ClassName() { }                                                                                          \
                                                                                                                          \
     PrototypeName::PrototypeName(GlobalObject& global_object)                                                            \
         : Object(*global_object.typed_array_prototype())                                                                 \
@@ -54,12 +54,11 @@ namespace JS {
     }                                                                                                                    \
     PrototypeName::~PrototypeName() { }                                                                                  \
                                                                                                                          \
-    ConstructorName::~ConstructorName() { }                                                                              \
-    Value ConstructorName::construct(Function&) { return call(); }                                                       \
     ConstructorName::ConstructorName(GlobalObject& global_object)                                                        \
         : TypedArrayConstructor(vm().names.ClassName, *global_object.typed_array_constructor())                          \
     {                                                                                                                    \
     }                                                                                                                    \
+    ConstructorName::~ConstructorName() { }                                                                              \
     void ConstructorName::initialize(GlobalObject& global_object)                                                        \
     {                                                                                                                    \
         auto& vm = this->vm();                                                                                           \
@@ -69,21 +68,27 @@ namespace JS {
     }                                                                                                                    \
     Value ConstructorName::call()                                                                                        \
     {                                                                                                                    \
-        if (vm().argument_count() <= 0)                                                                                  \
+        auto& vm = this->vm();                                                                                           \
+        vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ClassName);            \
+        return {};                                                                                                       \
+    }                                                                                                                    \
+    Value ConstructorName::construct(Function&)                                                                          \
+    {                                                                                                                    \
+        auto& vm = this->vm();                                                                                           \
+        if (vm.argument_count() == 0)                                                                                    \
             return ClassName::create(global_object(), 0);                                                                \
                                                                                                                          \
-        if (vm().argument_count() == 1 && vm().argument(0).is_number()) {                                                \
-            auto array_length_value = vm().argument(0);                                                                  \
-            if (!array_length_value.is_integer() || array_length_value.as_i32() < 0) {                                   \
-                vm().throw_exception<TypeError>(global_object(), ErrorType::ArrayInvalidLength);                         \
-                return {};                                                                                               \
-            }                                                                                                            \
-            auto* array = ClassName::create(global_object(), array_length_value.as_i32());                               \
-            return array;                                                                                                \
+        if (vm.argument(0).is_object()) {                                                                                \
+            /* FIXME: Initialize from TypedArray, ArrayBuffer, Iterable or Array-like object */                          \
+            TODO();                                                                                                      \
         }                                                                                                                \
-        auto* array = ClassName::create(global_object(), vm().argument_count());                                         \
-        for (size_t i = 0; i < vm().argument_count(); ++i)                                                               \
-            array->put_by_index(i, vm().argument(i));                                                                    \
+        /* FIXME: Use ToIndex() abstract operation */                                                                    \
+        auto array_length_value = vm.argument(0);                                                                        \
+        if (!array_length_value.is_integer() || array_length_value.as_i32() < 0) {                                       \
+            vm.throw_exception<TypeError>(global_object(), ErrorType::ArrayInvalidLength);                               \
+            return {};                                                                                                   \
+        }                                                                                                                \
+        auto* array = ClassName::create(global_object(), array_length_value.as_i32());                                   \
         return array;                                                                                                    \
     }
 
