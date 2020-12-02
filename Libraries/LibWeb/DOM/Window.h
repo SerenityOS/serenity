@@ -65,7 +65,7 @@ public:
     void clear_timeout(i32);
     void clear_interval(i32);
 
-    void did_set_location_href(Badge<Bindings::LocationObject>, const String& new_href);
+    void did_set_location_href(Badge<Bindings::LocationObject>, const URL& new_href);
     void did_call_location_reload(Badge<Bindings::LocationObject>);
 
     Bindings::WindowObject* wrapper() { return m_wrapper; }

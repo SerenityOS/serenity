@@ -70,7 +70,12 @@ JS_DEFINE_NATIVE_SETTER(LocationObject::href_setter)
     auto new_href = value.to_string(global_object);
     if (vm.exception())
         return;
-    window.impl().did_set_location_href({}, new_href);
+    auto href_url = window.impl().document().complete_url(new_href);
+    if (!href_url.is_valid()) {
+        vm.throw_exception<JS::URIError>(global_object, String::formatted("Invalid URL '{}'", new_href));
+        return;
+    }
+    window.impl().did_set_location_href({}, href_url);
 }
 
 JS_DEFINE_NATIVE_GETTER(LocationObject::pathname_getter)
