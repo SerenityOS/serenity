@@ -26,6 +26,7 @@
 
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/TypedArrayConstructor.h>
 
 namespace JS {
 
@@ -42,7 +43,7 @@ namespace JS {
     }                                                                                                                    \
                                                                                                                          \
     PrototypeName::PrototypeName(GlobalObject& global_object)                                                            \
-        : Object(*global_object.object_prototype())                                                                      \
+        : Object(*global_object.typed_array_prototype())                                                                 \
     {                                                                                                                    \
     }                                                                                                                    \
     void PrototypeName::initialize(GlobalObject& global_object)                                                          \
@@ -56,7 +57,7 @@ namespace JS {
     ConstructorName::~ConstructorName() { }                                                                              \
     Value ConstructorName::construct(Function&) { return call(); }                                                       \
     ConstructorName::ConstructorName(GlobalObject& global_object)                                                        \
-        : NativeFunction(vm().names.ClassName, *global_object.function_prototype())                                      \
+        : TypedArrayConstructor(vm().names.ClassName, *global_object.typed_array_constructor())                          \
     {                                                                                                                    \
     }                                                                                                                    \
     void ConstructorName::initialize(GlobalObject& global_object)                                                        \

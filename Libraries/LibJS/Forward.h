@@ -45,7 +45,7 @@
     void name([[maybe_unused]] JS::VM& vm, [[maybe_unused]] JS::GlobalObject& global_object, JS::Value value)
 
 // NOTE: Proxy is not included here as it doesn't have a prototype - m_proxy_constructor is initialized separately.
-#define JS_ENUMERATE_NATIVE_OBJECTS                                                    \
+#define JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES                                \
     __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor, void)               \
     __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor, void)     \
     __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void) \
@@ -57,6 +57,10 @@
     __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)     \
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)     \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)
+
+#define JS_ENUMERATE_NATIVE_OBJECTS                 \
+    JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES \
+    __JS_ENUMERATE(TypedArray, typed_array, TypedArrayPrototype, TypedArrayConstructor, void)
 
 #define JS_ENUMERATE_ERROR_SUBCLASSES                                                                                                      \
     __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor, void)                                                  \
@@ -147,11 +151,16 @@ enum class DeclarationKind;
 class ProxyObject;
 class ProxyConstructor;
 
+class TypedArrayConstructor;
+class TypedArrayPrototype;
+
 #define __JS_ENUMERATE(ClassName, snake_name, ConstructorName, PrototypeName, ArrayType) \
     class ClassName;                                                                     \
     class ConstructorName;                                                               \
     class PrototypeName;
-JS_ENUMERATE_BUILTIN_TYPES
+JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES
+JS_ENUMERATE_ERROR_SUBCLASSES
+JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
 struct Argument;

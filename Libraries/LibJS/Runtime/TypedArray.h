@@ -27,7 +27,7 @@
 #pragma once
 
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
@@ -98,6 +98,7 @@ protected:
         , m_length(length)
     {
         auto& vm = this->vm();
+        // FIXME: This belongs to TypedArray.prototype
         define_native_property(vm.names.length, length_getter, nullptr);
         m_data = (T*)calloc(m_length, sizeof(T));
     }
@@ -141,8 +142,8 @@ inline JS_DEFINE_NATIVE_GETTER(TypedArray<T>::length_getter)
         virtual void initialize(GlobalObject&) override;                                    \
         virtual ~PrototypeName() override;                                                  \
     };                                                                                      \
-    class ConstructorName final : public NativeFunction {                                   \
-        JS_OBJECT(ConstructorName, NativeFunction);                                         \
+    class ConstructorName final : public TypedArrayConstructor {                            \
+        JS_OBJECT(ConstructorName, TypedArrayConstructor);                                  \
                                                                                             \
     public:                                                                                 \
         explicit ConstructorName(GlobalObject&);                                            \

@@ -71,6 +71,8 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
     template<typename ConstructorType>
+    void initialize_constructor(const FlyString& property_name, ConstructorType*&, Object* prototype);
+    template<typename ConstructorType>
     void add_constructor(const FlyString& property_name, ConstructorType*&, Object* prototype);
 
 private:
@@ -103,7 +105,7 @@ private:
 };
 
 template<typename ConstructorType>
-inline void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::initialize_constructor(const FlyString& property_name, ConstructorType*& constructor, Object* prototype)
 {
     auto& vm = this->vm();
     constructor = heap().allocate<ConstructorType>(*this, *this);
@@ -115,6 +117,12 @@ inline void GlobalObject::add_constructor(const FlyString& property_name, Constr
         if (vm.exception())
             return;
     }
+}
+
+template<typename ConstructorType>
+inline void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object* prototype)
+{
+    initialize_constructor(property_name, constructor, prototype);
     define_property(property_name, constructor, Attribute::Writable | Attribute::Configurable);
 }
 

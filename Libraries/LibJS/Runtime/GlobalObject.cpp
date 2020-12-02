@@ -63,6 +63,8 @@
 #include <LibJS/Runtime/SymbolConstructor.h>
 #include <LibJS/Runtime/SymbolPrototype.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/TypedArrayConstructor.h>
+#include <LibJS/Runtime/TypedArrayPrototype.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -136,6 +138,8 @@ void GlobalObject::initialize()
     add_constructor(vm.names.RegExp, m_regexp_constructor, m_regexp_prototype);
     add_constructor(vm.names.String, m_string_constructor, m_string_prototype);
     add_constructor(vm.names.Symbol, m_symbol_constructor, m_symbol_prototype);
+
+    initialize_constructor(vm.names.TypedArray, m_typed_array_constructor, m_typed_array_prototype);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     add_constructor(vm.names.ClassName, m_##snake_name##_constructor, m_##snake_name##_prototype);
