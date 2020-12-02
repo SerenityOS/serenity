@@ -81,8 +81,20 @@ private:
         Gfx::FloatRect rect;
         Gfx::Color color;
         bool dead { false };
+
+        Brick(int row, int column, Gfx::Color c, int brick_width = 40, int brick_height = 12, int field_left_offset = 30, int field_top_offset = 30, int brick_spacing = 3)
+        {
+            rect = {
+                field_left_offset + (column * brick_width) + (column * brick_spacing),
+                field_top_offset + (row * brick_height) + (row * brick_spacing),
+                brick_width,
+                brick_height
+            };
+            color = c;
+        }
     };
 
+    int m_board;
     Ball m_ball;
     Paddle m_paddle;
     Vector<Brick> m_bricks;

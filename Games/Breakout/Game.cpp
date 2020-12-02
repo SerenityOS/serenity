@@ -25,6 +25,7 @@
  */
 
 #include "Game.h"
+#include "LevelSelectDialog.h"
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -35,6 +36,9 @@ namespace Breakout {
 Game::Game()
 {
     set_override_cursor(Gfx::StandardCursor::Hidden);
+    auto level_dialog = LevelSelectDialog::show(m_board, window());
+    if (level_dialog != GUI::Dialog::ExecOK)
+        m_board = -1;
     start_timer(16);
     reset();
 }
@@ -69,23 +73,34 @@ void Game::generate_bricks()
         Gfx::Color::LightGray,
     };
 
-    int brick_width = 40;
-    int brick_height = 12;
-    int brick_spacing = 3;
-    int field_left_offset = 30;
-    int field_top_offset = 30;
+    Vector<Brick> boards[] = {
+        // :^)
+        Vector({
+            Brick(0, 0, colors[3], 40, 12, 100),
+            Brick(0, 4, colors[3], 40, 12, 100),
+            Brick(1, 2, colors[3], 40, 12, 100),
+            Brick(1, 5, colors[3], 40, 12, 100),
+            Brick(2, 1, colors[3], 40, 12, 100),
+            Brick(2, 3, colors[3], 40, 12, 100),
+            Brick(2, 6, colors[3], 40, 12, 100),
+            Brick(3, 6, colors[3], 40, 12, 100),
+            Brick(4, 0, colors[3], 40, 12, 100),
+            Brick(4, 6, colors[3], 40, 12, 100),
+            Brick(5, 6, colors[3], 40, 12, 100),
+            Brick(6, 5, colors[3], 40, 12, 100),
+            Brick(7, 4, colors[3], 40, 12, 100),
+        })
+    };
 
-    for (int row = 0; row < 7; ++row) {
-        for (int column = 0; column < 10; ++column) {
-            Brick brick;
-            brick.rect = {
-                field_left_offset + (column * brick_width) + (column * brick_spacing),
-                field_top_offset + (row * brick_height) + (row * brick_spacing),
-                brick_width,
-                brick_height
-            };
-            brick.color = colors[row];
-            m_bricks.append(brick);
+    if (m_board != -1) {
+        m_bricks = boards[m_board];
+    } else {
+        // Rainbow
+        for (int row = 0; row < 7; ++row) {
+            for (int column = 0; column < 10; ++column) {
+                Brick brick(row, column, colors[row]);
+                m_bricks.append(brick);
+            }
         }
     }
 }
