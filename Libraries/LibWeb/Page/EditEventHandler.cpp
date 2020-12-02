@@ -31,6 +31,7 @@
 #include <LibWeb/Page/Frame.h>
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 
 #include "EditEventHandler.h"
@@ -39,21 +40,55 @@ namespace Web {
 
 void EditEventHandler::handle_delete(DOM::Range range)
 {
-    if (range.start().node() != range.end().node())
-        TODO();
+    // FIXME: Find a better way of updating the selection and cursor position.
 
-    if (is<DOM::Text>(*range.start().node())) {
-        auto& node = downcast<DOM::Text>(*range.start().node());
+    if (range.start().node() != range.end().node()) {
+        if (range.start().node()->parent() == range.end().node()->parent()) {
+            m_frame.document()->layout_node()->set_selection({});
+            m_frame.cursor_position().set_offset(range.start().offset());
 
-        StringBuilder builder;
+            // Remove all intermediate nodes.
+            auto* current = range.start().node()->next_sibling();
+            while (current != range.end().node()) {
+                auto* next = current->next_sibling();
+                current->parent()->remove_child(*current);
+                current = next;
+            }
 
-        builder.append(node.data().substring_view(0, range.start().offset()));
-        builder.append(node.data().substring_view(range.end().offset()));
-        node.set_data(builder.to_string());
+            if (!is<DOM::Text>(*range.start().node()) || !is<DOM::Text>(*range.end().node()))
+                TODO();
 
-        m_frame.document()->layout_node()->set_selection({});
-        node.invalidate_style();
+            // Join remaining text together.
+            StringBuilder builder;
+            builder.append(downcast<DOM::Text>(range.start().node())->data().substring_view(0, range.start().offset()));
+            builder.append(downcast<DOM::Text>(range.end().node())->data().substring_view(range.end().offset()));
+
+            range.start().node()->parent()->remove_child(*range.end().node());
+            downcast<DOM::Text>(range.start().node())->set_data(builder.to_string());
+
+            range.start().node()->invalidate_style();
+        } else {
+            TODO();
+        }
+    } else {
+        if (is<DOM::Text>(*range.start().node())) {
+            m_frame.document()->layout_node()->set_selection({});
+            m_frame.cursor_position().set_offset(range.start().offset());
+
+            auto& node = downcast<DOM::Text>(*range.start().node());
+
+            StringBuilder builder;
+            builder.append(node.data().substring_view(0, range.start().offset()));
+            builder.append(node.data().substring_view(range.end().offset()));
+            node.set_data(builder.to_string());
+
+            node.invalidate_style();
+        }
     }
+
+    // FIXME: We need to remove stale layout nodes when nodes are removed from the DOM. Currently,
+    //        this is the only way to get these to disappear.
+    m_frame.document()->force_layout();
 }
 
 void EditEventHandler::handle_delete(DOM::Position position)
