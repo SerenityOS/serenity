@@ -50,7 +50,8 @@ ProxyConstructor::~ProxyConstructor()
 
 Value ProxyConstructor::call()
 {
-    vm().throw_exception<TypeError>(global_object(), ErrorType::ProxyCallWithNew);
+    auto& vm = this->vm();
+    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.Proxy);
     return {};
 }
 
