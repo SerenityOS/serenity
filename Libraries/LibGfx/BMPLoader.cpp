@@ -1059,7 +1059,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
             if (!result.has_value())
                 return false;
             byte = result.value();
-            for (u8 i = 0; i < pixel_count; ++i) {
+            for (u16 i = 0; i < pixel_count; ++i) {
                 if (compression != Compression::RLE4) {
                     if (!set_byte(byte, true))
                         return false;
