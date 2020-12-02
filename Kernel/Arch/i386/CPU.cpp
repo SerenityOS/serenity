@@ -857,9 +857,11 @@ void handle_interrupt(TrapFrame* trap)
     auto& regs = *trap->regs;
     ASSERT(regs.isr_number >= IRQ_VECTOR_BASE && regs.isr_number <= (IRQ_VECTOR_BASE + GENERIC_INTERRUPT_HANDLERS_COUNT));
     u8 irq = (u8)(regs.isr_number - 0x50);
-    ASSERT(s_interrupt_handler[irq]);
-    s_interrupt_handler[irq]->handle_interrupt(regs);
-    s_interrupt_handler[irq]->eoi();
+    auto* handler = s_interrupt_handler[irq];
+    ASSERT(handler);
+    handler->increment_invoking_counter();
+    handler->handle_interrupt(regs);
+    handler->eoi();
 }
 
 void enter_trap_no_irq(TrapFrame* trap)

@@ -87,7 +87,6 @@ SharedIRQHandler::~SharedIRQHandler()
 void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    increment_invoking_counter();
 #ifdef INTERRUPT_DEBUG
     dbg() << "Interrupt @ " << interrupt_number();
     dbg() << "Interrupt Handlers registered - " << m_handlers.size();
