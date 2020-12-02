@@ -63,8 +63,8 @@ public:
 
     void set_needs_display(const Gfx::IntRect&);
 
-    void set_viewport_rect(const Gfx::IntRect&);
-    Gfx::IntRect viewport_rect() const { return m_viewport_rect; }
+    void set_viewport_scroll_offset(const Gfx::IntPoint&);
+    Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
 
     void did_scroll(Badge<InProcessWebView>);
 
@@ -109,7 +109,7 @@ private:
     WeakPtr<DOM::Element> m_host_element;
     RefPtr<DOM::Document> m_document;
     Gfx::IntSize m_size;
-    Gfx::IntRect m_viewport_rect;
+    Gfx::IntPoint m_viewport_scroll_offset;
 
     DOM::Position m_cursor_position;
     RefPtr<Core::Timer> m_cursor_blink_timer;
