@@ -42,29 +42,28 @@ String g_boot_mode = "graphical";
 
 static void sigchld_handler(int)
 {
-    int status = 0;
-    pid_t pid = waitpid(-1, &status, WNOHANG);
-    if (!pid)
-        return;
+    for (;;) {
+        int status = 0;
+        pid_t pid = waitpid(-1, &status, WNOHANG);
+        if (pid < 0) {
+            perror("waitpid");
+            break;
+        }
+        if (pid == 0)
+            break;
 
 #ifdef SYSTEMSERVER_DEBUG
-    dbg() << "Reaped child with pid " << pid << ", exit status " << status;
+        dbg() << "Reaped child with pid " << pid << ", exit status " << status;
 #endif
 
-    Service* service = Service::find_by_pid(pid);
-    if (service == nullptr) {
-        // This can happen for multi-instance services.
-        return;
-    }
+        Service* service = Service::find_by_pid(pid);
+        if (service == nullptr) {
+            // This can happen for multi-instance services.
+            continue;
+        }
 
-    // Call service->did_exit(status) some time soon.
-    // We wouldn't want to run the complex logic, such
-    // as possibly spawning the service again, from the
-    // signal handler, so defer it.
-    Core::EventLoop::main().post_event(*service, make<Core::DeferredInvocationEvent>([=](auto&) {
         service->did_exit(status);
-    }));
-    Core::EventLoop::wake();
+    }
 }
 
 static void parse_boot_mode()
@@ -112,14 +111,9 @@ int main(int, char**)
     mount_all_filesystems();
     parse_boot_mode();
 
-    struct sigaction sa = {
-        .sa_handler = sigchld_handler,
-        .sa_mask = 0,
-        .sa_flags = SA_RESTART
-    };
-    sigaction(SIGCHLD, &sa, nullptr);
-
     Core::EventLoop event_loop;
+
+    event_loop.register_signal(SIGCHLD, sigchld_handler);
 
     // Read our config and instantiate services.
     // This takes care of setting up sockets.
