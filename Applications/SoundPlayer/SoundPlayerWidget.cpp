@@ -26,6 +26,7 @@
 
 #include "SoundPlayerWidget.h"
 #include <AK/StringBuilder.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -120,9 +121,10 @@ void SoundPlayerWidget::hide_scope(bool hide)
 void SoundPlayerWidget::open_file(String path)
 {
     NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
-    if (loader->has_error()) {
+    if (loader->has_error() || !loader->sample_rate()) {
+        const String error_string = loader->error_string();
         GUI::MessageBox::show(window(),
-            String::formatted("Failed to load audio file: {} ({})", path, loader->error_string()),
+            String::formatted("Failed to load audio file: {} ({})", path, error_string.is_null() ? "Unknown error" : error_string),
             "Filetype error", GUI::MessageBox::Type::Error);
         return;
     }
@@ -143,6 +145,19 @@ void SoundPlayerWidget::open_file(String path)
 
     m_manager.set_loader(move(loader));
     update_position(0);
+}
+
+void SoundPlayerWidget::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+        open_file(urls.first().path());
+    }
 }
 
 int SoundPlayerWidget::normalize_rate(int rate) const
