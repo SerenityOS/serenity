@@ -148,7 +148,7 @@ void Window::cancel_animation_frame(i32 id)
     GUI::DisplayLink::unregister_callback(id);
 }
 
-void Window::did_set_location_href(Badge<Bindings::LocationObject>, const String& new_href)
+void Window::did_set_location_href(Badge<Bindings::LocationObject>, const URL& new_href)
 {
     auto* frame = document().frame();
     if (!frame)
