@@ -45,17 +45,18 @@
     void name([[maybe_unused]] JS::VM& vm, [[maybe_unused]] JS::GlobalObject& global_object, JS::Value value)
 
 // NOTE: Proxy is not included here as it doesn't have a prototype - m_proxy_constructor is initialized separately.
-#define JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES                                \
-    __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor, void)               \
-    __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor, void)     \
-    __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void) \
-    __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor, void)                   \
-    __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor, void)               \
-    __JS_ENUMERATE(Function, function, FunctionPrototype, FunctionConstructor, void)   \
-    __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor, void)     \
-    __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor, void)           \
-    __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)     \
-    __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)     \
+#define JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES                                           \
+    __JS_ENUMERATE(Array, array, ArrayPrototype, ArrayConstructor, void)                          \
+    __JS_ENUMERATE(ArrayBuffer, array_buffer, ArrayBufferPrototype, ArrayBufferConstructor, void) \
+    __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor, void)                \
+    __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void)            \
+    __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor, void)                              \
+    __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor, void)                          \
+    __JS_ENUMERATE(Function, function, FunctionPrototype, FunctionConstructor, void)              \
+    __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor, void)                \
+    __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor, void)                      \
+    __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)                \
+    __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)
 
 #define JS_ENUMERATE_NATIVE_OBJECTS                 \
