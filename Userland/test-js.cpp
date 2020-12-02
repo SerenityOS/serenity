@@ -731,7 +731,9 @@ int main(int argc, char** argv)
 
     String test_root;
 
-    if (!specified_test_root) {
+    if (specified_test_root) {
+        test_root = String { specified_test_root };
+    } else {
 #ifdef __serenity__
         test_root = "/home/anon/js-tests";
 #else
