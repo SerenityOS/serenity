@@ -106,19 +106,19 @@ void Frame::set_size(const Gfx::IntSize& size)
         m_document->layout();
 }
 
-void Frame::set_viewport_rect(const Gfx::IntRect& rect)
+void Frame::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
 {
-    if (m_viewport_rect == rect)
+    if (m_viewport_scroll_offset == offset)
         return;
-    m_viewport_rect = rect;
+    m_viewport_scroll_offset = offset;
 
     if (m_document && m_document->layout_node())
-        m_document->layout_node()->did_set_viewport_rect({}, rect);
+        m_document->layout_node()->did_set_viewport_rect({}, viewport_rect());
 }
 
 void Frame::set_needs_display(const Gfx::IntRect& rect)
 {
-    if (!m_viewport_rect.intersects(rect))
+    if (!viewport_rect().intersects(rect))
         return;
 
     if (is_main_frame()) {

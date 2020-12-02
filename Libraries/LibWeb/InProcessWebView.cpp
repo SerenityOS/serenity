@@ -248,7 +248,7 @@ void InProcessWebView::layout_and_sync_size()
         set_content_size(layout_root()->size().to_type<int>());
     }
 
-    page().main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
+    page().main_frame().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });
 }
 
 void InProcessWebView::resize_event(GUI::ResizeEvent& event)
@@ -409,7 +409,7 @@ void InProcessWebView::set_document(DOM::Document* document)
 
 void InProcessWebView::did_scroll()
 {
-    page().main_frame().set_viewport_rect(viewport_rect_in_content_coordinates());
+    page().main_frame().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });
     page().main_frame().did_scroll({});
 }
 

@@ -103,7 +103,7 @@ void PageHost::set_viewport_rect(const Gfx::IntRect& rect)
     page().main_frame().set_size(rect.size());
     if (page().main_frame().document())
         page().main_frame().document()->layout();
-    page().main_frame().set_viewport_rect(rect);
+    page().main_frame().set_viewport_scroll_offset(rect.location());
 }
 
 void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)
