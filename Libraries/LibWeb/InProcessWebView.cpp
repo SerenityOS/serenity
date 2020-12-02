@@ -237,14 +237,12 @@ void InProcessWebView::layout_and_sync_size()
     bool had_horizontal_scrollbar = horizontal_scrollbar().is_visible();
 
     page().main_frame().set_size(available_size());
-    document()->layout();
     set_content_size(layout_root()->size().to_type<int>());
 
     // NOTE: If layout caused us to gain or lose scrollbars, we have to lay out again
     //       since the scrollbars now take up some of the available space.
     if (had_vertical_scrollbar != vertical_scrollbar().is_visible() || had_horizontal_scrollbar != horizontal_scrollbar().is_visible()) {
         page().main_frame().set_size(available_size());
-        document()->layout();
         set_content_size(layout_root()->size().to_type<int>());
     }
 
