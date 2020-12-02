@@ -740,7 +740,8 @@ class Processor {
     static void smp_cleanup_message(ProcessorMessage& msg);
     bool smp_queue_message(ProcessorMessage& msg);
     static void smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async);
-    static void smp_broadcast_message(ProcessorMessage& msg, bool async);
+    static void smp_broadcast_message(ProcessorMessage& msg);
+    static void smp_broadcast_wait_sync(ProcessorMessage& msg);
     static void smp_broadcast_halt();
 
     void deferred_call_pool_init();
