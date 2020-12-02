@@ -9,7 +9,7 @@ describe("errors", () => {
         [-1, -100, -0.1, 0.1, 1.23, Infinity, -Infinity, NaN].forEach(value => {
             expect(() => {
                 new Array(value);
-            }).toThrowWithMessage(TypeError, "Invalid array length");
+            }).toThrowWithMessage(RangeError, "Invalid array length");
         });
     });
 });
