@@ -65,6 +65,7 @@ namespace JS {
         NativeFunction::initialize(global_object);                                                                       \
         define_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                                  \
         define_property(vm.names.length, Value(1), Attribute::Configurable);                                             \
+        define_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                        \
     }                                                                                                                    \
     Value ConstructorName::call()                                                                                        \
     {                                                                                                                    \
