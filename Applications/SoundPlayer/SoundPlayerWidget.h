@@ -45,6 +45,8 @@ public:
 private:
     explicit SoundPlayerWidget(GUI::Window&, NonnullRefPtr<Audio::ClientConnection>);
 
+    virtual void drop_event(GUI::DropEvent&) override;
+
     void update_position(const int position);
     void update_ui();
     int normalize_rate(int) const;
