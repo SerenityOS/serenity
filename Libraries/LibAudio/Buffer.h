@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/MemoryStream.h>
 #include <AK/SharedBuffer.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -108,7 +109,8 @@ private:
 // A buffer of audio samples, normalized to 44100hz.
 class Buffer : public RefCounted<Buffer> {
 public:
-    static RefPtr<Buffer> from_pcm_data(ReadonlyBytes, ResampleHelper& resampler, int num_channels, int bits_per_sample);
+    static RefPtr<Buffer> from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, int bits_per_sample);
+    static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, int bits_per_sample, int num_samples);
     static NonnullRefPtr<Buffer> create_with_samples(Vector<Sample>&& samples)
     {
         return adopt(*new Buffer(move(samples)));
