@@ -46,12 +46,6 @@ namespace JS {
         : Object(*global_object.typed_array_prototype())                                                                 \
     {                                                                                                                    \
     }                                                                                                                    \
-    void PrototypeName::initialize(GlobalObject& global_object)                                                          \
-    {                                                                                                                    \
-        auto& vm = this->vm();                                                                                           \
-        Object::initialize(global_object);                                                                               \
-        define_property(vm.names.length, Value(0), Attribute::Configurable);                                             \
-    }                                                                                                                    \
     PrototypeName::~PrototypeName() { }                                                                                  \
                                                                                                                          \
     ConstructorName::ConstructorName(GlobalObject& global_object)                                                        \

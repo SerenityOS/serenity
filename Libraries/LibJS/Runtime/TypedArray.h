@@ -32,9 +32,25 @@
 
 namespace JS {
 
+class TypedArrayBase : public Object {
+    JS_OBJECT(TypedArrayBase, Object);
+
+public:
+    u32 length() const { return m_length; }
+
+protected:
+    TypedArrayBase(u32 length, Object& prototype)
+        : Object(prototype)
+        , m_length(length)
+    {
+    }
+
+    u32 m_length { 0 };
+};
+
 template<typename T>
-class TypedArray : public Object {
-    JS_OBJECT(TypedArray, Object);
+class TypedArray : public TypedArrayBase {
+    JS_OBJECT(TypedArray, TypedArrayBase);
 
 public:
     virtual ~TypedArray() override
@@ -43,8 +59,6 @@ public:
         free(m_data);
         m_data = nullptr;
     }
-
-    i32 length() const { return m_length; }
 
     virtual bool put_by_index(u32 property_index, Value value) override
     {
@@ -94,36 +108,16 @@ public:
 
 protected:
     TypedArray(u32 length, Object& prototype)
-        : Object(prototype)
-        , m_length(length)
+        : TypedArrayBase(length, prototype)
     {
-        auto& vm = this->vm();
-        // FIXME: This belongs to TypedArray.prototype
-        define_native_property(vm.names.length, length_getter, nullptr);
         m_data = (T*)calloc(m_length, sizeof(T));
     }
 
 private:
     virtual bool is_typed_array() const final { return true; }
 
-    JS_DECLARE_NATIVE_GETTER(length_getter);
-
     T* m_data { nullptr };
-    u32 m_length { 0 };
 };
-
-template<typename T>
-inline JS_DEFINE_NATIVE_GETTER(TypedArray<T>::length_getter)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!this_object->is_typed_array()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "TypedArray");
-        return {};
-    }
-    return Value(static_cast<const TypedArray*>(this_object)->length());
-}
 
 #define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     class ClassName : public TypedArray<Type> {                                             \
@@ -139,7 +133,6 @@ inline JS_DEFINE_NATIVE_GETTER(TypedArray<T>::length_getter)
                                                                                             \
     public:                                                                                 \
         PrototypeName(GlobalObject&);                                                       \
-        virtual void initialize(GlobalObject&) override;                                    \
         virtual ~PrototypeName() override;                                                  \
     };                                                                                      \
     class ConstructorName final : public TypedArrayConstructor {                            \
@@ -157,9 +150,8 @@ inline JS_DEFINE_NATIVE_GETTER(TypedArray<T>::length_getter)
         virtual bool has_constructor() const override { return true; }                      \
     };
 
-#undef __JS_ENUMERATE
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType);
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type);
 JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
