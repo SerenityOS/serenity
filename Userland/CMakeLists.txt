@@ -15,6 +15,7 @@ foreach(CMD_SRC ${CMD_SOURCES})
     endif()
 endforeach()
 
+target_link_libraries(AFLaunch LibDesktop)
 target_link_libraries(aplay LibAudio)
 target_link_libraries(avol LibAudio)
 target_link_libraries(checksum LibCrypto)
