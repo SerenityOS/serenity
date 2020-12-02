@@ -53,6 +53,9 @@
 
 namespace JS {
 
+// Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
+static const double INVALID { 0 };
+
 static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
 
 static bool is_valid_bigint_value(String string)
@@ -362,16 +365,74 @@ i32 Value::to_i32(GlobalObject& global_object) const
 
 size_t Value::to_size_t(GlobalObject& global_object) const
 {
+    // FIXME: Replace uses of this function with to_length/to_index for correct behaviour and remove this eventually.
     if (is_empty())
         return 0;
     auto number = to_number(global_object);
     if (global_object.vm().exception())
-        return 0;
+        return INVALID;
     if (number.is_nan())
         return 0;
     if (number.as_double() <= 0)
         return 0;
     return number.as_size_t();
+}
+
+size_t Value::to_length(GlobalObject& global_object) const
+{
+    // 7.1.20 ToLength, https://tc39.es/ecma262/#sec-tolength
+
+    auto& vm = global_object.vm();
+
+    auto len = to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return INVALID;
+    if (len <= 0)
+        return 0;
+    return min(len, MAX_ARRAY_LIKE_INDEX);
+}
+
+size_t Value::to_index(GlobalObject& global_object) const
+{
+    // 7.1.22 ToIndex, https://tc39.es/ecma262/#sec-toindex
+
+    auto& vm = global_object.vm();
+
+    if (is_undefined())
+        return 0;
+    auto integer_index = to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return INVALID;
+    if (integer_index < 0) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidIndex);
+        return INVALID;
+    }
+    auto index = Value(integer_index).to_length(global_object);
+    ASSERT(!vm.exception());
+    if (integer_index != index) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidIndex);
+        return INVALID;
+    }
+    return index;
+}
+
+double Value::to_integer_or_infinity(GlobalObject& global_object) const
+{
+    // 7.1.5 ToIntegerOrInfinity, https://tc39.es/ecma262/#sec-tointegerorinfinity
+
+    auto& vm = global_object.vm();
+
+    auto number = to_number(global_object);
+    if (vm.exception())
+        return INVALID;
+    if (number.is_nan() || number.as_double() == 0)
+        return 0;
+    if (number.is_infinity())
+        return number.as_double();
+    auto integer = floor(abs(number.as_double()));
+    if (number.as_double() < 0)
+        integer = -integer;
+    return integer;
 }
 
 Value greater_than(GlobalObject& global_object, Value lhs, Value rhs)
