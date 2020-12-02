@@ -67,6 +67,7 @@ namespace JS {
     P(asinh)                                 \
     P(atanh)                                 \
     P(bind)                                  \
+    P(byteLength)                            \
     P(call)                                  \
     P(cbrt)                                  \
     P(ceil)                                  \
@@ -144,6 +145,7 @@ namespace JS {
     P(isInteger)                             \
     P(isNaN)                                 \
     P(isSafeInteger)                         \
+    P(isView)                                \
     P(join)                                  \
     P(keyFor)                                \
     P(keys)                                  \
