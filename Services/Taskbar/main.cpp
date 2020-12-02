@@ -25,6 +25,7 @@
  */
 
 #include "TaskbarWindow.h"
+#include <LibCore/EventLoop.h>
 #include <LibGUI/Application.h>
 #include <signal.h>
 #include <stdio.h>
@@ -38,10 +39,10 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    signal(SIGCHLD, [](int signo) {
-        (void)signo;
-        wait(nullptr);
+    app->event_loop().register_signal(SIGCHLD, [](int) {
+        // Wait all available children
+        while (waitpid(-1, nullptr, WNOHANG) > 0)
+            ;
     });
 
     if (pledge("stdio shared_buffer accept proc exec rpath", nullptr) < 0) {

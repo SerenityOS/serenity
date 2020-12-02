@@ -74,6 +74,8 @@ public:
 
     bool focus_debugging_enabled() const { return m_focus_debugging_enabled; }
 
+    Core::EventLoop& event_loop() { return *m_event_loop; }
+
 private:
     Application(int argc, char** argv);
 
