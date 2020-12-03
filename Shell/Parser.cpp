@@ -883,8 +883,7 @@ RefPtr<AST::Node> Parser::parse_redirection()
                 dest_pipe_fd = -1;
             } else {
                 auto fd = number.to_int();
-                ASSERT(fd.has_value());
-                dest_pipe_fd = fd.value();
+                dest_pipe_fd = fd.value_or(-1);
             }
             auto redir = create<AST::Fd2FdRedirection>(pipe_fd, dest_pipe_fd); // Redirection Fd2Fd
             if (dest_pipe_fd == -1)
