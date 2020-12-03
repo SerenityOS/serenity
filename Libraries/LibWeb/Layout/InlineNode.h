@@ -36,6 +36,10 @@ public:
     virtual ~InlineNode() override;
     virtual const char* class_name() const override { return "InlineNode"; }
 
+    void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const;
+
+    virtual void split_into_lines(BlockBox& containing_block, LayoutMode) override;
+
 private:
     virtual bool is_inline_node() const final { return true; }
 };
