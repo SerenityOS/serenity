@@ -34,7 +34,7 @@
 
 namespace Web::Layout {
 
-void LineBoxFragment::paint(PaintContext& context)
+void LineBoxFragment::paint(PaintContext& context, PaintPhase phase)
 {
     for (auto* ancestor = layout_node().parent(); ancestor; ancestor = ancestor->parent()) {
         if (!ancestor->is_visible())
@@ -42,7 +42,7 @@ void LineBoxFragment::paint(PaintContext& context)
     }
 
     if (is<TextNode>(layout_node()))
-        downcast<TextNode>(layout_node()).paint_fragment(context, *this);
+        downcast<TextNode>(layout_node()).paint_fragment(context, *this, phase);
 }
 
 bool LineBoxFragment::ends_in_whitespace() const

@@ -46,7 +46,7 @@ public:
     virtual const char* class_name() const override { return "TextNode"; }
     virtual bool is_text() const final { return true; }
 
-    void paint_fragment(PaintContext&, const LineBoxFragment&) const;
+    void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const;
 
     virtual void split_into_lines(BlockBox& container, LayoutMode) override;
 

@@ -66,44 +66,48 @@ const String& TextNode::text_for_style(const CSS::StyleProperties& style) const
     return dom_node().data();
 }
 
-void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment) const
+void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
 {
     auto& painter = context.painter();
-    painter.set_font(specified_style().font());
 
-    auto background_color = specified_style().property(CSS::PropertyID::BackgroundColor);
-    if (background_color.has_value() && background_color.value()->is_color())
-        painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), background_color.value()->to_color(document()));
-
-    auto color = specified_style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
-    auto text_decoration = specified_style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
-
-    if (document().inspected_node() == &dom_node())
-        context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
-
-    bool is_underline = text_decoration == "underline";
-    if (is_underline)
-        painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), color);
-
-    // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
-    auto text = m_text_for_rendering;
-    auto text_transform = specified_style().string_or_fallback(CSS::PropertyID::TextTransform, "none");
-    if (text_transform == "uppercase")
-        text = m_text_for_rendering.to_uppercase();
-    if (text_transform == "lowercase")
-        text = m_text_for_rendering.to_lowercase();
-
-    painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::TopLeft, color);
-
-    auto selection_rect = fragment.selection_rect(specified_style().font());
-    if (!selection_rect.is_empty()) {
-        painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
-        Gfx::PainterStateSaver saver(painter);
-        painter.add_clip_rect(enclosing_int_rect(selection_rect));
-        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::TopLeft, context.palette().selection_text());
+    if (phase == PaintPhase::Background) {
+        auto background_color = specified_style().property(CSS::PropertyID::BackgroundColor);
+        if (background_color.has_value() && background_color.value()->is_color())
+            painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), background_color.value()->to_color(document()));
     }
 
-    paint_cursor_if_needed(context, fragment);
+    if (phase == PaintPhase::Foreground) {
+        painter.set_font(specified_style().font());
+        auto color = specified_style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
+        auto text_decoration = specified_style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
+
+        if (document().inspected_node() == &dom_node())
+            context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
+
+        bool is_underline = text_decoration == "underline";
+        if (is_underline)
+            painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), color);
+
+        // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
+        auto text = m_text_for_rendering;
+        auto text_transform = specified_style().string_or_fallback(CSS::PropertyID::TextTransform, "none");
+        if (text_transform == "uppercase")
+            text = m_text_for_rendering.to_uppercase();
+        if (text_transform == "lowercase")
+            text = m_text_for_rendering.to_lowercase();
+
+        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, color);
+
+        auto selection_rect = fragment.selection_rect(specified_style().font());
+        if (!selection_rect.is_empty()) {
+            painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
+            Gfx::PainterStateSaver saver(painter);
+            painter.add_clip_rect(enclosing_int_rect(selection_rect));
+            painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
+        }
+
+        paint_cursor_if_needed(context, fragment);
+    }
 }
 
 void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragment& fragment) const
