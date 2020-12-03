@@ -46,6 +46,14 @@ enum class LayoutMode {
     OnlyRequiredLineBreaks,
 };
 
+enum class PaintPhase {
+    Background,
+    Border,
+    Foreground,
+    FocusOutline,
+    Overlay,
+};
+
 struct HitTestResult {
     RefPtr<Node> layout_node;
     int index_in_node { 0 };
@@ -116,14 +124,6 @@ public:
     virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
     virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
-
-    enum class PaintPhase {
-        Background,
-        Border,
-        Foreground,
-        FocusOutline,
-        Overlay,
-    };
 
     virtual void before_children_paint(PaintContext&, PaintPhase) {};
     virtual void paint(PaintContext&, PaintPhase);

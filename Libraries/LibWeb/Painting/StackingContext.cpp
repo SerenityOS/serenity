@@ -47,7 +47,7 @@ StackingContext::StackingContext(Box& box, StackingContext* parent)
     }
 }
 
-void StackingContext::paint(PaintContext& context, Node::PaintPhase phase)
+void StackingContext::paint(PaintContext& context, PaintPhase phase)
 {
     if (!m_box.is_root()) {
         m_box.paint(context, phase);
