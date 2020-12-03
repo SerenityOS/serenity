@@ -29,7 +29,6 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <ctype.h>
 
@@ -42,11 +41,7 @@ void LineBoxFragment::paint(PaintContext& context, PaintPhase phase)
             return;
     }
 
-    if (is<InlineNode>(layout_node()))
-        downcast<InlineNode>(layout_node()).paint_fragment(context, *this, phase);
-
-    if (is<TextNode>(layout_node()))
-        downcast<TextNode>(layout_node()).paint_fragment(context, *this, phase);
+    layout_node().paint_fragment(context, *this, phase);
 }
 
 bool LineBoxFragment::ends_in_whitespace() const
