@@ -250,6 +250,7 @@ public:
 
 private:
     void copy_from(const Variant&);
+    void move_from(Variant&&);
 
     struct RawPoint {
         int x;
