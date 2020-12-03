@@ -40,11 +40,6 @@ namespace Web {
 
 void EditEventHandler::handle_delete(DOM::Range range)
 {
-    // FIXME: Deleting nodes seems to mess up the layout tree. Not sure if this is not entirely
-    //        my fault or not my fault at all.
-
-    dump_tree(*m_frame.document());
-
     if (range.start().node() != range.end().node()) {
         if (range.start().node()->parent() == range.end().node()->parent()) {
             // Remove all intermediate nodes.
@@ -85,8 +80,6 @@ void EditEventHandler::handle_delete(DOM::Range range)
     // FIXME: We need to remove stale layout nodes when nodes are removed from the DOM. Currently,
     //        this is the only way to get these to disappear.
     m_frame.document()->force_layout();
-
-    dump_tree(*m_frame.document());
 }
 
 void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
