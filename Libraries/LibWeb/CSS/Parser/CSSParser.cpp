@@ -338,9 +338,21 @@ static CSS::Length parse_length(const CSS::ParsingContext& context, const String
     return CSS::Length(value.value(), type);
 }
 
-RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, const StringView& string)
+static bool takes_integer_value(CSS::PropertyID property_id)
+{
+    return property_id == CSS::PropertyID::ZIndex;
+}
+
+RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, const StringView& string, CSS::PropertyID property_id)
 {
     bool is_bad_length = false;
+
+    if (takes_integer_value(property_id)) {
+        auto integer = string.to_int();
+        if (integer.has_value())
+            return CSS::LengthStyleValue::create(CSS::Length::make_px(integer.value()));
+    }
+
     auto length = parse_length(context, string, is_bad_length);
     if (is_bad_length)
         return nullptr;
@@ -856,7 +868,7 @@ public:
         if (property_id == CSS::PropertyID::Invalid) {
             dbg() << "CSSParser: Unrecognized property '" << property_name << "'";
         }
-        auto value = parse_css_value(m_context, property_value);
+        auto value = parse_css_value(m_context, property_value, property_id);
         if (!value)
             return {};
         return CSS::StyleProperty { property_id, value.release_nonnull(), important };
