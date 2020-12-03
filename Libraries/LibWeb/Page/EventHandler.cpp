@@ -346,12 +346,14 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     }
 
     if (layout_root()->selection().is_valid()) {
-        auto range = layout_root()->selection().to_dom_range();
+        auto range = layout_root()->selection().to_dom_range().normalized();
 
         m_frame.document()->layout_node()->set_selection({});
+
+        // FIXME: This doesn't work for some reason?
         m_frame.set_cursor_position(range.start());
 
-        if (key == KeyCode::Key_Backspace) {
+        if (key == KeyCode::Key_Backspace || key == KeyCode::Key_Delete) {
             if (range.start().node()->is_editable()) {
                 m_edit_event_handler->handle_delete(range);
                 return true;
