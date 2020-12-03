@@ -35,6 +35,13 @@ public:
     InlineNode(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~InlineNode() override;
     virtual const char* class_name() const override { return "InlineNode"; }
+
+private:
+    virtual bool is_inline_node() const final { return true; }
 };
 
 }
+
+AK_BEGIN_TYPE_TRAITS(Web::Layout::InlineNode)
+static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_inline_node(); }
+AK_END_TYPE_TRAITS()
