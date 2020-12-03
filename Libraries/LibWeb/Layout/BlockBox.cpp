@@ -54,32 +54,31 @@ void BlockBox::paint(PaintContext& context, PaintPhase phase)
 
     Box::paint(context, phase);
 
+    if (!children_are_inline())
+        return;
+
     // FIXME: Inline backgrounds etc.
     if (phase == PaintPhase::Foreground) {
-        if (children_are_inline()) {
-            for (auto& line_box : m_line_boxes) {
-                for (auto& fragment : line_box.fragments()) {
-                    if (context.should_show_line_box_borders())
-                        context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
-                    fragment.paint(context);
-                }
+        for (auto& line_box : m_line_boxes) {
+            for (auto& fragment : line_box.fragments()) {
+                if (context.should_show_line_box_borders())
+                    context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
+                fragment.paint(context);
             }
         }
     }
 
     if (phase == PaintPhase::FocusOutline) {
-        if (children_are_inline()) {
-            for (auto& line_box : m_line_boxes) {
-                for (auto& fragment : line_box.fragments()) {
-                    auto* node = fragment.layout_node().dom_node();
-                    if (!node)
-                        continue;
-                    auto* parent = node->parent_element();
-                    if (!parent)
-                        continue;
-                    if (parent->is_focused())
-                        context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), context.palette().focus_outline());
-                }
+        for (auto& line_box : m_line_boxes) {
+            for (auto& fragment : line_box.fragments()) {
+                auto* node = fragment.layout_node().dom_node();
+                if (!node)
+                    continue;
+                auto* parent = node->parent_element();
+                if (!parent)
+                    continue;
+                if (parent->is_focused())
+                    context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), context.palette().focus_outline());
             }
         }
     }
