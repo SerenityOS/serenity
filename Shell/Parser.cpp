@@ -1380,7 +1380,7 @@ RefPtr<AST::Node> Parser::parse_glob()
         auto glob_after = parse_glob();
         if (glob_after) {
             if (glob_after->is_glob()) {
-                auto glob = static_cast<AST::BarewordLiteral*>(glob_after.ptr());
+                auto glob = static_cast<AST::Glob*>(glob_after.ptr());
                 textbuilder.append(glob->text());
             } else if (glob_after->is_bareword()) {
                 auto bareword = static_cast<AST::BarewordLiteral*>(glob_after.ptr());
