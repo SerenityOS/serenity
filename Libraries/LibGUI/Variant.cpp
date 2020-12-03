@@ -26,6 +26,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/JsonValue.h>
+#include <AK/RefPtr.h>
 #include <LibGUI/Variant.h>
 
 namespace GUI {
@@ -255,16 +256,22 @@ Variant& Variant::operator=(Variant&& other)
 {
     if (&other == this)
         return *this;
-    // FIXME: Move, not copy!
     clear();
-    copy_from(other);
-    other.clear();
+    move_from(AK::move(other));
     return *this;
 }
 
 Variant::Variant(const Variant& other)
 {
     copy_from(other);
+}
+
+void Variant::move_from(Variant&& other)
+{
+    m_type = other.m_type;
+    m_value = other.m_value;
+    other.m_type = Type::Invalid;
+    other.m_value.as_string = nullptr;
 }
 
 void Variant::copy_from(const Variant& other)
