@@ -101,6 +101,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     set_pty_master_fd(ptm_fd);
     m_cursor_blink_timer = add<Core::Timer>();
     m_visual_beep_timer = add<Core::Timer>();
+    m_auto_scroll_timer = add<Core::Timer>();
 
     m_scrollbar = add<GUI::ScrollBar>(Orientation::Vertical);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
@@ -117,6 +118,15 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
         m_cursor_blink_state = !m_cursor_blink_state;
         update_cursor();
     };
+
+    m_auto_scroll_timer->set_interval(50);
+    m_auto_scroll_timer->on_timeout = [this] {
+        if (m_auto_scroll_direction != AutoScrollDirection::None) {
+            int scroll_amount = m_auto_scroll_direction == AutoScrollDirection::Up ? -1 : 1;
+            m_scrollbar->set_value(m_scrollbar->value() + scroll_amount);
+        }
+    };
+    m_auto_scroll_timer->start();
 
     auto font_entry = m_config->read_entry("Text", "Font", "default");
     if (font_entry == "default")
@@ -180,6 +190,7 @@ void TerminalWidget::set_logical_focus(bool focus)
         m_cursor_blink_state = true;
         m_cursor_blink_timer->start();
     }
+    m_auto_scroll_direction = AutoScrollDirection::None;
     invalidate_cursor();
     update();
 }
@@ -579,6 +590,7 @@ void TerminalWidget::mouseup_event(GUI::MouseEvent& event)
             m_active_href_id = {};
             update();
         }
+        m_auto_scroll_direction = AutoScrollDirection::None;
     }
 }
 
@@ -662,6 +674,14 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
         return;
     }
 
+    auto adjusted_position = event.position().translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
+    if (adjusted_position.y() < 0)
+        m_auto_scroll_direction = AutoScrollDirection::Up;
+    else if (adjusted_position.y() > m_terminal.rows() * m_line_height)
+        m_auto_scroll_direction = AutoScrollDirection::Down;
+    else
+        m_auto_scroll_direction = AutoScrollDirection::None;
+
     auto old_selection_end = m_selection_end;
     m_selection_end = position;
     if (old_selection_end != m_selection_end)
@@ -681,6 +701,7 @@ void TerminalWidget::mousewheel_event(GUI::MouseEvent& event)
 {
     if (!is_scrollable())
         return;
+    m_auto_scroll_direction = AutoScrollDirection::None;
     m_scrollbar->set_value(m_scrollbar->value() + event.wheel_delta() * scroll_length());
     GUI::Frame::mousewheel_event(event);
 }

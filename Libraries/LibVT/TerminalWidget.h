@@ -175,8 +175,17 @@ private:
 
     int m_glyph_width { 0 };
 
+    enum class AutoScrollDirection {
+        None,
+        Up,
+        Down
+    };
+
+    AutoScrollDirection m_auto_scroll_direction { AutoScrollDirection::None };
+
     RefPtr<Core::Timer> m_cursor_blink_timer;
     RefPtr<Core::Timer> m_visual_beep_timer;
+    RefPtr<Core::Timer> m_auto_scroll_timer;
     RefPtr<Core::ConfigFile> m_config;
 
     RefPtr<GUI::ScrollBar> m_scrollbar;
