@@ -186,7 +186,7 @@ static void cleanup_and_exit()
 {
     // Clear the taskbar progress.
 #ifdef __serenity__
-    fprintf(stderr, "\033]9;-1;\033\\");
+    warn("\033]9;-1;\033\\");
 #endif
     exit(1);
 }
@@ -211,7 +211,7 @@ static void iterate_directory_recursively(const String& directory_path, Callback
     Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
 
     while (directory_iterator.has_next()) {
-        auto file_path = String::format("%s/%s", directory_path.characters(), directory_iterator.next_path().characters());
+        auto file_path = String::formatted("{}/{}", directory_path, directory_iterator.next_path());
         if (Core::File::is_directory(file_path)) {
             iterate_directory_recursively(file_path, callback);
         } else {
@@ -239,12 +239,12 @@ void TestRunner::run()
         ++progress_counter;
         print_file_result(run_file_test(path));
 #ifdef __serenity__
-        fprintf(stderr, "\033]9;%zu;%zu;\033\\", progress_counter, test_paths.size());
+        warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
 #endif
     }
 
 #ifdef __serenity__
-    fprintf(stderr, "\033]9;-1;\033\\");
+    warn("\033]9;-1;\033\\");
 #endif
 
     print_test_results();
@@ -255,7 +255,7 @@ static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& 
     auto file = Core::File::construct(file_path);
     auto result = file->open(Core::IODevice::ReadOnly);
     if (!result) {
-        printf("Failed to open the following file: \"%s\"\n", file_path.characters());
+        warnln("Failed to open the following file: \"{}\"", file_path);
         cleanup_and_exit();
     }
 
@@ -299,11 +299,11 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
     interpreter->heap().set_should_collect_on_every_allocation(collect_on_every_allocation);
 
     if (!m_test_program) {
-        auto result = parse_file(String::format("%s/test-common.js", m_test_root.characters()));
+        auto result = parse_file(String::formatted("{}/test-common.js", m_test_root));
         if (result.is_error()) {
-            printf("Unable to parse test-common.js\n");
-            printf("%s\n", result.error().error.to_string().characters());
-            printf("%s\n", result.error().hint.characters());
+            warnln("Unable to parse test-common.js");
+            warnln("{}", result.error().error.to_string());
+            warnln("{}", result.error().hint);
             cleanup_and_exit();
         }
         m_test_program = result.value();
@@ -318,7 +318,7 @@ JSFileResult TestRunner::run_file_test(const String& test_path)
 
     auto test_json = get_test_results(*interpreter);
     if (!test_json.has_value()) {
-        printf("Received malformed JSON from test \"%s\"\n", test_path.characters());
+        warnln("Received malformed JSON from test \"{}\"", test_path);
         cleanup_and_exit();
     }
 
@@ -402,7 +402,7 @@ enum Modifier {
 static void print_modifiers(Vector<Modifier> modifiers)
 {
     for (auto& modifier : modifiers) {
-        auto code = [&]() -> String {
+        auto code = [&] {
             switch (modifier) {
             case BG_RED:
                 return "\033[48;2;255;0;102m";
@@ -426,8 +426,8 @@ static void print_modifiers(Vector<Modifier> modifiers)
                 return "\033[0m";
             }
             ASSERT_NOT_REACHED();
-        };
-        printf("%s", code().characters());
+        }();
+        out("{}", code);
     }
 }
 
@@ -435,43 +435,43 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
 {
     if (file_result.most_severe_test_result == TestResult::Fail || file_result.error.has_value()) {
         print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
-        printf(" FAIL ");
+        out(" FAIL ");
         print_modifiers({ CLEAR });
     } else {
         if (m_print_times || file_result.most_severe_test_result != TestResult::Pass) {
             print_modifiers({ BG_GREEN, FG_BLACK, FG_BOLD });
-            printf(" PASS ");
+            out(" PASS ");
             print_modifiers({ CLEAR });
         } else {
             return;
         }
     }
 
-    printf(" %s", file_result.name.characters());
+    out(" {}", file_result.name);
 
     if (m_print_times) {
         print_modifiers({ CLEAR, ITALIC, FG_GRAY });
         if (file_result.time_taken < 1000) {
-            printf(" (%dms)\n", static_cast<int>(file_result.time_taken));
+            outln(" ({}ms)", static_cast<int>(file_result.time_taken));
         } else {
-            printf(" (%.3fs)\n", file_result.time_taken / 1000.0);
+            outln(" ({:3}s)", file_result.time_taken / 1000.0);
         }
         print_modifiers({ CLEAR });
     } else {
-        printf("\n");
+        outln();
     }
 
     if (!file_result.logged_messages.is_empty()) {
         print_modifiers({ FG_GRAY, FG_BOLD });
 #ifdef __serenity__
-        printf("     ℹ Console output:\n");
+        outln("     ℹ Console output:");
 #else
         // This emoji has a second invisible byte after it. The one above does not
-        printf("    ℹ️  Console output:\n");
+        outln("    ℹ️  Console output:");
 #endif
         print_modifiers({ CLEAR, FG_GRAY });
         for (auto& message : file_result.logged_messages)
-            printf("         %s\n", message.characters());
+            outln("         {}", message);
     }
 
     if (file_result.error.has_value()) {
@@ -479,18 +479,19 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
 
         print_modifiers({ FG_RED });
 #ifdef __serenity__
-        printf("     ❌ The file failed to parse\n\n");
+        outln("     ❌ The file failed to parse");
 #else
         // No invisible byte here, but the spacing still needs to be altered on the host
-        printf("    ❌ The file failed to parse\n\n");
+        outln("    ❌ The file failed to parse");
 #endif
+        outln();
         print_modifiers({ FG_GRAY });
         for (auto& message : test_error.hint.split('\n', true)) {
-            printf("         %s\n", message.characters());
+            outln("         {}", message);
         }
         print_modifiers({ FG_RED });
-        printf("         %s\n\n", test_error.error.to_string().characters());
-
+        outln("         {}", test_error.error.to_string());
+        outln();
         return;
     }
 
@@ -505,26 +506,26 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
 
             if (failed) {
 #ifdef __serenity__
-                printf("     ❌ Suite:  ");
+                out("     ❌ Suite:  ");
 #else
                 // No invisible byte here, but the spacing still needs to be altered on the host
-                printf("    ❌ Suite:  ");
+                out("    ❌ Suite:  ");
 #endif
             } else {
 #ifdef __serenity__
-                printf("     ⚠ Suite:  ");
+                out("     ⚠ Suite:  ");
 #else
                 // This emoji has a second invisible byte after it. The one above does not
-                printf("    ⚠️  Suite:  ");
+                out("    ⚠️  Suite:  ");
 #endif
             }
 
             print_modifiers({ CLEAR, FG_GRAY });
 
             if (suite.name == TOP_LEVEL_TEST_NAME) {
-                printf("<top-level>\n");
+                outln("<top-level>");
             } else {
-                printf("%s\n", suite.name.characters());
+                outln("{}", suite.name);
             }
             print_modifiers({ CLEAR });
 
@@ -533,14 +534,14 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
                     continue;
 
                 print_modifiers({ FG_GRAY, FG_BOLD });
-                printf("         Test:   ");
+                out("         Test:   ");
                 if (test.result == TestResult::Fail) {
                     print_modifiers({ CLEAR, FG_RED });
-                    printf("%s (failed):\n", test.name.characters());
-                    printf("                 %s\n", test.details.characters());
+                    outln("{} (failed):", test.name);
+                    outln("                 {}", test.details);
                 } else {
                     print_modifiers({ CLEAR, FG_ORANGE });
-                    printf("%s (skipped)\n", test.name.characters());
+                    outln("{} (skipped)", test.name);
                 }
                 print_modifiers({ CLEAR });
             }
@@ -550,45 +551,46 @@ void TestRunner::print_file_result(const JSFileResult& file_result) const
 
 void TestRunner::print_test_results() const
 {
-    printf("\nTest Suites: ");
+    out("\nTest Suites: ");
     if (m_counts.suites_failed) {
         print_modifiers({ FG_RED });
-        printf("%d failed, ", m_counts.suites_failed);
+        out("{} failed, ", m_counts.suites_failed);
         print_modifiers({ CLEAR });
     }
     if (m_counts.suites_passed) {
         print_modifiers({ FG_GREEN });
-        printf("%d passed, ", m_counts.suites_passed);
+        out("{} passed, ", m_counts.suites_passed);
         print_modifiers({ CLEAR });
     }
-    printf("%d total\n", m_counts.suites_failed + m_counts.suites_passed);
+    outln("{} total", m_counts.suites_failed + m_counts.suites_passed);
 
-    printf("Tests:       ");
+    out("Tests:       ");
     if (m_counts.tests_failed) {
         print_modifiers({ FG_RED });
-        printf("%d failed, ", m_counts.tests_failed);
+        out("{} failed, ", m_counts.tests_failed);
         print_modifiers({ CLEAR });
     }
     if (m_counts.tests_skipped) {
         print_modifiers({ FG_ORANGE });
-        printf("%d skipped, ", m_counts.tests_skipped);
+        out("{} skipped, ", m_counts.tests_skipped);
         print_modifiers({ CLEAR });
     }
     if (m_counts.tests_passed) {
         print_modifiers({ FG_GREEN });
-        printf("%d passed, ", m_counts.tests_passed);
+        out("{} passed, ", m_counts.tests_passed);
         print_modifiers({ CLEAR });
     }
-    printf("%d total\n", m_counts.tests_failed + m_counts.tests_skipped + m_counts.tests_passed);
+    outln("{} total", m_counts.tests_failed + m_counts.tests_skipped + m_counts.tests_passed);
 
-    printf("Files:       %d total\n", m_counts.files_total);
+    outln("Files:       {} total", m_counts.files_total);
 
-    printf("Time:        ");
+    out("Time:        ");
     if (m_total_elapsed_time_in_ms < 1000.0) {
-        printf("%dms\n\n", static_cast<int>(m_total_elapsed_time_in_ms));
+        outln("{}ms", static_cast<int>(m_total_elapsed_time_in_ms));
     } else {
-        printf("%-.3fs\n\n", m_total_elapsed_time_in_ms / 1000.0);
+        outln("{:>.3}s", m_total_elapsed_time_in_ms / 1000.0);
     }
+    outln();
 }
 
 class Test262ParserTestRunner final : public TestRunner {
@@ -716,11 +718,11 @@ int main(int argc, char** argv)
 
     if (test262_parser_tests) {
         if (collect_on_every_allocation) {
-            fprintf(stderr, "--collect-often and --test262-parser-tests options must not be used together\n");
+            warnln("--collect-often and --test262-parser-tests options must not be used together");
             return 1;
         }
         if (!specified_test_root) {
-            fprintf(stderr, "Test root is required with --test262-parser-tests\n");
+            warnln("Test root is required with --test262-parser-tests");
             return 1;
         }
     }
@@ -739,7 +741,7 @@ int main(int argc, char** argv)
 #else
         char* serenity_root = getenv("SERENITY_ROOT");
         if (!serenity_root) {
-            printf("No test root given, test-js requires the SERENITY_ROOT environment variable to be set");
+            warnln("No test root given, test-js requires the SERENITY_ROOT environment variable to be set");
             return 1;
         }
         test_root = String::formatted("{}/Libraries/LibJS/Tests", serenity_root);
