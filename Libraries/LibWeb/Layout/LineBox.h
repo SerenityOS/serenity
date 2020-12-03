@@ -38,7 +38,7 @@ public:
 
     float width() const { return m_width; }
 
-    void add_fragment(const Node& layout_node, int start, int length, int width, int height);
+    void add_fragment(const Node& layout_node, int start, int length, int width, int height, LineBoxFragment::Type = LineBoxFragment::Type::Normal);
 
     const NonnullOwnPtrVector<LineBoxFragment>& fragments() const { return m_fragments; }
     NonnullOwnPtrVector<LineBoxFragment>& fragments() { return m_fragments; }

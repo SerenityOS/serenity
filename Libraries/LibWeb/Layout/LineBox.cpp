@@ -33,7 +33,7 @@
 
 namespace Web::Layout {
 
-void LineBox::add_fragment(const Node& layout_node, int start, int length, int width, int height)
+void LineBox::add_fragment(const Node& layout_node, int start, int length, int width, int height, LineBoxFragment::Type fragment_type)
 {
     bool text_align_is_justify = layout_node.style().text_align() == CSS::TextAlign::Justify;
     if (!text_align_is_justify && !m_fragments.is_empty() && &m_fragments.last().layout_node() == &layout_node) {
@@ -42,7 +42,7 @@ void LineBox::add_fragment(const Node& layout_node, int start, int length, int w
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
         m_fragments.last().set_width(m_fragments.last().width() + width);
     } else {
-        m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width, 0.0f), Gfx::FloatSize(width, height)));
+        m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width, 0.0f), Gfx::FloatSize(width, height), fragment_type));
     }
     m_width += width;
 

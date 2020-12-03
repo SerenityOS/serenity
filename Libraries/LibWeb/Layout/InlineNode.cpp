@@ -24,7 +24,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InlineNode.h>
 
 namespace Web::Layout {
@@ -37,6 +39,32 @@ InlineNode::InlineNode(DOM::Document& document, DOM::Element& element, NonnullRe
 
 InlineNode::~InlineNode()
 {
+}
+
+void InlineNode::split_into_lines(BlockBox& containing_block, LayoutMode layout_mode)
+{
+    if (!style().padding().left.is_undefined_or_auto()) {
+        float padding_left = style().padding().left.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
+        containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_left, 0, LineBoxFragment::Type::Leading);
+    }
+
+    Node::split_into_lines(containing_block, layout_mode);
+
+    if (!style().padding().right.is_undefined_or_auto()) {
+        float padding_right = style().padding().right.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
+        containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_right, 0, LineBoxFragment::Type::Trailing);
+    }
+}
+
+void InlineNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
+{
+    auto& painter = context.painter();
+
+    if (phase == PaintPhase::Background) {
+        auto background_color = specified_style().property(CSS::PropertyID::BackgroundColor);
+        if (background_color.has_value() && background_color.value()->is_color())
+            painter.fill_rect(enclosing_int_rect(fragment.absolute_rect()), background_color.value()->to_color(document()));
+    }
 }
 
 }

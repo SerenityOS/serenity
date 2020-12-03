@@ -112,6 +112,12 @@ void InlineFormattingContext::run(LayoutMode layout_mode)
         for (size_t i = 0; i < line_box.fragments().size(); ++i) {
             auto& fragment = line_box.fragments()[i];
 
+            if (fragment.type() == LineBoxFragment::Type::Leading || fragment.type() == LineBoxFragment::Type::Trailing) {
+                fragment.set_height(max_height);
+            } else {
+                fragment.set_height(max(min_line_height, fragment.height()));
+            }
+
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
             fragment.set_offset({ roundf(x_offset + fragment.offset().x()), content_height + (max_height - fragment.height()) - (line_spacing / 2) });
