@@ -38,46 +38,57 @@
 
 namespace Web {
 
+// This method is quite convoluted but this is necessary to make editing feel intuitive.
 void EditEventHandler::handle_delete(DOM::Range range)
 {
     auto* start = downcast<DOM::Text>(range.start().node());
     auto* end = downcast<DOM::Text>(range.end().node());
 
-    // Remove all the nodes that are fully enclosed in the range.
-    HashTable<DOM::Node*> queued_for_deletion;
-    for (auto* node = start->next_in_pre_order(); node; node = node->next_in_pre_order()) {
-        if (node == end)
-            break;
-
-        queued_for_deletion.set(node);
-    }
-    for (auto* parent = start->parent(); parent; parent = parent->parent())
-        queued_for_deletion.remove(parent);
-    for (auto* parent = end->parent(); parent; parent = parent->parent())
-        queued_for_deletion.remove(parent);
-    for (auto* node : queued_for_deletion)
-        node->parent()->remove_child(*node);
-
-    if (start == end || start->next_sibling() == end) {
-        // If the start and end text nodes are now immediate siblings, merge the remainders into one.
-
+    if (start == end) {
         StringBuilder builder;
         builder.append(start->data().substring_view(0, range.start().offset()));
         builder.append(end->data().substring_view(range.end().offset()));
 
         start->set_data(builder.to_string());
-        start->invalidate_style();
-
-        if (start != end)
-            start->parent()->remove_child(*end);
     } else {
-        // Otherwise, remove parts from both nodes.
+        // Remove all the nodes that are fully enclosed in the range.
+        HashTable<DOM::Node*> queued_for_deletion;
+        for (auto* node = start->next_in_pre_order(); node; node = node->next_in_pre_order()) {
+            if (node == end)
+                break;
 
-        start->set_data(start->data().substring_view(0, range.start().offset()));
-        start->invalidate_style();
+            queued_for_deletion.set(node);
+        }
+        for (auto* parent = start->parent(); parent; parent = parent->parent())
+            queued_for_deletion.remove(parent);
+        for (auto* parent = end->parent(); parent; parent = parent->parent())
+            queued_for_deletion.remove(parent);
+        for (auto* node : queued_for_deletion)
+            node->parent()->remove_child(*node);
 
-        end->set_data(end->data().substring_view(range.end().offset()));
-        end->invalidate_style();
+        // Join the parent nodes of start and end.
+        DOM::Node *insert_after = start, *remove_from = end, *parent_of_end = end->parent();
+        while (remove_from) {
+            auto* next_sibling = remove_from->next_sibling();
+
+            remove_from->parent()->remove_child(*remove_from);
+            insert_after->parent()->insert_before(*remove_from, *insert_after);
+
+            insert_after = remove_from;
+            remove_from = next_sibling;
+        }
+        if (!parent_of_end->has_children()) {
+            if (parent_of_end->parent())
+                parent_of_end->parent()->remove_child(*parent_of_end);
+        }
+
+        // Join the start and end nodes.
+        StringBuilder builder;
+        builder.append(start->data().substring_view(0, range.start().offset()));
+        builder.append(end->data().substring_view(range.end().offset()));
+
+        start->set_data(builder.to_string());
+        start->parent()->remove_child(*end);
     }
 
     // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
