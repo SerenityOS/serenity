@@ -496,6 +496,7 @@ TEST_CASE(ECMA262_parse)
         { ",/=-:" },                                       // #4243
         { "\\x" },                                         // Even invalid escapes are allowed if ~unicode.
         { "\\", regex::Error::InvalidTrailingEscape },
+        { "(?", regex::Error::InvalidCaptureGroup },
     };
 
     for (auto& test : tests) {

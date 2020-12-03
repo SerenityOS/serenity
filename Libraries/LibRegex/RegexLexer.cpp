@@ -64,6 +64,9 @@ ALWAYS_INLINE char Lexer::peek(size_t offset) const
 
 void Lexer::back(size_t offset)
 {
+    if (offset == m_position + 1)
+        offset = m_position; // 'position == 0' occurs twice.
+
     ASSERT(offset <= m_position);
     if (!offset)
         return;
