@@ -37,6 +37,7 @@
 #include <AK/Types.h>
 #include <AK/Utf32View.h>
 #include <AK/Vector.h>
+#include <ctype.h>
 
 #include <stdio.h>
 
@@ -114,6 +115,47 @@ public:
             return {};
         return matcher->match(views, regex_options);
     }
+
+    String replace(const RegexStringView view, const StringView& replacement_pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
+    {
+        if (!matcher || parser_result.error != Error::NoError)
+            return {};
+
+        StringBuilder builder;
+        size_t start_offset = 0;
+        RegexResult result = matcher->match(view, regex_options);
+        if (!result.success)
+            return view.to_string();
+
+        for (size_t i = 0; i < result.matches.size(); ++i) {
+            auto& match = result.matches[i];
+            builder.append(view.substring_view(start_offset, match.global_offset - start_offset).to_string());
+            start_offset = match.global_offset + match.view.length();
+            GenericLexer lexer(replacement_pattern);
+            while (!lexer.is_eof()) {
+                if (lexer.consume_specific('\\')) {
+                    if (lexer.consume_specific('\\')) {
+                        builder.append('\\');
+                        continue;
+                    }
+                    auto number = lexer.consume_while(isdigit);
+                    if (auto index = number.to_uint(); index.has_value() && result.n_capture_groups >= index.value()) {
+                        builder.append(result.capture_group_matches[i][index.value() - 1].view.to_string());
+                    } else {
+                        builder.appendff("\\{}", number);
+                    }
+                } else {
+                    builder.append(lexer.consume_while([](auto ch) { return ch != '\\'; }));
+                }
+            }
+        }
+
+        builder.append(view.substring_view(start_offset, view.length() - start_offset).to_string());
+
+        return builder.to_string();
+    }
+
+    // FIXME: replace(const Vector<RegexStringView>, ...)
 
     RegexResult search(const RegexStringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const
     {
