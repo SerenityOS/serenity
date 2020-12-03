@@ -422,4 +422,5 @@ void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_nod
     else
         m_mouse_event_tracking_layout_node = nullptr;
 }
+
 }

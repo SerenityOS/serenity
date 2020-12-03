@@ -40,45 +40,49 @@ namespace Web {
 
 void EditEventHandler::handle_delete(DOM::Range range)
 {
-    if (range.start().node() != range.end().node()) {
-        if (range.start().node()->parent() == range.end().node()->parent()) {
-            // Remove all intermediate nodes.
-            auto* current = range.start().node()->next_sibling();
-            while (current != range.end().node()) {
-                auto* next = current->next_sibling();
-                current->parent()->remove_child(*current);
-                current = next;
-            }
+    auto* start = downcast<DOM::Text>(range.start().node());
+    auto* end = downcast<DOM::Text>(range.end().node());
 
-            // Join remaining text together.
-            StringBuilder builder;
-            builder.append(downcast<DOM::Text>(range.start().node())->data().substring_view(0, range.start().offset()));
-            builder.append(downcast<DOM::Text>(range.end().node())->data().substring_view(range.end().offset()));
+    // Remove all the nodes that are fully enclosed in the range.
+    HashTable<DOM::Node*> queued_for_deletion;
+    for (auto* node = start->next_in_pre_order(); node; node = node->next_in_pre_order()) {
+        if (node == end)
+            break;
 
-            range.start().node()->parent()->remove_child(*range.end().node());
-            downcast<DOM::Text>(range.start().node())->set_data(builder.to_string());
+        queued_for_deletion.set(node);
+    }
+    for (auto* parent = start->parent(); parent; parent = parent->parent())
+        queued_for_deletion.remove(parent);
+    for (auto* parent = end->parent(); parent; parent = parent->parent())
+        queued_for_deletion.remove(parent);
+    for (auto* node : queued_for_deletion)
+        node->parent()->remove_child(*node);
 
-            range.start().node()->invalidate_style();
-        } else {
-            TODO();
-        }
+    if (start == end || start->next_sibling() == end) {
+        // If the start and end text nodes are now immediate siblings, merge the remainders into one.
+
+        StringBuilder builder;
+        builder.append(start->data().substring_view(0, range.start().offset()));
+        builder.append(end->data().substring_view(range.end().offset()));
+
+        start->set_data(builder.to_string());
+        start->invalidate_style();
+
+        if (start != end)
+            start->parent()->remove_child(*end);
     } else {
-        if (is<DOM::Text>(*range.start().node())) {
-            m_frame.document()->layout_node()->set_selection({});
+        // Otherwise, remove parts from both nodes.
 
-            auto& node = downcast<DOM::Text>(*range.start().node());
+        start->set_data(start->data().substring_view(0, range.start().offset()));
+        start->invalidate_style();
 
-            StringBuilder builder;
-            builder.append(node.data().substring_view(0, range.start().offset()));
-            builder.append(node.data().substring_view(range.end().offset()));
-            node.set_data(builder.to_string());
-
-            node.invalidate_style();
-        }
+        end->set_data(end->data().substring_view(range.end().offset()));
+        end->invalidate_style();
     }
 
-    // FIXME: We need to remove stale layout nodes when nodes are removed from the DOM. Currently,
-    //        this is the only way to get these to disappear.
+    // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
+    //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
+    //        which really hurts performance.
     m_frame.document()->force_layout();
 }
 
@@ -96,9 +100,9 @@ void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
         node.invalidate_style();
     }
 
-    // FIXME: We need to remove stale layout nodes when nodes are removed from the DOM. Currently,
-    //        this is the only way to get these to disappear.
+    // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
+    //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
+    //        which really hurts performance.
     m_frame.document()->force_layout();
 }
-
 }
