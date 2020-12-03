@@ -563,4 +563,37 @@ TEST_CASE(ECMA262_match)
     }
 }
 
+TEST_CASE(replace)
+{
+    struct _test {
+        const char* pattern;
+        const char* replacement;
+        const char* subject;
+        const char* expected;
+        ECMAScriptFlags options {};
+    };
+
+    constexpr _test tests[] {
+        { "foo(.+)", "aaa", "test", "test" },
+        { "foo(.+)", "test\\1", "foobar", "testbar" },
+        { "foo(.+)", "\\2\\1", "foobar", "\\2bar" },
+        { "foo(.+)", "\\\\\\1", "foobar", "\\bar" },
+        { "foo(.)", "a\\1", "fooxfooy", "axay", ECMAScriptFlags::Multiline },
+    };
+
+    for (auto& test : tests) {
+        Regex<ECMA262> re(test.pattern, test.options);
+#ifdef REGEX_DEBUG
+        dbg() << "\n";
+        RegexDebug regex_dbg(stderr);
+        regex_dbg.print_raw_bytecode(re);
+        regex_dbg.print_header();
+        regex_dbg.print_bytecode(re);
+        dbg() << "\n";
+#endif
+        EXPECT_EQ(re.parser_result.error, Error::NoError);
+        EXPECT_EQ(re.replace(test.subject, test.replacement), test.expected);
+    }
+}
+
 TEST_MAIN(Regex)
