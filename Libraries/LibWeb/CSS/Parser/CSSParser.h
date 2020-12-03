@@ -47,7 +47,7 @@ namespace Web {
 
 RefPtr<CSS::StyleSheet> parse_css(const CSS::ParsingContext&, const StringView&);
 RefPtr<CSS::StyleDeclaration> parse_css_declaration(const CSS::ParsingContext&, const StringView&);
-RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext&, const StringView&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::Selector> parse_selector(const CSS::ParsingContext&, const StringView&);
 
 RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::ParsingContext&, const StringView&);
