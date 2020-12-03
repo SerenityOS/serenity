@@ -57,17 +57,15 @@ void BlockBox::paint(PaintContext& context, PaintPhase phase)
     if (!children_are_inline())
         return;
 
-    // FIXME: Inline backgrounds etc.
-    if (phase == PaintPhase::Foreground) {
-        for (auto& line_box : m_line_boxes) {
-            for (auto& fragment : line_box.fragments()) {
-                if (context.should_show_line_box_borders())
-                    context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
-                fragment.paint(context);
-            }
+    for (auto& line_box : m_line_boxes) {
+        for (auto& fragment : line_box.fragments()) {
+            if (context.should_show_line_box_borders())
+                context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
+            fragment.paint(context, phase);
         }
     }
 
+    // FIXME: Merge this loop with the above somehow..
     if (phase == PaintPhase::FocusOutline) {
         for (auto& line_box : m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
