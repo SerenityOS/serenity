@@ -64,6 +64,7 @@ NonnullRefPtr<BufferQueue> Mixer::create_queue(ClientConnection& client)
     auto queue = adopt(*new BufferQueue(client));
     pthread_mutex_lock(&m_pending_mutex);
     m_pending_mixing.append(*queue);
+    m_added_queue = true;
     pthread_cond_signal(&m_pending_cond);
     pthread_mutex_unlock(&m_pending_mutex);
     return queue;
@@ -74,11 +75,12 @@ void Mixer::mix()
     decltype(m_pending_mixing) active_mix_queues;
 
     for (;;) {
-        if (active_mix_queues.is_empty()) {
+        if (active_mix_queues.is_empty() || m_added_queue) {
             pthread_mutex_lock(&m_pending_mutex);
             pthread_cond_wait(&m_pending_cond, &m_pending_mutex);
             active_mix_queues.append(move(m_pending_mixing));
             pthread_mutex_unlock(&m_pending_mutex);
+            m_added_queue = false;
         }
 
         active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->client(); });
