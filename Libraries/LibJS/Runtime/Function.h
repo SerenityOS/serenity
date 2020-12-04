@@ -50,8 +50,6 @@ public:
 
     virtual void visit_edges(Visitor&) override;
 
-    virtual bool is_script_function() const { return false; }
-
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
     Value bound_this() const { return m_bound_this; }
