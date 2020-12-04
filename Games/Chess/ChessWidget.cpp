@@ -288,3 +288,24 @@ void ChessWidget::maybe_input_engine_move()
         update();
     });
 }
+
+void ChessWidget::flip_board()
+{
+    m_side = Chess::opposing_colour(m_side);
+    update();
+}
+
+void ChessWidget::resign()
+{
+    if (m_engine && m_board.turn() != m_side) {
+        GUI::MessageBox::show(window(), "You can only resign on your turn.", "Resign", GUI::MessageBox::Type::Information);
+        return;
+    }
+
+    board().set_resigned(m_board.turn());
+
+    set_drag_enabled(false);
+    update();
+    const String msg = m_board.result_to_string(m_board.game_result());
+    GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
+}

@@ -85,6 +85,14 @@ int main(int argc, char** argv)
     auto menubar = GUI::MenuBar::construct();
     auto& app_menu = menubar->add_menu("Chess");
 
+    app_menu.add_action(GUI::Action::create("Resign", { Mod_None, Key_F3 }, [&](auto&) {
+        widget.resign();
+    }));
+    app_menu.add_action(GUI::Action::create("Flip Board", { Mod_None, Key_F4 }, [&](auto&) {
+        widget.flip_board();
+    }));
+    app_menu.add_separator();
+
     app_menu.add_action(GUI::Action::create("New game", { Mod_None, Key_F2 }, [&](auto&) {
         widget.reset();
     }));
