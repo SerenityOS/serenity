@@ -33,7 +33,7 @@
 
 namespace Web::Layout {
 
-void LineBox::add_fragment(const Node& layout_node, int start, int length, int width, int height, LineBoxFragment::Type fragment_type)
+void LineBox::add_fragment(Node& layout_node, int start, int length, int width, int height, LineBoxFragment::Type fragment_type)
 {
     bool text_align_is_justify = layout_node.style().text_align() == CSS::TextAlign::Justify;
     if (!text_align_is_justify && !m_fragments.is_empty() && &m_fragments.last().layout_node() == &layout_node) {
@@ -47,7 +47,7 @@ void LineBox::add_fragment(const Node& layout_node, int start, int length, int w
     m_width += width;
 
     if (is<Box>(layout_node))
-        const_cast<Box&>(downcast<Box>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
+        downcast<Box>(layout_node).set_containing_line_box_fragment(m_fragments.last());
 }
 
 void LineBox::trim_trailing_whitespace()

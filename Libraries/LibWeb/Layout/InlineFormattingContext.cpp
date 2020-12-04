@@ -135,8 +135,8 @@ void InlineFormattingContext::run(LayoutMode layout_mode)
                 }
             }
 
-            if (fragment.layout_node().is_box())
-                dimension_box_on_line(const_cast<Box&>(downcast<Box>(fragment.layout_node())), layout_mode);
+            if (is<Box>(fragment.layout_node()))
+                dimension_box_on_line(downcast<Box>(fragment.layout_node()), layout_mode);
 
             float final_line_box_width = 0;
             for (auto& fragment : line_box.fragments())
