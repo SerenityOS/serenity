@@ -68,6 +68,41 @@ static String make_input_acceptable_cpp(const String& input)
     return input_without_dashes;
 }
 
+static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
+{
+    // FIXME: Spaghetti code ahead.
+
+    size_t lineno = 1;
+    size_t colno = 1;
+    size_t start_line = 0;
+    size_t line_length = 0;
+    for (size_t index = 0; index < input.length(); ++index) {
+        if (offset == index)
+            colno = index - start_line + 1;
+
+        if (input[index] == '\n') {
+            if (index >= offset)
+                break;
+
+            start_line = index + 1;
+            line_length = 0;
+            ++lineno;
+        } else {
+            ++line_length;
+        }
+    }
+
+    StringBuilder error_message;
+    error_message.appendff("{}\n", input.substring_view(start_line, line_length));
+    for (size_t i = 0; i < colno - 1; ++i)
+        error_message.append(' ');
+    error_message.append("\033[1;31m^\n");
+    error_message.appendff("{}:{}: error: {}\033[0m\n", filename, lineno, message);
+
+    warnln("{}", error_message.string_view());
+    exit(EXIT_FAILURE);
+}
+
 namespace IDL {
 
 struct Type {
@@ -125,27 +160,32 @@ struct Interface {
     String fully_qualified_name;
 };
 
-static OwnPtr<Interface> parse_interface(const StringView& input)
+static OwnPtr<Interface> parse_interface(StringView filename, const StringView& input)
 {
     auto interface = make<Interface>();
 
     GenericLexer lexer(input);
 
     auto assert_specific = [&](char ch) {
-        auto consumed = lexer.consume();
-        if (consumed != ch) {
-            dbg() << "Expected '" << ch << "' at offset " << lexer.tell() << " but got '" << consumed << "'";
-            ASSERT_NOT_REACHED();
-        }
+        if (!lexer.consume_specific(ch))
+            report_parsing_error(String::formatted("expected '{}'", ch), filename, input, lexer.tell());
     };
 
     auto consume_whitespace = [&] {
-        lexer.consume_while([](char ch) { return isspace(ch); });
+        bool consumed = true;
+        while (consumed) {
+            consumed = lexer.consume_while([](char ch) { return isspace(ch); }).length() > 0;
+
+            if (lexer.consume_specific("//")) {
+                lexer.consume_until('\n');
+                consumed = true;
+            }
+        }
     };
 
     auto assert_string = [&](const StringView& expected) {
-        bool saw_expected = lexer.consume_specific(expected);
-        ASSERT(saw_expected);
+        if (!lexer.consume_specific(expected))
+            report_parsing_error(String::formatted("expected '{}'", expected), filename, input, lexer.tell());
     };
 
     assert_string("interface");
@@ -295,7 +335,7 @@ int main(int argc, char** argv)
     auto namespace_ = lexical_path.parts().at(lexical_path.parts().size() - 2);
 
     auto data = file_or_error.value()->read_all();
-    auto interface = IDL::parse_interface(data);
+    auto interface = IDL::parse_interface(path, data);
 
     if (!interface) {
         warnln("Cannot parse {}", path);
