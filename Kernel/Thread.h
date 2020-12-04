@@ -211,7 +211,7 @@ public:
             : m_infinite(true)
         {
         }
-        explicit BlockTimeout(bool is_absolute, const timeval* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC)
+        explicit BlockTimeout(bool is_absolute, const timeval* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE)
             : m_clock_id(clock_id)
             , m_infinite(!time)
         {
@@ -225,7 +225,7 @@ public:
                     timespec_add(m_time, m_start_time, m_time);
             }
         }
-        explicit BlockTimeout(bool is_absolute, const timespec* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC)
+        explicit BlockTimeout(bool is_absolute, const timespec* time, const timespec* start_time = nullptr, clockid_t clock_id = CLOCK_MONOTONIC_COARSE)
             : m_clock_id(clock_id)
             , m_infinite(!time)
         {
@@ -249,7 +249,7 @@ public:
     private:
         timespec m_time { 0, 0 };
         timespec m_start_time { 0, 0 };
-        clockid_t m_clock_id { CLOCK_MONOTONIC };
+        clockid_t m_clock_id { CLOCK_MONOTONIC_COARSE };
         bool m_infinite { false };
         bool m_should_block { false };
     };
@@ -756,7 +756,6 @@ public:
     const TSS32& tss() const { return m_tss; }
     State state() const { return m_state; }
     const char* state_string() const;
-    u32 ticks() const { return m_ticks; }
 
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
     size_t thread_specific_region_size() const { return m_thread_specific_region_size; }
@@ -921,12 +920,12 @@ public:
     BlockResult sleep(clockid_t, const timespec&, timespec* = nullptr);
     BlockResult sleep(const timespec& duration, timespec* remaining_time = nullptr)
     {
-        return sleep(CLOCK_MONOTONIC, duration, remaining_time);
+        return sleep(CLOCK_MONOTONIC_COARSE, duration, remaining_time);
     }
     BlockResult sleep_until(clockid_t, const timespec&);
     BlockResult sleep_until(const timespec& duration)
     {
-        return sleep_until(CLOCK_MONOTONIC, duration);
+        return sleep_until(CLOCK_MONOTONIC_COARSE, duration);
     }
 
     // Tell this thread to unblock if needed,
@@ -937,7 +936,7 @@ public:
 
     void exit(void* = nullptr);
 
-    bool tick();
+    bool tick(bool in_kernel);
     void set_ticks_left(u32 t) { m_ticks_left = t; }
     u32 ticks_left() const { return m_ticks_left; }
 
@@ -1070,6 +1069,9 @@ public:
     static constexpr u32 default_kernel_stack_size = 65536;
     static constexpr u32 default_userspace_stack_size = 4 * MiB;
 
+    u32 ticks_in_user() const { return m_ticks_in_user; }
+    u32 ticks_in_kernel() const { return m_ticks_in_kernel; }
+
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #ifdef LOCK_DEBUG
@@ -1188,9 +1190,10 @@ private:
     TSS32 m_tss;
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
-    u32 m_ticks { 0 };
     u32 m_ticks_left { 0 };
     u32 m_times_scheduled { 0 };
+    u32 m_ticks_in_user { 0 };
+    u32 m_ticks_in_kernel { 0 };
     u32 m_pending_signals { 0 };
     u32 m_signal_mask { 0 };
     u32 m_kernel_stack_base { 0 };

@@ -474,7 +474,7 @@ int pthread_cond_init(pthread_cond_t* cond, const pthread_condattr_t* attr)
 {
     cond->value = 0;
     cond->previous = 0;
-    cond->clockid = attr ? attr->clockid : CLOCK_MONOTONIC;
+    cond->clockid = attr ? attr->clockid : CLOCK_MONOTONIC_COARSE;
     return 0;
 }
 
@@ -502,7 +502,7 @@ int pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex)
 
 int pthread_condattr_init(pthread_condattr_t* attr)
 {
-    attr->clockid = CLOCK_MONOTONIC;
+    attr->clockid = CLOCK_MONOTONIC_COARSE;
     return 0;
 }
 

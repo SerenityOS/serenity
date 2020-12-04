@@ -52,13 +52,33 @@ TimeManagement& TimeManagement::the()
     return *s_the;
 }
 
+bool TimeManagement::is_valid_clock_id(clockid_t clock_id)
+{
+    switch (clock_id) {
+    case CLOCK_MONOTONIC:
+    case CLOCK_MONOTONIC_COARSE:
+    case CLOCK_MONOTONIC_RAW:
+    case CLOCK_REALTIME:
+    case CLOCK_REALTIME_COARSE:
+        return true;
+    default:
+        return false;
+    };
+}
+
 KResultOr<timespec> TimeManagement::current_time(clockid_t clock_id) const
 {
     switch (clock_id) {
     case CLOCK_MONOTONIC:
-        return monotonic_time();
+        return monotonic_time(TimePrecision::Precise);
+    case CLOCK_MONOTONIC_COARSE:
+        return monotonic_time(TimePrecision::Coarse);
+    case CLOCK_MONOTONIC_RAW:
+        return monotonic_time_raw();
     case CLOCK_REALTIME:
-        return epoch_time();
+        return epoch_time(TimePrecision::Precise);
+    case CLOCK_REALTIME_COARSE:
+        return epoch_time(TimePrecision::Coarse);
     default:
         return KResult(EINVAL);
     }
@@ -69,22 +89,6 @@ bool TimeManagement::is_system_timer(const HardwareTimerBase& timer) const
     return &timer == m_system_timer.ptr();
 }
 
-timespec TimeManagement::ticks_to_time(u64 ticks, time_t ticks_per_second)
-{
-    timespec tspec;
-    tspec.tv_sec = ticks / ticks_per_second;
-    tspec.tv_nsec = (ticks % ticks_per_second) * (1'000'000'000 / ticks_per_second);
-    ASSERT(tspec.tv_nsec <= 1'000'000'000);
-    return tspec;
-}
-
-u64 TimeManagement::time_to_ticks(const timespec& tspec, time_t ticks_per_second)
-{
-    u64 ticks = (u64)tspec.tv_sec * ticks_per_second;
-    ticks += ((u64)tspec.tv_nsec * ticks_per_second) / 1'000'000'000;
-    return ticks;
-}
-
 void TimeManagement::set_epoch_time(timespec ts)
 {
     InterruptDisabler disabler;
@@ -92,27 +96,40 @@ void TimeManagement::set_epoch_time(timespec ts)
     m_remaining_epoch_time_adjustment = { 0, 0 };
 }
 
-u64 TimeManagement::monotonic_ticks() const
+timespec TimeManagement::monotonic_time(TimePrecision precision) const
 {
-    long seconds;
-    u64 ticks;
+    // This is the time when last updated by an interrupt.
+    u64 seconds;
+    u32 ticks;
+
+    bool do_query = precision == TimePrecision::Precise && m_can_query_precise_time;
 
     u32 update_iteration;
     do {
         update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
         seconds = m_seconds_since_boot;
         ticks = m_ticks_this_second;
+
+        if (do_query) {
+            // We may have to do this over again if the timer interrupt fires
+            // while we're trying to query the information. In that case, our
+            // seconds and ticks became invalid, producing an incorrect time.
+            // Be sure to not modify m_seconds_since_boot and m_ticks_this_second
+            // because this may only be modified by the interrupt handler
+            HPET::the().update_time(seconds, ticks, true);
+        }
     } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
-    return ticks + (u64)seconds * (u64)ticks_per_second();
+
+    ASSERT(m_time_ticks_per_second > 0);
+    ASSERT(ticks < m_time_ticks_per_second);
+    u64 ns = ((u64)ticks * 1000000000ull) / m_time_ticks_per_second;
+    ASSERT(ns < 1000000000ull);
+    return { (long)seconds, (long)ns };
 }
 
-timespec TimeManagement::monotonic_time() const
+timespec TimeManagement::epoch_time(TimePrecision) const
 {
-    return ticks_to_time(monotonic_ticks(), ticks_per_second());
-}
-
-timespec TimeManagement::epoch_time() const
-{
+    // TODO: Take into account precision
     timespec ts;
     u32 update_iteration;
     do {
@@ -155,7 +172,9 @@ void TimeManagement::initialize(u32 cpu)
 
 void TimeManagement::set_system_timer(HardwareTimerBase& timer)
 {
+    ASSERT(Processor::current().id() == 0); // This should only be called on the BSP!
     auto original_callback = m_system_timer->set_callback(nullptr);
+    m_system_timer->disable();
     timer.set_callback(move(original_callback));
     m_system_timer = timer;
 }
@@ -259,28 +278,36 @@ bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     if (is_hpet_periodic_mode_allowed())
         ASSERT(!periodic_timers.is_empty());
 
-    ASSERT(periodic_timers.size() + non_periodic_timers.size() >= 2);
+    ASSERT(periodic_timers.size() + non_periodic_timers.size() > 0);
 
-    if (periodic_timers.size() >= 2) {
-        m_time_keeper_timer = periodic_timers[1];
+    if (periodic_timers.size() > 0)
         m_system_timer = periodic_timers[0];
-    } else {
-        if (periodic_timers.size() == 1) {
-            m_time_keeper_timer = periodic_timers[0];
-            m_system_timer = non_periodic_timers[0];
-        } else {
-            m_time_keeper_timer = non_periodic_timers[1];
-            m_system_timer = non_periodic_timers[0];
+    else
+        m_system_timer = non_periodic_timers[0];
+
+    m_system_timer->set_callback([this](const RegisterState& regs) {
+        // Update the time. We don't really care too much about the
+        // frequency of the interrupt because we'll query the main
+        // counter to get an accurate time.
+        if (Processor::current().id() == 0) {
+            // TODO: Have the other CPUs call system_timer_tick directly
+            increment_time_since_boot_hpet();
         }
-    }
 
-    m_system_timer->set_callback(TimeManagement::timer_tick);
-    m_time_keeper_timer->set_callback(TimeManagement::update_time);
+        system_timer_tick(regs);
+    });
 
-    dbg() << "Reset timers";
-    m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(1024));
-    m_time_keeper_timer->try_to_set_frequency(OPTIMAL_TICKS_PER_SECOND_RATE);
+    // Use the HPET main counter frequency for time purposes. This is likely
+    // a much higher frequency than the interrupt itself and allows us to
+    // keep a more accurate time
+    m_can_query_precise_time = true;
+    m_time_ticks_per_second = HPET::the().frequency();
 
+    m_system_timer->try_to_set_frequency(m_system_timer->calculate_nearest_possible_frequency(OPTIMAL_TICKS_PER_SECOND_RATE));
+
+    // We don't need an interrupt for time keeping purposes because we
+    // can query the timer.
+    m_time_keeper_timer = m_system_timer;
     return true;
 }
 
@@ -296,18 +323,43 @@ bool TimeManagement::probe_and_set_legacy_hardware_timers()
     }
 
     m_hardware_timers.append(PIT::initialize(TimeManagement::update_time));
-    m_hardware_timers.append(RealTimeClock::create(TimeManagement::timer_tick));
+    m_hardware_timers.append(RealTimeClock::create(TimeManagement::system_timer_tick));
     m_time_keeper_timer = m_hardware_timers[0];
     m_system_timer = m_hardware_timers[1];
+
+    // The timer is only as accurate as the interrupts...
+    m_time_ticks_per_second = m_time_keeper_timer->ticks_per_second();
     return true;
 }
 
-void TimeManagement::update_time(const RegisterState& regs)
+void TimeManagement::update_time(const RegisterState&)
 {
-    TimeManagement::the().increment_time_since_boot(regs);
+    TimeManagement::the().increment_time_since_boot();
 }
 
-void TimeManagement::increment_time_since_boot(const RegisterState&)
+void TimeManagement::increment_time_since_boot_hpet()
+{
+    ASSERT(!m_time_keeper_timer.is_null());
+    ASSERT(m_time_keeper_timer->timer_type() == HardwareTimerType::HighPrecisionEventTimer);
+
+    // NOTE: m_seconds_since_boot and m_ticks_this_second are only ever
+    // updated here! So we can safely read that information, query the clock,
+    // and when we're all done we can update the information. This reduces
+    // contention when other processors attempt to read the clock.
+    auto seconds_since_boot = m_seconds_since_boot;
+    auto ticks_this_second = m_ticks_this_second;
+    auto delta_ns = HPET::the().update_time(seconds_since_boot, ticks_this_second, false);
+
+    // Now that we have a precise time, go update it as quickly as we can
+    u32 update_iteration = m_update1.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+    m_seconds_since_boot = seconds_since_boot;
+    m_ticks_this_second = ticks_this_second;
+    // TODO: Apply m_remaining_epoch_time_adjustment
+    timespec_add(m_epoch_time, { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) }, m_epoch_time);
+    m_update2.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+}
+
+void TimeManagement::increment_time_since_boot()
 {
     ASSERT(!m_time_keeper_timer.is_null());
 
@@ -318,7 +370,7 @@ void TimeManagement::increment_time_since_boot(const RegisterState&)
     constexpr time_t MaxSlewNanos = NanosPerTick / 100;
     static_assert(MaxSlewNanos < NanosPerTick);
 
-    u32 update_iteration = m_update1.fetch_add(1, AK::MemoryOrder::memory_order_relaxed);
+    u32 update_iteration = m_update1.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
 
     // Clamp twice, to make sure intermediate fits into a long.
     long slew_nanos = clamp(clamp(m_remaining_epoch_time_adjustment.tv_sec, (time_t)-1, (time_t)1) * 1'000'000'000 + m_remaining_epoch_time_adjustment.tv_nsec, -MaxSlewNanos, MaxSlewNanos);
@@ -338,7 +390,7 @@ void TimeManagement::increment_time_since_boot(const RegisterState&)
     m_update2.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 }
 
-void TimeManagement::timer_tick(const RegisterState& regs)
+void TimeManagement::system_timer_tick(const RegisterState& regs)
 {
     if (Processor::current().in_irq() <= 1) {
         // Don't expire timers while handling IRQs

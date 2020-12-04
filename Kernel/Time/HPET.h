@@ -45,7 +45,7 @@ public:
     static bool check_for_exisiting_periodic_timers();
     static HPET& the();
 
-    u64 frequency() const;
+    u64 frequency() const { return m_frequency; }
 
     const NonnullRefPtrVector<HPETComparator>& comparators() const { return m_comparators; }
     void disable(const HPETComparator&);
@@ -58,6 +58,8 @@ public:
 
     void enable_periodic_interrupt(const HPETComparator& comparator);
     void disable_periodic_interrupt(const HPETComparator& comparator);
+
+    u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
 
     Vector<unsigned> capable_interrupt_numbers(u8 comparator_number);
     Vector<unsigned> capable_interrupt_numbers(const HPETComparator&);
@@ -80,7 +82,9 @@ private:
     PhysicalAddress m_physical_acpi_hpet_registers;
     OwnPtr<Region> m_hpet_mmio_region;
 
-    u64 m_main_counter_clock_period { 0 };
+    u64 m_main_counter_last_read { 0 };
+    u64 m_main_counter_drift { 0 };
+
     u16 m_vendor_id;
     u16 m_minimum_tick;
     u64 m_frequency;
