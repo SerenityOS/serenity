@@ -339,7 +339,7 @@ char* getwd(char* buf)
 int sleep(unsigned seconds)
 {
     struct timespec ts = { seconds, 0 };
-    if (clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, nullptr) < 0)
+    if (clock_nanosleep(CLOCK_MONOTONIC_COARSE, 0, &ts, nullptr) < 0)
         return ts.tv_sec;
     return 0;
 }
@@ -347,7 +347,7 @@ int sleep(unsigned seconds)
 int usleep(useconds_t usec)
 {
     struct timespec ts = { (long)(usec / 1000000), (long)(usec % 1000000) * 1000 };
-    return clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, nullptr);
+    return clock_nanosleep(CLOCK_MONOTONIC_COARSE, 0, &ts, nullptr);
 }
 
 int gethostname(char* buffer, size_t size)

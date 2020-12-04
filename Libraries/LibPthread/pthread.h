@@ -82,9 +82,9 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
     {                                  \
         0, 0, 0, PTHREAD_MUTEX_DEFAULT \
     }
-#define PTHREAD_COND_INITIALIZER \
-    {                            \
-        0, 0, CLOCK_MONOTONIC    \
+#define PTHREAD_COND_INITIALIZER     \
+    {                                \
+        0, 0, CLOCK_MONOTONIC_COARSE \
     }
 
 int pthread_key_create(pthread_key_t* key, void (*destructor)(void*));

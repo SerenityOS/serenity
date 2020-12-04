@@ -41,20 +41,31 @@ HPETComparator::HPETComparator(u8 number, u8 irq, bool periodic_capable)
     : HardwareTimer(irq)
     , m_periodic(false)
     , m_periodic_capable(periodic_capable)
+    , m_enabled(false)
     , m_comparator_number(number)
 {
+}
+
+void HPETComparator::disable()
+{
+    if (!m_enabled)
+        return;
+    m_enabled = false;
+    HPET::the().disable(*this);
 }
 
 void HPETComparator::set_periodic()
 {
     ASSERT(m_periodic_capable);
     m_periodic = true;
+    m_enabled = true;
     HPET::the().enable_periodic_interrupt(*this);
 }
 void HPETComparator::set_non_periodic()
 {
     ASSERT(m_periodic_capable);
     m_periodic = false;
+    m_enabled = true;
     HPET::the().disable_periodic_interrupt(*this);
 }
 
@@ -79,7 +90,7 @@ size_t HPETComparator::ticks_per_second() const
 
 void HPETComparator::reset_to_default_ticks_per_second()
 {
-    ASSERT(is_capable_of_frequency(OPTIMAL_TICKS_PER_SECOND_RATE));
+    dbg() << "reset_to_default_ticks_per_second";
     m_frequency = OPTIMAL_TICKS_PER_SECOND_RATE;
     if (!is_periodic())
         set_new_countdown();
@@ -89,13 +100,16 @@ void HPETComparator::reset_to_default_ticks_per_second()
 bool HPETComparator::try_to_set_frequency(size_t frequency)
 {
     InterruptDisabler disabler;
-    if (!is_capable_of_frequency(frequency))
+    if (!is_capable_of_frequency(frequency)) {
+        dbg() << "HPETComparator: not cable of frequency: " << frequency;
         return false;
-    if (m_frequency == frequency)
-        return true;
+    }
+
     auto hpet_frequency = HPET::the().frequency();
     ASSERT(frequency <= hpet_frequency);
     m_frequency = frequency;
+    m_enabled = true;
+
 #ifdef HPET_COMPARATOR_DEBUG
     dbg() << "HPET Comparator: Max frequency " << hpet_frequency << " Hz, want to set " << frequency << " Hz, periodic: " << is_periodic();
 #endif
@@ -112,16 +126,17 @@ bool HPETComparator::is_capable_of_frequency(size_t frequency) const
 {
     if (frequency > HPET::the().frequency())
         return false;
-    if ((HPET::the().frequency() % frequency) != 0)
-        return false;
+    // HPET::update_periodic_comparator_value and HPET::update_non_periodic_comparator_value
+    // calculate the best counter based on the desired frequency.
     return true;
 }
 size_t HPETComparator::calculate_nearest_possible_frequency(size_t frequency) const
 {
-    if (frequency >= HPET::the().frequency())
+    if (frequency > HPET::the().frequency())
         return HPET::the().frequency();
-    // FIXME: Use better math here
-    return (frequency + (HPET::the().frequency() % frequency));
+    // HPET::update_periodic_comparator_value and HPET::update_non_periodic_comparator_value
+    // calculate the best counter based on the desired frequency.
+    return frequency;
 }
 
 }

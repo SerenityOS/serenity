@@ -57,6 +57,7 @@ public:
     virtual bool is_periodic_capable() const = 0;
     virtual void set_periodic() = 0;
     virtual void set_non_periodic() = 0;
+    virtual void disable() = 0;
 
     virtual size_t ticks_per_second() const = 0;
 

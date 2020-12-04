@@ -400,13 +400,15 @@ void Thread::finalize_dying_threads()
     }
 }
 
-bool Thread::tick()
+bool Thread::tick(bool in_kernel)
 {
-    ++m_ticks;
-    if (tss().cs & 3)
-        ++m_process->m_ticks_in_user;
-    else
+    if (in_kernel) {
         ++m_process->m_ticks_in_kernel;
+        ++m_ticks_in_kernel;
+    } else {
+        ++m_process->m_ticks_in_user;
+        ++m_ticks_in_user;
+    }
     return --m_ticks_left;
 }
 

@@ -80,7 +80,7 @@ private:
     }
     bool is_queued() const { return m_queued.load(AK::MemoryOrder::memory_order_relaxed); }
     void set_queued(bool queued) { m_queued.store(queued, AK::MemoryOrder::memory_order_relaxed); }
-    u64 now() const;
+    u64 now(bool) const;
 };
 
 class TimerQueue {
@@ -114,16 +114,16 @@ private:
     {
         switch (timer.m_clock_id) {
         case CLOCK_MONOTONIC:
+        case CLOCK_MONOTONIC_COARSE:
+        case CLOCK_MONOTONIC_RAW:
             return m_timer_queue_monotonic;
         case CLOCK_REALTIME:
+        case CLOCK_REALTIME_COARSE:
             return m_timer_queue_realtime;
         default:
             ASSERT_NOT_REACHED();
         }
     }
-
-    timespec ticks_to_time(clockid_t, u64 ticks) const;
-    u64 time_to_ticks(clockid_t, const timespec&) const;
 
     u64 m_timer_id_count { 0 };
     u64 m_ticks_per_second { 0 };

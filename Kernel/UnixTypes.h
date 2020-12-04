@@ -548,6 +548,9 @@ typedef int clockid_t;
 
 #define CLOCK_REALTIME 0
 #define CLOCK_MONOTONIC 1
+#define CLOCK_MONOTONIC_RAW 4
+#define CLOCK_REALTIME_COARSE 5
+#define CLOCK_MONOTONIC_COARSE 6
 #define TIMER_ABSTIME 99
 
 #define UTSNAME_ENTRY_LEN 65

@@ -64,10 +64,10 @@ void Scheduler::init_thread(Thread& thread)
 
 static u32 time_slice_for(const Thread& thread)
 {
-    // One time slice unit == 1ms
+    // One time slice unit == 4ms (assuming 250 ticks/second)
     if (&thread == Processor::current().idle_thread())
         return 1;
-    return 10;
+    return 2;
 }
 
 Thread* g_finalizer;
@@ -219,6 +219,7 @@ bool Scheduler::pick_next()
     // but since we're still holding the scheduler lock we're still in a critical section
     critical.leave();
 
+    thread_to_schedule->set_ticks_left(time_slice_for(*thread_to_schedule));
     return context_switch(thread_to_schedule);
 }
 
@@ -317,7 +318,6 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
 
 bool Scheduler::context_switch(Thread* thread)
 {
-    thread->set_ticks_left(time_slice_for(*thread));
     thread->did_schedule();
 
     auto from_thread = Thread::current();
@@ -480,7 +480,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
         }
     }
 
-    if (current_thread->tick())
+    if (current_thread->tick((regs.cs & 3) == 0))
         return;
 
     ASSERT_INTERRUPTS_DISABLED();

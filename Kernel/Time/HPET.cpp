@@ -197,10 +197,14 @@ void HPET::update_periodic_comparator_value()
     auto& regs = registers();
 
     u64 previous_main_value = (u64)regs.main_counter_value.low | ((u64)regs.main_counter_value.high << 32);
+    m_main_counter_drift += previous_main_value - m_main_counter_last_read;
+    m_main_counter_last_read = 0;
     regs.main_counter_value.low = 0;
     regs.main_counter_value.high = 0;
     for (auto& comparator : m_comparators) {
         auto& timer = regs.timers[comparator.comparator_number()];
+        if (!comparator.is_enabled())
+            continue;
         if (comparator.is_periodic()) {
             // Note that this means we're restarting all periodic timers. There is no
             // way to resume periodic timers properly because we reset the main counter
@@ -242,6 +246,33 @@ void HPET::update_non_periodic_comparator_value(const HPETComparator& comparator
     timer.comparator_value.low = (u32)new_counter_value;
 }
 
+u64 HPET::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
+{
+    // Should only be called by the time keeper interrupt handler!
+    u64 current_value = read_register_safe64(registers().main_counter_value);
+    u64 delta_ticks = m_main_counter_drift;
+    if (current_value >= m_main_counter_last_read)
+        delta_ticks += current_value - m_main_counter_last_read;
+    else
+        delta_ticks += m_main_counter_last_read - current_value; // the counter wrapped around
+    u64 ticks_since_last_second = (u64)ticks_this_second + delta_ticks;
+    auto ticks_per_second = frequency();
+    if (ticks_since_last_second > ticks_per_second) {
+        seconds_since_boot += ticks_since_last_second / ticks_per_second;
+        ticks_this_second = ticks_since_last_second % ticks_per_second;
+    } else {
+        ticks_this_second = ticks_since_last_second;
+    }
+
+    if (!query_only) {
+        m_main_counter_drift = 0;
+        m_main_counter_last_read = current_value;
+    }
+
+    // Return the time passed (in ns) since last time update_time was called
+    return (delta_ticks * 1000000000ull) / ticks_per_second;
+}
+
 void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
 {
 #ifdef HPET_DEBUG
@@ -253,7 +284,8 @@ void HPET::enable_periodic_interrupt(const HPETComparator& comparator)
     auto capabilities = timer.capabilities;
     ASSERT(capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable);
     timer.capabilities = capabilities | (u32)HPETFlags::TimerConfiguration::GeneratePeriodicInterrupt;
-    enable(comparator);
+    if (comparator.is_enabled())
+        enable(comparator);
 }
 void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
 {
@@ -266,7 +298,8 @@ void HPET::disable_periodic_interrupt(const HPETComparator& comparator)
     auto capabilities = timer.capabilities;
     ASSERT(capabilities & (u32)HPETFlags::TimerConfiguration::PeriodicInterruptCapable);
     timer.capabilities = capabilities & ~(u32)HPETFlags::TimerConfiguration::GeneratePeriodicInterrupt;
-    enable(comparator);
+    if (comparator.is_enabled())
+        enable(comparator);
 }
 
 void HPET::disable(const HPETComparator& comparator)
@@ -286,11 +319,6 @@ void HPET::enable(const HPETComparator& comparator)
     ASSERT(comparator.comparator_number() <= m_comparators.size());
     auto& timer = registers().timers[comparator.comparator_number()];
     timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::InterruptEnable;
-}
-
-u64 HPET::frequency() const
-{
-    return m_frequency;
 }
 
 Vector<unsigned> HPET::capable_interrupt_numbers(const HPETComparator& comparator)
@@ -394,7 +422,7 @@ HPET::HPET(PhysicalAddress acpi_hpet)
     klog() << "HPET: frequency " << m_frequency << " Hz (" << MEGAHERTZ_TO_HERTZ(m_frequency) << " MHz) resolution: " << calculate_ticks_in_nanoseconds() << "ns";
     ASSERT(regs.capabilities.main_counter_tick_period <= ABSOLUTE_MAXIMUM_COUNTER_TICK_PERIOD);
 
-    // Reset the counter, just in case...
+    // Reset the counter, just in case... (needs to match m_main_counter_last_read)
     regs.main_counter_value.high = 0;
     regs.main_counter_value.low = 0;
     if (regs.capabilities.attributes & (u32)HPETFlags::Attributes::LegacyReplacementRouteCapable)

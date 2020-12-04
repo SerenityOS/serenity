@@ -42,6 +42,7 @@ public:
     virtual const char* model() const override { return "HPET"; }
 
     u8 comparator_number() const { return m_comparator_number; }
+    bool is_enabled() const { return m_enabled; }
 
     virtual size_t ticks_per_second() const override;
 
@@ -49,6 +50,7 @@ public:
     virtual bool is_periodic_capable() const override { return m_periodic_capable; }
     virtual void set_periodic() override;
     virtual void set_non_periodic() override;
+    virtual void disable() override;
 
     virtual void reset_to_default_ticks_per_second() override;
     virtual bool try_to_set_frequency(size_t frequency) override;
@@ -61,7 +63,7 @@ private:
     HPETComparator(u8 number, u8 irq, bool periodic_capable);
     bool m_periodic : 1;
     bool m_periodic_capable : 1;
-    bool m_edge_triggered : 1;
+    bool m_enabled : 1;
     u8 m_comparator_number { 0 };
 };
 }

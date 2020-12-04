@@ -580,7 +580,7 @@ retry:
         auto next_timer_expiration = get_next_timer_expiration();
         if (next_timer_expiration.has_value()) {
             timespec now_spec;
-            clock_gettime(CLOCK_MONOTONIC, &now_spec);
+            clock_gettime(CLOCK_MONOTONIC_COARSE, &now_spec);
             now.tv_sec = now_spec.tv_sec;
             now.tv_usec = now_spec.tv_nsec / 1000;
             timeval_sub(next_timer_expiration.value(), now, timeout);
@@ -631,7 +631,7 @@ try_select_again:
 
     if (!s_timers->is_empty()) {
         timespec now_spec;
-        clock_gettime(CLOCK_MONOTONIC, &now_spec);
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &now_spec);
         now.tv_sec = now_spec.tv_sec;
         now.tv_usec = now_spec.tv_nsec / 1000;
     }
@@ -709,7 +709,7 @@ int EventLoop::register_timer(Object& object, int milliseconds, bool should_relo
     timer->interval = milliseconds;
     timeval now;
     timespec now_spec;
-    clock_gettime(CLOCK_MONOTONIC, &now_spec);
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &now_spec);
     now.tv_sec = now_spec.tv_sec;
     now.tv_usec = now_spec.tv_nsec / 1000;
     timer->reload(now);

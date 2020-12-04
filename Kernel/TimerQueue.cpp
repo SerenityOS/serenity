@@ -38,16 +38,45 @@ namespace Kernel {
 static AK::Singleton<TimerQueue> s_the;
 static SpinLock<u8> g_timerqueue_lock;
 
+ALWAYS_INLINE static u64 time_to_ns(const timespec& ts)
+{
+    return (u64)ts.tv_sec * 1000000000ull + ts.tv_nsec;
+}
+
+ALWAYS_INLINE static timespec ns_to_time(u64 ns)
+{
+    return { (time_t)(ns / 1000000000ull), (long)(ns % 1000000000ull) };
+}
+
 timespec Timer::remaining() const
 {
     if (m_remaining == 0)
         return {};
-    return TimerQueue::the().ticks_to_time(m_clock_id, m_remaining);
+    return ns_to_time(m_remaining);
 }
 
-u64 Timer::now() const
+u64 Timer::now(bool is_firing) const
 {
-    return TimerQueue::the().time_to_ticks(m_clock_id, TimeManagement::the().current_time(m_clock_id).value());
+    // NOTE: If is_firing is true then TimePrecision::Precise isn't really useful here.
+    // We already have a quite precise time stamp because we just updated the time in the
+    // interrupt handler. In those cases, just use coarse timestamps.
+    auto clock_id = m_clock_id;
+    if (is_firing) {
+        switch (clock_id) {
+        case CLOCK_MONOTONIC:
+            clock_id = CLOCK_MONOTONIC_COARSE;
+            break;
+        case CLOCK_MONOTONIC_RAW:
+            // TODO: use a special CLOCK_MONOTONIC_RAW_COARSE like mechanism here
+            break;
+        case CLOCK_REALTIME:
+            clock_id = CLOCK_REALTIME_COARSE;
+            break;
+        default:
+            break;
+        }
+    }
+    return time_to_ns(TimeManagement::the().current_time(clock_id).value());
 }
 
 TimerQueue& TimerQueue::the()
@@ -70,7 +99,7 @@ RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const timespe
     // *must* be a RefPtr<Timer>. Otherwise calling cancel_timer() could
     // inadvertently cancel another timer that has been created between
     // returning from the timer handler and a call to cancel_timer().
-    auto timer = adopt(*new Timer(clock_id, time_to_ticks(clock_id, deadline), move(callback)));
+    auto timer = adopt(*new Timer(clock_id, time_to_ns(deadline), move(callback)));
 
     ScopedSpinLock lock(g_timerqueue_lock);
     timer->m_id = 0; // Don't generate a timer id
@@ -91,7 +120,6 @@ TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
 void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 {
     u64 timer_expiration = timer->m_expires;
-    ASSERT(timer_expiration >= time_to_ticks(timer->m_clock_id, TimeManagement::the().current_time(timer->m_clock_id).value()));
 
     ASSERT(!timer->is_queued());
 
@@ -123,43 +151,7 @@ TimerId TimerQueue::add_timer(clockid_t clock_id, timeval& deadline, Function<vo
 {
     auto expires = TimeManagement::the().current_time(clock_id).value();
     timespec_add_timeval(expires, deadline, expires);
-    return add_timer(adopt(*new Timer(clock_id, time_to_ticks(clock_id, expires), move(callback))));
-}
-
-timespec TimerQueue::ticks_to_time(clockid_t clock_id, u64 ticks) const
-{
-    timespec tspec;
-    switch (clock_id) {
-    case CLOCK_MONOTONIC:
-        tspec.tv_sec = ticks / m_ticks_per_second;
-        tspec.tv_nsec = (ticks % m_ticks_per_second) * (1'000'000'000 / m_ticks_per_second);
-        break;
-    case CLOCK_REALTIME:
-        tspec.tv_sec = ticks / 1'000'000'000;
-        tspec.tv_nsec = ticks % 1'000'000'000;
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-    }
-    ASSERT(tspec.tv_nsec <= 1'000'000'000);
-    return tspec;
-}
-
-u64 TimerQueue::time_to_ticks(clockid_t clock_id, const timespec& tspec) const
-{
-    u64 ticks;
-    switch (clock_id) {
-    case CLOCK_MONOTONIC:
-        ticks = (u64)tspec.tv_sec * m_ticks_per_second;
-        ticks += ((u64)tspec.tv_nsec * m_ticks_per_second) / 1'000'000'000;
-        break;
-    case CLOCK_REALTIME:
-        ticks = (u64)tspec.tv_sec * 1'000'000'000 + tspec.tv_nsec;
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-    }
-    return ticks;
+    return add_timer(adopt(*new Timer(clock_id, time_to_ns(expires), move(callback))));
 }
 
 bool TimerQueue::cancel_timer(TimerId id)
@@ -249,7 +241,7 @@ void TimerQueue::remove_timer_locked(Queue& queue, Timer& timer)
     bool was_next_timer = (queue.list.head() == &timer);
     queue.list.remove(&timer);
     timer.set_queued(false);
-    auto now = timer.now();
+    auto now = timer.now(false);
     if (timer.m_expires > now)
         timer.m_remaining = timer.m_expires - now;
 
@@ -270,7 +262,7 @@ void TimerQueue::fire()
         ASSERT(timer);
         ASSERT(queue.next_timer_due == timer->m_expires);
 
-        while (timer && timer->now() > timer->m_expires) {
+        while (timer && timer->now(true) > timer->m_expires) {
             queue.list.remove(timer);
             timer->set_queued(false);
 

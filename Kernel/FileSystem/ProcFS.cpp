@@ -884,7 +884,8 @@ static OwnPtr<KBuffer> procfs$all(InodeIdentifier)
             thread_object.add("tid", thread.tid().value());
             thread_object.add("name", thread.name());
             thread_object.add("times_scheduled", thread.times_scheduled());
-            thread_object.add("ticks", thread.ticks());
+            thread_object.add("ticks_user", thread.ticks_in_user());
+            thread_object.add("ticks_kernel", thread.ticks_in_kernel());
             thread_object.add("state", thread.state_string());
             thread_object.add("cpu", thread.cpu());
             thread_object.add("priority", thread.priority());

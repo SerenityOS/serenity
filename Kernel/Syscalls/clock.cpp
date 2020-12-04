@@ -78,25 +78,21 @@ int Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_par
 
     bool is_absolute = params.flags & TIMER_ABSTIME;
 
-    switch (params.clock_id) {
-    case CLOCK_MONOTONIC:
-    case CLOCK_REALTIME: {
-        bool was_interrupted;
-        if (is_absolute) {
-            was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep).was_interrupted();
-        } else {
-            timespec remaining_sleep;
-            was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep).was_interrupted();
-            if (was_interrupted && params.remaining_sleep && !copy_to_user(params.remaining_sleep, &remaining_sleep))
-                return -EFAULT;
-        }
-        if (was_interrupted)
-            return -EINTR;
-        return 0;
-    }
-    default:
+    if (!TimeManagement::is_valid_clock_id(params.clock_id))
         return -EINVAL;
+
+    bool was_interrupted;
+    if (is_absolute) {
+        was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep).was_interrupted();
+    } else {
+        timespec remaining_sleep;
+        was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep).was_interrupted();
+        if (was_interrupted && params.remaining_sleep && !copy_to_user(params.remaining_sleep, &remaining_sleep))
+            return -EFAULT;
     }
+    if (was_interrupted)
+        return -EINTR;
+    return 0;
 }
 
 int Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)

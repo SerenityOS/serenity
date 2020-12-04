@@ -355,12 +355,12 @@ void ProcessModel::update()
     auto previous_pid_count = m_pids.size();
     auto all_processes = Core::ProcessStatisticsReader::get_all();
 
-    unsigned last_sum_times_scheduled = 0;
+    u64 last_sum_ticks_scheduled = 0;
     for (auto& it : m_threads)
-        last_sum_times_scheduled += it.value->current_state.times_scheduled;
+        last_sum_ticks_scheduled += it.value->current_state.ticks_user + it.value->current_state.ticks_kernel;
 
     HashTable<PidAndTid> live_pids;
-    unsigned sum_times_scheduled = 0;
+    u64 sum_ticks_scheduled = 0;
     for (auto& it : all_processes) {
         for (auto& thread : it.value.threads) {
             ThreadState state;
@@ -393,12 +393,14 @@ void ProcessModel::update()
             state.pgid = it.value.pgid;
             state.sid = it.value.sid;
             state.times_scheduled = thread.times_scheduled;
+            state.ticks_user = thread.ticks_user;
+            state.ticks_kernel = thread.ticks_kernel;
             state.cpu = thread.cpu;
             state.cpu_percent = 0;
             state.priority = thread.priority;
             state.effective_priority = thread.effective_priority;
             state.state = thread.state;
-            sum_times_scheduled += thread.times_scheduled;
+            sum_ticks_scheduled += thread.ticks_user + thread.ticks_kernel;
             {
                 auto pit = m_threads.find({ it.value.pid, thread.tid });
                 if (pit == m_threads.end())
@@ -423,8 +425,9 @@ void ProcessModel::update()
             continue;
         }
         auto& process = *it.value;
-        u32 times_scheduled_diff = process.current_state.times_scheduled - process.previous_state.times_scheduled;
-        process.current_state.cpu_percent = ((float)times_scheduled_diff * 100) / (float)(sum_times_scheduled - last_sum_times_scheduled);
+        u32 times_scheduled_diff = (process.current_state.ticks_user + process.current_state.ticks_kernel)
+            - (process.previous_state.ticks_user + process.previous_state.ticks_kernel);
+        process.current_state.cpu_percent = ((float)times_scheduled_diff * 100) / (float)(sum_ticks_scheduled - last_sum_ticks_scheduled);
         if (it.key.pid != 0) {
             m_cpus[process.current_state.cpu].total_cpu_percent += process.current_state.cpu_percent;
             m_pids.append(it.key);

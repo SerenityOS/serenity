@@ -116,6 +116,8 @@ private:
         pid_t pgid;
         pid_t sid;
         unsigned times_scheduled;
+        unsigned ticks_user;
+        unsigned ticks_kernel;
         String name;
         String state;
         String user;
