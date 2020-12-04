@@ -48,7 +48,7 @@ void InlineNode::split_into_lines(BlockBox& containing_block, LayoutMode layout_
         containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_left, 0, LineBoxFragment::Type::Leading);
     }
 
-    Node::split_into_lines(containing_block, layout_mode);
+    NodeWithStyleAndBoxModelMetrics::split_into_lines(containing_block, layout_mode);
 
     if (!style().padding().right.is_undefined_or_auto()) {
         float padding_right = style().padding().right.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
