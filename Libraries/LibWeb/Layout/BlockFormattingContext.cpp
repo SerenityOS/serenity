@@ -449,12 +449,12 @@ void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(B
     replaced_element_box_model.padding.top = box.style().padding().top.resolved_or_zero(context_box(), containing_block.width());
     replaced_element_box_model.padding.bottom = box.style().padding().bottom.resolved_or_zero(context_box(), containing_block.width());
 
-    float x = replaced_element_box_model.margin.left.to_px(context_box())
-        + replaced_element_box_model.border.left.to_px(context_box())
-        + replaced_element_box_model.padding.left.to_px(context_box())
-        + replaced_element_box_model.offset.left.to_px(context_box());
+    float x = replaced_element_box_model.margin.left.to_px(box)
+        + replaced_element_box_model.border.left.to_px(box)
+        + replaced_element_box_model.padding.left.to_px(box)
+        + replaced_element_box_model.offset.left.to_px(box);
 
-    float y = replaced_element_box_model.margin_box(context_box()).top + context_box().box_model().offset.top.to_px(context_box());
+    float y = replaced_element_box_model.margin_box(box).top + context_box().box_model().offset.top.to_px(box);
 
     box.set_offset(x, y);
 }
@@ -473,17 +473,17 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     box_model.padding.top = style.padding().top.resolved(zero_value, containing_block, containing_block.width());
     box_model.padding.bottom = style.padding().bottom.resolved(zero_value, containing_block, containing_block.width());
 
-    float x = box_model.margin.left.to_px(containing_block)
-        + box_model.border.left.to_px(containing_block)
-        + box_model.padding.left.to_px(containing_block)
-        + box_model.offset.left.to_px(containing_block);
+    float x = box_model.margin.left.to_px(box)
+        + box_model.border.left.to_px(box)
+        + box_model.padding.left.to_px(box)
+        + box_model.offset.left.to_px(box);
 
     if (containing_block.style().text_align() == CSS::TextAlign::VendorSpecificCenter) {
         x = (containing_block.width() / 2) - box.width() / 2;
     }
 
-    float y = box_model.margin_box(containing_block).top
-        + box_model.offset.top.to_px(containing_block);
+    float y = box_model.margin_box(box).top
+        + box_model.offset.top.to_px(box);
 
     // NOTE: Empty (0-height) preceding siblings have their margins collapsed with *their* preceding sibling, etc.
     float collapsed_bottom_margin_of_preceding_siblings = 0;
@@ -502,7 +502,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         y += relevant_sibling->effective_offset().y() + relevant_sibling->height() + relevant_sibling->box_model().padding.bottom.to_px(*relevant_sibling);
 
         // Collapse top margin with bottom margin of preceding siblings if needed
-        float my_margin_top = box_model.margin.top.to_px(containing_block);
+        float my_margin_top = box_model.margin.top.to_px(box);
 
         if (my_margin_top < 0 || collapsed_bottom_margin_of_preceding_siblings < 0) {
             // Negative margins present.
