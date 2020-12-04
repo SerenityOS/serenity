@@ -78,7 +78,7 @@ int main(int argc, char** argv)
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    widget.set_piece_set(config->read_entry("Style", "PieceSet", "test"));
+    widget.set_piece_set(config->read_entry("Style", "PieceSet", "stelar7"));
     widget.set_board_theme(config->read_entry("Style", "BoardTheme", "Beige"));
     widget.set_coordinates(config->read_bool_entry("Style", "Coordinates", true));
 
