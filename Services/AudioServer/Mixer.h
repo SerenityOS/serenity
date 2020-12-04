@@ -27,6 +27,7 @@
 #pragma once
 
 #include "ClientConnection.h"
+#include <AK/Atomic.h>
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullRefPtrVector.h>
@@ -125,6 +126,7 @@ public:
 
 private:
     Vector<NonnullRefPtr<BufferQueue>> m_pending_mixing;
+    Atomic<bool> m_added_queue { false };
     pthread_mutex_t m_pending_mutex;
     pthread_cond_t m_pending_cond;
 
