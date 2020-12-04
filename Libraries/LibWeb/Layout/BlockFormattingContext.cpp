@@ -499,7 +499,9 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     }
 
     if (relevant_sibling) {
-        y += relevant_sibling->effective_offset().y() + relevant_sibling->height() + relevant_sibling->box_model().padding.bottom.to_px(*relevant_sibling);
+        y += relevant_sibling->effective_offset().y()
+            + relevant_sibling->height()
+            + relevant_sibling->box_model().border_box(*relevant_sibling).bottom;
 
         // Collapse top margin with bottom margin of preceding siblings if needed
         float my_margin_top = box_model.margin.top.to_px(box);
