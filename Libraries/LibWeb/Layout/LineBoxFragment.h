@@ -43,7 +43,7 @@ public:
         Trailing,
     };
 
-    LineBoxFragment(const Node& layout_node, int start, int length, const Gfx::FloatPoint& offset, const Gfx::FloatSize& size, Type type)
+    LineBoxFragment(Node& layout_node, int start, int length, const Gfx::FloatPoint& offset, const Gfx::FloatSize& size, Type type)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -53,7 +53,7 @@ public:
     {
     }
 
-    const Node& layout_node() const { return m_layout_node; }
+    Node& layout_node() const { return m_layout_node; }
     int start() const { return m_start; }
     int length() const { return m_length; }
     const Gfx::FloatRect absolute_rect() const;
@@ -81,7 +81,7 @@ public:
     Gfx::FloatRect selection_rect(const Gfx::Font&) const;
 
 private:
-    const Node& m_layout_node;
+    Node& m_layout_node;
     int m_start { 0 };
     int m_length { 0 };
     Gfx::FloatPoint m_offset;
