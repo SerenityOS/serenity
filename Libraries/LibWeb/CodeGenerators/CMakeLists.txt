@@ -1,6 +1,7 @@
 add_executable(Generate_CSS_PropertyID_h Generate_CSS_PropertyID_h.cpp)
 add_executable(Generate_CSS_PropertyID_cpp Generate_CSS_PropertyID_cpp.cpp)
 add_executable(WrapperGenerator WrapperGenerator.cpp)
+target_compile_options(WrapperGenerator PUBLIC -g)
 target_link_libraries(Generate_CSS_PropertyID_h LagomCore)
 target_link_libraries(Generate_CSS_PropertyID_cpp LagomCore)
 target_link_libraries(WrapperGenerator LagomCore)
