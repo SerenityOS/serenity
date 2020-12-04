@@ -117,6 +117,7 @@ public:
     virtual bool is_error() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_native_function() const { return false; }
+    virtual bool is_script_function() const { return false; }
     virtual bool is_bound_function() const { return false; }
     virtual bool is_proxy_object() const { return false; }
     virtual bool is_regexp_object() const { return false; }
