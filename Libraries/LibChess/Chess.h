@@ -135,6 +135,8 @@ public:
     enum class Result {
         CheckMate,
         StaleMate,
+        WhiteResign,
+        BlackResign,
         FiftyMoveRule,
         SeventyFiveMoveRule,
         ThreeFoldRepetition,
@@ -143,6 +145,8 @@ public:
         NotFinished,
     };
 
+    String result_to_string(Result) const;
+
     template<typename Callback>
     void generate_moves(Callback callback, Colour colour = Colour::None) const;
     Move random_move(Colour colour = Colour::None) const;
@@ -150,6 +154,7 @@ public:
     Colour game_winner() const;
     int game_score() const;
     bool game_finished() const;
+    void set_resigned(Colour);
     int material_imbalance() const;
 
     Colour turn() const { return m_turn; }
@@ -164,6 +169,7 @@ private:
 
     Piece m_board[8][8];
     Colour m_turn { Colour::White };
+    Colour m_resigned { Colour::None };
     Optional<Move> m_last_move;
     int m_moves_since_capture { 0 };
 
