@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,14 +37,22 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
+#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Shape.h>
+#include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
 #include <signal.h>
@@ -159,14 +168,23 @@ static String read_next_piece()
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects);
 
+static void print_type(const FlyString& name)
+{
+    out("[\033[36;1m{}\033[0m]", name);
+}
+
+static void print_separator(bool& first)
+{
+    out(first ? " " : ", ");
+    first = false;
+}
+
 static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
 {
+    out("[");
     bool first = true;
-    out("[ ");
     for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
-        if (!first)
-            out(", ");
-        first = false;
+        print_separator(first);
         auto value = it.value_and_attributes(&array).value;
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
@@ -175,17 +193,17 @@ static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
             return;
         print_value(value, seen_objects);
     }
-    out(" ]");
+    if (!first)
+        out(" ");
+    out("]");
 }
 
 static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
-    out("{{ ");
+    out("{{");
     bool first = true;
     for (auto& entry : object.indexed_properties()) {
-        if (!first)
-            out(", ");
-        first = false;
+        print_separator(first);
         out("\"\033[33;1m{}\033[0m\": ", entry.index());
         auto value = entry.value_and_attributes(&object).value;
         // The V8 repl doesn't throw an exception here, and instead just
@@ -195,47 +213,124 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
             return;
         print_value(value, seen_objects);
     }
-
-    if (!object.indexed_properties().is_empty() && object.shape().property_count())
-        out(", ");
-
-    size_t index = 0;
     for (auto& it : object.shape().property_table_ordered()) {
+        print_separator(first);
         if (it.key.is_string()) {
             out("\"\033[33;1m{}\033[0m\": ", it.key.to_display_string());
         } else {
-            out("\033[33;1m{}\033[0m: ", it.key.to_display_string());
+            out("[\033[33;1m{}\033[0m]: ", it.key.to_display_string());
         }
         print_value(object.get_direct(it.value.offset), seen_objects);
-        if (index != object.shape().property_count() - 1)
-            out(", ");
-        ++index;
     }
-    out(" }}");
+    if (!first)
+        out(" ");
+    out("}}");
 }
 
-static void print_function(const JS::Object& function, HashTable<JS::Object*>&)
+static void print_function(const JS::Object& object, HashTable<JS::Object*>&)
 {
-    out("\033[34;1m[{}]\033[0m", function.class_name());
+    print_type(object.class_name());
+    if (object.is_script_function())
+        out(" {}", static_cast<const JS::ScriptFunction&>(object).name());
+    if (object.is_native_function())
+        out(" {}", static_cast<const JS::NativeFunction&>(object).name());
 }
 
 static void print_date(const JS::Object& date, HashTable<JS::Object*>&)
 {
-    out("\033[34;1mDate {}\033[0m", static_cast<const JS::Date&>(date).string());
+    print_type("Date");
+    out(" \033[34;1m{}\033[0m", static_cast<const JS::Date&>(date).string());
 }
 
 static void print_error(const JS::Object& object, HashTable<JS::Object*>&)
 {
     auto& error = static_cast<const JS::Error&>(object);
-    out("\033[34;1m[{}]\033[0m", error.name());
+    print_type(error.name());
     if (!error.message().is_empty())
-        out(": {}", error.message());
+        out(" \033[31;1m{}\033[0m", error.message());
 }
 
-static void print_regexp(const JS::Object& object, HashTable<JS::Object*>&)
+static void print_regexp_object(const JS::Object& object, HashTable<JS::Object*>&)
 {
-    auto& regexp = static_cast<const JS::RegExpObject&>(object);
-    out("\033[34;1m/{}/{}\033[0m", regexp.pattern(), regexp.flags());
+    auto& regexp_object = static_cast<const JS::RegExpObject&>(object);
+    // Use RegExp.prototype.source rather than RegExpObject::pattern() so we get proper escaping
+    auto source = regexp_object.get("source").to_primitive_string(object.global_object())->string();
+    print_type("RegExp");
+    out(" \033[34;1m/{}/{}\033[0m", source, regexp_object.flags());
+}
+
+static void print_proxy_object(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& proxy_object = static_cast<const JS::ProxyObject&>(object);
+    print_type("Proxy");
+    out("\n  target: ");
+    print_value(&proxy_object.target(), seen_objects);
+    out("\n  handler: ");
+    print_value(&proxy_object.handler(), seen_objects);
+}
+
+static void print_array_buffer(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& array_buffer = static_cast<const JS::ArrayBuffer&>(object);
+    auto& buffer = array_buffer.buffer();
+    auto byte_length = array_buffer.byte_length();
+    print_type("ArrayBuffer");
+    out("\n  byteLength: ");
+    print_value(JS::Value((double)byte_length), seen_objects);
+    outln();
+    for (size_t i = 0; i < byte_length; ++i) {
+        out("{:02x}", buffer[i]);
+        if (i + 1 < byte_length) {
+            if ((i + 1) % 32 == 0)
+                outln();
+            else if ((i + 1) % 16 == 0)
+                out("  ");
+            else
+                out(" ");
+        }
+    }
+}
+
+static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& typed_array_base = static_cast<const JS::TypedArrayBase&>(object);
+    auto length = typed_array_base.array_length();
+    print_type(object.class_name());
+    out("\n  length: ");
+    print_value(JS::Value(length), seen_objects);
+    out("\n  byteLength: ");
+    print_value(JS::Value(typed_array_base.byte_length()), seen_objects);
+    out("\n  buffer: ");
+    print_type("ArrayBuffer");
+    out(" @ {:p}", typed_array_base.viewed_array_buffer());
+    if (!length)
+        return;
+    outln();
+    // FIXME: This kinda sucks.
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    if (StringView(object.class_name()) == StringView(#ClassName)) {                     \
+        out("[ ");                                                                       \
+        auto& typed_array = static_cast<const JS::ClassName&>(typed_array_base);         \
+        auto data = typed_array.data();                                                  \
+        for (size_t i = 0; i < length; ++i) {                                            \
+            if (i > 0)                                                                   \
+                out(", ");                                                               \
+            print_value(JS::Value(data[i]), seen_objects);                               \
+        }                                                                                \
+        out(" ]");                                                                       \
+        return;                                                                          \
+    }
+    JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+    ASSERT_NOT_REACHED();
+}
+
+static void print_primitive_wrapper_object(const FlyString& name, const JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    // BooleanObject, NumberObject, StringObject
+    print_type(name);
+    out(" ");
+    print_value(object.value_of(), seen_objects);
 }
 
 static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
@@ -267,7 +362,19 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         if (object.is_error())
             return print_error(object, seen_objects);
         if (object.is_regexp_object())
-            return print_regexp(object, seen_objects);
+            return print_regexp_object(object, seen_objects);
+        if (object.is_proxy_object())
+            return print_proxy_object(object, seen_objects);
+        if (object.is_array_buffer())
+            return print_array_buffer(object, seen_objects);
+        if (object.is_typed_array())
+            return print_typed_array(object, seen_objects);
+        if (object.is_string_object())
+            return print_primitive_wrapper_object("String", object, seen_objects);
+        if (object.is_number_object())
+            return print_primitive_wrapper_object("Number", object, seen_objects);
+        if (object.is_boolean_object())
+            return print_primitive_wrapper_object("Boolean", object, seen_objects);
         return print_object(object, seen_objects);
     }
 
