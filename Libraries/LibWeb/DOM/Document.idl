@@ -8,6 +8,7 @@ interface Document : Node {
     readonly attribute DOMString contentType;
 
     Element? getElementById(DOMString id);
+    ArrayFromVector getElementsByName(DOMString name);
     ArrayFromVector getElementsByTagName(DOMString tagName);
     ArrayFromVector getElementsByClassName(DOMString className);
 
