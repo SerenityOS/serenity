@@ -27,9 +27,12 @@
 #include "ChessWidget.h"
 #include "PromotionDialog.h"
 #include <AK/String.h>
+#include <LibCore/DateTime.h>
+#include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
+#include <unistd.h>
 
 ChessWidget::ChessWidget(const StringView& set)
 {
@@ -289,6 +292,57 @@ void ChessWidget::maybe_input_engine_move()
     });
 }
 
+bool ChessWidget::export_pgn(const StringView& export_path) const
+{
+    auto file_or_error = Core::File::open(export_path, Core::File::WriteOnly);
+    if (file_or_error.is_error()) {
+        warnln("Couldn't open '{}': {}", export_path, file_or_error.error());
+        return false;
+    }
+    auto& file = *file_or_error.value();
+
+    // Tag Pair Section
+    file.write("[Event \"Casual Game\"]\n");
+    file.write("[Site \"SerenityOS Chess\"]\n");
+    file.write(String::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_string("%Y.%m.%d")));
+    file.write("[Round \"1\"]\n");
+
+    String username(getlogin());
+    const String player1 = (!username.is_empty() ? username : "?");
+    const String player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine" : "?");
+    file.write(String::formatted("[White \"{}\"]\n", m_side == Chess::Colour::White ? player1 : player2));
+    file.write(String::formatted("[Black \"{}\"]\n", m_side == Chess::Colour::Black ? player1 : player2));
+
+    file.write(String::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points(m_board.game_result(), m_board.turn())));
+    file.write("[WhiteElo \"?\"]\n");
+    file.write("[BlackElo \"?\"]\n");
+    file.write("[Variant \"Standard\"]\n");
+    file.write("[TimeControl \"-\"]\n");
+    file.write("[Annotator \"SerenityOS Chess\"]\n");
+    file.write("\n");
+
+    // Movetext Section
+    for (size_t i = 0, move_no = 1; i < m_board.moves().size(); i += 2, move_no++) {
+        const String white = m_board.moves().at(i).to_algebraic();
+
+        if (i + 1 < m_board.moves().size()) {
+            const String black = m_board.moves().at(i + 1).to_algebraic();
+            file.write(String::formatted("{}. {} {} ", move_no, white, black));
+        } else {
+            file.write(String::formatted("{}. {} ", move_no, white));
+        }
+    }
+
+    file.write("{ ");
+    file.write(Chess::Board::result_to_string(m_board.game_result(), m_board.turn()));
+    file.write(" } ");
+    file.write(Chess::Board::result_to_points(m_board.game_result(), m_board.turn()));
+    file.write("\n");
+
+    file.close();
+    return true;
+}
+
 void ChessWidget::flip_board()
 {
     m_side = Chess::opposing_colour(m_side);
@@ -306,6 +360,6 @@ void ChessWidget::resign()
 
     set_drag_enabled(false);
     update();
-    const String msg = m_board.result_to_string(m_board.game_result());
+    const String msg = Chess::Board::result_to_string(m_board.game_result(), m_board.turn());
     GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
 }

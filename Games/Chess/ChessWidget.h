@@ -48,6 +48,7 @@ public:
     virtual void mousemove_event(GUI::MouseEvent&) override;
 
     Chess::Board& board() { return m_board; };
+    const Chess::Board& board() const { return m_board; };
 
     Chess::Colour side() const { return m_side; };
     void set_side(Chess::Colour side) { m_side = side; };
@@ -60,6 +61,8 @@ public:
     bool drag_enabled() const { return m_drag_enabled; }
     void set_drag_enabled(bool e) { m_drag_enabled = e; }
     RefPtr<Gfx::Bitmap> get_piece_graphic(const Chess::Piece& piece) const;
+
+    bool export_pgn(const StringView& export_path) const;
 
     void resign();
     void flip_board();
