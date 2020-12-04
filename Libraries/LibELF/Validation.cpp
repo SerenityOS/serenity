@@ -93,7 +93,7 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (elf_header.e_phoff < elf_header.e_ehsize || elf_header.e_shoff < elf_header.e_ehsize) {
+    if (elf_header.e_phoff < elf_header.e_ehsize || (elf_header.e_shnum != SHN_UNDEF && elf_header.e_shoff < elf_header.e_ehsize)) {
         if (verbose) {
             dbgprintf("SHENANIGANS! program header offset (%d) or section header offset (%d) overlap with ELF header!\n",
                 elf_header.e_phoff, elf_header.e_shoff);
@@ -148,7 +148,7 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (elf_header.e_shoff < end_of_last_program_header) {
+    if (elf_header.e_shoff != SHN_UNDEF && elf_header.e_shoff < end_of_last_program_header) {
         if (verbose) {
             dbgprintf("SHENANIGANS! Section header table begins at file offset %d, which is within program headers [ %d - %zu ]!\n",
                 elf_header.e_shoff, elf_header.e_phoff, end_of_last_program_header);
