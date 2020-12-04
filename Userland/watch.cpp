@@ -56,7 +56,7 @@ static struct timeval get_current_time()
 {
     struct timespec ts;
     struct timeval tv;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
     timespec_to_timeval(ts, tv);
     return tv;
 }

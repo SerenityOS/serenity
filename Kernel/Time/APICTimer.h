@@ -44,6 +44,7 @@ public:
     virtual bool is_periodic_capable() const override { return true; }
     virtual void set_periodic() override;
     virtual void set_non_periodic() override;
+    virtual void disable() override { }
 
     virtual void reset_to_default_ticks_per_second() override;
     virtual bool try_to_set_frequency(size_t frequency) override;

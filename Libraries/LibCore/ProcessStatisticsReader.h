@@ -35,7 +35,8 @@ namespace Core {
 struct ThreadStatistics {
     pid_t tid;
     unsigned times_scheduled;
-    unsigned ticks;
+    unsigned ticks_user;
+    unsigned ticks_kernel;
     unsigned syscall_count;
     unsigned inode_faults;
     unsigned zero_faults;

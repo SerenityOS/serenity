@@ -34,9 +34,14 @@
 
 namespace Kernel {
 
-#define OPTIMAL_TICKS_PER_SECOND_RATE 1000
+#define OPTIMAL_TICKS_PER_SECOND_RATE 250
 
 class HardwareTimerBase;
+
+enum class TimePrecision {
+    Coarse = 0,
+    Precise
+};
 
 class TimeManagement {
     AK_MAKE_ETERNAL;
@@ -47,12 +52,15 @@ public:
     static void initialize(u32 cpu);
     static TimeManagement& the();
 
-    static timespec ticks_to_time(u64 ticks, time_t ticks_per_second);
-    static u64 time_to_ticks(const timespec& tspec, time_t ticks_per_second);
-
-    KResultOr<timespec> current_time(clockid_t clock_id) const;
-    timespec monotonic_time() const;
-    timespec epoch_time() const;
+    static bool is_valid_clock_id(clockid_t);
+    KResultOr<timespec> current_time(clockid_t) const;
+    timespec monotonic_time(TimePrecision = TimePrecision::Coarse) const;
+    timespec monotonic_time_raw() const
+    {
+        // TODO: implement
+        return monotonic_time(TimePrecision::Precise);
+    }
+    timespec epoch_time(TimePrecision = TimePrecision::Precise) const;
     void set_epoch_time(timespec);
     time_t ticks_per_second() const;
     time_t boot_time() const;
@@ -60,12 +68,13 @@ public:
     bool is_system_timer(const HardwareTimerBase&) const;
 
     static void update_time(const RegisterState&);
-    void increment_time_since_boot(const RegisterState&);
+    static void update_time_hpet(const RegisterState&);
+    void increment_time_since_boot_hpet();
+    void increment_time_since_boot();
 
     static bool is_hpet_periodic_mode_allowed();
 
     u64 uptime_ms() const;
-    u64 monotonic_ticks() const;
     static timeval now_as_timeval();
 
     timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
@@ -78,15 +87,18 @@ private:
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
     NonnullRefPtrVector<HardwareTimerBase> m_hardware_timers;
     void set_system_timer(HardwareTimerBase&);
-    static void timer_tick(const RegisterState&);
+    static void system_timer_tick(const RegisterState&);
 
     // Variables between m_update1 and m_update2 are synchronized
     Atomic<u32> m_update1 { 0 };
     u32 m_ticks_this_second { 0 };
-    u32 m_seconds_since_boot { 0 };
+    u64 m_seconds_since_boot { 0 };
     timespec m_epoch_time { 0, 0 };
     timespec m_remaining_epoch_time_adjustment { 0, 0 };
     Atomic<u32> m_update2 { 0 };
+
+    u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
+    bool m_can_query_precise_time { false };
 
     RefPtr<HardwareTimerBase> m_system_timer;
     RefPtr<HardwareTimerBase> m_time_keeper_timer;

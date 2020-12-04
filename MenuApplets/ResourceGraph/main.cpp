@@ -135,9 +135,9 @@ private:
         for (auto& it : all_processes) {
             for (auto& jt : it.value.threads) {
                 if (it.value.pid == 0)
-                    idle += jt.times_scheduled;
+                    idle += jt.ticks_user + jt.ticks_kernel;
                 else
-                    busy += jt.times_scheduled;
+                    busy += jt.ticks_user + jt.ticks_kernel;
             }
         }
     }
