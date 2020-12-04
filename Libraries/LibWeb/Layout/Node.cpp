@@ -241,15 +241,16 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     style.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom));
     style.set_padding(specified_style.length_box(CSS::PropertyID::PaddingLeft, CSS::PropertyID::PaddingTop, CSS::PropertyID::PaddingRight, CSS::PropertyID::PaddingBottom));
 
-    style.border_left().width = specified_style.length_or_fallback(CSS::PropertyID::BorderLeftWidth, {}).resolved_or_zero(*this, 0).to_px(*this);
-    style.border_top().width = specified_style.length_or_fallback(CSS::PropertyID::BorderTopWidth, {}).resolved_or_zero(*this, 0).to_px(*this);
-    style.border_right().width = specified_style.length_or_fallback(CSS::PropertyID::BorderRightWidth, {}).resolved_or_zero(*this, 0).to_px(*this);
-    style.border_bottom().width = specified_style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, {}).resolved_or_zero(*this, 0).to_px(*this);
+    auto do_border_style = [&](BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
+        border.width = specified_style.length_or_fallback(width_property, {}).resolved_or_zero(*this, 0).to_px(*this);
+        border.color = specified_style.color_or_fallback(color_property, document(), Color::Transparent);
+        border.line_style = specified_style.line_style(style_property).value_or(CSS::LineStyle::None);
+    };
 
-    style.border_left().color = specified_style.color_or_fallback(CSS::PropertyID::BorderLeftColor, document(), Color::Transparent);
-    style.border_top().color = specified_style.color_or_fallback(CSS::PropertyID::BorderTopColor, document(), Color::Transparent);
-    style.border_right().color = specified_style.color_or_fallback(CSS::PropertyID::BorderRightColor, document(), Color::Transparent);
-    style.border_bottom().color = specified_style.color_or_fallback(CSS::PropertyID::BorderBottomColor, document(), Color::Transparent);
+    do_border_style(style.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
+    do_border_style(style.border_top(), CSS::PropertyID::BorderTopWidth, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopStyle);
+    do_border_style(style.border_right(), CSS::PropertyID::BorderRightWidth, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightStyle);
+    do_border_style(style.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
 }
 
 void Node::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)

@@ -259,6 +259,35 @@ Optional<CSS::WhiteSpace> StyleProperties::white_space() const
     return {};
 }
 
+Optional<CSS::LineStyle> StyleProperties::line_style(CSS::PropertyID property_id) const
+{
+    auto value = property(property_id);
+    if (!value.has_value() || !value.value()->is_string())
+        return {};
+    auto string = value.value()->to_string();
+    if (string == "none")
+        return CSS::LineStyle::None;
+    if (string == "hidden")
+        return CSS::LineStyle::Hidden;
+    if (string == "dotted")
+        return CSS::LineStyle::Dotted;
+    if (string == "dashed")
+        return CSS::LineStyle::Dashed;
+    if (string == "solid")
+        return CSS::LineStyle::Solid;
+    if (string == "double")
+        return CSS::LineStyle::Double;
+    if (string == "groove")
+        return CSS::LineStyle::Groove;
+    if (string == "ridge")
+        return CSS::LineStyle::Ridge;
+    if (string == "inset")
+        return CSS::LineStyle::Inset;
+    if (string == "outset")
+        return CSS::LineStyle::Outset;
+    return {};
+}
+
 Optional<CSS::Float> StyleProperties::float_() const
 {
     auto value = property(CSS::PropertyID::Float);
