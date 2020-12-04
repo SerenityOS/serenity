@@ -29,6 +29,7 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <ctype.h>
 
