@@ -37,7 +37,7 @@ ChessWidget::ChessWidget(const StringView& set)
 }
 
 ChessWidget::ChessWidget()
-    : ChessWidget("test")
+    : ChessWidget("stelar7")
 {
 }
 
