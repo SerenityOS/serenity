@@ -92,7 +92,7 @@ public:
     InitialContainingBlockBox& root();
 
     virtual const char* class_name() const = 0;
-    virtual bool is_root() const { return false; }
+    virtual bool is_initial_containing_block() const { return false; }
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }
     virtual bool is_replaced() const { return false; }

@@ -52,7 +52,7 @@ Node::~Node()
 
 bool Node::can_contain_boxes_with_position_absolute() const
 {
-    return style().position() != CSS::Position::Static || is_root();
+    return style().position() != CSS::Position::Static || is_initial_containing_block();
 }
 
 const BlockBox* Node::containing_block() const
