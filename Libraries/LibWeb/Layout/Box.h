@@ -98,7 +98,7 @@ private:
         Bottom,
         Left,
     };
-    void paint_border(PaintContext&, Edge, const Gfx::FloatRect&, CSS::PropertyID style_property_id, const BorderData&);
+    void paint_border(PaintContext&, Edge, const Gfx::FloatRect&, const BorderData&);
 
     Gfx::FloatPoint m_offset;
     Gfx::FloatSize m_size;

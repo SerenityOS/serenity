@@ -33,66 +33,53 @@
 
 namespace Web::Layout {
 
-void Box::paint_border(PaintContext& context, Edge edge, const Gfx::FloatRect& rect, CSS::PropertyID style_property_id, const BorderData& border_data)
+void Box::paint_border(PaintContext& context, Edge edge, const Gfx::FloatRect& rect, const BorderData& border_data)
 {
     float width = border_data.width;
     if (width <= 0)
         return;
 
     auto color = border_data.color;
-    auto border_style = specified_style().property(style_property_id);
+    auto border_style = border_data.line_style;
     int int_width = max((int)width, 1);
 
-    auto first_point_for_edge = [](Edge edge, const Gfx::FloatRect& rect) {
+    struct Points {
+        Gfx::FloatPoint p1;
+        Gfx::FloatPoint p2;
+    };
+
+    auto points_for_edge = [](Edge edge, const Gfx::FloatRect& rect) -> Points {
         switch (edge) {
         case Edge::Top:
-            return rect.top_left();
+            return { rect.top_left(), rect.top_right() };
         case Edge::Right:
-            return rect.top_right();
+            return { rect.top_right(), rect.bottom_right() };
         case Edge::Bottom:
-            return rect.bottom_left();
-        case Edge::Left:
-        default:
-            return rect.top_left();
+            return { rect.bottom_left(), rect.bottom_right() };
+        default: // Edge::Left
+            return { rect.top_left(), rect.bottom_left() };
         }
     };
 
-    auto second_point_for_edge = [](Edge edge, const Gfx::FloatRect& rect) {
-        switch (edge) {
-        case Edge::Top:
-            return rect.top_right();
-        case Edge::Right:
-            return rect.bottom_right();
-        case Edge::Bottom:
-            return rect.bottom_right();
-        case Edge::Left:
-        default:
-            return rect.bottom_left();
-        }
-    };
+    auto [p1, p2] = points_for_edge(edge, rect);
 
-    auto p1 = first_point_for_edge(edge, rect);
-    auto p2 = second_point_for_edge(edge, rect);
-
-    if (border_style.has_value() && border_style.value()->to_string() == "inset") {
+    if (border_style == CSS::LineStyle::Inset) {
         auto top_left_color = Color::from_rgb(0x5a5a5a);
         auto bottom_right_color = Color::from_rgb(0x888888);
         color = (edge == Edge::Left || edge == Edge::Top) ? top_left_color : bottom_right_color;
-    } else if (border_style.has_value() && border_style.value()->to_string() == "outset") {
+    } else if (border_style == CSS::LineStyle::Outset) {
         auto top_left_color = Color::from_rgb(0x888888);
         auto bottom_right_color = Color::from_rgb(0x5a5a5a);
         color = (edge == Edge::Left || edge == Edge::Top) ? top_left_color : bottom_right_color;
     }
 
-    auto line_style = Gfx::Painter::LineStyle::Solid;
-    if (border_style.has_value()) {
-        if (border_style.value()->to_string() == "dotted")
-            line_style = Gfx::Painter::LineStyle::Dotted;
-        if (border_style.value()->to_string() == "dashed")
-            line_style = Gfx::Painter::LineStyle::Dashed;
-    }
+    auto gfx_line_style = Gfx::Painter::LineStyle::Solid;
+    if (border_style == CSS::LineStyle::Dotted)
+        gfx_line_style = Gfx::Painter::LineStyle::Dotted;
+    if (border_style == CSS::LineStyle::Dashed)
+        gfx_line_style = Gfx::Painter::LineStyle::Dashed;
 
-    if (line_style != Gfx::Painter::LineStyle::Solid) {
+    if (gfx_line_style != Gfx::Painter::LineStyle::Solid) {
         switch (edge) {
         case Edge::Top:
             p1.move_by(int_width / 2, int_width / 2);
@@ -111,12 +98,12 @@ void Box::paint_border(PaintContext& context, Edge edge, const Gfx::FloatRect& r
             p2.move_by(int_width / 2, -int_width / 2);
             break;
         }
-        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, int_width, line_style);
+        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, int_width, gfx_line_style);
         return;
     }
 
     auto draw_line = [&](auto& p1, auto& p2) {
-        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1, line_style);
+        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1, gfx_line_style);
     };
 
     float p1_step = 0;
@@ -200,10 +187,10 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         bordered_rect.set_y(padded_rect.y() - box_model().border.top.to_px(*this));
         bordered_rect.set_height(padded_rect.height() + box_model().border.top.to_px(*this) + box_model().border.bottom.to_px(*this));
 
-        paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, style().border_left());
-        paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, style().border_right());
-        paint_border(context, Edge::Top, bordered_rect, CSS::PropertyID::BorderTopStyle, style().border_top());
-        paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, style().border_bottom());
+        paint_border(context, Edge::Left, bordered_rect, style().border_left());
+        paint_border(context, Edge::Right, bordered_rect, style().border_right());
+        paint_border(context, Edge::Top, bordered_rect, style().border_top());
+        paint_border(context, Edge::Bottom, bordered_rect, style().border_bottom());
     }
 
     Layout::NodeWithStyleAndBoxModelMetrics::paint(context, phase);

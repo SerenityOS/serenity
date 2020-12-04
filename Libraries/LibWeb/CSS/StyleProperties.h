@@ -64,6 +64,7 @@ public:
     CSS::Display display() const;
     Optional<CSS::Float> float_() const;
     Optional<CSS::WhiteSpace> white_space() const;
+    Optional<CSS::LineStyle> line_style(CSS::PropertyID) const;
 
     const Gfx::Font& font() const
     {

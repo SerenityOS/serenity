@@ -41,6 +41,7 @@ public:
 struct BorderData {
 public:
     Color color { Color::Transparent };
+    CSS::LineStyle line_style { CSS::LineStyle::None };
     float width { 0 };
 };
 
