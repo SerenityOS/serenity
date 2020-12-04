@@ -5,3 +5,9 @@
 IFS="\x0a"
 
 export HISTCONTROL="ignoreboth"
+
+swap(a b) {
+    mv $a bak-$a-$b
+    mv $b $a
+    mv bak-$a-$b $b
+}
