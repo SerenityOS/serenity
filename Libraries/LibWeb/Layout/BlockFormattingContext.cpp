@@ -48,7 +48,7 @@ BlockFormattingContext::~BlockFormattingContext()
 
 bool BlockFormattingContext::is_initial() const
 {
-    return context_box().is_root();
+    return context_box().is_initial_containing_block();
 }
 
 void BlockFormattingContext::run(LayoutMode layout_mode)

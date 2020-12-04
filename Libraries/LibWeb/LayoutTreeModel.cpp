@@ -119,7 +119,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
 {
     auto& node = *static_cast<Layout::Node*>(index.internal_data());
     if (role == GUI::ModelRole::Icon) {
-        if (node.is_root())
+        if (node.is_initial_containing_block())
             return m_document_icon;
         if (node.is_text())
             return m_text_icon;

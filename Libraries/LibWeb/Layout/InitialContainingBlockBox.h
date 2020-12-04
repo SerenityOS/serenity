@@ -50,7 +50,7 @@ public:
 
     void did_set_viewport_rect(Badge<Frame>, const Gfx::IntRect&);
 
-    virtual bool is_root() const override { return true; }
+    virtual bool is_initial_containing_block() const override { return true; }
 
     void build_stacking_context_tree();
 
@@ -63,5 +63,5 @@ private:
 }
 
 AK_BEGIN_TYPE_TRAITS(Web::Layout::InitialContainingBlockBox)
-static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_root(); }
+static bool is_type(const Web::Layout::Node& layout_node) { return layout_node.is_initial_containing_block(); }
 AK_END_TYPE_TRAITS()
