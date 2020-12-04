@@ -512,6 +512,9 @@ Move Board::random_move(Colour colour) const
 
 Board::Result Board::game_result() const
 {
+    if (m_resigned != Colour::None)
+        return (m_resigned == Colour::White) ? Result::WhiteResign : Result::BlackResign;
+
     bool sufficient_material = false;
     bool no_more_pieces_allowed = false;
     Optional<Square> bishop;
@@ -682,6 +685,42 @@ bool Board::operator==(const Board& other) const
         return false;
 
     return turn() == other.turn();
+}
+
+void Board::set_resigned(Chess::Colour c)
+{
+    m_resigned = c;
+}
+
+String Board::result_to_string(Result r) const
+{
+    switch (r) {
+    case Result::CheckMate:
+        if (m_turn == Chess::Colour::White)
+            return "Black wins by Checkmate";
+        else
+            return "White wins by Checkmate";
+    case Result::WhiteResign:
+        return "Black wins by Resignation";
+    case Result::BlackResign:
+        return "White wins by Resignation";
+    case Result::StaleMate:
+        return "Draw by Stalemate";
+    case Chess::Board::Result::FiftyMoveRule:
+        return "Draw by 50 move rule";
+    case Chess::Board::Result::SeventyFiveMoveRule:
+        return "Draw by 75 move rule";
+    case Chess::Board::Result::ThreeFoldRepetition:
+        return "Draw by threefold repetition";
+    case Chess::Board::Result::FiveFoldRepetition:
+        return "Draw by fivefold repetition";
+    case Chess::Board::Result::InsufficientMaterial:
+        return "Draw by insufficient material";
+    case Chess::Board::Result::NotFinished:
+        return "Game not finished";
+    default:
+        ASSERT_NOT_REACHED();
+    }
 }
 
 }
