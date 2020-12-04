@@ -122,6 +122,49 @@ String Move::to_long_algebraic() const
     return builder.build();
 }
 
+String Move::to_algebraic() const
+{
+    if (piece.type == Type::King && from.file == 4) {
+        if (to.file == 2)
+            return "O-O-O";
+        if (to.file == 6)
+            return "O-O";
+    }
+
+    StringBuilder builder;
+
+    builder.append(char_for_piece(piece.type));
+
+    if (is_ambiguous) {
+        if (from.file != ambiguous.file)
+            builder.append(from.to_algebraic().substring(0, 1));
+        else if (from.rank != ambiguous.rank)
+            builder.append(from.to_algebraic().substring(1, 1));
+        else
+            builder.append(from.to_algebraic());
+    }
+
+    if (is_capture) {
+        if (piece.type == Type::Pawn)
+            builder.append(from.to_algebraic().substring(0, 1));
+        builder.append("x");
+    }
+
+    builder.append(to.to_algebraic());
+
+    if (promote_to != Type::None) {
+        builder.append("=");
+        builder.append(char_for_piece(promote_to));
+    }
+
+    if (is_mate)
+        builder.append("#");
+    else if (is_check)
+        builder.append("+");
+
+    return builder.build();
+}
+
 Board::Board()
 {
     // Fill empty spaces.
@@ -362,6 +405,7 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
 
                 return true;
             } else if ((move.to == Square("h1") || move.to == Square("g1")) && m_white_can_castle_kingside && get_piece(Square("f1")).type == Type::None && get_piece(Square("g1")).type == Type::None) {
+
                 return true;
             }
         } else {
@@ -369,6 +413,7 @@ bool Board::is_legal_no_check(const Move& move, Colour colour) const
 
                 return true;
             } else if ((move.to == Square("h8") || move.to == Square("g8")) && m_black_can_castle_kingside && get_piece(Square("f8")).type == Type::None && get_piece(Square("g8")).type == Type::None) {
+
                 return true;
             }
         }
@@ -407,6 +452,8 @@ bool Board::apply_move(const Move& move, Colour colour)
 
     if (!is_legal(move, colour))
         return false;
+
+    const_cast<Move&>(move).piece = get_piece(move.from);
 
     return apply_illegal_move(move, colour);
 }
@@ -467,10 +514,19 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
         }
     }
 
+    if (get_piece(move.to).colour != Colour::None) {
+        const_cast<Move&>(move).is_capture = true;
+        m_moves_since_capture = 0;
+    }
+
     if (get_piece(move.from).type == Type::Pawn && ((colour == Colour::Black && move.to.rank == 0) || (colour == Colour::White && move.to.rank == 7))) {
         // Pawn Promotion
         set_piece(move.to, { colour, move.promote_to });
         set_piece(move.from, EmptyPiece);
+
+        if (in_check(m_turn))
+            const_cast<Move&>(move).is_check = true;
+
         return true;
     }
 
@@ -481,14 +537,28 @@ bool Board::apply_illegal_move(const Move& move, Colour colour)
         } else {
             set_piece({ move.to.rank + 1, move.to.file }, EmptyPiece);
         }
+        const_cast<Move&>(move).is_capture = true;
         m_moves_since_capture = 0;
     }
 
-    if (get_piece(move.to).colour != Colour::None)
-        m_moves_since_capture = 0;
+    Square::for_each([&](Square sq) {
+        // Ambiguous Move
+        if (sq != move.from && get_piece(sq).type == move.piece.type && get_piece(sq).colour == move.piece.colour) {
+            if (is_legal(Move(sq, move.to), get_piece(sq).colour)) {
+                m_moves.last().is_ambiguous = true;
+                m_moves.last().ambiguous = sq;
+
+                return IterationDecision::Break;
+            }
+        }
+        return IterationDecision::Continue;
+    });
 
     set_piece(move.to, get_piece(move.from));
     set_piece(move.from, EmptyPiece);
+
+    if (in_check(m_turn))
+        const_cast<Move&>(move).is_check = true;
 
     return true;
 }
@@ -577,8 +647,10 @@ Board::Result Board::game_result() const
         return Result::NotFinished;
     }
 
-    if (in_check(turn()))
+    if (in_check(turn())) {
+        const_cast<Vector<Move>&>(m_moves).last().is_mate = true;
         return Result::CheckMate;
+    }
 
     return Result::StaleMate;
 }
@@ -692,14 +764,12 @@ void Board::set_resigned(Chess::Colour c)
     m_resigned = c;
 }
 
-String Board::result_to_string(Result r) const
+String Board::result_to_string(Result result, Colour turn)
 {
-    switch (r) {
+    switch (result) {
     case Result::CheckMate:
-        if (m_turn == Chess::Colour::White)
-            return "Black wins by Checkmate";
-        else
-            return "White wins by Checkmate";
+        ASSERT(turn != Chess::Colour::None);
+        return turn == Chess::Colour::White ? "Black wins by Checkmate" : "White wins by Checkmate";
     case Result::WhiteResign:
         return "Black wins by Resignation";
     case Result::BlackResign:
@@ -718,6 +788,35 @@ String Board::result_to_string(Result r) const
         return "Draw by insufficient material";
     case Chess::Board::Result::NotFinished:
         return "Game not finished";
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+String Board::result_to_points(Result result, Colour turn)
+{
+    switch (result) {
+    case Result::CheckMate:
+        ASSERT(turn != Chess::Colour::None);
+        return turn == Chess::Colour::White ? "0-1" : "1-0";
+    case Result::WhiteResign:
+        return "0-1";
+    case Result::BlackResign:
+        return "1-0";
+    case Result::StaleMate:
+        return "1/2-1/2";
+    case Chess::Board::Result::FiftyMoveRule:
+        return "1/2-1/2";
+    case Chess::Board::Result::SeventyFiveMoveRule:
+        return "1/2-1/2";
+    case Chess::Board::Result::ThreeFoldRepetition:
+        return "1/2-1/2";
+    case Chess::Board::Result::FiveFoldRepetition:
+        return "1/2-1/2";
+    case Chess::Board::Result::InsufficientMaterial:
+        return "1/2-1/2";
+    case Chess::Board::Result::NotFinished:
+        return "*";
     default:
         ASSERT_NOT_REACHED();
     }

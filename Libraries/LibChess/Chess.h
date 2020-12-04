@@ -105,6 +105,12 @@ struct Move {
     Square from;
     Square to;
     Type promote_to;
+    Piece piece;
+    bool is_check = false;
+    bool is_mate = false;
+    bool is_capture = false;
+    bool is_ambiguous = false;
+    Square ambiguous { 50, 50 };
     Move(const StringView& algebraic);
     Move(const Square& from, const Square& to, const Type& promote_to = Type::None)
         : from(from)
@@ -115,6 +121,7 @@ struct Move {
     bool operator==(const Move& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
 
     String to_long_algebraic() const;
+    String to_algebraic() const;
 };
 
 class Board {
@@ -145,7 +152,8 @@ public:
         NotFinished,
     };
 
-    String result_to_string(Result) const;
+    static String result_to_string(Result, Colour turn);
+    static String result_to_points(Result, Colour turn);
 
     template<typename Callback>
     void generate_moves(Callback callback, Colour colour = Colour::None) const;
