@@ -92,14 +92,6 @@ protected:
 private:
     virtual bool is_box() const final { return true; }
 
-    enum class Edge {
-        Top,
-        Right,
-        Bottom,
-        Left,
-    };
-    void paint_border(PaintContext&, Edge, const Gfx::FloatRect&, const BorderData&);
-
     Gfx::FloatPoint m_offset;
     Gfx::FloatSize m_size;
 

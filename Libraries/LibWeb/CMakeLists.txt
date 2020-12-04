@@ -180,6 +180,7 @@ set(SOURCES
     Page/EventHandler.cpp
     Page/Frame.cpp
     Page/Page.cpp
+    Painting/BorderPainting.cpp
     Painting/StackingContext.cpp
     SVG/SVGElement.cpp
     SVG/SVGGeometryElement.cpp
