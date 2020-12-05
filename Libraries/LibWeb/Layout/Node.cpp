@@ -28,6 +28,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
@@ -263,6 +264,13 @@ void Node::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, u
 
 void Node::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
 {
+}
+
+bool Node::is_root_element() const
+{
+    if (is_anonymous())
+        return false;
+    return is<HTML::HTMLHtmlElement>(*dom_node());
 }
 
 }
