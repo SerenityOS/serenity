@@ -198,7 +198,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
 
     auto& line_boxes = containing_block.line_boxes();
     containing_block.ensure_last_line_box();
-    float available_width = context.available_width_at_line(line_boxes.size()) - line_boxes.last().width();
+    float available_width = context.available_width_at_line(line_boxes.size() - 1) - line_boxes.last().width();
 
     // Collapse whitespace into single spaces
     if (do_collapse) {
@@ -264,7 +264,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
 
             if (line_boxes.last().width() > 0 && chunk_width > available_width) {
                 containing_block.add_line_box();
-                available_width = context.available_width_at_line(line_boxes.size());
+                available_width = context.available_width_at_line(line_boxes.size() - 1);
             }
             if (need_collapse & line_boxes.last().fragments().is_empty())
                 continue;
@@ -278,14 +278,14 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
         if (do_wrap_lines) {
             if (available_width < 0) {
                 containing_block.add_line_box();
-                available_width = context.available_width_at_line(line_boxes.size());
+                available_width = context.available_width_at_line(line_boxes.size() - 1);
             }
         }
 
         if (do_wrap_breaks) {
             if (chunk.is_break) {
                 containing_block.add_line_box();
-                available_width = context.available_width_at_line(line_boxes.size());
+                available_width = context.available_width_at_line(line_boxes.size() - 1);
             }
         }
     }
