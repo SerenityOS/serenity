@@ -12,6 +12,10 @@
         "url": "https://www.google.com/"
     },
     {
+        "title": "DuckDuckGo",
+        "url": "https://duckduckgo.com/"
+    },
+    {
         "title": "HTML spec",
         "url": "https://html.spec.whatwg.org/multipage/"
     },
