@@ -55,6 +55,12 @@ enum class WindowTileType {
     None = 0,
     Left,
     Right,
+    Top,
+    Bottom,
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight
 };
 
 enum class PopupMenuItem {
