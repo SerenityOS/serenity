@@ -56,7 +56,7 @@ static AvailableSpaceForLineInfo available_space_for_line(const InlineFormatting
 
     // FIXME: This is a total hack guess since we don't actually know the final y position of lines here!
     float line_height = context.context_box().specified_style().line_height(context.context_box());
-    float y = (line_index * line_height) + line_height / 2;
+    float y = (line_index * line_height);
 
     auto& bfc = static_cast<const BlockFormattingContext&>(*context.parent());
 
