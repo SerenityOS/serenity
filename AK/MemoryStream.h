@@ -222,55 +222,29 @@ public:
         return true;
     }
 
-    // FIXME: Does not read across chunk boundaries
-    //        Perhaps implement AK::memmem() for iterators?
     Optional<size_t> offset_of(ReadonlyBytes value) const
     {
-        if (value.size() > size())
-            return {};
-
-        // First, find which chunk we're in.
-        auto chunk_index = min((m_read_offset - m_base_offset) / chunk_size, m_chunks.size() - 1);
-        auto last_written_chunk_index = (m_write_offset - m_base_offset) / chunk_size;
-        auto first_chunk_index = chunk_index;
-        auto last_written_chunk_offset = m_write_offset % chunk_size;
-        auto first_chunk_offset = m_read_offset % chunk_size;
-        size_t last_chunk_offset = 0;
-        auto found_value = false;
-        auto chunk_index_max_bound = last_written_chunk_offset > 0 ? last_written_chunk_index + 1 : last_written_chunk_index;
-
-        for (; chunk_index < chunk_index_max_bound; ++chunk_index) {
-            auto& chunk = m_chunks[chunk_index];
-            auto chunk_bytes = chunk.bytes();
-            size_t chunk_offset = 0;
-            if (chunk_index == last_written_chunk_index) {
-                chunk_bytes = chunk_bytes.slice(0, last_written_chunk_offset);
+        // We can't directly pass m_chunks to memmem since we have a limited read/write range we want to search in.
+        Vector<ReadonlyBytes> spans;
+        auto chunk_index = (m_read_offset - m_base_offset) / chunk_size;
+        auto chunk_read_offset = (m_read_offset - m_base_offset) % chunk_size;
+        auto bytes_to_search = m_write_offset - m_read_offset;
+        for (; bytes_to_search > 0;) {
+            ReadonlyBytes span = m_chunks[chunk_index];
+            if (chunk_read_offset) {
+                span = span.slice(chunk_read_offset);
+                chunk_read_offset = 0;
             }
-            if (chunk_index == first_chunk_index) {
-                chunk_bytes = chunk_bytes.slice(first_chunk_offset);
-                chunk_offset = first_chunk_offset;
+            if (bytes_to_search < span.size()) {
+                spans.append(span.slice(0, bytes_to_search));
+                break;
             }
-
-            // See if 'value' is in this chunk,
-            auto position = AK::memmem(chunk_bytes.data(), chunk_bytes.size(), value.data(), value.size());
-            if (!position)
-                continue; // Not in this chunk either :(
-
-            // We found it!
-            found_value = true;
-            last_chunk_offset = (const u8*)position - chunk_bytes.data() + chunk_offset;
-            break;
+            bytes_to_search -= span.size();
+            spans.append(move(span));
+            ++chunk_index;
         }
 
-        if (found_value) {
-            if (first_chunk_index == chunk_index)
-                return last_chunk_offset - first_chunk_offset;
-
-            return (chunk_index - first_chunk_index) * chunk_size + last_chunk_offset - first_chunk_offset;
-        }
-
-        // No dice.
-        return {};
+        return memmem(spans.begin(), spans.end(), value);
     }
 
     size_t read_without_consuming(Bytes bytes) const
