@@ -48,6 +48,7 @@ int main(int argc, char** argv)
     const char* value_mask = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Display or modify the configuration of each network interface.");
     args_parser.add_option(value_ipv4, "Set the IP address of the selected network", "ipv4", 'i', "The new IP of the network");
     args_parser.add_option(value_adapter, "Select a specific network adapter to configure", "adapter", 'a', "The name of a network adapter");
     args_parser.add_option(value_gateway, "Set the default gateway of the selected network", "gateway", 'g', "The new IP of the gateway");

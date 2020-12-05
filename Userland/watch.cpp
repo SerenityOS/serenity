@@ -121,6 +121,7 @@ int main(int argc, char** argv)
 
     Vector<const char*> command;
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Execute a command repeatedly, and watch its output over time.");
     args_parser.add_option(opt_interval, "Amount of time between updates", "interval", 'n', "seconds");
     args_parser.add_option(flag_noheader, "Turn off the header describing the command and interval", "no-title", 't');
     args_parser.add_option(flag_beep_on_fail, "Beep if the command has a non-zero exit code", "beep", 'b');

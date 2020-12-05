@@ -45,6 +45,7 @@ int main(int argc, char** argv)
     Vector<const char*> paths;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Concatenate files or pipes to stdout.");
     args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 

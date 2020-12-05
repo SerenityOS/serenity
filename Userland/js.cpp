@@ -665,6 +665,7 @@ int main(int argc, char** argv)
     const char* script_path = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("This is a JavaScript interpreter.");
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
