@@ -66,13 +66,6 @@ const BlockBox* Node::containing_block() const
         return downcast<BlockBox>(ancestor);
     };
 
-    auto nearest_block_ancestor_that_creates_a_block_formatting_context = [this] {
-        auto* ancestor = parent();
-        while (ancestor && (!is<Box>(*ancestor) || !FormattingContext::creates_block_formatting_context(downcast<Box>(*ancestor))))
-            ancestor = ancestor->parent();
-        return downcast<BlockBox>(ancestor);
-    };
-
     if (is_text())
         return nearest_block_ancestor();
 
@@ -89,9 +82,6 @@ const BlockBox* Node::containing_block() const
 
     if (position == CSS::Position::Fixed)
         return &root();
-
-    if (is_floating())
-        return nearest_block_ancestor_that_creates_a_block_formatting_context();
 
     return nearest_block_ancestor();
 }
