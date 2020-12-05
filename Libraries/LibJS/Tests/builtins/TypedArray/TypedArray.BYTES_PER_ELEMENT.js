@@ -5,4 +5,6 @@ test("basic functionality", () => {
     expect(Int8Array.BYTES_PER_ELEMENT).toBe(1);
     expect(Int16Array.BYTES_PER_ELEMENT).toBe(2);
     expect(Int32Array.BYTES_PER_ELEMENT).toBe(4);
+    expect(Float32Array.BYTES_PER_ELEMENT).toBe(4);
+    expect(Float64Array.BYTES_PER_ELEMENT).toBe(8);
 });
