@@ -67,6 +67,8 @@ public:
     };
 
     bool parse(int argc, char** argv, bool exit_on_failure = true);
+    // *Without* trailing newline!
+    void set_general_help(const char* help_string) { m_general_help = help_string; };
     void print_usage(FILE*, const char* argv0);
 
     void add_option(Option&&);
@@ -86,6 +88,7 @@ private:
     Vector<Arg> m_positional_args;
 
     bool m_show_help { false };
+    const char* m_general_help { nullptr };
 };
 
 }
