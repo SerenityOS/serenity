@@ -27,6 +27,7 @@
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/InlineNode.h>
 
 namespace Web::Layout {
@@ -41,14 +42,16 @@ InlineNode::~InlineNode()
 {
 }
 
-void InlineNode::split_into_lines(BlockBox& containing_block, LayoutMode layout_mode)
+void InlineNode::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
 {
+    auto& containing_block = context.context_box();
+
     if (!style().padding().left.is_undefined_or_auto()) {
         float padding_left = style().padding().left.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);
         containing_block.ensure_last_line_box().add_fragment(*this, 0, 0, padding_left, 0, LineBoxFragment::Type::Leading);
     }
 
-    NodeWithStyleAndBoxModelMetrics::split_into_lines(containing_block, layout_mode);
+    NodeWithStyleAndBoxModelMetrics::split_into_lines(context, layout_mode);
 
     if (!style().padding().right.is_undefined_or_auto()) {
         float padding_right = style().padding().right.resolved(CSS::Length::make_px(0), *this, containing_block.width()).to_px(*this);

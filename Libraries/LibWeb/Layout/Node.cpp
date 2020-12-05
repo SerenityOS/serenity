@@ -30,6 +30,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/ReplacedBox.h>
@@ -65,6 +66,13 @@ const BlockBox* Node::containing_block() const
         return downcast<BlockBox>(ancestor);
     };
 
+    auto nearest_block_ancestor_that_creates_a_block_formatting_context = [this] {
+        auto* ancestor = parent();
+        while (ancestor && (!is<Box>(*ancestor) || !FormattingContext::creates_block_formatting_context(downcast<Box>(*ancestor))))
+            ancestor = ancestor->parent();
+        return downcast<BlockBox>(ancestor);
+    };
+
     if (is_text())
         return nearest_block_ancestor();
 
@@ -81,6 +89,9 @@ const BlockBox* Node::containing_block() const
 
     if (position == CSS::Position::Fixed)
         return &root();
+
+    if (is_floating())
+        return nearest_block_ancestor_that_creates_a_block_formatting_context();
 
     return nearest_block_ancestor();
 }
@@ -140,10 +151,10 @@ InitialContainingBlockBox& Node::root()
     return *document().layout_node();
 }
 
-void Node::split_into_lines(BlockBox& container, LayoutMode layout_mode)
+void Node::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
 {
     for_each_child([&](auto& child) {
-        child.split_into_lines(container, layout_mode);
+        child.split_into_lines(context, layout_mode);
     });
 }
 

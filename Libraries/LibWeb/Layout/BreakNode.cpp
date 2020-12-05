@@ -26,6 +26,7 @@
 
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BreakNode.h>
+#include <LibWeb/Layout/InlineFormattingContext.h>
 
 namespace Web::Layout {
 
@@ -39,9 +40,9 @@ BreakNode::~BreakNode()
 {
 }
 
-void BreakNode::split_into_lines(BlockBox& block, LayoutMode)
+void BreakNode::split_into_lines(InlineFormattingContext& block, LayoutMode)
 {
-    block.add_line_box();
+    block.context_box().add_line_box();
 }
 
 }

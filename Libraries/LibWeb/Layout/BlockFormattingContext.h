@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Vector.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/FormattingContext.h>
 
@@ -40,22 +41,32 @@ public:
 
     bool is_initial() const;
 
+    const Vector<Box*>& left_floating_boxes() const { return m_left_floating_boxes; }
+    const Vector<Box*>& right_floating_boxes() const { return m_right_floating_boxes; }
+
 protected:
     void compute_width(Box&);
     void compute_height(Box&);
 
 private:
+    virtual bool is_block_formatting_context() const final { return true; }
+
     void compute_width_for_absolutely_positioned_block(Box&);
 
     void layout_initial_containing_block(LayoutMode);
     void layout_block_level_children(LayoutMode);
     void layout_inline_children(LayoutMode);
     void layout_absolutely_positioned_descendants();
+    void layout_floating_descendants();
 
     void place_block_level_replaced_element_in_normal_flow(Box&);
     void place_block_level_non_replaced_element_in_normal_flow(Box&);
 
     void layout_absolutely_positioned_descendant(Box&);
+    void layout_floating_descendant(Box&);
+
+    Vector<Box*> m_left_floating_boxes;
+    Vector<Box*> m_right_floating_boxes;
 };
 
 }

@@ -24,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FormattingContext.h>
@@ -34,7 +35,7 @@ namespace Web::Layout {
 
 FormattingContext::FormattingContext(Box& context_box, FormattingContext* parent)
     : m_parent(parent)
-    , m_context_box(context_box)
+    , m_context_box(&context_box)
 {
 }
 
@@ -42,8 +43,37 @@ FormattingContext::~FormattingContext()
 {
 }
 
+bool FormattingContext::creates_block_formatting_context(const Box& box)
+{
+    if (box.is_root_element())
+        return true;
+    if (box.is_floating())
+        return true;
+    if (box.is_absolutely_positioned())
+        return true;
+    if (box.is_inline_block())
+        return true;
+    if (box.is_table_cell())
+        return true;
+    // FIXME: table-caption
+    // FIXME: anonymous table cells
+    // FIXME: Block elements where overflow has a value other than visible and clip.
+    // FIXME: display: flow-root
+    // FIXME: Elements with contain: layout, content, or paint.
+    // FIXME: flex
+    // FIXME: grid
+    // FIXME: multicol
+    // FIXME: column-span: all
+    return false;
+}
+
 void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
 {
+    if (creates_block_formatting_context(box)) {
+        BlockFormattingContext context(box, this);
+        context.run(layout_mode);
+        return;
+    }
     if (box.is_table()) {
         TableFormattingContext context(box, this);
         context.run(layout_mode);
@@ -51,8 +81,12 @@ void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
         InlineFormattingContext context(box, this);
         context.run(layout_mode);
     } else {
-        BlockFormattingContext context(box, this);
-        context.run(layout_mode);
+        // FIXME: This needs refactoring!
+        ASSERT(is_block_formatting_context());
+        auto& old_box = context_box();
+        set_context_box(box);
+        run(layout_mode);
+        set_context_box(old_box);
     }
 }
 

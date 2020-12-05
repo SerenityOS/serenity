@@ -25,6 +25,7 @@
  */
 
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 
@@ -117,17 +118,19 @@ float ReplacedBox::calculate_height() const
     return used_height;
 }
 
-void ReplacedBox::split_into_lines(Layout::BlockBox& container, LayoutMode)
+void ReplacedBox::split_into_lines(InlineFormattingContext& context, LayoutMode)
 {
+    auto& containing_block = context.context_box();
+
     // FIXME: This feels out of place. It would be nice if someone at a higher level
     //        made sure we had usable geometry by the time we start splitting.
     prepare_for_replaced_layout();
     auto width = calculate_width();
     auto height = calculate_height();
 
-    auto* line_box = &container.ensure_last_line_box();
-    if (line_box->width() > 0 && line_box->width() + width > container.width())
-        line_box = &container.add_line_box();
+    auto* line_box = &containing_block.ensure_last_line_box();
+    if (line_box->width() > 0 && line_box->width() + width > context.available_width_at_line(containing_block.line_boxes().size()))
+        line_box = &containing_block.add_line_box();
     line_box->add_fragment(*this, 0, 0, width, height);
 }
 

@@ -45,6 +45,50 @@ InlineFormattingContext::~InlineFormattingContext()
 {
 }
 
+struct AvailableSpaceForLineInfo {
+    float left { 0 };
+    float right { 0 };
+};
+
+static AvailableSpaceForLineInfo available_space_for_line(const InlineFormattingContext& context, size_t line_index)
+{
+    AvailableSpaceForLineInfo info;
+
+    // FIXME: This is a total hack guess since we don't actually know the final y position of lines here!
+    float line_height = context.context_box().specified_style().line_height(context.context_box());
+    float y = (line_index * line_height) + line_height / 2;
+
+    auto& bfc = static_cast<const BlockFormattingContext&>(*context.parent());
+
+    for (ssize_t i = bfc.left_floating_boxes().size() - 1; i >= 0; --i) {
+        auto& floating_box = *bfc.left_floating_boxes().at(i);
+        Gfx::FloatRect rect { floating_box.effective_offset(), floating_box.size() };
+        if (rect.contains_vertically(y)) {
+            info.left = rect.right() + 1;
+            break;
+        }
+    }
+
+    info.right = context.context_box().width();
+
+    for (ssize_t i = bfc.right_floating_boxes().size() - 1; i >= 0; --i) {
+        auto& floating_box = *bfc.right_floating_boxes().at(i);
+        Gfx::FloatRect rect { floating_box.effective_offset(), floating_box.size() };
+        if (rect.contains_vertically(y)) {
+            info.right = rect.left() - 1;
+            break;
+        }
+    }
+
+    return info;
+}
+
+float InlineFormattingContext::available_width_at_line(size_t line_index) const
+{
+    auto info = available_space_for_line(*this, line_index);
+    return info.right - info.left;
+}
+
 void InlineFormattingContext::run(LayoutMode layout_mode)
 {
     auto& containing_block = downcast<BlockBox>(context_box());
@@ -56,7 +100,7 @@ void InlineFormattingContext::run(LayoutMode layout_mode)
         if (child.is_absolutely_positioned())
             return;
 
-        child.split_into_lines(containing_block, layout_mode);
+        child.split_into_lines(*this, layout_mode);
     });
 
     for (auto& line_box : containing_block.line_boxes()) {
@@ -73,13 +117,15 @@ void InlineFormattingContext::run(LayoutMode layout_mode)
     float content_height = 0;
     float max_linebox_width = 0;
 
-    for (auto& line_box : containing_block.line_boxes()) {
+    for (size_t line_index = 0; line_index < containing_block.line_boxes().size(); ++line_index) {
+        auto& line_box = containing_block.line_boxes()[line_index];
         float max_height = min_line_height;
         for (auto& fragment : line_box.fragments()) {
             max_height = max(max_height, fragment.height());
         }
 
-        float x_offset = 0;
+        float x_offset = available_space_for_line(*this, line_index).left;
+
         float excess_horizontal_space = (float)containing_block.width() - line_box.width();
 
         switch (text_align) {

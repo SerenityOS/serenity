@@ -34,15 +34,21 @@ class FormattingContext {
 public:
     virtual void run(LayoutMode) = 0;
 
-    Box& context_box() { return m_context_box; }
-    const Box& context_box() const { return m_context_box; }
+    Box& context_box() { return *m_context_box; }
+    const Box& context_box() const { return *m_context_box; }
 
     FormattingContext* parent() { return m_parent; }
     const FormattingContext* parent() const { return m_parent; }
 
+    virtual bool is_block_formatting_context() const { return false; }
+
+    static bool creates_block_formatting_context(const Box&);
+
 protected:
     FormattingContext(Box&, FormattingContext* parent = nullptr);
     virtual ~FormattingContext();
+
+    void set_context_box(Box& box) { m_context_box = &box; }
 
     void layout_inside(Box&, LayoutMode);
 
@@ -54,7 +60,7 @@ protected:
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box&);
 
     FormattingContext* m_parent { nullptr };
-    Box& m_context_box;
+    Box* m_context_box { nullptr };
 };
 
 }
