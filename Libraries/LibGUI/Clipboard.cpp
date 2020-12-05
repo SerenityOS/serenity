@@ -161,7 +161,6 @@ void Clipboard::set_bitmap(const Gfx::Bitmap& bitmap)
     metadata.set("height", String::number(bitmap.height()));
     metadata.set("format", String::number((int)bitmap.format()));
     metadata.set("pitch", String::number(bitmap.pitch()));
-    metadata.set("bpp", String::number(bitmap.bpp()));
     set_data({ bitmap.scanline(0), bitmap.size_in_bytes() }, "image/x-serenityos", metadata);
 }
 
