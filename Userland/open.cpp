@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
     Core::EventLoop loop;
     Vector<const char*> urls_or_paths;
     Core::ArgsParser parser;
+    parser.set_general_help("Open a file or URL by executing the appropriate program.");
     parser.add_positional_argument(urls_or_paths, "URL or file path to open", "url-or-path");
     parser.parse(argc, argv);
 

@@ -42,6 +42,9 @@ int main(int argc, char** argv)
     const char* path = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help(
+        "Disassemble an executable, and show human-readable "
+        "assembly code for each function.");
     args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
     args_parser.parse(argc, argv);
 

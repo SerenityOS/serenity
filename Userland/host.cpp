@@ -41,6 +41,7 @@ int main(int argc, char** argv)
 
     const char* name_or_ip = nullptr;
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Convert between domain name and IPv4 address.");
     args_parser.add_positional_argument(name_or_ip, "Domain name or IPv4 address", "name");
     args_parser.parse(argc, argv);
 

@@ -62,6 +62,7 @@ int main(int argc, char** argv)
     const char* username = nullptr;
 
     auto args_parser = Core::ArgsParser();
+    args_parser.set_general_help("Modify an account password.");
     args_parser.add_option(del, "Delete password", "delete", 'd');
     args_parser.add_option(lock, "Lock password", "lock", 'l');
     args_parser.add_option(unlock, "Unlock password", "unlock", 'u');

@@ -53,6 +53,7 @@ struct FileSystem {
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Display free disk space of each partition.");
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.parse(argc, argv);
 
