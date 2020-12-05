@@ -30,6 +30,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -107,10 +108,14 @@ HitTestResult BlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type
     return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
-void BlockBox::split_into_lines(BlockBox& container, LayoutMode layout_mode)
+void BlockBox::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
 {
+    auto& container = context.context_box();
     auto* line_box = &container.ensure_last_line_box();
-    if (layout_mode != LayoutMode::OnlyRequiredLineBreaks && line_box->width() > 0 && line_box->width() + width() > container.width()) {
+
+    float available_width = context.available_width_at_line(container.line_boxes().size());
+
+    if (layout_mode != LayoutMode::OnlyRequiredLineBreaks && line_box->width() > 0 && line_box->width() + width() > available_width) {
         line_box = &container.add_line_box();
     }
     line_box->add_fragment(*this, 0, 0, width(), height());

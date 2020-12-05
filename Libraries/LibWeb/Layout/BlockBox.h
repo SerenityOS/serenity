@@ -52,7 +52,7 @@ public:
     template<typename Callback>
     void for_each_fragment(Callback) const;
 
-    virtual void split_into_lines(BlockBox& container, LayoutMode) override;
+    virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 
 private:
     virtual bool is_block() const override { return true; }

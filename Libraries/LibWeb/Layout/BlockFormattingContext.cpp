@@ -65,6 +65,8 @@ void BlockFormattingContext::run(LayoutMode layout_mode)
     if (layout_mode == LayoutMode::Default)
         compute_width(context_box());
 
+    layout_floating_descendants();
+
     if (context_box().children_are_inline()) {
         layout_inline_children(layout_mode);
     } else {
@@ -403,7 +405,7 @@ void BlockFormattingContext::layout_block_level_children(LayoutMode layout_mode)
     float content_width = 0;
 
     context_box().for_each_in_subtree_of_type<Box>([&](auto& box) {
-        if (box.is_absolutely_positioned() || box.containing_block() != &context_box())
+        if (box.is_absolutely_positioned() || box.is_floating() || box.containing_block() != &context_box())
             return IterationDecision::Continue;
 
         compute_width(box);
@@ -530,6 +532,8 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     icb.set_width(viewport_rect.width());
 
+    layout_floating_descendants();
+
     layout_block_level_children(layout_mode);
 
     ASSERT(!icb.children_are_inline());
@@ -562,6 +566,46 @@ void BlockFormattingContext::layout_absolutely_positioned_descendants()
         }
         return IterationDecision::Continue;
     });
+}
+
+void BlockFormattingContext::layout_floating_descendants()
+{
+    context_box().for_each_in_subtree_of_type<Box>([&](auto& box) {
+        if (box.is_floating() && box.containing_block() == &context_box()) {
+            layout_floating_descendant(box);
+        }
+        return IterationDecision::Continue;
+    });
+}
+
+void BlockFormattingContext::layout_floating_descendant(Box& box)
+{
+    ASSERT(box.is_floating());
+    auto& containing_block = context_box();
+
+    compute_width(box);
+    layout_inside(box, LayoutMode::Default);
+    compute_height(box);
+
+    if (box.style().float_() == CSS::Float::Left) {
+        float x = 0;
+        if (!m_left_floating_boxes.is_empty()) {
+            auto& previous_floating_box = *m_left_floating_boxes.last();
+            x = previous_floating_box.effective_offset().x() + previous_floating_box.width();
+        }
+        box.set_offset(x, 0);
+        m_left_floating_boxes.append(&box);
+    } else if (box.style().float_() == CSS::Float::Right) {
+        float x = 0;
+        if (!m_right_floating_boxes.is_empty()) {
+            auto& previous_floating_box = *m_right_floating_boxes.last();
+            x = previous_floating_box.effective_offset().x() - box.width();
+        } else {
+            x = containing_block.width() - box.width();
+        }
+        box.set_offset(x, 0);
+        m_right_floating_boxes.append(&box);
+    }
 }
 
 void BlockFormattingContext::layout_absolutely_positioned_descendant(Box& box)

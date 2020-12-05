@@ -38,6 +38,8 @@ public:
 
     virtual void run(LayoutMode) override;
 
+    float available_width_at_line(size_t line_index) const;
+
 private:
     void dimension_box_on_line(Box&, LayoutMode);
 };

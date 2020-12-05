@@ -41,7 +41,7 @@ public:
 private:
     virtual bool is_break() const override { return true; }
     virtual const char* class_name() const override { return "BreakNode"; }
-    virtual void split_into_lines(BlockBox&, LayoutMode) override;
+    virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;
 };
 
 }

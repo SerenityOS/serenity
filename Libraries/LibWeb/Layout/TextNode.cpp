@@ -31,6 +31,7 @@
 #include <LibGfx/Font.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/Frame.h>
 #include <ctype.h>
@@ -189,14 +190,15 @@ void TextNode::for_each_chunk(Callback callback, LayoutMode layout_mode, bool do
         commit_chunk(view.end(), false, true);
 }
 
-void TextNode::split_into_lines_by_rules(BlockBox& container, LayoutMode layout_mode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
+void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, LayoutMode layout_mode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
 {
+    auto& containing_block = context.context_box();
     auto& font = specified_style().font();
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
 
-    auto& line_boxes = container.line_boxes();
-    container.ensure_last_line_box();
-    float available_width = container.width() - line_boxes.last().width();
+    auto& line_boxes = containing_block.line_boxes();
+    containing_block.ensure_last_line_box();
+    float available_width = context.available_width_at_line(line_boxes.size()) - line_boxes.last().width();
 
     // Collapse whitespace into single spaces
     if (do_collapse) {
@@ -261,8 +263,8 @@ void TextNode::split_into_lines_by_rules(BlockBox& container, LayoutMode layout_
                 chunk_width = font.width(chunk.view) + font.glyph_spacing();
 
             if (line_boxes.last().width() > 0 && chunk_width > available_width) {
-                container.add_line_box();
-                available_width = container.width();
+                containing_block.add_line_box();
+                available_width = context.available_width_at_line(line_boxes.size());
             }
             if (need_collapse & line_boxes.last().fragments().is_empty())
                 continue;
@@ -275,21 +277,21 @@ void TextNode::split_into_lines_by_rules(BlockBox& container, LayoutMode layout_
 
         if (do_wrap_lines) {
             if (available_width < 0) {
-                container.add_line_box();
-                available_width = container.width();
+                containing_block.add_line_box();
+                available_width = context.available_width_at_line(line_boxes.size());
             }
         }
 
         if (do_wrap_breaks) {
             if (chunk.is_break) {
-                container.add_line_box();
-                available_width = container.width();
+                containing_block.add_line_box();
+                available_width = context.available_width_at_line(line_boxes.size());
             }
         }
     }
 }
 
-void TextNode::split_into_lines(BlockBox& container, LayoutMode layout_mode)
+void TextNode::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
 {
     bool do_collapse = true;
     bool do_wrap_lines = true;
@@ -313,7 +315,7 @@ void TextNode::split_into_lines(BlockBox& container, LayoutMode layout_mode)
         do_wrap_breaks = true;
     }
 
-    split_into_lines_by_rules(container, layout_mode, do_collapse, do_wrap_lines, do_wrap_breaks);
+    split_into_lines_by_rules(context, layout_mode, do_collapse, do_wrap_lines, do_wrap_breaks);
 }
 
 }
