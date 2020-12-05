@@ -41,3 +41,10 @@ concept FloatingPoint = IsFloatingPoint<T>::value;
 #endif
 
 }
+
+#if defined(__cpp_concepts) && !defined(__COVERITY__)
+
+using AK::IsFloatingPoint;
+using AK::IsIntegral;
+
+#endif
