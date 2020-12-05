@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
     const char* name = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Read manual pages. Try 'man man' to get started.");
     args_parser.add_positional_argument(section, "Section of the man page", "section", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(name, "Name of the man page", "name");
 

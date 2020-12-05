@@ -101,6 +101,7 @@ int main(int argc, char** argv)
     Vector<const char*> paths;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("List files in a directory.");
     args_parser.add_option(flag_show_dotfiles, "Show dotfiles", "all", 'a');
     args_parser.add_option(flag_show_almost_all_dotfiles, "Do not list implied . and .. directories", nullptr, 'A');
     args_parser.add_option(flag_ignore_backups, "Do not list implied entries ending with ~", "--ignore-backups", 'B');

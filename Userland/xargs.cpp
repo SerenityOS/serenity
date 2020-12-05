@@ -73,6 +73,7 @@ int main(int argc, char** argv)
     int max_bytes_for_one_command = ARG_MAX;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Read arguments from stdin and interpret them as command-line arguments for another program. See also: 'man xargs'.");
     args_parser.add_option(placeholder, "Placeholder string to be replaced in arguments", "replace", 'I', "placeholder");
     args_parser.add_option(split_with_nulls, "Split input items with the null character instead of newline", "null", '0');
     args_parser.add_option(specified_delimiter, "Split the input items with the specified character", "delimiter", 'd', "delim");

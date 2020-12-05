@@ -46,6 +46,7 @@ int main(int argc, char** argv)
     int port = 0;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Network cat: Connect to network sockets as if it were a file.");
     args_parser.add_option(should_listen, "Listen instead of connecting", "listen", 'l');
     args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v');
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');

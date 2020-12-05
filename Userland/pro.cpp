@@ -146,6 +146,7 @@ int main(int argc, char** argv)
     bool save_at_provided_name = false;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Download file from arbitrary ");
     args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O');
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
     args_parser.parse(argc, argv);

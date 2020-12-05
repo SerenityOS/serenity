@@ -51,6 +51,7 @@ int main(int argc, char** argv)
     const char* path = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Pretty-print a JSON file with syntax-coloring and indentation.");
     args_parser.add_positional_argument(path, "Path to JSON file", "path");
     args_parser.parse(argc, argv);
 

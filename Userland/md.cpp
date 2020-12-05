@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
     int view_width = 0;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Render Markdown to some other format.");
     args_parser.add_option(html, "Render to HTML rather than for the terminal", "html", 'H');
     args_parser.add_option(view_width, "Viewport width for the terminal (defaults to current terminal width)", "view-width", 0, "width");
     args_parser.add_positional_argument(file_name, "Path to Markdown file", "path", Core::ArgsParser::Required::No);

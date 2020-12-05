@@ -146,10 +146,11 @@ int main(int argc, char* argv[])
     pid_t arg_pid { -1 };
     const char* arg_file_name { nullptr };
 
-    Core::ArgsParser parser;
     if (argc == 1)
         arg_all_processes = true;
     else {
+        Core::ArgsParser parser;
+        parser.set_general_help("List open files of a processes. This can mean actual files in the file system, sockets, pipes, etc.");
         parser.add_option(arg_pid, "Select by PID", nullptr, 'p', "pid");
         parser.add_option(arg_fd, "Select by file descriptor", nullptr, 'd', "fd");
         parser.add_option(arg_uid, "Select by login/UID", nullptr, 'u', "login/UID");

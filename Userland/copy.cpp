@@ -45,6 +45,7 @@ static Options parse_options(int argc, char* argv[])
     Vector<const char*> text;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Copy text from stdin or the command-line to the clipboard.");
     args_parser.add_option(type, "Pick a type", "type", 't', "type");
     args_parser.add_positional_argument(text, "Text to copy", "text", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);

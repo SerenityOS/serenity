@@ -39,6 +39,8 @@ int main(int argc, char** argv)
     const char* path;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help(
+        "Show the 'real' path of a file, by resolving all symbolic links along the way.");
     args_parser.add_positional_argument(path, "Path to resolve", "path");
     args_parser.parse(argc, argv);
 

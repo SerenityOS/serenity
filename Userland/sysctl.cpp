@@ -114,6 +114,8 @@ int main(int argc, char** argv)
     const char* var = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help(
+        "Show or modify system-internal values. This requires root, and can crash your system.");
     args_parser.add_option(show_all, "Show all variables", nullptr, 'a');
     args_parser.add_positional_argument(var, "Command (var[=value])", "command", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);

@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
     bool no_newline = false;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Paste from the clipboard to stdout.");
     args_parser.add_option(print_type, "Display the copied type", "print-type", 0);
     args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
     args_parser.parse(argc, argv);
@@ -53,8 +54,7 @@ int main(int argc, char* argv[])
 
     if (!print_type) {
         printf("%s", data_and_type.data.data());
-        // Append a newline to text contents, but
-        // only if we're not asked not to do this.
+        // Append a newline to text contents, unless the caller says otherwise.
         if (data_and_type.mime_type.starts_with("text/") && !no_newline)
             putchar('\n');
     } else {

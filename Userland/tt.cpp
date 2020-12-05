@@ -44,6 +44,9 @@ int main(int argc, char** argv)
     const char* test_name = "n";
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help(
+        "Exercise error-handling and edge-case paths of the execution environment "
+        "(i.e., Kernel or UE) by doing unusual thread-related things.");
     args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, t = simple thread test, x = set stack, nothing = join race)", "test-name", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 

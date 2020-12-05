@@ -55,6 +55,8 @@ int main(int argc, char** argv)
     Vector<const char*> child_argv;
 
     Core::ArgsParser parser;
+    parser.set_general_help(
+        "Trace all syscalls and their result.");
     parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid");
     parser.add_positional_argument(child_argv, "Arguments to exec", "argument", Core::ArgsParser::Required::No);
 

@@ -47,6 +47,7 @@ int main(int argc, char** argv)
     Vector<const char*> files;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Print the beginning ('head') of a file.");
     args_parser.add_option(line_count, "Number of lines to print (default 10)", "lines", 'n', "number");
     args_parser.add_option(char_count, "Number of characters to print", "characters", 'c', "number");
     args_parser.add_option(never_print_filenames, "Never print file names", "quiet", 'q');

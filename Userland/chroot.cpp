@@ -41,6 +41,9 @@ int main(int argc, char** argv)
     const char* userspec = "0:0";
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help(
+        "Run a program in a chroot sandbox. During execution, the program "
+        "sees the given path as '/', and cannot access files outside of it.");
     args_parser.add_positional_argument(path, "New root directory", "path");
     args_parser.add_positional_argument(program, "Program to run", "program", Core::ArgsParser::Required::No);
 

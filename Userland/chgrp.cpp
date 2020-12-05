@@ -45,6 +45,7 @@ int main(int argc, char** argv)
     const char* path = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Change the owning group for a file or directory.");
     args_parser.add_positional_argument(gid_arg, "Group ID", "gid");
     args_parser.add_positional_argument(path, "Path to file", "path");
     args_parser.parse(argc, argv);

@@ -125,6 +125,9 @@ int main(int argc, char** argv)
     bool do_read_cpu_counter = false;
 
     auto args_parser = Core::ArgsParser();
+    args_parser.set_general_help(
+        "Exercise error-handling paths of the execution environment "
+        "(i.e., Kernel or UE) by crashing in many different ways.");
     args_parser.add_option(do_all_crash_types, "Test that all of the following crash types crash as expected", nullptr, 'A');
     args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
     args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');

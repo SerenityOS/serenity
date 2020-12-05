@@ -31,6 +31,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <stdio.h>
+#include <string.h>
 
 static bool use_color = false;
 static void print(const String& name, const JsonValue&, Vector<String>& trail);
@@ -58,8 +59,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2) {
+    if (argc != 2 || !strcmp(argv[1], "--help")) {
         fprintf(stderr, "usage: gron <file>\n");
+        fprintf(stderr, "Print each value in a JSON file with its fully expanded key.\n");
         return 0;
     }
     auto file = Core::File::construct(argv[1]);
