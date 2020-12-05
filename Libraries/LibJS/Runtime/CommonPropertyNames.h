@@ -168,6 +168,7 @@ namespace JS {
     P(padStart)                              \
     P(parse)                                 \
     P(parseFloat)                            \
+    P(parseInt)                              \
     P(pop)                                   \
     P(pow)                                   \
     P(preventExtensions)                     \

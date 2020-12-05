@@ -356,10 +356,8 @@ i32 Value::to_i32(GlobalObject& global_object) const
     auto number = to_number(global_object);
     if (global_object.vm().exception())
         return 0;
-    if (number.is_nan())
+    if (number.is_nan() || number.is_infinity())
         return 0;
-    // FIXME: What about infinity though - that's UB...
-    // Maybe NumericLimits<i32>::max() for +Infinity and NumericLimits<i32>::min() for -Infinity?
     return number.as_i32();
 }
 
