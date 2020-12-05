@@ -80,7 +80,7 @@ public:
             if (vm().exception())
                 return {};
             data()[property_index] = number;
-        } else if constexpr (sizeof(T) == 4) {
+        } else if constexpr (sizeof(T) == 4 || sizeof(T) == 8) {
             auto number = value.to_double(global_object());
             if (vm().exception())
                 return {};
@@ -99,9 +99,11 @@ public:
 
         if constexpr (sizeof(T) < 4) {
             return Value((i32)data()[property_index]);
-        } else if constexpr (sizeof(T) == 4) {
+        } else if constexpr (sizeof(T) == 4 || sizeof(T) == 8) {
             auto value = data()[property_index];
-            if constexpr (NumericLimits<T>::is_signed()) {
+            if constexpr (IsFloatingPoint<T>::value) {
+                return Value((double)value);
+            } else if constexpr (NumericLimits<T>::is_signed()) {
                 if (value > NumericLimits<i32>::max() || value < NumericLimits<i32>::min())
                     return Value((double)value);
             } else {

@@ -73,13 +73,15 @@
     __JS_ENUMERATE(TypeError, type_error, TypeErrorPrototype, TypeErrorConstructor, void)                                                  \
     __JS_ENUMERATE(URIError, uri_error, URIErrorPrototype, URIErrorConstructor, void)
 
-#define JS_ENUMERATE_TYPED_ARRAYS                                                                \
-    __JS_ENUMERATE(Uint8Array, uint8_array, Uint8ArrayPrototype, Uint8ArrayConstructor, u8)      \
-    __JS_ENUMERATE(Uint16Array, uint16_array, Uint16ArrayPrototype, Uint16ArrayConstructor, u16) \
-    __JS_ENUMERATE(Uint32Array, uint32_array, Uint32ArrayPrototype, Uint32ArrayConstructor, u32) \
-    __JS_ENUMERATE(Int8Array, int8_array, Int8ArrayPrototype, Int8ArrayConstructor, i8)          \
-    __JS_ENUMERATE(Int16Array, int16_array, Int16ArrayPrototype, Int16ArrayConstructor, i16)     \
-    __JS_ENUMERATE(Int32Array, int32_array, Int32ArrayPrototype, Int32ArrayConstructor, i32)
+#define JS_ENUMERATE_TYPED_ARRAYS                                                                      \
+    __JS_ENUMERATE(Uint8Array, uint8_array, Uint8ArrayPrototype, Uint8ArrayConstructor, u8)            \
+    __JS_ENUMERATE(Uint16Array, uint16_array, Uint16ArrayPrototype, Uint16ArrayConstructor, u16)       \
+    __JS_ENUMERATE(Uint32Array, uint32_array, Uint32ArrayPrototype, Uint32ArrayConstructor, u32)       \
+    __JS_ENUMERATE(Int8Array, int8_array, Int8ArrayPrototype, Int8ArrayConstructor, i8)                \
+    __JS_ENUMERATE(Int16Array, int16_array, Int16ArrayPrototype, Int16ArrayConstructor, i16)           \
+    __JS_ENUMERATE(Int32Array, int32_array, Int32ArrayPrototype, Int32ArrayConstructor, i32)           \
+    __JS_ENUMERATE(Float32Array, float32_array, Float32ArrayPrototype, Float32ArrayConstructor, float) \
+    __JS_ENUMERATE(Float64Array, float64_array, Float64ArrayPrototype, Float64ArrayConstructor, double)
 
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES          \
     __JS_ENUMERATE(Iterator, iterator)            \

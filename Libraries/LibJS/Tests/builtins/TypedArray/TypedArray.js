@@ -1,5 +1,14 @@
 // Update when more typed arrays get added
-const TYPED_ARRAYS = [Uint8Array, Uint16Array, Uint32Array, Int8Array, Int16Array, Int32Array];
+const TYPED_ARRAYS = [
+    Uint8Array,
+    Uint16Array,
+    Uint32Array,
+    Int8Array,
+    Int16Array,
+    Int32Array,
+    Float32Array,
+    Float64Array,
+];
 
 const getTypedArrayConstructor = () => Object.getPrototypeOf(TYPED_ARRAYS[0]);
 
@@ -65,9 +74,9 @@ test("typed array from ArrayBuffer with custom length and offset", () => {
     const uint8ArrayAll = new Uint8Array(arrayBuffer);
     const uint16ArrayPartial = new Uint16Array(arrayBuffer, 2, 4);
     // Affects two bytes of the buffer, beginning at offset
-    uint16ArrayPartial[0] = 52651
+    uint16ArrayPartial[0] = 52651;
     // Out of relative bounds, doesn't affect buffer
-    uint16ArrayPartial[4] = 123
+    uint16ArrayPartial[4] = 123;
     expect(uint8ArrayAll[0]).toBe(0);
     expect(uint8ArrayAll[1]).toBe(0);
     expect(uint8ArrayAll[2]).toBe(0xab);
