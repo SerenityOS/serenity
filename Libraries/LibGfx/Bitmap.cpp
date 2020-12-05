@@ -345,6 +345,8 @@ RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_shared_buffer() const
     if (m_shared_buffer)
         return *this;
     auto buffer = SharedBuffer::create_with_size(size_in_bytes());
+    if (!buffer)
+        return nullptr;
     auto bitmap = Bitmap::create_with_shared_buffer(m_format, *buffer, m_size, palette_to_vector());
     if (!bitmap)
         return nullptr;
