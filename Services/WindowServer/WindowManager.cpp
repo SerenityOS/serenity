@@ -528,7 +528,8 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
 
 #endif
 
-        const int maximization_deadzone = 2;
+        const int tiling_deadzone = 10;
+        const int secondary_deadzone = 2;
 
         if (m_move_window->is_maximized()) {
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
@@ -536,7 +537,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
             if (pixels_moved_from_start > 5) {
                 // dbg() << "[WM] de-maximizing window";
                 m_move_origin = event.position();
-                if (m_move_origin.y() <= maximization_deadzone)
+                if (m_move_origin.y() <= secondary_deadzone)
                     return true;
                 auto width_before_resize = m_move_window->width();
                 m_move_window->set_maximized(false);
@@ -546,17 +547,26 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
         } else {
             bool is_resizable = m_move_window->is_resizable();
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
-            const int tiling_deadzone = 5;
+            auto desktop = desktop_rect();
 
-            if (is_resizable && event.y() <= maximization_deadzone) {
-                m_move_window->set_tiled(WindowTileType::None);
-                m_move_window->set_maximized(true);
-                return true;
-            }
             if (is_resizable && event.x() <= tiling_deadzone) {
-                m_move_window->set_tiled(WindowTileType::Left);
+                if (event.y() <= tiling_deadzone + desktop.top())
+                    m_move_window->set_tiled(WindowTileType::TopLeft);
+                else if (event.y() >= desktop.height() - tiling_deadzone)
+                    m_move_window->set_tiled(WindowTileType::BottomLeft);
+                else
+                    m_move_window->set_tiled(WindowTileType::Left);
             } else if (is_resizable && event.x() >= Screen::the().width() - tiling_deadzone) {
-                m_move_window->set_tiled(WindowTileType::Right);
+                if (event.y() <= tiling_deadzone + desktop.top())
+                    m_move_window->set_tiled(WindowTileType::TopRight);
+                else if (event.y() >= desktop.height() - tiling_deadzone)
+                    m_move_window->set_tiled(WindowTileType::BottomRight);
+                else
+                    m_move_window->set_tiled(WindowTileType::Right);
+            } else if (is_resizable && event.y() <= secondary_deadzone + desktop.top()) {
+                m_move_window->set_tiled(WindowTileType::Top);
+            } else if (is_resizable && event.y() >= desktop.bottom() - secondary_deadzone) {
+                m_move_window->set_tiled(WindowTileType::Bottom);
             } else if (pixels_moved_from_start > 5 || m_move_window->tiled() == WindowTileType::None) {
                 m_move_window->set_tiled(WindowTileType::None);
                 Gfx::IntPoint pos = m_move_window_origin.translated(event.position() - m_move_origin);
