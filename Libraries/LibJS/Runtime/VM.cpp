@@ -27,6 +27,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Reference.h>
@@ -116,6 +117,8 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     for (auto& call_frame : m_call_stack) {
         if (call_frame->this_value.is_cell())
             roots.set(call_frame->this_value.as_cell());
+        if (call_frame->arguments_object)
+            roots.set(call_frame->arguments_object);
         for (auto& argument : call_frame->arguments) {
             if (argument.is_cell())
                 roots.set(argument.as_cell());
@@ -166,6 +169,24 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
 Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 {
     if (m_call_stack.size()) {
+        if (name == names.arguments) {
+            // HACK: Special handling for the name "arguments":
+            //       If the name "arguments" is defined in the current scope, for example via
+            //       a function parameter, or by a local var declaration, we use that.
+            //       Otherwise, we return a lazily constructed Array with all the argument values.
+            // FIXME: Do something much more spec-compliant.
+            auto possible_match = current_scope()->get_from_scope(name);
+            if (possible_match.has_value())
+                return possible_match.value().value;
+            if (!call_frame().arguments_object) {
+                call_frame().arguments_object = Array::create(global_object);
+                for (auto argument : call_frame().arguments) {
+                    call_frame().arguments_object->indexed_properties().append(argument);
+                }
+            }
+            return call_frame().arguments_object;
+        }
+
         for (auto* scope = current_scope(); scope; scope = scope->parent()) {
             auto possible_match = scope->get_from_scope(name);
             if (possible_match.has_value())

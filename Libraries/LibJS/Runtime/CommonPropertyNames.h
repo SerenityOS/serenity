@@ -62,6 +62,7 @@ namespace JS {
     P(abs)                                   \
     P(acosh)                                 \
     P(apply)                                 \
+    P(arguments)                             \
     P(asIntN)                                \
     P(asUintN)                               \
     P(asinh)                                 \
