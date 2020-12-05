@@ -1137,16 +1137,20 @@ int Emulator::virt$realpath(FlatPtr params_addr)
     Syscall::SC_realpath_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
+    if (params.path.length > PATH_MAX) {
+        return -ENAMETOOLONG;
+    }
     auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
     char host_buffer[PATH_MAX] = {};
+    size_t host_buffer_size = min(sizeof(host_buffer), params.buffer.size);
 
     Syscall::SC_realpath_params host_params;
     host_params.path = { (const char*)path.data(), path.size() };
-    host_params.buffer = { host_buffer, sizeof(host_buffer) };
+    host_params.buffer = { host_buffer, host_buffer_size };
     int rc = syscall(SC_realpath, &host_params);
     if (rc < 0)
         return rc;
-    mmu().copy_to_vm((FlatPtr)params.buffer.data, host_buffer, min(params.buffer.size, sizeof(host_buffer)));
+    mmu().copy_to_vm((FlatPtr)params.buffer.data, host_buffer, host_buffer_size);
     return rc;
 }
 
