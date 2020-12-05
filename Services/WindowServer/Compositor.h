@@ -114,7 +114,7 @@ private:
     Gfx::IntRect m_last_dnd_rect;
     Gfx::IntRect m_last_geometry_label_rect;
 
-    String m_wallpaper_path;
+    String m_wallpaper_path { "" };
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
     RefPtr<Gfx::Bitmap> m_wallpaper;
 
