@@ -59,6 +59,7 @@ struct CallFrame {
     FlyString function_name;
     Value this_value;
     Vector<Value> arguments;
+    Array* arguments_object { nullptr };
     ScopeObject* scope { nullptr };
     bool is_strict_mode { false };
 };
