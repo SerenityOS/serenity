@@ -226,9 +226,9 @@ bool Editor::load_history(const String& path)
     if (!history_file->open(Core::IODevice::ReadOnly))
         return false;
     while (history_file->can_read_line()) {
-        auto b = history_file->read_line(1024);
-        // skip the newline and terminating bytes
-        add_to_history(String(reinterpret_cast<const char*>(b.data()), b.size() - 2));
+        auto buffer = history_file->read_line(1024);
+        // -1 to skip the newline character
+        add_to_history(String(reinterpret_cast<const char*>(buffer.data()), buffer.size() - 1));
     }
     return true;
 }
