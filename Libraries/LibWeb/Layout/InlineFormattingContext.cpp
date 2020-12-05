@@ -113,7 +113,6 @@ void InlineFormattingContext::run(LayoutMode layout_mode)
 
     auto text_align = containing_block.style().text_align();
     float min_line_height = containing_block.specified_style().line_height(containing_block);
-    float line_spacing = min_line_height - containing_block.specified_style().font().glyph_height();
     float content_height = 0;
     float max_linebox_width = 0;
 
@@ -166,7 +165,7 @@ void InlineFormattingContext::run(LayoutMode layout_mode)
 
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
-            fragment.set_offset({ roundf(x_offset + fragment.offset().x()), content_height + (max_height - fragment.height()) - (line_spacing / 2) });
+            fragment.set_offset({ roundf(x_offset + fragment.offset().x()), content_height + (max_height - fragment.height()) });
 
             if (text_align == CSS::TextAlign::Justify
                 && fragment.is_justifiable_whitespace()
