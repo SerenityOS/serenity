@@ -25,8 +25,8 @@
  */
 
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 
 namespace Web::Layout {
