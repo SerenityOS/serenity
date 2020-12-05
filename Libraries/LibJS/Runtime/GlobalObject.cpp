@@ -26,6 +26,7 @@
  */
 
 #include <AK/LogStream.h>
+#include <AK/Utf8View.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>
@@ -68,6 +69,7 @@
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/TypedArrayPrototype.h>
 #include <LibJS/Runtime/Value.h>
+#include <ctype.h>
 
 namespace JS {
 
@@ -117,6 +119,7 @@ void GlobalObject::initialize()
     define_native_function(vm.names.isNaN, is_nan, 1, attr);
     define_native_function(vm.names.isFinite, is_finite, 1, attr);
     define_native_function(vm.names.parseFloat, parse_float, 1, attr);
+    define_native_function(vm.names.parseInt, parse_int, 1, attr);
 
     define_property(vm.names.NaN, js_nan(), 0);
     define_property(vm.names.Infinity, js_infinity(), 0);
@@ -211,6 +214,74 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
             return number;
     }
     return js_nan();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
+{
+    // 18.2.5 parseInt ( string, radix )
+    auto input_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // FIXME: There's a bunch of unnecessary string copying here.
+    double sign = 1;
+    auto s = input_string.trim_whitespace(TrimMode::Left);
+    if (!s.is_empty() && s[0] == '-')
+        sign = -1;
+    if (!s.is_empty() && (s[0] == '+' || s[0] == '-'))
+        s = s.substring(1, s.length() - 1);
+
+    auto radix = vm.argument(1).to_i32(global_object);
+    if (vm.exception())
+        return {};
+
+    bool strip_prefix = true;
+    if (radix != 0) {
+        if (radix < 2 || radix > 36)
+            return js_nan();
+        if (radix != 16)
+            strip_prefix = false;
+    } else {
+        radix = 10;
+    }
+
+    if (strip_prefix) {
+        if (s.length() >= 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+            s = s.substring(2, s.length() - 2);
+            radix = 16;
+        }
+    }
+
+    auto parse_digit = [&](u32 codepoint, i32 radix) -> Optional<i32> {
+        i32 digit = -1;
+
+        if (isdigit(codepoint))
+            digit = codepoint - '0';
+        else if (islower(codepoint))
+            digit = 10 + (codepoint - 'a');
+        else if (isupper(codepoint))
+            digit = 10 + (codepoint - 'A');
+
+        if (digit == -1 || digit >= radix)
+            return {};
+        return digit;
+    };
+
+    bool had_digits = false;
+    double number = 0;
+    for (auto codepoint : Utf8View(s)) {
+        auto digit = parse_digit(codepoint, radix);
+        if (!digit.has_value())
+            break;
+        had_digits = true;
+        number *= radix;
+        number += digit.value();
+    }
+
+    if (!had_digits)
+        return js_nan();
+
+    return Value(sign * number);
 }
 
 Optional<Variable> GlobalObject::get_from_scope(const FlyString& name) const
