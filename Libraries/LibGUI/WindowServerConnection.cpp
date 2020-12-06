@@ -173,9 +173,13 @@ void WindowServerConnection::handle(const Messages::WindowClient::KeyDown& messa
 #endif
     }
 
-    if (action && action->is_enabled()) {
-        action->activate();
-        return;
+    if (action) {
+        if (action->is_enabled()) {
+            action->activate();
+            return;
+        }
+        if (action->swallow_key_event_when_disabled())
+            return;
     }
 
     bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->accepts_emoji_input();

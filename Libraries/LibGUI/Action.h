@@ -132,6 +132,9 @@ public:
     }
     void set_checked(bool);
 
+    bool swallow_key_event_when_disabled() const { return m_swallow_key_event_when_disabled; }
+    void set_swallow_key_event_when_disabled(bool swallow) { m_swallow_key_event_when_disabled = swallow; }
+
     void register_button(Badge<Button>, Button&);
     void unregister_button(Badge<Button>, Button&);
     void register_menu_item(Badge<MenuItem>, MenuItem&);
@@ -159,6 +162,7 @@ private:
     bool m_enabled { true };
     bool m_checkable { false };
     bool m_checked { false };
+    bool m_swallow_key_event_when_disabled { false };
     ShortcutScope m_scope { ShortcutScope::None };
 
     HashTable<Button*> m_buttons;
