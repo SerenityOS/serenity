@@ -816,7 +816,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
     }
 
     pid_t pgid = is_first ? child : (command.pipeline ? command.pipeline->pgid : child);
-    if ((!m_is_subshell && command.should_wait) || command.pipeline) {
+    if (!m_is_subshell || command.pipeline) {
         if (setpgid(child, pgid) < 0 && m_is_interactive)
             perror("setpgid");
 
