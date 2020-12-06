@@ -50,6 +50,9 @@ public:
     XMLHttpRequestPrototype* xhr_prototype() { return m_xhr_prototype; }
     XMLHttpRequestConstructor* xhr_constructor() { return m_xhr_constructor; }
 
+    RangePrototype* range_prototype() { return m_range_prototype; }
+    RangeConstructor* range_constructor() { return m_range_constructor; }
+
 private:
     virtual const char* class_name() const override { return "WindowObject"; }
     virtual void visit_edges(Visitor&) override;
@@ -76,6 +79,9 @@ private:
 
     XMLHttpRequestConstructor* m_xhr_constructor { nullptr };
     XMLHttpRequestPrototype* m_xhr_prototype { nullptr };
+
+    RangePrototype* m_range_prototype { nullptr };
+    RangeConstructor* m_range_constructor { nullptr };
 };
 
 }
