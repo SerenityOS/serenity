@@ -259,6 +259,27 @@ String Document::title() const
     return builder.to_string();
 }
 
+void Document::set_title(const String& title)
+{
+    auto* head_element = const_cast<HTML::HTMLHeadElement*>(head());
+    if (!head_element)
+        return;
+
+    RefPtr<HTML::HTMLTitleElement> title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
+    if (!title_element) {
+        title_element = static_ptr_cast<HTML::HTMLTitleElement>(create_element(HTML::TagNames::title));
+        head_element->append_child(*title_element);
+    }
+
+    while (RefPtr<Node> child = title_element->first_child())
+        title_element->remove_child(child.release_nonnull());
+
+    title_element->append_child(adopt(*new Text(*this, title)));
+
+    if (auto* page = this->page())
+        page->client().page_did_change_title(title);
+}
+
 void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 {
     m_frame = frame;
