@@ -130,6 +130,9 @@ private:
 
     void relayout(const Gfx::IntSize&);
 
+    void update_copy_action();
+    void update_paste_action();
+
     Gfx::IntSize compute_base_size() const;
     int first_selection_column_on_row(int row) const;
     int last_selection_column_on_row(int row) const;

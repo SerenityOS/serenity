@@ -141,10 +141,12 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_copy_action = GUI::Action::create("Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
         copy();
     });
+    m_copy_action->set_swallow_key_event_when_disabled(true);
 
     m_paste_action = GUI::Action::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, Gfx::Bitmap::load_from_file("/res/icons/16x16/paste.png"), [this](auto&) {
         paste();
     });
+    m_paste_action->set_swallow_key_event_when_disabled(true);
 
     m_clear_including_history_action = GUI::Action::create("Clear including history", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
         clear_including_history();
@@ -155,6 +157,13 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_context_menu->add_action(paste_action());
     m_context_menu->add_separator();
     m_context_menu->add_action(clear_including_history_action());
+
+    GUI::Clipboard::the().on_change = [this](const String&) {
+        update_paste_action();
+    };
+
+    update_copy_action();
+    update_paste_action();
 }
 
 TerminalWidget::~TerminalWidget()
@@ -248,6 +257,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 
     if (future_cursor_column <= last_selection_column_on_row(m_terminal.cursor_row()) && m_terminal.cursor_row() >= min_selection_row && m_terminal.cursor_row() <= max_selection_row) {
         m_selection_end = {};
+        update_copy_action();
         update();
     }
 
@@ -553,6 +563,7 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 
         m_selection_start = { position.row(), start_column };
         m_selection_end = { position.row(), end_column };
+        update_copy_action();
     }
     GUI::Frame::doubleclick_event(event);
 }
@@ -560,6 +571,9 @@ void TerminalWidget::doubleclick_event(GUI::MouseEvent& event)
 void TerminalWidget::paste()
 {
     if (m_ptm_fd == -1)
+        return;
+    auto mime_type = GUI::Clipboard::the().mime_type();
+    if (!mime_type.starts_with("text/"))
         return;
     auto text = GUI::Clipboard::the().data();
     if (text.is_empty())
@@ -625,6 +639,7 @@ void TerminalWidget::mousedown_event(GUI::MouseEvent& event)
         else if (m_rectangle_selection)
             m_rectangle_selection = false;
 
+        update_copy_action();
         update();
     }
 }
@@ -684,8 +699,10 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
 
     auto old_selection_end = m_selection_end;
     m_selection_end = position;
-    if (old_selection_end != m_selection_end)
+    if (old_selection_end != m_selection_end) {
+        update_copy_action();
         update();
+    }
 }
 
 void TerminalWidget::leave_event(Core::Event&)
@@ -910,4 +927,14 @@ void TerminalWidget::clear_including_history()
 void TerminalWidget::scroll_to_bottom()
 {
     m_scrollbar->set_value(m_scrollbar->max());
+}
+
+void TerminalWidget::update_copy_action()
+{
+    m_copy_action->set_enabled(has_selection());
+}
+
+void TerminalWidget::update_paste_action()
+{
+    m_paste_action->set_enabled(GUI::Clipboard::the().mime_type().starts_with("text/") && !GUI::Clipboard::the().data().is_empty());
 }
