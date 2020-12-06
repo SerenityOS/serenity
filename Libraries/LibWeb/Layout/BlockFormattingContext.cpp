@@ -671,6 +671,8 @@ void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_blo
             } else {
                 // This box does not touch another floating box, go all the way to the left.
                 x = 0;
+                // Also, forget all previous left-floating boxes while we're here since they're no longer relevant.
+                m_left_floating_boxes.clear();
             }
         } else {
             // This is the first left-floating box. Go all the way to the left.
@@ -687,6 +689,8 @@ void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_blo
             } else {
                 // This box does not touch another floating box, go all the way to the right.
                 x = containing_block.width() - box.width();
+                // Also, forget all previous right-floating boxes while we're here since they're no longer relevant.
+                m_right_floating_boxes.clear();
             }
         } else {
             // This is the first right-floating box. Go all the way to the right.
