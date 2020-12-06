@@ -629,6 +629,20 @@ void BlockFormattingContext::layout_floating_children(Box& box)
     });
 }
 
+static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& context_box)
+{
+    Gfx::FloatRect rect { box.effective_offset(), box.size() };
+    for (auto* ancestor = box.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (is<Box>(*ancestor)) {
+            auto offset = downcast<Box>(*ancestor).effective_offset();
+            rect.move_by(offset);
+        }
+        if (ancestor == &context_box)
+            break;
+    }
+    return rect;
+}
+
 void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_block)
 {
     ASSERT(box.is_floating());
@@ -641,27 +655,47 @@ void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_blo
     place_block_level_non_replaced_element_in_normal_flow(box, containing_block);
 
     // Then we float it to the left or right.
-
     float x = box.effective_offset().x();
-    float y = box.effective_offset().y();
 
+    auto box_in_context_rect = rect_in_coordinate_space(box, context_box());
+    float y_in_context_box = box_in_context_rect.y();
+
+    // Next, float to the left and/or right
     if (box.style().float_() == CSS::Float::Left) {
         if (!m_left_floating_boxes.is_empty()) {
             auto& previous_floating_box = *m_left_floating_boxes.last();
-            x = previous_floating_box.effective_offset().x() + previous_floating_box.width();
+            auto previous_rect = rect_in_coordinate_space(previous_floating_box, context_box());
+            if (previous_rect.contains_vertically(y_in_context_box)) {
+                // This box touches another already floating box. Stack to the right.
+                x = previous_floating_box.effective_offset().x() + previous_floating_box.width();
+            } else {
+                // This box does not touch another floating box, go all the way to the left.
+                x = 0;
+            }
+        } else {
+            // This is the first left-floating box. Go all the way to the left.
+            x = 0;
         }
         m_left_floating_boxes.append(&box);
     } else if (box.style().float_() == CSS::Float::Right) {
         if (!m_right_floating_boxes.is_empty()) {
             auto& previous_floating_box = *m_right_floating_boxes.last();
-            x = previous_floating_box.effective_offset().x() - box.width();
+            auto previous_rect = rect_in_coordinate_space(previous_floating_box, context_box());
+            if (previous_rect.contains_vertically(y_in_context_box)) {
+                // This box touches another already floating box. Stack to the left.
+                x = previous_floating_box.effective_offset().x() - box.width();
+            } else {
+                // This box does not touch another floating box, go all the way to the right.
+                x = containing_block.width() - box.width();
+            }
         } else {
+            // This is the first right-floating box. Go all the way to the right.
             x = containing_block.width() - box.width();
         }
         m_right_floating_boxes.append(&box);
     }
 
-    box.set_offset(x, y);
+    box.set_offset(x, box.effective_offset().y());
 }
 
 void BlockFormattingContext::layout_absolutely_positioned_child(Box& box)
