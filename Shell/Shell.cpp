@@ -817,13 +817,13 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
     pid_t pgid = is_first ? child : (command.pipeline ? command.pipeline->pgid : child);
     if ((!m_is_subshell && command.should_wait) || command.pipeline) {
-        if (setpgid(child, pgid) < 0)
+        if (setpgid(child, pgid) < 0 && m_is_interactive)
             perror("setpgid");
 
         if (!m_is_subshell) {
-            if (tcsetpgrp(STDOUT_FILENO, pgid) != 0)
+            if (tcsetpgrp(STDOUT_FILENO, pgid) != 0 && m_is_interactive)
                 perror("tcsetpgrp(OUT)");
-            if (tcsetpgrp(STDIN_FILENO, pgid) != 0)
+            if (tcsetpgrp(STDIN_FILENO, pgid) != 0 && m_is_interactive)
                 perror("tcsetpgrp(IN)");
         }
     }
