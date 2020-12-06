@@ -1066,8 +1066,24 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (try_skip("u")) {
-        // FIXME: Implement this path, unicode escape sequence.
-        TODO();
+        if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 4); code_point.has_value()) {
+            // FIXME: The minimum length depends on the mode - should be utf8-length in u8 mode.
+            match_length_minimum += 1;
+            StringBuilder builder;
+            builder.append_code_point(code_point.value());
+            // FIXME: This isn't actually correct for ECMAScript.
+            auto u8_encoded = builder.string_view();
+            stack.insert_bytecode_compare_string(u8_encoded);
+            return true;
+        } else if (!unicode) {
+            // '\u' is allowed in non-unicode mode, just matches 'u'.
+            match_length_minimum += 1;
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'u' } });
+            return true;
+        } else {
+            set_error(Error::InvalidPattern);
+            return false;
+        }
     }
 
     // IdentityEscape
@@ -1261,8 +1277,16 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             if (try_skip("u")) {
-                // FIXME: Implement this path, unicode escape sequence.
-                TODO();
+                if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, ReadDigitFollowPolicy::Any, true, 4); code_point.has_value()) {
+                    // FIXME: While codepoint ranges are supported, codepoint matches as "Char" are not!
+                    return { { .code_point = code_point.value(), .is_character_class = false } };
+                } else if (!unicode) {
+                    // '\u' is allowed in non-unicode mode, just matches 'u'.
+                    return { { .code_point = 'u', .is_character_class = false } };
+                } else {
+                    set_error(Error::InvalidPattern);
+                    return {};
+                }
             }
 
             if (unicode) {
