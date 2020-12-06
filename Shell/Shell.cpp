@@ -853,7 +853,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         if (!job->exited())
             return;
         if (job->is_running_in_background() && job->should_announce_exit())
-            fprintf(stderr, "Shell: Job %" PRIu64 "(%s) exited\n", job->job_id(), job->cmd().characters());
+            warnln("Shell: Job {} ({}) exited\n", job->job_id(), job->cmd().characters());
+        else if (job->signaled() && job->should_announce_signal())
+            warnln("Shell: Job {} ({}) {}\n", job->job_id(), job->cmd().characters(), strsignal(job->termination_signal()));
 
         last_return_code = job->exit_code();
         job->disown();

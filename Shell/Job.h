@@ -84,6 +84,7 @@ public:
     void disown() { m_should_be_disowned = true; }
     bool is_running_in_background() const { return m_running_in_background; }
     bool should_announce_exit() const { return m_should_announce_exit; }
+    bool should_announce_signal() const { return m_should_announce_signal; }
     bool is_suspended() const { return m_is_suspended; }
     void unblock() const;
 
@@ -100,6 +101,7 @@ public:
     }
 
     void set_should_announce_exit(bool value) { m_should_announce_exit = value; }
+    void set_should_announce_signal(bool value) { m_should_announce_signal = value; }
 
     void deactivate() const { m_active = false; }
 
@@ -121,6 +123,7 @@ private:
     bool m_exited { false };
     bool m_running_in_background { false };
     bool m_should_announce_exit { false };
+    bool m_should_announce_signal { true };
     int m_exit_code { -1 };
     int m_term_sig { -1 };
     Core::ElapsedTimer m_command_timer;
