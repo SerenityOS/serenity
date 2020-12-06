@@ -1153,7 +1153,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
         int pipefd[2];
         int rc = pipe(pipefd);
         if (rc < 0) {
-            dbg() << "Error: cannot pipe(): " << strerror(errno);
+            dbgln("Error: cannot pipe(): {}", strerror(errno));
             return;
         }
         auto& last_in_commands = commands.last();
@@ -1233,7 +1233,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                     }
                     if (saved_errno == 0)
                         continue;
-                    dbg() << "read() failed: " << strerror(saved_errno);
+                    dbgln("read() failed: {}", strerror(saved_errno));
                     break;
                 }
                 if (read_size == 0)
@@ -1253,7 +1253,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
         notifier->on_ready_to_read = nullptr;
 
         if (close(pipefd[0]) < 0) {
-            dbg() << "close() failed: " << strerror(errno);
+            dbgln("close() failed: {}", strerror(errno));
         }
 
         if (!stream.eof()) {
@@ -1611,7 +1611,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
     }
 
     // FIXME: Somehow raise an error in the shell.
-    dbg() << "Non-exhaustive match rules!";
+    dbgln("Non-exhaustive match rules!");
     return create<AST::ListValue>({});
 }
 
@@ -2489,7 +2489,8 @@ void SyntaxError::dump(int level) const
 
 RefPtr<Value> SyntaxError::run(RefPtr<Shell>)
 {
-    dbg() << "SYNTAX ERROR AAAA";
+    dbgln("SYNTAX ERROR executed from");
+    dump(1);
     return create<StringValue>("");
 }
 
@@ -2897,7 +2898,7 @@ Result<NonnullRefPtr<Rewiring>, String> PathRedirection::apply() const
     auto check_fd_and_return = [my_fd = this->fd](int fd, const String& path) -> Result<NonnullRefPtr<Rewiring>, String> {
         if (fd < 0) {
             String error = strerror(errno);
-            dbg() << "open() failed for '" << path << "' with " << error;
+            dbgln("open() failed for '{}' with {}", path, error);
             return error;
         }
         return adopt(*new Rewiring(fd, my_fd, Rewiring::Close::Old));
