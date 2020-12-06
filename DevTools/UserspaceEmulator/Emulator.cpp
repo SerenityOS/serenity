@@ -404,6 +404,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$watch_file(arg1, arg2);
     case SC_clock_nanosleep:
         return virt$clock_nanosleep(arg1);
+    case SC_readlink:
+        return virt$readlink(arg1);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1524,6 +1526,28 @@ int Emulator::virt$clock_nanosleep(FlatPtr params_addr)
     if (remaining_vm_addr)
         mmu().copy_to_vm((FlatPtr)remaining_vm_addr, remaining.data(), sizeof(timespec));
 
+    return rc;
+}
+
+int Emulator::virt$readlink(FlatPtr params_addr)
+{
+    Syscall::SC_readlink_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    if (params.path.length > PATH_MAX) {
+        return -ENAMETOOLONG;
+    }
+    auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
+    char host_buffer[PATH_MAX] = {};
+    size_t host_buffer_size = min(sizeof(host_buffer), params.buffer.size);
+
+    Syscall::SC_readlink_params host_params;
+    host_params.path = { (const char*)path.data(), path.size() };
+    host_params.buffer = { host_buffer, host_buffer_size };
+    int rc = syscall(SC_readlink, &host_params);
+    if (rc < 0)
+        return rc;
+    mmu().copy_to_vm((FlatPtr)params.buffer.data, host_buffer, host_buffer_size);
     return rc;
 }
 

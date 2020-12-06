@@ -157,6 +157,7 @@ private:
     int virt$set_thread_name(pid_t, FlatPtr, size_t);
     pid_t virt$setsid();
     int virt$watch_file(FlatPtr, size_t);
+    int virt$readlink(FlatPtr);
 
     FlatPtr allocate_vm(size_t size, size_t alignment);
 
