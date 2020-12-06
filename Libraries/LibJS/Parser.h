@@ -143,8 +143,12 @@ public:
     const Vector<Error>& errors() const { return m_parser_state.m_errors; }
     void print_errors() const
     {
-        for (auto& error : m_parser_state.m_errors)
-            fprintf(stderr, "SyntaxError: %s\n", error.to_string().characters());
+        for (auto& error : m_parser_state.m_errors) {
+            auto hint = error.source_location_hint(m_parser_state.m_lexer.source());
+            if (!hint.is_empty())
+                warnln("{}", hint);
+            warnln("SyntaxError: {}", error.to_string());
+        }
     }
 
 private:
