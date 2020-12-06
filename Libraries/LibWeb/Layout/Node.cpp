@@ -231,6 +231,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (float_.has_value())
         style.set_float(float_.value());
 
+    auto clear = specified_style.clear();
+    if (clear.has_value())
+        style.set_clear(clear.value());
+
     style.set_z_index(specified_style.z_index());
     style.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
     style.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));

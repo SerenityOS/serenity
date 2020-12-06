@@ -565,6 +565,28 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     }
 
+    if (box.style().clear() == CSS::Clear::Left || box.style().clear() == CSS::Clear::Both) {
+        if (!m_left_floating_boxes.is_empty()) {
+            float clearance_y = 0;
+            for (auto* floating_box : m_left_floating_boxes) {
+                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->box_model().margin_box(*floating_box).bottom);
+            }
+            y = max(y, clearance_y);
+            m_left_floating_boxes.clear();
+        }
+    }
+
+    if (box.style().clear() == CSS::Clear::Right || box.style().clear() == CSS::Clear::Both) {
+        if (!m_right_floating_boxes.is_empty()) {
+            float clearance_y = 0;
+            for (auto* floating_box : m_right_floating_boxes) {
+                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->box_model().margin_box(*floating_box).bottom);
+            }
+            y = max(y, clearance_y);
+            m_right_floating_boxes.clear();
+        }
+    }
+
     box.set_offset(x, y);
 }
 
