@@ -65,7 +65,7 @@ unsigned PhysicalRegion::finalize_capacity()
     return size();
 }
 
-NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor)
+NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor, size_t physical_alignment)
 {
     ASSERT(m_pages);
     ASSERT(m_used != m_pages);
@@ -73,18 +73,19 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
     NonnullRefPtrVector<PhysicalPage> physical_pages;
     physical_pages.ensure_capacity(count);
 
-    auto first_contiguous_page = find_contiguous_free_pages(count);
+    auto first_contiguous_page = find_contiguous_free_pages(count, physical_alignment);
 
     for (size_t index = 0; index < count; index++)
         physical_pages.append(PhysicalPage::create(m_lower.offset(PAGE_SIZE * (index + first_contiguous_page)), supervisor));
     return physical_pages;
 }
 
-unsigned PhysicalRegion::find_contiguous_free_pages(size_t count)
+unsigned PhysicalRegion::find_contiguous_free_pages(size_t count, size_t physical_alignment)
 {
     ASSERT(count != 0);
+    ASSERT(physical_alignment % PAGE_SIZE == 0);
     // search from the last page we allocated
-    auto range = find_and_allocate_contiguous_range(count);
+    auto range = find_and_allocate_contiguous_range(count, physical_alignment / PAGE_SIZE);
     ASSERT(range.has_value());
     return range.value();
 }
@@ -118,16 +119,21 @@ Optional<unsigned> PhysicalRegion::find_one_free_page()
     return page_index;
 }
 
-Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t count)
+Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t count, unsigned alignment)
 {
     ASSERT(count != 0);
     size_t found_pages_count = 0;
-    auto first_index = m_bitmap.find_longest_range_of_unset_bits(count, found_pages_count);
+    // TODO: Improve how we deal with alignment != 1
+    auto first_index = m_bitmap.find_longest_range_of_unset_bits(count + alignment - 1, found_pages_count);
     if (!first_index.has_value())
         return {};
 
     auto page = first_index.value();
-    if (count == found_pages_count) {
+    if (alignment != 1) {
+        auto lower_page = m_lower.get() / PAGE_SIZE;
+        page = ((lower_page + page + alignment - 1) & ~(alignment - 1)) - lower_page;
+    }
+    if (found_pages_count >= count) {
         m_bitmap.set_range<true>(page, count);
         m_used += count;
         m_free_hint = first_index.value() + count + 1; // Just a guess

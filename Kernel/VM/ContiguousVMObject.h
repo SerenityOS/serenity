@@ -35,10 +35,10 @@ class ContiguousVMObject final : public VMObject {
 public:
     virtual ~ContiguousVMObject() override;
 
-    static NonnullRefPtr<ContiguousVMObject> create_with_size(size_t);
+    static NonnullRefPtr<ContiguousVMObject> create_with_size(size_t, size_t physical_alignment = PAGE_SIZE);
 
 private:
-    explicit ContiguousVMObject(size_t);
+    explicit ContiguousVMObject(size_t, size_t physical_alignment);
     explicit ContiguousVMObject(const ContiguousVMObject&);
 
     virtual const char* class_name() const override { return "ContiguousVMObject"; }

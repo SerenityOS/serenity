@@ -52,12 +52,12 @@ public:
     bool contains(const PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
 
     RefPtr<PhysicalPage> take_free_page(bool supervisor);
-    NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, bool supervisor);
+    NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, bool supervisor, size_t physical_alignment = PAGE_SIZE);
     void return_page(const PhysicalPage& page);
 
 private:
-    unsigned find_contiguous_free_pages(size_t count);
-    Optional<unsigned> find_and_allocate_contiguous_range(size_t count);
+    unsigned find_contiguous_free_pages(size_t count, size_t physical_alignment = PAGE_SIZE);
+    Optional<unsigned> find_and_allocate_contiguous_range(size_t count, unsigned alignment = 1);
     Optional<unsigned> find_one_free_page();
     void free_page_at(PhysicalAddress addr);
 
