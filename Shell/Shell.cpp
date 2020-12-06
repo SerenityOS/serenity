@@ -70,7 +70,7 @@ void Shell::setup_signals()
 {
     Core::EventLoop::register_signal(SIGCHLD, [this](int) {
 #ifdef SH_DEBUG
-        dbg() << "SIGCHLD!";
+        dbgln("SIGCHLD!");
 #endif
         notify_child_event();
     });
@@ -503,7 +503,7 @@ Shell::Frame Shell::push_frame(String name)
 {
     m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}));
 #ifdef SH_DEBUG
-    dbg() << "New frame '" << name << "' at " << &m_local_frames.last();
+    dbgln("New frame '{}' at {:p}", name, &m_local_frames.last());
 #endif
     return { m_local_frames, m_local_frames.last() };
 }
@@ -519,9 +519,10 @@ Shell::Frame::~Frame()
     if (!should_destroy_frame)
         return;
     if (&frames.last() != &frame) {
-        dbg() << "Frame destruction order violation near " << &frame << " (container = " << this << ") '" << frame.name << "'; current frames:";
+        dbgln("Frame destruction order violation near {:p} (container = {:p}) in '{}'", &frame, this, frame.name);
+        dbgln("Current frames:");
         for (auto& frame : frames)
-            dbg() << "- " << &frame << ": " << frame.name;
+            dbgln("- {:p}: {}", &frame, frame.name);
         ASSERT_NOT_REACHED();
     }
     frames.take_last();
@@ -557,7 +558,7 @@ int Shell::run_command(const StringView& cmd)
         return 0;
 
 #ifdef SH_DEBUG
-    dbg() << "Command follows";
+    dbgln("Command follows");
     command->dump(0);
 #endif
 
@@ -565,7 +566,11 @@ int Shell::run_command(const StringView& cmd)
         auto& error_node = command->syntax_error_node();
         auto& position = error_node.position();
         fprintf(stderr, "Shell: Syntax error in command: %s\n", error_node.error_text().characters());
-        fprintf(stderr, "Around '%.*s' at %zu:%zu\n", (int)min(position.end_offset - position.start_offset, (size_t)10), cmd.characters_without_null_termination() + position.start_offset, position.start_offset, position.end_offset);
+        fprintf(stderr, "Around '%.*s' at %zu:%zu to %zu:%zu\n",
+            (int)min(position.end_offset - position.start_offset, (size_t)10),
+            cmd.characters_without_null_termination() + position.start_offset,
+            position.start_line.line_column, position.start_line.line_number,
+            position.end_line.line_column, position.end_line.line_number);
         return 1;
     }
 
@@ -640,8 +645,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
     auto apply_rewirings = [&] {
         for (auto& rewiring : rewirings) {
+
 #ifdef SH_DEBUG
-            dbgprintf("in %s<%d>, dup2(%d, %d)\n", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
+            dbgln("in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
 #endif
             int rc = dup2(rewiring.old_fd, rewiring.new_fd);
             if (rc < 0) {
@@ -739,11 +745,10 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
                 // There's nothing interesting we can do here.
                 break;
             }
-            dbg() << "Oof";
         }
 
 #ifdef SH_DEBUG
-        dbg() << "Synced up with parent, we're good to exec()";
+        dbgln("Synced up with parent, we're good to exec()");
 #endif
 
         close(sync_pipe[0]);
@@ -829,7 +834,6 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             // There's nothing interesting we can do here.
             break;
         }
-        dbg() << "Oof";
     }
 
     close(sync_pipe[1]);
@@ -906,19 +910,19 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
 
     for (auto& command : commands) {
 #ifdef SH_DEBUG
-        dbg() << "Command";
+        dbgln("Command");
         for (auto& arg : command.argv)
-            dbg() << "argv: " << arg;
+            dbgln("argv: {}", arg);
         for (auto& redir : command.redirections) {
             if (redir.is_path_redirection()) {
                 auto path_redir = (const AST::PathRedirection*)&redir;
-                dbg() << "redir path " << (int)path_redir->direction << " " << path_redir->path << " <-> " << path_redir->fd;
+                dbgln("redir path '{}' <-({})-> {}", path_redir->path, (int)path_redir->direction, path_redir->fd);
             } else if (redir.is_fd_redirection()) {
                 auto* fdredir = (const AST::FdRedirection*)&redir;
-                dbg() << "redir fd " << fdredir->old_fd << " -> " << fdredir->new_fd;
+                dbgln("redir fd {} -> {}", fdredir->old_fd, fdredir->new_fd);
             } else if (redir.is_close_redirection()) {
                 auto close_redir = (const AST::CloseRedirection*)&redir;
-                dbg() << "close fd " << close_redir->fd;
+                dbgln("close fd {}", close_redir->fd);
             } else {
                 ASSERT_NOT_REACHED();
             }
@@ -951,7 +955,7 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
         if (explicitly_invoked)
             fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file_result.error().characters());
         else
-            dbg() << "open() failed for '" << filename << "' with " << file_result.error();
+            dbgln("open() failed for '{}' with {}", filename, file_result.error());
         return false;
     }
     auto file = file_result.value();
@@ -1327,7 +1331,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(const String& program_
 
     Vector<Line::CompletionSuggestion> suggestions;
 
-    dbg() << "Shell::complete_option(" << program_name << ", " << option_pattern << ")";
+    dbgln("Shell::complete_option({}, {})", program_name, option_pattern);
 
     // FIXME: Figure out how to do this stuff.
     if (has_builtin(program_name)) {
@@ -1469,7 +1473,7 @@ void Shell::notify_child_event()
                 if (errno == ECHILD) {
                     // The child process went away before we could process its death, just assume it exited all ok.
                     // FIXME: This should never happen, the child should stay around until we do the waitpid above.
-                    dbg() << "Child process gone, cannot get exit code for " << job_id;
+                    dbgln("Child process gone, cannot get exit code for {}", job_id);
                     child_pid = job.pid();
                 } else {
                     ASSERT_NOT_REACHED();
@@ -1619,7 +1623,7 @@ void Shell::stop_all_jobs()
         for (auto& entry : jobs) {
             if (entry.value->is_suspended()) {
 #ifdef SH_DEBUG
-                dbg() << "Job " << entry.value->pid() << " is suspended";
+                dbgln("Job {} is suspended", entry.value->pid());
 #endif
                 kill_job(entry.value, SIGCONT);
             }
@@ -1631,7 +1635,7 @@ void Shell::stop_all_jobs()
 
         for (auto& entry : jobs) {
 #ifdef SH_DEBUG
-            dbg() << "Actively killing " << entry.value->pid() << "(" << entry.value->cmd() << ")";
+            dbgln("Actively killing {} ({})", entry.value->pid(), entry.value->cmd());
 #endif
             kill_job(entry.value, SIGKILL);
         }
