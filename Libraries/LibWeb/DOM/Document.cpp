@@ -25,6 +25,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/DisplayLink.h>
@@ -61,6 +62,7 @@
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/SVG/TagNames.h>
+#include <ctype.h>
 #include <stdio.h>
 
 namespace Web::DOM {
@@ -240,7 +242,21 @@ String Document::title() const
     if (!title_element)
         return {};
 
-    return title_element->text_content();
+    auto raw_title = title_element->text_content();
+
+    StringBuilder builder;
+    bool last_was_space = false;
+    for (auto code_point : Utf8View(raw_title)) {
+        if (isspace(code_point)) {
+            last_was_space = true;
+        } else {
+            if (last_was_space && !builder.is_empty())
+                builder.append(' ');
+            builder.append_code_point(code_point);
+            last_was_space = false;
+        }
+    }
+    return builder.to_string();
 }
 
 void Document::attach_to_frame(Badge<Frame>, Frame& frame)
