@@ -803,6 +803,7 @@ Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZe
 
     int count = 0;
     size_t offset = 0;
+    auto start_token = m_parser_state.current_token;
     while (match(TokenType::Char)) {
         auto c = m_parser_state.current_token.value();
         if (follow_policy == ReadDigitFollowPolicy::DisallowDigit) {
@@ -826,7 +827,7 @@ Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZe
         ++count;
     }
 
-    auto str = m_parser_state.lexer.slice_back(offset);
+    StringView str { start_token.value().characters_without_null_termination(), offset };
     if (hex)
         return AK::StringUtils::convert_to_uint_from_hex(str);
 
@@ -1371,6 +1372,7 @@ StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_
     if (take_starting_angle_bracket && !consume("<"))
         return {};
 
+    auto start_token = m_parser_state.current_token;
     size_t offset = 0;
     while (match(TokenType::Char)) {
         auto c = m_parser_state.current_token.value();
@@ -1379,7 +1381,7 @@ StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_
         offset += consume().value().length();
     }
 
-    auto name = m_parser_state.lexer.slice_back(offset);
+    StringView name { start_token.value().characters_without_null_termination(), offset };
     if (!consume(">") || name.is_empty())
         set_error(Error::InvalidNameForCaptureGroup);
 
