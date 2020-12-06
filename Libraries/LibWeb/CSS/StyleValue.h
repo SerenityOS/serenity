@@ -149,6 +149,13 @@ enum class Float {
     Right,
 };
 
+enum class Clear {
+    None,
+    Left,
+    Right,
+    Both,
+};
+
 enum class LineStyle {
     None,
     Hidden,

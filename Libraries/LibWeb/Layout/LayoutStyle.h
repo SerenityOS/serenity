@@ -35,6 +35,7 @@ namespace Web {
 class InitialValues {
 public:
     static CSS::Float float_() { return CSS::Float::None; }
+    static CSS::Clear clear() { return CSS::Clear::None; }
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
 };
 
@@ -48,6 +49,7 @@ public:
 class LayoutStyle {
 public:
     CSS::Float float_() const { return m_float; }
+    CSS::Clear clear() const { return m_clear; }
     Optional<int> z_index() const { return m_z_index; }
     CSS::TextAlign text_align() const { return m_text_align; }
     CSS::Position position() const { return m_position; }
@@ -70,6 +72,7 @@ public:
 
 protected:
     CSS::Float m_float { InitialValues::float_() };
+    CSS::Clear m_clear { InitialValues::clear() };
     Optional<int> m_z_index;
     CSS::TextAlign m_text_align;
     CSS::Position m_position;
@@ -95,6 +98,7 @@ class ImmutableLayoutStyle final : public LayoutStyle {
 class MutableLayoutStyle final : public LayoutStyle {
 public:
     void set_float(CSS::Float value) { m_float = value; }
+    void set_clear(CSS::Clear value) { m_clear = value; }
     void set_z_index(Optional<int> value) { m_z_index = value; }
     void set_text_align(CSS::TextAlign text_align) { m_text_align = text_align; }
     void set_position(CSS::Position position) { m_position = position; }

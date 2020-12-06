@@ -303,6 +303,23 @@ Optional<CSS::Float> StyleProperties::float_() const
     return {};
 }
 
+Optional<CSS::Clear> StyleProperties::clear() const
+{
+    auto value = property(CSS::PropertyID::Clear);
+    if (!value.has_value() || !value.value()->is_string())
+        return {};
+    auto string = value.value()->to_string();
+    if (string == "none")
+        return CSS::Clear::None;
+    if (string == "left")
+        return CSS::Clear::Left;
+    if (string == "right")
+        return CSS::Clear::Right;
+    if (string == "both")
+        return CSS::Clear::Both;
+    return {};
+}
+
 CSS::Display StyleProperties::display() const
 {
     auto display = string_or_fallback(CSS::PropertyID::Display, "inline");

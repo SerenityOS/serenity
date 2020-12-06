@@ -63,6 +63,7 @@ public:
     CSS::TextAlign text_align() const;
     CSS::Display display() const;
     Optional<CSS::Float> float_() const;
+    Optional<CSS::Clear> clear() const;
     Optional<CSS::WhiteSpace> white_space() const;
     Optional<CSS::LineStyle> line_style(CSS::PropertyID) const;
 
