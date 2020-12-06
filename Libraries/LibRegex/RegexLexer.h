@@ -94,8 +94,6 @@ public:
     bool try_skip(char);
     char skip();
 
-    StringView slice_back(size_t offset) const { return m_source.substring_view(m_position - offset - 1, offset); }
-
 private:
     ALWAYS_INLINE char peek(size_t offset = 0) const;
     ALWAYS_INLINE void consume();
