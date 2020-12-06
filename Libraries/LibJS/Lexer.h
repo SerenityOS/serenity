@@ -40,6 +40,8 @@ public:
 
     Token next();
 
+    const StringView& source() const { return m_source; };
+
 private:
     void consume();
     bool consume_exponent();
