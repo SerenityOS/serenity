@@ -65,7 +65,7 @@ void BlockFormattingContext::run(LayoutMode layout_mode)
     if (layout_mode == LayoutMode::Default)
         compute_width(context_box());
 
-    layout_floating_descendants();
+    layout_floating_children();
 
     if (context_box().children_are_inline()) {
         layout_inline_children(layout_mode);
@@ -615,7 +615,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     icb.set_width(viewport_rect.width());
 
-    layout_floating_descendants();
+    layout_floating_children();
 
     layout_block_level_children(layout_mode);
 
@@ -651,17 +651,16 @@ void BlockFormattingContext::layout_absolutely_positioned_descendants()
     });
 }
 
-void BlockFormattingContext::layout_floating_descendants()
+void BlockFormattingContext::layout_floating_children()
 {
-    context_box().for_each_in_subtree_of_type<Box>([&](auto& box) {
-        if (box.is_floating() && box.containing_block() == &context_box()) {
-            layout_floating_descendant(box);
-        }
+    context_box().for_each_child_of_type<Box>([&](auto& box) {
+        if (box.is_floating())
+            layout_floating_child(box);
         return IterationDecision::Continue;
     });
 }
 
-void BlockFormattingContext::layout_floating_descendant(Box& box)
+void BlockFormattingContext::layout_floating_child(Box& box)
 {
     ASSERT(box.is_floating());
 

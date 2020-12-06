@@ -58,13 +58,13 @@ private:
     void layout_block_level_children(LayoutMode);
     void layout_inline_children(LayoutMode);
     void layout_absolutely_positioned_descendants();
-    void layout_floating_descendants();
+    void layout_floating_children();
 
     void place_block_level_replaced_element_in_normal_flow(Box&);
     void place_block_level_non_replaced_element_in_normal_flow(Box&);
 
     void layout_absolutely_positioned_descendant(Box&);
-    void layout_floating_descendant(Box&);
+    void layout_floating_child(Box&);
 
     Vector<Box*> m_left_floating_boxes;
     Vector<Box*> m_right_floating_boxes;
