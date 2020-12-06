@@ -522,7 +522,7 @@ void Formatter<StringView>::format(TypeErasedFormatParams& params, FormatBuilder
         ASSERT_NOT_REACHED();
     if (m_zero_pad)
         ASSERT_NOT_REACHED();
-    if (m_mode != Mode::Default && m_mode != Mode::String)
+    if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character)
         ASSERT_NOT_REACHED();
     if (m_width != value_not_set && m_precision != value_not_set)
         ASSERT_NOT_REACHED();
