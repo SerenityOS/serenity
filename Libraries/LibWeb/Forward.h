@@ -51,10 +51,10 @@ class MouseEvent;
 class Node;
 class ParentNode;
 class Position;
-class Range;
 class Text;
 class Timer;
 class Window;
+class Range;
 enum class QuirksMode;
 }
 

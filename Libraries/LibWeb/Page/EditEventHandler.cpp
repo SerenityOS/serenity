@@ -26,6 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Position.h>
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Layout/LayoutPosition.h>
 #include <LibWeb/Page/Frame.h>
@@ -39,15 +40,15 @@
 namespace Web {
 
 // This method is quite convoluted but this is necessary to make editing feel intuitive.
-void EditEventHandler::handle_delete(DOM::Range range)
+void EditEventHandler::handle_delete(DOM::Range& range)
 {
-    auto* start = downcast<DOM::Text>(range.start().node());
-    auto* end = downcast<DOM::Text>(range.end().node());
+    auto* start = downcast<DOM::Text>(range.start_container());
+    auto* end = downcast<DOM::Text>(range.end_container());
 
     if (start == end) {
         StringBuilder builder;
-        builder.append(start->data().substring_view(0, range.start().offset()));
-        builder.append(end->data().substring_view(range.end().offset()));
+        builder.append(start->data().substring_view(0, range.start_offset()));
+        builder.append(end->data().substring_view(range.end_offset()));
 
         start->set_data(builder.to_string());
     } else {
@@ -84,8 +85,8 @@ void EditEventHandler::handle_delete(DOM::Range range)
 
         // Join the start and end nodes.
         StringBuilder builder;
-        builder.append(start->data().substring_view(0, range.start().offset()));
-        builder.append(end->data().substring_view(range.end().offset()));
+        builder.append(start->data().substring_view(0, range.start_offset()));
+        builder.append(end->data().substring_view(range.end_offset()));
 
         start->set_data(builder.to_string());
         start->parent()->remove_child(*end);
