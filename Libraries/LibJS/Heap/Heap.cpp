@@ -118,10 +118,9 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
     }
 
 #ifdef HEAP_DEBUG
-    dbg() << "gather_roots:";
-    for (auto* root : roots) {
-        dbg() << "  + " << root;
-    }
+    dbgln("gather_roots:");
+    for (auto* root : roots)
+        dbgln("  + {}", root);
 #endif
 }
 
@@ -130,7 +129,7 @@ void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
     FlatPtr dummy;
 
 #ifdef HEAP_DEBUG
-    dbg() << "gather_conservative_roots:";
+    dbgln("gather_conservative_roots:");
 #endif
 
     jmp_buf buf;
@@ -161,19 +160,19 @@ void Heap::gather_conservative_roots(HashTable<Cell*>& roots)
         if (!possible_pointer)
             continue;
 #ifdef HEAP_DEBUG
-        dbg() << "  ? " << (const void*)possible_pointer;
+        dbgln("  ? {}", (const void*)possible_pointer);
 #endif
         auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(possible_pointer));
         if (all_live_heap_blocks.contains(possible_heap_block)) {
             if (auto* cell = possible_heap_block->cell_from_possible_pointer(possible_pointer)) {
                 if (cell->is_live()) {
 #ifdef HEAP_DEBUG
-                    dbg() << "  ?-> " << (const void*)cell;
+                    dbgln("  ?-> {}", (const void*)cell);
 #endif
                     roots.set(cell);
                 } else {
 #ifdef HEAP_DEBUG
-                    dbg() << "  #-> " << (const void*)cell;
+                    dbgln("  #-> {}", (const void*)cell);
 #endif
                 }
             }
@@ -190,7 +189,7 @@ public:
         if (cell->is_marked())
             return;
 #ifdef HEAP_DEBUG
-        dbg() << "  ! " << cell;
+        dbgln("  ! {}", cell);
 #endif
         cell->set_marked(true);
         cell->visit_edges(*this);
@@ -200,7 +199,7 @@ public:
 void Heap::mark_live_cells(const HashTable<Cell*>& roots)
 {
 #ifdef HEAP_DEBUG
-    dbg() << "mark_live_cells:";
+    dbgln("mark_live_cells:");
 #endif
     MarkingVisitor visitor;
     for (auto* root : roots)
@@ -210,7 +209,7 @@ void Heap::mark_live_cells(const HashTable<Cell*>& roots)
 void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measurement_timer)
 {
 #ifdef HEAP_DEBUG
-    dbg() << "sweep_dead_cells:";
+    dbgln("sweep_dead_cells:");
 #endif
     Vector<HeapBlock*, 32> empty_blocks;
     Vector<HeapBlock*, 32> full_blocks_that_became_usable;
@@ -227,7 +226,7 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
             if (cell->is_live()) {
                 if (!cell->is_marked()) {
 #ifdef HEAP_DEBUG
-                    dbg() << "  ~ " << cell;
+                    dbgln("  ~ {}", cell);
 #endif
                     block.deallocate(cell);
                     ++collected_cells;
@@ -249,21 +248,21 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
 
     for (auto* block : empty_blocks) {
 #ifdef HEAP_DEBUG
-        dbg() << " - HeapBlock empty @ " << block << ": cell_size=" << block->cell_size();
+        dbgln(" - HeapBlock empty @ {}: cell_size={}", block, block->cell_size());
 #endif
         allocator_for_size(block->cell_size()).block_did_become_empty({}, *block);
     }
 
     for (auto* block : full_blocks_that_became_usable) {
 #ifdef HEAP_DEBUG
-        dbg() << " - HeapBlock usable again @ " << block << ": cell_size=" << block->cell_size();
+        dbgln(" - HeapBlock usable again @ {}: cell_size={}", block, block->cell_size());
 #endif
         allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
     }
 
 #ifdef HEAP_DEBUG
     for_each_block([&](auto& block) {
-        dbg() << " > Live HeapBlock @ " << &block << ": cell_size=" << block.cell_size();
+        dbgln(" > Live HeapBlock @ {}: cell_size={}", &block, block.cell_size());
         return IterationDecision::Continue;
     });
 #endif
@@ -271,7 +270,6 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     int time_spent = measurement_timer.elapsed();
 
     if (print_report) {
-
         size_t live_block_count = 0;
         for_each_block([&](auto&) {
             ++live_block_count;

@@ -98,6 +98,4 @@ private:
     bool m_global_variable { false };
 };
 
-const LogStream& operator<<(const LogStream&, const Value&);
-
 }

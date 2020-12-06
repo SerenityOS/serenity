@@ -118,7 +118,8 @@ String Value::to_string_without_side_effects() const
             return is_negative_infinity() ? "-Infinity" : "Infinity";
         if (is_integer())
             return String::number(as_i32());
-        return String::format("%.4f", m_value.as_double);
+        // FIXME: This should be more sophisticated: don't cut off decimals, don't include trailing zeros
+        return String::formatted("{:.4}", m_value.as_double);
     case Type::String:
         return m_value.as_string->string();
     case Type::Symbol:
@@ -162,7 +163,8 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
             return is_negative_infinity() ? "-Infinity" : "Infinity";
         if (is_integer())
             return String::number(as_i32());
-        return String::format("%.4f", m_value.as_double);
+        // FIXME: This should be more sophisticated: don't cut off decimals, don't include trailing zeros
+        return String::formatted("{:.4}", m_value.as_double);
     case Type::String:
         return m_value.as_string->string();
     case Type::Symbol:
@@ -237,7 +239,7 @@ Object* Value::to_object(GlobalObject& global_object) const
     case Type::Object:
         return &const_cast<Object&>(as_object());
     default:
-        dbg() << "Dying because I can't to_object() on " << *this;
+        dbgln("Dying because I can't to_object() on {}", *this);
         ASSERT_NOT_REACHED();
     }
 }
@@ -820,11 +822,6 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
         if (same_value(rhs_prototype, lhs_object))
             return Value(true);
     }
-}
-
-const LogStream& operator<<(const LogStream& stream, const Value& value)
-{
-    return stream << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects());
 }
 
 bool same_value(Value lhs, Value rhs)
