@@ -177,6 +177,23 @@ public:
     SelectionState selection_state() const { return m_selection_state; }
     void set_selection_state(SelectionState state) { m_selection_state = state; }
 
+    template<typename Callback>
+    void for_each_child_in_paint_order(Callback callback) const
+    {
+        for_each_child([&](auto& child) {
+            if (is<Box>(child) && downcast<Box>(child).stacking_context())
+                return;
+            if (!child.is_positioned())
+                callback(child);
+        });
+        for_each_child([&](auto& child) {
+            if (is<Box>(child) && downcast<Box>(child).stacking_context())
+                return;
+            if (child.is_positioned())
+                callback(child);
+        });
+    }
+
 protected:
     Node(DOM::Document&, DOM::Node*);
 
