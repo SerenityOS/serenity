@@ -703,8 +703,6 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     //    }
 
     auto& action = m_signal_action_data[signal];
-    // FIXME: Implement SA_SIGINFO signal handlers.
-    ASSERT(!(action.flags & SA_SIGINFO));
 
     // Mark this signal as handled.
     m_pending_signals &= ~(1 << (signal - 1));
@@ -783,56 +781,117 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     m_signal_mask |= new_signal_mask;
     m_have_any_unmasked_pending_signals.store(m_pending_signals & ~m_signal_mask, AK::memory_order_release);
 
-    auto setup_stack = [&](RegisterState& state) {
-        u32* stack = &state.userspace_esp;
-        u32 old_esp = *stack;
-        u32 ret_eip = state.eip;
-        u32 ret_eflags = state.eflags;
+    setup_signal_stack(signal, old_signal_mask, handler_vaddr);
 
 #ifdef SIGNAL_DEBUG
-        klog() << "signal: setting up user stack to return to eip: " << String::format("%p", ret_eip) << " esp: " << String::format("%p", old_esp);
+    klog() << "signal: Okay, " << *this << " {" << state_string() << "} has been primed with signal handler " << String::format("%w", m_tss.cs) << ":" << String::format("%x", m_tss.eip) << " to deliver " << signal;
 #endif
+    return DispatchSignalResult::Continue;
+}
 
-        // Align the stack to 16 bytes.
-        // Note that we push 56 bytes (4 * 14) on to the stack,
-        // so we need to account for this here.
-        u32 stack_alignment = (*stack - 56) % 16;
-        *stack -= stack_alignment;
-
-        push_value_on_user_stack(stack, ret_eflags);
-
-        push_value_on_user_stack(stack, ret_eip);
-        push_value_on_user_stack(stack, state.eax);
-        push_value_on_user_stack(stack, state.ecx);
-        push_value_on_user_stack(stack, state.edx);
-        push_value_on_user_stack(stack, state.ebx);
-        push_value_on_user_stack(stack, old_esp);
-        push_value_on_user_stack(stack, state.ebp);
-        push_value_on_user_stack(stack, state.esi);
-        push_value_on_user_stack(stack, state.edi);
-
-        // PUSH old_signal_mask
-        push_value_on_user_stack(stack, old_signal_mask);
-
-        push_value_on_user_stack(stack, signal);
-        push_value_on_user_stack(stack, handler_vaddr.get());
-        push_value_on_user_stack(stack, 0); //push fake return address
-
-        ASSERT((*stack % 16) == 0);
-    };
-
+void Thread::setup_signal_stack(u8 signal, u32 old_signal_mask, VirtualAddress handler_vaddr)
+{
     // We now place the thread state on the userspace stack.
     // Note that we use a RegisterState.
     // Conversely, when the thread isn't blocking the RegisterState may not be
     // valid (fork, exec etc) but the tss will, so we use that instead.
-    auto& regs = get_register_dump_from_stack();
-    setup_stack(regs);
-    regs.eip = g_return_to_ring3_from_signal_trampoline.get();
+    auto& state = get_register_dump_from_stack();
 
-#ifdef SIGNAL_DEBUG
+    auto user_context = ucontext_from_regs(state, old_signal_mask);
+
+    // FIXME: Is there a way to avoid putting the extra 70+ bytes for SIGINFO
+    //        onto every single signal handler stack, even when siginfo was not specified?
+    // FIXME: Plumb sender information into this part. We need to know more about the signal.
+    //        Maybe need a struct SignalReason?
+    auto signal_info = siginfo_for_signal(signal, nullptr);
+
+    // Time to push things onto the stack
+    u32* stack = &state.userspace_esp;
+
+    // Align the stack to 16 bytes.
+    // Note that we push 132 bytes (5 * 4) + siginfo, + ucontext on to the stack
+    // so we need to account for this here.
+    constexpr size_t num_bytes_pushed = 20 + sizeof(siginfo_t) + sizeof(ucontext_t);
+    u32 stack_alignment = (*stack - num_bytes_pushed) % 16;
+    *stack -= stack_alignment;
+
+    auto push_struct_on_user_stack = [&stack](auto&& s) -> u32 {
+        *stack -= sizeof(s);
+        (void)copy_to_user((u32*)*stack, &s, sizeof(s));
+        return *stack;
+    };
+
+    u32 siginfo_location = push_struct_on_user_stack(signal_info);
+    u32 ucontext_location = push_struct_on_user_stack(user_context);
+    push_value_on_user_stack(stack, ucontext_location);
+    push_value_on_user_stack(stack, siginfo_location);
+    push_value_on_user_stack(stack, signal);
+    push_value_on_user_stack(stack, handler_vaddr.get());
+    push_value_on_user_stack(stack, 0); //push fake return address
+
+    ASSERT((*stack % 16) == 0);
+
+#ifndef SIGNAL_DEBUG
     dbgln("signal: Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
+    dbgln("Here's what we put on the user stack:");
+    dbgln("flags: {:#08x} exit_eip: {:#08x} eax: {:#08x} ecx: {:#08x} edx: {:#08x} ebx: {:#08x}", user_context.uc_mcontext.eflags, user_context.uc_mcontext.eip, state.eax, state.ecx, state.edx, state.ebx);
+    dbgln("esp: {:#08x} ebp: {:#08x} esi: {:#08x} edi: {:#08x} sigmask: {:#08x}", user_context.uc_mcontext.esp, state.ebp, state.esi, state.edi, old_signal_mask);
+    dbgln("ucontext* {:#08x} siginfo* {:#08x} signal {} handler: {:#08x} fake_ret: {}", ucontext_location, siginfo_location, signal, handler_vaddr.get(), 0);
 #endif
-    return DispatchSignalResult::Continue;
+
+    // Finally, prime the instruction pointer with our signal trampoline that will call the user handler
+    state.eip = g_return_to_ring3_from_signal_trampoline.get();
+}
+
+siginfo_t Thread::siginfo_for_signal(u8 signal, const Process* sender) const
+{
+    // FIXME: Implement signal-specific values here depending on sender and other traits
+    siginfo_t signal_info {};
+    signal_info.si_signo = signal;
+    signal_info.si_code = 0; // TODO: Signal specific
+    signal_info.si_pid = sender ? sender->pid().value() : 0;
+    signal_info.si_uid = sender ? sender->uid() : 0;
+    signal_info.si_addr = nullptr;      // TODO: signal specific
+    signal_info.si_status = 0;          // TODO: signal specific
+    signal_info.si_value.sival_int = 0; // TODO: signal specific
+
+    return signal_info;
+}
+
+ucontext_t Thread::ucontext_from_regs(const RegisterState& state, u32 old_signal_mask) const
+{
+    ucontext_t user_context {};
+    // Note: uc_link and uc_stack are only useful for deprecated getcontext/makecontext/setcontext
+    //       functions from the deprecated <ucontext.h>
+    user_context.uc_link = nullptr;
+    user_context.uc_stack.ss_flags = 0;
+    user_context.uc_stack.ss_size = 0;
+    user_context.uc_stack.ss_sp = nullptr;
+
+    u32 old_esp = state.userspace_esp;
+    u32 ret_eip = state.eip;
+    u32 ret_eflags = state.eflags;
+
+    user_context.uc_sigmask = old_signal_mask;
+
+    user_context.uc_mcontext.eax = state.eax;
+    user_context.uc_mcontext.ecx = state.ecx;
+    user_context.uc_mcontext.edx = state.edx;
+    user_context.uc_mcontext.ebx = state.ebx;
+    user_context.uc_mcontext.esp = old_esp;
+    user_context.uc_mcontext.ebp = state.ebp;
+    user_context.uc_mcontext.esi = state.esi;
+    user_context.uc_mcontext.edi = state.edi;
+    user_context.uc_mcontext.eip = ret_eip;
+    user_context.uc_mcontext.eflags = ret_eflags;
+    user_context.uc_mcontext.cs = state.cs;
+    user_context.uc_mcontext.ss = state.ss;
+    user_context.uc_mcontext.ds = state.ds;
+    user_context.uc_mcontext.es = state.es;
+    user_context.uc_mcontext.fs = state.fs;
+    user_context.uc_mcontext.gs = state.gs;
+
+    return user_context;
 }
 
 void Thread::set_default_signal_dispositions()

@@ -414,11 +414,15 @@ void signal_trampoline_dummy()
         "push ebp\n"
         "mov ebp, esp\n"
         "push eax\n"          // we have to store eax 'cause it might be the return value from a syscall
-        "sub esp, 4\n"        // align the stack to 16 bytes
+        "sub esp, 12\n"       // TODO: Is this the correct way to align the stack?
+        "mov eax, [ebp+20]\n" // push ucontext_t*
+        "push eax\n"
+        "mov eax, [ebp+16]\n" // push siginfo_t*
+        "push eax\n"
         "mov eax, [ebp+12]\n" // push the signal code
         "push eax\n"
         "call [ebp+8]\n" // call the signal handler
-        "add esp, 8\n"
+        "add esp, 16\n"  // Unroll the stack, such that the bottom of the stack is our register dump
         "mov eax, %P0\n"
         "int 0x82\n" // sigreturn syscall
         "asm_signal_trampoline_end:\n"

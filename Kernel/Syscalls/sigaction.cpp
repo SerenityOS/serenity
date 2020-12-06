@@ -87,33 +87,102 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     return 0;
 }
 
+#ifndef SIGNAL_DEBUG
+#    define SIG_VERBOSE(...)    \
+        do {                    \
+            dbgln(__VA_ARGS__); \
+        } while (0)
+#else
+#    define SIG_VERBOSE(...)
+#endif
+
 int Process::sys$sigreturn(RegisterState& registers)
 {
     REQUIRE_PROMISE(stdio);
     SmapDisabler disabler;
 
-    //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
+    //Here, we restore the state pushed by dispatch_signal and asm_signal_trampoline.
     u32* stack_ptr = (u32*)registers.userspace_esp;
+    SIG_VERBOSE("We pulled the stack pointer {} out of argument RegisterState", stack_ptr);
+
+    // Pop.. 2 words off the stack. That contain... things we don't care about.
+    stack_ptr += 2;
+
+    auto local_pop = [&]([[maybe_unused]] const char* value = nullptr) {
+        SIG_VERBOSE("Popping {} {:#08x} from user stack", value ? value : "value", *stack_ptr);
+        ++stack_ptr;
+    };
+
     u32 smuggled_eax = *stack_ptr;
+    local_pop("smuggled eax");
 
-    //pop the stored eax, ebp, return address, handler and signal code
-    stack_ptr += 5;
+    //pop the trampoline ebp, return address, handler, signal code, and siginfo_t*, and ucontext_t*
+    // FIXME: This feels really... awkward
+    for (size_t i = 0; i < 6; ++i) {
+        local_pop();
+    }
 
-    Thread::current()->m_signal_mask = *stack_ptr;
-    stack_ptr++;
-
-    //pop edi, esi, ebp, esp, ebx, edx, ecx and eax
-    memcpy(&registers.edi, stack_ptr, 8 * sizeof(FlatPtr));
-    stack_ptr += 8;
+    stack_ptr -= sizeof(ucontext_t);
+    ucontext_t* user_context = (ucontext_t*)stack_ptr;
+    for (size_t i = 0; i < sizeof(user_context->uc_mcontext) / 4; ++i) {
+        SIG_VERBOSE("uc_mcontext register {}: {:#08x}", i, ((u32*)(&(user_context->uc_mcontext)))[i]);
+    }
 
     registers.eip = *stack_ptr;
-    stack_ptr++;
+    local_pop("eip");
 
     registers.eflags = (registers.eflags & ~safe_eflags_mask) | (*stack_ptr & safe_eflags_mask);
-    stack_ptr++;
+    local_pop("eflags");
 
+#define __PRINT_MACRO(x) #x
+#define PRINT_MACRO(x) __PRINT_MACRO(x)
+
+#define SET_REG(reg)                                                                           \
+    do {                                                                                       \
+        registers.reg = user_context->uc_mcontext.reg;                                         \
+        dbgln("In RegisterState, set register " PRINT_MACRO(reg) " to {:08x}", registers.reg); \
+    } while (0)
+
+    Thread::current()->m_signal_mask = user_context->uc_sigmask;
+    SET_REG(edi);
+    SET_REG(esi);
+    SET_REG(ebp);
+    SET_REG(esp);
+    SET_REG(ebx);
+    SET_REG(edx);
+    SET_REG(ecx);
+    SET_REG(eax);
+    SET_REG(eip);
+    SET_REG(eflags);
+
+    /*
+    registers.edi = user_context->uc_mcontext.edi;
+    registers.esi = user_context->uc_mcontext.edi;
+    registers.ebp = user_context->uc_mcontext.edi;
+    registers.esp = user_context->uc_mcontext.edi;
+    registers.ebx = user_context->uc_mcontext.edi;
+    registers.edx = user_context->uc_mcontext.edi;
+    registers.ecx = user_context->uc_mcontext.edi;
+    registers.eax = user_context->uc_mcontext.eax;
+    registers.eip = user_context->uc_mcontext.eip;
+    registers.eflags = user_context->uc_mcontext.eflags;
+*/
+
+    // Check stack alignment. ... If this is off, it doesn't seem to crash?
+    // Yet? We don't have any programs that have super-aligned stack requirements yet
+    stack_ptr += sizeof(siginfo_t) / 4;
+    if ((u32)stack_ptr != registers.esp && round_up_to_power_of_two((u32)stack_ptr, 16) != registers.esp) {
+        dbgln("Unusual stack on signal return! Expected: {:#08x} Actual: {:#08x}", stack_ptr, registers.esp);
+    }
+    SIG_VERBOSE("New esp for userspace: {:#08x}", registers.esp);
+
+    // This is a common eflags value on sigreturn...
+    // Alignment issues might cause an EFAULT loop in this case
+    if (registers.eip == 0x220) {
+        dbgln("Suspicious userspace instruction pointer to return to! {:#08x}", registers.eip);
+        ASSERT_NOT_REACHED();
+    }
     registers.userspace_esp = registers.esp;
     return smuggled_eax;
 }
-
 }

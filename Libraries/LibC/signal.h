@@ -27,6 +27,7 @@
 #pragma once
 
 #include <signal_numbers.h>
+#include <sys/arch/i386/regs.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS
@@ -51,6 +52,21 @@ typedef struct siginfo {
     int si_status;
     union sigval si_value;
 } siginfo_t;
+
+typedef struct __stack {
+    void* ss_sp;
+    size_t ss_size;
+    int ss_flags;
+} stack_t;
+
+typedef PtraceRegisters mcontext_t;
+
+typedef struct ucontext {
+    struct ucontext* uc_link;
+    sigset_t uc_sigmask;
+    stack_t uc_stack;
+    mcontext_t uc_mcontext;
+} ucontext_t;
 
 struct sigaction {
     union {
@@ -99,11 +115,45 @@ extern const char* sys_siglist[NSIG];
 #define SIG_UNBLOCK 1
 #define SIG_SETMASK 2
 
+/* si_codes */
+#define ILL_ILLOPC 0
+#define ILL_ILLOPN 1
+#define ILL_ILLADR 2
+#define ILL_ILLTRP 3
+#define ILL_PRVOPC 4
+#define ILL_PRVREG 5
+#define ILL_COPROC 6
+#define ILL_BADSTK 7
+
+#define FPE_INTDIV 0
+#define FPE_INTOVF 1
+#define FPE_FLTDIV 2
+#define FPE_FLTOVF 3
+#define FPE_FLTUND 4
+#define FPE_FLTRES 5
+#define FPE_FLTINV 6
+
+#define SEGV_MAPERR 0
+#define SEGV_ACCERR 1
+
+#define BUS_ADRALN 0
+#define BUS_ADRERR 1
+#define BUS_OBJERR 2
+
+#define TRAP_BRKPT 0
+#define TRAP_TRACE 1
+
 #define CLD_EXITED 0
 #define CLD_KILLED 1
 #define CLD_DUMPED 2
 #define CLD_TRAPPED 3
 #define CLD_STOPPED 4
 #define CLD_CONTINUED 5
+
+#define SI_USER 0x40000000
+#define SI_QUEUE 0x40000001
+#define SI_TIMER 0x40000002
+#define SI_ASYNCIO 0x40000003
+#define SI_MESGQ 0x40000004
 
 __END_DECLS

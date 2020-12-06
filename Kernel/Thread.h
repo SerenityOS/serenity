@@ -1182,6 +1182,9 @@ private:
     void relock_process(LockMode, u32);
     String backtrace_impl();
     void reset_fpu_state();
+    void setup_signal_stack(u8 signal, u32 old_signal_mask, VirtualAddress handler_vaddr);
+    siginfo_t siginfo_for_signal(u8 signal, const Process* sender) const;
+    ucontext_t ucontext_from_regs(const RegisterState&, u32 old_signal_mask) const;
 
     mutable RecursiveSpinLock m_lock;
     mutable RecursiveSpinLock m_block_lock;

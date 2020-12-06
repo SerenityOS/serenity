@@ -1381,7 +1381,8 @@ int Emulator::virt$sigreturn()
 
     auto smuggled_eax = local_pop();
 
-    stack_ptr += 4 * sizeof(u32);
+    // trampoline ebp, fake return addr (0), handler addr, signal, siginfo_t*, ucontext_t*
+    stack_ptr += 6 * sizeof(u32);
 
     m_signal_mask = local_pop().value();
 
@@ -1396,6 +1397,10 @@ int Emulator::virt$sigreturn()
 
     m_cpu.set_eip(local_pop().value());
     m_cpu.set_eflags(local_pop());
+
+    stack_ptr += (sizeof(siginfo_t) + sizeof(ucontext_t)) / sizeof(u32);
+    if (m_cpu.esp().value() != stack_ptr && m_cpu.esp().value() == round_up_to_power_of_two(stack_ptr, 16))
+        reportln("\n=={}=== Unusual stack alignment on signal return! Expected: {:#08x} Actual: {:#08x}", getpid(), stack_ptr, m_cpu.esp().value());
 
     // FIXME: We're losing shadow bits here.
     return smuggled_eax.value();
@@ -1486,8 +1491,23 @@ void Emulator::dispatch_one_pending_signal()
 
     auto old_esp = m_cpu.esp();
 
-    u32 stack_alignment = (m_cpu.esp().value() - 56) % 16;
+    // FIXME: Fill these in with cool stuff about the signal being handled by user code
+    siginfo_t signal_info {};
+    signal_info.si_signo = signum;
+    ucontext_t user_context {};
+    user_context.uc_stack.ss_sp = (void*)old_esp.value();
+
+    u32 stack_alignment = (m_cpu.esp().value() - 64 - sizeof(siginfo_t) - sizeof(ucontext_t)) % 16;
     m_cpu.set_esp(shadow_wrap_as_initialized(m_cpu.esp().value() - stack_alignment));
+
+    // FIXME: Shadow the siginfo and ucontext_t? This can't be the "right" way to put it on the stack
+    m_cpu.set_esp({ m_cpu.esp().value() - sizeof(ucontext_t), m_cpu.esp().shadow() });
+    mmu().copy_to_vm(m_cpu.esp().value(), &user_context, sizeof(ucontext_t));
+    auto ucontext_location = m_cpu.esp();
+
+    m_cpu.set_esp({ m_cpu.esp().value() - sizeof(siginfo_t), m_cpu.esp().shadow() });
+    mmu().copy_to_vm(m_cpu.esp().value(), &signal_info, sizeof(siginfo_t));
+    auto siginfo_location = m_cpu.esp();
 
     m_cpu.push32(shadow_wrap_as_initialized(m_cpu.eflags()));
     m_cpu.push32(shadow_wrap_as_initialized(m_cpu.eip()));
@@ -1503,11 +1523,20 @@ void Emulator::dispatch_one_pending_signal()
     // FIXME: Push old signal mask here.
     m_cpu.push32(shadow_wrap_as_initialized(0u));
 
+    m_cpu.push32(ucontext_location);
+    m_cpu.push32(siginfo_location);
     m_cpu.push32(shadow_wrap_as_initialized((u32)signum));
     m_cpu.push32(shadow_wrap_as_initialized(handler.handler));
     m_cpu.push32(shadow_wrap_as_initialized(0u));
 
     ASSERT((m_cpu.esp().value() % 16) == 0);
+
+#ifdef DEBUG_SPAM
+    reportln("Signal: Signal Params on Stack:");
+    reportln("Signal: flags: {:#08x} exit_eip: {:#08x} eax: {:#08x} ecx: {:#08x} edx: {:#08x} ebx: {:#08x}", m_cpu.eflags(), m_cpu.eip(), m_cpu.eax(), m_cpu.ecx(), m_cpu.edx(), m_cpu.ebx());
+    reportln("Signal: esp: {:#08x} ebp: {:#08x} esi: {:#08x} edi: {:#08x} sigmask: {:#08x}", old_esp, m_cpu.ebp(), m_cpu.esi(), m_cpu.edi(), 0);
+    reportln("Signal: ucontext* {:#08x} siginfo* {:#08x} signal {} handler: {:#08x} fake_ret: {}", ucontext_location, siginfo_location, signum, handler.handler, 0);
+#endif
 
     m_cpu.set_eip(m_signal_trampoline);
 }
@@ -1527,11 +1556,15 @@ void signal_trampoline_dummy()
         "push ebp\n"
         "mov ebp, esp\n"
         "push eax\n"          // we have to store eax 'cause it might be the return value from a syscall
-        "sub esp, 4\n"        // align the stack to 16 bytes
+        "sub esp, 12\n"       // align the stack to 16 bytes
+        "mov eax, [ebp+20]\n" // push ucontext_t*
+        "push eax\n"
+        "mov eax, [ebp+16]\n" // push siginfo_t*
+        "push eax\n"
         "mov eax, [ebp+12]\n" // push the signal code
         "push eax\n"
         "call [ebp+8]\n" // call the signal handler
-        "add esp, 8\n"
+        "add esp, 16\n"
         "mov eax, %P0\n"
         "int 0x82\n" // sigreturn syscall
         "asm_signal_trampoline_end:\n"
