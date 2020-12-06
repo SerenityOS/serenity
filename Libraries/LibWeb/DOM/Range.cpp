@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, the SerenityOS developers.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,44 +24,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/DOM/Position.h>
+#include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Range.h>
-#include <LibWeb/Layout/LayoutPosition.h>
-#include <LibWeb/Layout/Node.h>
 
-namespace Web::Layout {
+namespace Web::DOM {
 
-DOM::Position LayoutPosition::to_dom_position() const
+Range::Range(Document& document)
+    : m_start_container(document)
+    , m_start_offset(0)
+    , m_end_container(document)
+    , m_end_offset(0)
 {
-    if (!layout_node)
-        return {};
-
-    // FIXME: Verify that there are no shenanigans going on.
-    return { const_cast<DOM::Node&>(*layout_node->dom_node()), (unsigned)index_in_node };
 }
 
-LayoutRange LayoutRange::normalized() const
+Range::Range(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
+    : m_start_container(start_container)
+    , m_start_offset(start_offset)
+    , m_end_container(end_container)
+    , m_end_offset(end_offset)
 {
-    if (!is_valid())
-        return {};
-    if (m_start.layout_node == m_end.layout_node) {
-        if (m_start.index_in_node < m_end.index_in_node)
-            return *this;
-        return { m_end, m_start };
+}
+
+NonnullRefPtr<Range> Range::clone_range() const
+{
+    return adopt(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
+}
+
+NonnullRefPtr<Range> Range::inverted() const
+{
+    return adopt(*new Range(const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset));
+}
+
+NonnullRefPtr<Range> Range::normalized() const
+{
+    if (m_start_container.ptr() == m_end_container.ptr()) {
+        if (m_start_offset <= m_end_offset)
+            return clone_range();
+
+        return inverted();
     }
-    if (m_start.layout_node->is_before(*m_end.layout_node))
-        return *this;
-    return { m_end, m_start };
-}
 
-NonnullRefPtr<DOM::Range> LayoutRange::to_dom_range() const
-{
-    ASSERT(is_valid());
+    if (m_start_container->is_before(m_end_container))
+        return clone_range();
 
-    auto start = m_start.to_dom_position();
-    auto end = m_end.to_dom_position();
-
-    return DOM::Range::create(*start.node(), start.offset(), *end.node(), end.offset());
+    return inverted();
 }
 
 }
