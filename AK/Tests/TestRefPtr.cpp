@@ -36,6 +36,15 @@ struct Object : public RefCounted<Object> {
 struct Object2 : Object {
 };
 
+struct SelfAwareObject : public RefCounted<SelfAwareObject> {
+    void one_ref_left() { m_has_one_ref_left = true; }
+    void will_be_destroyed() { ++num_destroyed; }
+
+    bool m_has_one_ref_left = false;
+    static size_t num_destroyed;
+};
+size_t SelfAwareObject::num_destroyed = 0;
+
 TEST_CASE(basics)
 {
     RefPtr<Object> object = adopt(*new Object);
@@ -129,6 +138,27 @@ TEST_CASE(assign_copy_self)
 #endif
 
     EXPECT_EQ(object->ref_count(), 1u);
+}
+
+TEST_CASE(self_observers)
+{
+    RefPtr<SelfAwareObject> object = adopt(*new SelfAwareObject);
+    EXPECT_EQ(object->ref_count(), 1u);
+    EXPECT_EQ(object->m_has_one_ref_left, false);
+    EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
+
+    object->ref();
+    EXPECT_EQ(object->ref_count(), 2u);
+    EXPECT_EQ(object->m_has_one_ref_left, false);
+    EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
+
+    object->unref();
+    EXPECT_EQ(object->ref_count(), 1u);
+    EXPECT_EQ(object->m_has_one_ref_left, true);
+    EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
+
+    object->unref();
+    EXPECT_EQ(SelfAwareObject::num_destroyed, 1u);
 }
 
 TEST_MAIN(RefPtr)
