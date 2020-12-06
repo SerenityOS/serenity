@@ -35,8 +35,6 @@
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/VM.h>
 
-//#define VM_DEBUG
-
 namespace JS {
 
 NonnullRefPtr<VM> VM::create()
