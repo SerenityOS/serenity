@@ -444,14 +444,16 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
         } else if (compare_type == CharacterCompareType::String) {
             ASSERT(!current_inversion_state());
 
-            char* str = reinterpret_cast<char*>(m_bytecode->at(offset++));
-            auto& length = m_bytecode->at(offset++);
+            const auto& length = m_bytecode->at(offset++);
+            StringBuilder str_builder;
+            for (size_t i = 0; i < length; ++i)
+                str_builder.append(m_bytecode->at(offset++));
 
             // We want to compare a string that is definitely longer than the available string
             if (input.view.length() - state.string_position < length)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-            if (!compare_string(input, state, str, length))
+            if (!compare_string(input, state, str_builder.string_view().characters_without_null_termination(), length))
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
         } else if (compare_type == CharacterCompareType::CharClass) {
@@ -717,9 +719,11 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             auto ref = m_bytecode->at(offset++);
             result.empend(String::format("number=%lu", ref));
         } else if (compare_type == CharacterCompareType::String) {
-            char* str = reinterpret_cast<char*>(m_bytecode->at(offset++));
             auto& length = m_bytecode->at(offset++);
-            result.empend(String::format("value=\"%.*s\"", length, str));
+            StringBuilder str_builder;
+            for (size_t i = 0; i < length; ++i)
+                str_builder.append(m_bytecode->at(offset++));
+            result.empend(String::format("value=\"%.*s\"", length, str_builder.string_view().characters_without_null_termination()));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::format(
                     "compare against: \"%s\"",
