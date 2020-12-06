@@ -93,9 +93,7 @@ void Node::paint(PaintContext& context, PaintPhase phase)
 
     before_children_paint(context, phase);
 
-    for_each_child([&](auto& child) {
-        if (child.is_box() && downcast<Box>(child).stacking_context())
-            return;
+    for_each_child_in_paint_order([&](auto& child) {
         child.paint(context, phase);
     });
 
@@ -105,11 +103,7 @@ void Node::paint(PaintContext& context, PaintPhase phase)
 HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     HitTestResult result;
-    for_each_child([&](auto& child) {
-        // Skip over children that establish their own stacking context.
-        // The outer loop who called us will take care of those.
-        if (is<Box>(child) && downcast<Box>(child).stacking_context())
-            return;
+    for_each_child_in_paint_order([&](auto& child) {
         auto child_result = child.hit_test(position, type);
         if (child_result.layout_node)
             result = child_result;
