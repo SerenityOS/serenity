@@ -587,22 +587,6 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     }
 
-    if (box.style().float_() == CSS::Float::Left) {
-        if (!m_left_floating_boxes.is_empty()) {
-            auto& previous_floating_box = *m_left_floating_boxes.last();
-            x = previous_floating_box.effective_offset().x() + previous_floating_box.width();
-        }
-        m_left_floating_boxes.append(&box);
-    } else if (box.style().float_() == CSS::Float::Right) {
-        if (!m_right_floating_boxes.is_empty()) {
-            auto& previous_floating_box = *m_right_floating_boxes.last();
-            x = previous_floating_box.effective_offset().x() - box.width();
-        } else {
-            x = containing_block.width() - box.width();
-        }
-        m_right_floating_boxes.append(&box);
-    }
-
     box.set_offset(x, y);
 }
 
@@ -668,7 +652,31 @@ void BlockFormattingContext::layout_floating_child(Box& box)
     layout_inside(box, LayoutMode::Default);
     compute_height(box);
 
+    // First we place the box normally (to get the right y coordinate.)
     place_block_level_non_replaced_element_in_normal_flow(box);
+
+    // Then we float it to the left or right.
+
+    float x = box.effective_offset().x();
+    float y = box.effective_offset().y();
+
+    if (box.style().float_() == CSS::Float::Left) {
+        if (!m_left_floating_boxes.is_empty()) {
+            auto& previous_floating_box = *m_left_floating_boxes.last();
+            x = previous_floating_box.effective_offset().x() + previous_floating_box.width();
+        }
+        m_left_floating_boxes.append(&box);
+    } else if (box.style().float_() == CSS::Float::Right) {
+        if (!m_right_floating_boxes.is_empty()) {
+            auto& previous_floating_box = *m_right_floating_boxes.last();
+            x = previous_floating_box.effective_offset().x() - box.width();
+        } else {
+            x = context_box().width() - box.width();
+        }
+        m_right_floating_boxes.append(&box);
+    }
+
+    box.set_offset(x, y);
 }
 
 void BlockFormattingContext::layout_absolutely_positioned_descendant(Box& box)
