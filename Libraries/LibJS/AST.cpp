@@ -48,7 +48,6 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/WithScope.h>
-#include <stdio.h>
 
 namespace JS {
 
@@ -823,14 +822,13 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
 
 static void print_indent(int indent)
 {
-    for (int i = 0; i < indent * 2; ++i)
-        putchar(' ');
+    out("{}", String::repeated(' ', indent * 2));
 }
 
 void ASTNode::dump(int indent) const
 {
     print_indent(indent);
-    printf("%s\n", class_name());
+    outln("{}", class_name());
 }
 
 void ScopeNode::dump(int indent) const
@@ -838,13 +836,13 @@ void ScopeNode::dump(int indent) const
     ASTNode::dump(indent);
     if (!m_variables.is_empty()) {
         print_indent(indent + 1);
-        printf("(Variables)\n");
+        outln("(Variables)");
         for (auto& variable : m_variables)
             variable.dump(indent + 2);
     }
     if (!m_children.is_empty()) {
         print_indent(indent + 1);
-        printf("(Children)\n");
+        outln("(Children)");
         for (auto& child : children())
             child.dump(indent + 2);
     }
@@ -923,10 +921,10 @@ void BinaryExpression::dump(int indent) const
     }
 
     print_indent(indent);
-    printf("%s\n", class_name());
+    outln("{}", class_name());
     m_lhs->dump(indent + 1);
     print_indent(indent + 1);
-    printf("%s\n", op_string);
+    outln("{}", op_string);
     m_rhs->dump(indent + 1);
 }
 
@@ -946,10 +944,10 @@ void LogicalExpression::dump(int indent) const
     }
 
     print_indent(indent);
-    printf("%s\n", class_name());
+    outln("{}", class_name());
     m_lhs->dump(indent + 1);
     print_indent(indent + 1);
-    printf("%s\n", op_string);
+    outln("{}", op_string);
     m_rhs->dump(indent + 1);
 }
 
@@ -981,16 +979,19 @@ void UnaryExpression::dump(int indent) const
     }
 
     print_indent(indent);
-    printf("%s\n", class_name());
+    outln("{}", class_name());
     print_indent(indent + 1);
-    printf("%s\n", op_string);
+    outln("{}", op_string);
     m_lhs->dump(indent + 1);
 }
 
 void CallExpression::dump(int indent) const
 {
     print_indent(indent);
-    printf("CallExpression %s\n", is_new_expression() ? "[new]" : "");
+    if (is_new_expression())
+        outln("CallExpression [new]");
+    else
+        outln("CallExpression");
     m_callee->dump(indent + 1);
     for (auto& argument : m_arguments)
         argument.value->dump(indent + 1);
@@ -1005,21 +1006,20 @@ void ClassDeclaration::dump(int indent) const
 void ClassExpression::dump(int indent) const
 {
     print_indent(indent);
-    ASSERT(m_name.characters());
-    printf("ClassExpression: \"%s\"\n", m_name.characters());
+    outln("ClassExpression: \"{}\"", m_name);
 
     print_indent(indent);
-    printf("(Constructor)\n");
+    outln("(Constructor)");
     m_constructor->dump(indent + 1);
 
     if (!m_super_class.is_null()) {
         print_indent(indent);
-        printf("(Super Class)\n");
+        outln("(Super Class)");
         m_super_class->dump(indent + 1);
     }
 
     print_indent(indent);
-    printf("(Methods)\n");
+    outln("(Methods)");
     for (auto& method : m_methods)
         method.dump(indent + 1);
 }
@@ -1029,7 +1029,7 @@ void ClassMethod::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    printf("(Key)\n");
+    outln("(Key)");
     m_key->dump(indent + 1);
 
     const char* kind_string = nullptr;
@@ -1045,78 +1045,78 @@ void ClassMethod::dump(int indent) const
         break;
     }
     print_indent(indent);
-    printf("Kind: %s\n", kind_string);
+    outln("Kind: {}", kind_string);
 
     print_indent(indent);
-    printf("Static: %s\n", m_is_static ? "true" : "false");
+    outln("Static: {}", m_is_static);
 
     print_indent(indent);
-    printf("(Function)\n");
+    outln("(Function)");
     m_function->dump(indent + 1);
 }
 
 void StringLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("StringLiteral \"%s\"\n", m_value.characters());
+    outln("StringLiteral \"{}\"", m_value);
 }
 
 void SuperExpression::dump(int indent) const
 {
     print_indent(indent);
-    printf("super\n");
+    outln("super");
 }
 
 void NumericLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("NumericLiteral %g\n", m_value);
+    outln("NumericLiteral {}", m_value);
 }
 
 void BigIntLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("BigIntLiteral %s\n", m_value.characters());
+    outln("BigIntLiteral {}", m_value);
 }
 
 void BooleanLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("BooleanLiteral %s\n", m_value ? "true" : "false");
+    outln("BooleanLiteral {}", m_value);
 }
 
 void NullLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("null\n");
+    outln("null");
 }
 
 void FunctionNode::dump(int indent, const char* class_name) const
 {
     print_indent(indent);
-    printf("%s '%s'\n", class_name, name().characters());
+    outln("{} '{}'", class_name, name());
     if (!m_parameters.is_empty()) {
         print_indent(indent + 1);
-        printf("(Parameters)\n");
+        outln("(Parameters)\n");
 
         for (auto& parameter : m_parameters) {
             print_indent(indent + 2);
             if (parameter.is_rest)
-                printf("...");
-            printf("%s\n", parameter.name.characters());
+                out("...");
+            outln("{}", parameter.name);
             if (parameter.default_value)
                 parameter.default_value->dump(indent + 3);
         }
     }
     if (!m_variables.is_empty()) {
         print_indent(indent + 1);
-        printf("(Variables)\n");
+        outln("(Variables)");
 
         for (auto& variable : m_variables)
             variable.dump(indent + 2);
     }
     print_indent(indent + 1);
-    printf("(Body)\n");
+    outln("(Body)");
     body().dump(indent + 2);
 }
 
@@ -1142,12 +1142,12 @@ void IfStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    printf("If\n");
+    outln("If");
     predicate().dump(indent + 1);
     consequent().dump(indent + 1);
     if (alternate()) {
         print_indent(indent);
-        printf("Else\n");
+        outln("Else");
         alternate()->dump(indent + 1);
     }
 }
@@ -1157,7 +1157,7 @@ void WhileStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    printf("While\n");
+    outln("While");
     test().dump(indent + 1);
     body().dump(indent + 1);
 }
@@ -1167,10 +1167,10 @@ void WithStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent + 1);
-    printf("Object\n");
+    outln("Object");
     object().dump(indent + 2);
     print_indent(indent + 1);
-    printf("Body\n");
+    outln("Body");
     body().dump(indent + 2);
 }
 
@@ -1179,7 +1179,7 @@ void DoWhileStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    printf("DoWhile\n");
+    outln("DoWhile");
     test().dump(indent + 1);
     body().dump(indent + 1);
 }
@@ -1189,7 +1189,7 @@ void ForStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    printf("For\n");
+    outln("For");
     if (init())
         init()->dump(indent + 1);
     if (test())
@@ -1204,7 +1204,7 @@ void ForInStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    printf("ForIn\n");
+    outln("ForIn");
     lhs().dump(indent + 1);
     rhs().dump(indent + 1);
     body().dump(indent + 1);
@@ -1215,7 +1215,7 @@ void ForOfStatement::dump(int indent) const
     ASTNode::dump(indent);
 
     print_indent(indent);
-    printf("ForOf\n");
+    outln("ForOf");
     lhs().dump(indent + 1);
     rhs().dump(indent + 1);
     body().dump(indent + 1);
@@ -1234,7 +1234,7 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
 void Identifier::dump(int indent) const
 {
     print_indent(indent);
-    printf("Identifier \"%s\"\n", m_string.characters());
+    outln("Identifier \"{}\"", m_string);
 }
 
 void SpreadExpression::dump(int indent) const
@@ -1465,7 +1465,7 @@ void AssignmentExpression::dump(int indent) const
 
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    printf("%s\n", op_string);
+    outln("{}", op_string);
     m_lhs->dump(indent + 1);
     m_rhs->dump(indent + 1);
 }
@@ -1485,12 +1485,12 @@ void UpdateExpression::dump(int indent) const
     ASTNode::dump(indent);
     if (m_prefixed) {
         print_indent(indent + 1);
-        printf("%s\n", op_string);
+        outln("{}", op_string);
     }
     m_argument->dump(indent + 1);
     if (!m_prefixed) {
         print_indent(indent + 1);
-        printf("%s\n", op_string);
+        outln("{}", op_string);
     }
 }
 
@@ -1532,7 +1532,7 @@ void VariableDeclaration::dump(int indent) const
 
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    printf("%s\n", declaration_kind_string);
+    outln("{}", declaration_kind_string);
 
     for (auto& declarator : m_declarations)
         declarator.dump(indent + 1);
@@ -1645,7 +1645,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 void MemberExpression::dump(int indent) const
 {
     print_indent(indent);
-    printf("%s (computed=%s)\n", class_name(), is_computed() ? "true" : "false");
+    outln("%{}(computed={})", class_name(), is_computed());
     m_object->dump(indent + 1);
     m_property->dump(indent + 1);
 }
@@ -1698,7 +1698,7 @@ void MetaProperty::dump(int indent) const
     else
         ASSERT_NOT_REACHED();
     print_indent(indent);
-    printf("%s %s\n", class_name(), name.characters());
+    outln("{} {}", class_name(), name);
 }
 
 Value MetaProperty::execute(Interpreter& interpreter, GlobalObject&) const
@@ -1738,7 +1738,7 @@ Value NullLiteral::execute(Interpreter&, GlobalObject&) const
 void RegExpLiteral::dump(int indent) const
 {
     print_indent(indent);
-    printf("%s (/%s/%s)\n", class_name(), content().characters(), flags().characters());
+    outln("{} (/{}/{})", class_name(), content(), flags());
 }
 
 Value RegExpLiteral::execute(Interpreter&, GlobalObject& global_object) const
@@ -1754,7 +1754,7 @@ void ArrayExpression::dump(int indent) const
             element->dump(indent + 1);
         } else {
             print_indent(indent + 1);
-            printf("<empty>\n");
+            outln("<empty>");
         }
     }
 }
@@ -1812,10 +1812,10 @@ void TaggedTemplateLiteral::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    printf("(Tag)\n");
+    outln("(Tag)");
     m_tag->dump(indent + 2);
     print_indent(indent + 1);
-    printf("(Template Literal)\n");
+    outln("(Template Literal)");
     m_template_literal->dump(indent + 2);
 }
 
@@ -1862,18 +1862,18 @@ void TryStatement::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent);
-    printf("(Block)\n");
+    outln("(Block)");
     block().dump(indent + 1);
 
     if (handler()) {
         print_indent(indent);
-        printf("(Handler)\n");
+        outln("(Handler)");
         handler()->dump(indent + 1);
     }
 
     if (finalizer()) {
         print_indent(indent);
-        printf("(Finalizer)\n");
+        outln("(Finalizer)");
         finalizer()->dump(indent + 1);
     }
 }
@@ -1881,10 +1881,10 @@ void TryStatement::dump(int indent) const
 void CatchClause::dump(int indent) const
 {
     print_indent(indent);
-    printf("CatchClause");
-    if (!m_parameter.is_null())
-        printf(" (%s)", m_parameter.characters());
-    printf("\n");
+    if (m_parameter.is_null())
+        outln("CatchClause");
+    else
+        outln("CatchClause ({})", m_parameter);
     body().dump(indent + 1);
 }
 
@@ -2011,13 +2011,13 @@ void SwitchCase::dump(int indent) const
     ASTNode::dump(indent);
     print_indent(indent + 1);
     if (m_test) {
-        printf("(Test)\n");
+        outln("(Test)");
         m_test->dump(indent + 2);
     } else {
-        printf("(Default)\n");
+        outln("(Default)");
     }
     print_indent(indent + 1);
-    printf("(Consequent)\n");
+    outln("(Consequent)");
     for (auto& statement : m_consequent)
         statement.dump(indent + 2);
 }
@@ -2042,13 +2042,13 @@ void ConditionalExpression::dump(int indent) const
 {
     ASTNode::dump(indent);
     print_indent(indent + 1);
-    printf("(Test)\n");
+    outln("(Test)");
     m_test->dump(indent + 2);
     print_indent(indent + 1);
-    printf("(Consequent)\n");
+    outln("(Consequent)");
     m_consequent->dump(indent + 2);
     print_indent(indent + 1);
-    printf("(Alternate)\n");
+    outln("(Alternate)");
     m_alternate->dump(indent + 2);
 }
 

@@ -198,11 +198,11 @@ Value Object::get_own_properties(const Object& this_object, PropertyKind kind, b
             if (kind == PropertyKind::Key) {
                 properties_array->define_property(i, js_string(vm(), String::number(i)));
             } else if (kind == PropertyKind::Value) {
-                properties_array->define_property(i, js_string(vm(), String::format("%c", str[i])));
+                properties_array->define_property(i, js_string(vm(), String::formatted("{:c}", str[i])));
             } else {
                 auto* entry_array = Array::create(global_object());
                 entry_array->define_property(0, js_string(vm(), String::number(i)));
-                entry_array->define_property(1, js_string(vm(), String::format("%c", str[i])));
+                entry_array->define_property(1, js_string(vm(), String::formatted("{:c}", str[i])));
                 properties_array->define_property(i, entry_array);
             }
             if (vm().exception())
@@ -400,9 +400,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         }
 
 #ifdef OBJECT_DEBUG
-        dbg() << "Defining new property " << property_name.to_display_string() << " with accessor descriptor { attributes=" << attributes << ", "
-              << "getter=" << getter.to_string_without_side_effects() << ", "
-              << "setter=" << setter.to_string_without_side_effects() << "}";
+        dbgln("Defining new property {} with accessor descriptor {{ attributes={}, getter={}, setter={} }}", property_name.to_display_string(), attributes, getter, setter);
 #endif
 
         return define_property(property_name, Accessor::create(vm, getter_function, setter_function), attributes, throw_exceptions);
@@ -422,8 +420,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         return {};
 
 #ifdef OBJECT_DEBUG
-    dbg() << "Defining new property " << property_name.to_display_string() << " with data descriptor { attributes=" << attributes
-          << ", value=" << (value.is_empty() ? "<empty>" : value.to_string_without_side_effects()) << " }";
+    dbgln("Defining new property {} with data descriptor {{ attributes={}, value={} }}", property_name.to_display_string(), attributes, value);
 #endif
 
     return define_property(property_name, value, attributes, throw_exceptions);
@@ -503,7 +500,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
 
     if (!is_extensible() && new_property) {
 #ifdef OBJECT_DEBUG
-        dbg() << "Disallow define_property of non-extensible object";
+        dbgln("Disallow define_property of non-extensible object");
 #endif
         if (throw_exceptions && vm().in_strict_mode())
             vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_name.to_display_string());
@@ -532,7 +529,7 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable() && attributes != metadata.value().attributes) {
 #ifdef OBJECT_DEBUG
-        dbg() << "Disallow reconfig of non-configurable property";
+        dbgln("Disallow reconfig of non-configurable property");
 #endif
         if (throw_exceptions)
             vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string());
@@ -548,14 +545,14 @@ bool Object::put_own_property(Object& this_object, const StringOrSymbol& propert
         metadata = shape().lookup(property_name);
 
 #ifdef OBJECT_DEBUG
-        dbg() << "Reconfigured property " << property_name.to_display_string() << ", new shape says offset is " << metadata.value().offset << " and my storage capacity is " << m_storage.size();
+        dbgln("Reconfigured property {}, new shape says offset is {} and my storage capacity is {}", property_name.to_display_string(), metadata.value().offset, m_storage.size());
 #endif
     }
 
     auto value_here = m_storage[metadata.value().offset];
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !metadata.value().attributes.is_writable()) {
 #ifdef OBJECT_DEBUG
-        dbg() << "Disallow write to non-writable property";
+        dbgln("Disallow write to non-writable property");
 #endif
         return false;
     }
@@ -580,7 +577,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 
     if (!is_extensible() && new_property) {
 #ifdef OBJECT_DEBUG
-        dbg() << "Disallow define_property of non-extensible object";
+        dbgln("Disallow define_property of non-extensible object");
 #endif
         if (throw_exceptions && vm().in_strict_mode())
             vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_index);
@@ -599,7 +596,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable() && attributes != existing_attributes) {
 #ifdef OBJECT_DEBUG
-        dbg() << "Disallow reconfig of non-configurable property";
+        dbgln("Disallow reconfig of non-configurable property");
 #endif
         if (throw_exceptions)
             vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
@@ -609,7 +606,7 @@ bool Object::put_own_property_by_index(Object& this_object, u32 property_index, 
     auto value_here = new_property ? Value() : existing_property.value().value;
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !existing_attributes.is_writable()) {
 #ifdef OBJECT_DEBUG
-        dbg() << "Disallow write to non-writable property";
+        dbgln("Disallow write to non-writable property");
 #endif
         return false;
     }

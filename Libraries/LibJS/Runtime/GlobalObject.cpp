@@ -25,7 +25,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <AK/LogStream.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
@@ -179,7 +178,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 {
-    dbg() << "Forced garbage collection requested!";
+    dbgln("Forced garbage collection requested!");
     vm.heap().collect_garbage();
     return js_undefined();
 }

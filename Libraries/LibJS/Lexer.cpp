@@ -181,7 +181,7 @@ void Lexer::consume()
             type = "LINE SEPARATOR";
         else
             type = "PARAGRAPH SEPARATOR";
-        dbg() << "Found a line terminator: " << type;
+        dbgln("Found a line terminator: {}", type);
 #endif
         // This is a three-char line terminator, we need to increase m_position some more.
         // We might reach EOF and need to check again.
@@ -201,9 +201,9 @@ void Lexer::consume()
             m_line_number++;
             m_line_column = 1;
 #ifdef LEXER_DEBUG
-            dbg() << "Incremented line number, now at: line " << m_line_number << ", column 1";
+            dbgln("Incremented line number, now at: line {}, column 1", m_line_number);
         } else {
-            dbg() << "Previous was CR, this is LF - not incrementing line number again.";
+            dbgln("Previous was CR, this is LF - not incrementing line number again.");
 #endif
         }
     } else {
@@ -638,12 +638,12 @@ Token Lexer::next()
         value_start_column_number);
 
 #ifdef LEXER_DEBUG
-    dbg() << "------------------------------";
-    dbg() << "Token: " << m_current_token.name();
-    dbg() << "Trivia: _" << m_current_token.trivia() << "_";
-    dbg() << "Value: _" << m_current_token.value() << "_";
-    dbg() << "Line: " << m_current_token.line_number() << ", Column: " << m_current_token.line_column();
-    dbg() << "------------------------------";
+    dbgln("------------------------------");
+    dbgln("Token: {}", m_current_token.name());
+    dbgln("Trivia: _{}_", m_current_token.trivia());
+    dbgln("Value: _{}_", m_current_token.value());
+    dbgln("Line: {}, Column: {}", m_current_token.line_number(), m_current_token.line_column());
+    dbgln("------------------------------");
 #endif
 
     return m_current_token;

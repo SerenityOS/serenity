@@ -26,8 +26,10 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Noncopyable.h>
+#include <AK/String.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
@@ -70,6 +72,19 @@ private:
     bool m_live { true };
 };
 
-const LogStream& operator<<(const LogStream&, const Cell*);
+}
+
+namespace AK {
+
+template<>
+struct Formatter<JS::Cell> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const JS::Cell* cell)
+    {
+        if (!cell)
+            Formatter<StringView>::format(params, builder, "Cell{nullptr}");
+        else
+            Formatter<StringView>::format(params, builder, String::formatted("{}{{{}}}", cell->class_name(), static_cast<const void*>(cell)));
+    }
+};
 
 }
