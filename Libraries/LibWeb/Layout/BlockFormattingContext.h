@@ -52,6 +52,7 @@ private:
     virtual bool is_block_formatting_context() const final { return true; }
 
     void compute_width_for_absolutely_positioned_block(Box&);
+    void compute_width_for_floating_box(Box&);
 
     void layout_initial_containing_block(LayoutMode);
     void layout_block_level_children(LayoutMode);
