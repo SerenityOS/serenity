@@ -1915,7 +1915,7 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
         // If we previously had an exception and the finalizer didn't
         // throw a new one, restore the old one.
         // FIXME: This will print debug output in throw_exception() for
-        // a seconds time with INTERPRETER_DEBUG enabled.
+        // a seconds time with m_should_log_exceptions enabled.
         if (previous_exception && !interpreter.exception())
             interpreter.vm().throw_exception(previous_exception);
     }
