@@ -394,14 +394,14 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return region->handle_fault(fault, lock);
 }
 
-OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, const StringView& name, u8 access, size_t physical_alignment, bool user_accessible, bool cacheable)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
-    auto vmobject = ContiguousVMObject::create_with_size(size);
+    auto vmobject = ContiguousVMObject::create_with_size(size, physical_alignment);
     return allocate_kernel_region_with_vmobject(range.value(), vmobject, name, access, user_accessible, cacheable);
 }
 
@@ -610,7 +610,7 @@ void MemoryManager::deallocate_supervisor_physical_page(const PhysicalPage& page
     ASSERT_NOT_REACHED();
 }
 
-NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size)
+NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size, size_t physical_alignment)
 {
     ASSERT(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
@@ -618,9 +618,9 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
     NonnullRefPtrVector<PhysicalPage> physical_pages;
 
     for (auto& region : m_super_physical_regions) {
-        physical_pages = region.take_contiguous_free_pages((count), true);
+        physical_pages = region.take_contiguous_free_pages(count, true, physical_alignment);
         if (!physical_pages.is_empty())
-            break;
+            continue;
     }
 
     if (physical_pages.is_empty()) {
