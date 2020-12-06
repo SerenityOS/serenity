@@ -94,6 +94,7 @@ public:
     void set_body(HTML::HTMLElement& new_body);
 
     String title() const;
+    void set_title(const String&);
 
     void attach_to_frame(Badge<Frame>, Frame&);
     void detach_from_frame(Badge<Frame>, Frame&);
