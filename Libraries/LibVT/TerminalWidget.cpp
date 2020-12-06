@@ -871,6 +871,13 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy URL", [this](auto&) {
             GUI::Clipboard::the().set_plain_text(m_context_menu_href);
         }));
+        m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy name", [&](auto&) {
+            // file://courage/home/anon/something -> /home/anon/something
+            auto path = URL(m_context_menu_href).path();
+            // /home/anon/something -> something
+            auto name = LexicalPath(path).basename();
+            GUI::Clipboard::the().set_plain_text(name);
+        }));
         m_context_menu_for_hyperlink->add_separator();
         m_context_menu_for_hyperlink->add_action(copy_action());
         m_context_menu_for_hyperlink->add_action(paste_action());
