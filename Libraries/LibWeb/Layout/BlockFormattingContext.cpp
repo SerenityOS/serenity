@@ -51,34 +51,30 @@ bool BlockFormattingContext::is_initial() const
     return context_box().is_initial_containing_block();
 }
 
-void BlockFormattingContext::run(LayoutMode layout_mode)
+void BlockFormattingContext::run(Box& box, LayoutMode layout_mode)
 {
     if (is_initial()) {
         layout_initial_containing_block(layout_mode);
         return;
     }
 
-    // FIXME: BFC currently computes the width+height of the context box.
+    // FIXME: BFC currently computes the width+height of the target box.
     //        This is necessary to be able to place absolutely positioned descendants.
     //        The same work is also done by the parent BFC for each of its blocks..
 
     if (layout_mode == LayoutMode::Default)
-        compute_width(context_box());
+        compute_width(box);
 
-    layout_floating_children();
+    layout_floating_children(box);
 
-    if (context_box().children_are_inline()) {
-        layout_inline_children(layout_mode);
+    if (box.children_are_inline()) {
+        layout_inline_children(box, layout_mode);
     } else {
-        layout_block_level_children(layout_mode);
+        layout_block_level_children(box, layout_mode);
     }
 
     if (layout_mode == LayoutMode::Default)
-        compute_height(context_box());
-
-    // No need to layout absolute positioned boxes during shrink-to-fit layouts.
-    if (layout_mode == LayoutMode::Default)
-        layout_absolutely_positioned_descendants();
+        compute_height(box);
 }
 
 void BlockFormattingContext::compute_width(Box& box)
@@ -411,7 +407,7 @@ void BlockFormattingContext::compute_height(Box& box)
     }
 
     auto& style = box.style();
-    auto& containing_block = context_box();
+    auto& containing_block = *box.containing_block();
 
     CSS::Length specified_height;
 
@@ -438,80 +434,83 @@ void BlockFormattingContext::compute_height(Box& box)
     }
 }
 
-void BlockFormattingContext::layout_inline_children(LayoutMode layout_mode)
+void BlockFormattingContext::layout_inline_children(Box& box, LayoutMode layout_mode)
 {
-    InlineFormattingContext context(context_box(), this);
-    context.run(layout_mode);
+    InlineFormattingContext context(box, this);
+    context.run(box, layout_mode);
 }
 
-void BlockFormattingContext::layout_block_level_children(LayoutMode layout_mode)
+void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode layout_mode)
 {
     float content_height = 0;
     float content_width = 0;
 
-    context_box().for_each_in_subtree_of_type<Box>([&](auto& box) {
-        if (box.is_absolutely_positioned() || box.is_floating() || box.containing_block() != &context_box())
+    box.for_each_child_of_type<Box>([&](auto& child_box) {
+        if (child_box.is_absolutely_positioned()) {
+            layout_absolutely_positioned_child(child_box);
+            return IterationDecision::Continue;
+        }
+
+        if (child_box.is_floating())
             return IterationDecision::Continue;
 
-        compute_width(box);
-        layout_inside(box, layout_mode);
-        compute_height(box);
+        compute_width(child_box);
+        layout_inside(child_box, layout_mode);
+        compute_height(child_box);
 
-        if (box.is_replaced())
-            place_block_level_replaced_element_in_normal_flow(box);
-        else if (box.is_block())
-            place_block_level_non_replaced_element_in_normal_flow(box);
+        if (child_box.is_replaced())
+            place_block_level_replaced_element_in_normal_flow(child_box, box);
+        else if (child_box.is_block())
+            place_block_level_non_replaced_element_in_normal_flow(child_box, box);
         else
-            dbgln("FIXME: Layout::BlockBox::layout_contained_boxes doesn't know how to place a {}", box.class_name());
+            dbgln("FIXME: BlockFormattingContext::layout_block_level_children() doesn't know how to place a {}", child_box.class_name());
 
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
-        if (is<ListItemBox>(box))
-            downcast<ListItemBox>(box).layout_marker();
+        if (is<ListItemBox>(child_box))
+            downcast<ListItemBox>(child_box).layout_marker();
 
-        content_height = max(content_height, box.effective_offset().y() + box.height() + box.box_model().margin_box(box).bottom);
-        content_width = max(content_width, downcast<Box>(box).width());
+        content_height = max(content_height, child_box.effective_offset().y() + child_box.height() + child_box.box_model().margin_box(child_box).bottom);
+        content_width = max(content_width, downcast<Box>(child_box).width());
         return IterationDecision::Continue;
     });
 
     if (layout_mode != LayoutMode::Default) {
-        if (context_box().style().width().is_undefined() || context_box().style().width().is_auto())
-            context_box().set_width(content_width);
+        if (box.style().width().is_undefined() || box.style().width().is_auto())
+            box.set_width(content_width);
     }
 
-    // FIXME: It's not right to always shrink-wrap the context box to the content here.
-    context_box().set_height(content_height);
+    // FIXME: It's not right to always shrink-wrap the box to the content here.
+    box.set_height(content_height);
 }
 
-void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& box)
+void BlockFormattingContext::place_block_level_replaced_element_in_normal_flow(Box& child_box, Box& containing_block)
 {
-    auto& containing_block = context_box();
     ASSERT(!containing_block.is_absolutely_positioned());
-    auto& replaced_element_box_model = box.box_model();
+    auto& replaced_element_box_model = child_box.box_model();
 
-    replaced_element_box_model.margin.top = box.style().margin().top.resolved_or_zero(context_box(), containing_block.width());
-    replaced_element_box_model.margin.bottom = box.style().margin().bottom.resolved_or_zero(context_box(), containing_block.width());
-    replaced_element_box_model.border.top = CSS::Length::make_px(box.style().border_top().width);
-    replaced_element_box_model.border.bottom = CSS::Length::make_px(box.style().border_bottom().width);
-    replaced_element_box_model.padding.top = box.style().padding().top.resolved_or_zero(context_box(), containing_block.width());
-    replaced_element_box_model.padding.bottom = box.style().padding().bottom.resolved_or_zero(context_box(), containing_block.width());
+    replaced_element_box_model.margin.top = child_box.style().margin().top.resolved_or_zero(containing_block, containing_block.width());
+    replaced_element_box_model.margin.bottom = child_box.style().margin().bottom.resolved_or_zero(containing_block, containing_block.width());
+    replaced_element_box_model.border.top = CSS::Length::make_px(child_box.style().border_top().width);
+    replaced_element_box_model.border.bottom = CSS::Length::make_px(child_box.style().border_bottom().width);
+    replaced_element_box_model.padding.top = child_box.style().padding().top.resolved_or_zero(containing_block, containing_block.width());
+    replaced_element_box_model.padding.bottom = child_box.style().padding().bottom.resolved_or_zero(containing_block, containing_block.width());
 
-    float x = replaced_element_box_model.margin.left.to_px(box)
-        + replaced_element_box_model.border.left.to_px(box)
-        + replaced_element_box_model.padding.left.to_px(box)
-        + replaced_element_box_model.offset.left.to_px(box);
+    float x = replaced_element_box_model.margin.left.to_px(child_box)
+        + replaced_element_box_model.border.left.to_px(child_box)
+        + replaced_element_box_model.padding.left.to_px(child_box)
+        + replaced_element_box_model.offset.left.to_px(child_box);
 
-    float y = replaced_element_box_model.margin_box(box).top + context_box().box_model().offset.top.to_px(box);
+    float y = replaced_element_box_model.margin_box(child_box).top + containing_block.box_model().offset.top.to_px(child_box);
 
-    box.set_offset(x, y);
+    child_box.set_offset(x, y);
 }
 
-void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& box)
+void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_flow(Box& child_box, Box& containing_block)
 {
     auto zero_value = CSS::Length::make_px(0);
-    auto& containing_block = context_box();
-    auto& box_model = box.box_model();
-    auto& style = box.style();
+    auto& box_model = child_box.box_model();
+    auto& style = child_box.style();
 
     box_model.margin.top = style.margin().top.resolved(zero_value, containing_block, containing_block.width());
     box_model.margin.bottom = style.margin().bottom.resolved(zero_value, containing_block, containing_block.width());
@@ -520,22 +519,22 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
     box_model.padding.top = style.padding().top.resolved(zero_value, containing_block, containing_block.width());
     box_model.padding.bottom = style.padding().bottom.resolved(zero_value, containing_block, containing_block.width());
 
-    float x = box_model.margin.left.to_px(box)
-        + box_model.border.left.to_px(box)
-        + box_model.padding.left.to_px(box)
-        + box_model.offset.left.to_px(box);
+    float x = box_model.margin.left.to_px(child_box)
+        + box_model.border.left.to_px(child_box)
+        + box_model.padding.left.to_px(child_box)
+        + box_model.offset.left.to_px(child_box);
 
     if (containing_block.style().text_align() == CSS::TextAlign::VendorSpecificCenter) {
-        x = (containing_block.width() / 2) - box.width() / 2;
+        x = (containing_block.width() / 2) - child_box.width() / 2;
     }
 
-    float y = box_model.margin_box(box).top
-        + box_model.offset.top.to_px(box);
+    float y = box_model.margin_box(child_box).top
+        + box_model.offset.top.to_px(child_box);
 
     // NOTE: Empty (0-height) preceding siblings have their margins collapsed with *their* preceding sibling, etc.
     float collapsed_bottom_margin_of_preceding_siblings = 0;
 
-    auto* relevant_sibling = box.previous_sibling_of_type<Layout::BlockBox>();
+    auto* relevant_sibling = child_box.previous_sibling_of_type<Layout::BlockBox>();
     while (relevant_sibling != nullptr) {
         if (!relevant_sibling->is_absolutely_positioned() && !relevant_sibling->is_floating()) {
             collapsed_bottom_margin_of_preceding_siblings = max(collapsed_bottom_margin_of_preceding_siblings, relevant_sibling->box_model().margin.bottom.to_px(*relevant_sibling));
@@ -551,7 +550,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
             + relevant_sibling->box_model().border_box(*relevant_sibling).bottom;
 
         // Collapse top margin with bottom margin of preceding siblings if needed
-        float my_margin_top = box_model.margin.top.to_px(box);
+        float my_margin_top = box_model.margin.top.to_px(child_box);
 
         if (my_margin_top < 0 || collapsed_bottom_margin_of_preceding_siblings < 0) {
             // Negative margins present.
@@ -565,7 +564,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     }
 
-    if (box.style().clear() == CSS::Clear::Left || box.style().clear() == CSS::Clear::Both) {
+    if (child_box.style().clear() == CSS::Clear::Left || child_box.style().clear() == CSS::Clear::Both) {
         if (!m_left_floating_boxes.is_empty()) {
             float clearance_y = 0;
             for (auto* floating_box : m_left_floating_boxes) {
@@ -576,7 +575,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     }
 
-    if (box.style().clear() == CSS::Clear::Right || box.style().clear() == CSS::Clear::Both) {
+    if (child_box.style().clear() == CSS::Clear::Right || child_box.style().clear() == CSS::Clear::Both) {
         if (!m_right_floating_boxes.is_empty()) {
             float clearance_y = 0;
             for (auto* floating_box : m_right_floating_boxes) {
@@ -587,7 +586,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     }
 
-    box.set_offset(x, y);
+    child_box.set_offset(x, y);
 }
 
 void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_mode)
@@ -599,9 +598,9 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     icb.set_width(viewport_rect.width());
 
-    layout_floating_children();
+    layout_floating_children(context_box());
 
-    layout_block_level_children(layout_mode);
+    layout_block_level_children(context_box(), layout_mode);
 
     ASSERT(!icb.children_are_inline());
 
@@ -613,10 +612,6 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     });
     icb.set_height(lowest_bottom);
 
-    // No need to layout absolute positioned boxes during shrink-to-fit layouts.
-    if (layout_mode == LayoutMode::Default)
-        layout_absolutely_positioned_descendants();
-
     // FIXME: This is a total hack. Make sure any GUI::Widgets are moved into place after layout.
     //        We should stop embedding GUI::Widgets entirely, since that won't work out-of-process.
     icb.for_each_in_subtree_of_type<Layout::WidgetBox>([&](auto& widget) {
@@ -625,26 +620,16 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     });
 }
 
-void BlockFormattingContext::layout_absolutely_positioned_descendants()
+void BlockFormattingContext::layout_floating_children(Box& box)
 {
-    context_box().for_each_in_subtree_of_type<Box>([&](auto& box) {
-        if (box.is_absolutely_positioned() && box.containing_block() == &context_box()) {
-            layout_absolutely_positioned_descendant(box);
-        }
+    box.for_each_child_of_type<Box>([&](auto& child_box) {
+        if (child_box.is_floating())
+            layout_floating_child(child_box, box);
         return IterationDecision::Continue;
     });
 }
 
-void BlockFormattingContext::layout_floating_children()
-{
-    context_box().for_each_child_of_type<Box>([&](auto& box) {
-        if (box.is_floating())
-            layout_floating_child(box);
-        return IterationDecision::Continue;
-    });
-}
-
-void BlockFormattingContext::layout_floating_child(Box& box)
+void BlockFormattingContext::layout_floating_child(Box& box, Box& containing_block)
 {
     ASSERT(box.is_floating());
 
@@ -653,7 +638,7 @@ void BlockFormattingContext::layout_floating_child(Box& box)
     compute_height(box);
 
     // First we place the box normally (to get the right y coordinate.)
-    place_block_level_non_replaced_element_in_normal_flow(box);
+    place_block_level_non_replaced_element_in_normal_flow(box, containing_block);
 
     // Then we float it to the left or right.
 
@@ -671,7 +656,7 @@ void BlockFormattingContext::layout_floating_child(Box& box)
             auto& previous_floating_box = *m_right_floating_boxes.last();
             x = previous_floating_box.effective_offset().x() - box.width();
         } else {
-            x = context_box().width() - box.width();
+            x = containing_block.width() - box.width();
         }
         m_right_floating_boxes.append(&box);
     }
@@ -679,7 +664,7 @@ void BlockFormattingContext::layout_floating_child(Box& box)
     box.set_offset(x, y);
 }
 
-void BlockFormattingContext::layout_absolutely_positioned_descendant(Box& box)
+void BlockFormattingContext::layout_absolutely_positioned_child(Box& box)
 {
     auto& containing_block = context_box();
     auto& box_model = box.box_model();

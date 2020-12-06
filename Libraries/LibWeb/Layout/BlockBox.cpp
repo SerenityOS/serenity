@@ -110,13 +110,13 @@ HitTestResult BlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type
 
 void BlockBox::split_into_lines(InlineFormattingContext& context, LayoutMode layout_mode)
 {
-    auto& container = context.context_box();
-    auto* line_box = &container.ensure_last_line_box();
+    auto& containing_block = context.containing_block();
+    auto* line_box = &containing_block.ensure_last_line_box();
 
-    float available_width = context.available_width_at_line(container.line_boxes().size() - 1);
+    float available_width = context.available_width_at_line(containing_block.line_boxes().size() - 1);
 
     if (layout_mode != LayoutMode::OnlyRequiredLineBreaks && line_box->width() > 0 && line_box->width() + width() > available_width) {
-        line_box = &container.add_line_box();
+        line_box = &containing_block.add_line_box();
     }
     line_box->add_fragment(*this, 0, 0, width(), height());
 }

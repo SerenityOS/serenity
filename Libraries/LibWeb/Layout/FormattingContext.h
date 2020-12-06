@@ -32,7 +32,7 @@ namespace Web::Layout {
 
 class FormattingContext {
 public:
-    virtual void run(LayoutMode) = 0;
+    virtual void run(Box&, LayoutMode) = 0;
 
     Box& context_box() { return *m_context_box; }
     const Box& context_box() const { return *m_context_box; }
@@ -47,8 +47,6 @@ public:
 protected:
     FormattingContext(Box&, FormattingContext* parent = nullptr);
     virtual ~FormattingContext();
-
-    void set_context_box(Box& box) { m_context_box = &box; }
 
     void layout_inside(Box&, LayoutMode);
 

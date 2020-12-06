@@ -353,7 +353,7 @@ void Document::layout()
     }
 
     Layout::BlockFormattingContext root_formatting_context(*m_layout_root, nullptr);
-    root_formatting_context.run(Layout::LayoutMode::Default);
+    root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
 
     m_layout_root->set_needs_display();
 

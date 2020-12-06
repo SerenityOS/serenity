@@ -71,22 +71,19 @@ void FormattingContext::layout_inside(Box& box, LayoutMode layout_mode)
 {
     if (creates_block_formatting_context(box)) {
         BlockFormattingContext context(box, this);
-        context.run(layout_mode);
+        context.run(box, layout_mode);
         return;
     }
     if (box.is_table()) {
         TableFormattingContext context(box, this);
-        context.run(layout_mode);
+        context.run(box, layout_mode);
     } else if (box.children_are_inline()) {
         InlineFormattingContext context(box, this);
-        context.run(layout_mode);
+        context.run(box, layout_mode);
     } else {
         // FIXME: This needs refactoring!
         ASSERT(is_block_formatting_context());
-        auto& old_box = context_box();
-        set_context_box(box);
-        run(layout_mode);
-        set_context_box(old_box);
+        run(box, layout_mode);
     }
 }
 

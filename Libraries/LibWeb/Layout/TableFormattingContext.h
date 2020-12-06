@@ -36,7 +36,7 @@ public:
     explicit TableFormattingContext(Box&, FormattingContext* parent);
     ~TableFormattingContext();
 
-    virtual void run(LayoutMode) override;
+    virtual void run(Box&, LayoutMode) override;
 
 private:
     void calculate_column_widths(Box& row, Vector<float>& column_widths);

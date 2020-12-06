@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/Types.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/FormattingContext.h>
 
@@ -36,7 +37,10 @@ public:
     InlineFormattingContext(Box& containing_block, FormattingContext* parent);
     ~InlineFormattingContext();
 
-    virtual void run(LayoutMode) override;
+    Box& containing_block() { return context_box(); }
+    const Box& containing_block() const { return context_box(); }
+
+    virtual void run(Box&, LayoutMode) override;
 
     float available_width_at_line(size_t line_index) const;
 

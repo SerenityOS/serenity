@@ -192,7 +192,8 @@ void TextNode::for_each_chunk(Callback callback, LayoutMode layout_mode, bool do
 
 void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, LayoutMode layout_mode, bool do_collapse, bool do_wrap_lines, bool do_wrap_breaks)
 {
-    auto& containing_block = context.context_box();
+    auto& containing_block = context.containing_block();
+
     auto& font = specified_style().font();
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
 

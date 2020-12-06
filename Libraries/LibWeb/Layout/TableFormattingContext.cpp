@@ -47,37 +47,37 @@ TableFormattingContext::~TableFormattingContext()
 {
 }
 
-void TableFormattingContext::run(LayoutMode)
+void TableFormattingContext::run(Box& box, LayoutMode)
 {
-    compute_width(context_box());
+    compute_width(box);
 
     float total_content_height = 0;
 
-    context_box().for_each_child_of_type<TableRowGroupBox>([&](auto& box) {
-        compute_width(box);
-        auto column_count = box.column_count();
+    box.for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
+        compute_width(row_group_box);
+        auto column_count = row_group_box.column_count();
         Vector<float> column_widths;
         column_widths.resize(column_count);
 
-        box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
+        row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             calculate_column_widths(row, column_widths);
         });
 
         float content_height = 0;
 
-        box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
+        row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             row.set_offset(0, content_height);
             layout_row(row, column_widths);
             content_height += row.height();
         });
 
-        box.set_height(content_height);
+        row_group_box.set_height(content_height);
 
         total_content_height += content_height;
     });
 
     // FIXME: This is a total hack, we should respect the 'height' property.
-    context_box().set_height(total_content_height);
+    box.set_height(total_content_height);
 }
 
 void TableFormattingContext::calculate_column_widths(Box& row, Vector<float>& column_widths)
