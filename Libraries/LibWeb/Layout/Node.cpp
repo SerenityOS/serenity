@@ -192,6 +192,11 @@ bool Node::is_floating() const
     return style().float_() != CSS::Float::None;
 }
 
+bool Node::is_positioned() const
+{
+    return has_style() && style().position() != CSS::Position::Static;
+}
+
 bool Node::is_absolutely_positioned() const
 {
     if (!has_style())
