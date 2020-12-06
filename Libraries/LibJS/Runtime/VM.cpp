@@ -49,7 +49,7 @@ VM::VM()
 {
     m_empty_string = m_heap.allocate_without_global_object<PrimitiveString>(String::empty());
     for (size_t i = 0; i < 128; ++i) {
-        m_single_ascii_character_strings[i] = m_heap.allocate_without_global_object<PrimitiveString>(String::format("%c", i));
+        m_single_ascii_character_strings[i] = m_heap.allocate_without_global_object<PrimitiveString>(String::formatted("{:c}", i));
     }
 
     m_scope_object_shape = m_heap.allocate_without_global_object<Shape>(Shape::ShapeWithoutGlobalObjectTag::Tag);

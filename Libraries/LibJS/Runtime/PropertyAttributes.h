@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include <AK/LogStream.h>
+#include <AK/Format.h>
 #include <AK/Types.h>
 
 namespace JS {
@@ -87,8 +87,18 @@ private:
     u8 m_bits;
 };
 
-const LogStream& operator<<(const LogStream& stream, const PropertyAttributes& attributes);
-
 const PropertyAttributes default_attributes = Attribute::Configurable | Attribute::Writable | Attribute::Enumerable;
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<JS::PropertyAttributes> : Formatter<u8> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const JS::PropertyAttributes& attributes)
+    {
+        Formatter<u8>::format(params, builder, attributes.bits());
+    }
+};
 
 }

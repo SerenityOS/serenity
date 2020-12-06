@@ -55,7 +55,6 @@ set(SOURCES
     Runtime/Object.cpp
     Runtime/ObjectPrototype.cpp
     Runtime/PrimitiveString.cpp
-    Runtime/PropertyAttributes.cpp
     Runtime/ProxyConstructor.cpp
     Runtime/ProxyObject.cpp
     Runtime/Reference.cpp

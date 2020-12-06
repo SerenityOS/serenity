@@ -93,7 +93,7 @@ public:
     {
         int p = m_token_precedence[static_cast<size_t>(token)];
         if (p == 0) {
-            fprintf(stderr, "Internal Error: No precedence for operator %s\n", Token::name(token));
+            warnln("Internal Error: No precedence for operator {}", Token::name(token));
             ASSERT_NOT_REACHED();
             return -1;
         }

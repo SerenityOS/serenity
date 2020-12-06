@@ -27,8 +27,9 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <AK/Forward.h>
-#include <AK/LogStream.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <math.h>
@@ -337,6 +338,16 @@ bool same_value_non_numeric(Value lhs, Value rhs);
 TriState abstract_relation(GlobalObject&, bool left_first, Value lhs, Value rhs);
 size_t length_of_array_like(GlobalObject&, Value);
 
-const LogStream& operator<<(const LogStream&, const Value&);
+}
+
+namespace AK {
+
+template<>
+struct Formatter<JS::Value> : Formatter<StringView> {
+    void format(TypeErasedFormatParams& params, FormatBuilder& builder, const JS::Value& value)
+    {
+        Formatter<StringView>::format(params, builder, value.is_empty() ? "<empty>" : value.to_string_without_side_effects());
+    }
+};
 
 }
