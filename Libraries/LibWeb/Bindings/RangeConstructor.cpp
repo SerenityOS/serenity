@@ -24,52 +24,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Node.h>
+#include <LibJS/Heap/Heap.h>
+#include <LibWeb/Bindings/RangeConstructor.h>
+#include <LibWeb/Bindings/RangeWrapper.h>
+#include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Range.h>
-#include <LibWeb/DOM/Window.h>
 
-namespace Web::DOM {
+namespace Web::Bindings {
 
-Range::Range(Window& window)
-    : m_start_container(window.document())
-    , m_start_offset(0)
-    , m_end_container(window.document())
-    , m_end_offset(0)
+RangeConstructor::RangeConstructor(JS::GlobalObject& global_object)
+    : NativeFunction(*global_object.function_prototype())
 {
 }
 
-Range::Range(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
-    : m_start_container(start_container)
-    , m_start_offset(start_offset)
-    , m_end_container(end_container)
-    , m_end_offset(end_offset)
+void RangeConstructor::initialize(JS::GlobalObject& global_object)
 {
+    NativeFunction::initialize(global_object);
+
+    define_property("length", JS::Value(0), JS::Attribute::Configurable);
 }
 
-NonnullRefPtr<Range> Range::clone_range() const
+JS::Value RangeConstructor::call()
 {
-    return adopt(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
+    return construct(*this);
 }
 
-NonnullRefPtr<Range> Range::inverted() const
+JS::Value RangeConstructor::construct(Function&)
 {
-    return adopt(*new Range(const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset));
-}
-
-NonnullRefPtr<Range> Range::normalized() const
-{
-    if (m_start_container.ptr() == m_end_container.ptr()) {
-        if (m_start_offset <= m_end_offset)
-            return clone_range();
-
-        return inverted();
-    }
-
-    if (m_start_container->is_before(m_end_container))
-        return clone_range();
-
-    return inverted();
+    auto& window = static_cast<WindowObject&>(global_object());
+    return heap().allocate<RangeWrapper>(window, window, DOM::Range::create(window.impl()));
 }
 
 }

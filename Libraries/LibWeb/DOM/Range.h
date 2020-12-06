@@ -28,6 +28,7 @@
 
 #include <AK/RefCounted.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/DOM/Node.h>
 
 namespace Web::DOM {
 
@@ -35,16 +36,18 @@ class Range final
     : public RefCounted<Range>
     , public Bindings::Wrappable {
 public:
-    // using WrapperType = Bindings::RangeWrapper;
+    using WrapperType = Bindings::RangeWrapper;
 
-    static NonnullRefPtr<Range> create(Document& document)
+    static NonnullRefPtr<Range> create(Window& window)
     {
-        return adopt(*new Range(document));
+        return adopt(*new Range(window));
     }
     static NonnullRefPtr<Range> create(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
     {
         return adopt(*new Range(start_container, start_offset, end_container, end_offset));
     }
+
+    // FIXME: There are a ton of methods missing here.
 
     Node* start_container() { return m_start_container; }
     unsigned start_offset() { return m_start_offset; }
@@ -57,16 +60,16 @@ public:
         return start_container() == end_container() && start_offset() == end_offset();
     }
 
-    void set_start(Node& container, JS::Value& offset)
+    void set_start(Node& container, unsigned offset)
     {
         m_start_container = container;
-        m_start_offset = (unsigned)offset.as_i32();
+        m_start_offset = offset;
     }
 
-    void set_end(Node& container, JS::Value& offset)
+    void set_end(Node& container, unsigned offset)
     {
         m_end_container = container;
-        m_end_offset = (unsigned)offset.as_i32();
+        m_end_offset = offset;
     }
 
     NonnullRefPtr<Range> inverted() const;
@@ -74,7 +77,7 @@ public:
     NonnullRefPtr<Range> clone_range() const;
 
 private:
-    explicit Range(Document&);
+    explicit Range(Window&);
     Range(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset);
 
     NonnullRefPtr<Node> m_start_container;

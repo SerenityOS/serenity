@@ -24,52 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Node.h>
-#include <LibWeb/DOM/Range.h>
-#include <LibWeb/DOM/Window.h>
+#pragma once
 
-namespace Web::DOM {
+#include <LibWeb/Bindings/Wrapper.h>
 
-Range::Range(Window& window)
-    : m_start_container(window.document())
-    , m_start_offset(0)
-    , m_end_container(window.document())
-    , m_end_offset(0)
-{
-}
+namespace Web::Bindings {
 
-Range::Range(Node& start_container, size_t start_offset, Node& end_container, size_t end_offset)
-    : m_start_container(start_container)
-    , m_start_offset(start_offset)
-    , m_end_container(end_container)
-    , m_end_offset(end_offset)
-{
-}
+class RangeWrapper final : public Wrapper {
+public:
+    RangeWrapper(JS::GlobalObject&, DOM::Range&);
 
-NonnullRefPtr<Range> Range::clone_range() const
-{
-    return adopt(*new Range(const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset));
-}
+    DOM::Range& impl() { return m_impl; }
+    const DOM::Range& impl() const { return m_impl; }
 
-NonnullRefPtr<Range> Range::inverted() const
-{
-    return adopt(*new Range(const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset));
-}
+private:
+    virtual const char* class_name() const override { return "RangeWrapper"; }
 
-NonnullRefPtr<Range> Range::normalized() const
-{
-    if (m_start_container.ptr() == m_end_container.ptr()) {
-        if (m_start_offset <= m_end_offset)
-            return clone_range();
+    NonnullRefPtr<DOM::Range> m_impl;
+};
 
-        return inverted();
-    }
-
-    if (m_start_container->is_before(m_end_container))
-        return clone_range();
-
-    return inverted();
-}
+RangeWrapper* wrap(JS::GlobalObject&, DOM::Range&);
 
 }

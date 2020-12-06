@@ -288,5 +288,8 @@ class Wrapper;
 class XMLHttpRequestConstructor;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+class RangeConstructor;
+class RangePrototype;
+class RangeWrapper;
 
 }
