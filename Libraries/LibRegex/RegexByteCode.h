@@ -186,7 +186,7 @@ public:
         append(move(bytecode));
     }
 
-    void insert_bytecode_compare_string(StringView view, size_t length)
+    void insert_bytecode_compare_string(StringView view)
     {
         ByteCode bytecode;
 
@@ -196,8 +196,7 @@ public:
         ByteCode arguments;
 
         arguments.empend(static_cast<ByteCodeValueType>(CharacterCompareType::String));
-        arguments.empend(reinterpret_cast<ByteCodeValueType>(view.characters_without_null_termination()));
-        arguments.empend(length);
+        arguments.insert_string(view);
 
         bytecode.empend(arguments.size()); // size of arguments
         bytecode.append(move(arguments));
@@ -205,7 +204,7 @@ public:
         append(move(bytecode));
     }
 
-    void insert_bytecode_compare_named_reference(StringView name, size_t length)
+    void insert_bytecode_compare_named_reference(StringView name)
     {
         ByteCode bytecode;
 
@@ -216,7 +215,7 @@ public:
 
         arguments.empend(static_cast<ByteCodeValueType>(CharacterCompareType::NamedReference));
         arguments.empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
-        arguments.empend(length);
+        arguments.empend(name.length());
 
         bytecode.empend(arguments.size()); // size of arguments
         bytecode.append(move(arguments));
@@ -458,6 +457,13 @@ public:
     OpCode* get_opcode(MatchState& state) const;
 
 private:
+    void insert_string(const StringView& view)
+    {
+        empend((ByteCodeValueType)view.length());
+        for (size_t i = 0; i < view.length(); ++i)
+            empend((ByteCodeValueType)view[i]);
+    }
+
     ALWAYS_INLINE OpCode* get_opcode_by_id(OpCodeId id) const;
     static HashMap<u32, OwnPtr<OpCode>> s_opcodes;
 };

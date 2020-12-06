@@ -430,7 +430,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
             if (length > 1) {
                 // last character is inserted into 'bytecode' for duplication symbol handling
                 auto new_length = length - ((match_repetition_symbol() && length > 1) ? 1 : 0);
-                stack.insert_bytecode_compare_string(start_token.value(), new_length);
+                stack.insert_bytecode_compare_string({ start_token.value().characters_without_null_termination(), new_length });
             }
 
             if ((match_repetition_symbol() && length > 1) || length == 1) // Create own compare opcode for last character before duplication symbol
@@ -1099,7 +1099,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
         }
         match_length_minimum += maybe_length.value();
 
-        stack.insert_bytecode_compare_named_reference(name, name.length());
+        stack.insert_bytecode_compare_named_reference(name);
         return true;
     }
 
