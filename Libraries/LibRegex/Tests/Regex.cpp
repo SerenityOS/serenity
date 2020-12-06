@@ -477,6 +477,7 @@ TEST_CASE(ECMA262_parse)
     struct _test {
         const char* pattern;
         regex::Error expected_error { regex::Error::NoError };
+        regex::ECMAScriptFlags flags {};
     };
 
     constexpr _test tests[] {
@@ -497,6 +498,8 @@ TEST_CASE(ECMA262_parse)
         { "\\x" },                                         // Even invalid escapes are allowed if ~unicode.
         { "\\", regex::Error::InvalidTrailingEscape },
         { "(?", regex::Error::InvalidCaptureGroup },
+        { "\\u1234", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
+        { "[\\u1234]", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
