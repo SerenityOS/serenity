@@ -120,7 +120,7 @@ float ReplacedBox::calculate_height() const
 
 void ReplacedBox::split_into_lines(InlineFormattingContext& context, LayoutMode)
 {
-    auto& containing_block = context.context_box();
+    auto& containing_block = context.containing_block();
 
     // FIXME: This feels out of place. It would be nice if someone at a higher level
     //        made sure we had usable geometry by the time we start splitting.

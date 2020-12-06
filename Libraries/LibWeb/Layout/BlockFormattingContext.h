@@ -37,7 +37,7 @@ public:
     explicit BlockFormattingContext(Box&, FormattingContext* parent);
     ~BlockFormattingContext();
 
-    virtual void run(LayoutMode) override;
+    virtual void run(Box&, LayoutMode) override;
 
     bool is_initial() const;
 
@@ -55,16 +55,16 @@ private:
     void compute_width_for_floating_box(Box&);
 
     void layout_initial_containing_block(LayoutMode);
-    void layout_block_level_children(LayoutMode);
-    void layout_inline_children(LayoutMode);
-    void layout_absolutely_positioned_descendants();
-    void layout_floating_children();
 
-    void place_block_level_replaced_element_in_normal_flow(Box&);
-    void place_block_level_non_replaced_element_in_normal_flow(Box&);
+    void layout_block_level_children(Box&, LayoutMode);
+    void layout_inline_children(Box&, LayoutMode);
+    void layout_floating_children(Box&);
 
-    void layout_absolutely_positioned_descendant(Box&);
-    void layout_floating_child(Box&);
+    void place_block_level_replaced_element_in_normal_flow(Box& child, Box& container);
+    void place_block_level_non_replaced_element_in_normal_flow(Box& child, Box& container);
+
+    void layout_absolutely_positioned_child(Box&);
+    void layout_floating_child(Box&, Box& containing_block);
 
     Vector<Box*> m_left_floating_boxes;
     Vector<Box*> m_right_floating_boxes;

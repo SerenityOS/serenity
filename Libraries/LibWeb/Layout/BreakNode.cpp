@@ -40,9 +40,9 @@ BreakNode::~BreakNode()
 {
 }
 
-void BreakNode::split_into_lines(InlineFormattingContext& block, LayoutMode)
+void BreakNode::split_into_lines(InlineFormattingContext& context, LayoutMode)
 {
-    block.context_box().add_line_box();
+    context.containing_block().add_line_box();
 }
 
 }

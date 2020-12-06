@@ -137,6 +137,7 @@ public:
     bool is_fixed_position() const;
 
     const BlockBox* containing_block() const;
+    BlockBox* containing_block() { return const_cast<BlockBox*>(const_cast<const Node*>(this)->containing_block()); }
 
     bool can_contain_boxes_with_position_absolute() const;
 
