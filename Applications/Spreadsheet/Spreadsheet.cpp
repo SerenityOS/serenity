@@ -70,15 +70,14 @@ Sheet::Sheet(Workbook& workbook)
         auto buffer = file_or_error.value()->read_all();
         JS::Parser parser { JS::Lexer(buffer) };
         if (parser.has_errors()) {
-            dbgln("Spreadsheet: Failed to parse runtime code");
-            for (auto& error : parser.errors())
-                dbgln("Error: {}\n{}", error.to_string(), error.source_location_hint(buffer));
+            warnln("Spreadsheet: Failed to parse runtime code");
+            parser.print_errors();
         } else {
             interpreter().run(global_object(), parser.parse_program());
             if (auto exc = interpreter().exception()) {
-                dbgln("Spreadsheet: Failed to run runtime code: ");
+                warnln("Spreadsheet: Failed to run runtime code: ");
                 for (auto& t : exc->trace())
-                    dbgln("{}", t);
+                    warnln("{}", t);
                 interpreter().vm().clear_exception();
             }
         }
