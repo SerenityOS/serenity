@@ -97,6 +97,11 @@ void BlockFormattingContext::compute_width(Box& box)
         return;
     }
 
+    if (box.is_floating()) {
+        compute_width_for_floating_box(box);
+        return;
+    }
+
     auto& style = box.style();
     float width_of_containing_block = box.width_of_logical_containing_block();
 
@@ -214,6 +219,46 @@ void BlockFormattingContext::compute_width(Box& box)
     box.box_model().border.right = CSS::Length::make_px(style.border_right().width);
     box.box_model().padding.left = padding_left;
     box.box_model().padding.right = padding_right;
+}
+
+void BlockFormattingContext::compute_width_for_floating_box(Box& box)
+{
+    // 10.3.5 Floating, non-replaced elements
+    auto& style = box.style();
+    float width_of_containing_block = box.width_of_logical_containing_block();
+    auto zero_value = CSS::Length::make_px(0);
+
+    auto margin_left = CSS::Length::make_auto();
+    auto margin_right = CSS::Length::make_auto();
+    const auto padding_left = style.padding().left.resolved_or_zero(box, width_of_containing_block);
+    const auto padding_right = style.padding().right.resolved_or_zero(box, width_of_containing_block);
+
+    // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
+    if (margin_left.is_auto())
+        margin_left = zero_value;
+    if (margin_right.is_auto())
+        margin_right = zero_value;
+
+    auto width = style.width();
+
+    // If 'width' is computed as 'auto', the used value is the "shrink-to-fit" width.
+    if (width.is_auto()) {
+
+        // Find the available width: in this case, this is the width of the containing
+        // block minus the used values of 'margin-left', 'border-left-width', 'padding-left',
+        // 'padding-right', 'border-right-width', 'margin-right', and the widths of any relevant scroll bars.
+        float available_width = width_of_containing_block
+            - margin_left.to_px(box) - style.border_left().width - padding_left.to_px(box)
+            - padding_right.to_px(box) - style.border_right().width - margin_right.to_px(box);
+
+        auto result = calculate_shrink_to_fit_widths(box);
+
+        // Then the shrink-to-fit width is: min(max(preferred minimum width, available width), preferred width).
+        width = CSS::Length(min(max(result.preferred_minimum_width, available_width), result.preferred_width), CSS::Length::Type::Px);
+    }
+
+    float final_width = width.resolved_or_zero(box, width_of_containing_block).to_px(box);
+    box.set_width(final_width);
 }
 
 void BlockFormattingContext::compute_width_for_absolutely_positioned_block(Box& box)
