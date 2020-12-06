@@ -159,7 +159,7 @@ private:
     static RefPtr<Font> load_from_memory(const u8*);
     static size_t glyph_count_by_type(FontTypes type);
 
-    void update_x_height() { m_x_height = m_mean_line - m_baseline; };
+    void update_x_height() { m_x_height = m_baseline - m_mean_line; };
 
     void set_family_fonts();
     RefPtr<Font> m_bold_family_font;
