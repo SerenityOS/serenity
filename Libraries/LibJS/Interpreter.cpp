@@ -40,8 +40,6 @@
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
 
-//#define INTERPRETER_DEBUG
-
 namespace JS {
 
 NonnullOwnPtr<Interpreter> Interpreter::create_with_existing_global_object(GlobalObject& global_object)
