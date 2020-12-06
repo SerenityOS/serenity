@@ -35,6 +35,7 @@
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <LibAudio/Buffer.h>
+#include <LibAudio/Device.h>
 #include <LibCore/File.h>
 #include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
@@ -130,10 +131,11 @@ private:
     pthread_mutex_t m_pending_mutex;
     pthread_cond_t m_pending_cond;
 
-    RefPtr<Core::File> m_device;
+    RefPtr<Audio::Device> m_device;
 
     NonnullRefPtr<LibThread::Thread> m_sound_thread;
 
+    bool m_running { false };
     bool m_muted { false };
     int m_main_volume { 100 };
 

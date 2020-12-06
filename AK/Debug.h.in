@@ -26,6 +26,10 @@
 
 #pragma once
 
+#ifndef AUDIODEVICE_DEBUG
+#cmakedefine01 AUDIODEVICE_DEBUG
+#endif
+
 #ifndef AUTOCOMPLETE_DEBUG
 #cmakedefine01 AUTOCOMPLETE_DEBUG
 #endif

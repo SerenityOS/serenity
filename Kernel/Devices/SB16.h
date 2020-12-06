@@ -26,18 +26,17 @@
 
 #pragma once
 
-#include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Devices/AudioDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
-#include <Kernel/WaitQueue.h>
 
 namespace Kernel {
 
 class SB16;
 
 class SB16 final : public IRQHandler
-    , public CharacterDevice {
+    , public AudioDevice {
 public:
     SB16();
     virtual ~SB16() override;
@@ -46,13 +45,12 @@ public:
     static void create();
     static SB16& the();
 
-    // ^CharacterDevice
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const FileDescription&, size_t) const override { return true; }
-
-    virtual const char* purpose() const override { return class_name(); }
+protected:
+    virtual bool do_initialize(Stream&) override;
+    virtual bool can_support_pcm_configuration(Stream&, const CurrentPCM&) override;
+    virtual void trigger_playback(Stream&) override;
+    virtual void transferred_to_dma_buffer(Stream&, bool) override;
+    virtual u8* playback_current_dma_period(Stream&, bool) override;
 
     // ^Device
     virtual mode_t required_mode() const override { return 0220; }
@@ -65,19 +63,36 @@ private:
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SB16"; }
 
+    void write_mixer_reg(u8 index, u8 value);
+    u8 read_mixer_reg(u8 index) const;
+
     void initialize();
-    void wait_for_irq();
-    void dma_start(uint32_t length);
+    void setup_dma(Stream&, u32);
+    void dsp_transfer_block(Stream&, u32);
     void set_sample_rate(uint16_t hz);
     void dsp_write(u8 value);
     static u8 dsp_read();
     u8 get_irq_line();
+    static u64 calculate_period_time(const CurrentPCM&);
     void set_irq_register(u8 irq_number);
     void set_irq_line(u8 irq_number);
+    void set_dma_channels();
+    bool allocate_dma_region(Stream&);
+    PhysicalAddress playback_current_dma_period_paddr(Stream&, bool);
 
-    OwnPtr<Region> m_dma_region;
+    struct StreamPrivateData {
+        u32 periods_read { 0 };
+        u32 periods_written { 0 };
+    };
+    StreamPrivateData& stream_private(Stream& stream)
+    {
+        return *(StreamPrivateData*)stream.private_data;
+    }
+
     int m_major_version { 0 };
-
-    WaitQueue m_irq_queue;
+    Vector<StreamPrivateData, 1> m_stream_private;
+    Stream* m_active_stream { nullptr };
+    u16 m_port { 0x220 };
+    bool m_is16bit { false };
 };
 }

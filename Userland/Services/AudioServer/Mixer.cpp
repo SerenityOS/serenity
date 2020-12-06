@@ -35,7 +35,7 @@
 namespace AudioServer {
 
 Mixer::Mixer()
-    : m_device(Core::File::construct("/dev/audio", this))
+    : m_device(Audio::Device::construct("/dev/audio", this))
     , m_sound_thread(LibThread::Thread::construct(
           [this] {
               mix();
@@ -43,17 +43,37 @@ Mixer::Mixer()
           },
           "AudioServer[mixer]"))
 {
+    pthread_mutex_init(&m_pending_mutex, nullptr);
+    pthread_cond_init(&m_pending_cond, nullptr);
+
     if (!m_device->open(Core::IODevice::WriteOnly)) {
         dbgln("Can't open audio device: {}", m_device->error_string());
         return;
     }
 
-    pthread_mutex_init(&m_pending_mutex, nullptr);
-    pthread_cond_init(&m_pending_cond, nullptr);
+    dbgln("Streams available for audio playback:");
+    Optional<unsigned> stream_index;
+    m_device->for_each_stream([&](const Audio::Device::Stream& stream) {
+        if (stream.type() != Audio::StreamType::Playback)
+            return IterationDecision::Continue;
+        dbgln("Stream #{}: {}", stream.index(), stream.name());
+        stream_index = stream.index();
+        return IterationDecision::Break;
+    });
 
-    m_zero_filled_buffer = (u8*)malloc(4096);
-    bzero(m_zero_filled_buffer, 4096);
-    m_sound_thread->start();
+    if (!stream_index.has_value()) {
+        dbgln("Could not find a stream for playback");
+    } else if (!m_device->select_stream(stream_index.value())) {
+        dbgln("Could not select stream {}", stream_index.value());
+    } else if (!m_device->pcm_prepare()) {
+        dbgln("Could not prepare stream {}", stream_index.value());
+    } else {
+        m_zero_filled_buffer = (u8*)malloc(4096);
+        bzero(m_zero_filled_buffer, 4096);
+
+        m_running = true;
+        m_sound_thread->start();
+    }
 }
 
 Mixer::~Mixer()

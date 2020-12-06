@@ -27,6 +27,7 @@ set(KERNEL_SOURCES
     CoreDump.cpp
     DMI.cpp
     Devices/AsyncDeviceRequest.cpp
+    Devices/AudioDevice.cpp
     Devices/BXVGADevice.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
