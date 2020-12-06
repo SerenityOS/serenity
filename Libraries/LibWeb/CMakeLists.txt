@@ -36,6 +36,7 @@ set(SOURCES
     DOM/Element.cpp
     DOM/ElementFactory.cpp
     DOM/Event.cpp
+    DOM/Range.cpp
     DOM/EventDispatcher.cpp
     DOM/EventListener.cpp
     DOM/EventTarget.cpp
