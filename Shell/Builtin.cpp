@@ -27,6 +27,7 @@
 #include "Shell.h"
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <inttypes.h>
 #include <signal.h>
@@ -829,6 +830,9 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
             return false;
         }
     }
+
+    Core::EventLoop loop;
+    setup_signals();
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin)                        \
     if (name == #builtin) {                                       \
