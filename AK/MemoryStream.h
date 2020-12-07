@@ -252,7 +252,7 @@ public:
         size_t nread = 0;
         while (bytes.size() - nread > 0 && m_write_offset - m_read_offset - nread > 0) {
             const auto chunk_index = (m_read_offset - m_base_offset + nread) / chunk_size;
-            const auto chunk_bytes = m_chunks[chunk_index].bytes().slice(m_read_offset % chunk_size).trim(m_write_offset - m_read_offset - nread);
+            const auto chunk_bytes = m_chunks[chunk_index].bytes().slice((m_read_offset + nread) % chunk_size).trim(m_write_offset - m_read_offset - nread);
             nread += chunk_bytes.copy_trimmed_to(bytes.slice(nread));
         }
 
@@ -279,8 +279,7 @@ public:
             return false;
         }
 
-        read(bytes);
-        return true;
+        return read(bytes) == bytes.size();
     }
 
     size_t write(ReadonlyBytes bytes) override
