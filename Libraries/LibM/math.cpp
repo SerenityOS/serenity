@@ -144,6 +144,13 @@ double ldexp(double x, int exp) NOEXCEPT
     return x * val;
 }
 
+float ldexpf(float x, int exp) NOEXCEPT
+{
+    // FIXME: Please fix me. I am naive.
+    float val = powf(2, exp);
+    return x * val;
+}
+
 double tanh(double x) NOEXCEPT
 {
     if (x > 0) {
