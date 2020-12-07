@@ -181,11 +181,10 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
             if (is<Box>(fragment.layout_node()))
                 dimension_box_on_line(downcast<Box>(fragment.layout_node()), layout_mode);
 
-            float final_line_box_width = 0;
-            for (auto& fragment : line_box.fragments())
-                final_line_box_width += fragment.width();
+            float left_edge = line_box.fragments().first().offset().x();
+            float right_edge = line_box.fragments().last().offset().x() + line_box.fragments().last().width();
+            float final_line_box_width = right_edge - left_edge;
             line_box.m_width = final_line_box_width;
-
             max_linebox_width = max(max_linebox_width, final_line_box_width);
         }
 
