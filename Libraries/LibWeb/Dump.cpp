@@ -80,11 +80,11 @@ void dump_tree(const DOM::Node& node)
     --indent;
 }
 
-void dump_tree(const Layout::Node& layout_node)
+void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_specified_style)
 {
     static size_t indent = 0;
     for (size_t i = 0; i < indent; ++i)
-        dbgprintf("    ");
+        dbgprintf("  ");
 
     FlyString tag_name;
     if (layout_node.is_anonymous())
@@ -115,87 +115,94 @@ void dump_tree(const Layout::Node& layout_node)
     }
 
     if (!layout_node.is_box()) {
-        dbgprintf("%s {\033[33m%s\033[0m%s}\n", layout_node.class_name(), tag_name.characters(), identifier.characters());
+        dbgprintf("\033[33m%s\033[0m {\033[33m%s\033[0m%s} @%p\n", layout_node.class_name(), tag_name.characters(), identifier.characters(), &layout_node);
     } else {
-        auto& layout_box = downcast<Layout::Box>(layout_node);
-        dbgprintf("%s {\033[34m%s\033[0m%s} at (%g,%g) size %gx%g",
-            layout_box.class_name(),
+        auto& box = downcast<Layout::Box>(layout_node);
+        dbgprintf("\033[34m%s\033[0m {\033[34m%s\033[0m%s} @%p at (%d,%d) size %dx%d",
+            box.class_name(),
             tag_name.characters(),
             identifier.characters(),
-            layout_box.absolute_x(),
-            layout_box.absolute_y(),
-            layout_box.width(),
-            layout_box.height());
+            &layout_node,
+            (int)box.absolute_x(),
+            (int)box.absolute_y(),
+            (int)box.width(),
+            (int)box.height());
 
-        // Dump the horizontal box properties
-        dbgprintf(" [%g+%g+%g %g %g+%g+%g]",
-            layout_box.box_model().margin.left.to_px(layout_box),
-            layout_box.box_model().border.left.to_px(layout_box),
-            layout_box.box_model().padding.left.to_px(layout_box),
-            layout_box.width(),
-            layout_box.box_model().padding.right.to_px(layout_box),
-            layout_box.box_model().border.right.to_px(layout_box),
-            layout_box.box_model().margin.right.to_px(layout_box));
+        if (box.is_positioned())
+            dbgprintf(" \033[31;1mpositioned\033[0m");
+        if (box.is_floating())
+            dbgprintf(" \033[32;1mfloating\033[0m");
 
-        // And the vertical box properties
-        dbgprintf(" [%g+%g+%g %g %g+%g+%g]",
-            layout_box.box_model().margin.top.to_px(layout_box),
-            layout_box.box_model().border.top.to_px(layout_box),
-            layout_box.box_model().padding.top.to_px(layout_box),
-            layout_box.height(),
-            layout_box.box_model().padding.bottom.to_px(layout_box),
-            layout_box.box_model().border.bottom.to_px(layout_box),
-            layout_box.box_model().margin.bottom.to_px(layout_box));
+        if (show_box_model) {
+            // Dump the horizontal box properties
+            dbgprintf(" [%g+%g+%g %g %g+%g+%g]",
+                box.box_model().margin.left.to_px(box),
+                box.box_model().border.left.to_px(box),
+                box.box_model().padding.left.to_px(box),
+                box.width(),
+                box.box_model().padding.right.to_px(box),
+                box.box_model().border.right.to_px(box),
+                box.box_model().margin.right.to_px(box));
+
+            // And the vertical box properties
+            dbgprintf(" [%g+%g+%g %g %g+%g+%g]",
+                box.box_model().margin.top.to_px(box),
+                box.box_model().border.top.to_px(box),
+                box.box_model().padding.top.to_px(box),
+                box.height(),
+                box.box_model().padding.bottom.to_px(box),
+                box.box_model().border.bottom.to_px(box),
+                box.box_model().margin.bottom.to_px(box));
+        }
 
         dbgprintf("\n");
     }
 
     if (layout_node.is_block() && static_cast<const Layout::BlockBox&>(layout_node).children_are_inline()) {
         auto& block = static_cast<const Layout::BlockBox&>(layout_node);
-        for (size_t i = 0; i < indent; ++i)
-            dbgprintf("    ");
-        dbgprintf("  Line boxes (%d):\n", block.line_boxes().size());
         for (size_t line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
             auto& line_box = block.line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
-                dbgprintf("    ");
-            dbgprintf("    [%d] width: %g\n", line_box_index, line_box.width());
+                dbgprintf("  ");
+            dbgprintf("  \033[34;1mline %d\033[0m width: %d\n", line_box_index, (int)line_box.width());
             for (size_t fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
                 auto& fragment = line_box.fragments()[fragment_index];
                 for (size_t i = 0; i < indent; ++i)
-                    dbgprintf("    ");
-                dbgprintf("      [%d] layout_node: %s{%p}, start: %d, length: %d, rect: %s\n",
+                    dbgprintf("  ");
+                dbgprintf("    \033[35;1mfrag %d\033[0m from %s @%p, start: %d, length: %d, rect: %s\n",
                     fragment_index,
                     fragment.layout_node().class_name(),
                     &fragment.layout_node(),
                     fragment.start(),
                     fragment.length(),
-                    fragment.absolute_rect().to_string().characters());
+                    enclosing_int_rect(fragment.absolute_rect()).to_string().characters());
                 if (fragment.layout_node().is_text()) {
                     for (size_t i = 0; i < indent; ++i)
-                        dbgprintf("    ");
+                        dbgprintf("  ");
                     auto& layout_text = static_cast<const Layout::TextNode&>(fragment.layout_node());
                     auto fragment_text = layout_text.text_for_rendering().substring(fragment.start(), fragment.length());
-                    dbgprintf("        text: \"%s\"\n", fragment_text.characters());
+                    dbgprintf("      \"%s\"\n", fragment_text.characters());
                 }
             }
         }
     }
 
-    struct NameAndValue {
-        String name;
-        String value;
-    };
-    Vector<NameAndValue> properties;
-    layout_node.specified_style().for_each_property([&](auto property_id, auto& value) {
-        properties.append({ CSS::string_from_property_id(property_id), value.to_string() });
-    });
-    quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });
+    if (show_specified_style) {
+        struct NameAndValue {
+            String name;
+            String value;
+        };
+        Vector<NameAndValue> properties;
+        layout_node.specified_style().for_each_property([&](auto property_id, auto& value) {
+            properties.append({ CSS::string_from_property_id(property_id), value.to_string() });
+        });
+        quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });
 
-    for (auto& property : properties) {
-        for (size_t i = 0; i < indent; ++i)
-            dbgprintf("    ");
-        dbgprintf("  (%s: %s)\n", property.name.characters(), property.value.characters());
+        for (auto& property : properties) {
+            for (size_t i = 0; i < indent; ++i)
+                dbgprintf("    ");
+            dbgprintf("  (%s: %s)\n", property.name.characters(), property.value.characters());
+        }
     }
 
     ++indent;

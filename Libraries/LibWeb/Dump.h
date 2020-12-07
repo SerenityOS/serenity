@@ -31,7 +31,7 @@
 namespace Web {
 
 void dump_tree(const DOM::Node&);
-void dump_tree(const Layout::Node&);
+void dump_tree(const Layout::Node&, bool show_box_model = false, bool show_specified_style = false);
 void dump_sheet(const CSS::StyleSheet&);
 void dump_rule(const CSS::StyleRule&);
 void dump_selector(const CSS::Selector&);
