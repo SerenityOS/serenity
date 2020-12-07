@@ -52,6 +52,12 @@ public:
     float width() const { return m_size.width(); }
     float height() const { return m_size.height(); }
 
+    float border_box_width() const
+    {
+        auto border_box = box_model().border_box(*this);
+        return width() + border_box.left + border_box.right;
+    }
+
     float absolute_x() const { return absolute_rect().x(); }
     float absolute_y() const { return absolute_rect().y(); }
     Gfx::FloatPoint absolute_position() const { return absolute_rect().location(); }
