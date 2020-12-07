@@ -260,6 +260,7 @@ private:
     HashMap<String, String> m_aliases;
     bool m_is_interactive { true };
     bool m_is_subshell { false };
+    bool m_should_reinstall_signal_handlers { true };
 
     bool m_should_format_live { false };
 
