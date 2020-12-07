@@ -68,21 +68,23 @@ namespace Shell {
 
 void Shell::setup_signals()
 {
-    Core::EventLoop::register_signal(SIGCHLD, [this](int) {
+    if (m_should_reinstall_signal_handlers) {
+        Core::EventLoop::register_signal(SIGCHLD, [this](int) {
 #ifdef SH_DEBUG
-        dbgln("SIGCHLD!");
+            dbgln("SIGCHLD!");
 #endif
-        notify_child_event();
-    });
+            notify_child_event();
+        });
 
-    Core::EventLoop::register_signal(SIGTSTP, [this](auto) {
-        auto job = current_job();
-        kill_job(job, SIGTSTP);
-        if (job) {
-            job->set_is_suspended(true);
-            job->unblock();
-        }
-    });
+        Core::EventLoop::register_signal(SIGTSTP, [this](auto) {
+            auto job = current_job();
+            kill_job(job, SIGTSTP);
+            if (job) {
+                job->set_is_suspended(true);
+                job->unblock();
+            }
+        });
+    }
 }
 
 void Shell::print_path(const String& path)
@@ -484,6 +486,9 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     argv.take_first();
     set_local_variable("ARGV", adopt(*new AST::ListValue(move(argv))), true);
 
+    Core::EventLoop loop;
+    setup_signals();
+
     function.body->run(*this);
 
     retval = last_return_code;
@@ -670,6 +675,8 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         return IterationDecision::Continue;
     };
 
+    TemporaryChange signal_handler_install { m_should_reinstall_signal_handlers, false };
+
     for (auto& redirection : m_global_redirections) {
         if (resolve_redirection(redirection) == IterationDecision::Break)
             return nullptr;
@@ -732,6 +739,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         m_is_subshell = true;
         m_pid = getpid();
         Core::EventLoop::notify_forked(Core::EventLoop::ForkEvent::Child);
+        TemporaryChange signal_handler_install { m_should_reinstall_signal_handlers, true };
 
         if (apply_rewirings() == IterationDecision::Break)
             _exit(126);
@@ -756,11 +764,11 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         if (!m_is_subshell && command.should_wait)
             tcsetattr(0, TCSANOW, &default_termios);
 
-        Core::EventLoop mainloop;
-        setup_signals();
-
         if (command.should_immediately_execute_next) {
             ASSERT(command.argv.is_empty());
+
+            Core::EventLoop mainloop;
+            setup_signals();
 
             for (auto& next_in_chain : command.next_chain)
                 run_tail(command, next_in_chain, 0);
