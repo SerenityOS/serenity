@@ -400,8 +400,12 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     if (should_block == ShouldBlock::Yes) {
         locker.unlock();
         auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-        if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description, unblock_flags).was_interrupted())
+        if (Thread::current()->block<Thread::ConnectBlocker>(nullptr, description, unblock_flags).was_interrupted()) {
+            // we need to reacquire the lock before we return
+            // this way, the Locker won't try to unlock when we aren't already holding the lock
+            locker.lock();
             return KResult(-EINTR);
+        }
         locker.lock();
         ASSERT(setup_state() == SetupState::Completed);
         if (has_error()) { // TODO: check unblock_flags
