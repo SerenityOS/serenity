@@ -30,6 +30,8 @@
 #include <math.h>
 #include <xmmintrin.h>
 
+#include <AK/SIMD.h>
+
 #define GAMMA 2.2
 
 // Most computer graphics are stored in the sRGB color space, which stores something close to
@@ -50,27 +52,28 @@
 
 namespace Gfx {
 
+using AK::SIMD::f32x4;
+
 #ifndef NO_FPU
 
 #    ifdef __SSE__
 
-// A vector of 4 floats, aligned for SSE instructions
-typedef float v4sf __attribute__((vector_size(16)));
-
-// Transform v4sf from gamma2.2 space to linear space
+// Transform f32x4 from gamma2.2 space to linear space
 // Assumes x is in range [0, 1]
 // FIXME: Remove this hack once clang-11 is available as the default in Github Actions.
 //        This is apparently sometime mid-December. https://github.com/actions/virtual-environments/issues/2130
 #        if !defined(__clang__) || __clang_major__ >= 11
-constexpr v4sf gamma_to_linear4(v4sf x)
+constexpr f32x4 gamma_to_linear4(f32x4 x)
 #        else
-inline v4sf gamma_to_linear4(v4sf x)
+inline f32x4 gamma_to_linear4(f32x4 x)
 #        endif
 {
     return (0.8f + 0.2f * x) * x * x;
 }
 
-inline v4sf linear_to_gamma4(v4sf x)
+// Transform f32x4 from linear space to gamma2.2 space
+// Assumes x is in range [0, 1]
+inline f32x4 linear_to_gamma4(f32x4 x)
 {
     // Source for approximation: https://mimosa-pudica.net/fast-gamma/
     constexpr float a = 0.00279491f;
@@ -81,29 +84,9 @@ inline v4sf linear_to_gamma4(v4sf x)
 
 // Linearize v1 and v2, lerp them by mix factor, then convert back.
 // The output is entirely v1 when mix = 0 and entirely v2 when mix = 1
-inline v4sf gamma_accurate_lerp4(v4sf v1, v4sf v2, float mix)
+inline f32x4 gamma_accurate_lerp4(f32x4 v1, f32x4 v2, float mix)
 {
     return linear_to_gamma4(gamma_to_linear4(v1) * (1 - mix) + gamma_to_linear4(v2) * mix);
-}
-
-// Convert a and b to linear space, blend them by mix factor, then convert back using sse1.
-// The output is entirely a when mix = 0 and entirely b when mix = 1
-inline Color gamma_accurate_blend4(Color a, Color b, float mix)
-{
-    v4sf ac = {
-        (float)a.red(),
-        (float)a.green(),
-        (float)a.blue(),
-        0.f,
-    };
-    v4sf bc = {
-        (float)b.red(),
-        (float)b.green(),
-        (float)b.blue(),
-        0.f,
-    };
-    v4sf out = 255.f * gamma_accurate_lerp4(ac / 255.f, bc / 255.f, mix);
-    return Color(out[0], out[1], out[2]);
 }
 
 #    endif
@@ -112,28 +95,18 @@ inline Color gamma_accurate_blend4(Color a, Color b, float mix)
 // Assumes x is in range [0, 1]
 constexpr float gamma_to_linear(float x)
 {
-#    ifdef ACCURATE_GAMMA_ADJUSTMENT
-    // Slower, but more accurate
-    return pow(x, GAMMA);
-#    else
     return (0.8 + 0.2 * x) * x * x;
-#    endif
 }
 
 // Transform scalar from linear space to gamma2.2 space
 // Assumes x is in range [0, 1]
 inline float linear_to_gamma(float x)
 {
-#    ifdef ACCURATE_GAMMA_ADJUSTMENT
-    // Slower, but more accurate
-    return pow(x, 1. / GAMMA);
-#    else
     // Source for approximation: https://mimosa-pudica.net/fast-gamma/
     constexpr float a = 0.00279491;
     constexpr float b = 1.15907984;
     float c = (b / sqrt(1 + a)) - 1;
     return ((b / __builtin_sqrt(x + a)) - c) * x;
-#    endif
 }
 
 // Linearize v1 and v2, lerp them by mix factor, then convert back.
@@ -148,7 +121,18 @@ inline float gamma_accurate_lerp(float v1, float v2, float mix)
 inline Color gamma_accurate_blend(Color a, Color b, float mix)
 {
 #    ifdef __SSE__
-    return gamma_accurate_blend4(a, b, mix);
+    f32x4 ac = {
+        (float)a.red(),
+        (float)a.green(),
+        (float)a.blue(),
+    };
+    f32x4 bc = {
+        (float)b.red(),
+        (float)b.green(),
+        (float)b.blue(),
+    };
+    f32x4 out = 255.f * gamma_accurate_lerp4(ac * (1.f / 255.f), bc * (1.f / 255.f), mix);
+    return Color(out[0], out[1], out[2]);
 #    else
     return {
         static_cast<u8>(255. * gamma_accurate_lerp(a.red() / 255., b.red() / 255., mix)),
