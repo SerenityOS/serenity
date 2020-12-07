@@ -28,6 +28,7 @@
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -90,6 +91,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.includes, includes, 1, attr);
     define_native_function(vm.names.slice, slice, 2, attr);
     define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
+    define_native_function(vm.names.split, split, 1, attr);
     define_native_function(vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
@@ -505,6 +507,29 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
     if (vm.exception())
         return {};
     return StringIterator::create(global_object, string);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
+{
+    auto string = ak_string_from(vm, global_object);
+    if (string.is_null())
+        return {};
+
+    if (vm.argument_count() == 0)
+        return js_string(vm, string);
+
+    auto separator_string = vm.argument(0).to_string(global_object);
+    auto* new_array = Array::create(global_object);
+    auto string_view = StringView(string);
+    auto separator_view = StringView(separator_string);
+
+    Vector<StringView> sub_strings = string_view.split_view(const_cast<StringView&>(separator_view), true);
+
+    for(auto sub_string: sub_strings) {
+        new_array->indexed_properties().append(Value(js_string(vm, sub_string)));
+    }
+
+    return Value(new_array);
 }
 
 }
