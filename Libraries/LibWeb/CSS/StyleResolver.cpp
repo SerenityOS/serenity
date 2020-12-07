@@ -567,12 +567,9 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const DOM::Element& 
         }
     }
 
-    auto style_attribute = element.attribute(HTML::AttributeNames::style);
-    if (!style_attribute.is_null()) {
-        if (auto declaration = parse_css_declaration(CSS::ParsingContext(document()), style_attribute)) {
-            for (auto& property : declaration->properties()) {
-                set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
-            }
+    if (auto* inline_style = element.inline_style()) {
+        for (auto& property : inline_style->properties()) {
+            set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
         }
     }
 

@@ -90,6 +90,8 @@ public:
     const CSS::StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
     NonnullRefPtr<CSS::StyleProperties> computed_style();
 
+    const CSS::StyleDeclaration* inline_style() const { return m_inline_style; }
+
     // FIXME: innerHTML also appears on shadow roots. https://w3c.github.io/DOM-Parsing/#dom-innerhtml
     String inner_html() const;
     void set_inner_html(StringView);
@@ -106,6 +108,8 @@ private:
 
     QualifiedName m_qualified_name;
     Vector<Attribute> m_attributes;
+
+    RefPtr<CSS::StyleDeclaration> m_inline_style;
 
     RefPtr<CSS::StyleProperties> m_resolved_style;
 
